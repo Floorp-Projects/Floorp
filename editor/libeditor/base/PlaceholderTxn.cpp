@@ -97,7 +97,7 @@ NS_IMETHODIMP PlaceholderTxn::Undo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -114,7 +114,7 @@ NS_IMETHODIMP PlaceholderTxn::Redo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -265,7 +265,7 @@ NS_IMETHODIMP PlaceholderTxn::Commit()
 
 NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;

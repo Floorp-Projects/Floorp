@@ -358,7 +358,7 @@ public:
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
     */
-  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection);
+  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection);
   NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
   virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
   virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
@@ -448,7 +448,7 @@ public:
                             nsEventStatus* aEventStatus);
 
 
-  virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
+  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
 

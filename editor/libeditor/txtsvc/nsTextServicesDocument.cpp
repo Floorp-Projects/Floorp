@@ -27,7 +27,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
@@ -581,7 +581,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -1089,7 +1089,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -2059,7 +2059,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     PRInt32 i, strLength  = aText->Length();
 
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     OffsetEntry *itEntry;
     OffsetEntry *entry = (OffsetEntry *)mOffsetTable[mSelStartIndex];
     void *node         = entry->mNode;
@@ -3043,7 +3043,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
   // XXX: If we ever get a SetSelection() method in nsIEditor, we should
   //      use it.
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   if (aDoUpdate)
   {
@@ -3140,7 +3140,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
   if (mIteratorStatus == nsTextServicesDocument::eIsDone)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool isCollapsed;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -3175,7 +3175,7 @@ nsresult
 nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength)
 {
   nsresult result;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
@@ -3504,7 +3504,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 {
   nsresult result;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsIDOMRange> range;
   OffsetEntry *entry;
 

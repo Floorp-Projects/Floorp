@@ -31,8 +31,6 @@ MODULE		= dom
 EXPORTS		= \
 		nsIDOMRange.h \
 		nsIDOMNSRange.h \
-		nsIDOMSelection.h \
-		nsIDOMSelectionListener.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

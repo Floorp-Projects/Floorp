@@ -28,7 +28,7 @@
 
 #include "nsIEditorShell.h"
 
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
@@ -231,7 +231,11 @@ nsPrintingCommands::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * re
     *outCmdEnabled = PR_FALSE;        // not implemented yet
   else if (cmdString.EqualsWithConversion("cmd_printPreview"))
     *outCmdEnabled = PR_FALSE;        // not implemented yet
-  
+  else if (cmdString.EqualsWithConversion("cmd_print_button"))
+    *outCmdEnabled = PR_TRUE;
+  else if (cmdString.EqualsWithConversion("cmd_printSetup"))
+    *outCmdEnabled = PR_FALSE;        // not implemented yet
+
   return NS_OK;
 }
 

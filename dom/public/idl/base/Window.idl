@@ -12,9 +12,9 @@ interface Window {
        readonly attribute  long scrollY;
        void  scrollTo(in long xScroll, in long yScroll);
        void  scrollBy(in long xScrollDif, in long yScrollDif);
+       xpidl nsISelection getSelection();
        void scrollByLines(in long numLines);
        void scrollByPages(in long numPages);
-       Selection getSelection();
 };
 
 interface WindowInternal : Window {

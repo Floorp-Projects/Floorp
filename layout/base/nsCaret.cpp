@@ -32,7 +32,8 @@
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -105,13 +106,16 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
   
-  nsCOMPtr<nsIDOMSelection> domSelection;
+	
+  nsCOMPtr<nsISelection> domSelection;
+  nsCOMPtr<nsISelectionPrivate> privateSelection;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
   if (selCon)
   {
     if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))))
     {
-      domSelection->AddSelectionListener(this);
+      privateSelection = do_QueryInterface(domSelection);
+      privateSelection->AddSelectionListener(this);
       mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(domSelection) );
     }
   }
@@ -138,6 +142,7 @@ NS_IMPL_RELEASE(nsCaret);
 NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
                                      void** aInstancePtrResult)
 {
+
   NS_PRECONDITION(aInstancePtrResult, "null pointer");
   if (!aInstancePtrResult)
   return NS_ERROR_NULL_POINTER;
@@ -148,8 +153,8 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
     foundInterface = (nsISupports*)(nsICaret*)this;   // whoo boy
   else if (aIID.Equals(NS_GET_IID(nsICaret)))
     foundInterface = (nsICaret*)this;
-  else if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener)))
-    foundInterface = (nsIDOMSelectionListener*)this;
+  else if (aIID.Equals(NS_GET_IID(nsISelectionListener)))
+    foundInterface = (nsISelectionListener*)this;
   else
     foundInterface = nsnull;
 
@@ -167,7 +172,7 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
 }
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsIDOMSelection *aDOMSel)
+NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
 {
   NS_ENSURE_ARG_POINTER(aDOMSel);
   mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
@@ -205,14 +210,15 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel)
+NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *aDOMSel)
 {
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
 
   mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
-    
-  nsCOMPtr<nsIDOMSelection> domSelection = aDOMSel;
+		
+	nsCOMPtr<nsISelection> domSelection = aDOMSel;
+	nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
   nsresult err;
   if (!domSelection)
     return NS_ERROR_NOT_INITIALIZED;    // no selection
@@ -268,7 +274,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
   nsIFrame*       theFrame = nsnull;
   PRInt32         theFrameOffset = 0;
   PRBool hintRight;
-  domSelection->GetHint(&hintRight);//translate hint.
+  privateSelection->GetInterlinePosition(&hintRight);//translate hint.
   nsIFrameSelection::HINT hint;
   if (hintRight)
     hint = nsIFrameSelection::HINTRIGHT;
@@ -357,13 +363,13 @@ NS_IMETHODIMP nsCaret::EraseCaret()
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *aDomSel, short aReason)
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel, short aReason)
 {
-  if (aReason & nsIDOMSelectionListener::MOUSEUP_REASON)//this wont do
+  if (aReason & nsISelectionListener::MOUSEUP_REASON)//this wont do
     return NS_OK;
-  if (mVisible)
-    StopBlinking();
-  nsCOMPtr<nsIDOMSelection> domSel(do_QueryReferent(mDomSelectionWeak));
+	if (mVisible)
+		StopBlinking();
+  nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (domSel.get() != aDomSel)
     return NS_OK; //ignore this then.
   if (mVisible)
@@ -439,8 +445,10 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
   if (!mDomSelectionWeak)
     return PR_FALSE;
+
   
-  nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
   if (!domSelection) return PR_FALSE;
   
   PRBool isCollapsed = PR_FALSE;
@@ -470,7 +478,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
     return PR_FALSE;
 
   PRBool hintRight;
-  domSelection->GetHint(&hintRight);//translate hint.
+  privateSelection->GetInterlinePosition(&hintRight);//translate hint.
   nsIFrameSelection::HINT hint;
   hint = (hintRight) ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
 
@@ -634,10 +642,10 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 ----------------------------------------------------------------------------- */
 PRBool nsCaret::MustDrawCaret()
 {
-  if (mDrawn)
-    return PR_TRUE;
-    
-  nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+	if (mDrawn)
+		return PR_TRUE;
+		
+	nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
   if (!domSelection)
     return PR_FALSE;
   PRBool isCollapsed;

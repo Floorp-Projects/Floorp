@@ -209,13 +209,13 @@ nsTSDNotifier::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PR
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::WillDeleteSelection(nsIDOMSelection *aSelection)
+nsTSDNotifier::WillDeleteSelection(nsISelection *aSelection)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DidDeleteSelection(nsIDOMSelection *aSelection)
+nsTSDNotifier::DidDeleteSelection(nsISelection *aSelection)
 {
   return NS_OK;
 }

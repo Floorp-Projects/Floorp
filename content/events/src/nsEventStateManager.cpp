@@ -47,7 +47,7 @@
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIFrameSelection.h"
 #include "nsIDeviceContext.h"
 #include "nsIScriptGlobalObject.h"

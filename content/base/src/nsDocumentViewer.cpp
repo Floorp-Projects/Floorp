@@ -45,7 +45,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
+#include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMRange.h"
@@ -106,16 +107,15 @@ class DocumentViewerImpl;
 #pragma mark ** nsDocViwerSelectionListener **
 #endif
 
-class nsDocViwerSelectionListener : public nsIDOMSelectionListener
+class nsDocViwerSelectionListener : public nsISelectionListener
 {
 public:
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-  // nsIDOMSelectionListerner interface
-  NS_DECL_IDOMSELECTIONLISTENER
-  
+  // nsISelectionListerner interface
+  NS_DECL_NSISELECTIONLISTENER  
 
                        nsDocViwerSelectionListener()
                        : mDocViewer(NULL)
@@ -245,7 +245,7 @@ private:
   nsresult MakeWindow(nsIWidget* aParentWidget,
                       const nsRect& aBounds);
 
-  nsresult GetDocumentSelection(nsIDOMSelection **aSelection);
+  nsresult GetDocumentSelection(nsISelection **aSelection);
 
   //
   // The following three methods are used for printing...
@@ -279,7 +279,7 @@ protected:
 
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
-  nsCOMPtr<nsIDOMSelectionListener> mSelectionListener;
+  nsCOMPtr<nsISelectionListener> mSelectionListener;
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
   
   PRBool  mEnableRendering;
@@ -436,12 +436,13 @@ DocumentViewerImpl::~DocumentViewerImpl()
   if (mPresShell) {
     // Break circular reference (or something)
     mPresShell->EndObservingDocument();
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     rv = GetDocumentSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv) || !selection) 
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+    if (NS_FAILED(rv) || !selPrivate) 
       return;
     if (mSelectionListener)
-      selection->RemoveSelectionListener(mSelectionListener);
+      selPrivate->RemoveSelectionListener(mSelectionListener);
   }
   
 }
@@ -592,15 +593,16 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   // this is the owning reference. The nsCOMPtr will take care of releasing
   // our ref to the listener on destruction.
   NS_ADDREF(selectionListener);
-  rv = selectionListener->QueryInterface(NS_GET_IID(nsIDOMSelectionListener), getter_AddRefs(mSelectionListener));
+  rv = selectionListener->QueryInterface(NS_GET_IID(nsISelectionListener), getter_AddRefs(mSelectionListener));
   NS_RELEASE(selectionListener);
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
   
-  rv = selection->AddSelectionListener(mSelectionListener);
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+  rv = selPrivate->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv)) return rv;
   
   //focus listener
@@ -1194,7 +1196,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   return rv;
 }
 
-nsresult DocumentViewerImpl::GetDocumentSelection(nsIDOMSelection **aSelection)
+nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection)
 {
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
@@ -1338,7 +1340,7 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
   // XXX this is a temporary implementation copied from nsWebShell
   // for now. I think nsDocument and friends should have some helper
   // functions to make this easier.
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult rv;
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
@@ -1361,7 +1363,7 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
   }
   if (!bodyNode) return NS_ERROR_FAILURE; 
   
-  rv = selection->ClearSelection();
+  rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
   static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
@@ -1385,7 +1387,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopySelection()
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult rv;
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
@@ -1922,7 +1924,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 #pragma mark -
 #endif
 
-NS_IMPL_ISUPPORTS(nsDocViwerSelectionListener, NS_GET_IID(nsIDOMSelectionListener));
+NS_IMPL_ISUPPORTS(nsDocViwerSelectionListener, NS_GET_IID(nsISelectionListener));
 
 nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 {
@@ -1931,12 +1933,12 @@ nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 }
 
 
-NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short)
+NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
 {
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 
   // get the selection state
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult rv = mDocViewer->GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 

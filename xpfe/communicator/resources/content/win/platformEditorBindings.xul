@@ -8,7 +8,7 @@
 <!-- xul key for Windows -->
 <keyset id="editorKeySet" xulkey="ctrl">
 
-
+ 
 <!-- alternate cut/copy/paste keys for Windows -->
 <key id="winAlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
   onkeypress="
@@ -54,6 +54,16 @@
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
         controller.doCommand('cmd_selectBottom');"/>
+<key id="key_homectrl" keycode="VK_HOME" shift="false" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_moveTop');
+        controller.doCommand('cmd_moveTop');"/>
+<key id="key_endctrl" keycode="VK_END" shift="false" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_moveBottom');
+        controller.doCommand('cmd_moveBottom');"/>
 </keyset>
 
 <!-- End Windows-specific keybindings -->

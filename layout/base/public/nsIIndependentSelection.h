@@ -23,7 +23,7 @@
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * NOTE!!  This is not a general class, but specific to layout and frames.
  * Consumers looking for the general selection interface should look at
- * nsIDOMSelection.
+ * nsISelection.
  */
 
 

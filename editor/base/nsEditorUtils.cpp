@@ -32,7 +32,7 @@
  * nsAutoSelectionReset
  *****************************************************************************/
 
-nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel, nsEditor *aEd) : 
+nsAutoSelectionReset::nsAutoSelectionReset(nsISelection *aSel, nsEditor *aEd) : 
 mSel(nsnull)
 ,mEd(nsnull)
 { 

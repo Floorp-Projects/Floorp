@@ -29,7 +29,7 @@
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 class nsHTMLEditor;
-class nsIDOMSelection;
+class nsISelection;
 
 /***************************************************************************
  * base for an object to encapsulate any additional info needed to be passed
@@ -60,8 +60,8 @@ public:
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
-  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;
-  NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
+  NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;
+  NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
   NS_IMETHOD SetFlags(PRUint32 aFlags)=0;
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;

@@ -29,7 +29,7 @@
 #include "nsIComponentManager.h" 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIPresShell.h"
 #include "nsXIFDTD.h"
 #include "nsParserCIID.h"
@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // Inherited methods from nsIDocumentEncoder
-  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
+  NS_IMETHOD SetSelection(nsISelection* aSelection);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
   NS_IMETHOD SetCharset(const nsAReadableString& aCharset);
 
@@ -74,7 +74,7 @@ protected:
   //NS_IMETHOD AddHeader(PRBool aYes);
 
   nsIDocument*      mDocument;
-  nsIDOMSelection*  mSelection;
+  nsISelection*  mSelection;
   nsString          mMimeType;
   nsString          mCharset;
   PRUint32          mFlags;
@@ -149,7 +149,7 @@ nsTextEncoder::SetWrapColumn(PRUint32 aWC)
 }
 
 NS_IMETHODIMP
-nsTextEncoder::SetSelection(nsIDOMSelection* aSelection)
+nsTextEncoder::SetSelection(nsISelection* aSelection)
 {
   mSelection = aSelection;
   return NS_OK;   

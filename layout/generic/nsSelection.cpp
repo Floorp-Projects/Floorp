@@ -20,7 +20,7 @@
  */
 
 /*
- * Implementation of selection: nsIDOMSelection and nsIFrameSelection
+ * Implementation of selection: nsISelection,nsISelectionPrivate and nsIFrameSelection
  */
 
 #include "nsCOMPtr.h"
@@ -29,8 +29,9 @@
 #include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
 #include "nsIFrameSelection.h"
-#include "nsIDOMSelection.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
+#include "nsISelectionListener.h"
 #include "nsIFocusTracker.h"
 #include "nsIComponentManager.h"
 #include "nsLayoutCID.h"
@@ -45,7 +46,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsITextContent.h"
 
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIIndependentSelection.h"
@@ -58,8 +59,6 @@
 #include "nsIPresShell.h"
 #include "nsICaret.h"
 
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
 
 // included for view scrolling
 #include "nsIViewManager.h"
@@ -113,7 +112,7 @@ class nsSelectionIterator;
 class nsSelection;
 class nsAutoScrollTimer;
 
-class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner, public nsSupportsWeakReference, public nsIIndependentSelection
+class nsDOMSelection : public nsISelection , public nsISelectionPrivate, public nsSupportsWeakReference, public nsIIndependentSelection
 {
 public:
   nsDOMSelection();
@@ -124,7 +123,7 @@ public:
   /*BEGIN nsIIndependentSelection interface implementations */
   NS_IMETHOD    SetPresShell(nsIPresShell *aPresShell);
 
-  /*BEGIN nsIDOMSelection interface implementations*/
+  /*BEGIN nsISelection,Private interface implementations*/
   NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode);
   NS_IMETHOD    GetAnchorOffset(PRInt32* aAnchorOffset);
   NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode);
@@ -132,7 +131,7 @@ public:
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
   NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);
   NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
-  NS_IMETHOD    ClearSelection();
+  NS_IMETHOD    RemoveAllRanges();
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    CollapseToStart();
   NS_IMETHOD    CollapseToEnd();
@@ -146,21 +145,17 @@ public:
   NS_IMETHOD    StartBatchChanges();
   NS_IMETHOD    EndBatchChanges();
 
-  NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);
-  NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
+  NS_IMETHOD    AddSelectionListener(nsISelectionListener* aNewListener);
+  NS_IMETHOD    RemoveSelectionListener(nsISelectionListener* aListenerToRemove);
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 
-  NS_IMETHOD    ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsAWritableString& aReturn);
+  NS_IMETHOD    ToString(PRUnichar **_retval);
+  NS_IMETHOD    ToStringWithFormat(const char *aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, PRUnichar ** aReturn);
 
-  NS_IMETHOD    SetHint(PRBool aHintRight);
-  NS_IMETHOD    GetHint(PRBool *aHintRight);
+  NS_IMETHOD    GetInterlinePosition(PRBool *aInterlinePosition);
+  NS_IMETHOD    SetInterlinePosition(PRBool aInterlinePosition);
 
-/*END nsIDOMSelection interface implementations*/
-
-/*BEGIN nsIScriptObjectOwner interface implementations*/
-  NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD 		SetScriptObject(void *aScriptObject);
-/*END nsIScriptObjectOwner interface implementations*/
+/*END nsISelection interface implementations*/
 
   // utility methods for scrolling the selection into view
   nsresult      GetPresContext(nsIPresContext **aPresContext);
@@ -259,8 +254,6 @@ private:
 
   nsSelection *mFrameSelection;
   nsWeakPtr mPresShellWeak; //weak reference to presshell.
-  // for nsIScriptObjectOwner
-  void*		mScriptObject;
   SelectionType mType;//type of this nsDOMSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
@@ -270,9 +263,9 @@ private:
 class nsSelectionBatcher
 {
 private:
-  nsCOMPtr<nsIDOMSelection> mSelection;
+  nsCOMPtr<nsISelectionPrivate> mSelection;
 public:
-  nsSelectionBatcher(nsIDOMSelection *aSelection) : mSelection(aSelection)
+  nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
   {
     if (mSelection) mSelection->StartBatchChanges();
   }
@@ -313,7 +306,7 @@ public:
   NS_IMETHOD ClearTableCellSelection(){mSelectingTableCellMode = 0; return NS_OK;}
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
 
-  NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
+  NS_IMETHOD GetSelection(SelectionType aType, nsISelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
@@ -598,14 +591,14 @@ nsresult NS_NewSelection(nsIFrameSelection **aFrameSelection)
   return NS_OK;
 }
 
-nsresult NS_NewDomSelection(nsIDOMSelection **aDomSelection);
+nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
-nsresult NS_NewDomSelection(nsIDOMSelection **aDomSelection)
+nsresult NS_NewDomSelection(nsISelection **aDomSelection)
 {
   nsDOMSelection *rlist = new nsDOMSelection;
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
-  *aDomSelection = (nsIDOMSelection *)rlist;
+  *aDomSelection = (nsISelection *)rlist;
   rlist->AddRef();
   return NS_OK;
 }
@@ -881,7 +874,7 @@ nsSelection::nsSelection()
 
   mDelayCaretOverExistingSelection = PR_TRUE;
   mDelayedMouseEventValid = PR_FALSE;
-  mReason = nsIDOMSelectionListener::NO_REASON;
+  mReason = nsISelectionListener::NO_REASON;
 }
 
 
@@ -1454,33 +1447,33 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
         InvalidateDesiredX();
         pos.mDirection = eDirNext;
         mHint = HINTLEFT;//stick to this line
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
         mHint = HINTRIGHT;//stick to opposite of movement
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
         pos.mAmount = eSelectLine;
         pos.mDirection = eDirNext;//no break here
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_UP : 
         pos.mAmount = eSelectLine;
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
         pos.mAmount = eSelectBeginLine;
         mHint = HINTRIGHT;//stick to opposite of movement
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
         mHint = HINTLEFT;//stick to this line
-        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
+        PostReason(nsISelectionListener::KEYPRESS_REASON);
      break;
   default :return NS_ERROR_FAILURE;
   }
@@ -1509,7 +1502,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
       if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
       {
         mHint = (HINT)pos.mPreferLeft;
-        PostReason(nsIDOMSelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
+        PostReason(nsISelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
         result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
       }
     }
@@ -1569,13 +1562,23 @@ nsSelection::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 //BEGIN nsIFrameSelection methods
 
 NS_IMETHODIMP
-nsDOMSelection::ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsAWritableString& aReturn)
+nsDOMSelection::ToString(PRUnichar **aReturn)
+{
+  return ToStringWithFormat("text/plain", 0, 0, aReturn);
+}
+
+
+NS_IMETHODIMP
+nsDOMSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags, 
+                                   PRInt32 aWrapCol, PRUnichar **aReturn)
 {
   nsresult rv = NS_OK;
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
   
   nsCOMPtr<nsIDocumentEncoder> encoder;
   nsCAutoString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
-  formatType.AppendWithConversion(aFormatType);
+  formatType.Append(aFormatType);
   rv = nsComponentManager::CreateInstance(formatType,
                                           nsnull,
                                           NS_GET_IID(nsIDocumentEncoder),
@@ -1594,21 +1597,23 @@ nsDOMSelection::ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, 
 
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
-
-  rv = encoder->Init(doc, aFormatType, aFlags);
+  nsAutoString readstring;
+  readstring.AssignWithConversion(aFormatType);
+  rv = encoder->Init(doc, readstring, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetSelection(this);
-  if (aWrapCount != 0)
-    encoder->SetWrapColumn(aWrapCount);
+  if (aWrapCol != 0)
+    encoder->SetWrapColumn(aWrapCol);
 
-  rv = encoder->EncodeToString(aReturn);
-
+  nsAutoString tmp;
+  rv = encoder->EncodeToString(tmp);
+  *aReturn = tmp.ToNewUnicode();//get the unicode pointer from it. this is temporary
   return rv;
 }
 
 NS_IMETHODIMP
-nsDOMSelection::SetHint(PRBool aHintRight)
+nsDOMSelection::SetInterlinePosition(PRBool aHintRight)
 {
   nsIFrameSelection::HINT hint;
   if (aHintRight)
@@ -1619,7 +1624,7 @@ nsDOMSelection::SetHint(PRBool aHintRight)
 }
 
 NS_IMETHODIMP
-nsDOMSelection::GetHint(PRBool *aHintRight)
+nsDOMSelection::GetInterlinePosition(PRBool *aHintRight)
 {
   nsIFrameSelection::HINT hint;
   nsresult rv = mFrameSelection->GetHint(&hint);
@@ -1643,7 +1648,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
   {
-    PostReason(nsIDOMSelectionListener::MOUSEDOWN_REASON + nsIDOMSelectionListener::DRAG_REASON);
+    PostReason(nsISelectionListener::MOUSEDOWN_REASON + nsISelectionListener::DRAG_REASON);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
   
@@ -1839,7 +1844,7 @@ printf("SetMouseDownState to FALSE - stopping cell selection\n");
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
-    PostReason(aState?nsIDOMSelectionListener::MOUSEDOWN_REASON:nsIDOMSelectionListener::MOUSEUP_REASON);//not a drag reason
+    PostReason(aState?nsISelectionListener::MOUSEDOWN_REASON:nsISelectionListener::MOUSEUP_REASON);//not a drag reason
     NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);//notify that reason is mouse up please.
   }
   return NS_OK;
@@ -1870,14 +1875,14 @@ nsSelection::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
 
 
 NS_IMETHODIMP
-nsSelection::GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection)
+nsSelection::GetSelection(SelectionType aType, nsISelection **aDomSelection)
 {
   if (!aDomSelection)
     return NS_ERROR_NULL_POINTER;
   PRInt8 index = GetIndexFromSelectionType(aType);
   if (index < 0)
     return NS_ERROR_INVALID_ARG;
-  *aDomSelection = mDomSelections[index];
+  *aDomSelection = NS_REINTERPRET_CAST(nsISelection *,mDomSelections[index]);
   (*aDomSelection)->AddRef();
   return NS_OK;
 }
@@ -2097,7 +2102,7 @@ NS_IMETHODIMP nsSelection::SelectAll()
   }
   PRInt32 numChildren;
   rootContent->ChildCount(numChildren);
-  PostReason(nsIDOMSelectionListener::NO_REASON);
+  PostReason(nsISelectionListener::NO_REASON);
   return TakeFocus(mLimiter, 0, numChildren, PR_FALSE, PR_FALSE);
 }
 
@@ -2200,7 +2205,7 @@ nsresult
 nsSelection::ClearNormalSelection()
 {
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  return mDomSelections[index]->ClearSelection();
+  return mDomSelections[index]->RemoveAllRanges();
 }
 
 nsresult
@@ -2296,7 +2301,7 @@ printf("HandleTableSelection: Dragged into a new cell\n");
           {
             // Force new selection block
             mStartSelectedCell = nsnull;
-            mDomSelections[index]->ClearSelection();
+            mDomSelections[index]->RemoveAllRanges();
 
             mSelectingTableCellMode = 
               (startRowIndex == curRowIndex) ? TABLESELECTION_ROW : TABLESELECTION_COLUMN;
@@ -2346,7 +2351,7 @@ printf("HandleTableSelection: Mouse down event\n");
         else
         {
           // No cells selected -- remove non-cell selection
-          mDomSelections[index]->ClearSelection();
+          mDomSelections[index]->RemoveAllRanges();
         }
         mSelectingTableCells = PR_TRUE;    // Signal to start drag-cell-selection
         mSelectingTableCellMode = aTarget;
@@ -2370,8 +2375,8 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
           nsCOMPtr<nsIContent> previousCellContent = do_QueryInterface(previousCellNode);
           if (!IsInSameTable(previousCellContent, childContent, nsnull))
           {
-            mDomSelections[index]->ClearSelection();
-            // Reset selection mode that is cleared in ClearSelection
+            mDomSelections[index]->RemoveAllRanges();
+            // Reset selection mode that is cleared in RemoveAllRanges
             mSelectingTableCellMode = aTarget;
           }
 
@@ -2391,7 +2396,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         mEndSelectedCell = nsnull;
 
         // Remove existing selection and select the table
-        mDomSelections[index]->ClearSelection();
+        mDomSelections[index]->RemoveAllRanges();
         return CreateAndAddRange(parentNode, aContentOffset);
       }
       else if (aTarget == TABLESELECTION_ROW || aTarget == TABLESELECTION_COLUMN)
@@ -2403,8 +2408,8 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
       
         // Force new selection block
         mStartSelectedCell = nsnull;
-        mDomSelections[index]->ClearSelection();
-        // Always do this AFTER ClearSelection
+        mDomSelections[index]->RemoveAllRanges();
+        // Always do this AFTER RemoveAllRanges
         mSelectingTableCellMode = aTarget;
         return SelectRowOrColumn(childContent, aTarget);
       }
@@ -3056,7 +3061,7 @@ nsSelection::GetHint(HINT *aHintRight)
 #pragma mark -
 #endif
 
-//BEGIN nsIDOMSelection interface implementations
+//BEGIN nsISelection interface implementations
 
 
 
@@ -3206,7 +3211,7 @@ nsSelection::GetLimiter(nsIContent **aLimiterContent)
 }
 
 
-//END nsIDOMSelection interface implementations
+//END nsISelection interface implementations
 
 #ifdef XP_MAC
 #pragma mark -
@@ -3227,7 +3232,6 @@ nsDOMSelection::nsDOMSelection(nsSelection *aList)
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
-  mScriptObject = nsnull;
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_REFCNT();
@@ -3240,7 +3244,6 @@ nsDOMSelection::nsDOMSelection()
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
-  mScriptObject = nsnull;
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_REFCNT();
@@ -3281,7 +3284,7 @@ NS_IMPL_ADDREF(nsDOMSelection)
 
 NS_IMPL_RELEASE(nsDOMSelection)
 
-NS_IMPL_QUERY_INTERFACE4(nsDOMSelection, nsIDOMSelection, nsIScriptObjectOwner, nsISupportsWeakReference, nsIIndependentSelection)
+NS_IMPL_QUERY_INTERFACE4(nsDOMSelection, nsISelection, nsISelectionPrivate, nsISupportsWeakReference, nsIIndependentSelection)
  
 
 NS_IMETHODIMP
@@ -4517,10 +4520,10 @@ nsDOMSelection::GetEnumerator(nsIEnumerator **aIterator)
 
 
 
-/** ClearSelection zeroes the selection
+/** RemoveAllRanges zeroes the selection
  */
 NS_IMETHODIMP
-nsDOMSelection::ClearSelection()
+nsDOMSelection::RemoveAllRanges()
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
@@ -5541,7 +5544,7 @@ nsDOMSelection::SelectAllChildren(nsIDOMNode* aParentNode)
   
   if (mFrameSelection) 
   {
-    mFrameSelection->PostReason(nsIDOMSelectionListener::SELECTALL_REASON);
+    mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
   }
   nsresult result = Collapse(aParentNode, 0);
   if (NS_SUCCEEDED(result))
@@ -5554,7 +5557,7 @@ nsDOMSelection::SelectAllChildren(nsIDOMNode* aParentNode)
       GetChildOffset(lastChild, aParentNode, numBodyChildren);
       if (mFrameSelection) 
       {
-        mFrameSelection->PostReason(nsIDOMSelectionListener::SELECTALL_REASON);
+        mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
       }
       result = Extend(aParentNode, numBodyChildren+1);
     }
@@ -6644,7 +6647,7 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
 
 
 NS_IMETHODIMP
-nsDOMSelection::AddSelectionListener(nsIDOMSelectionListener* aNewListener)
+nsDOMSelection::AddSelectionListener(nsISelectionListener* aNewListener)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -6660,7 +6663,7 @@ nsDOMSelection::AddSelectionListener(nsIDOMSelectionListener* aNewListener)
 
 
 NS_IMETHODIMP
-nsDOMSelection::RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove)
+nsDOMSelection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -6702,7 +6705,7 @@ nsDOMSelection::NotifySelectionListeners()
   for (PRUint32 i = 0; i < cnt;i++)
   {
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
-    nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
+    nsCOMPtr<nsISelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
     	thisListener->NotifySelectionChanged(domdoc,this, reason);
   }
@@ -6737,27 +6740,3 @@ nsDOMSelection::DeleteFromDocument()
   return mFrameSelection->DeleteFromDocument();
 }
 
-// BEGIN nsIScriptObjectOwner interface implementations
-NS_IMETHODIMP
-nsDOMSelection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
-
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptSelection(aContext, (nsISupports *)(nsIDOMSelection *)this, globalObj, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(globalObj);
-  return res;
-}
-
-NS_IMETHODIMP
-nsDOMSelection::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-// END nsIScriptObjectOwner interface implementations

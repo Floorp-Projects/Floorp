@@ -39,7 +39,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIReflowCommand.h"
 #include "nsGUIEvent.h"
 

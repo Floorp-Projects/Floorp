@@ -722,7 +722,7 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
     nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
     if (selCon)
     {
-      nsCOMPtr<nsIDOMSelection> sel;
+      nsCOMPtr<nsISelection> sel;
       if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel)
       {
         caret->SetCaretDOMSelection(sel);

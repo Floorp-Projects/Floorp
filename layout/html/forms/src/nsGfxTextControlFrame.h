@@ -34,7 +34,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsITransactionListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIPresContext.h"
@@ -51,7 +51,7 @@
 #include "nsCSSFrameConstructor.h"
 
 class nsIFrame;
-class nsIDOMSelection;
+class nsISelection;
 class nsIDOMCharacterData;
 
 class nsGfxTextControlFrame;
@@ -201,7 +201,7 @@ class nsEnderEventListener : public nsIEnderEventListener,
                              public nsIDOMKeyListener, 
                              public nsIDOMMouseListener,
                              public nsIDOMFocusListener,
-                             public nsIDOMSelectionListener,
+                             public nsISelectionListener,
                              public nsITransactionListener
 {
 public:
@@ -248,11 +248,11 @@ public:
   virtual nsresult Blur (nsIDOMEvent* aEvent);
   /* END interfaces from nsIDOMFocusListener*/
 
-  /** nsIDOMSelectionListener interfaces 
-    * @see nsIDOMSelectionListener
+  /** nsISelectionListener interfaces 
+    * @see nsISelectionListener
     */
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *, short);
-  /*END interfaces from nsIDOMSelectionListener*/
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short);
+  /*END interfaces from nsISelectionListener*/
  
   /** nsITransactionListener interfaces
     */

@@ -31,7 +31,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDiskDocument.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
@@ -101,8 +101,8 @@ class nsSelectionState
     nsSelectionState();
     ~nsSelectionState();
   
-    nsresult SaveSelection(nsIDOMSelection *aSel);
-    nsresult RestoreSelection(nsIDOMSelection *aSel);
+    nsresult SaveSelection(nsISelection *aSel);
+    nsresult RestoreSelection(nsISelection *aSel);
     PRBool   IsCollapsed();
     PRBool   IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();
@@ -220,7 +220,7 @@ public:
   NS_IMETHOD GetRootElement(nsIDOMElement **aElement);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   NS_IMETHOD GetSelectionController(nsISelectionController **aSel);
-  NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
+  NS_IMETHOD GetSelection(nsISelection **aSelection);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);
   NS_IMETHOD GetTransactionManager(nsITransactionManager* *aTxnManager);
@@ -486,7 +486,7 @@ protected:
   NS_IMETHOD NotifyDocumentListeners(TDocumentListenerNotification aNotificationType);
   
   /** make the given selection span the entire document */
-  NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
+  NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
   
 protected:
 // XXXX: Horrible hack! We are doing this because
@@ -509,8 +509,8 @@ public:
   /** routines for managing the preservation of selection across 
    *  various editor actions */
   PRBool   ArePreservingSelection();
-  nsresult PreserveSelectionAcrossActions(nsIDOMSelection *aSel);
-  nsresult RestorePreservedSelection(nsIDOMSelection *aSel);
+  nsresult PreserveSelectionAcrossActions(nsISelection *aSel);
+  nsresult RestorePreservedSelection(nsISelection *aSel);
   void     StopPreservingSelection();
 
 
@@ -722,8 +722,8 @@ public:
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
   
   static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
-  static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
-  static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
+  static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
+  static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
 
   // Helpers to add a node to the selection. 
   // Used by table cell selection methods

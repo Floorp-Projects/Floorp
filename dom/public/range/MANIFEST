@@ -22,5 +22,3 @@
 
 nsIDOMRange.h
 nsIDOMNSRange.h
-nsIDOMSelection.h
-nsIDOMSelectionListener.h

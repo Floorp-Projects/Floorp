@@ -42,8 +42,8 @@ TypeInState::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
-    *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
+  if (aIID.Equals(NS_GET_IID(nsISelectionListener))) {
+    *aInstancePtr = (void*)(nsISelectionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -67,7 +67,7 @@ TypeInState::~TypeInState()
 {
 }
 
-NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *,short)
+NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *,short)
 { 
   Reset(); 
   return NS_OK;

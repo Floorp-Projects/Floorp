@@ -25,8 +25,9 @@
 #include "nsIServiceManager.h"
 
 #include "nsIAutoCopy.h"
-#include "nsIDOMSelection.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
+#include "nsISelectionListener.h"
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsIDOMDocument.h"
@@ -34,7 +35,7 @@
 #include "nsIDocument.h"
 #include "nsSupportsPrimitives.h"
 
-class nsAutoCopyService : public nsIAutoCopyService , public nsIDOMSelectionListener
+class nsAutoCopyService : public nsIAutoCopyService , public nsISelectionListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -43,12 +44,12 @@ public:
   virtual ~nsAutoCopyService(){}//someday maybe we have it able to shutdown during run
 
   //nsIAutoCopyService interfaces
-  NS_IMETHOD Listen(nsIDOMSelection *aDomSelection);
+  NS_IMETHOD Listen(nsISelection *aDomSelection);
   //end nsIAutoCopyService
 
-  //nsIDOMSelectionListener interfaces
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
-  //end nsIDOMSelectionListener 
+  //nsISelectionListener interfaces
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+  //end nsISelectionListener 
 protected:
   nsCOMPtr<nsIClipboard> mClipboard;
   nsCOMPtr<nsIFormatConverter> mXIF;
@@ -57,7 +58,7 @@ protected:
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsAutoCopyService, nsIAutoCopyService,nsIDOMSelectionListener)
+NS_IMPL_ISUPPORTS2(nsAutoCopyService, nsIAutoCopyService,nsISelectionListener)
 
 nsresult
 NS_NewAutoCopyService(nsIAutoCopyService** aResult)
@@ -75,9 +76,13 @@ nsAutoCopyService::nsAutoCopyService()
 }
 
 NS_IMETHODIMP
-nsAutoCopyService::Listen(nsIDOMSelection *aDomSelection)
+nsAutoCopyService::Listen(nsISelection *aDomSelection)
 {
-  return aDomSelection->AddSelectionListener(this);
+  if (!aDomSelection)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelection> selection(aDomSelection);
+  nsCOMPtr<nsISelectionPrivate> selectionPrivate(do_QueryInterface(selection));
+  return selectionPrivate->AddSelectionListener(this);
 }
 
 
@@ -91,7 +96,7 @@ nsAutoCopyService::Listen(nsIDOMSelection *aDomSelection)
  * What we should do, to make our end of the deal faster:
  * Create a singleton transferable with our own magic converter.  When selection
  * changes (use a quick cache to detect ``real'' changes), we put the new
- * nsIDOMSelection in the transferable.  Our magic converter will take care of
+ * nsISelection in the transferable.  Our magic converter will take care of
  * transferable->XIF->whatever-other-format when the time comes to actually
  * hand over the clipboard contents.
  *
@@ -111,7 +116,7 @@ nsAutoCopyService::Listen(nsIDOMSelection *aDomSelection)
 #define DRAGGING 1
 
 NS_IMETHODIMP
-nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason)
+nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason)
 {
   nsresult rv;
 
@@ -121,7 +126,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
     if (NS_FAILED(rv))
       return rv;
   } 
-  if (!(aReason & nsIDOMSelectionListener::MOUSEUP_REASON))
+  if (!(aReason & nsISelectionListener::MOUSEUP_REASON))
     return NS_OK;//dont care if we are still dragging. or if its not from a mouseup
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {

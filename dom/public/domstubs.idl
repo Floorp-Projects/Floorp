@@ -77,12 +77,6 @@ interface nsIDOMDocumentFragment : nsIDOMNode {};
 [scriptable, uuid(a6cf90ce-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMRange : nsISupports {};
 
-[scriptable, uuid(a6cf90e1-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMSelection : nsISupports {};
-
-[scriptable, uuid(a6cf90e2-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMSelectionListener : nsISupports {};
-
 
 %{C++
 #else
@@ -103,7 +97,5 @@ interface nsIDOMSelectionListener : nsISupports {};
     class nsIDOMWindowInternal;
     class nsIDOMDocumentFragment;
     class nsIDOMRange;
-    class nsIDOMSelection;
-    class nsIDOMSelectionListener;
 #endif
 %}

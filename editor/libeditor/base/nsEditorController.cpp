@@ -28,7 +28,7 @@
 #include "nsIEditorShell.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIFormControlFrame.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIHTMLEditor.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
@@ -293,6 +293,8 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   // File menu
   NS_REGISTER_FIRST_COMMAND(nsPrintingCommands, "cmd_print");
   NS_REGISTER_NEXT_COMMAND(nsPrintingCommands, "cmd_printSetup");
+  NS_REGISTER_NEXT_COMMAND(nsPrintingCommands,"cmd_print_button");
+  NS_REGISTER_NEXT_COMMAND(nsPrintingCommands,"cmd_printSetup");
   NS_REGISTER_LAST_COMMAND(nsPrintingCommands, "cmd_printPreview");
   
   // Edit menu

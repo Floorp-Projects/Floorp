@@ -28,7 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsHTMLEditorLog.h"
 #include "nsCOMPtr.h"
@@ -958,7 +958,7 @@ nsHTMLEditorLog::PrintUnicode(const nsString &aString)
 nsresult
 nsHTMLEditorLog::PrintSelection()
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult result;
   PRInt32 rangeCount;
 

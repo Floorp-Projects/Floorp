@@ -24,7 +24,7 @@
 #include "nsEditor.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 
@@ -149,7 +149,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
       mEditor->ShouldTxnSetSelection(&bAdjustSelection);
       if (bAdjustSelection)
       {
-        nsCOMPtr<nsIDOMSelection> selection;
+        nsCOMPtr<nsISelection> selection;
         result = mEditor->GetSelection(getter_AddRefs(selection));
         if (NS_FAILED(result)) return result;
         if (!selection) return NS_ERROR_NULL_POINTER;

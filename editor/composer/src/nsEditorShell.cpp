@@ -69,7 +69,8 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 
 #include "nsIFileWidget.h"
 #include "nsFileSpec.h"
@@ -386,12 +387,13 @@ nsEditorShell::ResetEditingState()
   // now, unregister the selection listener, if there was one
   if (mStateMaintainer)
   {
-    nsCOMPtr<nsIDOMSelection> domSelection;
+    nsCOMPtr<nsISelection> domSelection;
     // using a scoped result, because we don't really care if this fails
     rv = GetEditorSelection(getter_AddRefs(domSelection));
     if (NS_SUCCEEDED(rv) && domSelection)
     {
-      domSelection->RemoveSelectionListener(mStateMaintainer);
+      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
+      selPriv->RemoveSelectionListener(mStateMaintainer);
       NS_IF_RELEASE(mStateMaintainer);
     }
   }
@@ -483,11 +485,12 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   if (NS_FAILED(rv)) return rv;
   
   // set it up as a selection listener
-  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsCOMPtr<nsISelection> domSelection;
   rv = GetEditorSelection(getter_AddRefs(domSelection));
   if (NS_FAILED(rv)) return rv;
 
-  rv = domSelection->AddSelectionListener(mStateMaintainer);
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
+  rv = selPriv->AddSelectionListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
 
   // and set it up as a doc state listener
@@ -2566,7 +2569,7 @@ nsEditorShell::Rewrap(PRBool aRespectNewlines)
   printf("nsEditorShell::Rewrap to %ld columns\n", (long)wrapCol);
 #endif
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   rv = GetEditorSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
@@ -2630,7 +2633,7 @@ nsEditorShell::StripCites()
   printf("nsEditorShell::StripCites()\n");
 #endif
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult rv = GetEditorSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
@@ -3328,7 +3331,7 @@ nsEditorShell::GetEditor(nsIEditor** aEditor)
 
 
 NS_IMETHODIMP
-nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
+nsEditorShell::GetEditorSelection(nsISelection** aEditorSelection)
 {
   nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
   if (editor)

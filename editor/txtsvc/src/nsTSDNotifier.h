@@ -80,8 +80,8 @@ public:
   NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
   NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
-  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection);
-  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection);
+  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection);
+  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection);
 };
 
 #endif // nsTSDNotifier_h__

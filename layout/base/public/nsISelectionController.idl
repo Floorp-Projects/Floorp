@@ -24,11 +24,11 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-
+#include "nsISelection.idl"
 
 %{C++
 
-class nsIDOMSelection;
+class nsISelection;
 typedef short SelectionType;
 typedef short SelectionRegion;
 class nsIDOMNode;
@@ -86,7 +86,7 @@ interface nsISelectionController : nsISupports
    * @param aType will hold the type of selection //SelectionType
    * @param _return will hold the return value
    */
-    nsIDOMSelection getSelection(in short type);
+    nsISelection getSelection(in short type);
 
    /**
    * ScrollSelectionIntoView scrolls a region of the selection,

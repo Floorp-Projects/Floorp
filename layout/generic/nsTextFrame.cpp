@@ -57,7 +57,7 @@
 #include "nsTextTransformer.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrameSelection.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsILookAndFeel.h"
 

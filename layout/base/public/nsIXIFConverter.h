@@ -26,7 +26,7 @@
 #include "nsString.h"
 
 
-class nsIDOMSelection;
+class nsISelection;
 
 
 #define NS_IXIFCONVERTER_IID  \
@@ -112,9 +112,9 @@ public:
 
   //NS_IMETHOD WriteDebugFile();        // saves to a temp file
 
-  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection) = 0;
+  NS_IMETHOD SetSelection(nsISelection* aSelection) = 0;
 
-  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection) = 0;
+  NS_IMETHOD GetSelection(nsISelection** aSelection) = 0;
 };
 
 #endif //nsIXIFConverter_h__

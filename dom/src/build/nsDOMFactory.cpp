@@ -132,8 +132,6 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMSelection.h"
-#include "nsIDOMSelectionListener.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMCRMFObject.h"
@@ -773,8 +771,6 @@ void XXXDomNeverCalled()
     NS_NewScriptCSSMediaRule(0, 0, 0, 0);
     NS_NewScriptCSSRuleList(0, 0, 0, 0);
     NS_NewScriptRange(0, 0, 0, 0);
-    NS_NewScriptSelection(0, 0, 0, 0);
-    NS_NewScriptSelectionListener(0, 0, 0, 0);
     NS_NewScriptHTMLFormControlList(0, 0, 0, 0);
     NS_InitDocumentClass(nsnull, nsnull);
     NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);

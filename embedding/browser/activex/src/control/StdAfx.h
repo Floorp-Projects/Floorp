@@ -76,7 +76,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIPresContext.h"
 #include "nsIPrompt.h"
 

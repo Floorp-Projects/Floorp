@@ -28,7 +28,7 @@
 
 class nsIDocumentEncoder;
 class nsIDocument;
-class nsIDOMSelection;
+class nsISelection;
 class nsIOutputStream;
 class nsISupportsArray;
 
@@ -119,7 +119,7 @@ public:
    *  selection is used for encoding, otherwise the entire
    *  document is encoded.
    */
-  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection) = 0;
+  NS_IMETHOD SetSelection(nsISelection* aSelection) = 0;
 
   /**
    *  Documents typically have an intrinsic character set.

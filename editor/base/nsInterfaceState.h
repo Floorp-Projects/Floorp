@@ -25,7 +25,7 @@
 #define nsInterfaceState_h__
 
 
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsIDocumentStateListener.h"
 #include "nsITransactionListener.h"
 #include "nsIWebShell.h"
@@ -38,7 +38,7 @@ class nsIDOMDocument;
 // class responsible for communicating changes in local state back to the UI.
 // This is currently somewhat tied to a given XUL UI implementation
 
-class nsInterfaceState : public nsIDOMSelectionListener,
+class nsInterfaceState : public nsISelectionListener,
                          public nsIDocumentStateListener,
                          public nsITransactionListener,
                          public nsITimerCallback
@@ -56,8 +56,8 @@ public:
   // here to target certain things for updating.
   NS_IMETHOD    ForceUpdate(const PRUnichar *tagToUpdate);
   
-  // nsIDOMSelectionListener interface
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
+  // nsISelectionListener interface
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
@@ -145,6 +145,6 @@ protected:
   
 };
 
-extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult);
+extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMDocument* aChromeDoc, nsISelectionListener** aInstancePtrResult);
 
 #endif // nsInterfaceState_h__

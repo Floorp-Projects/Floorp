@@ -887,31 +887,6 @@
     "screen.pixeldepth", \
     "screen.top", \
     "screen.width", \
-    "selection.addrange", \
-    "selection.addselectionlistener", \
-    "selection.anchornode", \
-    "selection.anchoroffset", \
-    "selection.clearselection", \
-    "selection.collapse", \
-    "selection.collapsetoend", \
-    "selection.collapsetostart", \
-    "selection.containsnode", \
-    "selection.deletefromdocument", \
-    "selection.endbatchchanges", \
-    "selection.extend", \
-    "selection.focusnode", \
-    "selection.focusoffset", \
-    "selection.gethint", \
-    "selection.getrangeat", \
-    "selection.iscollapsed", \
-    "selection.rangecount", \
-    "selection.removerange", \
-    "selection.removeselectionlistener", \
-    "selection.selectallchildren", \
-    "selection.sethint", \
-    "selection.startbatchchanges", \
-    "selection.tostring", \
-    "selectionlistener.notifyselectionchanged", \
     "stylesheet.disabled", \
     "stylesheet.href", \
     "stylesheet.media", \

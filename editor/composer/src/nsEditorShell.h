@@ -33,7 +33,7 @@
 #include "nsIEditorShell.h"
 #include "nsIEditorController.h"
 #include "nsIDocumentLoaderObserver.h"
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrompt.h"
 #include "nsIStreamObserver.h"

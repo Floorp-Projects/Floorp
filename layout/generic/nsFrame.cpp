@@ -49,7 +49,7 @@
 #include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIFrameSelection.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
@@ -1323,7 +1323,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                         getter_AddRefs(selection)))){
     rv = selection->Collapse(startNode,startpos.mContentOffset);

@@ -24,7 +24,7 @@
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * NOTE!!  This is not a general class, but specific to layout and frames.
  * Consumers looking for the general selection interface should look at
- * nsIDOMSelection.
+ * nsISelection.
  */
 
 #ifndef nsIFrameSelection_h___
@@ -33,7 +33,7 @@
 #include "nsISupports.h"
 #include "nsIFrame.h"
 #include "nsIFocusTracker.h"   
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -244,9 +244,9 @@ public:
 
   /** GetSelection
    * no query interface for selection. must use this method now.
-   * @param aSelectionType enum value defined in nsIDOMSelection for the domseleciton you want.
+   * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
    */
-  NS_IMETHOD GetSelection(SelectionType aSelectionType, nsIDOMSelection **aDomSelection)=0;
+  NS_IMETHOD GetSelection(SelectionType aSelectionType, nsISelection **aSelection)=0;
 
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,
@@ -259,7 +259,7 @@ public:
 
   /** RepaintSelection repaints the selected frames that are inside the selection
    *  specified by aSelectionType.
-   * @param aSelectionType enum value defined in nsIDOMSelection for the domseleciton you want.
+   * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
    */
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)=0;
 

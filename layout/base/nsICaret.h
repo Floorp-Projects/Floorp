@@ -44,7 +44,7 @@ public:
 
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
   
-  NS_IMETHOD SetCaretDOMSelection(nsIDOMSelection *aDOMSel) = 0;
+  NS_IMETHOD SetCaretDOMSelection(nsISelection *aDOMSel) = 0;
 
   /** SetCaretVisible will set the visibility of the caret
    *  @param inMakeVisible PR_TRUE to show the caret, PR_FALSE to hide it
@@ -69,7 +69,7 @@ public:
    *  If the selection is not collapsed, this returns the location of the focus pos,
    *    and false in outIsCollapsed.
    */
-  NS_IMETHOD GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel) = 0;
+  NS_IMETHOD GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *aDOMSel) = 0;
 
   /** ClearFrameRefs
    *  The caret stores a reference to the frame that the caret was last drawn in.

@@ -31,7 +31,7 @@
 
 class nsIDOMWindowInternal;
 class nsIDOMDocument;
-class nsIDOMSelection;
+class nsISelection;
 class nsIDOMElement;
 class nsIDOMNode;
 
@@ -44,7 +44,7 @@ interface nsIEditor;
 interface nsIEditorShell : nsISupports
 {
   readonly attribute nsIDOMDocument    editorDocument;
-  readonly attribute nsIDOMSelection   editorSelection;
+  readonly attribute nsISelection   editorSelection;
   readonly attribute nsISelectionController   selectionController;
   
            attribute nsIDOMWindowInternal      webShellWindow;

@@ -45,7 +45,7 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsIDOMDocument.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMWindowInternal.h"
 
 #include "mozXMLT.h"

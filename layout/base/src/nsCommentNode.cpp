@@ -26,7 +26,8 @@
 #include "nsIContent.h"
 #include "nsFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIXIFConverter.h"
 #include "nsIDocument.h"
 #include "nsIEnumerator.h"
@@ -403,7 +404,7 @@ nsresult
 nsCommentNode::ConvertContentToXIF(nsIXIFConverter* aConverter) const
 {
   const nsIContent* content = this;
-  nsCOMPtr<nsIDOMSelection> sel;
+  nsCOMPtr<nsISelection> sel;
   aConverter->GetSelection(getter_AddRefs(sel));
   nsIDocument* document;
   nsresult res;
@@ -423,7 +424,8 @@ nsCommentNode::ConvertContentToXIF(nsIXIFConverter* aConverter) const
   if (sel != nsnull && document->IsInSelection(sel,content))
   {
     nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(sel->GetEnumerator(&enumerator))) {
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(sel));
+    if (NS_SUCCEEDED(selPrivate->GetEnumerator(&enumerator))) {
       for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {

@@ -33,7 +33,7 @@
 #include "nsITextContent.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMText.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -1134,7 +1134,7 @@ NS_IMETHODIMP mozXMLTermSession::Abort(mozILineTermAux* lineTermAux,
     selCon = do_QueryInterface(mPresShell);
     if (!selCon)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                       getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
@@ -1177,7 +1177,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
   selCon = do_QueryInterface(mPresShell);
   if (!selCon)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                     getter_AddRefs(selection));
@@ -2245,7 +2245,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
   nsCRT::free(temCString);
 
   // Get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
   selCon = do_QueryInterface(mPresShell);
@@ -2836,7 +2836,7 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
   }
 
   // Get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
   selCon = do_QueryInterface(mPresShell);
@@ -3412,7 +3412,7 @@ NS_IMETHODIMP mozXMLTermSession::PositionScreenCursor(PRInt32 aRow,
   }
 
   // Get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
   selCon = do_QueryInterface(mPresShell);

@@ -37,7 +37,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
@@ -260,13 +260,13 @@ public:
     NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
-    NS_IMETHOD GetSelection(nsIDOMSelection** aSelection);
+    NS_IMETHOD GetSelection(nsISelection** aSelection);
 
     NS_IMETHOD SelectAll();
 
     NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    NS_IMETHOD CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection);
+    NS_IMETHOD CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection);
 
     NS_IMETHOD ToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode);
 
@@ -288,7 +288,7 @@ public:
 
     virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
 
-    virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
+    virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
 
     virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
 
@@ -540,7 +540,7 @@ protected:
     nsString                   mCharSetID;
     nsVoidArray                mCharSetObservers;
     nsVoidArray                mStyleSheets;
-    nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER]
+    nsCOMPtr<nsISelection>  mSelection;          // [OWNER]
     PRInt8                     mDisplaySelection;
     PRBool                     mIsKeyBindingDoc;
     nsVoidArray                mPresShells;

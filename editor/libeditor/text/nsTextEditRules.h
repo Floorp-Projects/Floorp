@@ -53,8 +53,8 @@ public:
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
-  NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
+  NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
+  NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty);
@@ -89,40 +89,40 @@ protected:
 
   // nsTextEditRules implementation methods
   nsresult WillInsertText(  PRInt32          aAction,
-                            nsIDOMSelection *aSelection, 
+                            nsISelection *aSelection, 
                             PRBool          *aCancel,
                             PRBool          *aHandled,
                             const nsString  *inString,
                             nsString        *outString,
                             PRInt32          aMaxLength);
-  nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
-  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillInsert(nsISelection *aSelection, PRBool *aCancel);
+  nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, 
+  nsresult WillDeleteSelection(nsISelection *aSelection, 
                                nsIEditor::EDirection aCollapsedAction, 
                                PRBool *aCancel,
                                PRBool *aHandled);
-  nsresult DidDeleteSelection(nsIDOMSelection *aSelection, 
+  nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aCollapsedAction, 
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillSetTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidSetTextProperty(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillRemoveTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidRemoveTextProperty(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidUndo(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillRedo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult DidRedo(nsISelection *aSelection, nsresult aResult);
 
   /** called prior to nsIEditor::OutputToString
     * @param aSelection
@@ -131,13 +131,13 @@ protected:
     * @param aOutCancel if set to PR_TRUE, the caller should cancel the operation
     *                   and use aOutText as the result.
     */
-  nsresult WillOutputText(nsIDOMSelection *aSelection,
+  nsresult WillOutputText(nsISelection *aSelection,
                           const nsString  *aInFormat,
                           nsString *aOutText, 
                           PRBool   *aOutCancel, 
                           PRBool *aHandled);
 
-  nsresult DidOutputText(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult DidOutputText(nsISelection *aSelection, nsresult aResult);
 
 
   // helper functions
@@ -146,11 +146,11 @@ protected:
   nsresult ReplaceNewlines(nsIDOMRange *aRange);
   
   /** creates a bogus text node if the document has no editable content */
-  nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
+  nsresult CreateBogusNodeIfNeeded(nsISelection *aSelection);
 
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
-  nsresult TruncateInsertionIfNeeded(nsIDOMSelection *aSelection, 
+  nsresult TruncateInsertionIfNeeded(nsISelection *aSelection, 
                                            const nsString  *aInString,
                                            nsString        *aOutString,
                                            PRInt32          aMaxLength);
@@ -163,7 +163,7 @@ protected:
 
   PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
 
-  nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aDirection);
+  nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aDirection);
   
   // data members
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor

@@ -87,7 +87,7 @@
 
 #include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
 #include "nsDOMError.h"
@@ -3355,7 +3355,7 @@ NS_IMETHODIMP
 nsDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 {
   nsresult result=NS_OK;
-  nsCOMPtr<nsIDOMSelection> sel;
+  nsCOMPtr<nsISelection> sel;
   aConverter->GetSelection(getter_AddRefs(sel));
   if (sel)
   {
@@ -3387,7 +3387,7 @@ nsDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 } 
 
 NS_IMETHODIMP
-nsDocument::CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection)
+nsDocument::CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection)
 {
     nsresult result=NS_OK;
 
@@ -3777,7 +3777,7 @@ nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
  *  @return  PR_TRUE if the content is found within the selection
  */
 PRBool
-nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* aContent) const
+nsDocument::IsInSelection(nsISelection* aSelection, const nsIContent* aContent) const
 {
   PRBool aYes = PR_FALSE;
   nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent *) aContent));

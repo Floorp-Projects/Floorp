@@ -23,7 +23,7 @@
 #ifndef TypeInState_h__
 #define TypeInState_h__
 
-#include "nsIDOMSelectionListener.h"
+#include "nsISelectionListener.h"
 #include "nsIEditProperty.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -38,7 +38,7 @@ struct PropItem
   ~PropItem();
 };
 
-class TypeInState : public nsIDOMSelectionListener
+class TypeInState : public nsISelectionListener
 {
 public:
 
@@ -48,7 +48,7 @@ public:
   void Reset();
   virtual ~TypeInState();
 
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
 
   nsresult SetProp(nsIAtom *aProp);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);

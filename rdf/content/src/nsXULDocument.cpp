@@ -1835,7 +1835,7 @@ nsXULDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetSelection(nsIDOMSelection** aSelection)
+nsXULDocument::GetSelection(nsISelection** aSelection)
 {
     if (!mSelection) {
         NS_ASSERTION(0,"not initialized");
@@ -2012,7 +2012,7 @@ nsXULDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurren
 }
 
 PRBool
-nsXULDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const
+nsXULDocument::IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const
 {
   PRBool aYes = PR_FALSE;
   nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent *) aContent));
@@ -6702,7 +6702,7 @@ NS_IMETHODIMP
 nsXULDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 {
   nsresult result=NS_OK;
-  nsCOMPtr<nsIDOMSelection> sel;
+  nsCOMPtr<nsISelection> sel;
   aConverter->GetSelection(getter_AddRefs(sel));
   if (sel)
   {
@@ -6734,7 +6734,7 @@ nsXULDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 } 
 
 NS_IMETHODIMP
-nsXULDocument::CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection)
+nsXULDocument::CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection)
 {
   nsresult result=NS_OK;
 

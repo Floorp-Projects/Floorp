@@ -54,7 +54,7 @@ class nsINameSpaceManager;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
 class nsIWordBreaker;
-class nsIDOMSelection;
+class nsISelection;
 class nsIChannel;
 class nsIPrincipal;
 class nsINodeInfoManager;
@@ -306,14 +306,14 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
+  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection = nsnull) = 0;
   NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
   virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
   virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
   virtual void FinishConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
 
   /* Helper methods to help determine the logical positioning of content */
-  virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const = 0;
+  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const = 0;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const = 0;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const = 0;
 

@@ -24,7 +24,7 @@
 
 #include "nsIEditor.h"
 #include "TextEditorTest.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -111,7 +111,7 @@ nsresult TextEditorTest::InitDoc()
 
 nsresult TextEditorTest::TestInsertBreak()
 {
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult result = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(result);
   TEST_POINTER(selection.get());
@@ -156,7 +156,7 @@ nsresult TextEditorTest::TestTextProperties()
 
   // set the whole text node to bold
   printf("set the whole first text node to bold\n");
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   result = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(result);
   TEST_POINTER(selection.get());

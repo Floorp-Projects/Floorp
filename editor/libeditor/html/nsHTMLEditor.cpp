@@ -39,7 +39,8 @@
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
@@ -307,15 +308,16 @@ nsHTMLEditor::~nsHTMLEditor()
   
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   // if we don't get the selection, just skip this
   if (NS_SUCCEEDED(result) && selection) 
   {
-    nsCOMPtr<nsIDOMSelectionListener>listener;
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+    nsCOMPtr<nsISelectionListener>listener;
     listener = do_QueryInterface(mTypeInState);
     if (listener) {
-      selection->RemoveSelectionListener(listener); 
+      selPriv->RemoveSelectionListener(listener); 
     }
   }
   nsCOMPtr<nsIDOMEventReceiver> erP;
@@ -417,15 +419,16 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}
   NS_ADDREF(mTypeInState);
 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) { return result; }
   if (selection) 
   {
-    nsCOMPtr<nsIDOMSelectionListener>listener;
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+    nsCOMPtr<nsISelectionListener>listener;
     listener = do_QueryInterface(mTypeInState);
     if (listener) {
-      selection->AddSelectionListener(listener); 
+      selPriv->AddSelectionListener(listener); 
     }
   }
 
@@ -716,7 +719,7 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
     
     if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
     {
-      nsCOMPtr<nsIDOMSelection>selection;
+      nsCOMPtr<nsISelection>selection;
       res = GetSelection(getter_AddRefs(selection));
       if (NS_FAILED(res)) return res;
       PRInt32 offset;
@@ -866,7 +869,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
     *outHandled = PR_TRUE;
     // put selection in right place
     // Use table code to get selection and index to new row...
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     nsCOMPtr<nsIDOMElement> tblElement;
     nsCOMPtr<nsIDOMElement> cell;
     PRInt32 row;
@@ -943,23 +946,24 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRI
   *outBRNode = brNode;
   if (*outBRNode && (aSelect != eNone))
   {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
     res = GetNodeLocation(*outBRNode, &parent, &offset);
     if (NS_FAILED(res)) return res;
     if (aSelect == eNext)
     {
       // position selection after br
-      selection->SetHint(PR_TRUE);
+      selPriv->SetInterlinePosition(PR_TRUE);
       res = selection->Collapse(parent, offset+1);
     }
     else if (aSelect == ePrevious)
     {
       // position selection before br
-      selection->SetHint(PR_TRUE);
+      selPriv->SetInterlinePosition(PR_TRUE);
       res = selection->Collapse(parent, offset);
     }
   }
@@ -977,7 +981,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPt
 NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 {
   PRBool bCollapsed;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   if (!outBRNode) return NS_ERROR_NULL_POINTER;
   *outBRNode = nsnull;
@@ -987,6 +991,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
   res = selection->GetIsCollapsed(&bCollapsed);
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
@@ -1005,7 +1010,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   // position selection after br
   res = GetNodeLocation(*outBRNode, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
-  selection->SetHint(PR_TRUE);
+  selPriv->SetInterlinePosition(PR_TRUE);
   res = selection->Collapse(selNode, selOffset+1);
   
   return res;
@@ -1020,10 +1025,11 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   ForceCompositionEnd();
 
   nsresult res;
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
@@ -1046,7 +1052,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   {
     // get selection range enumerator
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(getter_AddRefs(enumerator));
+    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_FAILED(res)) return res;
     if (!enumerator)    return NS_ERROR_FAILURE;
 
@@ -1741,16 +1747,17 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   aAll=PR_TRUE;
   aFirst=PR_FALSE;
   PRBool first=PR_TRUE;
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
   nsCOMPtr<nsIDOMNode> collapsedNode;
   nsCOMPtr<nsIEnumerator> enumerator;
-  result = selection->GetEnumerator(getter_AddRefs(enumerator));
+  result = selPriv->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result)) return result;
   if (!enumerator) return NS_ERROR_NULL_POINTER;
 
@@ -1934,10 +1941,11 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
   ForceCompositionEnd();
 
   nsresult res;
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
@@ -1965,7 +1973,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
   {
     // get selection range enumerator
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(getter_AddRefs(enumerator));
+    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_FAILED(res)) return res;
     if (!enumerator)    return NS_ERROR_FAILURE;
 
@@ -2069,7 +2077,7 @@ NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
   return RelativeFontChange(-1);
 }
 
-nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+nsresult nsHTMLEditor::GetTextSelectionOffsets(nsISelection *aSelection,
                                                PRInt32 &aOutStartOffset, 
                                                PRInt32 &aOutEndOffset)
 {
@@ -2087,7 +2095,9 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
   aSelection->GetFocusOffset(&endOffset);
 
   nsCOMPtr<nsIEnumerator> enumerator;
-  result = aSelection->GetEnumerator(getter_AddRefs(enumerator));
+  nsCOMPtr<nsISelection> selection(aSelection);
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  result = selPriv->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result)) return result;
   if (!enumerator) return NS_ERROR_NULL_POINTER;
 
@@ -2255,12 +2265,12 @@ nsHTMLEditor::SetCaretToDocumentStart()
 }
 
 nsresult 
-nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSelection, nsIDOMNode *aNode)
+nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
   nsresult res;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   if (aSelection)
   {
     selection = aSelection;
@@ -2295,7 +2305,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
   nsresult result;
 
@@ -2375,7 +2385,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kInsertText;
   PRInt32 opID = kOpInsertText;
@@ -2439,7 +2449,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   
   nsresult res;
 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
 
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
@@ -2562,7 +2572,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
 NS_IMETHODIMP
 nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -2669,7 +2679,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
 {
   ForceCompositionEnd();
 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
@@ -2753,7 +2763,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
   // pre-process
@@ -2800,16 +2810,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
         if (!selection) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
         if (NS_SUCCEEDED(res))
         {
+          nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
           if (-1==offsetInParent) 
           {
             nextNode->GetParentNode(getter_AddRefs(parent));
             res = GetChildOffset(nextNode, parent, offsetInParent);
             if (NS_SUCCEEDED(res)) {
-              // SetHint(PR_TRUE) means we want the caret to stick to the content on the "right".
+              // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
               // We want the caret to stick to whatever is past the break.  This is
               // because the break is on the same line we were on, but the next content
               // will be on the following line.
-              selection->SetHint(PR_TRUE);
+              selPriv->SetInterlinePosition(PR_TRUE);
               res = selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
             }
           }
@@ -2843,7 +2854,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res) || !selection)
     return NS_ERROR_FAILURE;
@@ -2976,7 +2987,7 @@ nsHTMLEditor::DeleteSelectionAndCreateNode(const nsString& aTag,
   NS_IF_ADDREF(*aNewNode);
 
   // we want the selection to be just after the new node
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -2993,7 +3004,7 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
   // Must be sure that element is contained in the document body
   if (IsElementInBody(aElement))
   {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3026,7 +3037,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
   // Be sure the element is contained in the document body
   if (aElement && IsElementInBody(aElement))
   {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3077,10 +3088,11 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
   if (!aTagList) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res;
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   // Find out if the selection is collapsed:
   PRBool isCollapsed;
@@ -3120,7 +3132,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
 
   // else non-collapsed selection
   nsCOMPtr<nsIEnumerator> enumerator;
-  res = selection->GetEnumerator(getter_AddRefs(enumerator));
+  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
   if (!enumerator) return NS_ERROR_NULL_POINTER;
 
@@ -3354,7 +3366,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType, PRBool entireList)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
@@ -3432,7 +3444,7 @@ nsHTMLEditor::RemoveList(const nsString& aListType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
@@ -3461,7 +3473,7 @@ nsHTMLEditor::MakeDefinitionItem(const nsString& aItemType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
@@ -3491,7 +3503,7 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
@@ -3575,7 +3587,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
   
   // pre-process
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3656,7 +3668,7 @@ nsHTMLEditor::Align(const nsString& aAlignType)
   PRBool cancel, handled;
   
   // Find out if the selection is collapsed:
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3684,7 +3696,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
   else
   {
     // If no node supplied, get it from anchor node of current selection
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NULL_POINTER;
@@ -3802,10 +3814,11 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   *aReturn = nsnull;
   
   // First look for a single element in selection
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   PRBool bNodeFound = PR_FALSE;
   res=NS_ERROR_NOT_INITIALIZED;
@@ -3938,7 +3951,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
     if (!isCollapsed)   // Don't bother to examine selection if it is collapsed
     {
       nsCOMPtr<nsIEnumerator> enumerator;
-      res = selection->GetEnumerator(getter_AddRefs(enumerator));
+      res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
       if (NS_SUCCEEDED(res))
       {
         if(!enumerator)
@@ -4108,7 +4121,7 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   nsresult res=NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
 
   if (!aAnchorElement) return NS_ERROR_NULL_POINTER; 
 
@@ -4761,7 +4774,7 @@ nsHTMLEditor::Undo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kUndo);
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   GetSelection(getter_AddRefs(selection));
   PRBool cancel, handled;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -4784,7 +4797,7 @@ nsHTMLEditor::Redo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRedo);
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   GetSelection(getter_AddRefs(selection));
   PRBool cancel, handled;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -4800,7 +4813,7 @@ nsHTMLEditor::Redo(PRUint32 aCount)
 
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
     return res;
@@ -4819,7 +4832,7 @@ NS_IMETHODIMP nsHTMLEditor::CanCut(PRBool &aCanCut)
 {
   aCanCut = PR_FALSE;
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
     
@@ -4843,7 +4856,7 @@ NS_IMETHODIMP nsHTMLEditor::CanCopy(PRBool &aCanCopy)
 {
   aCanCopy = PR_FALSE;
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
     
@@ -5062,7 +5075,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       rv = GetDocument(getter_AddRefs(destdomdoc)); 
       if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIDOMSelection> selection;
+      nsCOMPtr<nsISelection> selection;
       rv = GetSelection(getter_AddRefs(selection));
       if (NS_FAILED(rv)) return rv;
       if (!selection) return NS_ERROR_FAILURE;
@@ -5180,7 +5193,7 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
     return NS_OK;
   }
    
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
     
@@ -5221,7 +5234,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
   nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
 
   /* get the selection to be dragged */
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
@@ -5406,7 +5419,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation,
   nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -5559,7 +5572,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -5634,7 +5647,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   nsresult res = NS_OK;
 
   // get selection
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -5718,7 +5731,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
   }
   else
   {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
 
     // Set the wrap column.  If our wrap column is 0,
     // i.e. wrap to body width, then don't set it, let the
@@ -5741,11 +5754,13 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
     //is this a body?? do we want to output the whole doc?
     // Set the selection, if appropriate:
+    nsCOMPtr<nsISelectionPrivate> selPriv;
     if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
     {
       rv = GetSelection(getter_AddRefs(selection));
       if (NS_FAILED(rv))
         return rv;
+      selPriv = do_QueryInterface(selection);
     }
     else if (nsHTMLEditUtils::IsBody(rootElement))
     {
@@ -5790,10 +5805,11 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
         return NS_ERROR_FAILURE;
       rv = nsComponentManager::CreateInstance(kCDOMSelectionCID,
                                  nsnull,
-                                 NS_GET_IID(nsIDOMSelection),
+                                 NS_GET_IID(nsISelection),
                                  getter_AddRefs(selection));
       if (selection)
       {
+        selPriv = do_QueryInterface(selection);
   //get the independent selection interface
         nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
         if (indSel)
@@ -5816,7 +5832,18 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
         }
       }
     }
-    return selection->ToString(aFormatType, aFlags, wc, aOutputString);
+    PRUnichar *tmp;
+    char *tmpformattype= ToNewCString(aFormatType);//crap copied string
+    if (!tmpformattype)
+      return NS_ERROR_NULL_POINTER;
+    rv = selPriv->ToStringWithFormat(tmpformattype, aFlags, wc, &tmp);
+    if (NS_SUCCEEDED(rv) && tmp)
+    {
+      nsMemory::Free(tmpformattype);
+      aOutputString.Assign(tmp);
+      nsMemory::Free(tmp);
+    }
+    return rv;
   }
 #if 0
 
@@ -5882,7 +5909,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
     // Set the selection, if appropriate:
     if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
     {
-      nsCOMPtr<nsIDOMSelection> selection;
+      nsCOMPtr<nsISelection> selection;
       rv = GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(rv) && selection)
         encoder->SetSelection(selection);
@@ -5969,7 +5996,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   // Set the selection, if appropriate:
   if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
   {
-    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsISelection> selection;
     rv = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(rv) && selection)
       encoder->SetSelection(selection);
@@ -5996,7 +6023,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   return encoder->EncodeToStream(aOutputStream);
 }
 
-static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsIDOMSelection> aSelection, nsWeakPtr aDocWeak)
+static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)
 {
   nsresult res = NS_OK;
   // Set selection around <head> node
@@ -6036,7 +6063,7 @@ static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsIDOMSelection> aSelect
 NS_IMETHODIMP
 nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
 {
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -6109,7 +6136,7 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
     return NS_OK;
   }
   
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
 
@@ -6140,7 +6167,7 @@ nsHTMLEditor::GetReconversionString(nsReconversionEventReply* aReply)
 {
   nsresult res;
 
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res) || !selection)
     return (res == NS_OK) ? NS_ERROR_FAILURE : res;
@@ -6289,7 +6316,7 @@ nsHTMLEditor::TagCanContainTag(const nsString &aParentTag, const nsString &aChil
 
 
 NS_IMETHODIMP 
-nsHTMLEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
+nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   nsresult res;
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
@@ -6491,7 +6518,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
           }
         }
         // Set selection at beginning of deepest node
-        nsCOMPtr<nsIDOMSelection> selection;
+        nsCOMPtr<nsISelection> selection;
         res = GetSelection(getter_AddRefs(selection));
         if (NS_SUCCEEDED(res) && selection && firstChild)
         {
@@ -6588,7 +6615,7 @@ NS_IMETHODIMP
 nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -6920,7 +6947,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::SetSelectionAtDocumentStart(nsIDOMSelection *aSelection)
+nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 {
   nsCOMPtr<nsIDOMElement> bodyElement;
   nsresult res = GetRootElement(getter_AddRefs(bodyElement));  
@@ -6946,11 +6973,11 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   ForceCompositionEnd();
 
   // Get the selection 
-  nsCOMPtr<nsIDOMSelection>selection;
+  nsCOMPtr<nsISelection>selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
-  
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));  
   // Is the selection collapsed?
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
@@ -6974,7 +7001,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
 
   // get selection range enumerator
   nsCOMPtr<nsIEnumerator> enumerator;
-  res = selection->GetEnumerator(getter_AddRefs(enumerator));
+  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
   if (!enumerator)    return NS_ERROR_FAILURE;
 

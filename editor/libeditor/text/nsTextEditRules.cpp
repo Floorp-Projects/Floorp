@@ -29,7 +29,8 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
@@ -107,7 +108,7 @@ nsTextEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
   // call SetFlags only aftet mEditor has been initialized!
   SetFlags(aFlags);
-  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
 
@@ -203,7 +204,7 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   nsresult res = NS_OK;
   if (!--mActionNesting)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
+    nsCOMPtr<nsISelection>selection;
     res = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
   
@@ -219,7 +220,7 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 
 
 NS_IMETHODIMP 
-nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
+nsTextEditRules::WillDoAction(nsISelection *aSelection, 
                               nsRulesInfo *aInfo, 
                               PRBool *aCancel, 
                               PRBool *aHandled)
@@ -273,7 +274,7 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
 }
   
 NS_IMETHODIMP 
-nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
+nsTextEditRules::DidDoAction(nsISelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
   // dont let any txns in here move the selection around behind our back.
@@ -327,7 +328,7 @@ nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
 
 
 nsresult
-nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel)
     return NS_ERROR_NULL_POINTER;
@@ -383,7 +384,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
 }
 
 nsresult
-nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
@@ -420,7 +421,7 @@ nsTextEditRules::GetTopEnclosingPre(nsIDOMNode *aNode,
 }
 
 nsresult
-nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -519,7 +520,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
 }
 
 nsresult
-nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
 {
   // we only need to execute the stuff below if we are a plaintext editor.
   // html editors have a different mechanism for putting in mozBR's
@@ -543,6 +544,8 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
     if (NS_FAILED(res)) return res;
     if (bIsLast)
     {
+      nsCOMPtr<nsISelection> sel(aSelection);
+      nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));
       // need to insert special moz BR. Why?  Because if we don't
       // the user will see no new line for the break.  Also, things
       // like table cells won't grow in height.
@@ -551,7 +554,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
       if (NS_FAILED(res)) return res;
-      aSelection->SetHint(PR_TRUE);
+      selPrivate->SetInterlinePosition(PR_TRUE);
       res = aSelection->Collapse(selNode,selOffset);
       if (NS_FAILED(res)) return res;
     }
@@ -562,7 +565,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
-                                nsIDOMSelection *aSelection, 
+                                nsISelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
                                 const nsString  *inString,
@@ -800,7 +803,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 }
 
 nsresult
-nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection, 
+nsTextEditRules::DidInsertText(nsISelection *aSelection, 
                                nsresult aResult)
 {
   return DidInsert(aSelection, aResult);
@@ -809,7 +812,7 @@ nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection,
 
 
 nsresult
-nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillSetTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) 
     { return NS_ERROR_NULL_POINTER; }
@@ -823,13 +826,13 @@ nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCance
 }
 
 nsresult
-nsTextEditRules::DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidSetTextProperty(nsISelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-nsTextEditRules::WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillRemoveTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) 
     { return NS_ERROR_NULL_POINTER; }
@@ -843,13 +846,13 @@ nsTextEditRules::WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCa
 }
 
 nsresult
-nsTextEditRules::DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidRemoveTextProperty(nsISelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
+nsTextEditRules::WillDeleteSelection(nsISelection *aSelection, 
                                      nsIEditor::EDirection aCollapsedAction, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
@@ -897,7 +900,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
 // if the document is empty, insert a bogus text node with a &nbsp;
 // if we ended up with consecutive text nodes, merge them
 nsresult
-nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, 
+nsTextEditRules::DidDeleteSelection(nsISelection *aSelection, 
                                     nsIEditor::EDirection aCollapsedAction, 
                                     nsresult aResult)
 {
@@ -992,7 +995,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
 }
 
 nsresult
-nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -1008,7 +1011,7 @@ nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *
  * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
  */
 nsresult
-nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
 {
   nsresult res = aResult;  // if aResult is an error, we return it.
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
@@ -1035,7 +1038,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillRedo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -1046,7 +1049,7 @@ nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *
 }
 
 nsresult
-nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
 {
   nsresult res = aResult;  // if aResult is an error, we return it.
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
@@ -1084,7 +1087,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection, 
+nsTextEditRules::WillOutputText(nsISelection *aSelection, 
                                 const nsString  *aOutputFormat,
                                 nsString *aOutString,                                
                                 PRBool   *aCancel,
@@ -1115,7 +1118,7 @@ nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection,
 }
 
 nsresult
-nsTextEditRules::DidOutputText(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidOutputText(nsISelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
@@ -1217,7 +1220,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
 
 
 nsresult
-nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
+nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (!mEditor) { return NS_ERROR_NULL_POINTER; }
@@ -1280,7 +1283,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
 
 
 nsresult
-nsTextEditRules::TruncateInsertionIfNeeded(nsIDOMSelection *aSelection, 
+nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection, 
                                            const nsString  *aInString,
                                            nsString        *aOutString,
                                            PRInt32          aMaxLength)
@@ -1392,7 +1395,7 @@ nsTextEditRules::DeleteEmptyTextNode(nsIDOMNode *aNode)
 
 
 nsresult 
-nsTextEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aDirection)
+nsTextEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aDirection)
 {
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   
@@ -1439,13 +1442,16 @@ nsTextEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
   {
     if (!nextNode || mEditor->IsBlockNode(nextNode))
     {
+      nsCOMPtr<nsISelection> sel(aSelection);
+      nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));
+
       nsCOMPtr<nsIDOMNode> brNode;
       res = CreateMozBR(selNode, selOffset, &brNode);
       if (NS_FAILED(res)) return res;
       res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
       if (NS_FAILED(res)) return res;
       // selection stays *before* moz-br, sticking to it
-      aSelection->SetHint(PR_TRUE);
+      selPrivate->SetInterlinePosition(PR_TRUE);
       res = aSelection->Collapse(selNode,selOffset);
       if (NS_FAILED(res)) return res;
     }
