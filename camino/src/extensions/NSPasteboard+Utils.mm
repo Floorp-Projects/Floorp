@@ -70,7 +70,8 @@ NSString* const kCorePasteboardFlavorType_urld = @"CorePasteboardFlavorType 0x75
   const char* tempCString = [url UTF8String];
   [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
 
-  tempCString = [title UTF8String];
+  if (title)
+    tempCString = [title UTF8String];
   [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
 }
 
