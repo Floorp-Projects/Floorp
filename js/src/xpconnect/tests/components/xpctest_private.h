@@ -43,6 +43,13 @@
 { 0xecb3420, 0xd6f, 0x11d3, \
     { 0xba, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 
+
+// {FD774840-237B-11d3-9879-006008962422}
+#define NS_NOISY_CID \
+{ 0xfd774840, 0x237b, 0x11d3, \
+    { 0x98, 0x79, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+
 // 'namespace' class
 class xpctest
 {
@@ -52,6 +59,9 @@ public:
 
   static const nsID& GetChildCID() {static nsID cid = NS_CHILD_CID; return cid;}
   static NS_METHOD ConstructChild(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetNoisyCID() {static nsID cid = NS_NOISY_CID; return cid;}
+  static NS_METHOD ConstructNoisy(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

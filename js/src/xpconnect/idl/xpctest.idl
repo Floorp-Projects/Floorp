@@ -99,3 +99,7 @@ interface nsIXPCTestOther : nsISupports {
     void method3(in short i, in short j, in short k);
 };
 
+[scriptable, uuid(1e4cf7b0-237a-11d3-9879-006008962422)]
+interface nsIXPCTestNoisy : nsISupports {
+    void squawk();
+};

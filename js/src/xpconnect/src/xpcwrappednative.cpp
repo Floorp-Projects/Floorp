@@ -36,8 +36,6 @@ nsXPCWrappedNative::AddRef(void)
     else if(2 == mRefCnt && NULL != (xpcc = mClass->GetXPCContext()))
         JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj, 
                         "nsXPCWrappedNative::mJSObj");
-//    XPC_LOG_DEBUG(("+++ AddRef  of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
-
     return mRefCnt;
 }
 
@@ -49,20 +47,15 @@ nsXPCWrappedNative::Release(void)
 
     if(0 == --mRefCnt)
     {
-//        XPC_LOG_DEBUG(("--- Delete of wrapper %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
         NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;
     }
     if(1 == mRefCnt)
     {
         XPCContext* xpcc;
-//        XPC_LOG_DEBUG(("--- Removing root of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
         if(NULL != (xpcc = mClass->GetXPCContext()))
             JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
     }
-
-//    XPC_LOG_DEBUG(("--- Release of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
-
     return mRefCnt;
 }
 

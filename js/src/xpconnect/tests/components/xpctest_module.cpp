@@ -49,6 +49,8 @@ NSGetFactory(nsISupports* aServMgr,
         rv = factory->SetConstructor(xpctest::ConstructEcho);
     else if(aClass.Equals(xpctest::GetChildCID()))
         rv = factory->SetConstructor(xpctest::ConstructChild);
+    else if(aClass.Equals(xpctest::GetNoisyCID()))
+        rv = factory->SetConstructor(xpctest::ConstructNoisy);
     else
     {
         NS_ASSERTION(0, "incorrectly registered");
@@ -83,6 +85,10 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "nsChild", "nsChild", aPath,
                                     PR_TRUE, PR_TRUE);
 
+    rv = compMgr->RegisterComponent(xpctest::GetNoisyCID(),
+                                    "nsNoisy", "nsNoisy", aPath,
+                                    PR_TRUE, PR_TRUE);
+
     return rv;
 }
 
@@ -96,6 +102,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 
     rv = compMgr->UnregisterComponent(xpctest::GetEchoCID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetChildCID(), aPath);
+    rv = compMgr->UnregisterComponent(xpctest::GetNoisyCID(), aPath);
 
     return rv;
 }

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* Tests for XPConnect - hacked together while deveolpment continues. */
+/* Tests for XPConnect - hacked together while development continues. */
 
 #include <stdio.h>
 
