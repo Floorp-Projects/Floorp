@@ -32,14 +32,19 @@ static char szDefaultPluginFinderURL[] = DEFAULT_PLUGINFINDER_URL;
 
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
+  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
   switch (id)
   {
     case IDC_GET_PLUGIN:
       EndDialog(hWnd, IDC_GET_PLUGIN);
+      if(pPlugin !=NULL)
+        pPlugin->m_hWndDialog = NULL;
       break;
     case IDCANCEL:
     case IDC_BUTTON_CANCEL:
       EndDialog(hWnd, IDCANCEL);
+      if(pPlugin !=NULL)
+        pPlugin->m_hWndDialog = NULL;
       break;
     default:
       break;
@@ -53,6 +58,10 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   if(pPlugin == NULL)
     return TRUE;
 
+  SetWindowLong(hWnd, DWL_USER, (LONG)pPlugin);
+
+  pPlugin->m_hWndDialog = hWnd;
+  
   char szString[512];
   LoadString(hInst, IDS_TITLE, szString, sizeof(szString));
   SetWindowText(hWnd, szString);
@@ -138,6 +147,14 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   return TRUE;
 }
 
+static void onClose(HWND hWnd)
+{
+  EndDialog(hWnd, IDCANCEL);
+  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  if(pPlugin !=NULL)
+    pPlugin->m_hWndDialog = NULL;
+}
+
 static void onDestroy(HWND hWnd)
 {
 }
@@ -155,7 +172,7 @@ BOOL CALLBACK NP_LOADDS GetPluginDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam,
       HANDLE_WM_DESTROY(hWnd, wParam, lParam, onDestroy);
       break;
     case WM_CLOSE:
-      EndDialog(hWnd, IDCANCEL);
+      HANDLE_WM_CLOSE(hWnd, wParam, lParam, onClose);
       break;
 
     default:

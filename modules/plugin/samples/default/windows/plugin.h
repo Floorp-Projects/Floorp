@@ -44,6 +44,7 @@ public:
   LPSTR m_szPageURL;       // Location of plug-in HTML page
   LPSTR m_szFileURL;       // Location of plug-in JAR file 
   LPSTR m_szFileExtension; // File extension associated with the of the unknown mimetype
+  HWND m_hWndDialog;
 
   // environment
   BOOL m_bOnline;
