@@ -3596,10 +3596,10 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
   }
 
   if (aDeep) {
-    PRInt32 index;
+    PRInt32 indx;
     PRInt32 count = mChildren.Count();
-    for (index = 0; index < count; index++) {
-      nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
+    for (indx = 0; indx < count; indx++) {
+      nsIContent* child = (nsIContent*)mChildren.ElementAt(indx);
 
       nsCOMPtr<nsIDOMNode> node(do_QueryInterface(child));
 
@@ -3653,7 +3653,7 @@ nsGenericHTMLContainerElement::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
+  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(0);
   if (child) {
     nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
                                          (void**)aNode);
@@ -3668,13 +3668,15 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
-  if (child) {
-    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                         (void**)aNode);
-
-    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
-    return res;
+  if (0 != mChildren.Count()) {
+    nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
+    if (child) {
+      nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                           (void**)aNode);
+      
+      NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+      return res;
+    }
   }
   *aNode = nsnull;
   return NS_OK;
@@ -3705,11 +3707,12 @@ NS_IMETHODIMP
 nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
                                        nsIContent*& aResult) const
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(aIndex);
-  if (nsnull != child) {
-    NS_ADDREF(child);
-  }
+  // I really prefer NOT to do this test on all ChildAt calls - perhaps we
+  // should add FastChildAt().
+  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(aIndex);
+  NS_IF_ADDREF(child);
   aResult = child;
+
   return NS_OK;
 }
 
@@ -3772,7 +3775,8 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
                                               PRBool aDeepSetDocument)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
+  nsIContent* oldKid = NS_STATIC_CAST(nsIContent *,
+                                      mChildren.SafeElementAt(aIndex));
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
     doc->BeginUpdate();
@@ -3788,9 +3792,11 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
         doc->ContentReplaced(this, oldKid, aKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    oldKid->SetParent(nsnull);
-    NS_RELEASE(oldKid);
+    if (oldKid) {
+      oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      oldKid->SetParent(nsnull);
+      NS_RELEASE(oldKid);
+    }
   }
   if (aNotify && (nsnull != doc)) {
     doc->EndUpdate();
@@ -3846,7 +3852,8 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   if (aNotify && (nsnull != doc)) {
     doc->BeginUpdate();
   }
-  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
+  nsIContent* oldKid = NS_STATIC_CAST(nsIContent *,
+                                      mChildren.SafeElementAt(aIndex));
   if (nsnull != oldKid ) {
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {

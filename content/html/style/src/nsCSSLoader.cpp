@@ -605,12 +605,11 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   nsresult result = NS_ERROR_NULL_POINTER;
 
   if (aParser) {
-    result = NS_OK;
     if (! mParsers) {
       result = NS_NewISupportsArray(&mParsers);
     }
     if (mParsers) {
-      mParsers->AppendElement(aParser);
+      result = mParsers->AppendElement(aParser);
     }
   }
   return result;

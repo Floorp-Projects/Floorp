@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -59,7 +59,7 @@
 nsXULControllers::nsXULControllers()
 : mCurControllerID(0)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsXULControllers::~nsXULControllers(void)
@@ -85,19 +85,19 @@ nsXULControllers::DeleteControllers()
 NS_IMETHODIMP
 NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
+  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
 
-    nsXULControllers* controllers = new nsXULControllers();
-    if (! controllers)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
-    NS_ADDREF(controllers);
-    rv = controllers->QueryInterface(aIID, aResult);
-    NS_RELEASE(controllers);
-    return rv;
+  nsXULControllers* controllers = new nsXULControllers();
+  if (! controllers)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsresult rv;
+  NS_ADDREF(controllers);
+  rv = controllers->QueryInterface(aIID, aResult);
+  NS_RELEASE(controllers);
+  return rv;
 }
 
 // QueryInterface implementation for nsXULControllers
@@ -115,25 +115,25 @@ NS_IMPL_RELEASE(nsXULControllers)
 NS_IMETHODIMP
 nsXULControllers::GetCommandDispatcher(nsIDOMXULCommandDispatcher** _result)
 {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryReferent(mCommandDispatcher);
-    *_result = dispatcher;
-    NS_IF_ADDREF(*_result);
-    return NS_OK;
+  nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryReferent(mCommandDispatcher);
+  *_result = dispatcher;
+  NS_IF_ADDREF(*_result);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULControllers::SetCommandDispatcher(nsIDOMXULCommandDispatcher* aCommandDispatcher)
 {
-    mCommandDispatcher = getter_AddRefs(NS_GetWeakReference(aCommandDispatcher));
-    return NS_OK;
+  mCommandDispatcher = getter_AddRefs(NS_GetWeakReference(aCommandDispatcher));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULControllers::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = nsnull;
+  *_retval = nsnull;
 
   PRUint32 count = mControllers.Count();
   for (PRUint32 i=0; i < count; i++)
@@ -141,59 +141,60 @@ nsXULControllers::GetControllerForCommand(const nsAReadableString& aCommand, nsI
     nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(i));
     if (controllerData)
     {
-        nsCOMPtr<nsIController> controller;
+      nsCOMPtr<nsIController> controller;
       controllerData->GetController(getter_AddRefs(controller));
       if (controller)
       {
-            PRBool supportsCommand;
+        PRBool supportsCommand;
         controller->SupportsCommand(aCommand, &supportsCommand);
         if (supportsCommand) {
-                *_retval = controller;
-                NS_ADDREF(*_retval);
-                return NS_OK;
-            }
+          *_retval = controller;
+          NS_ADDREF(*_retval);
+          return NS_OK;
         }
+      }
     }
   }
   
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULControllers::InsertControllerAt(PRUint32 index, nsIController *controller)
+nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
 {
   nsXULControllerData*  controllerData = new nsXULControllerData(mCurControllerID++, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
-  PRBool  inserted = mControllers.InsertElementAt((void *)controllerData, index);
+  PRBool  inserted = mControllers.InsertElementAt((void *)controllerData, aIndex);
   NS_ASSERTION(inserted, "Insertion of controller failed");
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
+nsXULControllers::RemoveControllerAt(PRUint32 aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-        *_retval = nsnull;
-  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(index));
+  *_retval = nsnull;
+
+  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.SafeElementAt(aIndex));
   if (!controllerData) return NS_ERROR_FAILURE;
   
-  PRBool removed = mControllers.RemoveElementAt(index);
+  PRBool removed = mControllers.RemoveElementAt(aIndex);
   NS_ASSERTION(removed, "Removal of controller failed");
     
   controllerData->GetController(_retval);
   delete controllerData;
   
-    return NS_OK;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULControllers::GetControllerAt(PRUint32 index, nsIController **_retval)
+nsXULControllers::GetControllerAt(PRUint32 aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-        *_retval = nsnull;
+  *_retval = nsnull;
 
-  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.ElementAt(index));
+  nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.SafeElementAt(aIndex));
   if (!controllerData) return NS_ERROR_FAILURE;
 
   return controllerData->GetController(_retval);   // does the addref  
@@ -206,7 +207,7 @@ nsXULControllers::AppendController(nsIController *controller)
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
   PRBool  appended = mControllers.AppendElement((void *)controllerData);
   NS_ASSERTION(appended, "Appending controller failed");
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -252,7 +253,7 @@ nsXULControllers::GetControllerId(nsIController *controller, PRUint32 *_retval)
       if (thisController.get() == controller)
       {
         *_retval = controllerData->GetControllerID();
-    return NS_OK;
+        return NS_OK;
       }
     }
   }
@@ -282,5 +283,5 @@ nsXULControllers::GetControllerCount(PRUint32 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mControllers.Count();
-    return NS_OK;
+  return NS_OK;
 }

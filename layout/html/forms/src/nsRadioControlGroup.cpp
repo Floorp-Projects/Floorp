@@ -56,7 +56,7 @@ nsRadioControlGroup::GetRadioCount() const
 nsGfxRadioControlFrame*
 nsRadioControlGroup::GetRadioAt(PRInt32 aIndex) const 
 { 
-  return (nsGfxRadioControlFrame*) mRadios.ElementAt(aIndex);
+  return (nsGfxRadioControlFrame*) mRadios.SafeElementAt(aIndex);
 }
 
 PRBool 

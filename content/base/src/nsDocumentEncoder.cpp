@@ -660,9 +660,14 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
   
   // get start and end nodes for this recursion level
   nsCOMPtr<nsIContent> startNode, endNode;
-  startNode = NS_STATIC_CAST(nsIContent *, mStartNodes[mStartRootIndex - aDepth]);
-  endNode   = NS_STATIC_CAST(nsIContent *, mEndNodes[mEndRootIndex - aDepth]);
-  
+  PRInt32 start = mStartRootIndex - aDepth;
+  if (start >= 0 && start <= mStartNodes.Count())
+    startNode = NS_STATIC_CAST(nsIContent *, mStartNodes[start]);
+
+  PRInt32 end = mEndRootIndex - aDepth;
+  if (end >= 0 && end <= mEndNodes.Count())
+    endNode = NS_STATIC_CAST(nsIContent *, mEndNodes[end]);
+
   if ((startNode != content) && (endNode != content))
   {
     // node is completely contained in range.  Serialize the whole subtree
@@ -713,9 +718,9 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
       nsCOMPtr<nsIContent> child;
       nsCOMPtr<nsIDOMNode> childAsNode;
       PRInt32 startOffset = 0, endOffset = -1;
-      if (startNode == content)
+      if (startNode == content && mStartRootIndex >= aDepth)
         startOffset = NS_PTR_TO_INT32(mStartOffsets[mStartRootIndex - aDepth]);
-      if (endNode == content)
+      if (endNode == content && mEndRootIndex >= aDepth)
         endOffset = NS_PTR_TO_INT32(mEndOffsets[mEndRootIndex - aDepth]) ;
       // generated content will cause offset values of -1 to be returned.  
       PRInt32 j, childCount=0;
@@ -769,7 +774,7 @@ nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
   PRInt32 i = aAncestorArray.Count();
   nsresult rv = NS_OK;
 
-  while (i) {
+  while (i > 0) {
     nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(--i);
 
     if (!node)
@@ -791,9 +796,10 @@ nsDocumentEncoder::SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
                                             nsAWritableString& aString)
 {
   PRInt32 i = 0;
+  PRInt32 count = aAncestorArray.Count();
   nsresult rv = NS_OK;
 
-  while (1) {
+  while (i < count) {
     nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(i++);
 
     if (!node)
@@ -1222,33 +1228,33 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
   // where all the cells are in the same table.
 
   // leaf of ancestors might be text node.  If so discard it.
+  PRInt32 count = mCommonAncestors.Count();
+  PRInt32 i;
   nsCOMPtr<nsIDOMNode> node;
-  node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(0));
+  if (count > 0)
+    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(0));
+
   if (node && IsTextNode(node)) 
   {
     mCommonAncestors.RemoveElementAt(0);
     // don't forget to adjust range depth info
     if (mStartDepth) mStartDepth--;
     if (mEndDepth) mEndDepth--;
+    // and the count
+    count--;
   }
   
-  PRInt32 i = mCommonAncestors.Count();
-
-  node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(--i));
-
-  while (node) 
+  i = count;
+  while (i > 0)
   {
-    SerializeNodeStart(node, 0, -1, aContextString);
     node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(--i));
+    SerializeNodeStart(node, 0, -1, aContextString);
   }
-
-  i = 0;
-  node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(i));
-
-  while (node) 
+  //i = 0; guaranteed by above
+  while (i < count)
   {
+    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(i++));
     SerializeNodeEnd(node, aContextString);
-    node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(++i));
   }
 
   // encode range info : the start and end depth of the selection, where the depth is 

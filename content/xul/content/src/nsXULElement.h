@@ -537,7 +537,7 @@ protected:
     nsXULPrototypeElement*              mPrototype;
     nsIDocument*                        mDocument;           // [WEAK]
     nsIContent*                         mParent;             // [WEAK]
-    nsCheapVoidArray                    mChildren;           // [OWNER]
+    nsSmallVoidArray                    mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**

@@ -171,227 +171,6 @@ nsChildContentList::DropReference()
   mContent = nsnull;
 }
 
-//----------------------------------------------------------------------
-
-nsCheapVoidArray::nsCheapVoidArray()
-{
-  mChildren = nsnull;
-}
-
-nsCheapVoidArray::~nsCheapVoidArray()
-{
-  if (!HasSingleChild()) {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      delete vector;
-    }
-  }
-}
-
-PRInt32
-nsCheapVoidArray::Count() const
-{
-  if (HasSingleChild()) {
-    return 1;
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->Count();
-    }
-  }
-
-  return 0;
-}
-
-void*
-nsCheapVoidArray::ElementAt(PRInt32 aIndex) const
-{
-  if (HasSingleChild()) {
-    if (0 == aIndex) {
-      return (void*)GetSingleChild();
-    }
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->ElementAt(aIndex);
-    }
-  }
-
-  return nsnull;
-}
-
-PRInt32
-nsCheapVoidArray::IndexOf(void* aPossibleElement) const
-{
-  if (HasSingleChild()) {
-    if (aPossibleElement == (void*)GetSingleChild()) {
-      return 0;
-    }
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->IndexOf(aPossibleElement);
-    }
-  }
-
-  return -1;
-}
-
-PRBool
-nsCheapVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
-{
-  nsVoidArray* vector;
-  if (HasSingleChild()) {
-    vector = SwitchToVector();
-  }
-  else {
-    vector = GetChildVector();
-    if (!vector) {
-      if (0 == aIndex) {
-        SetSingleChild(aElement);
-        return PR_TRUE;
-      }
-      else {
-        return PR_FALSE;
-      }
-    }
-  }
-
-  return vector->InsertElementAt(aElement, aIndex);
-}
-
-PRBool
-nsCheapVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
-{
-  if (HasSingleChild()) {
-    if (aIndex == 0) {
-      SetSingleChild(aElement);
-      return PR_TRUE;
-    }
-    else {
-      return PR_FALSE;
-    }
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->ReplaceElementAt(aElement, aIndex);
-    }
-    else {
-      return PR_FALSE;
-    }
-  }
-}
-
-PRBool
-nsCheapVoidArray::AppendElement(void* aElement)
-{
-  nsVoidArray* vector;
-  if (HasSingleChild()) {
-    vector = SwitchToVector();
-  }
-  else {
-    vector = GetChildVector();
-    if (!vector) {
-      SetSingleChild(aElement);
-      return PR_TRUE;
-    }
-  }
-
-  return vector->AppendElement(aElement);
-}
-
-PRBool
-nsCheapVoidArray::RemoveElement(void* aElement)
-{
-  if (HasSingleChild()) {
-    if (aElement == GetSingleChild()) {
-      SetSingleChild(nsnull);
-      return PR_TRUE;
-    }
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->RemoveElement(aElement);
-    }
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsCheapVoidArray::RemoveElementAt(PRInt32 aIndex)
-{
-  if (HasSingleChild()) {
-    if (0 == aIndex) {
-      SetSingleChild(nsnull);
-      return PR_TRUE;
-    }
-  }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      return vector->RemoveElementAt(aIndex);
-    }
-  }
-
-  return PR_FALSE;
-}
-
-void
-nsCheapVoidArray::Compact()
-{
-  if (!HasSingleChild()) {
-    nsVoidArray* vector = GetChildVector();
-    if (vector) {
-      vector->Compact();
-    }
-  }
-}
-
-void
-nsCheapVoidArray::Clear()
-{
-  if (HasSingleChild()) {
-    SetSingleChild(nsnull);
-
-    return;
-  }
-
-  nsVoidArray* vector = GetChildVector();
-  if (vector) {
-    vector->Clear();
-  }
-}
-
-void
-nsCheapVoidArray::SetSingleChild(void* aChild)
-{
-  if (aChild)
-    mChildren = (void*)(PtrBits(aChild) | 0x1);
-  else
-    mChildren = nsnull;
-}
-
-nsVoidArray*
-nsCheapVoidArray::SwitchToVector()
-{
-  void* child = GetSingleChild();
-
-  mChildren = (void*)new nsAutoVoidArray();
-  nsVoidArray* vector = GetChildVector();
-  if (vector && child) {
-    vector->AppendElement(child);
-  }
-
-  return vector;
-}
-
-
 NS_IMETHODIMP
 nsNode3Tearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -927,7 +706,7 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   if (nsnull != mParent) {
     PRInt32 pos;
     mParent->IndexOf(this, pos);
-    if (pos > -1 ) {
+    if (pos > 0 ) {
       mParent->ChildAt(--pos, sibling);
     }
   }
@@ -936,7 +715,7 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
     mDocument->IndexOf(this, pos);
-    if (pos > -1 ) {
+    if (pos > 0 ) {
       mDocument->ChildAt(--pos, sibling);
     }
   }
@@ -3086,7 +2865,7 @@ nsGenericContainerElement::HasChildNodes(PRBool* aReturn)
 nsresult
 nsGenericContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
+  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(0);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
                                          (void**)aNode);
@@ -3100,12 +2879,14 @@ nsGenericContainerElement::GetFirstChild(nsIDOMNode** aNode)
 nsresult
 nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
-  if (nsnull != child) {
-    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                         (void**)aNode);
-    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
-    return res;
+  if (mChildren.Count() != 0) {
+    nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
+    if (nsnull != child) {
+      nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                           (void**)aNode);
+      NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+      return res;
+    }
   }
   *aNode = nsnull;
   return NS_OK;
@@ -3624,11 +3405,12 @@ nsresult
 nsGenericContainerElement::ChildAt(PRInt32 aIndex,
                                    nsIContent*& aResult) const
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(aIndex);
-  if (nsnull != child) {
-    NS_ADDREF(child);
-  }
+  // I really prefer NOT to do this test on all ChildAt calls - perhaps we
+  // should add FastChildAt().
+  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(aIndex);
+  NS_IF_ADDREF(child);
   aResult = child;
+
   return NS_OK;
 }
 

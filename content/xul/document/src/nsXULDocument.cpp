@@ -421,7 +421,7 @@ PlaceHolderRequest::~PlaceHolderRequest()
 
 struct BroadcasterMapEntry : public PLDHashEntryHdr {
     nsIDOMElement*   mBroadcaster; // [WEAK]
-    nsCheapVoidArray mListeners;   // [OWNING] of BroadcastListener objects
+    nsSmallVoidArray mListeners;   // [OWNING] of BroadcastListener objects
 };
 
 struct BroadcastListener {
@@ -483,6 +483,7 @@ nsXULDocument::~nsXULDocument()
         PL_DHashTableDestroy(mBroadcasterMap);
 
     // Notify observer that we're about to go away
+    // if an observer removes itself, we're ok (not if it removes others though)
     PRInt32 i;
     for (i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
@@ -950,6 +951,7 @@ nsXULDocument::SetDocumentCharacterSet(const nsAReadableString& aCharSetID)
   if (!mCharSetID.Equals(aCharSetID)) {
     mCharSetID.Assign(aCharSetID);
     PRInt32 n = mCharSetObservers.Count();
+    // if an observer removes itself, we're NOT ok
     for (PRInt32 i = 0; i < n; i++) {
       nsIObserver* observer = (nsIObserver*) mCharSetObservers.ElementAt(i);
       observer->Observe((nsIDocument*) this, "charset", 
@@ -1104,7 +1106,7 @@ nsXULDocument::GetNumberOfShells()
 NS_IMETHODIMP
 nsXULDocument::GetShellAt(PRInt32 aIndex, nsIPresShell** aShell)
 {
-    *aShell = NS_STATIC_CAST(nsIPresShell*, mPresShells[aIndex]);
+    *aShell = NS_STATIC_CAST(nsIPresShell*, mPresShells.SafeElementAt(aIndex));
     NS_IF_ADDREF(*aShell);
     return NS_OK;
 }
@@ -1143,7 +1145,7 @@ nsXULDocument::GetNumberOfSubDocuments(PRInt32 *aCount)
 NS_IMETHODIMP
 nsXULDocument::GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc)
 {
-    *aSubDoc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
+    *aSubDoc = (nsIDocument*) mSubDocuments.SafeElementAt(aIndex);
     NS_IF_ADDREF(*aSubDoc);
     return NS_OK;
 }
@@ -1241,9 +1243,11 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet)
       mStyleSheets.AppendElement(aSheet);
     }
     else {
-      if ((nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+      PRInt32 count = mStyleSheets.Count();
+      if (count != 0 &&
+          (nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
         // keep attr sheet last
-        mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+        mStyleSheets.InsertElementAt(aSheet, count - 1);
       }
       else {
         mStyleSheets.AppendElement(aSheet);
@@ -1260,6 +1264,7 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet)
         AddStyleSheetToStyleSets(aSheet);
 
         // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
+        // if an observer removes itself, we're ok (not if it removes others though)
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
             nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
             observer->StyleSheetAdded(this, aSheet);
@@ -1302,7 +1307,9 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
         mStyleSheets.AppendElement(sheet);
       }
       else {
-        if ((nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+        PRInt32 count = mStyleSheets.Count();
+        if (count != 0 &&
+            (nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
           // keep attr sheet last
           mStyleSheets.InsertElementAt(sheet, mStyleSheets.Count() - 1);
         }
@@ -1324,6 +1331,7 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
     }
   }
 
+  // if an observer removes itself, we're ok (not if it removes others though)
   for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetRemoved(this, sheet);
@@ -1361,6 +1369,7 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
     RemoveStyleSheetFromStyleSets(aSheet);
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
+    // if an observer removes itself, we're ok (not if it removes others though)
     for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
       observer->StyleSheetRemoved(this, aSheet);
@@ -1398,6 +1407,7 @@ nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool 
     }
   }
   if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
+    // if an observer removes itself, we're ok (not if it removes others though)
     for (i = mObservers.Count() - 1; i >= 0; --i) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
       observer->StyleSheetAdded(this, aSheet);
@@ -1433,6 +1443,7 @@ nsXULDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
         }
     }
 
+    // if an observer removes itself, we're ok (not if it removes others though)
     for (i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
         observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
@@ -1717,8 +1728,8 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
         NS_STATIC_CAST(BroadcasterMapEntry*, aEntry);
 
     // N.B. that we need to manually run the dtor because we
-    // constructed the nsCheapVoidArray object in-place.
-    entry->mListeners.~nsCheapVoidArray();
+    // constructed the nsSmallVoidArray object in-place.
+    entry->mListeners.~nsSmallVoidArray();
 }
 
 static PRBool
@@ -1839,9 +1850,9 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
 
         entry->mBroadcaster = aBroadcaster;
 
-        // N.B. placement new to construct the nsCheapVoidArray object
+        // N.B. placement new to construct the nsSmallVoidArray object
         // in-place
-        new (&entry->mListeners) nsCheapVoidArray();
+        new (&entry->mListeners) nsSmallVoidArray();
     }
 
     // Only add the listener if it's not there already!
@@ -3063,7 +3074,7 @@ nsXULDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   *aDefaultView = nsnull;
 
   nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
-                                       mPresShells.ElementAt(0));
+                                       mPresShells.SafeElementAt(0));
   NS_ENSURE_TRUE(shell, NS_OK);
 
   nsCOMPtr<nsIPresContext> ctx;
@@ -4617,13 +4628,16 @@ nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   nsCOMPtr<nsIPresShell> shell;
   GetShellAt(0, getter_AddRefs(shell));
 
-  // Retrieve the context
-  nsCOMPtr<nsIPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  if (shell) {
+    // Retrieve the context
+    nsCOMPtr<nsIPresContext> presContext;
+    shell->GetPresContext(getter_AddRefs(presContext));
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDocument*, this), aEvent, _retval);
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (presContext &&
+        NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
+      return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDocument*, this), aEvent, _retval);
+    }
   }
 
   return NS_ERROR_FAILURE;
@@ -4641,14 +4655,16 @@ nsXULDocument::CreateEvent(const nsAReadableString& aEventType,
   nsCOMPtr<nsIPresShell> shell;
   GetShellAt(0, getter_AddRefs(shell));
 
-  // Retrieve the context
-  nsCOMPtr<nsIPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  if (shell) {
+    // Retrieve the context
+    nsCOMPtr<nsIPresContext> presContext;
+    shell->GetPresContext(getter_AddRefs(presContext));
 
-  if (presContext) {
-    nsCOMPtr<nsIEventListenerManager> lm;
-    if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(lm)))) {
-      return lm->CreateEvent(presContext, nsnull, aEventType, aReturn);
+    if (presContext) {
+      nsCOMPtr<nsIEventListenerManager> lm;
+      if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(lm)))) {
+        return lm->CreateEvent(presContext, nsnull, aEventType, aReturn);
+      }
     }
   }
 

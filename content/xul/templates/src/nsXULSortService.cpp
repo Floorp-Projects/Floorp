@@ -1950,7 +1950,9 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 		((sortInfo.naturalOrderSort == PR_TRUE) &&
 		(isContainerRDFSeq == PR_TRUE)))
 	{
-	    nsCOMPtr<nsIContent>	child;
+		// because numChildren gets modified
+		PRInt32                 realNumChildren = numChildren;
+		nsCOMPtr<nsIContent>	child;
 
 		// rjc says: determine where static XUL ends and generated XUL/RDF begins
 		PRInt32			staticCount = 0;
@@ -2033,12 +2035,12 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			}
 			else if (sortState->lastWasLast == PR_TRUE)
 			{
-				container->ChildAt(numChildren-1, *getter_AddRefs(child));
+				container->ChildAt(realNumChildren-1, *getter_AddRefs(child));
 				temp = child.get();
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction > 0)
 				{
-					container->InsertChildAt(node, numChildren, aNotify,
+					container->InsertChildAt(node, realNumChildren, aNotify,
                                              PR_FALSE);
 					childAdded = PR_TRUE;
 				}
@@ -2048,7 +2050,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				}
 			}
 
-		        PRInt32			left = staticCount+1, right = numChildren, x;
+		        PRInt32	left = staticCount+1, right = realNumChildren, x;
 		        while ((childAdded == PR_FALSE) && (right >= left))
 		        {
 		        	x = (left + right) / 2;
@@ -2066,7 +2068,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 					childAdded = PR_TRUE;
 					
 					sortState->lastWasFirst = (thePos == staticCount) ? PR_TRUE: PR_FALSE;
-					sortState->lastWasLast = (thePos == numChildren) ? PR_TRUE: PR_FALSE;
+					sortState->lastWasLast = (thePos >= realNumChildren) ? PR_TRUE: PR_FALSE;
 					
 					break;
 				}

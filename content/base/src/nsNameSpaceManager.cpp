@@ -158,7 +158,7 @@ static PRInt32 FindNameSpaceID(const nsAReadableString& aURI)
 static const nsString* FindNameSpaceURI(PRInt32 aID)
 {
   NS_ASSERTION(nsnull != gURIArray, "no URI array");
-  return (const nsString*)gURIArray->ElementAt(aID - 1);
+  return (const nsString*)gURIArray->SafeElementAt(aID - 1);
 }
 
 //-----------------------------------------------------------

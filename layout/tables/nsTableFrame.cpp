@@ -2606,7 +2606,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
     // remove the cols from the table
     PRInt32 colX;
     for (colX = lastColIndex; colX >= firstColIndex; colX--) {
-      nsTableColFrame* colFrame = (nsTableColFrame*)mColFrames.ElementAt(colX);
+      nsTableColFrame* colFrame = (nsTableColFrame*)mColFrames.SafeElementAt(colX);
       if (colFrame) {
         RemoveCol(*aPresContext, colGroup, colX, PR_TRUE, PR_FALSE);
       }

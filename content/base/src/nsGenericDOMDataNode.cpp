@@ -230,7 +230,7 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   if (parent_weak) {
     PRInt32 pos;
     parent_weak->IndexOf(this, pos);
-    if (pos > -1 ) {
+    if (pos > 0 ) {
       parent_weak->ChildAt(--pos, *getter_AddRefs(sibling));
     }
   } else if (mDocument) {
@@ -238,7 +238,7 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
     mDocument->IndexOf(this, pos);
-    if (pos > -1 ) {
+    if (pos > 0 ) {
       mDocument->ChildAt(--pos, *getter_AddRefs(sibling));
     }
   }

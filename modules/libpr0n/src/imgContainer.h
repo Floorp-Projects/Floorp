@@ -74,6 +74,7 @@ private:
   }
 
   inline nsresult inlinedGetFrameAt(PRUint32 index, gfxIImageFrame **_retval) {
+    // callers DO try to go past the end
     nsISupports *_elem = mFrames.ElementAt(index);
     if (!_elem) return NS_ERROR_FAILURE;
     *_retval = NS_STATIC_CAST(gfxIImageFrame*, _elem);

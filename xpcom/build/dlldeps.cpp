@@ -113,6 +113,7 @@ void XXXNeverCalled()
     nsTextFormatter::smprintf_free(nsnull);
     dummyComparitor dummy;
     nsVoidArray();
+    nsSmallVoidArray();
     nsVoidBTree();
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();

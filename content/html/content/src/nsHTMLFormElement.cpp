@@ -583,9 +583,11 @@ nsHTMLFormElement::GetElementCount(PRUint32* aCount) const
 NS_IMETHODIMP 
 nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
                                 nsIFormControl** aFormControl) const 
-{ 
-  *aFormControl = (nsIFormControl*) mControls->mElements.ElementAt(aIndex);
+{
+  *aFormControl = NS_STATIC_CAST(nsIFormControl *,
+                                 mControls->mElements.SafeElementAt(aIndex));
   NS_IF_ADDREF(*aFormControl);
+
   return NS_OK;
 }
 
@@ -794,12 +796,11 @@ nsFormControlList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(aIndex);
-
+  nsIFormControl *control = NS_STATIC_CAST(nsIFormControl *,
+                                           mElements.SafeElementAt(aIndex));
   if (control) {
     return CallQueryInterface(control, aReturn);
   }
-
   *aReturn = nsnull;
 
   return NS_OK;

@@ -180,7 +180,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->ElementAt(dfInx));
+    nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->SafeElementAt(dfInx));
     if ( df ) {
 		  if (FormatsMatch(fe, *pFE)) {
 			  pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data

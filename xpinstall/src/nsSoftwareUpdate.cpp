@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -368,11 +367,14 @@ nsSoftwareUpdate::InstallJarCallBack()
 {
     PR_Lock(mLock);
 
-    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue.ElementAt(0);
-    if (nextInstall != nsnull)
-        delete nextInstall;
+    if (mJarInstallQueue.Count() != 0) // paranoia
+    {
+        nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue.ElementAt(0);
+        if (nextInstall != nsnull)
+            delete nextInstall;
 
-    mJarInstallQueue.RemoveElementAt(0);
+        mJarInstallQueue.RemoveElementAt(0);
+    }
     mInstalling = PR_FALSE;
 
     PR_Unlock(mLock);

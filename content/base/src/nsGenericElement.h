@@ -85,49 +85,6 @@ private:
   nsIContent *mContent;
 };
 
-class nsCheapVoidArray {
-public:
-  nsCheapVoidArray();
-  ~nsCheapVoidArray();
-
-  PRInt32 Count() const;
-  void* ElementAt(PRInt32 aIndex) const;
-  PRInt32 IndexOf(void* aPossibleElement) const;
-  PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
-  PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
-  PRBool AppendElement(void* aElement);
-  PRBool RemoveElement(void* aElement);
-  PRBool RemoveElementAt(PRInt32 aIndex);
-  void Compact();
-  void Clear();
-
-  void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
-
-private:
-  typedef unsigned long PtrBits;
-
-  PRBool HasSingleChild() const
-  {
-    return (mChildren && (PtrBits(mChildren) & 0x1));
-  }
-  void* GetSingleChild() const
-  {
-    return (mChildren ? ((void*)(PtrBits(mChildren) & ~0x1)) : nsnull);
-  }
-  void SetSingleChild(void *aChild);
-  nsVoidArray* GetChildVector() const
-  {
-    return (nsVoidArray*)mChildren;
-  }
-  nsVoidArray* SwitchToVector();
-
-  // A tagged pointer that's either a pointer to a single child
-  // or a pointer to a vector of multiple children. This is a space
-  // optimization since a large number of containers have only a 
-  // single child.
-  void *mChildren;  
-};
-
 // There are a set of DOM- and scripting-specific instance variables
 // that may only be instantiated when a content object is accessed
 // through the DOM. Rather than burn actual slots in the content
@@ -519,7 +476,7 @@ protected:
 #endif
 
   nsVoidArray* mAttributes;
-  nsCheapVoidArray mChildren;
+  nsSmallVoidArray mChildren;
 };
 
 

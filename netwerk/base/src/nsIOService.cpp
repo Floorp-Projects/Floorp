@@ -359,7 +359,7 @@ nsIOService::CacheURLParser(const char *scheme, nsIURLParser *parser)
 {
     NS_ENSURE_ARG_POINTER(scheme);
     NS_ENSURE_ARG_POINTER(parser);
-    for (unsigned int i=0; i<NS_N(gScheme); i++)
+    for (PRInt32 i=0; i< (PRInt32) NS_N(gScheme); i++)
     {
         if (!nsCRT::strcasecmp(scheme, gScheme[i]))
         {
@@ -367,8 +367,9 @@ nsIOService::CacheURLParser(const char *scheme, nsIURLParser *parser)
             // unlike nsSupportsArray, which doesn't.  We must release
             // them on delete!
             // grab this before overwriting it
-            nsIURLParser *old_parser = NS_STATIC_CAST(nsIURLParser*,
-                                                      mURLParsers[i]);
+            nsIURLParser *old_parser;
+            old_parser = NS_STATIC_CAST(nsIURLParser*,mURLParsers.SafeElementAt(i));
+
             NS_ADDREF(parser);
             mURLParsers.ReplaceElementAt(parser, i);
             // release any old entry, if any, AFTER adding new entry in
@@ -384,7 +385,8 @@ nsIOService::CacheURLParser(const char *scheme, nsIURLParser *parser)
 NS_IMETHODIMP
 nsIOService::GetCachedURLParser(const char *scheme, nsIURLParser **result)
 {
-    for (unsigned int i=0; i<NS_N(gScheme); i++)
+    PRInt32 count = mURLParsers.Count();
+    for (PRInt32 i=0; i < count; i++)
     {
         if (!nsCRT::strcasecmp(scheme, gScheme[i]))
         {

@@ -141,11 +141,10 @@ nsFormFrame::~nsFormFrame()
   RemoveRadioGroups();
   PRInt32 numControls = mFormControls.Count();
   PRInt32 i;
-  // Traverse list from end to 0 -> void array remove method does less work
+
   for (i = (numControls-1); i>=0; i--) {
     nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
     fcFrame->SetFormFrame(nsnull);
-    mFormControls.RemoveElement(fcFrame);
   }
 }
 

@@ -566,7 +566,7 @@ public:
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  nsCheapVoidArray mChildren;
+  nsSmallVoidArray mChildren;
 };
 
 //----------------------------------------------------------------------

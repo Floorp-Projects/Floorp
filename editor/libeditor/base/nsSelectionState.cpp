@@ -82,10 +82,11 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
   // else if we have too many, delete them
   else if (arrayCount>rangeCount)
   {
-    while ((item = (nsRangeStore*)mArray.ElementAt(rangeCount)))
+    for (i = arrayCount-1; i >= rangeCount; i--)
     {
+      item = (nsRangeStore*)mArray.ElementAt(i);
       delete item;
-      mArray.RemoveElementAt(rangeCount);
+      mArray.RemoveElementAt(i);
     }
   }
   
@@ -180,11 +181,12 @@ nsSelectionState::MakeEmpty()
 {
   // free any items in the array
   nsRangeStore *item;
-  while ((item = (nsRangeStore*)mArray.ElementAt(0)))
+  for (PRInt32 i = mArray.Count()-1; i >= 0; --i)
   {
+    item = (nsRangeStore*)mArray.ElementAt(i);
     delete item;
-    mArray.RemoveElementAt(0);
   }
+  mArray.Clear();
 }
 
 PRBool   
@@ -203,11 +205,12 @@ nsRangeUpdater::~nsRangeUpdater()
 {
   // free any items in the array
   nsRangeStore *item;
-  while ((item = (nsRangeStore*)mArray.ElementAt(0)))
+  for (PRInt32 i = mArray.Count()-1; i >= 0; --i)
   {
+    item = (nsRangeStore*)mArray.ElementAt(i);
     delete item;
-    mArray.RemoveElementAt(0);
   }
+  //mArray.Clear(); not really needed
 }
   
 void* 

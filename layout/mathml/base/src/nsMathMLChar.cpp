@@ -632,7 +632,7 @@ public:
 
   nsGlyphTable* ElementAt(PRInt32 aIndex)
   {
-    return NS_STATIC_CAST(nsGlyphTable*, mTableList.ElementAt(aIndex));
+    return NS_STATIC_CAST(nsGlyphTable*, mTableList.SafeElementAt(aIndex));
   }
 
   PRInt32 Count(PRBool aEverything = PR_FALSE)

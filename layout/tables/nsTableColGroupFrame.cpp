@@ -156,8 +156,9 @@ nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame,
   nsVoidArray& cols = aTableFrame->GetColCache();
   PRInt32 numCols = cols.Count();
   nsIFrame* lastColGroup;
+  if (numCols == 0) return nsnull; // no columns so no colgroups
   nsIFrame* lastCol = (nsIFrame*)cols.ElementAt(numCols - 1);
-  if (!lastCol) return nsnull; // no columns so no colgroups
+  NS_ASSERTION(lastCol,"null entry in column array");
   lastCol->GetParent(&lastColGroup);
   if (!lastColGroup) return nsnull; // shouldn't happen
  

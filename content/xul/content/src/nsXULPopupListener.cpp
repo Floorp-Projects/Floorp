@@ -319,6 +319,9 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsCOMPtr<nsIPresContext> context;
     nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
     tempdoc->GetShellAt(0, getter_AddRefs(shell));  // Get nsIDOMElement for targetNode
+    if (!shell)
+        return NS_ERROR_FAILURE;
+
     shell->GetPresContext(getter_AddRefs(context));
  
     nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
