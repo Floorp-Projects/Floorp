@@ -24,7 +24,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include <$(DEPTH)\config\autoconf.mk>
+include <$(DEPTH)\config\autoconf.mak>
 
 CHROME_DIR=packages\cview
 CHROME_L10N_DIR=cview\locale
@@ -33,4 +33,4 @@ CHROME_L10N = \
 	.\cviewOverlay.dtd \
 	$(NULL)
 
-include <$(topsrcdir)\config\rules.mk>
+include <$(topsrcdir)\config\rules.mak>

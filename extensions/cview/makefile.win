@@ -26,10 +26,10 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include <$(DEPTH)\config\autoconf.mk>
+include <$(DEPTH)\config\autoconf.mak>
 
 DIRS            = resources
 
 INSTALLROOT = $(DIST)\bin\chrome\packages\cview\cview
 
-include <$(topsrcdir)\config\rules.mk>
+include <$(topsrcdir)\config\rules.mak>
