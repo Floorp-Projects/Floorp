@@ -772,7 +772,14 @@ nsresult nsDeviceContextOS2::PrepareDocument(PRUnichar * aTitle, PRUnichar* aPri
     titleStr = aTitle;
     char *title = GetACPString(titleStr);
 
-    PSZ pszDocName = title != nsnull?title:"Mozilla Document";
+    PSZ pszDocName;
+    const PSZ pszGenericDocName = "MozillaDocument";
+
+    if (title) {
+      pszDocName = title;
+    } else {
+      pszDocName = pszGenericDocName;
+    } 
 
     long lDummy = 0;
     long lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
