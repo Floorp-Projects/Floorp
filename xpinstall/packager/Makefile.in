@@ -44,6 +44,7 @@ MOZ_PKG_APPNAME = mozilla
 endif
 
 MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet...."
+MAKE_SDK	=
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 TARGET_OS = os2-vacpp
@@ -51,6 +52,9 @@ endif
 
 PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
 PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
+
+SDK_DIR		= sdk
+SDK		= $(MOZ_PKG_APPNAME)-$(SDK_DIR)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)$(PKG_SUFFIX)
 
 TAR_CREATE_FLAGS = -cvhf
 
@@ -65,14 +69,17 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+MAKE_SDK        = tar -cf - $(SDK_DIR) | gzip -vf9 > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
 MAKE_PACKAGE 	= tar -cf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
+MAKE_SDK        = tar -cf - $(SDK_DIR) | bzip2 -vf > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9 $(PACKAGE) $(MOZ_PKG_APPNAME)
+MAKE_SDK	= $(ZIP) -r9 $(SDK) $(SDK_DIR)
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 PKG_SUFFIX	= .rpm
@@ -81,7 +88,7 @@ ifeq ($(MOZ_PKG_FORMAT),DEB)
 PKG_SUFFIX	= .deb
 endif
 
-TARGETS		= $(PACKAGE)
+TARGETS		= $(PACKAGE) $(SDK)
 
 NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
 ifneq ($(NSPR_LDIR),)
@@ -101,7 +108,7 @@ libs:: $(TARGETS)
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
+GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE) $(SDK)
 
 OSPACKAGE	= unix
 ifdef USE_SHORT_LIBNAME
@@ -124,6 +131,10 @@ OSPACKAGE	= os2
 TAR_CREATE_FLAGS = -cvf
 PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
+
+$(SDK):
+	cd $(DIST)
+	@if [ -d $(SDK_DIR) ]; then $(MAKE_SDK); fi
 
 $(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
