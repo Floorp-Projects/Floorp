@@ -115,6 +115,10 @@ NETLIB_LIBS		= \
 			-lnetwork \
 			-lpwcac \
 			$(NULL)
+else
+NETLIB_LIBS = \
+			$(DIST)/lib/libneckoutil_s.a \
+			$(NULL)
 endif
 
 ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
