@@ -653,6 +653,14 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     JSObject *gsp =
       nsWindowSH::GetInvalidatedGlobalScopePolluter(cx, mJSObject);
 
+    // Lock gsp to keep it from being collected by a last-ditch GC under
+    // mContext->InitContext(this), or possibly other indirect GC-thing
+    // allocations that might nest between here and the point in
+    // nsWindowSH::InstallGlobalScopePolluter that puts gsp back into the
+    // window object's prototype chain.
+
+    ::JS_LockGCThing(cx, gsp);
+
     if (mIsScopeClear) {
       mContext->InitContext(this);
     } else {
@@ -667,6 +675,8 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
 
     nsWindowSH::InstallGlobalScopePolluter(cx, mJSObject, gsp, html_doc);
+
+    ::JS_UnlockGCThing(cx, gsp);
   }
 
   // Clear our mutation bitfield.
