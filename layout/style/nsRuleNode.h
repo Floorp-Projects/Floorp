@@ -190,12 +190,30 @@ struct nsCachedStyleData
   };
 
   nsStyleStruct* GetStyleData(const nsStyleStructID& aSID) {
+    // Each struct is stored at this.m##type##Data->m##name##Data where
+    // |type| is either Inherit or Reset, and |name| is the name of the
+    // style struct.  The |gInfo| stores the offset of the appropriate
+    // m##type##Data for the struct within nsCachedStyleData (|this|)
+    // and the offset of the appropriate m##name##Data within the
+    // m##type##Data.  Note that if we don't have any reset structs,
+    // then mResetData is null, and likewise for mInheritedData.  This
+    // saves us from having to go through the long if-else cascade into
+    // which most compilers will turn a case statement.
+
     // NOTE:  nsStyleContext::SetStyle works roughly the same way.
+
     const StyleStructInfo& info = gInfo[aSID];
+
+    // Get either &mInheritedData or &mResetData.
     char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, this) + info.mCachedStyleDataOffset;
+
+    // Get either mInheritedData or mResetData.
     char* resetOrInherit = NS_REINTERPRET_CAST(char*, *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
+
     nsStyleStruct* data = nsnull;
     if (resetOrInherit) {
+      // If we have the mInheritedData or mResetData, then we might have
+      // the struct, so get it.
       char* dataSlot = resetOrInherit + info.mInheritResetOffset;
       data = *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot);
     }
