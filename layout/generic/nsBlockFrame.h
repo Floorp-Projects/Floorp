@@ -195,7 +195,8 @@ public:
 
   void ReflowFloater(nsIPresContext& aPresContext,
                      nsBlockReflowState& aState,
-                     nsIFrame* aFloaterFrame);
+                     nsIFrame* aFloaterFrame,
+                     nsHTMLReflowState& aFloaterReflowState);
 
   void PaintChildren(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
