@@ -959,7 +959,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint
   nsString nsStr;
   nsStr.SetString(aString, aLength);
   char* cStr = nsStr.ToNewCString();
-  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aFontID, aSpacing);
+  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aSpacing);
   delete[] cStr;
   return ret;
 }
