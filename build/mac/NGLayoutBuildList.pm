@@ -800,6 +800,7 @@ sub MakeResourceAliases()
     }
 
     _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
+    _InstallManifestRDF(":mozilla:themes:blue:manifest.rdf",$dist_dir, $chrome_subdir, "skins:blue:", "skin");
     if ($main::INCLUDE_CLASSIC_SKIN) {
     		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
     }
@@ -1105,6 +1106,7 @@ sub MakeResourceAliases()
 
     # Install skin files
     InstallSkinFiles("modern"); # fix me
+    InstallSkinFiles("blue"); # fix me
     if ($main::INCLUDE_CLASSIC_SKIN) {
     		InstallSkinFiles("classic"); # fix me
     }
