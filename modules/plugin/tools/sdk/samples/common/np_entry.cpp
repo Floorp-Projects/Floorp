@@ -56,10 +56,26 @@ static NPError fillPluginFunctionTable(NPPluginFuncs* aNPPFuncs)
   if(aNPPFuncs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-  if(aNPPFuncs->size < sizeof(NPPluginFuncs))
-    return NPERR_INVALID_FUNCTABLE_ERROR;
+  // Set up the plugin function table that Netscape will use to
+  // call us. Netscape needs to know about our version and size   
+  // and have a UniversalProcPointer for every function we implement.
 
   aNPPFuncs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
+#ifdef XP_MAC
+  aNPPFuncs->newp          = NewNPP_NewProc(Private_New);
+  aNPPFuncs->destroy       = NewNPP_DestroyProc(Private_Destroy);
+  aNPPFuncs->setwindow     = NewNPP_SetWindowProc(Private_SetWindow);
+  aNPPFuncs->newstream     = NewNPP_NewStreamProc(Private_NewStream);
+  aNPPFuncs->destroystream = NewNPP_DestroyStreamProc(Private_DestroyStream);
+  aNPPFuncs->asfile        = NewNPP_StreamAsFileProc(Private_StreamAsFile);
+  aNPPFuncs->writeready    = NewNPP_WriteReadyProc(Private_WriteReady);
+  aNPPFuncs->write         = NewNPP_WriteProc(Private_Write);
+  aNPPFuncs->print         = NewNPP_PrintProc(Private_Print);
+  aNPPFuncs->event         = NewNPP_HandleEventProc(Private_HandleEvent);	
+  aNPPFuncs->urlnotify     = NewNPP_URLNotifyProc(Private_URLNotify);			
+  aNPPFuncs->getvalue      = NewNPP_GetValueProc(Private_GetValue);
+  aNPPFuncs->setvalue      = NewNPP_SetValueProc(Private_SetValue);
+#else
   aNPPFuncs->newp          = NPP_New;
   aNPPFuncs->destroy       = NPP_Destroy;
   aNPPFuncs->setwindow     = NPP_SetWindow;
@@ -73,6 +89,7 @@ static NPError fillPluginFunctionTable(NPPluginFuncs* aNPPFuncs)
   aNPPFuncs->urlnotify     = NPP_URLNotify;
   aNPPFuncs->getvalue      = NPP_GetValue;
   aNPPFuncs->setvalue      = NPP_SetValue;
+#endif
   aNPPFuncs->javaClass     = NULL;
 
   return NPERR_NO_ERROR;
@@ -267,15 +284,16 @@ void SetUpQD(void)
 #endif /* !TARGET_API_MAC_CARBON */
 }
 
-NPError main(NPNetscapeFuncs* aNPNFuncs, NPPluginFuncs* aNPPFuncs, NPP_ShutdownUPP* aUnloadUpp);
-
-#pragma export on
+NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp);
 
 #if !TARGET_API_MAC_CARBON
+#pragma export on
+#if GENERATINGCFM
 RoutineDescriptor mainRD = BUILD_ROUTINE_DESCRIPTOR(uppNPP_MainEntryProcInfo, main);
 #endif
-
 #pragma export off
+#endif /* !TARGET_API_MAC_CARBON */
+
 
 NPError main(NPNetscapeFuncs* aNPNFuncs, NPPluginFuncs* aNPPFuncs, NPP_ShutdownUPP* aUnloadUpp)
 {
@@ -291,26 +309,7 @@ NPError main(NPNetscapeFuncs* aNPNFuncs, NPPluginFuncs* aNPPFuncs, NPP_ShutdownU
   if (rv == NPERR_NO_ERROR) {
     // defer static constructors until the global functions are initialized.
     __InitCode__();
-
-    // Set up the plugin function table that Netscape will use to
-    // call us. Netscape needs to know about our version and size
-    // and have a UniversalProcPointer for every function we implement.
-    pluginFuncs->version       = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
-    pluginFuncs->size          = sizeof(NPPluginFuncs);
-    pluginFuncs->newp          = NewNPP_NewProc(Private_New);
-    pluginFuncs->destroy       = NewNPP_DestroyProc(Private_Destroy);
-    pluginFuncs->setwindow     = NewNPP_SetWindowProc(Private_SetWindow);
-    pluginFuncs->newstream     = NewNPP_NewStreamProc(Private_NewStream);
-    pluginFuncs->destroystream = NewNPP_DestroyStreamProc(Private_DestroyStream);
-    pluginFuncs->asfile        = NewNPP_StreamAsFileProc(Private_StreamAsFile);
-    pluginFuncs->writeready    = NewNPP_WriteReadyProc(Private_WriteReady);
-    pluginFuncs->write         = NewNPP_WriteProc(Private_Write);
-    pluginFuncs->print         = NewNPP_PrintProc(Private_Print);
-    pluginFuncs->event         = NewNPP_HandleEventProc(Private_HandleEvent);	
-    pluginFuncs->urlnotify     = NewNPP_URLNotifyProc(Private_URLNotify);			
-    pluginFuncs->getvalue      = NewNPP_GetValueProc(Private_GetValue);
-    pluginFuncs->setvalue      = NewNPP_SetValueProc(Private_SetValue);
-    pluginFuncs->javaClass     = NULL;
+    rv = fillPluginFunctionTable(aNPPFuncs);
   }
 
   *aUnloadUpp = NewNPP_ShutdownProc(Private_Shutdown);
