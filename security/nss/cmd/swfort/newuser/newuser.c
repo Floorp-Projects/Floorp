@@ -633,7 +633,6 @@ main(int argc, char **argv)
 	CERTCertificate *cert;
 	CERTCertDBHandle *certhandle;
 	SECStatus rv;
-	SECMODModule *module;
 	unsigned char serial[16];
 	SECKEYPublicKey *pubKey;
 	DSAPrivateKey *keaPrivKey;
@@ -767,16 +766,6 @@ main(int argc, char **argv)
 	CI_GenerateRandom(random);
 	RNG_RandomUpdate(random,sizeof(random));
 
-	module = SECMOD_NewInternal();
-	if (module == NULL) {
-	    Terminate("Couldn't initialize security", 1, -1, caCert.card);
-	    exit(1);
-	}
-	rv = SECMOD_LoadModule(module);
-	if (rv != SECSuccess) {
-	    Terminate("Couldn't initialize security", 2, -1, caCert.card);
-	    exit(1);
-	}
 
     if (transportPin == NULL) transportPin = getPassPhrase();
     if (ssoMemPhrase == NULL) ssoMemPhrase = getPassPhrase();
@@ -838,10 +827,10 @@ main(int argc, char **argv)
 
 	switch (pubKey->keyType) {
 	case fortezzaKey:
-	    params = &pubKey->u.fortezza.params;
+	    params = (PQGParams *)&pubKey->u.fortezza.params;
 	    break;
 	case dsaKey:
-	    params = &pubKey->u.dsa.params;
+	    params = (PQGParams *)&pubKey->u.dsa.params;
 	    break;
 	default:
 	   Terminate("Certificate is not a fortezza or DSA Cert",
@@ -1044,12 +1033,14 @@ main(int argc, char **argv)
 	file->slotEntries = PORT_ZAlloc(sizeof(fortSlotEntry *)*5);
 	/* paa */
 	file->slotEntries[0] = PORT_ZNew(fortSlotEntry);
-	makeCertSlot(file->slotEntries[0],0,caCert.valid[0].label,
+	makeCertSlot(file->slotEntries[0],0,
+				(char *)caCert.valid[0].label,
 				&caCert.valid[0].cert->derCert,
 						Ks,NULL,NULL,NULL,0,p,q,g);
 	/* pca */
 	file->slotEntries[1] = PORT_ZNew(fortSlotEntry);
-	makeCertSlot(file->slotEntries[1],1,caCert.valid[pca_index].label,
+	makeCertSlot(file->slotEntries[1],1,
+				(char *)caCert.valid[pca_index].label,
 				&caCert.valid[pca_index].cert->derCert,
 						Ks,NULL,NULL,NULL,0,p,q,g);
 	/* ca */
@@ -1059,8 +1050,8 @@ main(int argc, char **argv)
 	caCert.label[5] = '0';
 	caCert.label[6] = '0';
 	caCert.label[7] = '1';
-	makeCertSlot(file->slotEntries[2],2,caCert.label,&myCACert->derCert,
-						Ks,NULL,NULL,NULL,0,p,q,g);
+	makeCertSlot(file->slotEntries[2],2,(char *)caCert.label,
+				&myCACert->derCert,Ks,NULL,NULL,NULL,0,p,q,g);
 	/* user */
 	file->slotEntries[3] = PORT_ZNew(fortSlotEntry);
 	strncpy(&userLabel[8],commonName,sizeof(CI_PERSON)-8);
