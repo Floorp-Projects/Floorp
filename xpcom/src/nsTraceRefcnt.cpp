@@ -188,22 +188,25 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
 #if defined(_WIN32)
-  HANDLE myProcess = ::GetCurrentProcess();
+  InitTraceLog();
+  if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
+    HANDLE myProcess = ::GetCurrentProcess();
 
-  if (!SymInitialize(myProcess, ".;..\\lib", TRUE)) {
-    return;
-  }
+    if (!SymInitialize(myProcess, ".;..\\lib", TRUE)) {
+      return;
+    }
 
-  BOOL b = ::SymLoadModule(myProcess,
-                           NULL,
-                           (char*)aLibraryName,
-                           (char*)aLibraryName,
-                           0,
-                           0);
+    BOOL b = ::SymLoadModule(myProcess,
+                             NULL,
+                             (char*)aLibraryName,
+                             (char*)aLibraryName,
+                             0,
+                             0);
 //  DWORD lastError = 0;
 //  if (!b) lastError = ::GetLastError();
 //  printf("loading symbols for library %s => %s [%d]\n", aLibraryName,
 //         b ? "true" : "false", lastError);
+  }
 #endif
 #endif
 }
