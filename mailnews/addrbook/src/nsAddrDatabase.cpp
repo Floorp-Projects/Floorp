@@ -269,12 +269,14 @@ NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 
 NS_IMETHODIMP nsAddrDatabase::AddListener(nsIAddrDBListener *listener)
 {
-    if (m_ChangeListeners == nsnull) 
+  if (!listener)
+    return NS_ERROR_NULL_POINTER;
+  if (m_ChangeListeners == nsnull) 
 	{
-        m_ChangeListeners = new nsVoidArray();
-        if (!m_ChangeListeners) 
+    m_ChangeListeners = new nsVoidArray();
+    if (!m_ChangeListeners) 
 			return NS_ERROR_OUT_OF_MEMORY;
-    }
+  }
 	PRInt32 count = m_ChangeListeners->Count();
 	PRInt32 i;
 	for (i = 0; i < count; i++)
@@ -307,8 +309,8 @@ NS_IMETHODIMP nsAddrDatabase::RemoveListener(nsIAddrDBListener *listener)
 
 NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
 {
-    if (m_ChangeListeners == nsnull)
-		return NS_OK;
+  if (m_ChangeListeners == nsnull)
+	  return NS_OK;
 	PRInt32 i;
 	for (i = 0; i < m_ChangeListeners->Count(); i++)
 	{
@@ -323,19 +325,24 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBL
 
 NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
 {
-    if (m_ChangeListeners == nsnull)
-		return NS_OK;
-	PRInt32 i;
-	PRInt32 count = m_ChangeListeners->Count();
-	for (i = 0; i < count; i++)
-	{
-		nsIAddrDBListener *changeListener = 
+  if (m_ChangeListeners == nsnull)
+	  return NS_OK;
+  PRInt32 i;
+  PRInt32 count = m_ChangeListeners->Count();
+  for (i = count - 1; i >= 0; i--)
+  {
+    nsIAddrDBListener *changeListener = 
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
-		nsresult rv = changeListener->OnCardEntryChange(abCode, card, instigator); 
-    NS_ENSURE_SUCCESS(rv, rv);
-	}
-    return NS_OK;
+    if (changeListener)
+    {
+      nsresult rv = changeListener->OnCardEntryChange(abCode, card, instigator); 
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else
+      m_ChangeListeners->RemoveElementAt(i); //remove null ptr in the list
+  }
+  return NS_OK;
 }
 
 nsresult nsAddrDatabase::NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator)
