@@ -405,6 +405,16 @@ class nsTSubstring_CharT : public nsTAString_CharT
           Assign(tuple);
         }
 
+        /**
+         * allows for direct initialization of a nsTSubstring object. 
+         *
+         * NOTE: this constructor is declared public _only_ for convenience
+         * inside the string implementation.
+         */
+      nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
+        : abstract_string_type(data, length, flags) {}
+
+
     protected:
 
       friend class nsTObsoleteAStringThunk_CharT;
@@ -418,10 +428,6 @@ class nsTSubstring_CharT : public nsTAString_CharT
       nsTSubstring_CharT()
         : abstract_string_type(
               NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer), 0, F_TERMINATED) {}
-
-        // allow subclasses to initialize fields directly
-      nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
-        : abstract_string_type(data, length, flags) {}
 
         // version of constructor that leaves mData and mLength uninitialized
       explicit

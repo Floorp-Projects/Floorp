@@ -345,6 +345,90 @@ static PRBool test_compress_ws()
     return rv;
   }
 
+static PRBool test_depend()
+  {
+    static const char kData[] = "hello world";
+
+    nsCStringContainer s;
+    NS_ENSURE_SUCCESS(
+        NS_CStringContainerInit2(s, kData, sizeof(kData)-1,
+                                 NS_CSTRING_CONTAINER_INIT_DEPEND),
+        PR_FALSE);
+
+    const char *sd;
+    NS_CStringGetData(s, &sd);
+
+    PRBool rv = (sd == kData);
+    NS_CStringContainerFinish(s);
+    return rv;
+  }
+
+static PRBool test_depend_sub()
+  {
+    static const char kData[] = "hello world";
+
+    nsCStringContainer s;
+    NS_ENSURE_SUCCESS(
+        NS_CStringContainerInit2(s, kData, sizeof(kData)-1,
+                                 NS_CSTRING_CONTAINER_INIT_DEPEND |
+                                 NS_CSTRING_CONTAINER_INIT_SUBSTRING),
+        PR_FALSE);
+
+    PRBool terminated;
+    const char *sd;
+    PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
+
+    PRBool rv = (sd == kData && len == sizeof(kData)-1 && !terminated);
+    NS_CStringContainerFinish(s);
+    return rv;
+  }
+
+static PRBool test_adopt()
+  {
+    static const char kData[] = "hello world";
+
+    char *data = (char *) nsMemory::Clone(kData, sizeof(kData));
+    if (!data)
+      return PR_FALSE;
+
+    nsCStringContainer s;
+    NS_ENSURE_SUCCESS(
+        NS_CStringContainerInit2(s, data, PR_UINT32_MAX,
+                                 NS_CSTRING_CONTAINER_INIT_ADOPT),
+        PR_FALSE); // leaks data on failure *shrug*
+
+    const char *sd;
+    NS_CStringGetData(s, &sd);
+
+    PRBool rv = (sd == data);
+    NS_CStringContainerFinish(s);
+    return rv;
+  }
+
+static PRBool test_adopt_sub()
+  {
+    static const char kData[] = "hello world";
+
+    char *data = (char *) nsMemory::Clone(kData, sizeof(kData)-1);
+    if (!data)
+      return PR_FALSE;
+
+    nsCStringContainer s;
+    NS_ENSURE_SUCCESS(
+        NS_CStringContainerInit2(s, data, sizeof(kData)-1,
+                                 NS_CSTRING_CONTAINER_INIT_ADOPT |
+                                 NS_CSTRING_CONTAINER_INIT_SUBSTRING),
+        PR_FALSE); // leaks data on failure *shrug*
+
+    PRBool terminated;
+    const char *sd;
+    PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
+
+    PRBool rv = (sd == data && len == sizeof(kData)-1 && !terminated);
+    NS_CStringContainerFinish(s);
+    return rv;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -362,6 +446,10 @@ tests[] =
     { "test_append", test_append },
     { "test_replace", test_replace },
     { "test_compress_ws", test_compress_ws },
+    { "test_depend", test_depend },
+    { "test_depend_sub", test_depend_sub },
+    { "test_adopt", test_adopt },
+    { "test_adopt_sub", test_adopt_sub },
     { nsnull, nsnull }
   };
 

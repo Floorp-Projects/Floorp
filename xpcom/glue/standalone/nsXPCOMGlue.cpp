@@ -288,6 +288,17 @@ NS_StringContainerInit(nsStringContainer &aStr)
     return xpcomFunctions.stringContainerInit(aStr);
 }
 
+extern "C" NS_COM nsresult
+NS_StringContainerInit2(nsStringContainer &aStr,
+                        const PRUnichar   *aData,
+                        PRUint32           aDataLength,
+                        PRUint32           aFlags)
+{
+    if (!xpcomFunctions.stringContainerInit2)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.stringContainerInit2(aStr, aData, aDataLength, aFlags);
+}
+
 extern "C" NS_COM void
 NS_StringContainerFinish(nsStringContainer &aStr)
 {
@@ -346,6 +357,17 @@ NS_CStringContainerInit(nsCStringContainer &aStr)
     if (!xpcomFunctions.cstringContainerInit)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.cstringContainerInit(aStr);
+}
+
+extern "C" NS_COM nsresult
+NS_CStringContainerInit2(nsCStringContainer &aStr,
+                         const char         *aData,
+                         PRUint32           aDataLength,
+                         PRUint32           aFlags)
+{
+    if (!xpcomFunctions.cstringContainerInit2)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.cstringContainerInit2(aStr, aData, aDataLength, aFlags);
 }
 
 extern "C" NS_COM void

@@ -96,6 +96,7 @@ typedef nsresult   (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 
 typedef nsresult   (* StringContainerInitFunc)(nsStringContainer&);
+typedef nsresult   (* StringContainerInit2Func)(nsStringContainer&, const PRUnichar *, PRUint32, PRUint32);
 typedef void       (* StringContainerFinishFunc)(nsStringContainer&);
 typedef PRUint32   (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
 typedef PRUnichar* (* StringCloneDataFunc)(const nsAString&);
@@ -104,6 +105,7 @@ typedef nsresult   (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, co
 typedef nsresult   (* StringCopyFunc)(nsAString &, const nsAString &);
 
 typedef nsresult   (* CStringContainerInitFunc)(nsCStringContainer&);
+typedef nsresult   (* CStringContainerInit2Func)(nsCStringContainer&, const char *, PRUint32, PRUint32);
 typedef void       (* CStringContainerFinishFunc)(nsCStringContainer&);
 typedef PRUint32   (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
 typedef char*      (* CStringCloneDataFunc)(const nsACString&);
@@ -159,9 +161,13 @@ typedef struct XPCOMFunctions{
     UTF16ToCString utf16ToCString;
     StringCloneDataFunc stringCloneData;
     CStringCloneDataFunc cstringCloneData;
+
+    // Added for Mozilla 1.8
     AllocFunc allocFunc;
     ReallocFunc reallocFunc;
     FreeFunc freeFunc;
+    StringContainerInit2Func stringContainerInit2;
+    CStringContainerInit2Func cstringContainerInit2;
    
 } XPCOMFunctions;
 

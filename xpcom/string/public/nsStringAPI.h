@@ -70,7 +70,7 @@ class nsACString;
  * implementation detail.
  *
  * The string data stored in a string container is always single fragment
- * and null-terminated.
+ * and may be null-terminated depending on how it is initialized.
  *
  * Typically, string containers are allocated on the stack for temporary
  * use.  However, they can also be malloc'd if necessary.  In either case,
@@ -129,6 +129,27 @@ class nsACString;
 class nsStringContainer;
 
 /**
+ * Flags that may be OR'd together to pass to NS_StringContainerInit2:
+ */
+enum {
+  /* Data passed into NS_StringContainerInit2 is not copied; instead, the
+   * string references the passed in data pointer directly.  The caller must
+   * ensure that the data is valid for the lifetime of the string container.
+   * This flag should not be combined with NS_STRING_CONTAINER_INIT_ADOPT. */
+  NS_STRING_CONTAINER_INIT_DEPEND    = (1 << 1),
+
+  /* Data passed into NS_StringContainerInit2 is not copied; instead, the
+   * string takes ownership over the data pointer.  The caller must have
+   * allocated the data array using the XPCOM memory allocator (nsMemory).
+   * This flag should not be combined with NS_STRING_CONTAINER_INIT_DEPEND. */
+  NS_STRING_CONTAINER_INIT_ADOPT     = (1 << 2),
+
+  /* Data passed into NS_StringContainerInit2 is a substring that is not
+   * null-terminated. */
+  NS_STRING_CONTAINER_INIT_SUBSTRING = (1 << 3)
+};
+
+/**
  * NS_StringContainerInit
  *
  * @param aContainer    string container reference
@@ -141,6 +162,32 @@ class nsStringContainer;
  */
 NS_STRINGAPI(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer);
+
+/**
+ * NS_StringContainerInit2
+ *
+ * @param aContainer    string container reference
+ * @param aData         character buffer (may be null)
+ * @param aDataLength   number of characters stored at aData (may pass
+ *                      PR_UINT32_MAX if aData is null-terminated)
+ * @param aFlags        flags affecting how the string container is
+ *                      initialized.  this parameter is ignored when aData
+ *                      is null.  otherwise, if this parameter is 0, then
+ *                      aData is copied into the string.
+ *
+ * This function resembles NS_StringContainerInit but provides further
+ * options that permit more efficient memory usage.  When aContainer is
+ * no longer needed, NS_StringContainerFinish should be called.
+ *
+ * NOTE: NS_StringContainerInit2(container, nsnull, 0, 0) is equivalent to
+ * NS_StringContainerInit(container).
+ *
+ * @status FROZEN
+ */
+NS_STRINGAPI(nsresult)
+NS_StringContainerInit2
+  (nsStringContainer &aContainer, const PRUnichar *aData = nsnull,
+   PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
 
 /**
  * NS_StringContainerFinish
@@ -347,11 +394,32 @@ NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
  * implementation detail.
  *
  * The string data stored in a string container is always single fragment
- * and null-terminated.
+ * and may be null-terminated depending on how it is initialized.
  *
  * @see nsStringContainer for use cases and further documentation.
  */
 class nsCStringContainer;
+
+/**
+ * Flags that may be OR'd together to pass to NS_StringContainerInit2:
+ */
+enum {
+  /* Data passed into NS_CStringContainerInit2 is not copied; instead, the
+   * string references the passed in data pointer directly.  The caller must
+   * ensure that the data is valid for the lifetime of the string container.
+   * This flag should not be combined with NS_CSTRING_CONTAINER_INIT_ADOPT. */
+  NS_CSTRING_CONTAINER_INIT_DEPEND    = (1 << 1),
+
+  /* Data passed into NS_CStringContainerInit2 is not copied; instead, the
+   * string takes ownership over the data pointer.  The caller must have
+   * allocated the data array using the XPCOM memory allocator (nsMemory).
+   * This flag should not be combined with NS_CSTRING_CONTAINER_INIT_DEPEND. */
+  NS_CSTRING_CONTAINER_INIT_ADOPT     = (1 << 2),
+
+  /* Data passed into NS_CStringContainerInit2 is a substring that is not
+   * null-terminated. */
+  NS_CSTRING_CONTAINER_INIT_SUBSTRING = (1 << 3)
+};
 
 /**
  * NS_CStringContainerInit
@@ -366,6 +434,32 @@ class nsCStringContainer;
  */
 NS_STRINGAPI(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer);
+
+/**
+ * NS_CStringContainerInit2
+ *
+ * @param aContainer    string container reference
+ * @param aData         character buffer (may be null)
+ * @param aDataLength   number of characters stored at aData (may pass
+ *                      PR_UINT32_MAX if aData is null-terminated)
+ * @param aFlags        flags affecting how the string container is
+ *                      initialized.  this parameter is ignored when aData
+ *                      is null.  otherwise, if this parameter is 0, then
+ *                      aData is copied into the string.
+ *
+ * This function resembles NS_CStringContainerInit but provides further
+ * options that permit more efficient memory usage.  When aContainer is
+ * no longer needed, NS_CStringContainerFinish should be called.
+ *
+ * NOTE: NS_CStringContainerInit2(container, nsnull, 0, 0) is equivalent to
+ * NS_CStringContainerInit(container).
+ *
+ * @status FROZEN
+ */
+NS_STRINGAPI(nsresult)
+NS_CStringContainerInit2
+  (nsCStringContainer &aContainer, const char *aData = nsnull,
+   PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
 
 /**
  * NS_CStringContainerFinish
