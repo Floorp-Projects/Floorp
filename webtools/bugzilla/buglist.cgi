@@ -23,6 +23,7 @@
 #                 Stephan Niemz  <st.n@gmx.net>
 #                 Andreas Franke <afranke@mathweb.org>
 #                 Myk Melez <myk@mozilla.org>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 ################################################################################
 # Script Initialization
@@ -706,19 +707,16 @@ $db_order =~ s/$aggregate_search/actual_time/g;
 $aggregate_search = quotemeta($columns->{'percentage_complete'}->{'name'});
 $db_order =~ s/$aggregate_search/percentage_complete/g;
 
+# Now put $db_order into a format that Bugzilla::Search can use.
+# (We create $db_order as a string first because that's the way
+# we did it before Bugzilla::Search took an "order" argument.)
+my @orderstrings = split(',', $db_order);
+
 # Generate the basic SQL query that will be used to generate the bug list.
 my $search = new Bugzilla::Search('fields' => \@selectnames, 
-                                  'params' => $params);
+                                  'params' => $params,
+                                  'order' => \@orderstrings);
 my $query = $search->getSQL();
-
-# Extra special disgusting hack: if we are ordering by target_milestone,
-# change it to order by the sortkey of the target_milestone first.
-if ($db_order =~ /bugs.target_milestone/) {
-    $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
-    $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
-}
-
-$query .= " ORDER BY $db_order " if ($order);
 
 if ($::FORM{'limit'} && detaint_natural($::FORM{'limit'})) {
     $query .= " LIMIT $::FORM{'limit'}";

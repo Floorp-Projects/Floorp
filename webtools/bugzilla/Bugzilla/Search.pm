@@ -24,6 +24,7 @@
 #                 Andreas Franke <afranke@mathweb.org>
 #                 Myk Melez <myk@mozilla.org>
 #                 Michael Schindler <michael@compressconsult.com>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 use strict;
 
@@ -43,17 +44,32 @@ use Bugzilla::Constants;
 use Date::Format;
 use Date::Parse;
 
+# Some fields are not sorted on themselves, but on other fields. 
+# We need to have a list of these fields and what they map to.
+# Each field points to an array that contains the fields mapped 
+# to, in order.
+our %specialorder = (
+    'bugs.target_milestone' => [ 'ms_order.sortkey','ms_order.value' ]
+);
+
+# When we add certain fields to the ORDER BY, we need to then add a
+# table join to the FROM statement. This hash maps input fields to 
+# the join statements that ned to be added.
+our %specialorderjoin = (
+    'bugs.target_milestone' => 'LEFT JOIN milestones AS ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id'
+);
+
 # Create a new Search
 # Note that the param argument may be modified by Bugzilla::Search
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
   
-    my $self = { @_ };  
+    my $self = { @_ };
     bless($self, $class);
-    
+
     $self->init();
-    
+ 
     return $self;
 }
 
@@ -63,8 +79,13 @@ sub init {
     my $params = $self->{'params'};
     my $user = $self->{'user'} || Bugzilla->user;
 
+    my $orderref = $self->{'order'} || 0;
+    my @inputorder;
+    @inputorder = @$orderref if $orderref;
+    my @orderby;
+
     my $debug = 0;
-        
+
     my @fields;
     my @supptables;
     my @wherepart;
@@ -1231,6 +1252,26 @@ sub init {
             }
         }
     }
+
+    # The ORDER BY clause goes last, but can require modifications
+    # to other parts of the query, so we want to create it before we
+    # write the FROM clause.
+    foreach my $orderitem (@inputorder) {
+        BuildOrderBy($orderitem, \@orderby);
+    }
+    # Now JOIN the correct tables in the FROM clause.
+    # This is done separately from the above because it's
+    # cleaner to do it this way.
+    foreach my $orderitem (@inputorder) {
+        # Grab the part without ASC or DESC.
+        my @splitfield = split(/\s+/, $orderitem);
+        if ($specialorderjoin{$splitfield[0]}) {
+            push(@supptables, $specialorderjoin{$splitfield[0]});
+        }
+        # FIXME: Some DBs require ORDER BY items to also
+        # be in GROUP BY.
+    }
+
     my %suppseen = ("bugs" => 1);
     my $suppstring = "bugs";
     my @supplist = (" ");
@@ -1255,7 +1296,7 @@ sub init {
     
     # Make sure we create a legal SQL query.
     @andlist = ("1 = 1") if !@andlist;
-   
+
     my $query = "SELECT " . join(', ', @fields) .
                 " FROM $suppstring" .
                 " LEFT JOIN bug_group_map " .
@@ -1286,6 +1327,10 @@ sub init {
 
     if (@having) {
         $query .= " HAVING " . join(" AND ", @having);
+    }
+
+    if (@orderby) {
+        $query .= " ORDER BY " . join(',', @orderby);
     }
 
     if ($debug) {
@@ -1474,5 +1519,59 @@ sub IsValidQueryType
         return 1;
     }
     return 0;
+}
+
+# BuildOrderBy - Private Subroutine
+# This function converts the input order to an "output" order,
+# suitable for concatenation to form an ORDER BY clause. Basically,
+# it just handles fields that have non-standard sort orders from
+# %specialorder.
+# Arguments:
+#  $orderitem - A string. The next value to append to the ORDER BY clause,
+#      in the format of an item in the 'order' parameter to
+#      Bugzilla::Search.
+#  $stringlist - A reference to the list of strings that will be join()'ed
+#      to make ORDER BY. This is what the subroutine modifies.
+#  $reverseorder - (Optional) A boolean. TRUE if we should reverse the order
+#      of the field that we are given (from ASC to DESC or vice-versa).
+#
+# Explanation of $reverseorder
+# ----------------------------
+# The role of $reverseorder is to handle things like sorting by
+# "target_milestone DESC".
+# Let's say that we had a field "A" that normally translates to a sort 
+# order of "B ASC, C DESC". If we sort by "A DESC", what we really then
+# mean is "B DESC, C ASC". So $reverseorder is only used if we call 
+# BuildOrderBy recursively, to let it know that we're "reversing" the 
+# order. That is, that we wanted "A DESC", not "A".
+sub BuildOrderBy {
+    my ($orderitem, $stringlist, $reverseorder) = (@_);
+
+    my @twopart = split(/\s+/, $orderitem);
+    my $orderfield = $twopart[0];
+    my $orderdirection = $twopart[1] || "";
+
+    if ($reverseorder) {
+        # If orderdirection is empty or ASC...
+        if (!$orderdirection || $orderdirection =~ m/asc/i) {
+            $orderdirection = "DESC";
+        } else {
+            # This has the minor side-effect of making any reversed invalid
+            # direction into ASC.
+            $orderdirection = "ASC";
+        }
+    }
+
+    # Handle fields that have non-standard sort orders, from $specialorder.
+    if ($specialorder{$orderfield}) {
+        foreach my $subitem (@{$specialorder{$orderfield}}) {
+            # DESC on a field with non-standard sort order means
+            # "reverse the normal order for each field that we map to."
+            BuildOrderBy($subitem, $stringlist, $orderdirection =~ m/desc/i);
+        }
+        return;
+    }
+
+    push(@$stringlist, $orderfield . ' ' . $orderdirection);
 }
 1;
