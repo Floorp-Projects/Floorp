@@ -48,7 +48,7 @@
 
           <menu label="&privacyMenu.label;" accesskey="&privacyMenu.accesskey;">
             <menupopup  id="personalManagers">
-              <menuitem id="lastInPersonalManagers" style="display:none;"/>
+              <menuitem id="lastInPersonalManagers" hidden="true"/>
             </menupopup>
            </menu>
          <menuseparator/>
