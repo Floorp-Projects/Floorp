@@ -513,27 +513,27 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
-	nsresult rv = NS_OK;
-	if (!mDatabase)
-	{
-		nsCOMPtr<nsIFileSpec> pathSpec;
-		rv = GetPath(getter_AddRefs(pathSpec));
-        if (NS_FAILED(rv)) return rv;
-        PRBool exists;
-        rv = pathSpec->Exists(&exists);
-        NS_ENSURE_SUCCESS(rv,rv);
-        if (!exists) return NS_ERROR_NULL_POINTER;  //mDatabase will be null at this point.
-
-		nsresult folderOpen = NS_OK;
-		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-
-		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
-		if (NS_SUCCEEDED(rv) && mailDBFactory)
-		{
-			folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
-			if(NS_FAILED(folderOpen) &&
-				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
-			{
+  nsresult rv = NS_OK;
+  if (!mDatabase)
+  {
+    nsCOMPtr<nsIFileSpec> pathSpec;
+    rv = GetPath(getter_AddRefs(pathSpec));
+    if (NS_FAILED(rv)) return rv;
+    PRBool exists;
+    rv = pathSpec->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!exists) return NS_ERROR_NULL_POINTER;  //mDatabase will be null at this point.
+    
+    nsresult folderOpen = NS_OK;
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+    
+    rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
+    if (NS_SUCCEEDED(rv) && mailDBFactory)
+    {
+      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+      if(NS_FAILED(folderOpen) &&
+        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
+      {
         nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
         nsCOMPtr <nsIDBFolderInfo> transferInfo;
         if (mDatabase)
@@ -542,53 +542,53 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
           if (dbFolderInfo)
           {
             if (folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
-                dbFolderInfo->SetFlags(mFlags);
+              dbFolderInfo->SetFlags(mFlags);
             dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
           }
           dbFolderInfo = nsnull;
         }
-				// if it's out of date then reopen with upgrade.
-				if(NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
-				{
-					return rv;
-				}
+        // if it's out of date then reopen with upgrade.
+        if(NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
+        {
+          return rv;
+        }
         else if (transferInfo && mDatabase)
         {
           mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
           if (dbFolderInfo)
             dbFolderInfo->InitFromTransferInfo(transferInfo);
         }
-			}
-	
-		}
-
-		if(mDatabase)
-		{
-
-			if(mAddListener)
-				mDatabase->AddListener(this);
-
-			// if we have to regenerate the folder, run the parser url.
-			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
-         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-			{
-              if(mFlags & MSG_FOLDER_FLAG_INBOX)
-                mParsingInbox = PR_TRUE;
-				if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
-					return rv;
-				else
-					return NS_ERROR_NOT_INITIALIZED;
-			}
-			else
-            {
-				//We must have loaded the folder so send a notification
+      }
+      
+    }
+    
+    if(mDatabase)
+    {
+      
+      if(mAddListener)
+        mDatabase->AddListener(this);
+      
+      // if we have to regenerate the folder, run the parser url.
+      if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
+        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+      {
+        if(mFlags & MSG_FOLDER_FLAG_INBOX)
+          mParsingInbox = PR_TRUE;
+        if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
+          return rv;
+        else
+          return NS_ERROR_NOT_INITIALIZED;
+      }
+      else
+      {
+        //We must have loaded the folder so send a notification
         NotifyFolderEvent(mFolderLoadedAtom);
-				//Otherwise we have a valid database so lets extract necessary info.
-				UpdateSummaryTotals(PR_TRUE);
-			}
-		}
-	}
-	return rv;
+        //Otherwise we have a valid database so lets extract necessary info.
+        UpdateSummaryTotals(PR_TRUE);
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -601,9 +601,15 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
     rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
   else
   {
-    NotifyFolderEvent(mFolderLoadedAtom);
-    rv = AutoCompact(aWindow);
-    NS_ENSURE_SUCCESS(rv,rv);
+    PRBool valid;
+    rv = mDatabase->GetSummaryValid(&valid);
+    // don't notify folder loaded or try compaction if db isn't valid (we're probably reparsing it)
+    if (NS_SUCCEEDED(rv) && valid)
+    {
+      NotifyFolderEvent(mFolderLoadedAtom);
+      rv = AutoCompact(aWindow);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
   }
   
   return rv;
