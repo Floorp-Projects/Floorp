@@ -32,7 +32,6 @@ Boolean 	gSDDlg = false;
 WindowPtr 	gWPtr = NULL;
 short		gCurrWin = 0;
 InstWiz		*gControls = NULL;
-static Boolean bInShutdown = false; 
 
 EventProc 			gSDIEvtHandler;  /* SDI */
 SDI_NETINSTALL 		gInstFunc;
@@ -158,10 +157,10 @@ InitOptObject(void)
 	/* ComponentsWin options */
 	for (i=0; i<kMaxComponents; i++)
 	{
-		if (gControls->cfg->st[0].comp[i] == kNotInSetupType)
-			gControls->opt->compSelected[i] = kNotSelected;
-		else if (gControls->cfg->st[0].comp[i] == kInSetupType)
+		if ((i<gControls->cfg->st[0].numComps) && (gControls->cfg->st[0].comp[i] == kInSetupType))
 			gControls->opt->compSelected[i] = kSelected;
+		else
+			gControls->opt->compSelected[i] = kNotSelected;
 	}	
 }
 
@@ -255,7 +254,7 @@ void MainEventLoop(void)
 		if (gSDDlg)			
 			YieldToAnyThread();  /* SmartDownload dialog thread */
 		
-		if (!gDone && !bInShutdown)	 /* after cx switch back ensure not done */
+		if (!gDone)	 /* after cx switch back ensure not done */
 		{
 			if(WaitNextEvent(everyEvent, &evt, 0, NULL))
 			{
@@ -283,7 +282,10 @@ void MainEventLoop(void)
  
 void ErrorHandler(void)
 {
-//TODO: this needs to be fixed.  
+// TO DO
+// 		* throw up an error dialog
+//		* handle a "fatality" parameter for recovery
+
 	SysBeep(10);
 	gDone = true;
 }
@@ -293,7 +295,6 @@ void Shutdown(void)
 	WindowPtr	frontWin;
 	long 		MIWMagic = 0;
 		
-	bInShutdown = true;
 	UnloadSDLib(&gConnID);
 	
 /* deallocate config object */
@@ -305,7 +306,7 @@ void Shutdown(void)
 /* deallocate all controls */	
 
 #if 0
-/* XXX gets dispose by DisposeWindow() ? */
+/* XXX gets disposed by DisposeWindow() ? */
 	if (gControls->nextB)
 		DisposeControl(gControls->nextB);  
 	if (gControls->backB)

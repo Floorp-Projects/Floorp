@@ -67,7 +67,6 @@ pascal void* Install(void* unused)
 	
 	/* call SDI_NetInstall */
 	gSDDlg = true;
-	// YieldToAnyThread();	/* force gSDDlg to be picked up by Main Thread */
 	ourHZ = GetZone();
 #if SDINST_IS_DLL == 1
 	gInstFunc(&sdistruct);
@@ -82,8 +81,13 @@ pascal void* Install(void* unused)
 	/* check if coreFile was downloaded */
 	HLock(gControls->cfg->coreFile);
 	if (*gControls->cfg->coreFile != NULL)
+	{
 		coreFile = CToPascal(*gControls->cfg->coreFile);
+		if (!coreFile)
+			return (void*) memFullErr;
+	}
 	HUnlock(gControls->cfg->coreFile);
+		
 	if (coreFile != NULL && *coreFile > 0) /* core file was specified */
 	{
 		err = FSMakeFSSpec(vRefNum, dirID, coreFile, &coreFileSpec);
@@ -97,12 +101,11 @@ pascal void* Install(void* unused)
 				return (void*) nil;
 			}
 					
-			sleep(1);
-		
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(vRefNum, dirID);
 			if (err!=noErr)
 				ErrorHandler();
+
 		}
 	
 		CleanupExtractedFiles();
@@ -141,7 +144,13 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	ERR_CHECK_RET(FSpOpenDF(idiSpec, fsRdWrPerm, &refNum), false);
 	
 	// setup buffer to at least 8K
+	buf = NULL;
 	buf = NewPtrClear(kGenIDIFileSize);
+	if (!buf)
+	{
+		ErrorHandler();
+		return false;
+	}
 	compsDone = 0;
 	instChoice = gControls->opt->instChoice-1;
 	
@@ -174,7 +183,8 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				keybuf = NewPtrClear(2);
 				keybuf = "]\r";
 				strncat(buf, keybuf, strlen(keybuf));
-				DisposePtr(keybuf);
+				if (keybuf)
+					DisposePtr(keybuf);
 
 				// write out \tdesc=
 				GetIndString(pkeybuf, rIDIKeys, sDesc);
@@ -184,10 +194,11 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				strncat(buf, keybuf, strlen(keybuf));	// \tdesc
 				ch = '=';								// \tdesc=
 				strncat(buf, &ch, 1);
-				DisposePtr(keybuf);
+				if (keybuf)
+					DisposePtr(keybuf);
 				
 				// write out gControls->cfg->comp[i].shortDesc\r
-				HLockHi(gControls->cfg->comp[i].shortDesc);
+				HLock(gControls->cfg->comp[i].shortDesc);
 				strncat(buf, *gControls->cfg->comp[i].shortDesc, strlen(*gControls->cfg->comp[i].shortDesc));				
 				HUnlock(gControls->cfg->comp[i].shortDesc);
 				ch = '\r';
@@ -204,19 +215,21 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 					strncat(buf, keybuf, strlen(keybuf));	// \t<n>
 					ch = '=';
 					strncat(buf, &ch, 1);					// \t<n>=
-					DisposePtr(keybuf);
+					if (keybuf)
+						DisposePtr(keybuf);
 					
 					// write out gControls->cfg->comp[i].url[j]+archive\r
-					HLockHi(gControls->cfg->comp[i].url[j]);					
+					HLock(gControls->cfg->comp[i].url[j]);					
 					strncat(buf, *gControls->cfg->comp[i].url[j], strlen(*gControls->cfg->comp[i].url[j]));
 					HUnlock(gControls->cfg->comp[i].url[j]);
-					HLockHi(gControls->cfg->comp[i].archive);
+					HLock(gControls->cfg->comp[i].archive);
 					strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
 					HUnlock(gControls->cfg->comp[i].archive);
 					ch = '\r';
 					strncat(buf, &ch, 1);
 				}
-				DisposePtr(fnum);
+				if (fnum)
+					DisposePtr(fnum);
 				compsDone++;
 			}
 		}
@@ -230,12 +243,14 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	ch = '[';
 	strncat(buf, &ch, 1);					// [
 	strncat(buf, keybuf, strlen(keybuf));	// [Netscape Install
-	DisposePtr(keybuf);
+	if (keybuf)
+		DisposePtr(keybuf);
 	
 	keybuf = NewPtrClear(2);
 	keybuf = "]\r";				
 	strncat(buf, keybuf, strlen(keybuf));	// [Netscape Install]\r
-	DisposePtr(keybuf);
+	if (keybuf)
+		DisposePtr(keybuf);
 	
 	// write out \tcore_file=<filename>\r
 	AddKeyToIDI( sCoreFile, gControls->cfg->coreFile, buf );
@@ -262,7 +277,8 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	// close file
 	ERR_CHECK_RET(FSClose(refNum), false)
 	
-	DisposePtr(buf);
+	if (buf)
+		DisposePtr(buf);
 	return bSuccess;
 }
 
@@ -272,7 +288,7 @@ AddKeyToIDI(short key, Handle val, char *ostream)
 	Str255	pkeybuf;
 	char 	*keybuf, *cval, ch;
 	
-	HLockHi(val);
+	HLock(val);
 	cval = *val;
 	
 	GetIndString(pkeybuf, rIDIKeys, key);
@@ -288,7 +304,8 @@ AddKeyToIDI(short key, Handle val, char *ostream)
 	
 	HUnlock(val);
 	
-	DisposePtr(keybuf);
+	if (keybuf)
+		DisposePtr(keybuf);
 }
 
 Boolean

@@ -85,8 +85,11 @@ ShowSetupTypeWin(void)
 		//Draw1Control(gControls->stw->instType);
 	
 		// setup type desc TE init and default item desc display
-		HLockHi((Handle)gControls->stw->instDescBox);
-		viewRect = (*(gControls->stw->instDescBox))->contrlRect;
+		HLock((Handle)gControls->stw->instDescBox);
+		SetRect(&viewRect,  (*(gControls->stw->instDescBox))->contrlRect.left,
+							(*(gControls->stw->instDescBox))->contrlRect.top,
+							(*(gControls->stw->instDescBox))->contrlRect.right,
+							(*(gControls->stw->instDescBox))->contrlRect.bottom);
 		HUnlock((Handle)gControls->stw->instDescBox);	
 		InsetRect(&viewRect, kTxtRectPad, kTxtRectPad);
 
@@ -95,7 +98,7 @@ ShowSetupTypeWin(void)
 		TextFace(normal);
 		TextSize(12);	
 		gControls->stw->instDescTxt = TENew( &viewRect, &viewRect);
-		HLockHi(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
+		HLock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		txtSize = strlen(*gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		TEInsert( *gControls->cfg->st[gControls->opt->instChoice - 1].longDesc, txtSize, gControls->stw->instDescTxt);
 		TESetAlignment( teFlushDefault, gControls->stw->instDescTxt);
@@ -105,7 +108,7 @@ ShowSetupTypeWin(void)
 	volName = (unsigned char **)NewPtrClear(sizeof(unsigned char *));
 	GetAllVInfo(volName, &numVols);	
 	gControls->stw->numVols = numVols;
-	HLockHi((Handle)gControls->stw->destLoc);
+	HLock((Handle)gControls->stw->destLoc);
 	pvtDataHdl = (PopupPrivateData **) (*(gControls->stw->destLoc))->contrlData;
 	popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
 	for (i=0; i<numVols; i++)
@@ -202,8 +205,11 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 	
-	HLockHi((Handle)gControls->stw->instType);
-	r = (**(gControls->stw->instType)).contrlRect;
+	HLock((Handle)gControls->stw->instType);
+	SetRect(&r, (**(gControls->stw->instType)).contrlRect.left,
+				(**(gControls->stw->instType)).contrlRect.top,
+				(**(gControls->stw->instType)).contrlRect.right,
+				(**(gControls->stw->instType)).contrlRect.bottom);
 	HUnlock((Handle)gControls->stw->instType);
 	if (PtInRect(localPt, &r))
 	{
@@ -212,8 +218,12 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		
 		gControls->opt->instChoice = GetControlValue(currCntl);
 		
-		r = (**(gControls->stw->instDescTxt)).viewRect;
-		HLockHi(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
+		SetRect(&r, (**(gControls->stw->instDescTxt)).viewRect.left,
+					(**(gControls->stw->instDescTxt)).viewRect.top,
+					(**(gControls->stw->instDescTxt)).viewRect.right,
+					(**(gControls->stw->instDescTxt)).viewRect.bottom);
+					
+		HLock(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
 		len = strlen(*gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
 		TESetText( *gControls->cfg->st[gControls->opt->instChoice-1].longDesc, len, gControls->stw->instDescTxt);
 		HUnlock(gControls->cfg->st[gControls->opt->instChoice-1].longDesc);
@@ -223,7 +233,10 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	}
 	
 	HLockHi((Handle)gControls->stw->destLoc);
-	r = (**(gControls->stw->destLoc)).contrlRect;
+	SetRect(&r, (**(gControls->stw->destLoc)).contrlRect.left,
+				(**(gControls->stw->destLoc)).contrlRect.top,
+				(**(gControls->stw->destLoc)).contrlRect.right,
+				(**(gControls->stw->destLoc)).contrlRect.bottom);
 	HUnlock((Handle)gControls->stw->destLoc);
 	if (PtInRect(localPt, &r))
 	{
@@ -380,9 +393,9 @@ void
 DrawDiskSpaceMsgs(short vRefNum)
 {
 	HVolumeParam	pb;
-	OSErr			err;
+	OSErr			err, reserr;
 	long			freeSpace;
-	TEHandle		diskSpaceMsgH;
+	TEHandle		dsAvailH, dsNeededH;
 	Rect			instDescBox, viewRect;
 	Handle			instDescRectH;
 	Str255			msg;
@@ -398,8 +411,16 @@ DrawDiskSpaceMsgs(short vRefNum)
 	freeSpace = pb.ioVFrBlk * pb.ioVAlBlkSiz;	// in bytes
 	freeSpace /= 1024;							// translate to kilobytes
 
+	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
-	HLockHi(instDescRectH);
+	reserr = ResError();
+	if (reserr!=noErr || !instDescRectH)
+	{
+		ErrorHandler();
+		return;
+	}
+	
+	HLock(instDescRectH);
 	instDescBox = (Rect) **((Rect**)instDescRectH);
 	SetRect( &viewRect, instDescBox.left, instDescBox.bottom + 2, 
 						instDescBox.right, instDescBox.bottom + 12 );
@@ -411,7 +432,13 @@ DrawDiskSpaceMsgs(short vRefNum)
 	TextSize(9);
 	TextFont(applFont);
 	EraseRect(&viewRect);	
-	diskSpaceMsgH = TENew(&viewRect, &viewRect);
+	dsAvailH = NULL;
+	dsAvailH = TENew(&viewRect, &viewRect);
+	if (!dsAvailH)
+	{
+		ErrorHandler();
+		return;
+	}
 	
 	/* Get the "Disk Space Available: " string */
 	GetIndString( msg, rStringList, sDiskSpcAvail );
@@ -427,16 +454,21 @@ DrawDiskSpaceMsgs(short vRefNum)
 	strcat( cmsg, ckb );
 	
 	/* draw the disk space available string */
-	TEInsert( cmsg, strlen(cmsg), diskSpaceMsgH );
-	TEUpdate( &viewRect, diskSpaceMsgH );
+	TEInsert( cmsg, strlen(cmsg), dsAvailH );
+	TEUpdate( &viewRect, dsAvailH );
 	
-	/* recycle msg pointer and handle */
-	TEDispose(diskSpaceMsgH);
+	/* recycle msg pointer */
 	DisposePtr((char*)cmsg);
 	
 	SetRect( &viewRect, instDescBox.right - 150, instDescBox.bottom + 2,
 						instDescBox.right, instDescBox.bottom + 12 );
-	diskSpaceMsgH = TENew( &viewRect, &viewRect );
+	dsNeededH = NULL;
+	dsNeededH = TENew( &viewRect, &viewRect );
+	if (!dsNeededH)
+	{
+		ErrorHandler();
+		return;
+	}
 	
 	/* Get the "Disk Space Needed: " string */
 	GetIndString( msg, rStringList, sDiskSpcNeeded );
@@ -452,14 +484,22 @@ DrawDiskSpaceMsgs(short vRefNum)
 	strcat( cmsg, ckb );
 	
 	/* draw the disk space available string */
-	TEInsert( cmsg, strlen(cmsg), diskSpaceMsgH );
-	TEUpdate( &viewRect, diskSpaceMsgH );
+	TEInsert( cmsg, strlen(cmsg), dsNeededH );
+	TEUpdate( &viewRect, dsNeededH );
 	
-	DisposePtr((char*)ckb);
-	free(cSpaceNeeded);		// malloc'd, not NewPtrClear'd
-	free(cfreeSpace);		// malloc'd, not NewPtrClear'd
-	DisposePtr((char*)cmsg);
-	TEDispose(diskSpaceMsgH);
+	if (dsAvailH)
+		TEDispose(dsAvailH);
+	if (dsNeededH)
+		TEDispose(dsNeededH);
+	
+	if (ckb)
+		DisposePtr((Ptr)ckb);
+	if (cSpaceNeeded)
+		free(cSpaceNeeded);		// malloc'd, not NewPtrClear'd
+	if (cfreeSpace)
+		free(cfreeSpace);		// malloc'd, not NewPtrClear'd
+	if (cmsg)
+		DisposePtr((Ptr)cmsg);
 	TextFont(systemFont);
 	TextSize(12);
 }
@@ -492,9 +532,18 @@ ClearDiskSpaceMsgs(void)
 {
 	Rect instDescBox, viewRect;
 	Handle instDescRectH;
+	OSErr	reserr;
 	
+	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
-	HLockHi(instDescRectH);
+	reserr = ResError();
+	if (reserr!=noErr || !instDescRectH)
+	{
+		ErrorHandler();
+		return;
+	}
+	
+	HLock(instDescRectH);
 	instDescBox = (Rect) **((Rect**)instDescRectH);
 	SetRect( &viewRect, instDescBox.left, instDescBox.bottom + 2, 
 						instDescBox.right, instDescBox.bottom + 12 );

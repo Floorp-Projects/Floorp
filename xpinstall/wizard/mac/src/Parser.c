@@ -274,7 +274,7 @@ PopulateCompWinKeys(char *cfgText)
 		currKey = PascalToC(pkey);
 		Handle sizeH = NewHandleClear(4); // long is four bytes
 		FillKeyValueUsingName(currSName, currKey, sizeH, cfgText);
-		HLockHi(sizeH);
+		HLock(sizeH);
 		gControls->cfg->comp[i].size = atol(*sizeH);
 		HUnlock(sizeH);
 		DisposeHandle(sizeH);
@@ -410,7 +410,7 @@ PopulateSetupTypeWinKeys(char *cfgText)
 				currCompName = NewPtrClear(kKeyMaxLen);
 				strncpy(currCompName, currSNameBuf, strlen(currSNameBuf));
 				
-				HLockHi(currVal);
+				HLock(currVal);
 				cNumIdx = strspn(currCompName, *currVal);
 				compIdx = *currVal+cNumIdx;
 				compNum = atoi(compIdx);

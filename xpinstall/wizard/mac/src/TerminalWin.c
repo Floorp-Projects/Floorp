@@ -96,20 +96,22 @@ UpdateTerminalWin(void)
 void 
 InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
-	Point 	localPt;
-	Rect	r;
+	Point 			localPt;
+	Rect			r;
 	ControlPartCode	part;
-	ThreadID		tid;
-	
-	GrafPtr	oldPort;
+	ThreadID 		tid;
+	GrafPtr			oldPort;
 	GetPort(&oldPort);
 	
 	SetPort(wCurrPtr);
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 					
-	HLockHi((Handle)gControls->backB);
-	r = (**(gControls->backB)).contrlRect;
+	HLock((Handle)gControls->backB);
+	SetRect(&r, (**(gControls->backB)).contrlRect.left,
+				(**(gControls->backB)).contrlRect.top,
+				(**(gControls->backB)).contrlRect.right,
+				(**(gControls->backB)).contrlRect.bottom);
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
 	{
@@ -137,8 +139,11 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 	}
 			
-	HLockHi((Handle)gControls->nextB);			
-	r = (**(gControls->nextB)).contrlRect;
+	HLock((Handle)gControls->nextB);		
+	SetRect(&r, (**(gControls->nextB)).contrlRect.left,
+				(**(gControls->nextB)).contrlRect.top,
+				(**(gControls->nextB)).contrlRect.right,
+				(**(gControls->nextB)).contrlRect.bottom);	
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))
 	{
@@ -158,7 +163,8 @@ SpawnSDThread(ThreadEntryProcPtr threadProc, ThreadID *tid)
 	OSErr			err;
 	
 	err = NewThread(kCooperativeThread, (ThreadEntryProcPtr)threadProc, (void*) nil, 
-					20000, kCreateIfNeeded, (void**)nil, tid);
+					0, kCreateIfNeeded, (void**)nil, tid);
+				//  ^---- 0 means gimme the default stack size from Thread Manager
 	if (err == noErr)
 		YieldToThread(*tid); /* force ctx switch */
 	else
