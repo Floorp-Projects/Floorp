@@ -822,15 +822,16 @@ function GetPromptService()
   return promptService;
 }
 
-const gShowDebugOutputStateChange = true;
+const gShowDebugOutputStateChange = false;
 const gShowDebugOutputProgress = false;
-const gShowDebugOutputStatusChange = true;
+const gShowDebugOutputStatusChange = false;
 
 const gShowDebugOutputLocationChange = false;
 const gShowDebugOutputSecurityChange = false;
 
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-const nsIChannel = Components.interfaces.nsIChannel
+const nsIChannel = Components.interfaces.nsIChannel;
+
 var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -883,16 +884,26 @@ var gEditorOutputProgressListener =
     }
 
     // Detect end of file upload of any file:
-    if ((aStateFlags & nsIWebProgressListener.STATE_STOP) && requestSpec)
+    if ((aStateFlags & nsIWebProgressListener.STATE_STOP))
     {
-      // New: Stop at the first bad aStatus, rather than waiting for STATE_IS_NETWORK message
+      // ignore aStatus == kErrorBindingAborted; check http response for possible errors
       try {
         // check http channel for response: 200 range is ok; other ranges are not
         var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
         var httpResponse = httpChannel.responseStatus;
         if (httpResponse < 200 || httpResponse >= 300)
           aStatus = httpResponse;   // not a real error but enough to pass check below
-      } catch(e) {}
+        else if (aStatus == kErrorBindingAborted)
+          aStatus = 0;
+
+        if (gShowDebugOutputStateChange)
+          dump("http response is: "+httpResponse+"\n");
+      } 
+      catch(e) 
+      {
+        if (aStatus == kErrorBindingAborted)
+          aStatus = 0;
+      }
 
       // Notify progress dialog when we receive the STOP
       //  notification for a file if there was an error 
@@ -911,6 +922,7 @@ var gEditorOutputProgressListener =
       {
         // Cancel the publish 
         gPersistObj.cancelSave();
+        gProgressDialog.SetProgressStatusCancel();
 
         //XXX TODO: we should provide more meaningful errors (if possible)
         var failedStr = GetString("PublishFailed");
@@ -1257,9 +1269,16 @@ function PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj)
   return ret;
 }
 
+const kErrorBindingAborted = 2152398850;
+const kErrorBindingRedirected = 2152398851;
+
 function DumpDebugStatus(aStatus)
 {
-  if (aStatus == 2152398852)
+  if (aStatus == kErrorBindingAborted)
+    dump("*****        status is NS_BINDING_ABORTED\n");
+  else if (aStatus == kErrorBindingRedirected)
+    dump("*****        status is NS_BINDING_REDIRECTED\n");
+  else if (aStatus == 2152398852)
     dump("*****        status is UNKNOWN_TYPE\n");
   else if (aStatus == 2152398853)
     dump("*****        status is DESTINATION_NOT_DIR\n");
@@ -1565,6 +1584,7 @@ function CancelPublishing()
 {
   try {
     gPersistObj.cancelSave(); // Cancel all networking transactions
+    gProgressDialog.SetProgressStatusCancel();
   } catch (e) {}
 
   // If canceling publishing do not do any commands after this    
