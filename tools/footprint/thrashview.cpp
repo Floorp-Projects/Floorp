@@ -118,7 +118,7 @@ static void
 decay()
 {
     unsigned char *page = pages;
-    unsigned char *last_page = pages + maxpage - minpage;
+    unsigned char *last_page = pages + (maxpage - minpage) + 1;
     for (; page < last_page; ++page) {
         if (*page) {
             *page /= 8;
