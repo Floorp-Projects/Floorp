@@ -92,6 +92,9 @@ public:
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected , PRUint32 aFlag/*not used*/);
+  NS_IMETHOD SetMouseDownState(PRBool aState);
+  NS_IMETHOD GetMouseDownState(PRBool *aState);
+
 /*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
@@ -152,15 +155,15 @@ private:
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
   nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
-  PRBool       GetDirection(){return mDirection;}
-  void         SetDirection(PRBool aDir){mDirection = aDir;}
+  nsDirection  GetDirection(){return mDirection;}
+  void         SetDirection(nsDirection aDir){mDirection = aDir;}
 
   NS_IMETHOD selectFrames(nsIDOMRange *aRange, PRBool aSelect);
   
   nsCOMPtr<nsISupportsArray> mRangeArray;
 
   nsCOMPtr<nsIDOMRange> mAnchorFocusRange;
-  PRBool mDirection; //FALSE = focus, anchor;  TRUE = anchor,focus
+  nsDirection mDirection; //FALSE = focus, anchor;  TRUE = anchor,focus
 
   //batching
   PRUint32 mBatching;
@@ -172,6 +175,7 @@ private:
   // for nsIScriptContextOwner
   void*		mScriptObject;
   nsIFocusTracker *mTracker;
+  PRBool mMouseDownState; //for drag purposes
 };
 
 class nsRangeListIterator : public nsIBidirectionalEnumerator
@@ -395,6 +399,7 @@ nsRangeList::nsRangeList()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mScriptObject = nsnull;
+  mDirection = PR_TRUE;
 }
 
 
@@ -476,7 +481,7 @@ NS_METHOD nsRangeList::GetAnchorNode(nsIDOMNode** aAnchorNode)
 	if (!aAnchorNode || !mAnchorFocusRange)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
-  if (mDirection){
+  if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetStartParent(aAnchorNode);
   }
   else{
@@ -490,7 +495,7 @@ NS_METHOD nsRangeList::GetAnchorOffset(PRInt32* aAnchorOffset)
 	if (!aAnchorOffset || !mAnchorFocusRange)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
-  if (mDirection){
+  if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetStartOffset(aAnchorOffset);
   }
   else{
@@ -505,7 +510,7 @@ NS_METHOD nsRangeList::GetFocusNode(nsIDOMNode** aFocusNode)
 	if (!aFocusNode || !mAnchorFocusRange)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
-  if (mDirection){
+  if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetEndParent(aFocusNode);
   }
   else{
@@ -520,7 +525,7 @@ NS_METHOD nsRangeList::GetFocusOffset(PRInt32* aFocusOffset)
 	if (!aFocusOffset || !mAnchorFocusRange)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
-  if (mDirection){
+  if (GetDirection() == eDirNext){
     result = mAnchorFocusRange->GetEndOffset(aFocusOffset);
   }
   else{
@@ -682,6 +687,7 @@ NS_IMETHODIMP
 nsRangeList::Init(nsIFocusTracker *aTracker)
 {
   mTracker = aTracker;
+  mMouseDownState = PR_FALSE;
   return NS_OK;
 }
 
@@ -723,33 +729,14 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
   if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
-return NS_OK;
-#if 0
-
-  nsIFrame *anchor;
-  nsIFrame *frame;
-  nsresult result = mTracker->GetFocus(&frame, &anchor);
-  if (NS_FAILED(result))
-    return result;
+  nsresult result = NS_OK;
   if (NS_KEY_DOWN == aGuiEvent->message) {
-
-    PRBool selected;
-    PRInt32 beginoffset = 0;
-    PRInt32 endoffset;
-    PRInt32 contentoffset;
-    nsresult result = NS_OK;
-
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
+    nsCOMPtr<nsIDOMNode> weakNodeUsed;
+    nsIDOMNode *weakNodeUsed;
+    PRInt32 offsetused = 0;
     nsIFrame *resultFrame;
-    PRInt32   frameOffset;
-    PRInt32   contentOffset;
-    PRInt32   offsetused = beginoffset;
-    nsIFrame *frameused;
     nsSelectionAmount amount = eSelectCharacter;
-    result = frame->GetSelected(&selected);
-    if (NS_FAILED(result)){
-      return result;
-    }
     if (keyEvent->isControl)
       amount = eSelectWord;
     switch (keyEvent->keyCode){
@@ -758,24 +745,25 @@ return NS_OK;
 #ifdef DEBUG_NAVIGATION
         printf("debug vk left\n");
 #endif
-        if (keyEvent->isShift || (endoffset < beginoffset)){ //f,a
-          offsetused = endoffset;
-          frameused = frame;
+        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
+          offsetused = fetchFocusOffset();
+          weakNodeUsed = dont_QueryInterface(fetchFocusNode());
         }
         else {
-          result = anchor->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
-          if (NS_FAILED(result)){
-            return result;
+          offsetused = fetchAnchorOffset();
+          weakNodeUsed = dont_QueryInterface(fetchAnchorNode());
+        }
+        if (weakNodeUsed && offsetused >=0){
+          nsIFrame *frame;
+          nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+          result = mTracker->GetPrimaryFrameFor(content, &frame);
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, &resultContent, &offsetused, PR_FALSE)) && resultFrame){
+            result = TakeFocus(resultContent, offsetused, keyEvent->isShift);
           }
-          offsetused = beginoffset;
-          frameused = anchor;
+          result = ScrollIntoView();
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
-          result = TakeFocus(resultFrame, frameOffset, contentOffset, keyEvent->isShift);
-        }
-        result = ScrollIntoView();
         break;
-      case nsIDOMEvent::VK_RIGHT : 
+/*      case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
 #ifdef DEBUG_NAVIGATION
         printf("debug vk right\n");
@@ -802,11 +790,15 @@ return NS_OK;
         printf("debug vk up\n");
 #endif
         break;
+      case nsIDOMEvent::VK_DOWN : 
+#ifdef DEBUG_NAVIGATION
+        printf("debug vk down\n");
+#endif
+        break;*/
     default :break;
     }
   }
   return result;
-#endif
 }
 
 #ifdef DEBUG
@@ -996,6 +988,27 @@ nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
 
 
+NS_METHOD 
+nsRangeList::SetMouseDownState(PRBool aState)
+{
+  mMouseDownState = aState;
+  return NS_OK;
+}
+
+
+
+NS_METHOD
+nsRangeList::GetMouseDownState(PRBool *aState)
+{
+  if (!aState)
+    return NS_ERROR_NULL_POINTER;
+  *aState = mMouseDownState;
+  return NS_OK;
+}
+
+
+
+//////////END FRAMESELECTION
 NS_METHOD
 nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
 {
@@ -1355,7 +1368,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
         if (NS_FAILED(res))
           return res;
-        SetDirection(PR_TRUE);
+        SetDirection(eDirNext);
         res = range->SetEnd(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1367,7 +1380,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(aParentNode, aOffset);
         if (NS_FAILED(res))
           return res;
-        SetDirection(PR_FALSE);
+        SetDirection(eDirPrevious);
         res = range->SetStart(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1380,7 +1393,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(aParentNode, aOffset);
         if (NS_FAILED(res))
           return res;
-        SetDirection(PR_TRUE);
+        SetDirection(eDirNext);
         res = range->SetEnd(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1402,12 +1415,12 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
         if (NS_FAILED(res))
           return res;
-        if (GetDirection() == PR_FALSE){
+        if (GetDirection() == eDirPrevious){
           res = range->SetStart(endNode,endOffset);
           if (NS_FAILED(res))
             return res;
         }
-        SetDirection(PR_TRUE);
+        SetDirection(eDirNext);
         res = range->SetEnd(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1419,7 +1432,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
         if (NS_FAILED(res))
           return res;
-        SetDirection(PR_FALSE);
+        SetDirection(eDirPrevious);
         res = range->SetStart(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1439,10 +1452,10 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res |= difRange->SetStart(aParentNode, aOffset);
         if (NS_FAILED(res))
           return res;
-        if (GetDirection() == PR_TRUE){
+        if (GetDirection() == eDirNext){
           range->SetEnd(startNode,startOffset);
         }
-        SetDirection(PR_FALSE);
+        SetDirection(eDirPrevious);
         res = range->SetStart(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1452,7 +1465,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         //select from 2 to 1
         res = difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
         res |= difRange->SetStart(aParentNode, aOffset);
-        SetDirection(PR_FALSE);
+        SetDirection(eDirPrevious);
         res = range->SetStart(aParentNode,aOffset);
         if (NS_FAILED(res))
           return res;
@@ -1465,11 +1478,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   }
 
-  // If we get here, the focus wasn't contained in any of the ranges.
-#ifdef DEBUG_mjudge
-  printf("nsRangeList::Extend: focus not contained in any ranges\n");
-#endif
-  return NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 

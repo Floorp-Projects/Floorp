@@ -210,9 +210,8 @@ public:
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, 
-                           nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
-                           PRBool aEatingWS)const;
+  NS_IMETHOD  PeekOffsetPeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
+                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const;
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
@@ -350,12 +349,6 @@ protected:
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
 
-  ///////////////////////////////////
-  // Important Selection Variables
-  ///////////////////////////////////
-  static PRBool     mDoingSelection;
-  static PRBool     mDidDrag;
-  static PRInt32    mStartPos;
 
   // Selection data is valid only from the Mouse Press to the Mouse Release
   ///////////////////////////////////
