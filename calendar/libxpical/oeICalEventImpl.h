@@ -81,7 +81,7 @@ public:
     oeICalEventImpl();
     virtual ~oeICalEventImpl();
     /* additional members */
-    void ParseIcalComponent( icalcomponent *vcalendar );
+    bool ParseIcalComponent( icalcomponent *vcalendar );
     icalcomponent *AsIcalComponent();
     icaltimetype GetNextAlarmTime( icaltimetype begin );
     bool matchId( const char *id );

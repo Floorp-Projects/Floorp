@@ -660,8 +660,11 @@ oeICalImpl::SetServer( const char *str ) {
             if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &icalevent ))) {
                 return rv;
             }
-            icalevent->ParseIcalComponent( vevent );
-            m_eventlist.Add( icalevent );
+            if( icalevent->ParseIcalComponent( vevent ) ) {
+                m_eventlist.Add( icalevent );
+            } else {
+                icalevent->Release();
+            }
         }
     }
     

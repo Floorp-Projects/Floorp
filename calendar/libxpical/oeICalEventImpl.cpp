@@ -995,7 +995,7 @@ NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
     return NS_OK;
 }
 
-void oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
+bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "ParseIcalComponent()\n" );
@@ -1005,7 +1005,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         #ifdef ICAL_DEBUG
         printf( "oeICalEventImpl::ParseIcalComponent() failed: vevent is NULL!\n" );
         #endif
-        return;
+        return false;
     }
 
     const char *tmpstr;
@@ -1020,7 +1020,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         #ifdef ICAL_DEBUG
         printf( "oeICalEventImpl::ParseIcalComponent() failed: UID not found!\n" );
         #endif
-        return;
+        return false;
     }
 
 //title
@@ -1297,6 +1297,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
             m_snoozetimes.push_back( snoozetimeinms );
         }
     }
+    return true;
 }
 
 #define ICALEVENT_VERSION "2.0"
