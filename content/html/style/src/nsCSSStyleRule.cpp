@@ -901,7 +901,6 @@ public:
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult SetCSSDeclaration(nsCSSDeclaration *aDecl);
   virtual nsresult GetCSSParsingEnvironment(nsICSSStyleRule* aRule,
                                             nsICSSStyleSheet** aSheet,
                                             nsIDocument** aDocument,
@@ -1001,16 +1000,6 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
   }
   else {
     *aDecl = nsnull;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-DOMCSSDeclarationImpl::SetCSSDeclaration(nsCSSDeclaration *aDecl)
-{
-  if (mRule) {
-    mRule->SetDeclaration(aDecl);
   }
 
   return NS_OK;
@@ -1152,10 +1141,7 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                     aParseOnlyOneDecl, &hint);
 
-      if (result == NS_CSS_PARSER_DROP_DECLARATION) {
-        SetCSSDeclaration(declClone);
-        result = NS_OK;
-      } else if (NS_SUCCEEDED(result)) {
+      if (NS_SUCCEEDED(result)) {
         if (cssSheet) {
           cssSheet->SetModified(PR_TRUE);
         }

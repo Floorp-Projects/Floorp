@@ -5667,7 +5667,7 @@ PresShell::BidiStyleChangeReflow()
   nsIFrame* rootFrame;
   mFrameManager->GetRootFrame(&rootFrame);
   if (rootFrame) {
-    mStyleSet->ClearStyleData(mPresContext, nsnull, nsnull);
+    mStyleSet->ClearStyleData(mPresContext, nsnull);
     ReconstructFrames();
   }
   return NS_OK;

@@ -770,10 +770,7 @@ protected:
   PRBool UseXBLForms();
 
   nsresult RecreateFramesForContent(nsIPresContext*  aPresContext,
-                                    nsIContent*      aContent, 
-                                    PRBool           aInlineStyle = PR_FALSE,
-                                    nsIStyleRule*    aRule = nsnull,
-                                    nsStyleContext*  aContext = nsnull);
+                                    nsIContent*      aContent);
 
   nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                            nsIContent*     aContent,

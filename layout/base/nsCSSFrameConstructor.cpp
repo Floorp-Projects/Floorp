@@ -10677,59 +10677,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
 #endif // INCLUDE_XUL
 
-  // check for inline style.  we need to clear the data at the style
-  // context's rule node whenever the inline style property changes.
-
-  nsRefPtr<nsStyleContext> styleContext;
-  nsCOMPtr<nsIStyleRule> rule;
-  PRBool inlineStyle = PR_FALSE;
-  if (aAttribute == nsHTMLAtoms::style) {
-    nsCOMPtr<nsIStyledContent> scontent(do_QueryInterface(aContent));
-    scontent->GetInlineStyleRule(getter_AddRefs(rule));
-    if (rule) {
-      inlineStyle = PR_TRUE;
-
-      // This style rule exists and we need to blow away any computed
-      // data that this rule cached in the rule tree.
-      if (primaryStyleFrame) {
-        styleContext = primaryStyleFrame->GetStyleContext();
-      } else {
-        // We might be in the undisplayed map.  Retrieve the style context from there.
-        nsCOMPtr<nsIFrameManager> frameManager;
-        shell->GetFrameManager(getter_AddRefs(frameManager));
-        styleContext = frameManager->GetUndisplayedContent(aContent);
-#ifdef DEBUG
-        if (!styleContext) {
-          nsCOMPtr<nsIContent> parent;
-          aContent->GetParent(*getter_AddRefs(parent));
-          if (parent) {
-            nsIFrame* parentFrame;
-            shell->GetPrimaryFrameFor(parent, &parentFrame);
-            NS_ASSERTION(!parentFrame,
-                     "parent frame but no child frame or undisplayed entry");
-          }
-        }
-#endif
-      }
-    }
-  }
-
-  // first see if we need to manage the style system: 
-  //  inlineStyle changes require us to clear out style data associated with the style attribute
-  // NOTE: for reframe, it happens after the old frames have been destroyed, not here, otherwise
-  //       we cannot get to the old style information for the old frame, and cannot correctly
-  //       deal with positioned frames or floaters (see bug 118415) - this is done in 
-  //       RecreateFramesForContent, which is called for a reframe
-  if (inlineStyle && 
-      (reconstruct || restyle) && 
-      !reframe) {
-    nsCOMPtr<nsIStyleSet> set;
-    shell->GetStyleSet(getter_AddRefs(set));
-    // XXXldb If |styleContext| is null, wouldn't it be faster to pass
-    // in something to tell it that this change is for inline style?
-    set->ClearStyleData(aPresContext, rule, styleContext);
-  }
-
   // See if we have appearance information for a theme.
   if (primaryFrame) {
     const nsStyleDisplay* disp;
@@ -10748,13 +10695,14 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
 
   // apply changes
-  if (primaryFrame && (aHint & nsChangeHint_AttrChange) && !(aHint & ~(nsChangeHint_AttrChange)))
+  if (primaryFrame && (aHint & nsChangeHint_AttrChange) && !(aHint & ~(nsChangeHint_AttrChange))) {
     result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
+  }
   else if (reconstruct) {
     result = ReconstructDocElementHierarchy(aPresContext);
   }
   else if (reframe) {
-    result = RecreateFramesForContent(aPresContext, aContent, inlineStyle, rule, styleContext);
+    result = RecreateFramesForContent(aPresContext, aContent);
   }
   else if (restyle) {
     // If there is no frame then there is no point in re-styling it,
@@ -10807,7 +10755,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       ProcessRestyledFrames(changeList, aPresContext);
     }
     else {  // no frame now, possibly genetate one with new style data
-      result = RecreateFramesForContent(aPresContext, aContent, inlineStyle, rule, styleContext);
+      result = RecreateFramesForContent(aPresContext, aContent);
     }
   }
 
@@ -10839,7 +10787,7 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
   if (restyle) {
     nsCOMPtr<nsIStyleSet> set;
     shell->GetStyleSet(getter_AddRefs(set));
-    set->ClearStyleData(aPresContext, aStyleRule, nsnull);
+    set->ClearStyleData(aPresContext, aStyleRule);
   }
 
   if (reframe) {
@@ -12064,9 +12012,7 @@ nsCSSFrameConstructor::CaptureStateFor(nsIPresContext* aPresContext,
 
 nsresult
 nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
-                                                nsIContent* aContent, PRBool aInlineStyle,
-                                                nsIStyleRule* aInlineStyleRule,
-                                                nsStyleContext* aStyleContext)                                   
+                                                nsIContent* aContent)
 {
   // Is the frame `special'? If so, we need to reframe the containing
   // block *here*, rather than trying to remove and re-insert the
@@ -12123,17 +12069,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
       // attribute change occurred.
       rv = ContentRemoved(aPresContext, container, aContent, indexInContainer, PR_FALSE);
 
-      // Now that the old frame is gone (and has stopped depending on obsolete style
-      // data), we need to blow away our style information if this reframe happened as
-      // a result of an inline style attribute changing.
-      if (aInlineStyle) {
-        nsCOMPtr<nsIStyleSet> set;
-        shell->GetStyleSet(getter_AddRefs(set));
-        // XXXldb If |aStyleContext| is null, wouldn't it be faster to pass
-        // in something to tell it that this change is for inline style?
-        set->ClearStyleData(aPresContext, aInlineStyleRule, aStyleContext);
-      }
-    
       if (NS_SUCCEEDED(rv)) {
         // Now, recreate the frames associated with this content object.
         rv = ContentInserted(aPresContext, container, aContent, indexInContainer, mTempFrameTreeState, PR_FALSE);
