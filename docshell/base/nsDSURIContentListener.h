@@ -27,15 +27,18 @@
 #include "nsString.h"
 #include "nsIURIContentListener.h"
 #include "nsICategoryManager.h"
+#include "nsWeakReference.h"
 
 class nsDocShell;
 
-class nsDSURIContentListener : public nsIURIContentListener
+class nsDSURIContentListener :
+    public nsIURIContentListener,
+    public nsSupportsWeakReference
+
 {
 friend class nsDocShell;
 public:
     NS_DECL_ISUPPORTS
-
     NS_DECL_NSIURICONTENTLISTENER
 
     nsresult Init();
@@ -50,7 +53,12 @@ protected:
 protected:
     nsDocShell*                      mDocShell;
 
-    nsIURIContentListener*           mParentContentListener;  // Weak Reference
+    // Store the parent listener in either of these depending on
+    // if supports weak references or not. Proper weak refs are
+    // preferred and encouraged!
+    nsWeakPtr                        mWeakParentContentListener;
+    nsIURIContentListener*           mParentContentListener;
+
     nsCOMPtr<nsICategoryManager>     mCatMgr;
 };
 

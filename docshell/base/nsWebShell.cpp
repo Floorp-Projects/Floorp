@@ -587,7 +587,6 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
         // throwing the click away.
         if (!uri && NS_SUCCEEDED(EnsureContentListener()))
         {
-            nsCOMPtr<nsIURIContentListener> listener = do_QueryInterface(mContentListener);
             NS_ConvertUCS2toUTF8 spec(aURLSpec);
             PRBool abort = PR_FALSE;
             uri = do_CreateInstance(kSimpleURICID, &rv);
@@ -598,7 +597,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                 NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
                 if (NS_SUCCEEDED(rv))
                 {
-                    listener->OnStartURIOpen(uri, &abort);
+                    mContentListener->OnStartURIOpen(uri, &abort);
                 }
             }
             // We didn't load the URI, so we failed
