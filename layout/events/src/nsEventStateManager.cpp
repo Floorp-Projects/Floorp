@@ -2304,7 +2304,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           event.eventStructType = NS_EVENT;
           event.message = NS_BLUR_CONTENT;
           
-          EnsureDocument(shell);
+          EnsureDocument(presShell);
           
           // Make sure we're not switching command dispatchers, if so, surpress the blurred one
           if(gLastFocusedDocument && mDocument) {
