@@ -26,18 +26,18 @@ $RegxpcomTest             = 1;
 $AliveTest                = 1;
 $JavaTest                 = 0;
 $ViewerTest               = 0;
-$BloatTest                = 0;
-$BloatTest2               = 0;
-$DomToTextConversionTest  = 0;
+$BloatTest                = 0;  # warren memory bloat test
+$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
+$DomToTextConversionTest  = 0;  
 $XpcomGlueTest            = 0;
-$CodesizeTest             = 0;
-$EmbedCodesizeTest        = 0;
+$CodesizeTest             = 0;  # Z,  require mozilla/tools/codesighs
+$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 $MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
-$LayoutPerformanceTest    = 0;
-$QATest                   = 0;
-$XULWindowOpenTest        = 0;
-$StartupPerformanceTest   = 0;
+$LayoutPerformanceTest    = 0;  # Tp
+$QATest                   = 0;  
+$XULWindowOpenTest        = 0;  # Txul
+$StartupPerformanceTest   = 0;  # Ts
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
 $results_server           = "tegu.mozilla.org";
