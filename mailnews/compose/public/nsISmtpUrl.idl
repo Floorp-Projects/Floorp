@@ -38,9 +38,9 @@ interface nsISmtpUrl : nsISupports {
 	// SMTP Parse specific getters --> retrieves portions from the url spec...
 	///////////////////////////////////////////////////////////////////////////////
 	
-	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
+	// This list is a list of all
 	// recipients to send the email to. each name is NULL terminated...
-	void GetAllRecipients(out string aRecipientsList);
+	attribute string recipients;
 
 	attribute boolean PostMessage;
 
@@ -61,8 +61,8 @@ interface nsISmtpUrl : nsISupports {
 	// the user's full name and user's email address are encapsulated in the senderIdentity.
 	// (the user's domain name can be glopped from the user's email address)
         //
-	// NOTE:  the SMTP username and SMTP server are in the mailto url
-	// mailto://sspitzer@tintin/...
+	// NOTE:  the SMTP username and SMTP server are in the smtp url
+	// smtp://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
     attribute nsINetPrompt netPrompt;
     attribute nsISmtpServer smtpServer;
