@@ -41,6 +41,7 @@ CPPSRCS =     \
   nsHTMLContentSinkStream.cpp \
   nsXIFDTD.cpp \
   nsParserFactory.cpp \
+  nsLoggingSink.cpp \
   $(NULL)
 
 EXPORTS =     \
@@ -49,6 +50,7 @@ EXPORTS =     \
   nsIHTMLContentSink.h  \
   nsHTMLContentSinkStream.h \
   nsHTMLTokens.h    \
+  nsILoggingSink.h   \
   nsIParserNode.h   \
   nsIParser.h   \
   nsIDTD.h \
