@@ -95,6 +95,8 @@ static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 #define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) 
 #endif
 
+// XXX Part of Temporary fix for Bug 127263
+PRBool nsPageFrame::mDoCreateWidget = PR_TRUE;
 
 nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -130,12 +132,12 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsIView * view;
   aChildList->GetView(aPresContext, &view);
-  if (view != nsnull) {
+  if (view != nsnull && mDoCreateWidget) {
     nscoord dx, dy;
-    nsIWidget* widget;
-    view->GetOffsetFromWidget(&dx, &dy, widget);
+    nsCOMPtr<nsIWidget> widget;
+    view->GetOffsetFromWidget(&dx, &dy, *getter_AddRefs(widget));
     nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-    if (ppContext && widget != nsnull) {
+    if (ppContext && widget) {
       view->CreateWidget(kCChildCID);  
     }
   }
