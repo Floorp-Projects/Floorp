@@ -1645,7 +1645,7 @@ struct nsDomainEntry {
         int thisLen = mOrigin.Length();
         if (len < thisLen)
             return PR_FALSE;
-        if (mOrigin != (anOrigin + (len - thisLen)))
+        if (!mOrigin.Equals(anOrigin + (len - thisLen)))
             return PR_FALSE;
         if (len == thisLen)
             return PR_TRUE;
