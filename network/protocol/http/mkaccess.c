@@ -54,7 +54,6 @@
 
 extern int XP_CONFIRM_AUTHORIZATION_FAIL;
 extern int XP_ACCESS_ENTER_USERNAME;
-extern int XP_ACCESS_ENTER_USERNAME;
 extern int XP_CONFIRM_PROXYAUTHOR_FAIL;
 extern int XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST;
 extern int XP_PROXY_REQUIRES_UNSUPPORTED_AUTH_SCHEME;
@@ -175,27 +174,61 @@ PRIVATE net_AuthStruct *
 net_CheckForAuthorization(char * address, Bool exact_match)
 {
 
+    char *atSign, *fSlash, *afterProto, *newAddress=NULL;
+    char tmp;
     XP_List * list_ptr = net_auth_list;
     net_AuthStruct * auth_s;
 
 	TRACEMSG(("net_CheckForAuthorization: checking for auth on: %s", address));
 
+    /* Auth struct->path doesn't contain username/password info (such as
+    * http://uname:pwd@host.com, so make sure we don't compare an address
+    * passed in with one with an auth struct->path until we remove/reduce the 
+    * address passed in. */
+    if( (afterProto=PL_strstr(address, "://")) ) {
+    afterProto=afterProto+3;
+    tmp=*afterProto;
+    *afterProto='\0';
+    StrAllocCopy(newAddress, address);
+    *afterProto=tmp;
+
+    /* temporarily truncate after first slash, if any. */
+    if( (fSlash=PL_strchr(afterProto, '/')) )
+      *fSlash='\0';
+    atSign=PL_strchr(afterProto, '@');
+    if(fSlash)
+      *fSlash='/';
+    if(atSign)
+      StrAllocCat(newAddress, atSign+1);
+    else
+      StrAllocCat(newAddress, afterProto);
+    }
+
     while((auth_s = (net_AuthStruct *) XP_ListNextObject(list_ptr))!=0)
       {
+        XP_ASSERT(newAddress);
+        if(!newAddress)
+            return NULL;
+
 		if(exact_match)
 		  {
-		    if(!PL_strcmp(address, auth_s->path))
-			    return(auth_s);
+            if(!PL_strcmp(address, auth_s->path)) {
+                XP_FREE(newAddress);       
+                return(auth_s);
+            }
 		  }
 		else
 		  {
 			/* shorter strings always come last so there can be no
 			 * ambiquity
 			 */
-		    if(!PL_strncasecmp(address, auth_s->path, PL_strlen(auth_s->path)))
-			    return(auth_s);
+            if(!PL_strncasecmp(address, auth_s->path, PL_strlen(auth_s->path))) {
+                XP_FREE(newAddress);       
+                return(auth_s);
+            }
 		  }
       }
+    XP_FREE(newAddress);
 	HG25262
    
     return(NULL);
@@ -731,25 +764,18 @@ NET_AskForAuthString(MWContext *context,
 	if(!password || re_authorize)
 	  {
 		XP_Bool remember_password;
+        char *loginString=XP_GetString(XP_ACCESS_ENTER_USERNAME);
 	   	host = NET_ParseURL(address, GET_HOST_PART);
 
 		/* malloc memory here to prevent buffer overflow */
-		len = PL_strlen(XP_GetString(XP_ACCESS_ENTER_USERNAME));
-		len += PL_strlen(realm) + PL_strlen(host) + 10;
-		
+		len = XP_STRLEN(loginString) + XP_STRLEN(realm) + XP_STRLEN(host) + 10;
 		buf = (char *)PR_Malloc(len*sizeof(char));
 		
-		if(buf)
-		  {
-			PR_snprintf( buf, len*sizeof(char), 
-						XP_GetString(XP_ACCESS_ENTER_USERNAME), 
-						realm, host);
+		if(buf) {
+            PR_snprintf( buf, len*sizeof(char), loginString, realm, host);
 
 
 			NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST) );
-			if (username && !(*username))
-				PR_Free(username);
-			PR_FREEIF(password);
 #if defined(SingleSignon)
 			/* prefill prompt with previous username/passwords if any */
 			status = SI_PromptUsernameAndPassword
@@ -761,16 +787,13 @@ NET_AskForAuthString(MWContext *context,
 #endif
 	
 			PR_Free(buf);
-		  }
-		else
-		  {
-			status = 0;
-		  }
+        } else {
+	        status = 0;
+		}
 
 		PR_Free(host);
 
-		if(!status)
-		  {
+		if(!status) {
 			TRACEMSG(("User canceled login!!!"));
 
 			/* if the paths are exact and the user cancels
@@ -828,6 +851,7 @@ NET_AskForAuthString(MWContext *context,
 	  }
 	else
 	  {
+        char *atSign, *host, *fSlash;
 		XP_List * list_ptr = net_auth_list;
 		net_AuthStruct * tmp_auth_ptr;
 		size_t new_len;
@@ -848,7 +872,35 @@ NET_AskForAuthString(MWContext *context,
 		prev_auth->username = username;
         prev_auth->password = password;
 		prev_auth->path = 0;
-		StrAllocCopy(prev_auth->path, new_address);
+       /* Don't save username/password info in the auth struct path. */
+        if( (atSign=PL_strchr(new_address, '@')) ) {
+          if( (host=PL_strstr(new_address, "://")) ) {
+            char tmp;
+            host+=3;
+            tmp=*host;
+            *host='\0';
+            StrAllocCopy(prev_auth->path, new_address);
+            *host=tmp;
+        
+            fSlash=PL_strchr(host, '/');
+            if(fSlash)
+              *fSlash='\0';
+            /* Do the atSign check again so we're sure to get one between the 
+             * protocol part and the first slash. */
+            atSign=PL_strchr(host, '@');
+            if(fSlash)
+              *fSlash='/';
+
+            if(atSign) {
+              StrAllocCat(prev_auth->path, atSign+1);
+            } else {
+              StrAllocCat(prev_auth->path, host);
+            }
+          }
+        } else {
+          StrAllocCopy(prev_auth->path, new_address);
+        }
+
 		prev_auth->realm = 0;
 		StrAllocCopy(prev_auth->realm, realm);
 
