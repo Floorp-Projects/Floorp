@@ -5569,6 +5569,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             char* uriSpec;
             uri->GetSpec(&uriSpec);
             printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+            nsCRT::free(uriSpec);
           }
         }
       }
