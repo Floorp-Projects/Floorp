@@ -28,6 +28,7 @@
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
+#include "nsEscape.h"
 #include "nsNeckoUtil.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerContainer.h"
@@ -134,7 +135,6 @@ protected:
   nsresult ProcessOneLine();
   nsresult ParseFormat(const char* aFormatStr);
   nsresult ParseData(const char* aDataStr);
-  char URLUnescape(const char** aStr);
 
   nsAutoString mComment;
 
@@ -306,6 +306,15 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   nsresult rv;
 
   if (mContainer) {
+    // We need to undo the AddRef() on the nsHTTPIndex objectthat
+    // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
+    // stuff it into an nsCOMPtr (because we _know_ it'll get release
+    // if any errors occur)...
+    nsCOMPtr<nsIHTTPIndex> httpindex = do_QueryInterface(mHTTPIndex);
+
+    // ...and then _force_ a release here
+    mHTTPIndex->Release();
+
     // Now get the content viewer container's script object.
     nsCOMPtr<nsIScriptContextOwner> contextowner;
     rv = mContainer->QueryCapability(nsCOMTypeInfo<nsIScriptContextOwner>::GetIID(),
@@ -328,7 +337,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
     rv = xpc->WrapNative(jscontext,                       
-                         mHTTPIndex,
+                         httpindex,
                          nsCOMTypeInfo<nsIHTTPIndex>::GetIID(),
                          getter_AddRefs(wrapper));
 
@@ -495,10 +504,12 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
     if (! aFormatStr)
       break;
 
-    nsAutoString name;
-    while (*aFormatStr && !nsString::IsSpace(PRUnichar(*aFormatStr))) {
-      name.Append(URLUnescape(&aFormatStr));
-    }
+    nsCAutoString name;
+    while (*aFormatStr && !nsString::IsSpace(PRUnichar(*aFormatStr)))
+      name.Append(*aFormatStr++);
+
+    // Okay, we're gonna monkey with the nsStr. Bold!
+    name.mLength = nsUnescapeCount(name.mStr);
 
     nsIRDFResource* resource = nsnull;
     for (Field* field = gFieldTable; field->mName; ++field) {
@@ -553,13 +564,13 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     while (*aDataStr && nsString::IsSpace(PRUnichar(*aDataStr)))
       ++aDataStr;
 
-    nsAutoString value;
+    nsCAutoString value;
 
     if (*aDataStr == '"' || *aDataStr == '\'') {
       // it's a quoted string. snarf everything up to the next quote character
       const char quotechar = *(aDataStr++);
       while (*aDataStr && *aDataStr != quotechar)
-        value.Append(URLUnescape(&aDataStr));
+        value.Append(*aDataStr++);
 
       if (! aDataStr) {
         NS_WARNING("quoted value not terminated");
@@ -568,8 +579,11 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     else {
       // it's unquoted. snarf until we see whitespace.
       while (*aDataStr && !nsString::IsSpace(*aDataStr))
-        value.Append(URLUnescape(&aDataStr));
+        value.Append(*aDataStr++);
     }
+
+    // Monkey with the nsStr, because we're bold.
+    value.mLength = nsUnescapeCount(value.mStr);
 
     values[field] = value;
 
@@ -618,60 +632,6 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
 }
 
 
-
-char
-nsHTTPIndexParser::URLUnescape(const char** aStr)
-{
-  // This funky little function will URL unescape (per RFC1738) the
-  // contents pointed to at aStr, and then move aStr forward an
-  // appropriate number of characters to deal with the unescaping.
-  //
-  // For example,
-  //
-  //   char* p = "%20foo";
-  //   char c = URLUnescape(p);
-  //   /* now c = ' ' and p points to "foo" */
-  //
-  static const char kHex[] = "0123456789abcdef";
-
-  char c = **aStr;
-  if (c == '%') {
-    const char* p = *aStr;
-    char c2 = 0;
-
-    for (PRInt32 i = 0; i < 2; ++i) {
-      char digit;
-
-      digit = *(++p);
-
-      // Illegal escape at the end of the string; e.g., "%". Bail.
-      if (! digit)
-        goto done;
-
-      if (digit >= 'A' && digit <= 'F')
-        digit = digit - 'A' + 'a';
-
-      char* offset = PL_strchr(kHex, digit);
-
-      // Character isn't in [0-9a-f]. Bail.
-      if (! offset)
-        goto done;
-
-      c2 *= 16;
-      c2 += char(offset - kHex);
-    }
-
-    (*aStr) += 3;
-    return c2;
-  }
-
-
-done:
-  (*aStr)++;
-  return c;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 // nsHTTPIndex implementation
 
@@ -695,7 +655,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
   if (NS_FAILED(rv)) return rv;
 
   static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-  rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, this,
+  rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull,
                                           nsCOMTypeInfo<nsIRDFDataSource>::GetIID(),
                                           getter_AddRefs(mDataSource));
   if (NS_FAILED(rv)) return rv;
@@ -729,19 +689,7 @@ nsHTTPIndex::~nsHTTPIndex()
 }
 
 NS_IMPL_ADDREF(nsHTTPIndex);
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTTPIndex::Release()
-{
-  --mRefCnt;
-  if (mRefCnt == 1 && mDataSource) {
-    mDataSource = nsnull; /* nsCOMPtr triggers Release() */
-  }
-  else if (mRefCnt == 0) {
-    delete this;
-  }
-  return mRefCnt;
-}
+NS_IMPL_RELEASE(nsHTTPIndex);
 
 NS_IMETHODIMP
 nsHTTPIndex::QueryInterface(REFNSIID aIID, void** aResult)
@@ -828,11 +776,6 @@ public:
                                        const char *aCommand,
                                        nsIContentViewer** aDocViewerResult);
 };
-
-#ifdef CONSTRUCT_XUL_DOCUMENT_SYNCHRONOUSLY
-NS_IMPL_ISUPPORTS(nsDirectoryViewerFactory::ProxyStream, nsCOMTypeInfo<nsIInputStream>::GetIID());
-#endif
-
 
 nsDirectoryViewerFactory::nsDirectoryViewerFactory()
 {
@@ -938,6 +881,13 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   // wrapper beastie.
   rv = httpindex->CreateListener(aDocListenerResult);
   if (NS_FAILED(rv)) return rv;
+
+  // addref the nsIHTTPIndex so that it'll live long enough to get
+  // added to the embedder's script global object; this happens when
+  // the stream's OnStartRequest() is called. (We can feel safe that
+  // this'll happen because of the flow-of-control in nsWebShell.cpp)
+  nsIHTTPIndex* dummy = httpindex;
+  NS_ADDREF(dummy);
 
   return NS_OK;
 }
