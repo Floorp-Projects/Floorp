@@ -462,7 +462,7 @@ Contributor(s):
             <menuseparator/> 
             <menuitem label="&preferencesCmd.label;"
                       accesskey="&preferencesCmd.accesskey;"
-                      oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+                      oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
         </menu>
     

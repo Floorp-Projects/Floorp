@@ -1,9 +1,9 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
+<?xul-overlay href="chrome://browser/content/pref/preftree.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref.dtd" >
 
 
 <!-- This dialog has a fixed size and is not resizable. 
@@ -48,10 +48,10 @@
   </script>        
         
   <stringbundle id="bundle_prefutilities"
-               src="chrome://communicator/locale/pref/prefutilities.properties"/>
+               src="chrome://browser/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-help.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-help.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <hbox flex="1">
@@ -70,8 +70,8 @@
         document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
       }
       else {
-        document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/pref/pref-navigator.xul" );
-        document.getElementById("panelFrame").setAttribute("tag", "chrome://communicator/content/pref/pref-navigator.xul" );
+        document.getElementById("panelFrame").setAttribute("src", "chrome://browser/content/pref/pref-navigator.xul" );
+        document.getElementById("panelFrame").setAttribute("tag", "chrome://browser/content/pref/pref-navigator.xul" );
       }
     ]]>
     </script>
