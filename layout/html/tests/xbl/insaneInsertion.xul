@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="insaneInsertion.css"?>
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<window id="insaneInsertion"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        orient="vertical" autostretch="never">
+<html>
+    Below this text is a group of XUL widgets with the labels A-I.  If
+  the insertion code is behaving correctly, then the widgets will all be in alphabetical
+  order.  Clicking on the button labeled 'D' should cause an alert to pop up indicating
+  that the button was clicked.
+  </html>
+
+  <box id="numberone">
+    <button label="d"/> 
+    <text value="f"/> 
+  </box>
+
+</window>
