@@ -1455,14 +1455,14 @@ static char kNameSpaceSeparator[] = ":";
     // are built via the content model builders.
     //
     // Since mNameSpace will _always_ be null, specifying
-    // kNameSpaceID_Unknown allows us to at least match on the
+    // kNameSpaceID_None allows us to at least match on the
     // tag. You'll start seeing problems when the same name is used in
     // different namespaces.
     //
     // See http://bugzilla.mozilla.org/show_bug.cgi?id=3275 for more
     // info.
 
-    aNameSpaceID = kNameSpaceID_Unknown; // XXX should be kNameSpaceID_None
+    aNameSpaceID = kNameSpaceID_None;
     if (0 < prefix.Length()) {
         nsIAtom* nameSpaceAtom = NS_NewAtom(prefix);
         if (mNameSpace) {
@@ -1722,7 +1722,8 @@ done:
         for (index = 0; index < count; index++) {
             const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
             if (((attr->mNameSpaceID == aNameSpaceID) ||
-                 (aNameSpaceID == kNameSpaceID_Unknown)) &&
+                 (aNameSpaceID == kNameSpaceID_Unknown) ||
+                 (aNameSpaceID == kNameSpaceID_None)) &&
                 (attr->mName == aName)) {
                 aResult = attr->mValue;
                 if (0 < aResult.Length()) {

@@ -1787,7 +1787,7 @@ RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
 
     // XXX check to see if we need to insert a '/' or a '#'
     nsAutoString tag(aNameAtom->GetUnicode());
-    if (uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
+    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
         uri.Append('#');
 
     uri.Append(tag);
