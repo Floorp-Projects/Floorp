@@ -2449,6 +2449,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   if (nNeedToShow)
     Show(PR_TRUE);
 
+  if (aRepaint)
+    Invalidate(PR_FALSE);
+
   return NS_OK;
 }
 

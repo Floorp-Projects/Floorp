@@ -1182,6 +1182,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
         NS_IF_RELEASE(par);
     }
+    
+    if (aRepaint)
+        Invalidate(PR_FALSE);
+    
     return NS_OK;
 }
 
@@ -1231,6 +1235,10 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 
         NS_IF_RELEASE(par);
     }
+
+    if (aRepaint)
+        Invalidate(PR_FALSE);
+
     return NS_OK;
 }
 
