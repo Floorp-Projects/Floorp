@@ -62,7 +62,7 @@ static int EndVCard (MimeObject *obj);
 static int WriteOutVCard (MimeObject *obj, VObject* v);
 static int WriteOutEachVCardProperty (MimeObject *obj, VObject* v, int* numEmail);
 static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail);
-static int WriteLineToStream (MimeObject *obj, const char *line);
+static int WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion);
 
 static void GetEmailProperties (VObject* o, char ** attribName);
 static void GetTelephoneProperties (VObject* o, char ** attribName);
@@ -497,7 +497,7 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
 					PR_FREEIF (string);
 					return status;
 				}
-				status = WriteLineToStream (obj, string);
+				status = WriteLineToStream (obj, string, PR_TRUE);
 				PR_FREEIF (string);
 				if (status < 0) return status;
 				status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -604,7 +604,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 			return status;
 		}
 
-		status = WriteLineToStream (obj, htmlLine);
+		status = WriteLineToStream (obj, htmlLine, PR_TRUE);
 		PR_Free (htmlLine); 
 		if (status < 0) return status;
 		status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
@@ -705,7 +705,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	/* output the name if there was one */
 	if (htmlLine1)
 	{
-		status = WriteLineToStream (obj, htmlLine1);
+		status = WriteLineToStream (obj, htmlLine1, PR_TRUE);
 		PR_FREEIF (htmlLine1);
 		if (status < 0) return status;
 	}
@@ -777,7 +777,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			PR_FREEIF (htmlLine2);
 			return status;
 		}
-		status = WriteLineToStream (obj, htmlLine2);
+		status = WriteLineToStream (obj, htmlLine2, PR_TRUE);
 		PR_FREEIF (htmlLine2);
 		if (status < 0) return status;
 		status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -796,7 +796,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
 						if (status < 0) return status;
             char *tString = VCardGetStringByID(VCARD_LDAP_USEHTML);
-						status = WriteLineToStream (obj, tString);
+						status = WriteLineToStream (obj, tString, PR_TRUE);
             PR_FREEIF(tString);
 						if (status < 0) return status;
 						status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -859,7 +859,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	if (prop)
 	{
     char *tString = VCardGetStringByID(VCARD_ADDR_CONFINFO);
-		WriteLineToStream (obj, tString);
+		WriteLineToStream (obj, tString, PR_FALSE);
     PR_FREEIF(tString);
 		if (status < 0) return status;
 		prop2 = isAPropertyOf(prop, VCUseServer);
@@ -884,7 +884,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
         
         if (tString1) 
         {
-          status = WriteLineToStream (obj, tString1);
+          status = WriteLineToStream (obj, tString1, PR_FALSE);
         }
         PR_FREEIF(tString1);
         PR_FREEIF (namestring);
@@ -935,7 +935,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	status = OutputFont(obj, PR_FALSE, "-1", NULL);
 	if (status < 0) return status;
   char *tString = VCardGetStringByID(VCARD_ADDR_ADDINFO);
-	status = WriteLineToStream (obj, tString);
+	status = WriteLineToStream (obj, tString, PR_FALSE);
   PR_FREEIF(tString);
 	if (status < 0) return status;
 	status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -963,11 +963,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	char* vCard = NULL;
 	char* vEscCard = NULL;
 	int len = 0;
-	char* charset = NULL;
 	char* rsrcString = NULL;
-	char* converted = NULL;
-  PRInt32 converted_length;
-  PRInt32   res;
 
 	if (!obj->options->output_vcard_buttons_p)
 		return status;
@@ -984,57 +980,24 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	if (!vEscCard)
 		return VCARD_OUT_OF_MEMORY;
 
-	/* parse a content type for the charset */
-	charset = PL_strstr(obj->content_type, "charset=");
-
-  if (!charset)
-    charset = "ISO-8859-1";
-
 	if (basic)
 	{
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_COMPLETE_VCARD);
-
-		// convert from the resource charset. 
-    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
-                              &converted, &converted_length);
-    if ( (res != 0) || (converted == NULL) )
-			converted = rsrcString;
-
     htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showAdvanced%d();\\\"></INPUT></FORM>", 
-			                        converted, s_unique);
+			                        rsrcString, s_unique);
 	}
 	else 
 	{
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_CONDENSED_VCARD);
-    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
-                              &converted, &converted_length);
-    if ( (res != 0) || (converted == NULL) )
-			converted = rsrcString;
-
 		htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showBasic%d();\\\"></INPUT></FORM>", 
-			converted, s_unique);
+			                        rsrcString, s_unique);
 	}
 
-  if (converted != rsrcString)
-  {
-		PR_FREEIF(converted);
-  }
   PR_FREEIF(rsrcString);
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
-
-  res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
-                            &converted, &converted_length);
-  if ( (res != 0) || (converted == NULL) )
-		converted = rsrcString;
-
 	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
-		vEscCard, converted);
-
-  if (converted != rsrcString)
-  {
-		PR_FREEIF(converted);
-  }
+		                        vEscCard, rsrcString);
   PR_FREEIF(rsrcString);
 
 	if (!htmlLine1 && !htmlLine2)
@@ -1059,13 +1022,13 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	status = WriteEachLineToStream (obj, "<SCRIPT>document.write(\"");
 	if (status < 0) goto FAIL;
 
-	status = WriteLineToStream (obj, htmlLine1);
+	status = WriteLineToStream (obj, htmlLine1, PR_FALSE);
 	if (status < 0) goto FAIL;
 
 	status = WriteEachLineToStream (obj, "\")</SCRIPT>");
 	if (status < 0) goto FAIL;
 
-	status = WriteLineToStream (obj, htmlLine2);
+	status = WriteLineToStream (obj, htmlLine2, PR_FALSE);
 	if (status < 0) goto FAIL;
 	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) goto FAIL;
@@ -1470,7 +1433,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 							PR_FREEIF (attribName);
 							return status;
 						}
-						status = WriteLineToStream (obj, attribName);
+						status = WriteLineToStream (obj, attribName, PR_FALSE);
 						if (status < 0) {
 							PR_FREEIF (attribName);
 							return status;
@@ -1774,7 +1737,7 @@ FindCharacterSet(MimeObject *obj)
 }
 
 static int 
-WriteLineToStream (MimeObject *obj, const char *line)               
+WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion) 
 {                                                                              
   int     status = 0;
   char    *htmlLine;
@@ -1787,21 +1750,26 @@ WriteLineToStream (MimeObject *obj, const char *line)
   if ( (!line) || (!*line) )
     return 0;
 
-  // Seek out a charset!
-  charset = PL_strcasestr(obj->content_type, "charset=");
-  if (!charset)
-    charset = FindCharacterSet(obj);
+  if (aDoCharConversion)
+  {
+    // Seek out a charset!
+    charset = PL_strcasestr(obj->content_type, "charset=");
+    if (!charset)
+      charset = FindCharacterSet(obj);
 
-  if ( (!charset) || ( (charset) && (!nsCRT::strcasecmp(charset, "us-ascii"))) )
-    charset = nsCRT::strdup("ISO-8859-1");
+    if ( (!charset) || ( (charset) && (!nsCRT::strcasecmp(charset, "us-ascii"))) )
+      charset = nsCRT::strdup("ISO-8859-1");
   
-  // convert from the resource charset.
-  res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line),
-                            &converted, &converted_length);
-  if ( (res != 0) || (converted == NULL) )
-    converted = (char *)line;
+    // convert from the resource charset.
+    res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line),
+                              &converted, &converted_length);
+    if ( (res != 0) || (converted == NULL) )
+      converted = (char *)line;
+    else
+      converted[converted_length] = '\0';
+  }
   else
-    converted[converted_length] = '\0';
+    converted = (char *)line;
   
   htmlLen = nsCRT::strlen(converted) + nsCRT::strlen("<DT></DT>") + 1;
   htmlLine = (char *) PR_MALLOC (htmlLen);
@@ -1828,7 +1796,7 @@ static int WriteAttribute (MimeObject *obj, const char *attrib)
 {
 	int status = 0;
 	OutputFont(obj, PR_FALSE, "-1", NULL);
-	status  = WriteLineToStream (obj, attrib);
+	status  = WriteLineToStream (obj, attrib, PR_FALSE);
 	OutputFont(obj, PR_TRUE, NULL, NULL);
 	return status;
 }
@@ -1838,7 +1806,7 @@ static int WriteValue (MimeObject *obj, const char *value)
 {
 	int status = 0;
 	OutputFont(obj, PR_FALSE, "-1", NULL);
-	status  = WriteLineToStream (obj, value);
+	status  = WriteLineToStream (obj, value, PR_TRUE);
 	OutputFont(obj, PR_TRUE, NULL, NULL);
 	return status;
 }
@@ -1970,8 +1938,8 @@ VCardGetStringByID(PRInt32 aMsgId)
 		else
     {
       nsAutoString v("");
-      v = ptrv;
-	  PR_FREEIF(ptrv);
+      v.Append(ptrv);
+	    PR_FREEIF(ptrv);
       tempString = v.ToNewUTF8String();
     }
 	}
