@@ -51,17 +51,12 @@ sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
     $name =~ s/^.*://o; # strip fully-qualified portion
-    my @allResults;
     foreach my $object (@$self) {
         my $method = $object->can($name);
         if ($method) {
             my @result = &$method($object, @_);
             if (@result) {
-                if (wantarray) {
-                    return @result;
-                } else {
-                    return $result[0];
-                }
+                return @result;
             }
         } else {
             confess("Failed to find method or property '$name' in object '$object' of MagicSelectingArray '$self', aborting"); # die with stack trace
