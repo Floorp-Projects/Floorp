@@ -200,6 +200,13 @@ public:
   PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   void      Finalize(JSContext *aContext, JSObject *aObj);
 
+  // Generic DOMNode implementations
+  nsresult  doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                           nsIDOMNode** aReturn);
+  nsresult  doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                           nsIDOMNode** aReturn);
+  nsresult  doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+
   // Implementation for nsISupports
   nsresult QueryInterface(REFNSIID aIID,
                           void** aInstancePtr);
@@ -275,11 +282,23 @@ public:
   nsresult    GetLastChild(nsIDOMNode** aLastChild);
   
   nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn);
+                           nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
+  }
   nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn);
-  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
+                           nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
+  }
+  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doRemoveChild(aOldChild, aReturn);
+  }
+  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doInsertBefore(aNewChild, nsnull, aReturn);
+  }
 
   // Remainder of nsIContent
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
