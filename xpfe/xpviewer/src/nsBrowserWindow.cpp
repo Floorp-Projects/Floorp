@@ -467,7 +467,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent, nsnull, aAppShell, nsnull, &initData);
-  mWindow->GetBounds(r);
+  mWindow->GetClientBounds(r);
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
@@ -492,7 +492,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (NS_OK != rv) {
     return rv;
   }
-  mWindow->GetBounds(r);
+  mWindow->GetClientBounds(r);
   r.x = r.y = 0;
   }
 
@@ -511,8 +511,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
 
   // Now lay it all out
-  mWindow->Resize(0, 0, PR_FALSE); // force resize
-  mWindow->Resize(r.width, r.height, PR_FALSE);
+  Layout(r.width, r.height);
 
 
   return NS_OK;
@@ -2509,15 +2508,6 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
                  PRInt32 status,
                  const nsString& aMsg)
 {
-  if (mThrobber) {
-    mThrobber->Stop();
-  }
-
-  if (mToolbarBtns && mToolbarBtns[gStopBtnInx]) {
-    mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
-    mToolbarBtns[gStopBtnInx]->Invalidate(PR_TRUE);
-  }
-
   nsAutoString url;
   if (nsnull != aURL) {
     aURL->ToString(url);
