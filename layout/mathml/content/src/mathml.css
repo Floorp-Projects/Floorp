@@ -273,9 +273,11 @@ mtd[-moz-math-columnline="dashed"] {
 mi {
   font-style: italic;
 }
-
-[-moz-math-font-style="normal"] {
-  font-style: normal;
+mi[-moz-math-font-style="italic"] {
+  font-style: italic;  /* if the textual content consists of a single character */
+}
+mi[-moz-math-font-style="normal"] {
+  font-style: normal; /* if the textual content consists of multiple characters */
 }
 
 
