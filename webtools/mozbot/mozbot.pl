@@ -122,7 +122,7 @@ LoadStockList();
 
 # read admin list 
 my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com" );
-my $adminf = ".mozbot-admins";
+my $adminf = ".$nick-admins";
 &fetch_admin_conf (\%admins);
 
 my $uptime = 0;
@@ -842,7 +842,7 @@ sub fetch_admin_conf
 
 sub create_pid_file
 	{
-	my $pid = ".mozbot-pid";
+	my $pid = ".$nick-pid";
 
 	if (open PID, ">$pid")
     {
