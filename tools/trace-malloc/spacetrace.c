@@ -1926,7 +1926,7 @@ STRun* createRunFromGlobal(void)
         if (globals.mOptions.mCategoryName)
         {
             STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
-            if (node && node->run)
+            if (node)
             {
                 /* Recalculate cost of run */
                 recalculateRunCost(node->run);
@@ -5046,6 +5046,7 @@ int applySettings(void)
     int changedOrder = 0;
     int changedGraph = 0;
     int changedDontCare = 0;
+    int changedCategory = 0;
     char looper_buf[32];
     PRIntn looper = 0;
 
@@ -5082,13 +5083,13 @@ int applySettings(void)
         PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
         getRes += getDataString(globals.mRequest.mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
     }
-    getRes += getDataString(globals.mRequest.mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedSet);
+    getRes += getDataString(globals.mRequest.mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedCategory);
     
     /*
     ** Sanity check options
     */
-    if (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName
-        || !findCategoryNode(globals.mOptions.mCategoryName, &globals))
+    if (changedCategory && (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName
+                            || !findCategoryNode(globals.mOptions.mCategoryName, &globals)))
     {
         if (globals.mOptions.mCategoryName)
             free(globals.mOptions.mCategoryName);
@@ -5111,6 +5112,27 @@ int applySettings(void)
             REPORT_ERROR(__LINE__, createRunFromGlobal);
         }
     }
+    else if (0 != changedCategory)
+    {
+        /*
+        ** Just a category change. We dont need to harvest. Just find the
+        ** right node and set the cache.mSortedRun. We need to recompute
+        ** cost though. But that is cheap.
+        */
+        if (globals.mOptions.mCategoryName)
+        {
+            STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
+            if (node)
+            {
+                /* Recalculate cost of run */
+                recalculateRunCost(node->run);
+
+                globals.mCache.mSortedRun = node->run;
+            }
+        }
+
+    }
+
 
 #if WANT_GRAPHS
     /*
