@@ -236,8 +236,10 @@ class nsDirEnumerator : public nsISimpleEnumerator
                 }
 
                 nsCOMPtr<nsIFile> file;
-                mParent->Clone(getter_AddRefs(file));
-
+                rv = mParent->Clone(getter_AddRefs(file));
+				if (NS_FAILED(rv)) 
+                    return rv;
+                
                 rv = file->Append(entry->name);
                 if (NS_FAILED(rv)) 
                     return rv;
@@ -741,8 +743,8 @@ nsLocalFile::Append(const char *node)
     if ( (node == nsnull)           || 
          (*node == '/')             || 
          (*node == '.')             ||
-         strchr(node, '\\')         ||
-         strchr(node, '/')          )
+         (strchr(node, '\\') != nsnull) ||
+         (strchr(node, '/')  != nsnull) )
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
