@@ -189,10 +189,12 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
             PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
             return PR_FAILURE;
         }
-        (void)memcpy(
-            extension, self->privateData,
-            self->tpdLength * sizeof(void*));
-        PR_DELETE(self->privateData);
+        if (self->privateData) {
+            (void)memcpy(
+                extension, self->privateData,
+                self->tpdLength * sizeof(void*));
+            PR_DELETE(self->privateData);
+        }
         self->tpdLength = _pr_tpd_length;
         self->privateData = (void**)extension;
     }

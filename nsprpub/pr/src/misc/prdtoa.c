@@ -577,7 +577,7 @@ static PRInt32 lo0bits(unsigned Long *y)
 	if (!(x & 1)) {
 		k++;
 		x >>= 1;
-		if (!x & 1)
+		if (!x)
 			return 32;
 	}
 	*y = x;
@@ -2342,6 +2342,7 @@ PR_dtoa(PRFloat64 d, int mode, int ndigits,
 
 	/* Check for special case that d is a normalized power of 2. */
 
+	spec_case = 0;
 	if (mode < 2) {
 		if (!word1(d) && !(word0(d) & Bndry_mask)
 #ifndef Sudden_Underflow
@@ -2353,8 +2354,6 @@ PR_dtoa(PRFloat64 d, int mode, int ndigits,
 			s2 += Log2P;
 			spec_case = 1;
 		}
-		else
-			spec_case = 0;
 	}
 
 	/* Arrange for convenient computation of quotients:
