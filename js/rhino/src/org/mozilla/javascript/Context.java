@@ -692,41 +692,13 @@ public class Context
      * This method must be called to initialize a scope before scripts
      * can be evaluated in that scope.<p>
      *
-     * This form of the method also allows for creating "sealed" standard
-     * objects. An object that is sealed cannot have properties added, changed,
-     * or removed. This is useful to create a "superglobal" that can be shared
-     * among several top-level objects. Note that sealing is not allowed in
-     * the current ECMA/ISO language specification, but is likely for
-     * the next version.
-     *
-     * This method does not affect the Context it is called upon.
-     *
-     * @param sealed whether or not to create sealed standard objects that
-     *        cannot be modified.
-     * @return the initialized scope
-     */
-    public final ScriptableObject initStandardObjects(boolean sealed)
-    {
-        return initStandardObjects(null, sealed);
-    }
-
-    /**
-     * Initialize the standard objects.
-     *
-     * Creates instances of the standard objects and their constructors
-     * (Object, String, Number, Date, etc.), setting up 'scope' to act
-     * as a global object as in ECMA 15.1.<p>
-     *
-     * This method must be called to initialize a scope before scripts
-     * can be evaluated in that scope.<p>
-     *
      * This method does not affect the Context it is called upon.
      *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
-     * @return the initialized scope. The method always returns instance
-	 *         of {@link ScriptableObject} but for compatibility 
-	 *         the return type is kept as {@link Scriptable}.
+     * @return the initialized scope. The method returns the value of the scope
+     *         argument if it is not null or newly allocated scope object which
+     *         is an instance {@link ScriptableObject}.
      */
     public final Scriptable initStandardObjects(ScriptableObject scope)
     {
@@ -756,7 +728,8 @@ public class Context
      *        object will be created to serve as the scope
      * @param sealed whether or not to create sealed standard objects that
      *        cannot be modified.
-     * @return the initialized scope
+     * @return the initialized scope. The method returns the value of the scope
+     *         argument if it is not null or newly allocated scope object.
      * @since 1.4R3
      */
     public ScriptableObject initStandardObjects(ScriptableObject scope,
@@ -1323,7 +1296,7 @@ public class Context
      * length 1 and its JavaScript type will be string.
      * <p>
      * The rest of values will be wrapped as LiveConnect objects
-     * by calling {@link WrapFactory#warp(Context cx, Scriptable scope,
+     * by calling {@link WrapFactory#wrap(Context cx, Scriptable scope,
      * Object obj, Class staticType)} as in:
      * <pre>
      *    return contextInstance.getWrapFactory().wrap(contextInstance, scope,
@@ -1557,7 +1530,7 @@ public class Context
     /**
      * @deprecated To enable/disable caching for a particular top scope,
      * use {@link ClassCache#get(Scriptable)} and
-     * {@link ClassCache#setReflectionCachingEnabled(boolean)}.
+     * {@link ClassCache#setCachingEnabled(boolean)}.
      * The function is kept only for compatibility and does nothing.
      */
     public static void setCachingEnabled(boolean cachingEnabled)
