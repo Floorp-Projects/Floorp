@@ -1,7 +1,7 @@
-?Release@nsFindComponentModule@@UAGKXZ ; 4
-?AddRef@Context@nsFindComponent@@UAGKXZ ; 4
-?CanUnload@nsFindComponentModule@@UAGIPAVnsIComponentManager@@PAH@Z ; 1
-?QueryInterface@nsFindComponentModule@@UAGIABUnsID@@PAPAX@Z ; 1
-??_GnsFindComponentModule@@UAEPAXI@Z ; 1
-?RegisterSelf@nsFindComponentModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
-_NSGetModule ; 1
+nsFindComponentModule::Release ; 4
+nsFindComponent::Context::AddRef ; 4
+nsFindComponentModule::`vector deleting destructor' ; 1
+NSGetModule ; 1
+nsFindComponentModule::RegisterSelf ; 1
+nsFindComponentModule::CanUnload ; 1
+nsFindComponentModule::QueryInterface ; 1

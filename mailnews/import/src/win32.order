@@ -1,3 +1,7 @@
-_NSGetModule ; 1
-??0UInitMaps@@QAE@XZ ; 1
-?Cleanup@nsImportStringBundle@@SAXXZ ; 1
+nsProxyObjectCallInfo::`vector deleting destructor' ; 1
+nsImportStringBundle::Cleanup ; 1
+NSGetModule ; 1
+UInitMaps::UInitMaps ; 1
+NSGetModule ; 1
+ImportOutFile::WriteByte ; 1
+ImportOutFile::WriteByte ; 1

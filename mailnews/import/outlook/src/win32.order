@@ -1,4 +1,5 @@
-?OutlookRegister@@YGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
-?Cleanup@nsOutlookStringBundle@@SAXXZ ; 1
-_NSGetModule ; 1
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 1
+do_GetService ; 1
+nsOutlookStringBundle::Cleanup ; 1
+OutlookRegister ; 1
+NSGetModule ; 1
+do_GetService ; 1

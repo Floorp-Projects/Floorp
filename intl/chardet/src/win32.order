@@ -1,44 +1,43 @@
-?AddRef@nsMetaCharsetObserver@@UAGKXZ ; 436
-?Release@nsXMLEncodingObserver@@UAGKXZ ; 435
-?QueryInterface@nsMetaCharsetObserver@@UAGIABUnsID@@PAPAX@Z ; 291
-?GetTagNameAt@nsMetaCharsetObserver@@UAGPBDI@Z ; 288
-?AddRef@nsDocumentCharsetInfo@@UAGKXZ ; 78
-?Release@nsDocumentCharsetInfo@@UAGKXZ ; 77
-?GetForcedCharset@nsDocumentCharsetInfo@@UAGIPAPAVnsIAtom@@@Z ; 45
-?Notify@nsMetaCharsetObserver@@EAGIPAVnsISupports@@PBVnsStringArray@@1@Z ; 41
-?Notify@nsMetaCharsetObserver@@UAGIPAVnsISupports@@PBGPBVnsStringArray@@2@Z ; 41
-?GetParentCharset@nsDocumentCharsetInfo@@UAGIPAPAVnsIAtom@@@Z ; 28
-?AddRef@nsMetaCharsetObserverFactory@@UAGKXZ ; 25
-?Release@nsMetaCharsetObserverFactory@@UAGKXZ ; 20
-?QueryInterface@nsDocumentCharsetInfo@@UAGIABUnsID@@PAPAX@Z ; 19
-??0nsDocumentCharsetInfo@@QAE@XZ ; 19
-?CreateInstance@nsDocumentCharsetInfoFactory@@UAGIPAVnsISupports@@ABUnsID@@PAPAX@Z ; 19
-??_GnsDocumentCharsetInfo@@UAEPAXI@Z ; 18
-??1nsDocumentCharsetInfo@@UAE@XZ ; 18
-?GetReadableFragment@?$nsPromiseSubstring@G@@MBEPBGAAU?$nsReadableFragment@G@@W4nsFragmentRequest@@I@Z ; 18
-?SetParentCharset@nsDocumentCharsetInfo@@UAGIPAVnsIAtom@@@Z ; 11
-?BeginReading@?$basic_nsAReadableString@G@@QBEAAV?$nsReadingIterator@G@@AAV2@@Z ; 10
-?normalize_forward@?$nsReadingIterator@G@@QAEXXZ ; 10
-??0?$nsPromiseSubstring@G@@QAE@ABV?$basic_nsAReadableString@G@@II@Z ; 6
-?Length@?$nsPromiseSubstring@G@@UBEIXZ ; 6
-?AssignFromPromise@?$basic_nsAWritableString@G@@IAEXABV?$basic_nsAReadableString@G@@@Z ; 6
-?Mid@?$basic_nsAReadableString@G@@QBEIAAV?$basic_nsAWritableString@G@@II@Z ; 6
-?Promises@?$nsPromiseSubstring@G@@UBEHABV?$basic_nsAReadableString@G@@@Z ; 6
-?Length@?$basic_nsLiteralString@G@@UBEIXZ ; 5
-?GetReadableFragment@?$basic_nsLiteralString@G@@MBEPBGAAU?$nsReadableFragment@G@@W4nsFragmentRequest@@I@Z ; 5
-?Compare@@YAHABV?$basic_nsAReadableString@G@@0@Z ; 5
-?QueryInterface@nsDetectionAdaptorFactory@@UAGIABUnsID@@PAPAX@Z ; 4
-?assign_assuming_AddRef@nsCOMPtr_base@@IAEXPAVnsISupports@@@Z ; 2
-?Release@nsCharDetModule@@UAGKXZ ; 2
-?GetClassObject@nsCharDetModule@@UAGIPAVnsIComponentManager@@ABUnsID@@1PAPAX@Z ; 2
-_NSGetModule ; 1
-?CreateInstance@nsMetaCharsetObserverFactory@@UAGIPAVnsISupports@@ABUnsID@@PAPAX@Z ; 1
-?Initialize@nsCharDetModule@@IAEIXZ ; 1
-?Start@nsMetaCharsetObserver@@UAGIXZ ; 1
-?NEW_DOCUMENT_CHARSET_INFO_FACTORY@@YAPAVnsIFactory@@XZ ; 1
-?NotifyWebShell@nsObserverBase@@MAGIPAVnsISupports@@PBDW4nsCharsetSource@@@Z ; 1
-??0nsCharDetModule@@QAE@XZ ; 1
-?NEW_META_CHARSET_OBSERVER_FACTORY@@YAPAVnsIFactory@@XZ ; 1
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 1
-?QueryInterface@nsCharDetModule@@UAGIABUnsID@@PAPAX@Z ; 1
-??0nsMetaCharsetObserver@@QAE@XZ ; 1
+nsMetaCharsetObserver::AddRef ; 1372
+nsMetaCharsetObserver::Release ; 1371
+nsMetaCharsetObserver::QueryInterface ; 915
+nsMetaCharsetObserver::GetTagNameAt ; 912
+nsMetaCharsetObserver::Notify ; 566
+nsDocumentCharsetInfo::AddRef ; 566
+nsMetaCharsetObserver::Notify ; 566
+nsDocumentCharsetInfo::Release ; 566
+nsDocumentCharsetInfo::GetForcedCharset ; 337
+nsDocumentCharsetInfo::GetParentCharset ; 289
+nsPromiseSubstring<unsigned short>::GetReadableFragment ; 162
+nsMetaCharsetObserverFactory::AddRef ; 122
+nsXMLEncodingObserverFactory::Release ; 118
+nsDocumentCharsetInfo::`scalar deleting destructor' ; 115
+nsDocumentCharsetInfo::~nsDocumentCharsetInfo ; 115
+nsDocumentCharsetInfo::nsDocumentCharsetInfo ; 115
+nsDocumentCharsetInfoFactory::CreateInstance ; 115
+nsDocumentCharsetInfo::QueryInterface ; 115
+nsDocumentCharsetInfo::SetParentCharset ; 107
+nsPromiseSubstring<unsigned short>::nsPromiseSubstring<unsigned short> ; 54
+basic_nsAWritableString<unsigned short>::AssignFromPromise ; 54
+nsPromiseSubstring<unsigned short>::Length ; 54
+basic_nsAReadableString<unsigned short>::Mid ; 54
+nsPromiseSubstring<unsigned short>::Promises ; 54
+nsDetectionAdaptorFactory::QueryInterface ; 4
+nsCharDetModule::Release ; 4
+nsCharDetModule::GetClassObject ; 2
+nsCharDetModule::~nsCharDetModule ; 1
+nsCharDetModule::Shutdown ; 1
+do_GetService ; 1
+nsCharDetModule::CanUnload ; 1
+NSGetModule ; 1
+nsMetaCharsetObserverFactory::CreateInstance ; 1
+nsDocumentCharsetInfoFactory::`vector deleting destructor' ; 1
+nsMetaCharsetObserverFactory::`vector deleting destructor' ; 1
+nsMetaCharsetObserver::nsMetaCharsetObserver ; 1
+nsCharDetModule::Initialize ; 1
+nsMetaCharsetObserver::Start ; 1
+nsCharDetModule::`vector deleting destructor' ; 1
+nsCharDetModule::nsCharDetModule ; 1
+NEW_DOCUMENT_CHARSET_INFO_FACTORY ; 1
+nsCharDetModule::QueryInterface ; 1
+NEW_META_CHARSET_OBSERVER_FACTORY ; 1

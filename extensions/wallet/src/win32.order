@@ -1,66 +1,76 @@
-_Wallet_UTF8Get ; 60790
-?normalize_forward@?$nsReadingIterator@G@@QAEXXZ ; 27745
-?BeginReading@?$basic_nsAReadableString@G@@QBEAAV?$nsReadingIterator@G@@AAV2@@Z ; 25909
-?Compare@@YAHABV?$basic_nsAReadableString@G@@0@Z ; 11871
-?advance@?$nsReadingIterator@G@@QAEAAV1@H@Z ; 2167
-?CharAt@?$basic_nsAReadableString@G@@QBEGI@Z ; 2167
-??1wallet_MapElement@@QAE@XZ ; 1500
-?OnEndURLLoad@nsWalletlibService@@UAGIPAVnsIDocumentLoader@@PAVnsIChannel@@I@Z ; 1254
-?OnStartURLLoad@nsWalletlibService@@UAGIPAVnsIDocumentLoader@@PAVnsIChannel@@@Z ; 1140
-_Wallet_UTF8Put ; 1064
-?wallet_StepForwardOrBack@@YAXAAPAVnsIDOMNode@@AAVnsString@@AAH2H@Z ; 948
-?AddRef@nsSingleSignOnPrompt@@UAGKXZ ; 296
-?Release@nsSingleSignOnPrompt@@UAGKXZ ; 296
-?assign_assuming_AddRef@nsCOMPtr_base@@IAEXPAVnsISupports@@@Z ; 294
-??_GnsVoidArray@@UAEPAXI@Z ; 208
-?QueryInterface@nsSingleSignOnPrompt@@UAGIABUnsID@@PAPAX@Z ; 194
-?OnEndDocumentLoad@nsWalletlibService@@UAGIPAVnsIDocumentLoader@@PAVnsIChannel@@I@Z ; 59
-?GetReadableFragment@?$nsPromiseSubstring@G@@MBEPBGAAU?$nsReadableFragment@G@@W4nsFragmentRequest@@I@Z ; 48
-?AssignFromPromise@?$basic_nsAWritableString@G@@IAEXABV?$basic_nsAReadableString@G@@@Z ; 16
-?Promises@?$nsPromiseSubstring@G@@UBEHABV?$basic_nsAReadableString@G@@@Z ; 16
-?Length@?$nsPromiseSubstring@G@@UBEIXZ ; 16
-??0?$nsPromiseSubstring@G@@QAE@ABV?$basic_nsAReadableString@G@@II@Z ; 16
-?wallet_ReadFromList@@YAHVnsString@@AAV1@AAPAVnsVoidArray@@2H@Z ; 14
-??1si_SignonUserStruct@@QAE@XZ ; 14
-_Wallet_Decrypt2 ; 11
-?AddRef@nsWalletlibService@@UAGKXZ ; 11
-_Wallet_Decrypt ; 11
-?Release@nsWalletlibService@@UAGKXZ ; 11
-?NS_GetSpecialDirectory@@YAIPBDPAPAVnsIFile@@@Z ; 9
-?QueryInterface@nsWalletlibService@@UAGIABUnsID@@PAPAX@Z ; 9
-?Wallet_DefaultsDirectory@@YAIAAVnsFileSpec@@@Z ; 7
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 6
-_SI_GetBoolPref ; 5
-?Mid@?$basic_nsAReadableString@G@@QBEIAAV?$basic_nsAWritableString@G@@II@Z ; 4
-??_Ewallet_MapElement@@QAEPAXI@Z ; 3
-_Wallet_Encrypt2 ; 2
-?Assign@?$basic_nsAWritableString@G@@QAEXPBG@Z ; 2
-?SI_RemoveAllSignonData@@YAXXZ ; 2
-??_GnsSingleSignOnPrompt@@UAEPAXI@Z ; 2
-?Notify@nsWalletlibService@@UAGIPAVnsIContent@@PAVnsIDOMWindowInternal@@PAVnsIURI@@PAH@Z ; 2
-_Wallet_ProfileDirectory ; 2
-?SetPromptDialogs@nsSingleSignOnPrompt@@UAGIPAVnsIPrompt@@@Z ; 2
-_SINGSIGN_RestoreSignonData ; 2
-_Wallet_ReleaseAllLists ; 2
-?do_GetService@@YA?BVnsGetServiceByCID@@ABUnsID@@PAI@Z ; 2
-_WLLT_OnSubmit ; 2
-_Wallet_Encrypt ; 2
-??0nsSingleSignOnPrompt@@QAE@XZ ; 2
-_SI_RegisterCallback ; 2
-_SINGSIGN_RememberSignonData ; 2
-?Init@nsSingleSignOnPrompt@@QAEIXZ ; 2
-??1nsSingleSignOnPrompt@@UAE@XZ ; 2
-??_EnsWalletlibService@@MAEPAXI@Z ; 1
-?Init@nsWalletlibService@@QAEIXZ ; 1
-??0nsWalletlibService@@QAE@XZ ; 1
-_Wallet_GiveCaveat ; 1
-_SI_InitSignonFileName ; 1
-?SI_LoadSignonData@@YAHXZ ; 1
-_SINGSIGN_PromptPassword ; 1
-??1wallet_HelpMac@@QAE@XZ ; 1
-?PromptPassword@nsSingleSignOnPrompt@@UAGIPBG00IPAPAGPAH@Z ; 1
-_NSGetModule ; 1
-??0wallet_HelpMac@@QAE@XZ ; 1
-_SI_GetCharPref ; 1
-??1nsWalletlibService@@MAE@XZ ; 1
-_SI_ClearUserData ; 1
+nsWalletlibService::OnEndURLLoad ; 8643
+nsWalletlibService::OnStartURLLoad ; 7939
+nsSingleSignOnPrompt::Release ; 2190
+nsSingleSignOnPrompt::AddRef ; 2190
+nsCOMPtr_base::assign_assuming_AddRef ; 2027
+nsSingleSignOnPrompt::QueryInterface ; 1245
+Wallet_UTF8Get ; 1127
+Wallet_UTF8Get ; 1127
+nsWalletlibService::OnEndDocumentLoad ; 353
+SI_LoadSignonData ; 94
+nsReadingIterator<unsigned short>::normalize_forward ; 77
+basic_nsAReadableString<unsigned short>::CharAt ; 77
+nsReadingIterator<unsigned short>::advance ; 77
+basic_nsAReadableString<unsigned short>::BeginReading ; 77
+si_SignonUserStruct::~si_SignonUserStruct ; 72
+SINGSIGN_RemoveUser ; 58
+SINGSIGN_RemoveUser ; 58
+SINGSIGN_RemoveUser ; 58
+nsPromiseSubstring<unsigned short>::GetReadableFragment ; 45
+do_GetService ; 44
+SINGSIGN_RestoreSignonData ; 41
+basic_nsAWritableString<unsigned short>::Assign ; 40
+SINGSIGN_RestoreSignonData ; 40
+nsPromiseSubstring<unsigned short>::nsPromiseSubstring<unsigned short> ; 15
+nsPromiseSubstring<unsigned short>::Promises ; 15
+nsPromiseSubstring<unsigned short>::Length ; 15
+basic_nsAWritableString<unsigned short>::AssignFromPromise ; 15
+si_SignonUserStruct::~si_SignonUserStruct ; 15
+nsWalletlibService::Release ; 9
+nsWalletlibService::AddRef ; 9
+nsWalletlibService::QueryInterface ; 7
+wallet_HelpMac::~wallet_HelpMac ; 7
+nsSingleSignOnPrompt::SetPromptDialogs ; 3
+nsSingleSignOnPrompt::~nsSingleSignOnPrompt ; 3
+nsQueryReferent::operator= ; 3
+nsSingleSignOnPrompt::Init ; 3
+nsSingleSignOnPrompt::`vector deleting destructor' ; 3
+nsSingleSignOnPrompt::nsSingleSignOnPrompt ; 3
+nsVoidArray::`vector deleting destructor' ; 3
+SI_RemoveAllSignonData ; 2
+Wallet_Decrypt ; 2
+Wallet_Decrypt ; 2
+SI_GetBoolPref ; 2
+Wallet_Decrypt2 ; 2
+SI_RegisterCallback ; 2
+si_SignonRememberingPrefChanged ; 1
+nsWalletlibService::`vector deleting destructor' ; 1
+SI_GetCharPref ; 1
+basic_nsAReadableString<unsigned short>::Mid ; 1
+WLLT_OnSubmit ; 1
+nsWalletlibService::Init ; 1
+SINGSIGN_PromptUsernameAndPassword ; 1
+wallet_StepForwardOrBack ; 1
+SI_ClearUserData ; 1
+WLLT_PrefillOneElement ; 1
+wallet_GetPrefills ; 1
+wallet_StepForwardOrBack ; 1
+SI_DeleteAll ; 1
+wallet_HelpMac::~wallet_HelpMac ; 1
+wallet_HelpMac::~wallet_HelpMac ; 1
+SINGSIGN_PromptPassword ; 1
+wallet_FormsCapturingPrefChanged ; 1
+NSGetModule ; 1
+wallet_HelpMac::~wallet_HelpMac ; 1
+SI_InitSignonFileName ; 1
+SINGSIGN_RememberSignonData ; 1
+wallet_StepForwardOrBack ; 1
+wallet_StepForwardOrBack ; 1
+nsWalletlibService::nsWalletlibService ; 1
+nsSingleSignOnPrompt::PromptPassword ; 1
+NS_GetSpecialDirectory ; 1
+nsWalletlibService::~nsWalletlibService ; 1
+wallet_HelpMac::~wallet_HelpMac ; 1
+Wallet_ProfileDirectory ; 1
+Wallet_ReleaseAllLists ; 1
+nsWalletlibService::Notify ; 1

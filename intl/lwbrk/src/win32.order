@@ -1,15 +1,15 @@
-?Release@nsJISx4501LineBreaker@@UAGKXZ ; 45635
-?AddRef@nsJISx4501LineBreaker@@UAGKXZ ; 45635
-?Next@nsJISx4501LineBreaker@@UAGIPBGIIPAIPAH@Z ; 2035
-?BreakInBetween@nsJISx4501LineBreaker@@UAGIPBGI0IPAH@Z ; 1285
-?AddRef@nsLWBreakerFImp@@UAGKXZ ; 44
-?Release@nsLWBreakerFImp@@UAGKXZ ; 44
-??0nsJISx4501LineBreaker@@QAE@PBGH0H@Z ; 42
-?GetBreaker@nsLWBreakerFImp@@UAGIAAVnsString@@PAPAVnsILineBreaker@@@Z ; 42
-??1nsJISx4501LineBreaker@@UAE@XZ ; 42
-??_EnsJISx4501LineBreaker@@UAEPAXI@Z ; 42
-?QueryInterface@nsLWBreakerFImp@@UAGIABUnsID@@PAPAX@Z ; 42
-_NSGetModule ; 1
-??1nsLWBreakerFImp@@UAE@XZ ; 1
-??0nsLWBreakerFImp@@QAE@XZ ; 1
-??_GnsLWBreakerFImp@@UAEPAXI@Z ; 1
+nsJISx4501LineBreaker::BreakInBetween ; 793158
+nsJISx4501LineBreaker::AddRef ; 702579
+nsJISx4501LineBreaker::Release ; 702578
+nsJISx4501LineBreaker::Next ; 55820
+nsLWBreakerFImp::Release ; 305
+nsLWBreakerFImp::AddRef ; 305
+nsJISx4501LineBreaker::nsJISx4501LineBreaker ; 303
+nsLWBreakerFImp::QueryInterface ; 303
+nsLWBreakerFImp::GetBreaker ; 303
+nsJISx4501LineBreaker::`scalar deleting destructor' ; 302
+nsJISx4501LineBreaker::~nsJISx4501LineBreaker ; 302
+nsLWBreakerFImp::`vector deleting destructor' ; 1
+nsLWBreakerFImp::nsLWBreakerFImp ; 1
+nsLWBreakerFImp::~nsLWBreakerFImp ; 1
+NSGetModule ; 1

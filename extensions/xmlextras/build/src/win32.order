@@ -1,12 +1,18 @@
-?InitializeClasses@nsXMLExtrasNameset@@UAGIPAVnsIScriptContext@@@Z ; 70
-?AddNameSet@nsXMLExtrasNameset@@UAGIPAVnsIScriptContext@@@Z ; 18
-?assign_assuming_AddRef@nsCOMPtr_base@@IAEXPAVnsISupports@@@Z ; 18
-?AddRef@nsDOMParserChannel@@UAGKXZ ; 7
-?Release@nsXMLExtras@@UAGKXZ ; 5
-?GetInstance@nsXMLExtras@@SAPAV1@XZ ; 2
-?QueryInterface@nsXMLExtras@@UAGIABUnsID@@PAPAX@Z ; 2
-?Shutdown@nsXMLExtras@@UAGIXZ ; 1
-??0nsXMLExtras@@QAE@XZ ; 1
-_NSGetModule ; 1
-??0nsXMLExtrasNameset@@QAE@XZ ; 1
-?Initialize@nsXMLExtras@@UAGIPAVnsIAppShellService@@PAVnsICmdLineService@@@Z ; 1
+nsXMLExtrasNameset::InitializeClasses ; 372
+nsCOMPtr_base::assign_assuming_AddRef ; 35
+nsXMLExtrasNameset::AddNameSet ; 35
+nsXMLExtrasNameset::Release ; 7
+nsDefaultSOAPEncoder::AddRef ; 7
+nsXMLExtras::~nsXMLExtras ; 2
+nsXMLExtras::QueryInterface ; 2
+nsXMLExtras::GetInstance ; 2
+NSGetModule ; 1
+nsXMLExtrasNameset::nsXMLExtrasNameset ; 1
+NSGetModule ; 1
+nsXMLExtrasNameset::~nsXMLExtrasNameset ; 1
+nsXMLExtras::nsXMLExtras ; 1
+nsXMLExtras::`vector deleting destructor' ; 1
+nsXMLHttpRequest::HandleEvent ; 1
+nsXMLExtras::Initialize ; 1
+nsXMLExtras::~nsXMLExtras ; 1
+nsXMLExtrasNameset::`scalar deleting destructor' ; 1

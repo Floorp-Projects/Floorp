@@ -1,4 +1,5 @@
-?do_GetService@@YA?BVnsGetServiceByContractID@@PBDPAI@Z ; 1
-?TextRegister@@YGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
-_NSGetModule ; 1
-?Cleanup@nsTextStringBundle@@SAXXZ ; 1
+NSGetModule ; 1
+do_GetService ; 1
+do_GetService ; 1
+TextRegister ; 1
+nsTextStringBundle::Cleanup ; 1
