@@ -28,6 +28,7 @@ EXPORTS =                       \
         nsEscape.h              \
         nsFileSpec.h            \
         nsFileStream.h          \
+        nsIFileStream.h         \
         $(NULL)
 
 MODULE = raptor 
