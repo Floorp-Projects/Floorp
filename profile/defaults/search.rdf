@@ -23,7 +23,7 @@
 
 <!DOCTYPE RDF 
 [
-<!ENTITY search.category.jobs		"Jobs">
+<!ENTITY search.category.jobs		"Business &amp; Careers">
 <!ENTITY search.category.music		"Music - Artist">
 <!ENTITY search.category.shareware	"Shareware">
 <!ENTITY search.category.technews	"Tech News">
