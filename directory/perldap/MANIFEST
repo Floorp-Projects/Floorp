@@ -16,7 +16,7 @@ MPL-1.0.txt
 test_api/search.pl
 test_api/write.pl
 test_api/api.pl
-example/ChangeLog
+examples/ChangeLog
 examples/lfinger.pl
 examples/qsearch.pl
 examples/monitor.pl
