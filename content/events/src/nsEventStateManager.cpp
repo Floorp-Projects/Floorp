@@ -4167,6 +4167,10 @@ nsEventStateManager::IsFrameSetDoc(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "Pointer is null!");
 
+  if (!aContent) {
+    return PR_FALSE;
+  }
+
   nsCOMPtr<nsIDOMHTMLFrameSetElement> frameSet = do_QueryInterface(aContent);
   if (frameSet) {
     return PR_TRUE;
