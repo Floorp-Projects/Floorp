@@ -397,6 +397,12 @@ endif
 LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
 endif
 
+ifeq ($(OS_ARCH),OpenBSD)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
+endif
+
 ifeq ($(OS_ARCH),BSD_OS)
 ifneq ($(OS_RELEASE),1.1)
 EXTRA_LIBS = -ldl
@@ -404,26 +410,15 @@ endif
 endif
 
 ifeq ($(USE_PTHREADS),1)
+LIBPTHREAD = -lpthread
 ifeq ($(OS_ARCH),AIX)
 LIBPTHREAD = -lpthreads
-else
-  ifeq ($(OS_ARCH),FreeBSD)
-  LIBPTHREAD =
-  else
-    ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)
-    LIBPTHREAD = -ldce
-    else
-      ifeq ($(OS_ARCH),BSD_OS)
-      LIBPTHREAD =
-      else
-        ifeq ($(OS_ARCH),NTO)
-         LIBPTHREAD =
-        else
-         LIBPTHREAD = -lpthread
-        endif
-      endif
-    endif
-  endif
+endif
+ifeq (,$(filter-out FreeBSD OpenBSD BSD_OS NTO,$(OS_ARCH)))
+LIBPTHREAD =
+endif
+ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)
+LIBPTHREAD = -ldce
 endif
 endif
 

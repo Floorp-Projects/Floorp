@@ -123,7 +123,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #define _PRSockOptVal_t char *
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(HPUX) \
     || defined(LINUX) || defined(FREEBSD) || defined(BSDI) || defined(VMS) \
-    || defined(NTO)
+    || defined(NTO) || defined(OPENBSD)
 #define _PRSockOptVal_t void *
 #else
 #error "Cannot determine architecture"
