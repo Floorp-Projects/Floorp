@@ -44,12 +44,13 @@
 #include "jsbit.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
-
-#ifdef JS_THREADSAFE
-extern int js_CompareAndSwap(jsword *, jsword, jsword);
-#endif
+#include "jslock.h"
 
 static JSArena *arena_freelist;
+
+#ifdef JS_THREADSAFE
+static JSLock *arena_freelist_lock;
+#endif
 
 #ifdef JS_ARENAMETER
 static JSArenaStats *arena_stats_list;
@@ -64,6 +65,13 @@ static JSArenaStats *arena_stats_list;
 JS_PUBLIC_API(void)
 JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 align)
 {
+#ifdef JS_THREADSAFE
+    /* Must come through here once in primordial thread to init safely! */
+    if (!arena_freelist_lock) {
+        arena_freelist_lock = JS_NEW_LOCK();
+        JS_ASSERT(arena_freelist_lock);
+    }
+#endif
     if (align == 0)
 	align = JS_ARENA_DEFAULT_ALIGN;
     pool->mask = JS_BITMASK(JS_CeilingLog2(align));
@@ -95,41 +103,37 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
     if (nb >= 60000U)
 	return 0;
 #endif  /* WIN16 */
-    ap = &arena_freelist;
     for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
-        if (a->next) {                          /* move to next arena */
-            a = a->next;
-	    continue;
+        if (!a->next) {
+            ap = &arena_freelist;
+            JS_ACQUIRE_LOCK(arena_freelist_lock);
+            while ((b = *ap) != NULL) {         /* reclaim a free arena */
+                if (b->avail + nb <= b->limit) {
+                    *ap = b->next;
+                    JS_RELEASE_LOCK(arena_freelist_lock);
+                    b->next = NULL;
+                    a = a->next = b;
+                    COUNT(pool, nreclaims);
+                    goto claim;
+                }
+                ap = &b->next;
+            }
+            JS_RELEASE_LOCK(arena_freelist_lock);
+            sz = JS_MAX(pool->arenasize, nb);   /* allocate a new arena */
+            sz += sizeof *a + pool->mask;       /* header and alignment slop */
+            b = (JSArena *) malloc(sz);
+            if (!b)
+                return 0;
+            a = a->next = b;
+            a->next = NULL;
+            a->limit = (jsuword)a + sz;
+            JS_COUNT_ARENA(pool,++);
+            COUNT(pool, nmallocs);
+        claim:
+            a->base = a->avail = (jsuword)JS_ARENA_ALIGN(pool, a + 1);
+            continue;
         }
-	while ((b = *ap) != NULL) {		/* reclaim a free arena */
-	    if (b->limit - b->base == pool->arenasize) {
-#ifdef JS_THREADSAFE
-		do {
-                    b = *ap;
-		    c = b->next;
-		} while (!js_CompareAndSwap((jsword *)ap,(jsword)b,(jsword)c));
-#else
-		*ap = b->next;
-#endif
-		b->next = NULL;
-		a = a->next = b;
-		COUNT(pool, nreclaims);
-		goto claim;
-	    }
-	    ap = &b->next;
-	}
-	sz = JS_MAX(pool->arenasize, nb);	/* allocate a new arena */
-	sz += sizeof *a + pool->mask;           /* header and alignment slop */
-	b = (JSArena *) malloc(sz);
-	if (!b)
-	    return 0;
-	a = a->next = b;
-	a->next = NULL;
-	a->limit = (jsuword)a + sz;
-	JS_COUNT_ARENA(pool,++);
-	COUNT(pool, nmallocs);
-    claim:
-	a->base = a->avail = (jsuword)JS_ARENA_ALIGN(pool, a + 1);
+        a = a->next;                            /* move to next arena */
     }
     p = (void *)a->avail;
     a->avail += nb;
@@ -185,15 +189,10 @@ FreeArenaList(JSArenaPool *pool, JSArena *head, JSBool reallyFree)
 	do {
 	    ap = &(*ap)->next;
 	} while (*ap);
-#ifdef JS_THREADSAFE
-	do {
-	    *ap = b = arena_freelist;
-	} while (!js_CompareAndSwap((jsword *)&arena_freelist, (jsword)b,
-                                    (jsword)a));
-#else
+        JS_ACQUIRE_LOCK(arena_freelist_lock);
 	*ap = arena_freelist;
 	arena_freelist = a;
-#endif
+        JS_RELEASE_LOCK(arena_freelist_lock);
 	head->next = NULL;
     }
 
@@ -205,8 +204,8 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
 {
     JSArena *a;
 
-    for (a = pool->first.next; a; a = a->next) {
-	if (JS_UPTRDIFF(mark, a->base) < JS_UPTRDIFF(a->avail, a->base)) {
+    for (a = &pool->first; a; a = a->next) {
+	if (JS_UPTRDIFF(mark, a->base) <= JS_UPTRDIFF(a->avail, a->base)) {
 	    a->avail = (jsuword)JS_ARENA_ALIGN(pool, mark);
 	    FreeArenaList(pool, a, JS_TRUE);
 	    return;
@@ -261,21 +260,25 @@ JS_ArenaFinish()
 {
     JSArena *a, *next;
 
-#ifdef JS_THREADSAFE
-    while (arena_freelist) {
-	a = arena_freelist;
-	next = a->next;
-	if (js_CompareAndSwap((jsword *)&arena_freelist, (jsword)a,
-                              (jsword)next)) {
-	    free(a);
-        }
-    }
-#else
-    for (a = arena_freelist; a; a = next) {
+    JS_ACQUIRE_LOCK(arena_freelist_lock);
+    a = arena_freelist;
+    arena_freelist = NULL;
+    JS_RELEASE_LOCK(arena_freelist_lock);
+    for (; a; a = next) {
         next = a->next;
         free(a);
     }
-    arena_freelist = NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_ArenaShutDown(void)
+{
+#ifdef JS_THREADSAFE
+    /* Must come through here once in the process's last thread! */
+    if (arena_freelist_lock) {
+        JS_DESTROY_LOCK(arena_freelist_lock);
+        arena_freelist_lock = NULL;
+    }
 #endif
 }
 
