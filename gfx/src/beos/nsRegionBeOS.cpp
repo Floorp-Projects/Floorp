@@ -150,10 +150,7 @@ void nsRegionBeOS :: SetRegionType(void)
 
 PRBool nsRegionBeOS :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-printf("nsRegionBeOS :: ContainsRect - FIXME: this is a bad implementation of ContainsRect\n");
-// ... because only two points of the rect are certainly in the region, not necessairly all of them
-	return mRegion.Contains(BPoint(aX, aY)) &&
-		mRegion.Contains(BPoint(aX + aWidth - 1, aY + aHeight - 1));
+	return mRegion.Intersects(BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
 }
 
 NS_IMETHODIMP nsRegionBeOS :: GetRects(nsRegionRectSet **aRects)
