@@ -1253,7 +1253,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
 	nsString2				urlHost("",eOneByte);
 
 	// this can't fail, can it?
-	nsresult res = m_runningUrl->GetImapAction(&imapAction);
+	nsresult res;
+    res = m_runningUrl->GetImapAction(&imapAction);
 	m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
 	m_runningUrl->GetMsgFlags(&msgFlags);
 

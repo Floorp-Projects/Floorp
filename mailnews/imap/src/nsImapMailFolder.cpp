@@ -1394,7 +1394,8 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 					rootDir->GetFileSpec(&filterFile);
 					// need a file spec for filters...
 					filterFile += "rules.dat";
-					nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+					nsresult res;
+                    res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
 				}
 			}
 		}
@@ -3052,8 +3053,8 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
 }
 
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
-    m_isMove(PR_FALSE), m_curIndex(0), m_totalCount(0),
-    m_selectedState(PR_FALSE), m_dataBuffer(nsnull)
+    m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0), m_totalCount(0),
+     m_dataBuffer(nsnull)
 {
 }
 

@@ -977,7 +977,6 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 {
 	int status = 0;
-	char * htmlLine = NULL;
 	char * htmlLine1 = NULL;
 	char * htmlLine2 = NULL;
 	char* vCard = NULL;
@@ -1554,7 +1553,6 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 	char *attribName = NULL;
 	char * url = NULL;
 	char *value = NULL;
-	char *ptr = NULL;
 	int status = 0;
 
 	if (vObjectName(o)) {

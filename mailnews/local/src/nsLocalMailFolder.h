@@ -51,8 +51,8 @@ struct nsLocalMailCopyState
   
   nsIMsgMessageService* messageService;
   PRBool isMove;
-  nsMsgKey curDstKey;
   PRUint32 curCopyIndex;
+  nsMsgKey curDstKey;
   PRUint32 totalMsgCount;
   char dataBuffer[FOUR_K];
 };

@@ -2286,8 +2286,8 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
 //	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	nsIMsgThread *thread = NULL;
 
-	nsIMsgDBHdr	*msgHdr = nsnull;
-    nsresult rv = NS_OK;
+    //nsIMsgDBHdr	*msgHdr = nsnull;
+    //nsresult rv = NS_OK;
 	mdbYarn	subjectYarn;
 
 	subjectYarn.mYarn_Buf = (void*)subject.GetBuffer();

@@ -624,7 +624,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	if (PR_SUCCESS == status) {
 
 #ifdef DEBUG_NEWS
-		printf("date = %s, %ld\n", line, date);
+		printf("date = %s\n", line);
 #endif
 		rv = newMsgHdr->SetDate(date);					/* date */
 		if (NS_FAILED(rv)) return rv;

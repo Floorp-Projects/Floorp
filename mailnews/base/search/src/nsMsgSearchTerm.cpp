@@ -60,7 +60,7 @@ nsresult NS_MsgGetAttributeFromString(const char *string, int16 *attrib)
 	if (NULL == string || NULL == attrib)
 		return NS_ERROR_NULL_POINTER;
 	PRBool found = FALSE;
-	for (int idxAttrib = 0; idxAttrib < sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry); idxAttrib++)
+	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
 		if (!PL_strcasecmp(string, SearchAttribEntryTable[idxAttrib].attribName))
 		{
@@ -79,7 +79,7 @@ nsresult NS_MsgGetStringForAttribute(int16 attrib, const char **string)
 	if (NULL == string)
 		return NS_ERROR_NULL_POINTER;
 	PRBool found = FALSE;
-	for (int idxAttrib = 0; idxAttrib < sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry); idxAttrib++)
+	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
 		// MSG_SearchOperator enums which is legal because of the way the

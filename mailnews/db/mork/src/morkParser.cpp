@@ -1109,7 +1109,6 @@ mork_bool morkParser::ReadAt(morkEnv* ev, mork_bool inInsideGroup)
   {
     morkStream* s = mParser_Stream;
      register int c;
-    int next = 0;
     if ( ((c = s->Getc(ev)) == '{' || c == '}') && ev->Good() )
      {
        if ( c == '{' ) // start of new group?

@@ -1395,7 +1395,8 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 		rootDir->GetFileSpec(&filterFile);
 		// need a file spec for filters...
 		filterFile += "rules.dat";
-		nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+		nsresult res;
+        res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
 	}
 
 	m_logFile = nsnull;
@@ -1599,7 +1600,8 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 			NS_ADDREF(inbox);
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
-		nsresult matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, msgHdr, inbox, 
+		nsresult matchTermStatus;
+        matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, msgHdr, inbox, 
 											m_mailDB, headers, headersSize, this);
 		NS_IF_RELEASE(inbox);
 	}

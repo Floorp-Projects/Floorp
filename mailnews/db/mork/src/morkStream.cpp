@@ -92,7 +92,8 @@ morkStream::morkStream(morkEnv* ev, const morkUsage& inUsage,
       if ( ioContentFile->FileFrozen() ) // forced to be readonly?
         inFrozen = morkBool_kTrue; // override the input value
         
-      mork_pos fileEnd = ioContentFile->Length(ev);
+      mork_pos fileEnd;
+      fileEnd = ioContentFile->Length(ev);
         
       morkFile::SlotStrongFile(ioContentFile, ev, &mStream_ContentFile);
       if ( ev->Good() )

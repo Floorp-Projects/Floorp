@@ -67,8 +67,9 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 /////////////////////////////////////////////////////////////////////////////
 
 nsLocalMailCopyState::nsLocalMailCopyState() :
-  fileStream(nsnull), curDstKey(0xffffffff), curCopyIndex(0),
-  messageService(nsnull), totalMsgCount(0)
+  fileStream(nsnull), messageService(nsnull),
+  curCopyIndex(0), curDstKey(0xffffffff),
+  totalMsgCount(0)
 {
 }
 
