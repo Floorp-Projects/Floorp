@@ -1705,19 +1705,18 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 		JSProperty **propp)
 {
     JSRuntime *rt;
-    JSObject *obj, *pobj, *parent, *lastobj;
+    JSObject *obj, *pobj, *lastobj;
     JSProperty *prop;
 
     rt = cx->runtime;
-
-    lastobj = NULL;             /* Suppress gcc warning */
-    for (obj = cx->fp->scopeChain; obj; obj = parent) {
-	/* Try the property cache and return immediately on cache hit. */
+    obj = cx->fp->scopeChain;
+    do {
+        /* Try the property cache and return immediately on cache hit. */
+        JS_LOCK_OBJ(cx, obj);
 	PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);
 	if (PROP_FOUND(prop)) {
 #ifdef JS_THREADSAFE
 	    JS_ASSERT(OBJ_IS_NATIVE(obj));
-	    JS_LOCK_OBJ(cx, obj);
 	    JS_ATOMIC_ADDREF(&((JSScopeProperty *)prop)->nrefs, 1);
 #endif
 	    *objp = obj;
@@ -1725,6 +1724,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	    *propp = prop;
 	    return JS_TRUE;
 	}
+        JS_UNLOCK_OBJ(cx, obj);
 
 	/* If cache miss (not cached-as-not-found), take the slow path. */
 	if (!prop) {
@@ -1742,9 +1742,9 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	    PROPERTY_CACHE_FILL(cx, &rt->propertyCache, obj, id,
 				PROP_NOT_FOUND(obj, id));
 	}
-	parent = OBJ_GET_PARENT(cx, obj);
 	lastobj = obj;
-    }
+    } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
+    
     *objp = lastobj;
     *pobjp = NULL;
     *propp = NULL;
@@ -1936,18 +1936,14 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                         if (protoattrs & JSPROP_SETTER) {
                             JSBool ok;
 
-#ifdef JS_THREADSAFE
                             JS_ATOMIC_ADDREF(&protosprop->nrefs, 1);
-#endif
                             JS_UNLOCK_OBJ(cx, proto);
 
                             ok = SPROP_SET(cx, protosprop, obj, obj, vp);
-#ifdef JS_THREADSAFE
                             JS_LOCK_OBJ_VOID(cx, proto,
                                              js_DropScopeProperty(cx,
                                                                   protoscope,
                                                                   protosprop));
-#endif
                             return ok;
                         }
 #endif /* JS_HAS_GETTER_SETTER */
@@ -2044,33 +2040,27 @@ read_only:
     slot = sprop->slot;
     pval = LOCKED_OBJ_GET_SLOT(obj, slot);
 
-#ifdef JS_THREADSAFE
     /* Hold sprop across setter callout, and drop after, in case of delete. */
     JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
-#endif
 
     /* Avoid deadlock by unlocking obj while calling sprop's setter. */
     JS_UNLOCK_OBJ(cx, obj);
 
     /* Let the setter modify vp before copying from it to obj->slots[slot]. */
     if (!SPROP_SET(cx, sprop, obj, obj, vp)) {
-#ifdef JS_THREADSAFE
 	JS_LOCK_OBJ_VOID(cx, obj, js_DropScopeProperty(cx, scope, sprop));
-#endif
 	return JS_FALSE;
     }
 
     /* Relock obj until we are done with sprop. */
     JS_LOCK_OBJ(cx, obj);
 
-#ifdef JS_THREADSAFE
     sprop = js_DropScopeProperty(cx, scope, sprop);
     if (!sprop) {
 	/* Lost a race with someone who deleted sprop. */
 	JS_UNLOCK_OBJ(cx, obj);
 	return JS_TRUE;
     }
-#endif
     GC_POKE(cx, pval);
     LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
 

@@ -77,7 +77,7 @@ struct JSObjectMap {
     (obj)->map->ops->deleteProperty(cx,obj,id,rval)
 #define OBJ_DEFAULT_VALUE(cx,obj,hint,vp)                                     \
     (obj)->map->ops->defaultValue(cx,obj,hint,vp)
-#define OBJ_ENUMERATE(cx,obj,enum_op,statep,idp)                                                 \
+#define OBJ_ENUMERATE(cx,obj,enum_op,statep,idp)                              \
     (obj)->map->ops->enumerate(cx,obj,enum_op,statep,idp)
 #define OBJ_CHECK_ACCESS(cx,obj,id,mode,vp,attrsp)                            \
     (obj)->map->ops->checkAccess(cx,obj,id,mode,vp,attrsp)
