@@ -1469,7 +1469,7 @@ void initDateObject(JS2Metadata *meta)
 
     PrototypeFunction *pf = &prototypeFunctions[0];
     while (pf->name) {
-        CallableInstance *fInst = new CallableInstance(meta->functionClass);
+        SimpleInstance *fInst = new SimpleInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
 /*
 XXX not prototype object function properties, like ECMA3
@@ -1478,7 +1478,7 @@ XXX not prototype object function properties, like ECMA3
 /*
 XXX not static members, since those can't be accessed from the instance
           Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
-          meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+          meta->defineLocalMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
 */
         InstanceMember *m = new InstanceMethod(fInst);
         meta->defineInstanceMember(meta->dateClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);

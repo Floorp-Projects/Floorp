@@ -115,23 +115,23 @@ namespace MetaData {
         // Adding "prototype" as a static member of the class - not a dynamic property
         meta->env->addFrame(meta->functionClass);
             Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(meta->functionClass->prototype), true);
-            meta->defineStaticMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         meta->env->removeTopFrame();
 
         // Add "constructor" as a dynamic property of the prototype
-        CallableInstance *fInst = new CallableInstance(meta->functionClass);
+        SimpleInstance *fInst = new SimpleInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Function_Constructor);
         meta->writeDynamicProperty(meta->functionClass->prototype, new Multiname(&meta->world.identifiers["constructor"], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
 
         PrototypeFunction *pf = &prototypeFunctions[0];
         while (pf->name) {
-            fInst = new CallableInstance(meta->functionClass);
+            fInst = new SimpleInstance(meta->functionClass);
             fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
     /*
     XXX not static members, since those can't be accessed from the instance
               Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
-              meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+              meta->defineLocalMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
     */
             InstanceMember *m = new InstanceMethod(fInst);
             meta->defineInstanceMember(meta->functionClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);

@@ -1016,16 +1016,10 @@
             baseVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
-            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
-            if (obj->kind == SimpleInstanceKind)
-                a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
-            else
-                a = checked_cast<CallableInstance *>(obj)->slots[slotIndex].value;
+            ASSERT(obj->kind == SimpleInstanceKind);
+            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
             float64 num = meta->toFloat64(a);
-            if (obj->kind == SimpleInstanceKind)
-                checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
-            else
-                checked_cast<CallableInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
+            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
         }
@@ -1037,16 +1031,10 @@
             baseVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
-            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
-            if (obj->kind == SimpleInstanceKind)
-                a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
-            else
-                a = checked_cast<CallableInstance *>(obj)->slots[slotIndex].value;
+            ASSERT(obj->kind == SimpleInstanceKind);
+            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
             float64 num = meta->toFloat64(a);
-            if (obj->kind == SimpleInstanceKind)
-                checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
-            else
-                checked_cast<CallableInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
+            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
         }
@@ -1058,17 +1046,11 @@
             baseVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
-            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
-            if (obj->kind == SimpleInstanceKind)
-                a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
-            else
-                a = checked_cast<CallableInstance *>(obj)->slots[slotIndex].value;
+            ASSERT(obj->kind == SimpleInstanceKind);
+            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            if (obj->kind == SimpleInstanceKind)
-                checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
-            else
-                checked_cast<CallableInstance *>(obj)->slots[slotIndex].value = a;
+            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
             baseVal = JS2VAL_VOID;
         }
         break;
@@ -1079,17 +1061,11 @@
             baseVal = pop();
             ASSERT(JS2VAL_IS_OBJECT(baseVal));
             JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
-            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
-            if (obj->kind == SimpleInstanceKind)
-                a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
-            else
-                a = checked_cast<CallableInstance *>(obj)->slots[slotIndex].value;
+            ASSERT(obj->kind == SimpleInstanceKind);
+            a = checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value;
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            if (obj->kind == SimpleInstanceKind)
-                checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
-            else
-                checked_cast<CallableInstance *>(obj)->slots[slotIndex].value = a;
+            checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
             baseVal = JS2VAL_VOID;
         }
         break;

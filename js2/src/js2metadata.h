@@ -44,14 +44,13 @@ namespace MetaData {
 class JS2Object;
 class JS2Metadata;
 class JS2Class;
-class StaticBinding;
+class LocalBinding;
 class Environment;
 class Context;
 class CompoundAttribute;
 class BytecodeContainer;
 class Pond;
 class SimpleInstance;
-class CallableInstance;
 
 
 typedef void (Invokable)();
@@ -102,7 +101,6 @@ enum ObjectKind {
     BlockKind, 
     PrototypeInstanceKind,
     SimpleInstanceKind,
-    CallableInstanceKind,
     MultinameKind,
     MethodClosureKind,
     AlienInstanceKind,
@@ -271,10 +269,10 @@ class Signature {
     bool returnType;                    // The type of this function's result
 };
 
-// A base class for Instance and Static members for convenience.
+// A base class for Instance and Local members for convenience.
 class Member {
 public:
-    enum MemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor, InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
+    enum MemberKind { Forbidden, DynamicVariableKind, Variable, ConstructorMethod, Setter, Getter, InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
     
     Member(MemberKind kind) : kind(kind) { }
 
@@ -283,67 +281,82 @@ public:
     virtual void mark()                 { }
 };
 
-// A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
-class StaticMember : public Member {
+// A local member is either forbidden, a dynamic variable, a variable, a constructor method, a getter or a setter:
+class LocalMember : public Member {
 public:
-    StaticMember(MemberKind kind) : Member(kind), forbidden(false) { }
-    StaticMember(MemberKind kind, bool forbidden) : Member(kind), forbidden(forbidden) { }
+    LocalMember(MemberKind kind) : Member(kind), forbidden(false) { }
+    LocalMember(MemberKind kind, bool forbidden) : Member(kind), forbidden(forbidden) { }
 
-    StaticMember *cloneContent; // Used during cloning operation to prevent cloning of duplicates (i.e. once
+    LocalMember *cloneContent;  // Used during cloning operation to prevent cloning of duplicates (i.e. once
                                 // a clone exists for this member it's recorded here and used for any other
                                 // bindings that refer to this member.)
                                 // Also used thereafter by 'assignArguments' to initialize the singular
                                 // variable instantations in a parameter frame.
 
-    virtual StaticMember *clone()       { if (forbidden) return this; ASSERT(false); return NULL; }
+    virtual LocalMember *clone()       { if (forbidden) return this; ASSERT(false); return NULL; }
     bool forbidden;
 };
 
 #define FUTURE_TYPE ((JS2Class *)(-1))
 
-class Variable : public StaticMember {
+class Variable : public LocalMember {
 public:
-    Variable() : StaticMember(Member::Variable), type(NULL), vb(NULL), value(JS2VAL_VOID), immutable(false) { }
-    Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), vb(NULL), value(value), immutable(immutable) { }
+    Variable() : LocalMember(Member::Variable), type(NULL), value(JS2VAL_VOID), immutable(false), vb(NULL) { }
+    Variable(JS2Class *type, js2val value, bool immutable) : LocalMember(LocalMember::Variable), type(type), value(value), immutable(immutable), vb(NULL) { }
 
-    virtual StaticMember *clone()   { return new Variable(type, value, immutable); }
+    virtual LocalMember *clone()   { return new Variable(type, value, immutable); }
     
     JS2Class *type;                 // Type of values that may be stored in this variable, NULL if INACCESSIBLE, FUTURE_TYPE if pending
-    VariableBinding *vb;            // The variable definition node, to resolve future types
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
                                     // uninitialised if the variable must be written before it can be read
     bool immutable;                 // true if this variable's value may not be changed once set
 
+    // XXX union this with the type field later?
+    VariableBinding *vb;            // The variable definition node, to resolve future types
+
     virtual void mark()                 { GCMARKVALUE(value); }
 };
 
-class HoistedVar : public StaticMember {
+class DynamicVariable : public LocalMember {
 public:
-    HoistedVar() : StaticMember(Member::HoistedVariable), value(JS2VAL_UNDEFINED), hasFunctionInitializer(false) { }
+    DynamicVariable() : LocalMember(Member::DynamicVariableKind), value(JS2VAL_UNDEFINED), sealed(false) { }
 
     js2val value;                   // This variable's current value
-    bool hasFunctionInitializer;    // true if this variable was created by a function statement
+                                    // XXX may be an uninstantiated function at compile time
+    bool sealed;                    // true if this variable cannot be deleted using the delete operator
 
-    virtual StaticMember *clone()       { return new HoistedVar(); }
+    virtual LocalMember *clone()       { return new DynamicVariable(); }
+    virtual void mark()                { GCMARKVALUE(value); }
+};
+
+class ConstructorMethod : public LocalMember {
+public:
+    ConstructorMethod() : LocalMember(Member::ConstructorMethod), value(JS2VAL_VOID) { }
+    ConstructorMethod(js2val value) : LocalMember(Member::ConstructorMethod), value(value) { }
+
+    js2val value;           // This constructor itself (a callable object)
+
     virtual void mark()                 { GCMARKVALUE(value); }
 };
 
-class ConstructorMethod : public StaticMember {
+class Getter : public LocalMember {
 public:
-    ConstructorMethod() : StaticMember(Member::ConstructorMethod), value(JS2VAL_VOID) { }
-    ConstructorMethod(js2val value) : StaticMember(Member::ConstructorMethod), value(value) { }
+    Getter() : LocalMember(Member::Getter), type(NULL), code(NULL) { }
 
-    js2val value;           // This function itself (a callable object)
+    JS2Class *type;         // The type of the value read from this getter
+    Invokable *code;        // calling this object does the read
 
-    virtual void mark()                 { GCMARKVALUE(value); }
+    virtual void mark();
 };
 
-class Accessor : public StaticMember {
+class Setter : public LocalMember {
 public:
-    Accessor() : StaticMember(Member::Accessor), type(NULL), code(NULL) { }
+    Setter() : LocalMember(Member::Setter), type(NULL), code(NULL) { }
 
-    JS2Class *type;         // The type of the value read from the getter or written into the setter
-    Invokable *code;        // calling this object does the read or write
+    JS2Class *type;         // The type of the value written into the setter
+    Invokable *code;        // calling this object does the write
+
+    virtual void mark();
 };
 
 
@@ -352,17 +365,19 @@ typedef std::map<String, js2val> DynamicPropertyMap;
 typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 
 
-// A STATICBINDING describes the member to which one qualified name is bound in a frame. Multiple 
+// A LOCALBINDING describes the member to which one qualified name is bound in a frame. Multiple 
 // qualified names may be bound to the same member in a frame, but a qualified name may not be 
 // bound to multiple members in a frame (except when one binding is for reading only and 
 // the other binding is for writing only).
-class StaticBinding {
+class LocalBinding {
 public:
-    StaticBinding(QualifiedName &qname, StaticMember *content) : qname(qname), xplicit(false), content(content) { }
+    LocalBinding(QualifiedName &qname, LocalMember *content) : qname(qname), content(content), xplicit(false) { }
 
     QualifiedName qname;        // The qualified name bound by this binding
+// implemented by having separate read & write binding sets
+//  AccessSet Accesses;
+    LocalMember *content;       // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
-    StaticMember *content;      // The member to which this qualified name was bound
 };
 
 class InstanceMember : public Member {
@@ -387,10 +402,10 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod(CallableInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
+    InstanceMethod(SimpleInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
     Signature type;         // This method's signature
 //    Invokable *code;        // This method itself (a callable object); null if this method is abstract
-    CallableInstance *fInst;
+    SimpleInstance *fInst;
 
     virtual void mark();
 };
@@ -424,10 +439,10 @@ typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
 
 
 
-// A StaticBindingMap maps names to a list of StaticBindings. Each StaticBinding in the list
+// A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
-typedef std::multimap<String, StaticBinding *> StaticBindingMap;
-typedef StaticBindingMap::iterator StaticBindingIterator;
+typedef std::multimap<String, LocalBinding *> LocalBindingMap;
+typedef LocalBindingMap::iterator LocalBindingIterator;
 
 typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
 typedef InstanceBindingMap::iterator InstanceBindingIterator;
@@ -441,8 +456,8 @@ public:
     Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), pluralFrame(NULL) { }
     Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), pluralFrame(pluralFrame) { }
 
-    StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
-    StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
+    LocalBindingMap localReadBindings;        // Map of qualified names to readable members defined in this frame
+    LocalBindingMap localWriteBindings;       // Map of qualified names to writable members defined in this frame
 
     std::vector<js2val> *temps;               // temporaries allocted in this frame
     uint16 allocateTemp();
@@ -542,39 +557,21 @@ public:
     SimpleInstance(JS2Class *type);
 
     JS2Class    *type;                      // This instance's type
+// Implemented as type->getName()
 //    const String  *typeofString;            // A string to return if typeof is invoked on this instance
     Slot        *slots;                     // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
+    FunctionWrapper *fWrap;
+
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
 
     virtual void markChildren();
     virtual ~SimpleInstance()            { }
 };
 
-// If the instance reposnds to the function call or new operators, then that 
-// instance is a CallableInstance
-class CallableInstance : public JS2Object {
-public:
-    CallableInstance(JS2Class *type);
-
-    JS2Class    *type;              // This instance's type
-//    Invokable   *call;            // A procedure to call when this instance is used in a call expression
-//    Invokable   *construct;       // A procedure to call when this instance is used in a new expression
-//    Environment *env;             // The environment to pass to the call or construct procedure
-    FunctionWrapper *fWrap;
-
-// Implemented as type->getName()
-//    const String  *typeofString;            // A string to return if typeof is invoked on this instance
-    Slot        *slots;                     // A set of slots that hold this instance's fixed property values
-    DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
-    virtual void markChildren();
-
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
-    virtual ~CallableInstance()            { }
-};
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
 // contain no fixed properties.
-
 class PrototypeInstance : public JS2Object {
 public:
     PrototypeInstance(JS2Object *parent, JS2Class *type) : JS2Object(PrototypeInstanceKind), parent(parent), type(type) { }
@@ -589,20 +586,20 @@ public:
     virtual ~PrototypeInstance()            { }
 };
 
-// Date instances are Callable instances created by the Date class, they have an extra field 
+// Date instances are simple instances created by the Date class, they have an extra field 
 // that contains the millisecond count
-class DateInstance : public CallableInstance {
+class DateInstance : public SimpleInstance {
 public:
-    DateInstance(JS2Class *type) : CallableInstance(type) { }
+    DateInstance(JS2Class *type) : SimpleInstance(type) { }
 
     float64     ms;
 };
 
-// String instances are Callable instances created by the String class, they have an extra field 
+// String instances are simple instances created by the String class, they have an extra field 
 // that contains the string data
-class StringInstance : public CallableInstance {
+class StringInstance : public SimpleInstance {
 public:
-    StringInstance(JS2Class *type) : CallableInstance(type), mValue(NULL) { }
+    StringInstance(JS2Class *type) : SimpleInstance(type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
@@ -610,11 +607,11 @@ public:
     virtual ~StringInstance()            { }
 };
 
-// Number instances are Callable instances created by the Number class, they have an extra field 
+// Number instances are simple instances created by the Number class, they have an extra field 
 // that contains the float64 data
-class NumberInstance : public CallableInstance {
+class NumberInstance : public SimpleInstance {
 public:
-    NumberInstance(JS2Class *type) : CallableInstance(type), mValue(0.0) { }
+    NumberInstance(JS2Class *type) : SimpleInstance(type), mValue(0.0) { }
 
     float64     mValue;
     virtual ~NumberInstance()            { }
@@ -642,22 +639,22 @@ public:
     virtual ~FunctionInstance()          { }
 };
 
-// Array instances are Callable instances created by the Array class, they 
+// Array instances are simple instances created by the Array class, they 
 // maintain the value of the 'length' property when 'indexable' elements
 // are added.
-class ArrayInstance : public CallableInstance {
+class ArrayInstance : public SimpleInstance {
 public:
-    ArrayInstance(JS2Class *type) : CallableInstance(type) { }
+    ArrayInstance(JS2Class *type) : SimpleInstance(type) { }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
     virtual ~ArrayInstance()             { }
 };
 
-// RegExp instances are Callable instances created by the RegExp class, they have an extra field 
+// RegExp instances are simple instances created by the RegExp class, they have an extra field 
 // that contains the RegExp object
-class RegExpInstance : public CallableInstance {
+class RegExpInstance : public SimpleInstance {
 public:
-    RegExpInstance(JS2Class *type) : CallableInstance(type) { }
+    RegExpInstance(JS2Class *type) : SimpleInstance(type) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -1006,7 +1003,7 @@ typedef std::vector<StmtNode *>::iterator TargetListIterator;
 typedef std::vector<StmtNode *>::reverse_iterator TargetListReverseIterator;
 
 struct MemberDescriptor {
-    StaticMember *staticMember;
+    LocalMember *localMember;
     QualifiedName *qname;
 };
 
@@ -1053,17 +1050,17 @@ public:
     bool hasType(js2val objVal, JS2Class *c);
     bool relaxedHasType(js2val objVal, JS2Class *c);
 
-    StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
+    LocalMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
-    HoistedVar *defineHoistedVar(Environment *env, const String *id, StmtNode *p);
-    Multiname *defineStaticMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
+    DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p);
+    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos);
     OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
     OverrideStatus *searchForOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
-    bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
+    bool findLocalMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
 
     js2val invokeFunction(const char *fname);
@@ -1072,7 +1069,7 @@ public:
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
+    bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
     JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
@@ -1080,13 +1077,13 @@ public:
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
-    bool writeStaticMember(StaticMember *m, js2val newValue, Phase phase);
+    bool writeLocalMember(LocalMember *m, js2val newValue, Phase phase);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
     bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
     bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
     bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
-    bool deleteStaticMember(StaticMember *m, bool *result);
+    bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
     void addGlobalObjectFunction(char *name, NativeCode *code);
@@ -1129,7 +1126,7 @@ public:
     // The one and only 'public' namespace
     Namespace *publicNamespace;
 
-    StaticMember *forbiddenMember;  // just need one of these hanging around
+    LocalMember *forbiddenMember;  // just need one of these hanging around
 
     // The base classes:
     JS2Class *objectClass;

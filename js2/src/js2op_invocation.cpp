@@ -48,22 +48,15 @@
             }
             else {
                 FunctionWrapper *fWrap = NULL;
-                if ((obj->kind == CallableInstanceKind)
+                if ((obj->kind == SimpleInstanceKind)
                             && (meta->objectType(a) == meta->functionClass)) {
-                    fWrap = (checked_cast<CallableInstance *>(obj))->fWrap;
+                    fWrap = (checked_cast<SimpleInstance *>(obj))->fWrap;
                 }
                 else
                     if ((obj->kind == PrototypeInstanceKind)
                             && ((checked_cast<PrototypeInstance *>(obj))->type == meta->functionClass)) {
                         fWrap = (checked_cast<FunctionInstance *>(obj))->fWrap;
                     }
-/*
-                if (obj->kind == CallableInstanceKind) {
-                    FunctionWrapper *fWrap = NULL;
-                    CallableInstance *dInst = (checked_cast<CallableInstance *>(obj));
-                    if (dInst->type == meta->functionClass)
-                        fWrap = dInst->fWrap;
-*/
                     if (fWrap) {
                         // XXX - I made this stuff up - extract the 'prototype' property from
                         // the function being invoked (defaulting to Object.prototype). Then 
@@ -122,9 +115,9 @@
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
             FunctionWrapper *fWrap = NULL;
-            if ((fObj->kind == CallableInstanceKind)
+            if ((fObj->kind == SimpleInstanceKind)
                         && (meta->objectType(b) == meta->functionClass)) {
-                fWrap = (checked_cast<CallableInstance *>(fObj))->fWrap;
+                fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
             }
             else
                 if ((fObj->kind == PrototypeInstanceKind)
@@ -160,7 +153,7 @@
             else
             if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the frame push of the objectType)
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
-                CallableInstance *fInst = mc->method->fInst;
+                SimpleInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(meta->env);
@@ -292,9 +285,6 @@
                     break;
                 case SimpleInstanceKind:
                     a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
-                    break;
-                case CallableInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<CallableInstance *>(obj)->type->getName());
                     break;
                 }
             }

@@ -235,11 +235,11 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
 
 void printFrameBindings(Frame *f)
 {
-    stdOut << " Static Bindings:\n";                    
-    for (StaticBindingIterator rsb = f->staticReadBindings.begin(), rsend = f->staticReadBindings.end(); (rsb != rsend); rsb++) {
+    stdOut << " Local Bindings:\n";                    
+    for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {
         stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << *rsb->second->qname.id;
         bool found = false;
-        for (StaticBindingIterator wsb = f->staticWriteBindings.begin(), wsend = f->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+        for (LocalBindingIterator wsb = f->localWriteBindings.begin(), wsend = f->localWriteBindings.end(); (wsb != wsend); wsb++) {
             if (rsb->second->qname == wsb->second->qname) {
                 found = true;
                 break;
@@ -247,9 +247,9 @@ void printFrameBindings(Frame *f)
         }
         stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
     }
-    for (StaticBindingIterator wsb = f->staticWriteBindings.begin(), wsend = f->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+    for (LocalBindingIterator wsb = f->localWriteBindings.begin(), wsend = f->localWriteBindings.end(); (wsb != wsend); wsb++) {
         bool found = false;
-        for (StaticBindingIterator rsb = f->staticReadBindings.begin(), rsend = f->staticReadBindings.end(); (rsb != rsend); rsb++) {
+        for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {
             if (rsb->second->qname == wsb->second->qname) {
                 found = true;
                 break;
@@ -266,10 +266,10 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
     if (argc) {
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
-            if (((fObj->kind == CallableInstanceKind)
+            if (((fObj->kind == SimpleInstanceKind)
                         && (meta->objectType(argv[0]) == meta->functionClass))) {
                 FunctionWrapper *fWrap;
-                fWrap = (checked_cast<CallableInstance *>(fObj))->fWrap;
+                fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
                 if (fWrap->code)
                     stdOut << "<native code>\n";
                 else

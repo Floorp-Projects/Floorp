@@ -806,7 +806,7 @@ void initArrayObject(JS2Metadata *meta)
 
     PrototypeFunction *pf = &arrayProtos[0];
     while (pf->name) {
-        CallableInstance *fInst = new CallableInstance(meta->functionClass);
+        SimpleInstance *fInst = new SimpleInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
     
         InstanceMember *m = new InstanceMethod(fInst);

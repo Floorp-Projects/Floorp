@@ -771,7 +771,7 @@ namespace MetaData {
         if (c->prototype)
             return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype, c));
         else
-            return OBJECT_TO_JS2VAL(new CallableInstance(c));
+            return OBJECT_TO_JS2VAL(new SimpleInstance(c));
     }
 
     // Save current engine state (pc, environment top) and
@@ -885,17 +885,17 @@ namespace MetaData {
     {
         if (obj->kind == ClassKind) {
             JS2Class *c = checked_cast<JS2Class *>(obj);
-            StaticBindingIterator sbi, end;
-            nameList = new const String *[c->staticReadBindings.size()];
+            LocalBindingIterator sbi, end;
+            nameList = new const String *[c->localReadBindings.size()];
             length = 0;
-            for (sbi = c->staticReadBindings.begin(), end = c->staticReadBindings.end(); (sbi != end); sbi++) {
+            for (sbi = c->localReadBindings.begin(), end = c->localReadBindings.end(); (sbi != end); sbi++) {
                 nameList[length++] = &sbi->first;
             }
         }
         else {
             DynamicPropertyMap *dMap = NULL;
-            if (obj->kind == CallableInstanceKind)
-                dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
+            if (obj->kind == SimpleInstanceKind)
+                dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
             else
             if (obj->kind == GlobalObjectKind)
                 dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
