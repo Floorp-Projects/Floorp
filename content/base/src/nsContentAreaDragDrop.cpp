@@ -74,6 +74,7 @@
 #include "nsIIOService.h"
 #include "nsIFile.h"
 #include "nsIWebNavigation.h"
+#include "nsIDragDropOverride.h"
 
 
 NS_IMPL_ADDREF(nsContentAreaDragDrop)
@@ -91,7 +92,7 @@ NS_INTERFACE_MAP_END
 // nsContentAreaDragDrop ctor
 //
 nsContentAreaDragDrop::nsContentAreaDragDrop ( ) 
-  : mListenerInstalled(PR_FALSE), mNavigator(nsnull)
+  : mListenerInstalled(PR_FALSE), mNavigator(nsnull), mOverrideDrag(nsnull), mOverrideDrop(nsnull)
 {
   NS_INIT_REFCNT();
 } // ctor
@@ -108,12 +109,16 @@ nsContentAreaDragDrop::~nsContentAreaDragDrop ( )
 
 
 NS_IMETHODIMP
-nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint, nsIWebNavigation* inNavigator)
+nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint, nsIWebNavigation* inNavigator,
+                                  nsIOverrideDragSource* inOverrideDrag, nsIOverrideDropSite* inOverrideDrop)
 {
   NS_ASSERTION(inAttachPoint, "Can't hookup Drag Listeners to NULL receiver");
   mEventReceiver = do_QueryInterface(inAttachPoint);
   NS_ASSERTION(mEventReceiver, "Target doesn't implement nsIDOMEventReceiver as needed");
   mNavigator = inNavigator;
+  
+  mOverrideDrag = inOverrideDrag;
+  mOverrideDrop = inOverrideDrop;
   
   return AddDragListener();
 }
@@ -215,7 +220,12 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
   nsCOMPtr<nsIDragSession> session;
   dragService->GetCurrentSession(getter_AddRefs(session));
   if ( session ) {
+    // if the client has provided an override callback, check if we
+    // the drop is allowed. If it allows it, we should still protect against
+    // dropping w/in the same document.
     PRBool dropAllowed = PR_TRUE;
+    if ( mOverrideDrop )
+      mOverrideDrop->AllowDrop(inEvent, session, &dropAllowed);    
     nsCOMPtr<nsIDOMDocument> sourceDoc;
     session->GetSourceDocument(getter_AddRefs(sourceDoc));
     nsCOMPtr<nsIDOMDocument> eventDoc;
@@ -339,6 +349,14 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
 
   nsresult rv = session->GetData(trans, 0);     // again, we only care about the first object
   if ( NS_SUCCEEDED(rv) ) {
+    // if the client has provided an override callback, call it. It may
+    // still return that we should continue processing.
+    if ( mOverrideDrop ) {
+      PRBool actionHandled = PR_FALSE;
+      if ( NS_SUCCEEDED(mOverrideDrop->DropAction(inMouseEvent, trans, &actionHandled)) )
+        if ( actionHandled )
+          return NS_OK;
+    }
     nsXPIDLCString flavor;
     nsCOMPtr<nsISupports> dataWrapper;
     PRUint32 dataLen = 0;
@@ -826,6 +844,15 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
   if ( preventDefault )
     return NS_OK;
 
+  // if the client has provided an override callback, check if we
+  // should continue
+  if ( mOverrideDrag ) {
+    PRBool allow = PR_FALSE;
+    if ( NS_SUCCEEDED(mOverrideDrag->AllowStart(inMouseEvent, &allow)) )
+      if ( !allow )
+        return NS_OK;
+  }
+  
   nsAutoString urlString, titleString, htmlString;
   PRBool isAnchor = PR_FALSE;
   
@@ -836,6 +863,11 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
     nsCOMPtr<nsITransferable> trans;
     nsresult rv = CreateTransferable(urlString, titleString, htmlString, isAnchor, getter_AddRefs(trans));
     if ( trans ) {
+      // if the client has provided an override callback, let them manipulate
+      // the flavors or drag data
+      if ( mOverrideDrag )
+        mOverrideDrag->Modify(trans);
+
       nsCOMPtr<nsISupportsArray> transArray(do_CreateInstance("@mozilla.org/supports-array;1"));
       if ( !transArray )
         return NS_ERROR_FAILURE;

@@ -39,6 +39,13 @@
 
 interface nsIDOMEventTarget;
 interface nsIWebNavigation;
+interface nsIOverrideDragSource;
+interface nsIOverrideDropSite;
+
+
+/**
+ * @status UNDER_REVIEW
+ */
 
 /**
  * Interface for communicating with the built-in drag and drop
@@ -50,12 +57,26 @@ interface nsIWebNavigation;
 [scriptable,uuid(4f418f58-f834-4736-a755-e0395bedca9d)]
 interface nsIDragDropHandler : nsISupports
 {
-    // attach drag handlers to the receiver specified in |attachPoint|. If
-    // |navigator| is supplied (it can be null), then if urls are dropped
-    // on the content area they will be loaded through the object provided. If
-    // it is null, then the client must handle the drop itself.
-  void hookupTo(in nsIDOMEventTarget attachPoint, in nsIWebNavigation navigator);
+  /**
+   * Attach drag handlers to receiver specified by |attachPoint| and
+   * specify callbacks to allow overriding of the built-in behaviors.
+   *
+   * @param attachPoint hookup listeners to this location
+   * @param navigator loads dropped urls via this interface. If NULL, 
+   *                   the client must handle the drop itself, either
+   *                   through the method provided via |overrideDrop| or
+   *                   by letting the event bubble up through the DOM.
+   * @param overrideDrag callback to client to override portions of the
+   *                      drag start action. Can be NULL.
+   * @param overrideDrop callback to client to override portions of the
+   *                      drop action. Can be NULL.
+   */
+  void hookupTo(in nsIDOMEventTarget attachPoint, in nsIWebNavigation navigator,
+                  in nsIOverrideDragSource overrideDrag,
+                  in nsIOverrideDropSite overrideDrop);
   
-    // call to unregister all handlers related to drag&drop
+  /**
+   * Unregister all handlers related to drag&drop
+   */
   void detach();
 };
