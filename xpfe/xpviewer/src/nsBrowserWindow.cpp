@@ -45,6 +45,9 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 
+#include "nsIXPBaseWindow.h"
+#include "nsXPBaseWindow.h"
+#include "nsFindDialog.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsIDocumentViewer.h"
@@ -143,6 +146,7 @@ static NS_DEFINE_IID(kToolbarItemHolderCID, NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kToolbarItemCID, NS_TOOLBARITEM_CID);
 static NS_DEFINE_IID(kPopUpMenuCID, NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kMenuButtonCID, NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
@@ -171,6 +175,7 @@ static NS_DEFINE_IID(kIToolbarItemHolderIID, NS_ITOOLBARITEMHOLDER_IID);
 static NS_DEFINE_IID(kIToolbarItemIID, NS_ITOOLBARITEM_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
+static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -464,8 +469,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-             r.x, r.y, r.width, r.height,
-             nsScrollPreference_kAuto, aAllowPlugins);
+                       r.x, r.y, r.width, r.height,
+                       nsScrollPreference_kAuto, 
+                       aAllowPlugins);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
@@ -1006,133 +1012,80 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+//---------------------------------------------------------------
+NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+{
+	nsIPresShell* shell = GetPresShell();
+	if (nsnull != shell) {
+	  nsIDocument* doc = shell->GetDocument();
+	  if (nsnull != doc) {
+		  PRBool foundIt = PR_FALSE;
+		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
+		  if (!foundIt) {
+		    // Display Dialog here
+		  }
+		  ForceRefresh();
+		  NS_RELEASE(doc);
+	  }
+	  NS_RELEASE(shell);
+	}
+  return NS_OK;
+}
 
 //---------------------------------------------------------------
-void
-nsBrowserWindow::DoFind()
+NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
 {
-  if (mDialog == nsnull) {
-  nscoord txtHeight   = 24;
-  nscolor textBGColor = NS_RGB(0, 0, 0);
-  nscolor textFGColor = NS_RGB(255, 255, 255);
+  mWindow->Invalidate(PR_TRUE);
+  mWebShell->Repaint(PR_TRUE);
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root;
+      vm->GetRootView(root);
+      if (nsnull != root) {
+        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+  return NS_OK;
+}
 
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
-     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
-     NS_RELEASE(lookAndFeel);
+
+
+//---------------------------------------------------------------
+void nsBrowserWindow::DoFind()
+{
+  if (mXPDialog) {
+    NS_RELEASE(mXPDialog);
+    //mXPDialog->SetVisible(PR_TRUE);
+    //return;
   }
 
+  nsString findHTML("resource:/res/samples/find.html");
+  //nsString findHTML("resource:/res/samples/find-table.html");
+  nsRect rect(0, 0, 505, 170);
+  //nsRect rect(0, 0, 480, 150);
+  nsString title("Find");
 
-  nsIDeviceContext* dc = mWindow->GetDeviceContext();
-  float t2d;
-  dc->GetTwipsToDevUnits(t2d);
-  nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-        NS_FONT_WEIGHT_NORMAL, 0,
-        nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
-  NS_RELEASE(dc);
-
-  // create a Dialog
-  //
-  nsRect rect;
-  rect.SetRect(0, 0, 380, 110);  
-
-  nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
-  nsIWidget* widget = nsnull;
-  NS_CreateDialog(mWindow,mDialog,rect,HandleGUIEvent,&font);
-  if (NS_OK == mDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
-  	widget->SetClientData(this);
-  	NS_RELEASE(widget);
-  }
-  mDialog->SetLabel("Find");
-
-  nscoord xx = 5;
-  // Create Label
-  rect.SetRect(xx, 8, 75, 24);  
-  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
-  NS_CreateLabel(mDialog,mLabel,rect,HandleGUIEvent,&font);
-  if (NS_OK == mLabel->QueryInterface(kIWidgetIID,(void**)&widget)) {
-  	widget->SetClientData(this);
-  	mLabel->SetAlignment(eAlign_Right);
-  	mLabel->SetLabel("Find what:");
-  	NS_RELEASE(widget);
-  }
-  xx += 75 + 5;
-
-  // Create TextField
-  rect.SetRect(xx, 5, 200, txtHeight);  
-  nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
-  NS_CreateTextWidget(mDialog,mTextField,rect,HandleGUIEvent,&font);
-  if (NS_OK == mTextField->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    widget->SetBackgroundColor(textBGColor);
-    widget->SetForegroundColor(textFGColor);
-    widget->SetClientData(this);
-    widget->SetFocus();
-  	NS_RELEASE(widget);
-  }
-  xx += 200 + 5;
-  
-  nscoord w = 65;
-  nscoord x = 205+80-w;
-  nscoord y = txtHeight + 10;
-  nscoord h = 19;
-
-  // Create Up RadioButton
-  rect.SetRect(x, y, w, h);  
-  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
-  NS_CreateRadioButton(mDialog,mUpRadioBtn,rect,HandleGUIEvent,&font);
-  if (NS_OK == mUpRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    widget->SetClientData(this);
-    mUpRadioBtn->SetLabel("Up");
-  	NS_RELEASE(widget);
-  }
-  y += h + 2;
-  
-  // Create Up RadioButton
-  rect.SetRect(x, y, w, h);  
-  nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
-  NS_CreateRadioButton(mDialog,mDwnRadioBtn,rect,HandleGUIEvent,&font);
-  if (NS_OK == mDwnRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->SetClientData(this);
-	  mDwnRadioBtn->SetLabel("Down");
-  	NS_RELEASE(widget);
-  }
-  
-  // Create Match CheckButton
-  rect.SetRect(5, y, 125, 24);  
-  nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
-  NS_CreateCheckButton(mDialog,mMatchCheckBtn,rect,HandleGUIEvent,&font);
-  if (NS_OK == mMatchCheckBtn->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->SetClientData(this);
-	  mMatchCheckBtn->SetLabel("Match Case");
-  	NS_RELEASE(widget);
+  nsXPBaseWindow * dialog = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+                                             kIXPBaseWindowIID,
+                                             (void**) &dialog);
+  if (rv == NS_OK) {
+    dialog->Init(mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
+    dialog->SetVisible(PR_TRUE);
+ 	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
+    }
   }
 
-  mUpRadioBtn->SetState(PR_FALSE);
-  mDwnRadioBtn->SetState(PR_TRUE);
-  
-  // Create Find Next Button
-  rect.SetRect(xx, 5, 75, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
-  NS_CreateButton(mDialog,mFindBtn,rect,HandleGUIEvent,&font);
-  if (NS_OK == mFindBtn->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->SetClientData(this);
-	  mFindBtn->SetLabel("Find Next");
-  	NS_RELEASE(widget);
+  nsFindDialog * findDialog = new nsFindDialog(this);
+  if (nsnull != findDialog) {
+    dialog->AddWindowListener(findDialog);
   }
-  
-  // Create Cancel Button
-  rect.SetRect(xx, 35, 75, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
-  NS_CreateButton(mDialog,mCancelBtn,rect,HandleGUIEvent,&font);
-  if (NS_OK == mCancelBtn->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->SetClientData(this);
-	  mCancelBtn->SetLabel("Cancel");
-  	NS_RELEASE(widget);
-  }  
-  }
-  mTextField->SelectAll();
+  //NS_IF_RELEASE(dialog);
 
 }
 
@@ -1143,32 +1096,13 @@ nsBrowserWindow::DoSelectAll()
 
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-  nsIDocument* doc = shell->GetDocument();
-  if (nsnull != doc) {
-    doc->SelectAll();
-    ForceRefresh();
-    NS_RELEASE(doc);
-  }
-  NS_RELEASE(shell);
-  }
-}
-
-//---------------------------------------------------------------
-void
-nsBrowserWindow::ForceRefresh()
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-  nsIViewManager* vm = shell->GetViewManager();
-  if (nsnull != vm) {
-    nsIView* root;
-    vm->GetRootView(root);
-    if (nsnull != root) {
-    vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      doc->SelectAll();
+      ForceRefresh();
+      NS_RELEASE(doc);
     }
-    NS_RELEASE(vm);
-  }
-  NS_RELEASE(shell);
+    NS_RELEASE(shell);
   }
 }
 

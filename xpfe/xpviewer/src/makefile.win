@@ -30,6 +30,8 @@ MISCDEP=                        \
 
 
 OBJS =					    \
+	.\$(OBJDIR)\nsFindDialog.obj	    \
+	.\$(OBJDIR)\nsXPBaseWindow.obj	    \
 	.\$(OBJDIR)\nsBrowserWindow.obj	    \
 	.\$(OBJDIR)\nsSetupRegistry.obj	    \
 	.\$(OBJDIR)\nsViewerApp.obj	    \
@@ -75,6 +77,7 @@ OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+	$(MAKE_INSTALL) resources\chrome\find.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) resources\throbber\LargeAnimation00.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) resources\throbber\LargeAnimation01.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) resources\throbber\LargeAnimation02.gif $(DIST)\bin\res\throbber
@@ -178,6 +181,7 @@ install:: $(PROGRAM)
 
 clobber::
 	rm -f $(DIST)\bin\xpviewer.exe
+	rm -f $(DIST)\bin\res\samples\find.html
 	rm -f $(DIST)\bin\res\samples\test0.html
 	rm -f $(DIST)\bin\res\samples\test1.html
 	rm -f $(DIST)\bin\res\samples\test2.html

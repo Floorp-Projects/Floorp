@@ -22,6 +22,7 @@
 #endif
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
+#include "nsXPBaseWindow.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIPref.h"
@@ -59,13 +60,16 @@
 #endif
 
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
+extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
+static NS_DEFINE_IID(kXPDialogWindowCID, NS_XPDIALOG_WINDOW_CID);
 
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIXPDialogWindowIID, NS_IXPDIALOG_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
@@ -145,6 +149,9 @@ nsViewerApp::SetupRegistry()
   NS_NewBrowserWindowFactory(&bwf);
   nsRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
 
+  NS_NewXPBaseWindowFactory(&bwf);
+  nsRepository::RegisterFactory(kXPDialogWindowCID, bwf, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -165,7 +172,6 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
   mAppShell->Create(&argc, argv);
-  //mAppShell->SetDispatchListener((nsDispatchListener*) this);
 
   // Load preferences
   rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
@@ -443,6 +449,21 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
+
+  // Create browser window
+  // XXX Some piece of code needs to properly hold the reference to this
+  // browser window. For the time being the reference is released by the
+  // browser event handling code during processing of the NS_DESTROY event...
+  /*nsXPDialogWindow* dialog = nsnull;
+  rv = nsRepository::CreateInstance(kXPDialogWindowCID, nsnull,
+                                             kIXPDialogWindowIID,
+                                             (void**) &dialog);
+  dialog->SetApp(this);
+  dialog->Init(mAppShell, mPrefs, nsRect(0, 0, 385, 175), PRUint32(~0), mAllowPlugins);
+  nsString findHTML("resource:/res/samples/find.html");
+  dialog->LoadURL(findHTML);
+  dialog->Show();*/
+
   /*mCrawler->SetBrowserWindow(bw);
 
   if (mDoPurify) {

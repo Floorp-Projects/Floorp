@@ -20,6 +20,7 @@
 #define nsBrowserWindow_h___
 
 #include "nsIBrowserWindow.h"
+#include "nsIXPBaseWindow.h"
 #include "nsIStreamListener.h"
 #include "nsINetSupport.h"
 #include "nsIWebShell.h"
@@ -93,6 +94,9 @@ public:
   NS_IMETHOD GetStatus(PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+  NS_IMETHOD ForceRefresh();
+
   NS_IMETHOD HandleEvent(nsGUIEvent * anEvent);
 
   // nsIStreamObserver
@@ -147,8 +151,6 @@ public:
 
   void DoFind();
   void DoSelectAll();
-  void ForceRefresh();
-
   void DoAppsDialog();
 
   // nsIToolbarManager Listener Interface
@@ -185,6 +187,7 @@ public:
   static void CloseAllWindows();
 
   nsViewerApp* mApp;
+  nsIXPBaseWindow* mXPDialog;
 
   PRUint32 mChromeMask;
   nsString mTitle;
