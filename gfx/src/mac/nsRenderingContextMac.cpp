@@ -19,14 +19,11 @@
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsFontMetricsMac.h"
+#include "nsIRegion.h"
 
-#include <math.h>
-#include "nspr.h"
-#include <QDOffscreen.h>
-#include <windows.h>
-#include "nsRegionMac.h"
+#include "nsTransform2D.h"
+#include "nsVoidArray.h"
 #include "nsGfxCIID.h"
-#include <Fonts.h>
 
 
 //------------------------------------------------------------------------
@@ -65,10 +62,6 @@ public:
   PRInt32               mFont;
   nsIFontMetrics * 			mFontMetrics;
 	PRInt32               mCurrFontHandle;
-
-  // Mac specific state
-  RgnHandle       			mMacOriginRelativeClipRgn;
-  RgnHandle							mMacPortRelativeClipRgn;
 };
 
 //------------------------------------------------------------------------
@@ -101,18 +94,6 @@ GraphicState::~GraphicState()
 	}
 
   NS_IF_RELEASE(mFontMetrics);
-
-	if (mMacOriginRelativeClipRgn)
-	{
-		::DisposeRgn(mMacOriginRelativeClipRgn);
-		mMacOriginRelativeClipRgn = nsnull;
-	}
-
-	if (mMacPortRelativeClipRgn)
-	{
-		::DisposeRgn(mMacPortRelativeClipRgn);
-		mMacPortRelativeClipRgn = nsnull;
-	}
 }
 
 //------------------------------------------------------------------------
@@ -132,10 +113,6 @@ void GraphicState::Init()
 	mFont						= 0;
   mFontMetrics		= nsnull;
   mCurrFontHandle	= 0;
-  
-  // Mac specific state
-  mMacOriginRelativeClipRgn	= nsnull;
-  mMacPortRelativeClipRgn		= nsnull;
 }
 
 //------------------------------------------------------------------------
@@ -151,17 +128,12 @@ void GraphicState::Init(nsIWidget* aWindow)
 
 	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
 	mMainRegion			= DuplicateRgn(widgetRgn);
-  mClipRegion			= nsnull;
+  mClipRegion			= DuplicateRgn(widgetRgn);
 
   mColor 					= NS_RGB(255,255,255);
 	mFont						= 0;
   mFontMetrics		= nsnull;
   mCurrFontHandle	= 0;
-  
-  // Mac specific state
-	RgnHandle widgetPortRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION_IN_PORT);
-	mMacOriginRelativeClipRgn	= DuplicateRgn(widgetPortRgn);
-	mMacPortRelativeClipRgn		= DuplicateRgn(widgetPortRgn);
 }
 
 //------------------------------------------------------------------------
@@ -186,9 +158,6 @@ void GraphicState::Duplicate(GraphicState* aGS)
 	NS_IF_ADDREF(mFontMetrics);
 
 	mCurrFontHandle	= aGS->mCurrFontHandle;
-
-	mMacOriginRelativeClipRgn	= DuplicateRgn(aGS->mMacOriginRelativeClipRgn);
-	mMacPortRelativeClipRgn		= DuplicateRgn(aGS->mMacPortRelativeClipRgn);
 }
 
 
@@ -286,22 +255,18 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	mOriginalSurface	= widgetSurface;
 	mFrontBuffer			= widgetSurface;
 	mCurrentBuffer		= widgetSurface;
-	
-	mMacScreenPortRelativeRect = (** mGS->mMacPortRelativeClipRgn).rgnBBox;
   
 	// use graphic state to initialize QuickDraw environment
-  ::SetPort(mGS->mRenderingSurface);
+  ::SetPort(mCurrentBuffer);
+	::PenNormal();
+	::PenMode(patCopy);
+	::TextMode(srcOr);
 
 	PRInt32	offx = mGS->mOffx;
 	PRInt32 offy = mGS->mOffy;
   ::SetOrigin(-offx,-offy);
-  ::OffsetRgn(mGS->mMainRegion, -offx, -offy);
-  ::OffsetRgn(mGS->mMacOriginRelativeClipRgn, -offx, -offy);
 
 	::SetClip(mGS->mMainRegion);
-
-	::PenNormal();
-	::TextMode(srcOr);
 
   return (CommonInit());
 }
@@ -315,10 +280,20 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
+	// init rendering context data
 	nsDrawingSurfaceMac drawingSurface = (nsDrawingSurfaceMac)aSurface;
 	mOriginalSurface	= drawingSurface;
 	mBackBuffer				= drawingSurface;
 	mCurrentBuffer		= drawingSurface;
+
+	// initialize QuickDraw environment
+  ::SetPort(mCurrentBuffer);
+	::PenNormal();
+	::PenMode(patCopy);
+	::TextMode(srcOr);
+
+  ::SetOrigin(0, 0);
+  ::ClipRect(&mCurrentBuffer->portRect);
 
   return (CommonInit());
 }
@@ -387,9 +362,11 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
     mGS = state;
     
 		// restore the QuickDraw environment
-    ::SetOrigin(-mGS->mOffx, -mGS->mOffy);
-    	
-    ::SetClip(mGS->mMacOriginRelativeClipRgn);
+		mCurrentBuffer = mGS->mRenderingSurface;
+		::SetPort(mCurrentBuffer);
+
+    ::SetOrigin(-mGS->mOffx, -mGS->mOffy);	// line order...
+    ::SetClip(mGS->mClipRegion);						// ...does matter
 
 		if (mGS->mColor != previousColor)
 			SetColor(mGS->mColor);
@@ -397,9 +374,8 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 		if (mGS->mFontMetrics)
 			SetFont(mGS->mFontMetrics);
 
-		if (mGS->mMacOriginRelativeClipRgn)
-			if (::EmptyRgn(mGS->mMacOriginRelativeClipRgn))
-      	bEmpty = PR_TRUE;
+		if (::EmptyRgn(mGS->mClipRegion))
+    	bEmpty = PR_TRUE;
 	}
 
   aClipEmpty = bEmpty;
@@ -413,38 +389,34 @@ NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurf
 {  
   if (aSurface == nsnull)
   {
-  	// set to screen port
+  	// set to screen port (we assume the application already called PopState)
     mCurrentBuffer = mGS->mRenderingSurface = mFrontBuffer;
 	}
   else
   { 
-  	// cps - This isn't as simple as just setting the surface... all the 
+  	//¥Hack: cps - This isn't as simple as just setting the surface... all the 
   	// surface relative parameters must be set as well. This means a 
-  	// rendering context push.
-
-   mMacScreenPortRelativeRect = (**mGS->mMacPortRelativeClipRgn).rgnBBox;
-  
-  	// This push is balaced by a pop in CopyOffScreenBits. This is a hack.
+  	// rendering context push. This push is balaced by a pop in CopyOffScreenBits.
   	PushState();
 
-  	mCurrentBuffer = mGS->mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
-  	
-	::SetOrigin(0,0);
-	
-	::SetRectRgn( mGS->mMacPortRelativeClipRgn,
-		((CGrafPtr)aSurface)->portRect.left,
-		((CGrafPtr)aSurface)->portRect.top,
-		((CGrafPtr)aSurface)->portRect.right,
-		((CGrafPtr)aSurface)->portRect.bottom );
-	
-	::SetRectRgn( mGS->mMacOriginRelativeClipRgn, 
-		0,
-		0,
-		((CGrafPtr)aSurface)->portRect.right - ((CGrafPtr)aSurface)->portRect.left,
-		((CGrafPtr)aSurface)->portRect.bottom - ((CGrafPtr)aSurface)->portRect.top );
-	
+		// init rendering context data
+		nsDrawingSurfaceMac drawingSurface = static_cast<nsDrawingSurfaceMac>(aSurface);
+		mGS->mRenderingSurface	= drawingSurface;
+		mBackBuffer							= drawingSurface;
+		mCurrentBuffer					= drawingSurface;
+
+		// initialize QuickDraw environment
+  	::SetPort(mCurrentBuffer);
+		::PenNormal();
+		::PenMode(patCopy);
+		::TextMode(srcOr);
+
 		mGS->mOffx = 0;
 		mGS->mOffy = 0;
+		::SetOrigin(0,0);
+
+		::RectRgn(mGS->mClipRegion, &((CGrafPtr)aSurface)->portRect);
+		::ClipRect(&((CGrafPtr)aSurface)->portRect);
   }
 
 	return NS_OK;
@@ -456,95 +428,88 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
-// cps - This API does not allow for source rect cropping.
 {
-  //PixMapPtr           srcpix;
-  //PixMapPtr			  destpix;
-  RGBColor			  rgbblack = {0x0000,0x0000,0x0000};
-  RGBColor			  rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
-  Rect                srcrect,dstrect;
-  PRInt32             x = aSrcX;
-  PRInt32             y = aSrcY;
-  nsRect              drect = aDestBounds;
-  nsDrawingSurfaceMac destport;
-  GrafPtr             savePort;
-  RGBColor            saveForeColor;
-  RGBColor            saveBackColor;
-
-  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-  {
-    destport = mGS->mRenderingSurface;
-    NS_ASSERTION(!(nsnull == destport), "no back buffer");
-  }
-  else
-    destport = mFrontBuffer;
-
+	// apply the selected transformations
+  PRInt32	x = aSrcX;
+  PRInt32	y = aSrcY;
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mGS->mTMatrix->TransformCoord(&x, &y);
 
+  nsRect dstRect = aDestBounds;
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    mGS->mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+    mGS->mTMatrix->TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
 
-  //::SetRect(&srcrect, x, y, x + drect.width, y + drect.height);
-  //::SetRect(&dstrect, drect.x, drect.y, drect.x + drect.width, drect.y + drect.height);
-  ::SetRect(&srcrect, x, y, drect.width, drect.height);
-  ::SetRect(
-    &dstrect, 
-    mMacScreenPortRelativeRect.left, 
-    mMacScreenPortRelativeRect.top, 
-    mMacScreenPortRelativeRect.left + drect.x + drect.width, 
-    mMacScreenPortRelativeRect.top + drect.y + drect.height);
+	// get the source and destination rectangles
+  Rect macSrcRect, macDstRect;
+  ::SetRect(&macSrcRect,
+  		x,
+  		y,
+  		dstRect.width,
+  		dstRect.height);
+
+  ::SetRect(&macDstRect, 
+	    dstRect.x, 
+	    dstRect.y, 
+	    dstRect.x + dstRect.width, 
+	    dstRect.y + dstRect.height);
   
-
-	::GetPort(&savePort);
-	::SetPort(destport);
-
-  ::SetClip(destport->visRgn);
-  
-  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+	// get the destination port
+  nsDrawingSurfaceMac destPort;
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
-  	//::SetEmptyRgn(destport->clipRgn);
-	//::CopyRgn(((nsDrawingSurfaceMac)aSrcSurf)->clipRgn, destport->clipRgn);
+    destPort = mGS->mRenderingSurface;
+    NS_ASSERTION((destPort != nsnull), "no back buffer");
   }
-
-  
-  // Don't want to do this just yet
-  //destpix = *((CGrafPtr)destport)->portPixMap;
-  //destpix = ((GrafPtr)destport)->portBits;
-  
-  //PixMapHandle offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
-  //if (offscreenPM)
+  else
   {
-    //srcpix = (PixMapPtr)*offscreenPM;
-
-		::GetForeColor(&saveForeColor);
-		::GetBackColor(&saveBackColor);
-		::RGBForeColor(&rgbblack);				//¥TODO: we should use MySetColor() from Dogbert: it's much faster
-		::RGBBackColor(&rgbwhite);
-		
-	::CopyBits(
-	  &((GrafPtr)aSrcSurf)->portBits,
-	  &((GrafPtr)destport)->portBits,
-	  &srcrect,
-	  &dstrect,
-	  ditherCopy,
-	  0L);
-
-
-		::RGBForeColor(&saveForeColor);		//¥TODO: we should use MySetColor() from Dogbert: it's much faster
-		::RGBBackColor(&saveBackColor);
-		}
-	::SetPort(savePort);
-		
-  // HACK - cps - hack to balance the state push that occurs when the drawing surface is selected in.
-  // This hack assumes that all drawing happens in the offscreen and CopyOffscreenBits is called only once
-  // directly before destroying the offscreen drawing surface.
-  if ( ! (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) )
-  {
+	  //¥Hack: - cps - hack to balance the state push that occurs when the drawing surface is selected in.
+	  // This hack assumes that all drawing happens in the offscreen and CopyOffscreenBits is called only once
+	  // directly before destroying the offscreen drawing surface.
   	PRBool bEmpty;
     PopState(bEmpty);
-  }
-  
+    destPort = mFrontBuffer;
+	}
+	
+	// get the source clip region
+	RgnHandle clipRgn;
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+  	clipRgn = ((nsDrawingSurfaceMac)aSrcSurf)->clipRgn;
+  else
+  	clipRgn = nil;
+
+	// make sure we are using the right colors for CopyBits
+	GrafPtr savePort;
+	::GetPort(&savePort);
+	::SetPort(destPort);
+  ::SetClip(destPort->visRgn);
+
+  RGBColor foreColor;
+  ::GetForeColor(&foreColor);
+  if ((foreColor.red != 0x0000) || (foreColor.green != 0x0000) || (foreColor.blue != 0x0000))
+  {
+	  RGBColor rgbBlack = {0x0000,0x0000,0x0000};
+		::RGBForeColor(&rgbBlack);
+	}
+
+  RGBColor backColor;
+  ::GetBackColor(&backColor);
+  if ((backColor.red != 0xFFFF) || (backColor.green != 0xFFFF) || (backColor.blue != 0xFFFF))
+  {
+	  RGBColor rgbWhite = {0xFFFF,0xFFFF,0xFFFF};
+		::RGBBackColor(&rgbWhite);
+	}
+
+	// copy the bits now
+	::CopyBits(
+		  &((GrafPtr)aSrcSurf)->portBits,
+		  &((GrafPtr)destPort)->portBits,
+		  &macSrcRect,
+		  &macDstRect,
+		  ditherCopy,
+		  clipRgn);
+
+	::SetPort(savePort);
+
   return NS_OK;
 }
 
@@ -552,32 +517,42 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
-  PRUint32	depth;
-  GWorldPtr	theoff;
-  Rect      bounds;
-  QDErr     myerr;
+	// get depth
+  PRUint32 depth = 8;
+  if (mContext)
+  	mContext->GetDepth(depth);
 
-  // Must make sure this code never gets called when nsRenderingSurface is nsnull
-  if(mContext)
-  mContext->GetDepth(depth);
-
-  if(aBounds!=nsnull)
+	// get rect
+  Rect bounds;
+  if (aBounds != nsnull)
   {
-  	::SetRect(
-  		&bounds,
-  		0,
-  		0,
-  		aBounds->width,
-  		aBounds->height);
+  	// fyi, aBounds->x and aBounds->y are always 0 here
+  	::SetRect(&bounds, aBounds->x, aBounds->y, aBounds->x + aBounds->width, aBounds->y + aBounds->height);
   }
   else
-  	::SetRect(&bounds,0,0,2,2);
+  	::SetRect(&bounds, 0, 0, 2, 2);
 
-  myerr = ::NewGWorld(&theoff,depth,&bounds,0,0,0);
-  ::LockPixels( ::GetGWorldPixMap(theoff) );
+	// create offscreen
+  GWorldPtr offscreenGWorld;
+  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &bounds, nil, nil, 0);
+  if (osErr != noErr)
+  	return NS_ERROR_FAILURE;
+
+	// lock the pixels... that's how it works on Windows and
+	// we are forced to do the same because the API doesn't
+	// give us any hook to do it at drawing time.
+  ::LockPixels(::GetGWorldPixMap(offscreenGWorld));
+
+	// erase the offscreen area
+	CGrafPtr savePort;
+	GDHandle saveDevice;
+	::GetGWorld(&savePort, &saveDevice);
+	::SetGWorld(offscreenGWorld, nil);
+	::SetOrigin(bounds.left, bounds.top);
+	::EraseRect(&bounds);
+	::SetGWorld(savePort, saveDevice);
   
-  aSurface = theoff;  
-
+  aSurface = offscreenGWorld;  
   return NS_OK;
 }
 
@@ -585,33 +560,12 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
 
 NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
-  GWorldPtr	theoff;
-
-	if(aDS)
+	if (aDS)
 	{
-		theoff = (GWorldPtr)aDS;
-		
-		//if( theoff == mCurrentOffscreenRenderingSurface )
-		//{
-			::UnlockPixels( ::GetGWorldPixMap(theoff) );
-		//	mCurrentOffscreenRenderingSurface == nsnull;
-		//}
-		
-		//if(theoff == mPreviousOffscreenRenderingSurface)
-		//    mPreviousOffscreenRenderingSurface = nsnull;
-		
-		::DisposeGWorld(theoff);
+		GWorldPtr offscreenGWorld = (GWorldPtr)aDS;
+		::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
+		::DisposeGWorld(offscreenGWorld);
 	}
-	
-	theoff = nsnull;
-	mCurrentBuffer = mGS->mRenderingSurface = mFrontBuffer;		// point back at the front surface
-		
-  //if (mRenderingSurface == (GrafPtr)theoff)
-    //mRenderingSurface = nsnull;
-
-  //DisposeRgn(mMainRegion);
-  //mMainRegion = nsnull;
-
   return NS_OK;
 }
 
@@ -646,125 +600,42 @@ NS_IMETHODIMP nsRenderingContextMac :: IsVisibleRect(const nsRect& aRect, PRBool
 
 NS_IMETHODIMP nsRenderingContextMac :: SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  PRBool 		bEmpty = PR_FALSE;
-  nsRect  	trect = aRect;
-  RgnHandle	theregion,tregion;
+	Rect macRect;
+	::SetRect(&macRect, aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height);
 
-  theregion = ::NewRgn();
-  SetRectRgn(theregion,trect.x,trect.y,trect.x+trect.width,trect.y+trect.height);
+	RgnHandle rectRgn = ::NewRgn();
+	::RectRgn(rectRgn, &macRect);
 
-  if (aCombine == nsClipCombine_kIntersect)
-  	{
-    if (nsnull != mGS->mClipRegion) 
-    {
-      tregion = ::NewRgn();
-      ::SectRgn(theregion,mGS->mClipRegion,tregion);
-      ::DisposeRgn(theregion);
-      ::DisposeRgn(mGS->mClipRegion);
-      mGS->mClipRegion = tregion;
-    } 
-    
-    //if (nsnull != mMacOriginRelativeClipRgn) 
-    //{
-    //  tregion = ::NewRgn();
-    //  ::SectRgn(theregion,mMacOriginRelativeClipRgn,tregion);
-    //  ::DisposeRgn(theregion);
-    //  ::DisposeRgn(mMacOriginRelativeClipRgn);
-    //  mMacOriginRelativeClipRgn = tregion;
-    //} 
-  }
-  else if (aCombine == nsClipCombine_kUnion)
-  {
-    if (nsnull != mGS->mClipRegion) 
+	RgnHandle clipRgn = mGS->mClipRegion;
+	if (clipRgn == nsnull)
+		clipRgn = ::NewRgn();
+
+	switch (aCombine)
 	{
-	  tregion = ::NewRgn();
-	  ::UnionRgn(theregion, mGS->mClipRegion, tregion);
-	  ::DisposeRgn(mGS->mClipRegion);
-	  ::DisposeRgn(theregion);
-	  mGS->mClipRegion = tregion;
-	} 
-	
-    //if (nsnull != mMacOriginRelativeClipRgn) 
-	//{
-	//  tregion = ::NewRgn();
-	//  ::UnionRgn(theregion, mMacOriginRelativeClipRgn, tregion);
-	//  ::DisposeRgn(mMacOriginRelativeClipRgn);
-	//  ::DisposeRgn(theregion);
-	//  mMacOriginRelativeClipRgn = tregion;
-	//} 
-  }
-  else if (aCombine == nsClipCombine_kSubtract)
-  {
-    if (nsnull != mGS->mClipRegion) 
-    {
-      tregion = ::NewRgn();
-	  ::DiffRgn(mGS->mClipRegion, theregion, tregion);
-      ::DisposeRgn(mGS->mClipRegion);
-      ::DisposeRgn(theregion);
-      mGS->mClipRegion = tregion;
-    } 
-    
-    //if (nsnull != mMacOriginRelativeClipRgn) 
-    //{
-    //  tregion = ::NewRgn();
-	//  ::DiffRgn(mMacOriginRelativeClipRgn, theregion, tregion);
-    //  ::DisposeRgn(mMacOriginRelativeClipRgn);
-    //  ::DisposeRgn(theregion);
-    //  mMacOriginRelativeClipRgn = tregion;
-    //} 
-  }
-  else if (aCombine == nsClipCombine_kReplace)
-  {
-    if (nsnull != mGS->mClipRegion)
-      ::DisposeRgn(mGS->mClipRegion);
+	  case nsClipCombine_kIntersect:
+	  	::SectRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
 
-    mGS->mClipRegion = theregion;
-    
-    
-    //if (nsnull != mMacOriginRelativeClipRgn)
-    //  ::DisposeRgn(mMacOriginRelativeClipRgn);
+	  case nsClipCombine_kUnion:
+	  	::UnionRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
 
-    //mMacOriginRelativeClipRgn = theregion;
-  			}
-  		else
-    		NS_ASSERTION(PR_FALSE, "illegal clip combination");
-  /*
-  if (nsnull == mClipRegion)
-  	{
-    bEmpty = PR_TRUE;
-    // clip to the size of the window
-    GrafPtr oldPort = NULL;
- 	::GetPort( & oldPort );
-    ::SetPort(mRenderingSurface);
-    ::ClipRect(&mRenderingSurface->portRect);
-    ::SetPort( oldPort );
-  } 
-  else 
-  {
-    // set the clipping area of this windowptr
- 	GrafPtr oldPort = NULL;
- 	::GetPort( & oldPort );
-    ::SetPort(mRenderingSurface);
-    ::SetClip(mClipRegion);
-    ::SetPort( oldPort );
-  }
-  */
+	  case nsClipCombine_kSubtract:
+	  	::DiffRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kReplace:
+	  	::CopyRgn(rectRgn, clipRgn);
+	  	break;
+	}
+	::DisposeRgn(rectRgn);
 
 	StartDraw();
-  if (nsnull == mGS->mMacOriginRelativeClipRgn) 
-  {
-    bEmpty = PR_TRUE;
-    // clip to the size of the window
-    ::ClipRect(&mGS->mRenderingSurface->portRect);
-  } 
-  else 
-  {
-    // set the clipping area of this windowptr
-    ::SetClip(mGS->mMacOriginRelativeClipRgn);
-	}
+		::SetClip(clipRgn);
 	EndDraw();
 
-  aClipEmpty = bEmpty;
+	mGS->mClipRegion = clipRgn;
+	aClipEmpty = ::EmptyRgn(clipRgn);
 
   return NS_OK;
 }
@@ -805,27 +676,10 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRect(nsRect &aRect, PRBool &aClipV
 
 NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  nsRect    rect;
-  //Rect	    mrect;
-  //RgnHandle	mregion;
-
-  nsRegionMac *pRegion = (nsRegionMac *)&aRegion;
-  
-  //pRegion->GetNativeRegion(&mregion);
-  //mrect = (**mregion).rgnBBox;
+  nsRect rect;
+  nsIRegion* pRegion = (nsIRegion*)&aRegion;
   pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
-  
-  //rect.x = mrect.left;
-  //rect.y = mrect.top;
-  //rect.width = mrect.right-mrect.left;
-  //rect.height = mrect.bottom-mrect.top;
-
-  SetClipRectInPixels(rect, aCombine, aClipEmpty);
-
-  if (::EmptyRgn(mGS->mClipRegion) == PR_TRUE)
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
+  SetClipRectInPixels(rect, aCombine, aClipEmpty);		//¥TODO: this is wrong: we should clip to the region, not to its bounding box
 
   return NS_OK;
 }
@@ -1125,7 +979,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(nscoord aX, nscoord aY, nscoo
   h = aHeight;
 
   mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,y+h);
   ::FrameOval(&therect);
 
 	EndDraw();
@@ -1154,7 +1008,7 @@ NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(nscoord aX, nscoord aY, nscoo
   h = aHeight;
 
   mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,y+h);
   ::PaintOval(&therect);
 
 	EndDraw();
@@ -1185,7 +1039,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord a
   h = aHeight;
   
   mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,y+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
 
 	EndDraw();
@@ -1216,7 +1070,7 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord a
   h = aHeight;
   
   mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,y+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
 
 	EndDraw();
