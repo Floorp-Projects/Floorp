@@ -55,6 +55,8 @@ static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 
 
+const PRInt32 nsXULAttribute::kMaxAtomValueLength = 12;
+
 //----------------------------------------------------------------------
 //
 // nsClassList
@@ -141,17 +143,19 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                const nsString& aValue)
     : mNameSpaceID(aNameSpaceID),
       mName(aName),
-      mValue(aValue),
+      mValue(nsnull),
       mContent(aContent),
       mScriptObject(nsnull)
 {
     NS_INIT_REFCNT();
     NS_IF_ADDREF(aName);
+    SetValueInternal(aValue);
 }
 
 nsXULAttribute::~nsXULAttribute()
 {
     NS_IF_RELEASE(mName);
+    ReleaseValue();
 }
 
 nsresult
@@ -216,9 +220,9 @@ nsXULAttribute::GetNodeName(nsString& aNodeName)
 NS_IMETHODIMP
 nsXULAttribute::GetNodeValue(nsString& aNodeValue)
 {
-    aNodeValue=mValue;
-    return NS_OK;
+    return GetValueInternal(aNodeValue);
 }
+
 NS_IMETHODIMP
 nsXULAttribute::SetNodeValue(const nsString& aNodeValue)
 {
@@ -350,8 +354,7 @@ nsXULAttribute::GetSpecified(PRBool* aSpecified)
 NS_IMETHODIMP
 nsXULAttribute::GetValue(nsString& aValue)
 {
-    aValue=mValue;
-    return NS_OK;
+    return GetValueInternal(aValue);
 }
 
 NS_IMETHODIMP
@@ -432,6 +435,40 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
     const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
     aQualifiedName.Append(unicodeString);
+}
+
+
+
+nsresult
+nsXULAttribute::SetValueInternal(const nsString& aValue)
+{
+    nsCOMPtr<nsIAtom> newAtom;
+    if (aValue.Length() <= kMaxAtomValueLength) {
+        newAtom = getter_AddRefs( NS_NewAtom(aValue.GetUnicode()) );
+    }
+
+    if (mValue) {
+        // Release the old value
+        ReleaseValue();
+    }
+
+    // ...and set the new value
+    if (newAtom) {
+        NS_ADDREF((nsIAtom*)newAtom.get());
+        mValue = (void*)(PRWord(newAtom.get()) | kAtomType);
+    }
+    else {
+        PRInt32 len = aValue.Length();
+        PRUnichar* str = new PRUnichar[len + 1];
+        if (! str)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsCRT::memcpy(str, aValue.GetUnicode(), len * sizeof(PRUnichar));
+        str[len] = PRUnichar(0);
+        mValue = str;
+    }
+
+    return NS_OK;
 }
 
 
