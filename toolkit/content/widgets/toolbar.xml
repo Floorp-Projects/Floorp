@@ -65,7 +65,7 @@
               var item = items[i];
               if (!item) continue;
 
-              if (item.localName == "separator") {
+              if (item == "separator") {
                 var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                    "toolbarseparator");
                 sep.id = "separator";
