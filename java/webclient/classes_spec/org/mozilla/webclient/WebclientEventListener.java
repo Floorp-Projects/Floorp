@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,16 +22,28 @@
 
 package org.mozilla.webclient;
 
-public interface WebclientEventListener 
-{
-
 /**
-
- * Important: do not call any webclient methods during this callback.
- * It may caus your app to deadlock.
-
+ * <p>The base interface for many, but not all, events coming from the
+ * browser.  For example, it is possible to add a
+ * <code>java.awt.event.MouseListener</code> or
+ * <code>java.awt.event.KeyListener</code> to the {@link
+ * BrowserControlCanvas}.  Doing so will cause events specific to those
+ * interfaces to be generated.  See the sub-interface javadoc for more
+ * details.</p>
  */
 
-public void eventDispatched(WebclientEvent event);
-
+public interface WebclientEventListener {
+    
+    /**
+     * <p>This method will be called by the browser when a particular
+     * event occurs.  The nature of the argument <code>event</code>
+     * depends on the particular <code>WebclientEventListener</code>
+     * sub-interface that is implemented.  See the sub-interface javadoc
+     * for more details.</p>
+     *
+     * @param event the event object for this event
+     */
+    
+    public void eventDispatched(WebclientEvent event);
+    
 } // end of interface WebclientEventListener

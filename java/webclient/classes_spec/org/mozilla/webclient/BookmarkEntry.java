@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -25,28 +25,84 @@ package org.mozilla.webclient;
 import java.util.Properties;
 import javax.swing.tree.MutableTreeNode;
 
-public interface BookmarkEntry extends MutableTreeNode
-{
+/**
+ * <p>The <code>TreeModel</code> returned by {@link
+ * Bookmarks#getBookmarks} is composed of instances of this class.</p>
+ *
+ * <p>New instances of this class may only be created with {@link
+ * Bookmarks#newBookmarkEntry}.  Instances may be added to and removed
+ * from the bookmarks tree by calling {@link Bookmarks#addBookmark} and
+ * {@link Bookmarks#removeBookmark} respectively.  A special entry that is a
+ * folder may be created with {@link Bookmarks#newBookmarkFolder}.</p>
+ *
+ * <p>The meta-data for the bookmark is contained in a
+ * <code>Properties</code></p> instance returned from {@link
+ * #getProperties}.  The constants for this class signify the valid keys
+ * for this <code>Properties</code> table.
+ *
+ */ 
 
-/** 
+public interface BookmarkEntry extends MutableTreeNode {
+    
+    /**
+     * <p>The date on which this bookmark entry was added.</p>
+     */
+    
+    public final static String ADD_DATE = "AddDate";
 
- * Property names
+    /**
+     * <p>The date on which this bookmark entry was last modified.</p>
+     */
 
- */
+    public final static String LAST_MODIFIED_DATE = "LastModifiedDate";
 
-public final static String ADD_DATE = "AddDate";
-public final static String LAST_MODIFIED_DATE = "LastModifiedDate";
-public final static String LAST_VISIT_DATE = "LastVisitDate";
-public final static String NAME = "Name";
-public final static String URL = "URL";
-public final static String DESCRIPTION = "Description";
-public final static String IS_FOLDER = "IsFolder";
+    /**
+     * <p>The date on which this bookmark entry was last visited by the
+     * browser.</p>
+     */
 
-public Properties getProperties();
+    public final static String LAST_VISIT_DATE = "LastVisitDate";
 
-public boolean isFolder();
+    /**
+     * <p>The name of this bookmark entry.</p>
+     */
 
+    public final static String NAME = "Name";
 
+    /**
+     * <p>The URL of this bookmark entry.</p>
+     */
+
+    public final static String URL = "URL";
+
+    /**
+     * <p>The optional user given description of this bookmark
+     * entry.</p>
+     */
+
+    public final static String DESCRIPTION = "Description";
+
+    /**
+     * <p>If this bookmark entry is a folder, the value of this property
+     * is the string "<code>true</code>" without the quotes.</p>
+     */
+
+    public final static String IS_FOLDER = "IsFolder";
+
+    /**
+     * <p>Returns the <code>Properties</code> for this instance.  Valid
+     * keys are given by the constants of this interface.  Other keys
+     * may exist depending on the implementation.</p>
+     */
+    
+    public Properties getProperties();
+
+    /**
+     * <p>Returns <code>true</code> if and only if this instance is a
+     * bookmark folder.</p>
+     */
+
+    public boolean isFolder();
 } 
 // end of interface BookmarkEntry
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -56,32 +56,40 @@ public interface WebclientFactory {
 	throws FileNotFoundException, ClassNotFoundException;
 
     /**
-     * <p>if called before {@link
-     * BrowserControlFactory#setAppData(java.lang.String)}, this will
-     * cause the profile used for starting up the underlying browser to
-     * be set.  If not called, the default will be "webclient"</p>
+     *
+     * <p>See {@link
+     * BrowserControlFactory#setProfile}.</p>
+     * 
      */
 
     public void setProfile(String profileName);
 
+    /**
+     *
+     * <p>See {@link
+     * BrowserControlFactory#appTerminate}.</p>
+     * 
+     */
+
     public void appTerminate() throws Exception;
     
+    /**
+     *
+     * <p>See {@link
+     * BrowserControlFactory#newBrowserControl}.</p>
+     * 
+     */
+
     public BrowserControl newBrowserControl() 
 	throws InstantiationException, IllegalAccessException, 
 	       IllegalStateException;
 
     /**
-       
-    * BrowserControlFactory.deleteBrowserControl is called with a
-    * BrowserControl instance obtained from
-    * BrowserControlFactory.newBrowserControl.  This method renders the
-    * argument instance completely un-usable.  It should be called when the
-    * BrowserControl instance is no longer needed.  This method simply
-    * calls through to the non-public BrowserControlImpl.delete() method.
-    
-    * @see org.mozilla.webclient.ImplObject#delete
-    
-    */
+     *
+     * <p>See {@link
+     * BrowserControlFactory#deleteBrowserControl}.</p>
+     * 
+     */
 
     public void deleteBrowserControl(BrowserControl toDelete);
 

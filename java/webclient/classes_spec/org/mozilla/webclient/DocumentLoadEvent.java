@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,26 +22,88 @@
 
 package org.mozilla.webclient;
 
-public class DocumentLoadEvent extends WebclientEvent
-{
+/**
+ * <p>Event class for the {@link DocumentLoadListener} interface.</p>
+ *
+ */
 
-public static final long START_DOCUMENT_LOAD_EVENT_MASK = 1;
-public static final long END_DOCUMENT_LOAD_EVENT_MASK = 1 << 2;
-public static final long START_URL_LOAD_EVENT_MASK = 1 << 3;
-public static final long END_URL_LOAD_EVENT_MASK = 1 << 4;
-public static final long PROGRESS_URL_LOAD_EVENT_MASK = 1 << 5;
-public static final long STATUS_URL_LOAD_EVENT_MASK = 1 << 6;
-public static final long UNKNOWN_CONTENT_EVENT_MASK = 1 << 7;
-public static final long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
+public class DocumentLoadEvent extends WebclientEvent {
+
+    /**
+     * <p>The <code>type</code> of the event to indicate the start of a
+     * document load.</p>
+     */ 
+
+    public static final long START_DOCUMENT_LOAD_EVENT_MASK = 1;
+
+    /**
+     * <p>The <code>type</code> of the event to indicate the end of a
+     * document load.</p>
+     */ 
+
+    public static final long END_DOCUMENT_LOAD_EVENT_MASK = 1 << 2;
+
+    /**
+     * <p>If the current document is a compound document, this event
+     * will be generated, indicating the start of a URL load within a
+     * document load for that compound document.</p>
+     */ 
+    
+    public static final long START_URL_LOAD_EVENT_MASK = 1 << 3;
+
+    /**
+     * <p>If the current document is a compound document, this event
+     * will be generated, indicating the end of a URL load within a
+     * document load for that compound document.</p>
+     */ 
+    
+    public static final long END_URL_LOAD_EVENT_MASK = 1 << 4;
+
+    /**
+     * <p>This event indicates a progress message from the browser.</p>
+     */
+
+    public static final long PROGRESS_URL_LOAD_EVENT_MASK = 1 << 5;
+
+    /**
+     * <p>This event indicates a status message from the browser.  For
+     * example, "completed."</p>
+     */
+    public static final long STATUS_URL_LOAD_EVENT_MASK = 1 << 6;
+
+    /**
+     * <p>This event indicates the browser encountered an unknown
+     * content that it does not know how to display.</p>
+     */
+
+    public static final long UNKNOWN_CONTENT_EVENT_MASK = 1 << 7;
+
+    /**
+     * <p>This event indicates the current fetch was interrupted.</p>
+     */
+    
+    public static final long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
 
 //
 // Constructors
 //
+    /**
+     * <p>Create a new <code>DocumentLoadListener</code> instance.</p>
+     *
+     * @param source the source of the event, passed to
+     * <code>super</code>.  This will be the {@link EventRegistration}
+     * instance for this {@link BrowserControl}.
+     *
+     * @param newType the eventType.  Depends on the {@link
+     * WebclientEventListener} sub-interface.
+     *
+     * @param newEventData the eventType.  Depends on the {@link
+     * WebclientEventListener} sub-interface.
+     */
 
-public DocumentLoadEvent(Object source, long newType, 
-                         Object newEventData)
-{
-    super(source, newType, newEventData);
-}
-
+    public DocumentLoadEvent(Object source, long newType, 
+			     Object newEventData) {
+	super(source, newType, newEventData);
+    }
+    
 } // end of class DocumentLoadEvent

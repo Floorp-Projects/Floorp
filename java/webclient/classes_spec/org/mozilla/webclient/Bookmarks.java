@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,19 +24,55 @@ package org.mozilla.webclient;
 
 import javax.swing.tree.TreeModel;
 
-public interface Bookmarks
-{
+/**
+ * <p>Provide an abstraction around the bookmarks facility provided by
+ * the underlying browser.</p>
+ */
 
-public void addBookmark(BookmarkEntry mayBeNullParent, 
-                        BookmarkEntry bookmark);
+public interface Bookmarks {
+    
+    /**
+     * <p>Add the argument <code>bookmark</code> as a child of the
+     * argument <code>mayBeNullParent</code>.  If
+     * <code>mayBeNullParent</code>is null, the <code>bookmark</code> is
+     * added as a child of the root node.</p>
+     *
+     * @param mayBeNullParent if non-<code>null</code> the parent of
+     * this bookmark.  The parent must return <code>true</code> from
+     * {@link BookmarkEntry#isFolder}.
+     */
+    
+    public void addBookmark(BookmarkEntry mayBeNullParent, 
+			    BookmarkEntry bookmark);
+
+    /**
+     * <p>Return a <code>TreeModel</code> representation of the
+     * bookmarks for the current profile.</p>
+     */
+    
+    public TreeModel getBookmarks() throws IllegalStateException;
+
+    /**
+     * <p>Remove the argument bookmark from its current position in the
+     * tree.</p>
+     */
             
-public TreeModel getBookmarks() throws IllegalStateException;
-            
-public void removeBookmark(BookmarkEntry bookmark);
+    public void removeBookmark(BookmarkEntry bookmark);
 
-public BookmarkEntry newBookmarkEntry(String url);
+    /**
+     * <p>Create a new, un-attached {@link BookmarkEntry} instance
+     * suitable for passing to {@link #addBookmark}.</p>
+     */
 
-public BookmarkEntry newBookmarkFolder(String name);
+    public BookmarkEntry newBookmarkEntry(String url);
+
+    /**
+     * <p>Create a new, un-attached {@link BookmarkEntry} instance
+     * suitable for passing to {@link #addBookmark} that is a
+     * folder for containing other <code>BookmarkEntry</code> instances.</p>
+     */
+
+    public BookmarkEntry newBookmarkFolder(String name);
             
 } 
 // end of interface Bookmarks

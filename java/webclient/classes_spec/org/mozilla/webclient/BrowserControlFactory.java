@@ -45,7 +45,7 @@ import java.io.FileNotFoundException;
  * WebclientFactory}.  All of the public static methods in this class
  * simply call through to this implementation instance.</p>
  *
- * @version $Id: BrowserControlFactory.java,v 1.12 2005/03/15 02:49:16 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.13 2005/03/17 01:56:55 edburns%acm.org Exp $
  * 
  *
  */
@@ -145,7 +145,9 @@ public class BrowserControlFactory extends Object {
      * <p>Delete a {@link BrowserControl} instance created with {@link
      * #newBrowserControl}.  This method must be called when the user no
      * longer needs a <code>BrowserControl</code> instance.  For
-     * example, when a browser tab closes.</p>
+     * example, when a browser tab closes.  After returning from this
+     * call, any extant references to that <code>BrowserControl</code>
+     * are completely useless.</p>
      *
      * @param toDelete the <code>BrowserControl</code> instance to
      * delete.

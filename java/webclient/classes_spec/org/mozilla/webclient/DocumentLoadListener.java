@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -23,21 +23,25 @@
 package org.mozilla.webclient;
 
 /**
- * <p>The <code>eventDispatched()</code> method is passed a {@link
- * DocumentLoadEvent} instance.  The <code>type</code> property of the
- * event will be one of the types defined as a <code>public static final
- * int</code> in <code>DocumentLoadEvent</code>.</p>
+ * <p>The {@link WebclientEventListener#eventDispatched} method is
+ * passed a {@link DocumentLoadEvent} instance.  The <code>type</code>
+ * property of the event will be one of the types defined as a
+ * <code>public static final int</code> constant in
+ * <code>DocumentLoadEvent</code>.</p>
  *
  * <p>The <code>eventData</code> property of the
  * <code>DocumentLoadEvent</code> instance will be a
- * <code>java.util.Map</code>.  For all <code>EVENT_MASK</code> types in
+ * <code>java.util.Map</code>.  For all <code>type</code>s in
  * <code>DocumentLoadEvent</code> the map will contain an entry under
  * the key "<code>URI</code>" without the quotes.  This will be the
  * fully qualified URI for the event.</p>
  *
  * <p>For the <code>PROGRESS_URL_LOAD_EVENT_MASK</code> there will be an
- * entry in the map for the key "<code>message</code>".  This will be
- * the progress message from the browser.</p>
+ * entry in the map for the key "<code>message</code>" without the
+ * quotes.  This will be the progress message from the browser.</p>
+ *
+ * <p>For extended information about the event, implement {@link
+ * PageInfoListener}.</p>
  *
  */
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -81,26 +81,98 @@ package org.mozilla.webclient;
 import java.util.Properties;
 import org.w3c.dom.Document;
 
-public interface CurrentPage
-{
-public void copyCurrentSelectionToSystemClipboard();
-            
-public void findInPage(String stringToFind, boolean forward, boolean matchCase);
-            
-public void findNextInPage();
-            
-public String getCurrentURL();
-            
-public Document getDOM();
+/**
+ * <p>Get information about and perform operations on the page currently
+ * being shown in the {@link BrowserControlCanvas} for the {@link
+ * BrowserControl} instance from which this <code>CurrentPage</code>
+ * instance was obtained.</p>
+ */
 
-public Properties getPageInfo();
+public interface CurrentPage {
+
+    /**
+     * <p>Copy the current selection to the system clipboard so its
+     * contents can be obtained using the standard Java
+     * <code>Toolkit.getDefaultToolkit().getSystemClipboard()</code>
+     * method.  The selection that is copied may be made either by the
+     * user, or programmatically via the {@link #selectAll} or {@link
+     * CurrentPage2#highlightSelection} methods. </p>
+     */ 
+    public void copyCurrentSelectionToSystemClipboard();
+
+    /**
+     * <p>Search for the argument <code>stringToFind</code> in the
+     * current page, highlighting it and scrolling the view to show
+     * it.</p>
+     *
+     * @param stringToFind the search string
+     *
+     * @param forward if <code>true</code>, search forward from the
+     * previous hit
+     *
+     * @param matchCase if <code>true</code>, the case must match in
+     * order to be considered a hit.
+     *
+     * @deprecated this method has been replaced by {@link
+     * CurrentPage2#find}.
+     */
             
-public String getSource();
+    public void findInPage(String stringToFind, boolean forward, boolean matchCase);
+
+    /**
+     * <p>Find the next occurrence of the String found with {@link
+     * #findInPage}.</p>
+     * 
+     * @deprecated this method has been replaced by {@link
+     * CurrentPage2#findNext}.
+     */
+
+    public void findNextInPage();
+
+    /**
+     * <p>Return the <code>URL</code> of the document currently
+     * showing.</p>
+     */
+            
+    public String getCurrentURL();
+
+    /**
+     * <p>Return a W3C DOM <code>Document</code> of the document currently
+     * showing.</p>
+     */
+    
+    public Document getDOM();
+
+    /**
+     * <p><b>Unimplemented</b> Return meta-information for the current
+     * page.</p>
+     */
+
+    public Properties getPageInfo();
+            
+    /**
+     * <p>Return the source for the current page as a String.</p>
+     */ 
+    public String getSource();
  
-public byte [] getSourceBytes();
+    /**
+     * <p>Return the source for the current page as a <code>byte</code>
+     * array.</p>
+     */ 
+    public byte [] getSourceBytes();
+
+    /**
+     * <p>Reset the find so that the next find starts from the beginning
+     * or end of the page.</p>
+     */
             
-public void resetFind();
+    public void resetFind();
             
-public void selectAll();
+    /**
+     * <p>Tell the underlying browser to select all text in the current
+     * page.</p>
+     */
+
+    public void selectAll();
 } 
 // end of interface CurrentPage
