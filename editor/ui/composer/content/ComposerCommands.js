@@ -1170,7 +1170,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           var newLocationLastSlash = curParentString.lastIndexOf("\/");
           if (newLocationLastSlash != -1)
             curParentString = curParentString.slice(0, newLocationLastSlash);
-          if (oldLocation == curParentString)
+          if (oldLocation == curParentString || IsUrlAboutBlank(oldLocation))
             parentDir = null;
           else
             parentDir = tempLocalFile.parent;
