@@ -270,38 +270,38 @@ class basic_nsAWritableString
 
 
         //
-        // |operator=()|, |Assign()|
+        // |Assign()|, |operator=()|
         //
-
-      basic_nsAWritableString<CharT>& operator=( const basic_nsAReadableString<CharT>& aReadable )  { do_AssignFromReadable(aReadable); return *this; }
-      basic_nsAWritableString<CharT>& operator=( const nsPromiseReadable<CharT>& aReadable )        { Assign(aReadable); return *this; }
-      basic_nsAWritableString<CharT>& operator=( const CharT* aPtr )                                { do_AssignFromElementPtr(aPtr); return *this; }
-      basic_nsAWritableString<CharT>& operator=( CharT aChar )                                      { do_AssignFromElement(aChar); return *this; }
 
       void Assign( const basic_nsAReadableString<CharT>& aReadable )                                { do_AssignFromReadable(aReadable); }
       void Assign( const nsPromiseReadable<CharT>& aReadable )                                      { aReadable.Promises(*this) ? AssignFromPromise(aReadable) : do_AssignFromReadable(aReadable); }
 //    void Assign( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )   { do_AssignFromIterators(aStart, aEnd); }
-      void Assign( const CharT* aPtr )                                                              { do_AssignFromElementPtr(aPtr); }
+      void Assign( const CharT* aPtr )                                                              { aPtr ? do_AssignFromElementPtr(aPtr) : SetLength(0); }
       void Assign( const CharT* aPtr, PRUint32 aLength )                                            { do_AssignFromElementPtrLength(aPtr, aLength); }
       void Assign( CharT aChar )                                                                    { do_AssignFromElement(aChar); }
 
+      basic_nsAWritableString<CharT>& operator=( const basic_nsAReadableString<CharT>& aReadable )  { Assign(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator=( const nsPromiseReadable<CharT>& aReadable )        { Assign(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator=( const CharT* aPtr )                                { Assign(aPtr); return *this; }
+      basic_nsAWritableString<CharT>& operator=( CharT aChar )                                      { Assign(aChar); return *this; }
+
 
 
         //
-        // |operator+=()|, |Append()|
+        // |Append()|, |operator+=()|
         //
-
-      basic_nsAWritableString<CharT>& operator+=( const basic_nsAReadableString<CharT>& aReadable ) { do_AppendFromReadable(aReadable); return *this; }
-      basic_nsAWritableString<CharT>& operator+=( const nsPromiseReadable<CharT>& aReadable )       { Append(aReadable); return *this; }
-      basic_nsAWritableString<CharT>& operator+=( const CharT* aPtr )                               { do_AppendFromElementPtr(aPtr); return *this; }
-      basic_nsAWritableString<CharT>& operator+=( CharT aChar )                                     { do_AppendFromElement(aChar); return *this; }
 
       void Append( const basic_nsAReadableString<CharT>& aReadable )                                { do_AppendFromReadable(aReadable); }
       void Append( const nsPromiseReadable<CharT>& aReadable )                                      { aReadable.Promises(*this) ? AppendFromPromise(aReadable) : do_AppendFromReadable(aReadable); }
 //    void Append( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )   { do_AppendFromIterators(aStart, aEnd); }
-      void Append( const CharT* aPtr )                                                              { do_AppendFromElementPtr(aPtr); }
+      void Append( const CharT* aPtr )                                                              { if (aPtr) do_AppendFromElementPtr(aPtr); }
       void Append( const CharT* aPtr, PRUint32 aLength )                                            { do_AppendFromElementPtrLength(aPtr, aLength); }
       void Append( CharT aChar )                                                                    { do_AppendFromElement(aChar); }
+
+      basic_nsAWritableString<CharT>& operator+=( const basic_nsAReadableString<CharT>& aReadable ) { Append(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator+=( const nsPromiseReadable<CharT>& aReadable )       { Append(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator+=( const CharT* aPtr )                               { Append(aPtr); return *this; }
+      basic_nsAWritableString<CharT>& operator+=( CharT aChar )                                     { Append(aChar); return *this; }
 
 
 
@@ -313,7 +313,7 @@ class basic_nsAWritableString
       void Insert( const basic_nsAReadableString<CharT>& aReadable, PRUint32 atPosition )                               { do_InsertFromReadable(aReadable, atPosition); }
       void Insert( const nsPromiseReadable<CharT>& aReadable, PRUint32 atPosition )                                     { aReadable.Promises(*this) ? InsertFromPromise(aReadable, atPosition) : do_InsertFromReadable(aReadable, atPosition); }
 //    void Insert( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd, PRUint32 atPosition )  { do_InsertFromIterators(aStart, aEnd, atPosition); }
-      void Insert( const CharT* aPtr, PRUint32 atPosition )                                                             { do_InsertFromElementPtr(aPtr, atPosition); }
+      void Insert( const CharT* aPtr, PRUint32 atPosition )                                                             { if (aPtr) do_InsertFromElementPtr(aPtr, atPosition); }
       void Insert( const CharT* aPtr, PRUint32 atPosition, PRUint32 aLength )                                           { do_InsertFromElementPtrLength(aPtr, atPosition, aLength); }
       void Insert( CharT aChar, PRUint32 atPosition )                                                                   { do_InsertFromElement(aChar, atPosition); }
 
@@ -433,14 +433,37 @@ basic_nsAWritableString<CharT>::do_AssignFromReadable( const basic_nsAReadableSt
 template <class CharT>
 void
 basic_nsAWritableString<CharT>::AssignFromPromise( const nsPromiseReadable<CharT>& aReadable )
+    /*
+      ...this function is only called when a promise that somehow references |this| is assigned _into_ |this|.
+      E.g.,
+      
+        ... writable& w ...
+        ... readable& r ...
+        
+        w = r + w;
+
+      In this example, you can see that unless the characters promised by |w| in |r+w| are resolved before
+      anything starts getting copied into |w|, there will be trouble.  They will be overritten by the contents
+      of |r| before being retrieved to be appended.
+
+      We could have a really tricky solution where we tell the promise to resolve _just_ the data promised
+      by |this|, but this should be a rare case, since clients with more local knowledge will know that, e.g.,
+      in the case above, |Insert| could have special behavior with significantly better performance.  Since
+      it's a rare case anyway, we should just do the simplest thing that could possibly work, resolve the
+      entire promise.  If we measure and this turns out to show up on performance radar, we then have the
+      option to fix either the callers or this mechanism.
+    */
   {
     PRUint32 length = aReadable.Length();
     if ( CharT* buffer = new CharT[length] )
       {
+        // Note: not exception safe.  We need something to manage temporary buffers like this
+
         copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
         do_AssignFromElementPtrLength(buffer, length);
         delete buffer;
       }
+    // else assert?
   }
 
 #if 0

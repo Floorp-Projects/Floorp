@@ -263,6 +263,24 @@ class basic_nsAReadableString
 
       PRUint32  CountChar( CharT ) const;
 
+
+        /*
+          |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
+          any _other_ way than they are now.  Consider these alternatives
+
+            aWritable = aReadable.Left(17);   // ...a member function that returns a |Substring|
+            aWritable = Left(aReadable, 17);  // ...a global function that returns a |Substring|
+            Left(aReadable, 17, aWritable);   // ...a global function that does the assignment
+
+          as opposed to the current signature
+
+            aReadable.Left(aWritable, 17);    // ...a member function that does the assignment
+
+          or maybe just stamping them out in favor of |Substring|, they are just duplicate functionality
+
+            aWritable = Substring(aReadable, 0, 17);
+        */
+            
       PRUint32  Left( basic_nsAWritableString<CharT>&, PRUint32 ) const;
       PRUint32  Mid( basic_nsAWritableString<CharT>&, PRUint32, PRUint32 ) const;
       PRUint32  Right( basic_nsAWritableString<CharT>&, PRUint32 ) const;
@@ -337,6 +355,7 @@ class basic_nsAReadableString
       virtual const void* Implementation() const;
       virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
       virtual PRBool Promises( const basic_nsAReadableString<CharT>& aString ) const { return &aString == this; }
+//    virtual PRBool PromisesExactly( const basic_nsAReadableString<CharT>& aString ) const { return false; }
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -531,27 +550,24 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   }
 
 
-  /*
-    Note: |Left()|, |Mid()|, and |Right()| could be modified to notice when they degenerate into copying the
-    entire string, and call |Assign()| instead.  This would be a win when the underlying implementation of
-    both strings could do buffer sharing.  This is _definitely_ something that should be measured before
-    being implemented.
-  */
-
 template <class CharT>
 PRUint32
-basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
+basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
   {
-    aResult = Substring(*this, 0, aLengthToCopy);
+      // If we're just assigning our entire self, give |aResult| the opportunity to share
+    if ( aStartPos == 0 && aLengthToCopy >= Length() )
+      aResult = *this;
+    else
+      aResult = Substring(*this, aStartPos, aLengthToCopy);
+
     return aResult.Length();
   }
 
 template <class CharT>
 PRUint32
-basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
+basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
-    aResult = Substring(*this, aStartPos, aLengthToCopy);
-    return aResult.Length();
+    return Mid(aResult, 0, aLengthToCopy);
   }
 
 template <class CharT>
@@ -560,8 +576,7 @@ basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, 
   {
     PRUint32 myLength = Length();
     aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
-    aResult = Substring(*this, myLength-aLengthToCopy, aLengthToCopy);
-    return aResult.Length();
+    return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
   }
 
 
@@ -612,7 +627,7 @@ class basic_nsLiteralString
         // Note: _not_ explicit
       basic_nsLiteralString( const CharT* aLiteral )
           : mStart(aLiteral),
-            mEnd(mStart + nsCharTraits<CharT>::length(mStart))
+            mEnd(mStart ? (mStart + nsCharTraits<CharT>::length(mStart)) : mStart)
         {
           // nothing else to do here
         }
@@ -624,7 +639,10 @@ class basic_nsLiteralString
             // This is an annoying hack.  Callers should be fixed to use the other
             //  constructor if they don't really know the length.
           if ( aLength == PRUint32(-1) )
-            mEnd = mStart + nsCharTraits<CharT>::length(mStart);
+            {
+              NS_WARNING("Tell scc: Caller constructing a string doesn't know the real length.  Please use the other constructor.");
+              mEnd = mStart + nsCharTraits<CharT>::length(mStart);
+            }
         }
 
       virtual PRUint32 Length() const;
@@ -818,6 +836,7 @@ class nsPromiseConcatenation
 
       virtual PRUint32 Length() const;
       virtual PRBool Promises( const basic_nsAReadableString<CharT>& ) const;
+//    virtual PRBool PromisesExactly( const basic_nsAReadableString<CharT>& ) const;
 
       nsPromiseConcatenation<CharT> operator+( const basic_nsAReadableString<CharT>& rhs ) const;
 
@@ -846,6 +865,15 @@ nsPromiseConcatenation<CharT>::Promises( const basic_nsAReadableString<CharT>& a
   {
     return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
   }
+
+#if 0
+PRBool
+nsPromiseConcatenation<CharT>::PromisesExactly( const basic_nsAReadableString<CharT>& aString ) const
+  {
+      // Not really like this, test for the empty string, etc
+    return mStrings[0] == &aString && !mStrings[1] || !mStrings[0] && mStrings[1] == &aString;
+  }
+#endif
 
 template <class CharT>
 const CharT*
@@ -992,7 +1020,7 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
 
     const CharT* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
 
-      // if there's more physical data in the returned fragment than I logically have left
+      // if there's more physical data in the returned fragment than I logically have left...
     size_t logical_size_forward = mLength - aPosition;
     if ( aFragment.mEnd - position_ptr > logical_size_forward )
       aFragment.mEnd = position_ptr + logical_size_forward;
@@ -1027,7 +1055,7 @@ copy_string( InputIterator first, InputIterator last, OutputIterator result )
 
     while ( first != last )
       {
-        PRInt32 count_copied = PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_size(first, last)));
+        PRInt32 count_copied = PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_distance(first, last)));
         NS_ASSERTION(count_copied > 0, "|copy_string| will never terminate");
         first += count_copied;
       }
@@ -1060,11 +1088,6 @@ template <class CharT>
 nsPromiseSubstring<CharT>
 Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
-#if 0
-      // signatures don't work, but consider this twist to help in assignments 
-    if ( aSubstringLength == aString.Length() && aStartPos == 0 )
-      return aString;
-#endif
     return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
   }
 
@@ -1143,6 +1166,11 @@ Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
     the number of cases we have to write |operator+()| for.  The cost is extra temporary concat strings
     in the evaluation of strings of '+'s, e.g., |A + B + C + D|, and that we have to do some work
     to implement the virtual functions of readables.
+  */
+
+  /*
+    I probably need to add |operator+()| for appropriate |CharT| and |CharT*| comparisons, since
+    automatic conversion to a literal string will not happen.
   */
 
 template <class CharT>
