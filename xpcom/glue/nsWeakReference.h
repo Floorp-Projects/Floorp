@@ -1,3 +1,25 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Scott Collins <scc@netscape.com>
+ */
+
 #ifndef nsWeakReference_h__
 #define nsWeakReference_h__
 
@@ -6,76 +28,76 @@
 #include "nsIWeakReference.h"
 
 class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
-	{
-		public:
-			nsSupportsWeakReference()
-					: mProxy(0)
-				{
-					// nothing else to do here
-				}
+  {
+    public:
+      nsSupportsWeakReference()
+          : mProxy(0)
+        {
+          // nothing else to do here
+        }
 
-			inline virtual ~nsSupportsWeakReference();
+      inline virtual ~nsSupportsWeakReference();
 
-			NS_IMETHOD GetWeakReference( nsIWeakReference** );
+      NS_IMETHOD GetWeakReference( nsIWeakReference** );
 
-		private:
-			friend class nsWeakReference;
+    private:
+      friend class nsWeakReference;
 
-			void
-			NoticeProxyDestruction()
-					// ...called (only) by an |nsWeakReference| from _its_ dtor.
-				{
-					mProxy = 0;
-				}
+      void
+      NoticeProxyDestruction()
+          // ...called (only) by an |nsWeakReference| from _its_ dtor.
+        {
+          mProxy = 0;
+        }
 
-			nsWeakReference* mProxy;
-	};
+      nsWeakReference* mProxy;
+  };
 
 class NS_COM nsWeakReference : public nsIWeakReference
-	{
-		public:
-		// nsISupports...
-			NS_IMETHOD_(nsrefcnt) AddRef();
-			NS_IMETHOD_(nsrefcnt) Release();
-			NS_IMETHOD QueryInterface( const nsIID&, void** );
+  {
+    public:
+    // nsISupports...
+      NS_IMETHOD_(nsrefcnt) AddRef();
+      NS_IMETHOD_(nsrefcnt) Release();
+      NS_IMETHOD QueryInterface( const nsIID&, void** );
 
-		// nsIWeakReference...
-			NS_IMETHOD QueryReferent( const nsIID&, void** );
+    // nsIWeakReference...
+      NS_IMETHOD QueryReferent( const nsIID&, void** );
 
 
-		private:
-			friend class nsSupportsWeakReference;
+    private:
+      friend class nsSupportsWeakReference;
 
-			nsWeakReference( nsSupportsWeakReference* referent )
-					: mRefCount(0),
-						mReferent(referent)
-					// ...I can only be constructed by an |nsSupportsWeakReference|
-				{
-					// nothing else to do here
-				}
+      nsWeakReference( nsSupportsWeakReference* referent )
+          : mRefCount(0),
+            mReferent(referent)
+          // ...I can only be constructed by an |nsSupportsWeakReference|
+        {
+          // nothing else to do here
+        }
 
-		virtual ~nsWeakReference()
-		 			// ...I will only be destroyed by calling |delete| myself.
-				{
-					if ( mReferent )
-						mReferent->NoticeProxyDestruction();
-				}
+    virtual ~nsWeakReference()
+           // ...I will only be destroyed by calling |delete| myself.
+        {
+          if ( mReferent )
+            mReferent->NoticeProxyDestruction();
+        }
 
-			void
-			NoticeReferentDestruction()
-					// ...called (only) by an |nsSupportsWeakReference| from _its_ dtor.
-				{
-					mReferent = 0;
-				}
+      void
+      NoticeReferentDestruction()
+          // ...called (only) by an |nsSupportsWeakReference| from _its_ dtor.
+        {
+          mReferent = 0;
+        }
 
-			nsrefcnt									mRefCount;
-			nsSupportsWeakReference*	mReferent;
-	};
+      nsrefcnt                  mRefCount;
+      nsSupportsWeakReference*  mReferent;
+  };
 
 inline nsSupportsWeakReference::~nsSupportsWeakReference()
-	{
-		if ( mProxy )
-			mProxy->NoticeReferentDestruction();
-	}
+  {
+    if ( mProxy )
+      mProxy->NoticeReferentDestruction();
+  }
 
 #endif
