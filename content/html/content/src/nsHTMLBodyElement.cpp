@@ -118,7 +118,7 @@ public:
                            PRBool aCompileEventHandlers);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
   BodyRule* mContentStyleRule;
@@ -581,9 +581,9 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLBodyElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::link },
     { &nsHTMLAtoms::vlink },
     { &nsHTMLAtoms::alink },
@@ -597,7 +597,7 @@ nsHTMLBodyElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
     { nsnull },
   };
 
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,

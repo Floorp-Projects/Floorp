@@ -244,7 +244,7 @@ public:
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
 
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
   /**
@@ -507,13 +507,13 @@ public:
    */
   static void MapCommonAttributesInto(const nsMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
-  static const AttributeDependenceEntry sCommonAttributeMap[];
-  static const AttributeDependenceEntry sImageMarginSizeAttributeMap[];
-  static const AttributeDependenceEntry sImageBorderAttributeMap[];
-  static const AttributeDependenceEntry sImageAlignAttributeMap[];
-  static const AttributeDependenceEntry sDivAlignAttributeMap[];
-  static const AttributeDependenceEntry sBackgroundAttributeMap[];
-  static const AttributeDependenceEntry sScrollingAttributeMap[];
+  static const MappedAttributeEntry sCommonAttributeMap[];
+  static const MappedAttributeEntry sImageMarginSizeAttributeMap[];
+  static const MappedAttributeEntry sImageBorderAttributeMap[];
+  static const MappedAttributeEntry sImageAlignAttributeMap[];
+  static const MappedAttributeEntry sDivAlignAttributeMap[];
+  static const MappedAttributeEntry sBackgroundAttributeMap[];
+  static const MappedAttributeEntry sScrollingAttributeMap[];
   
   /**
    * Helper to map the align attribute into a style struct.

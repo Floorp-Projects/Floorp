@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIDOMSVGTRANSFORMABLE
 
   // nsIStyledContent interface
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   
 protected:
   

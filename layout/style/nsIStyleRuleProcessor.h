@@ -188,11 +188,22 @@ public:
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
                            nsIAtom* aMedium) = 0;
 
-  // Test if style is dependent on content state
+  /**
+   * Test whether style is dependent on content state.  This test is
+   * used for optimization only, and may err on the side of reporting
+   * more dependencies than really exist.
+   *
+   * Event states are defined in nsIEventStateManager.h.
+   */
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
                                     nsReStyleHint* aResult) = 0;
-  // Test if style is dependent on attribute
+
+  /**
+   * Test whether style is dependent the presence or value of an
+   * attribute.  This test is used for optimization only, and may err on
+   * the side of reporting more dependencies than really exist.
+   */
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsIAtom* aMedium,
                                         nsReStyleHint* aResult) = 0;

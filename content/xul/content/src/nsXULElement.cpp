@@ -3302,7 +3302,7 @@ nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsXULElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsXULElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
     return PR_FALSE;
 }

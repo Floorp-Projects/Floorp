@@ -78,7 +78,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextElementBase::)
 
   // nsIStyledContent interface
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   
 protected:
   virtual void ParentChainChanged();
@@ -353,15 +353,15 @@ NS_IMETHODIMP nsSVGTextElement::SelectSubString(PRUint32 charnum, PRUint32 nchar
 // nsIStyledContent methods
 
 NS_IMETHODIMP_(PRBool)
-nsSVGTextElement::HasAttributeDependentStyle(const nsIAtom* name) const
+nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sTextContentElementsMap,
     sFontSpecificationMap
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGTextElementBase::HasAttributeDependentStyle(name);
+    nsSVGTextElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------

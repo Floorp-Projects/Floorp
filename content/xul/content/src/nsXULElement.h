@@ -514,7 +514,7 @@ public:
     NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                       PRInt32 aModType,
                                       nsChangeHint& aHint) const;
-    NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+    NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
     // nsIXULContent
     NS_IMETHOD_(PRUint32) PeekChildCount() const;

@@ -826,11 +826,9 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // to descendants of body, when we're already reresolving.
 
   // Handle the content style rules.
-  if (styledContent) {
-    if (styledContent->HasAttributeDependentStyle(aData->mAttribute)) {
-      *aResult = eReStyle_Self;
-      return NS_OK;
-    }
+  if (styledContent && styledContent->IsAttributeMapped(aData->mAttribute)) {
+    *aResult = eReStyle_Self;
+    return NS_OK;
   }
 
   *aResult = nsReStyleHint(0);

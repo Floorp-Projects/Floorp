@@ -100,7 +100,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
 nsresult
@@ -390,10 +390,10 @@ PlainMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLSharedLeafElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    static const AttributeDependenceEntry* const map[] = {
+    static const MappedAttributeEntry* const map[] = {
       sCommonAttributeMap,
       sImageMarginSizeAttributeMap,
       sImageAlignAttributeMap,
@@ -404,7 +404,7 @@ nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) c
   }
 
   if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    static const AttributeDependenceEntry attributes[] = {
+    static const MappedAttributeEntry attributes[] = {
       // XXXldb This is just wrong.
       { &nsHTMLAtoms::usemap },
       { &nsHTMLAtoms::ismap },
@@ -412,7 +412,7 @@ nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) c
       { nsnull }
     };
 
-    static const AttributeDependenceEntry* const map[] = {
+    static const MappedAttributeEntry* const map[] = {
       attributes,
       sCommonAttributeMap,
       sImageMarginSizeAttributeMap,
@@ -422,7 +422,7 @@ nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) c
     return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
 
-  return nsGenericHTMLElement::HasAttributeDependentStyle(aAttribute);
+  return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
 NS_IMETHODIMP

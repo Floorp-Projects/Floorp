@@ -121,7 +121,7 @@ public:
     return rv;
   }
 
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
 protected:
@@ -482,16 +482,16 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLIFrameElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLIFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::width },
     { &nsHTMLAtoms::height },
     { &nsHTMLAtoms::frameborder },
     { nsnull },
   };
 
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     attributes,
     sScrollingAttributeMap,
     sImageAlignAttributeMap,

@@ -1719,7 +1719,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (HasAttributeDependentStyle(aAttribute)) {
+    if (IsAttributeMapped(aAttribute)) {
       nsIHTMLStyleSheet* sheet = mDocument ?
         mDocument->GetAttributeStyleSheet() : nsnull;
       rv = mAttrsAndChildren.SetAndTakeMappedAttr(aAttribute, aParsedValue,
@@ -2268,9 +2268,9 @@ nsGenericHTMLElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 PRBool
-nsGenericHTMLElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap
   };
   
@@ -2865,14 +2865,14 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 
 
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
   { &nsHTMLAtoms::dir },
   { &nsHTMLAtoms::lang },
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
   { &nsHTMLAtoms::width },
   { &nsHTMLAtoms::height },
@@ -2881,32 +2881,32 @@ nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageAlignAttributeMap[] = {
   { &nsHTMLAtoms::align },
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sDivAlignAttributeMap[] = {
   { &nsHTMLAtoms::align },
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sImageBorderAttributeMap[] = {
   { &nsHTMLAtoms::border },
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sBackgroundAttributeMap[] = {
   { &nsHTMLAtoms::background },
   { &nsHTMLAtoms::bgcolor },
   { nsnull }
 };
 
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sScrollingAttributeMap[] = {
   { &nsHTMLAtoms::scrolling },
   { nsnull }
