@@ -1421,28 +1421,38 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 
     if ((w != aWidth) || (h != aHeight))
     {
-      // make sure that we don't infinitely recurse if live-resize is on
-      mResizeIsFromUs = PR_TRUE;
-      ::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+      if (aWidth != 0 && aHeight != 0) {
+        // make sure that we don't infinitely recurse if live-resize is on
+        mResizeIsFromUs = PR_TRUE;
+        ::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
 
-      // update userstate to match, if appropriate
-      PRInt32 sizeMode;
-      GetSizeMode(&sizeMode);
-      if (sizeMode == nsSizeMode_Normal) {
-        Rect portBounds;
-        ::GetWindowBounds(mWindowPtr, kWindowGlobalPortRgn, &portBounds);
-        ::SetWindowUserState(mWindowPtr, &portBounds);
+        // update userstate to match, if appropriate
+        PRInt32 sizeMode;
+        GetSizeMode(&sizeMode);
+        if (sizeMode == nsSizeMode_Normal) {
+          Rect portBounds;
+          ::GetWindowBounds(mWindowPtr, kWindowGlobalPortRgn, &portBounds);
+          ::SetWindowUserState(mWindowPtr, &portBounds);
+        }
+
+        mResizeIsFromUs = PR_FALSE;
+      } else {
+        // If width or height are zero, then ::SizeWindow() has no effect. So
+        // instead we just hide the window by calling Show(false), which sets
+        // mVisible to false. But the window is still considered to be 'visible'
+        // so we set that back to true.
+        Show(PR_FALSE);
+        mVisible = PR_TRUE;
       }
-
-      mResizeIsFromUs = PR_FALSE;
     }
   }
   Inherited::Resize(aWidth, aHeight, aRepaint);
 
   // Make window visible.  Show() will not make a window visible if mBounds are
   // still empty.  So when resizing a window, we check if it is supposed to be
-  // visible but has yet to be made so.
-  if (mVisible && !mShown)
+  // visible but has yet to be made so.  This needs to be called after
+  // Inherited::Resize(), since that function sets mBounds.
+  if (aWidth != 0 && aHeight != 0 && mVisible && !mShown)
     Show(PR_TRUE);
 
   return NS_OK;
