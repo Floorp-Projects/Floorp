@@ -191,7 +191,10 @@ PRBool nsFileSpec::IsHidden() const
     char *leafname = GetLeafName();
     if (nsnull != leafname)
     {
-        if ((!strcmp(leafname, ".")) || (!strcmp(leafname, "..")))
+	// rjc: don't return ".", "..", or any file/directory that begins with a "."
+
+	/*        if ((!strcmp(leafname, ".")) || (!strcmp(leafname, "..")))	*/
+	if (leafname[0] == '.')
         {
             hidden = PR_TRUE;
         }
