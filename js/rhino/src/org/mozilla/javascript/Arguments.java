@@ -80,8 +80,11 @@ class Arguments extends ScriptableObject {
     }
 
     public void put(String name, Scriptable start, Object value) {
-        if (name.equals("caller"))
+        if (name.equals("caller")) {
+            // Set "hasCaller" to false so that we won't look up a  
+            // computed value.
             hasCaller = false;
+        }
         super.put(name, start, value);
     }
 
