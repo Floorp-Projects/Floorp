@@ -12,18 +12,6 @@ import "ocidl.idl";
 // import "exdisp.idl";
 #include "exdispid.h"
 
-	[
-		object,
-		uuid(1339B54B-3453-11D2-93B9-000000000000),
-		dual,
-		helpstring("IMozillaBrowser Interface"),
-		pointer_default(unique)
-	]
-	interface IMozillaBrowser : IDispatch
-	{
-		[propget, id(DISPID_HWND)]
-		HRESULT Window([out, retval]long* phwnd);
-	};
 [
 	uuid(1339B53E-3453-11D2-93B9-000000000000),
 	version(1.0),
@@ -219,7 +207,7 @@ library MOZILLACONTROLLib
 	coclass MozillaBrowser
 	{
 		[default] interface IWebBrowser;
-		interface IMozillaBrowser;
+		interface IDispatch;
 //		[default, source] dispinterface DWebBrowserEvents2;
 		[default, source] dispinterface DWebBrowserEvents;
 	};

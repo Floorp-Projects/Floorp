@@ -23,25 +23,37 @@ extern CComModule _Module;
 #include <atlcom.h>
 #include <atlctl.h>
 
-/* Headers from NGLayout... */
-#include <malloc.h>
+#ifdef USE_NGPREF
+#include "nsIPref.h"
+#endif
+
+#include "prtypes.h"
+#include "xp_core.h"
+#include "jscompat.h"
+
+#include "prthread.h"
+#include "prprf.h"
+#include "plevent.h"
+#include "nsRepository.h"
+#include "nsWidgetsCID.h"
+#include "nsGfxCIID.h"
+#include "nsViewsCID.h"
+#include "nsString.h"
 
 #include "nsGlobalVariables.h"
 #include "nsIWebShell.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
+#include "nsIStreamListener.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
-#include "prthread.h"
-#include "prprf.h"
-#include "nsRepository.h"
-#include "nsWidgetsCID.h"
-#include "nsGfxCIID.h"
-#include "nsViewsCID.h"
-#include "nsString.h"
-#include "plevent.h"
+
+#include "BrowserDiagnostics.h"
+#include "MozillaControl.h"
+#include "WebShellContainer.h"
+#include "MozillaBrowser.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

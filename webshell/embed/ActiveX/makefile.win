@@ -28,17 +28,17 @@ MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = $(DLLNAME).res
 DEFFILE = $(DLLNAME).def
-OS_CFLAGS = /D "WIN32" 
+OS_CFLAGS = /D "WIN32"
 
-OBJS =					   \
+OBJS =                                     \
 	.\$(OBJDIR)\StdAfx.obj             \
-	.\$(OBJDIR)\nsSetupRegistry.obj	   \
+	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
     .\$(OBJDIR)\WebShellContainer.obj  \
 	$(NULL)
 
-LINCS=	\
+LINCS=  \
   -I$(PUBLIC)\raptor \
   -I$(PUBLIC)\xpcom \
   -I$(PUBLIC)\dom \
@@ -82,7 +82,7 @@ MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
-StdAfx.cpp: StdAfx.h MozillaControl.h
+StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 clobber::
 	regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll

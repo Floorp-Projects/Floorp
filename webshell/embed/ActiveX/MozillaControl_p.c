@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 3.03.0110 */
-/* at Sun Aug 23 21:54:29 1998
+/* at Sun Sep 20 22:00:35 1998
  */
 /* Compiler settings for MozillaControl.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -162,7 +162,7 @@ CInterfaceStubVtbl _IMozillaBrowserStubVtbl =
 
 #if !(TARGET_IS_NT40_OR_LATER)
 #error You need a Windows NT 4.0 or later to run this stub because it uses these features:
-#error   -Oif or -Oicf.
+#error   -Oif or -Oicf, more than 32 methods in the interface.
 #error However, your C/C++ compilation flags indicate you intend to run this app on earlier systems.
 #error This app will die there with the RPC_X_WRONG_STUB_VERSION error.
 #endif

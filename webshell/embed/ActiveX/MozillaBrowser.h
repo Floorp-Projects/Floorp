@@ -18,7 +18,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public CComCoClass<CMozillaBrowser, &CLSID_MozillaBrowser>,
 	public CComControl<CMozillaBrowser>,
 	public CProxyDWebBrowserEvents<CMozillaBrowser>,
-	public CStockPropImpl<CMozillaBrowser, IMozillaBrowser, &IID_IMozillaBrowser, &LIBID_MOZILLACONTROLLib>,
+	public CStockPropImpl<CMozillaBrowser, IWebBrowser, &IID_IWebBrowser, &LIBID_MOZILLACONTROLLib>,
 	public IProvideClassInfo2Impl<&CLSID_MozillaBrowser, &DIID_DWebBrowserEvents, &LIBID_MOZILLACONTROLLib>,
 	public IPersistStreamInitImpl<CMozillaBrowser>,
 	public IPersistStorageImpl<CMozillaBrowser>,
@@ -31,10 +31,9 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public IDataObjectImpl<CMozillaBrowser>,
 	public ISupportErrorInfo,
 	public IConnectionPointContainerImpl<CMozillaBrowser>,
-	public ISpecifyPropertyPagesImpl<CMozillaBrowser>,
-	// Support for IE
-	public IDispatchImpl<IWebBrowser, &IID_IWebBrowser, &LIBID_MOZILLACONTROLLib>
+	public ISpecifyPropertyPagesImpl<CMozillaBrowser>
 {
+	friend CWebShellContainer;
 public:
 	CMozillaBrowser();
 	virtual ~CMozillaBrowser();
@@ -42,8 +41,10 @@ public:
 DECLARE_REGISTRY_RESOURCEID(IDR_MOZILLABROWSER)
 
 BEGIN_COM_MAP(CMozillaBrowser)
-	COM_INTERFACE_ENTRY(IMozillaBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IMozillaBrowser)
+	// IE web browser interface
+	COM_INTERFACE_ENTRY(IWebBrowser)
+//	COM_INTERFACE_ENTRY(IMozillaBrowser)
+	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser)
 	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
@@ -53,7 +54,7 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
 	COM_INTERFACE_ENTRY_IMPL(IOleControl)
 	COM_INTERFACE_ENTRY_IMPL(IOleObject)
-	COM_INTERFACE_ENTRY_IMPL(IQuickActivate)
+//	COM_INTERFACE_ENTRY_IMPL(IQuickActivate)
 	COM_INTERFACE_ENTRY_IMPL(IPersistStorage)
 	COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
 	COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
@@ -62,8 +63,6 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
 	COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
-	// IE web browser interface
-	COM_INTERFACE_ENTRY(IWebBrowser)
 END_COM_MAP()
 
 BEGIN_PROPERTY_MAP(CMozillaBrowser)
@@ -107,9 +106,16 @@ END_MSG_MAP()
 // Protected members
 protected:
 	CWebShellContainer	*	m_pWebShellContainer;
+
+	// Mozilla interfaces
     nsIWebShell			*	m_pIWebShell;
+	nsIPref             *   m_pIPref;
 	
+	// Indicates the browser is busy doing something
+	BOOL					m_bBusy;
+
 	virtual HRESULT CreateWebShell();
+	virtual BOOL IsValid();
 
 // IWebBrowser implementation
 public:
@@ -139,7 +145,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR __RPC_FAR *LocationURL);
     virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL __RPC_FAR *pBool);
 
-// IMozillaBrowser
 public:
 	HRESULT OnDraw(ATL_DRAWINFO& di);
 

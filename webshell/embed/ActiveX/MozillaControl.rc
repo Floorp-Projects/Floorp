@@ -99,6 +99,15 @@ IDR_MOZILLABROWSER      REGISTRY DISCARDABLE    "MozillaBrowser.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MOZILLABROWSER      ICON    DISCARDABLE     "MozillaBrowser.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 

@@ -5,7 +5,7 @@
 
 
 /* File created by MIDL compiler version 3.03.0110 */
-/* at Sun Aug 23 21:54:29 1998
+/* at Sun Sep 20 22:13:10 1998
  */
 /* Compiler settings for MozillaControl.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -34,9 +34,6 @@ typedef struct _IID
 #define CLSID_DEFINED
 typedef IID CLSID;
 #endif // CLSID_DEFINED
-
-const IID IID_IMozillaBrowser = {0x1339B54B,0x3453,0x11D2,{0x93,0xB9,0x00,0x00,0x00,0x00,0x00,0x00}};
-
 
 const IID LIBID_MOZILLACONTROLLib = {0x1339B53E,0x3453,0x11D2,{0x93,0xB9,0x00,0x00,0x00,0x00,0x00,0x00}};
 
