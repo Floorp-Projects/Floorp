@@ -36,6 +36,11 @@
 #include "nsISupports.idl"
 #include "nsIProgrammingLanguage.idl"
 
+/**
+ * Provides information about a specific implementation class
+ * @status FROZEN
+ */
+
 [scriptable, uuid(986c11d0-f340-11d4-9075-0010a4e73d9a)]
 interface nsIClassInfo : nsISupports
 {
@@ -97,8 +102,6 @@ interface nsIClassInfo : nsISupports
     const PRUint32 PLUGIN_OBJECT        = 1 << 4;
     const PRUint32 EAGER_CLASSINFO      = 1 << 5;
     
-    // XXX what else might we want to add?
-
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
     // with this bit set.
@@ -106,12 +109,6 @@ interface nsIClassInfo : nsISupports
 
 
     readonly attribute PRUint32 flags;
-
-    /////////////////////////////////////////////////////////////////////////
-    // The above methods and attributes existed in Netscape6.1 and mozilla0.9.2. 
-    // New methods and attributes must be added to the *end* of the interface
-    // RESIST THE INCLINATION TO PLACE THEM ABOVE WHERE THEY *SEEM* TO BELONG.
-    /////////////////////////////////////////////////////////////////////////
 
     /**
      * Also a class ID through which an instance of this class can be created
