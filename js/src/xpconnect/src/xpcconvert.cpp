@@ -600,7 +600,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             NS_ASSERTION(iid,"can't do interface conversions without iid");
             JSObject* obj;
-            nsISupports* iface = nsnull;
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
@@ -732,16 +731,15 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
     nsISupports* iface;
-    nsresult rv = NS_OK;
 
     // is this really a native xpcom object with a wrapper?
-    nsXPCWrappedNative* wrapper =
+    nsXPCWrappedNative* wrappedNative =
                 nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx, src);
-    if(wrapper)
+    if(wrappedNative)
     {
-        iface = wrapper->GetNative();
+        iface = wrappedNative->GetNative();
         // is the underlying object the right interface?
-        if(wrapper->GetIID().Equals(*iid))
+        if(wrappedNative->GetIID().Equals(*iid))
         {
             NS_ADDREF(iface);
             *dest = iface;
@@ -768,11 +766,11 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     if(xpcc)
     {
-        nsXPCWrappedJS* wrapper = 
+        nsXPCWrappedJS* wrappedJS = 
             nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, src, *iid);
-        if(wrapper)
+        if(wrappedJS)
         {
-            *dest = NS_STATIC_CAST(nsXPTCStubBase*, wrapper);
+            *dest = NS_STATIC_CAST(nsXPTCStubBase*, wrappedJS);
             return JS_TRUE;
         }
     }
