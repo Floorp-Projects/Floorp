@@ -155,13 +155,12 @@
 <!ENTITY stopButton.label "Stop">
 
 <!--tooltips-->
-<!ENTITY sendButton.tooltip "Send">
-<!ENTITY quoteButton.tooltip "Quote">
-<!ENTITY addressButton.tooltip "Address">
-<!ENTITY attachButton.tooltip "Attach">
-<!ENTITY spellingButton.tooltip "Spelling">
-<!ENTITY saveButton.tooltip "Save">
-<!ENTITY stopButton.tooltip "Stop">
+<!ENTITY sendButton.tooltip "Send this message now"> 
+<!ENTITY quoteButton.tooltip "Quote the previous message"> 
+<!ENTITY addressButton.tooltip "Select a recipient from an Address Book"> 
+<!ENTITY attachButton.tooltip "Attach a file to this message"> 
+<!ENTITY saveButton.tooltip "Save this message"> 
+<!ENTITY stopButton.tooltip "Stop the current transfer"> 
 
 <!-- Toolbar items, imported from editorAppShell.xul -->
 <!--LOCALIZATION NOTE formatToolbar. Don't change any of these Style Characters -->

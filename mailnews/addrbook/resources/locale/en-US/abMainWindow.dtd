@@ -85,13 +85,13 @@ Rights Reserved.
 <!ENTITY showNames.label "Show names containing:">  
 
 <!-- Tooltips -->
-<!ENTITY newcardButton.tooltip "New Card">  
-<!ENTITY newlistButton.tooltip "New List">  
-<!ENTITY editButton.tooltip "Edit">  
-<!ENTITY newmsgButton.tooltip "New Msg">  
-<!ENTITY deleteButton.tooltip "Delete">  
-<!ENTITY stopButton.tooltip "Stop">  
-<!ENTITY searchButton.tooltip "Search">  
+<!ENTITY newcardButton.tooltip "Create a new address book card"> 
+<!ENTITY newlistButton.tooltip "Create a new list"> 
+<!ENTITY editButton.tooltip "Edit the selected card"> 
+<!ENTITY newmsgButton.tooltip "Create a new message"> 
+<!ENTITY deleteButton.tooltip "Delete selected card or address book"> 
+<!ENTITY stopButton.tooltip "Stop the current transfer"> 
+<!ENTITY searchButton.tooltip "Search the selected address book"> 
 
 <!-- Sidebar -->  
 <!ENTITY addressbook-sidebar-header.label "Address Books">  

@@ -388,7 +388,7 @@ END of Deprecated -->
 	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" onclick="SelectAddress()"/>
 	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;"  onclick="AttachFile()"/>
 	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="QuoteMessage()"/>
-            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" tooltip="aTooltip" tooltiptext="&spellingButton.tooltip;"  observes="cmd_spelling"/>
+            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
             <toolbarseparator/>
 	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;"  onclick="SaveAsDraft()"/>
 	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="Stop()"/>
