@@ -49,7 +49,7 @@ public:
   // If the db is NULL, then returns a URL that represents the entire
   // folder as a whole.
 #ifdef HAVE_DB
-  NS_IMETHOD BuildUrl (MessageDB *db, MessageKey key, char ** url);
+  NS_IMETHOD BuildUrl (nsMsgDatabase *db, MessageKey key, char ** url);
 #endif
 
 #ifdef HAVE_MASTER
@@ -59,18 +59,18 @@ public:
 #ifdef DOES_FOLDEROPERATIONS
   NS_IMETHOD StartAsyncCopyMessagesInto (MSG_FolderInfo *dstFolder,
                                          MSG_Pane* sourcePane, 
-                                         MessageDB *sourceDB,
-                                         IDArray *srcArray,
+                                         nsMsgDatabase *sourceDB,
+                                         nsMsgKeyArray *srcArray,
                                          int32 srcCount,
                                          MWContext *currentContext,
                                          MSG_UrlQueue *urlQueue,
-                                         XP_Bool deleteAfterCopy,
+                                         PRBool deleteAfterCopy,
                                          MessageKey nextKey = MSG_MESSAGEKEYNONE);
 
     
   NS_IMETHOD BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
-                                   MessageDB *sourceDB,
-                                   IDArray *srcArray, 
+                                   nsMsgDatabase *sourceDB,
+                                   nsMsgKeyArray *srcArray, 
                                    MSG_UrlQueue *urlQueue,
                                    int32 srcCount,
                                    MessageCopyInfo *copyInfo);
@@ -79,18 +79,18 @@ public:
   NS_IMETHOD FinishCopyingMessages (MWContext *context,
                                     MSG_FolderInfo * srcFolder, 
                                     MSG_FolderInfo *dstFolder, 
-                                    MessageDB *sourceDB,
-                                    IDArray **ppSrcArray, 
+                                    nsMsgDatabase *sourceDB,
+                                    nsMsgKeyArray **ppSrcArray, 
                                     int32 srcCount,
                                     msg_move_state *state);
 
 
   NS_IMETHOD CleanupCopyMessagesInto (MessageCopyInfo **info);
 
-  NS_IMETHOD SaveMessages(IDArray *, const char *fileName, 
-                          MSG_Pane *pane, MessageDB *msgDB,
+  NS_IMETHOD SaveMessages(nsMsgKeyArray *, const char *fileName, 
+                          MSG_Pane *pane, nsMsgDatabase *msgDB,
                           int (*doneCB)(void *, int status) = NULL, void *state = NULL,
-                          XP_Bool addMozillaStatus = TRUE);
+                          PRBool addMozillaStatus = TRUE);
 #endif
 
 	NS_IMETHOD GetPrettyName(char * *aPrettyName);
@@ -175,8 +175,8 @@ public:
 	// we don't want to do an expensive select until the user actually opens that folder
 	// These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
 	// struct used by the FE
-	int32			GetNumPendingUnread(XP_Bool deep = FALSE);
-	int32			GetNumPendingTotalMessages(XP_Bool deep = FALSE);
+	int32			GetNumPendingUnread(PRBool deep = FALSE);
+	int32			GetNumPendingTotalMessages(PRBool deep = FALSE);
 	
 	void			ChangeNumPendingUnread(int32 delta);
 	void			ChangeNumPendingTotalMessages(int32 delta);
@@ -221,7 +221,7 @@ public:
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiredCleanup);
 	NS_IMETHOD	ClearRequiresCleanup() ;
 #ifdef HAVE_PANE
-	virtual XP_Bool CanBeInFolderPane ();
+	virtual PRBool CanBeInFolderPane ();
 #endif
 
 	NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *knowsExtension);
@@ -232,8 +232,8 @@ public:
 #ifdef HAVE_SEMAPHORE
   MsgERR AcquireSemaphore (void *semHolder);
   void ReleaseSemaphore (void *semHolder);
-  XP_Bool TestSemaphore (void *semHolder);
-  XP_Bool IsLocked () { return m_semaphoreHolder != NULL; }
+  PRBool TestSemaphore (void *semHolder);
+  PRBool IsLocked () { return m_semaphoreHolder != NULL; }
 #endif
 
 #ifdef HAVE_PANE
@@ -247,7 +247,7 @@ public:
 #ifdef HAVE_CACHE
 	virtual MsgERR WriteToCache (XP_File);
 	virtual MsgERR ReadFromCache (char *);
-	virtual XP_Bool IsCachable ();
+	virtual PRBool IsCachable ();
 	void SkipCacheTokens (char **ppBuf, int numTokens);
 #endif
 
@@ -261,8 +261,8 @@ public:
 #endif
 
 #ifdef DOES_FOLDEROPERATIONS
-	int		DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, IDArray &keysToSave, MSG_FolderInfo *dstFolder, MessageDB *sourceDB);
-	void UpdateMoveCopyStatus(MWContext *context, XP_Bool isMove, int32 curMsgCount, int32 totMessages);
+	int		DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, nsMsgKeyArray &keysToSave, MSG_FolderInfo *dstFolder, nsMsgDatabase *sourceDB);
+	void UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages);
 #endif
 
 	NS_IMETHOD RememberPassword(const char *password);
@@ -320,8 +320,8 @@ public:
 
 #ifdef HAVE_DB	
 	virtual MsgERR BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
-																				MessageDB *sourceDB,
-																				IDArray *srcArray, 
+																				nsMsgDatabase *sourceDB,
+																				nsMsgKeyArray *srcArray, 
 																				MSG_UrlQueue *urlQueue,
 																				int32 srcCount,
 																				MessageCopyInfo *copyInfo);
@@ -330,8 +330,8 @@ public:
 	virtual int FinishCopyingMessages (MWContext *context,
 																			MSG_FolderInfo * srcFolder, 
 																			MSG_FolderInfo *dstFolder, 
-																			MessageDB *sourceDB,
-																			IDArray **ppSrcArray, 
+																			nsMsgDatabase *sourceDB,
+																			nsMsgKeyArray **ppSrcArray, 
 																			int32 srcCount,
 																			msg_move_state *state);
 #endif

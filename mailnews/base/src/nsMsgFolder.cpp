@@ -22,7 +22,11 @@
 #include "nsIRDFResourceFactory.h"
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
+#include "nsMsgKeyArray.h"
 
+#ifdef HAVE_DB
+#include "nsMsgDatabase.h"
+#endif
 /* use these macros to define a class IID for our component. */
 static NS_DEFINE_IID(kIMsgFolderIID, NS_IMSGFOLDER_IID);
 static NS_DEFINE_IID(kIMsgMailFolderIID, NS_IMSGMAILFOLDER_IID);
@@ -124,7 +128,7 @@ NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
 
 #ifdef HAVE_DB
 // this class doesn't have a url
-NS_IMETHODIMP nsMsgFolder::BuildUrl (MessageDB *db, MessageKey key, char ** url)
+NS_IMETHODIMP nsMsgFolder::BuildUrl (nsMsgDatabase *db, MessageKey key, char ** url)
 {
 	if(*url)
 	{
@@ -147,12 +151,12 @@ NS_IMETHODIMP nsMsgFolder::SetMaster(MSG_Master *master)
 #ifdef DOES_FOLDEROPERATIONS
 NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto (MSG_FolderInfo *dstFolder,
                                              MSG_Pane* sourcePane, 
-																						 MessageDB *sourceDB,
-                                             IDArray *srcArray,
+											 nsMsgDatabase *sourceDB,
+                                             nsMsgKeyArray *srcArray,
                                              int32 srcCount,
                                              MWContext *currentContext,
                                              MSG_UrlQueue *urlQueue,
-                                             XP_Bool deleteAfterCopy,
+                                             PRBool deleteAfterCopy,
                                              MessageKey nextKey = MSG_MESSAGEKEYNONE)
 {
 		// General note: If either the source or destination folder is an IMAP folder then we add the copy info struct
@@ -239,8 +243,8 @@ NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto (MSG_FolderInfo *dstFolder
 
     
 NS_IMETHODIMP nsMsgFolder::BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
-																		  MessageDB *sourceDB,
-                                      IDArray *srcArray, 
+										nsMsgDatabase *sourceDB,
+                                      nsMsgKeyArray *srcArray, 
                                       MSG_UrlQueue *urlQueue,
                                       int32 srcCount,
                                       MessageCopyInfo *copyInfo)
@@ -253,8 +257,8 @@ NS_IMETHODIMP nsMsgFolder::BeginCopyingMessages (MSG_FolderInfo *dstFolder,
 NS_IMETHODIMP nsMsgFolder::FinishCopyingMessages (MWContext *context,
                                       MSG_FolderInfo * srcFolder, 
                                       MSG_FolderInfo *dstFolder, 
-																			MessageDB *sourceDB,
-                                      IDArray **ppSrcArray, 
+									  nsMsgDatabase *sourceDB,
+                                      nsMsgKeyArray **ppSrcArray, 
                                       int32 srcCount,
                                       msg_move_state *state)
 {
@@ -313,8 +317,8 @@ NS_IMETHODIMP nsMsgFolder::CleanupCopyMessagesInto (MessageCopyInfo **info)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::SaveMessages(IDArray *, const char *fileName, 
-                                MSG_Pane *pane, MessageDB *msgDB,
+NS_IMETHODIMP nsMsgFolder::SaveMessages(nsMsgKeyArray *, const char *fileName, 
+                                MSG_Pane *pane, nsMsgDatabase *msgDB,
 								  int (*doneCB)(void *, int status) = NULL, void *state = NULL,
 								  XP_Bool addMozillaStatus = TRUE)
 {
@@ -1347,7 +1351,7 @@ NS_IMETHODIMP nsMsgFolder::ShouldPerformOperationOffline(PRBool *performOffline)
 
 
 #ifdef DOES_FOLDEROPERATIONS
-NS_IMETHODIMP nsMsgFolder::DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, IDArray &keysToSave, MSG_FolderInfo *dstFolder, MessageDB *sourceDB)
+NS_IMETHODIMP nsMsgFolder::DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, nsMsgKeyArray &keysToSave, MSG_FolderInfo *dstFolder, nsMsgDatabase *sourceDB)
 {
 
 }
@@ -1573,7 +1577,7 @@ NS_IMETHODIMP nsMsgMailFolder::RemoveSubFolder (const nsIMsgFolder *which)
 NS_IMETHODIMP nsMsgMailFolder::Delete ()
 {
 #ifdef HAVE_PORT
-	    MessageDB   *db;
+	    nsMsgDatabase   *db;
     // remove the summary file
     MsgERR status = CloseDatabase (m_pathName, &db);
     if (0 == status)
@@ -1635,7 +1639,7 @@ NS_IMETHODIMP nsMsgMailFolder::Rename (const char *newName)
 	            XP_STRCPY (slash + 1, leafNameForDisk);
 
 	        // rename the mail summary file, if there is one
-	        MessageDB *db = NULL;
+	        nsMsgDatabase *db = NULL;
 	        status = CloseDatabase (m_pathName, &db);
 	        
 			XP_StatStruct fileStat;
