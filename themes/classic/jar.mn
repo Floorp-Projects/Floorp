@@ -233,6 +233,7 @@ classic.jar:
     skin/classic/global/check-check.gif                                  (global/check-check.gif)
     skin/classic/global/check-radio-disabled.gif                         (global/check-radio-disabled.gif)
     skin/classic/global/check-radio.gif                                  (global/check-radio.gif)
+    skin/classic/global/closebox.gif                                     (global/closebox.gif)
     skin/classic/global/columnselect.gif                                 (global/columnselect.gif)
     skin/classic/global/console-error-caret.gif                          (global/console-error-caret.gif)
     skin/classic/global/console-error-dash.gif                           (global/console-error-dash.gif)

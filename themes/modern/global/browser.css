@@ -4,3 +4,9 @@
 tab[busy] {
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
+
+.tabbrowser-closebox {
+  list-style-image: url("chrome://global/skin/icons/closebox.gif");
+  margin-bottom: 3px;
+  margin-right: 2px;
+}
