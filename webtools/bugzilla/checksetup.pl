@@ -2845,7 +2845,7 @@ if ($dbh->bz_get_field_def("products", "product")) {
 
     print "Adding indexes for products and components tables.\n";
     $dbh->do("CREATE UNIQUE INDEX products_name_idx ON products(name)");
-    $dbh->do("CREATE UNIQUE INDEX component_product_id_idx"
+    $dbh->do("CREATE UNIQUE INDEX components_product_id_idx"
              . " ON components(product_id, name)");
     $dbh->do("CREATE INDEX components_name_idx ON components(name)");
 }
