@@ -28,17 +28,62 @@
  */
 
 [scriptable, uuid(69E5DF01-7B8B-11d3-AF61-00A024FFC08C)]
-interface nsIBrowserEmbedNav : nsISupports
+interface nsIWebBrowserNav : nsISupports
 {
-	void CanGoBack(out boolean Can);
-	void CanGoForward(out boolean Can);
+	/*
+	Indicates if the browser if it can go back.  If true this indicates that
+	there is back session history available to navigate to.
+	*/
+	readonly attribute canGoBack;
+
+	/*
+	Indicates if the browser if it can go forward.  If true this indicates that
+	there is forward session history available to navigate to.
+	*/
+	readonly attribute canGoForward;
+
+	/*
+	Tells the browser to navigate to the next Back session history item.
+	*/
 	void GoBack();
+
+	/*
+	Tells the browser to navigate to the next Forward session history item.
+	*/
 	void GoForward();
-	void LoadURL(in wstring url);
-	void LoadURLVia(in wstring url, in unsigned long adapterBinding);
+
+	/*
+	Loads a given URI.  This will give priority to loading the requested URI
+	in the object implementing	this interface.  If it can't be loaded here
+	however, the URL dispatcher will go through its normal process of content
+	loading.
+
+	@param uri - The URI to load.
+	*/
+	void LoadURI(in wstring uri);
+
+	/*
+	Loads a given URI through the specified adapter.  This will give priority
+	to loading the requested URI in the object implementing this interface.
+	If it can't be loaded here	however, the URL dispatcher will go through its
+	normal process of content loading.
+
+	@param uri - The URI to load.
+	@param adapterBinding - The local IP address of the adapter to bind to.
+	*/
+	void LoadURIVia(in wstring uri, in unsigned long adapterBinding);
+
 
 	void Reload(); //XXX Should take a cache parameter
+
+	/*
+	Stops a load of a URI.
+	*/
 	void Stop();
-	
+
+	/*
+	Retrieves or sets the current Document for the WebBrowser.  When setting
+	this will simulate the normal load process.
+	*/
 	attribute nsIDOMDocument document;		
 };
