@@ -143,7 +143,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 CPPSRCS += nsNativeAppSupportPh.cpp
-LIBS += -lphexlib
+LIBS += -lphexlib -lph
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
