@@ -72,10 +72,15 @@ typedef PRUint32 nsrefcnt;
 #endif
 
 /**
- * NS_NO_VTABLE is emitted by xpidl in interface declarations whenever xpidl
- * can determine that the interface can't contain a constructor.  This results
- * in some space savings and possible runtime savings - see bug 49416.
+ * NS_NO_VTABLE is emitted by xpidl in interface declarations whenever
+ * xpidl can determine that the interface can't contain a constructor.
+ * This results in some space savings and possible runtime savings -
+ * see bug 49416.  We undefine it first, as xpidl-generated headers
+ * define it for IDL uses that don't include this file.
  */
+#ifdef NS_NO_VTABLE
+#undef NS_NO_VTABLE
+#endif
 #if defined(_MSC_VER) && _MSC_VER >= 1100
 #define NS_NO_VTABLE __declspec(novtable)
 #else
