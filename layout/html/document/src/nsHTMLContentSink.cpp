@@ -139,20 +139,10 @@ class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink {
 public:
-  void* operator new(size_t size) {
-    void* rv = ::operator new(size);
-    if (rv) {
-      nsCRT::zero(rv, size);
-    }
-    return rv;
-  }
-
-  void operator delete(void* ptr) {
-    ::operator delete(ptr);
-  }
-
   HTMLContentSink();
   virtual ~HTMLContentSink();
+
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURL* aURL,

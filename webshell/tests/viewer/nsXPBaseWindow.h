@@ -48,11 +48,7 @@ class nsXPBaseWindow : public nsIXPBaseWindow,
                        public nsIDOMMouseListener
 {
 public:
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   nsXPBaseWindow();
   virtual ~nsXPBaseWindow();

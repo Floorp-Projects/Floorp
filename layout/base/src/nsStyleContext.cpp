@@ -691,17 +691,7 @@ public:
                    nsIPresContext* aPresContext);
   virtual ~StyleContextImpl();
 
-  void* operator new(size_t size) {
-    void* rv = ::operator new(size);
-    if (rv) {
-      nsCRT::zero(rv, size);
-    }
-    return rv;
-  }
-
-  void operator delete(void* ptr) {
-    ::operator delete(ptr);
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
 
