@@ -433,7 +433,7 @@ NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor,
 
 NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 {
-  return nsFontMetricsGTK::FamilyExists(aFontName);
+  return nsFontMetricsGTK::FamilyExists(this, aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)

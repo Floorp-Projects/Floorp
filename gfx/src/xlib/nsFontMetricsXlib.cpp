@@ -180,6 +180,8 @@ static PRBool gAllowDoubleByteSpecialChars = PR_TRUE;
 // XXX many of these statics need to be freed at shutdown time
 
 static nsIPref* gPref = nsnull;
+static float gDevScale = 0.0f; /* Scaler value from |GetCanonicalPixelScale()| */
+static PRBool gScaleBitmapFontsWithDevScale = PR_FALSE;
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 
@@ -856,8 +858,10 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
   }
 #endif /* NS_FONT_DEBUG */
 
-  NS_ASSERTION(aDevice!=nsnull, "calling InitGlobals() without a device"); 
+  NS_ENSURE_TRUE(nsnull != aDevice, NS_ERROR_NULL_POINTER);
   NS_STATIC_CAST(nsDeviceContextX *, aDevice)->GetXlibRgbHandle(gXlibRgbHandle);
+
+  aDevice->GetCanonicalPixelScale(gDevScale);
 
   nsServiceManager::GetService(kCharSetManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
@@ -1053,6 +1057,27 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
     SIZE_FONT_PRINTF(("gAATTDarkTextGain = %g", gAATTDarkTextGain));
   }
 #endif /* USE_AASB */
+
+#ifdef USE_XPRINT
+  if (nsFontMetricsXlib::mPrinterMode) {
+    gScaleBitmapFontsWithDevScale = PR_TRUE;
+  }
+#endif /* USE_XPRINT */
+
+ PRBool scale_bitmap_fonts_with_devscale = gScaleBitmapFontsWithDevScale;
+#ifdef USE_XPRINT
+  if (nsFontMetricsXlib::mPrinterMode) {
+    rv = gPref->GetBoolPref("print.xprint.font.scale_bitmap_fonts_with_devscale", &scale_bitmap_fonts_with_devscale);
+  }  
+  if (!nsFontMetricsXlib::mPrinterMode || NS_FAILED(rv)) {
+#endif /* USE_XPRINT */
+    rv = gPref->GetBoolPref("font.x11.scale_bitmap_fonts_with_devscale", &scale_bitmap_fonts_with_devscale);
+#ifdef USE_XPRINT
+  }
+#endif /* USE_XPRINT */
+  if (NS_SUCCEEDED(rv)) {
+    gScaleBitmapFontsWithDevScale = scale_bitmap_fonts_with_devscale;
+  }
 
   gFFRENodes = new nsHashtable();
   if (!gFFRENodes) {
@@ -3966,15 +3991,30 @@ NodeAddScalable(nsFontStretchXlib* aStretch,
 }
 
 static PRBool
-NodeAddSize(nsFontStretchXlib* aStretch, int aSize, const char *aName,
-        nsFontCharSetInfoXlib* aCharSetInfo)
+NodeAddSize(nsFontStretchXlib* aStretch, 
+            int aPixelSize, int aPointSize,
+            float scaler,
+            int aResX,      int aResY,
+            const char *aDashFoundry, const char *aFamily, 
+            const char *aWeight,      const char * aSlant, 
+            const char *aWidth,       const char *aStyle, 
+            const char *aSpacing,     const char *aCharSet,
+            nsFontCharSetInfoXlib* aCharSetInfo)
 {
+  if (scaler!=1.0f)
+  {
+    aPixelSize = int(float(aPixelSize) * scaler);
+    aPointSize = int(float(aPointSize) * scaler);
+    aResX = 0;
+    aResY = 0;
+  }
+
   PRBool haveSize = PR_FALSE;
   if (aStretch->mSizesCount) {
     nsFontXlib** end = &aStretch->mSizes[aStretch->mSizesCount];
     nsFontXlib** s;
     for (s = aStretch->mSizes; s < end; s++) {
-      if ((*s)->mSize == aSize) {
+      if ((*s)->mSize == aPixelSize) {
         haveSize = PR_TRUE;
         break;
       }
@@ -3993,8 +4033,11 @@ NodeAddSize(nsFontStretchXlib* aStretch, int aSize, const char *aName,
       delete [] aStretch->mSizes;
       aStretch->mSizes = newSizes;
     }
-    char* copy = PR_smprintf("%s", aName);
-    if (!copy) {
+    char *name = PR_smprintf("%s-%s-%s-%s-%s-%s-%d-%d-%d-%d-%s-*-%s", 
+                             aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+                             aPixelSize, aPointSize, aResX, aResY, aSpacing, aCharSet);  
+
+    if (!name) {
       return PR_FALSE;
     }
     nsFontXlib* size = new nsFontXlibNormal();
@@ -4002,9 +4045,9 @@ NodeAddSize(nsFontStretchXlib* aStretch, int aSize, const char *aName,
       return PR_FALSE;
     }
     aStretch->mSizes[aStretch->mSizesCount++] = size;
-    size->mName           = copy;
+    size->mName           = name;
     // size->mFont is initialized in the constructor
-    size->mSize           = aSize;
+    size->mSize           = aPixelSize;
     size->mBaselineAdjust = 0;
     size->mCCMap          = nsnull;
     size->mCharSetInfo    = aCharSetInfo;
@@ -4112,9 +4155,9 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
            outline_scaled = PR_FALSE;
 #ifdef USE_XPRINT
     PRBool builtin_printer_font = PR_FALSE;
+#endif /* USE_XPRINT */
     int    resX = -1,
            resY = -1;
-#endif /* USE_XPRINT */
 
 #ifdef FIND_FIELD
 #undef FIND_FIELD
@@ -4161,18 +4204,14 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
       scalable = PR_TRUE;
     }
     FIND_FIELD(resolutionX);
-#ifdef USE_XPRINT
     resX = atoi(resolutionX);
     NS_ASSERTION(!(resolutionX[0] != '0' && resX == 0), "atoi(resolutionX) failure.");
-#endif /* USE_XPRINT */
     if (resolutionX[0] == '0') {
       scalable = PR_TRUE;
     }
     FIND_FIELD(resolutionY);
-#ifdef USE_XPRINT
     resY = atoi(resolutionY);
     NS_ASSERTION(!(resolutionY[0] != '0' && resY == 0), "atoi(resolutionY) failure.");
-#endif /* USE_XPRINT */
     if (resolutionY[0] == '0') {
       scalable = PR_TRUE;
     }
@@ -4416,19 +4455,22 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
     }
   
     // get pixel size before the string is changed
-    int pixels = atoi(pixelSize);
+    int pixels,
+        points;
 
-    p = name;
-    while (p < charSetName) {
-      if (!*p) {
-        *p = '-';
-      }
-      p++;
-    }
- 
+    pixels = atoi(pixelSize);
+    points = atoi(pointSize);
+
     if (pixels) {
-      if (!NodeAddSize(stretch, pixels, name, charSetInfo))
+      if (!NodeAddSize(stretch, pixels, points, 1.0f, resX, resY, name, familyName, weightName, 
+                  slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
         continue;
+
+      if (gScaleBitmapFontsWithDevScale && (gDevScale > 1.0f)) {
+        if (!NodeAddSize(stretch, pixels, points, gDevScale, resX, resY, name, familyName, weightName, 
+                    slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
+          continue;
+      }
     }
   }
   XFreeFontNames(list);

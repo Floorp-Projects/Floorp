@@ -325,7 +325,7 @@ public:
                                PRUnichar aChar,
                                const char *aName);
 
-  static nsresult FamilyExists(const nsString& aFontName);
+  static nsresult FamilyExists(nsIDeviceContext *aDevice, const nsString& aName);
 
   //friend struct nsFontGTK;
 

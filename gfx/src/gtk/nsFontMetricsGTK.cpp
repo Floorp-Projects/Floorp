@@ -160,6 +160,8 @@ static PRBool gAllowDoubleByteSpecialChars = PR_TRUE;
 // XXX many of these statics need to be freed at shutdown time
 
 static nsIPref* gPref = nsnull;
+static float gDevScale = 0.0f; /* Scaler value from |GetCanonicalPixelScale()| */
+static PRBool gScaleBitmapFontsWithDevScale = PR_FALSE;
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 
@@ -816,7 +818,7 @@ FreeGlobals(void)
  * Initialize all the font lookup hash tables and other globals
  */
 static nsresult
-InitGlobals(void)
+InitGlobals(nsIDeviceContext *aDevice)
 {
 #ifdef NS_FONT_DEBUG
   char* debug = PR_GetEnv("NS_FONT_DEBUG");
@@ -824,6 +826,10 @@ InitGlobals(void)
     PR_sscanf(debug, "%lX", &gFontDebug);
   }
 #endif
+
+  NS_ENSURE_TRUE(nsnull != aDevice, NS_ERROR_NULL_POINTER);
+
+  aDevice->GetCanonicalPixelScale(gDevScale);
 
   nsServiceManager::GetService(kCharSetManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
@@ -1002,6 +1008,13 @@ InitGlobals(void)
   if (NS_SUCCEEDED(rv)) {
     gAATTDarkTextGain = atof(str.get());
     SIZE_FONT_PRINTF(("gAATTDarkTextGain = %g", gAATTDarkTextGain));
+  }
+
+  PRBool scale_bitmap_fonts_with_devscale = gScaleBitmapFontsWithDevScale;
+
+  rv = gPref->GetBoolPref("font.x11.scale_bitmap_fonts_with_devscale", &scale_bitmap_fonts_with_devscale);
+  if (NS_SUCCEEDED(rv)) {
+    gScaleBitmapFontsWithDevScale = scale_bitmap_fonts_with_devscale;
   }
 
   gFFRENodes = new nsHashtable();
@@ -1269,10 +1282,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mDocConverterType = nsnull;
 
   if (!gInitialized) {
-    res = InitGlobals();
-    if (NS_FAILED(res)) {
+    res = InitGlobals(aContext);
+    if (NS_FAILED(res))
       return res;
-    }
   }
 
   mFont = new nsFont(aFont);
@@ -3667,15 +3679,30 @@ NodeAddScalable(nsFontStretch* aStretch, PRBool aOutlineScaled,
 }
 
 static PRBool
-NodeAddSize(nsFontStretch* aStretch, int aSize, const char *aName,
-        nsFontCharSetInfo* aCharSetInfo)
+NodeAddSize(nsFontStretch* aStretch, 
+            int aPixelSize, int aPointSize,
+            float scaler,
+            int aResX,      int aResY,
+            const char *aDashFoundry, const char *aFamily, 
+            const char *aWeight,      const char * aSlant, 
+            const char *aWidth,       const char *aStyle, 
+            const char *aSpacing,     const char *aCharSet,
+            nsFontCharSetInfo* aCharSetInfo)
 {
+  if (scaler!=1.0f)
+  {
+    aPixelSize = int(float(aPixelSize) * scaler);
+    aPointSize = int(float(aPointSize) * scaler);
+    aResX = 0;
+    aResY = 0;
+  }
+
   PRBool haveSize = PR_FALSE;
   if (aStretch->mSizesCount) {
     nsFontGTK** end = &aStretch->mSizes[aStretch->mSizesCount];
     nsFontGTK** s;
     for (s = aStretch->mSizes; s < end; s++) {
-      if ((*s)->mSize == aSize) {
+      if ((*s)->mSize == aPixelSize) {
         haveSize = PR_TRUE;
         break;
       }
@@ -3694,8 +3721,11 @@ NodeAddSize(nsFontStretch* aStretch, int aSize, const char *aName,
       delete [] aStretch->mSizes;
       aStretch->mSizes = newSizes;
     }
-    char* copy = PR_smprintf("%s", aName);
-    if (!copy) {
+    char *name = PR_smprintf("%s-%s-%s-%s-%s-%s-%d-%d-%d-%d-%s-*-%s", 
+                             aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+                             aPixelSize, aPointSize, aResX, aResY, aSpacing, aCharSet);  
+
+    if (!name) {
       return PR_FALSE;
     }
     nsFontGTK* size = new nsFontGTKNormal();
@@ -3703,9 +3733,9 @@ NodeAddSize(nsFontStretch* aStretch, int aSize, const char *aName,
       return PR_FALSE;
     }
     aStretch->mSizes[aStretch->mSizesCount++] = size;
-    size->mName           = copy;
+    size->mName           = name;
     // size->mFont is initialized in the constructor
-    size->mSize           = aSize;
+    size->mSize           = aPixelSize;
     size->mBaselineAdjust = 0;
     size->mCCMap          = nsnull;
     size->mCharSetInfo    = aCharSetInfo;
@@ -3776,6 +3806,8 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
     char* p = name + 1;
     int scalable = 0;
     PRBool outline_scaled = PR_FALSE;
+    int    resX = -1,
+           resY = -1;
 
 #ifdef FIND_FIELD
 #undef FIND_FIELD
@@ -3822,10 +3854,14 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
       scalable = 1;
     }
     FIND_FIELD(resolutionX);
+    resX = atoi(resolutionX);
+    NS_ASSERTION(!(resolutionX[0] != '0' && resX == 0), "atoi(resolutionX) failure.");
     if (resolutionX[0] == '0') {
       scalable = 1;
     }
     FIND_FIELD(resolutionY);
+    resY = atoi(resolutionY);
+    NS_ASSERTION(!(resolutionY[0] != '0' && resY == 0), "atoi(resolutionY) failure.");
     if (resolutionY[0] == '0') {
       scalable = 1;
     }
@@ -4030,20 +4066,23 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaled
         continue;
     }
   
-    // get pixel size before the string is changed
-    int pixels = atoi(pixelSize);
+     // get pixel size before the string is changed
+    int pixels,
+        points;
 
-    p = name;
-    while (p < charSetName) {
-      if (!*p) {
-        *p = '-';
-      }
-      p++;
-    }
- 
+    pixels = atoi(pixelSize);
+    points = atoi(pointSize);
+
     if (pixels) {
-      if (!NodeAddSize(stretch, pixels, name, charSetInfo))
+      if (!NodeAddSize(stretch, pixels, points, 1.0f, resX, resY, name, familyName, weightName, 
+                  slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
         continue;
+
+      if (gScaleBitmapFontsWithDevScale && (gDevScale > 1.0f)) {
+        if (!NodeAddSize(stretch, pixels, points, gDevScale, resX, resY, name, familyName, weightName, 
+                    slant, setWidth, addStyle, spacing, charSetName, charSetInfo))
+          continue;
+      }
     }
   }
   XFreeFontNames(list);
@@ -4091,13 +4130,12 @@ FindFamily(nsCString* aName)
 }
 
 nsresult
-nsFontMetricsGTK::FamilyExists(const nsString& aName)
+nsFontMetricsGTK::FamilyExists(nsIDeviceContext *aDevice, const nsString& aName)
 {
   if (!gInitialized) {
-    nsresult res = InitGlobals();
-    if (NS_FAILED(res)) {
+    nsresult res = InitGlobals(aDevice);
+    if (NS_FAILED(res))
       return res;
-    }
   }
 
   if (!IsASCIIFontName(aName)) {
