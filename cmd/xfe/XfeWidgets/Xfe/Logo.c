@@ -573,7 +573,7 @@ AnimationTimeout(XtPointer closure,XtIntervalId * id)
 		return;
 	}
 
-	XtVaGetValues(w,XmNcurrentPixmapIndex,&i,NULL);
+    i = (Cardinal) XfeGetValue(w,XmNcurrentPixmapIndex);
 
 	i++;
 
@@ -582,7 +582,7 @@ AnimationTimeout(XtPointer closure,XtIntervalId * id)
 		i = 0;
 	}
 
-	XtVaSetValues(w,XmNcurrentPixmapIndex,i,NULL);
+    XfeSetValue(w,XmNcurrentPixmapIndex,i);
 
     /* Invoke animation Callbacks */
     _XfeInvokeCallbacks(w,lp->animation_callback,XmCR_ANIMATION,NULL,True);
@@ -679,6 +679,6 @@ XfeLogoAnimationReset(Widget w)
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsLogo(w) );
 
-	XtVaSetValues(w,XmNcurrentPixmapIndex,0,NULL);
+    XfeSetValue(w,XmNcurrentPixmapIndex,0);
 }
 /*----------------------------------------------------------------------*/

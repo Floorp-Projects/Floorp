@@ -168,7 +168,7 @@ XfeOptionMenuSetItem(Widget menu,Cardinal i)
 	{
 		if ((i >= 0) && (i < _XfemNumChildren(submenu)))
 		{
-			XtVaSetValues(menu,XmNmenuHistory,_XfeChildrenIndex(submenu,i),NULL);
+			XfeSetValue(menu,XmNmenuHistory,(XtArgVal) _XfeChildrenIndex(submenu,i));
 		}
 	}
 }
@@ -397,7 +397,7 @@ XfeDestroyMenuWidgetTree(WidgetList	children,
 		WidgetList	more_children = NULL;
 		int			num_more_children = 0;
 		
-		XtVaGetValues (children[i], XmNsubMenuId, &submenu, 0);
+		submenu = (Widget) XfeGetValue(children[i],XmNsubMenuId);
 
 		/* If a submenu exists, then this item has descendants */
 		if (submenu) 

@@ -47,9 +47,7 @@ XfeBorderWidth(Widget w)
 
 #if DEBUG_DIMENSIONS
 	{
-		Dimension border_width;
-
-		XtVaGetValues(w,XmNborderWidth,&border_width,NULL);
+		Dimension border_width = (Dimension) XfeGetValue(w,XmNborderWidth);
 
 		assert( border_width == _XfeBorderWidth(w) );
 	}
@@ -65,9 +63,7 @@ XfeWidth(Widget w)
 
 #if DEBUG_DIMENSIONS
 	{
-		Dimension width;
-
-		XtVaGetValues(w,XmNwidth,&width,NULL);
+		Dimension width = (Dimension) XfeGetValue(w,XmNwidth);
 
 		assert( width == _XfeWidth(w) );
 	}
@@ -83,9 +79,7 @@ XfeHeight(Widget w)
 
 #if DEBUG_DIMENSIONS
 	{
-		Dimension height;
-
-		XtVaGetValues(w,XmNheight,&height,NULL);
+		Dimension height = (Dimension) XfeGetValue(w,XmNheight);
 
 		assert( height == _XfeHeight(w) );
 	}

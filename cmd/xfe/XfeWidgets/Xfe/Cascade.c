@@ -504,7 +504,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 
 	cp->sub_menu_id = XmCreatePopupMenu(nw,SUB_MENU_ID_NAME,xargs,n);
 
-	XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_IGNORE,NULL);
+    XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_IGNORE);
 
 	/* Add ungrab event handler to cascade button */
 	XtInsertEventHandler(nw,
@@ -537,7 +537,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	cp->default_menu_cursor	= XmGetMenuCursor(XtDisplay(nw));
 
 	/* Update the tear model */
-	XtVaSetValues(cp->sub_menu_id,XmNtearOffModel,TEAR_MODEL(cp),NULL);
+    XfeSetValue(cp->sub_menu_id,XmNtearOffModel,TEAR_MODEL(cp));
 
     /* Update the torn shell title */
 	if (cp->torn_shell_title)
@@ -549,7 +549,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		cp->torn_shell_title = (String) XtNewString(XtName(nw));
 	}
 
-	XtVaSetValues(POPUP_SHELL(cp),XmNtitle,cp->torn_shell_title,NULL);
+    XfeSetValue(POPUP_SHELL(cp),XmNtitle,(XtArgVal)cp->torn_shell_title);
 
     /* Finish of initialization */
     _XfePrimitiveChainInitialize(rw,nw,xfeCascadeWidgetClass);
@@ -605,7 +605,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     /* allow_tear_off */
     if (np->allow_tear_off != op->allow_tear_off)
     {
-		XtVaSetValues(np->sub_menu_id,XmNtearOffModel,TEAR_MODEL(np),NULL);
+		XfeSetValue(np->sub_menu_id,XmNtearOffModel,TEAR_MODEL(np));
 	}
 
     /* torn_shell_title */
@@ -625,7 +625,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			np->torn_shell_title = (String) XtNewString(" ");
 		}
 
-		XtVaSetValues(POPUP_SHELL(np),XmNtitle,np->torn_shell_title,NULL);
+		XfeSetValue(POPUP_SHELL(np),XmNtitle,(XtArgVal) np->torn_shell_title);
 	}
 
     /* sub_menu_alignment */
@@ -1016,7 +1016,7 @@ Arm(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 	/* Install the mapping delay timer if needed */
 	if (cp->mapping_delay)
 	{
-		XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_ACCEPT,NULL);
+		XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_ACCEPT);
 	
 		cp->delay_timer_id = XtAppAddTimeOut(XtWidgetToApplicationContext(w),
 											 cp->mapping_delay,
@@ -1026,7 +1026,8 @@ Arm(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 	/* If no mapping delay is given, post the submenu right away */
 	else
 	{
-		XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_ACCEPT,NULL);
+		XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_ACCEPT);
+
 		Post(w,event,NULL,0);
 	}
 }
@@ -1036,7 +1037,7 @@ Activate(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeCascadePart *	cp = _XfeCascadePart(w);
 
-	XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_IGNORE,NULL);
+	XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_IGNORE);
 
 	_XfeButtonActivate(w,event,params,nparams);
 }
@@ -1054,7 +1055,7 @@ Disarm(Widget w,XEvent *event,char **params,Cardinal *nparams)
 
 	_XfeButtonDisarm(w,event,params,nparams);
 
-	XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_IGNORE,NULL);
+	XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_IGNORE);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1159,7 +1160,7 @@ SubMenuEH(Widget		shell,
 	{
 	case MapNotify:
 
-		XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_IGNORE,NULL);
+		XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_IGNORE);
 
 		/* Submenu is now popped up */
 		cp->popped_up = True;
@@ -1173,7 +1174,7 @@ SubMenuEH(Widget		shell,
 
 		Disarm(w,NULL,NULL,0);
 		
-		XtVaSetValues(cp->sub_menu_id,XmNmenuPost,POPUP_IGNORE,NULL);
+		XfeSetValue(cp->sub_menu_id,XmNmenuPost,(XtArgVal) POPUP_IGNORE);
 
 		/* Submenu is now popped down */
 		cp->popped_up = False;

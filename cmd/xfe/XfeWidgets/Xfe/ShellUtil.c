@@ -206,10 +206,8 @@ XfeShellGetGeometryFromResource(Widget			shell,
 
 	if (_XfeIsAlive(shell))
 	{
-		String geometry;
+		String geometry = (String) XfeGetValue(shell,XmNgeometry);
 
-		XtVaGetValues(shell,XmNgeometry,&geometry,NULL);
-		
 		if (geometry)
 		{
 			mask = XParseGeometry(geometry,&x,&y,&width,&height);
@@ -295,7 +293,7 @@ XfeShellSetIconicState(Widget shell,Boolean state)
 	{
 		WMShellWidget wms = (WMShellWidget) shell;
 		
-		XtVaSetValues(shell,XtNiconic,state,NULL);
+        XfeSetValue(shell,XtNiconic,state);
 		
 		wms->wm.wm_hints.flags |= StateHint;
 		wms->wm.wm_hints.initial_state = (state ? IconicState : NormalState);
@@ -311,7 +309,7 @@ XfeShellGetIconicState(Widget shell)
 
 	if (_XfeIsAlive(shell))
 	{
-		XtVaGetValues(shell,XtNiconic,&state,NULL);
+		state = (Boolean) XfeGetValue(shell,XtNiconic);
 	}
 
 	return state;

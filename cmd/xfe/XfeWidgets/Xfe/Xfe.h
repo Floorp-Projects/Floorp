@@ -412,6 +412,21 @@ XfeRepTypeRegister				(String				rep_type,
 								 String *			names);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* SetValue / GetValue utilities                                        */
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeSetValue						(Widget				w,
+								 String				resource_name,
+								 XtArgVal			value);
+/*----------------------------------------------------------------------*/
+extern XtArgVal
+XfeGetValue						(Widget				w,
+								 String				resource_name);
+/*----------------------------------------------------------------------*/
+
 XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Xfe.h			*/

@@ -157,11 +157,10 @@ XfeGetParentDialog(Widget w)
 			Widget			newmainw = popup;
 			Widget			popup_child = _XfeChildrenIndex(popup,0);
 			unsigned char	dialog_style = XmDIALOG_MODELESS;
-			
-			XtVaGetValues(popup_child,
-						  XmNdialogStyle, &dialog_style,
-						  NULL);
-			
+
+            dialog_style = (unsigned char) XfeGetValue(popup_child,
+													   XmNdialogStyle);
+
 			if (dialog_style != XmDIALOG_MODELESS)
 			{
 				mainw = newmainw;

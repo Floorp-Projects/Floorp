@@ -109,7 +109,7 @@ XfeUserData(Widget w)
     }
     else if (XmIsGadget(w))
     {
-		XtVaGetValues(w,XmNuserData,&user_data,NULL);
+		user_data = (XtPointer) XfeGetValue(w,XmNuserData);
     }
     
     return user_data;
@@ -769,5 +769,42 @@ XfeAddActions(Widget w,XtActionList actions,Cardinal num_actions)
 	assert( num_actions > 0 );
 
 	XtAppAddActions(XtWidgetToApplicationContext(w),actions,num_actions);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* SetValue / GetValue utilities                                        */
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeSetValue(Widget w,String resource_name,XtArgVal value)
+/*----------------------------------------------------------------------*/
+{
+	Arg av[1];
+	
+	assert( _XfeIsAlive(w) ) ;
+	assert( resource_name != NULL );
+
+	XtSetArg(av[0],resource_name,value);
+	
+	XtSetValues(w,av,1);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ XtArgVal
+XfeGetValue(Widget w,String resource_name)
+/*----------------------------------------------------------------------*/
+{
+	XtArgVal	value = 0;
+	Arg			av[1];
+	
+	assert( _XfeIsAlive(w) ) ;
+	assert( resource_name != NULL );
+
+	XtSetArg(av[0],resource_name,&value);
+	
+	XtGetValues(w,av,1);
+
+	return value;
 }
 /*----------------------------------------------------------------------*/

@@ -252,7 +252,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeFontChooserPart *	fp = _XfeFontChooserPart(nw);
     XfeCascadePart *		cp = _XfeCascadePart(nw);
 
-	XtVaSetValues(cp->sub_menu_id,XmNradioBehavior,True,NULL);
+    XfeSetValue(cp->sub_menu_id,XmNradioBehavior,True);
 
 	UpdateItems(nw);
 	UpdateLabels(nw);
@@ -399,7 +399,7 @@ UpdateFonts(Widget w)
 
 		if (_XfeIsAlive(item) && font_list)
 		{
-			XtVaSetValues(item,XmNfontList,font_list,NULL);
+			XfeSetValue(item,XmNfontList,font_list);
 		}
 	}
 }
@@ -418,7 +418,7 @@ UpdateLabels(Widget w)
 
 		if (_XfeIsAlive(item) && xm_string)
 		{
-			XtVaSetValues(item,XmNlabelString,xm_string,NULL);
+			XfeSetValue(item,XmNlabelString,xm_string);
 		}
 	}
 }

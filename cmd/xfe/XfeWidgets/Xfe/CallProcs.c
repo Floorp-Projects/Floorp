@@ -133,7 +133,7 @@ _XfeCallProcOrientationCursor(Widget w,int offset,XrmValue * value)
 	 * Determine the orientation.  Obviously, this will only work for 
 	 * widgets that actually have a XmNorientation resource.
 	 */
-	XtVaGetValues(w,XmNorientation,&orientation,NULL);
+    orientation = (unsigned char) XfeGetValue(w,XmNorientation);
 
 	cursor_name = (orientation == XmVERTICAL) ? VER_CURSOR : HOR_CURSOR;
 

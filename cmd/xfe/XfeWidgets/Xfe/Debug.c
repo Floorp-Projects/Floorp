@@ -207,9 +207,7 @@ XfeDebugRepTypeIndexToValue(String rep_type,Cardinal i)
 /* extern */ String
 XfeDebugGetWidgetString(Widget w,String name)
 {
-	XmString xmstr = NULL;
-
-	XtVaGetValues(w,name,&xmstr,NULL);
+	XmString xmstr = (XmString) XfeGetValue(w,name);
 
 	if (xmstr)
 	{
