@@ -241,9 +241,9 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg
 }
 
 void
-nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL,
-                          PRInt32 aStatus)
+nsWebCrawler::EndLoadURL(nsIWebShell* aShell,
+                         const PRUnichar* aURL,
+                         PRInt32 aStatus)
 {
   if (nsnull == aURL) {
     return;
