@@ -303,6 +303,12 @@ protected:
    */
   already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
+  /**
+   * MaybeSubmitForm looks for a submit input or a single text control
+   * and submits the form if either is present.
+   */
+  nsresult MaybeSubmitForm(nsIPresContext* aPresContext);
+  
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
@@ -1012,6 +1018,77 @@ nsHTMLInputElement::GetRadioGroupContainer()
 }
 
 nsresult
+nsHTMLInputElement::MaybeSubmitForm(nsIPresContext* aPresContext)
+{
+  if (!mForm) {
+    // Nothing to do here.
+    return NS_OK;
+  }
+  
+  // Find the first submit control in elements[]
+  // and also check how many text controls we have in the form
+  nsCOMPtr<nsIContent> submitControl;
+  PRInt32 numTextControlsFound = 0;
+
+  nsCOMPtr<nsISimpleEnumerator> formControls;
+  mForm->GetControlEnumerator(getter_AddRefs(formControls));
+
+  nsCOMPtr<nsISupports> currentControlSupports;
+  nsCOMPtr<nsIFormControl> currentControl;
+  PRBool hasMoreElements;
+  nsresult rv;
+  while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
+         hasMoreElements) {
+    rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    currentControl = do_QueryInterface(currentControlSupports);
+    if (currentControl) {
+      PRInt32 type = currentControl->GetType();
+      if (!submitControl &&
+          (type == NS_FORM_INPUT_SUBMIT ||
+           type == NS_FORM_BUTTON_SUBMIT ||
+           type == NS_FORM_INPUT_IMAGE)) {
+        submitControl = do_QueryInterface(currentControl);
+        // We know as soon as we find a submit control that it no
+        // longer matters how many text controls there are--we are
+        // going to fire the onClick handler.
+        break;
+      } else if (type == NS_FORM_INPUT_TEXT ||
+                 type == NS_FORM_INPUT_PASSWORD) {
+        numTextControlsFound++;
+      }
+    }
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+            
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (shell) {
+    if (submitControl) {
+      // Fire the button's onclick handler and let the button handle
+      // submitting the form.
+      nsGUIEvent event;
+      event.eventStructType = NS_MOUSE_EVENT;
+      event.message = NS_MOUSE_LEFT_CLICK;
+      event.widget = nsnull;
+      nsEventStatus status = nsEventStatus_eIgnore;
+      shell->HandleDOMEventWithTarget(submitControl, &event, &status);
+    } else if (numTextControlsFound == 1) {
+      // If there's only one text control, just submit the form
+      nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
+      nsFormEvent event;
+      event.eventStructType = NS_FORM_EVENT;
+      event.message         = NS_FORM_SUBMIT;
+      event.originator      = nsnull;
+      nsEventStatus status  = nsEventStatus_eIgnore;
+      shell->HandleDOMEventWithTarget(form, &event, &status);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
 {
   //
@@ -1586,22 +1663,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               {
                 // Checkbox and Radio try to submit on Enter press
                 if (keyEvent->keyCode != NS_VK_SPACE) {
-                  // Generate a submit event targeted at the form content
-                  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+                  MaybeSubmitForm(aPresContext);
 
-                  if (form) {
-                    nsIPresShell *shell = aPresContext->GetPresShell();
-                    if (shell) {
-                      nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
-
-                      nsFormEvent event;
-                      event.eventStructType = NS_FORM_EVENT;
-                      event.message         = NS_FORM_SUBMIT;
-                      event.originator      = formControl;
-                      nsEventStatus status  = nsEventStatus_eIgnore;
-                      shell->HandleDOMEventWithTarget(form, &event, &status);
-                    }
-                  }
                   break;  // If we are submitting, do not send click event
                 }
                 // else fall through and treat Space like click...
@@ -1659,68 +1722,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               }
             }
 
-            // mForm is null if the event handler (CheckFireOnChange above)
-            // removed us from the document (bug 194582).
-            if (mForm) {
-              // Find the first submit control in elements[]
-              // and also check how many text controls we have in the form
-              nsCOMPtr<nsIContent> submitControl;
-              PRInt32 numTextControlsFound = 0;
-
-              nsCOMPtr<nsISimpleEnumerator> formControls;
-              mForm->GetControlEnumerator(getter_AddRefs(formControls));
-
-              nsCOMPtr<nsISupports> currentControlSupports;
-              nsCOMPtr<nsIFormControl> currentControl;
-              PRBool hasMoreElements;
-              while (NS_SUCCEEDED(rv = formControls->HasMoreElements(&hasMoreElements)) &&
-                     hasMoreElements) {
-                rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                currentControl = do_QueryInterface(currentControlSupports);
-                if (currentControl) {
-                  PRInt32 type = currentControl->GetType();
-                  if (!submitControl &&
-                      (type == NS_FORM_INPUT_SUBMIT ||
-                       type == NS_FORM_BUTTON_SUBMIT ||
-                       type == NS_FORM_INPUT_IMAGE)) {
-                    submitControl = do_QueryInterface(currentControl);
-                    // We know as soon as we find a submit control that it no
-                    // longer matters how many text controls there are--we are
-                    // going to fire the onClick handler.
-                    break;
-                  } else if (type == NS_FORM_INPUT_TEXT ||
-                             type == NS_FORM_INPUT_PASSWORD) {
-                    numTextControlsFound++;
-                  }
-                }
-              }
-              NS_ENSURE_SUCCESS(rv, rv);
-            
-              nsIPresShell *shell = aPresContext->GetPresShell();
-              if (shell) {
-                if (submitControl) {
-                 // Fire the button's onclick handler and let the button handle
-                 // submitting the form.
-                  nsGUIEvent event;
-                  event.eventStructType = NS_MOUSE_EVENT;
-                  event.message = NS_MOUSE_LEFT_CLICK;
-                  event.widget = nsnull;
-                  nsEventStatus status = nsEventStatus_eIgnore;
-                  shell->HandleDOMEventWithTarget(submitControl, &event, &status);
-                } else if (numTextControlsFound == 1) {
-                  // If there's only one text control, just submit the form
-                  nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
-                  nsFormEvent event;
-                  event.eventStructType = NS_FORM_EVENT;
-                  event.message         = NS_FORM_SUBMIT;
-                  event.originator      = nsnull;
-                  nsEventStatus status  = nsEventStatus_eIgnore;
-                  shell->HandleDOMEventWithTarget(form, &event, &status);
-                }
-              }
-            }
+            rv = MaybeSubmitForm(aPresContext);
+            NS_ENSURE_SUCCESS(rv, rv);
           }
 
         } break; // NS_KEY_PRESS || NS_KEY_UP
