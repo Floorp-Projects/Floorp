@@ -1093,25 +1093,25 @@ function cli_icommand (e)
 client.onInputCSS =
 function cli_icss (e)
 {
-    if (!e.inputData)
-        return false;
-
-    e.inputData = stringTrim(e.inputData);
+    if (e.inputData)
+    {
+        e.inputData = stringTrim(e.inputData);
     
-    if (e.inputData.search(/^light$/i) != -1)
-        e.inputData = "chrome://chatzilla/skin/output-light.css";
-    else if (e.inputData.search(/^dark$/i) != -1)
-        e.inputData = "chrome://chatzilla/skin/output-dark.css";
-    else if (e.inputData.search(/^default$/i) != -1)
-        e.inputData = "chrome://chatzilla/skin/output-default.css";
-    else if (e.inputData.search(/^none$/i) != -1)
-        e.inputData = "chrome://chatzilla/content/output-base.css";
+        if (e.inputData.search(/^light$/i) != -1)
+            e.inputData = "chrome://chatzilla/skin/output-light.css";
+        else if (e.inputData.search(/^dark$/i) != -1)
+            e.inputData = "chrome://chatzilla/skin/output-dark.css";
+        else if (e.inputData.search(/^default$/i) != -1)
+            e.inputData = "chrome://chatzilla/skin/output-default.css";
+        else if (e.inputData.search(/^none$/i) != -1)
+            e.inputData = "chrome://chatzilla/content/output-base.css";
     
-    client.currentObject.display (getMsg("cli_icss", e.inputData), "INFO");
+        frames[0].document.location.href =
+            "chrome://chatzilla/content/outputwindow.html?" + e.inputData;
+        client.DEFAULT_STYLE = e.inputData;
+    }
     
-    frames[0].document.location.href =
-        "chrome://chatzilla/content/outputwindow.html?" + e.inputData;
-    client.DEFAULT_STYLE = e.inputData;
+    client.currentObject.display (getMsg("cli_icss", client.DEFAULT_STYLE), "INFO");
     return true;
 }
 
