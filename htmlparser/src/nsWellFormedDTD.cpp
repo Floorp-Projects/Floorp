@@ -35,7 +35,6 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-#include "nsXMLTokenizer.h"
 #include "nsExpatTokenizer.h"
 
 #include "prenv.h"  //this is here for debug reasons...
