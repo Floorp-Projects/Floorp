@@ -56,9 +56,10 @@ HTML_PASSEDMSG=Passed
 
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
-TMPFILES="$TMPFILES $RSH_FILE $WARNINGLIST"
+TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
 RSH_WAIT_TIME=40 #maximum time allowed for the 2 rsh to finish...
-TOTAL_TESTS=106
+#TOTAL_TESTS=106
+TOTAL_TESTS=122
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
@@ -120,9 +121,10 @@ do
                  -e "s/WINDOWS-OS-LINE:/${QA_SYS}/" 
         fi
     else
-        watch_rsh start $QA_SYS &
+        REM_SYSNAME=$QA_SYS
+        watch_rsh start $REM_SYSNAME &
         qa_stat_get_sysinfo $QA_SYS
-        watch_rsh stop $QA_SYS 
+        watch_rsh stop $REM_SYSNAME 
         echo $QA_OS_STRING >>$PLATFORMLIST
                           # use later for missing list
     fi
