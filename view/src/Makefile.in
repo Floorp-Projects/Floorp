@@ -51,7 +51,6 @@ CPPSRCS		= \
 		nsScrollingView.cpp \
 		nsScrollPortView.cpp \
 		nsViewManager.cpp \
-		nsViewManager2.cpp \
 		nsViewFactory.cpp \
 		$(NULL)
 
