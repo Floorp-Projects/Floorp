@@ -44,6 +44,7 @@ typedef LONG (WINAPI *NS_SetWindowLong) (HWND, int, LONG);
 typedef LRESULT (WINAPI *NS_SendMessage) (HWND, UINT, WPARAM, LPARAM )  ;
 typedef LONG (WINAPI *NS_DispatchMessage) (CONST MSG *);
 typedef BOOL (WINAPI *NS_GetMessage) (LPMSG, HWND, UINT, UINT);
+typedef BOOL (WINAPI *NS_PeekMessage) (LPMSG, HWND, UINT, UINT, UINT);
 typedef BOOL (WINAPI *NS_GetOpenFileName) (LPOPENFILENAMEW);
 typedef BOOL (WINAPI *NS_GetSaveFileName) (LPOPENFILENAMEW);
 typedef int (WINAPI *NS_GetClassName) (HWND, LPWSTR, int);

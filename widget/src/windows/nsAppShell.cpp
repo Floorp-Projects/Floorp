@@ -95,8 +95,13 @@ BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
 {
   MSG msg1, msg2, *lpMsg;
   BOOL b1, b2;
+#ifdef MOZ_UNICODE
+  b1 = nsToolkit::mPeekMessage(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
+  b2 = nsToolkit::mPeekMessage(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
+#else
   b1 = ::PeekMessage(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
   b2 = ::PeekMessage(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
+#endif /* MOZ_UNICODE */
   if (b1 || b2) {
     if (b1 && b2) {
       if (msg1.time < msg2.time)
@@ -107,7 +112,11 @@ BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
       lpMsg = &msg1;
     else
       lpMsg = &msg2;
+#ifdef MOZ_UNICODE
+    return nsToolkit::mPeekMessage(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
+#else
     return ::PeekMessage(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
+#endif /* MOZ_UNICODE */
   }
 
   return false;
@@ -132,9 +141,13 @@ NS_METHOD nsAppShell::Run(void)
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
      if (PeekKeyAndIMEMessage(&msg, NULL) ||
+#ifdef MOZ_UNICODE
+         nsToolkit::mPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+         nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+#else
          ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
          ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-
+#endif /* MOZ_UNICODE */
       keepGoing = (msg.message != WM_QUIT);
 
       if (keepGoing != 0) {
@@ -142,7 +155,11 @@ NS_METHOD nsAppShell::Run(void)
 //      if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
 //#endif
         TranslateMessage(&msg);
+#ifdef MOZ_UNICODE
+        nsToolkit::mDispatchMessage(&msg);
+#else
         ::DispatchMessage(&msg);
+#endif /* MOZ_UNICODE */
         if (mDispatchListener)
           mDispatchListener->AfterDispatch();
       }
@@ -154,7 +171,11 @@ NS_METHOD nsAppShell::Run(void)
         do {
           timerManager->FireNextIdleTimer();
           timerManager->HasIdleTimers(&hasTimers);
+#ifdef MOZ_UNICODE
+        } while (hasTimers && !nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+#else
         } while (hasTimers && !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+#endif
       } else {
 
         if (!gKeepGoing) {
@@ -199,9 +220,13 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
      if (PeekKeyAndIMEMessage(&msg, NULL) ||
+#ifdef MOZ_UNICODE
+        nsToolkit::mPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+#else
         ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
         ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-
+#endif /* MOZ_UNICODE */
       gotMessage = true;
     } else {
       PRBool hasTimers;
@@ -210,7 +235,11 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
         do {
           timerManager->FireNextIdleTimer();
           timerManager->HasIdleTimers(&hasTimers);
+#ifdef MOZ_UNICODE
+        } while (hasTimers && !nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+#else
         } while (hasTimers && !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+#endif /* MOZ_UNICODE */
       } else {
         // Block and wait for any posted application message
         ::WaitMessage();

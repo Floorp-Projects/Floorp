@@ -3015,8 +3015,6 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte )
 {
   wchar_t uniChar;
-  char    charToConvert[3];
-  size_t  length;
 
   if (mIMEIsComposing)  {
     HandleEndComposition();
@@ -3047,31 +3045,44 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
     } 
     else 
     {
-      if (!isMultiByte)	{
-        if (mLeadByte)  {	// mLeadByte is used for keeping the lead-byte of CJK char
-          charToConvert[0] = mLeadByte;
-          charToConvert[1] = LOBYTE(mbcsCharCode);
-          mLeadByte = '\0';
-          length=2;
-        } 
-        else {
-          charToConvert[0] = LOBYTE(mbcsCharCode);
-          if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) {
-            mLeadByte = charToConvert[0];
-            return TRUE;
-          }
-          length=1;
-        }
-      } else  {
-        // SC double-byte punctuation mark in Windows-English is 0x0000aca3
-        uniChar = LOWORD(mbcsCharCode);
-        charToConvert[0] = LOBYTE(uniChar);
-        charToConvert[1] = HIBYTE(uniChar);
-        mLeadByte = '\0';
-        length=2;
-      }
-      ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
-	    &uniChar, 1);
+#ifdef MOZ_UNICODE
+      if (nsToolkit::mIsNT)  { 
+        uniChar = mbcsCharCode; 
+      } 
+      else   
+      { 
+#endif  /* MOZ_UNICODE */
+        char    charToConvert[3]; 
+        size_t  length; 
+ 
+        if (!isMultiByte)	{ 
+          if (mLeadByte)  {	// mLeadByte is used for keeping the lead-byte of CJK char 
+            charToConvert[0] = mLeadByte; 
+            charToConvert[1] = LOBYTE(mbcsCharCode); 
+            mLeadByte = '\0'; 
+            length=2;  
+          } 
+          else { 
+            charToConvert[0] = LOBYTE(mbcsCharCode); 
+            if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) { 
+              mLeadByte = charToConvert[0]; 
+              return TRUE; 
+            } 
+            length=1; 
+          } 
+        } else  { 
+          // SC double-byte punctuation mark in Windows-English is 0x0000aca3 
+          uniChar = LOWORD(mbcsCharCode); 
+          charToConvert[0] = LOBYTE(uniChar); 
+          charToConvert[1] = HIBYTE(uniChar); 
+          mLeadByte = '\0'; 
+          length=2; 
+        }   
+        ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length, 
+          &uniChar, 1); 
+#ifdef MOZ_UNICODE
+      } 
+#endif  /* MOZ_UNICODE */
       virtualKeyCode = 0;
       mIsShiftDown = PR_FALSE;
     }
@@ -5901,7 +5912,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
   int err = 0;
 
 #ifdef MOZ_UNICODE
-  if (nsToolkit::mUseImeApiW) { 
+  if (nsToolkit::mIsNT) { 
     uniChar = MAKEWORD(aByte2, aByte1); 
   } 
   else  { 

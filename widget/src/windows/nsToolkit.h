@@ -93,6 +93,7 @@ protected:
 public:
     static HINSTANCE mDllInstance;
     // OS flag
+    static PRBool    mIsNT;
     static PRBool    mIsWinXP;
     static PRBool    mUseImeApiW;
     static PRBool    mW2KXP_CP936;
@@ -114,6 +115,7 @@ public:
     static NS_SendMessage       mSendMessage;
     static NS_DispatchMessage   mDispatchMessage;
     static NS_GetMessage        mGetMessage;
+    static NS_PeekMessage       mPeekMessage;
     static NS_GetOpenFileName   mGetOpenFileName;
     static NS_GetSaveFileName   mGetSaveFileName;
     static NS_GetClassName      mGetClassName;
