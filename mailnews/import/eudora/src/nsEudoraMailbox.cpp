@@ -29,6 +29,8 @@
 #define	kWhitespace	" \t\b\r\n"
 
 #ifdef IMPORT_DEBUG
+void DUMP_FILENAME( nsIFileSpec *pSpec, PRBool endLine);
+
 void DUMP_FILENAME( nsIFileSpec *pSpec, PRBool endLine)
 {
 	char *pPath = nsnull;
@@ -731,12 +733,12 @@ PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLe
 		tokLen = len - tokStart;
 		if (tokLen) {
 			num = AsciiToLong( pTok, tokLen);
-			if ((tokLen == 3) && (result = IsWeekDayStr( pTok))) {
+			if ((tokLen == 3) && ((result = IsWeekDayStr( pTok)) != 0)) {
 				if (weekDay)
 					return( -1);
 				weekDay = result;
 			}		
-			else if ((tokLen == 3) && (result = IsMonthStr( pTok))) {
+			else if ((tokLen == 3) && ((result = IsMonthStr( pTok)) != 0)) {
 				if (month)
 					return( -1);
 				month = result;
@@ -965,7 +967,7 @@ nsresult nsEudoraMailbox::ExamineAttachment( SimpleBuffer& data)
 	char	quote;
 	PRInt32	cnt;
 	PRInt32	idx = 0;
-	while ((cnt = eudoraAttachLen[idx])) {
+	while ((cnt = eudoraAttachLen[idx]) != 0) {
 		if (!nsCRT::strncmp( eudoraAttachLines[idx], pChar, cnt)) {
 			pData = pChar + cnt;
 			while (((*pData == ' ') || (*pData == '\t')) && (cnt < len)) {
