@@ -76,17 +76,27 @@
        
        
        (%subsection "Left-Side Expressions")
-       (grammar-argument :chi allow-calls no-calls)
+       (production (:left-side-expression :alpha) ((:call-expression :alpha)) left-side-expression-call-expression)
+       (production (:left-side-expression :alpha) (:short-new-expression) left-side-expression-short-new-expression)
        
-       (production (:member-expression :alpha no-calls) ((:primary-expression :alpha)) member-expression-primary-expression)
-       (production (:member-expression :alpha allow-calls) ((:member-expression :alpha no-calls) :arguments) call-expression-call-member-expression)
-       (production (:member-expression :alpha allow-calls) ((:member-expression :alpha allow-calls) :arguments) call-expression-call-call-expression)
-       (production (:member-expression :alpha :chi) ((:member-expression :alpha :chi) [ (:expression normal allow-in) ]) member-expression-array)
-       (production (:member-expression :alpha :chi) ((:member-expression :alpha :chi) \. $identifier) member-expression-property)
-       (production (:member-expression :alpha no-calls) (new (:member-expression normal no-calls) :arguments) member-expression-new)
+       (production (:call-expression :alpha) ((:primary-expression :alpha)) call-expression-primary-expression)
+       (production (:call-expression :alpha) (:full-new-expression) call-expression-full-new-expression)
+       (production (:call-expression :alpha) ((:call-expression :alpha) :member-operator) call-expression-member-operator)
+       (production (:call-expression :alpha) ((:call-expression :alpha) :arguments) call-expression-call)
        
-       (production (:new-expression :alpha) ((:member-expression :alpha no-calls)) new-expression-member-expression)
-       (production (:new-expression :alpha) (new (:new-expression normal)) new-expression-new)
+       (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
+       
+       (production :short-new-expression (new :short-new-subexpression) short-new-expression-new)
+       
+       (production :full-new-subexpression ((:primary-expression normal)) full-new-subexpression-primary-expression)
+       (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression)
+       (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator)
+       
+       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full)
+       (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
+       
+       (production :member-operator ([ (:expression normal allow-in) ]) member-operator-array)
+       (production :member-operator (\. $identifier) member-operator-property)
        
        (production :arguments (\( \)) arguments-empty)
        (production :arguments (\( :argument-list \)) arguments-list)
@@ -94,11 +104,8 @@
        (production :argument-list ((:assignment-expression normal allow-in)) argument-list-one)
        (production :argument-list (:argument-list \, (:assignment-expression normal allow-in)) argument-list-more)
        
-       (production (:left-side-expression :alpha) ((:new-expression :alpha)) left-side-expression-new-expression)
-       (production (:left-side-expression :alpha) ((:member-expression :alpha allow-calls)) left-side-expression-call-expression)
        
-       
-       (%subsection "Postfix Expressions")
+       (%subsection "Postfix Operators")
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha)) postfix-expression-left-side-expression)
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha) ++) postfix-expression-increment)
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha) --) postfix-expression-decrement)
@@ -138,6 +145,7 @@
        
        
        (%subsection "Relational Operators")
+       (exclude (:relational-expression initial no-in))
        (production (:relational-expression :alpha :beta) ((:shift-expression :alpha)) relational-expression-shift)
        (production (:relational-expression :alpha :beta) ((:relational-expression :alpha :beta) < (:shift-expression normal)) relational-expression-less)
        (production (:relational-expression :alpha :beta) ((:relational-expression :alpha :beta) > (:shift-expression normal)) relational-expression-greater)
@@ -148,6 +156,7 @@
        
        
        (%subsection "Equality Operators")
+       (exclude (:equality-expression initial no-in))
        (production (:equality-expression :alpha :beta) ((:relational-expression :alpha :beta)) equality-expression-relational)
        (production (:equality-expression :alpha :beta) ((:equality-expression :alpha :beta) == (:relational-expression normal :beta)) equality-expression-equal)
        (production (:equality-expression :alpha :beta) ((:equality-expression :alpha :beta) != (:relational-expression normal :beta)) equality-expression-not-equal)
@@ -156,30 +165,37 @@
        
        
        (%subsection "Binary Bitwise Operators")
+       (exclude (:bitwise-and-expression initial no-in))
        (production (:bitwise-and-expression :alpha :beta) ((:equality-expression :alpha :beta)) bitwise-and-expression-equality)
        (production (:bitwise-and-expression :alpha :beta) ((:bitwise-and-expression :alpha :beta) & (:equality-expression normal :beta)) bitwise-and-expression-and)
        
+       (exclude (:bitwise-xor-expression initial no-in))
        (production (:bitwise-xor-expression :alpha :beta) ((:bitwise-and-expression :alpha :beta)) bitwise-xor-expression-bitwise-and)
        (production (:bitwise-xor-expression :alpha :beta) ((:bitwise-xor-expression :alpha :beta) ^ (:bitwise-and-expression normal :beta)) bitwise-xor-expression-xor)
        
+       (exclude (:bitwise-or-expression initial no-in))
        (production (:bitwise-or-expression :alpha :beta) ((:bitwise-xor-expression :alpha :beta)) bitwise-or-expression-bitwise-xor)
        (production (:bitwise-or-expression :alpha :beta) ((:bitwise-or-expression :alpha :beta) \| (:bitwise-xor-expression normal :beta)) bitwise-or-expression-or)
        
        
        (%subsection "Binary Logical Operators")
+       (exclude (:logical-and-expression initial no-in))
        (production (:logical-and-expression :alpha :beta) ((:bitwise-or-expression :alpha :beta)) logical-and-expression-bitwise-or)
        (production (:logical-and-expression :alpha :beta) ((:logical-and-expression :alpha :beta) && (:bitwise-or-expression normal :beta)) logical-and-expression-and)
        
+       (exclude (:logical-or-expression initial no-in))
        (production (:logical-or-expression :alpha :beta) ((:logical-and-expression :alpha :beta)) logical-or-expression-logical-and)
        (production (:logical-or-expression :alpha :beta) ((:logical-or-expression :alpha :beta) \|\| (:logical-and-expression normal :beta)) logical-or-expression-or)
        
        
        (%subsection "Conditional Operator")
+       (exclude (:conditional-expression initial no-in))
        (production (:conditional-expression :alpha :beta) ((:logical-or-expression :alpha :beta)) conditional-expression-logical-or)
        (production (:conditional-expression :alpha :beta) ((:logical-or-expression :alpha :beta) ? (:assignment-expression normal :beta) \: (:assignment-expression normal :beta)) conditional-expression-conditional)
        
        
        (%subsection "Assignment Operators")
+       (exclude (:assignment-expression initial no-in))
        (production (:assignment-expression :alpha :beta) ((:conditional-expression :alpha :beta)) assignment-expression-conditional)
        (production (:assignment-expression :alpha :beta) ((:left-side-expression :alpha) = (:assignment-expression normal :beta)) assignment-expression-assignment)
        (production (:assignment-expression :alpha :beta) ((:left-side-expression :alpha) :compound-assignment (:assignment-expression normal :beta)) assignment-expression-compound)
@@ -198,12 +214,13 @@
        
        
        (%subsection "Expressions")
+       (exclude (:expression initial no-in))
        (production (:expression :alpha :beta) ((:assignment-expression :alpha :beta)) expression-assignment)
        (production (:expression :alpha :beta) ((:expression :alpha :beta) \, (:assignment-expression normal :beta)) expression-comma)
        
        (production :optional-expression ((:expression normal allow-in)) optional-expression-expression)
        (production :optional-expression () optional-expression-empty)
-              
+       
        
        (%section "Statements")
        
@@ -384,14 +401,14 @@
 (let ((*visible-modes* nil))
   (depict-rtf-to-local-file
    "JS14.rtf"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *jw*))))
+   #'(lambda (markup-stream)
+       (depict-world-commands markup-stream *jw*))))
 
 (let ((*visible-modes* nil))
   (depict-html-to-local-file
    "JS14.html"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *jw*))
+   #'(lambda (markup-stream)
+       (depict-world-commands markup-stream *jw*))
    "JavaScript 1.4 Grammar"))
 
 (with-local-output (s "JS14.txt") (print-grammar *jg* s))
