@@ -1205,7 +1205,8 @@ done
 
 # Load the list of Makefiles to generate.
 #   To add new Makefiles, edit allmakefiles.sh.
+#   allmakefiles.sh sets the variable, MAKEFILES.
 _topsrcdir=`dirname [$]0`
-MAKEFILES=`$_topsrcdir/allmakefiles.sh`
+. $_topsrcdir/allmakefiles.sh
 
 AC_OUTPUT($MAKEFILES)
