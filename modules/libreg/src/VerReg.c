@@ -630,14 +630,20 @@ static REGERR vr_FindKey(char *component_path, HREG *hreg, RKEY *key)
     if (unixreg != NULL) {
         *hreg = unixreg;
         rootkey = UNIX_ROOT(component_path);
-        err = NR_RegGetKey( *hreg, rootkey, component_path, key );
+        if (rootkey)
+            err = NR_RegGetKey( *hreg, rootkey, component_path, key );
+        else
+            err = REGERR_NOFIND;
     }
     if (unixreg == NULL || err == REGERR_NOFIND ) 
 #endif
     {
         *hreg = vreg;
         rootkey = PATH_ROOT(component_path);
-        err = NR_RegGetKey( *hreg, rootkey, component_path, key );
+        if (rootkey)
+            err = NR_RegGetKey( *hreg, rootkey, component_path, key );
+        else
+            err = REGERR_NOFIND;
     }
 
     return err;
