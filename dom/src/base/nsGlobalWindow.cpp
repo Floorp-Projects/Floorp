@@ -1979,10 +1979,49 @@ GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
 PRBool    
 GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
 {
-  if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    ::JS_DefineProperty(aContext, (JSObject *)mScriptObject, "location",
-                        JSVAL_NULL, nsnull, nsnull, 0);
+  if (JSVAL_IS_STRING(aID)) {
+    if (PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+      ::JS_DefineProperty(aContext, (JSObject *)mScriptObject, "location",
+                          JSVAL_NULL, nsnull, nsnull, 0);
+    }
+    else {
+      PRInt32 count;
+      if (NS_SUCCEEDED(mWebShell->GetChildCount(count)) && count) {
+        nsIWebShell *child = nsnull;
+        nsAutoString name(JS_GetStringBytes(JS_ValueToString(aContext, aID))); 
+        if (NS_SUCCEEDED(mWebShell->FindChildWithName(name.GetUnicode(), child))) {
+          if (child) {
+            JSObject *childObj;
+            //We found a subframe of the right name.  The rest of this is to get its script object.
+            nsIScriptContextOwner *contextOwner;
+            if (NS_SUCCEEDED(child->QueryInterface(kIScriptContextOwnerIID, (void**)&contextOwner))) {
+              nsIScriptGlobalObject *childGlobalObj;
+              if (NS_SUCCEEDED(contextOwner->GetScriptGlobalObject(&childGlobalObj))) {
+                nsIScriptObjectOwner *objOwner;
+                  if (NS_SUCCEEDED(childGlobalObj->QueryInterface(kIScriptObjectOwnerIID, (void**)&objOwner))) {
+                    nsIScriptContext *scriptContext;
+                    childGlobalObj->GetContext(&scriptContext);
+                    if (scriptContext) {
+                      objOwner->GetScriptObject(scriptContext, (void**)&childObj);
+                      NS_RELEASE(scriptContext);
+                    }
+                    NS_RELEASE(objOwner);
+                  }
+                NS_RELEASE(childGlobalObj);
+              }
+              NS_RELEASE(contextOwner);
+            }
+            //Okay, if we now have a childObj, we can define it and proceed.
+            if (childObj) {
+              ::JS_DefineProperty(aContext, (JSObject *)mScriptObject, 
+                                  JS_GetStringBytes(JS_ValueToString(aContext, aID)),
+                                  OBJECT_TO_JSVAL(childObj), nsnull, nsnull, 0);
+            }
+            NS_RELEASE(child);
+          }
+        }
+      }
+    }
   }
 
   return PR_TRUE;

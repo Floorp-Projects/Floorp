@@ -48,8 +48,10 @@ struct nsEvent {
   PRUint8     eventStructType;
   /// See GUI MESSAGES,
   PRUint32    message;              
-  /// in widget relative coordinates
+  /// in widget relative coordinates, modified to be relative to current view in layout.
   nsPoint     point;               
+  // in widget relative coordinates, not modified by layout code.
+  nsPoint     refPoint;               
   /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
   PRUint32    time;                                                
 };
