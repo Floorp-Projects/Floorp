@@ -42,6 +42,7 @@
 //
 
 #define PR_DLL_SUFFIX		""
+#define _PR_LOCAL_THREADS_ONLY
 #define _PR_NO_PREEMPT	1
 
 #include "prinit.h"
