@@ -2112,3 +2112,67 @@ CSmartBrowsingPrefs::InitDialog()
 
 	return CBrowserPropertyPage::InitDialog();
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// CPrivacyPrefs implementation
+
+CPrivacyPrefs::CPrivacyPrefs()
+	: CBrowserPropertyPage(IDD_PRIVACY, HELP_PREFS_BROWSER)
+{
+}
+
+// Initialize member data using XP preferences
+STDMETHODIMP
+CPrivacyPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
+{
+	if (!m_bHasBeenActivated) {
+
+		int32	n;
+
+		PREF_GetIntPref("network.cookie.cookieBehavior", &n);
+		m_nCookieAcceptance = (int)n;
+
+                PREF_GetBoolPref("network.signon.rememberSignons", &m_bRememberSignons);
+                PREF_GetBoolPref("privacy.warn_no_policy", &m_bPrivacyPolicy);
+		PREF_GetBoolPref("network.cookie.warnAboutCookies", &m_bWarnAboutCookies);
+	}
+
+	return CBrowserPropertyPage::Activate(hwndParent, lprc, bModal);
+}
+
+BOOL
+CPrivacyPrefs::DoTransfer(BOOL bSaveAndValidate)
+{
+	RadioButtonTransfer(IDC_RADIO1, m_nCookieAcceptance, bSaveAndValidate);
+	CheckBoxTransfer(IDC_CHECK7, m_bRememberSignons, bSaveAndValidate);
+	CheckBoxTransfer(IDC_CHECK8, m_bPrivacyPolicy, bSaveAndValidate);
+	CheckBoxTransfer(IDC_CHECK9, m_bWarnAboutCookies, bSaveAndValidate);
+	return TRUE;
+}
+
+// Apply changes using XP preferences
+BOOL
+CPrivacyPrefs::ApplyChanges()
+{
+	PREF_SetIntPref("network.cookie.cookieBehavior", (int32)m_nCookieAcceptance);
+        PREF_SetBoolPref("network.signon.rememberSignons", m_bRememberSignons);
+        PREF_SetBoolPref("privacy.warn_no_policy", m_bPrivacyPolicy);
+	PREF_SetBoolPref("network.cookie.warnAboutCookies", m_bWarnAboutCookies);
+	return TRUE;
+}
+
+BOOL
+CPrivacyPrefs::InitDialog()
+{
+        CheckIfLockedPref("network.signon.rememberSignons", IDC_CHECK7);
+        CheckIfLockedPref("privacy.warn_no_policy", IDC_CHECK8);
+
+	if (PREF_PrefIsLocked("network.cookie.cookieBehavior")) {
+		// Disable all the radio buttons in the group
+		DisableRadioButtonGroup(IDC_RADIO1);
+	}
+
+        CheckIfLockedPref("network.cookie.warnAboutCookies", IDC_CHECK9);
+
+	return CBrowserPropertyPage::InitDialog();
+}

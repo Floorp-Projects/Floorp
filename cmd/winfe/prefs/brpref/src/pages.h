@@ -263,6 +263,26 @@ class CSmartBrowsingPrefs : public CBrowserPropertyPage {
 };
 
 /////////////////////////////////////////////////////////////////////////////
+// CPrivacyPrefs
+
+class CPrivacyPrefs : public CBrowserPropertyPage {
+	public:
+		CPrivacyPrefs();
+
+	protected:
+		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
+		BOOL		 DoTransfer(BOOL bSaveAndValidate);
+		BOOL		 ApplyChanges();
+		BOOL		 InitDialog();
+
+	private:
+		int		m_nCookieAcceptance;
+		BOOL	m_bRememberSignons;
+		BOOL	m_bPrivacyPolicy;
+		BOOL	m_bWarnAboutCookies;
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // CAdvancedPrefs
 
 class CAdvancedPrefs : public CBrowserPropertyPage {
@@ -281,10 +301,6 @@ class CAdvancedPrefs : public CBrowserPropertyPage {
 		BOOL	m_bEnableJavaScript;
 		BOOL	m_bEnableStyleSheets;
 		BOOL	m_bSendEmailAddressForFTPPassword;
-		int		m_nCookieAcceptance;
-		BOOL	m_bRememberSignons;
-		BOOL	m_bPrivacyPolicy;
-		BOOL	m_bWarnAboutCookies;
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -152,7 +152,7 @@ IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 256, 190
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",-1,7,7,242,106,WS_GROUP
+    GROUPBOX        "",-1,7,7,242,82,WS_GROUP
     CONTROL         "Automatically load &images",IDC_CHECK1,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,18,97,10
     CONTROL         "Enable &Java",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
@@ -164,19 +164,26 @@ BEGIN
     CONTROL         "Send &email address as anonymous FTP password",
                     IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,70,
                     172,10
+END
+
+IDD_PRIVACY DIALOG DISCARDABLE  0, 0, 256, 190
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Privacy",-1,7,7,242,39,WS_GROUP
     CONTROL         "Save Logins and Passwords",IDC_CHECK7,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,17,83,150,10
-    CONTROL         "Warn me if server has no privacy policy",IDC_CHECK8,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,17,96,150,10
-    GROUPBOX        "Cookies",-1,7,119,242,72
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,18,150,10
+    CONTROL         "Warn me if server has no privacy policy",IDC_CHECK8,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,31,150,10
+    GROUPBOX        "Cookies",-1,7,50,242,65
     CONTROL         "&Accept all cookies",IDC_RADIO1,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,130,74,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,61,74,10
     CONTROL         "Accept &only cookies that get sent back to the originating server",
-                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,143,215,10
+                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,17,74,215,10
     CONTROL         "&Disable cookies",IDC_RADIO3,"Button",
-                    BS_AUTORADIOBUTTON,17,156,66,10
+                    BS_AUTORADIOBUTTON,17,87,66,10
     CONTROL         "&Warn me before accepting a cookie",IDC_CHECK9,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,18,174,139,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,17,100,139,10
 END
 
 IDD_CACHE DIALOG DISCARDABLE  0, 0, 256, 190
@@ -632,6 +639,15 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 183
     END
+
+    IDD_PRIVACY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 183
+    END
+
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -811,6 +827,7 @@ BEGIN
     IDS_NUMERIC_ONLY        "Please enter numeric digits only."
     IDS_MORE_DISK_SPACE     "More disk space"
     IDD_SMARTBROWSING       "Smart Browsing\nConfigure browsing aids"
+    IDD_PRIVACY             "Privacy\nEstablish your level of privacy protection"
 END
 
 #ifdef MOZ_SMARTUPDATE

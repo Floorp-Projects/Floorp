@@ -69,15 +69,6 @@ CAdvancedPrefs::InitDialog()
 	CheckIfLockedPref("javascript.enabled", IDC_CHECK3);
 	CheckIfLockedPref("browser.enable_style_sheets", IDC_CHECK4);
 	CheckIfLockedPref("security.email_as_ftp_password", IDC_CHECK6);
-        CheckIfLockedPref("network.signon.rememberSignons", IDC_CHECK7);
-        CheckIfLockedPref("privacy.warn_no_policy", IDC_CHECK8);
-
-	if (PREF_PrefIsLocked("network.cookie.cookieBehavior")) {
-		// Disable all the radio buttons in the group
-		DisableRadioButtonGroup(IDC_RADIO1);
-	}
-
-        CheckIfLockedPref("network.cookie.warnAboutCookies", IDC_CHECK9);
 
 	return CBrowserPropertyPage::InitDialog();
 }
@@ -92,15 +83,6 @@ CAdvancedPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
 		PREF_GetBoolPref("javascript.enabled", &m_bEnableJavaScript);
 		PREF_GetBoolPref("browser.enable_style_sheets", &m_bEnableStyleSheets);
 		PREF_GetBoolPref("security.email_as_ftp_password", &m_bSendEmailAddressForFTPPassword);
-
-		int32	n;
-
-		PREF_GetIntPref("network.cookie.cookieBehavior", &n);
-		m_nCookieAcceptance = (int)n;
-
-                PREF_GetBoolPref("network.signon.rememberSignons", &m_bRememberSignons);
-                PREF_GetBoolPref("privacy.warn_no_policy", &m_bPrivacyPolicy);
-		PREF_GetBoolPref("network.cookie.warnAboutCookies", &m_bWarnAboutCookies);
 	}
 
 	return CBrowserPropertyPage::Activate(hwndParent, lprc, bModal);
@@ -114,10 +96,6 @@ CAdvancedPrefs::DoTransfer(BOOL bSaveAndValidate)
 	CheckBoxTransfer(IDC_CHECK3, m_bEnableJavaScript, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK4, m_bEnableStyleSheets, bSaveAndValidate);
 	CheckBoxTransfer(IDC_CHECK6, m_bSendEmailAddressForFTPPassword, bSaveAndValidate);
-	RadioButtonTransfer(IDC_RADIO1, m_nCookieAcceptance, bSaveAndValidate);
-	CheckBoxTransfer(IDC_CHECK7, m_bRememberSignons, bSaveAndValidate);
-	CheckBoxTransfer(IDC_CHECK8, m_bPrivacyPolicy, bSaveAndValidate);
-	CheckBoxTransfer(IDC_CHECK9, m_bWarnAboutCookies, bSaveAndValidate);
 	return TRUE;
 }
 
@@ -130,10 +108,6 @@ CAdvancedPrefs::ApplyChanges()
 	PREF_SetBoolPref("javascript.enabled", m_bEnableJavaScript);
 	PREF_SetBoolPref("browser.enable_style_sheets", m_bEnableStyleSheets);
 	PREF_SetBoolPref("security.email_as_ftp_password", m_bSendEmailAddressForFTPPassword);
-	PREF_SetIntPref("network.cookie.cookieBehavior", (int32)m_nCookieAcceptance);
-        PREF_SetBoolPref("network.signon.rememberSignons", m_bRememberSignons);
-        PREF_SetBoolPref("privacy.warn_no_policy", m_bPrivacyPolicy);
-	PREF_SetBoolPref("network.cookie.warnAboutCookies", m_bWarnAboutCookies);
 	return TRUE;
 }
 
