@@ -636,6 +636,39 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
+    // If we're the root content, then prepend a special hidden form
+    // element.
+    if (aElement == mRoot) {
+      // Always insert a hidden form as the very first child of the window.
+      // Create a new form element.
+      nsAutoString tag("form");
+      nsCOMPtr<nsIHTMLContent> newElement;
+      if (!mHTMLElementFactory) {
+        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
+                                                nsnull,
+                                                kIHTMLElementFactoryIID,
+                                                (void**) &mHTMLElementFactory);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+      }
+      rv = mHTMLElementFactory->CreateInstanceByTag(tag,
+                                                getter_AddRefs(newElement));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement = do_QueryInterface(newElement);
+      if (htmlFormElement) {
+        mDocument->SetForm(htmlFormElement);
+    
+        nsCOMPtr<nsIContent> content = do_QueryInterface(htmlFormElement);
+        if (content) {
+          // Add this node as a child
+          mRoot->InsertChildAt(content, 0, PR_FALSE);
+        }
+      }
+    }
+
     // Now that we've built the children, check to see if the includesrc attribute
     // exists on the node.
     nsString includeSrc;
@@ -1696,23 +1729,7 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
       // Retrieve the hidden form from the XUL document.
       nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement;
       mDocument->GetForm(getter_AddRefs(htmlFormElement));
-      if (!htmlFormElement) {
-        // Create a new form element.
-        nsAutoString tag("form");
-        nsCOMPtr<nsIHTMLContent> newElement;
-        rv = mHTMLElementFactory->CreateInstanceByTag(tag,
-                                                  getter_AddRefs(newElement));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
-        if (NS_FAILED(rv)) return rv;
-
-        htmlFormElement = do_QueryInterface(newElement);
-        if (!htmlFormElement) {
-          NS_ERROR("Uh-oh! Couldn't make a form!");
-          return NS_ERROR_FAILURE;
-        }
-        mDocument->SetForm(htmlFormElement);
-      }
-        
+      
       // Set the form
       htmlFormControl->SetForm(htmlFormElement);
     }
