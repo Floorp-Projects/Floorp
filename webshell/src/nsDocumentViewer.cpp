@@ -150,17 +150,17 @@ nsresult DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     if (aIID.Equals(kIContentViewerIID)) {
         *aInstancePtr = (void*)(nsIContentViewer*)this;
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kIDocumentViewerIID)) {
         *aInstancePtr = (void*)(nsIDocumentViewer*)this;
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*)(nsISupports*)(nsIContentViewer*)this;
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     return NS_NOINTERFACE;
@@ -278,6 +278,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 
     // Init(...) will addref the Presentation Context...
     if (NS_OK == rv) {
+        // XXX FIX ME...
         mPresContext->Release();
     }
     return rv;

@@ -115,7 +115,7 @@ nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
   }
   else if (aNode->TEXT == mType) {
     *aRetNode = aNode;
-    aNode->AddRef();
+    NS_ADDREF(aNode);
   }
 
   return NS_OK;
@@ -125,7 +125,7 @@ nsresult nsGetCurrentNode(nsIDOMNode ** aNode)
 {
   if (kCurrentNode != nsnull) {
     *aNode = kCurrentNode;
-    kCurrentNode->AddRef();
+    NS_ADDREF(kCurrentNode);
     return NS_OK;
   }
   
@@ -138,7 +138,7 @@ nsresult nsGetCurrentNode(nsIDOMNode ** aNode)
     NS_RELEASE(mFirstTextNode);
     NS_RELEASE(mDocNode);
     *aNode = kCurrentNode;
-    kCurrentNode->AddRef();
+    NS_ADDREF(kCurrentNode);
     return NS_OK;
   }
 
@@ -150,7 +150,7 @@ nsresult nsSetCurrentNode(nsIDOMNode * aNode)
 {
   NS_IF_RELEASE(kCurrentNode);
   kCurrentNode = aNode;
-  kCurrentNode->AddRef();
+  NS_ADDREF(kCurrentNode);
   return NS_OK;
 }
 

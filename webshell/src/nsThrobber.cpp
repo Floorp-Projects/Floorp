@@ -111,7 +111,7 @@ public:
   nsrefcnt ReleaseObject() {
     NS_PRECONDITION(0 != mRefCnt, "dup release");
     if (--mRefCnt == 0) {
-      delete this;
+      NS_DELETEXPCOM(this);
       return 0;
     }
     return mRefCnt;
@@ -123,17 +123,17 @@ public:
     }
     if (aIID.Equals(kIThrobberIID)) {
       *aInstancePtr = (void*)(nsIThrobber*)this;
-      AddRef();
+      NS_ADDREF_THIS();
       return NS_OK;
     }
     if (aIID.Equals(kIImageObserverIID)) {
       *aInstancePtr = (void*)(nsIImageRequestObserver*)this;
-      AddRef();
+      NS_ADDREF_THIS();
       return NS_OK;
     }
     if (aIID.Equals(kISupportsIID)) {
       *aInstancePtr = (void*)(nsISupports*)(nsIThrobber*)this;
-      AddRef();
+      NS_ADDREF_THIS();
       return NS_OK;
     }
     if (nsnull != mInnerWidget) {
@@ -333,6 +333,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
   }
   else {
     // Get rid of extra reference count
+	// XXX FIX ME...
     mWidget->Release();
     mWidget->Create(aParent, aBounds, HandleThrobberEvent, NULL);
   }
@@ -549,7 +550,7 @@ nsThrobberFactory::QueryInterface(const nsIID &aIID, void **aResult)
     return NS_NOINTERFACE;
   }
 
-  AddRef(); // Increase reference count for caller
+  NS_ADDREF_THIS();  // Increase reference count for caller
   return NS_OK;
 }
 

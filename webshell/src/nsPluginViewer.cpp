@@ -193,13 +193,13 @@ PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIContentViewerIID)) {
     nsIContentViewer* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     nsISupports* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
