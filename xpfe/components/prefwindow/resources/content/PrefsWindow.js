@@ -145,7 +145,7 @@ function PrefCacheSelectFolder() {
     field.setAttribute("value", fp.file.unicodePath);
   } catch(ex) { }
 }
-
+//This function is unused, and therefore the files are no longer included by MANIFESTs
 function OpenProxyManualDialog() {
 	var dialog = window.openDialog("chrome://communicator/content/pref/pref-proxy-manual.xul", "", "chrome", {});
 }

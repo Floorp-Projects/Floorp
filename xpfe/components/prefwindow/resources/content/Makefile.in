@@ -68,7 +68,6 @@ CHROME_CONTENT = \
 		pref-policies.xul \
 		pref-proxies.js \
 		pref-proxies.xul \
-		pref-proxy-manual.xul \
 		pref-mousewheel.xul \
 		pref-wallet.xul \
 		pref-passwords.xul \
