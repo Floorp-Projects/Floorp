@@ -449,29 +449,16 @@ nsSSLIOLayerAddToSocket(const char* host,
                         nsISupports** info,
                         PRBool useTLS)
 {
+  PRFileDesc* layer = nsnull;
+  nsresult rv;
+  PRInt32 ret;
+
   if (firstTime) {
-    nsresult rv = InitNSSMethods();
+    rv = InitNSSMethods();
     if (NS_FAILED(rv)) return rv;
     firstTime = PR_FALSE;
   }
 
-  PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
-  if (!sslSock) {
-    NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
-    return NS_ERROR_FAILURE;
-  }
-
-  SSL_SetPKCS11PinArg(sslSock, nsnull);
-  SSL_HandshakeCallback(sslSock, HandshakeCallback, nsnull);
-  SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
-                            nsnull);
-
-  PRInt32 ret = SSL_SetURL(sslSock, host);
-  if (ret == -1) {
-    NS_ASSERTION(PR_FALSE, "NSS: Error setting server name");
-    return NS_ERROR_FAILURE;
-  }
-  
   nsNSSSocketInfo* infoObject = new nsNSSSocketInfo();
   if (!infoObject) return NS_ERROR_FAILURE;
   
@@ -483,36 +470,55 @@ nsSSLIOLayerAddToSocket(const char* host,
   infoObject->SetProxyPort(proxyPort);
   infoObject->SetUseTLS(useTLS);
 
+  PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
+  if (!sslSock) {
+    NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
+    goto loser;
+  }
+
+  SSL_SetPKCS11PinArg(sslSock, infoObject);
+  SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
+  SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
+                            nsnull);
+
+  ret = SSL_SetURL(sslSock, host);
+  if (ret == -1) {
+    NS_ASSERTION(PR_FALSE, "NSS: Error setting server name");
+    goto loser;
+  }
+  
   /* Now, layer ourselves on top of the SSL socket... */
-  PRFileDesc* layer = PR_CreateIOLayerStub(nsSSLIOLayerIdentity,
-                                           &nsSSLIOLayerMethods);
+  layer = PR_CreateIOLayerStub(nsSSLIOLayerIdentity,
+                               &nsSSLIOLayerMethods);
   if (!layer)
-    return NS_ERROR_FAILURE;
+    goto loser;
   
   layer->secret = (PRFilePrivate*) infoObject;
-  nsresult rv = PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer);
+  rv = PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer);
   
   if (NS_FAILED(rv)) {
-    NS_RELEASE(infoObject);
-    PR_DELETE(layer);
-    return NS_ERROR_FAILURE;
+    goto loser;
   }
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
   if (SECSuccess != SSL_Enable(sslSock, SSL_SECURITY, PR_TRUE)) {
-    return NS_ERROR_FAILURE;
+    goto loser;
   }
   if (SECSuccess != SSL_Enable(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
-    return NS_ERROR_FAILURE;
+    goto loser;
   }
   if (SECSuccess != SSL_Enable(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
-    return NS_ERROR_FAILURE;
+    goto loser;
   }
   if (SECSuccess != SSL_BadCertHook(sslSock, nsNSSBadCertHandler,
                                     infoObject)) {
-    return NS_ERROR_FAILURE;
+    goto loser;
   }
   return NS_OK;
+ loser:
+  NS_IF_RELEASE(infoObject);
+  PR_FREEIF(layer);
+  return NS_ERROR_FAILURE;
 }
   
