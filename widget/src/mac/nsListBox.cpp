@@ -419,9 +419,11 @@ nsresult nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 		::SetPt(&theCell, 0, 1);
 		::LSetSelect(true, theCell, mListHandle);
 	}
-	::LSetDrawingMode(true, mListHandle);
 	::LAutoScroll(mListHandle);
+	::LSetDrawingMode(true, mListHandle);
 	EndDraw();
+
+	Invalidate(PR_TRUE);
 
 	return NS_OK;
 }
@@ -476,6 +478,8 @@ nsresult nsListBox::Deselect()
 	}
 	::LSetDrawingMode(true, mListHandle);
 	EndDraw();
+
+	Invalidate(PR_TRUE);
 
 	return NS_OK;
 }
