@@ -513,7 +513,7 @@ nsGlobalHistory::GetLastPageVisted(char **_retval)
   if (! _retval)
     return NS_ERROR_NULL_POINTER;
 
-  *_retval = PR_smprintf("http://people.netscape.com/radha");
+  *_retval = PR_smprintf("http://people.netscape.com/waterson");
   return NS_OK;
 }
 
