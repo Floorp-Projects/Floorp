@@ -22,6 +22,7 @@
  */
 
 #include "nsWSDLPrivate.h"
+#include "nsISOAPMessage.h"
 
 ////////////////////////////////////////////////////////////
 //
@@ -155,7 +156,8 @@ nsWSDLPort::SetBinding(nsIWSDLBinding* aBinding)
 //
 ////////////////////////////////////////////////////////////
 nsSOAPPortBinding::nsSOAPPortBinding(const nsAReadableString& aName)
-  : mName(aName), mStyle(STYLE_RPC)
+  : mName(aName), mStyle(STYLE_RPC), 
+  mSoapVersion(nsISOAPPortBinding::SOAP_VERSION_UNKNOWN)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -227,6 +229,14 @@ nsSOAPPortBinding::GetTransport(nsAWritableString & aTransport)
   return NS_OK;
 }
 
+/* readonly attribute unsigned short soapVersion; */
+NS_IMETHODIMP
+nsSOAPPortBinding::GetSoapVersion(PRUint16 *aVersion)
+{
+  NS_ENSURE_ARG_POINTER(aVersion);
+  *aVersion = mSoapVersion;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsSOAPPortBinding::SetDocumentationElement(nsIDOMElement* aElement)
@@ -257,6 +267,13 @@ nsSOAPPortBinding::SetTransport(const nsAReadableString& aTransport)
 {
   mTransport.Assign(aTransport);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOAPPortBinding::SetSoapVersion(PRUint16 aVersion)
+{
+  mSoapVersion = aVersion;
   return NS_OK;
 }
 

@@ -65,6 +65,7 @@ public:
   NS_IMETHOD SetAddress(const nsAReadableString& aAddress);
   NS_IMETHOD SetStyle(PRUint16 aStyle);
   NS_IMETHOD SetTransport(const nsAReadableString& aTransport);
+  NS_IMETHOD SetSoapVersion(PRUint16 aSoapVersion);
 
 protected:
   nsString mName;
@@ -72,6 +73,7 @@ protected:
   PRUint16 mStyle;
   nsString mTransport;  
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
+  PRUint16 mSoapVersion;
 };
 
 class nsWSDLPort : public nsIWSDLPort {

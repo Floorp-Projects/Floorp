@@ -33,10 +33,15 @@ interface nsISOAPPortBinding : nsIWSDLBinding {
   const unsigned short STYLE_RPC = 1;
   const unsigned short STYLE_DOCUMENT = 2;
 
+  const unsigned short SOAP_VERSION_1_1 = 0;
+  const unsigned short SOAP_VERSION_1_2 = 1;
+  const unsigned short SOAP_VERSION_UNKNOWN = 32767;
+
   readonly attribute AString name;
   readonly attribute AString address;
   readonly attribute unsigned short style;
   readonly attribute AString transport;
+  readonly attribute unsigned short soapVersion;
 };
 
 [scriptable, uuid(0458dac8-65de-11d5-9b42-00104bdf5339)]

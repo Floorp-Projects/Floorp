@@ -46,6 +46,12 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 
+// XMLExtras includes
+#include "nsISOAPMessage.h"
+
+#define SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
+#define SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
+
 ////////////////////////////////////////////////////////////
 //
 // nsWSDLAtoms implementation
@@ -1404,6 +1410,10 @@ nsWSDLLoadRequest::ProcessBindingElement(nsIDOMElement* aElement)
     else if ((tagName == nsWSDLAtoms::sBinding_atom) &&
              IsElementOfNamespace(childElement, 
                                   NS_LITERAL_STRING(NS_WSDL_SOAP_NAMESPACE))) {
+      // XXX There should be different namespaces for newer versions
+      // of SOAP.
+      bindingInst->SetSoapVersion(nsISOAPPortBinding::SOAP_VERSION_1_1);
+
       nsAutoString style, transport;
       childElement->GetAttribute(NS_LITERAL_STRING("style"), style);
       childElement->GetAttribute(NS_LITERAL_STRING("transport"), transport);
