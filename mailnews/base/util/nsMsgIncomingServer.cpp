@@ -1609,7 +1609,11 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
 
       // Get password entry corresponding to the host URI we are passing in.
       rv = passwordMgr->FindPasswordEntry(&hostURI, getter_Copies(userName), getter_Copies(password));
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        // release hostURI
+        nsMemory::Free(hostURI);
+        return rv;
+      }
 
       // release hostURI
       nsMemory::Free(hostURI);

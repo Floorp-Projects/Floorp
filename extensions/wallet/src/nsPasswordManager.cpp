@@ -220,40 +220,42 @@ nsPasswordManager::FindPasswordEntry(char **hostURI, PRUnichar **username, PRUni
     // Emumerate through password elements
     while (hasMoreElements) {
       rv = enumerator->GetNext(getter_AddRefs(passwordElem));
-      if (NS_SUCCEEDED(rv) && passwordElem) {
-        // Get the server URI stored as host
-        nsXPIDLCString thisHostURI;
-        passwordElem->GetHost(getter_Copies(thisHostURI));
+      if (NS_FAILED(rv)) {
+        return rv; // could not unlock the database
+      }
 
-        nsXPIDLString thisUsername;
-        passwordElem->GetUser(getter_Copies(thisUsername));
+      // Get the server URI stored as host
+      nsXPIDLCString thisHostURI;
+      passwordElem->GetHost(getter_Copies(thisHostURI));
 
-        nsXPIDLString thisPassword;
-        passwordElem->GetPassword(getter_Copies(thisPassword));
+      nsXPIDLString thisUsername;
+      passwordElem->GetUser(getter_Copies(thisUsername));
 
-        // Check if any of the params are null (set by getter_Copies as
-        // preparation for output parameters) and treat them wild card
-        // entry matches or if they match with current password element 
-        // attribute values.
-        PRBool hostURIOK  = !*hostURI  || thisHostURI.Equals(*hostURI);
-        PRBool usernameOK = !*username || thisUsername.Equals(*username);
-        PRBool passwordOK = !*password || thisPassword.Equals(*password);
+      nsXPIDLString thisPassword;
+      passwordElem->GetPassword(getter_Copies(thisPassword));
 
-        // If a password match is found based on given input params, 
-        // fill in those params which are passed in as empty strings.
-        if (hostURIOK && usernameOK && passwordOK)
-        {
-          if (!*hostURI) {
-            *hostURI  = ToNewCString(thisHostURI);
-          }
-          if (!*username) {
-            *username = ToNewUnicode(thisUsername);
-          }
-          if (!*password) {
-            *password = ToNewUnicode(thisPassword);
-          }
-          break; 
+      // Check if any of the params are null (set by getter_Copies as
+      // preparation for output parameters) and treat them wild card
+      // entry matches or if they match with current password element 
+      // attribute values.
+      PRBool hostURIOK  = !*hostURI  || thisHostURI.Equals(*hostURI);
+      PRBool usernameOK = !*username || thisUsername.Equals(*username);
+      PRBool passwordOK = !*password || thisPassword.Equals(*password);
+
+      // If a password match is found based on given input params, 
+      // fill in those params which are passed in as empty strings.
+      if (hostURIOK && usernameOK && passwordOK)
+      {
+        if (!*hostURI) {
+          *hostURI  = ToNewCString(thisHostURI);
         }
+        if (!*username) {
+          *username = ToNewUnicode(thisUsername);
+        }
+        if (!*password) {
+          *password = ToNewUnicode(thisPassword);
+        }
+        break; 
       }
       enumerator->HasMoreElements(&hasMoreElements);
     }
