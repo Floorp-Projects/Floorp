@@ -306,7 +306,9 @@ static BOOL gMadePrefManager;
     // previous versions set dom.disable_open_click_delay to block some popups, but
     // we really shouldn't be doing that (mozilla no longer does). Ensure we clear it out
     // with authority so that it doesn't bite us later. Yes, this will break someone setting
-    // it manually, but that case is pretty rare.
+    // it manually, but that case is pretty rare. This will also clear it for someone who
+    // goes back to a previous version that shares the same pref folder, but that's ok 
+    // as well.
     mPrefs->ClearUserPref("dom.disable_open_click_delay");
     
     [self configureProxies];
