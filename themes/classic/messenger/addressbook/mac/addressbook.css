@@ -198,11 +198,18 @@ sidebarheader {
   min-width: 30px;
 }
 
-.CardViewText {
+.CardViewText,
+.CardViewLink {
   padding-left: 20px;
   padding-right: 2px;
   min-width: 30px;
   margin: 0px;
+}
+
+.CardViewLink {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 html|a {

@@ -201,11 +201,18 @@ sidebarheader {
   font-weight: bold;
 }
 
-.CardViewText {
+.CardViewText,
+.CardViewLink {
   margin: 0px;
   padding-right: 2px;
   padding-left: 20px;
   min-width: 30px;
+}
+
+.CardViewLink {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 html|a {

@@ -40,8 +40,12 @@ Rights Reserved.
 					<html class="CardViewHeading" hide="true" id="cvhName"/>
 					<html class="CardViewText" hide="true" id="cvDisplayName"/>
 					<html class="CardViewText" hide="true" id="cvNickname"/>
-					<html class="CardViewText" hide="true" id="cvEmail1"/>
-					<html class="CardViewText" hide="true" id="cvEmail2"/>
+					<html class="CardViewLink" hide="true" id="cvEmail1Box">
+						<html:p><html:a href="" id="cvEmail1"/>
+					</html:p></html>
+					<html class="CardViewLink" hide="true" id="cvEmail2Box">
+						<html:p><html:a href="" id="cvEmail2"/>
+					</html:p></html>
 				</vbox>
 				
 				<vbox id="cvbHome" class="cardViewGroup">
@@ -50,8 +54,8 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvHomeAddress2"/>
 					<html class="CardViewText" hide="true" id="cvHomeCityStZip"/>
 					<html class="CardViewText" hide="true" id="cvHomeCountry"/>
-					<html class="CardViewText" hide="true" id="cvHomeWebPageBox">
-						<html:p><html:a href="" id="cvHomeWebPage"/>
+					<html class="CardViewLink" hide="true" id="cvHomeWebPageBox">
+						<html:p><html:a onclick="return openLink('cvHomeWebPage');" href="" id="cvHomeWebPage"/>
 					</html:p></html>
 				</vbox>
 
@@ -86,8 +90,8 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvWorkAddress2"/>
 					<html class="CardViewText" hide="true" id="cvWorkCityStZip"/>
 					<html class="CardViewText" hide="true" id="cvWorkCountry"/>
-					<html class="CardViewText" hide="true" id="cvWorkWebPageBox">
-						<html:p><html:a href="" id="cvWorkWebPage"/>
+					<html class="CardViewLink" hide="true" id="cvWorkWebPageBox">
+						<html:p><html:a onclick="return openLink('cvWorkWebPage');" href="" id="cvWorkWebPage"/>
 					</html:p></html>
 				</vbox>
 			</vbox>
