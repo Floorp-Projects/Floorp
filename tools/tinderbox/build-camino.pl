@@ -255,6 +255,8 @@ END_SCRIPT
   return $status;
 }
 
+sub PreBuild {
+}
 
 sub main {
   my ($mozilla_build_dir) = @_;
