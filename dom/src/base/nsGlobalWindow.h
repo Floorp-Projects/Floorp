@@ -297,6 +297,8 @@ protected:
   nsDOMWindowList *mFrames;
 
   PRBool mFirstDocumentLoad;
+
+  void CleanUp(); 
 };
 
 /* 
