@@ -162,11 +162,11 @@ $charts++ if eval "require GD";
 $charts++ if eval "require Chart::Base";
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
-    "the optional libgd and the Perl modules GD and Chart::Base, e.g. by\n",
+    "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
     "running (as root)\n\n",
     "   perl -MCPAN -eshell\n",
-    "   install GD\n",
-    "   install Chart::Base\n";
+    "   install LDS/GD-1.19.tar.gz\n",
+    "   install N/NI/NINJAZ/Chart-0.99b.tar.gz";
 }
 
 

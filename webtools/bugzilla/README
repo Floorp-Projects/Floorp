@@ -32,8 +32,8 @@ other necessary ingredient is a web server set up to run cgi scripts.
         4. Data::Dumper Perl module
         5. MySQL related Perl module collection
         6. TimeDate Perl module collection
-        7. GD perl module (1.18 or greater)
-        8. Chart::Base Perl module (0.99 or greater)
+        7. GD perl module (1.18 or 1.19)
+        8. Chart::Base Perl module (0.99 through 0.99b)
         9. The web server of your choice
 
    Bugzilla has quite a few prerequisites, but none of them are TCL.
@@ -150,25 +150,28 @@ most interested in is the Date::Format module, but installing all of them
 is probably a good idea anyway.  The standard Perl module installation
 instructions should work perfectly for this simple package.
 
-1.7. GD Perl module (1.18 or greater)
+1.7. GD Perl module (1.18 or 1.19)
 
-   The GD library was written by Thomas Boutel a long while ago to
+   The GD library was written by Thomas Boutell a long while ago to
 programatically generate images in C.  Since then it's become almost a
 defacto standard for programatic image construction.  The Perl bindings
 to it found in the GD library are used on a million web pages to generate
 graphs on the fly.  That's what bugzilla will be using it for so you'd
 better install it if you want any of the graphing to work.
-  Actually bugzilla uses the Graph module which relies on GD itself, but
-isn't that always the way with OOP.  At any rate, you can find the GD
-library on CPAN (link in Appendix A) and it installs beautifully in the
-usual fashion.
+    Actually bugzilla uses the Graph module which relies on GD itself,
+but isn't that always the way with OOP.  At any rate, you can find the
+GD library on CPAN (link in Appendix A).  Note, however, that you MUST
+use version 1.18 or 1.19, because newer versions have dropped support
+for GIFs in favor of PNGs, and bugzilla has not yet been updated to
+deal with this.
 
-1.8. Chart::Base Perl module (0.99 or greater)
+1.8. Chart::Base Perl module (0.99 through 0.99b)
 
-   The Chart module provides bugzilla with on-the-fly charting abilities.
-It can be installed in the usual fashion after it has been fetched from
-CPAN where it is found as the Chart-x.x... tarball in a directory to be
-listed in Appendix A.
+   The Chart module provides bugzilla with on-the-fly charting
+abilities.  It can be installed in the usual fashion after it has been
+fetched from CPAN where it is found as the Chart-x.x... tarball in a
+directory to be listed in Appendix A.  Note that as with the GD perl
+module, only the specific versions listed above will work.
 
 1.9. HTTP server
 
@@ -426,7 +429,6 @@ MySQL related Perl modules:
 TimeDate Perl module collection:
         ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Date/
 
-
 GD Perl module: ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/
 
 Chart::Base module:
@@ -467,9 +469,9 @@ instructions by Terry Weissman <terry@mozilla.org>.
 
    The February 25, 1999 re-write of this page was done by Ry4an Brase
 <ry4an@ry4an.org>, with some edits by Terry Weissman, Bryce Nesbitt,
-& Martin Pool (But don't send bug reports to them!  Report them using
-bugzilla, at http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools,
-component Bugzilla).
+Martin Pool, & Dan Mosedale (But don't send bug reports to them!
+Report them using bugzilla, at http://bugzilla.mozilla.org/enter_bug.cgi ,
+project Webtools, component Bugzilla).
 
    Comments from people using this document for the first time are
 especially welcomed.
