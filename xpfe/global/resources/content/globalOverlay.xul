@@ -14,6 +14,23 @@
 		<menuitem value="&quitApplicationCmd.label;" oncommand="goQuitApplication()"/>
 	</menupopup>
 	
+	<!-- Edit Menu items -->
+	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" observes="cmd_undo"/>
+	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
+	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" observes="cmd_cut"/>
+	<menuitem id="menu_copy" value="&copyCmd.label;" key="key_copy" observes="cmd_copy"/>
+	<menuitem id="menu_paste" value="&pasteCmd.label;" key="key_paste" observes="cmd_paste"/>
+	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" observes="cmd_delete"/>
+	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" observes="cmd_selectAll"/>
+	
+	<key id="key_undo" command="true" key="&undoCmd.key;" observes="cmd_undo"/>
+	<key id="key_redo" shift="true" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
+	<key id="key_cut" command="true" key="&cutCmd.key;" observes="cmd_cut"/>
+	<key id="key_copy" command="true" key="&copyCmd.key;" observes="cmd_copy"/>
+	<key id="key_paste" command="true" key="&pasteCmd.key;" observes="cmd_paste"/>
+	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
+	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
+
 	<!-- Page Setup menu item -->
 	<menuitem id="pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
 
@@ -39,27 +56,6 @@
 		<menuseparator/>
 			<menuitem value="&interUsersCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/menu/intl/'"/>
 			  <menuitem value="&aboutCommCmd.label;" oncommand="window.content.location.href='about:'"/>
-			   
-
-
-<!--
-		This was the old menu.  Can take out if not neededed anymore.
-
-		<menuitem value="&referenceLibraryCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&releaseNotesCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&productInfoCmd.label;" oncommand="goHelp()"/>
-		<menuseparator/>
-		<menuitem value="&softwareUpdatesCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&registerCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&memberServicesCmd.label;" oncommand="goHelp()"/>
-		<menuseparator/>
-		<menuitem value="&internationalCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&securityCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&netwatchCmd.label;" oncommand="goHelp()"/>
-		<menuseparator/>
-		<menuitem value="&aboutPluginsCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&aboutFontCmd.label;" oncommand="goHelp()"/>
-		<menuitem value="&aboutCmd.label;" oncommand="goHelp()"/>  -->
 	  </menupopup>
 	</menu>
 	
