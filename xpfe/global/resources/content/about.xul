@@ -26,7 +26,6 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 <!DOCTYPE window SYSTEM "chrome://global/locale/about.dtd"> 
 
 <window
-        xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
@@ -41,14 +40,14 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
   </tabbox>
 
   <tabpanel align="vertical" flex="100%">
-    <html:iframe style="border: 1px inset gray;" src="about:"/>
-    <html:iframe style="border: 1px inset gray;" src="credits.html"/>
+    <iframe style="border: 1px inset gray;" src="about:"/>
+    <iframe style="border: 1px inset gray;" src="credits.html"/>
   </tabpanel>
 </tabcontrol>
 
 <box align="horizontal" style="margin-top: 1em;">
   <spring flex="100%"/>
-  <titledbutton id="ok" class="dialog push" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>
+  <button id="ok" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>
 </box>
 
 </box>

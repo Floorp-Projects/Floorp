@@ -5,52 +5,49 @@
 <!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
 
  <window
-	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	align="vertical"
 	onload="commonDialogOnLoad()"
 	class="dialog"> 
     
-    <html:script language="JavaScript" src="chrome://global/content/commonDialog.js" />
+    <script language="JavaScript" src="chrome://global/content/commonDialog.js" />
     
 	<keyset id="keyset"/>
 
     <box align="horizontal" flex="100%">
-		<html:div style="margin: 5px;">
-			<html:img id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
-		</html:div>
+	<image id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0" style="margin: 5px"/>
 
-		<box align="vertical" flex="100%">
-				<html:div id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;">
-					&header.label;
-				</html:div>
-				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px; max-width: 45em;" flex="100%">
-					
-				</html:div>
+	<box align="vertical" flex="100%">
+		<text id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;"
+			value="&header.label;"/>
+				<box orient="vertical" id="info.box" style="margin-left:2em; margin-right:2em; margin-top:5px; max-width: 45em;" flex="100%"/>
 		</box>
 	</box>
 
 	<box id="editFields" align="vertical" >
 		<box align="horizontal" id="loginEditField"  >
-			<html:div id="login.text">&editfield0.label;</html:div>
-			<html:input accesskey="u" tabindex="0" type="text" id="dialog.loginname" flex="100%"/>
+			<text id="login.text" value="&editfield0.label;"/>
+			<textfield accesskey="u" tabindex="0" type="text" id="dialog.loginname" flex="100%"/>
 		</box>
 
 		<box align="horizontal"  id ="password1EditField">
-			<html:div id="password1.text">&editfield1.label;</html:div>
-			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password1" flex="100%"/>
+			<text id="password1.text" value="&editfield1.label;"/>
+			<textfield accesskey="p" tabindex="1" type="password" id="dialog.password1" flex="100%"/>
 		</box>
 
 		<box align="horizontal"  id ="password2EditField">
-			<html:div id="password2.text">&editfield2.label;</html:div>
-			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password2" flex="100%"/>
+			<text id="password2.text" value="&editfield2.label;"/>
+			<textfield accesskey="p" tabindex="1" type="password" id="dialog.password2" flex="100%"/>
 		</box>
 	</box>
 
 
-	<html:label id="checkboxLabel"  onclick="onCheckboxClick()" >
-  		 <html:input type="checkbox" id="checkbox" />
-  		 &checkbox.label;
-    </html:label>		
+        <box id="checkboxContainer">
+  		 <checkbox id="checkbox" oncommand="onCheckboxClick()"/>
+<!--
+                 <text class="label" id="checkboxLabel" for="checkbox"
+                       value="&checkbox.label;"/>
+-->
+        </box>
 	<box id="okCancelButtons"/>
 </window>

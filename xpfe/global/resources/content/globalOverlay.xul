@@ -5,11 +5,10 @@
 
 
 <overlay id="globalOverlay"
-		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- html:script language="JavaScript" src="chrome://global/content/strres.js"/ -->
-<html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
+<!-- script language="JavaScript" src="chrome://global/content/strres.js"/ -->
+<script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu -->
 	<menu id="menu_File" value="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>

@@ -8,14 +8,14 @@ function commonDialogOnLoad()
 		dump( " error getting param block interface\n" );
 	
 	var messageText = param.GetString( 0 );
-//	dump("message: "+ msg +"\n");
+	//dump("message: "+ msg +"\n");
 	//SetElementText("info.txt", msg ); 
 	{
 		 var messageFragment;
 
     	// Let the caller use "\n" to cause breaks
     	// Translate these into <br> tags
-		 var messageParent = (document.getElementById("info.txt"));
+		 var messageParent = (document.getElementById("info.box"));
 	   	 done = false;
 	   	 while (!done) {
 	      breakIndex =   messageText.indexOf('\n');
@@ -35,14 +35,9 @@ function commonDialogOnLoad()
 	        done = true;
 	        messageFragment = messageText;
 	      }
-	      messageNode = document.createTextNode(messageFragment);
-	      if (messageNode)
-	        messageParent.appendChild(messageNode);
-
-	      // This is needed when the default namespace of the document is XUL
-	      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/TR/REC-html40");
-	      if (breakNode)
-	        messageParent.appendChild(breakNode);
+                var textnode = document.createElement("text");
+                textnode.setAttribute("value", messageFragment);
+                messageParent.appendChild(textnode);
 	    }
 	}
 	var msg = param.GetString( 3 );
@@ -55,7 +50,7 @@ function commonDialogOnLoad()
 	var iconURL = param.GetString(2 ); 
 	var element = document.getElementById("info.icon");
 	if( element )
-		element.src = iconURL;
+		element.setAttribute("src",iconURL);
 	else
 		dump("couldn't find icon element \n");
 	// Set button names
@@ -88,14 +83,14 @@ function commonDialogOnLoad()
 		case 4:
 			{
 				var button = document.getElementById("Button3");
-				button.setAttribute("style", "display:inline;");
+				button.removeAttribute("hidden");
 				var buttonText = param.GetString( 11 );
 				button.setAttribute( "value",buttonText);
 			}
 		case 3:
 			{
 				var button = document.getElementById("Button2");
-				button.setAttribute("style", "display:inline;");
+				button.removeAttribute("hidden");
 				var buttonText = param.GetString( 10 );
 				button.setAttribute( "value",buttonText);
 			}
@@ -105,7 +100,7 @@ function commonDialogOnLoad()
 			if ( element )
 			{
 	//			dump( "hide button \n" );
-				element.setAttribute("style", "display:none;"  );
+				element.setAttribute("hidden", "true"  );
 			}
 			else
 			{
@@ -122,11 +117,10 @@ function commonDialogOnLoad()
 //	dump("check box msg is "+ checkMsg +"\n");
 	if ( checkMsg != "" )
 	{	
-		var prompt = (document.getElementById("checkboxLabel"));
+		var prompt = (document.getElementById("checkbox"));
     	if ( prompt )
-    	{
- //   		dump(" setting message \n" );
-    		prompt.childNodes[1].nodeValue = checkMsg;
+   	{
+    		prompt.setAttribute("value",checkMsg);
     	}
 		var checkValue = param.GetInt( 1 );
 		var element=document.getElementById("checkbox" );
@@ -135,9 +129,8 @@ function commonDialogOnLoad()
 	}
 	else
 	{
-//		dump("not visibile \n");
-		var element = document.getElementById("checkboxLabel");
-		element.setAttribute("style","display: none;" );
+		var element = document.getElementById("checkbox");
+		element.setAttribute("hidden","true" );
 	}
 
 	// handle the edit fields
@@ -166,7 +159,7 @@ function commonDialogOnLoad()
 				}
 //		 	 	dump("hiding loginEditField");
 		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 				var element = document.getElementById("dialog.password1");
 				element.focus();
 			 }
@@ -181,7 +174,7 @@ function commonDialogOnLoad()
 				}
 //		 	 	dump("hiding password1EditField");
 		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 				var element = document.getElementById("dialog.loginname");
 				element.focus();
 			 }
@@ -199,12 +192,12 @@ function commonDialogOnLoad()
 //				}
 				// Now hide the meaningless text
 				var element = document.getElementById("password1.text");
-				element.setAttribute("style", "visibility: collapse;"  );
+				element.setAttribute("hidden", "true");
 //		 	 	dump("hiding loginEditField and password2EditField");
 		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 				var element = document.getElementById("dialog.password1");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
@@ -220,12 +213,12 @@ function commonDialogOnLoad()
 				}
 				// Now hide the meaningless text
 				var element = document.getElementById("login.text");
-				element.setAttribute("style", "visibility: collapse;"  );
+				element.setAttribute("hidden", "true");
 //		 		dump("hiding password1EditField and password2EditField");
 		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","visibility: collapse;" );
+				element.setAttribute("hidden", "true");
 				var element = document.getElementById("dialog.loginname");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
@@ -234,7 +227,7 @@ function commonDialogOnLoad()
 	 	case 0:
 //	 		dump("hiding all editfields \n");
 			var element = document.getElementById("editFields");
-			element.setAttribute("style","visibility: collapse;" );
+			element.setAttribute("hidden", "true");
 			break;
 	}
 	
@@ -256,10 +249,10 @@ function onCheckboxClick()
 
 function SetElementText( elementID, text )
 {
-//	dump("setting "+elementID+" to "+text +"\n");
+	dump("setting "+elementID+" to "+text +"\n");
 	var element = document.getElementById(elementID);
 	if( element )
-		element.childNodes[0].nodeValue = text;
+		element.setAttribute("value", text);
 	else
 		dump("couldn't find element \n");
 }

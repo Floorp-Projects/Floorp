@@ -4,11 +4,10 @@
 <!DOCTYPE  window SYSTEM "chrome://global/locale/charsetOverlay.dtd">
 
 <overlay id="charsetOverlay"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
+    <script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
     <!-- Mail Edit Charset Menu -->
     <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot"  oncommand="SetDocumentCharacterSet(event);" oncreate="InitCharsetMenuCheckMark();">

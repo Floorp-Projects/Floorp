@@ -2,7 +2,6 @@
 <?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
 
 <window id="browserBindings"
-   xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="browserKeySet">

@@ -23,11 +23,10 @@ Contributor(s): ______________________________________. -->
 <!DOCTYPE window SYSTEM "chrome://global/locale/charsetDetectorsOverlay.dtd" >
 
 <overlay id="charsetDetectorsOverlay"
-         xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          >
-<html:script src="chrome://global/content/charsetDetectorsOverlay.js" />
+<script src="chrome://global/content/charsetDetectorsOverlay.js" />
 
  
       <menu value="&charsetDetectorsMenu.label;"
