@@ -61,12 +61,13 @@
 		<html:label for="pref:0:bool:offline.news.download.use_days" accesskey="f" tabindex="0">			
 		&fromRadio.label;
 		</html:label> 
-		<html:select  id="pref" idold="pref:1:int:offline.news.download.increments">
-		<html:option>&one.select;</html:option>
-	    <html:option>&two.select;</html:option>
-		<html:option>&oneM.select;</html:option>
-		<html:option>&sixM.select;</html:option>
-		<html:option>&oneY.select;</html:option>
+		<html:select id="pref:int:offline.news.download.increments">
+			<html:option value="0">&yesterday.select;</html:option>
+			<html:option value="1">&oneW.select;</html:option>
+			<html:option value="2">&twoW.select;</html:option>
+			<html:option value="3">&oneM.select;</html:option>
+			<html:option value="4">&sixM.select;</html:option>
+			<html:option value="5">&oneY.select;</html:option>
 		</html:select> 
 	</html:div>  
 	<html:div>
