@@ -49,10 +49,7 @@ EXPORTS =				\
 !endif
   nsXBLAtomList.h \
   nsXBLAtoms.h \
+  nsBidiUtils.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-!ifdef IBMBIDI
-  EXPORTS = $(EXPORTS) nsBidiUtils.h
-!endif
