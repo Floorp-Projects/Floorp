@@ -135,6 +135,21 @@ XP_END_PROTOS
 #define FREEIF(obj)  {if(obj) {XP_FREE(obj); obj=0;}}
 #endif
 
+/* A utility function to fetch a file from cache right away, 
+ * and update it (from the original server) after its used.
+ * Used in/Required by Mr. R.D.F. Guha 
+ *
+ * Note that if the item is not in the cache, this defaults
+ * to retrieving it from the server.
+ *
+ * Variables and returns : see NET_GetURL in include/net.h
+ *
+ */
+extern int
+NET_GetURLQuick (URL_Struct * URL_s,
+        FO_Present_Types output_format,
+        MWContext * context,
+        Net_GetUrlExitFunc*	exit_routine);
 
 #endif /* MKUTILS_H */
 
