@@ -27,7 +27,8 @@
 #include "COtherDTD.h"
 #include "CNavDelegate.h"
 #include "CNavDTD.h"
-
+#include "prenv.h"  //this is here for debug reasons...
+#include <direct.h> //this is here for debug reasons...
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
@@ -38,6 +39,7 @@ static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 
+static char* gVerificationOutputDir=0;
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -97,6 +99,7 @@ nsHTMLParser::nsHTMLParser() {
   mDTD=0;
   mTokenHandlerCount=0;
   InitializeDefaultTokenHandlers();
+  gVerificationOutputDir = PR_GetEnv("VERIFY_PARSER");
 }
 
 
@@ -321,19 +324,35 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  * @return  TRUE if we know how to handle it, else false
  */
 PRBool VerifyContextVector(eHTMLTags tags[],PRInt32 count,nsIDTD* aDTD) {
-  PRBool result=PR_FALSE;
-  if(aDTD){
-    PRInt32 theArray[50];
-    for(int i=0;i<count;i++){
-      theArray[i]=tags[i];
+
+  PRBool  result=PR_TRUE;
+
+  if(0!=gVerificationOutputDir) {
+  
+    if(aDTD){
+      PRInt32 theArray[50];
+      char    path[_MAX_PATH+1];
+
+      strcpy(path,gVerificationOutputDir);
+      for(int i=0;i<count;i++){
+        theArray[i]=tags[i];
+
+#ifdef NS_WIN32
+        strcat(path,"/");
+        const char* name=GetTagName(tags[i]);
+        strcat(path,name);
+        mkdir(path);
+#endif
+      }
+      //ok, now see if we understand this vector
+      result=aDTD->VerifyContextVector(theArray,count);
     }
-    //ok, now see if we understand this vector
-    result=aDTD->VerifyContextVector(theArray,count);
+    if(PR_FALSE==result){
+      //add debugging code here to record the fact that we just encountered
+      //a context vector we don't know how to handle.
+    }
   }
-  if(PR_FALSE==result){
-    //add debugging code here to record the fact that we just encountered
-    //a context vector we don't know how to handle.
-  }
+
   return result;
 }
 
@@ -425,7 +444,14 @@ PRBool nsHTMLParser::IterateTokens() {
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
 PRBool nsHTMLParser::Parse(nsIURL* aURL){
-  return Parse(aURL,eParseMode_navigator);
+  eParseMode  theMode=eParseMode_navigator;
+  char*       theModeStr= PR_GetEnv("PARSE_MODE");
+
+  if(theModeStr) 
+    if(0!=strnicmp("nav",theModeStr,3))
+      theMode=eParseMode_other;
+
+  return Parse(aURL,theMode);
 }
 
 /**

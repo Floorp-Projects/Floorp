@@ -108,6 +108,7 @@ struct HTMLTagEntry
   // the binary search code above will break! 
 HTMLTagEntry gHTMLTagTable[] =
 {
+  {"!!UNKNOWN",   eHTMLTag_unknown},
   {"!DOCTYPE",    eHTMLTag_doctype},      {"A",          eHTMLTag_a},
   {"ACRONYM",     eHTMLTag_acronym},      {"ADDRESS",   eHTMLTag_address},
   {"APPLET",      eHTMLTag_applet},       {"AREA",      eHTMLTag_area},
@@ -139,7 +140,7 @@ HTMLTagEntry gHTMLTagTable[] =
   {"H5",          eHTMLTag_h5},           {"H6",        eHTMLTag_h6},
   {"HEAD",        eHTMLTag_head},         {"HEADER",    eHTMLTag_header},
   {"HR",          eHTMLTag_hr},           {"HTML",      eHTMLTag_html},
-
+  
   {"I",           eHTMLTag_italic},       {"IFRAME",    eHTMLTag_iframe}, 
   {"ILAYER",      eHTMLTag_ilayer},       {"IMG",       eHTMLTag_img},          
   {"INPUT",       eHTMLTag_input},        {"INS",       eHTMLTag_ins},          
@@ -152,12 +153,14 @@ HTMLTagEntry gHTMLTagTable[] =
   {"LINK",        eHTMLTag_link},         {"LISTING",   eHTMLTag_listing},      
 
   {"MAP",         eHTMLTag_map},          {"MARQUEE",   eHTMLTag_marquee},        
+  {"MATH",        eHTMLTag_math},
   {"MENU",        eHTMLTag_menu},         {"META",      eHTMLTag_meta},         
 
   {"NEWLINE",     eHTMLTag_newline},       
 
   {"NOEMBED",     eHTMLTag_noembed},      {"NOFRAMES",  eHTMLTag_noframes},     
   {"NOLAYER",     eHTMLTag_nolayer},      {"NOSCRIPT",  eHTMLTag_noscript},
+  {"NOTE",        eHTMLTag_note},
 
   {"OBJECT",      eHTMLTag_object},       {"OL",        eHTMLTag_ol},           
   {"OPTION",      eHTMLTag_option},       
@@ -182,12 +185,13 @@ HTMLTagEntry gHTMLTagTable[] =
   
   {"TEXT",        eHTMLTag_text},
 
-  {"TEXTAREA",  eHTMLTag_textarea},     
+  {"TEXTAREA",    eHTMLTag_textarea},     
   {"TFOOT",       eHTMLTag_tfoot},        {"TH",         eHTMLTag_th},           
   {"THEAD",       eHTMLTag_thead},        {"TITLE",      eHTMLTag_title},        
   {"TR",          eHTMLTag_tr},           {"TT",        eHTMLTag_tt},
 
   {"U",           eHTMLTag_u},            {"UL",        eHTMLTag_ul},
+  {"USERDEF",     eHTMLTag_userdefined},     
   {"VAR",         eHTMLTag_var},          {"WBR",       eHTMLTag_wbr},
   {"WS",          eHTMLTag_whitespace},       
 
@@ -1274,6 +1278,23 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
   return eHTMLTag_userdefined;
 }
 
+
+/**
+ * 
+ * @update	gess4/25/98
+ * @param 
+ * @return
+ */
+const char* GetTagName(eHTMLTags aTag) {
+  const char* result=0;
+  PRInt32     cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
+
+  for(int i=0;i<cnt;i++){
+    if(aTag==gHTMLTagTable[i].fTagID)
+      return gHTMLTagTable[i].fName;
+  }
+  return result;
+}
 
 /**-------------------------------------------------------
  *  This method iterates the attribute-table to ensure that is 
