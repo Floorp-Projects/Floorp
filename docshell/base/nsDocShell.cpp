@@ -3016,18 +3016,30 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
     char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
 
-    nsAutoString errorPageUrl;
+    nsXPIDLCString errorPageUrl;
 
-    errorPageUrl.AssignLiteral("chrome://global/content/netError.xhtml?e=");
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch)
+    {
+        // Note that we don't expose this pref, because we don't want users fiddling with it.
+        prefBranch->GetCharPref("browser.xul.error_pages.location", getter_Copies(errorPageUrl));
+    }
+
+    if (errorPageUrl.IsEmpty())
+    {
+        errorPageUrl.AssignLiteral("chrome://global/content/netError.xhtml");
+    }
+
+    errorPageUrl.AppendLiteral("?e=");
     errorPageUrl.AppendASCII(escapedError);
     errorPageUrl.AppendLiteral("&u=");
     errorPageUrl.AppendASCII(escapedUrl);
     errorPageUrl.AppendLiteral("&d=");
     errorPageUrl.AppendASCII(escapedDescription);
 
-    PR_FREEIF(escapedDescription);
-    PR_FREEIF(escapedError);
-    PR_FREEIF(escapedUrl);
+    nsMemory::Free(escapedDescription);
+    nsMemory::Free(escapedError);
+    nsMemory::Free(escapedUrl);
 
     nsCOMPtr<nsIURI> errorPageURI;
     nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
