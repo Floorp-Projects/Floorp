@@ -1556,6 +1556,7 @@ function openWalletPasswordDialog()
                     "_blank","chrome,resizable=yes","S");
 }
 
+var strBundleService = null;
 function srGetStrBundle(path)
 {
   var strBundle = null;
