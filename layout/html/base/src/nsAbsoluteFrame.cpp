@@ -122,7 +122,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mLeftOffsetFlags) {
     aRect.x = position->mLeftOffset;
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mLeftOffsetFlags,
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mLeftOffsetFlags,
                  "unexpected offset type");
     // Percentage values refer to the width of the containing block
     aRect.x = aContainingInnerRect.x + (aContainingInnerRect.width *
@@ -138,7 +138,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mTopOffsetFlags) {
     aRect.y = position->mTopOffset;
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mTopOffsetFlags,
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mTopOffsetFlags,
                  "unexpected offset type");
     // Percentage values refer to the height of the containing block
     aRect.y = aContainingInnerRect.y + (aContainingInnerRect.height *
@@ -152,7 +152,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
     aRect.width = position->mWidth;
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags,
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mWidthFlags,
                  "unexpected width type");
     aRect.width = aContainingInnerRect.width * position->mWidth / 100;
   }
@@ -164,7 +164,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
     aRect.height = position->mHeight;
   } else {
-    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags,
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PERCENT == position->mHeightFlags,
                  "unexpected height type");
     aRect.height = aContainingInnerRect.height * position->mHeight / 100;
   }
