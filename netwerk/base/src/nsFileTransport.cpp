@@ -21,6 +21,8 @@
  *   Darin Fisher <darin@netscape.com>
  */
 
+#include <limits.h>
+
 #include "nsFileTransport.h"
 #include "nsFileTransportService.h"
 #include "nsIInterfaceRequestor.h"
