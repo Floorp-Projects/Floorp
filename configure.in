@@ -443,6 +443,7 @@ case "$target" in
     fi
     MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
     MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
 *-beos*)
