@@ -19,6 +19,8 @@ DEPTH = ..
 
 MODULE = necko
 
+include <$(DEPTH)\config\config.mak>
+
 DIRS=            \
 	base     \
 	dns      \

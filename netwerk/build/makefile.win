@@ -26,6 +26,8 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetFactory.obj \
 	$(NULL)
 
+include <$(DEPTH)\config\config.mak>
+
 LLIBS=                              \
         $(DIST)\lib\neckobase_s.lib \
         $(DIST)\lib\neckodns_s.lib  \
