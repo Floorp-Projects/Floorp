@@ -25,6 +25,8 @@ skins/blue.jar:
     communicator/skin/tasksOverlay.css                         (communicator/tasksOverlay.css)
     communicator/skin/dialogOverlay.css                        (communicator/dialogOverlay.css)
     communicator/skin/prefpanels.css                           (communicator/prefpanels.css)
+    communicator/skin/content-large.gif                        (communicator/content-large.gif)
+    communicator/skin/content-small.gif                        (communicator/content-small.gif)
     editor/skin/EdImageMap.css                                 (editor/EdImageMap.css)
     editor/skin/EdImageMapPage.css                             (editor/EdImageMapPage.css)
     editor/skin/EditorDialog.css                               (editor/EditorDialog.css)
