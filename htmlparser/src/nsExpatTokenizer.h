@@ -60,7 +60,7 @@ protected:
      * @update	nra 2/29/99
      * @return  NS_ERROR_FAILURE if expat encounters an error, else NS_OK
      */
-    nsresult ParseXMLBuffer(const char *buffer);
+    nsresult ParseXMLBuffer(const char *aBuffer, PRUint32 aLength);
 
     /**
      * Sets up the callbacks for the expat parser      
