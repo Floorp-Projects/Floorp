@@ -36,8 +36,7 @@
 
 nsStyleLinkElement::nsStyleLinkElement() :
     mDontLoadStyle(PR_FALSE),
-    mUpdatesEnabled(PR_TRUE),
-    mAppend(PR_FALSE)
+    mUpdatesEnabled(PR_TRUE)
 {
 }
 
@@ -91,7 +90,6 @@ nsStyleLinkElement::SetEnableUpdates(PRBool aEnableUpdates)
 NS_IMETHODIMP
 nsStyleLinkElement::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
 {
-  mParser = nsnull;
   return NS_OK;
 }
 
@@ -163,6 +161,13 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
 {
   if (!mUpdatesEnabled)
     return NS_OK;
+
+  // Keep a strong ref to the parser so it's still around when we pass it
+  // to the CSS loader. Release strong ref in mParser so we don't hang on
+  // to the parser once we start the load or if we fail to load the
+  // stylesheet.
+  nsCOMPtr<nsIParser> parser = mParser;
+  mParser = nsnull;
 
   nsCOMPtr<nsIContent> thisContent;
   QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisContent));
@@ -318,7 +323,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
   rv = loader->LoadStyleLink(thisContent, uri, title, media,
                              kNameSpaceID_Unknown,
                              insertionPoint, 
-                             ((blockParser) ? mParser.get() : nsnull),
+                             ((blockParser) ? parser.get() : nsnull),
                              doneLoading, 
                              this);
 

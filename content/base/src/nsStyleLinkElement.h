@@ -69,9 +69,8 @@ protected:
 
   nsCOMPtr<nsIStyleSheet> mStyleSheet;
   nsCOMPtr<nsIParser> mParser;
-  PRBool mDontLoadStyle;
-  PRBool mUpdatesEnabled;
-  PRBool mAppend;
+  PRPackedBool mDontLoadStyle;
+  PRPackedBool mUpdatesEnabled;
 };
 
 #endif /* nsStyleLinkElement_h___ */
