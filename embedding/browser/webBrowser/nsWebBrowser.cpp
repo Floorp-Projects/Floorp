@@ -787,7 +787,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       docShellParentWidget = mInternalWidget;
       nsWidgetInitData  widgetInit;
 
-      widgetInit.clipChildren = PR_FALSE;
+      widgetInit.clipChildren = PR_TRUE;
       widgetInit.mWindowType = eWindowType_child;
       nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
