@@ -32,6 +32,25 @@
 
 #include "jsj_private.h"      /* LiveConnect internals */
 
+/* Floating-point double utilities, stolen from jsnum.h */
+#ifdef IS_LITTLE_ENDIAN
+#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
+#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
+#else
+#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[0])
+#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[1])
+#endif
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
+#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
+#define JSDOUBLE_HI32_MANTMASK  0x000fffff
+
+#define JSDOUBLE_IS_NaN(x)                                                    \
+    ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) == JSDOUBLE_HI32_EXPMASK &&   \
+     (JSDOUBLE_LO32(x) || (JSDOUBLE_HI32(x) & JSDOUBLE_HI32_MANTMASK)))
+
+#define JSDOUBLE_IS_INFINITE(x)                                               \
+    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&  \
+     !JSDOUBLE_LO32(x))
 
 static JSBool
 convert_js_obj_to_JSObject_wrapper(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj,
@@ -80,14 +99,19 @@ jsj_ConvertJSStringToJavaString(JSContext *cx, JNIEnv *jEnv, JSString *js_str)
  */
 JSBool
 jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignature *signature,
-                               int *cost, jobject *java_value)
+                               int *cost, jobject *java_value, JSBool *is_local_refp)
 {
     JSString *jsstr;
     jclass target_java_class;
     
     PR_ASSERT(signature->type == JAVA_SIGNATURE_CLASS ||
         signature->type == JAVA_SIGNATURE_ARRAY);
-    
+
+    /* Initialize to default case, in which no new Java object is
+       synthesized to perform the conversion and, therefore, no JNI local
+       references are being held. */
+    *is_local_refp = JS_FALSE;
+
     /* Get the Java type of the target value */
     target_java_class = signature->java_class;
     
@@ -169,7 +193,9 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
                 if (!JS_ValueToNumber(cx, v, &d))
                     goto conversion_error;
                 *java_value = (*jEnv)->NewObject(jEnv, jlDouble, jlDouble_Double, d);
-                if (!*java_value) {
+                if (*java_value) {
+                    *is_local_refp = JS_TRUE;
+                } else {
                     jsj_UnexpectedJavaError(cx, jEnv,
                         "Couldn't construct instance of java.lang.Double");
                     return JS_FALSE;
@@ -191,7 +217,9 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
                     goto conversion_error;
                 *java_value =
                     (*jEnv)->NewObject(jEnv, jlBoolean, jlBoolean_Boolean, b);
-                if (!*java_value) {
+                if (*java_value) {
+                    *is_local_refp = JS_TRUE;
+                } else {
                     jsj_UnexpectedJavaError(cx, jEnv, "Couldn't construct instance " 
                         "of java.lang.Boolean");
                     return JS_FALSE;
@@ -214,8 +242,11 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
         if (jsstr) {
             if (java_value) {
                 *java_value = jsj_ConvertJSStringToJavaString(cx, jEnv, jsstr);
-                if (!*java_value)
+                if (*java_value) {
+                    *is_local_refp = JS_TRUE;
+                } else {
                     return JS_FALSE;
+                }
             }
 #ifdef LIVECONNECT_IMPROVEMENTS
             if (!is_string)
@@ -249,12 +280,16 @@ if (!JSVAL_IS_NUMBER(v)) {                                               \
                 goto conversion_error;                                   \
         } else {                                                         \
             jdouble dval = *JSVAL_TO_DOUBLE(v);                          \
-            member_name = (member_type) dval;                            \
+            if (JSDOUBLE_IS_NaN(dval))                                   \
+                member_name = 0;                                         \
+            else                                                         \
+                member_name = (member_type) dval;                        \
                                                                          \
-            /* Don't allow a non-integral number */                      \
-            /* FIXME - should this be an error ? */                      \
-            if ((jdouble)member_name != dval)                            \
-                (*cost)++;                                               \
+            /* Don't allow a non-integral number to be converted         \
+               to an integral type */                                    \
+            /* Actually, we have to allow this for LC1 compatibility */  \
+            /* if ((jdouble)member_name != dval)                         \
+                (*cost)++; */                                            \
         }                                                                \
         if (java_value)                                                  \
             java_value->member_name = member_name;                       \
@@ -305,12 +340,16 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
                                                                          \
         } else {                                                         \
             jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
-            member_name = jdouble_to_jlong(dval);                        \
+            if (JSDOUBLE_IS_NaN(dval))                                   \
+                member_name = 0;                                         \
+            else                                                         \
+                member_name = jdouble_to_jlong(dval);                    \
                                                                          \
-            /* Don't allow a non-integral number */                      \
-            /* Should this be an error ? */                              \
-            if (jlong_to_jdouble(member_name) != dval)                   \
-                (*cost)++;                                               \
+            /* Don't allow a non-integral number to be converted         \
+               to an integral type */                                    \
+            /* Actually, we have to allow this for LC1 compatibility */  \
+            /*if (jlong_to_jdouble(member_name) != dval)                 \
+                (*cost)++;*/                                             \
         }                                                                \
         if (java_value)                                                  \
             java_value->member_name = member_name;                       \
@@ -337,10 +376,16 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
 JSBool
 jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v,
                               JavaSignature *signature,
-                              int *cost, jvalue *java_value)
+                              int *cost, jvalue *java_value, JSBool *is_local_refp)
 {
-    JavaSignatureChar type = signature->type;
+    JavaSignatureChar type;
 
+    /* Initialize to default case, in which no new Java object is
+       synthesized to perform the conversion and, therefore, no JNI local
+       references are being held. */
+    *is_local_refp = JS_FALSE;   
+    
+    type = signature->type;
     switch (type) {
     case JAVA_SIGNATURE_BOOLEAN:
         if (!JSVAL_IS_BOOLEAN(v)) {
@@ -410,7 +455,8 @@ jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v,
 
     case JAVA_SIGNATURE_CLASS:
     case JAVA_SIGNATURE_ARRAY:
-        if (!jsj_ConvertJSValueToJavaObject(cx, jEnv, v, signature, cost, &java_value->l))
+        if (!jsj_ConvertJSValueToJavaObject(cx, jEnv, v, signature, cost,
+            &java_value->l, is_local_refp))
             goto conversion_error;
         break;
 
