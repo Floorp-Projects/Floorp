@@ -50,12 +50,11 @@ public class JavaAdapter extends ScriptableObject {
             }
             intfs[interfaceCount++] = c;
         }
-        StringBuffer sb = new StringBuffer("adapter");
-        sb.append(serial++);
+        String adapterName = "adapter" + serial++;
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = (Scriptable) args[args.length - 1];
-        Class adapterClass = createAdapterClass(cx, obj, sb.toString(), 
+        Class adapterClass = createAdapterClass(cx, obj, adapterName, 
                                                 superClass, interfaces, 
                                                 null, null);
         Class[] ctorParms = { FlattenedObject.class };
@@ -65,13 +64,13 @@ public class JavaAdapter extends ScriptableObject {
     }
     
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
-                                           String name, Class superClass, 
+                                           String adapterName, Class superClass, 
                                            Class[] interfaces, 
                                            String scriptClassName,
                                            ClassNameHelper nameHelper)
         throws ClassNotFoundException
     {
-        ClassFileWriter cfw = new ClassFileWriter(name, 
+        ClassFileWriter cfw = new ClassFileWriter(adapterName, 
                                                   superClass.getName(), 
                                                   "<adapter>");
         cfw.addField("o", "Lorg/mozilla/javascript/FlattenedObject;",
@@ -85,9 +84,9 @@ public class JavaAdapter extends ScriptableObject {
                 cfw.addInterface(interfaces[i].getName());
         }
         
-        generateCtor(cfw, name, superClass);
+        generateCtor(cfw, adapterName, superClass);
         if (scriptClassName != null)
-            generateEmptyCtor(cfw, name, superClass, scriptClassName);
+            generateEmptyCtor(cfw, adapterName, superClass, scriptClassName);
         
         Hashtable generatedOverrides = new Hashtable();
         Hashtable generatedMethods = new Hashtable();
@@ -105,7 +104,7 @@ public class JavaAdapter extends ScriptableObject {
             	String methodKey = getMethodSignature(method);
             	if (! generatedOverrides.containsKey(methodKey)) {
                     Class[] parms = method.getParameterTypes();
-                    generateMethod(cfw, name, method.getName(), parms, 
+                    generateMethod(cfw, adapterName, method.getName(), parms, 
                                    method.getReturnType());
                     generatedOverrides.put(methodKey, methodKey);
                     generatedMethods.put(method.getName(), Boolean.TRUE);
@@ -134,7 +133,7 @@ public class JavaAdapter extends ScriptableObject {
                 String methodKey = getMethodSignature(method);
                 if (! generatedOverrides.containsKey(methodKey)) {
                     Class[] parms = method.getParameterTypes();
-                    generateMethod(cfw, name, method.getName(), parms, 
+                    generateMethod(cfw, adapterName, method.getName(), parms, 
                                    method.getReturnType());
                     generatedOverrides.put(methodKey, method);
                     generatedMethods.put(method.getName(), Boolean.TRUE);
@@ -166,7 +165,7 @@ public class JavaAdapter extends ScriptableObject {
             Class[] parms = new Class[length];
             for (int k=0; k < length; k++) 
                 parms[k] = Object.class;
-            generateMethod(cfw, name, (String) ids[j], parms, Object.class);
+            generateMethod(cfw, adapterName, id, parms, Object.class);
         }  
         
         ByteArrayOutputStream out = new ByteArrayOutputStream(512);
@@ -181,10 +180,10 @@ public class JavaAdapter extends ScriptableObject {
         if (nameHelper != null && nameHelper.getGeneratingDirectory() != null) 
         {
             try {
-                int lastDot = name.lastIndexOf('.');
+                int lastDot = adapterName.lastIndexOf('.');
                 if (lastDot != -1)
-                    name = name.substring(lastDot+1);
-                String filename = nameHelper.getTargetClassFileName(name);
+                    adapterName = adapterName.substring(lastDot+1);
+                String filename = nameHelper.getTargetClassFileName(adapterName);
                 FileOutputStream file = new FileOutputStream(filename);
                 file.write(bytes);
                 file.close();
@@ -198,12 +197,12 @@ public class JavaAdapter extends ScriptableObject {
         SecuritySupport ss = cx.getSecuritySupport();
         if (ss != null)  {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
-            return ss.defineClass(name, bytes, securityDomain);
+            return ss.defineClass(adapterName, bytes, securityDomain);
         } else {
             if (classLoader == null)
                 classLoader = new MyClassLoader();
-            classLoader.defineClass(name, bytes);
-            return classLoader.loadClass(name, true);
+            classLoader.defineClass(adapterName, bytes);
+            return classLoader.loadClass(adapterName, true);
         }
     }
 
@@ -237,7 +236,7 @@ public class JavaAdapter extends ScriptableObject {
         return Context.getUndefinedValue();
     }
     
-    private static void generateCtor(ClassFileWriter cfw, String name, 
+    private static void generateCtor(ClassFileWriter cfw, String adapterName, 
                                      Class superClass) 
     {
         cfw.startMethod("<init>", 
@@ -264,7 +263,7 @@ public class JavaAdapter extends ScriptableObject {
         // Save parameter in instance variable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // first arg
-        cfw.add(ByteCode.PUTFIELD, name, "o", 
+        cfw.add(ByteCode.PUTFIELD, adapterName, "o", 
                 "Lorg/mozilla/javascript/FlattenedObject;");
 
         // Store Scriptable object in "self", a public instance variable, 
@@ -275,14 +274,14 @@ public class JavaAdapter extends ScriptableObject {
                 "org/mozilla/javascript/FlattenedObject",
                 "getObject", "()",
                 "Lorg/mozilla/javascript/Scriptable;");
-        cfw.add(ByteCode.PUTFIELD, name, "self",
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");		
         
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
     }
 
-    private static void generateEmptyCtor(ClassFileWriter cfw, String name, 
+    private static void generateEmptyCtor(ClassFileWriter cfw, String adapterName, 
                                           Class superClass, 
                                           String scriptClassName) 
     {
@@ -310,7 +309,7 @@ public class JavaAdapter extends ScriptableObject {
         // Save the FlattenedObject in instance variable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // the FlattenedObject
-        cfw.add(ByteCode.PUTFIELD, name, "o", 
+        cfw.add(ByteCode.PUTFIELD, adapterName, "o", 
                 "Lorg/mozilla/javascript/FlattenedObject;");
 
         // Store Scriptable object in "self", a public instance variable, 
@@ -321,7 +320,7 @@ public class JavaAdapter extends ScriptableObject {
                 "org/mozilla/javascript/FlattenedObject",
                 "getObject", "()",
                 "Lorg/mozilla/javascript/Scriptable;");
-        cfw.add(ByteCode.PUTFIELD, name, "self",
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");		
         
         // Set the prototype of the js object to be a LiveConnect 
@@ -656,8 +655,6 @@ public class JavaAdapter extends ScriptableObject {
                 resolveClass(clazz);
             return clazz;
         }
-
-        private java.util.Hashtable loaded;
     }
     
     private static int serial;
