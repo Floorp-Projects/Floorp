@@ -167,7 +167,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                         nsAutoString err(INVALID_PARAM_VALUE);
                         toString(err);
                         aContext->receiveError(err,
-                                               NS_ERROR_XPATH_EVAL_FAILED);
+                                               NS_ERROR_XPATH_INVALID_ARG);
                         return new StringResult(err);
                     }
                 }
@@ -178,7 +178,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                         nsAutoString err(INVALID_PARAM_VALUE);
                         toString(err);
                         aContext->receiveError(err,
-                                               NS_ERROR_XPATH_EVAL_FAILED);
+                                               NS_ERROR_XPATH_INVALID_ARG);
                         return new StringResult(err);
                     }
                 }
@@ -263,7 +263,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         nsAutoString err(INVALID_PARAM_VALUE);
         toString(err);
         aContext->receiveError(err,
-                               NS_ERROR_XPATH_EVAL_FAILED);
+                               NS_ERROR_XPATH_INVALID_ARG);
         return new StringResult(err);
     }
 
