@@ -102,9 +102,13 @@ var BookmarksMenu = {
     switch (aNode.id) {
     case "bookmarks-ptf":
       parent = "NC:PersonalToolbarFolder";
+      item = BookmarksToolbar.getLastVisibleBookmark();
       break;
     case "BookmarksMenu":
       parent = "NC:BookmarksRoot";
+      break;
+    case "bookmarks-chevron":
+      parent = "NC:PersonalToolbarFolder";
       break;
     default:
       if (aOrientation == BookmarksUtils.DROP_ON)
@@ -633,7 +637,7 @@ var BookmarksMenuDNDObserver = {
         }
         break;
       case "toolbar": 
-        var newTarget = document.getElementById("bookmarks-ptf").lastChild;
+        var newTarget = BookmarksToolbar.getLastVisibleBookmark();
         if (newTarget)
           newTarget.setAttribute("dragover-right", "true");
         break;
@@ -648,7 +652,7 @@ var BookmarksMenuDNDObserver = {
     var newTarget;
     var bt;
     if (aTarget.id == "PersonalToolbar" || aTarget.id == "bookmarks-ptf") { 
-      newTarget = document.getElementById("bookmarks-ptf").lastChild;
+      newTarget = BookmarksToolbar.getLastVisibleBookmark();
       if (newTarget)
         newTarget.removeAttribute("dragover-right");
     } else {
@@ -686,6 +690,60 @@ var BookmarksToolbar =
     BookmarksUtils.loadBookmarkBrowser(aEvent, aEvent.target, aDS);
   },
 
+  /////////////////////////////////////////////////////////////////////////////
+  // returns the node of the last visible bookmark on the toolbar -->
+  getLastVisibleBookmark: function ()
+  {
+    var buttons = document.getElementById("bookmarks-ptf");
+    var button = buttons.firstChild;
+    if (!button)
+      return null; // empty bookmarks toolbar
+    do {
+      if (button.collapsed)
+        return button.previousSibling;
+      button = button.nextSibling;
+    } while (button)
+    return buttons.lastChild;
+  },
+
+  updateOverflowMenu: function (aMenuPopup)
+  {
+    var hbox = document.getElementById("bookmarks-ptf");
+    for (var i = 0; i < hbox.childNodes.length; i++) {
+      var button = hbox.childNodes[i];
+      var menu = aMenuPopup.childNodes[i];
+      if (menu.collapsed == button.collapsed)
+        menu.collapsed = !menu.collapsed;
+    }
+  },
+
+  resizeFunc: function(event) 
+  { 
+    var buttons = document.getElementById("bookmarks-ptf");
+    if (!buttons)
+      return;
+    var chevron = document.getElementById("bookmarks-chevron");
+    var width = buttons.boxObject.x + buttons.boxObject.width;
+    chevron.collapsed = true;
+    var overflowed = false;
+
+    for (var i=0; i<buttons.childNodes.length; i++) {
+      var button = buttons.childNodes[i];
+      button.collapsed = overflowed;
+      
+      if (button.boxObject.x + button.boxObject.width > width) {
+        overflowed = true;
+        // This button doesn't fit. Show it in the menu. Hide it in the toolbar.
+        if (!button.collapsed)
+          button.collapsed = true;
+        if (chevron.collapsed) {
+          chevron.collapsed = false;
+        }
+      }
+    }
+    BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
+  },
+
   // Fill in tooltips for personal toolbar
   fillInBTTooltip: function (tipElement)
   {
@@ -713,5 +771,34 @@ var BookmarksToolbar =
       tooltipUrl.setAttribute("hidden", "true");
     }
     return true; // show tooltip
+  }
+}
+
+// Implement nsIRDFObserver so we can update our overflow state when items get
+// added/removed from the toolbar
+var BookmarksToolbarRDFObserver =
+{
+  onAssert: function (aDataSource, aSource, aProperty, aTarget)
+  {
+    this.setOverflowTimeout(aSource, aProperty);
+  },
+  onUnassert: function (aDataSource, aSource, aProperty, aTarget)
+  {
+    this.setOverflowTimeout(aSource, aProperty);
+  },
+  onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
+  onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
+  beginUpdateBatch: function (aDataSource) {},
+  endUpdateBatch:   function (aDataSource) {},
+
+  _overflowTimerInEffect: false,
+  setOverflowTimeout: function (aSource, aProperty)
+  {
+    if (this._overflowTimerInEffect)
+      return;
+    if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == NC_NS+"LastModifiedDate")
+      return;
+    this._overflowTimerInEffect = true;
+    setTimeout(BookmarksToolbar.resizeFunc, 0);
   }
 }
