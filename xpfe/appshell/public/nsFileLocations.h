@@ -26,10 +26,33 @@
 #define _NSFILELOCATIONS_H_
 
 #include "nsFileSpec.h"
+#include "nsIFileLocator.h"
 
 #ifdef XP_MAC
 #include <Types.h>
 #endif
+
+
+class nsFileLocator : public nsIFileLocator
+//=============================================================================
+{
+public:
+  nsFileLocator();
+  
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetFileLocation(
+      PRUint32 aType,
+      	// NOTE: actually either nsSpecialFileSpec:Type, see nsFileLocations.h
+      	// or nsSpecialSystemDirectory::SystemDirectories, see nsSpecialSystemDirectory.h
+      nsIFileSpec** outSpec);
+
+  NS_IMETHOD ForgetProfileDir();
+
+protected:
+  virtual ~nsFileLocator();
+
+};
 
 // SEE ALSO:
 //      mozilla/base/public/nsSpecialSystemDirectory.h

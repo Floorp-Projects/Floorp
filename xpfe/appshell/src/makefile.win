@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-
+IS_COMPONENT=1
 
 DEFINES=-D_IMPL_NS_APPSHELL -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 

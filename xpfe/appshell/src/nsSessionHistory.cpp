@@ -21,7 +21,7 @@
  */
 
 
-#include "nsISessionHistory.h"
+#include "nsSessionHistory.h"
 #include "nsAppShellCIDs.h"
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
@@ -41,8 +41,7 @@
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 
 
-// Advance declarations
-class nsHistoryEntry;
+
 
 static nsHistoryEntry *  GenerateTree(const char * aStickyURL, nsIWebShell * aStickyContainer, nsIWebShell * aContainer,nsHistoryEntry *aParent, nsISessionHistory * aSHist);
 
@@ -717,48 +716,6 @@ nsHistoryEntry::GetRootDoc(void) {
      return top;
 }
 
-
-class nsSessionHistory: public nsISessionHistory
-{
-
-public:
-   nsSessionHistory();
-
-   //nsISupports
-   NS_DECL_ISUPPORTS
-
-   NS_DEFINE_STATIC_CID_ACCESSOR( NS_SESSIONHISTORY_CID )
-
-   NS_DECL_NSISESSIONHISTORY
-
-protected:
-
-   virtual ~nsSessionHistory();
-
-private:
-  PRInt32       mHistoryLength;
-  PRInt32       mHistoryCurrentIndex;
-  nsVoidArray   mHistoryEntries;
-
-  /** Following  member is used to identify whether we are in the
-   *  middle of loading a history document. The mIsLoadingDoc flag is 
-   *  used to determine whether the document that is curently  loaded 
-   *  in the window s'd go to the  end of the historylist or to be 
-   *  handed over to the current history entry (mIndexOfHistoryInLoad)
-   *  that is in the process of loading. The current history entry 
-   *  being loaded uses this new historyentry to decide whether the 
-   *  document is completely in par with the one in history. If not, it
-   *  will initiate further loads. When the document currently loaded is
-   *  completely on par with the one in history, it will clear the
-   *  mIsLoadingDoc flag. Any new URL loaded from then on, will go to the
-   *  end of the history list. Note: these members  are static.
-   */ 
-   PRBool            mIsLoadingDoc;
-   nsHistoryEntry *  mHistoryEntryInLoad;
-
-
-};
-
 MOZ_DECL_CTOR_COUNTER(nsSessionHistory);
 
 nsSessionHistory::nsSessionHistory()
@@ -1365,109 +1322,5 @@ nsSessionHistory::SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports* aState)
 
   hist->SetHistoryState(aState);
   return NS_OK;
-}
-
-
-NS_EXPORT nsresult NS_NewSessionHistory(nsISessionHistory** aResult)
-{
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = new nsSessionHistory();
-  if (nsnull == *aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-// Factory code for creating nsSessionHistory
-
-class nsSessionHistoryFactory : public nsIFactory
-{
-public:
-  nsSessionHistoryFactory();
-  NS_DECL_ISUPPORTS
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-  
-  NS_IMETHOD LockFactory(PRBool aLock);  
-protected:
-  virtual ~nsSessionHistoryFactory();
-};
-
-
-nsSessionHistoryFactory::nsSessionHistoryFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsresult
-nsSessionHistoryFactory::LockFactory(PRBool aLock)
-{
-  return NS_OK;
-}
-
-nsSessionHistoryFactory::~nsSessionHistoryFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsSessionHistoryFactory, nsIFactory);
-
-
-nsresult
-nsSessionHistoryFactory::CreateInstance(nsISupports *aOuter,
-                                  const nsIID &aIID,
-                                  void **aResult)
-{
-  nsresult rv;
-  nsSessionHistory* inst;
-
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-
-  NS_NEWXPCOM(inst, nsSessionHistory);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-
-nsresult
-NS_NewSessionHistoryFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-
-  nsIFactory* inst = new nsSessionHistoryFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
 }
 

@@ -21,26 +21,16 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMWindow.h"
-#include "nsICommonDialogs.h"
+#include "nsCommonDialogs.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsXPComFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+
 static NS_DEFINE_CID( kDialogParamBlockCID,          NS_DialogParamBlock_CID);
  
 
-
-class nsCommonDialogs: public nsICommonDialogs
-{
-public:
-			nsCommonDialogs();
-  virtual	~nsCommonDialogs();
-
-  NS_DECL_NSICOMMONDIALOGS
-  NS_DECL_ISUPPORTS
-private:
-};
 
 const char* kPromptURL="chrome://global/content/commonDialog.xul";
 
@@ -472,25 +462,4 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
 NS_IMPL_ADDREF(nsCommonDialogs);
 NS_IMPL_RELEASE(nsCommonDialogs);
 NS_IMPL_QUERY_INTERFACE(nsCommonDialogs, NS_GET_IID(nsICommonDialogs));
-
-// Entry point to create nsAppShellService factory instances...
-NS_DEF_FACTORY(CommonDialogs, nsCommonDialogs)
-
-nsresult NS_NewCommonDialogsFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst;
-  
-  inst = new nsCommonDialogsFactory;
-  if (nsnull == inst)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-  {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
-}
 

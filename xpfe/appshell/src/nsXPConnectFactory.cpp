@@ -20,33 +20,14 @@
  * Contributor(s): 
  */
 
+#include "nsXPConnectFactory.h"
 #include "nsRepository.h"
 #include "nsXPComFactory.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMXPConnectFactory.h"
 
-class XPConnectFactoryImpl : public nsIDOMXPConnectFactory,
-                             public nsIScriptObjectOwner
-{
-public:
-  XPConnectFactoryImpl();
 
-  NS_DECL_ISUPPORTS
-
-  // nsIXPConnectFactory interface...
-  NS_IMETHOD CreateInstance(const nsString &progID, nsISupports**_retval);
-
-  // nsIScriptObjectOwner interface...
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-protected:
-  virtual ~XPConnectFactoryImpl();
-
-private:
-  void *mScriptObject;
-};
 
 
 XPConnectFactoryImpl::XPConnectFactoryImpl()
@@ -131,26 +112,5 @@ XPConnectFactoryImpl::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
   return NS_OK;
-}
-
-
-
-// -----
-// Entry point to create nsXPConnectFactory factory instances...
-// -----
-NS_DEF_FACTORY(XPConnectFactory, XPConnectFactoryImpl)
-
-nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsXPConnectFactoryFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
 }
 
