@@ -16,6 +16,8 @@
 
 DEPTH		= ../..
 
+include $(DEPTH)/config/config.mk
+
 ifdef MOZ_OJI
 DIRS = liveconnect
 endif
