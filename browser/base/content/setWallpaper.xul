@@ -141,9 +141,9 @@
         
         function onPositionChange(val) {
           gMode = parseInt(val);
-          if (gMode == ISS.WALLPAPER_TILE)
+          if (gMode == ISS.BACKGROUND_TILE)
             tileImage();
-          else if (gMode == ISS.WALLPAPER_STRETCH)
+          else if (gMode == ISS.BACKGROUND_STRETCH)
             stretchImage();
           else
             centerImage();
