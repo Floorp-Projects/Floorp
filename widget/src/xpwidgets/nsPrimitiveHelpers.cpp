@@ -122,7 +122,7 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
     if ( doubleByteText ) {
       nsAutoString data;
       doubleByteText->GetData ( data );
-      *aDataBuff = ToNewCString(data);
+      *aDataBuff = ToNewUnicode(data);
     }
   }
 
