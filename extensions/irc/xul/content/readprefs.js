@@ -69,6 +69,8 @@
  *   +- views
  *   |  +- collapseMsgs (Boolean) Collapse consecutive messages from same
  *   |  |                         user
+ *   |  +- copyMessages (Boolean) Copy important messages to the network
+ *   |  |                         window
  *   |  +- client
  *   |  |  +- maxlines  (Number) max lines to keep in *client* view
  *   |  +- network
@@ -165,6 +167,9 @@ function readIRCPrefs (rootNode)
     client.COLLAPSE_MSGS = 
         getBoolPref (pref, rootNode + "views.collapseMsgs", false);
 
+    client.COPY_MESSAGES = 
+        getBoolPref (pref, rootNode + "views.copyMessages", true);
+
     client.MAX_MESSAGES = 
         getIntPref (pref, rootNode + "views.client.maxlines",
                     client.MAX_MESSAGES);
@@ -232,6 +237,7 @@ function writeIRCPrefs (rootNode)
     }
     pref.setBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
     pref.setBoolPref (rootNode + "views.collapseMsgs", client.COLLAPSE_MSGS);
+    pref.setBoolPref (rootNode + "views.copyMessages", client.COPY_MESSAGES);
     pref.setIntPref (rootNode + "views.client.maxlines", client.MAX_MESSAGES);
     pref.setIntPref (rootNode + "views.network.maxlines",
                      CIRCChanUser.prototype.MAX_MESSAGES);
