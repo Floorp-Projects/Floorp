@@ -49,6 +49,7 @@
 #include "jsgc.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsdtoa.h"
 
 #define ReadWord(W) (W)
 
