@@ -53,7 +53,7 @@ const char* kMacType="mactype";
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // Hash table helper functions
-static PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
+static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
     NS_ASSERTION(entry, "mapping problem");
 	NS_RELEASE(entry);
@@ -81,7 +81,7 @@ nsXMLMIMEDataSource::nsXMLMIMEDataSource() {
 }
 
 nsXMLMIMEDataSource::~nsXMLMIMEDataSource() {
-    mInfoObjects->Reset((nsHashtableEnumFunc)DeleteEntry, nsnull);
+    mInfoObjects->Reset(DeleteEntry, nsnull);
     delete mInfoObjects;
 }
 
