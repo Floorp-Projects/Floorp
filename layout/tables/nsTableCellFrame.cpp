@@ -53,23 +53,28 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)
 {
-  nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-  nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  NS_ASSERTION(nsnull!=myColor, "bad style color");
-  NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, mRect, *myColor);
+  if (disp->mVisible) {
+    nsStyleColor* myColor =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleSpacing* mySpacing =
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    NS_ASSERTION(nsnull!=myColor, "bad style color");
+    NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *mySpacing, 0);
-  /*
-  printf("painting borders, size = %d %d %d %d\n", 
-          myBorder->mSize.left, myBorder->mSize.top, 
-          myBorder->mSize.right, myBorder->mSize.bottom);
-  */
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, mRect, *myColor);
+
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, mRect, *mySpacing, 0);
+    /*
+    printf("painting borders, size = %d %d %d %d\n", 
+            myBorder->mSize.left, myBorder->mSize.top, 
+            myBorder->mSize.right, myBorder->mSize.bottom);
+    */
+  }
 
   // for debug...
   if (nsIFrame::GetShowFrameBorders()) {
