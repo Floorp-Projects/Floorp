@@ -5283,7 +5283,7 @@ RDFGenericBuilderImpl::ComputeContainmentProperties()
     }
 
 #if defined(TREE_PROPERTY_HACK)
-    if (!len || 1 /*XXX*/) {
+    if (! len) {
         // Some ever-present membership tests.
         mContainmentProperties.Add(kNC_child);
         mContainmentProperties.Add(kNC_Folder);
