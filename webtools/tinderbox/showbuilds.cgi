@@ -65,7 +65,7 @@ if ($form{'quickparse'}) {
 }
 
 
-print "Content-type: text/html\n\n<HTML>\n";
+print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 if( $form{'tree'} eq '' ){
     &show_tree_selector;
     exit;
@@ -140,8 +140,10 @@ else {
 
 $treename = $tree . ($tree2 ne "" ? " and $tree2" : "" );
 
+    my ($sec,$minute,$hour) = localtime(time());
+    my $now = sprintf("%02d:%02d", $hour, $minute);
     EmitHtmlTitleAndHeader("tinderbox: $treename", "tinderbox",
-                           "tree: $treename");
+                           "tree: $treename ($now)");
 
 
     print "$script_str\n";
