@@ -2484,8 +2484,8 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
             // Path is of the form "//123/http://foo/bar", with a variable number of digits.
             // To figure out where the "real" URL starts, search path for a '/', starting at 
             // the third character.
-            PRUint32 slashIndex = path.FindChar('/', 2);
-            if (slashIndex == -1) return NS_ERROR_FAILURE;
+            PRInt32 slashIndex = path.FindChar('/', 2);
+            if (slashIndex < 0) return NS_ERROR_FAILURE;
 
             // Replace |referrer| with a URI without wyciwyg://123/.
             nsCAutoString newReferrer;
