@@ -226,6 +226,16 @@ class CViewSourceHTML: public nsIDTD {
 
 
     static nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText);
+
+    /** These methods are used while setting setting title
+     *  in the view source window. Same code fragment as in
+     *  CNavDTD.
+     *  
+     *  @update  02/22/99
+     *  
+     */
+    nsresult OpenHead(const nsIParserNode& aNode);
+    nsresult CloseHead(const nsIParserNode& aNode);
     
 protected:
 
@@ -236,6 +246,8 @@ protected:
     nsDeque             mTokenDeque;
     PRBool              mIsHTML;
     nsITokenizer*       mTokenizer;
+    PRInt32             mHasOpenHead;
+
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
