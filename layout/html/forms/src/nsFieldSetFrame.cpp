@@ -142,10 +142,7 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aSt
   }
 
   // set the state flags (if any are provided)
-  nsFrameState state;
-  it->GetFrameState( &state );
-  state |= aStateFlags;
-  it->SetFrameState( state );
+  it->AddStateBits(aStateFlags);
   
   *aNewFrame = it;
   return NS_OK;
@@ -177,7 +174,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
  
   // get the content and legend frames.
   mContentFrame = aChildList;
-  mContentFrame->GetNextSibling(&mLegendFrame);
+  mLegendFrame = mContentFrame->GetNextSibling();
 
   // Queue up the frames for the content frame
   return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
@@ -371,17 +368,17 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     // if dirty then check dirty flags
     if (reason == eReflowReason_Dirty) 
     {
-        if (reflowContent) {
-              nsFrameState state;
-              mContentFrame->GetFrameState(&state);
-              reflowContent = (state & NS_FRAME_IS_DIRTY) || (state & NS_FRAME_HAS_DIRTY_CHILDREN);
-        }
+      if (reflowContent) {
+        reflowContent =
+          (mContentFrame->GetStateBits()
+           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+      }
 
-        if (reflowLegend) {
-              nsFrameState state;
-              mLegendFrame->GetFrameState(&state);
-              reflowLegend = (state & NS_FRAME_IS_DIRTY) || (state & NS_FRAME_HAS_DIRTY_CHILDREN);
-        }
+      if (reflowLegend) {
+        reflowLegend =
+          (mLegendFrame->GetStateBits()
+           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+      }
     }
 
     // availSize could have unconstrained values, don't perform any addition on them
@@ -515,13 +512,10 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
               aDesiredSize.mMaxElementWidth = kidDesiredSize.mMaxElementWidth;
             }
 
-            nsFrameState  kidState;
-            mContentFrame->GetFrameState(&kidState);
-
            // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
 
             /*
-            if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+            if (mContentFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
                  mState |= NS_FRAME_OUTSIDE_CHILDREN;
                  aDesiredSize.mOverflowArea.width += borderPadding.left + borderPadding.right;
                  aDesiredSize.mOverflowArea.height += borderPadding.top + borderPadding.bottom + mLegendSpace;
@@ -532,7 +526,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
         } else {
             // if we don't need to reflow just get the old size
-            mContentFrame->GetRect(contentRect);
+            contentRect = mContentFrame->GetRect();
             const nsStyleMargin* marginStyle = mContentFrame->GetStyleMargin();
 
             nsMargin m(0,0,0,0);
@@ -570,12 +564,11 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
       nsRect actualLegendRect(mLegendRect);
       actualLegendRect.Deflate(legendMargin);
 
-      nsPoint curOrigin;
-      mLegendFrame->GetOrigin(curOrigin);
+      nsPoint curOrigin = mLegendFrame->GetPosition();
 
       // only if the origin changed
       if ((curOrigin.x != mLegendRect.x) || (curOrigin.y != mLegendRect.y)) {
-          mLegendFrame->MoveTo(aPresContext,  actualLegendRect.x , actualLegendRect.y);
+          mLegendFrame->SetPosition(nsPoint(actualLegendRect.x , actualLegendRect.y));
           nsContainerFrame::PositionFrameView(aPresContext, mLegendFrame);
 
           // We need to recursively process the legend frame's
@@ -661,16 +654,10 @@ nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
   // XXX XXX
   // XXX temporary fix for bug 70648
   if (aOldFrame == mLegendFrame) {   
-    nsIFrame* sibling;
-    mContentFrame->GetNextSibling(&sibling);
+    nsIFrame* sibling = mContentFrame->GetNextSibling();
     NS_ASSERTION(sibling == mLegendFrame, "legendFrame is not next sibling");
-#ifdef DEBUG
-    nsIFrame* legendParent;
-    mLegendFrame->GetParent(&legendParent);
-    NS_ASSERTION(legendParent == this, "Legend Parent has wrong parent");
-#endif
-    nsIFrame* legendSibling;
-    sibling->GetNextSibling(&legendSibling);
+    NS_ASSERTION(mLegendFrame->GetParent() == this, "Legend Parent has wrong parent");
+    nsIFrame* legendSibling = sibling->GetNextSibling();
     // replace the legend, which is the next sibling, with any siblings of the legend (XXX always null?)
     mContentFrame->SetNextSibling(legendSibling);
     // OK, the legend is now removed from the sibling list, but who has ownership of it?

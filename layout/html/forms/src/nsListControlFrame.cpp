@@ -127,10 +127,7 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   }
 #if 0
   // set the state flags (if any are provided)
-  nsFrameState state;
-  it->GetFrameState( &state );
-  state |= NS_BLOCK_SPACE_MGR;
-  it->SetFrameState( state );
+  it->AddStateBits(NS_BLOCK_SPACE_MGR);
 #endif
   *aNewFrame = it;
   return NS_OK;
@@ -636,17 +633,13 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   if (NS_FAILED(result) || !childframe) return;
 
   // get the child rect
-  nsRect fRect;
-  childframe->GetRect(fRect);
+  nsRect fRect = childframe->GetRect();
   
   // get it into the coordinates of containerFrame
-  nsIFrame* ancestor;
-  childframe->GetParent(&ancestor);
-  while (ancestor && ancestor != containerFrame) {
-    nsPoint pt;
-    ancestor->GetOrigin(pt);
-    fRect += pt;
-    ancestor->GetParent(&ancestor);
+  for (nsIFrame* ancestor = childframe->GetParent();
+       ancestor && ancestor != containerFrame;
+       ancestor = ancestor->GetParent()) {
+    fRect += ancestor->GetPosition();
   }
 
   PRBool lastItemIsSelected = PR_FALSE;
@@ -751,8 +744,7 @@ nsListControlFrame::SaveState(nsIPresContext* aPresContext,
     scrollingView->GetScrolledView(child);
     NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
 
-    nsRect childRect(0,0,0,0);
-    child->GetBounds(childRect);
+    nsRect childRect = child->GetBounds();
 
     res = NS_NewPresState(getter_AddRefs(state));
     NS_ENSURE_SUCCESS(res, res);
@@ -828,7 +820,7 @@ nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
         nsIView* child = nsnull;
         nsRect childRect(0,0,0,0);
         if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
-          child->GetBounds(childRect);
+          childRect = child->GetBounds();
         }
         x = (int)(((float)childRect.width / w) * x);
         y = (int)(((float)childRect.height / h) * y);
@@ -878,18 +870,15 @@ GetMaxOptionHeight(nsIPresContext *aPresContext, nsIFrame *aContainer)
   nscoord result = 0;
   nsIFrame *option;
   for (aContainer->FirstChild(aPresContext, nsnull, &option);
-       option; option->GetNextSibling(&option)) {
+       option; option = option->GetNextSibling()) {
     nscoord optionHeight;
-    nsCOMPtr<nsIContent> content;
-    option->GetContent(getter_AddRefs(content));
-    if (nsCOMPtr<nsIDOMHTMLOptGroupElement>(do_QueryInterface(content))) {
+    if (nsCOMPtr<nsIDOMHTMLOptGroupElement>
+        (do_QueryInterface(option->GetContent()))) {
       // an optgroup
       optionHeight = GetMaxOptionHeight(aPresContext, option);
     } else {
       // an option
-      nsSize size;
-      option->GetSize(size);
-      optionHeight = size.height;
+      optionHeight = option->GetSize().height;
     }
     if (result < optionHeight)
       result = optionHeight;
@@ -1416,12 +1405,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 NS_IMETHODIMP
 nsListControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  nsIContent* content;
-  nsresult    rv;
-
-  rv = GetContent(&content);
-  aContent = content;
-  return rv;
+  aContent = GetContent();
+  NS_IF_ADDREF(aContent);
+  return NS_OK;
 }
 
 nsListControlFrame::ScrollbarStyles
@@ -1666,31 +1652,29 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
 {
   nsIView* view = nsnull;
   if (IsInDropDownMode()) {
-    view = GetView(aPresContext);
+    view = GetView();
   } else {
     nsIFrame* scrolledFrame = nsnull;
     GetScrolledFrame(aPresContext, scrolledFrame);
     NS_ASSERTION(scrolledFrame, "No scrolled frame found");
     NS_ENSURE_TRUE(scrolledFrame, NS_ERROR_FAILURE);
     
-    nsIFrame* scrollport = nsnull;
-    scrolledFrame->GetParent(&scrollport);
+    nsIFrame* scrollport = scrolledFrame->GetParent();
     NS_ASSERTION(scrollport, "No scrollport found");
     NS_ENSURE_TRUE(scrollport, NS_ERROR_FAILURE);
 
-    view = scrollport->GetView(aPresContext);
+    view = scrollport->GetView();
   }
 
   NS_ASSERTION(view, "no view???");
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIViewManager> viewMan;
-  view->GetViewManager(*getter_AddRefs(viewMan));
+  nsIViewManager* viewMan = view->GetViewManager();
   if (viewMan) {
     PRBool result;
     // It's not clear why we don't have the widget capture mouse events here.
     if (aGrabMouseEvents) {
-      viewMan->GrabMouseEvents(view,result);
+      viewMan->GrabMouseEvents(view, result);
       mIsCapturingMouseEvents = PR_TRUE;
     } else {
       nsIView* curGrabber;
@@ -2573,21 +2557,10 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   aPoint.x = 0;
   aPoint.y = 0;
  
-  nsIView *parent;
-
-  parent = aView;
-  while (nsnull != parent) {
-    nsCOMPtr<nsIViewManager> vm;
-    parent->GetViewManager(*getter_AddRefs(vm));
-    if (vm != aManager) {
-      break;
-    }
-
-    nscoord x, y;
-    parent->GetPosition(&x, &y);
-    aPoint.x += x;
-    aPoint.y += y;
-    parent->GetParent(parent);
+  for (nsIView* parent = aView;
+       parent && parent->GetViewManager() == aManager;
+       parent = parent->GetParent(parent)) {
+    aPoint += parent->GetPosition();
   }
 }
  
@@ -2672,21 +2645,6 @@ nsListControlFrame::DidReflow(nsIPresContext*           aPresContext,
       mDoneWithInitialReflow = PR_TRUE;
     }
     return rv;
-  }
-}
-
-NS_IMETHODIMP nsListControlFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
-{
-  if (PR_TRUE == IsInDropDownMode()) 
-  {
-    //SyncViewWithFrame();
-    mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    nsresult rv = nsGfxScrollFrame::MoveTo(aPresContext, aX, aY);
-    mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    //SyncViewWithFrame();
-    return rv;
-  } else {
-    return nsGfxScrollFrame::MoveTo(aPresContext, aX, aY);
   }
 }
 
@@ -3133,16 +3091,13 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         nscoord y;
         scrollableView->GetScrollPosition(x,y);
         // get the clipped rect
-        nsRect rect;
-        clippedView->GetBounds(rect);
+        nsRect rect = clippedView->GetBounds();
         // now move it by the offset of the scroll position
-        rect.x = 0;
-        rect.y = 0;
-        rect.MoveBy(x,y);
+        rect.x = x;
+        rect.y = y;
 
         // get the child
-        nsRect fRect;
-        childframe->GetRect(fRect);
+        nsRect fRect = childframe->GetRect();
         nsPoint pnt;
         nsIView * view;
         childframe->GetOffsetFromView(mPresContext, pnt, &view);
@@ -3162,7 +3117,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
           nsIFrame * optFrame;
           result = presShell->GetPrimaryFrameFor(parentContent, &optFrame);
           if (NS_SUCCEEDED(result) && optFrame) {
-            optFrame->GetRect(optRect);
+            optRect = optFrame->GetRect();
           }
         }
         fRect.y += optRect.y;
@@ -3617,7 +3572,7 @@ nsListEventListener::SetFrame(nsListControlFrame *aFrame)
   mFrame.SetReference(aFrame->WeakReferent());
   if (aFrame)
   {
-    aFrame->GetContent(getter_AddRefs(mContent));
+    mContent = aFrame->GetContent();
   }
   return NS_OK;
 }

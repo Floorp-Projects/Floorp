@@ -381,12 +381,11 @@ nsTextInputListener::EditAction()
 nsresult
 nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
 {
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = mFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = mFrame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
   nsCOMPtr<nsIDocument> doc;
-  rv = content->GetDocument(getter_AddRefs(doc));
+  nsresult rv = content->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
@@ -2178,12 +2177,9 @@ nsTextControlFrame::GetFont(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsTextControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  nsIContent* content;
-  nsresult    rv;
-
-  rv = GetContent(&content);
-  aContent = content;
-  return rv;
+  aContent = GetContent();
+  NS_IF_ADDREF(aContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
@@ -3079,13 +3075,10 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIFrame*       aChildList)
 {
   /*nsIFrame *list = aChildList;
-  nsFrameState  frameState;
   while (list)
   {
-    list->GetFrameState(&frameState);
-    frameState |= NS_FRAME_INDEPENDENT_SELECTION;
-    list->SetFrameState(frameState);
-    list->GetNextSibling(&list);
+    list->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
+    list = list->GetNextSibling();
   }
   */
   nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
@@ -3098,10 +3091,7 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
-  nsFrameState state;
-  first->GetFrameState(&state);
-  state |= NS_FRAME_REFLOW_ROOT;
-  first->SetFrameState(state);
+  first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
 //we must turn off scrollbars for singleline text controls
   if (IsSingleLineTextControl()) 
@@ -3130,7 +3120,7 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
   while(first)
   {
-    nsIView *view = first->GetView(aPresContext);
+    nsIView *view = first->GetView();
     if (view)
     {
       nsIScrollableView *scrollView;
@@ -3189,7 +3179,7 @@ nsTextControlFrame::GetScrollableView(nsIPresContext* aPresContext,
       rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
       if (NS_SUCCEEDED(rv) && scrollableView)
         *aView = scrollableView;
-      view->GetParent(view);
+      view = view->GetParent();
     }
   }
   return rv;

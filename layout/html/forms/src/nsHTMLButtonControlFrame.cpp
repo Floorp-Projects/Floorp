@@ -186,8 +186,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsCOMPtr<nsIContent> content;
-    GetContent(getter_AddRefs(content));
+    nsIContent* content = GetContent();
     nsCOMPtr<nsIDOMHTMLButtonElement> buttonElement(do_QueryInterface(content));
     if (buttonElement) //If turned XBL-base form control off, the frame contains HTML 4 button
       return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
@@ -272,11 +271,9 @@ nsHTMLButtonControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect
   nsIView* view;
   nsPoint viewOffset(0,0);
   GetOffsetFromView(aPresContext, viewOffset, &view);
-  while (nsnull != view) {
-    nsPoint tempOffset;
-    view->GetPosition(&tempOffset.x, &tempOffset.y);
-    viewOffset += tempOffset;
-    view->GetParent(view);
+  while (view) {
+    viewOffset += view->GetPosition();
+    view = view->GetParent();
   }
   aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
 }
@@ -336,7 +333,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   newParentContext = mFrames.FirstChild()->GetStyleContext();
 
   // Set the parent for each of the child frames
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(&frame)) {
+  for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
     frame->SetParent(mFrames.FirstChild());
     // now reparent the contexts for the reparented frame too
     if (frameManager) {
@@ -440,19 +437,12 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 #if 0
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
-    nsIView* view;
-    GetView(&view);
+    nsIView* view = GetView();
     if (!view) {
       nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      nsCOMPtr<nsIViewManager> viewMan;
-      presShell->GetViewManager(getter_AddRefs(viewMan));
-
-      nsIFrame* parWithView;
-      nsIView *parView;
-      GetParentWithView(&parWithView);
-      parWithView->GetView(&parView);
+      nsIViewManager* viewMan = aPresContext->GetViewManager();
+      nsIFrame* parWithView = GetAncestorWithView();
+      nsIView* parView = parWithView->GetView();
       // the view's size is not know yet, but its size will be kept in synch with our frame.
       nsRect boundBox(0, 0, 500, 500); 
       result = view->Init(viewMan, boundBox, parView, nsnull);
@@ -652,12 +642,9 @@ nsHTMLButtonControlFrame::GetFont(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  nsIContent* content;
-  nsresult    rv;
-
-  rv = GetContent(&content);
-  aContent = content;
-  return rv;
+  aContent = GetContent();
+  NS_IF_ADDREF(aContent);
+  return NS_OK;
 }
 
 nscoord 
