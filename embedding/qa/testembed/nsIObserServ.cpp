@@ -22,11 +22,8 @@
  * Contributor(s):
  *   David Epstein <depstein@netscape.com> 
  *   Ashish Bhatt <ashishbhatt@netscape.com> 
-
  *
-
  *
-
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -55,9 +52,7 @@
 CnsIObserServ::CnsIObserServ()
 
 {
-
 	mRefCnt = 1 ;
-
 }
 
 
@@ -83,13 +78,10 @@ ObserverElement ObserverTable[] = {
 void CnsIObserServ::OnStartTests(UINT nMenuID)
 
 {
-
 	// Calls  all or indivdual test cases on the basis of the 
 	// option selected from menu.
 
-
 	switch(nMenuID)
-
 	{
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS :
@@ -97,12 +89,12 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS :
-		AddObserversTest();
+		AddObserversTest(2);
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS :
-		QAOutput("nsIObserverService::EnumerateObserversTest(). Adding observers first", 2);
-		AddObserversTest();		
+		QAOutput("Adding observers first", 2);
+		AddObserversTest(1);		
 		EnumerateObserversTest();
 		break;
 
@@ -111,8 +103,8 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS :
-		QAOutput("nsIObserverService::RemoveObserversTest(). Adding observers first.", 2);
-		AddObserversTest();
+		QAOutput("Adding observers first.", 2);
+		AddObserversTest(1);
 		RemoveObserversTest();
 		break;
 
@@ -124,13 +116,13 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 
 void CnsIObserServ::RunAllTests()
 {
-	AddObserversTest();
+	AddObserversTest(2);
 	EnumerateObserversTest();
 	NotifyObserversTest();
 	RemoveObserversTest();
 }
 
-void CnsIObserServ::AddObserversTest()
+void CnsIObserServ::AddObserversTest(int displayType)
 {
 	int i;
 
@@ -143,19 +135,13 @@ void CnsIObserServ::AddObserversTest()
 		return;
 	}
 
-
-	observerService->AddObserver(this, "text/xml", PR_TRUE);
-
-
 	for (i=0; i<10; i++)
 	{
 		rv = observerService->AddObserver(this, ObserverTable[i].theTopic, 
-									 ObserverTable[i].theOwnsWeak);
+									      ObserverTable[i].theOwnsWeak);
 		FormatAndPrintOutput("The observer to be added = ", ObserverTable[i].theTopic, 1);	
-
-		RvTestResult(rv, "AddObservers() test", 2);
+		RvTestResult(rv, "AddObservers() test", displayType);
 	}
-
 }
 
 void CnsIObserServ::RemoveObserversTest()
@@ -170,7 +156,6 @@ void CnsIObserServ::RemoveObserversTest()
 		QAOutput("Can't get nsIObserverService object. Tests fail.");
 		return;
 	}
-
 
 	for (i=0; i<10; i++)
 	{
@@ -217,7 +202,6 @@ void CnsIObserServ::EnumerateObserversTest()
 		rv = observerService->EnumerateObservers(ObserverTable[i].theTopic, 
 												 getter_AddRefs(simpleEnum));
 
-
 		RvTestResult(rv, "EnumerateObserversTest() test", 2);
 		if (!simpleEnum)
 		{
@@ -239,7 +223,6 @@ void CnsIObserServ::EnumerateObserversTest()
 			// compare 'this' with observer object
 	//		if (this ==(CnsIObserServ *)observer)
 
-
 			if( this == NS_REINTERPRET_CAST(CnsIObserServ*,NS_REINTERPRET_CAST(void*, observer.get())))
 			{
 				QAOutput("observers match. Test passes.");
@@ -253,7 +236,6 @@ void CnsIObserServ::EnumerateObserversTest()
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(CnsIObserServ,  nsIObserver,  nsISupportsWeakReference);
-
 
 
 NS_IMETHODIMP CnsIObserServ::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)

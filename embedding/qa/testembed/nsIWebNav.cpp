@@ -85,7 +85,7 @@ NavElement UrlTable[] = {
    {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
    {"https://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
    {"about:plugins", nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE},
-   {"javascript:", nsIWebNavigation::LOAD_FLAGS_NONE},
+ //  {"javascript:", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"file://C|/Program Files", nsIWebNavigation::LOAD_FLAGS_NONE}
 };
 
@@ -169,7 +169,7 @@ void CNsIWebNav::RunAllTests()
    QAOutput("Run a few LoadURI() tests.", 2);
 
  	
-   LoadUriandReload(11);
+   LoadUriandReload(10);
 
  
 	// Stop() tests
@@ -189,39 +189,41 @@ void CNsIWebNav::RunAllTests()
 
 void CNsIWebNav::LoadUriandReload(int URItotal)
 {
-   int i=0;
+   int i=0, j=0;
    // LoadURI() & reload tests
 
    QAOutput("Run a few LoadURI() and Reload() tests.", 2);
-	
-   for (i=0; i < URItotal; i++)
-   {
-       LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
-       switch (i)
-       {
-       case 0:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
-           break;
-       case 1:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
-           break;
-       case 2:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
-           break;
-       // simulate shift-reload
-       case 3:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
-                      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
-           break;
-       case 4:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
-           break;
-	   case 5:
-           ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
-           break;
-       }
-   }
 
+   for (j=0; j < 9; j++) 
+   {
+	   for (i=0; i < URItotal; i++)
+	   {
+		   LoadUriTest(UrlTable[i].theUri, UrlTable[j].theFlag);
+		   switch (i)
+		   {
+		   case 0:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
+			   break;
+		   case 1:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
+			   break;
+		   case 2:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+			   break;
+		   // simulate shift-reload
+		   case 3:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
+						  nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+			   break;
+		   case 4:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+			   break;
+		   case 5:
+			   ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
+			   break;
+		   } 
+	   }
+   }
 }
 
 // ***********************************************************************
@@ -314,7 +316,7 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
    char theTotalString[500];
    char theFlagName[200];
 
-   switch(theFlag)
+  switch(theFlag)
   {
   case nsIWebNavigation::LOAD_FLAGS_NONE:
       strcpy(theFlagName, "LOAD_FLAGS_NONE");
@@ -350,7 +352,7 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
 
    rv =  qaWebNav->Reload(theFlag);
    sprintf(theTotalString, "%s%s%s%s", "Reload(): ", " w/ ", theFlagName, " test");
-   RvTestResult(rv, theTotalString, 2);
+   RvTestResult(rv, theTotalString, 1);
 }
 
 void CNsIWebNav::StopUriTest(char *theUrl, const unsigned long theFlag)
@@ -428,5 +430,5 @@ void CNsIWebNav::GetSHTest()
    rv = theSessionHistory->GetCount(&numOfElements);
    RvTestResult(rv, "nsISHistory::GetCount() for nsIWebNav test", 1);
  
-  FormatAndPrintOutput("the sHist entry count = ", numOfElements, 2);
+   FormatAndPrintOutput("the sHist entry count = ", numOfElements, 2);
 }
