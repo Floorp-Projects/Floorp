@@ -47,6 +47,7 @@ public:
   virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
     
 	// nsIWidget interface
+	NS_IMETHOD			Enable(PRBool bState);
 	NS_IMETHOD    	Show(PRBool aState);
 	NS_IMETHODIMP		SetFont(const nsFont &aFont);
 
