@@ -71,7 +71,7 @@ if ($build{all})
 chdir("::::");
 $MOZ_SRC = cwd();
 
-if ($MOZ_FULLCIRCLE = 1)
+if ($MOZ_FULLCIRCLE)
 {
 	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
 	$buildnum = Moz::SetBuildNumber();
