@@ -103,7 +103,9 @@ nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
     if (NS_FAILED(rv)) return rv;
     *trySSL= 0;
     getPrefString("try_ssl", pref);
-    return prefs->GetIntPref(pref, trySSL);
+    rv = prefs->GetIntPref(pref, trySSL);
+    if (NS_FAILED(rv)) *trySSL = 0;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,7 +129,9 @@ nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
     if (NS_FAILED(rv)) return rv;
     *authMethod = 0;
     getPrefString("auth_method", pref);
-    return prefs->GetIntPref(pref, authMethod);
+    rv = prefs->GetIntPref(pref, authMethod);
+    if (NS_FAILED(rv)) *authMethod = 0;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
