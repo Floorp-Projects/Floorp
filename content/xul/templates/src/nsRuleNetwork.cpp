@@ -377,40 +377,40 @@ MemoryElementSet::Add(MemoryElement* aElement)
 //----------------------------------------------------------------------
 
 nsresult
-nsBindingSet::Add(const nsBinding& aBinding)
+nsAssignmentSet::Add(const nsAssignment& aAssignment)
 {
-    NS_PRECONDITION(! HasBindingFor(aBinding.mVariable), "variable already bound");
-    if (HasBindingFor(aBinding.mVariable))
+    NS_PRECONDITION(! HasAssignmentFor(aAssignment.mVariable), "variable already bound");
+    if (HasAssignmentFor(aAssignment.mVariable))
         return NS_ERROR_UNEXPECTED;
 
     List* list = new List;
     if (! list)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    list->mBinding = aBinding;
-    list->mRefCnt  = 1;
-    list->mNext    = mBindings;
+    list->mAssignment = aAssignment;
+    list->mRefCnt     = 1;
+    list->mNext       = mAssignments;
 
-    mBindings = list;
+    mAssignments = list;
 
     return NS_OK;
 }
 
 PRInt32
-nsBindingSet::Count() const
+nsAssignmentSet::Count() const
 {
     PRInt32 count = 0;
-    for (ConstIterator binding = First(); binding != Last(); ++binding)
+    for (ConstIterator assignment = First(); assignment != Last(); ++assignment)
         ++count;
 
     return count;
 }
 
 PRBool
-nsBindingSet::HasBinding(PRInt32 aVariable, const Value& aValue) const
+nsAssignmentSet::HasAssignment(PRInt32 aVariable, const Value& aValue) const
 {
-    for (ConstIterator binding = First(); binding != Last(); ++binding) {
-        if (binding->mVariable == aVariable && binding->mValue == aValue)
+    for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
+        if (assignment->mVariable == aVariable && assignment->mValue == aValue)
             return PR_TRUE;
     }
 
@@ -418,10 +418,10 @@ nsBindingSet::HasBinding(PRInt32 aVariable, const Value& aValue) const
 }
 
 PRBool
-nsBindingSet::HasBindingFor(PRInt32 aVariable) const
+nsAssignmentSet::HasAssignmentFor(PRInt32 aVariable) const
 {
-    for (ConstIterator binding = First(); binding != Last(); ++binding) {
-        if (binding->mVariable == aVariable)
+    for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
+        if (assignment->mVariable == aVariable)
             return PR_TRUE;
     }
 
@@ -429,11 +429,11 @@ nsBindingSet::HasBindingFor(PRInt32 aVariable) const
 }
 
 PRBool
-nsBindingSet::GetBindingFor(PRInt32 aVariable, Value* aValue) const
+nsAssignmentSet::GetAssignmentFor(PRInt32 aVariable, Value* aValue) const
 {
-    for (ConstIterator binding = First(); binding != Last(); ++binding) {
-        if (binding->mVariable == aVariable) {
-            *aValue = binding->mValue;
+    for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
+        if (assignment->mVariable == aVariable) {
+            *aValue = assignment->mValue;
             return PR_TRUE;
         }
     }
@@ -442,22 +442,22 @@ nsBindingSet::GetBindingFor(PRInt32 aVariable, Value* aValue) const
 }
 
 PRBool
-nsBindingSet::Equals(const nsBindingSet& aSet) const
+nsAssignmentSet::Equals(const nsAssignmentSet& aSet) const
 {
-    if (aSet.mBindings == mBindings)
+    if (aSet.mAssignments == mAssignments)
         return PR_TRUE;
 
-    // If they have a different number of bindings, then they're different.
+    // If they have a different number of assignments, then they're different.
     if (Count() != aSet.Count())
         return PR_FALSE;
 
     // XXX O(n^2)! Ugh!
-    for (ConstIterator binding = First(); binding != Last(); ++binding) {
+    for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         Value value;
-        if (! aSet.GetBindingFor(binding->mVariable, &value))
+        if (! aSet.GetAssignmentFor(assignment->mVariable, &value))
             return PR_FALSE;
 
-        if (binding->mValue != value)
+        if (assignment->mValue != value)
             return PR_FALSE;
     }
 
@@ -473,9 +473,9 @@ Instantiation::Hash(const void* aKey)
 
     PLHashNumber result = 0;
 
-    nsBindingSet::ConstIterator last = inst->mBindings.Last();
-    for (nsBindingSet::ConstIterator binding = inst->mBindings.First(); binding != last; ++binding)
-        result ^= binding->Hash();
+    nsAssignmentSet::ConstIterator last = inst->mAssignments.Last();
+    for (nsAssignmentSet::ConstIterator assignment = inst->mAssignments.First(); assignment != last; ++assignment)
+        result ^= assignment->Hash();
 
     return result;
 }
@@ -568,9 +568,9 @@ InstantiationSet::Erase(Iterator aIterator)
 
 
 PRBool
-InstantiationSet::HasBindingFor(PRInt32 aVariable) const
+InstantiationSet::HasAssignmentFor(PRInt32 aVariable) const
 {
-    return !Empty() ? First()->mBindings.HasBindingFor(aVariable) : PR_FALSE;
+    return !Empty() ? First()->mAssignments.HasAssignmentFor(aVariable) : PR_FALSE;
 }
 
 //----------------------------------------------------------------------
@@ -645,30 +645,30 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     // matches.
     nsresult rv;
 
-    PRBool hasLeftBinding = aInstantiations.HasBindingFor(mLeftVariable);
-    PRBool hasRightBinding = aInstantiations.HasBindingFor(mRightVariable);
+    PRBool hasLeftAssignment = aInstantiations.HasAssignmentFor(mLeftVariable);
+    PRBool hasRightAssignment = aInstantiations.HasAssignmentFor(mRightVariable);
 
-    NS_ASSERTION(hasLeftBinding ^ hasRightBinding, "there isn't exactly one binding specified");
-    if (! (hasLeftBinding ^ hasRightBinding))
+    NS_ASSERTION(hasLeftAssignment ^ hasRightAssignment, "there isn't exactly one assignment specified");
+    if (! (hasLeftAssignment ^ hasRightAssignment))
         return NS_ERROR_UNEXPECTED;
 
     InstantiationSet instantiations = aInstantiations;
-    InnerNode* test = hasLeftBinding ? mRightParent : mLeftParent;
+    InnerNode* test = hasLeftAssignment ? mRightParent : mLeftParent;
 
-    // extend the bindings
+    // extend the assignments
     InstantiationSet::Iterator last = instantiations.Last();
     for (InstantiationSet::Iterator inst = instantiations.First(); inst != last; ++inst) {
-        if (hasLeftBinding) {
+        if (hasLeftAssignment) {
             // the left is bound
             Value leftValue;
-            inst->mBindings.GetBindingFor(mLeftVariable, &leftValue);
-            rv = inst->AddBinding(mRightVariable, leftValue);
+            inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
+            rv = inst->AddAssignment(mRightVariable, leftValue);
         }
         else {
             // the right is bound
             Value rightValue;
-            inst->mBindings.GetBindingFor(mRightVariable, &rightValue);
-            rv = inst->AddBinding(mLeftVariable, rightValue);
+            inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
+            rv = inst->AddAssignment(mLeftVariable, rightValue);
         }
 
         if (NS_FAILED(rv)) return rv;
@@ -701,7 +701,7 @@ JoinNode::GetNumBound(InnerNode* aAncestor, const InstantiationSet& aInstantiati
 
     PRInt32 count = 0;
     for (PRInt32 i = vars.GetCount() - 1; i >= 0; --i) {
-        if (aInstantiations.HasBindingFor(vars.GetVariableAt(i)))
+        if (aInstantiations.HasAssignmentFor(vars.GetVariableAt(i)))
             ++count;
     }
 
@@ -717,27 +717,27 @@ JoinNode::Bind(InstantiationSet& aInstantiations, PRBool* aDidBind)
     // variable. If successful, aDidBind <= PR_TRUE.
     nsresult rv;
 
-    PRBool hasLeftBinding = aInstantiations.HasBindingFor(mLeftVariable);
-    PRBool hasRightBinding = aInstantiations.HasBindingFor(mRightVariable);
+    PRBool hasLeftAssignment = aInstantiations.HasAssignmentFor(mLeftVariable);
+    PRBool hasRightAssignment = aInstantiations.HasAssignmentFor(mRightVariable);
 
-    NS_ASSERTION(! (hasLeftBinding && hasRightBinding), "there is more than one binding specified");
-    if (hasLeftBinding && hasRightBinding)
+    NS_ASSERTION(! (hasLeftAssignment && hasRightAssignment), "there is more than one assignment specified");
+    if (hasLeftAssignment && hasRightAssignment)
         return NS_ERROR_UNEXPECTED;
 
-    if (hasLeftBinding || hasRightBinding) {
+    if (hasLeftAssignment || hasRightAssignment) {
         InstantiationSet::Iterator last = aInstantiations.Last();
         for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
-            if (hasLeftBinding) {
+            if (hasLeftAssignment) {
                 // the left is bound
                 Value leftValue;
-                inst->mBindings.GetBindingFor(mLeftVariable, &leftValue);
-                rv = inst->AddBinding(mRightVariable, leftValue);
+                inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
+                rv = inst->AddAssignment(mRightVariable, leftValue);
             }
             else {
                 // the right is bound
                 Value rightValue;
-                inst->mBindings.GetBindingFor(mRightVariable, &rightValue);
-                rv = inst->AddBinding(mLeftVariable, rightValue);
+                inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
+                rv = inst->AddAssignment(mLeftVariable, rightValue);
             }
 
             if (NS_FAILED(rv)) return rv;
@@ -789,7 +789,7 @@ JoinNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
         rv = Bind(aInstantiations, &didBind);
         if (NS_FAILED(rv)) return rv;
 
-        NS_ASSERTION(didBind, "uh oh, still no binding");
+        NS_ASSERTION(didBind, "uh oh, still no assignment");
     }
 
     rv = last->Constrain(aInstantiations, aClosure);
