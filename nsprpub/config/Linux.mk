@@ -127,4 +127,3 @@ endif
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -shared
-DSO_LDFLAGS		=
