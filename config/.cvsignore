@@ -8,3 +8,5 @@ autoconf.mk
 Makefile
 bsdecho
 build_number
+master.pl
+master.ini
