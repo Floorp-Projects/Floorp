@@ -259,7 +259,7 @@ create_chrome(Widget parent,String name)
 	_tool_box = create_tool_box(chrome,"ToolBox");
 
 	tool_bar_one = XfeCreateLoadedToolBar(_tool_box,
-										  "ToolBoxOne",
+										  "ToolBarOne",
 										  "One",
 										  10,
 										  2,
@@ -268,11 +268,11 @@ create_chrome(Widget parent,String name)
 										  XfeActivateCallback,
 										  NULL);
 	
-	url_bar = create_url_bar(_tool_box,"UrlBar");
+	url_bar = create_url_bar(_tool_box,"ToolBarTwo");
 	
 	
 	tool_bar_two = XfeCreateLoadedToolBar(_tool_box,
-										  "ToolBoxTwo",
+										  "ToolBarThree",
 										  "Two",
 										  10,
 										  2,

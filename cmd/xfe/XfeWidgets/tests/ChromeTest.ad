@@ -16,8 +16,8 @@
 ! Reserved.
 
 
-ChromeTest*MainForm.width:					800
-ChromeTest*MainForm.height:					600
+!ChromeTest*MainForm.width:					800
+!ChromeTest*MainForm.height:					600
 ChromeTest*MainForm.background:				Gray70
 ChromeTest*MainForm.shadowThickness:		0
 ChromeTest*MainForm.shadowType:				shadow_in
@@ -84,6 +84,7 @@ ChromeTest*Toggle*BottomView.mnemonic:				B
 !!
 !! ToolBox
 !!
+ChromeTest*ToolBox.background:							red
 ChromeTest*ToolBox*background:							Gray70
 ChromeTest*ToolBox.shadowThickness:						1
 ChromeTest*ToolBox*buttonType:							button_push
