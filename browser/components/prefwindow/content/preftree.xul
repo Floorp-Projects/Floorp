@@ -152,11 +152,6 @@
             <treecell url="chrome://browser/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
           </treerow>
         </treeitem>
-        <treeitem id="mousewheelItem">
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
-          </treerow>  
-        </treeitem> 
       </treechildren>
     </treeitem>
 

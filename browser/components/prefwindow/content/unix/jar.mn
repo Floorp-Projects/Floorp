@@ -1,2 +1,2 @@
-comm.jar:
+browser.jar:
     content/browser/pref/platformPrefOverlay.xul
