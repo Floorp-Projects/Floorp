@@ -163,3 +163,13 @@ void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
   thunk.arg = closure;
   PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, &thunk);
 }
+
+static PR_CALLBACK PRIntn _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)
+{
+  return HT_ENUMERATE_REMOVE;
+}
+
+void nsHashtable::Reset() {
+  PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, NULL);
+}
+
