@@ -154,10 +154,7 @@ cert_init_cert()
 # local shell function to create client certs 
 #     initialize DB, import
 #     root cert
-#     generate request
-#     sign request
-#     import Cert
-#
+#     add cert to DB
 ########################################################################
 cert_create_cert()
 {
@@ -175,6 +172,19 @@ cert_create_cert()
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
+    cert_add_cert
+    return $?
+}
+
+############################# cert_add_cert ############################
+# local shell function to add client certs to an existing CERT DB
+#     generate request
+#     sign request
+#     import Cert
+#
+########################################################################
+cert_add_cert()
+{
 
     CU_ACTION="Generate Cert Request for $CERTNAME"
     CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
@@ -323,8 +333,8 @@ cert_ssl()
   cert_create_cert ${CLIENTDIR} "TestUser" 6
 
   echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
-  echo "             ${HOST}.${DOMSUF} ------------------------------------"
-  cert_init_cert ${SERVERDIR} "${HOST}.${DOMSUF}" 1
+  echo "             ${HOSTADDR} ------------------------------------"
+  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1
   cp ${CADIR}/*.db .
   CU_ACTION="Creating ${CERTNAME}'s Server Cert"
   CU_SUBJECT="CN=${CERTNAME}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
@@ -341,6 +351,37 @@ cert_ssl()
       cert_log "SUCCESS: SSL passed"
   fi
 }
+############################## cert_stresscerts ################################
+# local shell function to create client certs for SSL stresstest
+########################################################################
+cert_stresscerts()
+{
+
+  ############### Creating Certs for SSL stress test #######################
+  #
+  CERTDIR="$CLIENTDIR"
+  cd "${CERTDIR}"
+
+  CERTFAILED=0
+  echo "$SCRIPTNAME: Creating Client CA Issued Certificates ==============="
+
+  CONTINUE=$GLOB_MAX_CERT
+  CERTSERIAL=10
+
+  while [ $CONTINUE -ge $GLOB_MIN_CERT ]
+  do
+      CERTNAME="TestUser$CONTINUE"
+      cert_add_cert ${CLIENTDIR} "TestUser$CONTINUE" $CERTSERIAL
+      CERTSERIAL=`expr $CERTSERIAL + 1 `
+      CONTINUE=`expr $CONTINUE - 1 `
+  done
+  if [ "$CERTFAILED" != 0 ] ; then
+      cert_log "ERROR: StressCert failed $RET"
+  else
+      cert_log "SUCCESS: StressCert passed"
+  fi
+}
+
 
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
@@ -356,8 +397,15 @@ cert_cleanup()
 
 ################## main #################################################
 
-cert_init
-cert_CA
-cert_smime_client
-cert_ssl
+cert_init 
+cert_CA 
+cert_ssl 
+cert_smime_client        
+if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
+    cert_stresscerts 
+    #following lines to be used when databases are to be reused
+    #cp -r /u/sonmi/tmp/stress/kentuckyderby.13/* $HOSTDIR
+    #cp -r $HOSTDIR/../clio.8/* $HOSTDIR
+
+fi
 cert_cleanup
