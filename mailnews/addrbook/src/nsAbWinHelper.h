@@ -130,7 +130,7 @@ public:
 protected:
     HRESULT mLastError ;
     LPADRBOOK mAddressBook ;
-    static ULONG mEntryCounter ;
+    static PRUint32 mEntryCounter ;
     static PRLock *mMutex ;
 
     // Retrieve the contents of a container, with an optional restriction

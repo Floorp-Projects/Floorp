@@ -271,7 +271,7 @@ void nsMapiEntryArray::CleanUp(void)
 
 MOZ_DECL_CTOR_COUNTER(nsAbWinHelper)
 
-ULONG nsAbWinHelper::mEntryCounter = 0 ;
+PRUint32 nsAbWinHelper::mEntryCounter = 0 ;
 // There seems to be a deadlock/auto-destruction issue
 // in MAPI when multiple threads perform init/release 
 // operations at the same time. So I've put a mutex
