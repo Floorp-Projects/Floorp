@@ -1,0 +1,68 @@
+window { 
+ display: block; 
+} 
+
+tree { 
+ display: table; 
+ table-layout: fixed;
+ background-color: #FFFFFF; 
+ border: none; 
+ border-spacing: 0px; 
+// border-collapse: collapse; 
+// width: 100%;
+}
+
+treecol {
+ display: table-column;
+ width: 200px;
+}
+
+treeitem { 
+ display: table-row; 
+} 
+
+treehead { 
+ display: table-header-group; 
+} 
+
+treebody { 
+ display: table-row-group; 
+} 
+
+treecell { 
+ display: table-cell; 
+ font-family: Verdana, Sans-Serif;
+ font-size: 8pt;
+} 
+
+treehead treeitem treecell { 
+ background-color: #c0c0c0; 
+ border: outset 1px;
+ border-color: white #707070 #707070 white;
+ padding-left: 4px;
+}
+
+treeitem[selected="true"] > treecell {
+ background-color: yellow;
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+}
+
