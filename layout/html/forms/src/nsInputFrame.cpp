@@ -122,7 +122,6 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
 {
-printf("paint %d \n", this);
   nsStyleDisplay* disp =
     (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
