@@ -19,7 +19,7 @@ function doOKButton()
 {
     var v = document.commandDispatcher.focusedElement;
 			
-    if (v && v.tagName == 'TEXTAREA')
+    if (v && v.localName.toLowerCase() == 'textarea')
       return;
     
 	var close = true;

@@ -110,7 +110,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
       else 
         elementEntry.excluded = true;
 
-      if( formElement.nodeName.toLowerCase() == "select" ) { // select & combo
+      if( formElement.localName.toLowerCase() == "select" ) { // select & combo
         /* commenting out until select fields work properly, or someone tells me how
            to do this (also, is it better to store .value, or .text?):*/
           if( formElement.getAttribute("multiple") ) {
@@ -157,7 +157,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
         this.AddAttributes( formElement, elementEntry, "value", optAttributes );  // generic
 
       elementEntry.id       = formElement.id;
-      elementEntry.nodeName = formElement.nodeName;
+      elementEntry.localName = formElement.localName;
       // save the type attribute on the element if one is present
       elementEntry.elType   = ( formElement.type ) ? formElement.type : null;
     }
@@ -210,7 +210,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
         }
         
         // default "value" attributes        
-        if( formElement && formElement.nodeName.toLowerCase() == "input" ) {
+        if( formElement && formElement.localName.toLowerCase() == "input" ) {
           if( formElement.type.toLowerCase() == "checkbox" ||
               formElement.type.toLowerCase() == "radio" ) {
             if( value == undefined )
@@ -246,7 +246,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
               formElement.value = value;
           }
         } 
-        else if( formElement && formElement.nodeName.toLowerCase() == "select" ) {
+        else if( formElement && formElement.localName.toLowerCase() == "select" ) {
           /* commenting this out until select widgets work properly */
             if( formElement.getAttribute("multiple") &&
                 typeof(value) == "object" ) {
@@ -270,7 +270,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
               }
             }            
         }
-        else if( formElement && formElement.nodeName.toLowerCase() == "textarea" )
+        else if( formElement && formElement.localName.toLowerCase() == "textarea" )
           formElement.value = value;
       }
     }
@@ -372,7 +372,7 @@ function WSM_AddAttributes( formElement, elementEntry, valueAttribute, optAttrib
 /** string ElementIsIgnored( DOMElement element, StringArray exclElements ) ;
  *  - purpose: check to see if the current element is one of the ignored elements
  *  - in:       element - element to check, 
- *  -           exclElements - array of string ignored attribute nodeNames;
+ *  -           exclElements - array of string ignored attribute localNames;
  *  - out:      boolean if element is ignored (true) or not (false);
  **/
 function WSM_ElementIsIgnored( element, exclElements )
@@ -380,7 +380,7 @@ function WSM_ElementIsIgnored( element, exclElements )
   if (!exclElements) return false;
   for( var i = 0; i < exclElements.length; i++ )
   {
-    if( element.nodeName.toLowerCase() == exclElements[i] )
+    if( element.localName.toLowerCase() == exclElements[i] )
       return true;
   }
   return false;
