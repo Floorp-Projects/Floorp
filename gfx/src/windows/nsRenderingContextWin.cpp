@@ -2111,8 +2111,12 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
           goto MeasureText;
         }
       }
-      else {
+      else if(currFont) {
         prevFont = currFont;  // remember this font
+      } else {
+        NS_WARNING("no previous font and cannot find current font");
+        // this should never happen, but if it does we will continue walking the text
+        // and hope that a later font is found so we can use that to measure
       }
 
       // Advance to the next character
@@ -2124,7 +2128,10 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
 
      MeasureText:
       // Make sure the font is selected
-      if (prevFont->mFont != selectedFont) {
+      NS_ASSERTION(prevFont, "must have a font to measure text!");
+      if (prevFont &&
+          prevFont->mFont != selectedFont ) {
+        NS_ASSERTION(mDC && prevFont->mFont, "null args to SelectObject");
         ::SelectObject(mDC, prevFont->mFont);
         selectedFont = prevFont->mFont;
       }
@@ -2135,8 +2142,10 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
       while (start < i) {
         // Estimate how many characters will fit. Do that by diving the available
         // space by the average character width
-        PRInt32 estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
-
+        PRInt32 estimatedNumChars = 0;
+        if (aveCharWidth > 0) {
+          estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+        }
         // Make sure the estimated number of characters is at least 1
         if (estimatedNumChars < 1) {
           estimatedNumChars = 1;
@@ -3383,8 +3392,12 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
           goto MeasureText;
         }
       }
-      else {
+      else if(currFont) {
         prevFont = currFont;  // remember this font
+      } else {
+        NS_WARNING("no previous font and cannot find current font");
+        // this should never happen, but if it does we will continue walking the text
+        // and hope that a later font is found so we can use that to measure
       }
 
       // Advance to the next character
@@ -3396,7 +3409,10 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
 
      MeasureText:
       // Make sure the font is selected
-      if (prevFont->mFont != selectedFont) {
+      NS_ASSERTION(prevFont, "must have a font to measure text!");
+      if (prevFont &&
+          prevFont->mFont != selectedFont ) {
+        NS_ASSERTION(mDC && prevFont->mFont, "null args to SelectObject");
         ::SelectObject(mDC, prevFont->mFont);
         selectedFont = prevFont->mFont;
       }
@@ -3407,8 +3423,10 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
       while (start < i) {
         // Estimate how many characters will fit. Do that by diving the available
         // space by the average character width
-        PRInt32 estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
-
+        PRInt32 estimatedNumChars = 0;
+        if (aveCharWidth > 0) {
+          estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+        }
         // Make sure the estimated number of characters is at least 1
         if (estimatedNumChars < 1) {
           estimatedNumChars = 1;
