@@ -1,0 +1,24 @@
+   interface HTMLInputElement : HTMLElement {
+     attribute wstring         defaultValue;
+     attribute boolean         defaultChecked;
+     attribute HTMLFormElement form;
+     attribute wstring         accept;
+     attribute wstring         accessKey;
+     attribute wstring         align;
+     attribute wstring         alt;
+     attribute boolean         checked;
+     attribute boolean         disabled;
+     attribute long            maxLength;
+     attribute wstring         name;
+     attribute boolean         readOnly;
+     attribute wstring         size;
+     attribute wstring         src;
+     attribute long            tabIndex;
+     attribute wstring         type;
+     attribute wstring         useMap;
+     attribute wstring         value;
+     void                      blur();
+     void                      focus();
+     void                      select();
+     void                      click();
+   };

@@ -1,0 +1,7 @@
+   interface HTMLElement : Element {
+     attribute wstring         id;
+     attribute wstring         title;
+     attribute wstring         lang;
+     attribute wstring         dir;
+     attribute wstring         className;
+   };

@@ -1,0 +1,4 @@
+   interface HTMLDelElement : HTMLElement {
+     attribute wstring         cite;
+     attribute wstring         dateTime;
+   };

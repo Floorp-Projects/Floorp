@@ -1,0 +1,4 @@
+   interface HTMLFrameSetElement : HTMLElement {
+     attribute wstring         cols;
+     attribute wstring         rows;
+   };

@@ -17,21 +17,14 @@
 
 DEPTH=../..
 
+include $(DEPTH)/config/config.mk
+
 LIBRARY_NAME = jsdom
 
 DEFINES = -D_IMPL_NS_DOM
 
 CPPSRCS =				\
 	nsJSEnvironment.cpp		\
-	nsJSNode.cpp		\
-	nsJSData.cpp		\
-	nsJSDocument.cpp	\
-	nsJSDocumentFragment.cpp\
-	nsJSElement.cpp		\
-	nsJSNamedNodeMap.cpp	\
-	nsJSNodeList.cpp	\
-	nsJSText.cpp		\
-	nsJSAttribute.cpp	\
 	nsJSWindow.cpp          \
 	nsJSNavigator.cpp       \
 	nsGlobalWindow.cpp      \
@@ -41,8 +34,24 @@ MODULE = raptor
 
 REQUIRES = xpcom raptor dom js netlib
 
-include $(DEPTH)/config/config.mk
+ifeq ($(OS_ARCH),IRIX)
+LD = $(CCC)
+LD_ALL = -all
+LD_NONE = -none
+endif
 
-TARGETS = $(LIBRARY)
+# These must be maintained in the proper order for Linux.
+
+EXTRA_DSO_LDOPTS = \
+	$(LD_ALL)					\
+	$(DIST)/lib/libdomcore_s.a			\
+	$(LD_NONE)					\
+	$(DIST)/bin/libraptorbase.so			\
+	$(DIST)/bin/libnetlib.so			\
+	$(DIST)/bin/libxpcom.so				\
+	$(DIST)/bin/libnspr21.so			\
+	$(DIST)/bin/libplds21.so			\
+	$(DIST)/bin/libplc21.so				\
+	-lm
 
 include $(DEPTH)/config/rules.mk
