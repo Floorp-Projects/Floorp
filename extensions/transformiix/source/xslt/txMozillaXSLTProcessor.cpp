@@ -656,8 +656,7 @@ txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
         nsCAutoString spec;
         if (aUri) {
             aUri->GetSpec(spec);
-            // XXX use CopyUTF8toUCS2 once it's there
-            mSourceText = NS_ConvertUTF8toUCS2(spec);
+            CopyUTF8toUTF16(spec, mSourceText);
         }
         reportError(rv, nsnull, nsnull);
     }
