@@ -43,6 +43,7 @@ class nsIWebShell;
 class nsIWebShellContainer;
 class nsIPref;
 class nsIContent;
+class nsIURIContentListener;
 class nsIDOMDocument;
 
 // Interface ID for nsIWebShell
@@ -486,6 +487,9 @@ public:
    */
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState) = 0;
+
+  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aContentListener) = 0;
+  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener ** aContentListener) = 0;
 
 };
 
