@@ -51,7 +51,6 @@
 
 #undef DEBUG_scroll     // define to see ugly mousewheel messages
 
-static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
@@ -114,9 +113,7 @@ nsEventStateManager::~nsEventStateManager()
   NS_IF_RELEASE(mLastWindowToHaveFocus);
 }
 
-NS_IMPL_ADDREF(nsEventStateManager)
-NS_IMPL_RELEASE(nsEventStateManager)
-NS_IMPL_QUERY_INTERFACE(nsEventStateManager, kIEventStateManagerIID);
+NS_IMPL_ISUPPORTS1(nsEventStateManager, nsIEventStateManager)
 
 // This must be the same across instances
 static nsCOMPtr<nsIContent> mLastFocusedContent;
@@ -1418,12 +1415,12 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aFocusFram
     if(!surpressBlurAndFocus) {
     if (aSetFocus) {
 
-          mLastFocusedContent = nsnull;     
+      mLastFocusedContent = nsnull;     
       focusChange->SetFocus(mPresContext);
-                mLastFocusedContent = aFocusContent;
+      mLastFocusedContent = aFocusContent;
 
 
-          } else {
+    } else {
       focusChange->RemoveFocus(mPresContext);
     }
     }
@@ -2064,6 +2061,6 @@ nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
   if (nsnull == manager) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return manager->QueryInterface(kIEventStateManagerIID, (void **) aInstancePtrResult);
+  return manager->QueryInterface(NS_GET_IID(nsIEventStateManager), (void **) aInstancePtrResult);
 }
 
