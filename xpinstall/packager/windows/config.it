@@ -142,6 +142,7 @@ C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
 
 [Setup Type2]
 Description Short=C&ustom
@@ -156,6 +157,7 @@ C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -168,6 +170,7 @@ C3=Component3
 ;C1=Component1
 ;C2=Component2
 ;C3=Component3
+;C4=Component4
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -325,6 +328,26 @@ $InstallSizeArchive$:$UninstallFile$
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+Parameter=
+; url keys can be as many as needed.  url0 is attempted first.  if it fails,
+; the next url key is tried in sequential order.
+; The url should not contain the filename.  Setup will assemble the complete url
+; using the url keys and the Archive key.
+Domain0=$Domain$
+Server Path0=$ServerPath$
+
+[Component4]
+Description Short=Chatzilla
+Description Long=Chatzilla IRC client
+Archive=chatzilla.xpi
+$InstallSize$:chatzilla
+$InstallSizeSystem$
+$InstallSizeArchive$:chatzilla.xpi
+;Dependency0=
+; Attributes can be the following values:
+;   SELECTED  - the component is selected to be installed by default.
+;   INVISIBLE - the component is not shown in the Select Components dialog.
+Attributes=SELECTED
 Parameter=
 ; url keys can be as many as needed.  url0 is attempted first.  if it fails,
 ; the next url key is tried in sequential order.

@@ -18,7 +18,6 @@ bin/libxpcom.so
 bin/libxpistub.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
-bin/component.reg
 
 [browser]
 bin/mozilla
@@ -38,7 +37,6 @@ bin/libxlibrgb.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
-bin/vreg
 
 bin/components/addrbook.xpt
 bin/components/appshell.xpt
@@ -99,7 +97,6 @@ bin/components/liburiloader.so
 bin/components/libwallet.so
 bin/components/libwalletviewers.so
 bin/components/libxpconnect.so
-bin/components/libxpiflash.so
 bin/components/locale.xpt
 bin/components/libtbmb.so
 bin/components/tbmb.xpt
@@ -144,14 +141,10 @@ bin/components/xpcom_base.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
 bin/components/xpconnect.xpt
-; this is only there if you build the irc client
-; bin/components/bs.xpt
 bin/components/chrome.xpt
 bin/components/docshell.xpt
 bin/components/jsurl.xpt
 bin/components/layout.xpt
-; this is only there if you build the irc client
-; bin/components/libbs.so
 bin/components/libjsloader.so
 bin/components/libnsprefm.so
 bin/components/libregviewer.so
@@ -173,9 +166,18 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/locales/*
-bin/chrome/packages/*
-bin/chrome/skins/*
+bin/chrome/autocomplete.xml
+bin/chrome/htmlBindings.xml
+bin/chrome/menulistBindings.xml
+bin/chrome/platformHTMLBindings.xml
+bin/chrome/radioBindings.xml
+bin/chrome/treeBindings.xml
+bin/chrome/xul.css
+bin/chrome/xulBindings.xml
+bin/chrome/locales/en-US/*
+bin/chrome/packages/widget-toolkit/*
+bin/chrome/packages/core/*
+bin/chrome/skins/modern/*
 -bin/chrome/packages/core/editor/content/EditorInitPage.html
 -bin/chrome/packages/core/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -189,18 +191,9 @@ bin/chrome/skins/*
 -bin/chrome/packages/core/editor/content/viewsource.js
 -bin/chrome/packages/core/editor/content/viewsource.xul
 -bin/chrome/packages/core/communicator/content/domviewer
-bin/chrome/autocomplete.xml
-bin/chrome/htmlBindings.xml
-bin/chrome/radioBindings.xml
-bin/chrome/treeBindings.xml
-bin/chrome/menulistBindings.xml
-bin/chrome/platformHTMLBindings.xml
-bin/chrome/xul.css
-bin/chrome/xulBindings.xml
 
 bin/defaults/pref/editor.js
 bin/defaults/pref/all.js
-bin/defaults/pref/mailnews.js
 bin/defaults/pref/config.js
 bin/defaults/pref/initpref.js
 bin/defaults/pref/unix.js
@@ -267,6 +260,12 @@ bin/components/msgsearch.xpt
 bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
+bin/chrome/packages/messenger/*
+bin/defaults/pref/mailnews.js
 
 ; this doesn't seem to be in the tree. -blizzard
 ;bin/help/mailhelp/*
+
+[chatzilla]
+bin/components/chatzilla-service.js
+bin/chrome/packages/chatzilla/*

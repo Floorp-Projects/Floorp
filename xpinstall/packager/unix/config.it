@@ -88,6 +88,13 @@ $InstallSize$:mail
 Attributes=SELECTED
 URL0=$URLPath$
 
+[Component3]
+Description Short=Chatzilla
+Description Long=Chatzilla IRC client
+Archive=chatzilla.xpi
+$InstallSize$:chatzilla
+Attributes=SELECTED
+URL0=$URLPath$
 
 ;-------------------------------------------------------------------------
 [Dialog Start Install]

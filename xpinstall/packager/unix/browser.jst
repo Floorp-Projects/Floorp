@@ -1,7 +1,7 @@
-var err = startInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
-logComment("startInstall: " + err);
+var err = initInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
+logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Communicator");
+var communicatorFolder = getFolder("Program");
 logComment("communicatorFolder: " + communicatorFolder);
 
 err = addDirectory("Program",
@@ -18,13 +18,21 @@ var pluginsFolder = getFolder("Plugins");
 var ignoreErr = dirCreate(pluginsFolder);
 logComment("dirCreate() returned: " + ignoreErr);
 
-if (err==SUCCESS || err==REBOOT_NEEDED)
+var ctype = (CONTENT | DELAYED_CHROME);
+var cf = getFolder("Chrome");
+registerChrome(ctype, getFolder(cf,"packages/core"));
+registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
+registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
+registerChrome(LOCALE|DELAYED_CHROME, getFolder(cf,"locales/en-US"));
+
+err = getLastError();
+if (err==SUCCESS)
 {
-	err = finalizeInstall(); 
-	logComment("finalizeInstall() returned: " + err);
+	err = performInstall(); 
+	logComment("performInstall() returned: " + err);
 }
 else
 {
-	abortInstall();
-	logComment("abortInstall() due to error: " + err);
+	cancelInstall(err);
+	logComment("cancelInstall() due to error: " + err);
 }

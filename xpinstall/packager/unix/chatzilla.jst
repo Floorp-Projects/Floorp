@@ -1,0 +1,22 @@
+var err = initInstall("Chatzilla v0.5", "Chatzilla", "$Version$"); 
+logComment("initInstall: " + err);
+
+addFile("Chatzilla service",
+        "bin/components/chatzilla-service.js",
+        getFolder("Components"),
+        "");
+
+var fChat = getFolder("Chrome","packages/chatzilla");
+addDirectory("",
+             "bin/chrome/packages/chatzilla", // jar source folder 
+             fChat,                           // target folder
+             "");                             // target subdir 
+
+registerChrome(PACKAGE | DELAYED_CHROME, fChat);
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);
+

@@ -10,7 +10,7 @@ function createShortcuts()
   var winreg;
   var fWindows;
   var fTemp;
-  var fCommunicator;
+  var fProgram;
   var fileExe;
   var scExeDesc;
   var scProfileDesc;
@@ -24,8 +24,8 @@ function createShortcuts()
 
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
-  fCommunicator        = getFolder("Communicator");
-  fTemp                = fCommunicator + "$MainExeFile$";
+  fProgram             = getFolder("Program");
+  fTemp                = fProgram + "$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
   scExeDesc            = "$ProductName$";
   scProfileDesc        = "Profile Manager";
@@ -109,16 +109,16 @@ function createShortcuts()
     logComment("fileExe                 : " + fileExe);
     logComment("fFolderPath             : " + fFolderPath);
     logComment("scExeDesc               : " + scExeDesc);
-    logComment("fCommunicator           : " + fCommunicator);
+    logComment("fProgram                : " + fProgram);
 
     /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
      * This is so that the folder creation gets logged for uninstall to remove it. */
     File.dirCreate(fFolderPath);
 
     /* create the shortcuts */
-    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fCommunicator,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fCommunicator,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fCommunicator,  scProfileDescParam, fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
 //    File.windowsShortcut(fileExe, fFolderPath,    "Test Http",   "",             "",                 "http://sweetlou/products/client/temp/ssu", 0);
 
     /* set the Program Folder Path in the Mozilla key in the Windows Registry */
@@ -181,18 +181,18 @@ function updateWinReg()
     winreg.createKey(subkey,"");
 
     valname = "Install Directory";
-    value   = fCommunicator;
+    value   = fProgram;
     err     = winreg.setValueString(subkey, valname, value);
 
     // set the App Paths key here
     subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
     winreg.createKey(subkey,"");
     valname = "";
-    value   = fCommunicator + "$MainExeFile$";
+    value   = fProgram + "$MainExeFile$";
     err     = winreg.setValueString(subkey, valname, value);
 
     valname = "Path";
-    value   = fCommunicator;
+    value   = fProgram;
     err     = winreg.setValueString(subkey, valname, value);
   }
 }
@@ -200,52 +200,68 @@ function updateWinReg()
 // main
 var srDest;
 var err;
-var fCommunicator;
+var fProgram;
 var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("$ProductName$", "Browser", "$Version$"); 
-logComment("startInstall: " + err);
+err    = initInstall("$ProductName$", "Browser", "$Version$"); 
+logComment("initInstall: " + err);
 
-fCommunicator  = getFolder("Communicator");
+fProgram  = getFolder("Program");
 fWindowsSystem = getFolder("Win System");
-logComment("fCommunicator: " + fCommunicator);
+logComment("fProgram: " + fProgram);
 
-if(verifyDiskSpace(fCommunicator, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest) == true)
 {
-  setPackageFolder(fCommunicator);
+  setPackageFolder(fProgram);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to fCommunicator
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
   // check return value
-  if(!checkError(err))
+  if( err == SUCCESS )
   {
-    fileComponentRegStr = fCommunicator + "component.reg";
-    fileComponentReg    = getFolder("file:///", fileComponentRegStr);
-    err                 = fileDelete(fileComponentReg);
-    logComment("fileDelete() returned: " + err);
-
     updateWinReg();
     createShortcuts();
+    // we don't want to fail on errors for the above two
+    resetError();
+
+    // register chrome
+    var ctype = (CONTENT | DELAYED_CHROME);
+    var cf = getFolder("Chrome");
+    registerChrome(ctype, getFolder(cf,"packages/core"));
+    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/modern"));
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf,"locales/en-US"));
 
     /* Log the .dat files that are created post install so it can be uninstalled.
      * Since the components folder gets created (and therefore logged) during finalize
      * we need to log its creation here before the xpti files so it will get removed
      * if the xpti files were the last files in the folder */
-    logComment("Create Folder: " + fCommunicator + "components");
-    logComment("Installing: "    + fCommunicator + "components\\xpti.dat");
-    logComment("Installing: "    + fCommunicator + "components\\xptitemp.dat");
+    logComment("Create Folder: " + fProgram + "components");
+    logComment("Installing: "    + fProgram + "components\\xpti.dat");
+    logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
 
-    err = finalizeInstall(); 
-    logComment("finalizeInstall() returned: " + err);
+    err = getLastError();
+    if (err == SUCCESS)
+    {
+      err = performInstall();
+      logComment("performInstall() returned: " + err);
+    }
+    else
+      cancelInstall(err);
   }
+  else
+    cancelInstall(err);
 }
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
 
 // end main

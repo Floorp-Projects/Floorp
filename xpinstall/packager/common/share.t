@@ -15,21 +15,8 @@ function verifyDiskSpace(dirPath, spaceRequired)
     logComment("Insufficient disk space: " + dirPath);
     logComment("  required : " + spaceRequired + " K");
     logComment("  available: " + spaceAvailable + " K");
-    abortInstall(INSUFFICIENT_DISK_SPACE);
     return(false);
   }
 
   return(true);
 }
-
-function checkError(errorValue)
-{
-  if((errorValue != SUCCESS) && (errorValue != REBOOT_NEEDED))
-  {
-    abortInstall(errorValue);
-    return(true);
-  }
-
-  return(false);
-} // end checkError()
-

@@ -1,34 +1,41 @@
 // main
 var srDest;
 var err;
-var fCommunicator;
+var fProgram;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Mail", "Mail", "$Version$"); 
-logComment("startInstall: " + err);
-// check return value
-checkError(err);
+err    = initInstall("Mozilla Mail", "Mail", "$Version$"); 
+logComment("initInstall: " + err);
 
-fCommunicator = getFolder("Communicator");
-logComment("fCommunicator: " + fCommunicator);
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
 
-if(verifyDiskSpace(fCommunicator, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest) == true)
 {
-  setPackageFolder(fCommunicator);
+  setPackageFolder(fProgram);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to fCommunicator
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
 
+  // register chrome
+  err = registerChrome(CONTENT | DELAYED_CHROME,
+                       getFolder("Chrome","packages/messenger"));
+  logComment("registerChrome() returned: "+err);
+
   // check return value
-  if(!checkError(err))
+  if(err == SUCCESS)
   {
-    err = finalizeInstall(); 
-    logComment("finalizeInstall() returned: " + err);
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
   }
+  else
+    cancelInstall(err);
 }
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
 
 // end main

@@ -1,7 +1,7 @@
-var err = startInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
-logComment("startInstall: " + err);
+var err = initInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
+logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Communicator");
+var communicatorFolder = getFolder("Program");
 logComment("communicatorFolder: " + communicatorFolder);
 
 err = addDirectory("Program",
@@ -13,17 +13,13 @@ err = addDirectory("Program",
 
 logComment("addDirectory() returned: " + err);
 
-// delete the component registry
-var ignoreErr = fileDelete(communicatorFolder + "/component.reg"); 
-logComment("fileDelete() returned: " + ignoreErr);
-
-if (err==SUCCESS || err==REBOOT_NEEDED)
+if (err==SUCCESS)
 {
-	err = finalizeInstall(); 
-	logComment("finalizeInstall() returned: " + err);
+	err = performInstall(); 
+	logComment("performInstall() returned: " + err);
 }
 else
 {
-	abortInstall();
-	logComment("abortInstall() returned: " + err);
+	cancelInstall(err);
+	logComment("cancelInstall() returned: " + err);
 }
