@@ -522,7 +522,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
       // for the selected block content, replace blockParentNode with a new node of the correct type
       if (PR_FALSE==parentTag.EqualsIgnoreCase(aParentTag))
       {
-        DebugDumpContent(); // DEBUG
+		if (gNoisy) { DebugDumpContent(); } // DEBUG
         result = ReParentBlockContent(nodeToReParent, aParentTag, blockParentNode, parentTag, 
                                       getter_AddRefs(newParentNode));
         if (NS_SUCCEEDED(result) && newParentNode)
