@@ -92,6 +92,8 @@ NS_IMPL_RELEASE(nsDeviceContextUnix)
 
 nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 {
+  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
+
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
 
@@ -100,11 +102,14 @@ nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 
   mNativeWidget = aNativeWidget;
 
-  mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mNativeWidget), DefaultScreen(XtDisplay((Widget)mNativeWidget)))) /
-		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mNativeWidget),DefaultScreen(XtDisplay((Widget)mNativeWidget)) )) * 25.4) / 
-    NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+  if (nsnull != mNativeWidget)
+  {
+    mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mNativeWidget), DefaultScreen(XtDisplay((Widget)mNativeWidget)))) /
+  		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mNativeWidget),DefaultScreen(XtDisplay((Widget)mNativeWidget)) )) * 25.4) / 
+      NS_POINTS_TO_TWIPS_FLOAT(72.0f);
     
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
+    mPixelsToTwips = 1.0f / mTwipsToPixels;
+  }
 
   return NS_OK;
 }
