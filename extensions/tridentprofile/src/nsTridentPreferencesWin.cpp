@@ -49,6 +49,7 @@
 #include "plstr.h"
 #include "prio.h"
 #include "prmem.h"
+#include "prlong.h"
 #include "nsICookieManager2.h"
 #include "nsICookieService.h"
 #include "nsIFile.h"
@@ -600,7 +601,9 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
                                 nsDependentCString(path),
                                 nsDependentCString(name),
                                 nsDependentCString(value),
-                                flagsValue & 0x1, expirationDate);
+                                flagsValue & 0x1,
+                                PR_FALSE,
+                                PRInt64(expirationDate));
     if (NS_FAILED(onerv)) {
       rv = onerv;
       break;
