@@ -2,7 +2,6 @@
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            ACTIONS = {}; 
             CLASS = FontReceiverView; 
             LANGUAGE = ObjC; 
             OUTLETS = {delegate = id; }; 
