@@ -1609,6 +1609,13 @@ NS_IMETHODIMP nsMsgCompose::GetSavedFolderURI(char ** folderURI)
   return (*folderURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMETHODIMP nsMsgCompose::GetOriginalMsgURI(char ** originalMsgURI)
+{
+  NS_ENSURE_ARG_POINTER(originalMsgURI);
+  *originalMsgURI = ToNewCString(mOriginalMsgURI);
+  return (*originalMsgURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT

@@ -285,6 +285,9 @@ function HideMenus()
 
 function OnUnloadMessageWindow()
 {
+	// FIX ME - later we will be able to use onunload from the overlay
+	OnUnloadMsgHeaderPane();
+
 	OnMailWindowUnload();
 }
 

@@ -214,6 +214,15 @@ function OnLoadMsgHeaderPane()
   headerViewElement.dispatchEvent(event);
 }
 
+function OnUnloadMsgHeaderPane()
+{
+  // dispatch an event letting any listeners know that we have unloaded the message pane
+  var event = document.createEvent('Events');
+  event.initEvent('messagepane-unloaded', false, true);
+  var headerViewElement = document.getElementById("msgHeaderView");
+  headerViewElement.dispatchEvent(event);
+}
+
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
 // through our mime converter. 
 

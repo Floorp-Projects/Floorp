@@ -502,6 +502,10 @@ function OnLoadMessenger()
 function OnUnloadMessenger()
 {
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
+
+  // FIX ME - later we will be able to use onload from the overlay
+  OnUnloadMsgHeaderPane();
+
   OnMailWindowUnload();
 }
 
