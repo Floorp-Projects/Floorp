@@ -109,8 +109,8 @@ protected:
   nsresult      PrimeUpdateTimer();
   void          TimerCallback();
 
-  // this class should not hold references to the editor or editorShell. Doing
-  // so would result in cirular reference chains.
+  // this class should not hold references to the editor
+  // Doing so would result in cirular reference chains.
   
   nsIHTMLEditor*   mEditor;		 // the HTML editor
   nsIDOMDocument*  mChromeDoc;  // XUL document for the chrome area
