@@ -60,7 +60,6 @@ class nsIFindComponent;
 
 class nsBrowserInstance : public nsIBrowserInstance,
                           public nsIDocumentLoaderObserver,
-                          public nsIObserver,
 					                public nsISessionHistory,
                           public nsIURIContentListener,
                           public nsSupportsWeakReference {
@@ -78,8 +77,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     // nsIDocumentLoaderObserver
     NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
-    // nsIObserver
-    NS_DECL_NSIOBSERVER
     // nsISessionHistory
     NS_DECL_NSISESSIONHISTORY
     // URI Content listener
@@ -88,8 +85,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
   protected:
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void InitializeSearch(nsIFindComponent*);
-    void BeginObserving();
-    void EndObserving();
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
 	  NS_IMETHOD UpdateGoMenu();
 	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
