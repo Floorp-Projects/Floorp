@@ -273,13 +273,13 @@ function Startup()
     appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
                         .createInstance(Components.interfaces.nsIBrowserInstance);
     if (!appCore)
-      throw Components.results.NS_ERROR_FAILURE;
+      throw "couldn't create a browser instance";
 
     webNavigation = getWebNavigation();
     if (!webNavigation)
-      throw Components.results.NS_ERROR_FAILURE;
+      throw "no XBL binding for browser";
   } catch (e) {
-    alert("Error creating browser instance");
+    alert("Error launching browser window:" + e);
     window.close(); // Give up.
     return;
   }
