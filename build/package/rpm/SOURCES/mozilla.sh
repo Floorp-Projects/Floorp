@@ -56,6 +56,9 @@
 
 cmdname=`basename $0`
 
+## don't leave any core files around
+ulimit -c 0
+
 ##
 ## Variables
 ##
