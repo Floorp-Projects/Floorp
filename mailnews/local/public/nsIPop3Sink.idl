@@ -43,11 +43,11 @@ interface nsIPop3Sink : nsISupports {
   [noscript] voidPtr IncorporateBegin(in string uidlString, in nsIURI aURL,
                                       in unsigned long flags);
 
-  [noscript] void IncorporateWrite(in voidPtr closure, in string block,
+  [noscript] void IncorporateWrite(in string block,
                                    in long length);
 
-  [noscript] void IncorporateComplete(in voidPtr closure);
-  [noscript] void IncorporateAbort(in voidPtr closure, in long status);
+  [noscript] void IncorporateComplete();
+  [noscript] void IncorporateAbort(in boolean uidlDownload);
 
   void BiffGetNewMail();
 
