@@ -31,11 +31,6 @@
 #include "dom.h"
 
 #ifdef TX_EXE
-#ifndef XML_UNICODE
-#define XML_UNICODE
-#endif
-
-#include "xmlparse.h"
 #include <iostream.h>
 
 typedef struct  {
@@ -50,19 +45,6 @@ typedef struct  {
 **/
 class XMLParser
 {
-#ifdef TX_EXE
-  /*-----------------6/18/99 12:43PM------------------
-   * Sax related methods for XML parsers
-   * --------------------------------------------------*/
-  friend void charData(void* userData, const XML_Char* s, int len);
-  friend void commentHandler(void* userData, const XML_Char* s);
-  friend void startElement(void *userData, const XML_Char* name,
-                           const XML_Char** atts);
-  friend void endElement(void *userData, const XML_Char* name);
-
-  friend void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
-#endif
-
   public:
     XMLParser();
    ~XMLParser();
@@ -73,23 +55,8 @@ class XMLParser
     const String& getErrorString();
 
   protected:
-
-    Document*  theDocument;
-    Element*   currentElement;
-    MBool      errorState;
     String  errorString;
 #endif
 };
-
-#ifdef TX_EXE
-/*-----------------6/18/99 12:43PM------------------
- * Sax related methods for XML parsers
- * --------------------------------------------------*/
-void charData(void* userData, const XML_Char* s, int len);
-void startElement(void *userData, const XML_Char* name, const XML_Char** atts);
-void endElement(void *userData, const XML_Char* name);
-void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
-void piHandler(void *userData, const XML_Char *s);
-#endif
 
 #endif
