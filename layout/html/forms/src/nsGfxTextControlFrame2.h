@@ -43,7 +43,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIStatefulFrame.h"
 #include "nsIEditor.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsFormControlHelper.h"//for the inputdimensions
@@ -70,7 +69,6 @@ class nsIAccessible;
 class nsGfxTextControlFrame2 : public nsStackFrame,
                                public nsIAnonymousContentCreator,
                                public nsIGfxTextControlFrame2,
-                               public nsIStatefulFrame,
                                public nsIScrollableViewProvider
 
 {
@@ -230,10 +228,6 @@ protected:
                                nsIFrame**        aFrame);
 
   PRInt32 GetWidthInCharacters() const;
-
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsIScrollableViewProvider
   NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
