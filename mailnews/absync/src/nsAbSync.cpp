@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-
 #include "nsAbSync.h"
 #include "prmem.h"
 #include "nsAbSyncCID.h"
@@ -702,6 +701,10 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     if (NS_FAILED(aCard->GetKey(&aKey)))
       return NS_ERROR_FAILURE;
 
+#ifdef DEBUG_rhp
+  printf("ABSYNC: GENERATING PROTOCOL FOR CARD - Address Book Card Key: %d\n", aKey);
+#endif
+
     char *tVal = PR_smprintf("%d", (aKey * -1));
     if (tVal)
     {
@@ -754,10 +757,18 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         char *pVal = PR_smprintf("phone%d", phoneCount);
         if (pVal)
         {
+          char      *utfString = nsString2(aName).ToNewUTF8String();
+
           tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
           tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
           tProtLine.Append(NS_ConvertASCIItoUCS2("="));
-          tProtLine.Append(aName);
+          if (utfString)
+          {
+            tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
+            PR_FREEIF(utfString);
+          }
+          else
+            tProtLine.Append(aName);
           tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
           tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
           tProtLine.Append(NS_ConvertASCIItoUCS2("_type="));
