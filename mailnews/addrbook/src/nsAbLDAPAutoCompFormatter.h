@@ -43,9 +43,9 @@ class nsAbLDAPAutoCompFormatter : public nsIAbLDAPAutoCompFormatter
     nsString mCommentFormat;
 
     // parse and process format
-    nsresult ProcessFormat(const nsAReadableString & aFormat,
+    nsresult ProcessFormat(const nsAString & aFormat,
                            nsILDAPMessage *aMessage, 
-                           nsAWritableCString *aValue,
+                           nsACString *aValue,
                            nsCStringArray *aAttrs);
 
     // process a single attribute while parsing format
@@ -53,12 +53,12 @@ class nsAbLDAPAutoCompFormatter : public nsIAbLDAPAutoCompFormatter
                            nsReadingIterator<PRUnichar> & aIterEnd, 
                            PRBool aAttrRequired,
                            nsCOMPtr<nsIConsoleService> & aConsoleSvc,
-                           nsAWritableCString & aAttrName);
+                           nsACString & aAttrName);
 
     // append the first value associated with aAttrName in aMessage to aValue
-    nsresult AppendFirstAttrValue(nsAReadableCString &aAttrName, 
+    nsresult AppendFirstAttrValue(const nsACString &aAttrName, 
                                   nsILDAPMessage *aMessage,
                                   PRBool aAttrRequired,
-                                  nsAWritableCString &aValue);
+                                  nsACString &aValue);
 };
 

@@ -1029,13 +1029,13 @@ NS_IMETHODIMP nsAbView::SelectAll()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetSortDirection(nsAWritableString & aDirection)
+NS_IMETHODIMP nsAbView::GetSortDirection(nsAString & aDirection)
 {
   aDirection = mSortDirection;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetSortColumn(nsAWritableString & aColumn)
+NS_IMETHODIMP nsAbView::GetSortColumn(nsAString & aColumn)
 {
   aColumn = mSortColumn;
   return NS_OK;

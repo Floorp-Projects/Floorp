@@ -111,7 +111,7 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
 // Decode routine (also converts output to unicode)
 nsresult 
 nsMimeConverter::DecodeMimeHeader(const char *header, 
-                                  nsAWritableString& decodedString,
+                                  nsAString& decodedString,
                                   const char *default_charset,
                                   PRBool override_charset,
                                   PRBool eatContinuations)

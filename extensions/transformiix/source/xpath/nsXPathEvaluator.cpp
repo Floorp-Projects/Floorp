@@ -64,7 +64,7 @@ nsXPathEvaluator::~nsXPathEvaluator()
 }
 
 NS_IMETHODIMP
-nsXPathEvaluator::CreateExpression(const nsAReadableString & aExpression,
+nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {

@@ -2529,7 +2529,7 @@ SI_InSequence(const nsString& sequence, PRInt32 number)
 }
 
 PUBLIC void
-SI_FindValueInArgs(const nsAReadableString& results, const nsAReadableString& name, nsAWritableString& value)
+SI_FindValueInArgs(const nsAString& results, const nsAString& name, nsAString& value)
 {
   /* note: name must start and end with a vertical bar */
   nsReadingIterator<PRUnichar> start, end, barPos;

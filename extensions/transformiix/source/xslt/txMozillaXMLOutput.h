@@ -45,7 +45,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsSupportsArray.h"
 #include "txOutputFormat.h"
 
@@ -162,7 +162,7 @@ private:
     void closePrevious(PRInt8 aAction);
     void startHTMLElement(nsIDOMElement* aElement);
     void endHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
-    void processHTTPEquiv(nsIAtom* aHeader, nsAReadableString& aValue);
+    void processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue);
     void wrapChildren(nsIDOMNode* aCurrentNode, nsIDOMElement* aWrapper);
 
     nsCOMPtr<nsIDOMDocument> mDocument;

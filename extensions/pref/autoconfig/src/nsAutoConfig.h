@@ -71,7 +71,7 @@ class nsAutoConfig : public nsIAutoConfig,
         nsresult readOfflineFile();
         nsresult evaluateLocalFile(nsIFile *file);
         nsresult writeFailoverFile();
-        nsresult getEmailAddr(nsAWritableCString & emailAddr);
+        nsresult getEmailAddr(nsACString & emailAddr);
         nsCString mBuf, mCurrProfile;
         nsCOMPtr<nsIPrefBranch> mPrefBranch;
         PRBool mLoaded;

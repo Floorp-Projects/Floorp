@@ -432,9 +432,9 @@ nsAbLDAPAutoCompFormatter::GetAttributes(PRUint32 *aCount, char ** *aAttrs)
 // generate an nsIAutoCompleteItem from this.
 //
 nsresult
-nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAReadableString & aFormat,
+nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAString & aFormat,
                                          nsILDAPMessage *aMessage, 
-                                         nsAWritableCString *aValue,
+                                         nsACString *aValue,
                                          nsCStringArray *aAttrs)
 {
     nsresult rv;    // temp for return values
@@ -570,7 +570,7 @@ nsAbLDAPAutoCompFormatter::ParseAttrName(
     nsReadingIterator<PRUnichar> &aIterEnd, 
     PRBool aAttrRequired,                       // required?  or just optional?
     nsCOMPtr<nsIConsoleService> &aConsoleSvc,   // no need to reacquire this
-    nsAWritableCString &aAttrName)              // attribute token
+    nsACString &aAttrName)                      // attribute token
 {
     // reset attrname, and move past the opening brace
     //
@@ -620,10 +620,10 @@ nsAbLDAPAutoCompFormatter::ParseAttrName(
 
 nsresult
 nsAbLDAPAutoCompFormatter::AppendFirstAttrValue(
-    nsAReadableCString &aAttrName, // attr to get
+    const nsACString &aAttrName, // attr to get
     nsILDAPMessage *aMessage, // msg to get values from
     PRBool aAttrRequired, // is this a required value?
-    nsAWritableCString &aValue)
+    nsACString &aValue)
 {
     // get the attribute values for the field which will be used 
     // to fill in nsIAutoCompleteItem::value
@@ -683,13 +683,13 @@ nsAbLDAPAutoCompFormatter::AppendFirstAttrValue(
 
 // attribute AString nameFormat;
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::GetNameFormat(nsAWritableString & aNameFormat)
+nsAbLDAPAutoCompFormatter::GetNameFormat(nsAString & aNameFormat)
 {
     aNameFormat  = mNameFormat;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::SetNameFormat(const nsAReadableString & aNameFormat)
+nsAbLDAPAutoCompFormatter::SetNameFormat(const nsAString & aNameFormat)
 {
     mNameFormat = aNameFormat; 
     return NS_OK;
@@ -697,13 +697,13 @@ nsAbLDAPAutoCompFormatter::SetNameFormat(const nsAReadableString & aNameFormat)
 
 // attribute AString addressFormat;
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::GetAddressFormat(nsAWritableString & aAddressFormat)
+nsAbLDAPAutoCompFormatter::GetAddressFormat(nsAString & aAddressFormat)
 {
     aAddressFormat  = mAddressFormat;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::SetAddressFormat(const nsAReadableString & 
+nsAbLDAPAutoCompFormatter::SetAddressFormat(const nsAString & 
                                             aAddressFormat)
 {
     mAddressFormat = aAddressFormat; 
@@ -712,13 +712,13 @@ nsAbLDAPAutoCompFormatter::SetAddressFormat(const nsAReadableString &
 
 // attribute AString commentFormat;
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::GetCommentFormat(nsAWritableString & aCommentFormat)
+nsAbLDAPAutoCompFormatter::GetCommentFormat(nsAString & aCommentFormat)
 {
     aCommentFormat  = mCommentFormat;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsAbLDAPAutoCompFormatter::SetCommentFormat(const nsAReadableString & 
+nsAbLDAPAutoCompFormatter::SetCommentFormat(const nsAString & 
                                             aCommentFormat)
 {
     mCommentFormat = aCommentFormat; 
