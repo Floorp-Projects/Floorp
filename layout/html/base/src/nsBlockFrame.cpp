@@ -859,7 +859,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       }
     }
 
-    // XXX_perf get rid of this!
+    // XXX_perf get rid of this!  This is one of the things that makes
+    // incremental reflow O(N^2).
     BuildFloaterList();
   }
   
@@ -1443,7 +1444,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // Compute the combined area of our children
-// XXX_perf: This can be done incrementally
+  // XXX_perf: This can be done incrementally.  It is currently one of
+  // the things that makes incremental reflow O(N^2).
   nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
   if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
     for (line_iterator line = begin_lines(), line_end = end_lines();
@@ -6123,10 +6125,23 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
         (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
+      const nsStyleList* styleList;
+      GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
+      nsIAtom *pseudoElement;
+      switch (styleList->mListStyleType) {
+        case NS_STYLE_LIST_STYLE_DISC:
+        case NS_STYLE_LIST_STYLE_CIRCLE:
+        case NS_STYLE_LIST_STYLE_SQUARE:
+          pseudoElement = nsHTMLAtoms::mozListBulletPseudo;
+          break;
+        default:
+          pseudoElement = nsHTMLAtoms::mozListNumberPseudo;
+          break;
+      }
       nsIStyleContext* kidSC;
-      aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                             nsHTMLAtoms::mozListBulletPseudo,
-                                             mStyleContext, PR_FALSE, &kidSC);
+      aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement,
+                                                 mStyleContext, PR_FALSE,
+                                                 &kidSC);
 
       // Create bullet frame
       nsCOMPtr<nsIPresShell> shell;
@@ -6142,8 +6157,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.
-      const nsStyleList* styleList;
-      GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
         AddFrames(aPresContext, mBullet, nsnull);
