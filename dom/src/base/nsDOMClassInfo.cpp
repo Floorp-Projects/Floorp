@@ -131,7 +131,7 @@
 #include "nsILiveConnectManager.h"
 #include "nsIJVMPluginInstance.h"
 
-// HTMLOptionCollection includes
+// HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNSHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
