@@ -891,21 +891,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
     return NS_OK;
 
   // re-sync the presentation data and embellishment data of our children
-#ifdef DEBUG_rbs
-  nsEmbellishData oldData;
-  GetEmbellishDataFrom(frame, oldData);
-#endif
-
   RebuildAutomaticDataForChildren(frame);
-
-#ifdef DEBUG_rbs
-  nsEmbellishData newData;
-  GetEmbellishDataFrom(frame, newData);
-  NS_ASSERTION((NS_MATHML_IS_EMBELLISH_OPERATOR(oldData.flags) == 
-                NS_MATHML_IS_EMBELLISH_OPERATOR(newData.flags)) && 
-               (oldData.coreFrame == newData.coreFrame),
-               "embellished hierarchy has to be rebuilt too");
-#endif
 
   // re-resolve the style data to sync any change of script sizes
   nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
@@ -938,7 +924,20 @@ nsMathMLContainerFrame::ChildListChanged(PRInt32 aModType)
     // wrap any new foreign child that may have crept in
     WrapForeignFrames();
   }
-  return ReLayoutChildren(this);
+
+  // If this is an embellished frame we need to rebuild the
+  // embellished hierarchy by walking-up to the parent of the
+  // outermost embellished container.
+  nsIFrame* frame = this;
+  if (mEmbellishData.coreFrame) {
+    nsEmbellishData embellishData;
+    for (frame = mParent; frame; frame = frame->GetParent()) {
+      GetEmbellishDataFrom(frame, embellishData);
+      if (embellishData.coreFrame != mEmbellishData.coreFrame)
+        break;
+    }
+  }
+  return ReLayoutChildren(frame);
 }
 
 NS_IMETHODIMP
