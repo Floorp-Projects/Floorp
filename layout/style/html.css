@@ -87,6 +87,13 @@ center {
   text-align: -moz-center;
 }
 
+legend {
+  /* HTML legend always builds an nsLegendFrame,
+     which is a block. The style system needs to
+     know. */
+  display: block !important;
+}
+
 blockquote[type=cite] {
   display: block;
   margin: 1em 0px;

@@ -148,6 +148,11 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
+  // Inserted child content gets its frames parented by our child block
+  virtual nsIFrame* GetContentInsertionFrame() {
+    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+  }
+
 protected:
   void ReParentFrameList(nsFrameManager* aFrameManager, nsIFrame* aFrameList);
   virtual PRBool IsReset(PRInt32 type);
