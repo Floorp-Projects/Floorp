@@ -136,8 +136,9 @@ NS_IMETHODIMP nsWindow::Destroy()
 
   if (mIsDestroyingWindow == PR_TRUE) {
     nsBaseWidget::Destroy();
-    if (PR_FALSE == mOnDestroyCalled)
+    if (PR_FALSE == mOnDestroyCalled) {
         nsWidget::OnDestroy();
+    }
 
     if (mShell) {
     	if (GTK_IS_WIDGET(mShell))
@@ -160,8 +161,10 @@ nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
+  NS_ADDREF(win);
   win->SetIsDestroying( PR_TRUE );
   win->Destroy();
+  NS_RELEASE(win);
   return TRUE;
 }
 
