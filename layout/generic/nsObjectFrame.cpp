@@ -1709,10 +1709,18 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
                 postDataStream = do_QueryInterface(result, &rv);
               }
             }
-            rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
-                                 fullurl.GetUnicode(), 
-                                 unitarget.GetUnicode(), 
-                                 postDataStream);
+            if (postDataStream) {
+              rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
+                                   fullurl.GetUnicode(), 
+                                   unitarget.GetUnicode(), 
+                                   postDataStream);
+            }
+            else {
+              rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
+                                   fullurl.GetUnicode(), 
+                                   unitarget.GetUnicode(), 
+                                   nsnull);
+            }
             NS_IF_RELEASE(content);
           }
           NS_RELEASE(lh);
