@@ -52,7 +52,6 @@
 #include "prprf.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
-#include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"

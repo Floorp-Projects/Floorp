@@ -37,8 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIAuthPrompt.idl"
-#include "nsIEnumerator.idl"
 
 %{ C++
 #include "nsString.h"
@@ -51,7 +49,6 @@
 #define NS_WALLETSERVICE_CLASSNAME	"Auto Form Fill and Wallet"
 %}
 
-interface nsIPresShell;
 interface nsIDOMNode;
 interface nsIDOMWindowInternal;
 interface nsIPrompt;
