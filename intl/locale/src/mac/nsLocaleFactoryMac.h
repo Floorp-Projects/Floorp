@@ -27,24 +27,13 @@
 
 class nsLocaleMacFactory : public nsIFactory
 {   
-  public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
 
     nsLocaleMacFactory(const nsCID &aClass);   
     ~nsLocaleMacFactory();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };
