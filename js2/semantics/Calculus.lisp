@@ -22,7 +22,7 @@
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((production . 3) (rule . 2) (letexc . 1) (deftype . 1)))
+#+mcl (dolist (indent-spec '((production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -207,6 +207,34 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; SET UTILITIES
+
+(defun integer-set-min (intset)
+  (or (intset-min intset)
+      (error "min of empty integer-set")))
+
+(defun character-set-min (intset)
+  (code-char (or (intset-min intset)
+                 (error "min of empty character-set"))))
+
+
+(defun integer-set-max (intset)
+  (or (intset-max intset)
+      (error "max of empty integer-set")))
+
+(defun character-set-max (intset)
+  (code-char (or (intset-max intset)
+                 (error "max of empty character-set"))))
+
+
+(defun integer-set-member (elt intset)
+  (intset-member? intset elt))
+
+(defun character-set-member (elt intset)
+  (intset-member? intset (char-code elt)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; CODE GENERATION
 
 ; Return `(progn ,@statements), optimizing where possible.
@@ -228,21 +256,21 @@
            (null (cddr function-value)))
     (let ((stripped-function-value (second function-value)))
       (if (and (consp stripped-function-value)
-               (eq (first stripped-function-value) 'lambda)
+               (eq (first stripped-function-value) 'function)
                (listp (second stripped-function-value))
                (cddr stripped-function-value)
                (every #'(lambda (arg)
                           (and (identifier? arg)
                                (not (eql (first-symbol-char arg) #\&))))
                       (second stripped-function-value)))
-        (let ((lambda-args (second stripped-function-value))
-              (lambda-body (cddr stripped-function-value)))
-          (assert-true (= (length lambda-args) (length arg-values)))
-          (if lambda-args
+        (let ((function-args (second stripped-function-value))
+              (function-body (cddr stripped-function-value)))
+          (assert-true (= (length function-args) (length arg-values)))
+          (if function-args
             (list* 'let
-                   (mapcar #'list lambda-args arg-values)
-                   lambda-body)
-            (apply #'gen-progn lambda-body)))
+                   (mapcar #'list function-args arg-values)
+                   function-body)
+            (apply #'gen-progn function-body)))
         (cons stripped-function-value arg-values)))
     (list* 'funcall function-value arg-values)))
 
@@ -478,14 +506,14 @@
 ;;;   :command       expression code generation function ((world grammar-info-var . form-arg-list) -> void) if this identifier
 ;;;                  is a command like 'deftype or 'define
 ;;;   :special-form  expression code generation function ((world type-env id . form-arg-list) -> code, type, annotated-expr)
-;;;                  if this identifier is a special form like 'if or 'lambda
+;;;                  if this identifier is a special form like 'if or 'function
 ;;;
 ;;;   :primitive     primitive structure if this identifier is a primitive
 ;;;
 ;;;   :macro         lisp expansion function ((world type-env . form-arg-list) -> expansion) if this identifier is a macro
 ;;;
 ;;;   :type-constructor  expression code generation function ((world allow-forward-references . form-arg-list) -> type) if this
-;;;                  identifier is a type constructor like '->, 'vector, 'tuple, 'oneof, or 'address
+;;;                  identifier is a type constructor like '->, 'vector, 'set, 'tuple, 'oneof, or 'address
 ;;;   :deftype       type if this identifier is a type; nil if this identifier is a forward-referenced type
 ;;;
 ;;;   <value>        value of this identifier if it is a variable
@@ -588,6 +616,7 @@
     :character ;nil              ;nil
     :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
     :vector    ;nil              ;(element-type)
+    :set       ;nil              ;(element-type)
     :tuple     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
     :oneof     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
     :address)) ;nil              ;(element-type)
@@ -624,6 +653,16 @@
 (declaim (inline vector-element-type))
 (defun vector-element-type (type)
   (assert-true (eq (type-kind type) :vector))
+  (car (type-parameters type)))
+
+
+(declaim (inline make-set-type))
+(defun make-set-type (world element-type)
+  (make-type world :set nil (list element-type)))
+
+(declaim (inline set-element-type))
+(defun set-element-type (type)
+  (assert-true (eq (type-kind type) :set))
   (car (type-parameters type)))
 
 
@@ -700,6 +739,9 @@
         (:vector (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                    (format stream "vector ~@_")
                    (print-type (vector-element-type type) stream)))
+        (:set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                (format stream "set ~@_")
+                (print-type (set-element-type type) stream)))
         (:tuple (print-tuple-or-oneof "tuple"))
         (:oneof (print-tuple-or-oneof "oneof"))
         (:address (pprint-logical-block (stream nil :prefix "(" :suffix ")")
@@ -846,6 +888,11 @@
 ; (vector <element-type>)
 (defun scan-vector (world allow-forward-references element-type)
   (make-vector-type world (scan-type world element-type allow-forward-references)))
+
+
+; (set <element-type>)
+(defun scan-set (world allow-forward-references element-type)
+  (make-set-type world (scan-type world element-type allow-forward-references)))
 
 
 ; (address <element-type>)
@@ -1210,6 +1257,7 @@
 ;;;   A character
 ;;;   A function (represented by a lisp function)
 ;;;   A vector (represented by a list)
+;;;   A set (represented by an intset of its elements converted to integers)
 ;;;   A tuple (represented by a list of elements' values)
 ;;;   A oneof (represented by a pair: tag . value)
 ;;;   An address (represented by a cons cell whose cdr contains the value and car contains a serial number)
@@ -1241,6 +1289,7 @@
                                (or shallow (value-has-type (car value) element-type))
                                (test (cdr value))))))
                    (test value)))))
+    (:set (valid-intset? value))
     (:tuple (labels
               ((test (value types)
                  (or (and (null value) (null types))
@@ -1281,6 +1330,18 @@
                      (print-value (pprint-pop) element-type stream)
                      (pprint-exit-if-list-exhausted)
                      (format stream " ~:_"))))))
+    (:set (let ((converter (set-out-converter (set-element-type type))))
+            (pprint-logical-block (stream value :prefix "{" :suffix "}")
+              (pprint-exit-if-list-exhausted)
+              (loop
+                (let* ((values (pprint-pop))
+                       (value1 (car values))
+                       (value2 (cdr values)))
+                  (if (= value1 value2)
+                    (write (funcall converter value1) :stream stream)
+                    (write (list (funcall converter value1) (funcall converter value2)) :stream stream))))
+              (pprint-exit-if-list-exhausted)
+              (format stream " ~:_"))))
     (:tuple (print-values value (type-parameters type) stream :prefix "[" :suffix "]"))
     (:oneof (pprint-logical-block (stream nil :prefix "{" :suffix "}")
               (let* ((tag (car value))
@@ -1614,20 +1675,20 @@
      (list 'expr-annotation:special-form special-form type-expr))))
 
 
-; (lambda ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
-(defun scan-lambda (world type-env special-form arg-binding-exprs body-expr)
+; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
+(defun scan-function (world type-env special-form arg-binding-exprs body-expr)
   (flet
     ((scan-arg-binding (arg-binding-expr)
        (unless (and (consp arg-binding-expr)
                     (consp (cdr arg-binding-expr))
                     (member (cddr arg-binding-expr) '(nil (:unused)) :test #'equal))
-         (error "Bad lambda binding ~S" arg-binding-expr))
+         (error "Bad function binding ~S" arg-binding-expr))
        (let ((arg-symbol (scan-name world (first arg-binding-expr)))
              (arg-type (scan-type world (second arg-binding-expr))))
          (cons arg-symbol arg-type))))
     
     (unless (listp arg-binding-exprs)
-      (error "Bad lambda bindings ~S" arg-binding-exprs))
+      (error "Bad function bindings ~S" arg-binding-exprs))
     (let* ((arg-bindings (mapcar #'scan-arg-binding arg-binding-exprs))
            (args (mapcar #'car arg-bindings))
            (arg-types (mapcar #'cdr arg-bindings))
@@ -1787,6 +1848,20 @@
      (list 'expr-annotation:special-form special-form vector-annotated-expr))))
 
 
+; (subseq <vector-expr> <low-expr> <high-expr>)
+; Returns a vector containing elements of the given vector from low-expr to high-expr inclusive.
+; It is required that 0 <= low-expr <= high-expr+1 <= length.
+(defun scan-subseq (world type-env special-form vector-expr low-expr high-expr)
+  (let ((integer-type (world-integer-type world)))
+    (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+      (multiple-value-bind (low-code low-annotated-expr) (scan-typed-value world type-env low-expr integer-type)
+        (multiple-value-bind (high-code high-annotated-expr) (scan-typed-value world type-env high-expr integer-type)
+          (values
+           `(subseq ,vector-code ,low-code (1+ ,high-code))
+           vector-type
+           (list 'expr-annotation:special-form special-form vector-annotated-expr low-annotated-expr high-annotated-expr)))))))
+
+
 ; (append <vector-expr> <vector-expr>)
 ; Returns a vector contatenating the two given vectors, which must have the same element type.
 (defun scan-append (world type-env special-form vector1-expr vector2-expr)
@@ -1798,6 +1873,82 @@
          (list 'append vector1-code vector2-code))
        vector-type
        (list 'expr-annotation:special-form special-form vector1-annotated-expr vector2-annotated-expr)))))
+
+
+; (set-nth <vector-expr> <n-expr> <value-expr>)
+; Returns a vector containing the same elements of the given vector except that the nth has been replaced
+; with value-expr.  n must be between 0 and length-1, inclusive.
+(defun scan-set-nth (world type-env special-form vector-expr n-expr value-expr)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+    (multiple-value-bind (n-code n-annotated-expr) (scan-typed-value world type-env n-expr (world-integer-type world))
+      (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (vector-element-type vector-type))
+        (values
+         (let ((vector (gensym "V"))
+               (n (gensym "N")))
+           `(let ((,vector ,vector-code)
+                  (,n ,n-code))
+              (if (or (< ,n 0) (>= ,n (length ,vector)))
+                (error "Range error")
+                ,(if (eq vector-type (world-string-type world))
+                   `(progn
+                      (setq ,vector (copy-seq ,vector))
+                      (setf (char ,vector ,n) ,value-code)
+                      ,vector)
+                   (let ((l (gensym "L")))
+                     `(let ((,l (nthcdr ,n ,vector)))
+                        (append (ldiff ,vector ,l)
+                                (cons ,value-code (cdr ,l)))))))))
+         vector-type
+         (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr value-annotated-expr))))))
+
+
+;;; Sets
+
+; Return a function that converts values of the given element-type to integers for storage in a set.
+(defun set-in-converter (element-type)
+  (ecase (type-kind element-type)
+    (:integer #'identity)
+    (:character #'char-code)))
+
+
+; expr is the source code of an expression that generates a value of the given element-type.  Return
+; the source code of an expression that generates the corresponding integer for storage in a set of
+; the given element-type.
+(defun set-in-converter-expr (element-type expr)
+  (ecase (type-kind element-type)
+    (:integer expr)
+    (:character (list 'char-code expr))))
+
+
+; Return a function that converts integers to values of the given element-type for retrieval from a set.
+(defun set-out-converter (element-type)
+  (ecase (type-kind element-type)
+    (:integer #'identity)
+    (:character #'code-char)))
+
+
+; (set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
+; Makes a set of zero or more elements or element ranges.  Each <high-expr> can be null to indicate a
+; one-element range.
+(defun scan-set-of-ranges (world type-env special-form element-type-expr &rest element-exprs)
+  (let* ((element-type (scan-type world element-type-expr))
+         (high t))
+    (multiple-value-map-bind (element-codes element-annotated-exprs)
+                             #'(lambda (element-expr)
+                                 (setq high (not high))
+                                 (if (and high (null element-expr))
+                                   (values nil nil)
+                                   (multiple-value-bind (element-code element-annotated-expr)
+                                                        (scan-typed-value world type-env element-expr element-type)
+                                     (values (set-in-converter-expr element-type element-code)
+                                             element-annotated-expr))))
+                             (element-exprs)
+      (unless high
+        (error "Odd number of set-of-ranges elements: ~S" element-exprs))
+      (values
+       (cons 'intset-from-ranges element-codes)
+       (make-set-type world element-type)
+       (list* 'expr-annotation:special-form special-form element-type-expr element-annotated-exprs)))))
 
 
 ;;; Oneofs
@@ -1939,7 +2090,7 @@
       (values
        (cons 'list value-codes)
        type
-       (list* 'expr-annotation:special-form special-form type-expr value-annotated-exprs)))))
+       (list* 'expr-annotation:special-form special-form type-expr type value-annotated-exprs)))))
 
 
 ; (& <tag> <tuple-expr>)
@@ -2014,16 +2165,15 @@
 
 
 ; (let ((<var1> <type1> <expr1> [:unused]) ... (<varn> <typen> <exprn> [:unused])) <body>)  ==>
-; ((lambda ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>) <expr1> ... <exprn>)
+; ((function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>) <expr1> ... <exprn>)
 (defun expand-let (world type-env bindings &rest body)
-  (declare (ignore type-env))
-  (declare (ignore world))
+  (declare (ignore world type-env))
   (unless (and (listp bindings)
                (every #'let-binding? bindings))
     (error "Bad let bindings ~S" bindings))
-  (cons (list* 'lambda (mapcar #'(lambda (binding)
-                                   (list* (first binding) (second binding) (cdddr binding)))
-                               bindings) body)
+  (cons (list* 'function (mapcar #'(lambda (binding)
+                                     (list* (first binding) (second binding) (cdddr binding)))
+                                 bindings) body)
         (mapcar #'third bindings)))
 
 
@@ -2038,10 +2188,21 @@
   (let* ((var (first binding))
          (type (second binding))
          (expr (third binding))
-         (body-type (->-result-type (scan-value-type world type-env `(lambda ((,var ,type)) ,@body)))))
+         (body-type (->-result-type (scan-value-type world type-env `(function ((,var ,type)) ,@body)))))
     `(case ,expr
        ((abrupt x exception) (typed-oneof ,body-type abrupt x))
        ((normal ,var ,type ,@(cdddr binding)) ,@body))))
+
+
+; (set-of <element-type> <element-expr> ... <element-expr>)  ==>
+; (set-of-ranges <element-type> <element-expr> nil ... <element-expr> nil)
+(defun expand-set-of (world type-env element-type-expr &rest element-exprs)
+  (declare (ignore world type-env))
+  (list* 'set-of-ranges
+         element-type-expr
+         (mapcan #'(lambda (element-expr)
+                     (list element-expr nil))
+                 element-exprs)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -2146,7 +2307,8 @@
     
     (:macro
      (let expand-let depict-let)
-     (letexc expand-letexc depict-letexc))
+     (letexc expand-letexc depict-letexc)
+     (set-of expand-set-of nil))
     
     (:command
      (%section scan-% depict-%section)
@@ -2167,7 +2329,7 @@
     (:special-form
      ;;Control structures
      (bottom scan-bottom depict-bottom)
-     (lambda scan-lambda depict-lambda)
+     (function scan-function depict-function)
      (if scan-if depict-if)
      
      ;;Vectors
@@ -2180,7 +2342,12 @@
      (nth scan-nth depict-nth)
      (rest scan-rest depict-rest)
      (butlast scan-butlast depict-butlast)
+     (subseq scan-subseq depict-subseq)
      (append scan-append depict-append)
+     (set-nth scan-set-nth depict-set-nth)
+     
+     ;;Sets
+     (set-of-ranges scan-set-of-ranges depict-set-of-ranges)
      
      ;;Oneofs
      (oneof scan-oneof-form depict-oneof-form)
@@ -2202,6 +2369,7 @@
     (:type-constructor
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
+     (set scan-set depict-set)
      (oneof scan-oneof depict-oneof)
      (tuple scan-tuple depict-tuple)
      (address scan-address depict-address))))
@@ -2229,7 +2397,7 @@
     (- (-> (integer integer) integer) #'- :infix :minus t 5 5 4)
     (* (-> (integer integer) integer) #'* :infix "*" nil 4 4 4)
     (= (-> (integer integer) boolean) #'= :infix "=" t 6 5 5)
-    (!= (-> (integer integer) boolean) #'/= :infix :not-equal t 6 5 5)
+    (/= (-> (integer integer) boolean) #'/= :infix :not-equal t 6 5 5)
     (< (-> (integer integer) boolean) #'< :infix "<" t 6 5 5)
     (> (-> (integer integer) boolean) #'> :infix ">" t 6 5 5)
     (<= (-> (integer integer) boolean) #'<= :infix :less-or-equal t 6 5 5)
@@ -2269,7 +2437,32 @@
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
     
-    (string-equal (-> (string string) boolean) #'string=)
+    (char= (-> (character character) boolean) #'char= :infix "=" t 6 5 5)
+    (char/= (-> (character character) boolean) #'char/= :infix :not-equal t 6 5 5)
+    (char< (-> (character character) boolean) #'char< :infix "<" t 6 5 5)
+    (char> (-> (character character) boolean) #'char> :infix ">" t 6 5 5)
+    (char<= (-> (character character) boolean) #'char<= :infix :less-or-equal t 6 5 5)
+    (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t 6 5 5)
+    
+    (string-equal (-> (string string) boolean) #'string= :infix "=" t 6 5 5)
+
+    (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" 6 5)
+    (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil 6 2)
+    (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil 6 2)
+    (integer-set-intersection (-> (integer-set integer-set) integer-set) #'intset-intersection :infix :intersection-10 t 4 4 4)
+    (integer-set-union (-> (integer-set integer-set) integer-set) #'intset-union :infix :union-10 t 5 5 5)
+    (integer-set-difference (-> (integer-set integer-set) integer-set) #'intset-difference :infix :minus t 5 5 4)
+    (integer-set-member (-> (integer integer-set) boolean) #'integer-set-member :infix :member-10 t 6 5 5)
+    (integer-set= (-> (integer-set integer-set) boolean) #'intset= :infix "=" t 6 5 5)
+    
+    (character-set-length (-> (character-set) integer) #'intset-length :unary "|" "|" 6 5)
+    (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil 6 2)
+    (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil 6 2)
+    (character-set-intersection (-> (character-set character-set) character-set) #'intset-intersection :infix :intersection-10 t 4 4 4)
+    (character-set-union (-> (character-set character-set) character-set) #'intset-union :infix :union-10 t 5 5 5)
+    (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t 5 5 4)
+    (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t 6 5 5)
+    (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t 6 5 5)
 
     (is-ordinary-initial-identifier-character (-> (character) boolean) #'ordinary-initial-identifier-character?)
     (is-ordinary-continuing-identifier-character (-> (character) boolean) #'ordinary-continuing-identifier-character?)))
@@ -2320,6 +2513,8 @@
     (dolist (type-spec *default-types*)
       (add-type-name world (make-type world (cdr type-spec) nil nil) (world-intern world (car type-spec)) nil))
     (add-type-name world (make-vector-type world (make-type world :character nil nil)) (world-intern world 'string) nil)
+    (add-type-name world (make-set-type world (make-type world :integer nil nil)) (world-intern world 'integer-set) nil)
+    (add-type-name world (make-set-type world (make-type world :character nil nil)) (world-intern world 'character-set) nil)
     world))
 
 
@@ -2662,7 +2857,7 @@
 ; (define (<name> (<arg1> <type1>) ... (<argn> <typen>)) <result-type> <value>)
 ;   ==>
 ; (define <name> (-> (<type1> ... <typen>) <result-type>)
-;    (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <value>)
+;    (function ((<arg1> <type1>) ... (<argn> <typen>)) <value>)
 ;    t)
 (defun preprocess-define (preprocessor-state command name type value)
   (declare (ignore preprocessor-state))
@@ -2673,7 +2868,7 @@
                (list command
                      name
                      (list '-> (mapcar #'second bindings) type)
-                     (list 'lambda bindings value)
+                     (list 'function bindings value)
                      t))
              (list command name type value nil)))
           nil))
@@ -2685,7 +2880,7 @@
 ;
 ; (action (<action-name> (<arg1> <type1>) ... (<argn> <typen>)) <production-name> <body>)
 ;   ==>
-; (action <action-name> <production-name> (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <body>) t)
+; (action <action-name> <production-name> (function ((<arg1> <type1>) ... (<argn> <typen>)) <body>) t)
 (defun preprocess-action (preprocessor-state command action-name production-name body)
   (declare (ignore preprocessor-state))
   (values (list
@@ -2695,7 +2890,7 @@
                (list command
                      action-name
                      production-name
-                     (list 'lambda bindings body)
+                     (list 'function bindings body)
                      t))
              (list command action-name production-name body nil)))
           nil))
