@@ -37,7 +37,6 @@ CPPSRCS =				\
 	nsHTMLDocument.cpp		\
 	nsHTMLFrame.cpp			\
 	nsHTMLFrameset.cpp		\
-	nsHTMLParts.cpp			\
 	nsImageDocument.cpp		\
 	nsMarkupDocument.cpp		\
 	$(NULL)
