@@ -27,6 +27,9 @@ DIRS=                \
         xml          \
         xsl          \
         xbl          \
+!ifdef MOZ_SVG
+        svg          \
+!endif
         events       \
         xul          \
         shared       \

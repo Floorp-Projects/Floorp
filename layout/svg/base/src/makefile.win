@@ -1,9 +1,9 @@
 #!nmake
 #
-# The contents of this file are subject to the Netscape Public
+# The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
+# the License at http://www.mozilla.org/MPL/
 #
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
@@ -23,27 +23,42 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutsvgbase_s 
 MODULE=layout 
-REQUIRES    = xpcom \
-              widget \
-			  content \
-			  gfx \
-			  string \
-			  locale \
-			  dom \
-			  pref \
-			  view \
-	      necko \
-	      unicharutil \
+REQUIRES    = xpcom       \
+              widget      \
+              content     \
+              gfx         \
+              string      \
+              locale      \
+              dom         \
+              pref        \
+              view        \
+              libart_lgpl \
+              necko       \
+              unicharutil \
               $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPP_OBJS=					\
-  .\$(OBJDIR)\nsSVGContainerFrame.obj    \
-  .\$(OBJDIR)\nsPolygonFrame.obj    \
-  .\$(OBJDIR)\nsPolylineFrame.obj    \
-  .\$(OBJDIR)\nsSVGPathFrame.obj    \
-  $(NULL)
+CPP_OBJS=					                 \
+  .\$(OBJDIR)\nsSVGBPathBuilder.obj          \
+  .\$(OBJDIR)\nsSVGCircleFrame.obj           \
+  .\$(OBJDIR)\nsSVGEllipseFrame.obj          \
+  .\$(OBJDIR)\nsSVGFill.obj                  \
+  .\$(OBJDIR)\nsSVGForeignObjectFrame.obj    \
+  .\$(OBJDIR)\nsSVGGFrame.obj                \
+  .\$(OBJDIR)\nsSVGGenericContainerFrame.obj \
+  .\$(OBJDIR)\nsSVGGraphic.obj               \
+  .\$(OBJDIR)\nsSVGGraphicFrame.obj          \
+  .\$(OBJDIR)\nsSVGLineFrame.obj             \
+  .\$(OBJDIR)\nsSVGOuterSVGFrame.obj         \
+  .\$(OBJDIR)\nsSVGPathFrame.obj             \
+  .\$(OBJDIR)\nsSVGPolygonFrame.obj          \
+  .\$(OBJDIR)\nsSVGPolylineFrame.obj         \
+  .\$(OBJDIR)\nsSVGRectFrame.obj             \
+  .\$(OBJDIR)\nsSVGRenderItem.obj            \
+  .\$(OBJDIR)\nsSVGRenderingContext.obj      \
+  .\$(OBJDIR)\nsSVGStroke.obj                \
+	$(NULL)
 
 EXPORTS =					\
 	$(NULL)
@@ -57,17 +72,24 @@ LINCS= \
    -I..\..\..\html\forms\src \
    -I..\..\..\base\src \
   -I..\..\..\xml\content\src \
-  -I..\..\..\base\public
+  -I..\..\..\base\public \
+  -I..\..\..\..\content\svg\content\src \
+  $(NULL)
+
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
+
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+	$(MAKE_INSTALL) svg.css $(DIST)\bin\res
+	$(PERL) install-svg-css.pl $(DIST)\bin\res\ua.css
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\bin\res\svg.css

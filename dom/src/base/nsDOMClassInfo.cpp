@@ -266,6 +266,37 @@
 #include "nsIDocumentTransformer.h"
 #include "nsIXPathNodeSelector.h"
 
+#ifdef MOZ_SVG
+#include "nsIDOMSVGAnimatedLength.h"
+#include "nsIDOMSVGAnimatedPoints.h"
+#include "nsIDOMSVGAnimatedPathData.h"
+#include "nsIDOMSVGAnimTransformList.h"
+#include "nsIDOMSVGCircleElement.h"
+#include "nsIDOMSVGEllipseElement.h"
+#include "nsIDOMSVGLineElement.h"
+#include "nsIDOMSVGRectElement.h"
+#include "nsIDOMSVGDocument.h"
+#include "nsIDOMSVGElement.h"
+#include "nsIDOMSVGGElement.h"
+#include "nsIDOMSVGFitToViewBox.h"
+#include "nsIDOMSVGForeignObjectElem.h"
+#include "nsIDOMSVGMatrix.h"
+#include "nsIDOMSVGLength.h"
+#include "nsIDOMSVGLocatable.h"
+#include "nsIDOMSVGPathElement.h"
+#include "nsIDOMSVGPathSeg.h"
+#include "nsIDOMSVGPathSegList.h"
+#include "nsIDOMSVGPoint.h"
+#include "nsIDOMSVGPointList.h"
+#include "nsIDOMSVGPolygonElement.h"
+#include "nsIDOMSVGPolylineElement.h"
+#include "nsIDOMSVGSVGElement.h"
+#include "nsIDOMSVGTransformable.h"
+#include "nsIDOMSVGTransform.h"
+#include "nsIDOMSVGTransformList.h"
+#include "nsIDOMSVGRect.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#endif
 
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
@@ -656,6 +687,99 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_SVG
+  // SVG document
+  NS_DEFINE_CLASSINFO_DATA(SVGDocument, nsDocumentSH,
+                           NODE_SCRIPTABLE_FLAGS)
+
+  // SVG element classes
+  NS_DEFINE_CLASSINFO_DATA(SVGSVGElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPolygonElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPolylineElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGCircleElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGEllipseElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGLineElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGRectElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGGElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGForeignObjectElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+
+    
+  // other SVG classes
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPoints, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGPointList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGPoint, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedTransformList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGTransformList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGTransform, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGMatrix, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegClosePath, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegMovetoAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegMovetoRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoCubicAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoCubicRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoQuadraticAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoQuadraticRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegArcAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegArcRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoHorizontalAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoHorizontalRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoVerticalAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegLinetoVerticalRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoCubicSmoothAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoCubicSmoothRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoQuadraticSmoothAbs, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoQuadraticSmoothRel, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+#endif
 
   // Transformiix classes
   NS_DEFINE_CLASSINFO_DATA(XSLTProcessor, nsDOMGenericSH,
@@ -1623,6 +1747,215 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_PRIMARY_INTERFACE(DOMParser)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
   DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_SVG
+#define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGElement) \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+
+#define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)        \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLocatable)       \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformable)   \
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+
+  // XXX - the proto chain stuff is sort of hackish, because of the MI in
+  // the SVG interfaces. I doubt that extending the proto on one interface
+  // works properly on an element which inherits off multiple interfaces.
+  // Tough luck. - bbaetz
+  DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNode)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGSVGElement, nsIDOMSVGSVGElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSVGElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFitToViewBox)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLocatable)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPolygonElement, nsIDOMSVGPolygonElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPolygonElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPolylineElement, nsIDOMSVGPolylineElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPolylineElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGCircleElement, nsIDOMSVGCircleElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGCircleElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGEllipseElement, nsIDOMSVGEllipseElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGEllipseElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGLineElement, nsIDOMSVGLineElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLineElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGRectElement, nsIDOMSVGRectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGRectElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGGElement, nsIDOMSVGGElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGGElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGForeignObjectElement, nsIDOMSVGForeignObjectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGForeignObjectElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathElement, nsIDOMSVGPathElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPathData)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedLength, nsIDOMSVGAnimatedLength)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLength)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGLength, nsIDOMSVGLength)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLength)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedPoints, nsIDOMSVGAnimatedPoints)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPointList, nsIDOMSVGPointList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPointList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPoint, nsIDOMSVGPoint)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPoint)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedTransformList, nsIDOMSVGAnimatedTransformList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedTransformList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGTransformList, nsIDOMSVGTransformList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGTransform, nsIDOMSVGTransform)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransform)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGMatrix, nsIDOMSVGMatrix)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGMatrix)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegList, nsIDOMSVGPathSegList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegClosePath, nsIDOMSVGPathSegClosePath)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegClosePath)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegMovetoAbs, nsIDOMSVGPathSegMovetoAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegMovetoAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegMovetoRel, nsIDOMSVGPathSegMovetoRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegMovetoRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoAbs, nsIDOMSVGPathSegLinetoAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoRel, nsIDOMSVGPathSegLinetoRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoCubicAbs, nsIDOMSVGPathSegCurvetoCubicAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoCubicAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoCubicRel, nsIDOMSVGPathSegCurvetoCubicRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoCubicRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoQuadraticAbs, nsIDOMSVGPathSegCurvetoQuadraticAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoQuadraticAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoQuadraticRel, nsIDOMSVGPathSegCurvetoQuadraticRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoQuadraticRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegArcAbs, nsIDOMSVGPathSegArcAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegArcAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegArcRel, nsIDOMSVGPathSegArcRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegArcRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoHorizontalAbs, nsIDOMSVGPathSegLinetoHorizontalAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoHorizontalAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoHorizontalRel, nsIDOMSVGPathSegLinetoHorizontalRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoHorizontalRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoVerticalAbs, nsIDOMSVGPathSegLinetoVerticalAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoVerticalAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegLinetoVerticalRel, nsIDOMSVGPathSegLinetoVerticalRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegLinetoVerticalRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoCubicSmoothAbs, nsIDOMSVGPathSegCurvetoCubicSmoothAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoCubicSmoothAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoCubicSmoothRel, nsIDOMSVGPathSegCurvetoCubicSmoothRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoCubicSmoothRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoQuadraticSmoothAbs, nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPathSegCurvetoQuadraticSmoothRel, nsIDOMSVGPathSegCurvetoQuadraticSmoothRel)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathSegCurvetoQuadraticSmoothRel)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGRect, nsIDOMSVGRect)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGRect)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedRect, nsIDOMSVGAnimatedRect)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedRect)
+  DOM_CLASSINFO_MAP_END
+#endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_PRIMARY_INTERFACE(XSLTProcessor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDocumentTransformer)

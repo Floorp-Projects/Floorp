@@ -6956,6 +6956,18 @@
                 <PATH>UnicharUtilsStaticDebug.o</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
+            <FILEREF>
+                <TARGETNAME>layoutDebug.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>contentsharedDebug.o</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>layout.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>contentshared.o</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
         </GROUP>
         <GROUP><NAME>Options</NAME>
             <GROUP><NAME>Debug</NAME>
@@ -6989,12 +7001,6 @@
         </GROUP>
         <GROUP><NAME>NS Libraries</NAME>
             <GROUP><NAME>Debug</NAME>
-                <FILEREF>
-                    <TARGETNAME>layoutDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentsharedDebug.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
                 <FILEREF>
                     <TARGETNAME>layoutDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
@@ -7039,12 +7045,6 @@
                 </FILEREF>
             </GROUP>
             <GROUP><NAME>Optimized</NAME>
-                <FILEREF>
-                    <TARGETNAME>layout.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentshared.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
                 <FILEREF>
                     <TARGETNAME>layout.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>

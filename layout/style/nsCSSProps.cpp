@@ -738,6 +738,29 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
 };
 #endif
 
+#ifdef MOZ_SVG
+// keyword tables for SVG properties
+const PRInt32 nsCSSProps::kFillRuleKTable[] = {
+  eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO,
+  eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD,
+  -1, -1
+};
+
+const PRInt32 nsCSSProps::kStrokeLinecapKTable[] = {
+  eCSSKeyword_butt, NS_STYLE_STROKE_LINECAP_BUTT,
+  eCSSKeyword_round, NS_STYLE_STROKE_LINECAP_ROUND,
+  eCSSKeyword_square, NS_STYLE_STROKE_LINECAP_SQUARE,
+  -1, -1
+};
+
+const PRInt32 nsCSSProps::kStrokeLinejoinKTable[] = {
+  eCSSKeyword_butt, NS_STYLE_STROKE_LINEJOIN_MITER,
+  eCSSKeyword_round, NS_STYLE_STROKE_LINEJOIN_ROUND,
+  eCSSKeyword_bevel, NS_STYLE_STROKE_LINEJOIN_BEVEL,
+  -1, -1
+};
+#endif
+
 PRInt32 
 nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
 {
@@ -835,6 +858,25 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kBoxPackKTable);
 #endif
 
+#ifdef MOZ_SVG
+  case eCSSProperty_fill:
+  case eCSSProperty_fill_opacity:
+  case eCSSProperty_stroke:
+  case eCSSProperty_stroke_dasharray:
+  case eCSSProperty_stroke_dashoffset:
+  case eCSSProperty_stroke_miterlimit:
+  case eCSSProperty_stroke_opacity:
+  case eCSSProperty_stroke_width:
+    break;
+
+  case eCSSProperty_fill_rule:
+    return SearchKeywordTable(aValue, kFillRuleKTable);
+  case eCSSProperty_stroke_linecap:
+    return SearchKeywordTable(aValue, kStrokeLinecapKTable);
+  case eCSSProperty_stroke_linejoin:
+    return SearchKeywordTable(aValue, kStrokeLinejoinKTable);
+#endif
+    
   case eCSSProperty_box_sizing:
     return SearchKeywordTable(aValue, kBoxSizingKTable);
 

@@ -26,7 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base core html events stylesheets views css traversal range xbl xul
+DIRS =						\
+	base					\
+	core					\
+	html					\
+	events					\
+	stylesheets				\
+	views					\
+	css					\
+	traversal				\
+	range					\
+	xbl					\
+	xul
+
+ifdef MOZ_SVG
+DIRS += svg
+endif
 
 include $(topsrcdir)/config/rules.mk
 

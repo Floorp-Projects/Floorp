@@ -86,6 +86,5 @@ endif
 
 ifdef MOZ_SVG
 INCLUDES += \
-        -I$(srcdir)/../../../svg/content/src \
         -I$(srcdir)/../../../svg/base/src
 endif

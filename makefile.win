@@ -78,6 +78,9 @@ DIRS =                         \
   expat                        \
   gfx                          \
   gfx2                         \
+!ifdef MOZ_INTERNAL_LIBART_LGPL
+  other-licenses\libart_lgpl   \
+!endif
   modules\libpr0n              \
   modules\plugin               \
   uriloader                    \

@@ -40,6 +40,7 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  gfx \
 		  content \
+                  raptor \
 		  layout_xul \
 !ifdef MOZ_SVG
               raptor \
@@ -69,7 +70,6 @@ LINCS= \
   -I..\..\..\mathml\base\src \
 !endif
 !ifdef MOZ_SVG
-  -I..\..\..\svg\content\src \
   -I..\..\..\svg\base\src \
 !endif
   -I..\..\forms\src \

@@ -380,6 +380,11 @@ extern NS_EXPORT nsresult
 extern NS_EXPORT nsresult
    NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
 
+#ifdef MOZ_SVG
+extern NS_EXPORT nsresult
+   NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
+#endif
+
 extern NS_EXPORT nsresult
    NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 

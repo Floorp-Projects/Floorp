@@ -96,6 +96,9 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
   { TEXT_XML,          "xml,xsl", "Extensible Markup Language", 'TEXT', 'ttxt' },
   { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", 'TEXT', 'ttxt' },
+#ifdef MOZ_SVG
+  { "image/svg+xml", "svg", "Scalable Vector Graphics", 'svg ', 'ttxt' },
+#endif
   { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
   { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
   { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },

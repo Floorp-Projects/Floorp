@@ -97,6 +97,11 @@ public:
   static const PRInt32 kBoxOrientKTable[];
   static const PRInt32 kBoxPackKTable[];
 #endif
+#ifdef MOZ_SVG
+  static const PRInt32 kFillRuleKTable[];
+  static const PRInt32 kStrokeLinecapKTable[];
+  static const PRInt32 kStrokeLinejoinKTable[];
+#endif
   static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];

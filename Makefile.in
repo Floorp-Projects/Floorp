@@ -157,6 +157,10 @@ ifdef MOZ_ENABLE_GTK
 tier_9_dirs	+= widget/src/gtksuperwin widget/src/gtkxtbin
 endif
 
+ifdef MOZ_INTERNAL_LIBART_LGPL
+tier_9_dirs	+= other-licenses/libart_lgpl
+endif
+
 tier_9_dirs	+= \
 		widget/timer \
 		modules/libutil \

@@ -251,3 +251,17 @@ CSS_PROP(widows, widows, REFLOW)
 CSS_PROP(width, width, REFLOW)
 CSS_PROP(word-spacing, word_spacing, REFLOW)
 CSS_PROP(z-index, z_index, REFLOW)
+#ifdef MOZ_SVG
+CSS_PROP(fill, fill, VISUAL)
+CSS_PROP(fill-opacity, fill_opacity, VISUAL)
+CSS_PROP(fill-rule, fill_rule, VISUAL)
+CSS_PROP(stroke, stroke, VISUAL) 
+CSS_PROP(stroke-dasharray, stroke_dasharray, VISUAL) 
+CSS_PROP(stroke-dashoffset, stroke_dashoffset, VISUAL) 
+CSS_PROP(stroke-linecap, stroke_linecap, VISUAL)
+CSS_PROP(stroke-linejoin, stroke_linejoin, VISUAL) 
+CSS_PROP(stroke-miterlimit, stroke_miterlimit, VISUAL) 
+CSS_PROP(stroke-opacity, stroke_opacity, VISUAL)
+CSS_PROP(stroke-width, stroke_width, VISUAL)
+#endif
+  

@@ -431,6 +431,9 @@ CViewSourceHTML::CanParse(CParserContext& aParserContext,
        aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType) ||
+#ifdef MOZ_SVG
+       aParserContext.mMimeType.Equals(NS_LITERAL_STRING(kSVGTextContentType)) ||
+#endif
        aParserContext.mMimeType.EqualsWithConversion(kSGMLTextContentType)) {
       result=ePrimaryDetect;
     }

@@ -524,6 +524,12 @@ NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(nsRect *aBounds, PRUin
 	if (!surface)
 		return NS_ERROR_OUT_OF_MEMORY;
 
+	// Bug 93217. Needed for SVG, but possible side effects, so ifdef
+	// for now.
+#ifdef MOZ_SVG
+	NS_ADDREF(surface);
+#endif
+
 	nsresult rv = surface->Init(depth, macRect.right, macRect.bottom, aSurfFlags);
 	if (NS_SUCCEEDED(rv))
 		aSurface = surface;
@@ -554,8 +560,16 @@ NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSur
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
 */
+
+        // Bug 93217. Needed for SVG, but possible side effects, so ifdef
+        // for now.
+#ifdef MOZ_SVG
+	// release the surface (used to delete when CreateOffscreen didn't AddRef)
+  	NS_IF_RELEASE(surface);
+#else
 	// delete the surface
 	delete surface;
+#endif
 
 	return NS_OK;
 }

@@ -3673,6 +3673,41 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_box_ordinal_group:
     return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
 #endif
+#ifdef MOZ_SVG
+  case eCSSProperty_fill:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
+                        nsnull);
+  case eCSSProperty_fill_opacity:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN,
+                        nsnull);
+  case eCSSProperty_fill_rule:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kFillRuleKTable);
+  case eCSSProperty_stroke:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
+                        nsnull);
+  case eCSSProperty_stroke_dasharray:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOS,
+                        nsnull); // XXX parse into new CSS value type, not string
+  case eCSSProperty_stroke_dashoffset:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HLPN,
+                        nsnull);
+  case eCSSProperty_stroke_linecap:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kStrokeLinecapKTable);
+  case eCSSProperty_stroke_linejoin:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kStrokeLinejoinKTable);
+  case eCSSProperty_stroke_miterlimit:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HN,
+                                nsnull); // XXX value > 1
+  case eCSSProperty_stroke_opacity:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN,
+                        nsnull);
+  case eCSSProperty_stroke_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN,
+                        nsnull);
+#endif
   case eCSSProperty_box_sizing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxSizingKTable);

@@ -22,6 +22,8 @@ nsStyleStruct.h
 nsTextFragment.h
 nsXULAtomList.h
 nsXULAtoms.h
+nsSVGAtoms.h
+nsSVGAtomList.h
 nsXBLAtomList.h
 nsXBLAtoms.h
 

@@ -22,7 +22,21 @@
 DEPTH=..\..\..
 
 
-DIRS=base core html events stylesheets views css traversal range xbl xul
+DIRS=						\
+	base					\
+	core					\
+	html					\
+	events					\
+	stylesheets				\
+	views					\
+	css					\
+	traversal				\
+	range					\
+	xbl					\
+!ifdef MOZ_SVG
+	svg					\
+!endif
+	xul 
 
 include <$(DEPTH)\config\rules.mak>
 
