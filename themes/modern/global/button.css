@@ -13,7 +13,7 @@
     background-color  : transparent;
     color					    : #1C1D1F;
     font              : message-box;
-    -moz-user-focus   : normal !important;
+    -moz-user-focus   : normal;
   }
   
   .exit-dialog {

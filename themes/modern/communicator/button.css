@@ -31,7 +31,7 @@
 
 .button-toolbar {
   -moz-binding: url("chrome://global/content/xulBindings.xml#buttonleft");
-  -moz-user-focus: ignore !important;
+  -moz-user-focus: ignore;
   margin: 1px;
   border: none;
   height: 0px;
