@@ -1766,11 +1766,13 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   rv = channel->SetOriginalURI(mOriginalURI);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIChannel> tempChannel;
-  rv = mLoadGroup->GetDefaultLoadChannel(getter_AddRefs(tempChannel));
-  if (NS_SUCCEEDED(rv)) {
-    if (tempChannel == this) {
-      mLoadGroup->SetDefaultLoadChannel(channel);
+ if (mLoadGroup) {
+    nsCOMPtr<nsIChannel> tempChannel;
+    rv = mLoadGroup->GetDefaultLoadChannel(getter_AddRefs(tempChannel));
+    if (NS_SUCCEEDED(rv)) {
+      if (tempChannel == this) {
+        mLoadGroup->SetDefaultLoadChannel(channel);
+      }
     }
   }
 
