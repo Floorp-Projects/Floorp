@@ -6303,12 +6303,6 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIConten
     nsCOMPtr<nsIContent> element;
     rv = nsXULElement::Create(aPrototype, this, PR_FALSE, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
-
-    if (aPrototype->mNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL) || 
-        aPrototype->mNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_HTML)) {
-        // <script> tags in an overlay don't need a forward reference.
-        return NS_OK;
-    }
     
     OverlayForwardReference* fwdref = new OverlayForwardReference(this, element);
     if (! fwdref)
@@ -6530,6 +6524,13 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsAutoString id;
     rv = mOverlay->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     if (NS_FAILED(rv)) return eResolve_Error;
+
+    if (id.IsEmpty()) {
+        // overlay had no id, use the root element
+        mDocument->InsertElement(mDocument->mRootContent, mOverlay);
+        mResolved = PR_TRUE;
+        return eResolve_Succeeded;
+    }
 
     nsCOMPtr<nsIDOMElement> domtarget;
     rv = mDocument->GetElementById(id, getter_AddRefs(domtarget));
