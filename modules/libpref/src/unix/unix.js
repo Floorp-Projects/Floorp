@@ -51,8 +51,9 @@ pref("middlemouse.scrollbarPosition", true);
 // Clipboard behavior
 pref("clipboard.autocopy", true);
 
-// keyboard Mode_switch workaround
-pref("keyboard.mode_switch.enable_workaround", true);
+// autocomplete keyboard grab workaround
+pref("autocomplete.grab_during_popup", true);
+pref("autocomplete.ungrab_during_mode_switch", true);
 
 // Most Unix people think modal pref windows are stupid:
 pref("browser.prefWindowModal", false);
