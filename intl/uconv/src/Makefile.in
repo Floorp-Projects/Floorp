@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToUTF8.cpp \
 		nsUCvMinSupport.cpp \
+ 		nsScriptableUConv.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \

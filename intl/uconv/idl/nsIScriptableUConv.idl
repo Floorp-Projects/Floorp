@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+%{C++
+// {0A698C44-3BFF-11d4-9649-00C0CA135B4E}
+#define NS_ISCRIPTABLEUNICODECONVERTER_CID { 0x0A698C44, 0x3BFF, 0x11d4, { 0x96, 0x49, 0x00, 0xC0, 0xCA, 0x13, 0x5B, 0x4E } }
+#define NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID "@mozilla.org/intl/scriptableunicodeconverter"
+%}
+
+/**
+ * This interface is unicode encoder using from script
+ *
+ * @created         8/Jun/2000
+ * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
+ */
+[scriptable, uuid(0A698C44-3BFF-11d4-9649-00C0CA135B4E)]
+interface nsIScriptableUnicodeConverter : nsISupports
+{
+  /**
+   * Converts the data from Unicode to one Charset.
+   */
+  string ConvertFromUnicode([const] in wstring aSrc);
+
+  /**
+   * Converts the data from one Charset to Unicode.
+   */
+  wstring ConvertToUnicode([const] in string aSrc);
+
+  /**
+   * Current charactor set
+   */
+  attribute wstring charset;
+};

@@ -48,6 +48,7 @@ CPPSRCS =				\
 	nsUnicodeToMacRoman.cpp     \
 	nsUnicodeToUTF8.cpp     \
 	nsUCvMinSupport.cpp		\
+ 	nsScriptableUConv.cpp	\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -70,6 +71,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToMacRoman.obj			\
 	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
 	.\$(OBJDIR)\nsUCvMinSupport.obj			\
+ 	.\$(OBJDIR)\nsScriptableUConv.obj	\
 	$(NULL)
 
 CSRCS =		\
