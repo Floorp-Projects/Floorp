@@ -23,16 +23,20 @@ REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=				\
+	nsHTMLApplet.cpp		\
 	nsHTMLComment.cpp		\
 	nsHTMLHead.cpp			\
 	nsHTMLMeta.cpp			\
+	nsHTMLObject.cpp		\
 	nsHTMLTitle.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsHTMLApplet.obj		\
 	.\$(OBJDIR)\nsHTMLComment.obj		\
 	.\$(OBJDIR)\nsHTMLHead.obj		\
 	.\$(OBJDIR)\nsHTMLMeta.obj		\
+	.\$(OBJDIR)\nsHTMLObject.obj		\
 	.\$(OBJDIR)\nsHTMLTitle.obj		\
 	$(NULL)
 
