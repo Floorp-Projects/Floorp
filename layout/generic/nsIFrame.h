@@ -134,6 +134,9 @@ typedef PRUint32 nsFrameState;
 // This bit is set when the frame is first created
 #define NS_FRAME_IS_DIRTY 0x00000400
 
+// If this bit is set then the frame is unflowable.
+#define NS_FRAME_IS_UNFLOWABLE 0x00000800
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
