@@ -69,6 +69,7 @@ private:
 public:
   void * m_pNPNAlloced; // used by NPN_MemFree/Alloc in manual mode
   void * m_pValue;      // used by NPN_Get/SetValue stuff
+  NPAPI_Action m_firstAction; // = action_invalid;
 
 public:
   CPluginBase(NPP pNPInstance, WORD wMode);

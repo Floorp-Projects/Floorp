@@ -194,6 +194,9 @@ Return:
   DWORD dwTickReturn = XP_GetTickCount();
   pLogger->appendToLog(action_npp_new_stream, dwTickEnter, dwTickReturn, (DWORD)ret, (DWORD)instance, 
                        (DWORD)type, (DWORD)stream, (DWORD)seekable, (DWORD)stype);
+  if (pPlugin->m_firstAction == action_npn_request_read && seekable) {
+    *stype = NP_SEEK;
+  }
   return ret;
 }
 
@@ -233,6 +236,13 @@ Return:
   pLogger->appendToLog(action_npp_write, dwTickEnter, dwTickReturn, (DWORD)ret, 
                        (DWORD)instance, (DWORD)stream, 
                        (DWORD)offset, (DWORD)len, (DWORD)buffer);
+  if (pPlugin->m_firstAction == action_npn_request_read) {
+    if (stream->notifyData) {
+      NPByteRange* rangeList = 	(NPByteRange*) stream->notifyData;
+      NPN_RequestRead(stream, rangeList);
+      stream->notifyData = 0;
+    }
+  }
   return ret;
 }
 

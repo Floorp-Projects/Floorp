@@ -45,6 +45,8 @@
 #include "plugin.h"
 #include "comstrs.h"
 
+static char szDefaultNPByteRangeList[] = "100-100,200-100,300-100";
+
 static char szNotImplemented[] = "Currently not implemented";
 
 void EnableWindowNow(HWND hWnd, BOOL bEnable)
@@ -253,11 +255,18 @@ void updateUI(HWND hWnd)
   }
   else if(strcmp(szString, STRING_NPN_REQUESTREAD) == 0)
   {
+//serge
+    showArgControls7(hWnd, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
+    enableEdits7(hWnd, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE);
+    setStaticTexts7(hWnd, "instance:", "URL:", "Range:", "notifyData:", "", "", "");
+    setEditTexts7(hWnd, szNPInstance,NS_SAMPLE_URL,szDefaultNPByteRangeList,"0","","","");
+   /*
     EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_GO), FALSE);
     ShowWindow(GetDlgItem(hWnd, IDC_STATIC_INFO), SW_SHOW);
     Static_SetText(GetDlgItem(hWnd, IDC_STATIC_INFO), szNotImplemented);
     showArgControls7(hWnd, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE);
     ShowWindow(GetDlgItem(hWnd, IDC_BUTTON_PASTE), SW_HIDE);
+    */
   }
   else if(strcmp(szString, STRING_NPN_DESTROYSTREAM) == 0)
   {
@@ -417,6 +426,14 @@ void updateUI(HWND hWnd)
     assert(0);
 }
 
+/*      
+NPByteRange g_npByteRangeList[] = {
+   {100, 100, npByteRangeList + 1},
+   {200, 100, npByteRangeList + 2},
+   {300, 100, 0}
+};
+*/
+
 void onGo(HWND hWnd)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
@@ -457,6 +474,22 @@ void onGo(HWND hWnd)
       dwTarget = 0L;
     else
       dwTarget = (DWORD)sz2;
+    pPlugin->makeNPNCall(action_npn_get_url_notify, DEFAULT_DWARG_VALUE, (DWORD)sz1, dwTarget, dwData);
+  }
+  else if(strcmp(szString, STRING_NPN_REQUESTREAD) == 0)
+  {
+    extern NPByteRange * convertStringToNPByteRangeList(LPSTR szString);
+
+    Edit_GetText(GetDlgItem(hWnd, IDC_EDIT_ARG2), sz1, sizeof(sz1));
+    Edit_GetText(GetDlgItem(hWnd, IDC_EDIT_ARG3), sz2, sizeof(sz2));
+    DWORD dwData = (DWORD)GetDlgItemInt(hWnd, IDC_EDIT_ARG4, &bTranslated, FALSE);
+    DWORD dwTarget = 0L;
+    NPByteRange *npByteRangeList = convertStringToNPByteRangeList(sz2);
+    if (!npByteRangeList) { // use default szDefaultNPByteRangeList
+      npByteRangeList = convertStringToNPByteRangeList(szDefaultNPByteRangeList);
+    }
+    pPlugin->m_firstAction = action_npn_request_read;
+    dwData = (DWORD) npByteRangeList;
     pPlugin->makeNPNCall(action_npn_get_url_notify, DEFAULT_DWARG_VALUE, (DWORD)sz1, dwTarget, dwData);
   }
   else if(strcmp(szString, STRING_NPN_POSTURL) == 0)

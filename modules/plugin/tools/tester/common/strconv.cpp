@@ -292,3 +292,31 @@ DWORD convertStringToNPPVariable1(DWORD * pdw1)
 
   return dwRet;
 }
+
+NPByteRange * convertStringToNPByteRangeList(LPSTR szString)
+{
+  NPByteRange **brNextFromPrev, *brList = 0;
+  if(szString) {
+    int offset = -1, len = -1;
+    char *p = szString;
+    while (EOF != sscanf((const char*)p, "%d-%d", &offset, &len)) {
+      if (offset == -1 || len == -1)
+        break;
+      NPByteRange *brCurr = new NPByteRange;
+      brCurr->offset = offset;
+      brCurr->length = len;
+      brCurr->next = 0;
+      if (!brList)
+        brList = brCurr;
+      else
+        *brNextFromPrev = brCurr;
+      
+      brNextFromPrev = &brCurr->next;
+      
+      if (!(p = strchr(p, ',')))
+        break;
+      while(*(++p) == ' '); // cut off white spaces
+    } 
+  }
+  return brList;
+}
