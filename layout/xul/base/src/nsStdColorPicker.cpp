@@ -171,7 +171,7 @@ NS_IMETHODIMP nsStdColorPicker::Init(nsIContent *aContent)
     mColors = sizeof(StandardPalette) / sizeof(char *);
   }
 
-  mNumRows = NSToIntCeil(nscoord(mColors/mNumCols));
+  mNumRows = NSToIntCeil(nscoord(mColors/mNumCols)) - 1;
 
   return NS_OK;
 }
