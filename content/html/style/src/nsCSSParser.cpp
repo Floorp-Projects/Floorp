@@ -1567,7 +1567,17 @@ void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
     return;
   }
   aDataMask |= SEL_MASK_CLASS;
-  aSelector.AddClass(mToken.mIdent);  // class always case sensitive
+
+  if (mNavQuirkMode) {
+    // in quirks mode, we uppercase the class attribute and classes in CSS.
+    // (see also nsHTMLAttributes.cpp)
+    nsAutoString buffer;
+    mToken.mIdent.ToUpperCase(buffer);
+    aSelector.AddClass(buffer);
+  } else {
+    aSelector.AddClass(mToken.mIdent);
+  }  
+
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }
 
