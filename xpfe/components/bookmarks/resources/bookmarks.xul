@@ -81,7 +81,7 @@
   </menubar>
 
 <tree  id="bookmarksTree" 
-       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find"
+       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        ondblclick="return OpenURL(event,event.target.parentNode);"
        flex="100%">
 
