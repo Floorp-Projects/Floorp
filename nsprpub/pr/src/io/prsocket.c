@@ -1254,22 +1254,16 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 		return NULL;
 	}
 
-#if defined(_PR_INET6)
-	if (PR_AF_INET6 == domain) {
 #if defined(_PR_INET6_PROBE)
-        if (_pr_ipv6_is_present == PR_FALSE) 
-            domain = AF_INET;
-        else
-#endif
-		domain = AF_INET6;
-    }
-#elif defined(_PR_INET6_PROBE)
 	if (PR_AF_INET6 == domain) {
 		if (_pr_ipv6_is_present == PR_FALSE) 
 			domain = AF_INET;
 		else
 			domain = AF_INET6;
 	}
+#elif defined(_PR_INET6)
+	if (PR_AF_INET6 == domain)
+		domain = AF_INET6;
 #else
 	if (PR_AF_INET6 == domain)
 		domain = AF_INET;
@@ -1287,7 +1281,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	 */
 	if (fd != NULL) {
 		_PR_MD_MAKE_NONBLOCK(fd);
-#if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+#if defined(_PR_INET6_PROBE) || !defined(_PR_INET6)
 		/*
 		 * For platforms with no support for IPv6 
 		 * create layered socket for IPv4-mapped IPv6 addresses
