@@ -70,6 +70,12 @@ public:
   static nsIAtom* treefoot; // The footer of the tree view
   static nsIAtom* treepusher; // A column pusher (left or right) for the tree view
 
+  static nsIAtom* menu; // The menu element
+  static nsIAtom* menubar; // The menubar element
+  static nsIAtom* menuitem; // A single menu item
+  static nsIAtom* menubutton; // A button inside an XP menu.
+  static nsIAtom* menuchildren; // The menu's children.
+  
   static nsIAtom* progressmeter; 
   static nsIAtom* titledbutton;
   static nsIAtom* mode; 
