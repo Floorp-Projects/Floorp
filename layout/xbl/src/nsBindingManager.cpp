@@ -58,6 +58,7 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleSet.h"
+#include "nsIXBLPrototypeHandler.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -78,10 +79,14 @@ public:
   NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
   NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
 
+  NS_IMETHOD GetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler** aResult);
+  NS_IMETHOD SetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler* aHandler);
+
 private:
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsISupportsArray> mRuleProcessors;
   PRBool mScriptAccess;
+  nsSupportsHashtable* mHandlerTable;
 };
 
 /* Implementation file */
@@ -93,12 +98,13 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   /* member initializers and constructor code */
   mDocument = aDocument;
   mScriptAccess = PR_TRUE;
+  mHandlerTable = nsnull;
 }
 
 nsXBLDocumentInfo::~nsXBLDocumentInfo()
 {
   /* destructor code */
-
+  delete mHandlerTable;
 }
 
 NS_IMETHODIMP
@@ -136,7 +142,32 @@ nsXBLDocumentInfo::GetRuleProcessors(nsISupportsArray** aResult)
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
-  
+
+NS_IMETHODIMP
+nsXBLDocumentInfo::GetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler** aResult)
+{
+  *aResult = nsnull;
+  if (!mHandlerTable)
+    return NS_OK;
+
+  nsCStringKey key(aRef);
+  *aResult = NS_STATIC_CAST(nsIXBLPrototypeHandler*, mHandlerTable->Get(&key)); // Addref happens here.
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLDocumentInfo::SetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler* aHandler)
+{
+  if (!mHandlerTable)
+    mHandlerTable = new nsSupportsHashtable();
+
+  nsCStringKey key(aRef);
+  mHandlerTable->Put(&key, aHandler);
+
+  return NS_OK;
+}
+
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
 {
   *aResult = new nsXBLDocumentInfo(aDocument);

@@ -38,6 +38,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIScriptContext;
+class nsIXBLPrototypeHandler;
 
 // {5C4D9674-A2CF-4ddf-9F65-E1806C34D28D}
 #define NS_IXBLDOCUMENTINFO_IID \
@@ -54,6 +55,8 @@ public:
   NS_IMETHOD GetScriptAccess(PRBool* aResult)=0;
   NS_IMETHOD SetScriptAccess(PRBool aAccess)=0;
 
+  NS_IMETHOD GetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler** aResult)=0;
+  NS_IMETHOD SetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler* aHandler)=0;
 };
 
 extern nsresult
