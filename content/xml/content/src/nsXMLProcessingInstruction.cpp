@@ -391,6 +391,11 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
+nsXMLProcessingInstruction::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXMLProcessingInstruction::HandleDOMEvent(nsIPresContext* aPresContext,
                                            nsEvent* aEvent,
                                            nsIDOMEvent** aDOMEvent,
