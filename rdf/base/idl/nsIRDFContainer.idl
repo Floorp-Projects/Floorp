@@ -1,0 +1,71 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIRDFDataSource.idl"
+#include "nsIRDFResource.idl"
+#include "nsIRDFNode.idl"
+#include "nsISimpleEnumerator.idl"
+
+// A wrapper for manipulating RDF containers
+[scriptable, uuid(D4214E90-FB94-11D2-BDD8-00104BDE6048)]
+interface nsIRDFContainer : nsISupports {
+
+    // Initialize the container wrapper to the specified resource
+    // using the specified datasource for context.
+    void Init(in nsIRDFDataSource aDataSource, in nsIRDFResource aContainer);
+
+    // Return the number of elements in the container. Note that this
+    // may not always be accurate due to aggregation.
+    long GetCount();
+
+    // Return an enumerator that can be used to enumerate the contents
+    // of the container in ascending order.
+    nsISimpleEnumerator GetElements();
+
+    // Append an element to the container, assigning it the next
+    // available ordinal.
+    void AppendElement(in nsIRDFNode aElement);
+
+    // Remove the first occurence of the specified element from the
+    // container.
+    void RemoveElement(in nsIRDFNode aElement, in boolean aRenumber);
+    void InsertElementAt(in nsIRDFNode aElement, in long aIndex, in boolean aRenumber);
+    long IndexOf(in nsIRDFNode aElement);
+};
+
+%{C++
+PR_EXTERN(nsresult)
+NS_NewRDFContainer(nsIRDFContainer** aResult);
+
+PR_EXTERN(nsresult)
+NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
+                   nsIRDFResource* aResource,
+                   nsIRDFContainer** aResult);
+
+/**
+ * Create a cursor on a container that enumerates its contents in
+ * order
+ */
+PR_EXTERN(nsresult)
+NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aContainer,
+                          nsISimpleEnumerator** aResult);
+
+
+%}
