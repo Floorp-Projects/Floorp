@@ -243,8 +243,12 @@ nsPresContext::ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
 nsIFontMetrics*
 nsPresContext::GetMetricsFor(const nsFont& aFont)
 {
-  if (nsnull != mDeviceContext)
-    return mDeviceContext->GetMetricsFor(aFont);
+  if (nsnull != mDeviceContext) {
+    nsIFontMetrics* metrics;
+
+    mDeviceContext->GetMetricsFor(aFont, metrics);
+    return NS_OK;
+  }
   return nsnull;
 }
 

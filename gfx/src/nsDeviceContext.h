@@ -46,10 +46,10 @@ public:
   virtual float GetAppUnitsToDevUnits() const;
   virtual float GetDevUnitsToAppUnits() const;
 
-  virtual nsIFontCache * GetFontCache();
-  virtual void FlushFontCache();
+  NS_IMETHOD  GetFontCache(nsIFontCache *&aCache);
+  NS_IMETHOD  FlushFontCache();
 
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
 
   NS_IMETHOD  SetZoom(float aZoom);
   NS_IMETHOD  GetZoom(float &aZoom) const;
@@ -59,7 +59,7 @@ public:
 
   NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable);
 
-  virtual nsNativeWidget GetNativeWidget(void);
+  NS_IMETHOD  GetNativeWidget(nsNativeWidget &aNativeWidget);
 
   NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
 

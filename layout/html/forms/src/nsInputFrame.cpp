@@ -466,7 +466,8 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
   aFrame->GetFont(&aPresContext, font);
   //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
-  nsIFontCache* fontCache = deviceContext->GetFontCache();
+  nsIFontCache* fontCache;
+  deviceContext->GetFontCache(fontCache);
 
   nsIFontMetrics* fontMet = fontCache->GetMetricsFor(font);
   aSize.width  = fontMet->GetWidth(aString);
