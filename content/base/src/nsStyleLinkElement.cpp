@@ -84,12 +84,7 @@ NS_IMETHODIMP
 nsStyleLinkElement::SetEnableUpdates(PRBool aEnableUpdates)
 {
   mUpdatesEnabled = aEnableUpdates;
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsStyleLinkElement::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
-{
   return NS_OK;
 }
 
@@ -159,8 +154,9 @@ const PRBool kBlockByDefault=PR_TRUE;
 NS_IMETHODIMP
 nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, PRInt32 aDocIndex)
 {
-  if (!mUpdatesEnabled)
+  if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
+  }
 
   // Keep a strong ref to the parser so it's still around when we pass it
   // to the CSS loader. Release strong ref in mParser so we don't hang on
@@ -172,8 +168,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
   nsCOMPtr<nsIContent> thisContent;
   QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisContent));
 
-  if (!thisContent)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(thisContent, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc;
   thisContent->GetDocument(*getter_AddRefs(doc));
@@ -186,10 +181,9 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
     return NS_OK;
   }
 
-  if (!doc || mDontLoadStyle)
+  if (!doc) {
     return NS_OK;
-
-  nsresult rv = NS_OK;
+  }
 
   nsAutoString url, title, type, media;
   PRBool isAlternate;
@@ -213,8 +207,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
   }
 
   if (url.IsEmpty()) {
-    // if href is empty then just bail
-    return rv;
+    return NS_OK; // If href is empty then just bail
   }
 
   if (!type.EqualsIgnoreCase("text/css")) {
@@ -223,7 +216,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
 
   nsCOMPtr<nsIURI> uri;
 
-  rv = NS_NewURI(getter_AddRefs(uri), url);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
 
   if (NS_FAILED(rv)) {
     return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
@@ -313,10 +306,12 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
         }
       }
     }
-    if (prevSheet)
+    if (prevSheet) {
       insertionPoint = doc->GetIndexOfStyleSheet(prevSheet) + 1;
-    else
+    }
+    else {
       insertionPoint = 0;
+    }
   }
 
   PRBool doneLoading;
@@ -325,7 +320,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
                              insertionPoint, 
                              ((blockParser) ? parser.get() : nsnull),
                              doneLoading, 
-                             this);
+                             nsnull);
 
   if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;

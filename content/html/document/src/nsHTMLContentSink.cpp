@@ -3785,7 +3785,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
       result = AddAttributes(aNode, element);
       if (NS_SUCCEEDED(result)) {
         parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
-        if(!mInsideNoXXXTag) {
+        if (!mInsideNoXXXTag) {
           nsAutoString value;
           if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
             ProcessBaseHref(value);
@@ -4057,11 +4057,11 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsresult  result = NS_OK;
   nsIHTMLContent* parent = nsnull;
   
-  if(mCurrentContext!=nsnull) {
-    parent=mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
+  if (mCurrentContext) {
+    parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
   }
   
-  if(parent!=nsnull) {
+  if (parent) {
     // Create content object
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -4078,13 +4078,13 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
       if (ssle) {
         // XXX need prefs. check here.
-        if(!mInsideNoXXXTag) {
+        if (!mInsideNoXXXTag) {
           ssle->InitStyleLinkElement(mParser, PR_FALSE);
+          ssle->SetEnableUpdates(PR_FALSE);
         }
         else {
-          ssle->InitStyleLinkElement(mParser, PR_TRUE);
+          ssle->InitStyleLinkElement(nsnull, PR_TRUE);
         }
-        ssle->SetEnableUpdates(PR_FALSE);
       }
 
       // Add in the attributes and add the style content object to the
@@ -4095,6 +4095,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         return result;
       }
       parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
+
       if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
         result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
@@ -4670,11 +4671,11 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         // XXX need prefs. check here.
         if (!mInsideNoXXXTag) {
           ssle->InitStyleLinkElement(mParser, PR_FALSE);
+          ssle->SetEnableUpdates(PR_FALSE);
         }
         else {
-          ssle->InitStyleLinkElement(mParser, PR_TRUE);
+          ssle->InitStyleLinkElement(nsnull, PR_TRUE);
         }
-        ssle->SetEnableUpdates(PR_FALSE);
       }
 
       // Add in the attributes and add the style content object to the

@@ -668,8 +668,15 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
 
     if (ssle) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
+      // We stopped supporting <style src="..."> for XHTML as it is
+      // non-standard.
+      if (isHTML && tagAtom.get() == nsHTMLAtoms::style) {
+        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+      }
+      else {
+        ssle->InitStyleLinkElement(mParser, PR_FALSE);
+        ssle->SetEnableUpdates(PR_FALSE);
+      }
     }
 
     content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
@@ -705,9 +712,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     if (IDAttr && NS_SUCCEEDED(result))
       result = nodeInfo->SetIDAttributeAtom(IDAttr);
 
-    // We stopped supporting <style src="..."> for XHTML as it is
-    // non-standard.
-    if (ssle && !(isHTML && (tagAtom.get() == nsHTMLAtoms::style))) {
+    if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
       result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
       if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
@@ -1084,36 +1089,18 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   
-  PRInt32 i, count;
-  mStyleElement->GetAttributeCount(count);
-
-  nsAutoString src;
   nsAutoString title; 
   nsAutoString type; 
   nsAutoString media; 
 
-  nsCOMPtr<nsIAtom> name, prefix;
-  PRInt32 namespaceID;
+  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, title);
+  title.CompressWhitespace();
 
-  if (NS_FAILED(mStyleElement->GetAttribute(namespaceID, *getter_AddRefs(name),src)))
-    return rv;
-  src.StripWhitespace();
+  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  type.StripWhitespace();
 
-  for (i = 0; i < count; i++) {
-    mStyleElement->GetAttributeNameAt(i,namespaceID,*getter_AddRefs(name),*getter_AddRefs(prefix));
-    if (name.get() == nsHTMLAtoms::title) {
-      mStyleElement->GetAttribute(namespaceID,name,title);
-      title.CompressWhitespace();
-    }
-    else if (name.get() == nsHTMLAtoms::type) {
-      mStyleElement->GetAttribute(namespaceID,name,type);
-      type.StripWhitespace();
-    }
-    else if (name.get() == nsHTMLAtoms::media) {
-      mStyleElement->GetAttribute(namespaceID,name,media);
-      media.ToLowerCase();
-    }
-  }
+  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
+  media.ToLowerCase();
 
   nsAutoString  mimeType;
   nsAutoString  params;
