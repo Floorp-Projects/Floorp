@@ -767,11 +767,6 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
 
-  /* do nothing if signon preference is not enabled */
-  if (!si_GetSignonRememberingPref()) {
-    return PR_FALSE;
-  }
-
   si_lock_signon_list();
 
   /* get URL corresponding to host */
