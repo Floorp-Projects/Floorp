@@ -1071,6 +1071,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
           dy = NSTwipsToIntPixels(offy, scale);
 
           scrollv->SetPosition(0);  // make sure thumb is at the top
+          scrollv->SetParameters(0, 0, 0, 0);  // make thumb full-size 
 
           if (mScrollPref == nsScrollPreference_kAlwaysScroll || mScrollPref == nsScrollPreference_kAlwaysScrollVertical)
           {
