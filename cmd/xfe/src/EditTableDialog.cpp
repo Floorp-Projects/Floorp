@@ -101,17 +101,17 @@ extern "C" void fe_EventLoop();
 extern "C" {
 
 /* some forward definitions: */
-void fe_bg_group_set(Widget parent, LO_Color* color,
-                     char* bg_image, XP_Bool leave_image);
-void fe_bg_group_get(Widget parent, LO_Color** color_r,
+static void fe_bg_group_set(Widget parent, LO_Color* color,
+                            char* bg_image, XP_Bool leave_image);
+static void fe_bg_group_get(Widget parent, LO_Color** color_r,
                      char** bg_image_r, XP_Bool* leave_image_r);
 
-Widget
-fe_CreateFolder(Widget parent, char* name, Arg* args, Cardinal n);
-void
-fe_table_tbr_set(MWContext* context, Widget toggle, Widget text, Widget radio,
-                 Boolean enabled, unsigned numeric, Boolean second_one);
-extern Widget fe_create_background_group(Widget parent, char* name,
+static Widget fe_CreateFolder(Widget parent, char* name,
+                              Arg* args, Cardinal n);
+static void fe_table_tbr_set(MWContext* context, Widget toggle,
+                             Widget text, Widget radio, Boolean enabled,
+                             unsigned numeric, Boolean second_one);
+static Widget fe_create_background_group(Widget parent, char* name,
                                          Arg* p_args, Cardinal p_n);
 /* End Forward Definitions */
 
