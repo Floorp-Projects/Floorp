@@ -837,7 +837,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const PRUnichar *aString, PRUint3
 	}
 	
 	*utf8ptr = '\0';
-	uint32 utf8str_len = strlen(utf8str);
+	uint32 utf8str_len = strlen((char *)utf8str);
 	GetWidth((char *)utf8str, utf8str_len, aWidth);
 	delete [] utf8str;
 	return NS_OK;
@@ -884,8 +884,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 		if (mTranMatrix == nsnull) return NS_ERROR_FAILURE;
 		if (mSurface == nsnull) return NS_ERROR_FAILURE;
 		if (aString == nsnull) return NS_ERROR_FAILURE;
-		
-		nscoord x = aX, y = aY;
+		nscoord xx = aX, yy = aY, y=aY;
 		PRBool doEmulateBold = PR_FALSE;
 		
 		// Subtract xFontStruct ascent since drawing specifies baseline
@@ -895,36 +894,54 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 		}
 		
 		UpdateView();
-		if (mView) {
-			// FIXME: the following is *very* inefficient for text rendering,
-			// but it's the easiest way to render antialiased text correctly
+		if (mView)  
+		{
+			// XXX: the following maybe isn't  most efficient for text rendering,
+			// but it's the easy way to render antialiased text correctly
 			mView->SetDrawingMode(B_OP_OVER);
-			if (nsnull != aSpacing) {
-				char *utf8ptr = (char *)aString;
-				while (*utf8ptr != '\0') {
-					uint32 ch_len = utf8_char_len((uchar)*utf8ptr);  // counting character byte-length
-					
-					nscoord xx = x;
-					nscoord yy = y;
-					mTranMatrix->TransformCoord(&xx, &yy);
-					
-					// yy++; DrawString quirk!
-					mView->DrawString((char *)utf8ptr, ch_len, BPoint(xx, yy)); // draw the character
-					if (doEmulateBold) {
-						mView->DrawString((char *)utf8ptr, ch_len, BPoint(xx + 1.0, yy));
-					}
-					utf8ptr += ch_len;  // assigning substring pointer to next character
-					x += *aSpacing++;
+			if (nsnull == aSpacing || utf8_char_len((uchar)aString[0])==aLength) {
+				mTranMatrix->TransformCoord(&xx, &yy);
+				mView->DrawString(aString, aLength, BPoint(xx, yy));
+				if (doEmulateBold) {
+					mView->DrawString(aString, aLength, BPoint(xx+1.0, yy));
 				}
 			} else {
-				mTranMatrix->TransformCoord(&x, &y);
-				mView->DrawString(aString, aLength, BPoint(x, y));
-				if (doEmulateBold) {
-					mView->DrawString(aString, aLength, BPoint(x + 1.0, y));
-				}
+					int32 wlen=0, wpos=aX;
+					char *wpoint =0;
+					for(int32 i =0, onword=0, unichnum=0,  position=aX, ch_len=0;i<=aLength; )
+					{
+						ch_len = utf8_char_len((uchar)aString[i]);
+						wlen  += ch_len;
+						if((aString[i]==' ' && onword==1) || aString[i]=='\0')
+						{
+							onword=0;
+							xx = wpos; 
+							yy = y;
+							mTranMatrix->TransformCoord(&xx, &yy);
+							// yy++; DrawString quirk!
+							if('\0' == aString[i]) 
+								wlen--;
+							mView->DrawString((char *)(wpoint), wlen, BPoint(xx, yy)); 
+							if (doEmulateBold) 	
+								mView->DrawString((char *)(wpoint), wlen, BPoint(xx+1.0, yy));
+							wlen=0;
+						}
+						else
+						{
+							if (onword ==0)
+							{
+								onword= 1; 
+								wpoint = (char *)&(aString[i]); 
+								wpos = position;
+								
+							}
+						}
+						position += aSpacing[unichnum++];
+						i += ch_len;
+					}
 			}
 			mView->SetDrawingMode(B_OP_COPY);
-			mView->UnlockLooper();
+				mView->UnlockLooper();
 		}
 	}
 	return NS_OK;
@@ -943,7 +960,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar *aString, PRUin
 	}
 	
 	*utf8ptr = '\0';
-	uint32 utf8str_len = strlen(utf8str);
+	uint32 utf8str_len = strlen((char *)utf8str);
 	DrawString((char *)utf8str, utf8str_len, aX, aY, aSpacing);
 	delete [] utf8str;
 	return NS_OK;
@@ -1162,7 +1179,7 @@ nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar*   aString,
 		}
 	
 		*utf8ptr = '\0';
-		uint32 utf8str_len = strlen(utf8str);
+		uint32 utf8str_len = strlen((char *)utf8str);
 		r = GetBoundingMetrics((char *)utf8str, utf8str_len, aBoundingMetrics);
 		if (utf8str != utf8buf)
 			delete [] utf8str;
