@@ -148,6 +148,9 @@ CrossCheck("profiles", "userid",
            ["longdescs", "who", "bug_id"],
            ["namedqueries", "userid"]);
 
+CrossCheck("profiles", "login_name",
+	["components", "initialowner"]),;
+
 
 Status("Checking passwords");
 SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
