@@ -80,7 +80,7 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
   }
   
   // else if we have too many, delete them
-  else if (rangeCount>arrayCount)
+  else if (arrayCount>rangeCount)
   {
     while ((item = (nsRangeStore*)mArray.ElementAt(rangeCount)))
     {
