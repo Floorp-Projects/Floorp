@@ -52,9 +52,12 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mGC = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
-  mDrawable = (Drawable) aWindow->GetNativeData(NS_NATIVE_WIDGET);
+  mSurface = new nsDrawingSurfaceUnix();
 
+  mSurface->display =  XtDisplay((Widget)aWindow->GetNativeData(NS_NATIVE_WIDGET));
+  mSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
+  mSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+  
 #if 0
   mFontCache = mContext->GetFontCache();
 #endif 
@@ -68,7 +71,8 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mGC = (GC)aSurface;
+  mSurface = (nsDrawingSurfaceUnix *) aSurface;
+
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
@@ -102,10 +106,14 @@ void nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, PRBool aIntersec
 {
 }
 
-const nsRect& nsRenderingContextUnix :: GetClipRect()
+PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 {
-  nsRect r(0,0,0,0);
-  return r;
+  return PR_TRUE;
+}
+
+void nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect)
+{
+  //XXX wow, needs to do something.
 }
 
 void nsRenderingContextUnix :: SetColor(nscolor aColor)
@@ -117,8 +125,8 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;
 
-  XChangeGC(XtDisplay((Widget)mDrawable),
-	    mGC,
+  XChangeGC(mSurface->display,
+	    mSurface->gc,
 	    GCForeground | GCBackground,
 	    &values);
 }
@@ -130,11 +138,11 @@ nscolor nsRenderingContextUnix :: GetColor() const
 
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
-  Font id = ::XLoadFont(XtDisplay((Widget)mDrawable), "fixed");
+  Font id = ::XLoadFont(mSurface->display, "fixed");
 
-  XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mDrawable), id);
+  XFontStruct * fs = ::XQueryFont(mSurface->display, id);
 
-  ::XSetFont(XtDisplay((Widget)mDrawable), mGC, id);
+  ::XSetFont(mSurface->display, mSurface->gc, id);
 
 
 #if 0
@@ -197,9 +205,9 @@ void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  ::XFillRectangle(XtDisplay((Widget)mDrawable), 
-		   XtWindow((Widget)mDrawable),
-		   mGC,
+  ::XFillRectangle(mSurface->display, 
+		   mSurface->drawable,
+		   mSurface->gc,
 		   aX, aY,
 		   aWidth, aHeight);
 }
@@ -258,11 +266,11 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aWidth)
 {
   // XXX Hack
-  ::XLoadFont(XtDisplay((Widget)mDrawable), "fixed");
+  ::XLoadFont(mSurface->display, "fixed");
 
-  ::XDrawString(XtDisplay((Widget)mDrawable), 
-		XtWindow((Widget)mDrawable),
-		mGC,
+  ::XDrawString(mSurface->display, 
+		mSurface->drawable,
+		mSurface->gc,
 		aX, aY, aString, aWidth);
 }
 
@@ -274,8 +282,20 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 void nsRenderingContextUnix :: DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-  // XXX Leak - How to Print UniChar
-  DrawString(aString.ToNewCString(), aString.Length(), aX, aY, aWidth);
+  // XXX Leak - How to Print UniChar  
+  if (aString.Length() > 0) {
+    char * buf ;
+    
+    buf = (char *) malloc(sizeof(char) * (aString.Length()+1));
+
+    buf[aString.Length()] = '\0';
+
+    aString.ToCString(buf, aString.Length());
+
+    DrawString(buf, aString.Length(), aX, aY, aWidth);
+
+    free(buf);
+  }
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

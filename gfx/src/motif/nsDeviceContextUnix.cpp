@@ -28,11 +28,14 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
   NS_INIT_REFCNT();
 
   mFontCache = nsnull;
+  mSurface = nsnull;
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
 {
   NS_IF_RELEASE(mFontCache);
+
+  if (mSurface) delete mSurface;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
@@ -85,7 +88,14 @@ float nsDeviceContextUnix :: GetScrollBarHeight() const
 nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aView)
 {
   nsIRenderingContext *pContext = nsnull;
+  nsIWidget *win = aView->GetWidget();
   nsresult            rv;
+
+  mSurface = new nsDrawingSurfaceUnix();
+
+  mSurface->display =  XtDisplay((Widget)win->GetNativeData(NS_NATIVE_WIDGET));
+  mSurface->drawable = (Drawable)win->GetNativeData(NS_NATIVE_WINDOW);
+  mSurface->gc       = (GC)win->GetNativeData(NS_NATIVE_GRAPHIC);
 
   static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
@@ -93,7 +103,7 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
   rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
   if (NS_OK == rv)
-    InitRenderingContext(pContext, mWidget);
+    InitRenderingContext(pContext, win);
 
   return pContext;
 }
@@ -101,7 +111,6 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   aContext->Init(this, aWin);
-  mWidget = aWin;
 }
 
 nsIFontCache* nsDeviceContextUnix::GetFontCache()
@@ -150,3 +159,32 @@ nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &a
 {
   return ( aContext.CreateDrawingSurface(nsnull));
 }
+
+float nsDeviceContextUnix :: GetGamma(void)
+{
+  return mGammaValue;
+}
+
+void nsDeviceContextUnix :: SetGamma(float aGamma)
+{
+  if (aGamma != mGammaValue)
+  {
+    //we don't need to-recorrect existing images for this case
+    //so pass in 1.0 for the current gamma regardless of what it
+    //really happens to be. existing images will get a one time
+    //re-correction when they're rendered the next time. MMP
+
+    mGammaValue = aGamma;
+  }
+}
+
+PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
+{
+  //XXX we really need to ref count this somehow. MMP
+
+  return nsnull;
+}
+
+
+
+

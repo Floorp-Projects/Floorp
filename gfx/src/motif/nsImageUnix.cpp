@@ -46,9 +46,10 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 //------------------------------------------------------------
 
 // set up the pallete to the passed in color array, RGB only in this array
-void nsImageUnix :: ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect)
+void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
 }
+
 
 //------------------------------------------------------------
 
@@ -70,7 +71,7 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurf
 
 //------------------------------------------------------------
 
-void nsImageUnix::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation)
+void nsImageUnix::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
 {
 
 }
