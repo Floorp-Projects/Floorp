@@ -1256,6 +1256,7 @@ NET_ParseURL
 # NET_ProxyAutoConfig
 # NET_PublishFiles
 # NET_PublishFilesTo
+NET_GetURLQuick
 # NET_ReadCacheFAT
 # NET_ReadCookies
 # NET_ReadNewsgroupsFromDisk
