@@ -38,6 +38,7 @@
 #include "nsMsgSearchValue.h"
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
+#include "nsMsgUtf7Utils.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -390,6 +391,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 	  {
 		  PRInt32 prefixLen = PL_strlen(kImapPrefix);
 		  moveValue.Mid(m_action.m_originalServerPath, prefixLen, moveValue.Length() - prefixLen);
+          if ( filterVersion == k45Version)
+          {
+            nsAutoString unicodeStr;
+            unicodeStr.AssignWithConversion(m_action.m_originalServerPath.get());
+            char *utfNewName = CreateUtf7ConvertedStringFromUnicode(unicodeStr.get());
+            m_action.m_originalServerPath.Assign(utfNewName);
+            nsCRT::free(utfNewName);
+          }
 
       nsCOMPtr <nsIFolder> destIFolder;
       if (rootFolder)
@@ -451,6 +460,15 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
         nsCRT::free(unescapedMoveValue);
 #endif
         destFolderUri.Append('/');
+        if ( filterVersion == k45Version)
+        {
+          nsAutoString unicodeStr;
+          unicodeStr.AssignWithConversion(moveValue.get());
+          nsXPIDLCString escapedName;
+          rv =NS_MsgEscapeEncodeURLPath(unicodeStr.get(), getter_Copies(escapedName));
+          if (NS_SUCCEEDED(rv) && escapedName)
+            moveValue.Assign(escapedName.get());
+        }
         destFolderUri.Append(moveValue);
         localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, PR_FALSE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
 
