@@ -92,7 +92,7 @@ nsFileProtocolHandler::GetScheme(char* *result)
 NS_IMETHODIMP
 nsFileProtocolHandler::GetDefaultPort(PRInt32 *result)
 {
-    *result = 21; 
+    *result = -1;        // no port for file: URLs
     return NS_OK;
 }
 

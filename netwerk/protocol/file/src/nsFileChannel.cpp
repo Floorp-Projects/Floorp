@@ -69,7 +69,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 
     if (getter) {
         rv = getter->GetEventSink(verb, nsIStreamListener::GetIID(), (nsISupports**)&mListener);
-        if (NS_FAILED(rv)) return rv;
+        // ignore the failure -- we can live without having an event sink
     }
 
     mURI = uri;
