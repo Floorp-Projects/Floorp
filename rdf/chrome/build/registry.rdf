@@ -187,6 +187,12 @@
       </RDF:Description> 
     </content> 
 
+    <locale> 
+      <RDF:Description about="chrome://pref/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome> 
 
   <chrome about="chrome://bookmarks/"> 
@@ -206,7 +212,31 @@
     </skin> 
 
     <locale> 
-      <RDF:Description about="chrome://pref/locale/">
+      <RDF:Description about="chrome://bookmarks/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
+  </chrome> 
+
+  <chrome about="chrome://history/"> 
+
+    <content> 
+      <RDF:Description about="chrome://history/content/">
+	    <base>resource:/chrome/history/content/default/</base>
+         <main>history.xul</main> 
+      </RDF:Description> 
+    </content> 
+
+    <skin> 
+      <RDF:Description about="chrome://history/skin/">
+	    <base>resource:/chrome/history/skin/default/</base>
+        <main>history.css</main> 
+      </RDF:Description> 
+    </skin> 
+
+    <locale> 
+      <RDF:Description about="chrome://history/locale/">
         <name>en-US</name>
       </RDF:Description> 
     </locale> 
