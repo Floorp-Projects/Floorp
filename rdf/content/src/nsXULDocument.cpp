@@ -279,6 +279,7 @@ nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
 
         PL_HashTableAdd(mResources, aResource, head);
         NS_ADDREF(aResource);
+        NS_ADDREF(aContent);
     }
     else {
         while (1) {
@@ -295,6 +296,7 @@ nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
         head->mNext = new ContentListItem(aContent);
         if (! head->mNext)
             return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(aContent);
     }
 
     return NS_OK;
@@ -313,6 +315,7 @@ nsElementMap::Remove(nsIRDFResource* aResource, nsIContent* aContent)
 
     if (head) {
         if (head->mContent == aContent) {
+            NS_RELEASE(aContent);
             ContentListItem* newHead = head->mNext;
             if (newHead) {
                 PL_HashTableAdd(mResources, aResource, newHead);
@@ -330,6 +333,7 @@ nsElementMap::Remove(nsIRDFResource* aResource, nsIContent* aContent)
             while (doomed) {
                 if (doomed->mContent == aContent) {
                     head->mNext = doomed->mNext;
+                    NS_RELEASE(aContent);
                     delete doomed;
                     return NS_OK;
                 }
