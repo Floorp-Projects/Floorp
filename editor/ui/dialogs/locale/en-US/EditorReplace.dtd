@@ -33,6 +33,7 @@
 <!ENTITY replaceField.tooltip "Type one or more words to replace with">
 <!ENTITY findNextButton.label "Find Next">
 <!ENTITY replaceButton.label "Replace">
+<!ENTITY replaceAndFindButton.label "Replace and Find">
 <!ENTITY replaceAllButton.label "Replace All">
 <!ENTITY closeButton.label "Close">
 <!ENTITY notFoundWarning.label "The text you entered was not found.">
