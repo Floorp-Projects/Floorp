@@ -36,6 +36,7 @@ void CScanForFilesDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CScanForFilesDlg, CDialog)
 	//{{AFX_MSG_MAP(CScanForFilesDlg)
 	ON_BN_CLICKED(IDC_SELECTFILE, OnSelectFile)
+	ON_BN_CLICKED(IDC_SELECTFOLDER, OnSelectFolder)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -57,4 +58,10 @@ void CScanForFilesDlg::OnSelectFile()
 		m_sFilePattern = dlg.GetPathName();
 		UpdateData(FALSE);
 	}
+}
+
+void CScanForFilesDlg::OnSelectFolder() 
+{
+	// TODO: Add your control notification handler code here
+	
 }
