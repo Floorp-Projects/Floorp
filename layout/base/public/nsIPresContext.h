@@ -19,18 +19,6 @@
  *
  * Contributor(s): 
  *   IBM Corporation 
- * 
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date         Modified by     Description of modification
- * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
- *
  */
 #ifndef nsIPresContext_h___
 #define nsIPresContext_h___
@@ -42,7 +30,6 @@
 #include "nsIFrameImageLoader.h"
 #include "nsILanguageAtom.h"
 #ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
 class nsAutoString;
 class nsBidiPresUtils;
 #endif // IBMBIDI
