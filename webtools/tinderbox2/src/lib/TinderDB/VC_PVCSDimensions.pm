@@ -63,8 +63,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2003/12/23 13:38:08 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/12/27 21:16:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_PVCSDimensions.pm,v $ 
 # $Name:  $ 
@@ -131,7 +131,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -564,7 +564,7 @@ sub pvcs_date_str2time {
         split('/', $pvcs_date_str);
 
     $mon--;
-    print " $pvcs_date_str\n";
+
     my ($time) = timelocal($sec,$min,$hour,$mday,$mon,$year);    
     
     return $time;
