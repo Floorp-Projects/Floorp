@@ -55,7 +55,8 @@ sub run {
     my $self = shift;
     do {
         eval {
-            $self->objects([]);
+            # the input device is the same throughout the application
+            # see constructor above
             if ($self->verifyInput()) {
                 if ($self->input->command) {
                     $self->command($self->input->command);
@@ -70,11 +71,14 @@ sub run {
             $self->dump(3, "previous command didn't go over well: $@");
             $self->output->reportFatalError($@);
         }
+        # command has been completed, reset it
         $self->command(undef);
         # In case we used a progressive output device, let it shut
         # down.  It's important to do this, because it holds a
         # reference to us and we wouldn't want a memory leak...
         $self->defaultOutput(undef);
+        # empty the session objects list
+        $self->objects([]);
     } while ($self->input->next());
     # clear the objects hash here, so that objects are removed before
     # us, otherwise they can't refer back to us during shutdown.
@@ -143,6 +147,27 @@ sub output {
         }
     }
     if ($default) {
+        # now add the objects that have hooked in.
+        # * hooks have to be registered by the time the default output
+        #   device is picked; the hooks are not rescanned once a
+        #   default output is picked.
+        # * hooks are run in reverse order of being registered.
+        # * output.hook objects have to provide a getOutputHook method
+        #   which returns a reference which will be treated just as a
+        #   normal output service. In particular, this means that any
+        #   method could be called. So most output hooks should use
+        #   methodMissing much like PLIF::Output::Generic.
+        # * passthrough hooks should then call the original method
+        #   again on the argument of the getOutputHook method (which
+        #   is the next object). Override hooks (like the XML RPC one)
+        #   can call specific methods on the next object, or they can
+        #   do whatever they like. Note, though, that not using the
+        #   default output object is a bad idea, since it could leave
+        #   the user with nothing.
+        my @hooks = $self->getObjectList('output.hook');
+        foreach my $hook (@hooks) {
+            $output = $hook->getOutputHook($output);
+        }
         $self->defaultOutput($output);
     }
     return $output;
