@@ -36,13 +36,13 @@
 
 #include "nsString.h"
 
-#include "nsIChannel.h"
+#include "DummyChannel.h"
 
 #include "nspr.h"
 
 #include "ImageLogging.h"
 
-NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, imgIDecoderObserver, gfxIImageContainerObserver)
+NS_IMPL_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest, imgIDecoderObserver, gfxIImageContainerObserver, nsIStreamObserver)
 
 imgRequestProxy::imgRequestProxy() :
   mCanceled(PR_FALSE)
@@ -54,12 +54,15 @@ imgRequestProxy::imgRequestProxy() :
 imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
-  Cancel(NS_ERROR_FAILURE);
+
+  // it isn't the job of the request proxy to cancel itself.
+  // if your object goes away and you want to cancel the load, then do it yourself.
+  // Cancel(NS_ERROR_FAILURE);
 }
 
 
 
-nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserver, nsISupports *cx)
+nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, nsICacheEntryDescriptor *aCacheEntry)
 {
   PR_ASSERT(request);
 
@@ -74,6 +77,22 @@ nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserv
 
   mContext = cx;
 
+  nsISupports *inst = nsnull;
+  inst = new DummyChannel(this, aLoadGroup);
+  NS_ADDREF(inst);
+  nsresult res = inst->QueryInterface(NS_GET_IID(nsIChannel), getter_AddRefs(mDummyChannel));
+  NS_RELEASE(inst);
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup) {
+    loadGroup->AddRequest(mDummyChannel, cx);
+  }
+
+#ifdef MOZ_NEW_CACHE
+  mCacheEntry = aCacheEntry;
+#endif
+
   request->AddObserver(this);
 
   PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -83,6 +102,25 @@ nsresult imgRequestProxy::Init(imgRequest *request, imgIDecoderObserver *aObserv
   return NS_OK;
 }
 
+/**  nsIRequest / imgIRequest methods **/
+
+/* readonly attribute wstring name; */
+NS_IMETHODIMP imgRequestProxy::GetName(PRUnichar * *aName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean isPending (); */
+NS_IMETHODIMP imgRequestProxy::IsPending(PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsresult status; */
+NS_IMETHODIMP imgRequestProxy::GetStatus(nsresult *aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* void cancel (in nsresult status); */
 NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
@@ -97,6 +135,20 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   return rv;
 }
+
+/* void suspend (); */
+NS_IMETHODIMP imgRequestProxy::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void resume (); */
+NS_IMETHODIMP imgRequestProxy::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/**  imgIRequest methods **/
 
 /* readonly attribute gfxIImageContainer image; */
 NS_IMETHODIMP imgRequestProxy::GetImage(gfxIImageContainer * *aImage)
@@ -213,6 +265,29 @@ NS_IMETHODIMP imgRequestProxy::OnStopDecode(imgIRequest *request, nsISupports *c
   if (mObserver)
     mObserver->OnStopDecode(this, mContext, status, statusArg);
 
+  return NS_OK;
+}
+
+
+
+
+
+/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
+NS_IMETHODIMP imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+  return NS_OK;
+}
+
+/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult statusCode, in wstring statusText); */
+NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
+{
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup) {
+    loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode, statusText);
+  }
+  mDummyChannel = nsnull;
+      
   return NS_OK;
 }
 

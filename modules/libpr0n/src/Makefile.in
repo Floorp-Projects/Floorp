@@ -30,7 +30,9 @@ MODULE		= imglib2
 LIBRARY_NAME	= imglib2
 IS_COMPONENT	= 1
 
-CPPSRCS		= ImageCache.cpp \
+CPPSRCS		= \
+			DummyChannel.cpp \
+			ImageCache.cpp \
 			ImageFactory.cpp    \
 			imgLoader.cpp         \
 			imgRequest.cpp        \

@@ -26,7 +26,16 @@
 
 #include "gfxIImageContainer.h"
 #include "imgIDecoder.h"
+#include "nsIStreamObserver.h"
+#include "nsIChannel.h"
+#include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheEntryDescriptor.h"
+#else
+class nsICacheEntryDescriptor;
+#endif
 
 #define NS_IMGREQUESTPROXY_CID \
 { /* 20557898-1dd2-11b2-8f65-9c462ee2bc95 */         \
@@ -37,19 +46,22 @@
 }
 
 class imgRequestProxy : public imgIRequest,
-                        public imgIDecoderObserver
+                        public imgIDecoderObserver,
+                        public nsIStreamObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
+  NS_DECL_NSIREQUEST
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_GFXIIMAGECONTAINEROBSERVER
+  NS_DECL_NSISTREAMOBSERVER
 
   imgRequestProxy();
   virtual ~imgRequestProxy();
 
   /* additional members */
-  nsresult Init(imgRequest *request, imgIDecoderObserver *aObserver, nsISupports *cx);
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, nsICacheEntryDescriptor *aCacheEntry);
 
 private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
@@ -57,6 +69,14 @@ private:
   nsCOMPtr<nsISupports> mContext;
 
   nsCOMPtr<imgIRequest> mOwner;
+
+  nsCOMPtr<nsIChannel> mDummyChannel;
+
+#ifdef MOZ_NEW_CACHE
+  nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to give the cache an 
+                                                  * acurate count of people holding on to an entry
+                                                  */
+#endif
 
   PRBool mCanceled;
 };

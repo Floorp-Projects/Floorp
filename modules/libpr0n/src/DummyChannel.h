@@ -21,51 +21,33 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef ImageCache_h__
-#define ImageCache_h__
+#ifndef DummyChannel_h__
+#define DummyChannel_h__
 
-#include "nsIURI.h"
-#include "imgRequest.h"
-#include "prtypes.h"
+#include "nsIChannel.h"
+#include "nsIRequest.h"
+#include "nsILoadGroup.h"
 
-#define MOZ_NEW_CACHE 1
+#include "imgIRequest.h"
 
-#ifdef MOZ_NEW_CACHE
-#include "nsICacheEntryDescriptor.h"
-#else
-class nsICacheEntryDescriptor;
-#endif
+#include "nsCOMPtr.h"
 
-
-class ImageCache
+class DummyChannel : public nsIChannel
 {
 public:
-#ifdef MOZ_NEW_CACHE
-  ImageCache();
-  ~ImageCache();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANNEL
+  NS_FORWARD_NSIREQUEST(mRequest->)
 
+  DummyChannel(imgIRequest *aRequest, nsILoadGroup *aLoadGroup);
+  ~DummyChannel();
+
+private:
   /* additional members */
-  static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry);
-  static PRBool Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
-  static PRBool Remove(nsIURI *aKey);
+  nsCOMPtr<imgIRequest> mRequest;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-#else
-
-  ImageCache()  { }
-  ~ImageCache() { }
-
-  /* additional members */
-
-  static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry) {
-    return PR_FALSE;
-  }
-  static PRBool Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry) {
-    return PR_FALSE;
-  }
-  static PRBool Remove(nsIURI *aKey) {
-    return PR_FALSE;
-  }
-#endif /* MOZ_NEW_CACHE */
+  nsLoadFlags mLoadFlags;
 };
 
 #endif
