@@ -64,8 +64,10 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIWebBrowserStream.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrintSettings.h"
+#include "nsEmbedStream.h"
 
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
@@ -108,6 +110,7 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebBrowserPersist,
                      public nsIWebBrowserFocus,
                      public nsIWebProgressListener,
+                     public nsIWebBrowserStream,
                      public nsSupportsWeakReference
 {
 friend class nsDocShellTreeOwner;
@@ -126,6 +129,7 @@ public:
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
+    NS_DECL_NSIWEBBROWSERSTREAM
     NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
@@ -170,6 +174,10 @@ protected:
    PRUint32                       mPersistCurrentState;
    PRUint32                       mPersistResult;
    PRUint32                       mPersistFlags;
+
+   // stream
+   nsEmbedStream                 *mStream;
+   nsCOMPtr<nsISupports>          mStreamGuard;
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;

@@ -58,6 +58,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMException.h"
+#include "nsCRT.h"
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
 #endif

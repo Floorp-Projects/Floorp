@@ -62,6 +62,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIWebBrowserStream.h"
 #include "nsIPresShell.h"
 #include "nsIGlobalHistory.h"
 #include "nsIDocShellHistory.h"
@@ -110,6 +111,7 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
    mPersistResult(NS_OK),
    mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
+   mStream(nsnull),
    mParentWidget(nsnull),
    mParent(nsnull),
    mListenerArray(nsnull)
@@ -186,6 +188,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserStream)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -1892,3 +1895,48 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
   return NS_OK;
 }
 
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserStream
+//*****************************************************************************   
+
+/* void openStream (in string aBaseURI, in string aContentType); */
+NS_IMETHODIMP nsWebBrowser::OpenStream(const char *aBaseURI, const char *aContentType)
+{
+  nsresult rv;
+
+  if (!mStream) {
+    mStream = new nsEmbedStream();
+    mStreamGuard = do_QueryInterface(mStream);
+    mStream->InitOwner(this);
+    rv = mStream->Init();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return mStream->OpenStream(aBaseURI, aContentType);
+}
+
+/* void appendStream (in string aData, in long aLen); */
+NS_IMETHODIMP nsWebBrowser::AppendToStream(const char *aData, PRInt32 aLen)
+{
+  if (!mStream)
+    return NS_ERROR_FAILURE;
+
+  return mStream->AppendToStream(aData, aLen);
+}
+
+/* void closeStream (); */
+NS_IMETHODIMP nsWebBrowser::CloseStream()
+{
+  nsresult rv;
+
+  if (!mStream)
+    return NS_ERROR_FAILURE;
+  rv = mStream->CloseStream();
+
+  // release
+  mStream = 0;
+  mStreamGuard = 0;
+
+  return rv;
+}

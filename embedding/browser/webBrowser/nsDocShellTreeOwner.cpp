@@ -58,6 +58,7 @@
 #include "nsISimpleEnumerator.h"
 
 // Interfaces needed to be included
+#include "nsIPresContext.h"
 #include "nsIContextMenuListener.h"
 #include "nsIContextMenuListener2.h"
 #include "nsITooltipListener.h"

@@ -40,10 +40,8 @@
 #define nsPIDOMWindow_h__
 
 #include "nsISupports.h"
-#include "nsString.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIChromeEventHandler.h"
