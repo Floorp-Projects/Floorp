@@ -35,7 +35,7 @@ toolbarbutton {
   -moz-box-pack: center;
   margin: 0;
   border: 1px solid transparent;
-  padding: 3px;
+  padding: 4px;
   background-color: transparent;
   color: -moz-DialogText;
 }
@@ -57,7 +57,7 @@ toolbarbutton[buttonover="true"] {
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  padding: 4px 2px 2px 4px;
+  padding: 5px 3px 3px 5px;
 }
 
 toolbarbutton[disabled="true"],
@@ -65,7 +65,7 @@ toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
   border-color: transparent;
-  padding: 3px;
+  padding: 4px;
   color: GrayText;
 }
 
@@ -73,7 +73,7 @@ toolbarbutton[disabled="true"][open="true"] {
 
 toolbarbutton[checked="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding: 4px 2px 2px 4px !important;
+  padding: 5px 3px 3px 5px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText !important;
 }

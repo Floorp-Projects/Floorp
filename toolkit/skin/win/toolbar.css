@@ -32,22 +32,21 @@
 toolbox {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
+  border-left: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
 }
 
 /* ::::: toolbar & menubar ::::: */
 
-toolbar {
+toolbar,
+menubar {
   min-width: 1px;
   min-height: 20px;
+  border-left: 1px solid ThreeDHighlight;
   border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
-}
-
-toolbar[type="menubar"], menubar {
-  min-width: 1px;
-  min-height: 20px;
-  border-bottom: 1px solid ThreeDShadow;
-  border-top: 0px !important;
 }
 
 /* ::::: toolbar decorations ::::: */
@@ -71,7 +70,7 @@ toolbarpaletteitem {
 
 .toolbarpaletteitem-box[type="spacer"],
 .toolbarpaletteitem-box[type="spring"] {
-  border: 1px solid #808080;
+  border: 1px solid ThreeDShadow;
 }
 
 toolbarpaletteitem[place="toolbar"] {
@@ -103,7 +102,7 @@ toolbarpaletteitem[place="toolbar"] > toolbarspacer {
 }
 
 .toolbarpaletteitem-box[type="spring"][place="palette"] {
-  background: url("chrome://global/skin/toolbar/spacer-mid.gif") no-repeat center;
+  background: url("chrome://global/skin/toolbar/Flex.png") no-repeat center;
 }
 
 /* ..... drag and drop feedback ..... */
