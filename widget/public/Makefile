@@ -20,6 +20,7 @@ DEPTH=../..
 DEFINES = -D_IMPL_NS_UI
 
 EXPORTS =               \
+	nsStringUtil.h		\
 	nsui.h		\
 		nsITabWidget.h  \
         nsIWidget.h     \
