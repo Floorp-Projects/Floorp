@@ -1008,6 +1008,8 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
     return NS_OK;
   }
   
+  aImage->LockImagePixels(PR_FALSE);
+  
   PRUint8 *image_bits    = aImage->GetBits();
   PRInt32  row_bytes     = aImage->GetLineStride();
   PRUint8  imageDepth    = 24; /* R8G8B8 packed. Thanks to "tor" for that hint... */
@@ -1026,7 +1028,11 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
                                       image_bits, row_bytes,
                                       aSrcWidth, aSrcHeight);
     if (!composed_bits)
+    {
+      aImage->UnlockImagePixels(PR_FALSE);
       return NS_ERROR_FAILURE;
+    }
+
     image_bits = composed_bits;
     alphaBits = nsnull; /* ComposeAlphaImage() handled the alpha channel. 
                          * Once we enable XPRINT_SERVER_SIDE_ALPHA_COMPOSING 
@@ -1043,7 +1049,10 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
   PRUint8 *srcimg_data           = image_bits;
   PRUint8 *dstimg_data           = (PRUint8 *)PR_Malloc((aDHeight+1) * dstimg_bytes_per_line); 
   if (!dstimg_data)
+  {
+    aImage->UnlockImagePixels(PR_FALSE);
     return NS_ERROR_FAILURE;
+  }
 
   RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
               0, 0, (aDWidth-1), (aDHeight-1),
@@ -1064,6 +1073,8 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
   if (composed_bits) 
     PR_Free(composed_bits);
   
+  aImage->UnlockImagePixels(PR_FALSE);
+
   return rv;
 }
 
@@ -1075,6 +1086,8 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d(=dummy)/%d(=dummy))\n",
          (int)aX, (int)aY, (int)dummy1, (int)dummy2));
+
+  aImage->LockImagePixels(PR_FALSE);
 
   nsresult rv;
   PRInt32  width         = aImage->GetWidth();
@@ -1094,7 +1107,11 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
                                       image_bits, row_bytes,
                                       width, height);
     if (!composed_bits)
+    {
+      aImage->UnlockImagePixels(PR_FALSE);
       return NS_ERROR_FAILURE;
+    }
+
     image_bits = composed_bits;
     alphaBits = nsnull;
   }
@@ -1105,6 +1122,9 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
 
   if (composed_bits)
     PR_Free(composed_bits);
+
+  aImage->UnlockImagePixels(PR_FALSE);
+
   return rv;                     
 }
 
