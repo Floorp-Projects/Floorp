@@ -92,10 +92,12 @@ CSRCS =             \
 	poll_to.c		\
 	pollable.c		\
 	prftest1.c		\
+	prftest.c		\
 	prftest2.c		\
 	priotest.c		\
 	provider.c		\
 	ranfile.c       \
+	prpoll.c		\
 	sel_spd.c  		\
 	selct_er.c	    \
 	selct_nm.c	    \
@@ -103,9 +105,11 @@ CSRCS =             \
 	select2.c  		\
 	sem.c 	  		\
 	servr_kk.c		\
+	server_test.c	\
 	servr_ku.c		\
 	servr_uk.c		\
 	short_thread.c	\
+	servr_uu.c		\
 	sigpipe.c		\
 	socket.c		\
 	sockopt.c		\
@@ -135,7 +139,6 @@ CSRCS =             \
 
 ifeq ($(OS_TARGET),OS2)
 CSRCS +=            \
-	servr_uu.c		\
 	sleep.c			\
 	stat.c		    \
 	yield.c         \
