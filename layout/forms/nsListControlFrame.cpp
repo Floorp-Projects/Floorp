@@ -2693,7 +2693,7 @@ nsListControlFrame::GetScrollableView(nsIScrollableView*& aScrollableView)
 {
   aScrollableView = nsnull;
 
-  nsIView * scrollView;
+  nsIView * scrollView = nsnull;
   GetView(mPresContext, &scrollView);
   CallQueryInterface(scrollView, &aScrollableView);
   NS_ASSERTION(aScrollableView, "We must be able to get a ScrollableView");

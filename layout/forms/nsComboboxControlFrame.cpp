@@ -2040,7 +2040,7 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 NS_IMETHODIMP
 nsComboboxControlFrame::GetDummyFrame(nsIFrame** aFrame)
 {
-  nsISelectControlFrame* listFrame;
+  nsISelectControlFrame* listFrame = nsnull;
   NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
 
   CallQueryInterface(mDropdownFrame, &listFrame);
@@ -2056,7 +2056,7 @@ nsComboboxControlFrame::GetDummyFrame(nsIFrame** aFrame)
 NS_IMETHODIMP
 nsComboboxControlFrame::SetDummyFrame(nsIFrame* aFrame)
 {
-  nsISelectControlFrame* listFrame;
+  nsISelectControlFrame* listFrame = nsnull;
   NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
 
   CallQueryInterface(mDropdownFrame, &listFrame);
