@@ -27,12 +27,11 @@ static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsFtpProtocolHandler::nsFtpProtocolHandler()
-{
+nsFtpProtocolHandler::nsFtpProtocolHandler() {
+    NS_INIT_REFCNT();
 }
 
-nsFtpProtocolHandler::~nsFtpProtocolHandler()
-{
+nsFtpProtocolHandler::~nsFtpProtocolHandler() {
 }
 
 NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsIProtocolHandler::GetIID());
@@ -90,6 +89,9 @@ nsFtpProtocolHandler::NewUrl(const char* aSpec,
     if (NS_FAILED(rv)) return rv;
 
     rv = url->Init(aSpec, aBaseUrl);
+
+    *result = NS_STATIC_CAST(nsIUrl*, url);
+    NS_ADDREF(*result);
 
     return rv;
 }
