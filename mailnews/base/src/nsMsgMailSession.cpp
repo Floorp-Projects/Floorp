@@ -41,8 +41,7 @@ static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0),
   m_accountManager(0),
-  m_msgFolderCache(0),
-  mListeners(nsnull)
+  m_msgFolderCache(0)
 {
 	NS_INIT_REFCNT();
 }
@@ -60,20 +59,15 @@ nsMsgMailSession::~nsMsgMailSession()
   NS_IF_RELEASE(m_accountManager);
 
   NS_IF_RELEASE(m_msgFolderCache);
-  if (mListeners) 
-	{
-		delete mListeners;
-  }
+
 
 }
 
 nsresult nsMsgMailSession::Init()
 {
-	mListeners = new nsVoidArray();
-	if(!mListeners)
-		return NS_ERROR_OUT_OF_MEMORY;
+	nsresult rv = NS_NewISupportsArray(getter_AddRefs(mListeners));
 
-	return NS_OK;
+	return rv;
 
 }
 
@@ -214,11 +208,15 @@ nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
                                                   const char* oldValue,
                                                   const char* newValue)
 {
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
 	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		listener->OnItemPropertyChanged(item, property, oldValue, newValue);
 	}
 
@@ -232,11 +230,15 @@ nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
                                                       PRUint32 oldValue,
                                                       PRUint32 newValue)
 {
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
 	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		listener->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
 	}
 
@@ -246,11 +248,15 @@ nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
 
 NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item)
 {
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
 	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		listener->OnItemAdded(folder, item);
 	}
 
@@ -260,11 +266,15 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsIFolder *folder, nsISupp
 
 NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item)
 {
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
 	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		listener->OnItemRemoved(folder, item);
 	}
 	return NS_OK;

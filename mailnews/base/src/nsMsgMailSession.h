@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsISupportsArray.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // The mail session is a replacement for the old 4.x MSG_Master object. It contains
@@ -50,7 +51,7 @@ public:
 protected:
   nsIMsgAccountManager *m_accountManager;
   nsIMsgFolderCache		*m_msgFolderCache;
-	nsVoidArray *mListeners; 
+	nsCOMPtr<nsISupportsArray> mListeners; 
 	// stick this here temporarily
 	nsCOMPtr <nsIMsgStatusFeedback> m_temporaryMsgStatusFeedback;
 
