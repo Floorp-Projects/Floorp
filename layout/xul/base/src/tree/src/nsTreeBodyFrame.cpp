@@ -1707,7 +1707,8 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
       mScratchArray->AppendElement(nsXULAtoms::progressmeter);
 
       PRInt32 state = nsITreeView::progressNone;
-      mView->GetProgressMode(aRowIndex, aCol->GetID().get(), &state);
+      if (aRowIndex != -1)
+        mView->GetProgressMode(aRowIndex, aCol->GetID().get(), &state);
       if (state == nsITreeView::progressNormal)
         mScratchArray->AppendElement(nsXULAtoms::progressNormal);
       else if (state == nsITreeView::progressUndetermined)

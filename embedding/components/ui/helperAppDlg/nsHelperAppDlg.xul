@@ -39,6 +39,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="dialog.initDialog()"
+        onunload="if (dialog) dialog.onCancel()"
         style="width: 40em;"
         class="dialog">
 

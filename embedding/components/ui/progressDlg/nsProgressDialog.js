@@ -581,8 +581,11 @@ nsProgressDialog.prototype = {
 
                 // Activate reveal/launch buttons.
                 this.enable( "reveal" );
-                if ( this.target && !this.target.isExecutable() ) {
-                    this.enable( "launch" );
+                try {
+                    if ( this.target && !this.target.isExecutable() ) {
+                        this.enable( "launch" );
+                    }
+                } catch(e) {
                 }
 
                 // Disable the Pause/Resume buttons.

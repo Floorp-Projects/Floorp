@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  plugin \
 		  unicharutil \
 		  intl \
+		  windowwatcher \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

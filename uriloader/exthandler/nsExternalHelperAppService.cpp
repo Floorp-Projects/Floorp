@@ -78,6 +78,8 @@
 #include "nsEscape.h"
 
 #include "nsIStringBundle.h"
+#include "nsIPromptService.h"
+#include "nsIDOMWindow.h"
 
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
@@ -758,23 +760,17 @@ NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *a
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener * aWebProgressListener)
 { 
-  // this call back means we've succesfully brought up the 
-  // progress window so set the appropriate flag...
-
-  mProgressWindowCreated = PR_TRUE;
-
-  // while we were bringing up the progress dialog, we actually finished processing the
-  // url. If that's the case then mStopRequestIssued will be true. Tell the dialog to go away in that
-  // case and we need to execute the operation since we are actually done.
-  if (mStopRequestIssued && aWebProgressListener)
+  // The progress window only appears after the helper app dialog has told us
+  // what to do.  We need to be careful not to confuse helper app dialog
+  // calls to this method with ones from the progress dialog!
+  if (mReceivedDispostionInfo && aWebProgressListener)
   {
-    // simulate a notification saying the document is done.  This will turn around and cause our
-    // progress dialog to go away....
-    aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
-    return ExecuteDesiredAction();
+    // this call back means we've succesfully brought up the 
+    // progress window so set the appropriate flag...
+    mProgressWindowCreated = PR_TRUE;
   }
 
-  // o.t. go ahead and register the progress listener....
+  // Go ahead and register the progress listener....
 
   if (mLoadCookie) 
   {
@@ -785,6 +781,15 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
       mWebProgressListener = aWebProgressListener;
     }
   }
+
+  // while we were bringing up the progress dialog, we actually finished processing the
+  // url. If that's the case then mStopRequestIssued will be true. We need to execute the
+  // operation since we are actually done now.
+  if (mStopRequestIssued && aWebProgressListener)
+  {
+    return ExecuteDesiredAction();
+  }
+
   return NS_OK;
 }
 
@@ -1192,9 +1197,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
 // Convert error info into proper message text and send OnStatusChange notification
 // to the web progress listener.
-typedef enum { kReadError, kWriteError, kLaunchError } ErrorType;
-static void SendStatusChange( 
-    ErrorType type, nsresult rv, nsIRequest *aRequest, nsIWebProgressListener *aListener, const nsAFlatString &path)
+void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequest *aRequest, const nsAFlatString &path)
 {
     nsAutoString msgId;
     switch(rv)
@@ -1231,6 +1234,9 @@ static void SendStatusChange(
         }
         break;
     }
+#ifdef DEBUG_law
+printf( "\nError: %s, listener=0x%08X, rv=0x%08X\n\n", NS_LossyConvertUCS2toASCII(msgId).get(), (int)(void*)mWebProgressListener.get(), (int)rv );
+#endif
     // Get properties file bundle and extract status string.
     nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (s)
@@ -1242,7 +1248,27 @@ static void SendStatusChange(
             const PRUnichar *strings[] = { path.get() };
             if(NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText))))
             {
-                aListener->OnStatusChange(nsnull, (type == kReadError) ? aRequest : nsnull, rv, msgText);
+              if (mWebProgressListener)
+              {
+                // We have a listener, let it handle the error.
+                mWebProgressListener->OnStatusChange(nsnull, (type == kReadError) ? aRequest : nsnull, rv, msgText);
+              }
+              else
+              {
+                // We don't have a listener.  Simply show the alert ourselves.
+                nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+                nsXPIDLString title;
+                bundle->FormatStringFromName(NS_LITERAL_STRING("title").get(),
+                                             strings,
+                                             1,
+                                             getter_Copies(title));
+                if (prompter)
+                {
+                  // Extract parent window from context.
+                  nsCOMPtr<nsIDOMWindow> parent(do_GetInterface(mWindowContext));
+                  prompter->Alert(parent, title, msgText);
+                }
+              }
             }
         }
     }
@@ -1318,13 +1344,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     else
     {
       // An error occurred, notify listener.
-      if (mWebProgressListener)
-      {
-        nsAutoString tempFilePath;
-        if (mTempFile)
-          mTempFile->GetPath(tempFilePath);
-        SendStatusChange(readError ? kReadError : kWriteError, rv, request, mWebProgressListener, tempFilePath);
-      }
+      nsAutoString tempFilePath;
+      if (mTempFile)
+        mTempFile->GetPath(tempFilePath);
+      SendStatusChange(readError ? kReadError : kWriteError, rv, request, tempFilePath);
+
+      // Cancel the download.
+      Cancel();
     }
   }
   return rv;
@@ -1335,15 +1361,21 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
 {
   mStopRequestIssued = PR_TRUE;
 
+  // Cancel if the request did not complete successfully.
+  if (!mCanceled && NS_FAILED(aStatus))
+  {
+    // Send error notification.
+    nsAutoString tempFilePath;
+    if (mTempFile)
+      mTempFile->GetPath(tempFilePath);
+    SendStatusChange( kReadError, aStatus, request, tempFilePath );
+
+    Cancel();
+  }
+
   // first, check to see if we've been canceled....
   if (mCanceled) { // then go cancel our underlying channel too
     nsresult rv = request->Cancel(NS_BINDING_ABORTED);
-    // Notify dialog that download is complete.
-    if(mWebProgressListener)
-    {
-      // XXX Do we need to check for errors here (server goes down, network cable cut, etc.)?
-      mWebProgressListener->OnStateChange(nsnull, request, nsIWebProgressListener::STATE_STOP, NS_OK);
-    }
     return rv;
   }
 
@@ -1359,13 +1391,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
     mOutStream = nsnull;
   }
 
-  // Notify dialog that download is complete.
-  if(mWebProgressListener)
-  {
-    // XXX Do we need to check for errors here (server goes down, network cable cut, etc.)?
-    mWebProgressListener->OnStateChange(nsnull, request, nsIWebProgressListener::STATE_STOP, NS_OK);
-  }
-
   return ExecuteDesiredAction();
 }
 
@@ -1377,6 +1402,8 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
     nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
     if (action == nsIMIMEInfo::saveToDisk)
+      // XXX Put progress dialog in barber-pole mode
+      //     and change text to say "Copying from:".
       rv = MoveFile(mFinalFileDestination);
     else
     {
@@ -1391,6 +1418,18 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
         if (NS_SUCCEEDED(rv))
           rv = OpenWithApplication(nsnull);
       }
+    }
+
+    // Notify dialog that download is complete.
+    // By waiting till this point, it ensures that the progress dialog doesn't indicate
+    // success until we're really done.
+    if(mWebProgressListener)
+    {
+      if (!mCanceled)
+      {
+        mWebProgressListener->OnProgressChange(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
+      }
+      mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
     }
   }
   
@@ -1535,12 +1574,13 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
      {
        rv = mTempFile->MoveToNative(directoryLocation, fileName);
      }
-     if (NS_FAILED(rv) && mWebProgressListener)
+     if (NS_FAILED(rv))
      {
        // Send error notification.        
        nsAutoString path;
        fileToUse->GetPath(path);
-       SendStatusChange(kWriteError, rv, nsnull, mWebProgressListener, path);
+       SendStatusChange(kWriteError, rv, nsnull, path);
+       Cancel(); // Cancel (and clean up temp file).
      }
   }
 
@@ -1562,6 +1602,9 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     return NS_OK;
 
   mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+
+  // The helper app dialog has told us what to do.
+  mReceivedDispostionInfo = PR_TRUE;
 
   if (!aNewFileLocation)
   {
@@ -1597,7 +1640,6 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     ProcessAnyRefreshTags();
   }
 
-  mReceivedDispostionInfo = PR_TRUE;
   return rv;
 }
 
@@ -1618,19 +1660,22 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     if (helperAppService)
     {
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
-      if (NS_FAILED(rv) && mWebProgressListener)
+      if (NS_FAILED(rv))
       {
         // Send error notification.
         nsAutoString path;
         mFinalFileDestination->GetPath(path);
-        SendStatusChange(kLaunchError, rv, nsnull, mWebProgressListener, path);
+        SendStatusChange(kLaunchError, rv, nsnull, path);
+        Cancel(); // Cancel, and clean up temp file.
       }
-
+      else
+      {
 #ifndef XP_MAC
       // Mac users have been very verbal about temp files being deleted on app exit - they
       // don't like it - but we'll continue to do this on other platforms for now
       helperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
 #endif
+      }
     }
   }
 
