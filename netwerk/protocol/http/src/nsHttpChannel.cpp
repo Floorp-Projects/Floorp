@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Mozilla Public
@@ -430,7 +431,9 @@ nsHttpChannel::SetupTransaction()
             mRequestHead.SetHeader(nsHttp::Pragma, "no-cache");
     }
 
-    return mTransaction->SetupRequest(&mRequestHead, mUploadStream, mUploadStreamHasHeaders);
+    return mTransaction->SetupRequest(&mRequestHead, mUploadStream, 
+                                      mUploadStreamHasHeaders, 
+                                      mConnectionInfo->UsingHttpProxy() && !mConnectionInfo->UsingSSL());
 }
 
 void

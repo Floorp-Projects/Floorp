@@ -119,7 +119,8 @@ nsHttpTransaction::~nsHttpTransaction()
 nsresult
 nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
                                 nsIInputStream *requestBody,
-                                PRBool requestBodyHasHeaders)
+                                PRBool requestBodyHasHeaders,
+                                PRBool pruneProxyHeaders)
 {
     nsresult rv;
 
@@ -155,7 +156,7 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     mRequestHead = requestHead;
 
     mReqHeaderBuf.SetLength(0);
-    requestHead->Flatten(mReqHeaderBuf);
+    requestHead->Flatten(mReqHeaderBuf, pruneProxyHeaders);
 
 #if defined(PR_LOGGING)
     if (LOG2_ENABLED()) {

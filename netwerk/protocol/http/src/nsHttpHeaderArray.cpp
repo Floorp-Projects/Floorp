@@ -159,11 +159,15 @@ nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
 }
 
 void
-nsHttpHeaderArray::Flatten(nsACString &buf)
+nsHttpHeaderArray::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 {
     PRInt32 i, count = mHeaders.Count();
     for (i=0; i<count; ++i) {
         nsEntry *entry = (nsEntry *) mHeaders[i];
+        // prune proxy headers if requested
+        if (pruneProxyHeaders && ((entry->header == nsHttp::Proxy_Authorization) || 
+                                  (entry->header == nsHttp::Proxy_Connection)))
+            continue;
         buf.Append(entry->header);
         buf.Append(": ");
         buf.Append(entry->value);

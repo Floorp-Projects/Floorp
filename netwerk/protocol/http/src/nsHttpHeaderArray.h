@@ -47,7 +47,7 @@ public:
     // header value (the substring of the header line -- do not free).
     void ParseHeaderLine(char *line, nsHttpAtom *header=nsnull, char **value=nsnull);
 
-    void Flatten(nsACString &);
+    void Flatten(nsACString &, PRBool pruneProxyHeaders=PR_FALSE);
 
     PRUint32 Count() { return (PRUint32) mHeaders.Count(); }
 

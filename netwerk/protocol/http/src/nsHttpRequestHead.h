@@ -53,7 +53,7 @@ public:
     nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
     void ClearHeaders()                             { mHeaders.Clear(); }
 
-    void Flatten(nsACString &);
+    void Flatten(nsACString &, PRBool pruneProxyHeaders = PR_FALSE);
 
 private:
     nsHttpHeaderArray mHeaders;

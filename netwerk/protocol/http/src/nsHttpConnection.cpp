@@ -513,7 +513,7 @@ nsHttpConnection::SetupSSLProxyConnect()
     }
 
     buf.Truncate(0);
-    request.Flatten(buf);
+    request.Flatten(buf, PR_TRUE);
     buf.Append("\r\n");
 
     rv = NS_NewCStringInputStream(getter_AddRefs(mSSLProxyConnectStream), buf);
