@@ -1040,9 +1040,9 @@ struct nsColInfo {
 
 void
 AC_Wrapup(nsTableFrame* aTableFrame,
-           PRInt32       aNumItems, 
-           nsColInfo**   aColInfo,
-           PRBool        aAbort = PR_FALSE)
+          PRInt32       aNumItems, 
+          nsColInfo**   aColInfo,
+          PRBool        aAbort = PR_FALSE)
 {
   if (aColInfo) {
     for (PRInt32 i = 0; i < aNumItems; i++) {
@@ -1136,10 +1136,9 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
 
   // allocate storage for the affected cols. Only they get adjusted.
   nsColInfo** colInfo = new nsColInfo*[aNumConstrainedCols];
-  if (!colInfo) { 
-    return;
-  }
+  if (!colInfo) return;
   memset(colInfo, 0, aNumConstrainedCols * sizeof(nsColInfo *));
+
   PRInt32 maxMinDiff = 0;
   PRInt32 constrColX = 0;
   // set the col info entries for each constrained col
@@ -1170,12 +1169,13 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     maxWidth = PR_MAX(maxWidth, minWidth);
     maxMinDiff += maxWidth - minWidth;
     nscoord startWidth = (aStartAtMin) ? minWidth : maxWidth;
-    colInfo[constrColX++] = new nsColInfo(colFrame, colX, minWidth, startWidth, maxWidth);
+    colInfo[constrColX] = new nsColInfo(colFrame, colX, minWidth, startWidth, maxWidth);
     if (!colInfo[constrColX]) {
       AC_Wrapup(mTableFrame, aNumConstrainedCols, colInfo, PR_TRUE);
       return;
     }
     aAllocTypes[colX] = aWidthType;
+    constrColX++;
   }
   if (constrColX < aNumConstrainedCols) {
     // some of the constrainted cols might have been 0 and skipped
@@ -1207,7 +1207,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     nscoord reduceWidth = maxMinDiff - aAvailWidth;
     if (reduceWidth < 0) {
       NS_ASSERTION(PR_TRUE, "AllocateConstrained called incorrectly");
-      AC_Wrapup(mTableFrame, aNumConstrainedCols, colInfo, PR_TRUE);
+      AC_Wrapup(mTableFrame, aNumConstrainedCols, colInfo);
       return;
     }
     for (i = 0; i < aNumConstrainedCols; i++) {
