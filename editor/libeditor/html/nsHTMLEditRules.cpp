@@ -86,7 +86,6 @@
 const static PRUnichar nbsp = 160;
 
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kLeafIteratorCID, NS_LEAFITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
