@@ -309,9 +309,6 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
   if (NS_BLOCK_SPACE_MGR & mState)
     autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = 0;
-  }
   
    //------------ Handle Incremental Reflow -----------------
    PRBool reflowContent = PR_TRUE;
@@ -387,6 +384,10 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
     const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
     const nsMargin &padding       = aReflowState.mComputedPadding;
     nsMargin border = borderPadding - padding;
+    if (aDesiredSize.mComputeMEW) {
+      aDesiredSize.mMaxElementWidth = borderPadding.left + borderPadding.right;
+    }
+    
 
     // Figure out how big the legend is if there is one. 
     // get the legend's margin
@@ -509,6 +510,12 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
                               kidDesiredSize, contentRect.x, contentRect.y, 0);
             if (aDesiredSize.mComputeMEW) {
               aDesiredSize.mMaxElementWidth = kidDesiredSize.mMaxElementWidth;
+              if (eStyleUnit_Coord == aReflowState.mStylePosition->mWidth.GetUnit() &&
+                  NS_INTRINSICSIZE != aReflowState.mComputedWidth)
+                aDesiredSize.mMaxElementWidth = aReflowState.mComputedWidth;
+              if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit())
+                aDesiredSize.mMaxElementWidth = 0;
+              aDesiredSize.mMaxElementWidth += borderPadding.left + borderPadding.right;
             }
 
            // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
@@ -593,12 +600,9 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.descent = 0;
     aDesiredSize.mMaximumWidth = aDesiredSize.width;
     if (aDesiredSize.mComputeMEW) {
-        aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-
         // if the legend is wider use it
         if (aDesiredSize.mMaxElementWidth < mLegendRect.width + borderPadding.left + borderPadding.right)
-            aDesiredSize.mMaxElementWidth = mLegendRect.width + borderPadding.left + borderPadding.right;
-
+          aDesiredSize.mMaxElementWidth = mLegendRect.width + borderPadding.left + borderPadding.right;
     }
     aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
     if (mLegendFrame)
