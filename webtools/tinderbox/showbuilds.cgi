@@ -997,13 +997,15 @@ sub do_hdml {
 sub do_vxml {
   print "Content-type: text/vxml\n\n";
   print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">';
-  print "\n\n";
 
   %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
 
-  print '<vxml><form id="tinderbox"><block>\n\n';
-  print '<audio src="http://www.boulderdesign.com/sounds/wargames.wav">Welcome</audio>\n';
+  print '<vxml><form id="tinderbox"><block>';
+  print "\n\n";
+  print '<audio src="http://www.boulderdesign.com/sounds/wargames.wav">Welcome</audio>';
+  print "\n";
   print '<pause>500</pause>';
+  print "\n";
 
   if (is_tree_state_available()) {
     print "<audio>$::tree is " .
@@ -1015,6 +1017,7 @@ sub do_vxml {
   $testFailed = 0;
   $flames = 0;
 
+  print "\n";
   foreach my $buildname (sort keys %build) {
     if ($state_symbols{$build{buildname}} == 'red') {
       $flames = 1;
@@ -1023,21 +1026,25 @@ sub do_vxml {
     }
   }
 
-  print '<pause>500</pause>\n';
+  print '<pause>500</pause>';
 
   if ($testFailed == 1 || flames == 1) {
       if ($testFailed == 1) {
-        print '<audio src="http://www.boulderdesign.com/sounds/hansolo_badfeeling.wav">a test failed</audio>\n';
+        print '<audio src="http://www.boulderdesign.com/sounds/hansolo_badfeeling.wav">a test failed</audio>';
       } elsif ($flames == 1) {
-        print '<audio src="http://www.boulderdesign.com/sounds/brimstone.wav">something is on fire</audio>\n';
+        print '<audio src="http://www.boulderdesign.com/sounds/brimstone.wav">something is on fire</audio>';
       }
+      print "\n";
 
       foreach my $buildname (sort keys %build) {
-        print "<pause>500</pause>\n";
-        print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
+        print "<pause>500</pause>";
+        print "\n";
+        print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>";
+        print "\n";
       }
   }
 
-  print '<pause>1000</pause><audio src="http://www.boulderdesign.com/sounds/goodbye.wav">goodbye</audio>\n\n';
-  print '<disconnect/>\n</block></form></vxml>';
+  print '<pause>1000</pause><audio src="http://www.boulderdesign.com/sounds/goodbye.wav">goodbye</audio>';
+  print "\n";
+  print '<disconnect/></block></form></vxml>';
 }
