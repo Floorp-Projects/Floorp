@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *    Blake Ross (blakeross@telocity.com)
  */
 #include "nsCOMPtr.h"
 #include "nsButtonBoxFrame.h"
@@ -32,6 +33,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
+#include "nsIEventStateManager.h"
 
 //
 // NS_NewXULButtonFrame
@@ -78,15 +80,40 @@ NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext, 
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
+                              nsGUIEvent* aEvent,
+                              nsEventStatus* aEventStatus)
 {
   switch (aEvent->message) {
+    case NS_KEY_DOWN:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_SPACE == keyEvent->keyCode) {
+           nsCOMPtr<nsIEventStateManager> esm;
+           aPresContext->GetEventStateManager(getter_AddRefs(esm));           
+           esm->SetContentState(mContent, NS_EVENT_STATE_HOVER |  
+                                          NS_EVENT_STATE_ACTIVE);  // :hover:active state
+        }
+      }
+      break;
+
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE == keyEvent->charCode || NS_VK_RETURN == keyEvent->charCode) {
-          MouseClicked(aPresContext, aEvent);
+        if (NS_VK_RETURN == keyEvent->charCode) {
+           MouseClicked(aPresContext, aEvent);
+        }
+      }
+      break;
+
+    case NS_KEY_UP:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_SPACE == keyEvent->keyCode) {
+           nsCOMPtr<nsIEventStateManager> esm;
+           aPresContext->GetEventStateManager(getter_AddRefs(esm));
+           esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER |
+                                        NS_EVENT_STATE_ACTIVE);    // return to normal state
+           MouseClicked(aPresContext, aEvent);
         }
       }
       break;
