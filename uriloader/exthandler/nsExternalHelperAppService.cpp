@@ -479,7 +479,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
     NS_ENSURE_SUCCESS(rv, rv);
     
     PRBool exists = PR_FALSE;
-    rv = mOverRideDataSource->HasAssertion(contentTypeNodeResource, kNC_Value, mimeLiteral, true, &exists );
+    rv = mOverRideDataSource->HasAssertion(contentTypeNodeResource, kNC_Value, mimeLiteral, PR_TRUE, &exists );
 
     if (NS_SUCCEEDED(rv) && exists)
     {
