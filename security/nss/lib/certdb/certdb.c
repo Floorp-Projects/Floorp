@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.33 2002/06/20 18:53:16 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.34 2002/07/30 19:32:33 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -59,6 +59,7 @@
 #include "sslerr.h"
 #include "nsslocks.h"
 #include "pk11func.h"
+#include "xconst.h"   /* for  CERT_DecodeAltNameExtension */
 
 #ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
@@ -1237,6 +1238,143 @@ CERT_AddOKDomainName(CERTCertificate *cert, const char *hn)
     return SECSuccess;
 }
 
+SECStatus
+cert_TestHostName(const char * cn, const char * hn)
+{
+    char * hndomain;
+    int    regvalid;
+    char   cnbuf[80];
+
+    if ((hndomain = PORT_Strchr(hn, '.')) == NULL) {
+	/* No domain in URI host name */
+	char * cndomain;
+	long   nameLen;
+	if ((cndomain = PORT_Strchr(cn, '.')) != NULL &&
+	    (nameLen = cndomain - cn) < sizeof cnbuf  &&
+	    nameLen > 0) {
+	    /* there is a domain in the cn string, so chop it off */
+	    memcpy(cnbuf, cn, nameLen);
+	    cnbuf[nameLen] = '\0';
+	    cn = (const char *)cnbuf;
+	}
+    }
+
+    regvalid = PORT_RegExpValid(cn);
+    if (regvalid != NON_SXP) {
+	SECStatus rv;
+	/* cn is a regular expression, try to match the shexp */
+	int match = PORT_RegExpCaseSearch(hn, cn);
+
+	if ( match == 0 ) {
+	    rv = SECSuccess;
+	} else {
+	    PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
+	    rv = SECFailure;
+	}
+	return rv;
+    } 
+    /* cn is not a regular expression */
+
+    /* compare entire hn with cert name */
+    if (PORT_Strcasecmp(hn, cn) == 0) {
+	return SECSuccess;
+    }
+	    
+    if ( hndomain ) {
+	/* compare just domain name with cert name */
+	if ( PORT_Strcasecmp(hndomain+1, cn) == 0 ) {
+	    return SECSuccess;
+	}
+    }
+
+    PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
+    return SECFailure;
+}
+
+
+SECStatus
+cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
+{
+    PRArenaPool *     arena          = NULL;
+    CERTGeneralName * nameList       = NULL;
+    CERTGeneralName * current;
+    char *            cn;
+    int               cnBufLen;
+    int               cnLen;
+    unsigned int      hnLen;
+    SECStatus         rv             = SECFailure;
+    SECItem           subAltName;
+    char              cnbuf[128];
+
+    subAltName.data = NULL;
+    hnLen    = strlen(hn);
+    cn       = cnbuf;
+    cnBufLen = sizeof cnbuf;
+
+    rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, 
+				&subAltName);
+    if (rv != SECSuccess) 
+	goto finish;
+
+    rv = SECFailure;
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena) 
+	goto finish;
+
+    nameList = current = CERT_DecodeAltNameExtension(arena, &subAltName);
+    if (!current)
+    	goto finish;
+
+    do {
+	switch (current->type) {
+	case certDNSName:
+	    /* DNS name current->name.other.data is not null terminated.
+	    ** so much copy it.  Then downshift it.
+	    */
+	    cnLen = current->name.other.len;
+	    if (cnLen + 1 > cnBufLen) {
+	    	cnBufLen = cnLen + 1;
+	    	cn = (char *)PORT_ArenaAlloc(arena, cnBufLen);
+		if (!cn)
+		    goto finish;
+	    }
+	    PORT_Memcpy(cn, current->name.other.data, current->name.other.len);
+	    cn[cnLen] = 0;
+	    rv = cert_TestHostName(cn ,hn);
+	    if (rv == SECSuccess)
+	    	goto finish;
+	    break;
+	case certIPAddress:
+	    if (hnLen == current->name.other.len &&
+	        0 == memcmp(hn, current->name.other.data, hnLen)) {
+		rv = SECSuccess;
+		goto finish;
+	    }
+	    break;
+	default:
+	    break;
+	}
+	current = cert_get_next_general_name(current);
+    } while (current != nameList);
+
+    PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
+    rv = SECFailure;
+
+finish:
+
+    /* Don't free nameList, it's part of the arena. */
+    if (arena) {
+	PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    if (subAltName.data) {
+	SECITEM_FreeItem(&subAltName, PR_FALSE);
+    }
+
+    return rv;
+}
+
+
 /* Make sure that the name of the host we are connecting to matches the
  * name that is incoded in the common-name component of the certificate
  * that they are using.
@@ -1245,11 +1383,6 @@ SECStatus
 CERT_VerifyCertName(CERTCertificate *cert, const char *hn)
 {
     char *    cn;
-    char *    domain;
-    char *    hndomain;
-    char *    hostname;
-    int       regvalid;
-    int       match;
     SECStatus rv;
     CERTOKDomainName *domainOK;
 
@@ -1258,86 +1391,28 @@ CERT_VerifyCertName(CERTCertificate *cert, const char *hn)
 	return SECFailure;
     }
 
-    hostname = PORT_Strdup(hn);
-    if ( hostname == NULL ) {
-	return(SECFailure);
-    }
-    sec_lower_string(hostname);
-
     /* if the name is one that the user has already approved, it's OK. */
     for (domainOK = cert->domainOK; domainOK; domainOK = domainOK->next) {
-	if (0 == PORT_Strcmp(hostname, domainOK->name)) {
-	    PORT_Free(hostname);
+	if (0 == PORT_Strcasecmp(hn, domainOK->name)) {
 	    return SECSuccess;
     	}
     }
 
+    /* test the cert's Subject Alternative Name extension, if any */
+    rv = cert_VerifySubjectAltName(cert, hn);
+    if (rv == SECSuccess || PORT_GetError() != SSL_ERROR_BAD_CERT_DOMAIN)
+    	return rv;
+
     /* try the cert extension first, then the common name */
     cn = CERT_FindNSStringExtension(cert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
-    if ( cn == NULL ) {
+    if ( !cn ) {
 	cn = CERT_GetCommonName(&cert->subject);
     }
-    
-    sec_lower_string(cn);
-
     if ( cn ) {
-	if ( ( hndomain = PORT_Strchr(hostname, '.') ) == NULL ) {
-	    /* No domain in server name */
-	    if ( ( domain = PORT_Strchr(cn, '.') ) != NULL ) {
-		/* there is a domain in the cn string, so chop it off */
-		*domain = '\0';
-	    }
-	}
-
-	regvalid = PORT_RegExpValid(cn);
-	
-	if ( regvalid == NON_SXP ) {
-	    /* compare entire hostname with cert name */
-	    if ( PORT_Strcmp(hostname, cn) == 0 ) {
-		rv = SECSuccess;
-		goto done;
-	    }
-	    
-	    if ( hndomain ) {
-		/* compare just domain name with cert name */
-		if ( PORT_Strcmp(hndomain+1, cn) == 0 ) {
-		    rv = SECSuccess;
-		    goto done;
-		}
-	    }
-
-	    PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
-	    rv = SECFailure;
-	    goto done;
-	    
-	} else {
-	    /* try to match the shexp */
-	    match = PORT_RegExpCaseSearch(hostname, cn);
-
-	    if ( match == 0 ) {
-		rv = SECSuccess;
-	    } else {
-		PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
-		rv = SECFailure;
-	    }
-	    goto done;
-	}
-    }
-
-    PORT_SetError(SEC_ERROR_NO_MEMORY);
-    rv = SECFailure;
-
-done:
-    /* free the common name */
-    if ( cn ) {
+	rv = cert_TestHostName(cn, hn);
 	PORT_Free(cn);
     }
-    
-    if ( hostname ) {
-	PORT_Free(hostname);
-    }
-    
-    return(rv);
+    return rv;
 }
 
 PRBool
