@@ -77,8 +77,12 @@ var ResultsPaneController =
       case "cmd_delete":
       case "button_delete":
         var numSelected;
-        if (gAbView && gAbView.selection)
+        var enabled = false;
+        if (gAbView && gAbView.selection) {
+          if (gAbView.directory)         
+            enabled = gAbView.directory.operations & gAbView.directory.opWrite;
           numSelected = gAbView.selection.count;
+        }
         else 
           numSelected = 0;
 
@@ -89,7 +93,7 @@ var ResultsPaneController =
           else
             goSetMenuValue(command, "valueCards");
         }
-        return (numSelected > 0);
+        return (enabled && (numSelected > 0));
       case "button_edit":
         return (GetSelectedCardIndex() != -1);
       default:
