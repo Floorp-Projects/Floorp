@@ -125,7 +125,9 @@ void CDragBarDragTask::DoTranslucentDrag(void)
 void CDragBarDragTask::AddFlavors(
 	DragReference			inDragRef)
 {
-	OSErr theErr = ::AddDragItemFlavor(inDragRef, (ItemReference)this, Flavor_DragBar, mBar, sizeof(CDragBar*), flavorSenderOnly);
+	// We have to send |flavorNotSaved| or OS8 Finder will crash if you try to drag a bar onto the desktop.
+	OSErr theErr = ::AddDragItemFlavor(inDragRef, (ItemReference)this, Flavor_DragBar, mBar, sizeof(CDragBar*),
+											flavorSenderOnly | flavorNotSaved);
 	ThrowIfOSErr_(theErr);
 }
 
