@@ -27,6 +27,9 @@ dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
+# Set this define to make fixes w/o breaking anything else
+AC_DEFINE(USE_AUTOCONF)
+
 d=`pwd`
 if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
     AC_ERROR(Building in the srcdir is not supported! Please build from a separate objdir.)
@@ -306,10 +309,11 @@ AC_ARG_ENABLE(mailnews,
 	    MOZ_DARK=1
 	fi] )
 
+NO_EDITOR=1
 AC_ARG_ENABLE(editor,
-[  --disable-editor        disable editor],
-	[if test "$enableval" = "no"; then
-	    NO_EDITOR=1
+[  --enable-editor         enable editor],
+	[if test "$enableval" = "yes"; then
+	    NO_EDITOR=
 	fi] )
 
 AC_ARG_ENABLE(asserts,
