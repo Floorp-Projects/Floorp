@@ -78,6 +78,7 @@
 #define HEADER_X_SUN_ENCODING_INFO		    	"X-Sun-Encoding-Info"
 #define HEADER_X_PRIORITY                   "X-Priority"
 
+#define HEADER_PARM_CHARSET                 "charset"     
 #define HEADER_PARM_START                   "start"     
 #define HEADER_PARM_BOUNDARY				        "BOUNDARY"
 #define HEADER_PARM_FILENAME				        "FILENAME"
