@@ -90,7 +90,7 @@
         <spring style="height: 1px;"/>
         <tree 
               id="profiles" class="inset" style="height: 175px; width: 220px;" flex="100%"
-              onclick="if( event.clickCount == 2 ) return onStart(); else return showSelection(event.target.parentNode.parentNode);"
+              onclick="HandleClickEvent( event );"
               onkeypress="HandleKeyEvent( event );">
           <treehead>
             <treerow>
