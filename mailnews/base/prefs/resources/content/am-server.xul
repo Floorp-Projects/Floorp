@@ -82,6 +82,7 @@
         <html:input type="hidden" name="imap.personalNamespace"/>
         <html:input type="hidden" name="imap.publicNamespace"/>
         <html:input type="hidden" name="imap.otherUsersNamespace"/>
+        <html:input type="hidden" name="imap.serverDirectory"/>
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">

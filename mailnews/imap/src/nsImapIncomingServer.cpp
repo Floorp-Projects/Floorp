@@ -154,6 +154,9 @@ NS_IMETHODIMP nsImapIncomingServer::GetLocalStoreType(char ** type)
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,
                        "admin_url");
 
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, ServerDirectory,
+                       "server_sub_directory");
+
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UsingSubscription,
                         "using_subscription");
 

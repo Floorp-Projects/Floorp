@@ -36,6 +36,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute long maximumConnectionsNumber;
   attribute long timeOutLimits;
   attribute string adminUrl;
+  attribute string serverDirectory;
   attribute long capabilityPref;
   attribute boolean cleanupInboxOnExit;
   attribute long deleteModel;

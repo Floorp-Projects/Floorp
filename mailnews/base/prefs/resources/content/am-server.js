@@ -87,6 +87,7 @@ function getImapServer() {
     // string prefs
     imapServer.personalNamespace = controls["imap.personalNamespace"].value;
     imapServer.publicNamespace = controls["imap.publicNamespace"].value;
+    imapServer.serverDirectory = controls["imap.serverDirectory"].value;
     imapServer.otherUsersNamespace = controls["imap.otherUsersNamespace"].value;
     return imapServer;
 }
@@ -103,6 +104,7 @@ function saveServerLocally(imapServer)
     // string prefs
     controls["imap.personalNamespace"].value = imapServer.personalNamespace;
     controls["imap.publicNamespace"].value = imapServer.publicNamespace;
+    controls["imap.serverDirectory"].value = imapServer.serverDirectory;
     controls["imap.otherUsersNamespace"].value = imapServer.otherUsersNamespace;
 
     dump("Done.\n");
