@@ -79,9 +79,9 @@ DIRS =				\
   layout			\
   webshell
 
-include $(DEPTH)/config/config.mk
+-include $(DEPTH)/config/config.mk
 
-include $(DEPTH)/config/rules.mk
+-include $(DEPTH)/config/rules.mk
 
 real_all: all
 
