@@ -789,12 +789,16 @@ done:
 nsresult
 nsMessenger::Alert(const char *stringName)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsString errorMessage = GetString(nsString(stringName).GetUnicode());
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    if (docShell)
+    {
+        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
         
-    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = dialog->Alert(errorMessage.GetUnicode());
+        if (dialog)
+            rv = dialog->Alert(errorMessage.GetUnicode());
+    }
     return rv;
 }
 
