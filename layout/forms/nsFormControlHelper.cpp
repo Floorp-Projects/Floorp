@@ -308,12 +308,12 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   if (PR_TRUE == requiresWidget || eWidgetRendering_Native == mode ||
       type==NS_FORM_INPUT_TEXT || type==NS_FORM_TEXTAREA || type==NS_FORM_INPUT_PASSWORD) 
   {
-    if (!aWidthExplicit) {
+    if (!aWidthExplicit && mode == eWidgetRendering_Native) {
       PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
       aDesiredSize.width += hPadding;
       aMinSize.width += hPadding;
     }
-    if (!aHeightExplicit) {
+    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
       PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
       aDesiredSize.height += vPadding;
       aMinSize.height += vPadding;
@@ -666,8 +666,8 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
                                     float aPixelsToTwips, const nsRect & aRect)
 {
  // Width and height of the fixed size checkmark in TWIPS.
-  const PRUint32 fixedSizeCheckmarkWidth = 165;
-  const PRUint32 fixedSizeCheckmarkHeight = 165;
+  const PRInt32 fixedSizeCheckmarkWidth = 165;
+  const PRInt32 fixedSizeCheckmarkHeight = 165;
 
   if ((fixedSizeCheckmarkWidth == aRect.width)  &&
       (fixedSizeCheckmarkHeight == aRect.height)) {
