@@ -1793,7 +1793,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
             nsAutoString fileName;
 
             nsAutoString  promptString;
-            if (saveAsText)
+            if (saveAsText && mEditorType == eHTMLTextEditorType)
               GetBundleString(NS_LITERAL_STRING("ExportToText"), promptString);
             else
               GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
