@@ -48,6 +48,7 @@
 #include "nsMsgI18N.h"
 #include "nsSpecialSystemDirectory.h"
 
+
 //
 // Header strings...
 //
@@ -134,17 +135,9 @@ struct mime_draft_data
 
   MimeDecoderData     *decoder_data;
   char                *mailcharset;        // get it from CHARSET of Content-Type 
-  PRBool forwardInline;
+  PRBool              forwardInline;
+  nsCOMPtr<nsIMsgIdentity>      identity;
 };
-
-// RICHIE - PROBABLY BELONGS IN A HEADER SOMEWHERE!!!
-//Message Compose Editor Type 
-typedef enum
-{
-  nsMsgDefault = 0,
-  nsMsgPlainTextEditor,
-  nsMsgHTMLEditor
-} nsMsgEditorType;
 
 typedef enum {
 	nsMsg_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
@@ -188,7 +181,9 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 nsresult
 CreateTheComposeWindow(nsIMsgCompFields     *compFields,
                        nsMsgAttachmentData  *attachmentList,
-                       nsMsgEditorType      editorType)
+                       MSG_ComposeType		composeType,
+                       MSG_ComposeFormat    composeFormat,
+                       nsIMsgIdentity *		identity)
 {
 nsresult            rv;
 MSG_ComposeFormat   format = nsIMsgCompFormat::Default;
@@ -226,13 +221,25 @@ mime_dump_attachments ( attachmentList );
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
   
-  if (editorType == nsMsgPlainTextEditor)
-    format = nsIMsgCompFormat::PlainText;
-  else if (editorType == nsMsgHTMLEditor)
-    format = nsIMsgCompFormat::HTML;
+  if (identity)
+  {
+  	PRBool composeHtml = PR_FALSE;
+  	identity->GetComposeHtml(&composeHtml);
+  	if (composeHtml)
+		format = nsIMsgCompFormat::HTML;
+	else
+	{
+		format = nsIMsgCompFormat::PlainText;
+		/* do we we need to convert the HTML body to plain text? */
+		if (composeFormat == nsIMsgCompFormat::HTML)
+			compFields->ConvertBodyToPlainText();
+	}
+  }
+  else
+    format = composeFormat;
     
   rv = msgComposeService->OpenComposeWindowWithCompFields(nsnull, /* default chrome */
-                                                          format, compFields);
+                                                          composeType, format, compFields, identity);
   return rv;
 }
 
@@ -575,10 +582,10 @@ mime_intl_insert_message_header_1(char        **body,
 static void 
 mime_insert_all_headers(char            **body,
 									      MimeHeaders     *headers,
-									      nsMsgEditorType editorType,
+									      MSG_ComposeFormat composeFormat,
 									      char            *mailcharset)
 {
-	PRBool htmlEdit = editorType == nsMsgHTMLEditor;
+	PRBool htmlEdit = (composeFormat == nsIMsgCompFormat::HTML);
 	char *newBody = NULL;
 	char *html_tag = PL_strcasestr(*body, "<HTML>");
 	int i;
@@ -714,7 +721,7 @@ MimeGetNamedString(PRInt32 id)
 static void 
 mime_insert_normal_headers(char             **body,
 									         MimeHeaders      *headers,
-									         nsMsgEditorType  editorType,
+									         MSG_ComposeFormat  composeFormat,
 									         char             *mailcharset)
 {
 	char *newBody = NULL;
@@ -741,7 +748,7 @@ mime_insert_normal_headers(char             **body,
 										PR_TRUE);
 	char *references = MimeHeaders_get(headers, HEADER_REFERENCES, PR_FALSE, PR_TRUE);
 	const char *html_tag = PL_strcasestr(*body, "<HTML>");
-	PRBool htmlEdit = editorType == nsMsgHTMLEditor;
+	PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
 	
 	if (!from)
 		from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
@@ -902,7 +909,7 @@ mime_insert_normal_headers(char             **body,
 static void 
 mime_insert_micro_headers(char            **body,
 									        MimeHeaders     *headers,
-									        nsMsgEditorType editorType,
+									        MSG_ComposeFormat composeFormat,
 									        char            *mailcharset)
 {
 	char *newBody = NULL;
@@ -917,7 +924,7 @@ mime_insert_micro_headers(char            **body,
 	char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
 									   PR_TRUE);
 	const char *html_tag = PL_strcasestr(*body, "<HTML>");
-	PRBool htmlEdit = editorType == nsMsgHTMLEditor;
+	PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
 	
 	if (!from)
 		from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
@@ -1022,7 +1029,7 @@ mime_insert_micro_headers(char            **body,
 static void 
 mime_insert_forwarded_message_headers(char            **body, 
 												              MimeHeaders     *headers,
-												              nsMsgEditorType editorType,
+												              MSG_ComposeFormat composeFormat,
 												              char            *mailcharset)
 {
 	if (body && *body && headers)
@@ -1037,14 +1044,14 @@ mime_insert_forwarded_message_headers(char            **body,
 		switch (show_headers)
 		{
 		case 0:
-			mime_insert_micro_headers(body, headers, editorType, mailcharset);
+			mime_insert_micro_headers(body, headers, composeFormat, mailcharset);
 			break;
 		default:
 		case 1:
-			mime_insert_normal_headers(body, headers, editorType, mailcharset);
+			mime_insert_normal_headers(body, headers, composeFormat, mailcharset);
 			break;
 		case 2:
-			mime_insert_all_headers(body, headers, editorType, mailcharset);
+			mime_insert_all_headers(body, headers, composeFormat, mailcharset);
 			break;
 		}
 	}
@@ -1245,7 +1252,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     {
       char *body;
       PRUint32 bodyLen = 0;
-      nsMsgEditorType editorType = nsMsgDefault;
+      MSG_ComposeFormat composeFormat = nsIMsgCompFormat::Default;
       
       bodyLen = mdd->messageBody->file_spec->GetFileSize();
       body = (char *)PR_MALLOC (bodyLen + 1);
@@ -1262,23 +1269,23 @@ mime_parse_stream_complete (nsMIMESession *stream)
         if (mdd->messageBody->type && *mdd->messageBody->type)
         {
           if( PL_strcasestr(mdd->messageBody->type, "text/html") != NULL )
-            editorType = nsMsgHTMLEditor;
+            composeFormat = nsIMsgCompFormat::HTML;
           else if ( PL_strcasestr(mdd->messageBody->type, "text/plain") != NULL )
-            editorType = nsMsgPlainTextEditor;
+            composeFormat = nsIMsgCompFormat::PlainText;
         }
         else
         {
-          editorType = nsMsgPlainTextEditor;
+          composeFormat = nsIMsgCompFormat::PlainText;
         }
   
         // Since we have body text, then we should set the compose fields with
         // this data.      
-        if (editorType == nsMsgPlainTextEditor)
+        if (composeFormat == nsIMsgCompFormat::PlainText)
           fields->SetTheForcePlainText(PR_TRUE);
         
         if (forward_inline)
         {
-          mime_insert_forwarded_message_headers(&body, mdd->headers, editorType,
+          mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
                                                 mdd->mailcharset);
         }
         // setting the charset while we were creating the composition fields
@@ -1301,7 +1308,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData, editorType);
+		MSG_ComposeType type = mdd->forwardInline ? nsIMsgCompType::ForwardInline : nsIMsgCompType::Draft;
+        CreateTheComposeWindow(fields, newAttachData, type, composeFormat, mdd->identity);
       }
       
       PR_FREEIF(body);
@@ -1316,14 +1324,15 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
         printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
-        CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
+        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity);
       }
       else
       {
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
-        CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
+		MSG_ComposeType type = mdd->forwardInline ? nsIMsgCompType::ForwardInline : nsIMsgCompType::Draft;
+        CreateTheComposeWindow(fields, newAttachData, type, nsIMsgCompFormat::Default, mdd->identity);
       }
     }    
   }
@@ -1335,7 +1344,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
                                       GetMailSigningPreference(),
                                       mdd->mailcharset);
     if (fields)
-      CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
+      CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::New, nsIMsgCompFormat::Default, mdd->identity);
   }
   
   if ( mdd->headers )
@@ -1775,6 +1784,7 @@ mime_bridge_create_draft_stream(
   }
 
   newPluginObj2->GetForwardInline(&mdd->forwardInline);
+  newPluginObj2->GetIdentity(getter_AddRefs(mdd->identity));
   mdd->format_out = format_out;
   mdd->options = PR_NEWZAP  ( MimeDisplayOptions );
   if ( !mdd->options ) 

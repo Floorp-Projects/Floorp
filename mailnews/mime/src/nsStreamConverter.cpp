@@ -608,6 +608,23 @@ nsStreamConverter::GetForwardInline(PRBool *result)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStreamConverter::GetIdentity(nsIMsgIdentity * *aIdentity)
+{
+  if (!aIdentity) return NS_ERROR_NULL_POINTER;
+  	*aIdentity = mIdentity;
+  	NS_ADDREF(*aIdentity);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamConverter::SetIdentity(nsIMsgIdentity * aIdentity)
+{
+	mIdentity = aIdentity;
+	return NS_OK;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // Methods for nsIStreamListener...
 /////////////////////////////////////////////////////////////////////////////

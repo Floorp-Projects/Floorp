@@ -64,7 +64,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult                      SetQuotingToFollow(PRBool aVal);
   nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
-  nsresult                      BuildBodyMessage();
+  nsresult                      BuildBodyMessageAndSignature();
 
   nsString                      mQuoteURI;
 

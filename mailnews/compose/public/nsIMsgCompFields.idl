@@ -123,6 +123,8 @@ interface nsIMsgCompFields : nsISupports {
 	void SetTheForcePlainText(in boolean value);
 	boolean GetTheForcePlainText();
 	
+	/* some utility functions */
     nsIMsgRecipientArray SplitRecipients(in wstring recipients);
+    void ConvertBodyToPlainText();
 };
 

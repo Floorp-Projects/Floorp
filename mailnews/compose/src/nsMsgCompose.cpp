@@ -889,12 +889,13 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 {
   nsresult rv = NS_OK;
 
-  if (compFields)
-  {
-  	  if (m_compFields)
-        m_compFields->Copy(compFields);
-      return rv;
-  }
+    mType = type;
+	if (compFields)
+	{
+		if (m_compFields)
+			rv = m_compFields->Copy(compFields);
+		return rv;
+	}
 
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
@@ -918,7 +919,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       rv = message->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
       
-      mType = type;
       switch (type)
       {
       default: break;        
@@ -1001,7 +1001,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
             break;
         }
       case nsIMsgCompType::ForwardAsAttachment:
-      case nsIMsgCompType::ForwardInline:
         {
         
           if (!aCharset.Equals(""))
@@ -1017,17 +1016,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
             m_compFields->SetSubject(subjectStr.GetUnicode());
         
           // Setup quoting callbacks for later...
-          if (type == nsIMsgCompType::ForwardAsAttachment)
-          {
-          	mQuotingToFollow = PR_FALSE;	//We don't need to quote the original message.
-          	m_compFields->SetAttachments(originalMsgURI);
-          }
-          else
-          {
-          	mQuotingToFollow = PR_TRUE;
-            mWhatHolder = 2;
-			      mQuoteURI = originalMsgURI;
-          }
+          mQuotingToFollow = PR_FALSE;	//We don't need to quote the original message.
+          m_compFields->SetAttachments(originalMsgURI);
         
           break;
         }
@@ -1681,49 +1671,12 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   // Ok, now the document has been loaded, so we are ready to setup
   // the compose window and let the user run hog wild!
 
-  //
-  // Have to check to see if there is a body stored in the 
-  // comp fields...
-  //
-  PRBool            bodyInCompFields = PR_FALSE;
-  nsMsgCompFields   *compFields = nsnull; 
-  nsIMsgIdentity    *identity = nsnull;
-  PRBool            compHTML = PR_FALSE;
-	nsIEditorShell    *editor = nsnull;
-
-  mComposeObj->GetCompFields(&compFields);
-  mComposeObj->GetIdentity(&identity);
-  mComposeObj->GetComposeHTML(&compHTML);
-  mComposeObj->GetEditor(&editor);
-
-  if (compFields)
-  {
-    PRUnichar     *bod;
-
-    compFields->GetBody(&bod);
-    if ((bod) && (*bod))
-      bodyInCompFields = PR_TRUE;
-  }
-
   // Now, do the appropriate startup operation...signature only
   // or quoted message and signature...
   if ( mComposeObj->QuotingToFollow() )
     return mComposeObj->BuildQuotedMessageAndSignature();
-  else if (bodyInCompFields)
-    return mComposeObj->BuildBodyMessage();
   else
-  {
-    nsresult    rv;
-    nsAutoString    tSignature = "";
-
-    rv = mComposeObj->ProcessSignature(identity, &tSignature);
-    if ((NS_SUCCEEDED(rv)) && editor)
-    {
-      mComposeObj->ConvertAndLoadComposeWindow(editor, "", "", tSignature, PR_FALSE, compHTML);
-    }
-
-    return rv;
-  }
+    return mComposeObj->BuildBodyMessageAndSignature();
 }
 
 nsresult
@@ -1913,9 +1866,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 }
 
 nsresult
-nsMsgCompose::BuildBodyMessage()
+nsMsgCompose::BuildBodyMessageAndSignature()
 {
-  PRUnichar   *bod;
+  PRUnichar   *bod = nsnull;
+  nsresult	  rv;
 
   // 
   // This should never happen...if it does, just bail out...
@@ -1928,12 +1882,46 @@ nsMsgCompose::BuildBodyMessage()
   // composition editor window.
   //
   m_compFields->GetBody(&bod);
-  if (bod)
+
+  nsAutoString    tSignature = "";
+  /* Some time we want to add a signature and sometime we wont. Let's figure that now...*/
+  PRBool addSignature;
+  switch (mType)
   {
-    ConvertAndLoadComposeWindow(m_editor, "", bod, "", PR_FALSE, m_composeHTML);
+  	case nsIMsgCompType::New :
+  	case nsIMsgCompType::Reply :				/* should not append! but just in case */
+  	case nsIMsgCompType::ReplyAll :				/* should not append! but just in case */
+  	case nsIMsgCompType::ForwardAsAttachment :	/* should not append! but just in case */
+  	case nsIMsgCompType::ForwardInline :
+  	case nsIMsgCompType::NewsPost :
+  		addSignature = PR_TRUE;
+  		break;
+
+  	case nsIMsgCompType::Draft :
+  	case nsIMsgCompType::Template :
+  		addSignature = PR_FALSE;
+  		break;
+  	
+  	case nsIMsgCompType::MailToUrl :
+  		addSignature = !(bod && *bod != 0);
+  		break;
+
+  	default :
+  		addSignature = PR_FALSE;
+  		break;
+  }
+  if (addSignature)
+  	ProcessSignature(m_identity, &tSignature);
+  if (m_editor)
+  {
+  	if (bod)
+    	rv = ConvertAndLoadComposeWindow(m_editor, "", bod, tSignature, PR_FALSE, m_composeHTML);
+    else
+    	rv = ConvertAndLoadComposeWindow(m_editor, "", "", tSignature, PR_FALSE, m_composeHTML);
   }
 
-  return NS_OK;
+  PR_FREEIF(bod);
+  return rv;
 }
 
 nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotificationType)

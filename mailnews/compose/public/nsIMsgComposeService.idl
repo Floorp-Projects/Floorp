@@ -37,7 +37,7 @@ interface nsIMsgComposeService : nsISupports {
 
 	/* ... */
 	void OpenComposeWindow(in wstring msgComposeWindowURL, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
-						   in nsIMsgIdentity identity); /*object is temporary*/
+						   in nsIMsgIdentity identity);
 
     /* use this method to invoke a compose window given a mailto url.
 	   aMsgComposeWindowURL --> can be null in most cases. If you have your own chrome
@@ -47,12 +47,13 @@ interface nsIMsgComposeService : nsISupports {
 	void OpenComposeWindowWithURI(in wstring msgComposeWindowURL, in nsIURI aURI);
 
 	/* ... */
-	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeFormat format,
+	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
 							in wstring to, in wstring cc, in wstring bcc, in wstring newsgroups,
-							in wstring subject, in wstring body, in wstring attachment);
+							in wstring subject, in wstring body, in wstring attachment, in nsIMsgIdentity identity);
 
 	/* ... */
-	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeFormat format, in nsIMsgCompFields compFields);
+	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
+										in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
 
 	/* ... */
 	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow,

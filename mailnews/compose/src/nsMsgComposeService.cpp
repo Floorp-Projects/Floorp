@@ -105,24 +105,22 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	                                 nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
 	                                 getter_AddRefs(pMsgDraft));
 	    if (NS_SUCCEEDED(rv) && pMsgDraft)
-	    	rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, PR_TRUE);
+	    	rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_TRUE);
 
 		return rv;
 	}
 
 	args.Append("type=");
 	args.Append(type);
-	args.Append(",");
 
-	args.Append("format=");
+	args.Append(",format=");
 	args.Append(format);
 
 	if (identity) {
 		nsXPIDLCString key;
 		rv = identity->GetKey(getter_Copies(key));
 		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.Append(",");
-			args.Append("preselectid=");
+			args.Append(",preselectid=");
 			args.Append(key);
 		}
 	}
@@ -176,7 +174,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
                                     &aPlainText);
 
-       MSG_ComposeFormat format = 0;
+       MSG_ComposeFormat format = nsIMsgCompFormat::Default;
        if (aPlainText)
          format = nsIMsgCompFormat::PlainText;
 
@@ -189,13 +187,17 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
        nsAutoString uniBodyPart((const char*)aBodyPart);
        nsAutoString uniAttachmentPart((const char*)aAttachmentPart);
        
-       rv = OpenComposeWindowWithValues(aMsgComposeWindowURL, format, uniToPart.GetUnicode(), 
+       rv = OpenComposeWindowWithValues(aMsgComposeWindowURL,
+       									nsIMsgCompType::MailToUrl,
+       									format,
+       									uniToPart.GetUnicode(), 
                                         uniCcPart.GetUnicode(),
                                         unicBccPart.GetUnicode(), 
                                         uniNewsgroup.GetUnicode(), 
                                         uniSubjectPart.GetUnicode(),
                                         uniBodyPart.GetUnicode(), 
-                                        uniAttachmentPart.GetUnicode());
+                                        uniAttachmentPart.GetUnicode(),
+                                        nsnull);
     }
   }
 
@@ -203,6 +205,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgComposeWindowURL,
+														  MSG_ComposeType type,
 														  MSG_ComposeFormat format,
 														  const PRUnichar *to,
 														  const PRUnichar *cc,
@@ -210,7 +213,8 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 														  const PRUnichar *newsgroups,
 														  const PRUnichar *subject,
 														  const PRUnichar *body,
-														  const PRUnichar *attachment)
+														  const PRUnichar *attachment,
+														  nsIMsgIdentity *identity)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgCompFields> pCompFields;
@@ -228,20 +232,25 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 		if (attachment)	{pCompFields->SetAttachments(attachment);}
 		if (body)		{pCompFields->SetBody(body);}
 	
-		rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, format, pCompFields);
+		rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, type, format, pCompFields, identity);
     }
     
     return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *msgComposeWindowURL,
+														  MSG_ComposeType type,
 														  MSG_ComposeFormat format,
-														  nsIMsgCompFields *compFields)
+														  nsIMsgCompFields *compFields,
+														  nsIMsgIdentity *identity)
 {
 	nsAutoString args = "";
 	nsresult rv;
 
-	args.Append("format=");
+	args.Append("type=");
+	args.Append(type);
+
+	args.Append(",format=");
 	args.Append(format);
 	
 	if (compFields)
@@ -250,6 +259,14 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 		args.Append(",fieldsAddr="); args.Append((PRInt32)compFields, 10);
 	}
 
+	if (identity) {
+		nsXPIDLCString key;
+		rv = identity->GetKey(getter_Copies(key));
+		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
+			args.Append(",preselectid=");
+			args.Append(key);
+		}
+	}
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else

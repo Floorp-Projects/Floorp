@@ -37,16 +37,10 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-  /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
-  NS_IMETHOD  OpenDraftMsg(const PRUnichar *msgURI, 
-                           nsIMessage **aMsgToReplace,
-                           PRBool addInlineHeaders);
-
-  /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
-  NS_IMETHOD  OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToReplace);
+	NS_DECL_NSIMSGDRAFT
 
   nsresult    ProcessDraftOrTemplateOperation(const PRUnichar *msgURI, nsMimeOutputType aOutType,
-                                              nsIMessage **aMsgToReplace);
+                                              nsIMsgIdentity * identity, nsIMessage **aMsgToReplace);
 
   // 
   // Implementation data...

@@ -129,7 +129,7 @@ GetIMessageFromURI(const PRUnichar *msgURI)
 
 nsresult    
 nsMsgDraft::ProcessDraftOrTemplateOperation(const PRUnichar *msgURI, nsMimeOutputType aOutType, 
-                                            nsIMessage **aMsgToReplace)
+                                            nsIMsgIdentity * identity, nsIMessage **aMsgToReplace)
 {
 nsresult  rv;
 
@@ -172,8 +172,9 @@ nsresult  rv;
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
   {
-	    mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
+	  mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
       mimeConverter->SetForwardInline(mAddInlineHeaders);
+      mimeConverter->SetIdentity(identity);
   }
 
   nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(mimeParser);
@@ -233,7 +234,7 @@ nsresult  rv;
 
 nsresult
 nsMsgDraft::OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace,
-                         PRBool addInlineHeaders)
+                         nsIMsgIdentity * identity, PRBool addInlineHeaders)
 {
 PRUnichar     *HackUpAURIToPlayWith(void);      // RICHIE - forward declare for now
 
@@ -245,14 +246,15 @@ PRUnichar     *HackUpAURIToPlayWith(void);      // RICHIE - forward declare for 
   
   mAddInlineHeaders = addInlineHeaders;
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
-                                         aMsgToReplace);
+                                         identity, aMsgToReplace);
 }
 
 nsresult
-nsMsgDraft::OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToReplace)
+nsMsgDraft::OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToReplace,
+							   nsIMsgIdentity * identity)
 {
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageEditorTemplate, 
-                                         aMsgToReplace);
+                                         identity, aMsgToReplace);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

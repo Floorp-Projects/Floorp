@@ -86,7 +86,8 @@ private:
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
                                                   // data so don't feed the parser any more!
   nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
-  PRBool mForwardInline;
+  PRBool 						mForwardInline;
+  nsCOMPtr<nsIMsgIdentity>		mIdentity;
 }; 
 
 #endif /* nsStreamConverter_h_ */

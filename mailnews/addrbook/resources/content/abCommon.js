@@ -197,11 +197,14 @@ function AbEditCard()
 
 function AbNewMessage()
 {
+	var msgComposeType = Components.interfaces.nsIMsgCompType;
+	var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
 	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
 
-	msgComposeService.OpenComposeWindowWithValues(null, 0, GetSelectedAddresses(), null, null,
-												  null, null, null, null); 
+	msgComposeService.OpenComposeWindowWithValues(null, msgComposeType.New, msgComposFormat.Default,
+												  GetSelectedAddresses(), null, null,
+												  null, null, null, null, null); 
 }  
 
 function GetSelectedAddresses()

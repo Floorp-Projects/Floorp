@@ -29,6 +29,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgRecipientArray.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsMsgCompUtils.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -738,5 +739,25 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 			rv = NS_ERROR_FAILURE;
 	}
 		
+	return rv;
+}
+
+nsresult nsMsgCompFields::ConvertBodyToPlainText()
+{
+	nsresult rv = NS_OK;
+	
+	if (m_body && *m_body != 0)
+	{
+		PRUnichar * ubody;
+		rv = GetBody(&ubody);
+		if (NS_SUCCEEDED(rv))
+		{
+			nsString body(ubody);
+			PR_Free(ubody);
+			rv = ConvertBufToPlainText(body, msgCompHeaderInternalCharset());
+			if (NS_SUCCEEDED(rv))
+				rv = SetBody(body.GetUnicode());
+		}
+	}
 	return rv;
 }

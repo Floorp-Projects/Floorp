@@ -29,6 +29,7 @@
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
 #include "nsIMimeHeaders.idl"
+#include "nsIMsgIdentity.idl"
 
 interface nsIURI;
 
@@ -81,4 +82,10 @@ interface nsIMimeStreamConverter : nsISupports {
      * This is used for forward inline
      */
     attribute PRBool forwardInline;
+    
+     /*
+     * This is used for OpenDraft, OpenEditorTemplate and Forward inline (which use OpenDraft)
+     */
+
+	attribute nsIMsgIdentity identity;
 };

@@ -21,6 +21,7 @@
 */
 #include "nsISupports.idl"
 #include "nsIOutputStream.idl"
+#include "nsIMsgIdentity.idl"
 
 interface nsIMessage;
 
@@ -33,8 +34,9 @@ interface nsIMsgDraft : nsISupports
 	 * a URI
 	 */
 	void		OpenDraftMsg(in wstring msgURI, out nsIMessage aMsgToReplace,
-                             in PRBool addInlineHeaders);
+                             in nsIMsgIdentity identity, in PRBool addInlineHeaders);
 
-	void		OpenEditorTemplate(in wstring msgURI, out nsIMessage aMsgReplace);  
+	void		OpenEditorTemplate(in wstring msgURI, out nsIMessage aMsgReplace,
+                                   in nsIMsgIdentity identity);  
 };
 

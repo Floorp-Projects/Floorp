@@ -200,6 +200,7 @@ public:
 	nsresult AppendBody(char*);
 	
 	NS_IMETHOD SplitRecipients(const PRUnichar *recipients, nsIMsgRecipientArray **_retval); 
+	NS_IMETHOD ConvertBodyToPlainText(void); 
 
 
 	// When forwarding a bunch of messages, we can have a bunch of

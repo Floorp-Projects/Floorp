@@ -1125,7 +1125,7 @@ nsMessenger::LoadFirstDraft()
 
 
     // This should really pass in a URI, but for now, just to test, we can pass in nsnull
-    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull, PR_FALSE); 
+    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull, nsnull, PR_FALSE); 
   } 
 
   return rv;

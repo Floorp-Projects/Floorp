@@ -42,6 +42,9 @@ interface nsIMsgCompType {
     const long ForwardAsAttachment = 3;
     const long ForwardInline = 4;
     const long NewsPost		= 5;
+    const long Draft		= 6;
+    const long Template		= 7;
+    const long MailToUrl	= 8;
 };
 
 
