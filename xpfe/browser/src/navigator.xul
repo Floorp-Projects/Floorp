@@ -272,14 +272,14 @@
       		<menuitem name="&newMailCmd.label;" onclick="MsgNewMessage();"/>
 		      <menuitem name="&newChatCmd.label;" onclick=""/>
 		      <separator />
-		      <menuitem name="&newBlankPageCmd.label;" onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newBlankPageCmd.label;" onclick="BrowserNewEditorWindow();"/>
 		      <menuitem name="&newPageFromTemplateCmd.label;" onclick="BrowserNewWindow();"/>
 		      <menuitem name="&newPageFromDraftCmd.label;" onclick="BrowserNewWindow();"/>
     		</menu>
       <menuitem name="&openCmd.label;" onclick="BrowserOpenWindow();"/>
       <separator />
       <menuitem name="&sendPageCmd.label;" onclick="BrowserReload();"/>
-	   <menuitem name="&editPageCmd.label;" onclick="BrowserReload();" />
+	   <menuitem name="&editPageCmd.label;" onclick="BrowserEditPage(window.frames[0].frames[1].location.href);" />
 	   <separator />
       <menu name="&offlineMenu.label;">
 	      <menuitem name="&offlineGoOfflineCmd.label;" onclick="BrowserReload();"/>
