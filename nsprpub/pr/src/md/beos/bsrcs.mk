@@ -21,6 +21,7 @@ MDCSRCS =             \
 	bmisc.c       \
 	bnet.c        \
 	bproc.c       \
+	brng.c        \
 	bseg.c        \
 	btime.c       \
 	bmmap.c       \
