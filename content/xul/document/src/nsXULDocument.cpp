@@ -1880,7 +1880,7 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 
             nsAutoString value;
             broadcaster->GetAttr(nameSpaceID, name, value);
-            listener->SetAttr(nameSpaceID, name, value, PR_TRUE);
+            listener->SetAttr(nameSpaceID, name, value, PR_FALSE);
 
 #if 0
             // XXX we don't fire the |onbroadcast| handler during
@@ -1901,10 +1901,10 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 
         if (rv == NS_CONTENT_ATTR_NO_VALUE ||
             rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            listener->SetAttr(kNameSpaceID_None, name, value, PR_TRUE);
+            listener->SetAttr(kNameSpaceID_None, name, value, PR_FALSE);
         }
         else {
-            listener->UnsetAttr(kNameSpaceID_None, name, PR_TRUE);
+            listener->UnsetAttr(kNameSpaceID_None, name, PR_FALSE);
         }
 
 #if 0
@@ -3932,6 +3932,28 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
+	  // 4. Remove the element from our broadcaster map, since it is no longer
+	  // in the document.
+	  // Do a getElementById to retrieve the broadcaster
+    nsCOMPtr<nsIDOMElement> broadcaster;
+	  nsAutoString observesVal;
+	  aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, observesVal);
+    GetElementById(observesVal, getter_AddRefs(broadcaster));
+    if (broadcaster) {
+        nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
+		    RemoveBroadcastListenerFor(broadcaster,
+                                   elt,
+                                   NS_LITERAL_STRING("*"));
+    }
+	  
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, observesVal);
+    GetElementById(observesVal, getter_AddRefs(broadcaster));
+    if (broadcaster) {
+		    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
+		    RemoveBroadcastListenerFor(broadcaster,
+                                   elt,
+                                   NS_LITERAL_STRING("*"));
+    }
     return NS_OK;
 }
 
