@@ -191,9 +191,6 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     nsIFrame* frame = mPopupFrames.FirstChild();
     if (frame) {
       // We have children.
-      nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-      PRBool onMenuBar = PR_TRUE;
-      popup->SyncViewWithFrame(onMenuBar);
       ToggleMenuState();
     }
   }
@@ -244,6 +241,11 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
 
   if (aActivateFlag) {
+
+    // Sync up the view.
+    if (menuPopup)
+      menuPopup->SyncViewWithFrame(PR_TRUE);
+      
     // Open the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
     if (child) {
@@ -264,6 +266,10 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     if (child)
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
     mMenuOpen = PR_FALSE;
+
+    // Make sure we clear out our own items.
+    if (menuPopup)
+      menuPopup->SetCurrentMenuItem(nsnull);
   }
 }
 

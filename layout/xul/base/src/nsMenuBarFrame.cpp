@@ -30,6 +30,8 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsXULAtoms.h"
 #include "nsMenuFrame.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 
 //
 // NS_NewMenuBarFrame
@@ -113,6 +115,13 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsMenuBarFrame::SetActive()
+{
+  mIsActive = PR_TRUE;
+  return NS_OK;
+}
+
 void
 nsMenuBarFrame::ToggleMenuActiveState()
 {
@@ -129,7 +138,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
   else {
     // Activate the menu bar
-    mIsActive = PR_TRUE;
+    SetActive();
 
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "active" to track the current active menu.
