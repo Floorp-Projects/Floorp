@@ -982,7 +982,7 @@ PRInt32 nsZipArchive::BuildFileList()
 #ifndef STANDALONE
     // Arena allocate the nsZipItem
     void *mem;
-    PL_ARENA_ALLOCATE(mem, &mArena, sizeof nsZipItem);
+    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsZipItem));
     // Use placement new to arena allcoate the nsZipItem
     nsZipItem* item = mem ? new (mem) nsZipItem() : nsnull;
 #else
