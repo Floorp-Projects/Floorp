@@ -46,9 +46,6 @@ ifeq ($(subst /,_,$(shell uname -s)),OS2)
 INCLUDES	+= -I$(DEPTH)/cmd/os2fe/nfc/include -I$(DEPTH)/cmd/os2fe -I$(DEPTH)/cmd/winfe
 endif
 
-INCLUDES        += -I$(srcdir)/.
-# XXX Add -I$(DIST)/include/private to the above line. Replace DIST to something else in 
-#     autoconf world. 
-#     cyeh asked me to put in this note as we could not figure out a equivalent right now.
+INCLUDES        += -I$(srcdir)/. -I$(DEPTH)/dist/include/private
 
 $(LIBRARY): $(OBJS)
