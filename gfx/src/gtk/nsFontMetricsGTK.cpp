@@ -279,8 +279,8 @@ void nsFontMetricsGTK::RealizeFont()
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
   {
-    g_print("XA_UNDERLINE_POSITION = %i\nIf you see the above message, please
-    email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    g_print("XA_UNDERLINE_POSITION = %i\nIf you see the above message, please "
+    "email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
     mUnderlineOffset = NSToIntRound(pr * f);
   }
   else
@@ -291,8 +291,8 @@ void nsFontMetricsGTK::RealizeFont()
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
   {
-    g_print("XA_UNDERLINE_THICKNESS = %i\nIf you see the above message, please
-    email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
+    g_print("XA_UNDERLINE_THICKNESS = %i\nIf you see the above message, please "
+    "email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
   }
   else
