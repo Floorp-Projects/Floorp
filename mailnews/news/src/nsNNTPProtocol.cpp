@@ -81,6 +81,8 @@
 #include "nsIRDFResource.h"
 #include "nsRDFCID.h"
 
+#include "nsIPref.h"
+
 #include "nsIMsgWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -90,6 +92,8 @@
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
 
+#define PREF_NEWS_CANCEL_CONFIRM	"news.cancel.confirm"
+#define PREF_NEWS_CANCEL_ALERT_ON_SUCCESS "news.cancel.alert_on_success"
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
@@ -146,6 +150,7 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -3742,7 +3747,9 @@ PRInt32 nsNNTPProtocol::DoCancel()
     char *other_random_headers = nsnull;
     char *body = nsnull;
     cancelInfoEntry cancelInfo;
-	
+	PRBool requireConfirmationForCancel = PR_TRUE;
+	PRBool showAlertAfterCancel = PR_TRUE;
+
 	int L;
 #ifdef USE_LIBMSG
 	MSG_CompositionFields *fields = NULL;
@@ -3768,6 +3775,9 @@ PRInt32 nsNNTPProtocol::DoCancel()
   cancelInfo.old_from = m_cancelFromHdr;
   cancelInfo.from = nsnull;
 
+  nsCOMPtr <nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || !prefs) return -1;  /* unable to get the pref service */
+
   nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
   if (NS_FAILED(rv) || !dialog) return -1;  /* unable to get the dialog service */
 
@@ -3787,8 +3797,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   
   nsXPIDLString alertText;
   nsXPIDLString confirmText;
-  GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
-
+  
   PRInt32 confirmCancelResult = 0;
 
   /* Make sure that this loser isn't cancelling someone else's posting.
@@ -3819,7 +3828,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
       if (!cancelInfo.from) {
           GetNewsStringByName("cancelDisallowed", getter_Copies(alertText));
           rv = dialog->Alert(alertText);
-	  // XXX:  todo, check rv?
+		  // XXX:  todo, check rv?
           
           status = MK_NNTP_CANCEL_DISALLOWED;
 		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
@@ -3841,13 +3850,21 @@ PRInt32 nsNNTPProtocol::DoCancel()
 #endif
   }
   
-  /* Last chance to cancel the cancel.
-   */
-  rv = dialog->Confirm(confirmText, &confirmCancelResult);
-  // XXX:  todo, check rv?
-  
+  // QA needs to be able to disable this confirm dialog, for the automated tests.  see bug #31057
+  rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_CONFIRM, &requireConfirmationForCancel);
+  if (NS_FAILED(rv) || requireConfirmationForCancel) {
+	/* Last chance to cancel the cancel.
+	*/
+	GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
+	rv = dialog->Confirm(confirmText, &confirmCancelResult);
+	// XXX:  todo, check rv?
+  } 
+  else {
+	confirmCancelResult = 1;
+  }
+
   if (confirmCancelResult != 1) {
-      // they canceled the cancel
+      // they cancelled the cancel
       status = MK_NNTP_NOT_CANCELLED;
       goto FAIL;
   }  
@@ -3908,9 +3925,13 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
 
-    GetNewsStringByName("messageCancelled", getter_Copies(alertText));
-    rv = dialog->Alert(alertText);
-    // XXX:  todo, check rv?
+    // QA needs to be able to turn this alert off, for the automate tests.  see bug #31057
+	rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_ALERT_ON_SUCCESS, &showAlertAfterCancel);
+	if (NS_FAILED(rv) || showAlertAfterCancel) {
+		GetNewsStringByName("messageCancelled", getter_Copies(alertText));
+		rv = dialog->Alert(alertText);
+		// XXX:  todo, check rv?
+	}
 
 #if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
     // just me for now...
