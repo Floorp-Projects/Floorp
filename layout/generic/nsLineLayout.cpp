@@ -1035,32 +1035,27 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       if (metrics.width) {
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
         nsIContent* content = pfd->mFrame->GetContent();
-        if (content) {
-          nsresult result;
-          nsCOMPtr<nsITextContent> textContent
-            = do_QueryInterface(content, &result);
-          if ((NS_SUCCEEDED(result)) && textContent) {
-            PRBool isWhitespace;
-            result = textContent->IsOnlyWhitespace(&isWhitespace);
-            if (NS_SUCCEEDED(result)) {
-              pfd->SetFlag(PFD_ISNONWHITESPACETEXTFRAME, !isWhitespace);
-            }
+
+        nsCOMPtr<nsITextContent> textContent
+          = do_QueryInterface(content);
+        if (textContent) {
+          pfd->SetFlag(PFD_ISNONWHITESPACETEXTFRAME,
+                       !textContent->IsOnlyWhitespace());
 // fix for bug 40882
 #ifdef IBMBIDI
-            const nsTextFragment* frag;
-            textContent->GetText(&frag);
-            if (frag && frag->Is2b() ) {
-              //PRBool isVisual;
-              //mPresContext->IsVisualMode(isVisual);
-              PRUnichar ch = /*(isVisual) ?
-                      *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
-              if (IS_BIDI_DIACRITIC(ch) ) {
-                aFrame->SetBidiProperty(mPresContext, 
-                                        nsLayoutAtoms::endsInDiacritic, (void*)ch);
-              }
+          const nsTextFragment* frag = textContent->Text();
+          if (frag->Is2b()) {
+            //PRBool isVisual;
+            //mPresContext->IsVisualMode(isVisual);
+            PRUnichar ch = /*(isVisual) ?
+                            *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
+            if (IS_BIDI_DIACRITIC(ch)) {
+              aFrame->SetBidiProperty(mPresContext, 
+                                      nsLayoutAtoms::endsInDiacritic,
+                                      NS_INT32_TO_PTR(ch));
             }
-#endif // IBMBIDI
           }
+#endif // IBMBIDI
         }
       }
     }

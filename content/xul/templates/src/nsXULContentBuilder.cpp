@@ -677,8 +677,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                   do_CreateInstance(kTextNodeCID, &rv);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = content->SetText(value.get(), value.Length(), PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
+                content->SetText(value.get(), value.Length(), PR_FALSE);
 
                 rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ),
                                               aNotify, PR_FALSE);

@@ -2810,11 +2810,9 @@ nsXULDocument::ResumeWalk()
 
                     nsXULPrototypeText* textproto =
                         NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
-                    rv = text->SetText(textproto->mValue.get(),
-                                       textproto->mValue.Length(),
-                                       PR_FALSE);
-
-                    if (NS_FAILED(rv)) return rv;
+                    text->SetText(textproto->mValue.get(),
+                                  textproto->mValue.Length(),
+                                  PR_FALSE);
 
                     nsCOMPtr<nsIContent> child = do_QueryInterface(text);
                     if (! child)

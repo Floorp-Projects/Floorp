@@ -74,7 +74,7 @@ public:
 #endif
 
   // nsITextContent
-  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText);
 };
 
 nsresult
@@ -146,29 +146,26 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsCOMPtr<nsITextContent> textContent;
-  nsresult rv = CloneContent(PR_TRUE, getter_AddRefs(textContent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE);
+  NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(textContent, aReturn);
 }
 
-NS_IMETHODIMP
-nsCommentNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
+already_AddRefed<nsITextContent>
+nsCommentNode::CloneContent(PRBool aCloneText)
 {
   nsCommentNode* it = new nsCommentNode();
-  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIContent> kungFuDeathGrip(it);
+  if (!it)
+    return nsnull;
 
   if (aCloneText) {
     it->mText = mText;
   }
 
-  *aReturn = it;
-  NS_ADDREF(*aReturn);
+  NS_ADDREF(it);
 
-  return NS_OK;
+  return it;
 }
 
 #ifdef DEBUG

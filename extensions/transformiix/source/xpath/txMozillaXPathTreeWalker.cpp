@@ -634,9 +634,7 @@ txXPathNodeUtils::isWhitespace(const txXPathNode& aNode)
     if (!textCont) {
         return PR_TRUE;
     }
-    PRBool onlyWhitespace;
-    textCont->IsOnlyWhitespace(&onlyWhitespace);
-    return onlyWhitespace;
+    return textCont->IsOnlyWhitespace();
 }
 
 /* static */

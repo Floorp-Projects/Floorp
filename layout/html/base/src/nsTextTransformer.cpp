@@ -246,7 +246,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
   nsresult rv;
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent, &rv);
   if (tc.get()) {
-    tc->GetText(&mFrag);
+    mFrag = tc->Text();
 
     // Sanitize aStartingOffset
     if (aStartingOffset < 0) {

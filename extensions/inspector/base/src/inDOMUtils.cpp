@@ -84,9 +84,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aDataNode);
   NS_ASSERTION(textContent, "Does not implement nsITextContent!");
 
-  PRBool whiteSpaceOnly = PR_FALSE;
-  textContent->IsOnlyWhitespace(&whiteSpaceOnly);
-  if (!whiteSpaceOnly) {
+  if (!textContent->IsOnlyWhitespace()) {
     return NS_OK;
   }
 

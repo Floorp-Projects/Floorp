@@ -1056,8 +1056,8 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         return NS_OK;
       }
 
-      nsresult rv = tc->GetText(&frag);
-      if (NS_FAILED(rv)) continue;
+      frag = tc->Text();
+
       fragLen = frag->GetLength();
 
       // Set our starting point in this node.

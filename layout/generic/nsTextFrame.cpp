@@ -1422,11 +1422,11 @@ nsTextFrame::Paint(nsIPresContext*      aPresContext,
       // Get the text fragment
       nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
       const nsTextFragment* frag = nsnull;
-      if (tc.get()) {
-        tc->GetText(&frag);
-      }
-      if (!frag) {
-        return NS_ERROR_FAILURE;
+      if (tc) {
+        frag = tc->Text();
+        if (!frag) {
+          return NS_ERROR_FAILURE;
+        }
       }
 
       // Choose rendering pathway based on rendering context performance
@@ -3087,13 +3087,14 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   // Get the text fragment
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
   const nsTextFragment* frag = nsnull;
-  if (tc.get()) {
-    tc->GetText(&frag);
+  if (tc) {
+    frag = tc->Text();
+
+    if (!frag) {
+      return;
+    }
   }
-  if (!frag) {
-    return;
-  }
-  
+
   // Make enough space to transform
   nsAutoTextBuffer unicodePaintBuffer;
   nsAutoIndexBuffer indexBuffer;
@@ -3746,9 +3747,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
       PRInt32 totalLength = 0; // length up to the last-in-flow frame
       nsCOMPtr<nsITextContent> tc(do_QueryInterface(mContent));
       if (tc) {
-        const nsTextFragment* frag;
-        tc->GetText(&frag);
-        totalLength = frag->GetLength(); // raw value which includes whitespace
+        totalLength = tc->Text()->GetLength(); // raw value which includes whitespace
       }
       if ((hitLength == textLength) && (inOffset = mContentLength) &&
           (mContentOffset + mContentLength == totalLength)) {
@@ -5491,8 +5490,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
     // Get the text fragments that make up our content
     nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
     if (tc) {
-      const nsTextFragment* frag;
-      tc->GetText(&frag);
+      const nsTextFragment* frag = tc->Text();
       PRInt32 lastCharIndex = mContentOffset + mContentLength - 1;
       if (lastCharIndex < frag->GetLength()) {
         PRUnichar ch = frag->CharAt(lastCharIndex);
@@ -5780,14 +5778,13 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
 void
 nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
 {
-  const nsTextFragment* frag;
-
   // Get the frames text content
   nsCOMPtr<nsITextContent> tc(do_QueryInterface(mContent));
   if (!tc) {
     return;
   }
-  tc->GetText(&frag);
+
+  const nsTextFragment* frag = tc->Text();
 
   // Compute the total length of the text content.
   *aTotalContentLength = frag->GetLength();
@@ -5835,9 +5832,7 @@ nsTextFrame::IsEmpty()
     NS_NOTREACHED("text frame has no text content");
     return PR_TRUE;
   }
-  PRBool isOnlyWS;
-  textContent->IsOnlyWhitespace(&isOnlyWS);
-  return isOnlyWS;
+  return textContent->IsOnlyWhitespace();
 }
 
 #ifdef DEBUG

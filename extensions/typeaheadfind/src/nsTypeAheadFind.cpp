@@ -1588,8 +1588,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 
     if (textContent) {
       // look for non whitespace character before start offset
-      const nsTextFragment *textFrag;
-      textContent->GetText(&textFrag);
+      const nsTextFragment *textFrag = textContent->Text();
 
       for (PRInt32 index = 0; index < startOffset; index++) {
         if (!XP_IS_SPACE(textFrag->CharAt(index))) {
@@ -1642,13 +1641,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
       nsCOMPtr<nsITextContent> textContent =
         do_QueryInterface(parentsFirstChild);
 
-      if (textContent) {
-        // We don't want to look at a whitespace-only first child
-        PRBool isOnlyWhitespace;
-        textContent->IsOnlyWhitespace(&isOnlyWhitespace);
-        if (isOnlyWhitespace)
-          parentsFirstChild = parent->GetChildAt(1);
-      }
+      // We don't want to look at a whitespace-only first child
+      if (textContent && textContent->IsOnlyWhitespace())
+        parentsFirstChild = parent->GetChildAt(1);
 
       if (parentsFirstChild != startContent) {
         // startContent wasn't a first child, so we conclude that

@@ -1793,13 +1793,10 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
   nsresult rv = NS_OK;
   if (mDisplayContent) {
     nsAutoString value;
-    const nsTextFragment* fragment;
-    nsresult result = mDisplayContent->GetText(&fragment);
-    if (NS_SUCCEEDED(result)) {
-      fragment->AppendTo(value);
-    }
+    mDisplayContent->Text()->AppendTo(value);
+
     PRBool shouldSetValue = PR_FALSE;
-    if (NS_FAILED(result) || value.IsEmpty()) {
+    if (value.IsEmpty()) {
       shouldSetValue = PR_TRUE;
     } else {
        shouldSetValue = value != textToDisplay;
@@ -1822,19 +1819,16 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 nsresult
 nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
 {
-  nsresult rv = NS_OK;
   if (aText.IsEmpty()) {
     // Have to use a non-breaking space for line-height calculations
     // to be right
     static const PRUnichar spaceArr[] = { 0xA0, 0x00 };
-    nsDependentString space(spaceArr);
-    rv = mDisplayContent->SetText(space.get(), space.Length(), aNotify);
+    mDisplayContent->SetText(spaceArr, 2, aNotify);
   } else {
-    const nsAFlatString& flat = PromiseFlatString(aText);
-    rv = mDisplayContent->SetText(flat.get(), flat.Length(), aNotify);
+    mDisplayContent->SetText(aText, aNotify);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -1742,7 +1742,7 @@ nsHTMLCopyEncoder::IsEmptyTextContent(nsIDOMNode* aNode)
   PRBool result = PR_FALSE;
   nsCOMPtr<nsITextContent> tc(do_QueryInterface(aNode));
   if (tc) {
-    tc->IsOnlyWhitespace(&result);
+    result = tc->IsOnlyWhitespace();
   }
   return result;
 }

@@ -553,7 +553,9 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterCount(PRInt32 *aCharacterCount)
   if (!textContent)
     return NS_ERROR_FAILURE;
 
-  return textContent->GetTextLength(aCharacterCount);
+  *aCharacterCount = textContent->TextLength();
+
+  return NS_OK;
 }
 
 /*
@@ -1278,7 +1280,7 @@ NS_IMETHODIMP nsAccessibleEditableText::DidInsertNode(nsIDOMNode *aNode, nsIDOMN
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aNode));
   if (textContent) {
     textData.add = PR_TRUE;
-    textContent->GetTextLength((int *)&textData.length);
+    textData.length = textContent->TextLength();
     DOMPointToOffset(mPlainEditor, aNode, 0, &textData.start);
     FireTextChangeEvent(&textData);
   }
@@ -1292,7 +1294,7 @@ NS_IMETHODIMP nsAccessibleEditableText::WillDeleteNode(nsIDOMNode *aChild)
   textData.add = PR_FALSE;
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aChild));
   if (textContent) {
-    textContent->GetTextLength((int *)&textData.length);
+    textData.length = textContent->TextLength();
   }
   else {
     //XXX, don't fire event for the last br

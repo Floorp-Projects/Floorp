@@ -165,7 +165,7 @@ nsIsIndexFrame::UpdatePromptLabel()
                                                      NS_LITERAL_STRING("IsIndexPrompt").get(), prompt);
   }
   nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
-  result = text->SetText(prompt.get(), prompt.Length(), PR_TRUE);
+  text->SetText(prompt, PR_TRUE);
   return result;
 }
 

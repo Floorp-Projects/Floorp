@@ -471,8 +471,7 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = text->SetText(aText, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    text->SetText(aText, PR_TRUE);
 
     rv = AppendChildTo(text, PR_TRUE, PR_FALSE);
   }
@@ -604,15 +603,10 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         return result;
       }
 
-      result =
-        textContent->SetText(NS_REINTERPRET_CAST(const PRUnichar*,
-                                                 JS_GetStringChars(jsstr)),
-                             JS_GetStringLength(jsstr),
-                             PR_FALSE);
-
-      if (NS_FAILED(result)) {
-        return result;
-      }
+      textContent->SetText(NS_REINTERPRET_CAST(const PRUnichar*,
+                                               JS_GetStringChars(jsstr)),
+                           JS_GetStringLength(jsstr),
+                           PR_FALSE);
       
       result = AppendChildTo(textContent, PR_FALSE, PR_FALSE);
       if (NS_FAILED(result)) {

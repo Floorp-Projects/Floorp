@@ -313,8 +313,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   nsCOMPtr<nsITextContent> content = do_QueryInterface(aText);
   if (!content) return NS_ERROR_FAILURE;
   
-  const nsTextFragment* frag;
-  content->GetText(&frag);
+  const nsTextFragment* frag = content->Text();
 
   if (frag) {
     PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
