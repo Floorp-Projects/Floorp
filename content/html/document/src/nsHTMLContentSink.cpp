@@ -3739,7 +3739,6 @@ HTMLContentSink::StartLayout()
   // If it's a frameset document then disable scrolling.
   // Else, reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
-  nsresult rv;
   nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mDocShell);
   if (scrollableContainer) {
     if (mFrameset) {
