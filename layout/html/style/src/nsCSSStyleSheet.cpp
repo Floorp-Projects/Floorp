@@ -2485,18 +2485,22 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
           // XXX xml link too
-	  if(!tagset) {
-	    tagset=PR_TRUE;
-	    aContent->GetTag(contentTag);
-	  }
+          if(!tagset) {
+            tagset=PR_TRUE;
+            aContent->GetTag(contentTag);
+          }
           if (nsHTMLAtoms::a == contentTag) {
-            if (aTestState) {
+            // make sure this anchor has a link even if we are not testing state
+            // if there is no link, then this anchor is not really a linkpseudo.
+            // bug=23209
+            nsAutoString base, href;
+            nsresult attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
+            if (!(NS_CONTENT_ATTR_HAS_VALUE == attrState)) {
+              result = PR_FALSE;
+            } else if (aTestState) {
               if (! linkHandler) {
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
-                  nsAutoString base, href;
-                  nsresult attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-
                   if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
                     nsIURI* docURL = nsnull;
                     nsIHTMLContent* htmlContent;
