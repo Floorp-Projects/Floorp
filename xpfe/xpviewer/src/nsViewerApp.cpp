@@ -136,11 +136,6 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
 #if defined(NS_DEBUG) 
   /*
    * Check for the debug-only interface indicating thread-safety
