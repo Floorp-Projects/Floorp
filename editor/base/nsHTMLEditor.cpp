@@ -5661,7 +5661,9 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   iter->Init(aInRange);
   nsCOMPtr<nsIContent> content;
-  result = iter->CurrentNode(getter_AddRefs(content));
+  result = iter->CurrentNode(getter_AddRefs(content));  
+  if (!content) return NS_OK;
+  
   while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(content);
