@@ -36,27 +36,27 @@
 #include "pango-engine.h"
 
 /**
- * pango_shape:
+ * pangolite_shape:
  * @text:      the text to process
  * @length:    the length (in bytes) of @text
- * @analysis:  #PangoAnalysis structure from PangoItemize
+ * @analysis:  #PangoliteAnalysis structure from PangoliteItemize
  * @glyphs:    glyph string in which to store results
  *
  * Given a segment of text and the corresponding 
- * #PangoAnalysis structure returned from pango_itemize(),
+ * #PangoliteAnalysis structure returned from pangolite_itemize(),
  * convert the characters into glyphs. You may also pass
- * in only a substring of the item from pango_itemize().
+ * in only a substring of the item from pangolite_itemize().
  */
-void pango_shape(const gunichar2  *text, 
+void pangolite_shape(const gunichar2  *text, 
                  gint             length, 
-                 PangoAnalysis    *analysis,
-                 PangoGlyphString *glyphs)
+                 PangoliteAnalysis    *analysis,
+                 PangoliteGlyphString *glyphs)
 {
   if (analysis->shape_engine)
     analysis->shape_engine->script_shape(analysis->fontCharset, text, length, 
                                          analysis, glyphs);
   else {
-    pango_glyph_string_set_size (glyphs, 1);
+    pangolite_glyph_string_set_size (glyphs, 1);
     
     glyphs->glyphs[0].glyph = 0;
     glyphs->log_clusters[0] = 0;

@@ -39,9 +39,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <pango/pango-engine.h>
-#include <pango/pango-glyph.h>
-#include <pango/pango-types.h>
+#include <pangolite/pango-engine.h>
+#include <pangolite/pango-glyph.h>
+#include <pangolite/pango-types.h>
 
 #ifdef __cplusplus
 }

@@ -67,9 +67,9 @@
 void 
 query_module (const char *dir, const char *name)
 {
-  void (*list) (PangoEngineInfo **engines, gint *n_engines);
-  PangoEngine *(*load) (const gchar *id);
-  void (*unload) (PangoEngine *engine);
+  void (*list) (PangoliteEngineInfo **engines, gint *n_engines);
+  PangoliteEngine *(*load) (const gchar *id);
+  void (*unload) (PangoliteEngine *engine);
 
   GModule *module;
   gchar *path;
@@ -90,7 +90,7 @@ query_module (const char *dir, const char *name)
       g_module_symbol (module, "script_engine_unload", (gpointer)&unload))
     {
       gint i,j;
-      PangoEngineInfo *engines;
+      PangoliteEngineInfo *engines;
       gint n_engines;
 
       (*list) (&engines, &n_engines);
@@ -129,7 +129,7 @@ query_module (const char *dir, const char *name)
     }
   else
     {
-      fprintf (stderr, "%s does not export Pango module API\n", path);
+      fprintf (stderr, "%s does not export Pangolite module API\n", path);
     }
 
   g_free (path);
@@ -143,7 +143,7 @@ int main (int argc, char **argv)
   int i;
   char *path;
 
-  printf ("# Pango Modules file\n"
+  printf ("# Pangolite Modules file\n"
 	  "# Automatically generated file, do not edit\n"
 	  "#\n");
 
@@ -152,15 +152,15 @@ int main (int argc, char **argv)
       char **dirs;
       int i;
       
-      path = pango_config_key_get ("Pango/ModulesPath");
+      path = pangolite_config_key_get ("Pangolite/ModulesPath");
       if (!path)
-	path = g_strconcat (pango_get_lib_subdirectory (),
+	path = g_strconcat (pangolite_get_lib_subdirectory (),
 			    G_DIR_SEPARATOR_S "modules",
 			    NULL);
 
       printf ("# ModulesPath = %s\n#\n", path);
 
-      dirs = pango_split_file_list (path);
+      dirs = pangolite_split_file_list (path);
 
       for (i=0; dirs[i]; i++)
 	{

@@ -37,28 +37,28 @@
 
 #include "pango-types.h"
 
-char    *pango_trim_string(const char *str);
-char   **pango_split_file_list(const char *str);
+char    *pangolite_trim_string(const char *str);
+char   **pangolite_split_file_list(const char *str);
 
-gint     pango_read_line(FILE *stream, GString *str);
+gint     pangolite_read_line(FILE *stream, GString *str);
 
-gboolean pango_skip_space(const char **pos);
-gboolean pango_scan_word(const char **pos, GString *out);
-gboolean pango_scan_string(const char **pos, GString *out);
-gboolean pango_scan_int(const char **pos, int *out);
+gboolean pangolite_skip_space(const char **pos);
+gboolean pangolite_scan_word(const char **pos, GString *out);
+gboolean pangolite_scan_string(const char **pos, GString *out);
+gboolean pangolite_scan_int(const char **pos, int *out);
 
-char *   pango_config_key_get(const char *key);
+char *   pangolite_config_key_get(const char *key);
 
-/* On Unix, return the name of the "pango" subdirectory of SYSCONFDIR
- * (which is set at compile time). On Win32, return the Pango
+/* On Unix, return the name of the "pangolite" subdirectory of SYSCONFDIR
+ * (which is set at compile time). On Win32, return the Pangolite
  * installation directory (which is set at installation time, and
  * stored in the registry). The returned string should not be
  * g_free'd.
  */
-const char *pango_get_sysconf_subdirectory(void);
+const char *pangolite_get_sysconf_subdirectory(void);
 
-/* Ditto for LIBDIR/pango. On Win32, use the same Pango
+/* Ditto for LIBDIR/pangolite. On Win32, use the same Pangolite
  * installation directory. This returned string should not be
  * g_free'd either.
  */
-const char *pango_get_lib_subdirectory (void);
+const char *pangolite_get_lib_subdirectory (void);

@@ -42,39 +42,39 @@
 #include "pango-modules.h"
 #include "pango-utils.h"
 
-typedef struct _PangoMapInfo    PangoMapInfo;
-typedef struct _PangoEnginePair PangoEnginePair;
-typedef struct _PangoSubmap     PangoSubmap;
+typedef struct _PangoliteMapInfo    PangoliteMapInfo;
+typedef struct _PangoliteEnginePair PangoliteEnginePair;
+typedef struct _PangoliteSubmap     PangoliteSubmap;
 
-struct _PangoSubmap
+struct _PangoliteSubmap
 {
   gboolean is_leaf;
   union {
-    PangoMapEntry entry;
-    PangoMapEntry *leaves;
+    PangoliteMapEntry entry;
+    PangoliteMapEntry *leaves;
   } d;
 };
 
-struct _PangoMap
+struct _PangoliteMap
 {
   gint        n_submaps;
-  PangoSubmap submaps[256];
+  PangoliteSubmap submaps[256];
 };
 
-struct _PangoMapInfo
+struct _PangoliteMapInfo
 {
   const gchar *lang;
   guint       engine_type_id;
   guint       render_type_id;
-  PangoMap    *map;
+  PangoliteMap    *map;
 };
 
-struct _PangoEnginePair
+struct _PangoliteEnginePair
 {
-  PangoEngineInfo info;
+  PangoliteEngineInfo info;
   gboolean        included;
   void            *load_info;
-  PangoEngine     *engine;
+  PangoliteEngine     *engine;
 };
 
 static GList *maps = NULL;
@@ -83,27 +83,27 @@ static GSList *builtin_engines = NULL;
 static GSList *registered_engines = NULL;
 static GSList *dlloaded_engines = NULL;
 
-static void build_map(PangoMapInfo *info);
+static void build_map(PangoliteMapInfo *info);
 static void init_modules(void);
 
 /**
- * pango_find_map:
+ * pangolite_find_map:
  * @lang: the language tag for which to find the map (in the form
  *        en or en_US)
  * @engine_type_id: the render type for the map to find
  * @render_type_id: the engine type for the map to find
  * 
- * Locate a #PangoMap for a particular engine type and render
+ * Locate a #PangoliteMap for a particular engine type and render
  * type. The resulting map can be used to determine the engine
  * for each character.
  * 
  * Return value: 
  **/
-PangoMap*
-pango_find_map(const char *lang, guint engine_type_id, guint render_type_id)
+PangoliteMap*
+pangolite_find_map(const char *lang, guint engine_type_id, guint render_type_id)
 {
   GList        *tmp_list = maps;
-  PangoMapInfo *map_info = NULL;
+  PangoliteMapInfo *map_info = NULL;
   gboolean     found_earlier = FALSE;
 
   while (tmp_list) {
@@ -119,7 +119,7 @@ pango_find_map(const char *lang, guint engine_type_id, guint render_type_id)
   }
   
   if (!tmp_list) {
-    map_info = g_new(PangoMapInfo, 1);
+    map_info = g_new(PangoliteMapInfo, 1);
     map_info->lang = g_strdup(lang);
     map_info->engine_type_id = engine_type_id;
     map_info->render_type_id = render_type_id;
@@ -139,19 +139,19 @@ pango_find_map(const char *lang, guint engine_type_id, guint render_type_id)
   return map_info->map;
 }
 
-static PangoEngine *
-pango_engine_pair_get_engine(PangoEnginePair *pair)
+static PangoliteEngine *
+pangolite_engine_pair_get_engine(PangoliteEnginePair *pair)
 {
   if (!pair->engine) {
     if (pair->included) {
-      PangoIncludedModule *included_module = pair->load_info;
+      PangoliteIncludedModule *included_module = pair->load_info;
       
       pair->engine = included_module->load(pair->info.id);
     }
     else {
       GModule *module;
       char    *module_name = pair->load_info;
-      PangoEngine *(*load)(const gchar *id);
+      PangoliteEngine *(*load)(const gchar *id);
   	  
       module = g_module_open(module_name, 0);
       if (!module) {
@@ -175,15 +175,15 @@ pango_engine_pair_get_engine(PangoEnginePair *pair)
 }
 
 static void
-handle_included_module(PangoIncludedModule *module, GSList **engine_list)
+handle_included_module(PangoliteIncludedModule *module, GSList **engine_list)
 {
-  PangoEngineInfo *engine_info;
+  PangoliteEngineInfo *engine_info;
   int             n_engines, i;
 
   module->list(&engine_info, &n_engines);
   
   for (i = 0; i < n_engines; i++) {
-    PangoEnginePair *pair = g_new(PangoEnginePair, 1);
+    PangoliteEnginePair *pair = g_new(PangoliteEnginePair, 1);
     
     pair->info = engine_info[i];
     pair->included = TRUE;
@@ -201,9 +201,9 @@ process_module_file(FILE *module_file)
   GString  *tmp_buf = g_string_new(NULL);
   gboolean have_error = FALSE;
 
-  while (pango_read_line(module_file, line_buf)) {
-    PangoEnginePair *pair = g_new(PangoEnginePair, 1);
-    PangoEngineRange *range;
+  while (pangolite_read_line(module_file, line_buf)) {
+    PangoliteEnginePair *pair = g_new(PangoliteEnginePair, 1);
+    PangoliteEngineRange *range;
     GList *ranges = NULL;
     GList *tmp_list;
     
@@ -214,14 +214,14 @@ process_module_file(FILE *module_file)
     
     p = line_buf->str;
     
-    if (!pango_skip_space(&p)) {
+    if (!pangolite_skip_space(&p)) {
       g_free(pair);
       continue;
     }
     
     i = 0;
     while (1) {
-	  if (!pango_scan_string(&p, tmp_buf)) {
+	  if (!pangolite_scan_string(&p, tmp_buf)) {
       have_error = TRUE;
       goto error;
     }
@@ -240,7 +240,7 @@ process_module_file(FILE *module_file)
       pair->info.render_type = g_strdup(tmp_buf->str);
       break;
     default:
-      range = g_new(PangoEngineRange, 1);
+      range = g_new(PangoliteEngineRange, 1);
       if (sscanf(tmp_buf->str, "%d-%d:", &start, &end) != 2) {
         fprintf(stderr, "Error reading modules file");
         have_error = TRUE;
@@ -260,7 +260,7 @@ process_module_file(FILE *module_file)
       ranges = g_list_prepend(ranges, range);
     }
     
-	  if (!pango_skip_space(&p))
+	  if (!pangolite_skip_space(&p))
 	    break;	  
 	  i++;
     }
@@ -273,11 +273,11 @@ process_module_file(FILE *module_file)
     
     ranges = g_list_reverse(ranges);
     pair->info.n_ranges = g_list_length(ranges);
-    pair->info.ranges = g_new(PangoEngineRange, pair->info.n_ranges);
+    pair->info.ranges = g_new(PangoliteEngineRange, pair->info.n_ranges);
     
     tmp_list = ranges;
     for (i=0; i<pair->info.n_ranges; i++) {
-      pair->info.ranges[i] = *(PangoEngineRange *)tmp_list->data;
+      pair->info.ranges[i] = *(PangoliteEngineRange *)tmp_list->data;
       tmp_list = tmp_list->next;
     }
     
@@ -303,15 +303,15 @@ static void
 read_modules(void)
 {
   FILE *module_file;  
-  char *file_str = pango_config_key_get("Pango/ModuleFiles");
+  char *file_str = pangolite_config_key_get("Pangolite/ModuleFiles");
   char **files;
   int  n;
 
   if (!file_str)
-    file_str = g_strconcat(pango_get_sysconf_subdirectory(),
+    file_str = g_strconcat(pangolite_get_sysconf_subdirectory(),
                            G_DIR_SEPARATOR_S "pango.modules", NULL);
 
-  files = pango_split_file_list(file_str);
+  files = pangolite_split_file_list(file_str);
 
   n = 0;
   while (files[n])
@@ -333,7 +333,7 @@ read_modules(void)
 }
 
 static void
-set_entry(PangoMapEntry *entry, gboolean is_exact, PangoEngineInfo *info)
+set_entry(PangoliteMapEntry *entry, gboolean is_exact, PangoliteEngineInfo *info)
 {
   if ((is_exact && !entry->is_exact) || !entry->info) {
     entry->is_exact = is_exact;
@@ -355,10 +355,10 @@ init_modules(void)
 }
 
 static void
-map_add_engine(PangoMapInfo *info, PangoEnginePair *pair)
+map_add_engine(PangoliteMapInfo *info, PangoliteEnginePair *pair)
 {
   int      i, j, submap;
-  PangoMap *map = info->map;
+  PangoliteMap *map = info->map;
  
   for (i=0; i<pair->info.n_ranges; i++) {
     gchar    **langs;
@@ -395,7 +395,7 @@ map_add_engine(PangoMapInfo *info, PangoEnginePair *pair)
       else {
 	      if (map->submaps[submap].is_leaf) {
           map->submaps[submap].is_leaf = FALSE;
-          map->submaps[submap].d.leaves = g_new(PangoMapEntry, 256);
+          map->submaps[submap].d.leaves = g_new(PangoliteMapEntry, 256);
           for (j=0; j<256; j++) {
             map->submaps[submap].d.leaves[j].info = NULL;
             map->submaps[submap].d.leaves[j].is_exact = FALSE;
@@ -410,7 +410,7 @@ map_add_engine(PangoMapInfo *info, PangoEnginePair *pair)
 }
 
 static void
-map_add_engine_list(PangoMapInfo *info,
+map_add_engine_list(PangoliteMapInfo *info,
                     GSList       *engines,
                     const char   *engine_type,
                     const char   *render_type)  
@@ -418,7 +418,7 @@ map_add_engine_list(PangoMapInfo *info,
   GSList *tmp_list = engines;
   
   while (tmp_list) {
-    PangoEnginePair *pair = tmp_list->data;
+    PangoliteEnginePair *pair = tmp_list->data;
     tmp_list = tmp_list->next;
     
     if (strcmp(pair->info.engine_type, engine_type) == 0 &&
@@ -429,17 +429,17 @@ map_add_engine_list(PangoMapInfo *info,
 }
 
 static void
-build_map(PangoMapInfo *info)
+build_map(PangoliteMapInfo *info)
 {
   int      i;
-  PangoMap *map;
+  PangoliteMap *map;
 
   const char *engine_type = g_quark_to_string(info->engine_type_id);
   const char *render_type = g_quark_to_string(info->render_type_id);
   
   init_modules();
 
-  info->map = map = g_new(PangoMap, 1);
+  info->map = map = g_new(PangoliteMap, 1);
   map->n_submaps = 0;
   for (i=0; i<256; i++) {
     map->submaps[i].is_leaf = TRUE;
@@ -453,8 +453,8 @@ build_map(PangoMapInfo *info)
 }
 
 /**
- * pango_map_get_entry:
- * @map: a #PangoMap
+ * pangolite_map_get_entry:
+ * @map: a #PangoliteMap
  * @wc:  an ISO-10646 codepoint
  * 
  * Returns the entry in the map for a given codepoint. The entry
@@ -462,19 +462,19 @@ build_map(PangoMapInfo *info)
  * the codepoint and also whether the engine matches the language
  * tag for the map was created exactly or just approximately.
  * 
- * Return value: the #PangoMapEntry for the codepoint. This value
- *   is owned by the #PangoMap and should not be freed.
+ * Return value: the #PangoliteMapEntry for the codepoint. This value
+ *   is owned by the #PangoliteMap and should not be freed.
  **/
-PangoMapEntry *
-pango_map_get_entry(PangoMap *map, guint32 wc)
+PangoliteMapEntry *
+pangolite_map_get_entry(PangoliteMap *map, guint32 wc)
 {
-  PangoSubmap *submap = &map->submaps[wc / 256];
+  PangoliteSubmap *submap = &map->submaps[wc / 256];
   return submap->is_leaf ? &submap->d.entry : &submap->d.leaves[wc % 256];
 }
 
 /**
- * pango_map_get_engine:
- * @map: a #PangoMap
+ * pangolite_map_get_engine:
+ * @map: a #PangoliteMap
  * @wc:  an ISO-10646 codepoint
  * 
  * Returns the engine listed in the map for a given codepoint. 
@@ -483,30 +483,30 @@ pango_map_get_entry(PangoMap *map, guint32 wc)
  *    or %NULL. The lookup may cause the engine to be loaded;
  *    once an engine is loaded
  **/
-PangoEngine *
-pango_map_get_engine(PangoMap *map, guint32 wc)
+PangoliteEngine *
+pangolite_map_get_engine(PangoliteMap *map, guint32 wc)
 {
-  PangoSubmap *submap = &map->submaps[wc / 256];
-  PangoMapEntry *entry = submap->is_leaf ? &submap->d.entry : 
+  PangoliteSubmap *submap = &map->submaps[wc / 256];
+  PangoliteMapEntry *entry = submap->is_leaf ? &submap->d.entry : 
     &submap->d.leaves[wc % 256];
   
   if (entry->info)
-    return pango_engine_pair_get_engine((PangoEnginePair *)entry->info);
+    return pangolite_engine_pair_get_engine((PangoliteEnginePair *)entry->info);
   else
     return NULL;
 }
 
 /**
- * pango_module_register:
- * @module: a #PangoIncludedModule
+ * pangolite_module_register:
+ * @module: a #PangoliteIncludedModule
  * 
- * Registers a statically linked module with Pango. The
- * #PangoIncludedModule structure that is passed in contains the
+ * Registers a statically linked module with Pangolite. The
+ * #PangoliteIncludedModule structure that is passed in contains the
  * functions that would otherwise be loaded from a dynamically loaded
  * module.
  **/
 void
-pango_module_register(PangoIncludedModule *module)
+pangolite_module_register(PangoliteIncludedModule *module)
 {
   GSList *tmp_list = NULL;
   

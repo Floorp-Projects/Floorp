@@ -37,14 +37,14 @@
 
 #include <glib.h>
 
-typedef struct _PangoLangRange PangoLangRange;
-typedef struct _PangoLogAttr PangoLogAttr;
+typedef struct _PangoliteLangRange PangoliteLangRange;
+typedef struct _PangoliteLogAttr PangoliteLogAttr;
 
-typedef struct _PangoEngineShape PangoEngineShape;
+typedef struct _PangoliteEngineShape PangoliteEngineShape;
 
 /* A index of a glyph into a font. Rendering system dependent
  */
-typedef guint32 PangoGlyph;
+typedef guint32 PangoliteGlyph;
 
 /* Information about a segment of text with a consistent
  * shaping/language engine and bidirectional level
@@ -54,11 +54,11 @@ typedef enum {
   PANGO_DIRECTION_RTL,
   PANGO_DIRECTION_TTB_LTR,
   PANGO_DIRECTION_TTB_RTL
-} PangoDirection;
+} PangoliteDirection;
 
 /* Language tagging information
  */
-struct _PangoLangRange
+struct _PangoliteLangRange
 {
   gint  start;
   gint  length;
@@ -66,14 +66,14 @@ struct _PangoLangRange
 };
 
 /* Will be of more use when run information is stored */
-typedef struct _PangoAnalysis PangoAnalysis;
+typedef struct _PangoliteAnalysis PangoliteAnalysis;
 
-struct _PangoAnalysis
+struct _PangoliteAnalysis
 {
   char             *fontCharset;
-  PangoEngineShape *shape_engine;
+  PangoliteEngineShape *shape_engine;
   /*  guint8           level; */
-  PangoDirection   aDir;
+  PangoliteDirection   aDir;
 };
 
 #ifndef MOZ_WIDGET_GTK2 

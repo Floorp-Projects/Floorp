@@ -106,7 +106,7 @@
    (Char) != 0xFFFE && (Char) != 0xFFFF)
 
 /**
- * pango_trim_string:
+ * pangolite_trim_string:
  * @str: a string
  * 
  * Trim leading and trailing whitespace from a string.
@@ -114,7 +114,7 @@
  * Return value: A newly allocated string that must be freed with g_free()
  **/
 char *
-pango_trim_string (const char *str)
+pangolite_trim_string (const char *str)
 {
   int len;
 
@@ -131,7 +131,7 @@ pango_trim_string (const char *str)
 }
 
 /**
- * pango_split_file_list:
+ * pangolite_split_file_list:
  * @str: a comma separated list of filenames
  * 
  * Split a G_SEARCHPATH_SEPARATOR-separated list of files, stripping
@@ -140,7 +140,7 @@ pango_trim_string (const char *str)
  * Return value: a list of strings to be freed with g_strfreev()
  **/
 char **
-pango_split_file_list (const char *str)
+pangolite_split_file_list (const char *str)
 {
   int i = 0;
   int j;
@@ -150,7 +150,7 @@ pango_split_file_list (const char *str)
 
   while (files[i])
     {
-      char *file = pango_trim_string (files[i]);
+      char *file = pangolite_trim_string (files[i]);
 
       /* If the resulting file is empty, skip it */
       if (file[0] == '\0')
@@ -189,7 +189,7 @@ pango_split_file_list (const char *str)
 }
 
 /**
- * pango_read_line:
+ * pangolite_read_line:
  * @stream: a stdio stream
  * @str: #GString buffer into which to write the result
  * 
@@ -206,7 +206,7 @@ pango_split_file_list (const char *str)
  *               a line number counter which doesn't combine lines with \) 
  **/
 gint
-pango_read_line (FILE *stream, GString *str)
+pangolite_read_line (FILE *stream, GString *str)
 {
   gboolean quoted = FALSE;
   gboolean comment = FALSE;
@@ -298,7 +298,7 @@ pango_read_line (FILE *stream, GString *str)
 }
 
 /**
- * pango_skip_space:
+ * pangolite_skip_space:
  * @pos: in/out string position
  * 
  * Skips 0 or more characters of white space.
@@ -307,7 +307,7 @@ pango_read_line (FILE *stream, GString *str)
  * the position at a '\0' character.
  **/
 gboolean
-pango_skip_space (const char **pos)
+pangolite_skip_space (const char **pos)
 {
   const char *p = *pos;
   
@@ -320,7 +320,7 @@ pango_skip_space (const char **pos)
 }
 
 /**
- * pango_scan_word:
+ * pangolite_scan_word:
  * @pos: in/out string position
  * @out: a #GString into which to write the result
  * 
@@ -331,7 +331,7 @@ pango_skip_space (const char **pos)
  * Return value: %FALSE if a parse error occured. 
  **/
 gboolean
-pango_scan_word (const char **pos, GString *out)
+pangolite_scan_word (const char **pos, GString *out)
 {
   const char *p = *pos;
 
@@ -362,7 +362,7 @@ pango_scan_word (const char **pos, GString *out)
 }
 
 /**
- * pango_scan_string:
+ * pangolite_scan_string:
  * @pos: in/out string position
  * @out: a #GString into which to write the result
  * 
@@ -374,7 +374,7 @@ pango_scan_word (const char **pos, GString *out)
  * Return value: %FALSE if a parse error occured.
  **/
 gboolean
-pango_scan_string (const char **pos, GString *out)
+pangolite_scan_string (const char **pos, GString *out)
 {
   const char *p = *pos;
   
@@ -450,7 +450,7 @@ pango_scan_string (const char **pos, GString *out)
 }
 
 gboolean
-pango_scan_int (const char **pos, int *out)
+pangolite_scan_int (const char **pos, int *out)
 {
   int i = 0;
   char buf[32];
@@ -498,7 +498,7 @@ read_config_file (const char *filename, gboolean enoent_error)
   if (!file)
     {
       if (errno != ENOENT || enoent_error)
-	fprintf (stderr, "Pango:%s: Error opening config file: %s\n",
+	fprintf (stderr, "Pangolite:%s: Error opening config file: %s\n",
 		 filename, g_strerror (errno));
       return;
     }
@@ -507,22 +507,22 @@ read_config_file (const char *filename, gboolean enoent_error)
   tmp_buffer1 = g_string_new (NULL);
   tmp_buffer2 = g_string_new (NULL);
 
-  while (pango_read_line (file, line_buffer))
+  while (pangolite_read_line (file, line_buffer))
     {
       line++;
 
       pos = line_buffer->str;
-      if (!pango_skip_space (&pos))
+      if (!pangolite_skip_space (&pos))
 	continue;
 
       if (*pos == '[')	/* Section */
 	{
 	  pos++;
-	  if (!pango_skip_space (&pos) ||
-	      !pango_scan_word (&pos, tmp_buffer1) ||
-	      !pango_skip_space (&pos) ||
+	  if (!pangolite_skip_space (&pos) ||
+	      !pangolite_scan_word (&pos, tmp_buffer1) ||
+	      !pangolite_skip_space (&pos) ||
 	      *(pos++) != ']' ||
-	      pango_skip_space (&pos))
+	      pangolite_skip_space (&pos))
 	    {
 	      errstring = g_strdup ("Error parsing [SECTION] declaration");
 	      goto error;
@@ -542,8 +542,8 @@ read_config_file (const char *filename, gboolean enoent_error)
 	      goto error;
 	    }
 
-	  if (!pango_scan_word (&pos, tmp_buffer1) ||
-	      !pango_skip_space (&pos))
+	  if (!pangolite_scan_word (&pos, tmp_buffer1) ||
+	      !pangolite_skip_space (&pos))
 	    {
 	      errstring = g_strdup ("Line is not of the form KEY=VALUE or KEY+=VALUE");
 	      goto error;
@@ -560,18 +560,18 @@ read_config_file (const char *filename, gboolean enoent_error)
 	      goto error;
 	    }
 	    
-	  if (!pango_skip_space (&pos))
+	  if (!pangolite_skip_space (&pos))
 	    {
 	      empty = TRUE;
 	    }
 	  else
 	    {
-	      if (!pango_scan_string (&pos, tmp_buffer2))
+	      if (!pangolite_scan_string (&pos, tmp_buffer2))
 		{
 		  errstring = g_strdup ("Error parsing value string");
 		  goto error;
 		}
-	      if (pango_skip_space (&pos))
+	      if (pangolite_skip_space (&pos))
 		{
 		  errstring = g_strdup ("Junk after value string");
 		  goto error;
@@ -609,7 +609,7 @@ read_config_file (const char *filename, gboolean enoent_error)
 
   if (errstring)
     {
-      fprintf (stderr, "Pango:%s:%d: %s\n", filename, line, errstring);
+      fprintf (stderr, "Pangolite:%s:%d: %s\n", filename, line, errstring);
       g_free (errstring);
     }
       
@@ -630,8 +630,8 @@ read_config ()
       char *home;
       
       config_hash = g_hash_table_new (g_str_hash, g_str_equal);
-      filename = g_strconcat (pango_get_sysconf_subdirectory (),
-			      G_DIR_SEPARATOR_S "pangorc",
+      filename = g_strconcat (pangolite_get_sysconf_subdirectory (),
+			      G_DIR_SEPARATOR_S "pangoliterc",
 			      NULL);
       read_config_file (filename, FALSE);
       g_free (filename);
@@ -640,7 +640,7 @@ read_config ()
       if (home && *home)
 	{
 	  filename = g_strconcat (home,
-				  G_DIR_SEPARATOR_S ".pangorc",
+				  G_DIR_SEPARATOR_S ".pangoliterc",
 				  NULL);
 	  read_config_file (filename, FALSE);
 	  g_free (filename);
@@ -653,18 +653,18 @@ read_config ()
 }
 
 /**
- * pango_config_key_get:
+ * pangolite_config_key_get:
  * @key: Key to look up, in the form "SECTION/KEY".
  * 
- * Look up a key in the pango config database
- * (pseudo-win.ini style, read from $sysconfdir/pango/pangorc,
- *  ~/.pangorc, and getenv (PANGO_RC_FILE).)
+ * Look up a key in the pangolite config database
+ * (pseudo-win.ini style, read from $sysconfdir/pangolite/pangoliterc,
+ *  ~/.pangoliterc, and getenv (PANGO_RC_FILE).)
  * 
  * Return value: the value, if found, otherwise %NULL. The value is a
  * newly-allocated string and must be freed with g_free().
  **/
 char *
-pango_config_key_get (const char *key)
+pangolite_config_key_get (const char *key)
 {
   g_return_val_if_fail (key != NULL, NULL);
   
@@ -674,14 +674,14 @@ pango_config_key_get (const char *key)
 }
 
 G_CONST_RETURN char *
-pango_get_sysconf_subdirectory (void)
+pangolite_get_sysconf_subdirectory (void)
 {
 #ifdef G_OS_WIN32
   static gchar *result = NULL;
 
   if (result == NULL)
     result = g_win32_get_package_installation_subdirectory
-      ("pango", g_strdup_printf ("pango-%s.dll", PANGO_VERSION), "etc\\pango");
+      ("pangolite", g_strdup_printf ("pangolite-%s.dll", PANGO_VERSION), "etc\\pangolite");
 
   return result;
   // Am open to any other way of doing this
@@ -694,18 +694,18 @@ pango_get_sysconf_subdirectory (void)
 }
 
 G_CONST_RETURN char *
-pango_get_lib_subdirectory (void)
+pangolite_get_lib_subdirectory (void)
 {
 #ifdef G_OS_WIN32
   static gchar *result = NULL;
 
   if (result == NULL)
     result = g_win32_get_package_installation_subdirectory
-      ("pango", g_strdup_printf ("pango-%s.dll", PANGO_VERSION), "lib\\pango");
+      ("pangolite", g_strdup_printf ("pangolite-%s.dll", PANGO_VERSION), "lib\\pangolite");
 
   return result;
   // Open to any other way of doing this
-  // Bottomline : need to provide path to pango libraries
+  // Bottomline : need to provide path to pangolite libraries
   // Currently set to dist/bin - Open to other locations
 #else
   char *tmp = getenv("MOZILLA_FIVE_HOME");
@@ -741,9 +741,9 @@ g_utf8_get_char (const gchar *p)
 
 #ifdef HAVE_FRIBIDI
 void 
-pango_log2vis_get_embedding_levels (gunichar       *str,
+pangolite_log2vis_get_embedding_levels (gunichar       *str,
                                     int            len,
-                                    PangoDirection *pbase_dir,
+                                    PangoliteDirection *pbase_dir,
                                     guint8         *embedding_level_list)
 {
   FriBidiCharType fribidi_base_dir;
@@ -759,7 +759,7 @@ pango_log2vis_get_embedding_levels (gunichar       *str,
 }
 
 gboolean 
-pango_get_mirror_char (gunichar ch, gunichar *mirrored_ch)
+pangolite_get_mirror_char (gunichar ch, gunichar *mirrored_ch)
 {
   return fribidi_get_mirror_char (ch, mirrored_ch); 
 }
