@@ -162,17 +162,19 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
   // a style attribute on it, don't know why.
   // SetFlags() is really meant to only be called once
   // and at editor init time.  
-  if (aFlags & nsIHTMLEditor::eEditorPlaintextMask)
-  {
-    if (!(mFlags & nsIHTMLEditor::eEditorPlaintextMask))
-    {
-      // Call the editor's SetBodyWrapWidth(), which will
-      // set the styles appropriately for plaintext:
-      mEditor->SetBodyWrapWidth(72);
-    }
-  }
-  
+
+  PRBool willBePlaintext  = (aFlags & nsIHTMLEditor::eEditorPlaintextMask) != 0;
+  PRBool alreadyPlaintext = (mFlags & nsIHTMLEditor::eEditorPlaintextMask) != 0;
+
   mFlags = aFlags;
+
+  if (!alreadyPlaintext && willBePlaintext)
+  {
+    // Call the editor's SetBodyWrapWidth(), which will
+    // set the styles appropriately for plaintext:
+    mEditor->SetBodyWrapWidth(72);
+  }
+
   return NS_OK;
 }
 

@@ -863,7 +863,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   {
     if (mEditorTypeString.EqualsWithConversion("text"))
     {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorPlaintextMask);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorPlaintextMask | nsIHTMLEditor::eEditorEnableWrapHackMask);
       mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
@@ -1822,10 +1822,6 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               // Use page title as suggested name for new document
               if (fileName.Length() == 0 && title.Length() > 0)
               {
-                // Strip out quote character
-                PRUnichar quote = (PRUnichar)'\"';
-                title.StripChar(quote);
-
                 //Replace "bad" filename characteres with "_"
                 PRUnichar space = (PRUnichar)' ';
                 PRUnichar dot = (PRUnichar)'.';
