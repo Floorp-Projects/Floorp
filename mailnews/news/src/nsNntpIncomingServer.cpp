@@ -571,22 +571,22 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	rv = mRDFService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
 	if(NS_FAILED(rv)) return rv;
 
-	rv = CreateAndAdd((const char *)groupUri, aName, newsgroupResource);
+	rv = SetNewsgroupPropertiesInSubscribeDS((const char *)groupUri, aName, newsgroupResource);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = FindParent((const char *)groupUri, (const char *)serverUri, aName, newsgroupResource);
+	rv = FindParentGroupResource((const char *)groupUri, (const char *)serverUri, aName, newsgroupResource);
 	if(NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
 
 nsresult
-nsNntpIncomingServer::CreateAndAdd(const char *groupUri, const char *aName, nsIRDFResource *aResource)
+nsNntpIncomingServer::SetNewsgroupPropertiesInSubscribeDS(const char *groupUri, const char *aName, nsIRDFResource *aResource)
 {
 	nsresult rv;
 
 #ifdef DEBUG_sspitzer_
-	printf("CreateAndAdd(%s,%s,??)\n",groupUri,aName);
+	printf("SetNewsgroupPropertiesInSubscribeDS(%s,%s,??)\n",groupUri,aName);
 #endif
 		
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
@@ -605,12 +605,12 @@ nsNntpIncomingServer::CreateAndAdd(const char *groupUri, const char *aName, nsIR
 }
 
 nsresult
-nsNntpIncomingServer::FindParent(const char *groupUri, const char *serverUri, 
+nsNntpIncomingServer::FindParentGroupResource(const char *groupUri, const char *serverUri, 
 								const char *aName, nsIRDFResource *aChildResource)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer_
-	printf("FindParent(%s,%s,%s,??)\n",groupUri,serverUri,aName);
+	printf("FindParentGroupResource(%s,%s,%s,??)\n",groupUri,serverUri,aName);
 #endif
 
 	nsCOMPtr <nsIRDFResource> parentResource;
@@ -638,7 +638,7 @@ nsNntpIncomingServer::FindParent(const char *groupUri, const char *serverUri,
 #endif
 
 		if (!prune) {
-			rv = CreateAndAdd((const char *)groupUriCStr, (const char *)nameCStr, parentResource);
+			rv = SetNewsgroupPropertiesInSubscribeDS((const char *)groupUriCStr, (const char *)nameCStr, parentResource);
 			if(NS_FAILED(rv)) return rv;
 		}
 
@@ -648,7 +648,7 @@ nsNntpIncomingServer::FindParent(const char *groupUri, const char *serverUri,
 
 		// recurse
 		if (!prune) {
-			rv = FindParent((const char *)groupUriCStr, serverUri, (const char *)nameCStr, parentResource);
+			rv = FindParentGroupResource((const char *)groupUriCStr, serverUri, (const char *)nameCStr, parentResource);
 			if(NS_FAILED(rv)) return rv;
 		}
 	}
