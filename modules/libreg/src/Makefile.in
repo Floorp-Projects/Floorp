@@ -32,10 +32,7 @@ LIBRARY_NAME	= mozreg_s
 
 PROGRAM		= vreg$(BIN_SUFFIX)
 
-CSRCS		= reg.c VerReg.c vr_stubs.c
-ifneq ($(OS_ARCH),OS2)
-CSRCS += nr_bufio.c
-endif
+CSRCS		= reg.c VerReg.c vr_stubs.c nr_bufio.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 PROGOBJS        = $(addprefix R_,$(BIN_SRCS:.c=.o))
@@ -46,9 +43,7 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/config.mk
 
-ifneq ($(OS_ARCH),OS2)
 DEFINES         += -DUSE_BUFFERED_REGISTRY_IO	
-endif
 # Memory mapped files are not supported under QNX, Neutrino, HP-UX and BeOS
 #ifeq (,$(filter BeOS HP-UX QNX,$(OS_ARCH)))
 #CSRCS		+= mmapio.c
