@@ -1717,8 +1717,8 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
               found = PR_TRUE;
             else{
               if (aDirection == eDirNext)
-#if 0              {
-
+#if 0              
+	      {
                 result = resultFrame->GetPrevSibling(&child);
               }
               else
