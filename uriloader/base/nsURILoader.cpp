@@ -510,6 +510,17 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
+{
+   NS_ENSURE_TRUE(aLoadCookie, NS_ERROR_INVALID_ARG);
+
+   nsCOMPtr<nsIDocumentLoader> docLoader(do_GetInterface(aLoadCookie));
+   NS_ENSURE_TRUE(docLoader, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(docLoader->Stop(), NS_ERROR_FAILURE);
+   return NS_OK;
+}
+
 NS_IMETHODIMP
 nsURILoader::GetLoadGroupForContext(nsISupports * aWindowContext, nsILoadGroup ** aLoadGroup)
 {
