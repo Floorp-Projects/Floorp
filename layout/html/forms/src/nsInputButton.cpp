@@ -354,25 +354,30 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
 {
-  // let super do processing if there is no image
-  if (kButton_Image != GetButtonType()) {
-    return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext,
-                                          aDirtyRect);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+
+  if (disp->mVisible) {
+    // let super do processing if there is no image
+    if (kButton_Image != GetButtonType()) {
+      return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext,
+                                            aDirtyRect);
+    }
+
+    // First paint background and borders
+    nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+    nsIImage* image = mImageLoader.GetImage();
+    if (nsnull == image) {
+      // No image yet
+      return NS_OK;
+    }
+
+    // Now render the image into our inner area (the area without the
+    nsRect inner;
+    GetInnerArea(&aPresContext, inner);
+    aRenderingContext.DrawImage(image, inner);
   }
-
-  // First paint background and borders
-  nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
-
-  nsIImage* image = mImageLoader.GetImage();
-  if (nsnull == image) {
-    // No image yet
-    return NS_OK;
-  }
-
-  // Now render the image into our inner area (the area without the
-  nsRect inner;
-  GetInnerArea(&aPresContext, inner);
-  aRenderingContext.DrawImage(image, inner);
 
   return NS_OK;
 }

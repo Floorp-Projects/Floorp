@@ -287,7 +287,7 @@ protected:
   virtual PRBool IsFirstPassValid() const;
 
   /** do post processing to setting up style information for the frame */
-  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
   /** Support methods for DidSetStyleContext */
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);

@@ -428,18 +428,23 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
                               const nsRect& aDirtyRect)
 {
   // table paint code is concerned primarily with borders and bg color
-  nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-  nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  NS_ASSERTION(nsnull != myColor, "null style color");
-  NS_ASSERTION(nsnull != mySpacing, "null style spacing");
-  if (nsnull!=mySpacing)
-  {
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, mRect, *myColor);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *mySpacing, 0);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+
+  if (disp->mVisible) {
+    nsStyleColor* myColor =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleSpacing* mySpacing =
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    NS_ASSERTION(nsnull != myColor, "null style color");
+    NS_ASSERTION(nsnull != mySpacing, "null style spacing");
+    if (nsnull!=mySpacing)
+    {
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, mRect, *myColor);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, mRect, *mySpacing, 0);
+    }
   }
 
   // for debug...

@@ -130,16 +130,22 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
 {
-  // Make sure the widget is visible if it isn't currently visible
-  nsIView* view = nsnull;
-  GetView(view);
-  if (nsnull != view) {
-    SetViewVisiblity(&aPresContext, PR_TRUE);
-    NS_RELEASE(view);
-  }
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  // Point borders/padding if any
-  return nsInputFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  if (disp->mVisible) {
+    // Make sure the widget is visible if it isn't currently visible
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull != view) {
+      SetViewVisiblity(&aPresContext, PR_TRUE);
+      NS_RELEASE(view);
+    }
+
+    // Point borders/padding if any
+    return nsInputFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  }
+  return NS_OK;
 }
 
 void

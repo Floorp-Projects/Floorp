@@ -88,7 +88,7 @@ protected:
   virtual void CreatePsuedoFrame(nsIPresContext* aPresContext);
 
   // Subclass hook for style post processing
-  NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void      MapTextAttributes(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
