@@ -132,7 +132,7 @@ class nsWindowEnumerator : public nsISimpleEnumerator {
 
 public:
   nsWindowEnumerator(nsWindowWatcher *inWatcher);
-  ~nsWindowEnumerator();
+  virtual ~nsWindowEnumerator();
   NS_IMETHOD HasMoreElements(PRBool *retval);
   NS_IMETHOD GetNext(nsISupports **retval);
 
@@ -1400,11 +1400,6 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
                                  PRUint32 argc, jsval *argv)
 {
   if (argc == 0)
-    return;
-
-  JSContext *cx = GetExtantJSContext(aWindow);
-  NS_ASSERTION(cx, "window missing JSContext");
-  if (!cx)
     return;
 
   // copy the extra parameters into a JS Array and attach it
