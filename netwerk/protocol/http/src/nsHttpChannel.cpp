@@ -3664,7 +3664,7 @@ nsHttpChannel::SetPriority(PRInt32 value)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::BumpPriority(PRInt32 delta)
+nsHttpChannel::AdjustPriority(PRInt32 delta)
 {
     return SetPriority(mPriority + delta);
 }

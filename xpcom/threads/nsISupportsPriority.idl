@@ -73,5 +73,5 @@ interface nsISupportsPriority : nsISupports
    * reduce the amount of coding required to increment or decrement the value
    * of the priority attribute.
    */
-  void bumpPriority(in long delta);
+  void adjustPriority(in long delta);
 };

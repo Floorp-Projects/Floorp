@@ -305,7 +305,7 @@ nsImageFrame::Init(nsPresContext*  aPresContext,
     // Give image loads associated with an image frame a small priority boost!
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
     if (p)
-      p->BumpPriority(-1);
+      p->AdjustPriority(-1);
   }
 
   if (currentLoadStatus & imgIRequest::STATUS_ERROR) {

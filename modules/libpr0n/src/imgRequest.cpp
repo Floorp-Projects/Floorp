@@ -335,7 +335,7 @@ PRInt32 imgRequest::Priority() const
   return priority;
 }
 
-void imgRequest::BumpPriority(imgRequestProxy *proxy, PRInt32 delta)
+void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
 {
   // only the first proxy is allowed to modify the priority of this image load.
   //
@@ -349,7 +349,7 @@ void imgRequest::BumpPriority(imgRequestProxy *proxy, PRInt32 delta)
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
   if (p)
-    p->BumpPriority(delta);
+    p->AdjustPriority(delta);
 }
 
 /** imgILoad methods **/

@@ -366,14 +366,14 @@ NS_IMETHODIMP imgRequestProxy::GetPriority(PRInt32 *priority)
 NS_IMETHODIMP imgRequestProxy::SetPriority(PRInt32 priority)
 {
   NS_ENSURE_STATE(mOwner);
-  mOwner->BumpPriority(this, priority - mOwner->Priority());
+  mOwner->AdjustPriority(this, priority - mOwner->Priority());
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::BumpPriority(PRInt32 priority)
+NS_IMETHODIMP imgRequestProxy::AdjustPriority(PRInt32 priority)
 {
   NS_ENSURE_STATE(mOwner);
-  mOwner->BumpPriority(this, priority);
+  mOwner->AdjustPriority(this, priority);
   return NS_OK;
 }
 
