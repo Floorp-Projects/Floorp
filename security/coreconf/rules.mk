@@ -384,10 +384,10 @@ $(MAPFILE): $(LIBRARY_NAME).def
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
-	$(MKPROG) $(OBJDIR)/$(PROG_PREFIX)$*$(OBJ_SUFFIX) -Fe$@ -link \
+	$(MKPROG) $< -Fe$@ -link \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 else
-	$(MKPROG) -o $@ $(CFLAGS) $(OBJDIR)/$(PROG_PREFIX)$*$(OBJ_SUFFIX) \
+	$(MKPROG) -o $@ $(CFLAGS) $< \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 endif
 
