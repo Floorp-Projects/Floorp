@@ -80,6 +80,7 @@ CSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		jsautocfg.h \
 		js.msg \
 		jsapi.h \
 		jsarray.h \
@@ -122,8 +123,6 @@ EXPORTS		= \
 		jsxdrapi.h \
 		jsstddef.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 FDLIBM_LIBRARY	= fdlibm/libfdm.$(LIB_SUFFIX)
 JSMATH_PRELINK	= jsmathtemp.o
@@ -321,7 +320,4 @@ else
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
 endif
 endif
-
-export:: jsautocfg.h
-	$(INSTALL) -m 444 $< $(PUBLIC)
 
