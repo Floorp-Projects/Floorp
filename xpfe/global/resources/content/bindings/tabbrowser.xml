@@ -88,7 +88,7 @@
                                 node.removeCurrentTab();">
   
             <xul:tab validate="never" 
-                     onerror="this.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
+                     onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
                      maxwidth="250" width="0" minwidth="30" flex="100000"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
