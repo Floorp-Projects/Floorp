@@ -18,6 +18,7 @@
 
 
 #include "nsEditorUtils.h"
+#include "nsIDOMDocument.h"
 
 
 /******************************************************************************
@@ -43,9 +44,20 @@ nsAutoSelectionReset::~nsAutoSelectionReset()
 {
   if (mSel && mInitialized)
   {
-    // restore original selection
-    mSel->Collapse(mStartNode, mStartOffset);
-    mSel->Extend(mEndNode, mEndOffset);
+    // make sure that mStartNode and mEndNode are still in a document
+    nsCOMPtr<nsIDOMDocument> docStart;
+    nsresult res = mStartNode->GetOwnerDocument(getter_AddRefs(docStart)); 
+    if (NS_SUCCEEDED(res) && docStart)
+    {
+      nsCOMPtr<nsIDOMDocument> docEnd;
+      res = mEndNode->GetOwnerDocument(getter_AddRefs(docEnd)); 
+      if (NS_SUCCEEDED(res) && (docStart == docEnd))
+      {
+        // restore original selection
+        mSel->Collapse(mStartNode, mStartOffset);
+        mSel->Extend(mEndNode, mEndOffset);
+      }
+    }
   }
 }
 
