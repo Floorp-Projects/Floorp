@@ -28,7 +28,26 @@ function SetDocumentCharacterSet(aCharset)
   }
 }
 
-function NavigatorWindow() {}
+function NavigatorWindow()
+{
+	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+	if (!toolkitCore)
+	{
+		toolkitCore = new ToolkitCore();
+		if (toolkitCore)
+		{
+			toolkitCore.Init("ToolkitCore");
+		}
+    }
+
+    if (toolkitCore)
+	{
+      toolkitCore.ShowWindow("resource:/res/samples/navigator.xul",
+                             window);
+    }
+
+
+}
 function MessengerWindow() {}
 function ComposerWindow() {}
 function AIMService() {}

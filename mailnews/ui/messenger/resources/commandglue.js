@@ -118,7 +118,15 @@ function SortThreadPane(column, sortKey)
 	}
 
 	// sort!!!
-    rdfCore.doSort(node, sortKey, "ascending");
+	sortDirection = "ascending";
+    var currentDirection = node.getAttribute('sortDirection');
+    if (currentDirection == "ascending")
+            sortDirection = "descending";
+    else if (currentDirection == "descending")
+            sortDirection = "ascending";
+    else    sortDirection = "ascending";
+
+    rdfCore.doSort(node, sortKey, sortDirection);
 
     return(true);
 

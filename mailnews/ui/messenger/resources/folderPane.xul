@@ -11,6 +11,8 @@
 
 <tree rdf:datasources="rdf:mailnews" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treeitem>
       <treecell>Name</treecell>
