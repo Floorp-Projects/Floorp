@@ -71,7 +71,6 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
-#include "nsIPopUpMenu.h"
 
 #include "nsFormControlHelper.h"
 
