@@ -498,123 +498,6 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 }
 #endif
 
-#if 0
-void
-HTMLContentSink::ReduceEntities(nsString& aString)
-{
-  if (mParser) {
-    nsCOMPtr<nsIDTD> dtd;
-    
-    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
-    
-    if (NS_SUCCEEDED(rv)) {
-
-      // Reduce any entities
-      // XXX Note: as coded today, this will only convert well formed
-      // entities.  This may not be compatible enough.
-      // XXX there is a table in navigator that translates some numeric entities
-      // should we be doing that? If so then it needs to live in two places (bad)
-      // so we should add a translate numeric entity method from the parser...
-      char cbuf[100];
-      PRInt32 i = 0;
-      while ((PRUint32)i < aString.Length()) {
-        // If we have the start of an entity (and it's not at the end of
-        // our string) then translate the entity into it's unicode value.
-        if ((aString.CharAt(i++) == '&') && ((PRUint32)i < aString.Length())) {
-          PRInt32 start = i - 1;
-          PRUnichar e = aString.CharAt(i);
-          if (e == '#') {
-            // Convert a numeric character reference
-            i++;
-            char* cp = cbuf;
-            char* limit = cp + sizeof(cbuf) - 1;
-            PRBool ok = PR_FALSE;
-            PRInt32 slen = aString.Length();
-            while ((i < slen) && (cp < limit)) {
-              e = aString.CharAt(i);
-              if (e == ';') {
-                i++;
-                ok = PR_TRUE;
-                break;
-              }
-              if ((e >= '0') && (e <= '9')) {
-                *cp++ = char(e);
-                i++;
-                continue;
-              }
-              break;
-            }
-            if (!ok || (cp == cbuf)) {
-              continue;
-            }
-            *cp = '\0';
-            if (cp - cbuf > 5) {
-              continue;
-            }
-            PRInt32 ch = PRInt32( ::atoi(cbuf) );
-            if (ch > 65535) {
-              continue;
-            }
-            
-            // Remove entity from string and replace it with the integer
-            // value.
-            aString.Cut(start, i - start);
-            aString.Insert(PRUnichar(ch), start);
-            i = start + 1;
-          }
-          else if (((e >= 'A') && (e <= 'Z')) || ((e >= 'a') && (e <= 'z'))) {
-            // Convert a named entity
-            i++;
-            char* cp = cbuf;
-            char* limit = cp + sizeof(cbuf) - 1;
-            *cp++ = char(e);
-            PRBool ok = PR_FALSE;
-            PRInt32 slen = aString.Length();
-            while ((i < slen) && (cp < limit)) {
-              e = aString.CharAt(i);
-              if (e == ';') {
-                i++;
-                ok = PR_TRUE;
-                break;
-              }
-              if (((e >= '0') && (e <= '9')) ||
-                  ((e >= 'A') && (e <= 'Z')) ||
-                  ((e >= 'a') && (e <= 'z'))) {
-                *cp++ = char(e);
-                i++;
-                continue;
-              }
-              break;
-            }
-            if (!ok || (cp == cbuf)) {
-              continue;
-            }
-            *cp = '\0';
-            PRInt32 ch;
-            nsAutoString str; str.AssignWithConversion(cbuf);
-            dtd->ConvertEntityToUnicode(str, &ch);
-
-            if (ch < 0) {
-              continue;
-            }
-            
-            // Remove entity from string and replace it with the integer
-            // value.
-            aString.Cut(start, i - start);
-            aString.Insert(PRUnichar(ch), start);
-            i = start + 1;
-          }
-          else if (e == '{') {
-            // Convert a script entity
-            // XXX write me!
-          }
-        }
-      }
-    }
-  }
-}
-
-#else
 
 void HTMLContentSink::ReduceEntities(nsString& aString) {
   if (mParser) {
@@ -696,14 +579,19 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
       } //while
 
       if(0<theOutString.Length()) {
+
+        if(theStartPos<theLen) {
+          aString.Mid(theNCRStr,theStartPos,theLen-theStartPos);
+          theOutString.Append(theNCRStr);
+        }
+
         aString=theOutString;
-      }      
+      } 
 
     } //if
   } //if
 }  
 
-#endif
 
 // Temporary factory code to create content objects
 
