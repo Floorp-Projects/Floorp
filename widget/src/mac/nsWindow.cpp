@@ -982,14 +982,11 @@ nsWindow::Flash(nsPaintEvent	&aEvent)
 	if (debug_WantPaintFlashing() && aEvent.rect ) {
 		::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
 	          aEvent.rect->y + aEvent.rect->height );
+		StPortSetter portSetter(mWindowPtr);
+		unsigned long endTicks;
 		::InvertRect ( &flashRect );
-		for (int x = 0; x < 1000000; x++) ;
+		::Delay(10, &endTicks);
 		::InvertRect ( &flashRect );
-		for (int x = 0; x < 1000000; x++) ;    
-		::InvertRect ( &flashRect );
-		for (int x = 0; x < 1000000; x++) ;    
-		::InvertRect ( &flashRect );
-		for (int x = 0; x < 1000000; x++) ;    
 	}
 #endif
 }
