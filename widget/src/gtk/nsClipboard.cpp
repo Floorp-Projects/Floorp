@@ -54,11 +54,6 @@
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
 
-
-#if defined(DEBUG_pavlov)
-#define DEBUG_CLIPBOARD
-#endif
-
 static GdkAtom GDK_SELECTION_CLIPBOARD;
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
