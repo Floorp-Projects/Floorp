@@ -2698,49 +2698,57 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     if (localMessageLine)
         strcpy(localMessageLine,line);
     char *endOfLine = localMessageLine + strlen(localMessageLine);
+    PRBool needDummyEnvelope = PR_FALSE;
+    nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
+    
+    if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
+        msgUrl->GetAddDummyEnvelope(&needDummyEnvelope);
 
 	if (!chunkEnd)
 	{
-#if (MSG_LINEBREAK_LEN == 1)
-		if ((endOfLine - localMessageLine) >= 2 &&
-			 endOfLine[-2] == CR &&
-			 endOfLine[-1] == LF)
+        if (MSG_LINEBREAK_LEN == 1 && needDummyEnvelope)
+        {
+            if ((endOfLine - localMessageLine) >= 2 &&
+                endOfLine[-2] == CR &&
+                endOfLine[-1] == LF)
 			{
-			  /* CRLF -> CR or LF */
-			  endOfLine[-2] = MSG_LINEBREAK[0];
-			  endOfLine[-1] = '\0';
+                /* CRLF -> CR or LF */
+                endOfLine[-2] = MSG_LINEBREAK[0];
+                endOfLine[-1] = '\0';
 			}
-		  else if (endOfLine > localMessageLine + 1 &&
-				   endOfLine[-1] != MSG_LINEBREAK[0] &&
-			   ((endOfLine[-1] == CR) || (endOfLine[-1] == LF)))
+            else if (endOfLine > localMessageLine + 1 &&
+                     endOfLine[-1] != MSG_LINEBREAK[0] &&
+                     ((endOfLine[-1] == CR) || (endOfLine[-1] == LF)))
 			{
-			  /* CR -> LF or LF -> CR */
-			  endOfLine[-1] = MSG_LINEBREAK[0];
+                /* CR -> LF or LF -> CR */
+                endOfLine[-1] = MSG_LINEBREAK[0];
 			}
-		else // no eol characters at all
-		  {
-		    endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
-		    endOfLine[1] = '\0';
-		  }
-#else
-		  if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != CR) ||
-			   ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != LF))
+            else // no eol characters at all
+            {
+                endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
+                endOfLine[1] = '\0';
+            }
+        }
+        else
+        {
+            if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != CR) ||
+                ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != LF))
 			{
-			  if ((endOfLine[-1] == CR) || (endOfLine[-1] == LF))
-			  {
+                if ((endOfLine[-1] == CR) || (endOfLine[-1] == LF))
+                {
 				  /* LF -> CRLF or CR -> CRLF */
-				  endOfLine[-1] = MSG_LINEBREAK[0];
-				  endOfLine[0]  = MSG_LINEBREAK[1];
-				  endOfLine[1]  = '\0';
-			  }
-			  else	// no eol characters at all
-			  {
-				  endOfLine[0] = MSG_LINEBREAK[0];	// CR
-				  endOfLine[1] = MSG_LINEBREAK[1];	// LF
-				  endOfLine[2] = '\0';
+                    endOfLine[-1] = MSG_LINEBREAK[0];
+                    endOfLine[0]  = MSG_LINEBREAK[1];
+                    endOfLine[1]  = '\0';
+                }
+                else	// no eol characters at all
+                {
+                    endOfLine[0] = MSG_LINEBREAK[0];	// CR
+                    endOfLine[1] = MSG_LINEBREAK[1];	// LF
+                    endOfLine[2] = '\0';
 			  }
 			}
-#endif
+        }
 	}
 
 	const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
