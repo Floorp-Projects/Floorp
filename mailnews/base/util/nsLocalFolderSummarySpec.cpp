@@ -20,29 +20,36 @@
 #include "plstr.h"
 #include "nsString.h"
 
+MOZ_DECL_CTOR_COUNTER(nsLocalFolderSummarySpec);
+
 nsLocalFolderSummarySpec::~nsLocalFolderSummarySpec()
 {
+	MOZ_COUNT_DTOR(nsLocalFolderSummarySpec);
 
 }
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec()
 {
+	MOZ_COUNT_CTOR(nsLocalFolderSummarySpec);
 }
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const char *folderPath, PRBool create)
   : nsFileSpec(folderPath, create)
 {
+	MOZ_COUNT_CTOR(nsLocalFolderSummarySpec);
 	CreateSummaryFileName();
 }
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath)
 : nsFileSpec(inFolderPath)
 {
+	MOZ_COUNT_CTOR(nsLocalFolderSummarySpec);
 	CreateSummaryFileName();
 }
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFilePath &inFolderPath, PRBool create) : nsFileSpec(inFolderPath, create)
 {
+	MOZ_COUNT_CTOR(nsLocalFolderSummarySpec);
 	CreateSummaryFileName();
 }
 

@@ -93,11 +93,13 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* partname,
 	return result;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsMsgGroupRecord);
 
 nsMsgGroupRecord::nsMsgGroupRecord(nsMsgGroupRecord* parent, const char* partname,
 								 PRInt64 aTime, PRInt32 uniqueid, PRInt32 fileoffset,
 								 char delimiter /* = '.' */)
 {
+	MOZ_COUNT_CTOR(nsMsgGroupRecord);
 	int length;
 	m_prettyname = NULL;
 	m_parent = parent;
@@ -124,6 +126,7 @@ nsMsgGroupRecord::nsMsgGroupRecord(nsMsgGroupRecord* parent, const char* partnam
 
 nsMsgGroupRecord::~nsMsgGroupRecord()
 {
+	MOZ_COUNT_DTOR(nsMsgGroupRecord);
 	delete [] m_partname;
 	m_partname = NULL;
 	delete [] m_prettyname;

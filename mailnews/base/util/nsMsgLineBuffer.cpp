@@ -22,8 +22,11 @@
 
 #include "nsIInputStream.h" // used by nsMsgLineStreamBuffer
 
+MOZ_DECL_CTOR_COUNTER(nsByteArray);
+
 nsByteArray::nsByteArray()
 {
+	MOZ_COUNT_CTOR(nsByteArray);
 	m_buffer = NULL;
 	m_bufferSize = 0;
 	m_bufferPos = 0;
@@ -31,6 +34,7 @@ nsByteArray::nsByteArray()
 
 nsByteArray::~nsByteArray()
 {
+	MOZ_COUNT_DTOR(nsByteArray);
 	PR_FREEIF(m_buffer);
 }
 
@@ -75,8 +79,11 @@ nsresult nsByteArray::AppendBuffer(const char *buffer, PRUint32 length)
 	return ret;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsMsgLineBuffer);
+
 nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP)
 {
+	MOZ_COUNT_CTOR(nsMsgLineBuffer);
 	m_handler = handler;
 	m_convertNewlinesP = convertNewlinesP;
     m_lookingForCRLF = PR_TRUE;
@@ -84,6 +91,7 @@ nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convert
 
 nsMsgLineBuffer::~nsMsgLineBuffer()
 {
+	MOZ_COUNT_DTOR(nsMsgLineBuffer);
 }
 
 void

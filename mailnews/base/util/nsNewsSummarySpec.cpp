@@ -20,24 +20,35 @@
 #include "plstr.h"
 #include "nsString.h"
 
+MOZ_DECL_CTOR_COUNTER(nsNewsSummarySpec);
+
+nsNewsSummarySpec::~nsNewsSummarySpec()
+{
+	MOZ_COUNT_DTOR(nsNewsSummarySpec);
+}
+
 nsNewsSummarySpec::nsNewsSummarySpec()
 {
+	MOZ_COUNT_CTOR(nsNewsSummarySpec);
 }
 
 nsNewsSummarySpec::nsNewsSummarySpec(const char *folderPath)
   : nsFileSpec(folderPath)
 {
+	MOZ_COUNT_CTOR(nsNewsSummarySpec);
 	CreateSummaryFileName();
 }
 
 nsNewsSummarySpec::nsNewsSummarySpec(const nsFileSpec& inFolderPath)
 : nsFileSpec(inFolderPath)
 {
+	MOZ_COUNT_CTOR(nsNewsSummarySpec);
 	CreateSummaryFileName();
 }
 
 nsNewsSummarySpec::nsNewsSummarySpec(const nsFilePath &inFolderPath) : nsFileSpec(inFolderPath)
 {
+	MOZ_COUNT_CTOR(nsNewsSummarySpec);
 	CreateSummaryFileName();
 }
 

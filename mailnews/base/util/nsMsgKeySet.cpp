@@ -73,10 +73,12 @@
    set holds a cache of the last value asked for, and can simply resume the
    search from there.  */
 
+MOZ_DECL_CTOR_COUNTER(nsMsgKeySet);
 
 
 nsMsgKeySet::nsMsgKeySet(/* MSG_NewsHost* host*/)
 {
+	MOZ_COUNT_CTOR(nsMsgKeySet);
 	m_cached_value = -1;
 	m_cached_value_index = 0;
 	m_length = 0;
@@ -90,6 +92,7 @@ nsMsgKeySet::nsMsgKeySet(/* MSG_NewsHost* host*/)
 
 nsMsgKeySet::~nsMsgKeySet()
 {
+	MOZ_COUNT_DTOR(nsMsgKeySet);
 	PR_FREEIF(m_data);
 }
 

@@ -23,8 +23,11 @@
 #include "nsUInt32Array.h"
 #include "nsQuickSort.h"
 
+MOZ_DECL_CTOR_COUNTER(nsUInt32Array);
+
 nsUInt32Array::nsUInt32Array()
 {
+	MOZ_COUNT_CTOR(nsUInt32Array);
 	m_nSize = 0;
 	m_nMaxSize = 0;
 	m_nGrowBy = 0;
@@ -33,6 +36,7 @@ nsUInt32Array::nsUInt32Array()
 
 nsUInt32Array::~nsUInt32Array()
 {
+	MOZ_COUNT_DTOR(nsUInt32Array);
 	SetSize(0);
 }
 

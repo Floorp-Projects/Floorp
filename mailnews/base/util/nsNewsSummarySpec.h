@@ -34,6 +34,7 @@ public:
   nsNewsSummarySpec(const char *folderPath);
   nsNewsSummarySpec(const nsFileSpec& inFolderPath);
   nsNewsSummarySpec(const nsFilePath &inFolderPath);
+  ~nsNewsSummarySpec();
   void SetFolderName(const char *folderPath);
 
 protected:
