@@ -499,6 +499,9 @@ sub BuildClientDist()
    # find
    InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
+   # bookmarks
+   InstallFromManifest(":mozilla:xpfe:components:bookmarks:public:MANIFEST_IDL",	"$distdirectory:idl:");
+
    # history
    InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
    
@@ -666,7 +669,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
-    BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
+	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
+	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",		"bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
@@ -1007,6 +1011,7 @@ sub MakeResourceAliases()
 		
 	# Install XPFE component resources
 	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
@@ -1161,6 +1166,7 @@ sub BuildXPAppProjects()
 
 	# Components
 	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", "BookmarksComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
