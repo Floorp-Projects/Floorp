@@ -76,7 +76,7 @@ protected:
   nsMathMLChar* mSeparatorsChar;
   PRInt32       mSeparatorsCount;
 
-  // helper routine to format the MathMLChars involved here
+  // helper routines to format the MathMLChars involved here
   static nsresult
   ReflowChar(nsIPresContext*      aPresContext,
              nsIRenderingContext& aRenderingContext,
@@ -90,13 +90,20 @@ protected:
              nsBoundingMetrics&   aContainerSize,
              nsHTMLReflowMetrics& aDesiredSize);
 
+  static void
+  PlaceChar(nsMathMLChar*      aMathMLChar,
+            nscoord            aFontAscent,
+            nscoord            aDesiredAscent,
+            nsBoundingMetrics& bm,
+            nscoord&           dx);
+
   // clean up
   void
   RemoveFencesAndSeparators();
 
   // add fences and separators when all child frames are known
   nsresult
-  ReCreateFencesAndSeparators(nsIPresContext* aPresContext);
+  CreateFencesAndSeparators(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmfencedFrame_h___ */

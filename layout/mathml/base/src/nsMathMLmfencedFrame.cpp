@@ -102,8 +102,7 @@ nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext* aPresContext,
   rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (NS_FAILED(rv)) return rv;
 
-  rv = ReCreateFencesAndSeparators(aPresContext);
-  
+  rv = CreateFencesAndSeparators(aPresContext);  
   return rv;
 }
 
@@ -121,11 +120,9 @@ nsMathMLmfencedFrame::RemoveFencesAndSeparators()
 }
 
 nsresult
-nsMathMLmfencedFrame::ReCreateFencesAndSeparators(nsIPresContext* aPresContext)
+nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
 {
   nsresult rv;
-
-  RemoveFencesAndSeparators();
 
   nsAutoString value, data;
 
@@ -248,6 +245,12 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   /////////////
   // Reflow children
   // Asking each child to cache its bounding metrics
+
+  // Note that we don't use the base method nsMathMLContainerFrame::Reflow()
+  // because we want to stretch our fences, separators and stretchy frames using
+  // the *same* initial aDesiredSize.mBoundingMetrics. If we were to use the base
+  // method here, our stretchy frames will be stretched and placed, and we may
+  // end up stretching our fences/separators with a different aDesiredSize.
 
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
@@ -372,22 +375,12 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   // and update our bounding metrics
 
   i = 0;
-  nscoord dy, dx = 0;
+  nscoord dx = 0;
   nsBoundingMetrics bm;
   PRBool firstTime = PR_TRUE;
   mBoundingMetrics.Clear();
   if (mOpenChar) {
-    mOpenChar->GetBoundingMetrics(bm);
-    mOpenChar->GetRect(rect);
-    dy = aDesiredSize.ascent - rect.y;
-    if (mOpenChar->GetEnum() == eMathMLChar_DONT_STRETCH)
-      dy += (fontAscent - bm.ascent);
-    mOpenChar->SetRect(nsRect(dx + rect.x, dy,
-                              bm.width, rect.height));
-    dx += rect.width;
-
-    bm.descent = (bm.ascent + bm.descent) - rect.y;
-    bm.ascent = rect.y;
+    PlaceChar(mOpenChar, fontAscent, aDesiredSize.ascent, bm, dx);
     mBoundingMetrics = bm;
     firstTime = PR_FALSE;
   }
@@ -409,20 +402,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
       dx += childSize.width;
 
       if (i < mSeparatorsCount) {
-        mSeparatorsChar[i].GetBoundingMetrics(bm);
-        mSeparatorsChar[i].GetRect(rect);
-        dy = aDesiredSize.ascent - rect.y;
-        if (mSeparatorsChar[i].GetEnum() == eMathMLChar_DONT_STRETCH)
-          dy += (fontAscent - bm.ascent);
-        mSeparatorsChar[i].SetRect(nsRect(dx + rect.x, dy, 
-                                          bm.width, rect.height));
-        dx += rect.width;
-
-        bm.descent = (bm.ascent + bm.descent) - rect.y;
-        bm.ascent = rect.y;
-        bm.leftBearing += rect.x;
-        bm.rightBearing += rect.x;
-        bm.width = rect.width;
+        PlaceChar(&mSeparatorsChar[i], fontAscent, aDesiredSize.ascent, bm, dx);
         mBoundingMetrics += bm;
       }
       i++;
@@ -431,18 +411,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   if (mCloseChar) {
-    mCloseChar->GetBoundingMetrics(bm);
-    mCloseChar->GetRect(rect);
-    dy = aDesiredSize.ascent - rect.y;
-    if (mCloseChar->GetEnum() == eMathMLChar_DONT_STRETCH)
-       dy += (fontAscent - bm.ascent);
-    mCloseChar->SetRect(nsRect(dx + rect.x, dy, 
-                               bm.width, rect.height));
-    bm.descent = (bm.ascent + bm.descent) - rect.y;
-    bm.ascent = rect.y;
-    bm.leftBearing += rect.x;
-    bm.rightBearing += rect.x;
-    bm.width = rect.width;
+    PlaceChar(mCloseChar, fontAscent, aDesiredSize.ascent, bm, dx);
     if (firstTime)
       mBoundingMetrics  = bm;
     else  
@@ -465,7 +434,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-// helper function to perform the common task of formatting our chars
+// helper functions to perform the common task of formatting our chars
 nsresult
 nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -493,7 +462,6 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
       nscoord height = charSize.ascent + charSize.descent;
       charSize.ascent = height/2 + axisHeight;
       charSize.descent = height - charSize.ascent;
-
     }
     else {
       charSize.ascent = fontAscent;
@@ -530,6 +498,46 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                 charSize.ascent + charSize.descent));
   }
   return NS_OK;
+}
+
+void
+nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
+                                nscoord            aFontAscent,
+                                nscoord            aDesiredAscent,
+                                nsBoundingMetrics& bm,
+                                nscoord&           dx)
+{
+  aMathMLChar->GetBoundingMetrics(bm);
+
+  // the char's x-origin was used to store lspace ...
+  // the char's y-origin was used to stored the ascent ... 
+  nsRect rect;
+  aMathMLChar->GetRect(rect);
+ 
+  nscoord dy = aDesiredAscent - rect.y;
+  if (aMathMLChar->GetEnum() == eMathMLChar_DONT_STRETCH)
+  {
+    // normal char, nsMathMLChar::Paint() will substract this later
+    dy += (aFontAscent - bm.ascent);
+  }
+  else
+  {
+    // the stretchy char will be centered around the axis
+    // so we adjust the returned bounding metrics accordingly
+    bm.descent = (bm.ascent + bm.descent) - rect.y;
+    bm.ascent = rect.y;
+  }
+
+  aMathMLChar->SetRect(nsRect(dx + rect.x, dy,
+                              bm.width, rect.height));
+
+  bm.leftBearing += rect.x;
+  bm.rightBearing += rect.x;
+  
+  // return rect.width since it includes lspace and rspace
+  bm.width = rect.width;
+
+  dx += rect.width;
 }
 
 // ----------------------
