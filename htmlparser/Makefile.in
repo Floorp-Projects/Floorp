@@ -22,7 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = src robot
+DIRS = src 
+
+ifdef ENABLE_TESTS
+DIRS += robot
+endif
 
 include $(topsrcdir)/config/config.mk
 
