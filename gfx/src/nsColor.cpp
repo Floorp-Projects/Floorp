@@ -43,6 +43,11 @@
 #include "nscore.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
+#include <math.h>
 
 static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
 {
@@ -447,6 +452,38 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
     b = 0;
 
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
+}
+
+
+/* Gamma correction stuff */
+
+PR_IMPLEMENT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
+static double  gammaValue = 2.2;
+
+double NS_DisplayGammaValue(void)
+{
+  return gammaValue;
+}
+
+void NS_InitializeGamma(void)
+{
+  nsresult result;
+
+  nsCOMPtr<nsIScreenManager> screenmgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIScreen> screen;
+    screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+    if (screen)
+      screen->GetGammaValue(&gammaValue);
+  }
+
+  double gamma = 2.2/gammaValue;
+
+  for (int i=0; i<256; i++) {
+    nsGammaRamp[i]        = pow(double(i)/255.0, gamma)   * 255.0 + 0.5;
+    nsInverseGammaRamp[i] = pow(double(i)/255.0, 1/gamma) * 255.0 + 0.5;
+  }
 }
 
 // Function to convert RGB color space into the HSV colorspace

@@ -118,7 +118,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::CommonInit() {
 	float app2dev;
 	mContext->GetAppUnitsToDevUnits(app2dev);
 	mTranMatrix->AddScale(app2dev, app2dev);
-	mContext->GetGammaTable(mGammaTable);
 	return NS_OK;
 }
 
@@ -298,8 +297,10 @@ void nsRenderingContextBeOS::UpdateView() {
 		if (mCurrentFont == nsnull) mCurrentFont = (BFont *)be_plain_font;
 		
 		mView->SetFont(mCurrentFont);
-		mView->SetHighColor(mGammaTable[NS_GET_R(mCurrentColor)],
-			mGammaTable[NS_GET_G(mCurrentColor)], mGammaTable[NS_GET_B(mCurrentColor)], 255);
+		mView->SetHighColor(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor)),
+                        NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
+                        NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)),
+                        255);
 
 		BRegion *region = nsnull;
 		if (mClipRegion) {

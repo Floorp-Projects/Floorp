@@ -1216,10 +1216,12 @@ NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aStrin
 
 void nsRenderingContextPh::UpdateGC()
 {
+        nscolor acolor = NS_GAMMA_CORRECT_COLOR(mCurrentColor);
+
 	PgSetGC(mGC);	/* new */
-	PgSetStrokeColor(NS_TO_PH_RGB(mCurrentColor));
-	PgSetTextColor(NS_TO_PH_RGB(mCurrentColor));
-	PgSetFillColor(NS_TO_PH_RGB(mCurrentColor));
+	PgSetStrokeColor(NS_TO_PH_RGB(acolor));
+	PgSetTextColor(NS_TO_PH_RGB(acolor));
+	PgSetFillColor(NS_TO_PH_RGB(acolor));
 	PgSetStrokeDash(mLineStyle, strlen((char *)mLineStyle), 0x10000);
 	
 //	  valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FUNCTION);

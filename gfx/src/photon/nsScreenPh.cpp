@@ -101,3 +101,13 @@ NS_IMETHODIMP nsScreenPh :: GetAvailRect( PRInt32 *outLeft, PRInt32 *outTop, PRI
   *outHeight = mHeight;
   return NS_OK;
 	}
+
+NS_IMETHODIMP
+nsScreenPh :: GetGammaValue(double *aGammaValue)
+{
+  // XXX - Replace this with code to query the gamma value for your platform
+
+  *aGammaValue = 2.2;
+
+  return NS_OK;
+} // GetGammaValue

@@ -29,6 +29,7 @@
 #include "imgIDecoderObserver.h"
 #include "nsMemory.h"
 #include "prinrval.h"
+#include "nsColor.h"
 
 static void il_mng_timeout_func(nsITimer *timer, void *data);
 
@@ -522,34 +523,8 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
   // pass mng container as user data 
   mHandle = mng_initialize(this, il_mng_alloc, il_mng_free, NULL);
 
-////////////
-// Gamma correction - gross hack, but it's what mozilla's PNG
-//                    decoder does and nobody has complained yet (except
-//                    for me, but the bug is in eternal limbo)
-  double LUT_exponent, CRT_exponent = 2.2, display_exponent;
-
-  /* set up gamma correction for Mac, Unix and (Win32 and everything else)
-   * using educated guesses for display-system exponents; do preferences
-   * later */
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  LUT_exponent = 1.8 / 2.61;
-#elif defined(XP_UNIX)
-# if defined(__sgi)
-  LUT_exponent = 1.0 / 1.7;   /* typical default for SGI console */
-# elif defined(NeXT)
-  LUT_exponent = 1.0 / 2.2;   /* typical default for NeXT cube */
-# else
-    LUT_exponent = 1.0;         /* default for most other Unix workstations */
-# endif
-#else
-    LUT_exponent = 1.0;         /* virtually all PCs and most other systems */
-#endif
-
-  display_exponent = LUT_exponent * CRT_exponent;
   mng_set_dfltimggamma(mHandle, 0.45455);
-  mng_set_displaygamma(mHandle, display_exponent);
-////////////
+  mng_set_displaygamma(mHandle, NS_DisplayGammaValue());
 
   mng_setcb_openstream(mHandle, il_mng_openstream);
   mng_setcb_closestream(mHandle, il_mng_closestream);
@@ -563,7 +538,7 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
   mng_setcb_memalloc(mHandle, il_mng_alloc);
   mng_setcb_memfree(mHandle, il_mng_free);
   mng_set_suspensionmode(mHandle, MNG_TRUE);
-  
+ 
   int ret = mng_readdisplay(mHandle);
   if (ret == MNG_NEEDMOREDATA)
     mResumeNeeded = PR_TRUE;

@@ -32,6 +32,8 @@
 
 #include "imgIContainerObserver.h"
 
+#include "nsColor.h"
+
 #include "nspr.h"
 #include "png.h"
 
@@ -168,7 +170,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   png_uint_32 width, height;
   int bit_depth, color_type, interlace_type, compression_type, filter_type;
   int channels;
-  double LUT_exponent, CRT_exponent = 2.2, display_exponent, aGamma;
+  double aGamma;
 
   png_bytep trans=NULL;
   int num_trans =0;
@@ -201,34 +203,13 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   png_set_bgr(png_ptr);
 #endif
 
-  /* set up gamma correction for Mac, Unix and (Win32 and everything else)
-   * using educated guesses for display-system exponents; do preferences
-   * later */
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  LUT_exponent = 1.8 / 2.61;
-#elif defined(XP_UNIX)
-# if defined(__sgi)
-  LUT_exponent = 1.0 / 1.7;   /* typical default for SGI console */
-# elif defined(NeXT)
-  LUT_exponent = 1.0 / 2.2;   /* typical default for NeXT cube */
-# else
-  LUT_exponent = 1.0;         /* default for most other Unix workstations */
-# endif
-#else
-  LUT_exponent = 1.0;         /* virtually all PCs and most other systems */
-#endif
-
-  /* (alternatively, could check for SCREEN_GAMMA environment variable) */
-  display_exponent = LUT_exponent * CRT_exponent;
-
   if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
       if (aGamma < 0)
           aGamma = 0.45455;
-      png_set_gamma(png_ptr, display_exponent, aGamma);
+      png_set_gamma(png_ptr, NS_DisplayGammaValue(), aGamma);
   }
   else
-      png_set_gamma(png_ptr, display_exponent, 0.45455);
+      png_set_gamma(png_ptr, NS_DisplayGammaValue(), 0.45455);
 
   /* let libpng expand interlaced images */
   if (interlace_type == PNG_INTERLACE_ADAM7) {

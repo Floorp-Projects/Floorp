@@ -762,9 +762,9 @@ NS_IMETHODIMP nsRenderingContextMac::SetColor(nscolor aColor)
 	#define COLOR8TOCOLOR16(color8)	 ((color8 << 8) | color8)
 
 	RGBColor color;
-	color.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
-	color.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
-	color.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
+	color.red   = COLOR8TOCOLOR16(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(aColor)));
+	color.green = COLOR8TOCOLOR16(NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(aColor)));
+	color.blue  = COLOR8TOCOLOR16(NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(aColor)));
 	::RGBForeColor(&color);
 	mGS->mColor = aColor ;
 

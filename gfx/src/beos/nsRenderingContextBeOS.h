@@ -224,7 +224,6 @@ protected:
 	nsCOMPtr<nsIRegion> mClipRegion;
 	nsVoidArray *mStateCache;
 	BView *mView;
-	PRUint8 *mGammaTable;
 	nscolor mCurrentColor;
 	BFont *mCurrentFont;
 	nsLineStyle mCurrentLineStyle;

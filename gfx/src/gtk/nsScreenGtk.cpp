@@ -110,3 +110,28 @@ nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 } // GetColorDepth
 
 
+NS_IMETHODIMP
+nsScreenGtk :: GetGammaValue(double *aGammaValue)
+{
+  // XXX - Add more query options (XSolarisGetVisualGamma, XF86VidModeGetGamma)
+
+#if defined(__sgi)
+  *aGammaValue = 2.2/1.7;
+  FILE *infile = fopen("/etc/config/system.glGammaVal", "r");
+  if (infile) {
+    char tmpline[80];
+
+    fgets(tmpline, sizeof(tmpline), infile);
+    fclose(infile);
+    double sgi_gamma = atof(tmpline);
+    if (sgi_gamma > 0.0)
+      *aGammaValue = 2.2/sgi_gamma;
+  }
+#elif defined(NeXT)
+  *aGammaValue = 1.0;
+#else
+  *aGammaValue = 2.2;
+#endif
+
+  return NS_OK;
+} // GetGammaValue

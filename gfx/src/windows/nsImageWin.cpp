@@ -232,50 +232,6 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 void 
 nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
-  // XXX Any gamma correction should be done in the image library, and not
-  // here...
-#if 0
-  if (aFlags & nsImageUpdateFlags_kColorMapChanged){
-    PRUint8 *gamma = aContext->GetGammaTable();
-
-    if (mColorMap->NumColors > 0){
-      PRUint8* cpointer = mColorTable;
-
-      for(PRInt32 i = 0; i < mColorMap->NumColors; i++){
-        *cpointer++ = gamma[mColorMap->Index[(3 * i) + 2]];
-        *cpointer++ = gamma[mColorMap->Index[(3 * i) + 1]];
-        *cpointer++ = gamma[mColorMap->Index[(3 * i)]];
-        *cpointer++ = 0;
-      }
-    }
-  }else if ((aFlags & nsImageUpdateFlags_kBitsChanged) &&(nsnull != aUpdateRect)){
-    if (0 == mNumPaletteColors){
-      PRInt32 x, y, span = CalcBytesSpan(mBHead->biWidth), idx;
-      PRUint8 *pixels = mImageBits + 
-        (mBHead->biHeight - aUpdateRect->y - aUpdateRect->height) * span + 
-        aUpdateRect->x * 3;
-      PRUint8 *gamma;
-      float    gammaValue;
-      aContext->GetGammaTable(gamma);
-      aContext->GetGamma(gammaValue);
-
-      // Gamma correct the image
-      if (1.0 != gammaValue){
-        for (y = 0; y < aUpdateRect->height; y++){
-          for (x = 0, idx = 0; x < aUpdateRect->width; x++){
-            pixels[idx] = gamma[pixels[idx]];
-            idx++;
-            pixels[idx] = gamma[pixels[idx]];
-            idx++;
-            pixels[idx] = gamma[pixels[idx]];
-            idx++;
-          }
-          pixels += span;
-        }
-      }
-    }
-  }
-#endif
 }
 
 //------------------------------------------------------------

@@ -433,6 +433,11 @@ NS_IMETHODIMP nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
+    // All colors going through gfx for output will be gamma corrected,
+    // so we push system colors through an inverse gamma transform so
+    // they will end up the same (modula rounding errors).
+    aColor = NS_INVERSE_GAMMA_CORRECT_COLOR(aColor);
+
     CACHE_COLOR(aID, aColor);
     return NS_OK;
   }
