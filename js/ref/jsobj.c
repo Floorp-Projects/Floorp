@@ -2451,6 +2451,9 @@ out:
 
 #endif /* JS_HAS_XDR */
 
+/* WIN16 has no stderr! --MLM */
+#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800 
+
 #ifdef DEBUG
 
 /* Routines to print out values during debugging. */
@@ -2506,3 +2509,4 @@ void printAtom(JSAtom *atom) {
 
 #endif
 
+#endif

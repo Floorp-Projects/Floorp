@@ -309,10 +309,10 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
 
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
+    slot = JSVAL_TO_INT(id);
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
 	return JS_FALSE;
-    slot = JSVAL_TO_INT(id);
     if ((size_t)slot >= str->length)
 	return JS_TRUE;
     return str_resolve1(cx, obj, str, slot);

@@ -60,11 +60,11 @@
 static JSBool
 IdIsIndex(jsid id, jsuint *indexp)
 {
-    jsuint i;
     JSString *str;
     jschar *cp;
 
     if (JSVAL_IS_INT(id)) {
+	jsuint i;
         i = JSVAL_TO_INT(id);
         if (i < 0)
             return JS_FALSE;
