@@ -451,7 +451,8 @@ dnl ========================================================
 case "$target" in
 *-aix*)
     if test ! "$GNU_CC"; then
-	DSO_LDOPTS='-ldl -bM:SRE -p1 -brtl -bso -bexpall -bnoentry'
+	# DSO_LDOPTS='-ldl -bM:SRE -p1 -brtl -bso -bexpall -bnoentry'
+	DSO_LDOPTS='-ldl -p1 -brtl -bso'
 	DSO_CFLAGS='-qflag=w:w'
 	DSO_PIC_CFLAGS='-DPIC'
     fi
