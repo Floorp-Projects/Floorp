@@ -174,6 +174,7 @@ nsIAtom* nsHTMLAtoms::selected;
 nsIAtom* nsHTMLAtoms::selectedindex;
 nsIAtom* nsHTMLAtoms::shape;
 nsIAtom* nsHTMLAtoms::size;
+nsIAtom* nsHTMLAtoms::spacer;
 nsIAtom* nsHTMLAtoms::span;
 nsIAtom* nsHTMLAtoms::src;
 nsIAtom* nsHTMLAtoms::standby;
@@ -367,6 +368,7 @@ void nsHTMLAtoms::AddrefAtoms()
     selectedindex = NS_NewAtom("SELECTEDINDEX");
     shape = NS_NewAtom("SHAPE");
     size = NS_NewAtom("SIZE");
+    spacer = NS_NewAtom("SPACER");
     span = NS_NewAtom("SPAN");
     src = NS_NewAtom("SRC");
     standby = NS_NewAtom("STANDBY");
@@ -552,6 +554,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(selectedindex);
     NS_RELEASE(shape);
     NS_RELEASE(size);
+    NS_RELEASE(spacer);
     NS_RELEASE(span);
     NS_RELEASE(src);
     NS_RELEASE(standby);
