@@ -161,6 +161,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mTabTheme = NULL;
   mTreeViewTheme = NULL;
   mComboBoxTheme = NULL;
+  mHeaderTheme = NULL;
 
   mThemeDLL = ::LoadLibrary(kThemeLibraryName);
   if (mThemeDLL) {
@@ -284,11 +285,15 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mComboBoxTheme = openTheme(NULL, L"Combobox");
       return mComboBoxTheme;
     }
+    case NS_THEME_TREEVIEW_HEADER_CELL:
+    case NS_THEME_TREEVIEW_HEADER_SORTARROW: {
+      if (!mHeaderTheme)
+        mHeaderTheme = openTheme(NULL, L"Header");
+      return mHeaderTheme;
+    }
     case NS_THEME_LISTBOX:
     case NS_THEME_LISTBOX_LISTITEM:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_TREEVIEW_HEADER:
-    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     case NS_THEME_TREEVIEW_TWISTY_OPEN:
     case NS_THEME_TREEVIEW_TREEITEM: {
       if (!mTreeViewTheme)
@@ -673,6 +678,31 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       
       return NS_OK;
     }
+    case NS_THEME_TREEVIEW_HEADER_SORTARROW: {
+      // XXX Probably will never work due to a bug in the Luna theme.
+      aPart = 4;
+      aState = 1;
+      return NS_OK;
+    }
+    case NS_THEME_TREEVIEW_HEADER_CELL: {
+      aPart = 1;
+      if (!aFrame) {
+        aState = TS_NORMAL;
+        return NS_OK;
+      }
+      
+      PRInt32 eventState = GetContentState(aFrame);
+      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+        aState = TS_ACTIVE;
+      else if (eventState & NS_EVENT_STATE_FOCUS)
+        aState = TS_FOCUSED;
+      else if (eventState & NS_EVENT_STATE_HOVER)
+        aState = TS_HOVER;
+      else 
+        aState = TS_NORMAL;
+      
+      return NS_OK;
+    }
     case NS_THEME_DROPDOWN_BUTTON: {
       aPart = CBP_DROPMARKER;
       if (!aFrame) {
@@ -858,11 +888,12 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
                  // themes.
                  // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
-
+  
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
   aResult->width = sz.cx;
   aResult->height = sz.cy;
+
   return NS_OK;
 }
 
@@ -952,6 +983,10 @@ nsNativeThemeWin::CloseData()
   if (mComboBoxTheme) {
     closeTheme(mComboBoxTheme);
     mComboBoxTheme = NULL;
+  }
+  if (mHeaderTheme) {
+    closeTheme(mHeaderTheme);
+    mHeaderTheme = NULL;
   }
 }
 

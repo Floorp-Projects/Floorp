@@ -38,6 +38,7 @@ tree {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
+  -moz-appearance: listbox;
 }
 
 /* ::::: tree rows ::::: */
@@ -137,6 +138,7 @@ treechildren:-moz-tree-cell-text(progressmeter) {
 
 treecol,
 treecolpicker { 
+  -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;
