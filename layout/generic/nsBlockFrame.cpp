@@ -555,9 +555,11 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
 {
   // The issue here is that for a 'height' of 'auto' the reflow state
   // code won't know how to calculate the containing block height
-  // because it's calculated bottom up. We don't really want to do
-  // this for the initial containing block.
-  if (nsLayoutUtils::IsInitialContainingBlock(aReflowState.frame)) {
+  // because it's calculated bottom up. So we use our own computed
+  // size as the dimensions. We don't really want to do this for the
+  // initial containing block
+  nsIFrame* frame = aReflowState.frame;
+  if (nsLayoutUtils::IsInitialContainingBlock(frame)) {
     return nsSize(-1, -1);
   }
 
@@ -569,6 +571,35 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
   }
   cbSize.width -= border.left + border.right;
   cbSize.height -= border.top + border.bottom;
+
+  if (frame->GetParent()->GetContent() == frame->GetContent()) {
+    // We are a wrapped frame for the content. Use the container's
+    // dimensions, if they have been precomputed.
+    // XXX This is a hack! We really should be waiting until the outermost
+    // frame is fully reflowed and using the resulting dimensions, even
+    // if they're intrinsic.
+    // In fact we should be attaching absolute children to the outermost
+    // frame and not always sticking them in block frames.
+
+    // First, find the reflow state for the outermost frame for this
+    // content.
+    const nsHTMLReflowState* aLastRS = &aReflowState;
+    while (aLastRS->parentReflowState &&
+           aLastRS->parentReflowState->frame->GetContent() == frame->GetContent()) {
+      aLastRS = aLastRS->parentReflowState;
+    }
+    if (aLastRS != &aReflowState) {
+      // We found a reflow state for the outermost wrapping frame, so use
+      // its computed metrics if available
+      if (aLastRS->mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+        cbSize.width = aLastRS->mComputedWidth;
+      }
+      if (aLastRS->mComputedHeight != NS_UNCONSTRAINEDSIZE) {
+        cbSize.height = aLastRS->mComputedHeight;
+      }
+    }
+  }
+
   return cbSize;
 }
 
