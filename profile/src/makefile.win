@@ -53,7 +53,7 @@ LINCS = -I$(PUBLIC)/js \
         -I$(DEPTH)\include \
     -I$(PUBLIC)/libreg \
 
-LCFLAGS = -DMOZILLA_CLIENT
+LCFLAGS = -DMOZILLA_CLIENT -DNECKO
 
 # I'm hardcoding the directory name here to fix MOZ_LITE
 # it was $(DIST_PREFIX) instead of WIN, which is the same
