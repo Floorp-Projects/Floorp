@@ -1009,7 +1009,9 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         if(!treeItem)
             *aResult = this;
     }
-    else if(name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main"))
+    // _main is an IE target which should be case-insensitive but isn't
+    // see bug 217886 for details
+    else if(name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main")))
     {
         if (mTreeOwner) {
             mTreeOwner->FindItemWithName(name.get(), nsnull, 
@@ -4978,8 +4980,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         //
         if (mUseExternalProtocolHandler && aLoadType == LOAD_LINK) {
             // don't do it for javascript urls!
+            // _main is an IE target which should be case-insensitive but isn't
+            // see bug 217886 for details            
             if (!bIsJavascript &&
-                (name.EqualsIgnoreCase("_content") || name.EqualsIgnoreCase("_main") ||
+                (name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main")) ||
                  name.EqualsIgnoreCase("_blank"))) 
             {
                 nsCOMPtr<nsIExternalProtocolService> extProtService;
@@ -5020,10 +5024,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     name.EqualsIgnoreCase("_new")) {
                     name.Assign(NS_LITERAL_STRING("_top"));
                 }
+                // _main is an IE target which should be case-insensitive but isn't
+                // see bug 217886 for details
                 else if (!name.EqualsIgnoreCase("_parent") &&
                          !name.EqualsIgnoreCase("_self") &&
                          !name.EqualsIgnoreCase("_content") &&
-                         !name.EqualsIgnoreCase("_main")) {
+                         !name.Equals(NS_LITERAL_STRING("_main"))) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
                                      NS_STATIC_CAST(nsIInterfaceRequestor *, this),
