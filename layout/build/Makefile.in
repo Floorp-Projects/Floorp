@@ -52,11 +52,8 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libraptorxulcontent_s.a \
 		$(DIST)/lib/libraptorxulbase_s.a \
 		$(DIST)/lib/libraptorlayout_s.a \
+		$(DIST)/lib/libneckoutil_s.a \
 		$(NULL)
-
-ifdef NECKO
-SHARED_LIBRARY_LIBS += $(DIST)/lib/libneckoutil_s.a
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \

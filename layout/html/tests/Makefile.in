@@ -32,29 +32,7 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../style/src
 
-ifndef NECKO
-NET_LIBS	= \
-		-lpwcac \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lnetcnvts \
-		-labouturl \
-		-lhttpurl \
-		-lmimetype \
-		-lnetcache \
-		-lnetlib \
-		-lnetwork \
-		-lsockstuburl \
-		$(NULL)
-else
-NET_LIBS = \
-		$(DIST)/lib/libneckoutil_s.a \
-		$(NULL)
-endif
-
-GECKO_LIBS = \
+LIBS		= \
 		$(DIST)/lib/libraptorhtmlbase_s.a \
 		$(DIST)/lib/libnglhtmlcon_s.a \
 		$(DIST)/lib/libraptorhtmldoc_s.a \
@@ -62,16 +40,12 @@ GECKO_LIBS = \
 		$(DIST)/lib/libraptorhtmltable_s.a \
 		$(DIST)/lib/libraptorlayout_s.a \
 		$(DIST)/lib/libraptorevents_s.a \
-		$(NULL)
-
-LIBS		= \
-		$(GECKO_LIBS) \
 		-lmozjs \
 		-lraptorgfx \
 		-lxpcom \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
-		$(NET_LIBS) \
+		$(DIST)/lib/libneckoutil_s.a \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -22,43 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+LIBRARY_NAME	= DebugRobot
+
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
 
-include $(topsrcdir)/config/config.mk
-
-ifndef NECKO
-PROGRAM		= htmlrobot
-else
-LIBRARY_NAME	= DebugRobot
-endif
-
-ifndef NECKO
-LIBS		= \
-		-lnetlib \
-		-lftpurl \
-		-lfileurl \
-		-labouturl \
-		-lgophurl \
-		-lremoturl \
-		-lnetcnvts \
-		-lnetwork \
-		-lsockstuburl \
-		-lmimetype \
-		-lnetcache \
-		-lhttpurl \
-		-lpwcac \
-		-lmozjs \
-		-lxpcom \
-		$(MOZ_TIMER_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
-
-# Needed to resolve __yylex (?)
-ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
-LIBS		+= -lpcap
-endif
-
-else
+ifdef ENABLE_TESTS
 DIRS		= test
 endif
 
