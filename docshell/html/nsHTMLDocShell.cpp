@@ -283,7 +283,7 @@ NS_IMETHODIMP nsHTMLDocShell::SizeToContent()
  */
 NS_IMETHODIMP nsHTMLDocShell::SelectAll()
 {
-   NS_ENSURE_STATE(mDocument && mPresShell);
+   NS_ENSURE_STATE(mPresShell);
 /*  XXX Implement - There is something not quite right with the objects
    being retrieved.  bodyNode isn't defined and bodyElement isn't used
    and nor is node.
@@ -298,7 +298,10 @@ NS_IMETHODIMP nsHTMLDocShell::SelectAll()
    nsCOMPtr<nsIDOMElement> bodyElement;
    nsAutoString bodyTag = "body";
 
-   NS_ENSURE_SUCCESS(mDocument->GetElementsByTagName(bodyTag, 
+   nsCOMPtr<nsIDOMDocument> document;
+   NS_ENSURE_SUCCESS(GetDocument(getter_AddRefs(document)), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(document->GetElementsByTagName(bodyTag, 
       getter_AddRefs(nodeList)), NS_ERROR_FAILURE);
    NS_ENSURE(nodeList, NS_OK); // this means the document has no body, so nothing to select
 
