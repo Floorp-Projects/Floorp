@@ -46,12 +46,10 @@
 #include "nsIProxyObjectManager.h"
 
 PYXPCOM_EXPORT PyObject *PyXPCOM_Error = NULL;
-extern void PyXPCOM_InterpreterState_Ensure();
 extern PRInt32 _PyXPCOM_GetGatewayCount(void);
 extern PRInt32 _PyXPCOM_GetInterfaceCount(void);
 
 extern void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
-extern void PyXPCOM_InterpreterState_Ensure();
 
 #ifdef XP_WIN
 // Can only assume dynamic loading on Windows.
@@ -430,11 +428,17 @@ static struct PyMethodDef xpcom_methods[]=
 ////////////////////////////////////////////////////////////
 // Other helpers/global functions.
 //
+#ifndef PYXPCOM_USE_PYGILSTATE
+extern void PyXPCOM_InterpreterState_Ensure();
+#endif
+
 PRBool PyXPCOM_Globals_Ensure()
 {
 	PRBool rc = PR_TRUE;
 
+#ifndef PYXPCOM_USE_PYGILSTATE
 	PyXPCOM_InterpreterState_Ensure();
+#endif
 
 	// The exception object - we load it from .py code!
 	if (PyXPCOM_Error == NULL) {
