@@ -282,16 +282,16 @@ NS_SetupRegistry()
 
 #ifdef NS_DEBUG
   printf("NS_SetupRegistry() MOZ_TOOLKIT=%s, WIDGET_DLL=%s, GFX_DLL=%s\n",
-         (const char *) nsAutoCString(unixToolkitName),
-         (const char *) nsAutoCString(unixWidgetDllName),
-         (const char *) nsAutoCString(unixGfxDllName));
+         (const char *) nsCAutoString(unixToolkitName),
+         (const char *) nsCAutoString(unixWidgetDllName),
+         (const char *) nsCAutoString(unixGfxDllName));
 #endif
   
 #undef WIDGET_DLL
 #undef GFXWIN_DLL
 
-#define WIDGET_DLL (const char *) nsAutoCString(unixWidgetDllName)
-#define GFXWIN_DLL (const char *) nsAutoCString(unixGfxDllName)
+#define WIDGET_DLL (const char *) nsCAutoString(unixWidgetDllName)
+#define GFXWIN_DLL (const char *) nsCAutoString(unixGfxDllName)
 
 #endif /* defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT) */
 
