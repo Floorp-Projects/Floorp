@@ -298,12 +298,17 @@ function setInitialSort(node, sortDirection)
 	var sortResource = node.getAttribute('resource');
 	if (!sortResource) return(false);
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
-	if (!isupports)    return(false);
-	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
-	if (!xulSortService)    return(false);
-	xulSortService.Sort(node, sortResource, sortDirection);
-
+	try
+	{
+		var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+		if (!isupports)    return(false);
+		var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+		if (!xulSortService)    return(false);
+		xulSortService.Sort(node, sortResource, sortDirection);
+	}
+	catch(ex)
+	{
+	}
 	return(true);
 }
 
