@@ -54,132 +54,6 @@ import java.lang.reflect.*;
 
 public class NativeJavaPackage extends ScriptableObject {
 
-    // we know these are packages so we can skip the class check
-    // note that this is ok even if the package isn't present.
-    private static final String commonPackages = ""
-                                                 +"java.lang;"
-                                                 +"java.lang.reflect"
-                                                 +"java.io;"
-                                                 +"java.math;"
-                                                 +"java.net;"
-                                                 +"java.util;"
-                                                 +"java.util.zip;"
-                                                 +"java.text;"
-                                                 +"java.text.resources;"
-                                                 +"java.applet;"
-                                                 +"javax.swing;"
-                                                 ;
-
-    public static class TopLevelPackage extends NativeJavaPackage
-                                        implements Function
-    {
-        public TopLevelPackage() {
-            super("");
-        }
-
-        public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                           Object[] args)
-            throws JavaScriptException
-        {
-            return construct(cx, scope, args);
-        }
-
-        public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-            throws JavaScriptException
-        {
-            ClassLoader loader = getClassLoaderFromArgs(args);
-            if (loader == null) {
-                Context.reportRuntimeError0("msg.not.classloader");
-                return null;
-            }
-            return new NativeJavaPackage("", loader);
-        }
-
-        private ClassLoader getClassLoaderFromArgs(Object[] args) {
-            if (args.length < 1) {
-                return null;
-            }
-            Object arg = args[0];
-            if (arg instanceof Wrapper) {
-                arg = ((Wrapper)arg).unwrap();
-            }
-            if (!(arg instanceof ClassLoader)) {
-                return null;
-            }
-            return (ClassLoader) arg;
-        }
-
-    }
-    public static Scriptable init(Scriptable scope)
-        throws PropertyException
-    {
-        final NativeJavaPackage packages = new TopLevelPackage();
-        packages.setPrototype(getObjectPrototype(scope));
-        packages.setParentScope(scope);
-
-        // We want to get a real alias, and not a distinct JavaPackage
-        // with the same packageName, so that we share classes and packages
-        // that are underneath.
-        NativeJavaPackage javaAlias = (NativeJavaPackage)packages.get("java",
-                                                                      packages);
-
-        for (int nameStart = 0; ;) {
-            int nameEnd = commonPackages.indexOf(';', nameStart);
-            if (nameEnd < 0) { break; }
-            String packageName = commonPackages.substring(nameStart, nameEnd);
-            packages.forcePackage(packageName);
-            nameStart = nameEnd + 1;
-        }
-
-        JIFunction getClass = new JIFunction("getClass", 1) {
-            public Object call(Context fcx, Scriptable fscope,
-                               Scriptable thisObj, Object[] args)
-            {
-                return js_getClass(fcx, fscope, packages, args);
-            }
-        };
-
-        // It's safe to downcast here since initStandardObjects takes
-        // a ScriptableObject.
-        ScriptableObject global = (ScriptableObject) scope;
-
-        getClass.defineAsProperty(global, ScriptableObject.DONTENUM);
-        global.defineProperty("Packages", packages, ScriptableObject.DONTENUM);
-        global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
-
-        // I think I'm supposed to return the prototype, but I don't have one.
-        return packages;
-    }
-
-    // set up a name which is known to be a package so we don't
-    // need to look for a class by that name
-    void forcePackage(String name) {
-        NativeJavaPackage pkg;
-        int end = name.indexOf('.');
-        if (end == -1)
-            end = name.length();
-
-        String id = name.substring(0, end);
-        Object cached = super.get(id, this);
-        if (cached != null && cached instanceof NativeJavaPackage) {
-            pkg = (NativeJavaPackage) cached;
-        } else {
-            String newPackage = packageName.length() == 0
-                                ? id
-                                : packageName + "." + id;
-            pkg = new NativeJavaPackage(newPackage, classLoader);
-            pkg.setParentScope(this);
-            pkg.setPrototype(this.prototype);
-            super.put(id, this, pkg);
-        }
-        if (end < name.length())
-            pkg.forcePackage(name.substring(end+1));
-    }
-
-    public NativeJavaPackage(String packageName) {
-        this(packageName, null);
-    }
-
     public NativeJavaPackage(String packageName, ClassLoader classLoader) {
         this.packageName = packageName;
         this.classLoader = classLoader;
@@ -213,6 +87,34 @@ public class NativeJavaPackage extends ScriptableObject {
         return NOT_FOUND;
     }
 
+    // set up a name which is known to be a package so we don't
+    // need to look for a class by that name
+    void forcePackage(String name)
+    {
+        NativeJavaPackage pkg;
+        int end = name.indexOf('.');
+        if (end == -1) {
+            end = name.length();
+        }
+
+        String id = name.substring(0, end);
+        Object cached = super.get(id, this);
+        if (cached != null && cached instanceof NativeJavaPackage) {
+            pkg = (NativeJavaPackage) cached;
+        } else {
+            String newPackage = packageName.length() == 0
+                                ? id
+                                : packageName + "." + id;
+            pkg = new NativeJavaPackage(newPackage, classLoader);
+            pkg.setParentScope(this);
+            pkg.setPrototype(this.prototype);
+            super.put(id, this, pkg);
+        }
+        if (end < name.length()) {
+            pkg.forcePackage(name.substring(end+1));
+        }
+    }
+
     synchronized Object getPkgProperty(String name, Scriptable start,
                                        boolean createPkg)
     {
@@ -220,14 +122,18 @@ public class NativeJavaPackage extends ScriptableObject {
         if (cached != NOT_FOUND)
             return cached;
 
-        String newPackage = packageName.length() == 0
-                            ? name
-                            : packageName + '.' + name;
+        String className = (packageName.length() == 0)
+                               ? name : packageName + '.' + name;
         Context cx = Context.getContext();
         ClassShutter shutter = cx.getClassShutter();
         Scriptable newValue = null;
-        if (shutter == null || shutter.visibleToScripts(newPackage)) {
-            Class cl = findClass(cx, newPackage);
+        if (shutter == null || shutter.visibleToScripts(className)) {
+            Class cl = null;
+            if (classLoader != null) {
+                cl = ScriptRuntime.classOrNull(classLoader, className);
+            } else {
+                cl = ScriptRuntime.classOrNull(className);
+            }
             if (cl != null) {
                 newValue = new NativeJavaClass(getTopLevelScope(this), cl);
                 newValue.setParentScope(this);
@@ -235,7 +141,7 @@ public class NativeJavaPackage extends ScriptableObject {
             }
         }
         if (newValue == null && createPkg) {
-            NativeJavaPackage pkg = new NativeJavaPackage(newPackage,
+            NativeJavaPackage pkg = new NativeJavaPackage(className,
                                                           classLoader);
             pkg.setParentScope(this);
             pkg.setPrototype(this.prototype);
@@ -255,49 +161,6 @@ public class NativeJavaPackage extends ScriptableObject {
 
     public String toString() {
         return "[JavaPackage " + packageName + "]";
-    }
-
-    static final Scriptable js_getClass(Context cx, Scriptable scope,
-                                        NativeJavaPackage top, Object[] args)
-    {
-        if (args.length > 0  && args[0] instanceof Wrapper) {
-            Scriptable result = top;
-            Class cl = ((Wrapper) args[0]).unwrap().getClass();
-            // Evaluate the class name by getting successive properties of
-            // the string to find the appropriate NativeJavaClass object
-            String name = cl.getName();
-            int offset = 0;
-            for (;;) {
-                int index = name.indexOf('.', offset);
-                String propName = index == -1
-                                  ? name.substring(offset)
-                                  : name.substring(offset, index);
-                Object prop = result.get(propName, result);
-                if (!(prop instanceof Scriptable))
-                    break;  // fall through to error
-                result = (Scriptable) prop;
-                if (index == -1)
-                    return result;
-                offset = index+1;
-            }
-        }
-        throw Context.reportRuntimeError(
-            Context.getMessage0("msg.not.java.obj"));
-    }
-
-    private Class findClass(Context cx, String className)
-    {
-        Class cl = null;
-        ClassLoader loader = classLoader;
-        if (loader == null) {
-            loader = cx.getApplicationClassLoader();
-        }
-        if (loader != null) {
-            cl = ScriptRuntime.classOrNull(loader, className);
-        } else {
-            cl = ScriptRuntime.classOrNull(className);
-        }
-        return cl;
     }
 
     private String packageName;

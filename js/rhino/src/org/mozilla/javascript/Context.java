@@ -722,15 +722,15 @@ public class Context {
         // This creates the Packages and java package roots.
         new LazilyLoadedCtor(scope,
                              "Packages",
-                             "org.mozilla.javascript.NativeJavaPackage",
+                             "org.mozilla.javascript.NativeJavaTopPackage",
                              sealed);
         new LazilyLoadedCtor(scope,
                              "java",
-                             "org.mozilla.javascript.NativeJavaPackage",
+                             "org.mozilla.javascript.NativeJavaTopPackage",
                              sealed);
         new LazilyLoadedCtor(scope,
                              "getClass",
-                             "org.mozilla.javascript.NativeJavaPackage",
+                             "org.mozilla.javascript.NativeJavaTopPackage",
                              sealed);
 
         // Define the JavaAdapter class, allowing it to be overridden.
