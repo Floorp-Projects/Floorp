@@ -385,7 +385,9 @@ static const char kDOMStringBundleURL[] =
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
    nsIXPCScriptable::WANT_PRECREATE |                                         \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
-   nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
+   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
+   nsIXPCScriptable::WANT_FINALIZE |                                          \
+   nsIXPCScriptable::WANT_MARK) &                                             \
   ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
 
 // We need to let JavaScript QI elements to interfaces that are not in
@@ -3724,12 +3726,12 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // that's the case). If *vp is a window object (i.e. a child
       // frame), return without doing a security check.
 
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
       sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
-                                             getter_AddRefs(wrapper));
+                                             getter_AddRefs(vpwrapper));
 
-      if (wrapper) {
-        nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(wrapper));
+      if (vpwrapper) {
+        nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(vpwrapper));
 
         if (window) {
           // Yup, *vp is a window object, return early (*vp is already
@@ -4259,6 +4261,365 @@ nsDOMClassInfo::InitDOMJSClass(JSContext *cx, JSObject *obj)
   return NS_OK;
 }
 
+/*
+ * The problem of how to deal with garbage collection in a system where:
+ *  1. the GC runtime contains lazily-created wrappers for other data
+ *     structures not participating in the GC,
+ *  2. where those data structures are reachable from each other in a
+ *     way that is reflected through the wrappers, and
+ *  3. where the wrappers can carry additional information that is not
+ *     in the wrapped object
+ * is a difficult one.  XPConnect is such a system.  It creates wrappers
+ * around native objects that do not participate in the JS GC and which
+ * are reachable from each other outside of the knowledge of the JS
+ * engine (but through getters or functions that are accessible to JS
+ * users) and it allows these wrappers to be decorated with JS
+ * properties.  It is worth noting one very important use case for our
+ * toolkit:  XBL, which uses JS properties on the bound element for
+ * storing fields.
+ *
+ * For DOM nodes, compatibility with behavior in other browsers requires
+ * that we preserve JS properties on wrappers across garbage collection.
+ * To do this in a way that the garbage collector is still effective, we
+ * have to incorporate knowledge of reachability in the underlying
+ * (wrapped) data structures into the garbage collector's mark phase.
+ *
+ * See https://bugzilla.mozilla.org/show_bug.cgi?id=283129 for more details.
+ */
+
+#if defined(DEBUG_dbaron) || defined(DEBUG_jst)
+#define DEBUG_PRESERVE_WRAPPERS
+#endif
+
+/**
+ * Every XPConnect wrapper that needs to be preserved (because it has JS
+ * properties set on it) as long as the element it wraps is reachable
+ * from script (via JS or via DOM APIs accessible from JS) gets an entry
+ * in this table.
+ */
+static PLDHashTable sPreservedWrapperTable;
+
+struct PreservedWrapperEntry : public PLDHashEntryHdr {
+  nsIDOMNode* key; // must be first to line up with PLDHashEntryStub
+  nsIXPConnectWrappedNative *wrapper;
+
+  // See |WrapperSCCEntry::first|.  Valid only during mark phase of GC.
+  PreservedWrapperEntry *next;
+};
+
+/**
+ * During the Mark phase of the GC, we need to mark all of the preserved
+ * wrappers that are reachable via DOM APIs.  Since reachability for DOM
+ * nodes is symmetric, if one DOM node is reachable from another via DOM
+ * APIs, then they are in the same strongly connected component.
+ * (Strongly connected components are never reachable from each other
+ * via DOM APIs.)  We can refer to each strongly connected component by
+ * walking up to the top of the parent chain.  This function finds that
+ * root node for any DOM node.
+ */
+static nsIDOMNode* GetSCCRootFor(nsIDOMNode *aDOMNode)
+{
+  nsCOMPtr<nsIDOMNode> cur(aDOMNode), next;
+#ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
+  nsCOMArray<nsIDOMNode> stack;
+#endif
+  for (;;) {
+#ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
+    stack.AppendObject(cur);
+#endif
+    cur->GetParentNode(getter_AddRefs(next));
+    if (!next) {
+#ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
+      PRUint16 nodeType;
+      cur->GetNodeType(&nodeType);
+      if (nodeType != nsIDOMNode::DOCUMENT_NODE) {
+        printf("    non-document root:");
+        nsAutoString nodeName;
+        for (PRInt32 i = stack.Count() - 1; i >= 0; --i) {
+          stack[i]->GetNodeName(nodeName);
+          printf(" > %s", NS_ConvertUTF16toUTF8(nodeName).get());
+          stack[i]->GetNodeType(&nodeType);
+          if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+            nsCOMPtr<nsIContent> content = do_QueryInterface(stack[i]);
+            for (PRInt32 j = 0, j_end = content->GetAttrCount(); j < j_end; ++j) {
+              PRInt32 namespaceID;
+              nsCOMPtr<nsIAtom> name, prefix;
+              content->GetAttrNameAt(j, &namespaceID, getter_AddRefs(name),
+                                     getter_AddRefs(prefix));
+              nsAutoString val;
+              nsCAutoString atomStr;
+              content->GetAttr(namespaceID, name, val);
+              printf("[");
+              if (prefix) {
+                prefix->ToUTF8String(atomStr);
+                printf("%s:", atomStr.get());
+              }
+              name->ToUTF8String(atomStr);
+              printf("%s=\"%s\"]", atomStr.get(), NS_ConvertUTF16toUTF8(val).get());
+            }
+          }
+        }
+        printf("\n");
+      }
+#endif
+      return cur;
+    }
+    next.swap(cur);
+  }
+}
+
+/**
+ * At the beginning of the mark phase of the GC, we sort all the
+ * wrappers into their strongly connected components.  We maintain this
+ * information for the duration of the mark phase, during which time
+ * |sWrapperSCCTable| maps the SCC roots to a list of the wrappers in
+ * the SCC.  This allows the mark callback for any wrapper (preserved or
+ * not) to quickly mark all of the preserved wrappers in its SCC.
+ *
+ * Many of these roots are documents.  We know that a document will be
+ * marked if it is still being displayed since the document is reachable
+ * by a JS property on the global object.
+ */
+static PLDHashTable sWrapperSCCTable;
+
+// If we run out of memory constructing sWrapperSCCTable, its |ops|
+// member holds this value for the remainder of that GC cycle.
+#define WRAPPER_SCC_OPS_OOM_MARKER ((PLDHashTableOps*)1)
+
+struct WrapperSCCEntry : public PLDHashEntryHdr {
+  // This could probably be a weak pointer (which would avoid the
+  // need for hash table ops), but it seems safer this way.
+  nsCOMPtr<nsIDOMNode> key; // must be first to line up with PLDHashEntryStub
+
+  // Linked list of preserved wrappers in the strongly connected
+  // component, to be traversed using |PreservedWrapperEntry::next|.
+  PreservedWrapperEntry *first;
+
+  PRBool marked;
+
+  WrapperSCCEntry(nsIDOMNode *aKey)
+    : key(aKey), first(nsnull), marked(PR_FALSE) {}
+};
+
+PR_STATIC_CALLBACK(void)
+WrapperSCCsClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  WrapperSCCEntry *entry = NS_STATIC_CAST(WrapperSCCEntry*, hdr);
+  entry->~WrapperSCCEntry();
+  memset(hdr, 0, table->entrySize);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+WrapperSCCsInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                     const void *key)
+{
+  WrapperSCCEntry *entry = NS_STATIC_CAST(WrapperSCCEntry*, hdr);
+  new (entry) WrapperSCCEntry(NS_STATIC_CAST(nsIDOMNode*,
+                                NS_CONST_CAST(void*, key)));
+  return PR_TRUE;
+}
+
+static const PLDHashTableOps sWrapperSCCTableOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  PL_DHashVoidPtrKeyStub,
+  PL_DHashMatchEntryStub,
+  PL_DHashMoveEntryStub,
+  WrapperSCCsClearEntry,
+  PL_DHashFinalizeStub,
+  WrapperSCCsInitEntry
+};
+
+
+// static
+nsresult
+nsDOMClassInfo::PreserveWrapper(nsIDOMNode *aDOMNode,
+                                nsIXPConnectWrappedNative *aWrapper)
+{
+  if (!sPreservedWrapperTable.ops &&
+      !PL_DHashTableInit(&sPreservedWrapperTable, PL_DHashGetStubOps(), nsnull,
+                         sizeof(PreservedWrapperEntry), 16)) {
+    sPreservedWrapperTable.ops = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PreservedWrapperEntry *entry = NS_STATIC_CAST(PreservedWrapperEntry*,
+    PL_DHashTableOperate(&sPreservedWrapperTable, aDOMNode, PL_DHASH_ADD));
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  entry->key = aDOMNode;
+  entry->wrapper = aWrapper;
+
+  return NS_OK;
+}
+
+// static
+void
+nsDOMClassInfo::ReleaseWrapper(nsIDOMNode *aDOMNode)
+{
+  if (sPreservedWrapperTable.ops) {
+    PL_DHashTableOperate(&sPreservedWrapperTable, aDOMNode, PL_DHASH_REMOVE);
+    if (sPreservedWrapperTable.entryCount == 0) {
+      PL_DHashTableFinish(&sPreservedWrapperTable);
+      sPreservedWrapperTable.ops = nsnull;
+    }
+  }
+}
+
+struct MarkAllWrappersData {
+  JSContext *cx;
+  void *arg;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+MarkAllWrappers(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                PRUint32 number, void *arg)
+{
+  MarkAllWrappersData *data = NS_STATIC_CAST(MarkAllWrappersData*, arg);
+  PreservedWrapperEntry *entry = NS_STATIC_CAST(PreservedWrapperEntry*, hdr);
+
+  JSObject *wrapper_obj;
+  if (NS_SUCCEEDED(entry->wrapper->GetJSObject(&wrapper_obj)))
+    JS_MarkGCThing(data->cx, wrapper_obj, 
+                   "nsDOMClassInfo::sPreservedWrapperTable_OOM", data->arg);
+
+  return PL_DHASH_NEXT;
+}
+
+// static
+void
+nsDOMClassInfo::MarkReachablePreservedWrappers(nsIDOMNode *aDOMNode,
+                                               JSContext *cx, void *arg)
+{
+  // Magic value indicating we've hit out-of-memory earlier in this GC.
+  if (sWrapperSCCTable.ops == WRAPPER_SCC_OPS_OOM_MARKER)
+    return;
+
+  // The JS engine doesn't have a notification for the beginning of
+  // the mark phase.  However, we can determine that the mark phase
+  // has begun by detecting the first mark and lazily call
+  // BeginGCMark.
+  if (!sWrapperSCCTable.ops && !nsDOMClassInfo::BeginGCMark()) {
+    // We didn't have enough memory to create the temporary data
+    // structures we needed.
+    sWrapperSCCTable.ops = WRAPPER_SCC_OPS_OOM_MARKER;
+
+    // Just mark all the preserved wrappers.  It won't help the GC free
+    // up memory, but there's nothing better to do.
+    if (sPreservedWrapperTable.ops) {
+      MarkAllWrappersData data;
+      data.cx = cx;
+      data.arg = arg;
+      PL_DHashTableEnumerate(&sPreservedWrapperTable, MarkAllWrappers, &data);
+    }
+    return;
+  }
+
+  WrapperSCCEntry *entry = NS_STATIC_CAST(WrapperSCCEntry*,
+    PL_DHashTableOperate(&sWrapperSCCTable, GetSCCRootFor(aDOMNode),
+                         PL_DHASH_LOOKUP));
+  if (!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->marked)
+    return;
+
+#ifdef DEBUG_PRESERVE_WRAPPERS
+  {
+    nsAutoString nodeName;
+    entry->key->GetNodeName(nodeName);
+    printf("  marking entries for SCC root %p \"%s\"\n",
+           entry->key.get(), NS_ConvertUTF16toUTF8(nodeName).get());
+  }
+#endif
+  entry->marked = PR_TRUE;
+
+  for (PreservedWrapperEntry *pwe = entry->first; pwe; pwe = pwe->next) {
+    JSObject *wrapper_obj;
+    if (NS_SUCCEEDED(pwe->wrapper->GetJSObject(&wrapper_obj)))
+      ::JS_MarkGCThing(cx, wrapper_obj,
+                       "nsDOMClassInfo::sPreservedWrapperTable", arg);
+  }
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+ClassifyWrapper(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                PRUint32 number, void *arg)
+{
+  PreservedWrapperEntry *entry = NS_STATIC_CAST(PreservedWrapperEntry*, hdr);
+
+  WrapperSCCEntry *SCCEntry = NS_STATIC_CAST(WrapperSCCEntry*,
+    PL_DHashTableOperate(&sWrapperSCCTable, GetSCCRootFor(entry->key),
+                         PL_DHASH_ADD));
+  if (!SCCEntry) {
+    *NS_STATIC_CAST(PRBool*, arg) = PR_TRUE;
+    return PL_DHASH_STOP;
+  }
+
+#ifdef DEBUG_PRESERVE_WRAPPERS
+  if (!SCCEntry->first) {
+    nsAutoString nodeName;
+    SCCEntry->key->GetNodeName(nodeName);
+    printf("  new SCC root %p \"%s\"\n",
+           SCCEntry->key.get(), NS_ConvertUTF16toUTF8(nodeName).get());
+  }
+#endif
+
+  entry->next = SCCEntry->first;
+  SCCEntry->first = entry;
+
+  return PL_DHASH_NEXT;
+}
+
+// static
+PRBool
+nsDOMClassInfo::BeginGCMark()
+{
+  NS_PRECONDITION(!sWrapperSCCTable.ops, "table already initialized");
+
+#ifdef DEBUG_PRESERVE_WRAPPERS
+  printf("\nClassifying preserved wrappers into SCCs:\n");
+#endif
+
+  if (!PL_DHashTableInit(&sWrapperSCCTable, &sWrapperSCCTableOps, nsnull,
+                         sizeof(WrapperSCCEntry), 16)) {
+    return PR_FALSE;
+  }
+
+  PRBool failure = PR_FALSE;
+  if (sPreservedWrapperTable.ops)
+    PL_DHashTableEnumerate(&sPreservedWrapperTable, ClassifyWrapper, &failure);
+  if (failure) {
+    PL_DHashTableFinish(&sWrapperSCCTable);
+    // caller will reset table ops
+    return PR_FALSE;
+  }
+
+#ifdef DEBUG_PRESERVE_WRAPPERS
+  printf("Marking:\n");
+#endif
+
+  return PR_TRUE;
+}
+
+// static
+void
+nsDOMClassInfo::EndGCMark()
+{
+  if (sWrapperSCCTable.ops) {
+    if (sWrapperSCCTable.ops != WRAPPER_SCC_OPS_OOM_MARKER)
+      PL_DHashTableFinish(&sWrapperSCCTable);
+    sWrapperSCCTable.ops = nsnull;
+  }
+}
+
+// hack to give XBL access to nsDOMClassInfo::PreserveWrapper
+nsresult
+NS_DOMClassInfo_PreserveWrapper(nsIDOMNode *aDOMNode,
+                                nsIXPConnectWrappedNative *aWrapper)
+{
+  return nsDOMClassInfo::PreserveWrapper(aDOMNode, aWrapper);
+}
+
 // static
 nsresult
 nsWindowSH::GlobalResolve(nsIScriptGlobalObject *global, JSContext *cx,
@@ -4492,7 +4853,7 @@ nsWindowSH::GlobalResolve(nsIScriptGlobalObject *global, JSContext *cx,
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
 
-      nsresult rv =
+      rv =
         sXPConnect->GetWrappedNativePrototype(cx, obj, ci,
                                               getter_AddRefs(proto_holder));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
@@ -4513,7 +4874,7 @@ nsWindowSH::GlobalResolve(nsIScriptGlobalObject *global, JSContext *cx,
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
 
-      nsresult rv =
+      rv =
         sXPConnect->GetWrappedNativePrototype(cx, obj, ci,
                                               getter_AddRefs(proto_holder));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
@@ -5069,24 +5430,34 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsISupports *native = wrapper->Native();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
 
-  nsCOMPtr<nsIDocument> doc;
+  // This can fail on out-of-memory, which should end up throwing a JS
+  // exception.
+  return nsDOMClassInfo::PreserveWrapper(node, wrapper);
+}
 
-  if (node) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    node->GetOwnerDocument(getter_AddRefs(domdoc));
-    doc = do_QueryInterface(domdoc);
-  }
+NS_IMETHODIMP
+nsNodeSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                   JSObject *obj)
+{
+  nsISupports *native = wrapper->Native();
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
 
-  if (!doc) {
-    doc = do_QueryInterface(native);
-  }
+  nsDOMClassInfo::ReleaseWrapper(node);
 
-  if (doc) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    doc->AddReference(content, wrapper);
-  }
+  return NS_OK;
+}
 
-  return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
+NS_IMETHODIMP
+nsNodeSH::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+               JSObject *obj, void *arg, PRUint32 *_retval)
+{
+  nsISupports *native = wrapper->Native();
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
+
+  nsDOMClassInfo::MarkReachablePreservedWrappers(node, cx, arg);
+
+  *_retval = 1;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5807,7 +6178,7 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSString *val = ::JS_ValueToString(cx, *vp);
       NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-      nsresult rv = location->SetHref(nsDependentJSString(val));
+      rv = location->SetHref(nsDependentJSString(val));
       NS_ENSURE_SUCCESS(rv, rv);
 
       return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);

@@ -185,8 +185,6 @@ public:
 
   static nsresult Init();
 
-  static nsJSEnvironment *GetScriptingEnvironment();
-
   static nsresult CreateNewContext(nsIScriptContext **aContext);
 
   static void ShutDown();

@@ -46,6 +46,10 @@
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
 #include "nsIXBLDocumentInfo.h"
+#include "nsIDOMNode.h"
+
+nsresult NS_DOMClassInfo_PreserveWrapper(nsIDOMNode *aDOMNode,
+                                         nsIXPConnectWrappedNative *aWrapper);
 
 nsresult
 nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement)
@@ -133,8 +137,10 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   nsIDocument* doc = aBoundElement->GetOwnerDoc();
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> nativeWrapper(do_QueryInterface(wrapper));
-    if (nativeWrapper)
-      doc->AddReference(aBoundElement, nativeWrapper);
+    if (nativeWrapper) {
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aBoundElement));
+      NS_DOMClassInfo_PreserveWrapper(node, nativeWrapper);
+    }
   }
   
   return rv;

@@ -1835,13 +1835,6 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
       shell->ReleaseAnonymousContent();
     }
-
-#ifdef DEBUG_jst
-    printf ("Content wrapper hash had %d entries.\n",
-            mContentWrapperHash.Count());
-#endif
-
-    mContentWrapperHash.Reset();
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
@@ -4073,26 +4066,6 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
       shell->FlushPendingNotifications(aType);
     }
   }
-}
-
-void
-nsDocument::AddReference(void *aKey, nsISupports *aReference)
-{
-  nsVoidKey key(aKey);
-
-  if (mScriptGlobalObject) {
-    mContentWrapperHash.Put(&key, aReference);
-  }
-}
-
-already_AddRefed<nsISupports>
-nsDocument::RemoveReference(void *aKey)
-{
-  nsVoidKey key(aKey);
-
-  nsISupports* oldReference;
-  mContentWrapperHash.Remove(&key, &oldReference);
-  return oldReference;
 }
 
 nsIScriptEventManager*

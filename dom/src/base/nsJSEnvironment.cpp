@@ -2022,6 +2022,8 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
     return JS_FALSE;
+  if (status == JSGC_MARK_END)
+    nsDOMClassInfo::EndGCMark();
   return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 }
 
