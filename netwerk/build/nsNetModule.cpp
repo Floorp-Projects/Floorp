@@ -65,10 +65,19 @@
 
 #include "nsNetCID.h"
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
+// Mac OS
+#define BUILD_APPLEFILE_DECODER 1
+#else
+// other platforms
+#define BUILD_BINHEX_DECODER 1
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsStreamConverterService.h"
-#if defined(XP_MAC)
+
+#ifdef BUILD_APPLEFILE_DECODER
 #include "nsAppleFileDecoder.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
 #endif
@@ -178,7 +187,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #include "nsUnknownDecoder.h"
 #include "nsTXTToHTMLConv.h"
 #include "nsIndexedToHTML.h"
-#ifndef XP_MAC
+#ifdef BUILD_BINHEX_DECODER
 #include "nsBinHexDecoder.h"
 #endif
 
@@ -204,7 +213,7 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define DEFLATE_TO_UNCOMPRESSED      "?from=deflate&to=uncompressed"
 #define PLAIN_TO_HTML                "?from=text/plain&to=text/html"
 
-#ifndef XP_MAC
+#ifdef BUILD_BINHEX_DECODER
 #define BINHEX_TO_WILD               "?from=application/mac-binhex40&to=*/*"
 #endif
 
@@ -221,7 +230,7 @@ static const char *const g_StreamConverterArray[] = {
         COMPRESS_TO_UNCOMPRESSED,
         XCOMPRESS_TO_UNCOMPRESSED,
         DEFLATE_TO_UNCOMPRESSED,
-#ifndef XP_MAC
+#ifdef BUILD_BINHEX_DECODER
         BINHEX_TO_WILD,
 #endif
         PLAIN_TO_HTML
@@ -278,7 +287,8 @@ UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
     }
     return rv;
 }
-#ifndef XP_MAC
+
+#ifdef BUILD_BINHEX_DECODER
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder);
 #endif
 
@@ -667,7 +677,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       UnregisterStreamConverters  // unregisters *all* converters
     },
     
-#if defined(XP_MAC)
+#ifdef BUILD_APPLEFILE_DECODER
     { NS_APPLEFILEDECODER_CLASSNAME, 
       NS_APPLEFILEDECODER_CID,
       NS_IAPPLEFILEDECODER_CONTRACTID, 
@@ -755,7 +765,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ISTREAMCONVERTER_KEY PLAIN_TO_HTML,
       CreateNewNSTXTToHTMLConvFactory
     },
-#ifndef XP_MAC
+#ifdef BUILD_BINHEX_DECODER
     { "nsBinHexConverter", NS_BINHEXDECODER_CID,
       NS_ISTREAMCONVERTER_KEY BINHEX_TO_WILD,
       nsBinHexDecoderConstructor

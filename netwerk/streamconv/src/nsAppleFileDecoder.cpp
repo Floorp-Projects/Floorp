@@ -247,6 +247,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         break;
       
       case parseEntries :
+        {
         if (!m_entries)
         {
           m_entries = new ap_entry[m_headers.entriesCount];
@@ -274,6 +275,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
           }
           m_headerOk = PR_TRUE;          
           m_state = parseLookupPart;
+        }
         }
         break;
       
@@ -382,6 +384,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         break;
       
       case parseResourceFork :
+        {
         dataCount = m_currentPartLength - m_currentPartCount;
         if (dataCount > bufferSize)
           dataCount = bufferSize;
@@ -398,6 +401,7 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         if (noErr != FSWrite(m_rfRefNum, &count, buffPtr) || count != dataCount)
             return NS_ERROR_FAILURE;
         m_totalResourceForkWritten += dataCount;
+        }
         break;
       
       case parseWriteThrough :

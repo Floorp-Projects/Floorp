@@ -38,5 +38,11 @@ XPIDLSRCS	= \
 		nsIDirIndexListener.idl \
 		$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+XPIDLSRCS += \
+		nsIAppleFileDecoder.idl \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
