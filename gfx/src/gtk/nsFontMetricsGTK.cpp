@@ -637,7 +637,7 @@ InitGlobals(void)
   }
   nsFontFamilyName* f = gFamilyNameTable;
   while (f->mName) {
-    nsStringKey key(f->mName);
+    nsCStringKey key(f->mName);
     gAliases->Put(&key, f->mXName);
     f++;
   }
@@ -648,7 +648,7 @@ InitGlobals(void)
   }
   nsFontPropertyName* p = gWeightNames;
   while (p->mName) {
-    nsStringKey key(p->mName);
+    nsCStringKey key(p->mName);
     gWeights->Put(&key, (void*) p->mValue);
     p++;
   }
@@ -659,7 +659,7 @@ InitGlobals(void)
   }
   p = gStretchNames;
   while (p->mName) {
-    nsStringKey key(p->mName);
+    nsCStringKey key(p->mName);
     gStretches->Put(&key, (void*) p->mValue);
     p++;
   }
@@ -670,7 +670,7 @@ InitGlobals(void)
   }
   nsFontCharSetMap* charSetMap = gCharSetMap;
   while (charSetMap->mName) {
-    nsStringKey key(charSetMap->mName);
+    nsCStringKey key(charSetMap->mName);
     gCharSets->Put(&key, charSetMap->mInfo);
     charSetMap++;
   }
@@ -681,7 +681,7 @@ InitGlobals(void)
   }
   nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
   while (specialCharSetMap->mName) {
-    nsStringKey key(specialCharSetMap->mName);
+    nsCStringKey key(specialCharSetMap->mName);
     gSpecialCharSets->Put(&key, specialCharSetMap->mInfo);
     specialCharSetMap++;
   }
@@ -2475,7 +2475,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     if (!*charSetName) {
       continue;
     }
-    nsStringKey charSetKey(charSetName);
+    nsCStringKey charSetKey(charSetName);
     nsFontCharSetInfo* charSetInfo =
       (nsFontCharSetInfo*) gCharSets->Get(&charSetKey);
     // indirection for font specific charset encoding 
@@ -2483,7 +2483,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
       nsCAutoString familyCharSetName(familyName);
       familyCharSetName.Append('-');
       familyCharSetName.Append(charSetName);
-      nsStringKey familyCharSetKey(familyCharSetName);
+      nsCStringKey familyCharSetKey(familyCharSetName);
       charSetInfo =
         (nsFontCharSetInfo*) gSpecialCharSets->Get(&familyCharSetKey);
     }
@@ -2513,7 +2513,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     nodeName.Append(familyName);
     nodeName.Append('-');
     nodeName.Append(charSetName);
-    nsStringKey key(nodeName);
+    nsCStringKey key(nodeName);
     nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
     if (!node) {
       node = new nsFontNode;
@@ -2564,7 +2564,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
       node->mStyles[styleIndex] = style;
     }
 
-    nsStringKey weightKey(weightName);
+    nsCStringKey weightKey(weightName);
     int weightNumber = (int) gWeights->Get(&weightKey);
     if (!weightNumber) {
 #ifdef NOISY_FONTS
@@ -2582,7 +2582,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
       style->mWeights[weightIndex] = weight;
     }
   
-    nsStringKey setWidthKey(setWidth);
+    nsCStringKey setWidthKey(setWidth);
     int stretchIndex = (int) gStretches->Get(&setWidthKey);
     if (!stretchIndex) {
 #ifdef NOISY_FONTS
@@ -2683,7 +2683,7 @@ GetAllFontNames(void)
 static nsFontFamily*
 FindFamily(nsCString* aName)
 {
-  nsStringKey key(*aName);
+  nsCStringKey key(*aName);
   nsFontFamily* family = (nsFontFamily*) gFamilies->Get(&key);
   if (!family) {
     family = new nsFontFamily();
@@ -2727,7 +2727,7 @@ nsFontMetricsGTK::FamilyExists(const nsString& aName)
 nsFontGTK*
 nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
 {
-  nsStringKey key(*aName);
+  nsCStringKey key(*aName);
   nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
   if (!node) {
     nsCAutoString pattern("-");
@@ -2780,7 +2780,7 @@ nsFontMetricsGTK::TryFamily(nsCString* aName, PRUnichar aChar)
 nsFontGTK*
 nsFontMetricsGTK::TryAliases(nsCString* aAlias, PRUnichar aChar)
 {
-  nsStringKey key(*aAlias);
+  nsCStringKey key(*aAlias);
   char* name = (char*) gAliases->Get(&key);
   if (name) {
     nsCAutoString str(name);
