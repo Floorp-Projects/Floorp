@@ -1389,7 +1389,7 @@ nsFtpState::R_retr() {
 
     if ((mResponseCode/100 == 5) && (mServerType != FTP_OS2_TYPE)) {
         mRETRFailed = PR_TRUE;
-        
+                
         // We need to kill off the existing connection - see bug 101128
         mDRequestForwarder->RetryConnection();
         nsCOMPtr<nsISocketTransport> st = do_QueryInterface(mDPipe);
@@ -1794,6 +1794,80 @@ nsFtpState::SetLoadFlags(nsLoadFlags aLoadFlags)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// This really really needs to be somewhere else
+static inline PRUint32
+PRTimeToSeconds(PRTime t_usec)
+{
+    PRTime usec_per_sec;
+    PRUint32 t_sec;
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_DIV(t_usec, t_usec, usec_per_sec);
+    LL_L2I(t_sec, t_usec);
+    return t_sec;
+}
+
+#define NowInSeconds() PRTimeToSeconds(PR_Now())
+
+PRUint32 nsFtpState::mSessionStartTime = NowInSeconds();
+
+/* Is this cache entry valid to use for reading?
+ * Since we make up an expiration time for ftp, use the following rules:
+ * (see bug 103726)
+ *
+ * LOAD_FROM_CACHE                    : always use cache entry, even if expired
+ * LOAD_BYPASS_CACHE                  : overwrite cache entry
+ * LOAD_NORMAL|VALIDATE_ALWAYS        : overwrite cache entry
+ * LOAD_NORMAL                        : honor expiration time
+ * LOAD_NORMAL|VALIDATE_ONCE_PER_SESSION : overwrite cache entry if first access 
+ *                                         this session, otherwise use cache entry 
+ *                                         even if expired.
+ * LOAD_NORMAL|VALIDATE_NEVER         : always use cache entry, even if expired
+ *
+ * Note that in theory we could use the mdtm time on the directory
+ * In practice, the lack of a timezone plus the general lack of support for that
+ * on directories means that its not worth it, I suspect. Revisit if we start
+ * caching files - bbaetz
+ */
+PRBool
+nsFtpState::CanReadEntry()
+{
+    nsCacheAccessMode access;
+    nsresult rv = mCacheEntry->GetAccessGranted(&access);
+    if (NS_FAILED(rv)) return PR_FALSE;
+    
+    // If I'm not granted read access, then I can't reuse it...
+    if (!(access & nsICache::ACCESS_READ))
+        return PR_FALSE;
+
+    nsLoadFlags flags;
+    rv = mChannel->GetLoadFlags(&flags);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (flags & LOAD_FROM_CACHE)
+        return PR_TRUE;
+
+    if (flags & LOAD_BYPASS_CACHE)
+        return PR_FALSE;
+    
+    if (flags & VALIDATE_ALWAYS)
+        return PR_FALSE;
+    
+    PRUint32 time;
+    if (flags & VALIDATE_ONCE_PER_SESSION) {
+        rv = mCacheEntry->GetLastModified(&time);
+        if (NS_FAILED(rv)) return PR_FALSE;
+        return (mSessionStartTime > time);
+    }
+
+    if (flags & VALIDATE_NEVER)
+        return PR_TRUE;
+
+    // OK, now we just check the expiration time as usual
+    rv = mCacheEntry->GetExpirationTime(&time);
+    if (NS_FAILED(rv)) return rv;
+    return (NowInSeconds() <= time);
+}
+
 nsresult
 nsFtpState::Init(nsIFTPChannel* aChannel,
                  nsIPrompt*  aPrompter,
@@ -1830,9 +1904,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (NS_FAILED(rv)) return rv;
         
     if (mCacheEntry) {
-        nsCacheAccessMode access;
-        mCacheEntry->GetAccessGranted(&access);
-        if (access & nsICache::ACCESS_READ) {
+        if (CanReadEntry()) {
             // XXX - all this code assumes that we only cache directories
             // If we start caching files, this needs to be updated
 
