@@ -142,15 +142,9 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
+	NS_ADDREF(inst);
   nsresult res = inst->QueryInterface(aIID, aResult);
-
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
-//  else {
-//    inst->Release();
-//  }
+	NS_RELEASE(inst);
 
   return res;  
 }  

@@ -106,12 +106,10 @@ nsresult nsLocaleMacFactory::CreateInstance(nsISupports *aOuter,
   if (NULL == inst) {
     return NS_ERROR_OUT_OF_MEMORY;  
   }
-  
+
+	NS_ADDREF(inst);
   nsresult res = inst->QueryInterface(aIID, aResult);
-  
-  if(NS_FAILED(res)) {
-    delete inst;
-  }
+  NS_RELEASE(inst);
 
   return res;
 }
