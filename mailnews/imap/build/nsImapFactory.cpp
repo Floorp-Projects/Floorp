@@ -200,28 +200,23 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
+	nsresult finalResult = NS_OK;
 
-	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-	if (NS_FAILED(rv)) return rv;
-
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                            (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kCImapUrl, nsnull, nsnull,
                                     path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCImapProtocol, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCImapHostSessionList, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	
 	rv = compMgr->RegisterComponent(kCImapIncomingServer,
@@ -229,71 +224,63 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									"component://netscape/messenger/server&type=imap",
 									path, PR_TRUE, PR_TRUE);
 
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	// register our RDF resource factories:
 	rv = compMgr->RegisterComponent(kCImapResource,
 								  "Mail/News Imap Resource Factory",
 								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap",
 								  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCImapService, nsnull, 
 								  "component://netscape/messenger/messageservice;type=imap_message", 
 								path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCImapService, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
 
-   rv = compMgr->RegisterComponent(kCImapMessageResource,
+	rv = compMgr->RegisterComponent(kCImapMessageResource,
                                    "Imap Message Resource Factory",
                                    NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message",
                                    path, PR_TRUE, PR_TRUE);
 
-   if (NS_FAILED(rv)) goto done;
+   if (NS_FAILED(rv)) finalResult = rv;
 
-	done:
-		(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
+	nsresult finalResult = NS_OK;
 
-	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-	if (NS_FAILED(rv)) return rv;
-
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kCImapUrl, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapProtocol, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapHostSessionList, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapIncomingServer, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv))finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapService, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapMessageResource, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCImapResource, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) finalResult = rv;
 
-done:
-	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-	return rv;
+	return finalResult;
 }

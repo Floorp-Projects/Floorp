@@ -174,60 +174,45 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsresult finalResult = NS_OK;
 
-//  nsIComponentManager* compMgr;
   NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
 
-//  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
-
-//  rv = servMgr->GetService(kComponentManagerCID, 
-//                           nsIComponentManager::GetIID(), 
-//                           (nsISupports**)&compMgr);
-//  if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kCMailDB, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv))finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCNewsDB, nsnull, nsnull, 
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCImapDB, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
   
-  done:
-//  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsresult finalResult = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kCMailDB, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kCImapDB, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kCNewsDB, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
