@@ -597,15 +597,6 @@ InitializeScrollFrame(nsIPresContext*          aPresContext,
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
                                     nsIContent* aContent);
 
-  PRInt32 FindRestyledFramesBelow(nsIFrame* aFrame, 
-                                  nsIPresContext* aPresContext,
-                                  PRInt32 aParentHint,
-                                  nsStyleChangeList& aResults);
-
-  PRInt32 ComputeStateChangeFor(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                                nsStyleChangeList& aChangeList,
-                                PRInt32 aFrameChange);
-
   nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
                                            nsIAtom* aAttribute);
