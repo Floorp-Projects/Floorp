@@ -218,13 +218,8 @@ nsresult ConvertFromUnicode(const char* aCharset,
                             const nsString& inString,
                             char** outCString)
 {
-#if 0 
-  nsCAutoString s;
-  nsresult rv;
-  rv = nsMsgI18NConvertFromUnicode(aCharset, inString, s);
-  *outCString = PL_strdup(s);
-  return rv;
-#endif
+  NS_ENSURE_ARG_POINTER(aCharset);
+  NS_ENSURE_ARG_POINTER(outCString);
 
   *outCString = NULL;
 
@@ -294,16 +289,10 @@ nsresult ConvertToUnicode(const char* aCharset,
                           const char* inCString, 
                           nsString& outString)
 {
-#if 0 
-  nsresult rv;
-  rv = nsMsgI18NConvertToUnicode(aCharset, nsCAutoString(inCString), outString);
-  return rv;
-#endif
+  NS_ENSURE_ARG_POINTER(aCharset);
+  NS_ENSURE_ARG_POINTER(inCString);
 
-  if (NULL == inCString) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  else if ('\0' == *inCString) {
+  if ('\0' == *inCString) {
     outString.Truncate();
     return NS_OK;
   }
