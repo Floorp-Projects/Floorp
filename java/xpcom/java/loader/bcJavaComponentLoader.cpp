@@ -446,8 +446,7 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     // only unregister if we're the current JS component loader
     if (!strcmp(javaLoader, BC_JAVACOMPONENTLOADER_ContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
-					   javaComponentTypeName, PR_TRUE,
-                                           getter_Copies(javaLoader));
+					   javaComponentTypeName, PR_TRUE);
     }
     return NS_OK;
 }

@@ -170,7 +170,7 @@ void test() {
     nsresult r;
     bcIJavaSample *test;
     bcIJavaSample *a = new bcJavaSample();
-#if 0
+#if 1
     r = nsComponentManager::CreateInstance("bcJavaSample",
 					   nsnull,
 					   NS_GET_IID(bcIJavaSample),
@@ -183,7 +183,7 @@ void test() {
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
     
-#if 1
+#if 0
     {
         PRThread *thr = PR_CreateThread( PR_USER_THREAD,
                                          thread_start,
@@ -208,12 +208,14 @@ void test() {
     }
 #endif            
     //thread_start(test); 
+#if 0
     if (javaSample == NULL) {
         return;
-    } 
+    }
+
     test = javaSample;
+#endif 
     test->Test1((int)PR_GetCurrentThread());
-    return;
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
         printf("failed to get component. try to restart test\n");
