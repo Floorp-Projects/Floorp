@@ -28,7 +28,6 @@ nsresult
 nsInterfaceRecord::GetInfo(nsInterfaceInfo **result)
 {
     if (this->info != NULL) {
-        // XXX should add ref here? (not xposed in public api...)
         NS_ADDREF(this->info);
         *result = this->info;
         return NS_OK;
@@ -50,16 +49,18 @@ nsInterfaceRecord::GetInfo(nsInterfaceInfo **result)
         nsresult nsr = parent_record->GetInfo((nsInterfaceInfo **)&parent);
         if (NS_FAILED(nsr)) {
             *result = NULL;
-            return nsr;  // ? ... or NS_ERROR_FAILURE
+            return nsr;
         }
     }
 
     // got a parent for it, now build the object itself
     *result = new nsInterfaceInfo(this, (nsInterfaceInfo *)parent);
-    if (*result == NULL) {
-        NS_RELEASE(parent);
-    } else {
-        NS_ADDREF(*result);
+
+    // Since the newly created nsInterfaceInfo always holds a ref to
+    // the parent, the reference we hold always needs to be released here.
+    NS_IF_RELEASE(parent);
+
+    if (*result != NULL) {
         this->info = *result;
     }
     return NS_OK;

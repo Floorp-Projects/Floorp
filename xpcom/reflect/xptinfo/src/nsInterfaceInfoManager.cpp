@@ -49,7 +49,7 @@
 // so that xpt stuff doesn't try to define it itself...
 #include "xpt_xdr.h"
 
-#ifdef DEBUG_mccabe
+#ifdef DEBUG_iim
 #define TRACE(x) fprintf x
 #else
 #define TRACE(x)
@@ -191,7 +191,10 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    this->typelibRecords = tlrecord; // add it to the list of typelibs
+    // add it to the list of typelibs; this->typelibRecords record supplied
+    // to constructor becomes the 'next' field in the new nsTypelibRecord.
+    this->typelibRecords = tlrecord; 
+
 
     for (int i = 0; i < limit; i++) {
         XPTInterfaceDirectoryEntry *current = header->interface_directory + i;
@@ -279,7 +282,7 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 // as many InterfaceDirectoryEntries as we expect to see.
 #define XPT_HASHSIZE 64
 
-#ifdef DEBUG
+#ifdef DEBUG_iim
 static PRIntn
 check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg)
 {
@@ -316,7 +319,7 @@ check_iidtable_enumerator(nsHashKey *aKey, void *aData, void *closure)
     return PR_TRUE;
 }
 
-#endif
+#endif // DEBUG_iim
 
 nsresult
 nsInterfaceInfoManager::initInterfaceTables()
@@ -347,7 +350,7 @@ nsInterfaceInfoManager::initInterfaceTables()
     sysdir.ResolveSymlink(wasAlias);
 #endif
     
-#ifdef DEBUG
+#ifdef DEBUG_iim
     int which = 0;
 #endif
     
@@ -371,7 +374,7 @@ nsInterfaceInfoManager::initInterfaceTables()
         }
         
         // it's a valid file, read it in.
-#ifdef DEBUG
+#ifdef DEBUG_iim
         which++;
         TRACE((stderr, "%d %s\n", which, fileName));
 #endif
@@ -386,7 +389,7 @@ nsInterfaceInfoManager::initInterfaceTables()
         nsCRT::free(fileName);
     }
     
-#ifdef DEBUG
+#ifdef DEBUG_iim
     TRACE((stderr, "\nchecking name table for unresolved entries...\n"));
     // scan here to confirm that all interfaces are resolved.
     PL_HashTableEnumerateEntries(this->nameTable,
