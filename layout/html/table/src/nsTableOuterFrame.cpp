@@ -228,11 +228,12 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
                                                   &innerTableMaxElementSize);
   
 #ifdef NOISY_MARGINS
-    nsIContentPtr content = mInnerTableFrame->GetContent();
+    nsIContent* content = nsnull;
+    mInnerTableFrame->GetContent(content);
     nsTablePart *table = (nsTablePart*)content;
     if (table != nsnull)
       table->DumpCellMap();
-    mInnerTableFrame->ResetColumnLayoutData();
+    mInnerTableFrame->RecalcLayoutData();
     mInnerTableFrame->ListColumnLayoutData(stdout,1);
 #endif
 
