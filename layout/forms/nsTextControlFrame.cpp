@@ -623,6 +623,7 @@ public:
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
   NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollableView);
+  NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -872,58 +873,24 @@ nsTextInputSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
 {
-#if XXXXX_WORK_TO_BE_COMPLETED_XXXXX
-  // XXX: this code needs to be finished or rewritten
-  // expected bahavior for PageMove is to scroll AND move the caret
-  nsIScrollableView *scrollableView;
-  nsresult result;
-  nscoord containerHeight, containerWidth, lineHeight;
-  nsPoint oldLocation;
+  // expected behavior for PageMove is to scroll AND move the caret
+  // and to remain relative position of the caret in view. see Bug 4302.
 
-  result = GetScrollableView(&scrollableView);
-  if (NS_FAILED(result))
-    return result;
-  if (!scrollableView)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  // find out where we are; determine amount to page up/down
-  result = scrollableView->GetScrollPosition(oldLocation.x, oldLocation.y);
-  if (NS_FAILED(result))
-    return result;
-
-  result = scrollableView->GetLineHeight(&lineHeight);
-  if (NS_FAILED(result))
-    return result;
-
-  result = scrollableView->GetContainerSize(&containerWidth, &containerHeight);
-  if (NS_SUCCEEDED(result))
+  if (mPresShellWeak)
   {
-    // scroll this amount backwards
-    if (!aForward)
-      containerHeight = 0 - containerHeight;
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+    if (!presShell)
+      return NS_ERROR_NULL_POINTER;
 
-    nsPoint desiredLocation(oldLocation.x, oldLocation.y + containerHeight - lineHeight);
-    result = scrollableView->ScrollTo(desiredLocation.x, desiredLocation.y, NS_VMREFRESH_NO_SYNC);
-
-    // grab the parent / root DIV for this text widget
-    nsCOMPtr<nsIContent> parentDIV;
-    result = GetLimiter(getter_AddRefs(parentDIV));
+    //get the scroll view
+    nsIScrollableView *scrollableView;
+    nsresult result = GetScrollableView(&scrollableView);
     if (NS_FAILED(result))
       return result;
-    if (!parentDIV)
-      return NS_ERROR_UNEXPECTED;
 
-    // now we know how much to move up/down, we need to look into the content and 
-    // figure out where that coordinate is and then place the caret at that location
-    nsCOMPtr<nsIContent> content;
-    result = frame->GetContentAndOffsetsFromPoint(presContext, desiredLocation, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
-    result = GetFrameForNodeOffset(content, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+    CommonPageMove(aForward, aExtend, scrollableView, this);
   }
-  
-  return result;
-#else
-  return ScrollPage(aForward);
-#endif
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, true);
 }
 
 NS_IMETHODIMP
@@ -1220,6 +1187,13 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetScrollableView(nsIScrollableView **aS
 {
   if(mFrameSelection) 
     return mFrameSelection->GetScrollableView(aScrollableView);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel)
+{
+  if(mFrameSelection) 
+    return mFrameSelection->CommonPageMove(aForward, aExtend, aScrollableView, this);
   return NS_ERROR_FAILURE;
 }
 

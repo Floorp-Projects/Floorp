@@ -1967,7 +1967,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   // XXX_kin: END HACK! HACK! HACK!
 
   result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
-            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
   NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
   
   return result;

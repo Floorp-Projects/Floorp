@@ -1862,7 +1862,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
       // XXX_kin: END HACK! HACK! HACK!
 
       result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
-		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
     }
   }
   return result;

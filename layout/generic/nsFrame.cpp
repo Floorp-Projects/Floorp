@@ -3590,6 +3590,33 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           return ((result) ? result : NS_ERROR_FAILURE);
         }
+
+        nsFrameState state;
+        thisBlock->GetFrameState(&state);
+        
+        if (state & NS_FRAME_OUT_OF_FLOW)
+        {
+          //if we are searching for a frame that is not in flow we will not find it. 
+          //we must instead look for its placeholder
+          nsCOMPtr<nsIPresShell>     presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+  
+          if (presShell) 
+          {
+            nsCOMPtr<nsIFrameManager>  frameManager;
+            presShell->GetFrameManager(getter_AddRefs(frameManager));
+    
+            if (frameManager) 
+            {
+              result = frameManager->GetPlaceholderFrameFor(thisBlock, &thisBlock);
+              if (!thisBlock)
+                return NS_ERROR_FAILURE;
+              if (NS_FAILED(result))
+                return result;
+            }
+          }
+        }
+
         result = iter->FindLineContaining(thisBlock, &thisLine);
 
         if (NS_FAILED(result))

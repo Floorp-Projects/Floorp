@@ -3851,7 +3851,7 @@ nsHTMLEditor::SetCompositionString(const nsAString& aCompositionString, nsIPriva
   // XXX_kin: END HACK! HACK! HACK!
 
   result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
-              &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+              &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
   NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
 
   

@@ -364,6 +364,7 @@ public:
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
 
   NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
         nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset);
@@ -974,7 +975,6 @@ nsSelection::nsSelection()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mLimiter = nsnull; //no default limiter.
-    
   if (sInstanceCount <= 0)
   {
     sTableAtom = NS_NewAtom("table");
@@ -1115,7 +1115,7 @@ nsSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested by the
   if (NS_FAILED(result))
     return result;
 
-  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, mDomSelections[index], &coord, &collapsed);
+  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, mDomSelections[index], &coord, &collapsed, nsnull);
   if (NS_FAILED(result))
     return result;
    
@@ -3094,6 +3094,132 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
   return result;
 }
 
+NS_IMETHODIMP
+nsSelection::CommonPageMove(PRBool aForward, 
+                          PRBool aExtend, 
+                          nsIScrollableView *aScrollableView,
+                          nsIFrameSelection *aFrameSel)
+{
+  if ( !aScrollableView || !aFrameSel)
+    return NS_ERROR_NULL_POINTER;
+  // expected behavior for PageMove is to scroll AND move the caret
+  // and remain relative position of the caret in view. see Bug 4302.
+
+  nsresult result;
+  const nsIView* clipView;
+  nsRect viewRect;
+  //get the frame from the scrollable view
+
+  void*    clientData;
+  nsIFrame* mainframe = nsnull;
+
+  // The view's client data points back to its frame
+  nsIView *scrolledView;
+  result = aScrollableView->GetScrolledView(scrolledView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (scrolledView && NS_SUCCEEDED(scrolledView->GetClientData(clientData)))
+    mainframe = (nsIFrame*)clientData;
+
+  if (!mainframe)
+    return NS_ERROR_FAILURE;
+
+  // find out where we are; determine amount to page up/down
+  if (NS_FAILED(result = aScrollableView->GetClipView(&clipView))) 
+    return result;
+  if (NS_FAILED(result = clipView->GetBounds(viewRect))) 
+    return result;
+
+  nsCOMPtr<nsIPresContext> context;
+  result = mTracker->GetPresContext(getter_AddRefs(context));
+  
+  if (NS_FAILED(result))
+    return result;
+  
+  if (!context)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresShell> shell;
+  result = context->GetShell(getter_AddRefs(shell));
+  
+  if (NS_FAILED(result))
+    return result;
+  
+  if (!shell)
+    return NS_ERROR_NULL_POINTER;
+
+  // find out where the caret is.
+  // we should know mDesiredX value of nsSelection, but I havent seen that behavior in other windows applications yet.
+  nsCOMPtr<nsISelection> domSel;
+  aFrameSel->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+  
+  if (!domSel) 
+    return NS_ERROR_UNEXPECTED;
+  
+  nsCOMPtr<nsICaret> caret;
+  nsRect caretPos;
+  PRBool isCollapsed;
+  result = shell->GetCaret(getter_AddRefs(caret));
+  
+  if (NS_FAILED(result)) 
+    return result;
+  
+  nsIView *caretView;
+  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, domSel, &caretPos, &isCollapsed, &caretView);
+  
+  if (NS_FAILED(result)) 
+    return result;
+  
+  //need to adjust caret jump by percentage scroll
+  viewRect.height = (PRInt32) (viewRect.height * PAGE_SCROLL_PERCENT);
+  
+  if (aForward)
+    caretPos.y += viewRect.height;
+  else
+    caretPos.y -= viewRect.height;
+
+  
+  if (caretView)
+  {
+    nscoord x,y;
+    while (caretView != scrolledView)
+    {
+      caretView->GetPosition(&x, &y);
+      caretPos.x += x;
+      caretPos.y += y;
+      caretView->GetParent(caretView);
+      if (!caretView) //how did we miss the scrolled view. something is very wrong
+        return NS_ERROR_FAILURE;
+    }
+  }
+    
+  // get a content at desired location
+  nsCOMPtr<nsIContent> content;
+  PRInt32 startOffset, endOffset;
+  PRBool beginFrameContent;
+  nsPoint desiredPoint;
+  desiredPoint.x = caretPos.x;
+  desiredPoint.y = caretPos.y + caretPos.height/2;
+  result = mainframe->GetContentAndOffsetsFromPoint(context, desiredPoint, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+  
+  if (NS_FAILED(result)) 
+    return result;
+  
+  if (!content) 
+    return NS_ERROR_UNEXPECTED;
+
+  // scroll one page
+
+  aScrollableView->ScrollByPages(aForward ? 1 : -1);
+  
+  // place the caret
+  result = aFrameSel->HandleClick(content, startOffset, startOffset, aExtend, PR_FALSE, PR_TRUE);
+  
+  return result;
+}
+
 NS_IMETHODIMP 
 nsSelection::CharacterMove(PRBool aForward, PRBool aExtend)
 {
@@ -4472,7 +4598,6 @@ nsSelection::GetLimiter(nsIContent **aLimiterContent)
 
   return NS_OK;
 }
-
 
 //END nsISelection interface implementations
 

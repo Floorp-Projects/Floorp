@@ -626,8 +626,29 @@ nsGfxScrollFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
   nsIFrame* frame = nsnull;
   mInner->mScrollAreaBox->GetFrame(&frame);
+  nsIView *view;
+  nsPoint point(aPoint);
+  nsPoint currentPoint;
+  //we need to translate the coordinates to the inner
+  nsresult result = GetClosestViewForFrame(aCX, this, &view);
+  if (NS_FAILED(result))
+    return result;
+  if (!view)
+    return NS_ERROR_FAILURE;
 
-  return frame->GetContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset, aContentOffsetEnd, aBeginFrameContent);
+  nsIView *innerView;
+  result = GetClosestViewForFrame(aCX, frame, &innerView);
+  if (NS_FAILED(result))
+    return result;
+  while (view != innerView && innerView)
+  {
+    innerView->GetPosition(&currentPoint.x, &currentPoint.y);
+    point.x -= currentPoint.x;
+    point.y -= currentPoint.y;
+    innerView->GetParent(innerView);
+  }
+
+  return frame->GetContentAndOffsetsFromPoint(aCX, point, aNewContent, aContentOffset, aContentOffsetEnd, aBeginFrameContent);
 }
 
 PRIntn
