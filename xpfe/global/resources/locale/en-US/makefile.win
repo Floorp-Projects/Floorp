@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) charsetOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetDetectorsOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) brand.properties $(DISTBROWSER)
+	$(MAKE_INSTALL) brand.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardManager.properties $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) about.dtd $(DISTBROWSER)
