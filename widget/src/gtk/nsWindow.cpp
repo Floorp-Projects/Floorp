@@ -47,6 +47,10 @@
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
 
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#include "nsIServiceManager.h"
+
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
 #undef DEBUG_DND_XLATE
@@ -1792,8 +1796,55 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   if (!mShell)
     return NS_ERROR_FAILURE;
 
-  gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
+  nsresult result;
+  static nsIUnicodeEncoder* converter = nsnull;
+  static int initialized = 0;
+  if (!initialized) {
+    initialized = 1;
+    result = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
+      &result);
+    if (platform && NS_SUCCEEDED(result)) {
+      nsAutoString charset("");
+      result = platform->GetCharset(kPlatformCharsetSel_WindowManager, charset);
+      if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
+	NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+	  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+	if (manager && NS_SUCCEEDED(result)) {
+	  result = manager->GetUnicodeEncoder(&charset, &converter);
+	  if (NS_FAILED(result) && converter) {
+	    NS_RELEASE(converter);
+	    converter = nsnull;
+	  }
+	  else if (converter) {
+	    result = converter->SetOutputErrorBehavior(
+	      nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+	  }
+	}
+      }
+    }
+    NS_ASSERTION(converter, "cannot get convert for window title");
+  }
 
+
+  if (converter) {
+    char titleStr[256];
+    titleStr[0] = 0;
+    PRInt32 srcLen = aTitle.Length() + 1;
+    PRInt32 destLen = sizeof(titleStr);
+    titleStr[destLen] = 0;
+    result = converter->Convert(aTitle.GetUnicode(), &srcLen, titleStr,
+      &destLen);
+    NS_ASSERTION(NS_SUCCEEDED(result), "cannot convert title string");
+    if (titleStr[0] && NS_SUCCEEDED(result)) {
+      titleStr[destLen] = 0;
+printf("title string = [%s]\n", titleStr);
+      gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
+      return NS_OK;
+    } 
+  }
+  // fallback to use bad conversion
+  gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
   return NS_OK;
 }
 
