@@ -467,8 +467,8 @@ MOZ_EDITOR	= 1
 endif
 
 ifdef MOZ_MEDIUM
-MOZ_MAIL_COMPOSE	= 1
 ifndef MODULAR_NETLIB
+MOZ_MAIL_COMPOSE	= 1
 MOZ_SINGLESIGNON	= 1
 endif
 endif
@@ -542,7 +542,9 @@ DEFINES		+= -DUNIX_LDAP
 endif
 
 ifdef MOZ_MEDIUM
+ifndef MODULAR_NETLIB
 SMART_MAIL = 1
+endif
 endif
 
 # i'm not sure if SHACK and ENDER still need to be defined explicitly
