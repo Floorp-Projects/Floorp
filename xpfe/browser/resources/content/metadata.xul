@@ -71,7 +71,11 @@
       <rows>
         <row id="link-url">
           <text value="&link-url.label; "/>
-          <text id="link-url-text" value="" class="text-link" onclick="openLink(this)"/>
+          <hbox>
+            <text id="link-url-text" value="" class="text-link" 
+                  onclick="openLink(this)"/>
+            <spring flex="1"/>
+          </hbox>
         </row>
         <row id="link-target">
           <text value="&link-target.label; "/>
@@ -106,11 +110,33 @@
       <rows>
         <row id="image-url">
           <text value="&image-url.label; "/>
-          <text id="image-url-text" value="" class="text-link" onclick="openLink(this)"/>
+          <hbox>
+            <text id="image-url-text" value="" class="text-link" 
+                  onclick="openLink(this)"/>
+            <spring flex="1"/>
+          </hbox>
+        </row>
+        <row id="image-width">
+          <text value="&image-width.label; "/>
+          <hbox>
+            <text id="image-width-text" value=""/>
+            <text value=" &image-pixels.label;"/>
+          </hbox>
+        </row>
+        <row id="image-height">    
+          <text value="&image-height.label; "/>
+          <hbox>
+            <text id="image-height-text" value=""/>
+            <text value=" &image-pixels.label;"/>
+          </hbox>
         </row>
         <row id="image-desc">
           <text value="&image-desc.label; "/>
-          <text id="image-desc-text" value="" class="text-link" onclick="openLink(this)"/>
+          <hbox>
+            <text id="image-desc-text" value="" class="text-link" 
+                  onclick="openLink(this)"/>
+            <spring flex="1"/>
+          </hbox>
         </row>
       </rows>
     </grid>
@@ -125,7 +151,11 @@
       <rows>
         <row id="insdel-cite">
           <text value="&insdel-cite.label; "/>
-          <text id="insdel-cite-text" value="" class="text-link" onclick="openLink(this)"/>
+          <hbox>
+            <text id="insdel-cite-text" value="" class="text-link" 
+                  onclick="openLink(this)"/>
+            <spring flex="1"/>
+          </hbox>
         </row>
         <row id="insdel-date">
           <text value="&insdel-date.label; "/>
@@ -144,7 +174,11 @@
       <rows>
         <row id="quote-cite">
           <text value="&quote-cite.label; "/>
-          <text id="quote-cite-text" value="" class="text-link" onclick="openLink(this)"/>
+          <hbox>
+            <text id="quote-cite-text" value="" class="text-link" 
+                  onclick="openLink(this)"/>
+            <spring flex="1"/>
+          </hbox>
         </row>
       </rows>
     </grid>
