@@ -495,7 +495,6 @@ EnsureDefaultRegistryDirectory() {
                 "%s/" NS_MOZILLA_DIR_NAME, settings);
     if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
         PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
-        printf("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
     }
