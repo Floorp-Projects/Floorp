@@ -3874,6 +3874,8 @@
    (cond
     ((endp element-codes) nil)
     ((endp (cdr element-codes)) (cons 'list element-codes))
+    ((every #'(lambda (element) (or (numberp element) (stringp element))) element-codes)
+     (list 'quote (remove-duplicates element-codes :test #'equal)))
     (t `(delete-duplicates (list ,@element-codes) ,@(element-test world element-type))))
    (make-list-set-type world element-type)
    (list* 'expr-annotation:special-form special-form element-annotated-exprs)))
@@ -5643,6 +5645,7 @@
 
 (defparameter *default-primitives*
   '((neg (-> (integer) integer) #'- :unary :minus nil %prefix% %prefix%)
+    (abs (-> (integer) integer) #'abs :unary "|" "|" %primary% %expr%)
     (* (-> (integer integer) integer) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %unary%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
@@ -5650,6 +5653,7 @@
     
     ;(rational-compare (-> (rational rational) order) #'rational-compare)
     (rat-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
+    (rat-abs (-> (rational) rational) #'abs :unary "|" "|" %primary% %expr%)
     (rat* (-> (rational rational) rational) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
     (rat+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
@@ -5664,7 +5668,7 @@
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
-    (real-to-float32 (-> (rational) finite-float32) #'rational-to-float32)
+    (real-to-float32 (-> (rational) float32) #'rational-to-float32)
     (truncate-finite-float32 (-> (finite-float32) integer) #'truncate-finite-float32)
     
     ;(float32-compare (-> (float32 float32) order) #'float32-compare)
@@ -5676,7 +5680,7 @@
     (float32-divide (-> (float32 float32) float32) #'float32-divide)
     (float32-remainder (-> (float32 float32) float32) #'float32-remainder)
     
-    (real-to-float64 (-> (rational) finite-float64) #'rational-to-float64)
+    (real-to-float64 (-> (rational) float64) #'rational-to-float64)
     (float32-to-float64 (-> (float32) float64) #'float32-to-float64)
     (truncate-finite-float64 (-> (finite-float64) integer) #'truncate-finite-float64)
     
@@ -5697,9 +5701,7 @@
     (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
     (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
     
-    (digit-value (-> (character) integer) #'digit-char-36)
-    (is-initial-identifier-character (-> (character) boolean) #'initial-identifier-character?)
-    (is-continuing-identifier-character (-> (character) boolean) #'continuing-identifier-character?)))
+    (digit-value (-> (character) integer) #'digit-char-36)))
 
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
