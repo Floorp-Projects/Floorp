@@ -127,6 +127,9 @@ nsresult
 NS_NewMenuPopupFrame ( nsIFrame** aNewFrame );
 
 nsresult
+NS_NewPopupSetFrame(nsIFrame** aNewFrame);
+
+nsresult
 NS_NewMenuFrame ( nsIFrame** aNewFrame, PRUint32 aFlags );
 
 nsresult
@@ -1836,6 +1839,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::menuitem      == tag.get())  || 
         (nsXULAtoms::menubar       == tag.get())  ||
         (nsXULAtoms::menupopup     == tag.get())  ||
+        (nsXULAtoms::menupopupset  == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::toolbaritem     == tag.get())  ||
@@ -3094,6 +3098,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       processChildren = PR_TRUE;
       rv = NS_NewMenuBarFrame(&newFrame);
 #endif
+    }
+    else if (aTag == nsXULAtoms::menupopupset) {
+      // This frame contains child popups
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewPopupSetFrame(&newFrame);
     }
     else if (aTag == nsXULAtoms::menupopup) {
       // This is its own frame that derives from
