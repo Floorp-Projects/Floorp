@@ -1,0 +1,160 @@
+#!/bin/sh
+
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version 
+# 1.1 (the "License"); you may not use this file except in compliance with 
+# the License. You may obtain a copy of the License at 
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1996-2003
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#	Mark Smith <MarkCSmithWork@aol.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK ***** 
+
+# alarm: a simple script to ring a bell after a specified time period elapses.
+#
+# usage: alarm +relativetime [msg]
+#        alarm absolutetime [msg]
+#
+# where:
+# relativetime is a number in seconds or a number followed by 
+#	a unit character (s for seconds, m for minutes, h for hours), e.g., +2h
+# absolutetime is a precise time for the alarm, e.g., 3pm
+# msg is an optional text message to be displayed when the alarm fires.
+#
+
+ECHO_MINUS_N="/usr/ucb/echo -n"
+ECHO=echo
+GETDATE=$HOME/usr/bin-`uname`/getdate
+
+ring_bell()
+{
+    for i in a b c d e; do
+	$ECHO_MINUS_N 
+	sleep 1
+    done 
+    sleep 2;
+    for i in a b c d e; do
+	$ECHO_MINUS_N 
+	sleep 1
+    done 
+	$ECHO ""
+}
+
+if [ $# -lt 1 ]; then
+    $ECHO "usage: $0 absolutetime [msg]"
+    $ECHO "usage: $0 +relativetime [msg]"
+    exit 1;
+fi
+
+RAWTIME=$1
+if [ -z "$2" ]; then
+	MSG="Alarm!"
+else
+	shift
+	MSG="Alarm: $*"
+fi
+
+FIRSTCHAR=`$ECHO $RAWTIME | sed -e 's/\(.\).*$/\1/'`
+if [ $FIRSTCHAR = "+" ]; then
+# relative time
+	ALLBUTFIRST=`$ECHO $RAWTIME | sed -e 's/^.//'`
+	LASTCHAR=`$ECHO $ALLBUTFIRST | sed -e 's/^.*\(.\)$/\1/'`
+	ALLBUTLAST=`$ECHO $ALLBUTFIRST | sed -e 's/.$//'`
+	case $LASTCHAR in
+		s)
+			SLEEPTIME=$ALLBUTLAST
+			break;
+			;;
+		m)
+			SLEEPTIME=`expr $ALLBUTLAST \* 60`
+			break;
+			;;
+		h)
+			SLEEPTIME=`expr $ALLBUTLAST \* 60 \* 60`
+			break;
+			;;
+		[0-9])
+			SLEEPTIME=$ALLBUTFIRST
+			break;
+			;;
+		*)
+			$ECHO "time must be in the form [0-9]*s, [0-9]*m, [0-9]*h"
+			exit 1
+	esac
+
+else
+# absolute time
+	if [ -z "$DATEMSK" ]; then
+		DATEMSK=$HOME/.datemsk; export DATEMSK
+	fi
+	CURRENT_TIME=`date`;
+	CURRENT_TIME_SECS=`$GETDATE "$CURRENT_TIME"`
+	if [ $? -ne 0 ]; then
+		$ECHO "$GETDATE failed for current time"
+		exit 1
+	fi
+	ALARM_TIME_SECS=`$GETDATE "$RAWTIME"`
+	if [ $? -ne 0 ]; then
+		ALARM_TIME_SECS="";
+# try adding an 'm' if the last char. is an 'a' or a 'p' (so 5am and 5pm work)
+		LASTCHAR=`$ECHO $RAWTIME | sed -e 's/^.*\(.\)$/\1/'`
+		if [ "$LASTCHAR" = "p" -o "$LASTCHAR" = "a" ]; then
+			ALARM_TIME_SECS=`$GETDATE "$RAWTIME"m`
+			if [ $? -ne 0 ]; then
+				ALARM_TIME_SECS="";
+			fi
+		fi
+	fi
+
+	if [ -z "$ALARM_TIME_SECS" ]; then
+		$ECHO "$GETDATE failed for $RAWTIME; try one of these formats:"
+		cat $DATEMSK
+		exit 1
+	fi
+	SLEEPTIME=`expr $ALARM_TIME_SECS - $CURRENT_TIME_SECS`
+	if [ $SLEEPTIME -le 0 ]; then
+		SECONDS_AGO=`expr 0 - $SLEEPTIME`;
+		$ECHO "$RAWTIME seems to be in the past ($SECONDS_AGO seconds ago)"
+		exit 1
+	fi
+fi
+
+#$ECHO rt=$RAWTIME fc=$FIRSTCHAR lc=$LASTCHAR sl=$SLEEPTIME
+
+if [ $SLEEPTIME != "$ALLBUTLAST" ]; then
+    $ECHO "$MSG in $SLEEPTIME seconds ($RAWTIME)..."
+else
+    $ECHO "$MSG in $SLEEPTIME seconds..."
+fi
+sleep $SLEEPTIME
+$ECHO_MINUS_N "$MSG"
+ring_bell
+exit 0
