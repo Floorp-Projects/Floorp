@@ -67,6 +67,12 @@ typedef PRUcs2 PRUnichar;
 #define NS_BASE NS_IMPORT
 #endif
 
+#ifdef _IMPL_NS_NET
+#define NS_NET NS_EXPORT
+#else
+#define NS_NET NS_IMPORT
+#endif
+
 #ifdef _IMPL_NS_DOM
 #define NS_DOM NS_EXPORT
 #else
