@@ -87,5 +87,16 @@ else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt 
-endif
-endif
+endif		#MOZ_MONOLITHIC_TOOLKIT
+endif		#MOZ_ENABLE_GTK
+
+ifdef MOZ_ENABLE_QT
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+ifndef MOZ_MONOLITHIC_TOOLKIT
+CXXFLAGS        += $(MOZ_QT_CFLAGS)
+CFLAGS          += $(MOZ_QT_CFLAGS)
+else
+CXXFLAGS        += $(TK_CFLAGS)
+CFLAGS          += $(TK_CFLAGS)
+endif		#MOZ_MONOLITHIC_TOOLKIT
+endif		#MOZ_ENABLE_QT
