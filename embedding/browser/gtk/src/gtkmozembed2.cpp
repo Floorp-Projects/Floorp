@@ -794,6 +794,7 @@ gtk_moz_embed_open_stream(GtkMozEmbed *embed, const char *base_uri,
 
   g_return_if_fail (embed != NULL);
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  g_return_if_fail (GTK_WIDGET_REALIZED(GTK_WIDGET(embed)));
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
@@ -807,6 +808,7 @@ void gtk_moz_embed_append_data(GtkMozEmbed *embed, const char *data,
 
   g_return_if_fail (embed != NULL);
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  g_return_if_fail (GTK_WIDGET_REALIZED(GTK_WIDGET(embed)));
 
   embedPrivate = (EmbedPrivate *)embed->data;
   embedPrivate->AppendToStream(data, len);
@@ -819,6 +821,7 @@ gtk_moz_embed_close_stream(GtkMozEmbed *embed)
 
   g_return_if_fail (embed != NULL);
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  g_return_if_fail (GTK_WIDGET_REALIZED(GTK_WIDGET(embed)));
 
   embedPrivate = (EmbedPrivate *)embed->data;
   embedPrivate->CloseStream();
