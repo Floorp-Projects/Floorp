@@ -41,7 +41,7 @@
     {
 			border              : 1px solid ThreeDFace;	
     }
-    
+  
   button:hover:active,
   button[open="true"]
     {
@@ -82,7 +82,6 @@
   .button-box-text,
   button[disabled]:focus > .button-box-1 > .button-box-2 > .button-box-text
     {
-      -moz-box-pack       : center;
       padding             : 0px 3px 1px 2px;
       border              : 1px solid ThreeDFace;
       margin              : 1px;

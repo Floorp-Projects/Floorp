@@ -9,7 +9,7 @@
       <xul:hbox class="button-box-1" flex="1">
         <xul:hbox class="button-box-2" align="center" flex="1">
           <xul:image class="button-icon" inherits="src"/>
-          <xul:hbox class="button-box-text" flex="1" align="center">
+          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
           </xul:hbox>
@@ -22,7 +22,7 @@
     <content>
       <xul:hbox class="button-box-1" flex="1">
         <xul:hbox class="button-box-2" align="center" flex="1">
-          <xul:hbox class="button-box-text" flex="1" align="center">
+          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
           </xul:hbox>
@@ -37,7 +37,7 @@
       <xul:hbox class="button-box-1" flex="1">
         <xul:vbox class="button-box-2" align="center" flex="1">
           <xul:image class="button-icon" inherits="src"/>
-          <xul:hbox class="button-box-text" flex="1" align="center">
+          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
           </xul:hbox>
@@ -50,7 +50,7 @@
     <content>
       <xul:hbox class="button-box-1" flex="1">
         <xul:vbox class="button-box-2" align="center" flex="1">
-          <xul:hbox class="button-box-text" flex="1" align="center">
+          <xul:hbox class="button-box-text" flex="1" align="center" pack="center">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
             <children/>
           </xul:hbox>

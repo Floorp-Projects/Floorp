@@ -22,7 +22,7 @@
 
         <xul:hbox class="menulist-text-box" align="center">
          <xul:image class="menulist-icon-mid" inherits="src"/>
-         <xul:text class="menulist-text-mid" inherits="disabled,value=label,crop,accesskey" flex="1"/>
+         <xul:text class="menulist-text-mid" inherits="disabled,value=label,crop,accesskey" crop="right" flex="1"/>
        </xul:hbox>
      </xul:stack>
       
