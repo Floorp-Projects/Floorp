@@ -42,8 +42,8 @@ DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
 interface IEnumRegisterWordA;
 interface IEnumRegisterWordW;
 interface IEnumInputContext;
-struct IMEMENUITEMINFOA;
-struct IMEMENUITEMINFOW;
+struct NS_IMEMENUITEMINFOA;
+struct NS_IMEMENUITEMINFOW;
     
     interface
     IActiveIMMApp : public IUnknown
@@ -398,8 +398,8 @@ struct IMEMENUITEMINFOW;
             /* [in] */ HIMC hIMC,
             /* [in] */ DWORD dwFlags,
             /* [in] */ DWORD dwType,
-            /* [in] */ IMEMENUITEMINFOA __RPC_FAR *pImeParentMenu,
-            /* [out] */ IMEMENUITEMINFOA __RPC_FAR *pImeMenu,
+            /* [in] */ NS_IMEMENUITEMINFOA __RPC_FAR *pImeParentMenu,
+            /* [out] */ NS_IMEMENUITEMINFOA __RPC_FAR *pImeMenu,
             /* [in] */ DWORD dwSize,
             /* [out] */ DWORD __RPC_FAR *pdwResult) = 0;
         
@@ -407,8 +407,8 @@ struct IMEMENUITEMINFOW;
             /* [in] */ HIMC hIMC,
             /* [in] */ DWORD dwFlags,
             /* [in] */ DWORD dwType,
-            /* [in] */ IMEMENUITEMINFOW __RPC_FAR *pImeParentMenu,
-            /* [out] */ IMEMENUITEMINFOW __RPC_FAR *pImeMenu,
+            /* [in] */ NS_IMEMENUITEMINFOW __RPC_FAR *pImeParentMenu,
+            /* [out] */ NS_IMEMENUITEMINFOW __RPC_FAR *pImeMenu,
             /* [in] */ DWORD dwSize,
             /* [out] */ DWORD __RPC_FAR *pdwResult) = 0;
         
