@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 cindent et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,6 +46,18 @@
 #include "nsReadableUtils.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
+
+static NS_METHOD
+DiscardSegments(nsIInputStream *input,
+                void *closure,
+                const char *buf,
+                PRUint32 offset,
+                PRUint32 count,
+                PRUint32 *countRead)
+{
+    *countRead = count;
+    return NS_OK;
+}
 
 // nsISupports implementation
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener)
@@ -132,10 +145,22 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                                     PRUint32 aCount)
 {
     nsresult rv = NS_ERROR_FAILURE;
-	PRUint32 streamLen = aCount;
+    PRUint32 streamLen = aCount;
 
-	if (streamLen == 0 || mStreamEnded)
-		return NS_OK; // XXX an error code would make more sense, no?
+    if (streamLen == 0)
+    {
+        NS_ERROR("count of zero passed to OnDataAvailable");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    if (mStreamEnded)
+    {
+        // Hmm... this may just indicate that the data stream is done and that
+        // what's left is either metadata or padding of some sort.... throwing
+        // it out is probably the safe thing to do.
+        PRUint32 n;
+        return iStr->ReadSegments(DiscardSegments, nsnull, streamLen, &n);
+    }
 
     switch (mMode)
     {
