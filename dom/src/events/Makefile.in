@@ -28,6 +28,7 @@ DEFINES += -D_IMPL_NS_DOM
 
 CPPSRCS =				\
 	nsJSEventListener.cpp		\
+	nsJSDOMEventListener.cpp		\
 	nsJSEvent.cpp			\
 	$(NULL)
 

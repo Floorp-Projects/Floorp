@@ -42,7 +42,7 @@ public:
   * @param anEvent the event to process. @see nsIDOMEvent.h for event types.
   */
 
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent) = 0;
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) = 0;
 
 };
 

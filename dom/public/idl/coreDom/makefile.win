@@ -68,5 +68,7 @@ export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 install::
 	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOMEventCapturer.h $(XPCOM_DESTDIR)\..\coreEvents
 	$(RM) $(GENXDIR)\nsIDOMEventCapturer.h
+	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOMEventTarget.h $(XPCOM_DESTDIR)\..\coreEvents
+	$(RM) $(GENXDIR)\nsIDOMEventTarget.h
 	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
 	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)

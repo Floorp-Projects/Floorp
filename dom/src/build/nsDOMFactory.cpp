@@ -705,7 +705,8 @@ void XXXDomNeverCalled()
   NS_NewScriptGlobalObject(0);
   NS_NewScriptNavigator(0, 0, 0, 0);
   NS_NewScriptLocation(0, 0, 0, 0);
-  NS_NewScriptEventListener(0, 0, 0);
+  NS_NewScriptEventListener(0, 0, 0, 0);
+  NS_NewJSEventListener(0, 0, 0);
   NS_NewScriptCSS2Properties(0, 0, 0, 0);
   NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
   NS_NewScriptStyleSheetCollection(0, 0, 0, 0);

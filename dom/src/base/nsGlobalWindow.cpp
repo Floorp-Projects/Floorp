@@ -76,6 +76,7 @@ static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -164,6 +165,11 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIDOMEventReceiverIID)) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMEventReceiver*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventTargetIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMEventTarget*)this;
     AddRef();
     return NS_OK;
   }
@@ -1817,7 +1823,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
 
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &mDOMEvent;
   }
   
@@ -1828,13 +1834,13 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
   //Bubbling stage
   /*Up to frames?*/
 
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
@@ -1856,12 +1862,12 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 }
 
 nsresult 
-GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+GlobalWindowImpl::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   nsIEventListenerManager *mManager;
 
   if (NS_OK == GetListenerManager(&mManager)) {
-    mManager->AddEventListener(aListener, aIID);
+    mManager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     NS_RELEASE(mManager);
     return NS_OK;
   }
@@ -1869,10 +1875,41 @@ GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& 
 }
 
 nsresult 
-GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+GlobalWindowImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListener(aListener, aIID);
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+GlobalWindowImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                   PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+GlobalWindowImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                      PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

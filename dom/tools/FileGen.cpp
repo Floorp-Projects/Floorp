@@ -138,6 +138,10 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
         break;
       case TYPE_XPIDL_OBJECT:
         sprintf(aBuffer, kXPIDLObjTypePtrStr, aVariable.GetTypeName());
+        break;
+      case TYPE_FUNC:
+        sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
+        break;
       default:
         // XXX Fail for other cases
         break;
@@ -181,6 +185,9 @@ FileGen::GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_XPIDL_OBJECT:
         sprintf(aBuffer, kXPIDLObjTypeStr, aVariable.GetTypeName());
         break;
+      case TYPE_FUNC:
+        sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
+        break;
       default:
         // XXX Fail for other cases
         break;
@@ -223,6 +230,9 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         break;
       case TYPE_XPIDL_OBJECT:
         sprintf(aBuffer, kXPIDLObjTypeStr, aVariable.GetTypeName());
+        break;
+      case TYPE_FUNC:
+        sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
         break;
       default:
         // XXX Fail for other cases
@@ -338,8 +348,8 @@ FileGen::CollectAllInInterface(IdlInterface &aInterface,
     for (p = 0; p < pcount; p++) {
       IdlParameter *param = func->GetParameterAt(p);
         
-      if (((param->GetType() == TYPE_OBJECT) || (param->GetType() == TYPE_XPIDL_OBJECT)) &&
-          !PL_HashTableLookup(aTable, param->GetTypeName())) {
+      if (((param->GetType() == TYPE_OBJECT) || (param->GetType() == TYPE_XPIDL_OBJECT)
+          || (param->GetType() == TYPE_FUNC)) && !PL_HashTableLookup(aTable, param->GetTypeName())) {
         PL_HashTableAdd(aTable, param->GetTypeName(), (void *)(param->GetType()));
       }
     }

@@ -39,6 +39,7 @@ EXPORTS =				\
 	nsIDOMPaintListener.h		\
 	nsIDOMDragListener.h		\
 	nsIDOMNSEvent.h			\
+	nsIDOMEventTarget.h			\
 	nsIDOMTextListener.h		\
 	$(NULL)
 

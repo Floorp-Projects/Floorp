@@ -29,6 +29,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -38,11 +40,15 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMNamedNodeMap);
 NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMEventListener);
+NS_DEF_PTR(nsIDOMEventTarget);
 NS_DEF_PTR(nsIDOMNodeList);
 
 //
@@ -548,6 +554,126 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 }
 
 
+//
+// Native method AddEventListener
+//
+PR_STATIC_CALLBACK(JSBool)
+EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *privateThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMEventTarget *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventTarget");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMEventListener* b1;
+  PRBool b2;
+  PRBool b3;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 4) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+                                         cx,
+                                         obj,
+                                         argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->AddEventListener(b0, b1, b2, b3)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function addEventListener requires 4 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveEventListener
+//
+PR_STATIC_CALLBACK(JSBool)
+EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *privateThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMEventTarget *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventTarget");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMEventListener* b1;
+  PRBool b2;
+  PRBool b3;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 4) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+                                         cx,
+                                         obj,
+                                         argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->RemoveEventListener(b0, b1, b2, b3)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function removeEventListener requires 4 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Node
@@ -597,6 +723,8 @@ static JSFunctionSpec NodeMethods[] =
   {"appendChild",          NodeAppendChild,     1},
   {"hasChildNodes",          NodeHasChildNodes,     0},
   {"cloneNode",          NodeCloneNode,     1},
+  {"addEventListener",          EventTargetAddEventListener,     4},
+  {"removeEventListener",          EventTargetRemoveEventListener,     4},
   {0}
 };
 

@@ -50,10 +50,18 @@
         Window open(/* ... */);
       };
 
-      interface EventCapturer : EventReceiver {
+     interface EventCapturer : EventReceiver {
 /* IID: { 0xa6cf906c, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-        void   captureEvent(in wstring type);
-	void   releaseEvent(in wstring type);
-      };
+       void   captureEvent(in wstring type);
+	   void   releaseEvent(in wstring type);
+     };
+
+     interface EventTarget {
+ /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \
+  { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } */
+
+	   void	addEventListener(in DOMString type, in function EventListener listener, in boolean postProcess, in boolean useCapture);
+	   void	removeEventListener(in DOMString type, in function EventListener listener, in boolean postProcess, in boolean useCapture);
+	 };

@@ -39,6 +39,7 @@ public:
     VK_TAB = 9,
     VK_CLEAR = 12,
     VK_RETURN = 13,
+    VK_ENTER = 14,
     VK_SHIFT = 16,
     VK_CONTROL = 17,
     VK_ALT = 18,

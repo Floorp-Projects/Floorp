@@ -30,6 +30,8 @@
 #include "jsapi.h"
 #include "nsString.h"
 
+class nsIDOMEventListener;
+
 class nsJSUtils {
 public:
   static NS_EXPORT PRBool nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
@@ -68,6 +70,11 @@ public:
   static NS_EXPORT PRBool nsConvertJSValToBool(PRBool* aProp,
                                      JSContext* aContext,
                                      jsval aValue);
+
+  static NS_EXPORT PRBool nsConvertJSValToFunc(nsIDOMEventListener** aListener,
+                                       JSContext* aContext,
+                                       JSObject* aObj,
+                                       jsval aValue);
 
   static NS_EXPORT void nsGenericFinalize(JSContext* aContext,
                                 JSObject* aObj);

@@ -17,6 +17,10 @@
  */
 #include "nsJSEventListener.h"
 #include "nsString.h"
+#include "nsIScriptEventListener.h"
+
+static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 /*
  * nsJSEventListener implementation
@@ -37,16 +41,8 @@ nsresult nsJSEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kIDOMEventListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptEventListenerIID)) {
-    *aInstancePtr = (void*)(nsIScriptEventListener*)this;
     AddRef();
     return NS_OK;
   }
@@ -62,7 +58,7 @@ NS_IMPL_ADDREF(nsJSEventListener)
 
 NS_IMPL_RELEASE(nsJSEventListener)
 
-nsresult nsJSEventListener::ProcessEvent(nsIDOMEvent* aEvent)
+nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval, result;
   jsval argv[1];
@@ -110,7 +106,7 @@ nsresult nsJSEventListener::ProcessEvent(nsIDOMEvent* aEvent)
  * Factory functions
  */
 
-extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void *aObj)
+extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void *aObj)
 {
   JSContext *mCX = (JSContext*)aContext->GetNativeContext();
   
@@ -118,8 +114,6 @@ extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aIns
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 
   return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
 }
