@@ -32,10 +32,10 @@ static NS_DEFINE_IID(kIDOMNSEventIID, NS_IDOMNSEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
 static char* mEventNames[] = {
-  "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover",
-  "onmouseout", "onmousemove", "onkeydown", "onkeyup", "onkeypress",
-  "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-  "onsubmit", "onreset", "onchange", "onpaint" ,"text"
+  "mousedown", "mouseup", "click", "dblclick", "mouseover",
+  "mouseout", "mousemove", "keydown", "keyup", "keypress",
+  "focus", "blur", "load", "unload", "abort", "error",
+  "submit", "reset", "change", "paint" ,"text"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
