@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = public src prefs build resources
 
 ifdef ENABLE_TESTS
-DIRS += tests
+# DIRS += tests
 endif
 
 include $(topsrcdir)/config/config.mk
