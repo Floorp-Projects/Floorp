@@ -88,6 +88,13 @@ NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
   if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
     originCharset.Truncate();
 
+  // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32-LE,
+  // UTF-32LE, UTF-32BE (yet?). Truncate it and leave it to default (UTF-8)
+  if (originCharset[0] == 'U' &&
+      originCharset[1] == 'T' &&
+      originCharset[2] == 'F')
+    originCharset.Truncate();
+
   rv = nsHTMLUtils::IOService->NewURI(NS_ConvertUCS2toUTF8(aSpec),
                                       NS_LossyConvertUCS2toASCII(originCharset).get(),
                                       aBaseURI, getter_AddRefs(absURI));
