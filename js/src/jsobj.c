@@ -1042,9 +1042,18 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     jsid id;
     uintN attrs;
+    JSObject *obj2;
+    JSProperty *prop;
 
     if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
+    /* Be compatible with an error in the ECMA spec; return false unless hasOwnProperty. */
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        return JS_FALSE;
+    if (prop && obj2 != obj) {
+        *rval = JSVAL_FALSE;
+        return JS_TRUE;
+    }
     if (!OBJ_GET_ATTRIBUTES(cx, obj, id, NULL, &attrs))
         return JS_FALSE;
     *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
