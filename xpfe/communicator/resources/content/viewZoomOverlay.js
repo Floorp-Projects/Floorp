@@ -98,6 +98,10 @@ ZoomManager.prototype = {
     this.jump(-1);
   },
 
+  reset : function() {
+    this.textZoom = 100;
+  },
+
   getZoomFactors : function() {
     this.ensureZoomFactors();
 
