@@ -304,12 +304,12 @@
   </chrome> 
 
     <chrome about="chrome://netwerk/"> 
-
     <content> 
       <RDF:Description about="chrome://netwerk/content/">
 	    <base>resource:/chrome/netwerk/content/default/</base>
       </RDF:Description> 
     </content> 
+   </chrome> 
 
 </RDF:RDF> 
 
