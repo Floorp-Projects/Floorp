@@ -165,11 +165,16 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetChildCount(PRInt32 *aAccChildCount)
 
 nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
                    nsIFrame *aBulletFrame, const nsAString& aBulletText):
-  nsAccessibleWrap(aDOMNode, aShell),
-  mBulletAccessible(aBulletText.IsEmpty() ? nsnull : 
-                    new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
-                                                   aBulletFrame, aBulletText))
+  nsAccessibleWrap(aDOMNode, aShell)
 {
+  if (!aBulletText.IsEmpty()) {
+    mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
+                                                       aBulletFrame, aBulletText);
+    nsCOMPtr<nsPIAccessNode> bulletANode(mBulletAccessible);
+    if (bulletANode) {
+      bulletANode->Init();
+    }
+  }
 }
 
 NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
@@ -202,7 +207,7 @@ void nsHTMLLIAccessible::CacheChildren(PRBool aWalkAnonContent)
     walker.mState.frame = GetFrame();
     walker.GetFirstChild();
 
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible = do_QueryInterface(mBulletAccessible);
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible = mBulletAccessible;
     while (walker.mState.accessible) {
       ++mAccChildCount;
       privatePrevAccessible->SetNextSibling(walker.mState.accessible);
@@ -218,6 +223,20 @@ nsHTMLListBulletAccessible::nsHTMLListBulletAccessible(nsIDOMNode* aDomNode,
   nsIWeakReference* aShell, nsIFrame *aFrame, const nsAString& aBulletText): 
   nsHTMLTextAccessible(aDomNode, aShell, aFrame), mBulletText(aBulletText)
 {
+}
+
+NS_IMETHODIMP nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
+{
+  // Since mDOMNode is same as for list item, use |this| pointer as the unique Id
+  *aUniqueID = NS_STATIC_CAST(void*, this);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsHTMLListBulletAccessible::Shutdown()
+{
+  mBulletText.Truncate();
+  return nsHTMLTextAccessible::Shutdown();
 }
 
 NS_IMETHODIMP nsHTMLListBulletAccessible::GetName(nsAString &aName)
