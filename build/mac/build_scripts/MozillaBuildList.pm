@@ -443,6 +443,7 @@ sub BuildRuntimeDist()
     InstallFromManifest(":mozilla:gc:boehm:MANIFEST",                              "$distdirectory:gc:");
 
     #INCLUDE
+    InstallFromManifest(":mozilla:config:MANIFEST_xpfe",                           "$distdirectory:xpfe:");
     InstallFromManifest(":mozilla:config:mac:MANIFEST",                            "$distdirectory:config:");
     InstallFromManifest(":mozilla:config:mac:MANIFEST_config",                     "$distdirectory:config:");
     
