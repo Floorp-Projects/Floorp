@@ -396,7 +396,7 @@ NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
 }
 
 //*****************************************************************************
-// CBrowserImpl::nsIStreamListener (used for nsIRequest tests)
+// CBrowserImpl::nsIStreamListener (used for nsIRequest)
 
 NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				nsISupports *ctxt, nsIInputStream *input,

@@ -61,8 +61,6 @@
 // Print Includes
 #include "PrintProgressDialog.h"
 
-// Mozilla Includes
-#include "nsIWidget.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -467,9 +465,9 @@ void CBrowserView::OnNavReload()
 }
 
 void CBrowserView::OnNavStop() 
-{
-  if(mWebNav)
-    mWebNav->Stop(nsIWebNavigation::STOP_ALL);
+{	
+	if(mWebNav)
+		mWebNav->Stop();
 }
 
 void CBrowserView::OnUpdateNavStop(CCmdUI* pCmdUI)

@@ -167,14 +167,9 @@ NS_METHOD winEmbedFileLocProvider::CloneMozBinDirectory(nsILocalFile **aLocalFil
         //    This will be set if a directory was passed to NS_InitXPCOM
         // 2. If that doesn't work, set it to be the current process directory
         
-<<<<<<< winEmbedFileLocProvider.cpp
 //        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
 	    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID,&rv));
 
-=======
-        nsCOMPtr<nsIProperties> directoryService = 
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
->>>>>>> 1.4
         if (NS_FAILED(rv))
             return rv;
         
@@ -213,14 +208,9 @@ NS_METHOD winEmbedFileLocProvider::GetProductDirectory(nsILocalFile **aLocalFile
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
    
-<<<<<<< winEmbedFileLocProvider.cpp
     //NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID,&rv));
 
-=======
-    nsCOMPtr<nsIProperties> directoryService = 
-             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
->>>>>>> 1.4
     if (NS_FAILED(rv)) return rv;
     rv = directoryService->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_SUCCEEDED(rv))

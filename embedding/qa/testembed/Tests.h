@@ -139,27 +139,5 @@ protected:
 	void FileCopyTest(nsILocalFile *, nsILocalFile *);
 	void FileMoveTest(nsILocalFile *, nsILocalFile *);
 };
-<<<<<<< Tests.h
-=======
-
-//	structure for uri table
-typedef struct
-{
-	char		theUri[1024];
-	bool		reqPend;
-	bool		reqStatus;
-	bool		reqSuspend;
-	bool		reqResume;
-	bool		reqCancel;
-	bool		reqSetLoadGroup;
-	bool		reqGetLoadGroup;	
-} ReqElement;
-
-typedef struct
-{
-  char			theUri[1024];
-  unsigned long theFlag;
-} NavElement;
->>>>>>> 1.8
 
 #endif //_TESTS_H
