@@ -313,6 +313,9 @@ NS_IMETHODIMP
 nsPrefMigration::AddProfilePaths(const char * oldProfilePathStr, const char * newProfilePathStr)
 {
   MigrateProfileItem* item = new MigrateProfileItem();
+  if (!item)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   item->oldFile = oldProfilePathStr;
   item->newFile = newProfilePathStr;
   
