@@ -186,7 +186,7 @@ protected:
  * alpha0.20 : First time we did versioning
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.31"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.40"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
