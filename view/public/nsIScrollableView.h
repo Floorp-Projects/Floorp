@@ -53,6 +53,13 @@ public:
    * @result coordinate in twips
    */
   virtual PRInt32 GetVisibleOffset(void) = 0;
+
+  /**
+   * Get the view that we are scrolling within the
+   * scrolling view. 
+   * @result child view
+   */
+  virtual nsIView * GetScrolledView(void) = 0;
 };
 
 #endif

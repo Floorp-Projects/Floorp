@@ -47,6 +47,16 @@ ScrollBarView :: ~ScrollBarView()
 void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
 {
   mBounds.SizeTo(width, height);
+
+  if (nsnull != mWindow)
+  {
+    nsIPresContext  *px = mViewManager->GetPresContext();
+    float           t2p = px->GetTwipsToPixels();
+  
+    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height));
+
+    NS_RELEASE(px);
+  }
 }
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
@@ -140,8 +150,6 @@ void nsScrollingView :: SetPosition(nscoord x, nscoord y)
 
 void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 {
-  PRInt32           owidth, oheight;
-  nsIWidget         *win;
   nsRect            trect;
   nsIPresContext    *cx;
   nsIDeviceContext  *dx;
@@ -153,32 +161,19 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     cx = mViewManager->GetPresContext();
     dx = cx->GetDeviceContext();
 
-    mScrollBarView->GetDimensions(&owidth, &oheight);
-    mScrollBarView->SetDimensions(owidth, height);
+    mScrollBarView->GetDimensions(&trect.width, &trect.height);
 
-    mScrollBarView->SetPosition(width - NS_TO_INT_ROUND(dx->GetScrollBarWidth()), 0);
+    trect.height = height;
+    trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    trect.y = 0;
 
-    win = mScrollBarView->GetWidget();
+    mScrollBarView->SetBounds(trect);
 
-    if (nsnull != win)
-    {
-      nsRect trect;
-      win->GetBounds(trect);
-
-      //compute new bounds
-
-      trect.x = NS_TO_INT_ROUND((width - NS_TO_INT_ROUND(dx->GetScrollBarWidth())) * cx->GetTwipsToPixels());
-      trect.y = 0;
-      trect.height = NS_TO_INT_ROUND(height * cx->GetTwipsToPixels());
-
-      win->Resize(trect.x, trect.y, trect.width, trect.height);
-
-      NS_RELEASE(win);
-    }
-
-    //this will fix the size of the thumb when we resize the root window
-
-    SetContainerSize(mSize);
+    //this will fix the size of the thumb when we resize the root window,
+    //but unfortunately it will also cause scrollbar flashing. so long as
+    //all resize operations happen through the viewmanager, this is not
+    //an issue. we'll see. MMP
+//    SetContainerSize(mSize);
 
     NS_RELEASE(dx);
     NS_RELEASE(cx);
@@ -281,7 +276,7 @@ void nsScrollingView :: SetContainerSize(nscoord aSize)
 
         //we need to be able to scroll
 
-        scroll->Enable(PR_TRUE);
+        mScrollBarView->SetVisibility(nsViewVisibility_kShow);
 
         //now update the scroller position for the new size
 
@@ -298,7 +293,7 @@ void nsScrollingView :: SetContainerSize(nscoord aSize)
         NS_RELEASE(px);
       }
       else
-        scroll->Enable(PR_FALSE);
+        mScrollBarView->SetVisibility(nsViewVisibility_kHide);
 
       scroll->Release();
     }
@@ -347,4 +342,24 @@ void nsScrollingView :: AdjustChildWidgets(nscoord aDx, nscoord aDy)
       kid->AdjustChildWidgets(aDx, aDy);
     }
   }
+}
+
+nsIView * nsScrollingView :: GetScrolledView(void)
+{
+  PRInt32 numkids;
+  nsIView *retview = nsnull;
+
+  numkids = GetChildCount();
+
+  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+  {
+    retview = GetChild(cnt);
+
+    if (retview != mScrollBarView)
+      break;
+    else
+      retview = nsnull;
+  }
+
+  return retview;
 }
