@@ -161,9 +161,9 @@ LocalStoreImpl::LocalStoreImpl(void)
 
 LocalStoreImpl::~LocalStoreImpl(void)
 {
+    Flush();
     NS_IF_RELEASE(mInner);
     PL_strfree(mURI);
-    Flush();
 }
 
 
@@ -237,7 +237,7 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
         nsOutputFileStream os(spec);
         os << "<?xml version=\"1.0\"?>" << nsEndl;
         os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
-        os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\"" << nsEndl;
+        os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
         os << "  <!-- Empty -->" << nsEndl;
         os << "</RDF:RDF>" << nsEndl;
     }
