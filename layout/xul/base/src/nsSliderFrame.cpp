@@ -648,16 +648,16 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     if (NS_FAILED(rv))
         return rv;
 
-    nsMargin borderPadding(0,0,0,0);
-    spacing->GetBorderPadding(borderPadding);
+    nsRect clientRect;
+    GetClientRect(clientRect);
     
     // figure out the new rect
     nsRect newThumbRect(thumbRect);
 
     if (isHorizontal)
-       newThumbRect.x = borderPadding.left + nscoord(float(curpospx)*mRatio);
+       newThumbRect.x = clientRect.x + nscoord(float(curpospx)*mRatio);
     else
-       newThumbRect.y = borderPadding.top + nscoord(float(curpospx)*mRatio);
+       newThumbRect.y = clientRect.y + nscoord(float(curpospx)*mRatio);
 
     // set the rect
     thumbFrame->SetRect(aPresContext, newThumbRect);

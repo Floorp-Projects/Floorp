@@ -152,7 +152,7 @@ public:
   State mState;
   nscoord mSplitterPos;
   nscoord mSplitterViewPos;
-
+  PRBool mDragging;
 
 };
 
@@ -240,6 +240,7 @@ nsSplitterFrame::nsSplitterFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell
   mInner->mChildInfosAfter = nsnull;
   mInner->mChildInfosBefore = nsnull;
   mInner->mState = nsSplitterFrameInner::Open;
+  mInner->mDragging = PR_FALSE;
 }
 
 nsSplitterFrame::~nsSplitterFrame()
@@ -466,7 +467,7 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   // if the mouse is captured always return us as the frame.
-  if (IsMouseCaptured(aPresContext))
+  if (mInner->mDragging)
   {
     // XXX It's probably better not to check visibility here, right?
     *aFrame = this;
@@ -491,6 +492,7 @@ nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
+
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: 
          mInner->MouseDrag(aPresContext, aEvent);
@@ -501,16 +503,17 @@ nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext,
     break;
   }
 
-  return nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 void
 nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
-      if (mOuter->IsMouseCaptured(aPresContext)) {
+      if (mDragging) {
           AdjustChildren(aPresContext);
           AddListener(aPresContext);
           mOuter->CaptureMouse(aPresContext, PR_FALSE);
+          mDragging = PR_FALSE;
           State newState = GetState(); 
           // if the state is dragging then make it Open.
           if (newState == Dragging)
@@ -526,7 +529,7 @@ nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 void
 nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
-        if (mOuter->IsMouseCaptured(aPresContext)) {
+        if (mDragging) {
 
           //printf("Dragging\n");
 
@@ -904,7 +907,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   mDragStartPx = c;
     
-  printf("Pressed mDragStartPx=%d\n",mDragStartPx);
+  //printf("Pressed mDragStartPx=%d\n",mDragStartPx);
 
   return NS_OK;
 }
@@ -917,13 +920,14 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   if (!mPressed)
       return NS_OK;
   
-  if (mOuter->IsMouseCaptured(mOuter->mPresContext))
+  if (mDragging)
     return NS_OK;
 
   mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
   RemoveListener();
   mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
+  mDragging = PR_TRUE;
 
   return NS_OK;
 }
