@@ -66,6 +66,13 @@
 
 #define MAX_LOADSTRING 100
 
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
+
 const CHAR *szWindowClass = "OS2EMBED";
 
 // Foward declarations of functions included in this code module:
@@ -113,7 +120,7 @@ class ProfileChangeObserver : public nsIObserver,
 
 {
 public:
-	ProfileChangeObserver();
+	 ProfileChangeObserver();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -123,49 +130,42 @@ public:
 int main(int argc, char *argv[])
 {
     printf("You are embedded, man!\n\n");
-    printf("******************************************************************\n");
-    printf("*                                                                *\n");
-    printf("*  IMPORTANT NOTE:                                               *\n");
-    printf("*                                                                *\n");
-    printf("*  OS2Embed is not supported!!! Do not raise bugs on it unless   *\n");
-    printf("*  it is badly broken (e.g. crash on start/exit, build errors)   *\n");
-    printf("*  or you have the patch to make it better! MFCEmbed is now our  *\n");
-    printf("*  embedding test application on Win32 and all testing should    *\n");
-    printf("*  be done on that.                                              *\n");
-    printf("*                                                                *\n");
-    printf("******************************************************************\n");
-    printf("\n\n");
-    
-     // Sophisticated command-line parsing in action
-     char *szFirstURL = "http://www.mozilla.org/projects/embedding";
-	char *szDefaultProfile = nsnull;
-	int argn;
-	for (argn = 1; argn < argc; argn++)
-	{
-		if (stricmp("-P", argv[argn]) == 0)
-		{
-			if (argn + 1 < argc)
-			{
-				szDefaultProfile = argv[++argn];
-			}
-		}
-		else
-		{
-	        szFirstURL = argv[argn];
-		}
-    }
-	strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
-	// Initialize global strings
-     CHAR szTitle[MAX_LOADSTRING];
-	WinLoadString((HAB)0, ghInstanceResources, IDS_APP_TITLE, MAX_LOADSTRING, szTitle);
-     MyRegisterClass();
+    // Sophisticated command-line parsing in action
+    char *szFirstURL = "http://www.mozilla.org/projects/embedding";
+    char *szDefaultProfile = nsnull;
+    int argn;
+    for (argn = 1; argn < argc; argn++)
+    {
+        if (stricmp("-P", argv[argn]) == 0)
+        {
+            if (argn + 1 < argc)
+            {
+                szDefaultProfile = argv[++argn];
+            }
+        }
+        else
+        {
+            szFirstURL = argv[argn];
+        }
+    }
+    strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
+
+    // Initialize global strings
+    CHAR szTitle[MAX_LOADSTRING];
+    WinLoadString((HAB)0, ghInstanceResources, IDS_APP_TITLE, MAX_LOADSTRING, szTitle);
+    MyRegisterClass();
+
+#ifdef _BUILD_STATIC_BIN
+    // Initialize XPCOM's module info table
+    NSGetStaticModuleInfo = app_getModuleInfo;
+#endif
 
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
 
-	// Choose the new profile
-	if (!ChooseNewProfile(TRUE, szDefaultProfile))
+    // Choose the new profile
+    if (!ChooseNewProfile(TRUE, szDefaultProfile))
     {
         NS_TermEmbedding();
         return 1;
@@ -209,7 +209,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWea
 
 ProfileChangeObserver::ProfileChangeObserver()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 // ---------------------------------------------------------------------------
