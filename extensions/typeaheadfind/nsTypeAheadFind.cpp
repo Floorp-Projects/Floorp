@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
@@ -84,6 +83,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsISound.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
@@ -407,22 +408,14 @@ NS_IMETHODIMP nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic
     while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) 
            && hasMoreDocShells) {
       docShellEnumerator->GetNext(getter_AddRefs(pcContainer));
-      docShell = do_QueryInterface(pcContainer);
-      if (docShell) {
-        docShell->GetPresShell(getter_AddRefs(presShell));
-        if (presShell) {
-          presShell->GetDocument(getter_AddRefs(doc));
-          if (doc) {
-            nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-            doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-            domWin = do_QueryInterface(ourGlobal);
-            if (domWin) {
-              nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
-              PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
-              if (index >= 0)
-                mManualFindWindows->RemoveElementAt(index);
-            }
-          }
+      nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(pcContainer));
+      if (ifreq) {
+        ifreq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWin));
+        if (domWin) {
+          nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
+          PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
+          if (index >= 0)
+            mManualFindWindows->RemoveElementAt(index);
         }
       }
     }
@@ -1463,9 +1456,10 @@ void nsTypeAheadFind::RemoveWindowFocusListener(nsIDOMWindow *aDOMWin)
   // Remove focus listener
   nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
   GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
-  chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("focus"),
-                                          NS_STATIC_CAST(nsIDOMFocusListener*, this),
-                                          PR_TRUE);
+  if (chromeEventHandler)
+    chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("focus"),
+                                            NS_STATIC_CAST(nsIDOMFocusListener*, this),
+                                            PR_TRUE);
 
   if (aDOMWin == mFocusedWindow)
     mFocusedWindow = nsnull;
@@ -1477,9 +1471,10 @@ void nsTypeAheadFind::AttachWindowFocusListener(nsIDOMWindow *aDOMWin)
   // Add focus listener to chrome event handler
   nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
   GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
-  chromeEventHandler->AddEventListener(NS_LITERAL_STRING("focus"),
-                                       NS_STATIC_CAST(nsIDOMFocusListener*, this),
-                                       PR_TRUE);
+  if (chromeEventHandler)
+    chromeEventHandler->AddEventListener(NS_LITERAL_STRING("focus"),
+                                         NS_STATIC_CAST(nsIDOMFocusListener*, this),
+                                         PR_TRUE);
 }
 
 
