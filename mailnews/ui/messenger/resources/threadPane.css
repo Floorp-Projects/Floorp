@@ -49,10 +49,14 @@ treehead treeitem treecell {
 
 icon {
  display: list-item;
- list-style-image: url(http://www.shadowland.org/client/images/ClosedRead.gif);
+ height: 16px;
+ width: 16px;
+ list-style-image: url("resource:/res/mailnews/messenger/closedMailFolder.gif");
 }
 
 treeitem > treecell > titledbutton {
  vertical-align: bottom;
+ height: 16px;
+ width: 16px;
  list-style-image: url("resource:/res/mailnews/messenger/mailMessage.gif");
 }
