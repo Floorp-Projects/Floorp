@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@/../src/
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/../src/objs.mk
