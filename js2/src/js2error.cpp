@@ -61,7 +61,7 @@ js2val error_ConstructorCore(JS2Metadata *meta, JS2Class *errorClass, js2val arg
     js2val thatValue = OBJECT_TO_JS2VAL(obj);
 
     if (!JS2VAL_IS_VOID(arg)) {
-        errorClass->writePublic(meta, thatValue, errorClass, &meta->world.identifiers["message"], true, meta->engine->allocString(meta->toString(arg)));
+        errorClass->WritePublic(meta, thatValue, &meta->world.identifiers["message"], true, meta->engine->allocString(meta->toString(arg)));
     }
 
     return thatValue;
@@ -111,7 +111,7 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
     Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
 
     JS2Class *c = meta->objectType(thatValue);
-    if (c->readPublic(meta, &thatValue, c, &meta->world.identifiers["message"], RunPhase, &result)) {
+    if (c->ReadPublic(meta, &thatValue, &meta->world.identifiers["message"], RunPhase, &result)) {
         if (JS2VAL_IS_STRING(result))
             return result;
         else

@@ -481,7 +481,7 @@ namespace MetaData {
                     ParameterFrame *pFrame = env->getEnclosingParameterFrame();
                     // If there isn't a parameter frame, or the parameter frame is
                     // only a runtime frame (for eval), then it's an orphan return
-                    if ((pFrame->kind != ParameterFrameKind) || pFrame->pluralFrame)
+                    if (!pFrame || pFrame->pluralFrame)
                         reportError(Exception::syntaxError, "Return statement not in function", p->pos);
                     ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                     if (e->expr) {
@@ -558,7 +558,7 @@ namespace MetaData {
                     }
                 
                     VariableBinding *vb = vs->bindings;
-                    Frame *regionalFrame = *(env->getRegionalFrame());
+                    Frame *regionalFrame = (env->getRegionalFrame())->first;
                     while (vb)  {
                         const StringAtom *name = vb->name;
                         if (vb->type)
@@ -1065,9 +1065,9 @@ namespace MetaData {
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
                 FrameListIterator fi = env->getRegionalFrame();
-                NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*fi);
+                NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(fi->first);
                 if (regionalFrame->kind == ParameterFrameKind)
-                    regionalFrame = checked_cast<NonWithFrame *>(*--fi);
+                    regionalFrame = checked_cast<NonWithFrame *>((--fi)->first);
                 FrameVariable *frV = makeFrameVariable(regionalFrame);
                 ASSERT(frV->kind != FrameVariable::Parameter);
                 Reference *switchTemp;
@@ -1349,7 +1349,7 @@ namespace MetaData {
                                 if (vb->initializer) {
                                     try {
                                         js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                        v->value = type->implicitCoerce(this, newValue, type);
+                                        v->value = type->ImplicitCoerce(this, newValue);
                                     }
                                     catch (Exception x) {
                                         // If a compileExpressionError occurred, then the initialiser is 
@@ -1420,7 +1420,7 @@ namespace MetaData {
                             v->type = t;
                             if (vb->initializer) {
                                 js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                v->defaultValue = t->implicitCoerce(this, newValue, t);
+                                v->defaultValue = t->ImplicitCoerce(this, newValue);
                             }
                             else
                                 v->defaultValue = t->defaultValue;
@@ -1778,8 +1778,8 @@ namespace MetaData {
             break;
         case ExprNode::This:
             {
-                js2val a;
-                if (!env->findThis(this, true, &a) || (a == JS2VAL_VOID))
+                ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                if ((pFrame == NULL) || (pFrame->thisObject == JS2VAL_VOID))
 					if (!cxt->E3compatibility)
 						reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
@@ -1794,8 +1794,8 @@ namespace MetaData {
                     ValidateExpression(cxt, env, s->op);
                 }
                 else {
-                    js2val a;
-                    if ((c == NULL) || !env->findThis(this, false, &a))
+                    ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                    if ((c == NULL) || (pFrame == NULL) || !(pFrame->isConstructor || pFrame->isInstance))
                         reportError(Exception::syntaxError, "No 'super' available", p->pos);
                     if (c->super == NULL)
                         reportError(Exception::definitionError, "No 'super' for this class", p->pos);
@@ -2342,7 +2342,7 @@ doUnary:
                     // that the arguments property will get built
                     FrameListIterator fi = env->getBegin();
                     while (fi != env->getEnd()) {
-                        Frame *fr = *fi;
+                        Frame *fr = fi->first;
                         if ((fr->kind != WithFrameKind) && (fr->kind != BlockFrameKind)) {
                             NonWithFrame *nwf = checked_cast<NonWithFrame *>(fr);
                             if (nwf->kind == ParameterFrameKind) {
@@ -2369,7 +2369,7 @@ doUnary:
                 FrameListIterator fi = env->getBegin();
                 bool keepLooking = true;
                 while (fi != env->getEnd() && keepLooking) {
-                    Frame *fr = *fi;
+                    Frame *fr = fi->first;
                     if (fr->kind == WithFrameKind)
                         // XXX unless it's provably not a dynamic object that been with'd??
                         break;
@@ -2750,8 +2750,8 @@ doUnary:
     {
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
-            if ((*fi)->kind == ClassKind)
-                return checked_cast<JS2Class *>(*fi);
+            if ((fi->first)->kind == ClassKind)
+                return checked_cast<JS2Class *>(fi->first);
             fi++;
         }
         return NULL;
@@ -2763,13 +2763,13 @@ doUnary:
     {
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
-            switch ((*fi)->kind) {
+            switch ((fi->first)->kind) {
             case ClassKind:
             case PackageKind:
             case SystemKind:
                 return NULL;
             case ParameterFrameKind:
-                return checked_cast<ParameterFrame *>(*fi);
+                return checked_cast<ParameterFrame *>(fi->first);
             case BlockFrameKind:
             case WithFrameKind:
                 break;
@@ -2788,12 +2788,12 @@ doUnary:
     {
         FrameListIterator start = getBegin();
         FrameListIterator  fi = start;
-        while (((*fi)->kind == BlockFrameKind) || ((*fi)->kind == WithFrameKind)) {
+        while (((fi->first)->kind == BlockFrameKind) || ((fi->first)->kind == WithFrameKind)) {
             fi++;
             ASSERT(fi != getEnd());
         }
-        if ((*fi)->kind == ClassKind) {
-            while ((fi != start) && ((*fi)->kind != BlockFrameKind))
+        if ((fi->first)->kind == ClassKind) {
+            while ((fi != start) && ((fi->first)->kind != BlockFrameKind))
                 fi--;
         }
         return fi;
@@ -2811,28 +2811,9 @@ doUnary:
     // Returns the penultimate frame, always a Package
     Package *Environment::getPackageFrame()
     {
-        Frame *result = *(getEnd() - 2);
+        Frame *result = (getEnd() - 2)->first;
         ASSERT(result->kind == PackageKind);
         return checked_cast<Package *>(result);
-    }
-
-    // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
-    // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
-    // false, allow this to be defined only by an instance member of a class.
-    bool Environment::findThis(JS2Metadata *meta, bool allowPrototypeThis, js2val *result)
-    {
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
-            Frame *pf = *fi;
-            if ((pf->kind == ParameterFrameKind)
-                    && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
-                if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype) {
-                    *result = checked_cast<ParameterFrame *>(pf)->thisObject;
-                    return true;
-                }
-            fi++;
-        }
-        return false;
     }
 
     js2val Environment::readImplicitThis(JS2Metadata *meta)
@@ -2856,36 +2837,35 @@ doUnary:
     // an error.
     void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base)
     {
-        js2val a = JS2VAL_VOID;
-        findThis(meta, false, &a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
-            switch ((*fi)->kind) {
+            Frame *f = fi->first;
+            switch (f->kind) {
             case ClassKind:
             case PackageKind:
                 {
-                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    js2val frame = OBJECT_TO_JS2VAL(*fi);
-                    result = limit->read(meta, &frame, limit, multiname, this, phase, rval);
+                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(f));
+                    js2val frame = OBJECT_TO_JS2VAL(f);
+                    result = limit->Read(meta, &frame, multiname, this, phase, rval);
                 }
                 break;
             case SystemKind:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(*fi, multiname, ReadAccess);
+                    LocalMember *m = meta->findLocalMember(f, multiname, ReadAccess);
                     if (m)
                         result = meta->readLocalMember(m, phase, rval);
                 }
                 break;
             case WithFrameKind:
                 {
-                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    WithFrame *wf = checked_cast<WithFrame *>(f);
                     // XXX uninitialized 'with' object?
                     js2val withVal = OBJECT_TO_JS2VAL(wf->obj);
                     JS2Class *limit = meta->objectType(withVal);
-                    result = limit->read(meta, &withVal, limit, multiname, this, phase, rval);
+                    result = limit->Read(meta, &withVal, multiname, this, phase, rval);
                     if (result && base)
                         *base = withVal;
                 }
@@ -2902,24 +2882,23 @@ doUnary:
     // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing)
     {
-        js2val a = JS2VAL_VOID;
-        findThis(meta, false, &a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
-            switch ((*fi)->kind) {
+            Frame *f = fi->first;
+            switch (f->kind) {
             case ClassKind:
             case PackageKind:
                 {
-                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, false, newValue, false);
+                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(f));
+                    result = limit->Write(meta, OBJECT_TO_JS2VAL(f), multiname, this, false, newValue, false);
                 }
                 break;
             case SystemKind:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
                     if (m) {
                         meta->writeLocalMember(m, newValue, false);
                         result = true;
@@ -2928,10 +2907,10 @@ doUnary:
                 break;
             case WithFrameKind:
                 {
-                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    WithFrame *wf = checked_cast<WithFrame *>(f);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, false, newValue, false);
+                    result = limit->Write(meta, OBJECT_TO_JS2VAL(wf->obj), multiname, this, false, newValue, false);
                 }
                 break;
             }
@@ -2942,7 +2921,7 @@ doUnary:
         if (createIfMissing) {
             Package *pkg = getPackageFrame();
             JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-            result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, this, true, newValue, false);
+            result = limit->Write(meta, OBJECT_TO_JS2VAL(pkg), multiname, this, true, newValue, false);
             if (result)
                 return;
         }
@@ -2955,24 +2934,23 @@ doUnary:
     // but it had darn well better be in the environment somewhere.
     void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue)
     {
-        js2val a = JS2VAL_VOID;
-        findThis(meta, false, &a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
-            switch ((*fi)->kind) {
+            Frame *f = fi->first;
+            switch (f->kind) {
             case ClassKind:
             case PackageKind:
                 {
-                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, false, newValue, true);
+                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(f));
+                    result = limit->Write(meta, OBJECT_TO_JS2VAL(f), multiname, this, false, newValue, true);
                 }
                 break;
             case SystemKind:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
                     if (m) {
                         meta->writeLocalMember(m, newValue, true);
                         result = true;
@@ -2981,10 +2959,10 @@ doUnary:
                 break;
             case WithFrameKind:
                 {
-                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    WithFrame *wf = checked_cast<WithFrame *>(f);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, false, newValue, true);
+                    result = limit->Write(meta, OBJECT_TO_JS2VAL(wf->obj), multiname, this, false, newValue, true);
                 }
                 break;
             }
@@ -2996,7 +2974,7 @@ doUnary:
         ASSERT(false);
         Package *pkg = getPackageFrame();
         JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-        result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, this, true, newValue, true);
+        result = limit->Write(meta, OBJECT_TO_JS2VAL(pkg), multiname, this, true, newValue, true);
         if (result)
             return;
     }
@@ -3005,17 +2983,16 @@ doUnary:
     // can't be found, or the result of the deleteProperty call if it was found.
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
-        js2val a = JS2VAL_VOID;
-        findThis(meta, false, &a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
-            switch ((*fi)->kind) {
+            Frame *f = fi->first;
+            switch (f->kind) {
             case ClassKind:
             case PackageKind:
                 {
-                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, &result))
+                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(f));
+                    if (limit->Delete(meta, OBJECT_TO_JS2VAL(f), multiname, this, &result))
                         return result;
                 }
                 break;
@@ -3023,17 +3000,17 @@ doUnary:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(*fi, multiname, WriteAccess);
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
                     if (m)
                         return false;
                 }
                 break;
             case WithFrameKind:
                 {
-                    WithFrame *wf = checked_cast<WithFrame *>(*fi);
+                    WithFrame *wf = checked_cast<WithFrame *>(f);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, &result))
+                    if (limit->Delete(meta, OBJECT_TO_JS2VAL(wf->obj), multiname, this, &result))
                         return result;
                 }
                 break;
@@ -3071,7 +3048,7 @@ doUnary:
     { 
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
-            GCMARKOBJECT(*fi)
+            GCMARKOBJECT(fi->first)
             fi++;
         }
     }
@@ -3172,7 +3149,7 @@ doUnary:
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
                                                 LocalMember *m, size_t pos, bool enumerable)
     {
-        NonWithFrame *innerFrame = checked_cast<NonWithFrame *>(*(env->getBegin()));
+        NonWithFrame *innerFrame = checked_cast<NonWithFrame *>((env->getBegin())->first);
         if ((overrideMod != Attribute::NoOverride) || (xplicit && innerFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
         
@@ -3194,12 +3171,12 @@ doUnary:
 
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
         FrameListIterator fi = env->getBegin();
-        Frame *regionalFrame = *env->getRegionalFrame();
+        Frame *regionalFrame = env->getRegionalFrame()->first;
         if (innerFrame != regionalFrame) {
             // The frame iterator is pointing at the top of the environment's
             // frame list, start at the one below that and continue to the frame
             // returned by 'getRegionalFrame()'.
-            Frame *fr = *++fi;
+            Frame *fr = (++fi)->first;
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
@@ -3216,7 +3193,7 @@ doUnary:
                 }
                 if (fr == regionalFrame)
                     break;
-                fr = *++fi;
+                fr = (++fi)->first;
                 ASSERT(fr);
             }
         }
@@ -3237,7 +3214,7 @@ doUnary:
         // region if they haven't been marked as such already.
         if (innerFrame != regionalFrame) {
             fi = env->getBegin();
-            Frame *fr = *++fi;
+            Frame *fr = ++fi->first;
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
@@ -3264,7 +3241,7 @@ doUnary:
                 }
                 if (fr == regionalFrame)
                     break;
-                fr = *++fi;
+                fr = ++fi->first;
             }
         }
         return multiname;
@@ -3431,7 +3408,7 @@ doUnary:
     {
         LocalMember *result = NULL;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
-        NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameEnd);
+        NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(regionalFrameEnd->first);
         ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterFrameKind));          
 rescan:
         // run through all the existing bindings, to see if this variable already exists.
@@ -3455,7 +3432,7 @@ rescan:
                 && (regionalFrame->kind == ParameterFrameKind)
                 && (regionalFrameEnd != env->getBegin())) {
             // re-scan in the frame above the parameter frame
-            regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameEnd - 1));
+            regionalFrame = checked_cast<NonWithFrame *>((regionalFrameEnd - 1)->first);
             goto rescan;
         }
         
@@ -3806,7 +3783,7 @@ static const uint8 urlCharType[256] =
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
-        return OBJECT_TO_JS2VAL(c->super);
+        return OBJECT_TO_JS2VAL(meta->functionClass->prototype);
     }
  
     static js2val Object_valueOf(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
@@ -3814,16 +3791,6 @@ static const uint8 urlCharType[256] =
         return thisValue;
     }
 
-bool nullClass_ReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval) { return false; }
-bool nullClass_ReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval) { return false; }
-bool nullClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval) { return false; }
-bool nullClass_arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue) { return false; }
-bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
-bool nullClass_WritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue) { return false; }
-bool nullClass_BracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue) { return false; }
-bool nullClass_DeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result) { return false; }
-bool nullClass_DeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result) { return false; }
-bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result) { return false; }
     
 #define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
 
@@ -3845,27 +3812,13 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js
 
         MAKEBUILTINCLASS(objectClass, NULL, false, false, engine->Object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
-        MAKEBUILTINCLASS(nullClass, objectClass, false, true, engine->null_StringAtom, JS2VAL_NULL);
-        nullClass->read = nullClass_ReadProperty;
-        nullClass->readPublic = nullClass_ReadPublicProperty;
-        nullClass->write = nullClass_WriteProperty;
-        nullClass->writePublic = nullClass_WritePublicProperty;
-        nullClass->deleteProperty = nullClass_DeleteProperty;
-        nullClass->deletePublic = nullClass_DeletePublic;
-        nullClass->bracketRead = nullClass_BracketRead;
-        nullClass->bracketWrite = nullClass_BracketWrite;
-        nullClass->bracketDelete = nullClass_BracketDelete;
-
+        nullClass = new JS2NullClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->null_StringAtom); nullClass->complete = true; nullClass->defaultValue = JS2VAL_NULL;
         MAKEBUILTINCLASS(booleanClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Boolean"]), JS2VAL_FALSE);
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, engine->allocStringPtr(&world.identifiers["general number"]), engine->nanValue);
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
-        MAKEBUILTINCLASS(integerClass, numberClass, false, true, engine->allocStringPtr(&world.identifiers["Integer"]), JS2VAL_ZERO);
-        integerClass->implicitCoerce = integerImplicitCoerce;
-        integerClass->is = integerIs;
+        integerClass = new JS2IntegerClass(numberClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["Integer"])); integerClass->complete = true; integerClass->defaultValue = JS2VAL_ZERO;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
-        MAKEBUILTINCLASS(stringClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["String"]), JS2VAL_NULL);
-        stringClass->bracketRead = stringClass_BracketRead;
-        
+        stringClass = new JS2StringClass(objectClass, NULL, new Namespace(engine->private_StringAtom), false, true, engine->allocStringPtr(&world.identifiers["String"])); stringClass->complete = true; stringClass->defaultValue = JS2VAL_NULL;        
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);                
@@ -4018,9 +3971,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initMathObject(this, mathObject);
 
 /*** ECMA 3  Array Class ***/
-        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
-        arrayClass->write = arrayClass_WriteProperty;
-        arrayClass->writePublic = arrayClass_WritePublic;
+
+        arrayClass = new JS2ArrayClass(objectClass, NULL, new Namespace(engine->private_StringAtom), true, true, engine->allocStringPtr(&world.identifiers["Array"])); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
@@ -4289,7 +4241,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 Slot *s = findSlot(containerVal, mv);
                 if (mv->immutable && !JS2VAL_IS_UNINITIALIZED(s->value))
                     reportError(Exception::compileExpressionError, "Reinitialization of constant", engine->errorPos());
-                s->value = mv->type->implicitCoerce(this, newValue, mv->type);
+                s->value = mv->type->ImplicitCoerce(this, newValue);
                 return true;
             }
         case Member::InstanceSetterMember:
@@ -4330,15 +4282,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Local:
                     {
                         FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((*fi)->kind == ParameterFrameKind);
-                        *rval = (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot];
+                        ASSERT((fi->first)->kind == ParameterFrameKind);
+                        *rval = (*checked_cast<NonWithFrame *>((fi - 1)->first)->slots)[f->frameSlot];
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
                         FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((*fi)->kind == ParameterFrameKind);
-                        *rval = (*checked_cast<NonWithFrame *>(*fi)->slots)[f->frameSlot];
+                        ASSERT((fi->first)->kind == ParameterFrameKind);
+                        *rval = (*checked_cast<NonWithFrame *>(fi->first)->slots)[f->frameSlot];
                     }
                     break;
                 }
@@ -4386,7 +4338,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
                     else    // quietly ignore the write for JS1 compatibility
                         return true;
-                v->value = v->type->implicitCoerce(this, newValue, v->type);
+                v->value = v->type->ImplicitCoerce(this, newValue);
             }
             return true;
         case LocalMember::FrameVariableMember:
@@ -4399,15 +4351,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Local:
                     {
                         FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((*fi)->kind == ParameterFrameKind);
-                        (*checked_cast<NonWithFrame *>(*(fi - 1))->slots)[f->frameSlot] = newValue;
+                        ASSERT((fi->first)->kind == ParameterFrameKind);
+                        (*checked_cast<NonWithFrame *>((fi - 1)->first)->slots)[f->frameSlot] = newValue;
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
                         FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((*fi)->kind == ParameterFrameKind);
-                        (*checked_cast<NonWithFrame *>(*fi)->slots)[f->frameSlot] = newValue;
+                        ASSERT((fi->first)->kind == ParameterFrameKind);
+                        (*checked_cast<NonWithFrame *>(fi->first)->slots)[f->frameSlot] = newValue;
                     }
                     break;
                 }
@@ -4660,17 +4612,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             call(NULL),
             construct(JS2Engine::defaultConstructor),
             init(NULL),
-            read(defaultReadProperty),
-            readPublic(defaultReadPublicProperty),
-            write(defaultWriteProperty),
-            writePublic(defaultWritePublicProperty),
-            deleteProperty(defaultDeleteProperty),
-            deletePublic(defaultDeletePublic),
-            bracketRead(defaultBracketRead),
-            bracketWrite(defaultBracketWrite),
-            bracketDelete(defaultBracketDelete),
-            implicitCoerce(defaultImplicitCoerce),
-            is(defaultIs),
             slotCount(super ? super->slotCount : 0)
     {
     }
@@ -5068,18 +5009,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 (*slots)[i] = argBase[i];
             }
             if (plural->buildArguments) 
-                meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, argBase[i]);
+                meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->numberToString(i), true, argBase[i]);
         }
         while (i++ < length) {
             if (i < slotCount) {
                 (*slots)[i] = JS2VAL_UNDEFINED;
             }
             if (plural->buildArguments) 
-                meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
+                meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
         }
         if (plural->buildArguments) {
             setLength(meta, argsObj, argCount);
-            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
+            meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
         }
     }
 

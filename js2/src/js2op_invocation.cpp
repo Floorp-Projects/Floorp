@@ -66,7 +66,7 @@
                     js2val protoVal = OBJECT_TO_JS2VAL(meta->objectClass->prototype);
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
                     JS2Class *limit = meta->objectType(a);
-                    if (limit->read(meta, &a, limit, &mn, meta->env, RunPhase, &protoVal)) {
+                    if (limit->Read(meta, &a, &mn, meta->env, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
@@ -158,7 +158,7 @@
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
                         pFrame = new ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
-                        meta->env->addFrame(pFrame);
+                        meta->env->addFrame(pFrame, a);
                     }
                 }
             }
@@ -266,7 +266,7 @@
             if (obj->kind != ClassKind)
                  meta->reportError(Exception::badValueError, "Type expected", errorPos());
             JS2Class *isClass = checked_cast<JS2Class *>(obj);
-            push(isClass->is(meta, a, isClass));
+            push(isClass->Is(meta, a));
         }
         break;
 
@@ -292,7 +292,7 @@
                     js2val b_protoVal;
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
                     JS2Class *limit = meta->objectType(b);
-                    if (limit->read(meta, &b, limit, &mn, meta->env, RunPhase, &b_protoVal)) {
+                    if (limit->Read(meta, &b, &mn, meta->env, RunPhase, &b_protoVal)) {
                         if (!JS2VAL_IS_OBJECT(b_protoVal))
                             meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
                     }
@@ -360,6 +360,6 @@
             JS2Class *c = BytecodeContainer::getType(pc);
             pc += sizeof(JS2Class *);
             a = pop();
-            push(c->implicitCoerce(meta, a, c));
+            push(c->ImplicitCoerce(meta, a));
         }
         break;

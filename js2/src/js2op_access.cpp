@@ -42,12 +42,12 @@
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
-                if (!li->limit->read(meta, &b, li->limit, mn, NULL, RunPhase, &a))
+                if (!li->limit->Read(meta, &b, mn, NULL, RunPhase, &a))
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             }
             else {
                 JS2Class *limit = meta->objectType(b);
-                if (!limit->read(meta, &b, limit, mn, NULL, RunPhase, &a))
+                if (!limit->Read(meta, &b, mn, NULL, RunPhase, &a))
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             }
             push(a);
@@ -61,7 +61,7 @@
             b = pop();
             bool result;
             JS2Class *limit = meta->objectType(b);
-            if (!limit->deleteProperty(meta, b, limit, mn, NULL, &result))
+            if (!limit->Delete(meta, b, mn, NULL, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
@@ -81,14 +81,14 @@
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
-                if (!li->limit->write(meta, b, li->limit, mn, NULL, true, a, false)) {
+                if (!li->limit->Write(meta, b, mn, NULL, true, a, false)) {
                     if (!meta->cxt.E3compatibility)
                         meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
                 }
             }
             else {
                 JS2Class *limit = meta->objectType(b);
-                if (!limit->write(meta, b, limit, mn, NULL, true, a, false)) {
+                if (!limit->Write(meta, b, mn, NULL, true, a, false)) {
                     if (!meta->cxt.E3compatibility)
                         meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
                 }
@@ -104,7 +104,7 @@
             pc += sizeof(short);
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->read(meta, &b, limit, mn, NULL, RunPhase, &a))
+            if (!limit->Read(meta, &b, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(b);
             push(a);
@@ -172,7 +172,7 @@
             indexVal = pop();
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+            if (!limit->BracketRead(meta, &b, indexVal, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             push(a);
             indexVal = JS2VAL_VOID;
@@ -185,7 +185,7 @@
             b = pop();
             bool result;
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketDelete(meta, b, limit, indexVal, &result))
+            if (!limit->BracketDelete(meta, b, indexVal, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
@@ -201,7 +201,7 @@
             indexVal = pop();
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, indexVal, a)) {
+            if (!limit->BracketWrite(meta, b, indexVal, a)) {
                 if (!meta->cxt.E3compatibility)
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             }
@@ -216,7 +216,7 @@
             indexVal = pop();
             b = top();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+            if (!limit->BracketRead(meta, &b, indexVal, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             push(a);
             indexVal = JS2VAL_VOID;
@@ -232,7 +232,7 @@
             indexVal = STRING_TO_JS2VAL(astr);
             push(indexVal);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+            if (!limit->BracketRead(meta, &b, indexVal, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), astr);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -248,7 +248,7 @@
             ASSERT(JS2VAL_IS_STRING(indexVal)); // because the readForRef above will have executed first
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, indexVal, a)) {
+            if (!limit->BracketWrite(meta, b, indexVal, a)) {
                 if (!meta->cxt.E3compatibility)
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), JS2VAL_TO_STRING(indexVal));
             }

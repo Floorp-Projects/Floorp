@@ -282,7 +282,7 @@ typedef struct REBackTrackData {
 
 typedef struct REGlobalData {
     JSBool globalMultiline;
-    JSRegExp *regexp;               /* the RE in execution */   
+    JS2RegExp *regexp;              /* the RE in execution */   
     JSBool ok;                      /* runtime error (out_of_memory only?) */
     size_t start;                   /* offset to start at */
     ptrdiff_t skipped;              /* chars skipped anchoring this r.e. */
@@ -1318,7 +1318,7 @@ typedef struct {
 } EmitStateStackEntry;
 
 static jsbytecode *
-emitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth, 
+emitREBytecode(CompilerState *state, JS2RegExp *re, intN treeDepth, 
                jsbytecode *pc, RENode *t)
 {
     ptrdiff_t diff;
@@ -1941,7 +1941,7 @@ lexHex:
 }
 
 void
-js_DestroyRegExp(JSRegExp *re)
+js_DestroyRegExp(JS2RegExp *re)
 {
     uintN i;
     if (re->classList) {
@@ -2172,7 +2172,7 @@ static REMatchState *simpleMatch(REGlobalData *gData, REMatchState *x,
 }
 
 static REMatchState *
-executeREBytecode(REGlobalData *gData, REMatchState *x)
+executeREBytecode(REGlobalData *gData, REMatchState *x, JSBool allowSkip)
 {
     REMatchState *result;
     REBackTrackData *backTrackData;
@@ -2197,7 +2197,7 @@ executeREBytecode(REGlobalData *gData, REMatchState *x)
      *   the string until that match is made, or fail if it can't be
      *   found at all.
      */
-    if (REOP_IS_SIMPLE(op)) {
+    if (allowSkip && REOP_IS_SIMPLE(op)) {
         anchor = JS_FALSE;
         while (x->cp <= gData->cpend) {
             nextpc = pc;    /* reset back to start each time */
@@ -2734,7 +2734,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         x->cp = cp2;
         for (j = 0; j < gData->regexp->parenCount; j++)
             x->parens[j].index = -1;
-        result = executeREBytecode(gData, x);
+        result = executeREBytecode(gData, x, true);
         if (!gData->ok || result)
             return result;
         gData->backTrackSP = gData->backTrackStack;
@@ -2747,7 +2747,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
 
 
 static REMatchState *
-initMatch(REGlobalData *gData, JSRegExp *re)
+initMatch(REGlobalData *gData, JS2RegExp *re)
 {
     REMatchState *result;
     uintN i;
@@ -2787,7 +2787,7 @@ initMatch(REGlobalData *gData, JSRegExp *re)
  * Call the recursive matcher to do the real work.  Return null on mismatch.
  * On match, return the completed MatchResult structure.
  */
-REMatchResult *REExecute(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline)
+REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline)
 {
     REGlobalData gData;
     REMatchState *x, *result;
@@ -2826,7 +2826,7 @@ REMatchResult *REExecute(JS2Metadata *meta, JSRegExp *re, const jschar *str, uin
     return returnValue;
 }
 
-REMatchResult *REMatch(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 length)
+REMatchResult *REMatch(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 length)
 {
     REGlobalData gData;
     REMatchState *x, *result;
@@ -2847,7 +2847,7 @@ REMatchResult *REMatch(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint3
 
     for (j = 0; j < re->parenCount; j++)
         x->parens[j].index = -1;
-    result = executeREBytecode(&gData, x);
+    result = executeREBytecode(&gData, x, false);
     if (!gData.ok) 
         return NULL;
     if (!result)
@@ -2887,9 +2887,9 @@ bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 
 #define JS_ROUNDUP(x,y) (JS_HOWMANY(x,y)*(y))
 
 // Compile the source re, return NULL for failure (error functions called)
-JSRegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags)
+JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags)
 {    
-    JSRegExp *re;
+    JS2RegExp *re;
     CompilerState state;
     size_t resize;
     jsbytecode *endPC;
@@ -2915,7 +2915,7 @@ JSRegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 
         goto out;
 
     resize = sizeof *re + state.progLength + 1;
-    re = (JSRegExp *) malloc(JS_ROUNDUP(resize, sizeof(uint32)));
+    re = (JS2RegExp *) malloc(JS_ROUNDUP(resize, sizeof(uint32)));
     if (!re)
         goto out;
 

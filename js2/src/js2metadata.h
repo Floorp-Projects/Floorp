@@ -63,6 +63,7 @@ typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
+/*
 typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
 typedef bool (ReadPublic)(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
 typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
@@ -94,7 +95,7 @@ js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isCla
 js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 bool stringClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
-
+*/
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject);
@@ -719,13 +720,17 @@ public:
 // a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
 // -each frame's scope is directly contained in the following frame's scope. The last frame is always the
 // SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
-typedef std::deque<Frame *> FrameList;
+typedef std::deque<std::pair<Frame *, js2val> > FrameList;
 typedef FrameList::iterator FrameListIterator;
 
 // Deriving from JS2Object for gc sake only
 class Environment : public JS2Object {
 public:
-    Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
+    Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) 
+        { 
+            frameList.push_back(std::pair<Frame *, js2val>(nextToLast, JS2VAL_VOID)); 
+            frameList.push_back(std::pair<Frame *, js2val>(systemFrame, JS2VAL_VOID));  
+        }
     virtual ~Environment()                  { }
 
     Environment(Environment *e) : JS2Object(EnvironmentKind), frameList(e->frameList) { }
@@ -734,18 +739,18 @@ public:
     ParameterFrame *Environment::getEnclosingParameterFrame();
     FrameListIterator getRegionalFrame();
     FrameListIterator getRegionalEnvironment();
-    Frame *getTopFrame()                    { return frameList.front(); }
+    Frame *getTopFrame()                    { return frameList.front().first; }
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
     Package *getPackageFrame();
-    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
+    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back().first); }
 
-    void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
+    void setTopFrame(Frame *f)              { while (frameList.front().first != f) frameList.pop_front(); }
 
-    void addFrame(Frame *f)                 { frameList.push_front(f); }
+    void addFrame(Frame *f)                 { frameList.push_front(std::pair<Frame *, js2val>(f, JS2VAL_VOID)); }
+    void addFrame(Frame *f, js2val x)       { frameList.push_front(std::pair<Frame *, js2val>(f, x)); }
     void removeTopFrame()                   { frameList.pop_front(); }
 
-    bool findThis(JS2Metadata *meta, bool allowPrototypeThis, js2val *result);
     js2val readImplicitThis(JS2Metadata *meta);
     void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
@@ -790,29 +795,67 @@ public:
 
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
-
-    Read *read;
-    ReadPublic *readPublic;
-    Write *write;
-    WritePublic *writePublic;
-    DeleteProperty *deleteProperty;
-    DeletePublic *deletePublic;
-    BracketRead *bracketRead;    
-    BracketWrite *bracketWrite;
-    BracketDelete *bracketDelete;
-    ImplicitCoerce *implicitCoerce;
-    Is *is;
+    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
+    virtual bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval);
+    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
+    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
+    virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result);
+    virtual bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result);
+    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
+    virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
+    virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result);
+    virtual js2val ImplicitCoerce(JS2Metadata *meta, js2val newValue);
+    virtual js2val Is(JS2Metadata *meta, js2val newValue);
 
     bool isAncestor(JS2Class *heir);
 
-
     uint32 slotCount;
-
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
     virtual void markChildren();
     virtual ~JS2Class();
+};
 
+class JS2ArrayClass : public JS2Class {
+public:
+    JS2ArrayClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+        : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
+
+    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
+    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
+};
+
+class JS2IntegerClass : public JS2Class {
+public:
+    JS2IntegerClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+        : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
+
+    virtual js2val ImplicitCoerce(JS2Metadata *meta, js2val newValue);
+    virtual js2val Is(JS2Metadata *meta, js2val newValue);
+};
+
+class JS2StringClass : public JS2Class {
+public:
+    JS2StringClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+        : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
+
+    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
+};
+
+class JS2NullClass : public JS2Class {
+public:
+    JS2NullClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+        : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
+    
+    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)           { return false; }
+    virtual bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval)                         { return false; }
+    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)                           { return false; }
+    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
+    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)             { return false; }
+    virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)                                     { return false; }
+    virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)                       { return false; }
+    virtual bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result)                                     { return false; }
+    virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)                                       { return false; }
 };
 
 class Package : public NonWithFrame {
@@ -987,7 +1030,7 @@ public:
     js2val getIgnoreCase(JS2Metadata *meta);
     js2val getSource(JS2Metadata *meta);
 
-    JSRegExp  *mRegExp;
+    JS2RegExp  *mRegExp;
     virtual ~RegExpInstance()             { }
 };
 

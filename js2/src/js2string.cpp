@@ -131,7 +131,7 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
         regexp = JS2VAL_NULL;
         regexp = RegExp_Constructor(meta, regexp, argv, 1);
     }
-    JSRegExp *re = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
+    JS2RegExp *re = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
 
     REMatchResult *match = REExecute(meta, re, str->begin(), 0, (int32)str->length(), false);
     if (match)
@@ -167,7 +167,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp));
     DEFINE_ROOTKEEPER(rk1, thisInst);
-    JSRegExp *re = thisInst->mRegExp;
+    JS2RegExp *re = thisInst->mRegExp;
     if ((re->flags & JSREG_GLOB) == 0) {
         return RegExp_exec(meta, regexp, &S, 1);                
     }
@@ -185,7 +185,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(index), true, matchStr);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(index), true, matchStr);
             index++;
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
@@ -280,7 +280,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 
     if (meta->objectType(searchValue) != meta->regexpClass) {
         RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
-        JSRegExp *re = reInst->mRegExp;
+        JS2RegExp *re = reInst->mRegExp;
         REMatchResult *match;
         String newString;
         int32 lastIndex = 0;
@@ -380,7 +380,7 @@ static void strSplitMatch(const String *S, uint32 q, const String *R, MatchResul
     result.failure = false;
 }
 
-static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JSRegExp *RE, MatchResult &result)
+static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JS2RegExp *RE, MatchResult &result)
 {
     result.failure = true;
     result.captures = NULL;
@@ -388,7 +388,7 @@ static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JSReg
     REMatchResult *match = REMatch(meta, RE, S->begin() + q, (int32)(S->length() - q));
 
     if (match) {
-        result.endIndex = match->startIndex + q;
+        result.endIndex = match->endIndex + q;
         result.failure = false;
         result.capturesCount = toUInt32(match->parenCount);
         if (match->parenCount) {
@@ -427,7 +427,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     uint32 s = S->size();
     uint32 p = 0;
 
-    JSRegExp *RE = NULL;
+    JS2RegExp *RE = NULL;
     const String *R = NULL;
     if (meta->objectType(separatorV) == meta->regexpClass)
         RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
@@ -452,7 +452,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
             strSplitMatch(S, 0, R, z);
         if (!z.failure)
             return result;
-        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString((int32)0), true, STRING_TO_JS2VAL(S));
+        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString((int32)0), true, STRING_TO_JS2VAL(S));
         return result;
     }
 
@@ -464,7 +464,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 step11:
         if (q == s) {
             js2val v = meta->engine->allocString(S, p, (s - p));
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, v);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
             return result;
         }
         MatchResult z;
@@ -483,13 +483,13 @@ step11:
         }
         T = meta->engine->allocStringPtr(S, p, (q - p));   // XXX
         js2val v = STRING_TO_JS2VAL(T);
-        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, v);
+        meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
         if (getLength(meta, A) == lim)
             return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, z.captures[i]);
+            meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, z.captures[i]);
             if (getLength(meta, A) == lim)
                 return result;
         }

@@ -111,30 +111,36 @@
 
     case eThis: // XXX literal?
         {
-            if (!meta->env->findThis(meta, true, &a) || JS2VAL_IS_INACCESSIBLE(a))
+            pFrame = meta->env->getEnclosingParameterFrame();
+            if ((pFrame == NULL) || JS2VAL_IS_INACCESSIBLE(pFrame->thisObject))
                 a = OBJECT_TO_JS2VAL(meta->env->getPackageFrame());
 //                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
+            else
+                a = pFrame->thisObject;
             push(a);
+            pFrame = NULL;
         }
         break;
 
     case eSuper: // XXX literal?
         {
-            if (!meta->env->findThis(meta, false, &a))
-                ASSERT(false);
+            pFrame = meta->env->getEnclosingParameterFrame();
+            ASSERT(pFrame);
+            a = pFrame->thisObject;
             if (JS2VAL_IS_INACCESSIBLE(a))
                 meta->reportError(Exception::compileExpressionError, "'this' not available for 'super'", errorPos());
 makeLimitedInstance:
             {
                 JS2Class *limit = meta->env->getEnclosingClass()->super;
                 ASSERT(limit);
-                a = limit->implicitCoerce(meta, a, limit);
+                a = limit->ImplicitCoerce(meta, a);
                 ASSERT(JS2VAL_IS_OBJECT(a));
                 if (JS2VAL_IS_NULL(a))
                     push(JS2VAL_NULL);
                 else
                     push(OBJECT_TO_JS2VAL(new LimitedInstance(JS2VAL_TO_OBJECT(a), limit)));
             }
+            pFrame = NULL;
         }
         break;
 

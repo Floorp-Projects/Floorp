@@ -62,30 +62,30 @@ namespace MetaData {
 
     void RegExpInstance::setLastIndex(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, meta->engine->allocStringPtr("lastIndex"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("lastIndex"), true, a);
     }
     void RegExpInstance::setGlobal(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, meta->engine->allocStringPtr("global"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("global"), true, a);
     }
     void RegExpInstance::setMultiline(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, meta->engine->allocStringPtr("multiline"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("multiline"), true, a);
     }
     void RegExpInstance::setIgnoreCase(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, meta->engine->allocStringPtr("ignoreCase"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("ignoreCase"), true, a);
     }
     void RegExpInstance::setSource(JS2Metadata *meta, js2val a)
     {
-        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, meta->engine->allocStringPtr("source"), true, a);
+        meta->regexpClass->WritePublic(meta, OBJECT_TO_JS2VAL(this), meta->engine->allocStringPtr("source"), true, a);
     }
 
     js2val RegExpInstance::getLastIndex(JS2Metadata *meta)
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, meta->engine->allocStringPtr("lastIndex"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("lastIndex"), RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -93,7 +93,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, meta->engine->allocStringPtr("global"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("global"), RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -101,7 +101,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, meta->engine->allocStringPtr("multiline"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("multiline"), RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -109,7 +109,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, meta->engine->allocStringPtr("ignoreCase"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("ignoreCase"), RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -117,7 +117,7 @@ namespace MetaData {
     {
         js2val r;
         js2val thisVal = OBJECT_TO_JS2VAL(this);
-        if (!meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, meta->engine->allocStringPtr("source"), RunPhase, &r))
+        if (!meta->regexpClass->ReadPublic(meta, &thisVal, meta->engine->allocStringPtr("source"), RunPhase, &r))
             ASSERT(false);
         return r;
     }
@@ -193,11 +193,11 @@ namespace MetaData {
                 meta->createDynamicProperty(A, meta->engine->allocStringPtr("index"), meta->engine->allocNumber((float64)(match->startIndex)), ReadWriteAccess, false, true);
                 meta->createDynamicProperty(A, meta->engine->allocStringPtr("input"), meta->engine->allocString(str), ReadWriteAccess, false, true);
                 
-                meta->stringClass->writePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->stringClass, meta->engine->allocStringPtr("lastMatch"), true, matchStr);
+                meta->stringClass->WritePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->engine->allocStringPtr("lastMatch"), true, matchStr);
                 js2val leftContextVal = meta->engine->allocString(str->substr(0, (uint32)match->startIndex));
-                meta->stringClass->writePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->stringClass, meta->engine->allocStringPtr("leftContext"), true, matchStr);
+                meta->stringClass->WritePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->engine->allocStringPtr("leftContext"), true, matchStr);
                 js2val rightContextVal = meta->engine->allocString(str->substr((uint32)match->endIndex, (uint32)str->length() - match->endIndex));
-                meta->stringClass->writePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->stringClass, meta->engine->allocStringPtr("rightContext"), true, matchStr);
+                meta->stringClass->WritePublic(meta, OBJECT_TO_JS2VAL(meta->regexpClass), meta->engine->allocStringPtr("rightContext"), true, matchStr);
                 
                 if (meta->toBoolean(thisInst->getGlobal(meta))) {
                     index = match->endIndex;
@@ -255,7 +255,7 @@ namespace MetaData {
                     meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
             }
         }
-        JSRegExp *re = RECompile(meta, regexpStr->begin(), (int32)regexpStr->length(), flags);
+        JS2RegExp *re = RECompile(meta, regexpStr->begin(), (int32)regexpStr->length(), flags);
         if (re) {
             thisInst->mRegExp = re;
             // XXX ECMA spec says these are DONTENUM

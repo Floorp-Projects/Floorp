@@ -226,7 +226,7 @@ namespace MetaData {
         js2val fnVal;
 
         JS2Class *limit = objectType(thisValue);
-        if (limit->readPublic(this, &thisValue, limit, fnName, RunPhase, &fnVal)) {
+        if (limit->ReadPublic(this, &thisValue, fnName, RunPhase, &fnVal)) {
             if (JS2VAL_IS_OBJECT(fnVal)) {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
                 if ((fnObj->kind == SimpleInstanceKind)
@@ -627,12 +627,12 @@ namespace MetaData {
     }
 
 
-    bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
+    bool JS2Class::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
     {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess);
+        InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, ReadAccess);
         if (mBase)
-            return meta->readInstanceMember(*base, limit, mBase, phase, rval);
-        if (limit != meta->objectType(*base))
+            return meta->readInstanceMember(*base, this, mBase, phase, rval);
+        if (this != meta->objectType(*base))
             return false;
 
         Member *m = meta->findCommonMember(base, multiname, ReadAccess, false);
@@ -676,48 +676,48 @@ namespace MetaData {
         }
     }
 
-    bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval)
+    bool JS2Class::ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval)
     {
         // XXX could speed up by pushing knowledge of single namespace?
         DEFINE_ROOTKEEPER(rk1, name);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultReadProperty(meta, base, limit, mn, NULL, phase, rval);
+        return Read(meta, base, mn, NULL, phase, rval);
     }
 
-    bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result)
+    bool JS2Class::DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result)
     {
         DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultDeleteProperty(meta, base, limit, mn, NULL, result);
+        return Delete(meta, base, mn, NULL, result);
     }
 
-    bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
+    bool JS2Class::WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)
     {
         DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultWriteProperty(meta, base, limit, mn, NULL, createIfMissing, newValue, false);
+        return Write(meta, base, mn, NULL, createIfMissing, newValue, false);
     }
 
-    bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval)
+    bool JS2Class::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(rk, indexStr);
         Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk1, mn);
-        return limit->read(meta, base, limit, mn, NULL, phase, rval);
+        return Read(meta, base, mn, NULL, phase, rval);
     }
 
-    bool arrayClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
+    bool JS2ArrayClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         ASSERT(JS2VAL_IS_OBJECT(base));
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
 
-        bool result = defaultWriteProperty(meta, base, limit, multiname, env, createIfMissing, newValue, false);
+        bool result = JS2Class::Write(meta, base, multiname, env, createIfMissing, newValue, false);
         if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
             const char16 *numEnd;        
             float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
@@ -736,23 +736,23 @@ namespace MetaData {
         return result;
     }    
 
-    bool arrayClass_WritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
+    bool JS2ArrayClass::WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)
     {
         DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return arrayClass_WriteProperty(meta, base, limit, mn, meta->env, createIfMissing, newValue, false);
+        return Write(meta, base, mn, meta->env, createIfMissing, newValue, false);
     }
 
-    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
+    bool JS2Class::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
+        InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, WriteAccess);
         if (mBase) {
-            meta->writeInstanceMember(base, limit, mBase, newValue);
+            meta->writeInstanceMember(base, this, mBase, newValue);
             return true;
         }
-        if (limit != meta->objectType(base))
+        if (this != meta->objectType(base))
             return false;
 
         Member *m = meta->findCommonMember(&base, multiname, WriteAccess, true);
@@ -773,7 +773,7 @@ namespace MetaData {
                 QualifiedName qName = multiname->selectPrimaryName(meta);
                 Multiname *mn = new Multiname(qName);
                 DEFINE_ROOTKEEPER(rk, mn);
-                if ( (meta->findBaseInstanceMember(limit, mn, ReadAccess) == NULL)
+                if ( (meta->findBaseInstanceMember(this, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
                     meta->createDynamicProperty(baseObj, &qName, newValue, ReadWriteAccess, false, true);
                     return true;
@@ -807,23 +807,23 @@ namespace MetaData {
         }
     }
 
-    bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue)
+    bool JS2Class::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(rk, indexStr);
         Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk1, mn);
-        return limit->write(meta, base, limit, mn, NULL, true, newValue, false);
+        return Write(meta, base, mn, NULL, true, newValue, false);
     }
 
-    bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result)
+    bool JS2Class::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
     {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
+        InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, WriteAccess);
         if (mBase) {
             *result = false;
             return true;
         }
-        if (limit != meta->objectType(base))
+        if (this != meta->objectType(base))
             return false;
 
         Member *m = meta->findCommonMember(&base, multiname, WriteAccess, false);
@@ -898,24 +898,24 @@ VariableMemberCommon:
         }
     }
 
-    bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result)
+    bool JS2Class::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
     {
         const String *indexStr = meta->toString(indexVal);
         DEFINE_ROOTKEEPER(rk, indexStr);
         Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk1, mn);
-        return limit->deleteProperty(meta, base, limit, mn, NULL, result);
+        return Delete(meta, base, mn, NULL, result);
     }
 
-    js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    js2val JS2Class::ImplicitCoerce(JS2Metadata *meta, js2val newValue)
     {
-        if (JS2VAL_IS_NULL(newValue) || meta->objectType(newValue)->isAncestor(isClass) )
+        if (JS2VAL_IS_NULL(newValue) || meta->objectType(newValue)->isAncestor(this) )
             return newValue;
         meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
         return JS2VAL_VOID;
     }
 
-    js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    js2val JS2IntegerClass::ImplicitCoerce(JS2Metadata *meta, js2val newValue)
     {
         if (JS2VAL_IS_UNDEFINED(newValue))
             return JS2VAL_ZERO;
@@ -931,12 +931,12 @@ VariableMemberCommon:
         return JS2VAL_VOID;
     }
 
-    js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    js2val JS2Class::Is(JS2Metadata *meta, js2val newValue)
     {
-        return BOOLEAN_TO_JS2VAL(meta->objectType(newValue) == isClass);
+        return BOOLEAN_TO_JS2VAL(meta->objectType(newValue) == this);
     }
 
-    js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    js2val JS2IntegerClass::Is(JS2Metadata *meta, js2val newValue)
     {
         bool result = false;
         if (JS2VAL_IS_NUMBER(newValue)) {
@@ -948,7 +948,7 @@ VariableMemberCommon:
         return BOOLEAN_TO_JS2VAL(result);
     }
 
-    bool stringClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval)
+    bool JS2StringClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
     {
         if (JS2VAL_IS_INT(indexVal)) {
             const String *str = NULL;
@@ -970,7 +970,7 @@ VariableMemberCommon:
             return true;
         }
         else
-            return defaultBracketRead(meta, base, limit, indexVal, phase, rval);
+            return BracketRead(meta, base, indexVal, phase, rval);
     }
 
 
