@@ -45,10 +45,14 @@ install::
 	$(MAKE_INSTALL) anchor-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) anchor.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) bold.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bold_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images	
 	$(MAKE_INSTALL) bullets.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bullets_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) center.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) center_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) color.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) dec-font-size.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) dec-font-size_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) div.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) find.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) hline-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
@@ -62,21 +66,29 @@ install::
 	$(MAKE_INSTALL) img-align-right.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) img-align-top.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) inc-font-size.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) inc-font-size_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) indent.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) indent_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) italic.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) italic_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) justify.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) left.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) left_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) link-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) link.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) newfile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) numbers.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) numbers_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) object-popup.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) openfile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) outdent.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) outdent_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) preview.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) publish.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) right.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) right_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) savefile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) savemod.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) span.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
@@ -84,6 +96,7 @@ install::
 	$(MAKE_INSTALL) table-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) table.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) underline.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) underline_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-normal.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-tags.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-html.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
