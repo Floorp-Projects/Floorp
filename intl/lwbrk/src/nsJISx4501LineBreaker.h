@@ -48,6 +48,7 @@ protected:
 
   PRUint32 Next(const PRUnichar* aText, PRUint32 aLen,  PRUint32 aPos);
   PRInt8   GetClass(PRUnichar u);
+  PRInt8   ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next );
   PRBool   GetPair(PRInt8 c1, PRInt8 c2);
 
 };
