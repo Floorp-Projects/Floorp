@@ -285,7 +285,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
 
     *targets = nsnull;
 
-	// we only have positive assertions in the file system data source.
+	// we only have positive assertions in the subscribe data source.
 	if (!tv) return NS_RDF_NO_VALUE;
 
     nsCOMPtr<nsISubscribableServer> server;
@@ -494,9 +494,9 @@ nsSubscribeDataSource::HasAssertion(nsIRDFResource *source,
 	if (! hasAssertion)
 		return NS_ERROR_NULL_POINTER;
 
-	// we only have positive assertions in the file system data source.
 	*hasAssertion = PR_FALSE;
 
+  // we only have positive assertions in the subscribe data source.
 	if (!tv) return NS_OK;
 
 	if (property == kNC_Child.get()) {
