@@ -69,7 +69,7 @@ class nsHTMLScriptEventHandler : public nsIScriptEventHandler
 {
 public:
   nsHTMLScriptEventHandler(nsIDOMHTMLScriptElement *aOuter);
-  virtual ~nsHTMLScriptEventHandler();
+  virtual ~nsHTMLScriptEventHandler() {};
   
   // nsISupports
   NS_DECL_ISUPPORTS
