@@ -54,7 +54,7 @@ Neil Rashbrook <neil@parkwaycc.co.uk>
   <menuitem label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
 </popup>
 
-<tree id="configTree" flex="1" class="plain" seltype="single"
+<tree id="configTree" flex="1" class="plain focusring" seltype="single"
       enableColumnDrag="true" context="configContext">
   <treecols>
     <treecol id="prefCol" label="&prefColumn.label;" flex="7"
