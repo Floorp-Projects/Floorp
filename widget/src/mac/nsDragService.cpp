@@ -566,7 +566,22 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
           // we probably have some form of text. The DOM only wants LF, so convert k
           // from MacOS line endings to DOM line endings.
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );            
-          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
+
+          unsigned char *dataPtr = (unsigned char *) dataBuff;
+#if TARGET_CARBON
+          // skip BOM (Byte Order Mark to distinguish little or big endian) in 'utxt'
+          // 10.2 puts BOM for 'utxt', we need to remove it here
+          // for little endian case, we also need to convert the data to big endian
+          // but we do not do that currently (need this in case 'utxt' is really in little endian)
+          if ( (macOSFlavor == 'utxt') &&
+               (dataSize > 2) &&
+               ((dataPtr[0] == 0xFE && dataPtr[1] == 0xFF) ||
+               (dataPtr[0] == 0xFF && dataPtr[1] == 0xFE)) ) {
+            dataSize -= sizeof(PRUnichar);
+            dataPtr += sizeof(PRUnichar);
+          }
+#endif
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, (void *) dataPtr, dataSize, getter_AddRefs(genericDataWrapper) );
         }
         
         // put it into the transferable.
