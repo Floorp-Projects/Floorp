@@ -15,6 +15,7 @@ User Agent=$UserAgent$
 ; Destination Path values:
 ;   OS2DISK
 ;   OS2DIR
+;   OS2SYSDIR
 Path=[OS2DISK]\$CompanyName$\$ProductName$
 
 ; Sub Path, when set will indicate to Setup to create a subfolder from
@@ -86,10 +87,20 @@ Confirmation Message=There was an error encountered during installation of $Prod
 ;
 [Locate Previous Product Path0]
 App=[Product CurrentVersion]
-Name=Install Directory
+Key=Install Directory
 Decrypt App=TRUE
 Contains Filename=FALSE
 Verify Existence=
+
+; This version allows previous product path to be found from an arbitrary INI file
+; This was used by IBM Web Browser to locate installs from previous installers
+;[Locate Previous Product Path1]
+;INI=[OS2SYSDIR]\EPFIS.INI
+;Decrypt INI=TRUE
+;App=EPFINST_IBM Web Browser for OS/2_0000-000_0000
+;Key=FilePath
+;Contains Filename=FALSE
+;Verify Existence=
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -321,6 +332,7 @@ Message Retry0=Some files have failed the CRC check and are being downloaded aga
 Show Dialog=AUTO
 
 [Check Instance0]
+; If you create your own product, make sure to change this name to something else
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
@@ -633,29 +645,29 @@ Destination=[SETUP PATH]\install_wizard.log
 
 
 ;RunAppX sections
-[RunApp0]
-Timing=depend reboot
-Wait=FALSE
-Target=[SETUP PATH]\$MainExeFile$
-Parameters=-installer
-WorkingDir=[SETUP PATH]
+;[RunApp0]
+;Timing=depend reboot
+;Wait=FALSE
+;Target=[SETUP PATH]\$MainExeFile$
+;Parameters=-installer
+;WorkingDir=[SETUP PATH]
 ;The Criterion ID=RecaptureHP associates the decision to run this app with
 ;  the user input to the Recapture Homepage checkbox offered (optionally) in the
 ;  Additional Options dialog.
-Criterion ID=RecaptureHP
-Run App If Criterion=FALSE
+;Criterion ID=RecaptureHP
+;Run App If Criterion=FALSE
 
-[RunApp1]
-Timing=depend reboot
-Wait=FALSE
-Target=[SETUP PATH]\$MainExeFile$
-Parameters=-installer -resetPref browser.startup.homepage
-WorkingDir=[SETUP PATH]
+;[RunApp1]
+;Timing=depend reboot
+;Wait=FALSE
+;Target=[SETUP PATH]\$MainExeFile$
+;Parameters=-installer -resetPref browser.startup.homepage
+;WorkingDir=[SETUP PATH]
 ;The Criterion ID=RecaptureHP associates the decision to run this app with
 ;  the user input to the Recapture Homepage checkbox offered (optionally) in the
 ;  Additional Options dialog.
-Criterion ID=RecaptureHP
-Run App If Criterion=TRUE
+;Criterion ID=RecaptureHP
+;Run App If Criterion=TRUE
 
 [OS2 INI0]
 App=$ProductName$ $UserAgent$
@@ -729,14 +741,30 @@ Decrypt Key=FALSE
 Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
-[Cleanup Previous Product INIApps]
-Product Name0=Mozilla
-Product INI App0=Mozilla
-Current Version0=$UserAgent$
+; This version looks in the default INI for anything beginning with Product Name
+; and if it begins with product name and doesn't have current version set the same
+; and the value of Key is the same as the installed directory, it removes the
+; entire app
+[Cleanup Previous Product INIApps0]
+Product Name=$ProductName$
+Current Version=$UserAgent$
+Key=Install Directory
+
+; This version looks in a specified or the default INI for the given App
+; and if the value of the specified Key matched the installed directory,
+; it removes the entire app
+;[Cleanup Previous Product INIApps1]
+;INI=[OS2SYSDIR]\EPFIS.INI
+;Decrypt INI=TRUE
+;App=EPFINST_IBM Web Browser for OS/2_0000-000_0000
+;Key=FilePath
 
 ; Open Folder indicates whether to open the program folder after the install
 ;
 ; Default value is TRUE if nothing is set.
+;
+; When creating objects, you can specify Attribute=UPDATE or FAIL
+; FAIL will fail when trying to create the object, UPDATE will replace it
 
 [Program Folder0]
 Timing=post smartupdate
