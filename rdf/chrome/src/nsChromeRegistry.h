@@ -188,6 +188,7 @@ protected:
   PRBool mProfileInitialized;
   
   PRBool mUseXBLForms;
+  PRBool mRuntimeProvider;
 
   nsCString mProfileRoot;
   nsCString mInstallRoot;
