@@ -627,10 +627,8 @@ nsMsgSendLater::StartNextMailFileSend()
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
 
   // RICHIE 
-  // I think i had a typo here....this should work now!
-  // before I was releasing mSendListener and this was causing us grief! Thought that it
-  // looked like messageService was not addref'ing
-  NS_RELEASE(mSaveListener); 
+  // Problem. If I release the SaveListener, then there is a refcount problem.
+  // NS_RELEASE(mSaveListener); 
 
 	if (NS_FAILED(rv))
     return rv;    
