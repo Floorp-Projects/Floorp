@@ -46,6 +46,8 @@
 #include "nsDOMWalker.h"
 
 class nsEncoderNodeFixup;
+class nsIStorageStream;
+
 struct URIData;
 
 class nsWebBrowserPersist : public nsIInterfaceRequestor,
@@ -100,7 +102,7 @@ private:
         nsILocalFile *aFile, nsIOutputStream **aOutputStream);
     nsresult MakeOutputStreamFromURI(nsIURI *aURI, nsIOutputStream  **aOutStream);
     nsresult CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel);
-    nsresult StartUpload(nsIOutputStream *aOutStream, nsIURI *aDestinationURI,
+    nsresult StartUpload(nsIStorageStream *aOutStream, nsIURI *aDestinationURI,
         const char *aContentType);
     nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel);
     nsresult MakeFilenameFromURI(
