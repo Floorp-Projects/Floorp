@@ -62,15 +62,44 @@
        url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
 }
 
-#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy {
+#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy {
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
 }
 
-#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy:hover,
-#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy:active {
+#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:hover,
+#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:active {
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
+}
+
+.sidebar-header-grippy {
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    background-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-down.gif"); 
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.sidebar-header-grippy:hover,
+.sidebar-header-grippy:active {
+    background-color: transparent;
+    background-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-down-hover.gif"); 
+}
+
+#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy {
+    background-color: transparent;
+    background-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-up.gif"); 
+}
+
+#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy:hover,
+#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy:active {
+    background-image:
+       url("chrome://communicator/skin/sidebar/sbgrippy-up-hover.gif"); 
 }
 
 #sidebar-status-grippy {
@@ -91,6 +120,7 @@
     background-image:
        url("chrome://communicator/skin/sidebar/sidebar-close-hover.gif"); 
 }
+
 
 /**/
 
@@ -120,6 +150,10 @@
 .sidebarheader-main > .sidebar-header-text {
     font-weight: bold;
     margin: 2px;
+}
+
+.sidebarheader-main > .sidebar-header-grippy {
+    min-height: 8px;
 }
 
 #sidebar-panel-picker:hover {
