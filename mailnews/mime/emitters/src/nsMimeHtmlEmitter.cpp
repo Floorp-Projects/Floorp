@@ -207,7 +207,16 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       headerNames[numHeadersAdded] = headerInfo->name;
 
       if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
-        rv = GenerateDateString(headerInfo->value, &headerValues[numHeadersAdded]);
+      {
+        PRBool displayOriginalDate = PR_FALSE;
+        if (prefs)
+          prefs->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
+
+        if (displayOriginalDate)
+          headerValues[numHeadersAdded] = ToNewUnicode(nsDependentCString(headerValue));
+        else
+          GenerateDateString(headerValue, &headerValues[numHeadersAdded]);
+      }
       else
       {
         // optimization: if we aren't in view all header view mode, we only show a small set of the total # of headers.
