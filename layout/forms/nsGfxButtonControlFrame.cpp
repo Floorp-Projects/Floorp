@@ -176,10 +176,12 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
       // Honor the suggested width and/or height.
     if (kSuggestedNotSet != mSuggestedWidth) {
       suggestedReflowState.mComputedWidth = mSuggestedWidth;
+      suggestedReflowState.mComputedWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
     }
 
     if (kSuggestedNotSet != mSuggestedHeight) {
       suggestedReflowState.mComputedHeight = mSuggestedHeight;
+      suggestedReflowState.mComputedHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
     }
 
     return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
