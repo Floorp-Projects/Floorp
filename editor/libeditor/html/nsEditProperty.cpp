@@ -34,6 +34,7 @@ nsIAtom * nsIEditProperty::b;
 nsIAtom * nsIEditProperty::big;
 nsIAtom * nsIEditProperty::font;
 nsIAtom * nsIEditProperty::i;
+nsIAtom * nsIEditProperty::img;
 nsIAtom * nsIEditProperty::span;
 nsIAtom * nsIEditProperty::small;
 nsIAtom * nsIEditProperty::strike;
@@ -62,6 +63,7 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::big =  NS_NewAtom("big");
   nsIEditProperty::font = NS_NewAtom("font");
   nsIEditProperty::i =    NS_NewAtom("i");
+  nsIEditProperty::i =    NS_NewAtom("img");
   nsIEditProperty::span = NS_NewAtom("span");
   nsIEditProperty::small =NS_NewAtom("small");
   nsIEditProperty::strike=NS_NewAtom("strike");
@@ -90,6 +92,7 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::big);
   NS_IF_RELEASE(nsIEditProperty::font);
   NS_IF_RELEASE(nsIEditProperty::i);
+  NS_IF_RELEASE(nsIEditProperty::img);
   NS_IF_RELEASE(nsIEditProperty::span);
   NS_IF_RELEASE(nsIEditProperty::small);
   NS_IF_RELEASE(nsIEditProperty::strike);
