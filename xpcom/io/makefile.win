@@ -39,7 +39,6 @@ EXPORTS =                               \
         nsFileSpecStreaming.h           \
         nsFileStream.h                  \
         nsIFileStream.h                 \
-        nsIFileUtils.h                  \
         nsIUnicharInputStream.h         \
         nsLinebreakConverter.h          \
         nsScriptableInputStream.h       \
