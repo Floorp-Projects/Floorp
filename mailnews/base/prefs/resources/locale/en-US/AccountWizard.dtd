@@ -37,14 +37,15 @@
 <!ENTITY incomingServerTypeLabel.label "Server Type:">
 <!-- LOCALIZATION NOTE (incomingServerNameDesc.label) : Do not translate "&quot;pop.example.net&quot;" in below line -->
 <!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server (for example, &quot;mail.example.net&quot;).">
-<!ENTITY incomingServerLabel.label "Server Name:">
+<!ENTITY incomingServerLabel.label "Incoming Server:">
 <!-- LOCALIZATION NOTE (newsServerNameDesc.label) : Do not translate "NNTP" or the "&quot;" entities in below line -->
 <!ENTITY newsServerNameDesc.label "Enter the name of your news server (NNTP) (for example, &quot;news.example.net&quot;).">
 <!-- LOCALIZATION NOTE (smtpServerTitle.label) : Do not translate "SMTP" in below line -->
 <!ENTITY smtpServerTitle.label "Outgoing Server (SMTP)">
 <!-- LOCALIZATION NOTE (smtpServerDesc.label) : Do not translate "SMTP" and "&quot;smtp.example.net&quot;" in below line -->
 <!ENTITY smtpServerDesc.label "Enter the name of your outgoing server (SMTP) (for example, &quot;smtp.example.net&quot;).">
-<!ENTITY smtpServerLabel.label "Server Name:">
+<!ENTITY smtpServerLabel.label "Outgoing Server:">
+<!ENTITY newsServerLabel.label "Newsgroup Server:">
 <!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
 <!ENTITY imapType.label "IMAP">
 <!-- LOCALIZATION NOTE (popType.label) : Do not translate "POP" in below line -->
@@ -57,7 +58,7 @@
 	  inserting text after the "&quot;" entity in currentSmtpAfter.label, if required grammatically
 -->
 <!-- LOCALIZATION NOTE (haveSmtp1.label) : Do not translate "SMTP" in below line -->
-<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing server (SMTP). You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account. To specify additional outgoing servers, choose Mail &amp; Newsgroups Account Settings from the Edit menu.">
+<!ENTITY haveSmtp1.label "Your existing outgoing server (SMTP), &quot;@server_name@&quot;, will be used. You can modify outgoing server settings by choosing Mail &amp; Newsgroups Account Settings from the Edit menu.">
 
 <!-- Entities for Login page -->
 

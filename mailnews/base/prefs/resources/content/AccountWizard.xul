@@ -116,39 +116,41 @@ Rights Reserved.
               onpageshow="return serverPageInit();"
               onpageadvanced="return serverPageValidate();">
     <vbox flex="1">
-      <groupbox orient="vertical">
-        <caption label="&incomingServerTitle.label;"/>
+        <vbox id="serverTypeBox">
         <description>&incomingServerTypeDesc.label;</description>
-        <separator class="thin"/>
-        <hbox align="center">
-          <!-- The initial value for the servertype radiogroup is set in onInit() -->
-          <radiogroup id="servertype" wsm_persist="true" orient="horizontal">
-              <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true" oncommand="setServerType();"/>
-              <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true" oncommand="setServerType();"/>
-          </radiogroup>
-        </hbox>
-        <separator class="thin"/>
-        <description>&incomingServerNameDesc.label;</description>
-        <separator class="thin"/>
-        <hbox align="center">
-          <label class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="incomingServer"/>
-          <textbox wsm_persist="true" id="incomingServer" flex="1"/>
-        </hbox>
-      </groupbox>
+          <separator class="thin"/>
+          <hbox align="center" class="serverDataBox">
+            <!-- The initial value for the servertype radiogroup is set in onInit() -->
+            <radiogroup id="servertype" wsm_persist="true" orient="horizontal">
+                <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true" oncommand="setServerType();"/>
+                <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true" oncommand="setServerType();"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
 
-      <groupbox orient="vertical" id="noSmtp">
-        <caption label="&smtpServerTitle.label;"/>
-        <description>&smtpServerDesc.label;</description>
-        <separator class="thin"/>
-        <hbox align="center">
-          <label class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
-          <textbox id="smtphostname" wsm_persist="true" flex="1"/>
-        </hbox>
-      </groupbox>
+        <separator/>
 
-      <groupbox id="haveSmtp" orient="vertical">
-        <description id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</description>
-      </groupbox>
+        <vbox id="incomingServerbox">
+          <description>&incomingServerNameDesc.label;</description>
+          <hbox align="center" class="serverDataBox">
+            <label class="label, serverLabel" value="&incomingServerLabel.label;" for="incomingServer"/>
+            <textbox wsm_persist="true" id="incomingServer" flex="1"/>
+          </hbox>
+        </vbox>
+
+        <separator/>
+
+        <vbox id="noSmtp">
+          <description>&smtpServerDesc.label;</description>
+          <hbox align="center" class="serverDataBox">
+            <label class="label, serverLabel" value="&smtpServerLabel.label;" for="smtphostname"/>
+            <textbox id="smtphostname" wsm_persist="true" flex="1"/>
+          </hbox>
+        </vbox>
+
+        <vbox id="haveSmtp">
+          <description id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</description>
+        </vbox>
     </vbox>
   </wizardpage>
 
@@ -177,7 +179,7 @@ Rights Reserved.
       <description>&newsServerNameDesc.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label control="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
+        <label control="hostname" value="&newsServerLabel.label;" style="width: 8em;"/>
         <textbox id="newsServer" wsm_persist="true" flex="1"/>
       </hbox>
     </vbox>
