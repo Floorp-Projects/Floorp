@@ -591,9 +591,9 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
           nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         ) ||
-        !Substring(nsDependentString(aInString, aInLength),
+        !Substring(Substring(aInString, aInString+aInLength),
                    (before == LT_IGNORE ? 0 : 1),
-                   aRepLen).Equals(nsDependentString(rep, aRepLen),
+                   aRepLen).Equals(Substring(rep, rep+aRepLen),
                                    nsCaseInsensitiveStringComparator())
     )
     return PR_FALSE;
