@@ -24,6 +24,55 @@
 
 #include <Math64.h>
 
+/* VersGreaterThan4 - utility function to test if it's >4.x running */
+static Boolean VersGreaterThan4(FSSpec *fSpec)
+{
+	Boolean result = false;
+	short	fRefNum = 0;
+	
+	SetResLoad(false);
+	fRefNum = FSpOpenResFile(fSpec, fsRdPerm);
+	SetResLoad(true);
+	if (fRefNum != -1)
+	{
+		Handle	h;
+		h = Get1Resource('vers', 2);
+		if (h && **(unsigned short**)h >= 0x0500)
+			result = true;
+		CloseResFile(fRefNum);
+	}
+		
+	return result;
+}
+
+/* Variant of FindRunningAppBySignature that looks from a specified PSN */
+static OSErr FindNextRunningAppBySignature (OSType sig, FSSpec *fSpec, ProcessSerialNumber *psn)
+{
+	OSErr 			err = noErr;
+	ProcessInfoRec 	info;
+	FSSpec			tempFSSpec;
+	
+	while (true)
+	{
+		err = GetNextProcess(psn);
+		if (err != noErr) return err;
+		info.processInfoLength = sizeof(ProcessInfoRec);
+		info.processName = nil;
+		info.processAppSpec = &tempFSSpec;
+		err = GetProcessInformation(psn, &info);
+		if (err != noErr) return err;
+		
+		if (info.processSignature == sig)
+		{
+			if (fSpec != nil)
+				*fSpec = tempFSSpec;
+			return noErr;
+		}
+	}
+	
+	return procNotFound;
+}
+
 /*-----------------------------------------------------------*
  *   Setup Type Window
  *-----------------------------------------------------------*/
@@ -48,8 +97,40 @@ ShowSetupTypeWin(void)
 	long				txtSize;
 	Str255				instLocTitle, selectFolder;
 	GrafPtr				oldPort;
+	ProcessSerialNumber thePSN;
+	FSSpec				theSpec;
+	
 	GetPort(&oldPort);
 	
+	/* Short term fix for #58928 - prevent install if Mozilla or Netscape running */
+	if (FindRunningAppBySignature('MOSS', &theSpec, &thePSN) == noErr ||
+		FindRunningAppBySignature('MOZZ', &theSpec, &thePSN) == noErr)
+	{
+KeepCheckingVersion:
+		if (VersGreaterThan4(&theSpec))
+		{
+			Str255 tempStr;
+			SInt16 itemHit;
+			SInt16  stringLen = strlen(*gControls->cfg->welcMsg[1]);
+			if (stringLen > 255)
+				stringLen = 255;
+			/* copy C to P string */
+			BlockMoveData(*gControls->cfg->welcMsg[1], &tempStr[1], stringLen);
+			tempStr[0] = stringLen;
+			/* Show a Stop alert with the text */
+			StandardAlert(kAlertStopAlert, tempStr, nil, nil, &itemHit);
+			/* Bounce user back to Welcome window */
+			ShowWelcomeWin();
+			return;
+		}
+	}
+	
+	/* Just because we found one app doesn't mean another copy isn't running so
+	   keep checking */
+	if (FindNextRunningAppBySignature('MOSS', &theSpec, &thePSN) == noErr ||
+		FindNextRunningAppBySignature('MOZZ', &theSpec, &thePSN) == noErr)
+		goto KeepCheckingVersion;
+
 	if (gWPtr != NULL)
 	{
 		SetPort(gWPtr);
