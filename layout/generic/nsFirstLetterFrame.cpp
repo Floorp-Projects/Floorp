@@ -134,36 +134,27 @@ nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
                          nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  nsIStyleContext* newSC = nsnull;
+  nsCOMPtr<nsIStyleContext> newSC;
   if (aPrevInFlow) {
-    // Get proper style context for ourselves
-    nsIStyleContext* parentStyleContext;
-    parentStyleContext = aContext->GetParent();
+    // Get proper style context for ourselves.  We're creating the frame
+    // that represents everything *except* the first letter, so just create
+    // a style context like we would for a text node.
+    nsIStyleContext* parentStyleContext = aContext->GetParent();
     if (parentStyleContext) {
-      nsIAtom* atom = aPrevInFlow
-        ? nsHTMLAtoms::mozLetterFrame
-        : nsHTMLAtoms::firstLetterPseudo;
-      rv = aPresContext->ResolvePseudoStyleContextFor(aContent, atom,
-                                                     parentStyleContext,
-                                                     PR_FALSE, &newSC);
+      rv = aPresContext->ResolveStyleContextForNonElement(
+                                                   parentStyleContext,
+                                                   PR_FALSE,
+                                                   getter_AddRefs(newSC));
       NS_RELEASE(parentStyleContext);
-      if (NS_FAILED(rv)) {
+      if (NS_FAILED(rv))
         return rv;
-      }
 
-      if (nsnull != newSC) {
-        if (newSC == aContext) {
-          NS_RELEASE(newSC);
-        }
-        else {
-          aContext = newSC;
-        }
-      }
+      if (newSC)
+        aContext = newSC;
     }
   }
   rv = nsFirstLetterFrameSuper::Init(aPresContext, aContent, aParent,
                                      aContext, aPrevInFlow);
-  NS_IF_RELEASE(newSC);
   return rv;
 }
 
@@ -372,8 +363,10 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
     nsCOMPtr<nsIContent> kidContent;
     kid->GetContent(getter_AddRefs(kidContent));
     if (kidContent) {
-      aPresContext->ResolveStyleContextFor(kidContent, mStyleContext,
-                                           PR_FALSE, getter_AddRefs(sc));
+      NS_ASSERTION(kidContent->IsContentOfType(nsIContent::eTEXT),
+                   "should contain only text nodes");
+      aPresContext->ResolveStyleContextForNonElement(mStyleContext,
+                                                 PR_FALSE, getter_AddRefs(sc));
       if (sc) {
         kid->SetStyleContext(aPresContext, sc);
       }

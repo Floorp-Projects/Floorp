@@ -206,7 +206,10 @@ public:
    * the rule matching.
    *
    * XXX This is temporary.  It should go away when we stop creating
-   * style contexts for text nodes.
+   * style contexts for text nodes and placeholder frames.  (We also use
+   * it once to create a style context for the nsFirstLetterFrame that
+   * represents everything except the first letter.)
+   *
    */
   NS_IMETHOD ResolveStyleContextForNonElement(
                                     nsIStyleContext* aParentContext,
