@@ -246,26 +246,25 @@ nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyR
     nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
     GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
 
-    if (!markerEnd && !markerMid && !markerStart)
-      return NS_OK;
+    if (markerEnd || markerMid || markerStart) {
+      float strokeWidth;
+      GetStrokeWidth(&strokeWidth);
+      
+      nsVoidArray marks;
+      markable->GetMarkPoints(&marks);
+    
+      PRUint32 num = marks.Count();
+      
+      if (markerStart)
+        markerStart->PaintMark(canvas, this, (nsSVGMark *)marks[0], strokeWidth);
+      
+      if (markerMid)
+        for (PRUint32 i = 1; i < num - 1; i++)
+          markerMid->PaintMark(canvas, this, (nsSVGMark *)marks[i], strokeWidth);
 
-    float strokeWidth;
-    GetStrokeWidth(&strokeWidth);
-
-    nsVoidArray marks;
-    markable->GetMarkPoints(&marks);
-
-    PRUint32 num = marks.Count();
-
-    if (markerStart)
-      markerStart->PaintMark(canvas, this, (nsSVGMark *)marks[0], strokeWidth);
-
-    if (markerMid)
-      for (PRUint32 i = 1; i < num - 1; i++)
-        markerMid->PaintMark(canvas, this, (nsSVGMark *)marks[i], strokeWidth);
-
-    if (markerEnd)
-      markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
+      if (markerEnd)
+        markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
+    }
   }
 
   if (clip)
