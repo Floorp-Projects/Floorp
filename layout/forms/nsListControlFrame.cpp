@@ -1679,7 +1679,8 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
       PRBool selected = PR_FALSE;
       option->GetDefaultSelected(&selected);
       if (selected) {
-        Reset(aPresContext);             // this sets mSelectedIndex to the defaulted selection
+        // XXX this is very bad to here
+        //Reset(aPresContext);             // this sets mSelectedIndex to the defaulted selection
         wasReset = PR_TRUE;
       }
       NS_RELEASE(option);
