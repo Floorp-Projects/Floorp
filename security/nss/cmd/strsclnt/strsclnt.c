@@ -195,7 +195,7 @@ disableAllSSLCiphers(void)
 /* This invokes the "default" AuthCert handler in libssl.
 ** The only reason to use this one is that it prints out info as it goes. 
 */
-static int
+static SECStatus
 mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 		     PRBool isServer)
 {
@@ -217,7 +217,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     return rv;  
 }
 
-static int /* should be SECStatus but public prototype says int. */
+static SECStatus
 myBadCertHandler( void *arg, PRFileDesc *fd)
 {
     int err = PR_GetError();

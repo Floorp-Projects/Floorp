@@ -255,7 +255,7 @@ disableAllSSLCiphers(void)
     }
 }
 
-static int
+static SECStatus
 mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 		     PRBool isServer)
 {

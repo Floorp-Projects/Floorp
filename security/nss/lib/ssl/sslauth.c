@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.2 2000/09/12 20:15:42 jgmyers%netscape.com Exp $
+ * $Id: sslauth.c,v 1.3 2001/02/09 00:32:03 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -59,7 +59,7 @@ CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd)
 }
 
 /* NEED LOCKS IN HERE.  */
-int
+SECStatus
 SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 		   char **ip, char **sp)
 {
@@ -141,17 +141,17 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	}
     }
 
-    return 0;
+    return SECSuccess;
 }
 
 /************************************************************************/
 
 /* NEED LOCKS IN HERE.  */
-int
+SECStatus
 SSL_AuthCertificateHook(PRFileDesc *s, SSLAuthCertificate func, void *arg)
 {
     sslSocket *ss;
-    int rv;
+    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -161,21 +161,21 @@ SSL_AuthCertificateHook(PRFileDesc *s, SSLAuthCertificate func, void *arg)
     }
 
     if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return(rv);
+	return rv;
     }
     ss->authCertificate = func;
     ss->authCertificateArg = arg;
 
-    return(0);
+    return SECSuccess;
 }
 
 /* NEED LOCKS IN HERE.  */
-int 
+SECStatus 
 SSL_GetClientAuthDataHook(PRFileDesc *s, SSLGetClientAuthData func,
 			      void *arg)
 {
     sslSocket *ss;
-    int rv;
+    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -189,15 +189,15 @@ SSL_GetClientAuthDataHook(PRFileDesc *s, SSLGetClientAuthData func,
     }
     ss->getClientAuthData = func;
     ss->getClientAuthDataArg = arg;
-    return 0;
+    return SECSuccess;
 }
 
 /* NEED LOCKS IN HERE.  */
-int 
+SECStatus 
 SSL_SetPKCS11PinArg(PRFileDesc *s, void *arg)
 {
     sslSocket *ss;
-    int rv;
+    SECStatus rv;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -210,7 +210,7 @@ SSL_SetPKCS11PinArg(PRFileDesc *s, void *arg)
 	return rv;
     }
     ss->pkcs11PinArg = arg;
-    return 0;
+    return SECSuccess;
 }
 
 
@@ -218,7 +218,7 @@ SSL_SetPKCS11PinArg(PRFileDesc *s, void *arg)
  * certificate message is received from the peer and the local application
  * has not registered an authCert callback function.
  */
-int
+SECStatus
 SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
 {
     SECStatus          rv;

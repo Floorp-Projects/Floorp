@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.6 2001/01/18 16:36:41 wtc%netscape.com Exp $
+ * $Id: ssl.h,v 1.7 2001/02/09 00:32:03 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -165,7 +165,7 @@ SSL_IMPORT SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
 ** Force the handshake for fd to complete immediately.  This blocks until
 ** the complete SSL handshake protocol is finished.
 */
-SSL_IMPORT int SSL_ForceHandshake(PRFileDesc *fd);
+SSL_IMPORT SECStatus SSL_ForceHandshake(PRFileDesc *fd);
 
 /*
 ** Query security status of socket. *on is set to one if security is
@@ -178,9 +178,9 @@ SSL_IMPORT int SSL_ForceHandshake(PRFileDesc *fd);
 ** data is not needed.  All strings returned by this function are owned
 ** by SSL, and will be freed when the socket is closed.
 */
-SSL_IMPORT int SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
-			      int *keySize, int *secretKeySize,
-			      char **issuer, char **subject);
+SSL_IMPORT SECStatus SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
+			                int *keySize, int *secretKeySize,
+			                char **issuer, char **subject);
 
 /* Values for "on" */
 #define SSL_SECURITY_STATUS_NOOPT	-1
@@ -203,14 +203,16 @@ SSL_IMPORT CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 ** (because of SSL_REQUIRE_CERTIFICATE in SSL_Enable) to authenticate the
 ** certificate.
 */
-typedef int (*SSLAuthCertificate)(void *arg, PRFileDesc *fd, PRBool checkSig,
-				  PRBool isServer);
-SSL_IMPORT int SSL_AuthCertificateHook(PRFileDesc *fd, SSLAuthCertificate f,
-				   void *arg);
+typedef SECStatus (*SSLAuthCertificate)(void *arg, PRFileDesc *fd, 
+					PRBool checkSig, PRBool isServer);
+
+SSL_IMPORT SECStatus SSL_AuthCertificateHook(PRFileDesc *fd, 
+					     SSLAuthCertificate f,
+				             void *arg);
 
 /* An implementation of the certificate authentication hook */
-SSL_IMPORT int SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
-			       PRBool isServer);
+SSL_IMPORT SECStatus SSL_AuthCertificate(void *arg, PRFileDesc *fd, 
+					 PRBool checkSig, PRBool isServer);
 
 /*
  * Prototype for SSL callback to get client auth data from the application.
@@ -219,7 +221,7 @@ SSL_IMPORT int SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
  *	pRetCert - pointer to pointer to cert, for return of cert
  *	pRetKey - pointer to key pointer, for return of key
  */
-typedef int (*SSLGetClientAuthData)(void *arg, PRFileDesc *fd,
+typedef SECStatus (*SSLGetClientAuthData)(void *arg, PRFileDesc *fd,
 				    CERTDistNames *caNames,
 				    CERTCertificate **pRetCert,/*return */
 				    SECKEYPrivateKey **pRetKey);/* return */
@@ -231,8 +233,8 @@ typedef int (*SSLGetClientAuthData)(void *arg, PRFileDesc *fd,
  *	f - the application's callback that delivers the key and cert
  *	a - application specific data
  */
-SSL_IMPORT int SSL_GetClientAuthDataHook(PRFileDesc *fd, SSLGetClientAuthData f,
-				     void *a);
+SSL_IMPORT SECStatus SSL_GetClientAuthDataHook(PRFileDesc *fd, 
+			                       SSLGetClientAuthData f, void *a);
 
 
 /*
@@ -240,15 +242,16 @@ SSL_IMPORT int SSL_GetClientAuthDataHook(PRFileDesc *fd, SSLGetClientAuthData f,
  *	fd - the file descriptor for the connection in question
  *	a - pkcs11 application specific data
  */
-SSL_IMPORT int SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
+SSL_IMPORT SECStatus SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 
 /*
 ** This is a callback for dealing with server certs that are not authenticated
 ** by the client.  The client app can decide that it actually likes the
 ** cert by some external means and restart the connection.
 */
-typedef int (*SSLBadCertHandler)(void *arg, PRFileDesc *fd);
-SSL_IMPORT int SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg);
+typedef SECStatus (*SSLBadCertHandler)(void *arg, PRFileDesc *fd);
+SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, 
+				     void *arg);
 
 /*
 ** Configure ssl for running a secure server. Needs the
@@ -264,7 +267,8 @@ typedef enum {
     kt_kea_size
 } SSLKEAType;
 
-SSL_IMPORT SECStatus SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
+SSL_IMPORT SECStatus SSL_ConfigSecureServer(
+				PRFileDesc *fd, CERTCertificate *cert,
 				SECKEYPrivateKey *key, SSLKEAType kea);
 
 /*
@@ -275,10 +279,10 @@ SSL_IMPORT SECStatus SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cer
 ** This version of the function is for use in applications that have only one 
 ** process that uses the cache (even if that process has multiple threads).
 */
-SSL_IMPORT int SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
-					  PRUint32 timeout,
-					  PRUint32 ssl3_timeout,
-				    const char *   directory);
+SSL_IMPORT SECStatus SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
+					            PRUint32 timeout,
+					            PRUint32 ssl3_timeout,
+				              const char *   directory);
 /*
 ** Like SSL_ConfigServerSessionIDCache, with one important difference.
 ** If the application will run multiple processes (as opposed to, or in 
@@ -288,10 +292,10 @@ SSL_IMPORT int SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
 ** This function sets up a Server Session ID (SID) cache that is safe for
 ** access by multiple processes on the same system.
 */
-SSL_IMPORT int SSL_ConfigMPServerSIDCache(int      maxCacheEntries, 
-				      PRUint32 timeout,
-			       	      PRUint32 ssl3_timeout, 
-		                const char *   directory);
+SSL_IMPORT SECStatus SSL_ConfigMPServerSIDCache(int      maxCacheEntries, 
+				                PRUint32 timeout,
+			       	                PRUint32 ssl3_timeout, 
+		                          const char *   directory);
 
 /* environment variable set by SSL_ConfigMPServerSIDCache, and queried by
  * SSL_InheritMPServerSIDCache when envString is NULL.
@@ -310,8 +314,8 @@ SSL_IMPORT SECStatus SSL_InheritMPServerSIDCache(const char * envString);
 ** performing a handshake.
 */
 typedef void (*SSLHandshakeCallback)(PRFileDesc *fd, void *client_data);
-SSL_IMPORT int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
-				 void *client_data);
+SSL_IMPORT SECStatus SSL_HandshakeCallback(PRFileDesc *fd, 
+			          SSLHandshakeCallback cb, void *client_data);
 
 /*
 ** For the server, request a new handshake.  For the client, begin a new
@@ -321,7 +325,7 @@ SSL_IMPORT int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 ** do the much faster session restart handshake.  This will change the 
 ** session keys without doing another private key operation.
 */
-SSL_IMPORT int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
+SSL_IMPORT SECStatus SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* deprecated!
@@ -330,13 +334,13 @@ SSL_IMPORT int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
 ** full handshake will be done.  
 ** This call is equivalent to SSL_ReHandshake(fd, PR_TRUE)
 */
-SSL_IMPORT int SSL_RedoHandshake(PRFileDesc *fd);
+SSL_IMPORT SECStatus SSL_RedoHandshake(PRFileDesc *fd);
 #endif
 
 /*
  * Allow the application to pass a URL or hostname into the SSL library
  */
-SSL_IMPORT int SSL_SetURL(PRFileDesc *fd, const char *url);
+SSL_IMPORT SECStatus SSL_SetURL(PRFileDesc *fd, const char *url);
 
 /*
 ** Return the number of bytes that SSL has waiting in internal buffers.
@@ -347,7 +351,7 @@ SSL_IMPORT int SSL_DataPending(PRFileDesc *fd);
 /*
 ** Invalidate the SSL session associated with fd.
 */
-SSL_IMPORT int SSL_InvalidateSession(PRFileDesc *fd);
+SSL_IMPORT SECStatus SSL_InvalidateSession(PRFileDesc *fd);
 
 /*
 ** Return a SECItem containing the SSL session ID associated with the fd.
@@ -355,7 +359,7 @@ SSL_IMPORT int SSL_InvalidateSession(PRFileDesc *fd);
 SSL_IMPORT SECItem *SSL_GetSessionID(PRFileDesc *fd);
 
 /*
-** Clear out the SSL session cache.
+** Clear out the client's SSL session cache, not the server's session cache.
 */
 SSL_IMPORT void SSL_ClearSessionCache(void);
 
@@ -363,7 +367,7 @@ SSL_IMPORT void SSL_ClearSessionCache(void);
 ** Set peer information so we can correctly look up SSL session later.
 ** You only have to do this if you're tunneling through a proxy.
 */
-SSL_IMPORT int SSL_SetSockPeerID(PRFileDesc *fd, char *peerID);
+SSL_IMPORT SECStatus SSL_SetSockPeerID(PRFileDesc *fd, char *peerID);
 
 /*
 ** Reveal the security information for the peer. 
