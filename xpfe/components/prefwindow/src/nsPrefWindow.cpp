@@ -76,7 +76,6 @@ nsPrefWindow::nsPrefWindow()
 ,    mPanelFrame(nsnull)
 ,    mPrefs(nsnull)
 ,    mSubStrings(nsnull)
-,    mWindow(nsnull)
 {
 	NS_INIT_REFCNT();
     
@@ -156,7 +155,7 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
 	if (mPrefs)
 	{
 #ifdef NS_DEBUG
-	    stream << "Existing pref object reused by "
+	    stream << "еее showWindow called twice! Existing pref object reused by "
 	    	<< nsString(id).ToCString(buf, sizeof(buf))
 	    	<< nsEndl;
 #endif
@@ -179,8 +178,6 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
         return NS_ERROR_FAILURE;
 
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    if (mWindow)
-    	return NS_OK;
     nsIWebShellWindow* window = nsnull;
     nsCOMPtr<nsIURL> urlObj;
     nsresult rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://pref/content/");
@@ -198,7 +195,6 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
                                  nsnull, cb, 504, 436);
     if (window)
     {
-        mWindow = window;
         nsCOMPtr<nsIWidget> parentWindowWidgetThing;
         nsresult gotParent
         	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
@@ -719,7 +715,6 @@ NS_IMETHODIMP nsPrefWindow::savePrefs()
         mPrefs->SavePrefFile();
     }
     // Then close    
-    mWindow = nsnull;
     return Close(mPanelFrame);
 } // nsPrefWindow::SavePrefs
 
@@ -732,7 +727,6 @@ NS_IMETHODIMP nsPrefWindow::cancelPrefs()
         mPrefs->DeleteBranch("temp_tree");
     
     // Then close    
-    mWindow = nsnull;
     return Close(mPanelFrame);
 }
 
