@@ -5795,7 +5795,7 @@ HRESULT GetCheckInstanceQuitMessage(char *aSection, char *aMessage, DWORD aMessa
   *aMessage = '\0';
   *messageFullInstaller = '\0';
 
-  GetPrivateProfileString(aSection, "Message", "", aMessage, sizeof(aMessageBufSize), szFileIniConfig);
+  GetPrivateProfileString(aSection, "Message", "", aMessage, aMessageBufSize, szFileIniConfig);
   GetPrivateProfileString(aSection, "Message Full Installer", "", messageFullInstaller, sizeof(messageFullInstaller), szFileIniConfig);
   if(!gbDownloadTriggered && !gbPreviousUnfinishedDownload && (*messageFullInstaller != '\0'))
     MozCopyStr(messageFullInstaller, aMessage, aMessageBufSize);
