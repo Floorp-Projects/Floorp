@@ -319,7 +319,7 @@ NS_NewGenericModule(const char* moduleName,
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
 #  define NSMODULEINFO(_name)             _name##_gModuleInfo
 #  define NSGETMODULE_ENTRY_POINT(_info)
-#  define NSDEPENDENT_LIBS(_name)         static const char* _name##_gDependlibs[]={DEPENDENT_LIBS "\0"};
+#  define NSDEPENDENT_LIBS(_name)         const char* _name##_gDependlibs[]={DEPENDENT_LIBS "\0"};
 #  define NSDEPENDENT_LIBS_NAME(_name)    _name##_gDependlibs
 #else
 #  define NSMODULEINFO(_name)             gModuleInfo
