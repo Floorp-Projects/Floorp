@@ -551,7 +551,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
 #endif
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 #ifdef NS_DEBUG
