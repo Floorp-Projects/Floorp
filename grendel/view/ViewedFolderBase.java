@@ -95,7 +95,7 @@ class ViewedFolderBase implements ViewedFolder {
   }
 
   /**
-   * Returns whether we thing the folder is opened
+   * Returns whether we think the folder is opened
    */
 
   public boolean isOpen() {

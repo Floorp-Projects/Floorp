@@ -261,8 +261,9 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
     }
   }
 
-  void notifyFolderDeleted(ViewedFolderBase aFolder)
-    throws MessagingException {
+  void notifyFolderDeleted(ViewedFolderBase aFolder) {
+  //  throws MessagingException {
+    try {
     if (!aFolder.getFolder().exists()) {
       Object[] listeners = fListeners.getListenerList();
       ViewedStoreEvent event = null;
@@ -275,9 +276,13 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
     } else {
       notifyFolderChanged(aFolder);
     }
+    } catch (MessagingException e) {
+      e.printStackTrace();
+    }
   }
 
   void notifyFolderCreated(Folder aFolder) {
+    try{
     if (aFolder.getParent() != null) {
       try {
         ViewedFolderBase parent =
@@ -288,6 +293,9 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
       }
     } else {
       throw new IllegalStateException("Can't create default folder?");
+    }
+    } catch (MessagingException e) {
+      e.printStackTrace();
     }
   }
 
