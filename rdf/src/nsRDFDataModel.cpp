@@ -16,6 +16,16 @@
  * Reserved.
  */
 
+/*
+
+  This is mostly a naive re-implementation of ht.c. There is currently
+  lots of stuff missing. For example, sorting, drag-and-drop support,
+  the "local HT database" (whatever that was for), fast access into
+  the tree for GetNthItem(). The list goes on and on, and I'm sure
+  that I don't know the half of it.
+
+*/
+
 #include "nsRDFDataModel.h"
 #include "nsRDFDataModelItem.h"
 #include "nsIRDFDataBase.h"
@@ -24,27 +34,38 @@
 #include "prprf.h"
 #include "rdf-int.h"
 
-// XXX these have just GOT to go away. They're copied from ht.c
-PRInt32 htCounter = 0;
+static NS_DEFINE_IID(kIDataModelIID,   NS_IDATAMODEL_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 
-char* gNavCenterDataSources1[15] = {
-    "rdf:localStore",
-    "rdf:remoteStore",
-    "rdf:bookmarks",
-    "rdf:remoteStore",
-    "rdf:history",
-    /* "rdf:ldap", */
-    "rdf:esftp",
-    /* "rdf:mail", */
+
+////////////////////////////////////////////////////////////////////////
+// Utility functions
+
+static RDF
+rdf_GetDefaultDB(void)
+{
+    // hackery that I don't understand from HTRDF_GetDB()
+    static const char* gNavCenterDataSources1[15] = {
+        "rdf:localStore",
+        "rdf:remoteStore",
+        "rdf:bookmarks",
+        "rdf:remoteStore",
+        "rdf:history",
+        /* "rdf:ldap", */
+        "rdf:esftp",
+        /* "rdf:mail", */
 #ifdef	XP_MAC
-    "rdf:appletalk",
+        "rdf:appletalk",
 #endif
-    "rdf:lfs",
-    "rdf:ht",
-    "rdf:columns",
-    "rdf:find",
-    NULL
-};
+        "rdf:lfs",
+        "rdf:ht",
+        "rdf:columns",
+        "rdf:find",
+        NULL
+    };
+
+    return RDF_GetDB(gNavCenterDataSources1);
+}
 
 
 
@@ -77,7 +98,6 @@ nsRDFDataModel::~nsRDFDataModel(void)
 NS_IMPL_ADDREF(nsRDFDataModel);
 NS_IMPL_RELEASE(nsRDFDataModel);
 
-static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
 NS_IMPL_QUERY_INTERFACE(nsRDFDataModel, kIDataModelIID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -106,16 +126,15 @@ nsRDFDataModel::InitFromURL(const nsString& aUrl)
     if (! r)
         return NS_ERROR_UNEXPECTED;
 
-    nsRDFDataModelItem* item = new nsRDFDataModelItem(*this, r);
-    PR_ASSERT(item);
-    if (! item)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsRDFDataModelItem* item;
+    nsresult res = CreateItem(r, item);
+    if (NS_FAILED(res))
+        return res;
 
     if (mRoot)
         mRoot->Release();
 
-    mRoot = item;
-    mRoot->AddRef();
+    mRoot = item; // n.b. implicit AddRef() in CreateItem()
     mRoot->SetOpenState(PR_TRUE);
 
     return NS_OK;
@@ -123,9 +142,38 @@ nsRDFDataModel::InitFromURL(const nsString& aUrl)
 
 
 NS_IMETHODIMP
-nsRDFDataModel::InitFromResource(nsIDMItem* pResource)
+nsRDFDataModel::InitFromResource(nsIDMItem* pItem)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsIRDFResource* resource;
+    if (NS_FAILED(pItem->QueryInterface(kIRDFResourceIID, (void**) &resource)))
+        return NS_ERROR_INVALID_ARG;
+
+    nsresult res = NS_OK;
+
+    do {
+        RDF_Resource r;
+
+        if (NS_FAILED(res = resource->GetResource(r)))
+            break;
+
+        nsRDFDataModelItem* item;
+        if (NS_FAILED(res = CreateItem(r, item)))
+            break;
+
+        if (mRoot)
+            mRoot->Release();
+
+        mRoot = item; // n.b. implicit AddRef() in CreateItem()
+        mRoot->SetOpenState(PR_TRUE);
+
+        if (mDB)
+            RDF_ReleaseDB(mDB);
+
+        mDB = rdf_GetDefaultDB();
+    } while (0);
+
+    resource->Release();
+    return NS_ERROR_UNEXPECTED;
 }
 
 
@@ -160,4 +208,5 @@ nsRDFDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) co
 }
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation methods
 
