@@ -30,7 +30,7 @@ if {![info exists FORM(product)]} {
         
         puts "<H2>First, you must pick a product on which to enter a bug.</H2>"
         foreach p [lsort [array names versions]] {
-            puts "<a href=enter_bug.cgi?product=$p&$buffer>$p</a><br>"
+            puts "<a href=\"enter_bug.cgi?product=[url_quote $p]\"&$buffer>$p</a><br>"
         }
         exit
     }
