@@ -61,7 +61,7 @@ struct nsStyleColor : public nsStyleStruct {
 
   PRUint8 mCursor;                // [reset] See nsStyleConsts.h NS_STYLE_CURSOR_*
   nsString mCursorImage;          // [reset] url string
-  float mOpacity;                 // [reset] percentage
+  float mOpacity;                 // [inherited] percentage
 
   PRBool BackgroundIsTransparent() const {return (mBackgroundFlags &
     (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
@@ -77,6 +77,9 @@ struct nsStyleSpacing: public nsStyleStruct {
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
   nsStyleSides  mBorder;          // [reset] length, percent, See nsStyleConsts.h for enum
 
+  nsStyleCoord  mBorderRadius;    // [reset] length, percent, inherit
+
+  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
   PRBool GetMargin(nsMargin& aMargin) const;
   PRBool GetPadding(nsMargin& aPadding) const;
@@ -85,16 +88,17 @@ struct nsStyleSpacing: public nsStyleStruct {
 
   PRUint8 GetBorderStyle(PRUint8 aSide) const; 
   void    SetBorderStyle(PRUint8 aSide, PRUint8 aStyle); 
-  nscolor GetBorderColor(PRUint8 aSide) const; 
+  PRBool  GetBorderColor(PRUint8 aSide, nscolor& aColor) const;   // PR_FALSE means TRANSPARENT
   void    SetBorderColor(PRUint8 aSide, nscolor aColor); 
+  void    SetBorderTransparent(PRUint8 aSide); 
+  void    UnsetBorderColor(PRUint8 aSide);
 
-  void ClearBorderStyleHighBit(PRUint8 aSide);
-
-#if 0
-  PRUint8 GetMargin2(nsMargin& aMargin) const;
-  PRUint8 GetPadding2(nsMargin& aMargin) const;
-#endif
-
+  PRBool  GetOutlineWidth(nscoord& aWidth) const; // PR_TRUE if pre-computed
+  PRUint8 GetOutlineStyle(void) const;
+  void    SetOutlineStyle(PRUint8 aStyle);
+  PRBool  GetOutlineColor(nscolor& aColor) const; // PR_FALSE means INVERT
+  void    SetOutlineColor(nscolor aColor); 
+  void    SetOutlineInvert(void); 
 
 // XXX these are deprecated methods
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
@@ -108,13 +112,17 @@ protected:
   PRBool    mHasCachedMargin;
   PRBool    mHasCachedPadding;
   PRBool    mHasCachedBorder;
+  PRBool    mHasCachedOutline;
   nsMargin  mCachedMargin;
   nsMargin  mCachedPadding;
   nsMargin  mCachedBorder;
   nsMargin  mCachedBorderPadding;
 
-  PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
-  nscolor       mBorderColor[4];  // [reset] 
+  PRUint8   mBorderStyle[4];  // [reset] See nsStyleConsts.h
+  nscolor   mBorderColor[4];  // [reset] 
+  nscoord   mCachedOutlineWidth;
+  PRUint8   mOutlineStyle;    // [reset] See nsStyleConsts.h
+  nscolor   mOutlineColor;    // [reset] 
 };
 
 struct nsStyleList : public nsStyleStruct {
@@ -205,6 +213,16 @@ struct nsStyleTable: public nsStyleStruct {
 protected:
   nsStyleTable(void);
 };
+
+#if 0 // not ready for prime time
+struct nsStyleContent: public nsStyleStruct {
+  PRUint32  ContentCount(void) const;
+  PRBool    GetContentAt(PRUint32 aIndex, nsStyleXXX& aContent);
+
+protected:
+  nsStyleContent(void);
+};
+#endif
 
 #define BORDER_PRECEDENT_EQUAL  0
 #define BORDER_PRECEDENT_LOWER  1
