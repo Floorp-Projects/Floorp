@@ -113,11 +113,9 @@ endif
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/chrome/userContent-example.css ./MozillaSunbird/defaults/profile/US/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/chrome/userChrome-example.css ./MozillaSunbird/defaults/profile/US/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/bookmarks.html ./MozillaSunbird/defaults/profile/US
-	cp $(topsrcdir)/dist/bin/defaults/profile/US/panels.rdf ./MozillaSunbird/defaults/profile/US
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/localstore.rdf ./MozillaSunbird/defaults/profile/US
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/search.rdf ./MozillaSunbird/defaults/profile/US
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/mimeTypes.rdf ./MozillaSunbird/defaults/profile/US
-	cp $(topsrcdir)/dist/bin/defaults/profile/panels.rdf ./MozillaSunbird/defaults/profile
 	cp $(topsrcdir)/dist/bin/defaults/profile/localstore.rdf ./MozillaSunbird/defaults/profile
 	cp $(topsrcdir)/dist/bin/defaults/profile/search.rdf ./MozillaSunbird/defaults/profile
 	cp $(topsrcdir)/dist/bin/defaults/profile/mimeTypes.rdf ./MozillaSunbird/defaults/profile
