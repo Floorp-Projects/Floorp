@@ -175,7 +175,7 @@ function pickSaveAs (title, typeList, defaultFile, defaultDir)
     picker.init (window, title ? title : futils.MSG_SAVE_AS,
                  Components.interfaces.nsIFilePicker.modeSave);
 
-    var reason;
+    var reason = PICK_CANCEL;
     
     try
     {
@@ -214,7 +214,16 @@ function pickOpen (title, typeList, defaultFile, defaultDir)
     picker.init (window, title ? title : futils.MSG_OPEN,
                  Components.interfaces.nsIFilePicker.modeOpen);
 
-    var rv = picker.show();
+    var rv = PICK_CANCEL;
+    
+    try
+    {
+        rv = picker.show();
+    }
+    catch (ex)
+    {
+        dd ("caught exception from file picker: " + ex);
+    }
     
     if (rv != PICK_CANCEL)
         futils.lastOpenDir = picker.file.parent;
