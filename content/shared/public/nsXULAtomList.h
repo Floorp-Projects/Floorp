@@ -89,7 +89,7 @@ XUL_ATOM(broadcaster, "broadcaster") // A broadcaster
 XUL_ATOM(observes, "observes") // The observes element
 XUL_ATOM(templateAtom, "template") // A XUL template
 
-XUL_ATOM(progressmeter, "progressmeter")
+XUL_ATOM(progressbar, "progressbar")
 XUL_ATOM(titledbutton, "titledbutton")
 XUL_ATOM(crop, "crop")
 

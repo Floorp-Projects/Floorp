@@ -2093,7 +2093,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::tabbox          == tag.get())  ||
         (nsXULAtoms::tabpanel        == tag.get())  ||
         (nsXULAtoms::tabpage         == tag.get())  ||
-        (nsXULAtoms::progressmeter   == tag.get())  ||        
+        (nsXULAtoms::progressbar     == tag.get())  ||        
         (nsXULAtoms::checkbox        == tag.get())  ||
         (nsXULAtoms::radio           == tag.get())  ||
         (nsXULAtoms::menulist        == tag.get())  ||
@@ -4588,7 +4588,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // End of TOOLBAR CONSTRUCTION logic
 
     // PROGRESS METER CONSTRUCTION
-    else if (aTag == nsXULAtoms::progressmeter) {
+    else if (aTag == nsXULAtoms::progressbar) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewProgressMeterFrame(aPresShell, &newFrame);
