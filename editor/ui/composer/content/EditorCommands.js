@@ -1,3 +1,5 @@
+  	var editorType = "html";
+    var editorName = "EditorAppCoreHTML";
   
   /* the following variables are expected to be defined
   	in the embedding file:
