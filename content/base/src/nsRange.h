@@ -178,6 +178,8 @@ public:
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
   static nsresult      Lock();
   static nsresult      Unlock();
+
+  static nsresult CopyContents(nsIDOMNode* aFromNode, nsIDOMNode* aAppendToNode, nsRange* aInRange);
   
   static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
                                       PRInt32 nodeOffset,
