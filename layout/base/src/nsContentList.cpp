@@ -394,6 +394,14 @@ nsContentList::Remove(nsIContent *aContent)
 }
 
 nsresult
+nsContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex)
+{
+  aIndex = mContent.IndexOf(aContent);
+
+  return NS_OK;
+}
+
+nsresult
 nsContentList::Reset()
 {
   mContent.Clear();

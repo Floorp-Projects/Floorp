@@ -120,6 +120,7 @@ public:
 
   nsresult Add(nsIContent *aContent);
   nsresult Remove(nsIContent *aContent);
+  nsresult IndexOf(nsIContent *aContent, PRInt32& aIndex);
 
 protected:
   nsresult Match(nsIContent *aContent, PRBool *aMatch);
