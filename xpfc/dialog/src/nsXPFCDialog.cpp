@@ -19,10 +19,19 @@
 #include "nsXPFCDialog.h"
 #include "nsxpfcCIID.h"
 #include "nspr.h"
+#include "nsXPFCMethodInvokerCommand.h"
+#include "nsXPFCTextWidget.h"
+#include "nsITextWidget.h"
+#include "nsWidgetsCID.h"
+#include "nsVoidArray.h"
+#include "nsXPFCDataCollectionManager.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPFCDialogCID, NS_XPFC_DIALOG_CID);
 static NS_DEFINE_IID(kCIXPFCDialogIID, NS_IXPFC_DIALOG_IID);
+static NS_DEFINE_IID(kCXPFCDataCollectionManager, NS_XPFCDATACOLLECTION_MANAGER_CID);
+static NS_DEFINE_IID(kIXPFCDataCollectionManager, NS_IXPFCDATACOLLECTION_MANAGER_IID);
 
 #define DEFAULT_WIDTH  300
 #define DEFAULT_HEIGHT 300
@@ -83,3 +92,106 @@ nsresult nsXPFCDialog :: GetClassPreferredSize(nsSize& aSize)
   return (NS_OK);
 }
 
+static NS_DEFINE_IID(kInsTextWidgetIID,     NS_ITEXTWIDGET_IID);
+#define MAX_SIZE 2048
+
+nsresult nsXPFCDialog :: CollectDataInCanvas(nsIXPFCCanvas* host_canvas, nsVoidArray* DataMembers)
+{
+  nsresult res ;
+  nsIIterator * iterator;
+
+  res = host_canvas->CreateIterator(&iterator);
+
+  if (NS_OK != res)
+    return NS_OK;
+
+  iterator->Init();
+  while(!(iterator->IsDone()))
+  {
+      nsIXPFCCanvas * canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
+      nsString canvas_name;
+      nsITextWidget * text_widget = nsnull;
+      nsIWidget * widget = nsnull;
+
+      canvas_name = host_canvas->GetNameID();
+      widget = canvas->GetWidget();
+      if (widget)
+      {
+        res = widget->QueryInterface(kInsTextWidgetIID,(void**)&text_widget);
+        NS_RELEASE(widget);
+
+        if (NS_OK == res)
+        {
+          CollectedDataPtr newData;
+          nsString text;
+          nsString name;
+          nsString colon = ":";
+          PRUint32 size;
+
+          text_widget->GetText(text, MAX_SIZE, size);
+          name = canvas->GetNameID();
+
+          NS_RELEASE(text_widget);
+
+          newData = new CollectedData;
+          newData->LabelName = canvas_name;
+          newData->LabelName += colon;
+          newData->LabelName += name;
+          newData->Value = text;
+          DataMembers->AppendElement((void *)newData);
+        }
+      }
+
+    CollectDataInCanvas(canvas, DataMembers);
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+}
+
+nsresult nsXPFCDialog :: CollectData()
+{
+  nsCollectedData*   cdata = new nsCollectedData;
+  nsVoidArray*      lDataMembers = cdata->GetDataArray();
+  nsIXPFCDataCollectionManager *theMan = nsnull;
+
+  CollectDataInCanvas(this, lDataMembers);
+
+  for(PRInt32 x = 0; x < lDataMembers->Count(); x++)
+  {
+    nsString a,b;
+    CollectedDataPtr c;
+    c = (CollectedDataPtr)(lDataMembers->ElementAt(x));
+    a = c->LabelName;
+    b = c->Value;
+  }
+  
+  nsServiceManager::GetService(kCXPFCDataCollectionManager, kIXPFCDataCollectionManager, (nsISupports**)&theMan);
+  if (theMan)
+  {
+    nsString ce = nsString("CreateEvent");
+    theMan->CallDataHandler(ce, cdata);
+  }
+
+  return NS_OK;
+}
+
+/*
+ *  If we cannot process the command, pass it up the food chain
+ */
+
+nsEventStatus nsXPFCDialog::ProcessCommand(nsIXPFCCommand* aCommand)
+{
+  static NS_DEFINE_IID(kXPFCDialogDataHandlerCommandCID, NS_XPFC_DIALOG_DATA_HANDLER_COMMAND_CID);
+  nsXPFCMethodInvokerCommand * methodinvoker_command = nsnull;
+
+  if (NS_OK == aCommand->QueryInterface(kXPFCDialogDataHandlerCommandCID, (void**)&methodinvoker_command))
+  {
+    CollectData();
+    // NS_RELEASE(this);
+  } else
+  {
+    nsXPFCCanvas::ProcessCommand(aCommand);
+  }
+  return (nsEventStatus_eIgnore);
+}

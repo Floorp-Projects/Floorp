@@ -59,6 +59,8 @@ public:
                       DateTime* aStart, 
                       DateTime* aStop, JulianPtrArray* aL
                       );
+
+  NS_IMETHOD StoreEvent(VEvent& addEvent);
 private:
   nsIVector * mLayers ;
   nsCalendarShell * mpShell;

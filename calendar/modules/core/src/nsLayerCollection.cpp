@@ -411,3 +411,34 @@ nsresult nsLayerCollection::SetShell(nsCalendarShell* aShell)
   }
   return NS_OK;
 }
+
+/**
+ * @param aStart Starting time for fetch
+ * @param aStart ending time for fetch
+ * @param anArray Match a returned boolean value. If a match is found this value
+ *               is returned as PR_TRUE. Otherwise, the it is set to PR_FALSE.
+ *
+ * @return NS_OK on success
+ */
+nsresult nsLayerCollection::StoreEvent(VEvent& addEvent)
+{
+  PRInt32 i,j;
+  PRInt32 iSize = mLayers->Count();
+  PRInt32 iTmpSize;
+  nsILayer *pLayer;
+  JulianPtrArray TmpArray;
+
+  /*
+   *  XXX:
+   *  This should be made multi-threaded...
+   */
+  for ( i = 0; i < iSize; i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    if (NS_OK == (pLayer->StoreEvent(addEvent)))
+    {
+      break;
+    }
+  }
+  return NS_OK;
+}

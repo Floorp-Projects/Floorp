@@ -296,7 +296,7 @@ nsresult nsLayer::FetchEventsByRange(
                  0);
 
   capiStatus = pCapi->CAPI_SetStreamCallbacks(
-    pSession->m_Session, &RcvStream, 0,0,RcvData, pCalStreamReader,0);
+    pSession->m_Session, &RcvStream, 0,0 ,RcvData, pCalStreamReader,0);
 
   if (CAPI_ERR_OK != capiStatus)
     return 1;   /* XXX: really need to fix this up */
@@ -411,7 +411,118 @@ nsresult nsLayer::FetchEventsByRange(
   return NS_OK;
 }
 
+/**
+ *  Send data to CAPI. This is invoked on calls such as CAPI_StoreEvent.
+ */
+int SndData(void* pData, char* pBuf, size_t iSize, size_t *piTransferred)
+{
+    nsCapiBufferStruct* pCtx = (nsCapiBufferStruct*)pData;  
+    *piTransferred = (pCtx->m_pBufSize > iSize) ? iSize : pCtx->m_pBufSize; 
+    memcpy(pBuf,pCtx->m_pBuf,*piTransferred); 
+    pCtx->m_pBufSize -= *piTransferred; 
+    pCtx->m_pBuf += *piTransferred; 
+    return pCtx->m_pBufSize > 0 ? 0 : -1; 
+}
 
+/**
+ * Save this event
+ * @return NS_OK on success.
+ */
+nsresult
+nsLayer::StoreEvent(VEvent& addEvent)
+{
+  ErrorCode status = ZERO_ERROR;
+  PRThread * mainThread = 0;
+  CAPIStream SndStream = 0;
+  CAPIStatus capiStatus;
+  PRMonitor * pCBReaderMonitor = 0;           // destroyed
+  PRMonitor *pThreadMonitor = 0;              // destroyed
 
+  /*
+   * Select the capi interface to use for this operation...
+   * Each layer stores its curl, ask for a session based on
+   * the curl...
+   */
+  nsICapi* pCapi = 0;
+  nsCalSession *pSession;
+  nsCurlParser curl(msCurl);
+  if (NS_OK == (mpShell->mSessionMgr.GetSession(msCurl, 0, curl.GetPassword().GetBuffer(), pSession)))
+  {
+    if (0 != pSession)
+    {
+      pCapi = pSession->mCapi;
+    }
+  }
+  else
+  {
+    NS_ASSERTION(1,"Could not get a session");
+    pCapi = mpShell->mSessionMgr.GetAt(0L)->mCapi;  // should comment this
+  }
+
+  /*
+   * The data is actually read and parsed in another thread. Set it all
+   * up here...
+   */
+#if 0
+  mainThread = PR_CurrentThread();    
+  pCBReaderMonitor = PR_NewMonitor();  // destroyed
+  nsCapiCallbackReader * capiReader = new nsCapiCallbackReader(pCBReaderMonitor);
+  pThreadMonitor = ::PR_NewMonitor(); // destroyed
+  PR_EnterMonitor(pThreadMonitor);
+  parseThread = PR_CreateThread(PR_USER_THREAD,
+                 main_CalStreamReader,
+                 pCalStreamReader,
+                 PR_PRIORITY_NORMAL,
+                 PR_LOCAL_THREAD,
+                 PR_UNJOINABLE_THREAD,
+                 0);
+
+  capiStatus = pCapi->CAPI_SetStreamCallbacks(
+    pSession->m_Session, &RcvStream, 0, 0, RcvData, pCalStreamReader,0);
+#else
+  UnicodeString        thisEvent;
+  nsCapiBufferStruct   sBuf;
+
+  thisEvent = "Content-type: text/calendar\nContent-encoding: 7bit\n\nBEGIN:VCALENDAR\n";
+  thisEvent += "METHOD: PUBLISH\n";
+  thisEvent += addEvent.toICALString();
+  thisEvent += "END:VCALENDAR\n";
+ 
+  sBuf.m_pBuf = thisEvent.toCString("");
+  sBuf.m_pBufSize = strlen(sBuf.m_pBuf);
+  capiStatus = pCapi->CAPI_SetStreamCallbacks(pSession->m_Session, &SndStream, &SndData, (void *)&sBuf, nsnull, nsnull, 0);
+
+  nsCurlParser sessionURL(msCurl);
+  char** asList = gasViewPropList;
+  int iListSize = giViewPropListCount;
+
+  if (nsCurlParser::eCAPI == sessionURL.GetProtocol())
+  {
+    asList = 0;
+    iListSize = 0;
+  }
+
+  CAPIHandle h = 0;
+  JulianString sHandle(sessionURL.GetCSID());
+
+  /*
+   * The handle name may be a file name. We need to make sure that
+   * the characters are in URL form. That is "C|/bla" instead of
+   * "C:/bla"
+   */
+  nsCurlParser::ConvertToURLFileChars(sHandle);
+  capiStatus = pCapi->CAPI_GetHandle( pSession->m_Session, sHandle.GetBuffer(), 0, &h);
+  if (0 != capiStatus)
+    return 1; /* XXX really need to fix this */
+
+  if ( CAPI_ERR_OK != (pCapi->CAPI_StoreEvent( pSession->m_Session, &h, 1, 0, &SndStream)))
+  {
+  }
+
+#endif
+  if (CAPI_ERR_OK != capiStatus)
+    return 1;   /* XXX: really need to fix this up */
+
+}
 
 

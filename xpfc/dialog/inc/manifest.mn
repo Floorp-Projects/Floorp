@@ -1,4 +1,4 @@
-# 
+#
 #           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
 #              NETSCAPE COMMUNICATIONS CORPORATION
 # Copyright (C) 1996 Netscape Communications Corporation.  All Rights
@@ -10,11 +10,11 @@
 GDEPTH = ../../..
 
 EXPORTS = \
-	$(NULL)
+    $(NULL)
 
 PRIVATE_EXPORTS = \
     nsXPFCDialog.h \
-	$(NULL)
+    $(NULL)
 
 MODULE = xpfc
 

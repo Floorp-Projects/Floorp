@@ -1,4 +1,4 @@
-# 
+#
 #           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
 #              NETSCAPE COMMUNICATIONS CORPORATION
 # Copyright (C) 1996 Netscape Communications Corporation.  All Rights
@@ -10,11 +10,12 @@
 GDEPTH = ../../..
 
 EXPORTS = \
-	nsShellInstance.h \
-	nsApplicationManager.h \
+    nsShellInstance.h \
+    nsApplicationManager.h \
     nsStreamManager.h \
     nsStreamObject.h \
-	$(NULL)
+    nsXPFCDataCollectionManager.h \
+    $(NULL)
 
 MODULE = xpfc
 

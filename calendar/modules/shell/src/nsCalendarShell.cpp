@@ -43,9 +43,14 @@
 #include "nsXPFCToolkit.h"
 #include "nsX400Parser.h"
 #include "nsxpfcCIID.h"
+#include "nsIXPFCDataCollectionManager.h"
 #include "nscalcids.h"
+
 #include "capi.h"
 #include "nsICapi.h"
+#include "uidrgntr.h"
+#include "attendee.h"
+
 #include "nsxpfcstrings.h"
 #include "nsCoreCIID.h"
 #include "nsLayer.h"
@@ -221,6 +226,122 @@ nsresult nsCalendarShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsCalendarShell)
 NS_IMPL_RELEASE(nsCalendarShell)
 
+// eyork temp place for this
+static NS_DEFINE_IID(kCCalShell,     NS_CAL_SHELL_CID);
+
+nsresult nsCalendarShell::ReceiveCallback(nsICollectedData& aReply)
+{
+
+  CreateEventFunc(aReply);
+  return NS_OK;                                                        
+}
+
+nsresult nsCalendarShell::CreateEventFunc(nsICollectedData& cdp)
+{
+#define BUF_SIZE  2048
+  char     temp[BUF_SIZE];
+  Attendee *aAttendee = nsnull;
+  VEvent   ev;
+  nsString StringValue;
+  nsString StringLabel;
+  nsICalendarUser*  CalUser = nsnull;
+
+  ev.setDTStamp(DateTime());  // Default DataTime is now
+  ev.setUID(nsCalUIDRandomGenerator::generate());
+
+  StringLabel = nsString("ReqiEditableUserFields");
+  cdp.FindValueInCollectedData(StringLabel,     StringValue);
+  StringValue.ToCString(temp, BUF_SIZE);        ev.setOrganizer(UnicodeString(temp));
+
+  StringLabel = nsString("ComposeArea");
+  cdp.FindValueInCollectedData(StringLabel,     StringValue);
+  StringValue.ToCString(temp, BUF_SIZE);        ev.setDescription(UnicodeString(temp));
+
+  StringLabel = nsString("SubjectEditableTimeFields");
+  cdp.FindValueInCollectedData(StringLabel,     StringValue);
+  StringValue.ToCString(temp, BUF_SIZE);        ev.setSummary(UnicodeString(temp));
+
+  StringLabel = nsString("StartEditableTimeFields");
+  cdp.FindValueInCollectedData(StringLabel,     StringValue);
+  ev.setDTStart(DateTime((UnicodeString(StringValue.ToCString(temp, BUF_SIZE)))));
+
+  StringLabel = nsString("EndEditableTimeFields");
+  cdp.FindValueInCollectedData(StringLabel,     StringValue);
+  ev.setDTEnd(DateTime((UnicodeString(StringValue.ToCString(temp, BUF_SIZE)))));
+
+  PRInt32 index = 0;
+  int16 my_space = 0x0020;
+
+  StringLabel = nsString("ReqsEditableUserFields");
+  cdp.FindValueInCollectedData(StringLabel,    StringValue);
+
+  while (index < StringValue.Length())
+  {
+    nsString CurrentAttendee;
+
+    while (index < StringValue.Length())
+    {
+      if (StringValue[index] != my_space)
+        CurrentAttendee += StringValue[index++];
+      else {
+        index++;
+        break;
+      }
+    }
+
+    aAttendee = new Attendee(ICalComponent::ICAL_COMPONENT_VEVENT);
+    if (aAttendee)
+    {
+      aAttendee->setName(UnicodeString(CurrentAttendee.ToCString(temp, BUF_SIZE)));
+      aAttendee->setRole(Attendee::ROLE_REQ_PARTICIPANT);
+      ev.addAttendee(aAttendee);
+    }
+  }
+
+  index = 0;
+  StringLabel = nsString("OptEditableUserFields");
+  cdp.FindValueInCollectedData(StringLabel,    StringValue);
+
+  while (index < StringValue.Length())
+  {
+    nsString CurrentAttendee;
+
+    while (index < StringValue.Length())
+    {
+      if (StringValue[index] != my_space)
+        CurrentAttendee += StringValue[index++];
+      else {
+        index++;
+        break;
+      }
+    }
+
+    aAttendee = new Attendee(ICalComponent::ICAL_COMPONENT_VEVENT);
+    if (aAttendee)
+    {
+      aAttendee->setName(UnicodeString(CurrentAttendee.ToCString(temp, BUF_SIZE)));
+      aAttendee->setRole(Attendee::ROLE_OPT_PARTICIPANT);
+      ev.addAttendee(aAttendee);
+    }
+  }
+
+  Logon();
+  GetLoggedInUser(&CalUser);
+  if (CalUser) 
+  {
+    nsILayer* aLayer = nsnull;
+
+    CalUser->GetLayer(aLayer);
+
+    if (aLayer)
+    {
+       aLayer->StoreEvent(ev);
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult nsCalendarShell::Init()
 {
   /*
@@ -261,6 +382,17 @@ nsresult nsCalendarShell::Init()
    * Create the UI
    */
   LoadUI();
+
+  /*
+   * Register the DataCollection Funciotn CreateEvent
+   */
+  nsIXPFCDataCollectionManager *theMan = mShellInstance->GetDataCollectionManager();
+  if (theMan)
+  {
+     nsString ce = nsString("CreateEvent");
+//     theMan->AddDataCollection(ce, (DataCollectionHandlerFunc *)CreateEventFunc);
+     theMan->AddDataCollection(ce, this);
+  }
 
   return res;
 }
@@ -325,6 +457,12 @@ nsresult nsCalendarShell::ParseCommandLine()
         return Usage();
     }
   }
+  return NS_OK;
+}
+
+nsresult nsCalendarShell::GetLoggedInUser(nsICalendarUser** LoggInUser)
+{
+  *LoggInUser = mpLoggedInUser;
   return NS_OK;
 }
 
@@ -1079,7 +1217,6 @@ extern "C" int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
 }
 
 
-
 /* mozilla/include/xp_trace.h */
 
 #if defined(NS_DEBUG)
@@ -1201,3 +1338,4 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
   
   return NS_OK;  
 }
+

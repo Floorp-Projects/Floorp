@@ -745,7 +745,6 @@ nsresult nsTrexTestShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
     delete c;
   }
 
-
   return NS_OK;
 }
 
@@ -928,6 +927,12 @@ nsresult nsTrexTestShell :: ExitThread()
 nsresult nsTrexTestShell::StartCommandServer()
 {
   return NS_OK;
+}
+
+class nsICollectedData;
+nsresult nsTrexTestShell::ReceiveCallback(nsICollectedData& aReply)
+{
+  return NS_OK;                                                        
 }
 
 
@@ -1136,4 +1141,3 @@ nsresult nsTrexTestShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsS
   SendJS(mJSData);
   return NS_OK;
 }
-

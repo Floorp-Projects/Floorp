@@ -47,7 +47,6 @@ nsCalUIDRandomGenerator::~nsCalUIDRandomGenerator()
 UnicodeString 
 nsCalUIDRandomGenerator::generate(UnicodeString us)
 {
-#if 0
     char sBuf[10];
     UnicodeString u;
     DateTime d;
@@ -60,9 +59,6 @@ nsCalUIDRandomGenerator::generate(UnicodeString us)
     u += '-';
     u += us;
     return u;
-#else
-    return "";
-#endif
 }
 
 //---------------------------------------------------------------------

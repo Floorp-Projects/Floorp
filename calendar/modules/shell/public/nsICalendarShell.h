@@ -22,9 +22,12 @@
 #include "nsIApplicationShell.h"
 #include "nscore.h"
 #include "nsIAppShell.h"
+#include "nsICalendarUser.h"
 
 #include "capi.h"
 #include "nscal.h"
+
+class nsICollectedData;
 
 //fe35e400-ea8d-11d1-9244-00805f8a7ab6
 #define NS_ICAL_SHELL_IID   \
@@ -55,7 +58,11 @@ public:
   NS_IMETHOD SetCAPIPassword(char * aPassword) = 0;
   NS_IMETHOD_(char *) GetCAPIPassword() = 0;
 
+  NS_IMETHOD ReceiveCallback(nsICollectedData& aReply) = 0;
+
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0 ;
+
+  NS_IMETHOD GetLoggedInUser(nsICalendarUser** LoggInUser) = 0;
 
 };
 

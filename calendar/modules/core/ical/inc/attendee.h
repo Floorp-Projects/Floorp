@@ -30,6 +30,7 @@
 #include "prprty.h"
 #include "jlog.h"
 #include "datetime.h"
+#include "nscalcoreicalexp.h"
 
 /**
  *  The Attendee class encapsulates the data in the iCalendar 
@@ -38,7 +39,7 @@
  *  are stored as t_int32.  Other parameters are stored as UnicodeStrings 
  *  or as JulianPtrArray's of UnicodeStrings.
  */
-class Attendee : public ICalProperty
+class NS_CAL_CORE_ICAL Attendee : public ICalProperty
 {
 private:
 

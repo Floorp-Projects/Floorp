@@ -1071,7 +1071,7 @@ CAPIStatus CAPI_StoreEvent(
     FILE *pFile;
     PCAPISESSION *pSession = (PCAPISESSION*)s;
     PCAPIHANDLE* pHandle;
-    PCAPIStream* pStream = (PCAPIStream*)str;
+    PCAPIStream* pStream = (PCAPIStream*)(*(void **)str);
     NSCalendar *pCal = 0;
     char* pBuf = 0;
     size_t iBufSize = BUFSIZ;

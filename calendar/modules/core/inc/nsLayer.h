@@ -58,6 +58,9 @@ public:
                       DateTime* aStop,
                       JulianPtrArray* anArray
                       );
+
+  NS_IMETHOD StoreEvent(VEvent& addEvent);
+
 private:
   nsresult FetchEventsByRange();
 };

@@ -69,6 +69,7 @@
 #define XPFC_STRING_XBOX                           "xbox"
 #define XPFC_STRING_XPITEM                         "xpitem"
 #define XPFC_STRING_YBOX                           "ybox"
+#define XPFC_STRING_ONACTION                       "onaction"
 
 #endif
 

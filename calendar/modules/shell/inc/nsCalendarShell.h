@@ -74,12 +74,17 @@ public:
   NS_IMETHOD SetCAPIPassword(char * aPassword) ;
   NS_IMETHOD_(char *) GetCAPIPassword() ;
 
+  NS_IMETHOD GetLoggedInUser(nsICalendarUser** LoggInUser);
+
   // nsIAppShell interfaces
   NS_IMETHOD Create(int* argc, char ** argv) ;
   NS_IMETHOD SetDispatchListener(nsDispatchListener* aDispatchListener) ;
   NS_IMETHOD Exit();
   virtual nsresult Run();
   virtual void* GetNativeData(PRUint32 aDataType) ;
+
+  NS_IMETHOD ReceiveCallback(nsICollectedData& aReply);
+  NS_IMETHOD CreateEventFunc(nsICollectedData& cdp);
 
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent)  ;
   NS_IMETHOD GetWebViewerContainer(nsIWebViewerContainer ** aWebViewerContainer) ;

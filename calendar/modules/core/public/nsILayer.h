@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 #include "jdefines.h"
 #include "julnstr.h"
+#include "VEvent.h"
 
 //5482d0d0-4cca-11d2-924a-00805f8a7ab6
 #define NS_ILAYER_IID   \
@@ -75,6 +76,14 @@ public:
                       DateTime* aStop,
                       JulianPtrArray* anArray
                       ) = 0;
+
+  /**
+   * Save an event in this layer
+   * @param  addEvent  the new event to save
+   * @return NS_OK on success
+   */
+   NS_IMETHOD StoreEvent(VEvent& addEvent) = 0;
+
 };
 
 

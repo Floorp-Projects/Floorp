@@ -71,6 +71,8 @@ public:
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent)  ;
   NS_IMETHOD GetWebViewerContainer(nsIWebViewerContainer ** aWebViewerContainer) ;
   NS_IMETHOD StartCommandServer();
+
+  NS_IMETHOD ReceiveCallback(nsICollectedData& aReply);
   NS_IMETHOD SendCommand(nsString& aCommand);
   NS_IMETHOD ExecuteJS();
 

@@ -20,6 +20,7 @@
 #define nsIXPFCDialog_h___
 
 #include "nsISupports.h"
+#include "nsString.h"
 
 //52ae6d80-3b81-11d2-bee0-00805f8a8dbd
 #define NS_IXPFC_DIALOG_IID      \

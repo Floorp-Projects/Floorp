@@ -41,6 +41,7 @@
 #include "nsXPFCXMLContentSink.h"
 #include "nsMenuManager.h"
 #include "nsXPFCToolbarManager.h"
+#include "nsXPFCDataCollectionManager.h"
 #include "nsStreamManager.h"
 #include "nsStreamObject.h"
 #include "nsVector.h"
@@ -71,9 +72,9 @@
 #include "nsUser.h"
 
 static NS_DEFINE_IID(kCShellInstance,             NS_XPFC_SHELL_INSTANCE_CID);
-static NS_DEFINE_IID(kCXPFCMenuItem,                  NS_XPFCMENUITEM_CID);
-static NS_DEFINE_IID(kCXPFCMenuBar,                   NS_XPFCMENUBAR_CID);
-static NS_DEFINE_IID(kCXPFCMenuContainer,             NS_XPFCMENUCONTAINER_CID);
+static NS_DEFINE_IID(kCXPFCMenuItem,              NS_XPFCMENUITEM_CID);
+static NS_DEFINE_IID(kCXPFCMenuBar,               NS_XPFCMENUBAR_CID);
+static NS_DEFINE_IID(kCXPFCMenuContainer,         NS_XPFCMENUCONTAINER_CID);
 static NS_DEFINE_IID(kCMenuManager,               NS_MENU_MANAGER_CID);
 static NS_DEFINE_IID(kCStreamManager,             NS_STREAM_MANAGER_CID);
 static NS_DEFINE_IID(kIStreamManager,             NS_ISTREAM_MANAGER_IID);
@@ -82,7 +83,8 @@ static NS_DEFINE_IID(kIStreamObject,              NS_ISTREAM_OBJECT_IID);
 static NS_DEFINE_IID(kCXPFCDTD,                   NS_IXPFCXML_DTD_IID);
 static NS_DEFINE_IID(kCXPFCContentSink,           NS_XPFCXMLCONTENTSINK_IID);
 static NS_DEFINE_IID(kCXPFCToolbar,               NS_XPFC_TOOLBAR_CID);
-static NS_DEFINE_IID(kCXPFCToolbarManager,            NS_XPFCTOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kCXPFCToolbarManager,        NS_XPFCTOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kCXPFCDataCollectionManager, NS_XPFCDATACOLLECTION_MANAGER_CID);
 static NS_DEFINE_IID(kCXPFCDialog,                NS_XPFC_DIALOG_CID);
 static NS_DEFINE_IID(kCXPFCButton,                NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCXPButton,                  NS_XP_BUTTON_CID);
