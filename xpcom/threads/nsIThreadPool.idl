@@ -50,9 +50,11 @@ interface nsIThreadPool : nsISupports
     void DispatchRequest(in nsIRunnable runnable);
     void ProcessPendingRequests();
     void Shutdown();
-    void Init(in unsigned long aStackSize,
-              in PRThreadPriority aPriority,
-              in PRThreadScope aScope);
+    void Init(in unsigned long aPoolMinThreadCount,
+              in unsigned long aPoolMaxThreadCount,
+              in unsigned long aThreadStackSize,
+              in PRThreadPriority aThreadPriority,
+              in PRThreadScope aThreadScope);
 };
 
 %{C++

@@ -51,7 +51,8 @@ public:
 
     static PRUintn kIThreadSelfIndex;
 
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD
+    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 protected:
     PRThread*                   mThread;
@@ -70,17 +71,24 @@ public:
     NS_DECL_NSITHREADPOOL
 
     // nsThreadPool methods:
-    nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads);
+    nsThreadPool();
     virtual ~nsThreadPool();
 
-    nsIRunnable* GetRequest();
+    nsIRunnable* GetRequest(nsIThread* currentThread);
+    nsresult AddThread();
 
-	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD
+    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
 protected:
     nsCOMPtr<nsISupportsArray>  mThreads;
     nsCOMPtr<nsISupportsArray>  mRequests;
     PRMonitor*                  mRequestMonitor;
+    
+    PRUint32                    mStackSize;
+    PRThreadPriority            mPriority;
+    PRThreadScope               mScope;
+
     PRUint32                    mMinThreads;
     PRUint32                    mMaxThreads;
     PRBool                      mShuttingDown;
@@ -101,7 +109,7 @@ public:
     virtual ~nsThreadPoolRunnable();
 
 protected:
-    nsThreadPool*       mPool;
+    nsCOMPtr<nsThreadPool>      mPool;
 
 };
 
