@@ -335,14 +335,14 @@ NS_METHOD nsFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
 {
   NS_ERROR("not a container");
   aFrame = nsnull;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
 {
   NS_ERROR("not a container");
   aIndex = -1;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::FirstChild(nsIFrame*& aFirstChild) const
@@ -355,14 +355,14 @@ NS_METHOD nsFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) cons
 {
   NS_ERROR("not a container");
   aNextChild = nsnull;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
 {
   NS_ERROR("not a container");
   aPrevChild = nsnull;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::LastChild(nsIFrame*& aLastChild) const
@@ -680,7 +680,7 @@ NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
   aStatus = frComplete;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
@@ -756,7 +756,7 @@ NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
 {
   NS_ERROR("not splittable");
   aContinuingFrame = nsnull;
-  return NS_OK;/* XXX return an invalid value? */
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
@@ -768,7 +768,7 @@ NS_METHOD nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
 NS_METHOD nsFrame::SetPrevInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
@@ -780,37 +780,37 @@ NS_METHOD nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
 NS_METHOD nsFrame::SetNextInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::RemoveFromFlow()
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::BreakFromPrevFlow()
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsFrame::BreakFromNextFlow()
 {
   NS_ERROR("not splittable");
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Associated view object
