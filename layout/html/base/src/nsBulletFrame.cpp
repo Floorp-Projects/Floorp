@@ -192,6 +192,30 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     case NS_STYLE_LIST_STYLE_KATAKANA:
     case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
     case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_CJK_HEAVENLY_STEM:
+    case NS_STYLE_LIST_STYLE_CJK_EARTHLY_BRANCH:
+    case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
+    case NS_STYLE_LIST_STYLE_PERSIAN:
+    case NS_STYLE_LIST_STYLE_URDU:
+    case NS_STYLE_LIST_STYLE_DEVANAGARI:
+    case NS_STYLE_LIST_STYLE_GURMUKHI:
+    case NS_STYLE_LIST_STYLE_GUJARATI:
+    case NS_STYLE_LIST_STYLE_ORIYA:
+    case NS_STYLE_LIST_STYLE_KANNADA:
+    case NS_STYLE_LIST_STYLE_MALAYALAM:
+    case NS_STYLE_LIST_STYLE_BENGALI:
+    case NS_STYLE_LIST_STYLE_TAMIL:
+    case NS_STYLE_LIST_STYLE_TELUGU:
+    case NS_STYLE_LIST_STYLE_THAI:
+    case NS_STYLE_LIST_STYLE_LAO:
+    case NS_STYLE_LIST_STYLE_MYANMAR:
+    case NS_STYLE_LIST_STYLE_KHMER:
       aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aCX, *myList, text);
       aRenderingContext.SetFont(fm);
@@ -253,6 +277,23 @@ static void DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
    result.AppendWithConversion(cbuf);
+}
+static void OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& result)
+{
+   PRUnichar diff = zeroChar - PRUnichar('0');
+   DecimalToText(ordinal, result); 
+   PRUnichar* p = (PRUnichar*)result.GetUnicode();
+   for(; nsnull != *p ; p++) 
+      *p += diff;
+}
+static void TamilToText(PRInt32 ordinal,  nsString& result)
+{
+   PRUnichar diff = 0x0BE6 - PRUnichar('0');
+   DecimalToText(ordinal, result); 
+   PRUnichar* p = (PRUnichar*)result.GetUnicode();
+   for(; nsnull != *p ; p++) 
+      if(*p != PRUnichar('0'))
+         *p += diff;
 }
 
 
@@ -402,6 +443,18 @@ static PRUnichar gLowerGreekChars[LOWER_GREEK_CHARS_SIZE] =
 0x03C6, 0x03C7, 0x03C8, 0x03C9          // phi    chi   psi    omega    
 };
 
+#define CJK_HEAVENLY_STEM_CHARS_SIZE 10 
+static PRUnichar gCJKHeavenlyStemChars[CJK_HEAVENLY_STEM_CHARS_SIZE] =
+{
+0x7532, 0x4e59, 0x4e19, 0x4e01, 0x620a,
+0x5df1, 0x5e9a, 0x8f9b, 0x58ec, 0x7678
+};
+#define CJK_EARTHLY_BRANCH_CHARS_SIZE 12 
+static PRUnichar gCJKEarthlyBranchChars[CJK_EARTHLY_BRANCH_CHARS_SIZE] =
+{
+0x5b50, 0x4e11, 0x5bc5, 0x536f, 0x8fb0, 0x5df3,
+0x5348, 0x672a, 0x7533, 0x9149, 0x620c, 0x4ea5
+};
 // We know cjk-ideographic need 31 characters to display 99,999,999,999,999,999
 // georgian and armenian need 6 at most
 // hebrew may need more...
@@ -425,18 +478,40 @@ static void CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* c
 }
 
 
-static PRUnichar gCJKIdeographicDigit[10] =
+static PRUnichar gCJKIdeographicDigit1[10] =
 {
   0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,  // 0 - 4
   0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d   // 5 - 9
 };
-static PRUnichar gCJKIdeographicUnit[4] =
+static PRUnichar gCJKIdeographicDigit2[10] =
+{
+  0x96f6, 0x58f9, 0x8cb3, 0x53c3, 0x8086,  // 0 - 4
+  0x4f0d, 0x9678, 0x67d2, 0x634c, 0x7396   // 5 - 9
+};
+static PRUnichar gCJKIdeographicDigit3[10] =
+{
+  0x96f6, 0x58f9, 0x8d30, 0x53c1, 0x8086,  // 0 - 4
+  0x4f0d, 0x9646, 0x67d2, 0x634c, 0x7396   // 5 - 9
+};
+static PRUnichar gCJKIdeographicUnit1[4] =
 {
   0x000, 0x5341, 0x767e, 0x5343
 };
-static PRUnichar gCJKIdeographic10KUnit[4] =
+static PRUnichar gCJKIdeographicUnit2[4] =
+{
+  0x000, 0x62FE, 0x4F70, 0x4EDF
+};
+static PRUnichar gCJKIdeographic10KUnit1[4] =
 {
   0x000, 0x842c, 0x5104, 0x5146
+};
+static PRUnichar gCJKIdeographic10KUnit2[4] =
+{
+  0x000, 0x4E07, 0x4ebf, 0x5146
+};
+static PRUnichar gCJKIdeographic10KUnit3[4] =
+{
+  0x000, 0x4E07, 0x5104, 0x5146
 };
 
 static void CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
@@ -726,9 +801,28 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
       break;
 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-      // We may need to pass in different table for CJK-Ideographic-complex if it is
-      // supported in CSS3 or we may pass in different table for simplified Chinese
-      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit, gCJKIdeographicUnit, gCJKIdeographic10KUnit);
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit1);
+      break;
+
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2, gCJKIdeographicUnit2, gCJKIdeographic10KUnit1);
+      break;
+
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit2);
+      break;
+
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit3, gCJKIdeographicUnit2, gCJKIdeographic10KUnit2);
+      break;
+
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1, gCJKIdeographicUnit1, gCJKIdeographic10KUnit3);
+      break;
+
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL: 
+      CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2, gCJKIdeographicUnit2, gCJKIdeographic10KUnit3);
       break;
 
     case NS_STYLE_LIST_STYLE_HEBREW: 
@@ -743,6 +837,74 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
       GeorgianToText(mOrdinal, result);
       break;
  
+    case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
+      OtherDecimalToText(mOrdinal, 0x0660, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_PERSIAN:
+    case NS_STYLE_LIST_STYLE_URDU:
+      OtherDecimalToText(mOrdinal, 0x06f0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_DEVANAGARI:
+      OtherDecimalToText(mOrdinal, 0x0966, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_GURMUKHI:
+      OtherDecimalToText(mOrdinal, 0x0a66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_GUJARATI:
+      OtherDecimalToText(mOrdinal, 0x0AE6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_ORIYA:
+      OtherDecimalToText(mOrdinal, 0x0B66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_KANNADA:
+      OtherDecimalToText(mOrdinal, 0x0CE6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MALAYALAM:
+      OtherDecimalToText(mOrdinal, 0x0D66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_THAI:
+      OtherDecimalToText(mOrdinal, 0x0E50, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_LAO:
+      OtherDecimalToText(mOrdinal, 0x0ED0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MYANMAR:
+      OtherDecimalToText(mOrdinal, 0x1040, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_KHMER:
+      OtherDecimalToText(mOrdinal, 0x17E0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_BENGALI:
+      OtherDecimalToText(mOrdinal, 0x09E6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_TELUGU:
+      OtherDecimalToText(mOrdinal, 0x0C66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_TAMIL:
+      TamilToText(mOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_CJK_HEAVENLY_STEM:
+      CharListToText(mOrdinal, result, gCJKHeavenlyStemChars, CJK_HEAVENLY_STEM_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_CJK_EARTHLY_BRANCH:
+      CharListToText(mOrdinal, result, gCJKEarthlyBranchChars, CJK_EARTHLY_BRANCH_CHARS_SIZE);
+      break;
   }
   result.AppendWithConversion(".");
 }
@@ -860,6 +1022,30 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_ARMENIAN: 
     case NS_STYLE_LIST_STYLE_GEORGIAN: 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL: 
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL: 
+    case NS_STYLE_LIST_STYLE_CJK_HEAVENLY_STEM:
+    case NS_STYLE_LIST_STYLE_CJK_EARTHLY_BRANCH:
+    case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
+    case NS_STYLE_LIST_STYLE_PERSIAN:
+    case NS_STYLE_LIST_STYLE_URDU:
+    case NS_STYLE_LIST_STYLE_DEVANAGARI:
+    case NS_STYLE_LIST_STYLE_GURMUKHI:
+    case NS_STYLE_LIST_STYLE_GUJARATI:
+    case NS_STYLE_LIST_STYLE_ORIYA:
+    case NS_STYLE_LIST_STYLE_KANNADA:
+    case NS_STYLE_LIST_STYLE_MALAYALAM:
+    case NS_STYLE_LIST_STYLE_BENGALI:
+    case NS_STYLE_LIST_STYLE_TAMIL:
+    case NS_STYLE_LIST_STYLE_TELUGU:
+    case NS_STYLE_LIST_STYLE_THAI:
+    case NS_STYLE_LIST_STYLE_LAO:
+    case NS_STYLE_LIST_STYLE_MYANMAR:
+    case NS_STYLE_LIST_STYLE_KHMER:
       GetListItemText(aCX, *myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);
