@@ -1030,6 +1030,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMetrics.mMaximumWidth = aMetrics.width;
   }
+  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
   FinishAndStoreOverflow(&aMetrics);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,

@@ -4201,6 +4201,9 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   // can happen here, e.g. CSS2 outline.
   // If we find more things other than outline that need to be added,
   // we should think about starting a new method like GetAdditionalOverflow()
+  NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
+               aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
+               "Computed overflow area must contain frame bounds");
 
   PRBool hasOutline;
   nsRect outlineRect(ComputeOutlineRect(this, &hasOutline, *aOverflowArea));
