@@ -163,7 +163,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       
       // if we find text/unicode, also advertise text/plain (which we will convert
       // on our own in nsDataObj::GetText().
-      if ( strcmp(flavorStr, kUnicodeMime) ) {
+      if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
         FORMATETC fe2;
         SET_FORMATETC(fe2, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor("text/plain", &fe2);
