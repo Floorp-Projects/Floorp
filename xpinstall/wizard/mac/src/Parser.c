@@ -172,7 +172,7 @@ PopulateInstallKeys(char *instText)
         my_c2pstrcpy(*tmp, gStrings->iErr[i]);
     }
 
-    DisposePtr((char *)tmp);
+    DisposeHandle(tmp);
     return err;
 }
 
