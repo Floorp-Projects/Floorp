@@ -3166,7 +3166,7 @@ static void ComputeRate(PRInt32 bytes, PRTime startTime, float *rate)
  */
 PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 length)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   PRInt32 i=0;
   PRUint32 status = 1;
   
@@ -3188,7 +3188,10 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
   if (line[0]=='.' && line[1]=='\0')
   {
     PRBool listpnames=PR_FALSE;
-    rv = m_nntpServer->QueryExtension("LISTPNAMES",&listpnames);
+    NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+    if (m_nntpServer) {
+      rv = m_nntpServer->QueryExtension("LISTPNAMES",&listpnames);
+    }
     if (NS_SUCCEEDED(rv) && listpnames)
       m_nextState = NNTP_LIST_PRETTY_NAMES;
     else
@@ -3265,7 +3268,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     }
   }
   
-	 /* find whitespace separator if it exits */
+  /* find whitespace separator if it exits */
   for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
     ;  /* null body */
   
