@@ -111,16 +111,28 @@ function help() {
 function strresTest() {
   var Bundle = JS_GetStrBundle("resource:/res/strres.properties", null);
   var	ostr1 = Bundle.GetStringFromName("file");
-  dump("\n--** JS strBundle GetStringFromName file=" + ostr1 + " **--\n");
+  dump("\n--** JS strBundle GetStringFromName file=" + ostr1 +
+      "len=" + ostr1.length + "**--\n");
   var	ostr2 = Bundle.GetStringFromID(123);
-  dump("\n--** JS strBundle GetStringFromID 123=" + ostr2 + " **--\n");
+  dump("\n--** JS strBundle GetStringFromID 123=" + ostr2 + 
+      "len=" + ostr2.length + "**--\n");
 
   var	ostr3 = Bundle.GetStringFromName("back");
-  dump("\n--** JS strBundle GetStringFromName back=" + ostr3 + " **--\n");
+  dump("\n--** JS strBundle GetStringFromName back=" + ostr3 + 
+       "len=" + ostr3.length + "**--\n");
+  
+  var	ostr4 = Bundle.GetStringFromName("eutf8");
+  dump("\n--** JS strBundle GetStringFromName eutf8=" + ostr4 +
+       "len=" + ostr4.length + "**--\n");
+  var	ostr5 = "\u88e6\ue3bb\u8b82"; /* 戻る */
+  dump("\n--** JS strBundle GetStringFromName escaped=" + ostr5 +
+       "len=" + ostr5.length + "**--\n");
 
 
-  /* utf-8 */
-  dialog.test.setAttribute("value", "戻る"); 
+  /* utf-8 \u9cdf\u9b5a */
+  dialog.test.setAttribute("value", ostr3); 
+  dialog.ok.setAttribute("value", ostr2); 
+  dialog.cancel.setAttribute("value", ostr5); 
   /* sjis 
   dialog.test.setAttribute("value", "�߂�");  */
 }
