@@ -758,7 +758,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       rv = NS_NewHTMLTableSectionElement(&newRowGroup, nsHTMLAtoms::tbody);
       if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
       {
-        rv = mInner.AppendChildTo(newRowGroup, PR_FALSE);
+        rv = mInner.AppendChildTo(newRowGroup, PR_TRUE);
         newRowGroup->QueryInterface(kIDOMNodeIID, (void **)&rowGroup);
         NS_RELEASE(newRowGroup);
       }
