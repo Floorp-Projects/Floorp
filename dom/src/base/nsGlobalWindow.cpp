@@ -3222,20 +3222,22 @@ PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
     nsAutoString name(aName);
     // _main is an IE target which should be case-insensitive but isn't
     // see bug 217886 for details
-    if (!name.IsEmpty() &&
-        !name.EqualsIgnoreCase("_top") &&
-        !name.EqualsIgnoreCase("_self") &&
-        !name.EqualsIgnoreCase("_content") &&
-        !name.Equals(NS_LITERAL_STRING("_main"))) {
-
-      nsCOMPtr<nsIWindowWatcher> wwatch =
-          do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-      if (wwatch) {
-        nsCOMPtr<nsIDOMWindow> namedWindow;
-        wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
-                                getter_AddRefs(namedWindow));
-        if (namedWindow)
-          allowWindow = PR_TRUE;
+    if (!name.IsEmpty()) {
+      if (name.EqualsIgnoreCase("_top") ||
+          name.EqualsIgnoreCase("_self") ||
+          name.EqualsIgnoreCase("_content") ||
+          name.Equals(NS_LITERAL_STRING("_main")))
+        allowWindow = PR_TRUE;
+      else {
+        nsCOMPtr<nsIWindowWatcher> wwatch =
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+        if (wwatch) {
+          nsCOMPtr<nsIDOMWindow> namedWindow;
+          wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
+                                  getter_AddRefs(namedWindow));
+          if (namedWindow)
+            allowWindow = PR_TRUE;
+        }
       }
     }
   }
