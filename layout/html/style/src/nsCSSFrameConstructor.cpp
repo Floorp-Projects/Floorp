@@ -118,9 +118,6 @@
 #include "nsPolylineFrame.h"
 
 
-#ifdef DEBUG_mjudge
-#define DEBUG_NEWFRAME 1 
-#endif
 
 nsresult
 NS_NewSVGContainerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot );
@@ -3860,7 +3857,7 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
     }
     if (aNewFrame)
     {
-#ifndef DEBUG_NEWFRAME
+#ifndef ENDER_LITE
       ((nsGfxTextControlFrame*)aNewFrame)->SetFrameConstructor(this);
 #endif
     }
