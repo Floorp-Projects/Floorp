@@ -646,8 +646,8 @@ Contributor(s): ______________________________________. -->
           
        <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup onpopupshowing="javaItemEnabling();">
-          <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" key="key_history" command="cmd_history"/>
+          <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
           <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
         </menupopup>
