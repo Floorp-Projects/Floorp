@@ -53,6 +53,7 @@ extern "C" {
 }
 
 icaltimetype ConvertFromPrtime( PRTime indate );
+PRTime ConvertToPrtime ( icaltimetype indate );
 
 /* event enumerator */
 class
@@ -883,8 +884,7 @@ oeICalImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **datelist, ns
 #ifdef ICAL_DEBUG_ALL
     printf( "CHECKDATE: %s\n" , icaltime_as_ctime( checkdate ) );
 #endif
-    PRTime checkdateinms = icaltime_as_timet( checkdate );
-    checkdateinms *= 1000;
+    PRTime checkdateinms = ConvertToPrtime( checkdate );
 
     struct icaltimetype checkenddate = ConvertFromPrtime( datems );
     checkenddate.month++;
@@ -896,8 +896,7 @@ oeICalImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **datelist, ns
 #ifdef ICAL_DEBUG_ALL
     printf( "CHECKENDDATE: %s\n" , icaltime_as_ctime( checkenddate ) );
 #endif
-    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
-    checkenddateinms *= 1000;
+    PRTime checkenddateinms = ConvertToPrtime( checkenddate );
 
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
@@ -913,16 +912,14 @@ oeICalImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **datelist, nsI
     checkdate.minute = 0;
     checkdate.second = 0;
     icaltime_adjust( &checkdate, 0, 0 , 0, -1 );
-    PRTime checkdateinms = icaltime_as_timet( checkdate );
-    checkdateinms *= 1000;
+    PRTime checkdateinms = ConvertToPrtime( checkdate );
 
     struct icaltimetype checkenddate = ConvertFromPrtime( datems );
     checkenddate.hour = 0;
     checkenddate.minute = 0;
     checkenddate.second = 0;
     icaltime_adjust( &checkenddate, 7, 0 , 0, 0 );
-    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
-    checkenddateinms *= 1000;
+    PRTime checkenddateinms = ConvertToPrtime( checkenddate );
 
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
@@ -938,16 +935,14 @@ oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsIS
     checkdate.minute = 0;
     checkdate.second = 0;
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
-    PRTime checkdateinms = icaltime_as_timet( checkdate );
-    checkdateinms *= 1000;
+    PRTime checkdateinms = ConvertToPrtime( checkdate );
 
     struct icaltimetype checkenddate = ConvertFromPrtime( datems );
     checkenddate.hour = 0;
     checkenddate.minute = 0;
     checkenddate.second = 0;
     icaltime_adjust( &checkenddate, 1, 0, 0, 0 );
-    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
-    checkenddateinms *= 1000;
+    PRTime checkenddateinms = ConvertToPrtime( checkenddate );
 
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
@@ -978,7 +973,7 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
             PRBool isvalid;
             PRTime checkdateloop = checkdateinms;
             tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
-            while( isvalid && (checkdateloop<checkenddateinms) ) {
+            while( isvalid && LL_CMP( checkdateloop, <, checkenddateinms ) ) {
                 PRUint32 tmpid;
                 tmpevent->GetId( &tmpid );
                 eventEnum->AddEventId( tmpid );
@@ -1018,8 +1013,7 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
     checkdate.minute = 0;
     checkdate.second = 0;
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
-    PRTime checkdateinms = icaltime_as_timet( checkdate );
-    checkdateinms *= 1000;
+    PRTime checkdateinms = ConvertToPrtime( checkdate );
     
     EventList *tmplistptr = &m_eventlist;
     int i=0,count=0;
@@ -1077,8 +1071,11 @@ void oeICalImpl::SetupAlarmManager() {
     printf( "oeICalImpl::SetupAlarmManager()\n" );
 #endif
 
-    PRTime todayinms = time( nsnull );
-    todayinms *= 1000;
+    PRTime todayinms = PR_Now();
+    PRInt64 usecpermsec;
+    LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
+    LL_DIV( todayinms, todayinms, usecpermsec );
+
     icaltimetype now = ConvertFromPrtime( todayinms );
 
 //    printf( "NOW IS: %s\n", icaltime_as_ctime( now ) );

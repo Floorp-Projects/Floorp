@@ -44,6 +44,7 @@
 #include "stdlib.h"
 
 icaltimetype ConvertFromPrtime( PRTime indate );
+PRTime ConvertToPrtime ( icaltimetype indate );
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(oeDateTimeImpl, oeIDateTime)
@@ -145,8 +146,7 @@ NS_IMETHODIMP oeDateTimeImpl::SetMinute(PRInt16 newval)
 
 NS_IMETHODIMP oeDateTimeImpl::GetTime(PRTime *retval)
 {
-    PRTime result = icaltime_as_timet( m_datetime );
-    *retval = result*1000;
+    *retval = ConvertToPrtime( m_datetime );
     return NS_OK;
 }
 

@@ -59,16 +59,40 @@ char *EmptyReturn() {
 icaltimetype ConvertFromPrtime( PRTime indate ) {
     icaltimetype outdate;
 
-    time_t seconds = indate /1000;
-    struct tm t = *(localtime(&seconds));
+    PRExplodedTime ext;
+    PRInt64 indateinusec, usecpermsec;
+    LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
+    LL_MUL( indateinusec, indate, usecpermsec );
+    PR_ExplodeTime( indateinusec, PR_LocalTimeParameters, &ext);
+ 
+    outdate.year = ext.tm_year;
+    outdate.month = ext.tm_month + 1;
+    outdate.day = ext.tm_mday;
+    outdate.hour = ext.tm_hour;
+    outdate.minute = ext.tm_min;
+    outdate.second = ext.tm_sec;
 
-    outdate.year = t.tm_year+ 1900;
-    outdate.month = t.tm_mon + 1;
-    outdate.day = t.tm_mday;
-    outdate.hour = t.tm_hour;
-    outdate.minute = t.tm_min;
-    outdate.second = t.tm_sec;
     return outdate;
+}
+
+PRTime ConvertToPrtime ( icaltimetype indate ) {
+    PRExplodedTime ext;
+    
+    PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &ext);
+
+    ext.tm_year = indate.year;
+    ext.tm_month = indate.month - 1;
+    ext.tm_mday = indate.day;
+    ext.tm_hour = indate.hour;
+    ext.tm_min = indate.minute;
+    ext.tm_sec = indate.second;
+    ext.tm_usec = 0;
+
+    PRTime result = PR_ImplodeTime( &ext );
+    PRInt64 usecpermsec;
+    LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
+    LL_DIV( result, result, usecpermsec );
+    return result;
 }
 
 
@@ -614,8 +638,7 @@ NS_IMETHODIMP oeICalEventImpl::GetLastAlarmAck(PRTime *aRetVal)
 #ifdef ICAL_DEBUG_ALL
     printf( "GetLastAlarmAck()\n" );
 #endif
-    *aRetVal = icaltime_as_timet( m_lastalarmack );
-    *aRetVal /= 1000;
+    *aRetVal = ConvertToPrtime( m_lastalarmack );
     return NS_OK;
 }
 NS_IMETHODIMP oeICalEventImpl::SetLastAlarmAck(PRTime aNewVal)
@@ -637,7 +660,13 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
     if( !m_recur ) {
         PRTime start;
         m_start->GetTime( &start );
-        if( (start/1000) > (begin/1000) ) {
+
+        PRInt64 startinsec,begininsec,msecpersec;
+        LL_I2L( msecpersec, PR_MSEC_PER_SEC );
+        LL_DIV( startinsec, start, msecpersec );
+        LL_DIV( begininsec, begin, msecpersec );
+
+        if( LL_CMP( startinsec, > , begininsec ) ) {
             *retval = start;
             *isvalid = true;
         }
@@ -671,9 +700,8 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
                 printf( "Wrong day in month\n" );
                 continue;
             }
-            PRTime nextinms = icaltime_as_timet( next );
-            nextinms *= 1000;
-            if( (nextinms > begin) && !IsExcepted( nextinms ) ) {
+            PRTime nextinms = ConvertToPrtime( next );
+            if( LL_CMP(nextinms, > ,begin) && !IsExcepted( nextinms ) ) {
 //                printf( "Result: %d-%d-%d %d:%d\n" , next.year, next.month, next.day, next.hour, next.minute );
                 *retval = nextinms;
                 *isvalid = true;
@@ -689,8 +717,7 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
 
 icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
     icaltimetype result = icaltime_null_time();
-    PRTime begininms = icaltime_as_timet( begin );
-    begininms *= 1000;
+    PRTime begininms = ConvertToPrtime( begin );
     PRTime resultinms;
     PRBool isvalid;
     GetNextRecurrence( begininms ,&resultinms, &isvalid );
@@ -729,11 +756,11 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
 icaltimetype oeICalEventImpl::CalculateAlarmTime( icaltimetype date ) {
     icaltimetype result = date;
     if( strcasecmp( m_alarmunits, "days" ) == 0 )
-        icaltime_adjust( &result, -m_alarmlength, 0, 0, 0 );
+        icaltime_adjust( &result, -(signed long)m_alarmlength, 0, 0, 0 );
     else if( strcasecmp( m_alarmunits, "hours" ) == 0 )
-        icaltime_adjust( &result, 0, -m_alarmlength, 0, 0 );
+        icaltime_adjust( &result, 0, -(signed long)m_alarmlength, 0, 0 );
     else
-        icaltime_adjust( &result, 0, 0, -m_alarmlength, 0 );
+        icaltime_adjust( &result, 0, 0, -(signed long)m_alarmlength, 0 );
 
     return result;
 }
@@ -837,8 +864,7 @@ NS_IMETHODIMP oeICalEventImpl::AddException( PRTime exdate )
     tmpexdate.hour = 0;
     tmpexdate.minute = 0;
     tmpexdate.second = 0;
-    exdate = icaltime_as_timet( tmpexdate );
-    exdate *= 1000;
+    exdate = ConvertToPrtime( tmpexdate );
     m_exceptiondates.push_back( exdate );
     return NS_OK;
 }
@@ -869,8 +895,7 @@ bool oeICalEventImpl::IsExcepted( PRTime date ) {
     tmpexdate.hour = 0;
     tmpexdate.minute = 0;
     tmpexdate.second = 0;
-    date = icaltime_as_timet( tmpexdate );
-    date *= 1000;
+    date = ConvertToPrtime( tmpexdate );
     
     bool result = false;
     for( int i=0; i<m_exceptiondates.size(); i++ ) {
@@ -1156,8 +1181,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
             prop != 0 ;
             prop = icalcomponent_get_next_property( vevent, ICAL_RECURRENCEID_PROPERTY ) ) {
         icaltimetype exdate = icalproperty_get_recurrenceid( prop );
-        PRTime exdateinms = icaltime_as_timet( exdate );
-        exdateinms *= 1000;
+        PRTime exdateinms = ConvertToPrtime( exdate );
         m_exceptiondates.push_back( exdateinms );
     }
 }
