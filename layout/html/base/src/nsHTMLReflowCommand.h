@@ -39,8 +39,8 @@
 #include "nsReflowType.h"
 #include "nsVoidArray.h"
 #include <stdio.h>
+#include "nsIAtom.h"
 
-class  nsIAtom;
 class  nsIFrame;
 class  nsIPresContext;
 class  nsIRenderingContext;
