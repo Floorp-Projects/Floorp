@@ -31,11 +31,6 @@ class nsString;
 class nsIDocumentObserver : public nsISupports {
 public:
   /**
-   * This is called when the documents title has arrived.
-   */
-  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
-
-  /**
    * Notify that a content model update is beginning. This call can be
    * nested.
    */
