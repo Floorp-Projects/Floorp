@@ -12,10 +12,11 @@
 <!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
 <!ENTITY useViewManager2.label "use ViewManager2">
+<!ENTITY debugEnableTBDnD.label "Personal Toolbar Drag &amp; Drop (buggy)">
 
 <!-- Event Debugging -->
 <!ENTITY debugEventDebugging.label "Event Debugging">
-<!ENTITY debugPaintFlashing.label "Paint Flashing (Caps-Lock toggles on/off)">
+<!ENTITY debugPaintFlashing.label "Paint Flashing (Caps-Lck toggles)">
 <!ENTITY debugPaintDumping.label "Paint Dumping">
 <!ENTITY debugInvalidateDumping.label "Invalidate Dumping">
 <!ENTITY debugEventDumping.label "Event Dumping">
