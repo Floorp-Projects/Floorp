@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://searcg/locale/search-panel.dtd" >
+<!DOCTYPE window SYSTEM "chrome://search/locale/search-panel.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -33,6 +33,14 @@
   onload="Init();">
 
   <html:script src="chrome://search/content/search-panel.js" />
+
+  <box align="horizontal">
+  	<html:div>&search.text.label;</html:div>
+  	<html:input id="sidebar-search-text" size="14" onkeyup="if (event.which == 13) { return doSearch(); }" />
+  	<html:button onclick="return doSearch();">&search.button.label;</html:button>
+  </box>
+
+  <html:hr width="100%" size="1" />
 
   <html:div style="width:100px; height:100px" flex="1">
   <tree id="Tree" ref="NC:LastSearchRoot"
