@@ -13,7 +13,7 @@
     
   <script language="JavaScript" src="chrome://global/content/commonDialog.js"></script>
     
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
   <box flex="1">
     <box autostretch="never" valign="top">
@@ -26,10 +26,10 @@
       <box id="info.box" flex="1" orient="vertical" style="max-width: 45em;"/>
 
       <!-- edit fields -->
-		  <box orient="vertical" id="loginEditField" hidden="true">
-			  <text class="label" id="login.text" value="&editfield0.label;" for="dialog.loginname"/>
-			  <textfield tabindex="0" type="text" id="dialog.loginname" flex="1"/>
-		  </box>
+      <box orient="vertical" id="loginEditField" hidden="true">
+        <text class="label" id="login.text" value="&editfield0.label;" for="dialog.loginname"/>
+        <textfield tabindex="0" type="text" id="dialog.loginname" flex="1"/>
+      </box>
       <box orient="vertical" id ="password1EditField" hidden="true">
         <text class="label" id="password1.text" value="&editfield1.label;" for="dialog.password1"/>
         <textfield tabindex="1" type="password" id="dialog.password1" flex="1"/>
@@ -43,9 +43,9 @@
       
       <!-- checkbox -->
       <box id="checkboxContainer" hidden="true" autostretch="never">
-        <checkbox id="checkbox" oncommand="onCheckboxClick(this)"/>
+        <checkbox id="checkbox" oncommand="onCheckboxClick(this)" style="max-width: 40em;"/>
       </box>
-  	</box>
+    </box>
   </box>
 
   <separator class="thin"/>
