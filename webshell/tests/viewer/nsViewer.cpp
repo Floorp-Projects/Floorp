@@ -369,6 +369,7 @@ DocObserver::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+#if 0
 nsresult
 DocObserver::LoadURL(const nsString& aURLSpec, 
                      const char* aCommand,
@@ -398,6 +399,7 @@ DocObserver::LoadURL(const nsString& aURLSpec,
   return mDocLoader->LoadURL(aURLSpec, aCommand, aContainer,
                              aPostData, aExtraInfo, anObserver);
 }
+#endif
 
 // Pass title information through to all of the web widgets that
 // belong to this document.
@@ -499,7 +501,11 @@ NS_IMETHODIMP
 DocObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
-  fputs(mURL, stdout);
+  if (nsnull != aURL) {
+    nsAutoString url;
+    aURL->ToString(url);
+    fputs(url, stdout);
+  }
   printf(": progress %d", aProgress);
   if (0 != aProgressMax) {
     printf(" (out of %d)", aProgressMax);
@@ -511,11 +517,11 @@ DocObserver::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
 NS_IMETHODIMP
 DocObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-  //start the throbber...
-  if (nsnull != mViewer)
-    mViewer->mUpdateThrobber = PR_TRUE;
-
-  fputs(mURL, stdout);
+  if (nsnull != aURL) {
+    nsAutoString url;
+    aURL->ToString(url);
+    fputs(url, stdout);
+  }
   fputs(": start\n", stdout);
   return NS_OK;
 }
@@ -523,7 +529,11 @@ DocObserver::OnStartBinding(nsIURL* aURL, const char *aContentType)
 NS_IMETHODIMP
 DocObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
-  fputs(mURL, stdout);
+  if (nsnull != aURL) {
+    nsAutoString url;
+    aURL->ToString(url);
+    fputs(url, stdout);
+  }
   fputs(": stop\n", stdout);
 
 #ifdef VIEWER_UI
@@ -1560,6 +1570,7 @@ nsViewer::Back()
     mHistoryIndex--;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+      mUpdateThrobber = PR_TRUE;    //start the throbber...
       mWD->observer->mWebWidget->LoadURL(*s, mWD->observer, nsnull);
     }
     ShowHistory();
@@ -1584,6 +1595,7 @@ nsViewer::Forward()
     mHistoryIndex++;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+      mUpdateThrobber = PR_TRUE;    //start the throbber...
       mWD->observer->mWebWidget->LoadURL(*s, mWD->observer, nsnull);
     }
     ShowHistory();
@@ -1623,6 +1635,8 @@ nsViewer::GoTo(const nsString& aURLSpec,
 
     mLocation->RemoveText();
     mLocation->SetText(aURLSpec);
+
+    mUpdateThrobber = PR_TRUE;    //start the throbber...
     rv = aWebWidget->LoadURL(aURLSpec, anObserver, aPostData);
   }
   return rv;

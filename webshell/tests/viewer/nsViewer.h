@@ -117,13 +117,6 @@ public:
                             const nsString& aTargetSpec,
                             nsIPostData* aPostDat = 0);
 
-  nsresult LoadURL(const nsString& aURLSpec, 
-                   const char* aCommand,
-                   nsIViewerContainer* aContainer,
-                   nsIPostData* aPostData,
-                   nsISupports* aExtraInfo,
-                   nsIStreamObserver* anObserver);
-
   nsIWebWidget* mWebWidget;
   nsIWidget* mWindowWidget;
   nsViewer* mViewer;
@@ -135,7 +128,6 @@ public:
 protected:
   virtual ~DocObserver();
 
-  nsString mURL;
   nsString mOverURL;
   nsString mOverTarget;
 };
