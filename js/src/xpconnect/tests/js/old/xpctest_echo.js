@@ -401,6 +401,44 @@ foo = bar = iface = clazz = null;
 
 /***************************************************************************/
 
+var r = new Object();
+r.SetReceiver = function() {};
+r.SendOneString = function(str) {Components.returnCode = code; return null;}
+echo.SetReceiver(r);
+var all_ok = true;
+
+var code = Components.results.NS_OK;
+try {
+  echo.SendOneString("");
+} catch(e)  {
+  all_ok = false;
+}
+
+var code = Components.results.NS_ERROR_FAILURE;
+try {
+  echo.SendOneString("");
+  all_ok = false;
+} catch(e)  {
+  if(e.result != code) 
+    all_ok = false;
+}
+
+var code = Components.results.NS_ERROR_NULL_POINTER;
+try {
+  echo.SendOneString("");
+  all_ok = false;
+} catch(e)  {
+  if(e.result != code) 
+    all_ok = false;
+}
+
+print("returnCode test - "+(all_ok ? "passed" : "failed"));
+
+echo.SetReceiver(null);
+r = null;
+
+/***************************************************************************/
+
 print(".......................................");
 print("simple speed tests...");
 
