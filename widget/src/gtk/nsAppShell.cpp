@@ -23,15 +23,19 @@
 #include "nsIEventQueueService.h"
 #include "nsSelectionMgr.h"
 #include "nsXPComCIID.h"
-#include "nsICmdLineService.h"
 #include <stdlib.h>
 
+#ifdef CMDLINEARGS
+#include "nsICmdLineService.h"
+#endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+#ifdef CMDLINEARGS
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
+#endif
 
 //-------------------------------------------------------------------------
 //
