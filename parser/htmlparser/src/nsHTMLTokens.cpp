@@ -1734,8 +1734,8 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
     { PRUnichar(' '), PRUnichar('"'), 
       PRUnichar('='), PRUnichar('\n'), 
       PRUnichar('\r'), PRUnichar('\t'), 
-      PRUnichar('>'), PRUnichar('\b'),
-      PRUnichar(0) };
+      PRUnichar('>'), PRUnichar('<'),
+      PRUnichar('\b'), PRUnichar(0) };
     static const nsReadEndCondition theEndCondition(theTerminalsChars);
 
     nsReadingIterator<PRUnichar> start, end;

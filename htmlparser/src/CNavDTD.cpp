@@ -556,120 +556,165 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 }
 
 /**
+ * @param aTarget - Tag that was neglected in the document.
+ * @param aType   - Specifies the type of the target. Ex. start, end, text, etc.
+ * @param aParser - Parser to drive this process
+ * @param aSink   - HTML Content sink
+ */
+nsresult
+CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
+                              eHTMLTokenTypes aType,
+                              nsIParser* aParser,
+                              nsIContentSink* aSink)
+{ 
+  NS_ASSERTION(mTokenizer, "tokenizer is null! unable to build target.");
+  NS_ASSERTION(mTokenAllocator, "unable to create tokens without an allocator.");
+  if (!mTokenizer || !mTokenAllocator)
+    return NS_OK;
+  if (eHTMLTag_unknown != mSkipTarget && eHTMLTag_title == aTarget) {
+    PRInt32 size = mSkippedContent.GetSize();
+    // Note: The first location of the skipped content 
+    // deque contains the opened-skip-target. Do not include
+    // that when guessing title contents. The term "guessing" 
+    // is used because the document did not contain an end title
+    // and hence it's almost impossible to know what markup
+    // should belong in the title. The assumption used here is that
+    // if the markup is anything other than "text", or "entity" or,
+    // "whitespace" then it's least likely to belong in the title.
+    PRInt32 index;
+    for (index = 1; index < size; index++) {
+      CHTMLToken* token = 
+        NS_REINTERPRET_CAST(CHTMLToken*, mSkippedContent.ObjectAt(index));
+      NS_ASSERTION(token, "there is a null token in the skipped content list!");
+      eHTMLTokenTypes type = eHTMLTokenTypes(token->GetTokenType());
+      if (eToken_whitespace != type && 
+          eToken_newline != type    && 
+          eToken_text != type       && 
+          eToken_entity != type     &&
+          eToken_attribute != type) {
+        // Now pop the tokens that do not belong ( just a guess work )
+        // in the title and push them into the tokens queue.
+        while (size != index++) {
+          token = NS_REINTERPRET_CAST(CHTMLToken*, mSkippedContent.Pop()); 
+          mTokenizer->PushTokenFront(token);
+        }
+        break;
+      }
+    }
+  }
+  CHTMLToken* target = 
+      NS_STATIC_CAST(CHTMLToken*, mTokenAllocator->CreateTokenOfType(aType, aTarget));
+  mTokenizer->PushTokenFront(target);
+  return BuildModel(aParser, mTokenizer, 0, aSink);
+}
+
+/**
  * 
  * @update  gess5/18/98
  * @param 
  * @return 
  */
-nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
-  nsresult result=NS_OK;
-
-  if(aSink) { 
-
-    if((NS_OK==anErrorCode) && !(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET))) {
-
-      mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
-
-      if (mTokenAllocator) {
-        CStartToken *theToken = NS_STATIC_CAST(CStartToken*, mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
-        mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
-        result = BuildModel(aParser,mTokenizer, 0, aSink);
+nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
+                                PRBool aNotifySink,
+                                nsIParser* aParser,
+                                nsIContentSink* aSink)
+{
+  if (!aSink)
+    return NS_OK;
+  nsresult result = NS_OK;
+  if (aParser && aNotifySink) { 
+    if (NS_OK == anErrorCode) {
+      if (eHTMLTag_unknown != mSkipTarget) {
+        // Looks like there is an open target ( ex. <title>, <textarea> ).
+        // Create a matching target to handle the unclosed target.
+        result = BuildNeglectedTarget(mSkipTarget, eToken_end, aParser, aSink);
+        NS_ENSURE_SUCCESS(result , result);
       }
-    } 
+      if (!(mFlags & (NS_DTD_FLAG_HAD_FRAMESET | NS_DTD_FLAG_HAD_BODY))) {
+        // This document is not a frameset document, however, it did not contain
+        // a body tag either. So, make one!. Note: Body tag is optional per spec..
+        result = BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser, aSink);
+        NS_ENSURE_SUCCESS(result , result);
+      }
+      if (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
+        // Looks like the misplaced contents are not processed yet.
+        // Here is our last chance to handle the misplaced content.
+        mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; 
+        
+        // mContextTopIndex refers to the misplaced content's legal parent index.
+        result = HandleSavedTokens(mBodyContext->mContextTopIndex);
+        NS_ENSURE_SUCCESS(result, result);
 
-    if(aParser && (NS_OK==result)){ 
-      if(aNotifySink){ 
-        if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
-          if (mTokenAllocator) {
-            if(mSkipTarget) {
-              CHTMLToken* theEndToken=nsnull;
-              theEndToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,mSkipTarget));
-              if(theEndToken) {
-                result=HandleToken(theEndToken,mParser);
-              }
-            }
-            if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
-              // Create an end table token to flush tokens off the misplaced list...
-              CHTMLToken* theTableToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_table));
-              if(theTableToken) {
-                result=HandleToken(theTableToken,mParser);
-              }
-            }
-          }
-          if(NS_SUCCEEDED(result)) {
-            eHTMLTags theTarget; 
-
-            //now let's disable style handling to save time when closing remaining stack members...
-            mFlags &= ~NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
-
-            while(mBodyContext->GetCount() > 0) { 
-              theTarget = mBodyContext->Last(); 
-              CloseContainersTo(theTarget,PR_FALSE); 
-            } 
-          }
-        } 
-        else {
-          //If you're here, then an error occured, but we still have nodes on the stack.
-          //At a minimum, we should grab the nodes and recycle them.
-          //Just to be correct, we'll also recycle the nodes.
-          while(mBodyContext->GetCount() > 0) { 
-            nsEntryStack* theChildStyles = 0;
-            nsCParserNode* theNode = mBodyContext->Pop(theChildStyles);
-            IF_DELETE(theChildStyles,&mNodeAllocator);
-            IF_FREE(theNode, &mNodeAllocator);
-          } 
+        mBodyContext->mContextTopIndex = -1; 
+      }          
+      //now let's disable style handling to save time when closing remaining stack members...
+      mFlags &= ~NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
+      while (mBodyContext->GetCount() > 0) { 
+        result = CloseContainersTo(mBodyContext->Last(), PR_FALSE);
+        if (NS_FAILED(result)) {
+          //No matter what, you need to call did build model.
+          aSink->DidBuildModel(0);
+          return result;
         }
+      } 
+    } 
+    else {
+      //If you're here, then an error occured, but we still have nodes on the stack.
+      //At a minimum, we should grab the nodes and recycle them.
+      //Just to be correct, we'll also recycle the nodes.
+      while (mBodyContext->GetCount() > 0) { 
+        nsEntryStack* theChildStyles = 0;
+        nsCParserNode* theNode = mBodyContext->Pop(theChildStyles);
+        IF_DELETE(theChildStyles,&mNodeAllocator);
+        IF_FREE(theNode, &mNodeAllocator);
+      } 
+    }
 
-        STOP_TIMER();
-        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
 
 #ifdef  ENABLE_CRC
 
-          //let's only grab this state once! 
-        if(!gShowCRC) { 
-          gShowCRC=1; //this only indicates we'll not initialize again. 
-          char* theEnvString = PR_GetEnv("RICKG_CRC"); 
-          if(theEnvString){ 
-            if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])){ 
-              gShowCRC=2;  //this indicates that the CRC flag was found in the environment. 
-            } 
-          } 
+      //let's only grab this state once! 
+    if (!gShowCRC) { 
+      gShowCRC=1; //this only indicates we'll not initialize again. 
+      char* theEnvString = PR_GetEnv("RICKG_CRC"); 
+      if (theEnvString){ 
+        if (('1'== theEnvString[0]) || ('Y'== theEnvString[0]) || ('y'== theEnvString[0])){ 
+          gShowCRC=2;  //this indicates that the CRC flag was found in the environment. 
         } 
+      } 
+    } 
 
-        if(2==gShowCRC) { 
-          if(mComputedCRC32!=mExpectedCRC32) { 
-            if(mExpectedCRC32!=0) { 
-              printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32); 
-              result = aSink->DidBuildModel(2); 
-            } 
-            else { 
-              printf("Computed CRC: %u.\n",mComputedCRC32); 
-              result = aSink->DidBuildModel(3); 
-            } 
-          } 
-          else result = aSink->DidBuildModel(0); 
+    if (2 == gShowCRC) { 
+      if (mComputedCRC32 != mExpectedCRC32) { 
+        if (mExpectedCRC32 != 0) { 
+          printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32); 
+          result = aSink->DidBuildModel(2); 
         } 
-        else result=aSink->DidBuildModel(0); 
+        else { 
+          printf("Computed CRC: %u.\n",mComputedCRC32); 
+          result = aSink->DidBuildModel(3); 
+          NS_ENSURE_SUCCESS(result, result);
+        } 
+      } 
+    }
 #endif
 
-        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
-        START_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
+    START_TIMER();
 
-          //Now make sure the misplaced content list is empty,
-          //by forcefully recycling any tokens we might find there.
+      //Now make sure the misplaced content list is empty,
+      //by forcefully recycling any tokens we might find there.
 
-        CToken* theToken=0;
-        while((theToken=(CToken*)mMisplacedContent.Pop())) {
-          IF_FREE(theToken, mTokenAllocator);
-        }
-      } 
-    } //if aparser
+    CToken* theToken = 0;
+    while ((theToken = (CToken*)mMisplacedContent.Pop())) {
+      IF_FREE(theToken, mTokenAllocator);
+    }
+  } //if aparser
 
-      //No matter what, you need to call did build model.
-    result=aSink->DidBuildModel(0); 
-
-  } //if asink
-  return result;
+  //No matter what, you need to call did build model.
+  return aSink->DidBuildModel(0); 
 }
 
 NS_IMETHODIMP_(void) 
