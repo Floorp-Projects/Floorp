@@ -55,8 +55,13 @@ interface nsICachingChannel : nsISupports
      * Set/get the cache key... uniquely identifies the data in the cache.
      * Holding a reference to this key DOES NOT prevent the cached data from
      * being removed.  It is otherwise similar to the cacheToken.
+     *
+     * The fromCacheOnly flag inhibits fetching from the net if the data in the
+     * cache has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will
+     * be sent to the listener's onStopRequest in this case.
      */
-    attribute nsISupports cacheKey;
+    nsISupports getCacheKey();
+    void        setCacheKey(in nsISupports cacheKey, in boolean fromCacheOnly);
 
     /**
      * Specifies whether or not the data should be cached to a file.  This
@@ -74,3 +79,10 @@ interface nsICachingChannel : nsISupports
      */
     readonly attribute nsIFile cacheFile;
 };
+
+%{C++
+/**
+ * nsresult passed through onStopRequest if the document could not be fetched from the cache.
+ */
+#define NS_ERROR_DOCUMENT_NOT_CACHED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
+%}

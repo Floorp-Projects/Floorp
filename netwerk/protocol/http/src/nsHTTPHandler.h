@@ -148,6 +148,7 @@ public:
 
 #ifdef MOZ_NEW_CACHE
     nsresult GetCacheSession(nsCacheStoragePolicy, nsICacheSession **);
+    PRUint32 CreatePostID() { return ++mLastPostID; }
 #endif
 
 protected:
@@ -166,6 +167,7 @@ protected:
 #ifdef MOZ_NEW_CACHE
     nsCOMPtr<nsICacheSession> mCacheSession_ANY;
     nsCOMPtr<nsICacheSession> mCacheSession_MEM;
+    PRUint32                  mLastPostID;
 #endif
 
     char*               mAcceptLanguages;
