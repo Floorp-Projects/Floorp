@@ -410,6 +410,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
       }
       aStatus = NS_FRAME_COMPLETE;
       printf("--------------------------> Skipping reflow\n");
+      NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+      NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
       return NS_OK;
     }
 #endif
@@ -448,6 +450,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (!mOverrideReflowOpt && bailOnWidth && bailOnHeight) {
     REFLOW_DEBUG_MSG3("*** Done nsLCF - Bailing on DW: %d  DH: %d ", PX(aDesiredSize.width), PX(aDesiredSize.height));
     REFLOW_DEBUG_MSG3("bailOnWidth %d  bailOnHeight %d\n", PX(bailOnWidth), PX(bailOnHeight));
+    NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+    NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
     return NS_OK;
   } else if (mOverrideReflowOpt) {
     mOverrideReflowOpt = PR_FALSE;
@@ -522,6 +526,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
           NS_RELEASE(vm);
         }
+        NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+        NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return NS_OK;
 #else 
         nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
@@ -570,6 +576,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.ascent = aDesiredSize.height;
         aDesiredSize.descent = 0;
         printf("Bottom*  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+        NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+        NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return NS_OK;
       } else {
         nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
@@ -962,6 +970,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
   printf("Bottom   DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+  NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+  NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
   return NS_OK;
 }
 
@@ -3433,7 +3443,7 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               } else {
                 SingleSelection();
                 if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
                 } else {
                   UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
                 }
@@ -3462,7 +3472,7 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               } else {
                 SingleSelection();
                 if (nsnull != mComboboxFrame) {
-                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
                 } else {
                   UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
                 }
