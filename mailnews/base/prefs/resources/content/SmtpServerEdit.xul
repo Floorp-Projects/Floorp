@@ -28,6 +28,8 @@
 
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SmtpServerEdit.dtd">
 
 <window class="dialog"

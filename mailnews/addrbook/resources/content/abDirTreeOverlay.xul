@@ -19,6 +19,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abDirTreeOverlay.dtd">
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

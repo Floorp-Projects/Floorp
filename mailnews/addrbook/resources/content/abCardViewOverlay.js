@@ -259,8 +259,8 @@ function cvSetNode(node, text)
 function cvSetVisible(node, visible)
 {
 	if ( visible )
-		node.removeAttribute("hide");
+		node.removeAttribute("collapsed");
 	else
-		node.setAttribute("hide", "true");
+		node.setAttribute("collapsed", "true");
 }
 

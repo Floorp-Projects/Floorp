@@ -1,7 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/pref-mailnews.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -25,6 +22,8 @@ Rights Reserved.
 Contributor(s):
     rcassin@supernova.org
 -->
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 

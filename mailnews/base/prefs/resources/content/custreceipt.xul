@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/custreceipt.dtd">

@@ -107,7 +107,7 @@ nsMimeXULEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outC
   mBody.Append("\">");
 
   // Now for some style...
-  mBody.Append("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
+  mBody.Append("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/messageBody.css\">");
   mBody.Append("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
 
   mBodyStarted = PR_TRUE;
@@ -246,7 +246,7 @@ nsMimeXULEmitter::WriteXULHeader()
 {
   UtilityWriteCRLF("<?xml version=\"1.0\"?>");
 
-  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/messageBody.css\" type=\"text/css\"?>");
 
   // Make it look consistent...
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/global.css\" type=\"text/css\"?>");

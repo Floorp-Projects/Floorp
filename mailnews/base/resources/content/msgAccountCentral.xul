@@ -20,7 +20,7 @@ Rights Reserved.
 
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/msgAccountCentral.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accountCentral.css" type="text/css"?>
 
 <!DOCTYPE window [
  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">

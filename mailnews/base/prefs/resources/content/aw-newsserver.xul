@@ -20,8 +20,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accountWizard.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >

@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
-
 <!--
 The contents of this file are subject to the Netscape Public
 License Version 1.1 (the "License"); you may not use this file
@@ -22,11 +20,12 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">
 
 <overlay
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
->
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script src="chrome://messenger/content/threadPane.js"/>
 

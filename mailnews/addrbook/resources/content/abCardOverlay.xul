@@ -19,6 +19,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/cardDialog.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abCardOverlay.dtd">
 
 <overlay id="editcardOverlay"

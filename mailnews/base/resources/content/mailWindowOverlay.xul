@@ -20,6 +20,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 

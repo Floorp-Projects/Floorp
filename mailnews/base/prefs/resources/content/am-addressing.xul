@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 
 <!--
 
@@ -25,6 +24,8 @@ Contributors:
   Srilatha Moturi <srilatha@netscape.com>
 
 -->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManager.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 

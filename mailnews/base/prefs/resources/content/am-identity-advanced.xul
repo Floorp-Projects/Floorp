@@ -1,8 +1,5 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!--
  The contents of this file are subject to the Netscape Public
  License Version 1.1 (the "License"); you may not use this file
@@ -23,6 +20,10 @@
  Rights Reserved.
 
 -->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManager.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-identity-advanced.dtd">
 

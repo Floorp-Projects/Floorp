@@ -76,7 +76,7 @@ nsMimeXmlEmitter::WriteXMLHeader(const char *msgID)
     
   UtilityWrite("<?xml version=\"1.0\"?>");
 
-  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/messageBody.css\" type=\"text/css\"?>");
 
   UtilityWrite("<message id=\"");
   UtilityWrite(newValue);

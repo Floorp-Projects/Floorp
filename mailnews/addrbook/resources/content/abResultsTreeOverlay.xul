@@ -20,6 +20,9 @@ Rights Reserved.
 --> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd">
+
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
