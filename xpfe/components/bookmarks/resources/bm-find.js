@@ -21,7 +21,7 @@
  *    Robert John Churchill    <rjc@netscape.com>
  *
  * Contributor(s): 
- *    Blake Ross <blakeross@telocity.com>
+ *    Blake Ross   <blakeross@telocity.com>
  *    Peter Annema <disttsc@bart.nl>
  */
 
@@ -56,7 +56,6 @@ function doLoad()
 
   //set initial focus
   gFindText.focus();
- 
 }
 
 var gDatasourceName;
@@ -121,12 +120,11 @@ function saveFind()
   if (!searchURL)
     return false;
 
-  var searchTitle = "Find: " + gMatchName + " " + gMethodName + " '" + gTextName + "' in "  gDatasourceName;
+  var searchTitle = "Find: " + gMatchName + " " + gMethodName + " '" + gTextName + "' in " + gDatasourceName;
   var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                        .getService()
                        .QueryInterface(Components.interfaces.nsIBookmarksService)
                        .AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
- 
   return true;
 }
 
@@ -183,7 +181,7 @@ function OpenURL(event, node, root)
     return false;
 
   // get right sized window
-  window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
   return true;
 }
 
