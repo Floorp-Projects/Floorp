@@ -634,6 +634,18 @@ print "</TABLE>\n";
 
 if ($count == 0) {
     print "Zarro Boogs found.\n";
+    # I've been asked to explain this ... way back when, when Netscape released
+    # version 4.0 of its browser, we had a release party.  Naturally, there
+    # had been a big push to try and fix every known bug before the release.
+    # Naturally, that hadn't actually happened.  (This is not unique to
+    # Netscape or to 4.0; the same thing has happened with every software
+    # project I've ever seen.)  Anyway, at the release party, T-shirts were
+    # handed out that said something like "Netscape 4.0: Zarro Boogs".
+    # Just like the software, the T-shirt had no known bugs.  Uh-huh.
+    #
+    # So, when you query for a list of bugs, and it gets no results, you
+    # can think of this as a friendly reminder.  Of *course* there are bugs
+    # matching your query, they just aren't in the bugsystem yet...
 } elsif ($count == 1) {
     print "One bug found.\n";
 } else {
