@@ -38,7 +38,6 @@
 #include "nsRDFBuiltInDataSources.h"
 #include "nsIRDFFileSystem.h"
 #include "nsIRDFFind.h"
-#include "nsIRelatedLinksDataSource.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
@@ -66,7 +65,6 @@ static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CI
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,                  NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,                  NS_RDFMENUBUILDER_CID);
-static NS_DEFINE_CID(kRDFRelatedLinksDataSourceCID,       NS_RDFRELATEDLINKSDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,               NS_RDFTOOLBARBUILDER_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,                  NS_RDFTREEBUILDER_CID);
@@ -215,10 +213,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFContainerUtils((nsIRDFContainerUtils**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFRelatedLinksDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFRelatedLinksDataSource((nsIRDFDataSource**) &inst)))
-            return rv;
-    }
     else if (mClassID.Equals(kXULDocumentCID)) {
         if (NS_FAILED(rv = NS_NewXULDocument((nsIRDFDocument**) &inst)))
             return rv;
@@ -358,11 +352,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "ftp",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFRelatedLinksDataSourceCID,  
-                                         "RDF Related Links Data Source",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "relatedlinks",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFInMemoryDataSourceCID,
                                          "RDF In-Memory Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource",
@@ -497,8 +486,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kRDFFindDataSourceCID,      aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFFTPDataSourceCID,       aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFRelatedLinksDataSourceCID,   aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
     if (NS_FAILED(rv)) goto done;
