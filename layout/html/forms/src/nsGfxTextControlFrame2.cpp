@@ -1952,7 +1952,20 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
-  return nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(rv))
+  { // fix for bug 40596, width:auto means the control sets it's maxElementSize.width to it's default width
+    if (aDesiredSize.maxElementSize)
+    {
+      nsStylePosition *stylePosition;
+      GetStyleData(eStyleStruct_Position,  (const nsStyleStruct *&)stylePosition);
+      nsStyleUnit widthUnit = stylePosition->mWidth.GetUnit();
+      if (eStyleUnit_Auto == widthUnit) {
+        aDesiredSize.maxElementSize->width = aDesiredSize.width;
+      }
+    }
+  }
+  return rv;
 }
 
 
