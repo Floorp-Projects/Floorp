@@ -59,6 +59,46 @@ Contributor(s): ______________________________________. -->
  </popup>
 </popupset>
 
+<!-- Context menu -->
+<popupset>
+    <!-- This is the skeleton context menu.  It is populated and emptied
+         dynamically, from the template (see below) via the oncreate/ondestroy
+         handlers.
+    -->
+    <popup id="context"
+           oncreate="BrowserCreateContextMenu(this,event)"
+           ondestroy="BrowserDestroyContextMenu(this)">
+    </popup>
+
+    <!-- This is the context menu template used to populate the actual
+         content menu on demand.  It holds everything and is whittled down
+         based on the specific content element that is "context menu-ed."
+    -->
+    <popup id="context-template">
+        <menuitem id="template-back"
+                  value="&goBackCmd.label;"
+                  accesskey="&goBackCmd.accesskey;"
+                  oncommand="BrowserBack()"/>
+        <menuitem id="template-forward"
+                  value="&goForwardCmd.label;"
+                  accesskey="&goForwardCmd.accesskey;"
+                  oncommand="BrowserForward()"/>
+        <menuitem id="template-reload"
+                  value="&reloadCmd.label;"
+                  oncommand="BrowserReallyReload(0);"/>
+        <menuitem id="template-stop"
+                  value="&stopCmd.label;"
+                  oncommand="BrowserStop();"/>
+        <menuseparator/>
+        <menuitem id="template-viewsource"
+                  value="&pageSourceCmd.label;"
+                  oncommand="BrowserViewSource();"/>
+        <menuitem id="template-viewinfo"
+                  value="&pageInfoCmd.label;"
+                  oncommand="BrowserViewInfo();"/>
+    </popup>
+</popupset>
+
 <html:script language="javascript">
   var gBookmarkPopup = null;
 </html:script>
@@ -615,7 +655,7 @@ Contributor(s): ______________________________________. -->
 
       <box align="horizontal" id="status-bar" chromeclass="status">
  
-        <titledbutton value="&notifCom.label;" onclick="doTests()"/>
+        <titledbutton value="&notifCom.label;" onclick="doTests()" context="context"/>
 
         <box id="state-box" align="horizontal" flex="100%">
           <box align="vertical" style="width:100px">

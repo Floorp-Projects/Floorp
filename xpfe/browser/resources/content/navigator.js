@@ -1264,3 +1264,170 @@ function FitToScreen()
 		resizeTo( sizeX,sizeY );	
 	}
 }
+
+// Set given attribute of specified context-menu item.  If the
+// value is null, then it removes the attribute (which works
+// nicely for the disabled attribute).
+function setContextMenuItemAttr( id, attr, val ) {
+    var elem = document.getElementById( id );
+    if ( elem ) {
+        if ( val == null ) {
+            // null indicates attr should be removed.
+            elem.removeAttribute( attr );
+        } else {
+            // Set attr=val.
+            elem.setAttribute( attr, val );
+        }
+    }
+}
+
+// Set context menu attribute according to like attribute of another node
+// (such as a broadcaster).
+function setContextMenuItemAttrFromNode( item_id, attr, other_id ) {
+    var elem = document.getElementById( other_id );
+    if ( elem && elem.getAttribute( attr ) == "true" ) {
+        setContextMenuItemAttr( item_id, attr, "true" );
+    } else {
+        setContextMenuItemAttr( item_id, attr, null );
+    }
+}
+
+// Return "true" if we're not on a link, null otherwise (seems odd, but it gives
+// us the proper value to which to set a disabled attribute to).
+function isNotOnLink( event ) {
+    // Not implemented so all link-based options are disabled.
+    return "true";
+}
+
+// Returns "true" if we're not in a frame, null otherwise (see above).
+function isNotInFrame( event ) {
+    // Not implemented so all frame-based options are disabled.
+    return "true";
+}
+
+// Returns "true" if we're not on an image, null otherwise (see above).
+function isNotOnImage( event ) {
+    // Not implemented so all image-based options are disabled.
+    return "true";
+}
+
+// Returns "true" if we're not on a background image, null otherwise (see above).
+function isNotOnBGImage( event ) {
+    // Not implemented so all background-image-based options are disabled.
+    return "true";
+}
+
+// Returns "true" if there's no text selected, null otherwise (see above).
+function isNoTextSelected( event ) {
+    // Not implemented so all text-selected-based options are disabled.
+    return "true";
+}
+
+// Set various context menu attributes based on the state of the world
+// (to be enhanced RSN to modify the menu based on the type of content
+// element that's contextuated).
+function BrowserSetupContextMenu( menu, event ) {
+    // Open link depends on whether we're on a link.
+    setContextMenuItemAttr( "context-openlink", "disabled", isNotOnLink( event ) );
+
+    // Open frame depends on whether we're in a frame.
+    setContextMenuItemAttr( "context-openframe", "disabled", isNotInFrame( event ) );
+
+    // Open in composer depends on whether we're on a link.
+    setContextMenuItemAttr( "context-openlinkincomposer", "disabled", isNotOnLink( event ) );
+
+    <!-- ------------------------------------------------------------ -->
+    // Back determined by canGoBack broadcaster.
+    setContextMenuItemAttrFromNode( "context-back", "disabled", "canGoBack" );
+
+    // Forward determined by canGoForward broadcaster.
+    setContextMenuItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
+
+    // Reload is always OK.
+
+    // Stop determined by canStop broadcaster.
+    setContextMenuItemAttrFromNode( "context-stop", "disabled", "canStop" );
+
+    <!-- ------------------------------------------------------------ -->
+
+    // View source is always OK.
+
+    // View Info don't work no way no how.
+    setContextMenuItemAttr( "context-viewinfo", "disabled", "true" );
+
+    // View Image needs content element detection.
+    setContextMenuItemAttr( "context-viewimage", "disabled", isNotOnImage( event ) );
+
+    <!-- ------------------------------------------------------------ -->
+
+    // Add bookmark always OK.
+
+    // Send Page not working yet.
+    setContextMenuItemAttr( "context-sendpage", "disabled", "true" );
+
+    <!-- ------------------------------------------------------------ -->
+
+    // Save page is always OK.
+
+    // Save background image depends on whether there is one.
+    setContextMenuItemAttr( "context-savebgimage", "disabled", isNotOnBGImage( event ) );
+
+    // Save image not working yet.
+    setContextMenuItemAttr( "context-saveimage", "disabled", "true" );
+
+    <!-- ------------------------------------------------------------ -->
+
+    // Copy depends on whether there is selected text.
+    setContextMenuItemAttr( "context-copy", "disabled", isNoTextSelected() );
+
+    // Copy link location depends on whether we're on a link.
+    setContextMenuItemAttr( "context-copylink", "disabled", isNotOnLink( event ) );
+
+    // Copy image location depends on whether we're on a link.
+    setContextMenuItemAttr( "context-copyimage", "disabled", isNotOnImage( event ) );
+}
+
+// Temporary workaround for DOM api not yet implemented.
+function cloneNode( item ) {
+    // Create another element like the one we're cloning.
+    var node = document.createElement( item.tagName );
+
+    // Copy attributes from argument item to the new one.
+    var attrs = item.attributes;
+    for ( var i = 0; i < attrs.length; i++ ) {
+        var attr = attrs.item( i );
+        node.setAttribute( attr.nodeName, attr.nodeValue );
+    }
+
+    // Voila!
+    return node;
+}
+
+// "create" the context menu by cloning the template.
+function BrowserCreateContextMenu( menu, event ) {
+    var template = document.getElementById( "context-template" );
+    var items = template.childNodes;
+    for ( var i = 0; i < items.length; i++ ) {
+        // Replicate item.
+        //var item = items.item(i).cloneNode( false );
+
+        // cloneNode not implemented, fake it.
+        var item = cloneNode( items.item(i) );
+
+        // Change id.
+        item.setAttribute( "id", item.getAttribute( "id" ).replace( "template-", "context-" ) );
+
+        // Add it to popup menu.
+        menu.appendChild( item );
+    }
+    // Tweak the menu.
+    BrowserSetupContextMenu( menu, event );
+}
+
+// Remove all the children which we added at oncreate.
+function BrowserDestroyContextMenu( menu ) {
+    var items = menu.childNodes;
+    for ( var i = 0; i < items.length; i++ ) {
+        menu.removeChild( items.item(i) );
+    }
+}
