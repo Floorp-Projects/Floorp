@@ -73,6 +73,15 @@ NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry);
 extern int
 NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
 
+/* lookup routine
+ *
+ * builds a key and looks for it in
+ * the database.  Returns an access
+ * method and sets a filename in the
+ * URL struct if found
+ */
+extern int NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
+
 XP_END_PROTOS
 
 #endif /* NETCACHE_H */
