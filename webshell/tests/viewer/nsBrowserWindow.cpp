@@ -876,6 +876,45 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoImageInspector();
     break;
 
+  case VIEWER_GFX_SCROLLBARS_ON: {
+    SetBoolPref("nglayout.widget.gfxscrollbars", PR_TRUE);
+    nsAutoString text;
+    PRUint32 size;
+    mLocation->GetText(text, 1000, size);
+    GoTo(text.GetUnicode());
+    }
+    break;
+
+  case VIEWER_GFX_SCROLLBARS_OFF: {
+    SetBoolPref("nglayout.widget.gfxscrollbars", PR_FALSE);
+    nsAutoString text;
+    PRUint32 size;
+    mLocation->GetText(text, 1000, size);
+    GoTo(text.GetUnicode());
+    }
+    break;
+
+  case VIEWER_GOTO_TEST_URL1: 
+  case VIEWER_GOTO_TEST_URL2: {
+    nsAutoString urlStr;
+    char * pref = aID == VIEWER_GOTO_TEST_URL1?"nglayout.widget.testurl1":"nglayout.widget.testurl2";
+    GetStringPref(pref, urlStr);
+    PRUint32 size;
+    mLocation->SetText(urlStr, size);
+    GoTo(urlStr.GetUnicode());
+    }
+    break;
+
+  case VIEWER_SAVE_TEST_URL1: 
+  case VIEWER_SAVE_TEST_URL2: {
+    nsAutoString text;
+    PRUint32 size;
+    mLocation->GetText(text, 1000, size);
+    char * pref = aID == VIEWER_SAVE_TEST_URL1?"nglayout.widget.testurl1":"nglayout.widget.testurl2";
+    SetStringPref(pref, text);
+    }
+    break;
+
 #ifdef PURIFY
   case VIEWER_PURIFY_SHOW_NEW_LEAKS:
   case VIEWER_PURIFY_SHOW_ALL_LEAKS:
@@ -3183,6 +3222,52 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
     prefs->SavePrefFile();
     
     ForceRefresh();
+  }
+}
+
+void
+nsBrowserWindow::SetBoolPref(const char * aPrefName, PRBool aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName,"null pref name");
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  if (prefs && nsnull != aPrefName)
+  {
+    prefs->SetBoolPref(aPrefName, aValue);
+    prefs->SavePrefFile();
+  }
+}
+
+void
+nsBrowserWindow::SetStringPref(const char * aPrefName, const nsString& aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName, "null pref name");
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  if (nsnull != prefs && nsnull != aPrefName)
+  {
+    char * prefStr = aValue.ToNewCString();
+    prefs->SetCharPref(aPrefName, prefStr);
+    prefs->SavePrefFile();
+    delete [] prefStr;
+  }
+
+}
+
+void
+nsBrowserWindow::GetStringPref(const char * aPrefName, nsString& aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName, "null pref name");
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  if (nsnull != prefs && nsnull != aPrefName)
+  {
+    char* prefCharVal;
+    nsresult result = prefs->CopyCharPref(aPrefName, &prefCharVal);
+    if (NS_SUCCEEDED(result)) {
+      aValue = prefCharVal;
+      PL_strfree(prefCharVal);
+    }
   }
 }
 
