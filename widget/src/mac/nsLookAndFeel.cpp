@@ -72,10 +72,23 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x00,0x00,0x00);
         break;
     case eColor_TextSelectBackground:
-        aColor = NS_RGB(0x00,0x00,0x80);
+        GrafPtr thePort;
+        ::GetPort(&thePort);
+       	if (thePort)
+       	{
+       		GrafVars** grafVars = (GrafVars**)((CGrafPtr)thePort)->grafVars;
+       		RGBColor macColor = (*grafVars)->rgbHiliteColor;
+       		aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
+       	}
+       	else
+        	aColor = NS_RGB(0x00,0x00,0x00);
         break;
     case eColor_TextSelectForeground:
-        aColor = NS_RGB(0xff,0xff,0xff);
+    		GetColor(eColor_TextSelectBackground, aColor);
+    		if (aColor == 0xffffff)
+    			aColor = NS_RGB(0x00,0x00,0x00);
+    		else
+	        aColor = NS_RGB(0xff,0xff,0xff);
         break;
     default:
         aColor = NS_RGB(0xff,0xff,0xff);
