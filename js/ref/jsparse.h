@@ -55,11 +55,11 @@ PR_BEGIN_EXTERN_C
  *                            Each sub-tree's root node has a pn_op in the set
  *                            JSOP_IMPORT{ALL,PROP,ELEM}
  * TOK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null
- * TOK_SWITCH   ternary     pn_kid1: discriminant
- *                          pn_kid2: list of TOK_CASE nodes
- *                          pn_kid3: TOK_LC node for default statements or null
- * TOK_CASE     binary      pn_left: case expr
- *                          pn_right: TOK_LC node for case statements
+ * TOK_SWITCH   binary      pn_left: discriminant
+ *                          pn_right: list of TOK_CASE nodes, with at most one
+ *                            TOK_DEFAULT node
+ * TOK_CASE,    binary      pn_left: case expr or null if TOK_DEFAULT
+ * TOK_DEFAULT              pn_right: TOK_LC node for this case's statements
  * TOK_WHILE    binary      pn_left: cond, pn_right: body
  * TOK_DO       binary      pn_left: body, pn_right: cond
  * TOK_FOR      binary      pn_left: either
@@ -161,7 +161,7 @@ struct JSParseNode {
 	    uint32      count;          /* number of nodes in list */
 	    JSBool      extra;          /* extra comma flag for [1,2,,] */
         } list;
-        struct {                        /* ternary: if, switch, for(;;), ?: */
+        struct {                        /* ternary: if, for(;;), ?: */
             JSParseNode *kid1;          /* condition, discriminant, etc. */
             JSParseNode *kid2;          /* then-part, case list, etc. */
             JSParseNode *kid3;          /* else-part, default case, etc. */
