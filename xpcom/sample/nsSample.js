@@ -1,81 +1,107 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-function mySample() {
-    /* use this to execute code a la C++'s SetValue */
-    this.value getter= function () {
-        dump ("Getting value\n");
-        return this.val;
-    };
+/*
+ * No magic constructor behaviour, as is de rigeur for XPCOM.
+ * If you must perform some initialization, and it could possibly fail (even
+ * due to an out-of-memory condition), you should use an Init method, which
+ * can convey failure appropriately (thrown exception in JS,
+ * NS_FAILED(nsresult) return in C++).
+ *
+ * In JS, you can actually cheat, because a thrown exception will cause the
+ * CreateInstance call to fail in turn, but not all languages are so lucky.
+ * (Though ANSI C++ provides exceptions, they are verboten in Mozilla code
+ * for portability reasons -- and even when you're building completely
+ * platform-specific code, you can't throw across an XPCOM method boundary.)
+ */
+function mySample() { /* big comment for no code, eh? */ }
 
-    this.value setter= function (newval) {
-        dump("Setting value to " + newval + "\n");
-        return this.val = newval;
-    };
-}
+/* decorate prototype to provide ``class'' methods and property accessors */
+mySample.prototype = {
+    /*
+     * getter: and setter: are new Magic in JS1.5, borrowing intent -- if not
+     * complete syntax -- from the JS2 design.  They define accessors for
+     * properties on the JS object, follow the expected rules for prototype
+     * delegation, and make a mean cup of coffee.
+     */
+    value getter: function () { return this.val; },
+    value setter: function (newval) { return this.val = newval; },
 
-mySample.prototype.val = "<default value>";
-mySample.prototype.writeValue = function (aPrefix) {
-    dump("mySample::writeValue => " + aPrefix + this.val + "\n");
-}
-mySample.prototype.poke = function (aValue) {
-    this.val = aValue;
-}
-/* until bug 14460 is fixed, must use QueryInterface, not queryInterface */
-mySample.prototype.QueryInterface = function(iid) {
-    if (iid.equals(Components.interfaces.nsISample) ||
-        iid.equals(Components.interfaces.nsISupports))
-        return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    writeValue: function (aPrefix) {
+        dump("mySample::writeValue => " + aPrefix + this.val + "\n");
+    },
+    poke: function (aValue) { this.val = aValue; },
+
+    /*
+     * We don't need a QueryInterface method unless we're doing
+     * something fancy like supporting multiple interfaces (not
+     * counting nsISupports, of course), or aggregating with an outer.
+     *
+     * If you _are_ providing a QueryInterface method, note that until
+     * bug 14460 is resolved you need to name it QueryInterface, not
+     * queryInterface as you might believe.
+     */
+    val: "<default value>"
 }
 
 var myModule = {
-    RegisterSelf:function (compMgr, fileSpec, location) {
-        dump("RegisterSelf(" + Array.prototype.join.apply(arguments, ",") + 
-             ")\n");
-        try {
-            compMgr.registerComponentWithType(this.myCID,
-                                              "Sample JS Component",
-                                              "mozilla.jssample.1", fileSpec,
-                                              location, true, true, 
-                                              "text/javascript");
-        } catch (e) { 
-            dump(" FAILURE[" + e + "]");
-        }
-        dump("RegisterSelf done\n");
+    /*
+     * RegisterSelf is called at registration time (component installation
+     * or the only-until-release startup autoregistration) and is responsible
+     * for notifying the component manager of all components implemented in
+     * this module.  The fileSpec, location and type parameters are mostly
+     * opaque, and should be passed on to the registerComponent call
+     * unmolested.
+     */
+    registerSelf: function (compMgr, fileSpec, location, type) {
+        compMgr.registerComponentWithType(this.myCID,
+                                          "Sample JS Component",
+                                          "mozilla.jssample.1", fileSpec,
+                                          location, true, true, 
+                                          type);
     },
 
-    GetClassObject:function (compMgr, cid, iid) {
-        dump("GetClassObject(" + Array.prototype.join.apply(arguments, ",") +
-             ")\n");
-
-        if (!cid.equals(this.myCID)) {
-            dump("GetClassObject: CID mismatch:\nmine:\t" + this.myCID +
-                 "\nin:\t" + cid + "\n");
+    /*
+     * The GetClassObject method is responsible for producing Factory and
+     * SingletonFactory objects (the latter are specialized for services).
+     */
+    getClassObject: function (compMgr, cid, iid) {
+        if (!cid.equals(this.myCID))
             throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
 
-        dump("GetClassObject: have right CID\n");
-        if (iid.equals(Components.interfaces.nsIFactory)) {
-            dump("JS: looking for factory (" + iid + ")\n");
-            return this.myFactory;
-        }
-        dump("GetClassObject: IID mismatch:\nfact:\t" +
-             Components.interfaces.nsIFactory + "\nin:\t" +
-             iid + "\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        if (!iid.equals(Components.interfaces.nsIFactory))
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        return this.myFactory;
     },
 
     /* CID for this class */
-    myCID:Components.ID("{dea98e50-1dd1-11b2-9344-8902b4805a2e}"),
+    myCID: Components.ID("{dea98e50-1dd1-11b2-9344-8902b4805a2e}"),
 
     /* factory object */
-    myFactory:{
-        CreateInstance:function (outer, iid) {
-            dump ("JS: CreateInstance(" 
-                  + Array.prototype.join.apply(arguments, ",") + ")\n");
-            if (outer != null) {
+    myFactory: {
+        /*
+         * Construct an instance of the interface specified by iid,
+         * possibly aggregating with the provided |outer|.  (If you don't
+         * know what aggregation is all about, you don't need to.  It reduces
+         * even the mightiest of XPCOM warriors to snivelling cowards.)
+         */
+        CreateInstance: function (outer, iid) {
+            dump("CI: " + iid + "\n");
+            if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+            /*
+             * If we had a QueryInterface method (see above), we would write
+             * the following as:
+             *    return (new mySample()).QueryInterface(iid);
+             * because our QI would check the IID correctly for us.
+             */
+            
+            if (!iid.equals(Components.interfaces.nsISample) &&
+                !iid.equals(Components.interfaces.nsISupports)) {
+                throw Components.results.NS_ERROR_INVALID_ARG;
             }
+
             return new mySample();
         }
     }
