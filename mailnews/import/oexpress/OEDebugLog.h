@@ -23,9 +23,11 @@
 #ifndef OEDebugLog_h___
 #define OEDebugLog_h___
 
+/*
 #ifdef NS_DEBUG
 #define IMPORT_DEBUG	1
 #endif
+*/
 
 #ifdef IMPORT_DEBUG
 #include "stdio.h"

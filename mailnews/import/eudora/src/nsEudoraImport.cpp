@@ -37,6 +37,7 @@
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIImportSettings.h"
+#include "nsIImportFieldMap.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
 #include "nsTextFormater.h"
@@ -123,8 +124,8 @@ public:
 	/* PRBool GetAutoFind (out wstring description); */
 	NS_IMETHOD GetAutoFind(PRUnichar **description, PRBool *_retval);
 	
-	/* PRBool GetNeedsFieldMap (); */
-	NS_IMETHOD GetNeedsFieldMap(PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
+	/* PRBool GetNeedsFieldMap (nsIFileSpec location); */
+	NS_IMETHOD GetNeedsFieldMap(nsIFileSpec *location, PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
 	
 	/* void GetDefaultLocation (out nsIFileSpec location, out boolean found, out boolean userVerify); */
 	NS_IMETHOD GetDefaultLocation(nsIFileSpec **location, PRBool *found, PRBool *userVerify);
@@ -133,13 +134,13 @@ public:
 	NS_IMETHOD FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval);
 	
 	/* nsISupports GetFieldMap (in nsIImportABDescriptor source); */
-	NS_IMETHOD GetFieldMap(nsIImportABDescriptor *source, nsISupports **_retval)
+	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
 		{ return( NS_ERROR_FAILURE); }
 	
 	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
-									nsISupports *		fieldMap, 
+									nsIImportFieldMap *	fieldMap, 
 									PRUnichar **		errorLog,
 									PRUnichar **		successLog,
 									PRBool *			fatalError);
@@ -638,7 +639,7 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSource, 
 													nsIAddrDatabase *	pDestination, 
-													nsISupports *		fieldMap, 
+													nsIImportFieldMap *	fieldMap, 
 													PRUnichar **		pErrorLog,
 													PRUnichar **		pSuccessLog,
 													PRBool *			fatalError)

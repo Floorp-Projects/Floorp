@@ -41,6 +41,7 @@
 #include "nsOEMailbox.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
+#include "nsIImportFieldMap.h"
 #include "WabObject.h"
 #include "nsOEAddressIterator.h"
 #include "nsIOutputStream.h"
@@ -110,8 +111,8 @@ public:
 	/* PRBool GetAutoFind (out wstring description); */
 	NS_IMETHOD GetAutoFind(PRUnichar **description, PRBool *_retval);
 	
-	/* PRBool GetNeedsFieldMap (); */
-	NS_IMETHOD GetNeedsFieldMap(PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
+	/* PRBool GetNeedsFieldMap ( nsIFileSpec *location); */
+	NS_IMETHOD GetNeedsFieldMap(nsIFileSpec *pLoc, PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
 	
 	/* void GetDefaultLocation (out nsIFileSpec location, out boolean found, out boolean userVerify); */
 	NS_IMETHOD GetDefaultLocation(nsIFileSpec **location, PRBool *found, PRBool *userVerify)
@@ -120,14 +121,14 @@ public:
 	/* nsISupportsArray FindAddressBooks (in nsIFileSpec location); */
 	NS_IMETHOD FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval);
 	
-	/* nsISupports GetFieldMap (in nsIImportABDescriptor source); */
-	NS_IMETHOD GetFieldMap(nsIImportABDescriptor *source, nsISupports **_retval)
+	/* nsISupports InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap); */
+	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
 		{ return( NS_ERROR_FAILURE); }
 	
 	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
-									nsISupports *		fieldMap, 
+									nsIImportFieldMap *	fieldMap, 
 									PRUnichar **		errorLog,
 									PRUnichar **		successLog,
 									PRBool *			fatalError);
@@ -606,7 +607,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 	
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *source, 
 													nsIAddrDatabase *	destination, 
-													nsISupports *		fieldMap, 
+													nsIImportFieldMap *	fieldMap, 
 													PRUnichar **		errorLog,
 													PRUnichar **		successLog,
 													PRBool *			fatalError)

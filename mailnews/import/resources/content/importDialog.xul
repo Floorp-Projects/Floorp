@@ -1,0 +1,78 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/importDialog.dtd">
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        style="padding:0px"
+        onload="OnLoadImportDialog()"
+        align="vertical">
+
+<html:script src="chrome://global/content/strres.js"/>
+<html:script src="chrome://messenger/content/importDialog.js"/>
+<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+
+	<keyset id="keyset"/>
+
+	<box align="horizontal">
+	
+		<spring style="width:3em"/>
+		
+		<!-- module list -->
+		<box align="vertical" style="height:170px">
+			<spring style="height:1em"/>
+			<html:div id="listLabel">*</html:div>
+			<spring style="height:.5em"/>
+			<box align="vertical" style="border: 1px inset white">
+				<html:div style="width:20em; height:100px" flex="1">
+					<tree id="moduleList" style="width:100%; height:100%" onselect="ImportSelectionChanged()">
+						<treecol style="width:100%"/>
+						<treechildren id="bucketBody"/>
+					</tree>
+				</html:div>
+			</box>
+			
+			<spring style="height:1.5em"/>
+			
+			<box align="vertical" style="height: 3em; background-color:white; border:1px inset white;">
+				<html:div id="description" flex="1"></html:div>
+			</box>
+			
+			<spring style="height:2em"/>
+		</box>
+	
+		<spring style="width:3em"/>
+
+	</box>
+
+	<!-- OK & Cancel buttons -->
+	<box id="okCancelButtons"/>
+
+</window>

@@ -28,7 +28,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIImportDriver;
 interface nsIDOMWindow;
 interface nsISupportsWString;
 

@@ -1,0 +1,100 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/*
+  	Field map interface for importing address books
+  
+	A field map is an arbitrary sized list of mozilla address book fields.
+	The field map is used by import to map fields from the import format
+	to mozilla fields.
+	For export, the map contains the ordered list of mozilla fields to
+	export!
+*/
+
+#include "nsISupports.idl"
+
+interface nsIAddrDatabase;
+interface nsIMdbRow;
+interface nsIAbCard;
+
+
+[scriptable, uuid(1CEB9241-ADC1-11d3-A9C2-00A0CC26DA63)]
+interface nsIImportFieldMap : nsISupports
+{
+	readonly attribute long	numMozFields;
+	readonly attribute long	mapSize;
+	
+	wstring GetFieldDescription( in long index);
+	
+	/*
+		Set the size of the field map, all unpopulated entries
+		will default to -1
+	*/
+	void	SetFieldMapSize( in long size);
+		
+	/*
+		Initialize the field map to a given size with default values
+	*/
+	void	DefaultFieldMap( in long size);
+
+	/*
+		Return the field number that this index maps to, -1 for no field
+	*/
+	long	GetFieldMap( in long index);
+
+	/*
+		Set the field that this index maps to, -1 for no field
+	*/
+	void	SetFieldMap( in long index, in long fieldNum);	
+	
+	/*
+		Set the field that this index maps to, -1 for no field
+	*/
+	void	SetFieldMapByDescription( in long index, in wstring fieldDesc);	
+	
+	/*
+		Set the value of the given field in the database row 
+	*/
+	void	SetFieldValue( in nsIAddrDatabase database, in nsIMdbRow row, in long fieldNum, in wstring value);
+
+	/*
+		Set the value of the given field in the database row 
+	*/
+	void	SetFieldValueByDescription( in nsIAddrDatabase database, in nsIMdbRow row, in wstring fieldDesc, in wstring value);
+	
+	/*
+		Get the value of the given field from the address card
+	*/
+	wstring GetFieldValue( in nsIAbCard card, in long fieldNum);
+
+	/*
+		Get the value of the given field from the address card
+	*/
+	wstring GetFieldValueByDescription( in nsIAbCard card, in wstring fieldDesc);
+
+};
+	
+
+
+%{ C++
+
+%}

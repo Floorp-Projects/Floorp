@@ -378,22 +378,24 @@ nsresult nsOE5File::WriteMessageBuffer( nsIFileSpec *stream, char *pBuffer, PRUi
 	// examine the rest of the buffer for from problems!
 	PRUint32		cnt = 0;
 	char *			pChar = pBuffer;
-	while (cnt < (size - 6)) {
-		if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0A) && ISFROMLINE( pChar, 2)) {			
-			rv = stream->Write( pBuffer, cnt + 2, &written);
-			pBuffer += (cnt + 2);
-			size -= (cnt + 2);
-			pChar += 2;
-			cnt = 0;
-			if (NS_SUCCEEDED( rv)) {
-				rv = stream->Write( ">", 1, &written);
+	if (size > 6) {
+		while (cnt < (size - 6)) {
+			if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0A) && ISFROMLINE( pChar, 2)) {			
+				rv = stream->Write( pBuffer, cnt + 2, &written);
+				pBuffer += (cnt + 2);
+				size -= (cnt + 2);
+				pChar += 2;
+				cnt = 0;
+				if (NS_SUCCEEDED( rv)) {
+					rv = stream->Write( ">", 1, &written);
+				}
+				if (NS_FAILED( rv))
+					return( rv);
 			}
-			if (NS_FAILED( rv))
-				return( rv);
-		}
-		else {
-			cnt++;
-			pChar++;
+			else {
+				cnt++;
+				pChar++;
+			}
 		}
 	}
 	

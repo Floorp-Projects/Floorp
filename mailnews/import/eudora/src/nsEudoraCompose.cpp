@@ -228,8 +228,10 @@ nsresult nsEudoraCompose::CreateComponents( void)
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
-		if (NS_SUCCEEDED(rv) && m_pMsgFields)
+		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
+			IMPORT_LOG0( "nsEudoraCompose - CreateComponents succeeded\n");
 			return( NS_OK);
+		}
 	}
 
 	return( NS_ERROR_FAILURE);
@@ -459,7 +461,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	if (bodyType.Length())
 		pMimeType = bodyType.ToNewCString();
 	
-	// IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
+	IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 
 	rv = m_pMsgSend->CreateAndSendMessage(	nsnull,			// no editor shell
@@ -478,6 +480,8 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 										nsnull);		// listener array
 
 	
+	IMPORT_LOG0( "Returned from CreateAndSendMessage\n");
+
 	if (pAttach)
 		delete [] pAttach;
 

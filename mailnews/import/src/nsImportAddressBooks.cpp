@@ -24,11 +24,13 @@
 #include "prprf.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsIImportService.h"
 #include "nsISupportsArray.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportGeneric.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIImportABDescriptor.h"
+#include "nsIImportFieldMap.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIURL.h"
@@ -47,6 +49,7 @@
 #include "nsTextFormater.h"
 #include "ImportDebug.h"
 
+static NS_DEFINE_CID(kImportServiceCID, NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
@@ -54,6 +57,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_IID(kIStandardUrlIID, NS_IURL_IID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_IID(kIImportFieldMapIID, NS_IIMPORTFIELDMAP_IID);
 
 static const char *kDirectoryDataSourceRoot = "abdirectory://";
 static const char *kCardDataSourceRoot = "abcard://";
@@ -99,6 +103,7 @@ public:
 private:
 	void	GetDefaultLocation( void);
 	void	GetDefaultBooks( void);
+	void	GetDefaultFieldMap( void);
 
 public:
 	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
@@ -108,6 +113,7 @@ private:
 	nsIImportAddressBooks *		m_pInterface;
 	nsISupportsArray *			m_pBooks;
 	nsIFileSpec *				m_pLocation;
+	nsIImportFieldMap *			m_pFieldMap;
 	PRBool						m_autoFind;
 	PRUnichar *					m_description;
 	PRBool						m_gotLocation;
@@ -131,6 +137,7 @@ public:
 	PRUint32					currentSize;
 	nsISupportsArray *			books;
 	nsIImportAddressBooks *		addressImport;
+	nsIImportFieldMap *			fieldMap;
 	nsISupportsWString *		successLog;
 	nsISupportsWString *		errorLog;
 	char *						pDestinationUri;
@@ -172,6 +179,7 @@ nsImportGenericAddressBooks::nsImportGenericAddressBooks()
 	m_doImport = PR_FALSE;
 	m_pThreadData = nsnull;
 	m_pDestinationUri = nsnull;
+	m_pFieldMap = nsnull;
 
 	m_pLocation = nsnull;
 	m_autoFind = PR_FALSE;
@@ -195,6 +203,7 @@ nsImportGenericAddressBooks::~nsImportGenericAddressBooks()
 	if (m_description)
 		nsCRT::free( m_description);
 
+	NS_IF_RELEASE( m_pFieldMap);
 	NS_IF_RELEASE( m_pLocation);
 	NS_IF_RELEASE( m_pInterface);
 	NS_IF_RELEASE( m_pBooks);
@@ -248,9 +257,29 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		}
 	}
 
+	if (!nsCRT::strcasecmp( dataId, "fieldMap")) {
+		if (m_pFieldMap) {
+			*_retval = m_pFieldMap;
+			m_pFieldMap->AddRef();
+		}
+		else {
+			if (m_pInterface && m_pLocation) {
+				PRBool	needsIt = PR_FALSE;
+				m_pInterface->GetNeedsFieldMap( m_pLocation, &needsIt);
+				if (needsIt) {
+					GetDefaultFieldMap();
+					if (m_pFieldMap) {
+						*_retval = m_pFieldMap;
+						m_pFieldMap->AddRef();
+					}
+				}
+			}
+		}
+	}
 
 	return( NS_OK);
 }
+
 
 NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISupports *item)
 {
@@ -288,6 +317,11 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 		}
 	}
 
+	if (!nsCRT::strcasecmp( dataId, "fieldMap")) {
+		NS_IF_RELEASE( m_pFieldMap);
+		if (item)
+			item->QueryInterface( nsIImportFieldMap::GetIID(), (void **) &m_pFieldMap);
+	}
 
 	return( NS_OK);
 }
@@ -322,7 +356,13 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetStatus( const char *statusKind, PR
 			m_pInterface->GetSupportsMultiple( &multi);
 		*_retval = (PRInt32) multi;
 	}
-
+	
+	if (!nsCRT::strcasecmp( statusKind, "needsFieldMap")) {
+		PRBool		needs = PR_FALSE;
+		if (m_pInterface && m_pLocation)
+			m_pInterface->GetNeedsFieldMap( m_pLocation, &needs);
+		*_retval = (PRInt32) needs;
+	}
 
 	return( NS_OK);
 }
@@ -364,6 +404,36 @@ void nsImportGenericAddressBooks::GetDefaultBooks( void)
 		return;
 
 	nsresult rv = m_pInterface->FindAddressBooks( m_pLocation, &m_pBooks);
+}
+
+void nsImportGenericAddressBooks::GetDefaultFieldMap( void)
+{
+	if (!m_pInterface || !m_pLocation)
+		return;
+	
+	NS_IF_RELEASE( m_pFieldMap);
+	
+	nsresult	rv;
+	NS_WITH_SERVICE(nsIImportService, impSvc, kImportServiceCID, &rv);
+	if (NS_FAILED(rv)) {
+		IMPORT_LOG0( "*** Unable to get nsIImportService.\n");
+		return;
+	}
+
+	rv = impSvc->CreateNewFieldMap( &m_pFieldMap);
+	if (NS_FAILED( rv))
+		return;
+	
+	PRInt32	sz = 0;
+	rv = m_pFieldMap->GetNumMozFields( &sz);
+	if (NS_SUCCEEDED( rv))
+		rv = m_pFieldMap->DefaultFieldMap( sz);
+	if (NS_SUCCEEDED( rv))
+		rv = m_pInterface->InitFieldMap( m_pLocation, m_pFieldMap);
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Error: Unable to initialize field map\n");
+		NS_IF_RELEASE( m_pFieldMap);
+	}
 }
 
 
@@ -493,6 +563,8 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *succe
 	NS_ADDREF( m_pBooks);
 	m_pThreadData->addressImport = m_pInterface;
 	NS_ADDREF( m_pInterface);
+	m_pThreadData->fieldMap = m_pFieldMap;
+	NS_IF_ADDREF( m_pFieldMap);
 	m_pThreadData->errorLog = m_pErrorLog;
 	NS_IF_ADDREF( m_pErrorLog);
 	m_pThreadData->successLog = m_pSuccessLog;
@@ -590,6 +662,7 @@ AddressThreadData::AddressThreadData()
 	successLog = nsnull;
 	errorLog = nsnull;
 	pDestinationUri = nsnull;
+	fieldMap = nsnull;
 }
 
 AddressThreadData::~AddressThreadData()
@@ -601,6 +674,7 @@ AddressThreadData::~AddressThreadData()
 	NS_IF_RELEASE( addressImport);
 	NS_IF_RELEASE( errorLog);
 	NS_IF_RELEASE( successLog);
+	NS_IF_RELEASE( fieldMap);
 }
 
 void AddressThreadData::DriverDelete( void)
@@ -826,7 +900,7 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 						PRUnichar *pError = nsnull;
 						rv = pData->addressImport->ImportAddressBook(	book, 
 																	pDestDB, // destination
-																	nsnull, // fieldmap
+																	pData->fieldMap, // fieldmap
 																	&pError,
 																	&pSuccess,
 																	&fatalError);

@@ -42,6 +42,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsImportScanFile.obj		\
 		.\$(OBJDIR)\nsImportEncodeScan.obj		\
 		.\$(OBJDIR)\nsImportMimeEncode.obj		\
+		.\$(OBJDIR)\nsImportFieldMap.obj		\
         $(NULL)
 
 LLIBS=\

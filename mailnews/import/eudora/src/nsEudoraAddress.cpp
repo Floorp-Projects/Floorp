@@ -116,6 +116,8 @@ nsresult nsEudoraAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pNam
 	
 	rv = pSrc->CloseStream();
 	
+	delete [] pLine;
+
 	if (!eof) {
 		IMPORT_LOG0( "*** Error reading the address book, didn't reach the end\n");
 		return( NS_ERROR_FAILURE);

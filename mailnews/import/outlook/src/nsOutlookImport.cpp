@@ -40,6 +40,7 @@
 #include "nsIImportGeneric.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
+#include "nsIImportFieldMap.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
 #include "nsOutlookSettings.h"
@@ -49,6 +50,8 @@
 #include "OutlookDebugLog.h"
 
 #include "nsOutlookMail.h"
+
+#include "MapiApi.h"
 
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
@@ -111,8 +114,8 @@ public:
 	/* PRBool GetAutoFind (out wstring description); */
 	NS_IMETHOD GetAutoFind(PRUnichar **description, PRBool *_retval);
 	
-	/* PRBool GetNeedsFieldMap (); */
-	NS_IMETHOD GetNeedsFieldMap(PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
+	/* PRBool GetNeedsFieldMap ( nsIFileSpec location); */
+	NS_IMETHOD GetNeedsFieldMap(nsIFileSpec *location, PRBool *_retval) { *_retval = PR_FALSE; return( NS_OK);}
 	
 	/* void GetDefaultLocation (out nsIFileSpec location, out boolean found, out boolean userVerify); */
 	NS_IMETHOD GetDefaultLocation(nsIFileSpec **location, PRBool *found, PRBool *userVerify)
@@ -122,13 +125,13 @@ public:
 	NS_IMETHOD FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval);
 	
 	/* nsISupports GetFieldMap (in nsIImportABDescriptor source); */
-	NS_IMETHOD GetFieldMap(nsIImportABDescriptor *source, nsISupports **_retval)
+	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
 		{ return( NS_ERROR_FAILURE); }
 	
 	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
-									nsISupports *		fieldMap, 
+									nsIImportFieldMap *	fieldMap, 
 									PRUnichar **		errorLog,
 									PRUnichar **		successLog,
 									PRBool *			fatalError);
@@ -333,11 +336,25 @@ NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *f
     if (!ppLoc || !found || !userVerify)
         return NS_ERROR_NULL_POINTER;
 	
-	// Bizarro, there really isn't a "default" location, the mail
-	// is in the MAPI store and we just open it via API 
-	
-	// We'll just use an "empty" file spec for now since we
-	// don't really care where the mail is.
+
+	*found = PR_FALSE;
+	*ppLoc = nsnull;
+	*userVerify = PR_FALSE;
+	// We need to verify here that we can get the mail, if true then
+	// return a dummy location, otherwise return no location
+	CMapiApi	mapi;
+	if (!mapi.Initialize())
+		return( NS_OK);
+	if (!mapi.LogOn())
+		return( NS_OK);
+
+	CMapiFolderList	store;
+	if (!mapi.IterateStores( store))
+		return( NS_OK);
+
+	if (store.GetSize() == 0)
+		return( NS_OK);
+
 
 	nsresult	rv;
 	nsIFileSpec *	spec;
@@ -557,7 +574,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 	
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *source, 
 													nsIAddrDatabase *	destination, 
-													nsISupports *		fieldMap, 
+													nsIImportFieldMap *	fieldMap, 
 													PRUnichar **		errorLog,
 													PRUnichar **		successLog,
 													PRBool *			fatalError)

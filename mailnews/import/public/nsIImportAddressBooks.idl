@@ -65,6 +65,7 @@ interface 	nsISupportsArray;
 interface	nsIImportABDescriptor;
 interface	nsIOutputStream;
 interface	nsIAddrDatabase;
+interface	nsIImportFieldMap;
 
 [scriptable, uuid(3fe29be0-3539-11d3-a206-00a0cc26da63)]
 interface nsIImportAddressBooks : nsISupports
@@ -93,7 +94,7 @@ interface nsIImportAddressBooks : nsISupports
 		Returns true if the address book needs the user to specify a field map
 		for address books imported from this format.
 	*/
-	PRBool GetNeedsFieldMap();
+	PRBool GetNeedsFieldMap( in nsIFileSpec location);
 	
 	/*
 		If found and userVerify BOTH return false, then it is assumed that this
@@ -112,9 +113,10 @@ interface nsIImportAddressBooks : nsISupports
 	nsISupportsArray FindAddressBooks( in nsIFileSpec location);
 	
 	/*
-		Get a field map for a given address book.
+		Fill in defaults (if any) for a field map for importing address
+		books from this location.
 	*/
-	nsISupports GetFieldMap( in nsIImportABDescriptor source);
+	void InitFieldMap( in nsIFileSpec location, in nsIImportFieldMap fieldMap);
 	
 	/*
 		Import a specific mailbox into the destination file supplied.  If an error
@@ -124,7 +126,7 @@ interface nsIImportAddressBooks : nsISupports
 	*/
 	void 	ImportAddressBook( 	in nsIImportABDescriptor source, 
 						   		in nsIAddrDatabase destination,
-						   		in nsISupports fieldMap,
+						   		in nsIImportFieldMap fieldMap,
 								out wstring errorLog,
 								out wstring successLog,
 						   		out boolean fatalError);

@@ -34,6 +34,7 @@
 #include "nsImportMailboxDescriptor.h"
 #include "nsImportABDescriptor.h"
 #include "nsIImportGeneric.h"
+#include "nsImportFieldMap.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "ImportDebug.h"
@@ -82,7 +83,9 @@ public:
 	/* nsIImportModule GetModuleWithCID (in nsCIDRef cid); */
 	NS_IMETHOD GetModuleWithCID(const nsCID & cid, nsIImportModule **_retval);
 	
-
+	/* nsIImportFieldMap CreateNewFieldMap (); */
+	NS_IMETHOD CreateNewFieldMap(nsIImportFieldMap **_retval);
+	
 	/* nsIImportMailboxDescriptor CreateNewMailboxDescriptor (); */
 	NS_IMETHOD CreateNewMailboxDescriptor(nsIImportMailboxDescriptor **_retval);
 
@@ -196,6 +199,8 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 
 nsImportService::~nsImportService()
 {
+	gImportService = nsnull;
+
     if (m_pModules != nsnull)
         delete m_pModules;
 
@@ -212,6 +217,13 @@ NS_IMETHODIMP nsImportService::DiscoverModules( void)
 {
 	m_didDiscovery = PR_FALSE;
 	return( DoDiscover());
+}
+
+NS_IMETHODIMP nsImportService::CreateNewFieldMap( nsIImportFieldMap **_retval)
+{
+  nsresult rv;
+  rv = nsImportFieldMap::Create( nsnull, nsIImportFieldMap::GetIID(), (void**)_retval);
+  return rv;
 }
 
 NS_IMETHODIMP nsImportService::CreateNewMailboxDescriptor( nsIImportMailboxDescriptor **_retval)

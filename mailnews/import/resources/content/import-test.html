@@ -240,7 +240,11 @@ function ImportAddresses( module) {
 
 		addInterface.SetData( "addressLocation", file);
 	}
-
+	
+	var map = addInterface.GetData( "fieldMap");
+	if (map != null) {
+		// FIXME: Show modal UI to handle the field map!
+	}
 
 	if (addInterface.WantsProgress()) {
 		dump( "Beginning address import with progress\n");
@@ -270,7 +274,7 @@ function ImportAddresses( module) {
 }
 
 
-function ImportSettings( module) {
+function ImportSettings( module, newAccount) {
 	var setIntf = module.GetImportInterface( "settings");
 	if (setIntf != null)
 		setIntf = setIntf.QueryInterface( Components.interfaces.nsIImportSettings);
@@ -323,7 +327,6 @@ function ImportSettings( module) {
 	// interesting, we need to return the account that new
 	// mail should be imported into?
 	// that's really only useful for "Upgrade"
-	var newAccount = new Object();
 	return( setIntf.Import( newAccount));
 }
 
@@ -370,6 +373,14 @@ function eudoraAddress() {
 	ImportAddresses( module);
 }
 
+function importTextAddress() {
+	dump( "Loading text import component\n");
+	var module = Components.classes["component://mozilla/import/import-text"].createInstance();
+	module = module.QueryInterface( Components.interfaces.nsIImportModule);
+	dump( "Loaded text import module\n");
+
+	ImportAddresses( module);
+}
 
 function importOESettings() {
 	dump( "Loading outlook express component\n");
@@ -450,6 +461,7 @@ function trySettings( index) {
 <input type="button" value="Import Eudora Settings" onclick="eudoraSettings();"><br>
 <input type="button" value="Test Listings" onclick="testLists();"><br>
 <input type="button" value="Import Settings from module #2" onclick="trySettings( 2);"><br>
+<input type="button" value="Import Text Address Book" onclick="importTextAddress();"><br>
 <form> 
 
 </body>

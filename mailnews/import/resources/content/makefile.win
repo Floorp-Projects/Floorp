@@ -25,9 +25,17 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) import-test.html		$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) importDialog.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) importDialog.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) importProgress.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL)	importProgress.js		$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\bin\res\samples\import-test.html
+	rm -f $(DIST)\bin\chrome\messenger\content\default\importDialog.js
+	rm -f $(DIST)\bin\chrome\messenger\content\default\importDialog.xul
+	rm -f $(DIST)\bin\chrome\messenger\content\default\importProgress.js
+	rm -f $(DIST)\bin\chrome\messenger\content\default\importProgress.xul
 
 
 

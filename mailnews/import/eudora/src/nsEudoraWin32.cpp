@@ -355,7 +355,7 @@ nsresult nsEudoraWin32::ScanDescmap( nsIFileSpec *pFolder, nsISupportsArray *pAr
 		pData++;
 		pStart = pData;
 		fieldLen = 0;
-		while ((pos < len) && (*pData != ',')) {
+		while ((pos < len) && (*pData != 0x0D) && (*pData != 0x0A) && (*pData != ',')) {
 			pos++;
 			pData++;
 			fieldLen++;
@@ -364,6 +364,12 @@ nsresult nsEudoraWin32::ScanDescmap( nsIFileSpec *pFolder, nsISupportsArray *pAr
 		if (fieldLen)
 			flag.Append( pStart, fieldLen);		
 		flag.Trim( kWhitespace);
+		while ((pos < len) && ((*pData == 0x0D) || (*pData == 0x0A))) {
+			pos++;
+			pData++;
+		}
+
+		IMPORT_LOG2( "name: %s, fName: %s\n", (const char *)name, (const char *)fName);
 
 		if (fName.Length() && name.Length() && (type.Length() == 1)) {
 			entry->FromFileSpec( pFolder);

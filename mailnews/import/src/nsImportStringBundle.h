@@ -50,5 +50,8 @@ public:
 #define IMPORT_ERROR_MB_CREATE								2009
 #define IMPORT_ERROR_MB_NODESTFOLDER						2010
 
+#define IMPORT_FIELD_DESC_START								2100
+#define IMPORT_FIELD_DESC_END								2135
+
 
 #endif /* _nsImportStringBundle_H__ */
