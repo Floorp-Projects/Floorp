@@ -133,12 +133,10 @@ sub retrieve {
    
     my $disposition = $action eq "download" ? "attachment" : "inline";
       
-    my $length = length($file->content);
-  
     print $request->header(
-        -type                   =>  qq|text/html; name="$file->name"|,
-        -content_disposition    =>  qq|$disposition; filename="$file->name"|,
-        -content_length         =>  $length );
+        -type                =>  "text/html; name=\"" . $file->name . "\"",
+        -content_disposition =>  "$disposition; filename=\"" . $file->name . "\"",
+        -content_length      =>  length($file->content) );
 
     print $file->content;
 }
@@ -146,7 +144,7 @@ sub retrieve {
 sub diff {
     my $file = Doctor::File->new($request->param('file'));
     ValidateVersions($request->param('version'), $file->version);
-    my $diff = $file->diff($request->param('content'))
+    my $diff = $file->diff(GetContent())
       || "There are no differences between the version in CVS and your revision.";
 
     print $request->header(-type=>"text/plain");
@@ -236,6 +234,8 @@ sub queue {
         ThrowCodeError($@, "Mail Failure");
     }
 
+    $vars->{file} = $file;
+
     print $request->header;
     $template->process("queued.tmpl", $vars)
       || ThrowCodeError($template->error(), "Template Processing Failed");
@@ -251,21 +251,22 @@ sub commit {
 
     if ($action eq "commit") {
         ValidateVersions($request->param('version'), $file->version);
-        $file->patch($request->param('content'));
+        $file->patch(GetContent());
     }
     else {
-        $file->add($request->param("content"));
+        $file->add(GetContent());
     }
     my ($rv, $output, $errors) = $file->commit($username, $password, $comment);
 
     if ($rv != 0) {
-        ThrowUserError("An error occurred while committing the file.",
+        ThrowUserError("An error occurred while committing the file: $output $errors",
                        undef,
                        $output,
                        $rv,
                        $errors);
     }
   
+    $vars->{file} = $file;
     $vars->{output} = $output;
     $vars->{errors} = $errors;
 
@@ -306,21 +307,20 @@ sub ValidateComment {
     return $request->param('comment');
 }
 
-sub ValidateVersions()
-{
-  # Throws an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-
-  my ($oldversion, $newversion) = @_;
-
-  if ($oldversion && $newversion && $oldversion != $newversion) {
-    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-      but version <em>$newversion</em> is in the repository.  Reload the edit 
-      page and make your changes again (and bother the authors of this script 
-      to implement change merging
-      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
-  }
+sub ValidateVersions() {
+    # Throws an error if the version of the file that was edited
+    # does not match the version in the repository.  In the future
+    # we should try to merge the user's changes if possible.
+  
+    my ($oldversion, $newversion) = @_;
+  
+    if ($oldversion && $newversion && $oldversion != $newversion) {
+        ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+          but version <em>$newversion</em> is in the repository.  Reload the edit 
+          page and make your changes again (and bother the authors of this script 
+          to implement change merging
+          (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+    }
 }
 
 
@@ -328,58 +328,56 @@ sub ValidateVersions()
 # Error Handling
 ################################################################################
 
-sub ThrowUserError
-{
-  # Throw an error about a problem with the user's request.  This function
-  # should avoid mentioning system problems displaying the error message, since
-  # the user isn't going to care about them and probably doesn't need to deal
-  # with them after fixing their own mistake.  Errors should be gentle on 
-  # the user, since many "user" errors are caused by bad UI that trip them up.
-  
-  # !!! Mail code errors to the system administrator!
-  
-  ($vars->{'message'}, 
-   $vars->{'title'}, 
-   $vars->{'cvs_command'}, 
-   $vars->{'cvs_error_code'}, 
-   $vars->{'cvs_error_message'}) = @_;
-  
-  chdir($HOME);
-  print $request->header;
-  $template->process("user-error.tmpl", $vars)
-    || print( ($vars->{'title'} ? "<h1>$vars->{'title'}</h1>" : "") . 
-              "<p>$vars->{'message'}</p><p>Please go back and try again.</p>" );
-  exit;
+sub ThrowUserError {
+    # Throw an error about a problem with the user's request.  This function
+    # should avoid mentioning system problems displaying the error message, since
+    # the user isn't going to care about them and probably doesn't need to deal
+    # with them after fixing their own mistake.  Errors should be gentle on 
+    # the user, since many "user" errors are caused by bad UI that trip them up.
+    
+    # !!! Mail code errors to the system administrator!
+
+    ($vars->{'message'}, 
+     $vars->{'title'}, 
+     $vars->{'cvs_command'}, 
+     $vars->{'cvs_error_code'}, 
+     $vars->{'cvs_error_message'}) = @_;
+    
+    chdir($HOME);
+    print $request->header;
+    $template->process("user-error.tmpl", $vars)
+      || print( ($vars->{'title'} ? "<h1>$vars->{'title'}</h1>" : "") . 
+                "<p>$vars->{'message'}</p><p>Please go back and try again.</p>" );
+    exit;
 }
 
-sub ThrowCodeError
-{
-  # Throw error about a problem with the code.  This function should be
-  # apologetic and deferent to the user, since it isn't the user's fault
-  # the code didn't work.
-  
-  # !!! Mail code errors to the system administrator!
-  
-  ($vars->{'message'}, $vars->{'title'}) = @_;
-  
-  chdir($HOME);
-  print $request->header;
-  $template->process("code-error.tmpl", $vars)
-    || print("
-         <p>
-         Unfortunately Doctor has experienced an internal error from which
-         it was unable to recover.  More information about the error is
-         provided below. Please forward this information along with any
-         other information that would help diagnose and fix this problem
-         to the system administrator at
-         <a href=\"mailto:$CONFIG{ADMIN_EMAIL}\">$CONFIG{ADMIN_EMAIL}</a>.
-         </p>
-         <p>
-         couldn't process error.tmpl template: " . $template->error() . 
-         "; error occurred while trying to display error message: " . 
-         ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'} . 
-         "</p>");
-  exit;
+sub ThrowCodeError {
+    # Throw error about a problem with the code.  This function should be
+    # apologetic and deferent to the user, since it isn't the user's fault
+    # the code didn't work.
+    
+    # !!! Mail code errors to the system administrator!
+    
+    ($vars->{'message'}, $vars->{'title'}) = @_;
+    
+    chdir($HOME);
+    print $request->header;
+    $template->process("code-error.tmpl", $vars)
+      || print("
+            <p>
+            Unfortunately Doctor has experienced an internal error from which
+            it was unable to recover.  More information about the error is
+            provided below. Please forward this information along with any
+            other information that would help diagnose and fix this problem
+            to the system administrator at
+            <a href=\"mailto:$CONFIG{ADMIN_EMAIL}\">$CONFIG{ADMIN_EMAIL}</a>.
+            </p>
+            <p>
+            couldn't process error.tmpl template: " . $template->error() . 
+            "; error occurred while trying to display error message: " . 
+            ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'} .
+            "</p>");
+    exit;
 }
 
 ################################################################################

@@ -2,11 +2,16 @@
  * Banner and Navigation Bar
  */
 
-#bannernav {
+h1 {
+  margin-top: 0px;
   margin-bottom: 5px;
+  font-size: 24px;
   font-weight: bold;
 }
 
+h2 {
+  font-size: 18px;
+}
 
 /*
  * Tabs

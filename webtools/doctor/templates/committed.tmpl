@@ -25,24 +25,23 @@
 
   <head>
     <title>Doctor - [% is_new ? "created" : "committed" %] [%+ file.relative_spec FILTER html %]</title>
+    <link rel="stylesheet" href="doctor.css" type="text/css"></link>
   </head>
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - [% is_new ? "created" : "committed" %] <em>
-      [% IF file.url %]
+    <h1>
+      Doctor - [% is_new ? "created" : "committed" %]
+      [%+ IF file.url %]
         <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
       [% ELSE %]
         [% file.relative_spec FILTER html %]
       [% END %]
-    </em></b></big>
+    </h1>
 
     <p>
-      [% IF is_new %]
-        The new file has been committed to the repository.
-      [% ELSE %]
-        Your changes have been committed to the repository.
-      [% END %]
+      [% IF is_new %] The new file has [% ELSE %] Your changes have [% END %]
+      been committed to the repository.
     </p>
 
     <h2>Results</h2>

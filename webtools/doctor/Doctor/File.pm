@@ -54,29 +54,6 @@ sub version {
     return $self->{_version};
 }
 
-sub tempdir {
-    my $self = shift;
-    $self->{_tempdir} ||=
-        File::Temp->tempdir("doctor-XXXXXXXX", TMPDIR => 1, CLEANUP => 1);
-    return $self->{_tempdir};
-}
-
-sub line_endings {
-    my $self = shift;
-    if      (!$self->content)               { return undef }
-    elsif   ($self->content =~ /\r\n/s)     { return "windows" }
-    elsif   ($self->content =~ /\r[^\n]/s)  { return "mac" }
-    else                                    { return "unix" }
-}
-
-sub linebreak {
-    my $self = shift;
-    if      (!$self->content)               { return undef; }
-    elsif   ($self->content =~ /\r\n/s)     { return "\r\n" }
-    elsif   ($self->content =~ /\r[^\n]/s)  { return "\r" }
-    else                                    { return "\n" }
-}
-
 sub spec {
     my $self = shift;
     # The spec can only be set once.
@@ -123,6 +100,29 @@ sub spec {
         if ($self->{_spec} =~ m:/$:) { $self->{_spec} .= "index.html" }
     }
     return $self->{_spec};
+}
+
+sub tempdir {
+    my $self = shift;
+    $self->{_tempdir} ||=
+        File::Temp->tempdir("doctor-XXXXXXXX", TMPDIR => 1, CLEANUP => 1);
+    return $self->{_tempdir};
+}
+
+sub line_endings {
+    my $self = shift;
+    if      (!$self->content)               { return undef }
+    elsif   ($self->content =~ /\r\n/s)     { return "windows" }
+    elsif   ($self->content =~ /\r[^\n]/s)  { return "mac" }
+    else                                    { return "unix" }
+}
+
+sub linebreak {
+    my $self = shift;
+    if      (!$self->content)               { return undef; }
+    elsif   ($self->content =~ /\r\n/s)     { return "\r\n" }
+    elsif   ($self->content =~ /\r[^\n]/s)  { return "\r" }
+    else                                    { return "\n" }
 }
 
 sub url {

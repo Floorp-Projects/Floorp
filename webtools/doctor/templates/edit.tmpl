@@ -51,7 +51,7 @@
       <input id="file"          type="hidden" name="file"         value="[% file.spec FILTER html %]">
       <input id="version"       type="hidden" name="version"      value="[% version %]">
   
-      <div id="bannernav">
+      <h1>
         Doctor - [% is_new ? "create" : "edit" %]
         [%+ IF file.url %]
           <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
@@ -64,7 +64,7 @@
         [% END %]
         | <label for="content_file">upload:</label>
           <input id="content_file" type="file" name="content_file">
-      </div>
+      </h1>
 
       <div id="tabs">
         <button id="editTab"      class="tab [% "wysiwyg" IF wysiwyg %]"

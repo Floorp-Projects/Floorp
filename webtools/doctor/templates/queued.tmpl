@@ -19,21 +19,25 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
+[% is_new = (file.version == "new" ? 1 : 0) %]
+
 <html>
 
   <head>
-    <title>Doctor - changes submitted for review - [% (file_url ? file_url : file) FILTER html %]</title>
+    <title>Doctor - changes submitted for review - [%+ file.relative_spec FILTER html %]</title>
+    <link rel="stylesheet" href="doctor.css" type="text/css"></link>
   </head>
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - changes submitted for review - <em>
-      [% IF file_url %]
-        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+    <h1>
+      Doctor - changes submitted for review
+      [%+ IF file.url %]
+        <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
       [% ELSE %]
-        [% file FILTER html %]
+        [% file.relative_spec FILTER html %]
       [% END %]
-    </em></b></big>
+    </h1>
 
     <p>
       Your changes have been submitted for review.
