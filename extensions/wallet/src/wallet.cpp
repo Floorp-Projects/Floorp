@@ -364,7 +364,7 @@ Wallet_Localize(char* genericString) {
   } else if (!PL_strcmp(genericString,"FollowingItemsCanBePrefilledForYou")){
     v = nsAutoString("Following items can be pre-filled for you.");
   } else if (!PL_strcmp(genericString,"password")){
-    v = nsAutoString("password=");
+    v = nsAutoString("database password: ");
   } else if (!PL_strcmp(genericString,"SelectUser")){
     v = nsAutoString("Select a username to be entered on this form");
   } else if (!PL_strcmp(genericString,"SelectUserWhosePasswordIsBeingChanged")){
