@@ -49,7 +49,7 @@ int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CStri
 	configcompString[20]="Classic Skin";
 	configcompString[21]="En US lang pack";
 	configcompString[22]="US region pack";
-	configcompString[23]="Marker Recommended";
+	configcompString[23]="Marker Recommended End";
 	configcompString[24]="Marker Full End";
 	configcompString[25]="Marker Custom End";
 	configcompString[26]=" ";
