@@ -159,7 +159,9 @@ NS_IMETHODIMP nsNativeDetector::DoIt(
   nsDetectionConfident aConfidence;
   if (SUCCEEDED(DetectCharsetUsingMLang(mMultiLanguage, mMLangConvertCharset, 
                                         mCharset, aConfidence, (BYTE *) aBuf, &theSize))) {
-    mObserver->Notify(mCharset, aConfidence);
+    if (eNoAnswerMatch != aConfidence) {
+      mObserver->Notify(mCharset, aConfidence);
+    }
   }
   else {
     mObserver->Notify("", eNoAnswerMatch);
