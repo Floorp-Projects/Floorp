@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2000/11/28 00:32:57 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/01/04 00:21:36 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -774,7 +774,7 @@ sub apply_db_updates {
         die("Error in updatefile: $full_file, ".
             "timenow: $timenow, is not a valid time.");
 
-      ($starttime < $timenow) ||
+      ($starttime <= $timenow) ||
         die("Error in updatefile: $full_file, ".
             "starttime: $starttime, is less then timenow: $timenow.");
 
