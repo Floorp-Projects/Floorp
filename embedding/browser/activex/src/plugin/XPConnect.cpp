@@ -804,7 +804,8 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         nsCOMPtr<nsIDispatchSupport> disp(do_GetService("@mozilla.org/nsdispatchsupport;1"));
         for (UINT i = 0; i < argc; i++)
         {
-            disp->COMVariant2JSVal(&pDispParams->rgvarg[i], &args[i]);
+            // Arguments are listed backwards, intentionally, in rgvarg
+            disp->COMVariant2JSVal(&pDispParams->rgvarg[argc - 1 - i], &args[i]);
         }
     }
 
