@@ -54,7 +54,10 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIPrefService.h"
 #include "nsVoidArray.h"
+
+#define PREF_FORMFILL_ENABLE "browser.formfill.enable"
 
 static const char *kFormHistoryFileName = "formhistory.dat";
 
@@ -314,44 +317,51 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 NS_IMETHODIMP
 nsFormHistory::Notify(nsIContent* aFormNode, nsIDOMWindowInternal* aWindow, nsIURI* aActionURL, PRBool* aCancelSubmit)
 {
-  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIDOMHTMLFormElement> formElt = do_QueryInterface(aFormNode);
-  NS_ENSURE_TRUE(formElt, NS_ERROR_FAILURE);
+  PRBool shouldSaveData = PR_TRUE;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pref) 
+    pref->GetBoolPref(PREF_FORMFILL_ENABLE, &shouldSaveData);
 
-  nsCOMPtr<nsIDOMHTMLCollection> elts;
-  formElt->GetElements(getter_AddRefs(elts));
-  
-  const char *textString = "text";
-  
-  PRUint32 length;
-  elts->GetLength(&length);
-  for (PRUint32 i = 0; i < length; ++i) {
-    nsCOMPtr<nsIDOMNode> node;
-    elts->Item(i, getter_AddRefs(node));
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(node);
-    if (inputElt) {
-      // Filter only inputs that are of type "text"
-      nsAutoString type;
-      inputElt->GetType(type);
-      if (type.EqualsIgnoreCase(textString)) {
-        // If this input has a name/id and value, add it to the database
-        nsAutoString value;
-        inputElt->GetValue(value);
-        if (!value.IsEmpty()) {
-          nsAutoString name;
-          inputElt->GetName(name);
-          if (name.IsEmpty())
-            inputElt->GetId(name);
-          
-          if (!name.IsEmpty())
-            AppendRow(name, value, nsnull);
+  if (shouldSaveData) {
+    nsresult rv = OpenDatabase(); // lazily ensure that the database is open
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIDOMHTMLFormElement> formElt = do_QueryInterface(aFormNode);
+    NS_ENSURE_TRUE(formElt, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMHTMLCollection> elts;
+    formElt->GetElements(getter_AddRefs(elts));
+    
+    const char *textString = "text";
+    
+    PRUint32 length;
+    elts->GetLength(&length);
+    for (PRUint32 i = 0; i < length; ++i) {
+      nsCOMPtr<nsIDOMNode> node;
+      elts->Item(i, getter_AddRefs(node));
+      nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(node);
+      if (inputElt) {
+        // Filter only inputs that are of type "text"
+        nsAutoString type;
+        inputElt->GetType(type);
+        if (type.EqualsIgnoreCase(textString)) {
+          // If this input has a name/id and value, add it to the database
+          nsAutoString value;
+          inputElt->GetValue(value);
+          if (!value.IsEmpty()) {
+            nsAutoString name;
+            inputElt->GetName(name);
+            if (name.IsEmpty())
+              inputElt->GetId(name);
+            
+            if (!name.IsEmpty())
+              AppendRow(name, value, nsnull);
+          }
         }
       }
     }
   }
-  
+
   return NS_OK;
 }
 
