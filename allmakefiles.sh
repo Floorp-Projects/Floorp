@@ -702,7 +702,6 @@ embedding/Makefile
 embedding/browser/Makefile
 embedding/browser/build/Makefile
 embedding/browser/webBrowser/Makefile
-embedding/browser/setup/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
 embedding/browser/gtk/tests/Makefile
