@@ -47,8 +47,14 @@
 
         // Get the window for this information
         var w;
-        if ("arguments" in window && window.arguments.length > 1 && window.arguments[0])
+        if ("arguments" in window && window.arguments.length > 0 && window.arguments[0])
+        {
           w = window.arguments[0];
+
+          // We don't have separate info for a frame, return null until further notice
+          // (see bug 138479)
+          return null;
+        }
         else if ("gBrowser" in window.opener)
           w = window.opener.gBrowser.contentWindow;
         else
@@ -122,6 +128,11 @@
       var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
       var info = security._getSecurityInfo();
+      if (!info) {
+        document.getElementById("securityTab").setAttribute("hidden", true);
+        return;
+      }
+
       var idHdr;
       var message1;
       var message2;
