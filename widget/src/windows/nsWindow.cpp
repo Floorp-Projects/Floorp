@@ -787,9 +787,6 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg,
 
 // End of the methods to dispatch global messages
 
-
-PRBool gIsDestroyingAny = PR_FALSE;
-
 //-------------------------------------------------------------------------
 //
 // nsISupport stuff
@@ -1707,9 +1704,7 @@ NS_METHOD nsWindow::Destroy()
     if (gAttentionTimerMonitor)
       gAttentionTimerMonitor->KillTimer(mWnd);
 
-    gIsDestroyingAny = PR_TRUE;
     VERIFY(::DestroyWindow(mWnd));
-    gIsDestroyingAny = PR_FALSE;
 
     mWnd = NULL;
     //our windows can be subclassed by
@@ -1816,7 +1811,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
         }
       }
     } else
-      ::ShowWindow(mWnd, SW_HIDE);
+      ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | 
+        SWP_NOZORDER | SWP_NOACTIVATE);
   }
   mIsVisible = bState;
   return NS_OK;
@@ -4231,8 +4227,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 
       case WM_SETFOCUS:
-
-        if(!gIsDestroyingAny) { 
         result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
         if(gJustGotActivate) {
           gJustGotActivate = PR_FALSE;
@@ -4243,11 +4237,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (nsWindow::gIsAccessibilityOn && !mRootAccessible && mIsTopWidgetWindow) 
           CreateRootAccessible();
 #endif
-        } else {
-          nsToolkit *toolkit = NS_STATIC_CAST(nsToolkit *, mToolkit);
-          VERIFY(::PostMessage(toolkit->GetDispatchWindow(), WM_SETFOCUS,
-                     wParam, lParam));
-        }
         break;
 
       case WM_KILLFOCUS:

@@ -100,7 +100,6 @@ protected:
    NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
    void EnableParent(PRBool aEnable);
-   void ActivateParent();
    PRBool ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
             nsIWidget *aReqBelow, nsIWidget **aActualBelow);
    void                    SetContentScrollbarVisibility(PRBool aVisible);
@@ -124,7 +123,6 @@ protected:
    PRPackedBool            mIntrinsicallySized; 
    PRPackedBool            mCenterAfterLoad;
    PRPackedBool            mIsHiddenWindow;
-   PRPackedBool            mHadChildWindow;
    PRUint32                mZlevel;
    PRUint32                mContextFlags;
 };
