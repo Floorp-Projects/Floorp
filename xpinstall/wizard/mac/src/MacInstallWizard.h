@@ -701,6 +701,7 @@ Boolean		UnloadSDLib(CFragConnectionID *);
  *   Inflation
  *-----------------------------------------------------------*/
 OSErr		ExtractCoreFile(short, long, short, long);
+void		WhackDirectories(char *);
 OSErr		InflateFiles(void*, void*, short, long);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
