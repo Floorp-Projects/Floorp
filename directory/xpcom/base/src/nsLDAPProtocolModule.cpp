@@ -37,6 +37,7 @@
 #include "nsLDAPConnection.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPMessage.h"
+#include "nsLDAPServer.h"
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 #include "nsLDAPProtocolHandler.h"
@@ -50,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPConnection);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPOperation);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPServer);
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
@@ -69,6 +71,8 @@ static nsModuleComponentInfo components[] =
           nsLDAPOperationConstructor },
     { "LDAP Message", NS_LDAPMESSAGE_CID,
           "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
+    { "LDAP Server", NS_LDAPSERVER_CID,
+          "@mozilla.org/network/ldap-server;1", nsLDAPServerConstructor },
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL    
     { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
           NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 

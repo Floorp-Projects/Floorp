@@ -48,6 +48,7 @@ XPIDLSRCS	= 	\
 			nsILDAPMessageListener.idl \
 			nsILDAPURL.idl \
 			nsILDAPErrors.idl \
+			nsILDAPServer.idl \
 			$(NULL)
 
 ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL

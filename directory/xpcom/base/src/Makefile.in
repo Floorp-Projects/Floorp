@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsLDAPConnection.cpp \
 		nsLDAPOperation.cpp \
 		nsLDAPURL.cpp \
+		nsLDAPServer.cpp \
 		$(NULL)
 
 ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL

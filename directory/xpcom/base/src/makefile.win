@@ -33,6 +33,7 @@ CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
            .\$(OBJDIR)\nsLDAPMessage.obj         \
            .\$(OBJDIR)\nsLDAPConnection.obj      \
            .\$(OBJDIR)\nsLDAPOperation.obj       \
+           .\$(OBJDIR)\nsLDAPServer.obj          \
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
            .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
            .\$(OBJDIR)\nsLDAPChannel.obj         \
@@ -40,6 +41,8 @@ CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
 !endif
            $(NULL)
 
+# There might be some issues here with how DEFINES might get duplicated
+# in the LCFLAGS.
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
 DEFINES = -DMOZ_LDAP_XPCOM_EXPERIMENTAL $(DEFINES)
 LCFLAGS = \
