@@ -5,6 +5,19 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <binding id="button-doubletext" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+		  <xul:stack flex="1">
+          	<xul:text class="button-text-shadow" inherits="value,accesskey,crop,dragover-top,disabled"/>		  
+          	<xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>          	
+          </xul:stack>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
 
   <binding id="menubar" extends="xul:menubar">
     <content>
@@ -14,35 +27,33 @@
     </content>
   </binding>
   
-  <binding id="status-bar" extends="xul:box">
-    <content>
-      <xul:box>
-        <xul:image class="statusbar-left"/>
-        <xul:box autostretch="never" flex="1">
-          <children/>
-        </xul:box>
-        <xul:image class="statusbar-right"/>
-      </xul:box>
-    </content>
-  </binding>
-
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
   	<content>
-  	  	<xul:box class="toolbar-primary-image-left">
-        	<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
+  		<xul:stack flex="1">
+  			<xul:box flex="1">
+  				<xul:image class="toolbar-primary-image-left"/>
+    			<xul:image flex="1" class="toolbar-primary-image-middle"/>
+    			<xul:image class="toolbar-primary-image-right"/>
+    		</xul:box>
+    	    <xul:box flex="1">
+    	    	<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
            		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
             	                class="toolbar-primary-grippy"/>
-    	</xul:box>	
-        <xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
-        	  <children/>
-        </xul:box>
-        <xul:spring class="toolbar-primary-image-right"/>
+    	    	<xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
+    	    	  <children/>
+    	    	</xul:box>
+    	    </xul:box>
+    	</xul:stack>
     </content>
   </binding>
-
+  
   <binding id="nav-bar-inner" extends="xul:box">
     <content>
- 		<xul:image class="navbar-inner-groove-image-left"/>
+    	<xul:box orient="vertical">
+    		<xul:spring class="navbar-inner-groove-image-left-top"/>
+    		<xul:spring flex="1" class="navbar-inner-groove-image-left-middle"/>
+    		<xul:spring class="navbar-inner-groove-image-left-bottom"/>
+    	</xul:box>
  		<xul:box flex="1" class="navbar-inner-border-outer">
  			<xul:box flex="1" class="navbar-inner-border-middle">
  				<xul:box flex="1" class="navbar-inner-border-inner">
@@ -50,25 +61,37 @@
 	    		</xul:box>
 	    	</xul:box>
 	    </xul:box>
-      	<xul:image class="navbar-inner-groove-image-right"/>
+	    <xul:box orient="vertical">
+    		<xul:spring class="navbar-inner-groove-image-right-top"/>
+    		<xul:spring flex="1" class="navbar-inner-groove-image-right-middle"/>
+    		<xul:spring class="navbar-inner-groove-image-right-bottom"/>
+    	</xul:box>
     </content>
   </binding>
   
   <binding id="urlbar-group" extends="xul:box">
     <content>
-    	<xul:image class="urlbar-image-left"/>
- 		<xul:box flex="1" class="urlbar-border-outer">
+		<xul:box orient="vertical">
+    		<xul:spring class="urlbar-image-left-top"/>
+    		<xul:spring flex="1" class="urlbar-image-left-middle"/>
+    		<xul:spring class="urlbar-image-left-bottom"/>
+    	</xul:box> 		
+    	<xul:box flex="1" class="urlbar-border-outer">
  			<xul:box flex="1" class="urlbar-border-inner">
 		    	<children/>
 	    	</xul:box>
 	    </xul:box>
-      	<xul:image class="urlbar-image-right"/>
+		<xul:box orient="vertical">
+    		<xul:spring class="urlbar-image-right-top"/>
+    		<xul:spring flex="1" class="urlbar-image-right-middle"/>
+    		<xul:spring class="urlbar-image-right-bottom"/>
+    	</xul:box> 		
     </content>
   </binding>
 
   <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
-        <xul:image class="three-slice-button-image-left" inherits="default,disabled"/>
+        <xul:spring class="three-slice-button-image-left" inherits="default,disabled"/>
     	<xul:box flex="1" class="three-slice-button-image-middle" inherits="default,disabled" orient="vertical" align="center">
     	  	<xul:spring flex="1" class="three-slice-button-top-spring"/>
     	  	<xul:box flex="1">
@@ -79,7 +102,7 @@
     	    </xul:box>
 		    <xul:spring flex="1" class="three-slice-button-bottom-spring"/>
     	</xul:box>
-    	<xul:image class="three-slice-button-image-right" inherits="default,disabled"/>
+    	<xul:spring class="three-slice-button-image-right" inherits="default,disabled"/>
     </content>
   </binding>
 

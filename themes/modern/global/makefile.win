@@ -171,10 +171,10 @@ install::
 	$(MAKE_INSTALL) taskbar-tab-minimized.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-trans.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-down-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-down.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-up-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tb-grippy-up.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-down.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tb-grippy-up.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) textfield.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar-begincap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar-dropdown-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

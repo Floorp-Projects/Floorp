@@ -193,6 +193,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
   }
 
+#ubhist-keyword-popup 
+  {
+	  margin                : 0px 4px 0px 0px;
+	  width                 : 10px; 
+	  list-style-image      : url("chrome://global/skin/ubhist-arrow.gif"); 
+  }
+
 #content-frame 
   {
     min-width             : 0px;
@@ -201,7 +208,8 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 #nav-bar-inner
   {
-    padding-left          : 6px;
+    min-width			  : 0px;
+    margin				  : 11px 0px 11px 6px;
   }
   
 #search-button

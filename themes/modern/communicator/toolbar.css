@@ -5,38 +5,38 @@ toolbar
   {
     background-color      : #394B6E;
     border-bottom         : 1px solid #000000;
-    border-top			  : 1px solid #A9B7D8;
+    border-top			  : 1px solid #B6CADF;
   }
 
 toolbargrippy 
   { 
-    background		      : url("chrome://global/skin/tb-grippy-up.png") no-repeat bottom;
+    background		      : url("chrome://global/skin/tb-grippy-up.gif") no-repeat bottom;
     width                 : 9px;
     height                : 7px;
-    margin				  : 0px 0px 3px 2px;
+    margin				  : 0px 0px 0px 1px;
   } 
 
 toolbargrippy:hover:active
   {
-  	background		      : url("chrome://global/skin/tb-grippy-up-clicked.png") no-repeat bottom;
+  	background		      : url("chrome://global/skin/tb-grippy-up-clicked.gif") no-repeat bottom;
   }
 
 .collapsed-tray-holder
   {
   	background-color	  : #394B6E;
   	border-bottom		  : 1px solid #11151F;
-	border-top			  : 1px solid #A9B7D8;
+	border-top			  : 1px solid #B6CADF;
   }
 
 toolbargrippy[tbgrippy-collapsed="true"]
   {
-  	background			  : url(chrome://global/skin/tb-grippy-down.png) no-repeat bottom left;
+  	background			  : url(chrome://global/skin/tb-grippy-down.gif) no-repeat bottom left;
   	margin				  : 1px 0px 1px 2px;
   }
 
 toolbargrippy[tbgrippy-collapsed="true"]:hover:active
   {
-  	background		      : url("chrome://global/skin/tb-grippy-down-clicked.png") no-repeat bottom left;
+  	background		      : url("chrome://global/skin/tb-grippy-down-clicked.gif") no-repeat bottom left;
   }
 
 
@@ -73,7 +73,7 @@ toolbar[collapsed="true"] > toolbargrippy
   {
     -moz-binding		  : url("chrome://global/skin/globalBindings.xml#toolbar-primary");
     padding               : 0px;
-    border-bottom         : 1px solid #354557;
+    border-bottom         : 1px solid #6583A2;
     border-top			  : 0px;
 	background-color	  : transparent;
     background-image	  : none;
@@ -81,22 +81,22 @@ toolbar[collapsed="true"] > toolbargrippy
   
 .toolbar-primary-image-left
   {
-    background		      : url("chrome://global/skin/navbar-bg-leftcap.gif") no-repeat;
+    list-style-image      : url("chrome://global/skin/navbar-bg-leftcap.gif");
     width				  : 24px;
-    height				  : 46px;
+    height				  : 43px;
   }
 
 .toolbar-primary-image-middle
   {
-    background            : url("chrome://global/skin/navbar-bg.gif") repeat-x;
-    height			  	  : 46px;
+    list-style-image          : url("chrome://global/skin/navbar-bg.gif");
+    height			  	  : 43px;
   }
 
 .toolbar-primary-image-right
   {
-  	background			  : url("chrome://global/skin/navbar-bg-rightcap.gif") no-repeat;
+  	list-style-image	  : url("chrome://global/skin/navbar-bg-rightcap.gif");
   	width				  : 24px;
-  	height				  : 46px;
+  	height				  : 43px;
   }
 
 .toolbary-primary-grippy

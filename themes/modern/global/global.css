@@ -134,25 +134,6 @@
       padding			  : 0px;
     }
 
-  statusbar
-    {
-      /*-moz-binding        : url("chrome://global/skin/globalBindings.xml#status-bar");*/
-    }
-
-  .statusbar-left
-    {
-      width               : 8px;
-      list-style-image    : url("chrome://global/skin/gray-bottomleft.gif");
-      background-position : bottom left;
-    }
-
-  .statusbar-right
-    {
-      width               : 8px;
-      list-style-image    : url("chrome://global/skin/gray-bottomright.gif");
-      background-position : bottom right;
-    }
-
 /**
  * html|iframe default sizing 
  **/

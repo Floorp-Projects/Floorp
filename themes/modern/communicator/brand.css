@@ -3,7 +3,7 @@
   {
     -moz-binding          : url("chrome://global/content/xulBindings.xml#buttontop");
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    margin                : 5px 1px 9px 8px;
+    margin                : 5px 11px 6px 8px;
     padding               : 0px;
     cursor                : pointer;
     border                : 0px;
@@ -17,7 +17,7 @@
   
 #navigator-throbber:hover:active
   {
-    margin               : 4px 0px 5px 9px;
+    margin               : 6px 10px 5px 9px;
   }
 
 #navigator-throbber > .button-internal-box

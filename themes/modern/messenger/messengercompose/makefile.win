@@ -40,3 +40,21 @@ install::
 	$(MAKE_INSTALL) sendConvAltering.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) sendConvNo.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) sendConvYes.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) save-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) save-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) save-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose

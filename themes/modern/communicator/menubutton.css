@@ -62,7 +62,7 @@
   {
     -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
     border                  : 0px solid red;
-    margin      	        : 3px 2px 9px 2px;
+    margin      	        : 3px 2px 6px 2px;
     padding					: 0px;
   }
 
@@ -70,7 +70,7 @@
 .menubutton-dual.toolbar[disabled="true"]:hover,
 .menubutton-dual.toolbar[disabled="true"]:hover:active
   {
-    margin      	        : 3px 2px 9px 2px;
+    margin      	        : 3px 2px 6px 2px;
 	padding					: 0px;
   }
 
@@ -91,7 +91,7 @@
 
 .button-toolbar-2.menubutton-dual-button > .button-internal-box > .button-text-container
   {
-    padding-top             : 5px;
+    padding-top             : 0px;
   }
   
 .menubutton-dual-dropmarker

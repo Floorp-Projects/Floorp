@@ -246,10 +246,16 @@ iframe {
 
 #button-print 
   {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
+    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
 	list-style-image      : url("chrome://global/skin/print.gif");
-    margin                : 3px 3px 0px 3px;
+    margin                : 3px 3px 1px 3px;
     text-align			  : center;
+  }
+
+#button-print > .menubutton-dual-stack > .menubutton-dual-button
+  {
+  	margin				  : 0px;
+  	padding				  : 0px;
   }
 
 #button-print[disabled="true"],

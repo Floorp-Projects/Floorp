@@ -183,7 +183,8 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #nav-bar-inner
   {
-    padding-left          : 6px;
+    min-width			  : 0px;
+    margin				  : 11px 0px 11px 6px;
   }
   
 #search-button

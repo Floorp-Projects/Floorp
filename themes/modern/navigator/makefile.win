@@ -65,3 +65,17 @@ install::
 	$(MAKE_INSTALL) urlbar-left.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) urlbar-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) urlbar-right.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-left-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-left-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-left-top.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-middle-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-middle-top.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-right-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-right-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-groove-right-top.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-left-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-left-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-left-top.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-right-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-right-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-right-top.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

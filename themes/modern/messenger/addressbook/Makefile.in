@@ -41,6 +41,18 @@ EXPORT_RESOURCE_SAMPLES = \
 		person.gif \
 		list.gif \
 		myaddrbk.gif \
+		edit-clicked.gif \
+		edit-disabled.gif \
+		edit-hover.gif \
+		newcard-clicked.gif \
+		newcard-disabled.gif \
+		newcard-hover.gif \
+		newlist-clicked.gif \
+		newlist-disabled.gif \
+		newlist-hover.gif \
+		newmsgab-clicked.gif \
+		newmsgab-disabled.gif \
+		newmsgab-hover.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

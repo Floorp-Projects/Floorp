@@ -39,3 +39,15 @@ install::
 	$(MAKE_INSTALL) newmsgab.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) person.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) property.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) edit-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) edit-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) edit-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsgab-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsgab-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsgab-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
