@@ -288,6 +288,14 @@ public class FunctionObject extends BaseFunction
         return found;
     }
 
+    /**
+     * Returns all public methods declared by the specified class. This excludes
+     * inherited methods.
+     *
+     * @param clazz the class from which to pull public declared methods
+     * @return the public methods declared in the specified class
+     * @see Class#getDeclaredMethods()
+     */
     static Method[] getMethodList(Class clazz) {
         Method[] methods = null;
         try {

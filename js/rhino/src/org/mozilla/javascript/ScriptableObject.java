@@ -711,9 +711,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * argument will be passed, along with the newly created constructor and
      * the newly created prototype.<p>
      *
-     * @param scope The scope in which to define the constructor
+     * @param scope The scope in which to define the constructor.
      * @param clazz The Java class to use to define the JavaScript objects
-     *              and properties
+     *              and properties.
      * @exception IllegalAccessException if access is not available
      *            to a reflected class member
      * @exception InstantiationException if unable to instantiate
@@ -729,7 +729,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         throws IllegalAccessException, InstantiationException,
                InvocationTargetException
     {
-        defineClass(scope, clazz, false);
+        defineClass(scope, clazz, false, false);
     }
 
     /**
@@ -742,10 +742,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * the current ECMA/ISO language specification, but is likely for
      * the next version.
      *
-     * @param scope The scope in which to define the constructor
+     * @param scope The scope in which to define the constructor.
      * @param clazz The Java class to use to define the JavaScript objects
      *              and properties. The class must implement Scriptable.
-     * @param sealed whether or not to create sealed standard objects that
+     * @param sealed Whether or not to create sealed standard objects that
      *               cannot be modified.
      * @exception IllegalAccessException if access is not available
      *            to a reflected class member
@@ -757,6 +757,41 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public static void defineClass(Scriptable scope, Class clazz,
                                    boolean sealed)
+        throws IllegalAccessException, InstantiationException,
+               InvocationTargetException
+    {
+        defineClass(scope, clazz, sealed, false);
+    }
+
+    /**
+     * Defines JavaScript objects from a Java class, optionally
+     * allowing sealing and mapping of Java inheritance to JavaScript
+     * prototype-based inheritance.
+     *
+     * Similar to <code>defineClass(Scriptable scope, Class clazz)</code>
+     * except that sealing and inheritance mapping are allowed. An object
+     * that is sealed cannot have properties added or removed. Note that
+     * sealing is not allowed in the current ECMA/ISO language specification,
+     * but is likely for the next version.
+     *
+     * @param scope The scope in which to define the constructor.
+     * @param clazz The Java class to use to define the JavaScript objects
+     *              and properties. The class must implement Scriptable.
+     * @param sealed Whether or not to create sealed standard objects that
+     *               cannot be modified.
+     * @param mapInheritance Whether or not to map Java inheritance to
+     *                       JavaScript prototype-based inheritance.
+     * @return the class name for the prototype of the specified class
+     * @exception IllegalAccessException if access is not available
+     *            to a reflected class member
+     * @exception InstantiationException if unable to instantiate
+     *            the named class
+     * @exception InvocationTargetException if an exception is thrown
+     *            during execution of methods of the named class
+     * @since 1.6R2
+     */
+    public static String defineClass(Scriptable scope, Class clazz,
+                                   boolean sealed, boolean mapInheritance)
         throws IllegalAccessException, InstantiationException,
                InvocationTargetException
     {
@@ -775,7 +810,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 Object args[] = { Context.getContext(), scope,
                                   sealed ? Boolean.TRUE : Boolean.FALSE };
                 method.invoke(null, args);
-                return;
+                return null;
             }
             if (parmTypes.length == 1 &&
                 parmTypes[0] == ScriptRuntime.ScriptableClass &&
@@ -783,7 +818,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             {
                 Object args[] = { scope };
                 method.invoke(null, args);
-                return;
+                return null;
             }
 
         }
@@ -804,10 +839,25 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                       "msg.zero.arg.ctor", clazz.getName());
         }
 
-        Scriptable proto = (Scriptable)
-                        protoCtor.newInstance(ScriptRuntime.emptyArgs);
-        proto.setPrototype(getObjectPrototype(scope));
+        Scriptable proto = (Scriptable) protoCtor.newInstance(ScriptRuntime.emptyArgs);
         String className = proto.getClassName();
+
+        // Set the prototype's prototype, trying to map Java inheritance to JS
+        // prototype-based inheritance if requested to do so.
+        Scriptable superProto = null;
+        if (mapInheritance) {
+            Class superClass = clazz.getSuperclass();
+            if (ScriptRuntime.ScriptableClass.isAssignableFrom(superClass)) {
+                String name = ScriptableObject.defineClass(scope, superClass, sealed, mapInheritance);
+                if (name != null) {
+                    superProto = ScriptableObject.getClassPrototype(scope, name);
+                }
+            }
+        }
+        if (superProto == null) {
+            superProto = ScriptableObject.getObjectPrototype(scope);
+        }
+        proto.setPrototype(superProto);
 
         // Find out whether there are any methods that begin with
         // "js". If so, then only methods that begin with special
@@ -918,18 +968,21 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
 
+        // Call user code to complete initialization if necessary.
         if (finishInit != null) {
-            // call user code to complete the initialization
             Object[] finishArgs = { scope, ctor, proto };
             finishInit.invoke(null, finishArgs);
         }
 
+        // Seal the object if necessary.
         if (sealed) {
             ctor.sealObject();
             if (proto instanceof ScriptableObject) {
                 ((ScriptableObject) proto).sealObject();
             }
         }
+
+        return className;
     }
 
     /**
