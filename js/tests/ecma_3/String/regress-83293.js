@@ -25,7 +25,7 @@
 * str.replace(strA, strB) == str.replace(new RegExp(strA),strB)
 * See ECMA-262 Section 15.5.4.11 String.prototype.replace
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var bug = 83293;
 var summary = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)';
 var status = '';
@@ -37,11 +37,15 @@ var strA = '';
 var strB = 'Z';
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
+/*
+ * In this test, it's important to reportCompare() each other case before the 
+ * last case is attempted, instead of storing all results in an array as usual.
+ */
 function test()
 {
   enterFunc ('test');
