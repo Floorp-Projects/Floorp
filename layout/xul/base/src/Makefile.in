@@ -43,6 +43,7 @@ CPPSRCS =				\
 	nsTreeFrame.cpp \
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
+	nsTriStateCheckboxFrame.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
