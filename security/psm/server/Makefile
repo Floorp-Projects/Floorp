@@ -312,7 +312,7 @@ ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm xpi/psm
 endif
 	$(NSINSTALL) -m 755 $(PROGRAM) xpi/psm
-ifneq ($(OS_ARCH), WINNT)
+ifeq ($(OS_ARCH), Linux)
 	$(NSINSTALL) -m 755 $(DIST)/bin/regxpcom $(PLATFORM)
 	$(NSINSTALL) -m 755 start-regxpcom $(PLATFORM)
 	cd $(PLATFORM); start-regxpcom
