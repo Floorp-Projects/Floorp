@@ -69,14 +69,6 @@ print "The raw version id is:  $inDefaultVersion\n";
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
-# Until we really figure out what to do with this batch file, this will get it
-#   into the installer, at least
-print "\n Copying runapp.bat $inStagePath\\mfcembed\\bin\n";
-if(system("copy runapp.bat $inStagePath\\mfcembed\\bin"))
-{
-  die "\n Error: copy runapp.bat $inStagePath\\mfcembed\\bin\n";
-}
-
 $inXpiURL = "";
 $inRedirIniURL = "";
 
@@ -178,13 +170,13 @@ if(MakeXpiFile())
 }
 
 # Grab xpcom from mozilla build
-if(system("copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath"))
+if(system("copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath"))
 {
-  die "\n Error: copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\n";
+  die "\n Error: copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\n";
 }
-if(system("copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\\xpi"))
+if(system("copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\\xpi"))
 {
-  die "\n Error: copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\\xpi\n";
+  die "\n Error: copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\\xpi\n";
 }
 
 
