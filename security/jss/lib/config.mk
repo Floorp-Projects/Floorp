@@ -54,7 +54,6 @@ EXTRA_LIBS += \
     $(LIBJAR) \
     $(LIBPKCS12) \
     $(LIBPKCS7) \
-    $(LIBSECTOOL) \
     $(LIBSMIME) \
     $(LIBSOFTOKEN) \
     $(LIBCERTDB) \
