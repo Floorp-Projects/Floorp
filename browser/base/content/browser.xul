@@ -166,9 +166,6 @@ Contributor(s):
   <broadcaster id="Communicator:WorkMode"
                label="&offlineGoOfflineCmd.label;"
                oncommand="toggleOfflineStatus();"/>
-  <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-  <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-  <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
   <broadcaster id="isImage"/>
 
   <keyset>
@@ -470,9 +467,9 @@ Contributor(s):
           <menupopup>
             <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
               <menupopup onpopupshowing="updateToolbarStates(this);"> 
-                <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
-                <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
-                <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
+                <menuitem id="toggle_navbar" label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','toggle_navbar');" checked="true"  />
+                <menuitem id="toggle_ptoolbar" label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','toggle_ptoolbar');" checked="true" />
+                <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('status-bar','toggle_taskbar');" checked="true" />
               </menupopup>
             </menu>
             <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
