@@ -5,7 +5,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onConstruction="startup()"> 
+        onload="startup()"> 
   
 <html:style>
 	#toolbar {
@@ -60,12 +60,12 @@
 	{
 		dump("SendMessage!\n");
 		if (appCore != null) {
-			appCore.SendMessage(document.getElementByID('msgFrom').value, 
-					   document.getElementByID('msgSmtp').value, 
-					   document.getElementByID('msgTo').value, 
-					   document.getElementByID('msgCc').value, 
-					   document.getElementByID('msgBcc').value, 
-					   document.getElementByID('msgSubject').value, 
+			appCore.SendMessage(document.getElementById('msgFrom').value, 
+					   document.getElementById('msgSmtp').value, 
+					   document.getElementById('msgTo').value, 
+					   document.getElementById('msgCc').value, 
+					   document.getElementById('msgBcc').value, 
+					   document.getElementById('msgSubject').value, 
 					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
 		}
 	}
@@ -75,10 +75,10 @@
 		dump("MessageSent Callback!\n");
 
 		// Clear Them
-		document.getElementByID('msgTo').value = "";
-		document.getElementByID('msgCc').value = "";
-		document.getElementByID('msgBcc').value = "";
-		document.getElementByID('msgSubject').value = "";
+		document.getElementById('msgTo').value = "";
+		document.getElementById('msgCc').value = "";
+		document.getElementById('msgBcc').value = "";
+		document.getElementById('msgSubject').value = "";
 		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
 	}
 </html:script>
@@ -136,7 +136,7 @@
     </menu>
 </menubar>
 
-<html:div html:id="toolbar">
+<html:div id="toolbar">
 <toolbox>
 	<toolbar>
  		<titledbutton src="resource:/res/toolbar/Mail_SendMsg.gif" align="bottom" value="Send" onClick="SendMessage()">	
@@ -164,32 +164,32 @@
 		</titledbutton>
 	</toolbar>
 	<toolbar>
-		From:<html:input html:id="msgFrom" html:style="vertical-align: center" html:type="text" 
-		html:style="width:200px;" html:value="qatest02@netscape.com" /> 
-		Smtp:<html:input html:id="msgSmtp" html:style="vertical-align: center" html:type="text" 
-		html:style="width:200px;" html:value="nsmail-1.mcom.com" />
+		From:<html:input id="msgFrom" style="vertical-align: center" type="text" 
+			style="width:200px;" value="qatest02@netscape.com" /> 
+		Smtp:<html:input id="msgSmtp" style="vertical-align: center" type="text" 
+			style="width:200px;" value="nsmail-1.mcom.com" />
 		<html:br/>
-		To:<html:input html:id="msgTo" html:style="vertical-align: center" html:type="text" 
-		html:style="width:200px;" />   
+		To:<html:input id="msgTo" style="vertical-align: center" type="text" 
+			style="width:200px;" />   
 		<html:br/>
-		Cc:<html:input html:id="msgCc" html:style="vertical-align: center" html:type="text" 
-		html:style="width:200px;" />   
-		Bcc:<html:input html:id="msgBcc" html:style="vertical-align: center" html:type="text" 
-		html:style="width:200px;" />   
+		Cc:<html:input id="msgCc" style="vertical-align: center" type="text" 
+			style="width:200px;" />   
+		Bcc:<html:input id="msgBcc" style="vertical-align: center" type="text" 
+			style="width:200px;" />   
 	</toolbar>
 	<toolbar>
-		Subject:<html:input html:id="msgSubject" html:style="vertical-align: center" html:type="text" 
-		html:style="width:500px;" /> 
+		Subject:<html:input id="msgSubject" style="vertical-align: center" type="text" 
+			style="width:500px;" /> 
 	</toolbar>
 </toolbox>
 </html:div>
 
-<html:div html:id="body">
-<html:iframe html:src="resource:/res/samples/composeframe.html" name="browser.message.body" width="100%" height="300px"></html:iframe>
+<html:div id="body">
+<html:iframe src="resource:/res/samples/composeframe.html" name="browser.message.body" width="100%" height="300px"></html:iframe>
 </html:div>
 
-<html:div html:id="footer">
-<html:iframe html:src="status.html" html:name="browser.status" html:width="100%" html:height="34px" > </html:iframe>
+<html:div id="footer">
+<html:iframe src="status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
 </html:div>
 
 </window>
