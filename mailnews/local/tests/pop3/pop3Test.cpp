@@ -46,6 +46,7 @@
 
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMsgIncomingServer.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -268,6 +269,7 @@ nsresult nsPop3TestDriver::ReadAndDispatchCommand()
         break;
 	case 5:
 		status = OnIdentityCheck();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -310,25 +312,26 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
                                                    (nsISupports **) &mailSession);
 	if (NS_SUCCEEDED(result) && mailSession)
 	{
-		nsIMsgIdentity * msgIdentity = nsnull;
-		result = mailSession->GetCurrentIdentity(&msgIdentity);
-		if (NS_SUCCEEDED(result) && msgIdentity)
+		// mscott: we really don't check an identity, we check
+		// for an outgoing 
+		nsIMsgIncomingServer * incomingServer = nsnull;
+		result = mailSession->GetCurrentServer(&incomingServer);
+		if (NS_SUCCEEDED(result) && incomingServer)
 		{
-			const char * value = nsnull;
-			msgIdentity->GetRootFolderPath(&value);
-			printf("Root folder path: %s\n", value ? value : "");
-			msgIdentity->GetPopName(&value);
+			char * value = nsnull;
+			incomingServer->GetPrettyName(&value);
+			printf("Server pretty name: %s\n", value ? value : "");
+			incomingServer->GetUserName(&value);
 			printf("User Name: %s\n", value ? value : "");
-			msgIdentity->GetPopServer(&value);
+			incomingServer->GetHostName(&value);
 			printf("Pop Server: %s\n", value ? value : "");
-			msgIdentity->GetPopPassword(&value);
+			incomingServer->GetPassword(&value);
 			printf("Pop Password: %s\n", value ? value : "");
-			msgIdentity->GetSmtpServer(&value);
-			printf("Smtp Server: %s\n", value ? value : "");
 
+			NS_RELEASE(incomingServer);
 		}
 		else
-			printf("Unable to retrieve the msgIdentity....\n");
+			printf("Unable to retrieve the outgoing server interface....\n");
 
 		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 	}
