@@ -123,6 +123,8 @@ public:
     nsresult SetMozRegDataMovedFlag(nsIFile* regName);
     nsresult ResetProfileMembers();
     nsresult DetermineForceMigration(PRBool *forceMigration);
+    nsresult GetProfilePathString(nsString& profilePath, const PRUnichar *dirString, PRBool *pathChanged);
+    nsresult SetProfilePathString(const nsString& dirPath, const nsString& profileName, nsString& persistentPath);
 };
 
 #endif // __nsProfileAccess_h___
