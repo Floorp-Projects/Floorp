@@ -284,7 +284,6 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libhook.a \
 		  $(DIST)/lib/libparse.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)pref.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a \
 		  $(DIST)/lib/libpics.a \
 		  $(DIST)/lib/libpwcac.a \
 		  $(DIST)/lib/libreg.a \
@@ -488,13 +487,12 @@ else
 BASIC_LIBS	+= $(DIST)/lib/libzlib.a
 endif
 
-ifndef NO_MOCHA
 BASIC_LIBS	+= $(DIST)/lib/libjs.a
 ifdef JAVA_OR_OJI
 BASIC_LIBS	+= $(DIST)/lib/libjsj.a
 endif
-BASIC_LIBS	+= $(DIST)/lib/libmocha.a
-endif
+BASIC_LIBS	+= $(DIST)/lib/libmocha.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a
 
 # Post-Java libs
 BASIC_LIBS	+= $(DIST)/lib/libstyle.a
