@@ -56,6 +56,10 @@
             return val;
             
           this._currentPage = val;
+
+          // Setting this attribute allows wizard's clients to dynamically
+          // change the styles of each page based on purpose of the page. 
+          this.setAttribute("currentpageid", val.pageid);
                     
           if (this.onFirstPage) {
             this.canRewind = false;
