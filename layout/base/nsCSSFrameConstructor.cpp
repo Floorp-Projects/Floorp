@@ -1402,12 +1402,6 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
                                           nsLayoutAtoms::floaterList,
                                           aState.mFloatedItems.childList);
   }
-
-  if (outerFrame) {
-    outerFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::captionList,
-                                    aNewCaptionFrame);
-  }
-
   return rv;
 }
 
@@ -5096,7 +5090,19 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
     // the next 5 cases are only relevant if the parent is not a table, ConstructTableFrame handles children
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
     {
-      rv = ConstructTableCaptionFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+      // aParentFrame may be an inner table frame rather than an outer frame 
+      // In this case we need to get the outer frame.
+      nsIFrame* parentFrame = aParentFrame;
+      nsIFrame* outerFrame = nsnull;
+      aParentFrame->GetParent(&outerFrame);
+      nsCOMPtr<nsIAtom> frameType;
+      if (outerFrame) {
+        outerFrame->GetFrameType(getter_AddRefs(frameType));
+        if (nsLayoutAtoms::tableOuterFrame == frameType.get()) {
+          parentFrame = outerFrame;
+        }
+      }
+      rv = ConstructTableCaptionFrame(aPresShell, aPresContext, aState, aContent, parentFrame,
                                       aStyleContext, newFrame, ignore, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
