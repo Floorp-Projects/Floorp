@@ -19,6 +19,7 @@
 #include "primpl.h"
 #include <signal.h>
 #include <string.h>
+
 #if defined(WIN95)                                                                         
 /*
 ** Some local variables report warnings on Win95 because the code paths
@@ -28,6 +29,10 @@
 */
 #pragma warning(disable : 4101)
 #endif          
+
+#if defined(XP_MAC)
+#include <LowMem.h>
+#endif
 
 /* _pr_activeLock protects the following global variables */
 PRLock *_pr_activeLock;
@@ -93,6 +98,8 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
 #else
 #if defined(SOLARIS) || defined (UNIXWARE) && defined (USR_SVR4_THREADS)
     stack->stackTop = (char*) &thread;
+#elif defined(XP_MAC)
+    stack->stackTop = (char*) LMGetCurStackBase();
 #else
     stack->stackTop = (char*) ((((long)&type + _pr_pageSize - 1)
                 >> _pr_pageShift) << _pr_pageShift);
@@ -1323,7 +1330,16 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
   
         /* Update thread type counter */
         PR_Lock(_pr_activeLock);
+        /*
+         * We should just or in 'flags'.  Until I verify
+         * that it works on all platforms, I'm going to
+         * ifdef it with XP_MAC.  -- wtc@netscape.com
+         */
+#ifdef XP_MAC
+        thread->flags |= flags;
+#else
         thread->flags = flags;
+#endif
         thread->id = ++_pr_utid;
         if (type == PR_SYSTEM_THREAD) {
             thread->flags |= _PR_SYSTEM;
