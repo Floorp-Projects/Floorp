@@ -201,7 +201,7 @@ void CEditorPrefContain::DrawSelf()
 // This is probably stupid. This just allows all the dialogs I'm creating
 // to remember who created them. Also the creator can specify which tab the
 // Tab control should start on, if there is a tab control. Also, if this
-// is an image, link, or HRule dialog, the creator can specify whether theRegistry
+// is an image, link, or HRule dialog, the creator can specify whether the
 // final action should be to insert or modify a selected element.
 
 Boolean CEditDialog::Start(ResIDT inWindowID, MWContext * context, short initTabValue, Boolean insert)
@@ -2411,11 +2411,7 @@ void CEDTableCellContain::FinishCreateSelf()
 {
 	fRowSpanEditText = (LGAEditField*)this->FindPaneByID( 'rows' );
 	fColSpanEditText = (LGAEditField*)this->FindPaneByID( 'cols' );
-	
-	spanCaption = (CCaption*)FindPaneByID( 'span' );
-	rowCaption = (CCaption*)FindPaneByID( 'rCap' );
-	colCaption = (CCaption*)FindPaneByID( 'cCap' );
-	
+
 	fHorizontalAlignment = (LGAPopup *)this->FindPaneByID( 'HzPU' );
 	fVerticalAlignment = (LGAPopup *)this->FindPaneByID( 'VtPU' );
 
@@ -2454,30 +2450,6 @@ void CEDTableCellContain::Help()
 
 void CEDTableCellContain::AdjustEnable()
 {
-	ETriState rowEnableState = fRowSpanEditText->GetEnabledState();
-	ETriState colEnableState = fColSpanEditText->GetEnabledState();
-
-	// We do not use IsEnabled() because it returns false when we display the dialog box for 
-	// the first time.  The two edit fields' mVisibles are Tri_Latent in the beginning.  Since 
-	// the superview is not yet visible, the edit fields are not visible either.  The code
-	// here will enable the captions as long as fRowSpanEditText and fColSpanEditText are not
-	// triState_Off.  The captions will only be enabled when the superview is enabled.
-	
-	if ( rowEnableState != triState_Off || colEnableState != triState_Off )
-		spanCaption->Enable();
-	else
-		spanCaption->Disable();
-	
-	if ( rowEnableState != triState_Off )
-		rowCaption->Enable();
-	else
-		rowCaption->Disable();
-	
-	if ( colEnableState != triState_Off )
-		colCaption->Enable();
-	else
-		colCaption->Disable();
-	
 	if (fCustomWidth->GetValue())
 	{
 		fWidthEditText->Enable();
@@ -2731,7 +2703,7 @@ void CEDTableCellContain::ControlsFromPref()
 	{
 		fWidthEditText->SetValue( cellData->iWidth );
 		fWidthPopup->SetValue( (cellData->bWidthPercent) ? kPercentOfWindowItem : kPixelsItem );
-	}
+	} 
 	else
 	{
 		fWidthEditText->SetValue(20);		// where do we get the default value?
@@ -2757,7 +2729,6 @@ void CEDTableCellContain::ControlsFromPref()
 	else
 		rgb = UGraphics::MakeRGBColor( 0xFF, 0xFF, 0xFF );	// something pretty... (or, better yet, get the default color - yeah, right!)
 	fColorCustomColor->SetColor( rgb );
-	fColorCustomColor->Refresh();	// CColorButton::SetColor does not refresh automatically, so we call refresh
 	
 	mImageFileName->SetLongDescriptor( cellData->pBackgroundImage ? cellData->pBackgroundImage : "" );
 	mUseImage->SetValue( (cellData->mask & CF_BACK_IMAGE) ? cellData->pBackgroundImage != NULL : 2 );
@@ -2844,6 +2815,9 @@ void CEDTableCellContain::ListenToMessage( MessageT inMessage, void* /* ioParam 
 		case 'TsPU':	/* popup menu item was changed */
 		case 'PREV':
 		case 'NEXT':
+			/* AllFieldsOK?, Cancel->Close, Apply */
+//			CEditDialog::ListenToMessage( msg_Apply, NULL );
+
 			/* approprate selection  */
 			ED_HitType moveType = ED_HIT_SEL_CELL;
 			LGAPopup * tableSelectionPopup = (LGAPopup*)FindPaneByID( 'TsPU' );
@@ -2872,16 +2846,11 @@ void CEDTableCellContain::ListenToMessage( MessageT inMessage, void* /* ioParam 
 			else if (inMessage == 'TsPU')
 			     moveDirection = ED_MOVE_NONE;
 			
-			if ( AllFieldsOK() )
-			{
-				EDT_BeginBatchChanges( fContext );
-				PrefsFromControls();
-				EDT_EndBatchChanges( fContext);
-					
-				EDT_ChangeTableSelection( fContext, moveType, moveDirection, NULL );
-				ControlsFromPref();	// fill in new data
-			}
-			break; // if fields are not ok, don't change anything
+			EDT_ChangeTableSelection( fContext, moveType, moveDirection, NULL );
+			
+			/* fill in new data */
+			ControlsFromPref();
+			break;
 			
 		case 'cwth':
 		case 'chgt':
@@ -3368,6 +3337,7 @@ void CEDParagraphContain::PrefsFromControls()
 				list->iStart = fStartNumberEditText->GetValue();
 			}
 		}
+						
 		EDT_SetListData(fContext, list);
 		EDT_FreeListData(list);
 	}
@@ -3997,6 +3967,8 @@ void CEDImageContain::FinishCreateSelf()
 	fImageFileName = (CLargeEditField *)FindPaneByID( 'WST1' );
 	fImageFileName->AddListener(this);
 
+	fImageAltFileName = (CLargeEditField *)FindPaneByID( 'WST3' );
+	fImageAltFileName->AddListener(this);
 	fImageAltTextEdit = (CLargeEditField *)FindPaneByID( 'WST5' );
 	fImageAltTextEdit->AddListener(this);
 	
@@ -4027,7 +3999,6 @@ void CEDImageContain::AdjustEnable()
 {
 	Boolean allEmpty = false;	// assume at least one has text unless proven otherwise
 	Str255 str;
-	CCaption* textCaption = (CCaption*)FindPaneByID( 'text' );
 	fImageFileName->GetDescriptor( str );
 	if ( str[0] == 0 )
 	{
@@ -4035,7 +4006,7 @@ void CEDImageContain::AdjustEnable()
 		fEditImageButton->Disable();
 		fBackgroundImageCheck->Disable();
 
-		textCaption->Disable();
+		fImageAltFileName->Disable();
 		fImageAltTextEdit->Disable();
 		
 		allEmpty = true;
@@ -4046,10 +4017,11 @@ void CEDImageContain::AdjustEnable()
 		fEditImageButton->Enable();
 		fBackgroundImageCheck->Enable();
 		
-		textCaption->Enable();
+		fImageAltFileName->Enable();
 		fImageAltTextEdit->Enable();
 	}
 	
+	LView* altreps = (LView *)FindPaneByID( 'C002' );
 	LView* dimensions = (LView *)FindPaneByID( 'C003' );
 	LView* spacearound = (LView *)FindPaneByID( 'C004' );
 	LView* aligncaption = (LView *)FindPaneByID( 'Cptn' );	// alignment caption
@@ -4063,9 +4035,13 @@ void CEDImageContain::AdjustEnable()
 		mImageAlignmentPopup->Disable();
 		if ( aligncaption )
 			aligncaption->Disable();
+		
+		altreps->Disable();
 	}
 	else
 	{
+		altreps->Enable();
+		
 		dimensions->Enable();
 		spacearound->Enable();
 		extrahtmlbutton->Enable();
@@ -4126,6 +4102,9 @@ EDT_ImageData *CEDImageContain::ImageDataFromControls()
 		
 	XP_FREEIF( image->pSrc );
 	image->pSrc = fImageFileName->GetLongDescriptor();
+	
+	XP_FREEIF( image->pLowSrc );
+	image->pLowSrc = fImageAltFileName->GetLongDescriptor();
 
 	XP_FREEIF( image->pAlt );
 	image->pAlt = fImageAltTextEdit->GetLongDescriptor();
@@ -4288,6 +4267,9 @@ void CEDImageContain::ControlsFromPref()
 		
 		if (image->pSrc)
 			fImageFileName->SetLongDescriptor( image->pSrc );
+		
+		if ( image->pLowSrc )
+			fImageAltFileName->SetLongDescriptor( image->pLowSrc );
 		
 		if ( image->pAlt )
 			fImageAltTextEdit->SetLongDescriptor( image->pAlt );
@@ -4565,6 +4547,11 @@ void CEDImageContain::ListenToMessage( MessageT inMessage, void* ioParam )
 		
 		case 'wst1':	// "Choose File..." image
 			CEditDialog::ChooseImageFile(fImageFileName);
+			AdjustEnable();
+			break;
+		
+		case 'wst3':	// "Choose File..." Alt Image
+			CEditDialog::ChooseImageFile(fImageAltFileName);
 			AdjustEnable();
 			break;
 		

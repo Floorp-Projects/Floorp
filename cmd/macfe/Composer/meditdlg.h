@@ -33,7 +33,7 @@ class CTabControl;
 class CLargeEditField;
 class LGAEditField;
 class LGAPopup;
-class CCaption;
+
 
 class CChameleonView: public LView
 {
@@ -346,7 +346,7 @@ public:
 	virtual void		InitializeDialogControls();
 	
 	virtual void		SavePlace( LStream* ) { }
-	virtual void		RestorePlace( LStream* ) { }	
+	virtual void		RestorePlace( LStream* ) { }
 
 //	virtual void		ListenToMessage( MessageT inMessage, void* ioParam );
 	
@@ -580,7 +580,7 @@ protected:
 	char *				fLowSrcStr;
 	
 	CLargeEditField*	fImageFileName;	// was CEditBroadcaster
-//	CLargeEditField*	fImageAltFileName;
+	CLargeEditField*	fImageAltFileName;
 	CLargeEditField*	fImageAltTextEdit;
 	
 	LGAEditField*		fHeightTextEdit;
@@ -811,9 +811,6 @@ public:
 protected:
 	LGAEditField*		fRowSpanEditText;
 	LGAEditField*		fColSpanEditText;
-	CCaption* 			spanCaption;
-	CCaption*	 		rowCaption;
-	CCaption* 			colCaption;
 
 	LGAPopup*			fHorizontalAlignment;
 	LGAPopup*			fVerticalAlignment;
