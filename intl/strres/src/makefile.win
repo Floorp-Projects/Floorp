@@ -30,7 +30,7 @@ CPP_OBJS =					\
 
 MODULE=intl
 
-REQUIRES=xpcom netlib raptor 
+#REQUIRES=xpcom netlib raptor 
 
 LINCS=\
     -I$(PUBLIC)\xpcom \
