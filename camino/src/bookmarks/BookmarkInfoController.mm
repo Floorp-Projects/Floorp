@@ -196,10 +196,14 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 
 -(void)setBookmark: (BookmarkItem*) aBookmark
 {
+  // register for changes on the new bookmark
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc removeObserver:self name:BookmarkItemChangedNotification object:nil];
   // to avoid a hard-to-find bug, we do UI stuff before setting
   if (aBookmark) {
     [self updateUI:aBookmark];
     [aBookmark retain];
+    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:aBookmark];
   }
   [mBookmarkItem release];
   mBookmarkItem = aBookmark;
@@ -325,8 +329,15 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   }
 }
 
+// We're only registering for our current bookmark,
+// so no need to make checks to see if it's the right one.
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
+  BookmarkItem *item = [aNote object];
+  if ([item isKindOfClass:[Bookmark class]]) {
+    [mNumberVisitsField setIntValue:[(Bookmark *)item numberOfVisits]];
+    [mLastVisitField setStringValue: [[(Bookmark *)item lastVisit] descriptionWithCalendarFormat:[[mLastVisitField formatter] dateFormat] timeZone:[NSTimeZone localTimeZone] locale:nil]];
+  }
 }
 
 @end
