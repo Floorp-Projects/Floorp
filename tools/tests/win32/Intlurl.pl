@@ -42,7 +42,7 @@ for ($i = 0; $i < 13; $i ++)
 #                         "c:\\program files\\netscape\\seamonkey\\x86rel\\");
 				 "$temp");
 
-	sleep (60);
+	sleep (90);
 	$ProcessObj->GetExitCode( $ExitCode );
 	$ProcessObj->Kill( $ExitCode );
 	close (STDOUT);
