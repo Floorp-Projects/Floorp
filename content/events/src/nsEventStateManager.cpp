@@ -3986,6 +3986,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
 
   if ((aState & NS_EVENT_STATE_FOCUS)) {
+    EnsureDocument(mPresContext);
     if (aContent && (aContent == mCurrentFocus) && gLastFocusedDocument == mDocument) {
       // gLastFocusedDocument appears to always be correct, that is why
       // I'm not setting it here. This is to catch an edge case.
