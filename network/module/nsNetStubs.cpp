@@ -1784,14 +1784,12 @@ MWContext *FE_MakeNewWindow(MWContext *pOldContext, URL_Struct *pUrl, char *pCon
  * closure: Data to be passed as the only argument to "func"
  * msecs:   The number of milli-seconds in the interval
  */
-#ifndef XP_MAC
 PUBLIC void * 
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-#endif /* XP_MAC */
 
 /*
  *---------------------------------------------------------------------------
