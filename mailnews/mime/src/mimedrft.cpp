@@ -1113,7 +1113,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     // operation.
     
     //forward_inline = (mdd->format_out != FO_CMDLINE_ATTACHMENTS);    
-	forward_inline = mdd->forwardInline;
+    forward_inline = mdd->forwardInline;
     if (forward_inline)
     {
 #ifdef MOZ_SECURITY
@@ -1138,7 +1138,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
       mdd->stream = 0;
     }
   }
-
+  
   //
   // Now, process the attachments that we have gathered from the message
   // on disk
@@ -1277,57 +1277,81 @@ mime_parse_stream_complete (nsMIMESession *stream)
           if( PL_strcasestr(mdd->messageBody->type, "text/html") != NULL )
             composeFormat = nsIMsgCompFormat::HTML;
           else if ( ( PL_strcasestr(mdd->messageBody->type, "text/plain") != NULL ) ||
-                    ( PL_strcasecmp(mdd->messageBody->type, "text") == 0 ) )
+            ( PL_strcasecmp(mdd->messageBody->type, "text") == 0 ) )
             composeFormat = nsIMsgCompFormat::PlainText;
         }
         else
         {
           composeFormat = nsIMsgCompFormat::PlainText;
         }
-  
+        
         // Since we have body text, then we should set the compose fields with
         // this data.      
- //       if (composeFormat == nsIMsgCompFormat::PlainText)
- //         fields->SetTheForcePlainText(PR_TRUE);
+        //       if (composeFormat == nsIMsgCompFormat::PlainText)
+        //         fields->SetTheForcePlainText(PR_TRUE);
         
         if (forward_inline)
         {
-		  if (mdd->identity)
-		  {
-			 PRBool bFormat;
-			 mdd->identity->GetComposeHtml(&bFormat);
-			 if (bFormat)
-			 {
-			   if (body && composeFormat == nsIMsgCompFormat::PlainText)
-			   {
-				char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
-				*newbody = 0;
-				PL_strcat(newbody, "<PRE>");
-				PL_strcat(newbody, body);
-				PL_strcat(newbody, "</PRE>");
-				PR_Free(body);
-				body = newbody;
-				composeFormat = nsIMsgCompFormat::HTML;
-			   }
-			 }
-		  }
+          if (mdd->identity)
+          {
+            PRBool bFormat;
+            mdd->identity->GetComposeHtml(&bFormat);
+            if (bFormat)
+            {
+              if (body && composeFormat == nsIMsgCompFormat::PlainText)
+              {
+                char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
+                if (newbody)
+                {
+                  *newbody = 0;
+                  PL_strcat(newbody, "<PRE>");
+                  PL_strcat(newbody, body);
+                  PL_strcat(newbody, "</PRE>");
+                  PR_Free(body);
+                  body = newbody;
+                }
 
+                composeFormat = nsIMsgCompFormat::HTML;
+              }
+            }
+          }
+          
           mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
-                                                mdd->mailcharset);
+            mdd->mailcharset);
         }
         // setting the charset while we are creating the composition fields
         //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
+        
+        // Ok, if we are here, then we should look at the charset and convert
+        // to UTF-8...
+        //
+        char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
+        if (bodyCharset)
+        {
+          // Now do conversion to UTF-8 for output
+          char  *convertedString = nsnull;
+          PRInt32 convertedStringLen;
+          PRInt32 res = MIME_ConvertCharset(PR_FALSE, bodyCharset, "UTF-8", body, nsCRT::strlen(body), 
+                                            &convertedString, &convertedStringLen, NULL);
+          if (res == 0)
+          {
+            PR_FREEIF(body);
+            body = convertedString;
+          }  
 
-      // convert from UTF-8 to UCS2
-      nsString ucs2;
-      if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
-        fields->SetBody(ucs2.GetUnicode());
-      else
-        fields->SetBody(NS_ConvertASCIItoUCS2(body).GetUnicode());
+          PR_FREEIF(bodyCharset);
+        }
 
+        // convert from UTF-8 to UCS2
+        nsString ucs2;
+        if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
+          fields->SetBody(ucs2.GetUnicode());
+        else
+          fields->SetBody(NS_ConvertASCIItoUCS2(body).GetUnicode());
+        
         PR_FREEIF(body);
       } // end if (messageBody)
-  
+      
       //
       // At this point, we need to create a message compose window or editor
       // window via XP-COM with the information that we have retrieved from 
@@ -1336,7 +1360,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
 #ifdef NS_DEBUG
-       printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
+        printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
 #endif
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity);
       }
@@ -1345,13 +1369,13 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITH a body!!!!\n");
 #endif
-		if (mdd->forwardInline)
-        	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
+        if (mdd->forwardInline)
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
         else
         {
-            nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
-            fields->SetDraftId(urlStr.GetUnicode());
-        	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
+          nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
+          fields->SetDraftId(urlStr.GetUnicode());
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
         }
       }
       
@@ -1376,31 +1400,31 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("Time to create the composition window WITHOUT a body!!!!\n");
 #endif
-		if (mdd->forwardInline)
-	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
-	    else
-	    {
-            nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
-            fields->SetDraftId(urlStr.GetUnicode());
-	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
-	    }
+        if (mdd->forwardInline)
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
+        else
+        {
+          nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
+          fields->SetDraftId(urlStr.GetUnicode());
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
+        }
       }
     }    
   }
   else
   {
     fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-                                      org, subj, refs, 0, priority, 0, news_host,
-                                      GetMailXlateionPreference(), 
-                                      GetMailSigningPreference(),
-                                      mdd->mailcharset);
+      org, subj, refs, 0, priority, 0, news_host,
+      GetMailXlateionPreference(), 
+      GetMailSigningPreference(),
+      mdd->mailcharset);
     if (fields)
       CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::New, nsIMsgCompFormat::Default, mdd->identity);
   }
   
   if ( mdd->headers )
     MimeHeaders_free ( mdd->headers );
-
+  
   // 
   // Free the original attachment structure...
   // Make sure we only cleanup the local copy of the memory and not kill 
@@ -1410,19 +1434,19 @@ mime_parse_stream_complete (nsMIMESession *stream)
   {
     int               i;
     nsMsgAttachedFile *cur = mdd->attachments;
-
+    
     for ( i = 0; i < mdd->attachments_count; i++, cur++ ) 
     {
-	    if ( cur->file_spec ) 
+      if ( cur->file_spec ) 
       {
-	      delete ( cur->file_spec );
+        delete ( cur->file_spec );
         cur->file_spec = nsnull;
       }
     }
-
+    
     mime_free_attachments( mdd->attachments, mdd->attachments_count );
   }
-
+  
   PR_FREEIF(mdd);
   if (fields)
     NS_RELEASE(fields);
@@ -1431,7 +1455,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   MimeObject *obj = (mdd ? mdd->obj : 0);  
   if ( (obj) && (obj->options) && (obj->options->prefs) )
     nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
-
+  
   PR_Free (mdd);
   
   PR_FREEIF(host);
