@@ -105,8 +105,9 @@ install: trapdoor
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/usr/bonsaitools/bin/mysqltcl#$(MYSQLTCL)#g \
+              -e s#/tools/ns/bin/perl5#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
-	chmod 755 $(PREFIX)$$(I); done && \
+	chmod 755 $(PREFIX)/$$I; done && \
 	mkdir -p $(PREFIX)/data && \
 	cp -f trapdoor $(PREFIX)/data && \
 	chmod 755 $(PREFIX)/data && \
