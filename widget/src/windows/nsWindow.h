@@ -196,6 +196,7 @@ protected:
     PRBool      mIsControlDown;
     PRBool      mIsAltDown;
     PRBool      mIsDestroying;
+    PRBool      mOnDestroyCalled;
 
     PRInt32     mWidth;
     PRInt32     mHeight;
