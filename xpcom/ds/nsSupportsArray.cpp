@@ -53,12 +53,15 @@ public:
   NS_IMETHOD_(PRBool) RemoveElementAt(PRInt32 aIndex);
   NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRInt32 aStartIndex = 0);
   NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement);
+
+  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements);
+  
   NS_IMETHOD_(void)   Clear(void);
 
   NS_IMETHOD_(void)   Compact(void);
 
-  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData);
-  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData);
+  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const;
+  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const;
 
 protected:
   void DeleteArray(void);
@@ -269,6 +272,44 @@ PRBool SupportsArrayImpl::RemoveLastElement(const nsISupports* aElement)
   return PR_FALSE;
 }
 
+PRBool SupportsArrayImpl::AppendElements(nsISupportsArray* aElements)
+{
+  SupportsArrayImpl*  elements = (SupportsArrayImpl*)aElements;
+
+  if (elements && (0 < elements->mCount)) {
+    if (mArraySize < (mCount + elements->mCount)) {  // need to grow the array
+      PRInt32 count = mCount + elements->mCount;
+      PRInt32 oldSize = mArraySize;
+      while (mArraySize < count) {  // ick
+        mArraySize += kGrowArrayBy;
+      }
+      nsISupports** oldArray = mArray;
+      mArray = new nsISupports*[mArraySize];
+      if (0 == mArray) { // ran out of memory
+        mArray = oldArray;
+        mArraySize = oldSize;
+        return PR_FALSE;
+      }
+      if (0 != oldArray) { // need to move old data
+        if (0 < mCount) {
+          ::memcpy(mArray, oldArray, mCount);
+        }
+        if (oldArray != &(mAutoArray[0])) {
+          delete[] oldArray;
+        }
+      }
+    }
+
+    PRInt32 index;
+    while (index < elements->mCount) {
+      NS_ADDREF(elements->mArray[index]);
+      mArray[mCount++] = elements->mArray[index++];
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 void SupportsArrayImpl::Clear(void)
 {
   while (0 <= --mCount) {
@@ -300,7 +341,7 @@ void SupportsArrayImpl::Compact(void)
   }
 }
 
-PRBool SupportsArrayImpl::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
+PRBool SupportsArrayImpl::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
 {
   PRInt32 index = -1;
   PRBool  running = PR_TRUE;
@@ -311,7 +352,7 @@ PRBool SupportsArrayImpl::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void
   return running;
 }
 
-PRBool SupportsArrayImpl::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData)
+PRBool SupportsArrayImpl::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData) const
 {
   PRInt32 index = mCount;
   PRBool  running = PR_TRUE;
