@@ -20,9 +20,11 @@
 * Creation Date:   30 May 2001
 * Correction Date: 14 Aug 2001
 *
-* SUMMARY:  Regression test for bug 83293
+* SUMMARY:  Regression test for bugs 83293, 103351
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=83293
-* and http://bugzilla.mozilla.org/show_bug.cgi?id=92942
+*     http://bugzilla.mozilla.org/show_bug.cgi?id=103351
+*     http://bugzilla.mozilla.org/show_bug.cgi?id=92942
+*
 *
 * ********************   CORRECTION !!!  *****************************
 *
