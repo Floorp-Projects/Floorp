@@ -348,6 +348,7 @@ var DefaultController =
         else
           return(GetNumSelectedMessages() > 0);
       case "cmd_markAllRead":
+        return(MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
         return IsFindEnabled();
