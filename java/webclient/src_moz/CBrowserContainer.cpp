@@ -58,7 +58,7 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
     mDomEventTarget(nsnull), inverseDepth(-1), 
     properties(nsnull), currentDOMEvent(nsnull)
 {
-  	NS_INIT_REFCNT();
+  	NS_INIT_ISUPPORTS();
     // initialize the string constants (including properties keys)
     if (!util_StringConstantsAreInitialized()) {
         util_InitStringConstants();

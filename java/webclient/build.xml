@@ -96,10 +96,8 @@
                      executable="gmake"/>
     <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win"/>
-    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_share" executable="make" 
+                     failonerror="yes"/>
 
   </target>
 
@@ -182,10 +180,8 @@
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes">
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win"/>
-    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
+                     failonerror="yes"/>
 
     <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
                      failonerror="yes">
@@ -195,10 +191,8 @@
                      failonerror="yes">
       <arg line="buildRunems"/>
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win buildRunems"/>
-    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
+                     failonerror="yes"/>
 
   </target>
 

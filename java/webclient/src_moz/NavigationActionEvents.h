@@ -37,6 +37,7 @@
 #include "nsActions.h"
 #include "nsIWebNavigation.h"
 #include "nsString.h"
+#include "nsIURI.h"
 #include "ns_util.h"
 
 struct WebShellInitContext;
@@ -81,8 +82,7 @@ protected:
 class wsPostEvent : public nsActionEvent {
 public:
     wsPostEvent(WebShellInitContext *yourInitContext, 
-                const PRUnichar      *absoluteUrlToCopy,
-                PRInt32              absoluteUrlLength,
+                nsIURI              *absoluteUrl,
                 const PRUnichar      *targetToCopy,
                 PRInt32              targetLength,
                 PRInt32              postDataLength,
@@ -98,7 +98,7 @@ private:
 protected:
 
     WebShellInitContext *mInitContext;
-    nsString            *mAbsoluteURL;          
+    nsCOMPtr<nsIURI>     mAbsoluteURI;          
     nsString            *mTarget;          
     const char          *mPostData;      
     const char          *mPostHeaders;   

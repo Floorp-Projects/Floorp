@@ -33,19 +33,19 @@
 
 #include "CurrentPageActionEvents.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsISearchContext.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsIHistoryEntry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsIFindComponent.h"
+#include "nsIWebBrowserFind.h"
 
 wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
@@ -102,99 +102,48 @@ wsFindEvent::handleEvent ()
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
     if (mInitContext) {
-        //First get the FindComponent object
-        nsCOMPtr<nsIFindComponent> findComponent;
-        findComponent = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
+        //First get the nsIWebBrowserFind object
+        nsCOMPtr<nsIWebBrowserFind> findComponent;
+        nsCOMPtr<nsIInterfaceRequestor> 
+            findRequestor(do_GetInterface(mInitContext->webBrowser));
+        
+        rv = findRequestor->GetInterface(NS_GET_IID(nsIWebBrowserFind),
+                                         getter_AddRefs(findComponent));
         
         if (NS_FAILED(rv) || nsnull == findComponent)  {
             return (void *) rv;
         }
-
-        nsCOMPtr<nsISupports> searchContext;
-        // get the nsISearchContext
-        // No seachString means this is Find, not FindNext.
+            
+        // If this a Find, not a FindNext, we must make the
+        // nsIWebBrowserFind instance aware of the string to search.
         if (mSearchString) {
             
-            nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
-            if (mInitContext->docShell != nsnull) {
-                nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(mInitContext->docShell));
-                nsCOMPtr<nsIURI> url = nsnull;
-                
-                rv = mInitContext->webNavigation->GetCurrentURI(getter_AddRefs(url));
-                if (NS_FAILED(rv) || nsnull == url)  {
-                    return (void *) rv;
-                } 
-                
-                if (interfaceRequestor != nsnull) {
-                    rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindowInternal), 
-                                                          getter_AddRefs(domWindowInternal));
-                    if (NS_FAILED(rv) || nsnull == domWindowInternal)  {
-                        return (void *) rv;
-                    }
-                }
-                else
-                    {
-                        mInitContext->initFailCode = kFindComponentError;
-                        return (void *) rv;
-                    }
-            }
-            else {
-                mInitContext->initFailCode = kFindComponentError;
-                return (void *) rv;
-            }
+            PRUnichar * srchString = nsnull;
             
-            // if we get here, we have a domWindowInternal
-            
-            rv = findComponent->CreateContext(domWindowInternal, nsnull, getter_AddRefs(searchContext));
-            if (NS_FAILED(rv))  {
-                mInitContext->initFailCode = kSearchContextError;
-                return (void *) rv;
-            }
-
-        }
-        else {
-            // this is findNext
-            searchContext = mInitContext->searchContext;
-        }
-        if (!searchContext) {
-            mInitContext->initFailCode = kSearchContextError;
-            return (void *) NS_ERROR_FAILURE;
-        }
-        
-        nsCOMPtr<nsISearchContext> srchcontext;
-        rv = searchContext->QueryInterface(NS_GET_IID(nsISearchContext), getter_AddRefs(srchcontext));
-        if (NS_FAILED(rv))  {
-            mInitContext->initFailCode = kSearchContextError;
-            return (void *) rv;
-        }
-        
-        PRUnichar * aString;
-        srchcontext->GetSearchString(& aString);
-        
-        PRUnichar * srchString = nsnull;
-        if (mSearchString) {
-            srchString = (PRUnichar *) ::util_GetStringChars(env, mSearchString);
+            srchString = (PRUnichar *) ::util_GetStringChars(env, 
+                                                             mSearchString);
             
             // Check if String is NULL
             if (nsnull == srchString) {
                 return (void *) NS_ERROR_NULL_POINTER;
             }
-            
-            srchcontext->SetSearchString(srchString);
-            srchcontext->SetSearchBackwards(!mForward);
-            srchcontext->SetCaseSensitive(mMatchCase);
-        }
-        
-        PRBool found = PR_TRUE;
-        rv = findComponent->FindNext(srchcontext, &found);
-        result = (void *) rv;
-        if (mSearchString) {
+            rv = findComponent->SetSearchString(srchString);
+            if (NS_FAILED(rv))  {
+                mInitContext->initFailCode = kFindComponentError;
+                return (void *) rv;
+            }
             ::util_ReleaseStringChars(env, mSearchString, srchString);
             ::util_DeleteGlobalRef(env, mSearchString);
             mSearchString = nsnull;
+
         }
-        // Save in initContext struct for future findNextInPage calls
-        mInitContext->searchContext = srchcontext;
+        findComponent->SetFindBackwards(!mForward);
+        findComponent->SetMatchCase(mMatchCase);
+
+        
+        PRBool found = PR_TRUE;
+        rv = findComponent->FindNext(&found);
+        result = (void *) rv;
   
     }
     return result;

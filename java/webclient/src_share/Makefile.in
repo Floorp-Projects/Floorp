@@ -52,9 +52,13 @@ ifneq ($(BAL_INTERFACE),)
 INCLUDES := -I../bal -I../bal/solaris $(INCLUDES) 
 else
 ifeq ($(OS_ARCH),Linux)
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(INCLUDES)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux $(INCLUDES)
 else
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES)
+ifeq ($(OS_ARCH),WINNT)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 $(INCLUDES)
+else
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES)
+endif
 endif
 endif
 

@@ -38,7 +38,7 @@ InputStreamShim::InputStreamShim(jobject yourJavaStreamRef,
     mCountFromMozilla(0), mAvailable(0), mAvailableForMozilla(0), mNumRead(0),
     mDoClose(PR_FALSE), mDidClose(PR_FALSE), mLock(nsnull) 
 { 
-    NS_INIT_REFCNT(); 
+    NS_INIT_ISUPPORTS();
     mLock = PR_NewLock();
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 }

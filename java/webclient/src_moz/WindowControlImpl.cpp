@@ -98,7 +98,6 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->y = y;
     initContext->w = width;
     initContext->h = height;
-    initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
     initContext->browserContainer = nsnull;
     util_InitializeShareInitContext(&(initContext->shareContext));

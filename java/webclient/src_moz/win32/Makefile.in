@@ -1,0 +1,87 @@
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH		= ../../../..
+topsrcdir	= $(DEPTH)
+srcdir		= $(topsrcdir)/java/webclient/src_moz/win32
+VPATH		= $(topsrcdir)/java/webclient/src_moz/win32
+
+JAVAHOME        = $(MOZ_JDKHOME)
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE=wc_win32
+REQUIRES	= xpcom \
+		  layout \
+		  appcomps \
+		  string \
+		  embed_base \
+		  webBrowser_core \
+		  webshell \
+		  windowwatcher \
+		  profile \
+		  necko \
+		  docshell \
+		  dom \
+		  widget \
+		  uriloader \
+		  shistory \
+		  webbrowserpersist \
+		  content \
+		  gfx \
+		  $(NULL)
+
+ifdef BAL_INTERFACE
+LIBRARY_NAME = wc_win32_bal
+else
+LIBRARY_NAME = wc_win32
+endif
+
+CPPSRCS = \
+	Win32BrowserControlCanvas.cpp \
+	$(NULL)
+
+EXTRA_LIBS		+= \
+			$(XPCOM_LIBS) \
+			$(NSPR_LIBS) \
+			$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+# check for OS type
+ifeq ($(OS_ARCH),Linux)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux -I.. -I../../src_share $(INCLUDES)
+else
+ifeq ($(OS_ARCH),WINNT)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 -I.. -I../../src_share $(INCLUDES)
+else
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris -I.. -I../../src_share $(INCLUDES)
+endif
+endif
+
+export:: libs
+
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).a
+
+clobber_all:: clobber

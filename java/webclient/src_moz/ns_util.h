@@ -48,7 +48,6 @@
 #include "nsIThread.h" // for PRThread
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
-#include "nsISearchContext.h" // for Find
 #include "nsIDOMDocument.h"
 
 #include "wcIBrowserContainer.h" // our BrowserContainer
@@ -101,7 +100,6 @@ struct WebShellInitContext {
 	int					w;
 	int					h;
     int                 gtkWinPtr;
-    nsCOMPtr<nsISearchContext> searchContext;
     nsCOMPtr<nsIDOMDocument> currentDocument;
     nsCOMPtr<wcIBrowserContainer> browserContainer;
     // This struct contains all per-window information not specific to mozilla
@@ -118,7 +116,6 @@ enum {
 	kHistoryWebShellError,
 	kClipboardWebShellError,
 	kFindComponentError,
-	kSearchContextError,
     kGetContentViewerError,
     kGetDOMWindowError
 };

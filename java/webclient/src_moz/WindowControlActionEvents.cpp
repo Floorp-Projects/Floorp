@@ -37,6 +37,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsEmbedAPI.h"  // for NS_TermEmbedding
 
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
 
 /*
@@ -137,7 +140,6 @@ wsDeallocateInitContextEvent::handleEvent ()
     mInitContext->w = -1;
     mInitContext->h = -1;    
     mInitContext->gtkWinPtr = nsnull;
-    mInitContext->searchContext = nsnull;
 
     // make sure we aren't listening anymore.  This needs to be done
     // before currentDocument = nsnull
@@ -151,7 +153,7 @@ wsDeallocateInitContextEvent::handleEvent ()
     if (isLastWindow) {
         NS_TermEmbedding();
 #ifdef _WIN32
-        _exit(0);
+        exit(0);
 #endif
     }
     return (void *) NS_OK;

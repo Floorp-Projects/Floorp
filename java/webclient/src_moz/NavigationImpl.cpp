@@ -31,6 +31,10 @@
 #include "NavigationImpl.h"
 
 #include "NavigationActionEvents.h"
+#include "nsIServiceManagerUtils.h"
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsNetCID.h"
 
 #include "ns_util.h"
 
@@ -159,6 +163,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     const char          *postHeadersChars = nsnull;
     char                *headersAndData   = nsnull;
     wsPostEvent         *actionEvent      = nsnull;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID,
+                                                     &rv);
+    nsCOMPtr<nsIURI> uri;
+    NS_ConvertUCS2toUTF8 uriACString(urlChars);
+
+    if (!ioService || NS_FAILED(rv)) {
+        return;
+    }
 
     if (initContext == nsnull || !initContext->initComplete) {
         ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativePost");
@@ -219,10 +232,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
         }
     }
 
+    rv = ioService->NewURI(uriACString, nsnull, nsnull, 
+                           getter_AddRefs(uri));
+    if (!uri || NS_FAILED(rv)) {
+        goto NPFS_CLEANUP;
+    }
+
 
     if (!(actionEvent = new wsPostEvent(initContext,
-                                        urlChars,
-                                        urlLen,
+                                        uri,
                                         targetChars,
                                         targetLen, 
                                         (PRInt32) postDataLength,

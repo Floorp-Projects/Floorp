@@ -94,10 +94,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
   //First get the FindComponent object
   
-  // Pass searchContext to findComponent for the actual find call
   PRBool found = PR_TRUE;
 
-  if (initContext->initComplete && initContext->searchContext) {
+  if (initContext->initComplete) {
       wsFindEvent * actionEvent = new wsFindEvent(initContext);
       PLEvent			* event       = (PLEvent*) *actionEvent;      
       ::util_PostEvent(initContext, event);
@@ -237,7 +236,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-  initContext->searchContext = nsnull;
 
 }
 

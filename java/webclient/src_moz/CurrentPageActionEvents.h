@@ -35,7 +35,6 @@
 #include "nsActions.h"
 
 #include "nsIContentViewerEdit.h"
-#include "nsISearchContext.h"
 #include "nsISHistory.h"
 #include "ns_util.h"
 

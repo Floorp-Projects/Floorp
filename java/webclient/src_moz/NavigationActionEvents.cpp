@@ -206,8 +206,7 @@ wsLoadFromStreamEvent::~wsLoadFromStreamEvent ()
  * wsPostEvent
  */
 wsPostEvent::wsPostEvent(WebShellInitContext *yourInitContext, 
-                         const PRUnichar     *absoluteUrlToCopy,
-                         PRInt32              absoluteUrlLength,
+                         nsIURI              *absoluteUri,
                          const PRUnichar     *targetToCopy,
                          PRInt32              targetLength,
                          PRInt32              postDataLength,
@@ -217,8 +216,7 @@ wsPostEvent::wsPostEvent(WebShellInitContext *yourInitContext,
     nsActionEvent(), 
     mInitContext(yourInitContext)
 {
-  mAbsoluteURL = new nsString(absoluteUrlToCopy, absoluteUrlLength);
-
+  mAbsoluteURI = absoluteUri;
   if (targetToCopy != nsnull){
     mTarget = new nsString(targetToCopy, targetLength);
   }
@@ -320,7 +318,7 @@ wsPostEvent::handleEvent ()
 
   rv = lh->OnLinkClick(content, 
                        eLinkVerb_Replace, 
-                       mAbsoluteURL->get(), 
+                       mAbsoluteURI, 
                        ((mTarget != nsnull) ? mTarget->get() : nsnull),
                        postDataStream,
                        headersDataStream);  
@@ -331,8 +329,7 @@ wsPostEvent::handleEvent ()
 
 wsPostEvent::~wsPostEvent ()
 {
-  if (mAbsoluteURL != nsnull)
-    delete mAbsoluteURL;
+  mAbsoluteURI = nsnull;
   if (mTarget != nsnull)
     delete mTarget;
   mPostData = nsnull;

@@ -40,7 +40,7 @@ NS_INTERFACE_MAP_END
 
 wsRDFObserver::wsRDFObserver() 
 {
-  	NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 wsRDFObserver::~wsRDFObserver() {}
