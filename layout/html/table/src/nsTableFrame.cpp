@@ -1840,6 +1840,30 @@ nsTableFrame::NotifyAncestorsOfSpecialReflow(const nsHTMLReflowState& aReflowSta
   }
 }
 
+static PRBool
+IsSpecialNested(const nsHTMLReflowState& aReflowState)
+{
+  // Walk up the reflow state tree until we find anything with a style height.
+  // stop when we reach a table
+  const nsHTMLReflowState* rs = aReflowState.parentReflowState;
+  while (rs && rs->frame) {
+    const nsStylePosition* position;
+    rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
+    if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
+      nscoord coordValue = position->mHeight.GetCoordValue();
+      if (coordValue > 0) return PR_TRUE;
+    }
+    else if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
+      float percent = position->mHeight.GetPercentValue();
+      if (percent > 0.0f) return PR_TRUE;
+    }      
+    nsCOMPtr<nsIAtom> frameType;
+    rs->frame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableFrame == frameType.get()) break;
+    rs = rs->parentReflowState;
+  }
+  return PR_FALSE;
+}
 /* overview:
   if mFirstPassValid is false, this is our first time through since content was last changed
     do pass 1
@@ -1943,9 +1967,11 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   // during an unconstrained reflow because another reflow will be processed later.
   if (NeedsReflow(aReflowState) && (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
     if (!mPrevInFlow) {
-      // see if an extra reflow will be necessary when there is a pct height but no height on the parent 
+      // see if an extra reflow will be necessary when the table is nested, there is a pct height, 
+      // no computed height, but a height on the containing table       
       if ( ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)  || 
-            (0                    == aReflowState.mComputedHeight)) && IsPctHeight(mStyleContext)) {
+            (0                    == aReflowState.mComputedHeight)) && 
+            IsPctHeight(mStyleContext) && IsSpecialNested(aReflowState)) {
         NotifyAncestorsOfSpecialReflow(aReflowState);
         SetNeedSpecialReflow(PR_TRUE);
       }
@@ -1970,7 +1996,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = PR_TRUE;
       ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
                   nextReason, doCollapse, balanced, aStatus);
-      haveDesiredHeight = PR_TRUE;;
+      haveDesiredHeight = PR_TRUE;
     }
   }
   else if (aReflowState.mFlags.mSpecialTableReflow) {
@@ -1988,7 +2014,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   if (!haveDesiredHeight) {
     aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); 
   }
-
   if (IsRowInserted()) {
     ProcessRowInserted(aPresContext, *this, PR_TRUE, aDesiredSize.height);
   }

@@ -503,8 +503,11 @@ nsTableRowGroupFrame::GetFirstRow()
 
 
 struct RowInfo {
-  unsigned height:30;
+  RowInfo() { height = pctHeight = hasStyleHeight = hasPctHeight = isSpecial = 0; }
+  unsigned height;       // content height or fixed height, excluding pct height
+  unsigned pctHeight:29; // pct height
   unsigned hasStyleHeight:1; 
+  unsigned hasPctHeight:1; 
   unsigned isSpecial:1; // there is no cell originating in the row with rowspan=1 and there are at
                         // least 2 cells spanning the row and there is no style height on the row
 };
@@ -577,20 +580,6 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
 
-  // make sure that pct height rows do not exceed 100%
-  nscoord pctTotal = 0;
-  nsTableRowFrame* rowFrame;
-  for (rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
-    if (rowFrame->HasPctHeight()) {
-      nscoord pctHeight = NSToCoordRound(rowFrame->GetPctHeight() * 100.0f);
-      if ((pctHeight + pctTotal) > 100) {
-        pctHeight = PR_MAX(0, NSToCoordRound(100.0f - (float)pctTotal));
-        rowFrame->SetPctHeight((float)pctHeight / 100.0f, PR_TRUE);
-      }
-      pctTotal += pctHeight;
-    }
-  }
-    
   // find the nearest row at or before aStartRowFrameIn that isn't spanned into. 
   // If we have a computed height, then we can't compute the heights
   // incrementally from aStartRowFrameIn, and we must start at the first row.
@@ -637,9 +626,14 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   // the style height of the row.
   nscoord pctHeightBasis = GetHeightBasis(aReflowState);
   PRInt32 rowIndex; // the index in rowInfo, not among the rows in the row group
+  nsTableRowFrame* rowFrame;
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame; rowFrame = rowFrame->GetNextRow(), rowIndex++) {
-    UpdateHeights(rowInfo[rowIndex], nsTableFrame::RoundToPixel(rowFrame->GetHeight(pctHeightBasis), p2t), 
-                  heightOfRows, heightOfUnStyledRows);
+    if (rowFrame->HasPctHeight()) {
+      rowInfo[rowIndex].hasPctHeight = PR_TRUE;
+      rowInfo[rowIndex].pctHeight = nsTableFrame::RoundToPixel(rowFrame->GetHeight(pctHeightBasis), p2t);
+    }
+    nscoord nonPctHeight = PR_MAX(rowFrame->GetContentHeight(), rowFrame->GetFixedHeight());
+    UpdateHeights(rowInfo[rowIndex], nonPctHeight, heightOfRows, heightOfUnStyledRows);
     rowInfo[rowIndex].hasStyleHeight = rowFrame->HasStyleHeight();
 
     if (!rowInfo[rowIndex].hasStyleHeight) {
@@ -773,12 +767,23 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
     } // while (rowFrame)
   }
 
+  // pct height rows have already got their content heights. Give them their pct heights up to pctHeightBasis
+  nscoord extra = pctHeightBasis - heightOfRows;
+  for (rowFrame = startRowFrame, rowIndex = 0; rowFrame && (extra > 0); rowFrame = rowFrame->GetNextRow(), rowIndex++) {
+    RowInfo& rInfo = rowInfo[rowIndex];
+    if (rInfo.hasPctHeight) {
+      nscoord rowExtra = PR_MAX(0, rInfo.pctHeight - rInfo.height);
+      rowExtra = PR_MIN(rowExtra, extra);
+      UpdateHeights(rInfo, rowExtra, heightOfRows, heightOfUnStyledRows);
+      extra -= rowExtra;
+    }
+  }
+
   nscoord rowGroupHeight = startRowGroupHeight + heightOfRows + ((numRows - 1) * cellSpacingY);
-  nscoord extraComputedHeight = 0;
   // if we have a style height, allocate the extra height to unconstrained rows
   if ((aReflowState.mComputedHeight > rowGroupHeight) && 
       (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight)) {
-    extraComputedHeight = aReflowState.mComputedHeight - rowGroupHeight;
+    nscoord extraComputedHeight = aReflowState.mComputedHeight - rowGroupHeight;
     nscoord extraUsed = 0;
     PRBool haveUnStyledRows = (heightOfUnStyledRows > 0);
     nscoord divisor = (haveUnStyledRows) 
