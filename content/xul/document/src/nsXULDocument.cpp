@@ -112,6 +112,8 @@
 #include "nsIPref.h"
 #include "nsIFocusController.h"
 #include "nsContentList.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 
 //----------------------------------------------------------------------
@@ -3389,10 +3391,18 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                 // Ignore the return value, as we don't need to propagate
                 // a failure to write to the FastLoad file, because this
                 // method aborts that whole process on error.
-                nsCOMPtr<nsIScriptContext> scriptContext;
-                mScriptGlobalObject->GetContext(getter_AddRefs(scriptContext));
-                if (scriptContext)
-                    scriptProto->SerializeOutOfLine(nsnull, scriptContext);
+                nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner
+                  = do_QueryInterface(mCurrentPrototype);
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+
+                NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
+                if (global) {
+                    nsCOMPtr<nsIScriptContext> scriptContext;
+                    global->GetContext(getter_AddRefs(scriptContext));
+                    if (scriptContext)
+                        scriptProto->SerializeOutOfLine(nsnull, scriptContext);
+                }
             }
         }
         // ignore any evaluation errors
