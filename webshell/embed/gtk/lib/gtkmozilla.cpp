@@ -32,6 +32,7 @@ extern "C" void NS_SetupRegistry();
 
 static void gtk_mozilla_realize(GtkWidget *widget);
 static void gtk_mozilla_finalize (GtkObject *object);
+static void gtk_mozilla_size_allocate (GtkWidget *widget, GtkAllocation *allocation);
 
 typedef gboolean (*GtkSignal_BOOL__POINTER_INT) (GtkObject * object,
                                                  gpointer arg1,
@@ -108,6 +109,7 @@ gtk_mozilla_class_init (GtkMozillaClass *klass)
 
   object_class->finalize = gtk_mozilla_finalize;
   widget_class->realize = gtk_mozilla_realize;
+  widget_class->size_allocate = gtk_mozilla_size_allocate;
 
   klass->will_load_url = NULL;
   klass->begin_load_url = NULL;
@@ -127,6 +129,17 @@ gtk_mozilla_realize (GtkWidget *widget)
   moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
   
   moz_container->Show();
+}
+
+static void
+gtk_mozilla_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
+{
+  g_return_if_fail(widget != NULL);
+  g_return_if_fail(GTK_IS_WIDGET(widget));
+  g_return_if_fail(GTK_IS_MOZILLA(widget));
+  if (GTK_WIDGET_CLASS(parent_class)->size_allocate)
+    (*GTK_WIDGET_CLASS(parent_class)->size_allocate)(widget, allocation);
+  gtk_mozilla_resize(GTK_MOZILLA(widget), allocation->width, allocation->height);
 }
 
 // THIS is a total hack.  Needed cause mozilla wont work without prefs
@@ -151,7 +164,7 @@ static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition)
 {
-  printf("event_processor_callback()\n");
+  // printf("event_processor_callback()\n");
   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
   eventQueue->ProcessPendingEvents();
 }
@@ -161,6 +174,7 @@ GtkType
 gtk_mozilla_get_type (void)
 {
   static GtkType mozilla_type = 0;
+  nsresult rv;
 
   if (!mozilla_type) {
     static const GtkTypeInfo mozilla_info = {
@@ -184,9 +198,9 @@ gtk_mozilla_get_type (void)
 
     // Create the Event Queue for the UI thread...
 
-    nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                               NS_GET_IID(nsIEventQueueService),
-                                               (nsISupports **)&aEventQService);
+    rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                      NS_GET_IID(nsIEventQueueService),
+                                      (nsISupports **)&aEventQService);
     
     if (!NS_SUCCEEDED(rv)) {
       printf("Could not obtain the event queue service\n");
@@ -234,7 +248,8 @@ gtk_mozilla_get_type (void)
                   event_processor_callback,
                   EQueue);
 
-    nsIThread::SetMainThread();
+    // XXX chris this is generating a bad warning.
+    // nsIThread::SetMainThread();
 
   }
 
