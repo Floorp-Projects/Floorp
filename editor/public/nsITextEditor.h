@@ -73,7 +73,7 @@ public:
    *                  in the current selection.  Each item in aPropList is an nsEditProperty.
    * NOTE: this method is experimental, expect it to change.
    */
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)=0;
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll)=0;
 
   /**
    * RemoveTextProperties() deletes the properties from all text in the current selection.
