@@ -99,11 +99,14 @@ ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L/usr/X11R6/lib -lXt
+# Adding $(JDKHOME)/jre/lib/sparc because we need to link against 
+# the libjawt.so shared library for the JAWT Native Interface
+# functionality to work correctly.
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -ljawt -L/usr/X11R6/lib -lXt
 else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L/usr/X11R6/lib -lXt 
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -ljawt -L/usr/X11R6/lib -lXt 
 endif
 endif
 
