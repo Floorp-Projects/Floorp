@@ -28,7 +28,7 @@ var smimeCompFieldsContractID = "@mozilla.org/messenger-smime/composefields;1";
 function GetSecurityInfo()
 {
   var smimeComposefields;
-  var msgCompFields = msgCompose.compFields;
+  var msgCompFields = gMsgCompose.compFields;
   if (msgCompFields)
   {
     if (!msgCompFields.securityInfo)
