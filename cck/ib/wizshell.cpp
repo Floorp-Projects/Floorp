@@ -36,10 +36,17 @@ void CreateRshell (void)
 //	FILE* rshell = theApp.OpenAFile(CDdir +"rshell.ini", "w");
 
 	ofstream rshell(Rsh);
+	CString captionValue = "Netscape Client Customization Kit" ;
+	CString netscapeValue = "Netscape by ";
 	CString fvalue1=GetGlobal("ShellTitleText");
 	CString fvalue2=GetGlobal("ShellBgBitmap");
 	CString fvalue3=GetGlobal("ShellBelowTitleText");
 	CString fvalue4=GetGlobal("ShellInstallTextFile");
+	
+	if (fvalue1.IsEmpty())
+		;
+	else 
+		captionValue = netscapeValue + fvalue1;
 	char jsprefname[200];
 
 	if(!part1) {
@@ -53,7 +60,7 @@ void CreateRshell (void)
 
 		rshell <<jsprefname<<"\n";
 	}
-	rshell <<"caption="<<fvalue1<<"\n";
+	rshell <<"caption="<<captionValue<<"\n";
 //	rshell <<"bk_bitmap="<<fvalue2<<"\n";
 //	rshell <<"button2_cmdline=exe,"<<fvalue4<<"\n";
 
