@@ -299,8 +299,27 @@ function ChangeReplaceWord()
   var saveAllow = allowSelectWord;
   allowSelectWord = false;
 
-  // Unselect the word in the suggested list when user edits the replacement word
-  dialog.SuggestedList.selectedIndex = -1;
+  // Select matching word in list
+  var newIndex = -1;
+  var replaceWord = TrimString(dialog.ReplaceWordInput.value);
+  if (replaceWord)
+  {
+    var count = 0;
+    var treeChildren = dialog.SuggestedList.firstChild.nextSibling;
+    if (treeChildren && treeChildren.childNodes)
+      count = treeChildren.childNodes.length;
+
+    for (var i = 0; i < count; i++)
+    {
+      var wordInList = GetTreelistValueAt(dialog.SuggestedList, i);
+      if (wordInList == replaceWord)
+      {
+        newIndex = i;
+        break;
+      }
+    }
+  }
+  dialog.SuggestedList.selectedIndex = newIndex;
 
   allowSelectWord = saveAllow;
 
