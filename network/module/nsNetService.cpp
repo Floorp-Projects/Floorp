@@ -1018,6 +1018,19 @@ nsNetlibService::CreateURL(nsIURL* *aURL,
     return protocolURLFactory->CreateURL(aURL, aSpec, aContextURL, aContainer, aGroup);
 }
 
+
+
+
+NS_IMETHODIMP
+nsNetlibService::AreThereActiveConnections()
+{
+    if (NET_AreThereActiveConnections() == PR_TRUE)
+        return 1;
+    else
+        return 0;   
+}
+
+
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
@@ -1499,7 +1512,6 @@ BOOL WINAPI DllMain(HINSTANCE hDllInst,
 
   return (bResult);
 }
-
 
 
 #endif /* XP_PC */

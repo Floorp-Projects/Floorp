@@ -243,6 +243,13 @@ struct nsINetService : public nsISupports
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull) = 0;
 
+    
+    NS_IMETHOD AreThereActiveConnections(void) = 0;
+
+
+
+
+
 };
 
 

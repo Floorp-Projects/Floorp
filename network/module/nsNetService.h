@@ -95,6 +95,7 @@ public:
                          const nsIURL* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull);
+    NS_IMETHOD AreThereActiveConnections(void);
 
 protected:
     virtual ~nsNetlibService();
