@@ -652,11 +652,7 @@ nsCString* nsCString::ToNewString() const {
  * @return  ptr to new ascii string
  */
 char* nsCString::ToNewCString() const {
-  nsCString temp(*this);  //construct nsCString with alloc on heap (which we'll steal in a moment)
-  temp.SetCapacity(8);    //force it to have an allocated buffer, even if this is empty.
-  char* result=temp.mStr; //steal temp's buffer
-  temp.mStr=0;            //clear temp's buffer to prevent deallocation
-  return result;          //and return the char*
+  return nsCRT::strdup(mStr);
 }
 
 /**
@@ -666,12 +662,12 @@ char* nsCString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
-  nsString temp;
-  temp.AssignWithConversion(*this);         //construct nsCString with alloc on heap (which we'll steal in a moment)
-  temp.SetCapacity(8);          //force temp to have an allocated buffer, even if this is empty.
-  PRUnichar* result=temp.mUStr; //steal temp's buffer
-  temp.mStr=0;                  //now clear temp's buffer to prevent deallocation
-  temp.mOwnsBuffer=PR_FALSE;    //and return the PRUnichar*
+  PRUnichar* result = NS_STATIC_CAST(PRUnichar*, nsAllocator::Alloc(sizeof(PRUnichar) * (mLength + 1)));
+  if (result) {
+    CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
+    nsAutoString temp(desc);
+    temp.AssignWithConversion(*this);
+  }
   return result;
 }
 
@@ -1948,6 +1944,7 @@ NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
       }
 
     *out = '\0'; // null terminate
+    mLength = utf8len;
   }
 
 

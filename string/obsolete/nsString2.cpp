@@ -719,13 +719,13 @@ nsString* nsString::ToNewString() const {
  * @return  ptr to new ascii string
  */
 char* nsString::ToNewCString() const {
-
-  nsCString temp;
-  temp.AssignWithConversion(GetUnicode(), Length());  //construct nsCString with alloc on heap (which we'll steal in a moment)
-  temp.SetCapacity(8);    //force it to have an allocated buffer, even if this is empty.
-  char* result=temp.mStr; //steal temp's buffer
-  temp.mStr=0;            //clear temp's buffer to prevent deallocation
-  return result;          //and return the char*
+  char* result = NS_STATIC_CAST(char*, nsAllocator::Alloc(mLength + 1));
+  if (result) {
+    CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
+    nsCAutoString temp(desc);
+    temp.AssignWithConversion(*this);
+  }
+  return result;
 }
 
 /**
@@ -763,13 +763,7 @@ char* nsString::ToNewUTF8String() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsString::ToNewUnicode() const {
-
-  nsString temp(*this);         //construct nsString with alloc on heap (which we'll steal in a moment)
-  temp.SetCapacity(8);          //force it to have an allocated buffer, even if this is empty.
-  PRUnichar* result=temp.mUStr; //steal temp's buffer
-  temp.mStr=0;                  //clear temp's buffer to prevent deallocation
-  temp.mOwnsBuffer=PR_FALSE;
-  return result;                //and return the PRUnichar* to the caller
+  return nsCRT::strdup(mUStr);
 }
 
 /**
@@ -2307,6 +2301,116 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsCString& )
   }
 #endif
 #endif
+
+
+void
+NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
+{
+  // Handle null string by just leaving us as a brand-new
+  // uninitialized nsAutoString.
+  if (! aCString)
+    return;
+
+  // Compute space required: do this once so we don't incur multiple
+  // allocations. This "optimization" is probably of dubious value...
+  const char* p;
+  PRUint32 count;
+  for (p = aCString, count = 0; *p && count < aLength; ++count) {
+    if ( 0 == (*p & 0x80) )
+      p += 1; // ASCII
+    else if ( 0xC0 == (*p & 0xE0) )
+      p += 2; // 2 byte UTF8
+    else if ( 0xE0 == (*p & 0xF0) )
+      p += 3; // 3 byte UTF8
+    else if ( 0xF0 == (*p & 0xF8) )
+      p += 4; // 4 byte UTF8
+    else if ( 0xF8 == (*p & 0xFC) )
+      p += 5; // 5 byte UTF8
+    else if ( 0xFC == (*p & 0xFE) )
+      p += 6;
+    else {
+      NS_ERROR("not a UTF-8 string");
+      return;
+    }
+  }
+
+  // Grow the buffer if we need to.
+  if ((count * sizeof(PRUnichar)) >= sizeof(mBuffer))
+    SetCapacity(count + 1);
+
+  // We'll write directly into the new string's buffer
+  PRUnichar* out = mUStr;
+
+  // Convert the characters.
+  for (p = aCString, count = 0; *p && count < aLength; ++count) {
+    char c = *p++;
+
+    if( 0 == (0x80 & c)) { // ASCII
+      *out++ = PRUnichar(c);
+      continue;
+    }
+
+    PRUint32 ucs4;
+    PRInt32 state = 0;
+    
+    if ( 0xC0 == (0xE0 & c) ) { // 2 bytes UTF8
+      ucs4 = (PRUint32(c) << 6) & 0x000007C0L;
+      state = 1;
+    }
+    else if ( 0xE0 == (0xF0 & c) ) { // 3 bytes UTF8
+      ucs4 = (PRUint32(c) << 12) & 0x0000F000L;
+      state = 2;
+    }
+    else if ( 0xF0 == (0xF8 & c) ) { // 4 bytes UTF8
+      ucs4 = (PRUint32(c) << 18) & 0x001F0000L;
+      state = 3;
+    }
+    else if ( 0xF8 == (0xFC & c) ) { // 5 bytes UTF8
+      ucs4 = (PRUint32(c) << 24) & 0x03000000L;
+      state = 4;
+    }
+    else if ( 0xFC == (0xFE & c) ) { // 6 bytes UTF8
+      ucs4 = (PRUint32(c) << 30) & 0x40000000L;
+      state = 5;
+    }
+    else {
+      NS_ERROR("not a UTF8 string");
+      break;
+    }
+
+    while (state--) {
+      c = *p++;
+
+      if ( 0x80 == (0xC0 & c) ) {
+        PRInt32 shift = state * 6;
+        ucs4 |= (PRUint32(c) & 0x3F) << shift;
+      }
+      else {
+        NS_ERROR("not a UTF8 string");
+        goto done; // so we minimally clean up
+      }
+    }
+
+    if (ucs4 >= 0x00010000) {
+      if (ucs4 >= 0x001F0000) {
+        *out++ = 0xFFFD;
+      }
+      else {
+        ucs4 -= 0x00010000;
+        *out++ = 0xD800 | (0x000003FF & (ucs4 >> 10));
+        *out++ = 0xDC00 | (0x000003FF & ucs4);
+      }
+    }
+    else {
+      if (0xfeff != ucs4) // ignore BOM
+        *out++ = ucs4;
+    }
+  }
+
+ done:
+  *out = '\0'; // null terminate
+  mLength = count;
+}
 
 #if 0
 /**

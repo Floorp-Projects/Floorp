@@ -1002,6 +1002,27 @@ NS_ConvertToString( const char* aCString, PRUint32 aLength )
   }
 #endif
 
+
+class NS_COM NS_ConvertUTF8toUCS2
+      : public nsAutoString
+  {
+    public:
+      NS_ConvertUTF8toUCS2( const char* aCString )
+        { Init( aCString, ~PRUint32(0) /* MAXINT */ ); }
+
+      NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
+        { Init( aCString, aLength ); }
+
+      NS_ConvertUTF8toUCS2( char aChar )
+        { Init( &aChar, 1 ); }
+
+    protected:
+      void Init( const char* aCString, PRUint32 aLength );
+
+    private:
+      NS_ConvertUTF8toUCS2( PRUnichar );
+  };
+
 /***************************************************************
   The subsumestr class is very unusual. 
   It differs from a normal string in that it doesn't use normal
