@@ -78,7 +78,7 @@ function goToggleToolbar( id, elementID )
     toolbar.hidden = !isHidden;
     document.persist(id, 'hidden');
     if (element) {
-      element.checked = isHidden;
+      element.setAttribute("checked", isHidden ? "true" : "false");
       document.persist(elementID, 'checked');
     }
   }
