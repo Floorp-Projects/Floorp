@@ -43,6 +43,8 @@ BLOCKQUOTE {
 CENTER {
   display: block;
   text-align: center;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 DIV {
   display: block;
