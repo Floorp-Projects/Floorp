@@ -169,11 +169,13 @@ protected:
     void     PlatformGetFileInfo(nsIRegistry::Key Key,PRTime *lastModifiedTime,PRUint32 *fileSize);
 
 protected:
-    nsHashtable*  mFactories;
-    nsHashtable*  mProgIDs;
-    PRMonitor*    mMon;
-    nsHashtable*  mDllStore;
-    nsIRegistry*  mRegistry;
+    nsHashtable*     mFactories;
+    nsHashtable*     mProgIDs;
+    PRMonitor*       mMon;
+    nsHashtable*     mDllStore;
+    nsIRegistry*     mRegistry;
+	nsIRegistry::Key mXPCOMKey;
+	nsIRegistry::Key mClassesKey;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
