@@ -918,13 +918,16 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
   for (nsIFrame* rowFrame = GetFirstFrame(); rowFrame; GetNextFrame(rowFrame, &rowFrame)) {
+    PRInt32 rowEndY = 0;
     PRBool rowIsOnCurrentPage = PR_TRUE;
+    PRBool degenerateRow = PR_FALSE;
     nsRect bounds;
     rowFrame->GetRect(bounds);
     if (bounds.YMost() > availHeight) {
       nsRect actualRect;
       nsRect adjRect;
       aPresContext->GetPageDim(&actualRect, &adjRect);
+      nsIFrame* contRowFrame = nsnull;
       nscoord pageHeight = actualRect.height;
       // reflow the row in the availabe space and have it split if it is the 1st
       // row or there is at least 20% of the current page available 
