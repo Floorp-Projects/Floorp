@@ -130,6 +130,14 @@ public:
                                      nsIUrlListener* aUrlListener,
                                      PRInt32 level,
                                      nsIURL** aURL);
+    NS_IMETHOD OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
+                                 nsIMsgFolder* aSrcFolder,
+                                 const char* messageIds,
+                                 nsIMsgFolder* aDstFolder,
+                                 PRBool idsAreUids,
+                                 PRBool isMove,
+                                 nsIUrlListener* aUrlListener,
+                                 nsIURL** aURL);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +151,7 @@ public:
 							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 protected:
-    nsresult GetFolderName(nsIImapUrl* aImapUrl, nsIMsgFolder* aImapFolder,
+    nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            nsString2& folderName);
 	nsresult GetImapConnectionAndUrl(nsIEventQueue * aClientEventQueue,
                                      nsIImapUrl  * &imapUrl,
