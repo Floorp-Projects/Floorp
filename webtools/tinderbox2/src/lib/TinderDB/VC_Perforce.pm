@@ -125,7 +125,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -316,10 +316,10 @@ sub status_table_row {
             @{ $DATABASE{$tree}{$time}{'author'}{$author} };
 
         $affected_files{$author}{$time}{$change_num} = 
-            @{ $affected_files_ref };
+            $affected_files_ref;
 
         $jobs_fixed{$author}{$time}{$change_num} = 
-            @{ $jobs_fixed };
+            $jobs_fixed_ref;
 
     }
   } # while (1)
@@ -372,7 +372,12 @@ sub status_table_row {
     # define two tables, to show what was checked in and what jobs
     # were fixed for each author
 
-    foreach $author (sort keys %authors) {
+    my (@authors) = main::uniq ( 
+                                 (keys %affected_files), 
+                                 (keys %jobs_fixed)
+                                 );
+
+    foreach $author (@authors) {
       my ($table) = '';
       my ($num_rows) = 0;
       my ($max_length) = 0;
@@ -386,7 +391,7 @@ sub status_table_row {
                         Revision, Action, Comment);
       $table .= list2table_header($header);
 
-      foreach @row (@{ $affected_files{$author}{$time} }) {
+      foreach $row (@{ $affected_files{$author}{$time} }) {
           
           $num_rows++;
           $table .= list2table_row($time,$changenum,@row);
@@ -400,7 +405,7 @@ sub status_table_row {
                         Author, Status, Comment);
       $table .= list2table_header($header);
 
-      foreach @row (@{ $jobs_fixed{$author}{$time} }) {
+      foreach $row (@{ $jobs_fixed{$author}{$time} }) {
           
           $num_rows++;
           $table .= list2table_row($time,$changenum,@row);
@@ -580,14 +585,15 @@ sub apply_db_updates {
   (defined($METADATA{$tree}{'next_change_num'})) ||
       ($METADATA{$tree}{'next_change_num'} = 1);
 
-    do {
+  while (1) {
 
-        my $change_num = $METADATA{$tree}{'next_change_num'});
+        my $change_num = $METADATA{$tree}{'next_change_num'};
+        $ENV{'PATH'}=$ENV{'PATH'}.':/usr/src/perforce';
         my (@cmd) = ('p4', 'describe', '-s', $change_num);
 
         store_cmd_output(@cmd);        
 
-        if (!(does_cmd_nextline_match("no such changelist.\n"))) {
+        if (does_cmd_nextline_match("^Change ")) {
 
             $METADATA{$tree}{'next_change_num'}++;
             $num_updates++;
@@ -602,9 +608,11 @@ sub apply_db_updates {
             $DATABASE{$tree}{$time}{'author'}{$author} = 
             [\@affected_files, \@jobs_fixed, $change_num];
 
+        } else {
+            last;
         }
 
-    } while ( !(does_cmd_nextline_match("no such changelist.\n")) );
+    }
 
     $METADATA{$tree}{'updates_since_trim'} += $num_updates;
 
@@ -888,13 +896,13 @@ sub parse_update_affected_files {
 
 
 
-list2table_header {
+sub list2table_header {
     my (@list) = @_;
     
     my ($header) = (
                     "\t<tr>".
                     "<th>".
-                    join("</th><th>",@list);
+                    join("</th><th>",@list).
                     "</th>".
                     "</tr>\n".
                     "");
@@ -902,14 +910,14 @@ list2table_header {
 }
 
 
-list2table_row {
+sub list2table_row {
     my (@list) = @_;
     
     my ($row) = (
                  "\t<tr>".
-                 "<td>"
+                 "<td>".
                  join("</td><td>", @list).
-                 "</td>"
+                 "</td>".
                  "</tr>\n".
                  "");
     
