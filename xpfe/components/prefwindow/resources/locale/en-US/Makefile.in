@@ -50,6 +50,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-smartupdate.dtd \
 		$(srcdir)/pref-mousewheel.dtd	\
 		$(srcdir)/pref-wallet.dtd	\
+		$(srcdir)/prefutilities.properties	\
 		$(srcdir)/preftree.dtd \
 		$(srcdir)/pref.dtd \
 		$(NULL)
