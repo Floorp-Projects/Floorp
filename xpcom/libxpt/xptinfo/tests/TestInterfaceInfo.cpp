@@ -31,6 +31,11 @@
 
 static void RegAllocator();
 
+// This file expects the nsInterfaceInfoManager to be able to discover
+// .xpt files corresponding to those in xpcom/idl.  Currently this
+// means setting XPTDIR in the environment to some directory
+// containing these files.
+
 int main (int argc, char **argv) {
     RegAllocator();
 
@@ -39,8 +44,8 @@ int main (int argc, char **argv) {
     char *name1, *name2, *name3, *name4;
     nsIInterfaceInfo *info1, *info2, *info3, *info4;
 
-    fprintf(stderr, "\ngetting iid for 'Interface'\n");
-    iim->GetIIDForName("Interface", &iid1);
+    fprintf(stderr, "\ngetting iid for 'nsISupports'\n");
+    iim->GetIIDForName("nsISupports", &iid1);
     iim->GetNameForIID(iid1, &name1);
     fprintf(stderr, "%s iid %s\n", name1, iid1->ToString());
 
