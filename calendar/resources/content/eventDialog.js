@@ -98,6 +98,8 @@ const kRepeatDay_6 = 1<<6;//Saturday
 
 
 var gStartDate = new Date( );
+// Note: gEndDate is *exclusive* end date, so duration = end - start.
+// For all-day(s) events (no times), displayed end date is one day earlier.
 var gEndDate = new Date( );
 
 /*-----------------------------------------------------------------
@@ -137,12 +139,12 @@ function loadCalendarEventDialog()
    document.getElementById( "start-datetime" ).value = gStartDate;
    
    gEndDate.setTime( gEvent.end.getTime() );
-   var userEndDate = new Date(gEndDate);
+   var displayEndDate = new Date(gEndDate);
    if( gEvent.allDay ) {
-      //userland enddate == ical enddate - 1, in the case of allday events 
-      userEndDate.setDate( userEndDate.getDate() - 1 );
+      //displayEndDate == icalEndDate - 1, in the case of allday events 
+      displayEndDate.setDate( displayEndDate.getDate() - 1 );
    }
-   document.getElementById( "end-datetime" ).value = userEndDate;
+   document.getElementById( "end-datetime" ).value = displayEndDate;
    
    gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
    
@@ -482,59 +484,50 @@ function onOKCommand()
    return true;
 }
 
-function checkEndTime()
-{
-   var AllDayEvent = getFieldValue( "all-day-event-checkbox", "checked" );
-   if( gEndDate.getTime() < gStartDate.getTime() && !AllDayEvent )
-   {
-      return( true );
-   }
-   else
-   {
-      return( false );
-   }
-}
-
 /*
- * Check that the end date is after the start date, if they are the same day
- * then the checkEndTime function should catch the problem (if there is one).
+ * Compare dateA with dateB ignoring time of day of each date object.
+ * Comparison based on year, month, and day, ignoring rest.
+ * Returns
+ *   -1 if dateA <  dateB (ignoring time of day)
+ *    0 if dateA == dateB (ignoring time of day)
+ *   +1 if dateA >  dateB (ignoring time of day)
  */
 
-function checkEndDate()
+function compareIgnoringTimeOfDay(dateA, dateB)
 {
-   if( gStartDate.getFullYear() == gEndDate.getFullYear() &&
-       gStartDate.getMonth() == gEndDate.getMonth() &&
-       gStartDate.getDay() == gEndDate.getDay() ) {
-      if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-         return( -1 ) //from users point of view allday events end at gEndDate-1 
-      } else {
-         return( 0 );
-      }
-   } else if ( gEndDate < gStartDate) {
+  if (dateA.getFullYear() == dateB.getFullYear() &&
+      dateA.getMonth() == dateB.getMonth() &&
+      dateA.getDay() == dateB.getDay() ) {
+    return 0;
+  } else if (dateA < dateB) {
       return -1;
-   } else if ( gEndDate > gStartDate) {
+  } else if (dateA > dateB) {
       return 1;
    }
 }
 
+/** Check that end date is not before start date, and update warning msg.
+    Return true if problem found. **/
 function checkSetTimeDate()
 {
-   var CheckEndDate = checkEndDate();
-   var CheckEndTime = checkEndTime();
+   var dateComparison = compareIgnoringTimeOfDay(gEndDate, gStartDate);
 
-   if ( CheckEndDate < 0 )
+   if (dateComparison < 0 ||
+       (dateComparison == 0 && getFieldValue( "all-day-event-checkbox",
+                                              "checked" )))
    {
-      // end before start
+      // end before start, or all day event and end date is not exclusive.
       setDateError(true);
       setTimeError(false);
       return false;
    }
-   else if ( CheckEndDate == 0 )
+   else if (dateComparison == 0)
    {
       setDateError(false);
-      // start & end same
-      setTimeError(CheckEndTime);
-      return !CheckEndTime;
+      // start & end date same, so compare entire time (ms since 1970)
+      var isBadEndTime = gEndDate.getTime() < gStartDate.getTime();
+      setTimeError(isBadEndTime);
+      return !isBadEndTime;
    }
    else
    {
@@ -607,12 +600,12 @@ function updateOKButton()
 
 function onDateTimePick( dateTimePicker )
 {
-   var pickedDateTime = new Date( dateTimePicker.value);
+   var pickedDateTime = new Date( dateTimePicker.value );
 
    if( dateTimePicker.id == "end-datetime" )
    {
      if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-       //user enddate == ical enddate - 1 (for allday events)
+       //display enddate == ical enddate - 1 (for allday events)
        pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
      }
      gEndDate = pickedDateTime;
@@ -629,12 +622,12 @@ function onDateTimePick( dateTimePicker )
      // preserve the previous duration by changing end
      gEndDate.setTime( gStartDate.getTime() + gDuration );
      
-     var userEndDate =new Date(gEndDate)
+     var displayEndDate = new Date(gEndDate)
      if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-       //user enddate == ical enddate - 1 (for allday events)
-       userEndDate.setDate( userEndDate.getDate() - 1 );
+       //display enddate == ical enddate - 1 (for allday events)
+       displayEndDate.setDate( displayEndDate.getDate() - 1 );
      }
-     document.getElementById( "end-datetime" ).value = userEndDate;
+     document.getElementById( "end-datetime" ).value = displayEndDate;
    }
 
    var now = new Date();
@@ -679,8 +672,13 @@ function commandUntil()
 
 function commandAllDay()
 {
+  //user enddate == ical enddate - 1 (for allday events)
+  if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
+    gEndDate.setDate( gEndDate.getDate() + 1 );
+  } else { 
+    gEndDate.setDate( gEndDate.getDate() - 1 );
+  }
    updateStartEndItemEnabled();
-
    updateOKButton();
 }
 
