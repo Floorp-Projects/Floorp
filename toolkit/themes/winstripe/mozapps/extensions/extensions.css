@@ -19,7 +19,6 @@
 
 #uninstallButton {
   margin: 0px;
-  -moz-user-focus: ignore;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
   -moz-image-region: rect(0px, 21px, 21px, 0px) !important;
 }
@@ -31,7 +30,6 @@
 
 #updateButton {
   margin: 0px;
-  -moz-user-focus: ignore;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
   -moz-image-region: rect(0px, 42px, 21px, 21px) !important;
 }
@@ -43,7 +41,6 @@
 
 #useThemeButton {
   margin: 0px;
-  -moz-user-focus: ignore;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
   -moz-image-region: rect(0px, 63px, 21px, 42px) !important;
 }
@@ -66,6 +63,11 @@
   text-decoration: underline !important;
   cursor: pointer;
   text-align: right;
+  -moz-user-focus: normal;
+}
+
+#getMore:focus {
+  -moz-outline: 1px dotted invert ! important;
 }
 
 /* Extension Buttons (Iconic buttons in each extension item) */
