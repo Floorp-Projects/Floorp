@@ -474,6 +474,14 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoPrintSetup();
     break;
 
+  case VIEWER_TABLE_INSPECTOR:
+    DoTableInspector();
+    break;
+
+  case VIEWER_IMAGE_INSPECTOR:
+    DoImageInspector();
+    break;
+
 #if defined(XP_WIN) || defined(XP_MAC)
   case VIEWER_TREEVIEW:
 	// Instantiate a tree widget
@@ -1102,6 +1110,16 @@ nsBrowserWindow::~nsBrowserWindow()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mTreeView);
+  NS_IF_RELEASE(mTableInspectorDialog);
+  NS_IF_RELEASE(mImageInspectorDialog);
+
+  if (nsnull != mTableInspector) {
+    delete mTableInspector;
+  }
+  if (nsnull != mImageInspector) {
+    delete mImageInspector;
+  }
+
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)
@@ -2255,6 +2273,97 @@ void nsBrowserWindow::DoPrintSetup()
   //NS_IF_RELEASE(dialog);
 
 }
+
+//---------------------------------------------------------------
+nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIWebShell *aWebShell)
+{
+  nsIDOMDocument* domDoc = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* mCViewer;
+    aWebShell->GetContentViewer(mCViewer);
+    if (nsnull != mCViewer) {
+      nsIDocumentViewer* mDViewer;
+      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
+	      nsIDocument* mDoc;
+	      mDViewer->GetDocument(mDoc);
+	      if (nsnull != mDoc) {
+	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+	        }
+	        NS_RELEASE(mDoc);
+	      }
+	      NS_RELEASE(mDViewer);
+      }
+      NS_RELEASE(mCViewer);
+    }
+  }
+  return domDoc;
+}
+
+//---------------------------------------------------------------
+void nsBrowserWindow::DoTableInspector()
+{
+  if (mTableInspectorDialog) {
+    mTableInspectorDialog->SetVisible(PR_TRUE);
+    return;
+  }
+  nsIDOMDocument* domDoc = GetDOMDocument(mWebShell);
+
+  if (nsnull != domDoc) {
+    nsString printHTML("resource:/res/samples/printsetup.html");
+    nsRect rect(0, 0, 375, 510);
+    nsString title("Table Inspector");
+
+    nsXPBaseWindow * xpWin = nsnull;
+    nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+                                               kIXPBaseWindowIID,
+                                               (void**) &xpWin);
+    if (rv == NS_OK) {
+      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+      xpWin->SetVisible(PR_TRUE);
+ 	    if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mTableInspectorDialog)) {
+        mTableInspector = new nsTableInspectorDialog(this, domDoc); // ref counts domDoc
+        if (nsnull != mTableInspector) {
+          xpWin->AddWindowListener(mTableInspector); 
+        }
+      }
+      NS_RELEASE(xpWin);
+    }
+    NS_RELEASE(domDoc);
+  }
+
+}
+void nsBrowserWindow::DoImageInspector()
+{
+  if (mImageInspectorDialog) {
+    mImageInspectorDialog->SetVisible(PR_TRUE);
+    return;
+  }
+
+  nsIDOMDocument* domDoc = GetDOMDocument(mWebShell);
+
+  if (nsnull != domDoc) {
+    nsString printHTML("resource:/res/samples/image_props.html");
+    nsRect rect(0, 0, 485, 124);
+    nsString title("Image Inspector");
+
+    nsXPBaseWindow * xpWin = nsnull;
+    nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
+    if (rv == NS_OK) {
+      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+      xpWin->SetVisible(PR_TRUE);
+ 	    if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mImageInspectorDialog)) {
+        mImageInspector = new nsImageInspectorDialog(this, domDoc); // ref counts domDoc
+        if (nsnull != mImageInspector) {
+          xpWin->AddWindowListener(mImageInspector); 
+        }
+      }
+      NS_RELEASE(xpWin);
+    }
+    NS_RELEASE(domDoc);
+  }
+
+}
+
 //----------------------------------------------------------------------
 
 void

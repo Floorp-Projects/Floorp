@@ -91,7 +91,8 @@ nsXPBaseWindow::nsXPBaseWindow() :
   mContentRoot(nsnull),
   mPrefs(nsnull),
   mAppShell(nsnull),
-  mDocIsLoaded(PR_FALSE)
+  mDocIsLoaded(PR_FALSE),
+  mWindowListener(nsnull)
 {
 }
 
@@ -488,6 +489,10 @@ NS_IMETHODIMP nsXPBaseWindow::RemoveEventListener(nsIDOMNode * aNode)
 //-----------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::AddWindowListener(nsIWindowListener * aWindowListener)
 {
+  if (nsnull != mWindowListener) {
+    return NS_ERROR_FAILURE;
+  }
+
   mWindowListener = aWindowListener;
   if (mDocIsLoaded && nsnull != mWindowListener) {
     mWindowListener->Initialize(this);
