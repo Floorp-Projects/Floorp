@@ -48,6 +48,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIPresContext.h"
@@ -505,6 +506,12 @@ nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
               mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, nsAutoString(), PR_TRUE);
 
           mPressed = PR_FALSE;
+
+          // if we dragged then fire a command event.
+          if (mDidDrag) {
+              nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(mOuter->GetContent());
+              element->DoCommand();
+          }
 
           //printf("MouseUp\n");
 
