@@ -214,12 +214,16 @@ public:
 	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
 	nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
 	nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
+
+	nsresult				CreateCollationKey(nsString &sourceString, nsString &resultString);
+
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
 	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
 	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
 	static	void			YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
 	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
+
 	
 	// helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
 	static void				PRTime2Seconds(PRTime prTime, PRUint32 *seconds);

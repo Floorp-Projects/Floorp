@@ -20,6 +20,7 @@
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
 #include "nsMsgUtils.h"
+#include "nsIMsgHeaderParser.h"
 
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
 
@@ -497,7 +498,31 @@ NS_IMETHODIMP nsMsgHdr::GetMime2DecodedRecipients(nsString *resultRecipients)
 
 NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString *resultAuthor)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_senderColumnToken, *resultAuthor);
+	nsCAutoString cSender;
+	char *name = nsnull;
+
+	nsresult ret = m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_senderColumnToken, cSender);
+	if (NS_SUCCEEDED(ret))
+	{
+		nsIMsgHeaderParser *headerParser = m_mdb->GetHeaderParser();
+		if (headerParser)
+		{
+			//XXXOnce we get the csid, use Intl version
+			if(NS_SUCCEEDED(ret = headerParser->ExtractHeaderAddressName (nsnull, cSender, &name)))
+				*resultAuthor = name;
+
+		}
+	}
+	if (NS_SUCCEEDED(ret))
+	{
+		nsAutoString autoString(name);
+		ret = m_mdb->CreateCollationKey(autoString, *resultAuthor);
+	}
+
+	if(name)
+		PL_strfree(name);
+
+	return ret;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(nsString *resultSubject)

@@ -2102,13 +2102,16 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 
 	err = RowCellColumnToMime2DecodedString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err))
-	{
-		err = GetCollationKeyGenerator();
-		if (NS_SUCCEEDED(err) && m_collationKeyGenerator)
-		{
-			err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, nakedString, resultStr) ;
- 		}
-	}
+		err = CreateCollationKey(nakedString, resultStr);
+
+	return err;
+}
+
+nsresult nsMsgDatabase::CreateCollationKey(nsString &sourceString, nsString &resultString)
+{
+	nsresult err = GetCollationKeyGenerator();
+	if (NS_SUCCEEDED(err) && m_collationKeyGenerator)
+		err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, sourceString, resultString) ;
 	return err;
 }
 
