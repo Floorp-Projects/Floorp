@@ -112,6 +112,7 @@ private:
 	static nsIRDFResource	*kNC_RelevanceSort;
 	static nsIRDFResource	*kNC_Site;
 	static nsIRDFResource	*kNC_Engine;
+	static nsIRDFResource	*kNC_HTML;
 
 	char			*mLine;
 
@@ -284,6 +285,7 @@ nsIRDFResource			*SearchDataSourceCallback::kNC_RelevanceSort;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Site;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Engine;
 nsIRDFResource			*SearchDataSourceCallback::kNC_loading;
+nsIRDFResource			*SearchDataSourceCallback::kNC_HTML;
 
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
@@ -1743,6 +1745,7 @@ SearchDataSourceCallback::SearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFR
 		gRDFService->GetResource(NC_NAMESPACE_URI "Site", &kNC_Site);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Engine", &kNC_Engine);
 		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "HTML", &kNC_HTML);
 	}
 }
 
@@ -1772,6 +1775,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 		NS_RELEASE(kNC_Site);
 		NS_RELEASE(kNC_Engine);
 		NS_RELEASE(kNC_loading);
+		NS_RELEASE(kNC_HTML);
 	}
 }
 
@@ -2135,10 +2139,23 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		}
 #endif
 
-
 		delete [] href;
 		href = nsnull;
 		if (NS_FAILED(rv))	continue;
+		
+		// set HTML chunk
+		const PRUnichar	*htmlUni = resultItem.GetUnicode();
+		if (htmlUni)
+		{
+			nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
+			{
+				if (htmlLiteral)
+				{
+					mDataSource->Assert(res, kNC_HTML, htmlLiteral, PR_TRUE);
+				}
+			}
+		}
 
 		// look for Site (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldSiteRes = nsnull;
