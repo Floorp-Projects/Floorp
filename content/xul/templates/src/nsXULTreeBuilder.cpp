@@ -70,6 +70,7 @@
 #include "nsVoidArray.h"
 #include "nsUnicharUtils.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMClassInfo.h"
 
 // For security check
 #include "nsIDocument.h"
@@ -308,9 +309,16 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXULTreeBuilder, nsXULTemplateBuilder,
-                             nsIXULTreeBuilder,
-                             nsITreeView)
+NS_IMPL_ADDREF(nsXULTreeBuilder)
+NS_IMPL_RELEASE(nsXULTreeBuilder)
+
+NS_INTERFACE_MAP_BEGIN(nsXULTreeBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsIXULTreeBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsITreeView)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTreeBuilder)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTreeBuilder)
+NS_INTERFACE_MAP_END_INHERITING(nsXULTemplateBuilder)
+
 
 nsXULTreeBuilder::nsXULTreeBuilder()
     : mSortVariable(0),

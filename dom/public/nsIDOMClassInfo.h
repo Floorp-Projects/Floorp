@@ -270,6 +270,10 @@ enum nsDOMClassInfoID {
   
   eDOMClassInfo_ImageDocument_id,
 
+#ifdef MOZ_XUL
+  eDOMClassInfo_XULTreeBuilder_id,
+#endif
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
