@@ -269,7 +269,7 @@ write_address_file(void * pc, FILE* aStream)
         }
  
 #ifdef __GNUC__
-        nsTraceRefcnt::DemangleSymbol(func, dembuff, sizeof(dembuff));
+        DemangleSymbol(func, dembuff, sizeof(dembuff));
         if (strlen(dembuff)) {
             func = dembuff;
         }
