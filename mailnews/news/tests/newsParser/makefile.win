@@ -30,7 +30,6 @@ LLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\plc3.lib			\
  $(DIST)\lib\msgnews_s.lib    	\
  $(DIST)\lib\msgbase.lib		\
  $(DIST)\lib\msgbaseutil.lib	\

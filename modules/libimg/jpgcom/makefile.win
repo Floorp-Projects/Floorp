@@ -44,7 +44,6 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 LCFLAGS		= $(LCFLAGS) /TP 
 
 LLIBS= $(LIBNSPR)  \
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\util.lib            \
 	$(DIST)\lib\jpeg3250.lib            \
 	$(DIST)\lib\xpcom.lib \
@@ -52,8 +51,6 @@ LLIBS= $(LIBNSPR)  \
 	$(DIST)\lib\cache.lib \
 !endif
 	$(NULL)
-
-MISCDEP=$(LLIBS)
 
 LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 LIBRARY_SUFFIX = $(MOZ_BITS)$(VERSION_NUMBER)

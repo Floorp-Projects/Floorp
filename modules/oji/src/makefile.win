@@ -103,7 +103,6 @@ EXPORTS = jvmmgr.h \
 
 LLIBS = \
 	$(LIBNSPR)			\
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\xpcom.lib         \
 	$(DIST)\lib\xplib.lib           \
 	$(DIST)\lib\js3250.lib          \

@@ -36,15 +36,12 @@ OBJS=											\
 LLIBS=											\
 			$(MSGLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
-			$(DIST)\lib\plc3.lib				\
 			$(DIST)\lib\msgbaseutil.lib			\
 			$(DIST)\lib\msgnews_s.lib			\
 			$(DIST)\lib\netlib.lib				\
 			$(LIBNSPR)							\
 			$(DIST)\lib\rdfutil_s.lib			\
 			$(NULL)
-
-MISCDEP=$(LLIBS)
 
 include <$(DEPTH)/config/rules.mak>
 

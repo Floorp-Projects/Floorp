@@ -116,12 +116,9 @@ OBJS=											\
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
-			$(DIST)\lib\plc3.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
-
-MISCDEP=$(LLIBS)
 
 include <$(DEPTH)/config/rules.mak>
 

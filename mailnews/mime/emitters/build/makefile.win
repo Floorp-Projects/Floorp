@@ -52,8 +52,6 @@ LLIBS=										\
 			$(DIST)\lib\emitterutils_s.lib  \
 			$(NULL)
 
-MISCDEP=$(LLIBS)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

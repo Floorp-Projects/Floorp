@@ -94,7 +94,6 @@ MSGLIBS=				\
 LLIBS=							\
 			$(LLIBS)			\
 			$(LIBNSPR)			\
-			$(DIST)\lib\plc3.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xppref32.lib	\
 			$(DIST)\lib\xpcom.lib       	\
