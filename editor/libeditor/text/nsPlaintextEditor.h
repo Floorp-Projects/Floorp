@@ -55,6 +55,7 @@ class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
 class nsIDocumentEncoder;
+class nsIDragSession;
 
 /**
  * The text editor implementation.
@@ -226,6 +227,11 @@ protected:
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD InsertTextFromTransferable(nsITransferable *transferable);
+  virtual nsresult SetupDocEncoder(nsIDocumentEncoder **aDocEncoder);
+  virtual nsresult PutDragDataInTransferable(nsITransferable **aTransferable);
+  virtual nsresult DoAllowDropHook(nsIDOMEvent* aDropEvent, nsIDragSession *aSession, PRBool *aAllowDrop);
+  virtual nsresult DoInsertionHook(nsIDOMEvent* aDropEvent,
+                                   nsITransferable *aTrans, PRBool *aDoInsert);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();

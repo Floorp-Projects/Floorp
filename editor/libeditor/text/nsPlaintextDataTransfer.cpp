@@ -100,6 +100,10 @@
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDocShell.h"
+#include "nsIClipboardDragDropHooks.h"
+#include "nsIClipboardDragDropHookList.h"
+#include "nsISimpleEnumerator.h"
 
 // Misc
 #include "nsEditorUtils.h"
@@ -182,11 +186,22 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (!dragSession) return NS_OK;
 
+  // transferable hooks
+  PRBool isAllowed = PR_TRUE;
+  DoAllowDropHook(aDropEvent, dragSession, &isAllowed);
+  if (!isAllowed)
+    return NS_OK;
+
   // Get the nsITransferable interface for getting the data from the drop
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareTransferable(getter_AddRefs(trans));
   if (NS_FAILED(rv)) return rv;
   if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
+
+  PRBool doInsert = PR_TRUE;
+  DoInsertionHook(aDropEvent, trans, &doInsert);
+  if (!doInsert)
+    return NS_OK;
 
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
@@ -366,13 +381,11 @@ NS_IMETHODIMP nsPlaintextEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDr
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
 
   if (nsevent) {
-    res = nsevent->GetOriginalTarget(getter_AddRefs(eventTarget));
-    if (NS_FAILED(res)) {
-      return res;
-    }
+    res = nsevent->GetExplicitOriginalTarget(getter_AddRefs(eventTarget));
+    if (NS_FAILED(res)) return res;
   }
 
-  if ( eventTarget )
+  if (eventTarget)
   {
     nsCOMPtr<nsIDOMNode> eventTargetDomNode = do_QueryInterface(eventTarget);
     if ( eventTargetDomNode )
@@ -385,6 +398,42 @@ NS_IMETHODIMP nsPlaintextEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDr
     }
   }
 
+  if (NS_FAILED(res)) return res;
+  if (!*aCanDrag) return NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> isupp;
+  doc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  if (!hookObj) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIClipboardDragDropHooks> override;
+  PRBool hasMoreHooks = PR_FALSE;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+         && hasMoreHooks)
+  {
+    res = enumerator->GetNext(getter_AddRefs(isupp));
+    if (NS_FAILED(res)) break;
+    override = do_QueryInterface(isupp);
+    if (override)
+    {
+      res = override->AllowStartDrag(aDragEvent, aCanDrag);
+      NS_ASSERTION(NS_SUCCEEDED(res), "hook failure in AllowStartDrag");
+    }
+
+    if (!*aCanDrag)
+      break;
+  }
+
   return NS_OK;
 }
 
@@ -392,14 +441,14 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  rv = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  nsCOMPtr<nsITransferable> trans;
+  rv = PutDragDataInTransferable(getter_AddRefs(trans));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
+  if (!trans) return NS_OK; // maybe there was nothing to copy?
 
-  /* get the selection to be dragged */
-  nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
+ /* get the drag service */
+  nsCOMPtr<nsIDragService> dragService = 
+           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   /* create an array of transferables */
@@ -408,108 +457,62 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   if (transferableArray == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  /* get the drag service */
-  nsCOMPtr<nsIDragService> dragService = 
-           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  /* add the transferable to the array */
+  rv = transferableArray->AppendElement(trans);
   if (NS_FAILED(rv)) return rv;
 
-  /* create html flavor transferable */
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
-  NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
-
+  // check our transferable hooks (if any)
   nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv)) return rv;
-	
+  GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  if (doc)
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> isupp;
+  doc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  if (!hookObj) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIClipboardDragDropHooks> override;
+  PRBool canInvokeDrag = PR_TRUE;
+  PRBool hasMoreHooks = PR_FALSE;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+         && hasMoreHooks)
   {
-    // find out if we're a plaintext control or not
-    PRUint32 editorFlags = 0;
-    rv = GetFlags(&editorFlags);
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
-    
-    // get correct mimeType and document encoder flags set
-    nsAutoString mimeType;
-    PRUint32 docEncoderFlags = 0;
-    if (bIsPlainTextControl)
+    rv = enumerator->GetNext(getter_AddRefs(isupp));
+    if (NS_FAILED(rv)) break;
+    override = do_QueryInterface(isupp);
+    if (override)
     {
-      docEncoderFlags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
-      mimeType = NS_LITERAL_STRING(kUnicodeMime);
+      nsresult hookResult = override->OnCopyOrDrag(trans, &canInvokeDrag);
+      NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnCopyOrDrag");
     }
-    else
-      mimeType = NS_LITERAL_STRING(kHTMLMime);
-    
-    // set up docEncoder
-    nsCOMPtr<nsIDocumentEncoder> docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-    NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-    rv = docEncoder->Init(doc, mimeType, docEncoderFlags);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = docEncoder->SetSelection(selection);
-    if (NS_FAILED(rv)) return rv;
-
-    // grab a string
-    nsAutoString buffer;
-    rv = docEncoder->EncodeToString(buffer);
-    if (NS_FAILED(rv)) return rv;
-
-    // if we have an empty string, we're done; otherwise continue
-    if ( !buffer.IsEmpty() )
-    {
-      nsCOMPtr<nsISupportsString> dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-
-      rv = dataWrapper->SetData( buffer );
-      if (NS_FAILED(rv)) return rv;
-
-      if (bIsPlainTextControl)
-      {
-         // Add the unicode flavor to the transferable
-        rv = trans->AddDataFlavor(kUnicodeMime);
-        if (NS_FAILED(rv)) return rv;
-      }
-      else
-      {
-        rv = trans->AddDataFlavor(kHTMLMime);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
-        NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
-
-        rv = trans->SetConverter(htmlConverter);
-        if (NS_FAILED(rv)) return rv;
-      }
-
-      // QI the data object an |nsISupports| so that when the transferable holds
-      // onto it, it will addref the correct interface.
-      nsCOMPtr<nsISupports> nsisupportsDataWrapper ( do_QueryInterface(dataWrapper) );
-      rv = trans->SetTransferData(bIsPlainTextControl ? kUnicodeMime : kHTMLMime,  
-                                  nsisupportsDataWrapper, buffer.Length() * 2);
-      if (NS_FAILED(rv)) return rv;
-
-      /* add the transferable to the array */
-      rv = transferableArray->AppendElement(trans);
-      if (NS_FAILED(rv)) return rv;
-
-      /* invoke drag */
-      unsigned int flags;
-      // in some cases we'll want to cut rather than copy... hmmmmm...
-        flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
-      
-      rv = dragService->InvokeDragSession( domnode, transferableArray, nsnull, flags);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
-
-      if (nsevent) {
-        nsevent->PreventBubble();
-      }
-    }
+    // if one of our overrides says we can't invoke drag, return now
+    if (!canInvokeDrag)
+      return NS_OK;
   }
+
+  /* invoke drag */
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  rv = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
+
+  unsigned int flags;
+  // in some cases we'll want to cut rather than copy... hmmmmm...
+  flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
+
+  rv = dragService->InvokeDragSession(domnode, transferableArray, nsnull, flags);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
+  if (nsevent)
+    nsevent->PreventBubble();
 
   return rv;
 }
@@ -529,6 +532,12 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
   rv = PrepareTransferable(getter_AddRefs(trans));
   if (NS_SUCCEEDED(rv) && trans)
   {
+    // handle transferable hooks
+    PRBool doInsert = PR_TRUE;
+    DoInsertionHook(nsnull, trans, &doInsert);
+    if (!doInsert)
+      return NS_OK;
+
     // Get the Data from the clipboard  
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
@@ -584,4 +593,198 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   
   *aCanPaste = haveFlavors;
   return NS_OK;
+}
+
+nsresult
+nsPlaintextEditor::SetupDocEncoder(nsIDocumentEncoder **aDocEncoder)
+{
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsresult rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv)) return rv;
+	
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  // find out if we're a plaintext control or not
+  PRUint32 editorFlags = 0;
+  rv = GetFlags(&editorFlags);
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
+
+  // get correct mimeType and document encoder flags set
+  nsAutoString mimeType;
+  PRUint32 docEncoderFlags = 0;
+  if (bIsPlainTextControl)
+  {
+    docEncoderFlags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
+    mimeType = NS_LITERAL_STRING(kUnicodeMime);
+  }
+  else
+    mimeType = NS_LITERAL_STRING(kHTMLMime);
+
+  // set up docEncoder
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
+  if (!encoder)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = encoder->Init(doc, mimeType, docEncoderFlags);
+  if (NS_FAILED(rv)) return rv;
+    
+  /* get the selection to be dragged */
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = encoder->SetSelection(selection);
+  if (NS_FAILED(rv)) return rv;
+
+  *aDocEncoder = encoder;
+  NS_ADDREF(*aDocEncoder);
+  return NS_OK;
+}
+
+nsresult
+nsPlaintextEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
+{
+  *aTransferable = nsnull;
+  nsCOMPtr<nsIDocumentEncoder> docEncoder;
+  nsresult rv = SetupDocEncoder(getter_AddRefs(docEncoder));
+  if (NS_FAILED(rv)) return rv;
+
+  // grab a string
+  nsAutoString buffer;
+  rv = docEncoder->EncodeToString(buffer);
+  if (NS_FAILED(rv)) return rv;
+
+  // if we have an empty string, we're done; otherwise continue
+  if (buffer.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsISupportsString> dataWrapper =
+                        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dataWrapper->SetData(buffer);
+  if (NS_FAILED(rv)) return rv;
+
+  /* create html flavor transferable */
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // find out if we're a plaintext control or not
+  PRUint32 editorFlags = 0;
+  rv = GetFlags(&editorFlags);
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
+  if (bIsPlainTextControl)
+  {
+    // Add the unicode flavor to the transferable
+    rv = trans->AddDataFlavor(kUnicodeMime);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else
+  {
+    rv = trans->AddDataFlavor(kHTMLMime);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
+    NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
+
+    rv = trans->SetConverter(htmlConverter);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // QI the data object an |nsISupports| so that when the transferable holds
+  // onto it, it will addref the correct interface.
+  nsCOMPtr<nsISupports> nsisupportsDataWrapper = do_QueryInterface(dataWrapper);
+  rv = trans->SetTransferData(bIsPlainTextControl ? kUnicodeMime : kHTMLMime,
+                   nsisupportsDataWrapper, buffer.Length() * sizeof(PRUnichar));
+  if (NS_FAILED(rv)) return rv;
+
+  *aTransferable = trans;
+  NS_ADDREF(*aTransferable);
+  return NS_OK;
+}
+
+nsresult
+nsPlaintextEditor::DoAllowDropHook(nsIDOMEvent* aDropEvent, 
+                                   nsIDragSession *aSession, PRBool *aAllowDrop)
+{
+  *aAllowDrop = PR_TRUE;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> isupp;
+  doc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  if (!hookObj) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIClipboardDragDropHooks> override;
+  PRBool hasMoreHooks = PR_FALSE;
+  nsresult res = NS_OK;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
+  {
+    res = enumerator->GetNext(getter_AddRefs(isupp));
+    if (NS_FAILED(res)) break;
+    override = do_QueryInterface(isupp);
+    if (override)
+    {
+      nsresult hookResult = override->AllowDrop(aDropEvent, aSession, aAllowDrop);
+      NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in AllowDrop");
+    }
+
+    if (!*aAllowDrop)
+      break;
+  }
+
+  return res;
+}
+
+
+nsresult
+nsPlaintextEditor::DoInsertionHook(nsIDOMEvent* aDropEvent,
+                                   nsITransferable *aTrans, PRBool *aDoInsert)
+{
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> isupp;
+  doc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  if (!hookObj) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIClipboardDragDropHooks> override;
+  PRBool hasMoreHooks = PR_FALSE;
+  nsresult res = NS_OK;
+  while (*aDoInsert &&
+       NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) && hasMoreHooks)
+  {
+    res = enumerator->GetNext(getter_AddRefs(isupp));
+    if (NS_FAILED(res)) break;
+    override = do_QueryInterface(isupp);
+    if (override)
+    {
+      nsresult hookResult = override->OnPasteOrDrop(aDropEvent, aTrans, aDoInsert);
+      NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
+    }
+  }
+
+  return res;
 }

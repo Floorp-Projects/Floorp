@@ -1163,6 +1163,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   dragService->GetCurrentSession(getter_AddRefs(dragSession)); 
   if (!dragSession) return NS_OK;
 
+  // transferable hooks here
+  PRBool isAllowed = PR_TRUE;
+  DoAllowDropHook(aDropEvent, dragSession, &isAllowed);
+  if (!isAllowed)
+    return NS_OK;
+
   // find out if we have our internal html flavor on the clipboard.  We don't want to mess
   // around with cfhtml if we do.
   PRBool bHavePrivateHTMLFlavor = PR_FALSE;
@@ -1302,7 +1308,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       }
 
       // We never have to delete if selection is already collapsed
-      PRBool deleteSelection = PR_FALSE;
       PRBool cursorIsInSelection = PR_FALSE;
 
       // Check if mouse is in the selection
@@ -1370,232 +1375,120 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
 NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag)
 {
-  if (!aCanDrag)
-    return NS_ERROR_NULL_POINTER;
-
-  /* we really should be checking the XY coordinates of the mouseevent and ensure that
-   * that particular point is actually within the selection (not just that there is a selection)
-   */
-  *aCanDrag = PR_FALSE;
- 
-  // KLUDGE to work around bug 50703
-  // After double click and object property editing, 
-  //  we get a spurious drag event
-  if (mIgnoreSpuriousDragEvent)
-  {
-#ifdef DEBUG_cmanske
-    printf(" *** IGNORING SPURIOUS DRAG EVENT!\n");
-#endif
-    mIgnoreSpuriousDragEvent = PR_FALSE;
-    return NS_OK;
-  }
-   
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-    
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-  
-  // if we are collapsed, we have no selection so nothing to drag
-  if (isCollapsed)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
-
-  if (nsevent) 
-  {
-    res = nsevent->GetExplicitOriginalTarget(getter_AddRefs(eventTarget));
-    if (NS_FAILED(res)) 
-    {
-      return res;
-    }
-  }
-
-  if (eventTarget)
-  {
-    nsCOMPtr<nsIDOMNode> eventTargetDomNode = do_QueryInterface(eventTarget);
-    if (eventTargetDomNode)
-    {
-      PRBool isTargetedCorrectly = PR_FALSE;
-      res = selection->ContainsNode(eventTargetDomNode, PR_FALSE, &isTargetedCorrectly);
-      if (NS_FAILED(res)) return res;
-
-      *aCanDrag = isTargetedCorrectly;
-    }
-  }
-
-  return NS_OK;
+  return nsPlaintextEditor::CanDrag(aDragEvent, aCanDrag);
 }
 
-NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
+nsresult
+nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  rv = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  NS_ENSURE_ARG_POINTER(aTransferable);
+  *aTransferable = nsnull;
+  nsCOMPtr<nsIDocumentEncoder> docEncoder;
+  nsresult rv = SetupDocEncoder(getter_AddRefs(docEncoder));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
+  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  /* get the selection to be dragged */
-  nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
+  // grab a string
+  nsAutoString buffer, parents, info;
+
+  // find out if we're a plaintext control or not
+  PRUint32 editorFlags = 0;
+  rv = GetFlags(&editorFlags);
   if (NS_FAILED(rv)) return rv;
 
-  /* create an array of transferables */
-  nsCOMPtr<nsISupportsArray> transferableArray;
-  NS_NewISupportsArray(getter_AddRefs(transferableArray));
-  if (transferableArray == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
+  PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
+  if (!bIsPlainTextControl)
+  {
+    // encode the selection as html with contextual info
+    rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else
+  {
+    // encode the selection
+    rv = docEncoder->EncodeToString(buffer);
+    if (NS_FAILED(rv)) return rv;
+  }
 
-  /* get the drag service */
-  nsCOMPtr<nsIDragService> dragService = 
-           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  // if we have an empty string, we're done; otherwise continue
+  if ( buffer.IsEmpty() )
+    return NS_OK;
+
+  nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper;
+
+  dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dataWrapper->SetData(buffer);
   if (NS_FAILED(rv)) return rv;
 
   /* create html flavor transferable */
   nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  if (doc)
+  if (bIsPlainTextControl)
   {
-    // find out if we're a plaintext control or not
-    PRUint32 editorFlags = 0;
-    rv = GetFlags(&editorFlags);
+    // Add the unicode flavor to the transferable
+    rv = trans->AddDataFlavor(kUnicodeMime);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
-    
-    // get correct mimeType and document encoder flags set
-    nsAutoString mimeType;
-    PRUint32 docEncoderFlags = 0;
-    if (bIsPlainTextControl)
-    {
-      docEncoderFlags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
-      mimeType = NS_LITERAL_STRING(kUnicodeMime);
-    }
-    else
-      mimeType = NS_LITERAL_STRING(kHTMLMime);
-    
-    // set up docEncoder
-    nsCOMPtr<nsIDocumentEncoder> docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-    NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
-
-    rv = docEncoder->Init(doc, mimeType, docEncoderFlags);
+    // QI the data object an |nsISupports| so that when the transferable holds
+    // onto it, it will addref the correct interface.
+    nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
+    rv = trans->SetTransferData(kUnicodeMime, genericDataObj,
+                                buffer.Length() * sizeof(PRUnichar));
     if (NS_FAILED(rv)) return rv;
-    
-    rv = docEncoder->SetSelection(selection);
+  }
+  else
+  {
+    contextWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
+    infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
+
+    contextWrapper->SetData(parents);
+    infoWrapper->SetData(info);
+
+    rv = trans->AddDataFlavor(kHTMLMime);
     if (NS_FAILED(rv)) return rv;
 
-    // grab a string
-    nsAutoString buffer, parents, info;
+    nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
+    NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
 
-    if (!bIsPlainTextControl)
+    rv = trans->SetConverter(htmlConverter);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
+    rv = trans->SetTransferData(kHTMLMime, genericDataObj,
+                                buffer.Length() * sizeof(PRUnichar));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!parents.IsEmpty())
     {
-      // encode the selection as html with contextual info
-      rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
-      if (NS_FAILED(rv)) return rv;
+      // Add the htmlcontext DataFlavor to the transferable
+      trans->AddDataFlavor(kHTMLContext);
+      genericDataObj = do_QueryInterface(contextWrapper);
+      trans->SetTransferData(kHTMLContext, genericDataObj,
+                             parents.Length() * sizeof(PRUnichar));
     }
-    else
+    if (!info.IsEmpty())
     {
-      // encode the selection
-      rv = docEncoder->EncodeToString(buffer);
-      if (NS_FAILED(rv)) return rv;
-    }
-
-    // if we have an empty string, we're done; otherwise continue
-    if (!buffer.IsEmpty())
-    {
-      nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper;
-
-      dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-      rv = dataWrapper->SetData(buffer);
-      if (NS_FAILED(rv)) return rv;
-
-      if (bIsPlainTextControl)
-      {
-         // Add the unicode flavor to the transferable
-        rv = trans->AddDataFlavor(kUnicodeMime);
-        if (NS_FAILED(rv)) return rv;
-
-        // QI the data object an |nsISupports| so that when the transferable holds
-        // onto it, it will addref the correct interface.
-        nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
-        rv = trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length() * 2);
-        if (NS_FAILED(rv)) return rv;
-      }
-      else
-      {
-        contextWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-        NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
-        infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-        NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
-
-        contextWrapper->SetData(parents);
-        infoWrapper->SetData(info);
-
-        rv = trans->AddDataFlavor(kHTMLMime);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
-        NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
-
-        rv = trans->SetConverter(htmlConverter);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISupports> genericDataObj(do_QueryInterface(dataWrapper));
-        rv = trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length() * 2);
-        if (NS_FAILED(rv)) return rv;
-
-        if (parents.Length())
-        {
-          // Add the htmlcontext DataFlavor to the transferable
-          trans->AddDataFlavor(kHTMLContext);
-          genericDataObj = do_QueryInterface(contextWrapper);
-          trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
-        }
-        if (info.Length())
-        {
-          // Add the htmlinfo DataFlavor to the transferable
-          trans->AddDataFlavor(kHTMLInfo);
-          genericDataObj = do_QueryInterface(infoWrapper);
-          trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
-        }
-      }
-
-      /* add the transferable to the array */
-      rv = transferableArray->AppendElement(trans);
-      if (NS_FAILED(rv)) return rv;
-
-      /* invoke drag */
-      unsigned int flags;
-      // in some cases we'll want to cut rather than copy... hmmmmm...
-      flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
-      
-      rv = dragService->InvokeDragSession(domnode, transferableArray, nsnull, flags);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
-
-      if (nsevent) 
-      {
-        nsevent->PreventBubble();
-      }
+      // Add the htmlinfo DataFlavor to the transferable
+      trans->AddDataFlavor(kHTMLInfo);
+      genericDataObj = do_QueryInterface(infoWrapper);
+      trans->SetTransferData(kHTMLInfo, genericDataObj,
+                             info.Length() * sizeof(PRUnichar));
     }
   }
 
-  return rv;
+  *aTransferable = trans; 
+  NS_ADDREF(*aTransferable);
+  return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
+{
+  return nsPlaintextEditor::DoDrag(aDragEvent);
+}
 
 PRBool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
 {
@@ -1642,6 +1535,12 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   rv = PrepareHTMLTransferable(getter_AddRefs(trans), bHavePrivateHTMLFlavor);
   if (NS_SUCCEEDED(rv) && trans)
   {
+    // handle transferable hooks
+    PRBool doInsert = PR_TRUE;
+    DoInsertionHook(nsnull, trans, &doInsert);
+    if (!doInsert)
+      return NS_OK;
+
     // Get the Data from the clipboard  
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
@@ -2267,7 +2166,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
   PRInt32 contextDepth = 0;
-  if (aContextStr.Length())
+  if (!aContextStr.IsEmpty())
   {
     res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode));
     NS_ENSURE_SUCCESS(res, res);
@@ -2317,7 +2216,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
  
   // get the infoString contents
   nsAutoString numstr1, numstr2;
-  if (aInfoStr.Length())
+  if (!aInfoStr.IsEmpty())
   {
     PRInt32 err, sep;
     sep = aInfoStr.FindChar((PRUnichar)',');
