@@ -16,6 +16,16 @@
  * Reserved.
  */
 
+//
+// IMPORTANT
+// pinkerton 98-12-11
+//
+// This file is currently obsolete. There is no "tree view interface" presented to
+// the world. There is only the DOM. However, I'm leaving this file in place in the
+// tree in case we ever need something like it. The IID will have to change, however,
+// because it has been appropriated by nsIContentConnector.
+//
+
 #ifndef nsITreeView_h___
 #define nsITreeView_h___
 
@@ -24,6 +34,7 @@
 class nsIContent;
 
 // {FC41CD61-796E-11d2-BF86-00105A1B0627}
+// NO LONGER VALID -- USED BY nsIContentConnector
 #define NS_ITREEVIEW_IID      \
 { 0xfc41cd61, 0x796e, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
