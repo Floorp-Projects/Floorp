@@ -1012,6 +1012,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
       rv = NS_ERROR_OUT_OF_MEMORY; goto done;
     }
 
+    rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
+    if (NS_FAILED(rv)) goto done;
+
     db ->ListAllKeys(compactState->m_keyArray);
     compactState->m_size = compactState->m_keyArray.GetSize();
     compactState->m_curIndex = 0;
