@@ -2539,7 +2539,12 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           parent->GetParent(*getter_AddRefs(newHover));
           if (newHover && newHover != commonHoverParent) {
             newHover->GetParent(*getter_AddRefs(parent));
-            document->ContentStatesChanged(newHover, (parent.get() == commonHoverParent) ? nsnull : parent);
+            if (parent == commonHoverParent) {
+              document->ContentStatesChanged(newHover, nsnull);
+            }
+            else {
+              document->ContentStatesChanged(newHover, parent);
+            }
           }
           else {
             break;
@@ -2555,7 +2560,12 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           parent->GetParent(*getter_AddRefs(oldHover));
           if (oldHover && oldHover != commonHoverParent) {
             oldHover->GetParent(*getter_AddRefs(parent));
-            document->ContentStatesChanged(oldHover, (parent.get() == commonHoverParent) ? nsnull : parent);
+            if (parent == commonHoverParent) {
+              document->ContentStatesChanged(oldHover, nsnull);
+            }
+            else {
+              document->ContentStatesChanged(oldHover, parent);
+            }
           }
           else {
             break;
