@@ -47,7 +47,7 @@ function GetSecurityInfo()
     } 
     else
     {
-      smimeComposefields = msgCompFields.securityInfo;
+      smimeComposefields = msgCompFields.securityInfo.QueryInterface(ismimeCompFields);
     }
   } // if we have message compose fields...
 
