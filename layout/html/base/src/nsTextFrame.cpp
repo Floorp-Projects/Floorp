@@ -113,11 +113,9 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                   const nsPoint& aPoint,
-                                   nsIFrame** aFrame,
-                                   nsIContent** aContent,
-                                   PRInt32& aCursor);
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                       nsPoint& aPoint,
+                       PRInt32& aCursor);
 
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -453,16 +451,19 @@ TextFrame::~TextFrame()
 }
 
 NS_IMETHODIMP
-TextFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                 const nsPoint& aPoint,
-                                 nsIFrame** aFrame,
-                                 nsIContent** aContent,
-                                 PRInt32& aCursor)
+TextFrame::GetCursor(nsIPresContext& aPresContext,
+                     nsPoint& aPoint,
+                     PRInt32& aCursor)
 {
-  if (NS_STYLE_CURSOR_AUTO == aCursor) {
-    *aContent = mContent;
-    *aFrame = this;
-    aCursor = NS_STYLE_CURSOR_TEXT;
+  const nsStyleColor* styleColor;
+  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+  aCursor = styleColor->mCursor;
+
+  if (NS_STYLE_CURSOR_AUTO == aCursor && nsnull != mGeometricParent) {
+    mGeometricParent->GetCursor(aPresContext, aPoint, aCursor);
+    if (NS_STYLE_CURSOR_AUTO == aCursor) {
+      aCursor = NS_STYLE_CURSOR_TEXT;
+    }
   }
   return NS_OK;
 }

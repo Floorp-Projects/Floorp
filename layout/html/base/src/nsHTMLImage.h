@@ -109,11 +109,9 @@ public:
   NS_METHOD HandleEvent(nsIPresContext& aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus& aEventStatus);
-  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
-                         const nsPoint& aPoint,
-                         nsIFrame** aFrame,
-                         nsIContent** aContent,
-                         PRInt32& aCursor);
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                       nsPoint& aPoint,
+                       PRInt32& aCursor);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,

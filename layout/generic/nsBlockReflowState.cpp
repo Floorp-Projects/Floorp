@@ -5175,22 +5175,9 @@ nsIFrame * nsBlockFrame::FindHitFrame(nsBlockFrame * aBlockFrame,
 
 NS_IMETHODIMP
 nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
-                          nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus)
+                                    nsGUIEvent* aEvent,
+                                    nsEventStatus& aEventStatus)
 {
-  if (0) {
-    nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  }
-
-  //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-    aEventStatus = nsEventStatus_eIgnore;
-  
-  //if (nsnull != mContent && (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP ||
-  //    (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !mDoingSelection))) {
-  if (nsnull != mContent) {
-    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
-  }
-
   if (DisplaySelection(aPresContext) == PR_FALSE) {
     if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN) {
       return NS_OK;

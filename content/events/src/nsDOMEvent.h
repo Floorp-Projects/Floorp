@@ -124,8 +124,9 @@ public:
 
 protected:
 
-  nsEvent *mEvent;
-  nsIPresContext *mPresContext;
+  nsEvent* mEvent;
+  nsIPresContext* mPresContext;
+  nsIDOMNode* mTarget;
 
   const char* GetEventName(PRUint32 aEventType);
 

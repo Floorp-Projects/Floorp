@@ -1287,10 +1287,10 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
 
         if (mActiveLink == this) {
           nsEventStatus mStatus;
-          nsMouseEvent mEvent;
-          mEvent.eventStructType = NS_MOUSE_EVENT;
-          mEvent.message = NS_MOUSE_LEFT_CLICK;
-          HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus);
 
           if (nsEventStatus_eConsumeNoDefault != mStatus) {
             nsAutoString base, href, target;

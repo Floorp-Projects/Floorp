@@ -43,18 +43,10 @@ public:
                    const nsRect&        aDirtyRect);
 
   /**
-   * Pass through the event to the correct child frame.
-   * Return PR_TRUE if the event is consumed.
+   * Find the correct child frame.
    */
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
-
-  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
-                         const nsPoint&  aPoint,
-                         nsIFrame**      aFrame,
-                         nsIContent**    aContent,
-                         PRInt32&        aCursor);
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+                             nsIFrame**     aFrame);
 
   // Child frame enumeration.
   NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;

@@ -25,8 +25,8 @@
 
 class nsIContent;
 class nsIPresContext;
-class nsIDOMEventState;
 class nsIDOMEvent;
+class nsIFrame;
 
 /*
  * Event listener manager interface.
@@ -40,23 +40,14 @@ class nsIEventStateManager : public nsISupports {
 
 public:
 
- /**
-  * Gets the current event target. 
-  * @param
-  */
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent *aEvent, 
+                         nsIFrame* aTargetFrame,
+                         nsEventStatus& aStatus) = 0;
 
-  NS_IMETHOD GetEventTarget(nsISupports **aResult) = 0;
+  NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
 
- /**
-  * Gets the current event target. 
-  * @param
-  */
-
-  NS_IMETHOD SetEventTarget(nsISupports *aSupports) = 0;
-
-
-  NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent) = 0;
-  NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent) = 0;
+  NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
 
   NS_IMETHOD GetActiveLink(nsIContent **aLink) = 0;
   NS_IMETHOD SetActiveLink(nsIContent *aLink) = 0;

@@ -384,8 +384,8 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
                                     nsGUIEvent* aEvent,
                                     nsEventStatus& aEventStatus)
 {
-  if (nsnull != mContent) {
-    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
   }
 
   // make sure that the widget in the event is this
@@ -419,10 +419,10 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
                                             NSTwipsToIntPixels(aEvent->point.y, t2p));   
 
         nsEventStatus mStatus = nsEventStatus_eIgnore;
-        nsMouseEvent mEvent;
-        mEvent.eventStructType = NS_MOUSE_EVENT;
-        mEvent.message = NS_MOUSE_LEFT_CLICK;
-        mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+        nsMouseEvent event;
+        event.eventStructType = NS_MOUSE_EVENT;
+        event.message = NS_MOUSE_LEFT_CLICK;
+        mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus);
         
         if (nsEventStatus_eConsumeNoDefault != mStatus) {
           MouseClicked(&aPresContext);

@@ -69,15 +69,13 @@ public:
                              const nsRect&        aDirtyRect);
 
   /**
-   * Pass through the event to the correct child frame.
-   * Return PR_TRUE if the event is consumed.
-   * @see nsContainerFrame::HandleEvent
+   * Find the correct descendant frame.
+   * Return PR_TRUE if a frame containing the point is found.
+   * @see nsContainerFrame::GetFrameForPoint
    */
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
-  /** calls Reflow for all of its child rows.
+   /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.
     * <P> rows are not split unless absolutely necessary.
     *

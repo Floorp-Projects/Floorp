@@ -1233,12 +1233,6 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   nsIDOMEvent* mDOMEvent = nsnull;
 
   if (DOM_EVENT_INIT == aFlags) {
-    nsIEventStateManager *mManager;
-    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-      mManager->SetEventTarget((nsIDocument*)this);
-      NS_RELEASE(mManager);
-    }
- 
     aDOMEvent = &mDOMEvent;
   }
   

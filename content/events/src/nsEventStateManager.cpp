@@ -21,67 +21,359 @@
 #include "nsEventStateManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
+#include "nsIWidget.h"
+#include "nsIStyleContext.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsDOMEvent.h"
+#include "nsHTMLAtoms.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 
 nsEventStateManager::nsEventStateManager() {
-  mEventTarget = nsnull;
-  mLastMouseOverContent = nsnull;
+  mLastMouseOverFrame = nsnull;
+  mCurrentTarget = nsnull;
   mActiveLink = nsnull;
+  mCurrentFocus = nsnull;
+  mDocument = nsnull;
+  mPresContext = nsnull;
   NS_INIT_REFCNT();
 }
 
 nsEventStateManager::~nsEventStateManager() {
-  NS_IF_RELEASE(mEventTarget);
-  NS_IF_RELEASE(mLastMouseOverContent);
+  NS_IF_RELEASE(mActiveLink);
+  NS_IF_RELEASE(mCurrentFocus);
+  NS_IF_RELEASE(mDocument);
 }
 
 NS_IMPL_ADDREF(nsEventStateManager)
 NS_IMPL_RELEASE(nsEventStateManager)
 NS_IMPL_QUERY_INTERFACE(nsEventStateManager, kIEventStateManagerIID);
 
-NS_METHOD nsEventStateManager::GetEventTarget(nsISupports **aResult)
+NS_IMETHODIMP
+nsEventStateManager::HandleEvent(nsIPresContext& aPresContext, 
+                                 nsGUIEvent *aEvent,
+                                 nsIFrame* aTargetFrame,
+                                 nsEventStatus& aStatus)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mEventTarget;
-  NS_IF_ADDREF(mEventTarget);
-  return NS_OK;
-}
-
-NS_METHOD nsEventStateManager::SetEventTarget(nsISupports *aSupports)
-{
-  NS_IF_RELEASE(mEventTarget);
+  mCurrentTarget = aTargetFrame;
+  aStatus = nsEventStatus_eIgnore;
   
-  mEventTarget = aSupports;
-  NS_ADDREF(mEventTarget);
-  return NS_OK;
-}
-
-NS_METHOD nsEventStateManager::GetLastMouseOverContent(nsIContent **aContent)
-{
-  NS_PRECONDITION(nsnull != aContent, "null ptr");
-  if (nsnull == aContent) {
-    return NS_ERROR_NULL_POINTER;
+  switch (aEvent->message) {
+  case NS_MOUSE_MOVE:
+    UpdateCursor(aPresContext, aEvent->point, aTargetFrame);
+    GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
+    break;
+  case NS_MOUSE_EXIT:
+    //GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
+    break;
+  case NS_KEY_DOWN:
+    switch(((nsKeyEvent*)aEvent)->keyCode) {
+    case NS_VK_TAB:
+      ShiftFocus();
+      aStatus = nsEventStatus_eConsumeNoDefault;
+      break;
+    }
+    break;
+  case NS_GOTFOCUS:
+    NS_IF_RELEASE(mCurrentFocus);
+    aTargetFrame->GetContent(mCurrentFocus);
+    break;
   }
-  *aContent = mLastMouseOverContent;
-  NS_IF_ADDREF(mLastMouseOverContent);
   return NS_OK;
 }
 
-NS_METHOD nsEventStateManager::SetLastMouseOverContent(nsIContent *aContent)
+NS_IMETHODIMP
+nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
 {
-  NS_IF_RELEASE(mLastMouseOverContent);
-  
-  mLastMouseOverContent = aContent;
-  NS_IF_ADDREF(mLastMouseOverContent);
+  mPresContext = aPresContext;
   return NS_OK;
 }
 
-NS_METHOD nsEventStateManager::GetActiveLink(nsIContent **aLink)
+void
+nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame)
+{
+  PRInt32 cursor;
+  nsCursor c;
+
+  aTargetFrame->GetCursor(aPresContext, aPoint, cursor);
+
+  switch (cursor) {
+  default:
+  case NS_STYLE_CURSOR_AUTO:
+  case NS_STYLE_CURSOR_DEFAULT:
+    c = eCursor_standard;
+    break;
+  case NS_STYLE_CURSOR_POINTER:
+    c = eCursor_hyperlink;
+    break;
+  case NS_STYLE_CURSOR_TEXT:
+    c = eCursor_select;
+    break;
+  case NS_STYLE_CURSOR_N_RESIZE:
+  case NS_STYLE_CURSOR_S_RESIZE:
+    c = eCursor_sizeNS;
+    break;
+  case NS_STYLE_CURSOR_W_RESIZE:
+  case NS_STYLE_CURSOR_E_RESIZE:
+    c = eCursor_sizeWE;
+    break;
+  case NS_STYLE_CURSOR_NE_RESIZE:
+    c = eCursor_select;
+    break;
+  case NS_STYLE_CURSOR_NW_RESIZE:
+    c = eCursor_select;
+    break;
+  case NS_STYLE_CURSOR_SE_RESIZE:
+    c = eCursor_select;
+    break;
+  case NS_STYLE_CURSOR_SW_RESIZE:
+    c = eCursor_select;
+    break;
+  }
+  nsIWidget* window;
+  aTargetFrame->GetWindow(window);
+  window->SetCursor(c);
+  NS_RELEASE(window);
+}
+
+void
+nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIFrame* aTargetFrame)
+{
+  switch(aEvent->message) {
+  case NS_MOUSE_MOVE:
+    {
+      if (mLastMouseOverFrame != aTargetFrame) {
+        //We'll need the content, too, to check if it changed separately from the frames.
+        nsIContent *lastContent = nsnull;
+        nsIContent *targetContent;
+
+        aTargetFrame->GetContent(targetContent);
+
+        if (nsnull != mLastMouseOverFrame) {
+          //fire mouseout
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_EXIT;
+
+          //The frame has change but the content may not have.  Check before dispatching to content
+          mLastMouseOverFrame->GetContent(lastContent);
+
+          if (lastContent != targetContent) {
+            lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+          }
+
+          //Now dispatch to the frame
+          mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+        }
+
+        //fire mouseover
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_MOUSE_EVENT;
+        event.message = NS_MOUSE_ENTER;
+
+        //The frame has change but the content may not have.  Check before dispatching to content
+        if (lastContent != targetContent) {
+          targetContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+        }
+
+        //Now dispatch to the frame
+        aTargetFrame->HandleEvent(aPresContext, &event, status);   
+
+        NS_IF_RELEASE(lastContent);
+        NS_IF_RELEASE(targetContent);
+
+        mLastMouseOverFrame = aTargetFrame;
+      }
+    }
+    break;
+  case NS_MOUSE_EXIT:
+    {
+      //This is actually the window mouse exit event.  Such a think does not
+      // yet exist but it will need to eventually.
+      if (nsnull != mLastMouseOverFrame) {
+        //fire mouseout
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_MOUSE_EVENT;
+        event.message = NS_MOUSE_EXIT;
+
+        nsIContent *lastContent;
+        mLastMouseOverFrame->GetContent(lastContent);
+
+        if (nsnull != lastContent) {
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+          NS_RELEASE(lastContent);
+        }
+
+        //Now dispatch to the frame
+        mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+      }
+    }
+    break;
+  }
+  
+}
+
+void
+nsEventStateManager::ShiftFocus()
+{
+  if (nsnull == mPresContext) {
+    return;
+  }
+
+  if (nsnull == mCurrentFocus) {
+    if (nsnull == mDocument) {
+      nsIPresShell* presShell = mPresContext->GetShell();
+      if (nsnull != presShell) {
+        mDocument = presShell->GetDocument();
+        NS_RELEASE(presShell);
+        if (nsnull == mDocument) {
+          return;
+        }
+      }
+    }
+    mCurrentFocus = mDocument->GetRootContent();
+    if (nsnull == mCurrentFocus) {  
+      return;
+    }
+  }
+
+  nsIContent* next = GetNextTabbableContent(mCurrentFocus, nsnull, mCurrentFocus);
+
+  if (nsnull == next) {
+    NS_IF_RELEASE(mCurrentFocus);
+    //XXX pass focus up to webshellcontainer FocusAvailable
+    return;
+  }
+
+  nsIDOMHTMLAnchorElement *nextAnchor;
+  nsIDOMHTMLInputElement *nextInput;
+  nsIDOMHTMLSelectElement *nextSelect;
+  nsIDOMHTMLTextAreaElement *nextTextArea;
+  if (NS_OK == next->QueryInterface(kIDOMHTMLAnchorElementIID,(void **)&nextAnchor)) {
+    nextAnchor->Focus();
+    NS_RELEASE(nextAnchor);
+  }
+  else if (NS_OK == next->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
+    nextInput->Focus();
+    NS_RELEASE(nextInput);
+  }
+  else if (NS_OK == next->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
+    nextSelect->Focus();
+    NS_RELEASE(nextSelect);
+  }
+  else if (NS_OK == next->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
+    nextTextArea->Focus();
+    NS_RELEASE(nextTextArea);
+  }
+
+  NS_IF_RELEASE(mCurrentFocus);
+  mCurrentFocus = next;
+}
+
+/*
+ * At some point this will need to be linked into HTML 4.0 tabindex
+ */
+nsIContent*
+nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop)
+{
+  PRInt32 count, index;
+  aParent->ChildCount(count);
+
+  if (nsnull != aChild) {
+    aParent->IndexOf(aChild, index);
+    index += 1;
+  }
+  else {
+    index = 0;
+  }
+
+  for (;index < count;index++) {
+    nsIContent* child;
+    aParent->ChildAt(index, child);
+    nsIContent* content = GetNextTabbableContent(child, nsnull, aTop);
+    if (content != nsnull) {
+      NS_IF_RELEASE(child);
+      return content;
+    }
+    if (nsnull != child) {
+      nsIAtom* tag;
+      PRBool disabled = PR_TRUE;
+
+      child->GetTag(tag);
+      if (nsHTMLAtoms::input==tag) {
+        nsIDOMHTMLInputElement *nextInput;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
+          nextInput->GetDisabled(&disabled);
+          NS_RELEASE(nextInput);
+        }
+      }
+      else if (nsHTMLAtoms::select==tag) {
+        nsIDOMHTMLSelectElement *nextSelect;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
+          nextSelect->GetDisabled(&disabled);
+          NS_RELEASE(nextSelect);
+        }
+      }
+      else if (nsHTMLAtoms::textarea==tag) {
+        nsIDOMHTMLTextAreaElement *nextTextArea;
+        if (NS_OK == child->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
+          nextTextArea->GetDisabled(&disabled);
+          NS_RELEASE(nextTextArea);
+        }
+
+      }
+      //XXX Not all of these are focusable yet.
+      else if(nsHTMLAtoms::a==tag
+              //nsHTMLAtoms::area==tag ||
+              //nsHTMLAtoms::button==tag ||
+              //nsHTMLAtoms::object==tag
+              ) {
+        disabled = PR_FALSE;
+      }
+
+      if (!disabled) {
+        return child;
+      }
+      NS_RELEASE(child);
+    }
+  }
+
+  if (aParent == aTop) {
+    nsIContent* nextParent;
+    aParent->GetParent(nextParent);
+    if (nsnull != nextParent) {
+      nsIContent* content = GetNextTabbableContent(nextParent, aParent, nextParent);
+      NS_RELEASE(nextParent);
+      return content;
+    }
+  }
+
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
+{
+  *aFrame = mCurrentTarget;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::GetActiveLink(nsIContent **aLink)
 {
   NS_PRECONDITION(nsnull != aLink, "null ptr");
   if (nsnull == aLink) {
@@ -92,7 +384,8 @@ NS_METHOD nsEventStateManager::GetActiveLink(nsIContent **aLink)
   return NS_OK;
 }
 
-NS_METHOD nsEventStateManager::SetActiveLink(nsIContent *aLink)
+NS_IMETHODIMP
+nsEventStateManager::SetActiveLink(nsIContent *aLink)
 {
   nsIDocument *mDocument;
 

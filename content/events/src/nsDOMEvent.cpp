@@ -19,10 +19,14 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIEventStateManager.h"
+#include "nsIFrame.h"
+#include "nsIContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDOMRenderingContext.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSEventIID, NS_IDOMNSEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
@@ -38,11 +42,13 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
   mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
   mEvent = aEvent;
+  mTarget = nsnull;
   NS_INIT_REFCNT();
 }
 
 nsDOMEvent::~nsDOMEvent() {
   NS_RELEASE(mPresContext);
+  NS_IF_RELEASE(mTarget);
 }
 
 NS_IMPL_ADDREF(nsDOMEvent)
@@ -93,15 +99,30 @@ NS_METHOD nsDOMEvent::SetType(const nsString& aType)
 
 NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
 {
-  nsIEventStateManager *mManager;
-  nsISupports *mTarget;
-  
-  if (NS_OK == mPresContext->GetEventStateManager(&mManager)) {
-    mManager->GetEventTarget(&mTarget);
-    NS_RELEASE(mManager);
+  if (nsnull != mTarget) {
+    *aTarget = mTarget;
+    NS_ADDREF(mTarget);
+    return NS_OK;
   }
   
-  return mTarget->QueryInterface(kIDOMNodeIID, (void**)aTarget);
+  nsIEventStateManager *manager;
+  nsIFrame *targetFrame;
+  nsIContent *targetContent;
+
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    manager->GetEventTarget(&targetFrame);
+    NS_RELEASE(manager);
+  }
+  
+  if (NS_OK == targetFrame->GetContent(targetContent) && nsnull != targetContent) {    
+    if (NS_OK == targetContent->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
+      *aTarget = mTarget;
+      NS_ADDREF(mTarget);
+    }
+    NS_RELEASE(targetContent);
+  }
+
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
@@ -288,6 +309,8 @@ NS_METHOD nsDOMEvent::SetLayerY(PRInt32 aLayerY)
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
   //XXX Write me!
+
+  //XXX And when you do, make sure to copy over the event target here, too!
   return NS_OK;
 }
 

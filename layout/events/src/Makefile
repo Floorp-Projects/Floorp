@@ -41,7 +41,10 @@ REQUIRES = xpcom raptor dom js
 
 include $(DEPTH)/config/config.mk
 
-INCLUDES += -I$(PUBLIC)/dom
+INCLUDES += \
+	-I$(PUBLIC)/dom \
+	-I../../html/base/src \
+	$(NULL)
 
 MKSHLIB :=
 

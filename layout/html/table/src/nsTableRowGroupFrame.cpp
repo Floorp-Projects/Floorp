@@ -233,43 +233,29 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
  * so the default "get the child rect, see if it contains the event point" action isn't
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
-NS_METHOD nsTableRowGroupFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                            nsGUIEvent*     aEvent,
-                                            nsEventStatus&  aEventStatus)
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
-  if (gsDebug) printf("TRGF %p::HandleEvent aPoint(%d,%d) and row rect (%d,%d,%d,%d)\n",
-                         this, aEvent->point.x, aEvent->point.y,
-                         mRect.x, mRect.y, mRect.width, mRect.height);
-  aEventStatus = nsEventStatus_eIgnore;
-
   nsIFrame* kid;
+  nsRect kidRect;
+  nsPoint tmp;
+
   FirstChild(nsnull, kid);
   while (nsnull != kid) {
-    nsRect kidRect;
     kid->GetRect(kidRect);
     const nsStyleDisplay *childDisplay;
     kid->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
-      if (((nsTableRowFrame*)(kid))->Contains(aEvent->point)) {
-        if (gsDebug) printf("%p TRGF::HE calling HE on child %d\n", this, kid);
-        aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-        kid->HandleEvent(aPresContext, aEvent, aEventStatus);
-        aEvent->point.MoveBy(kidRect.x, kidRect.y);
-        break;
+      if (((nsTableRowFrame*)(kid))->Contains(aPoint)) {
+        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+        return kid->GetFrameForPoint(tmp, aFrame);
       }
-    }
-    else {
-      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
-      aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      break;
     }
     kid->GetNextSibling(kid);
   }
-
-  return NS_OK;
+  *aFrame = this;
+  return NS_ERROR_FAILURE;
 }
-
 
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableRowGroupFrame::GetTopMarginFor(nsIPresContext*      aCX,

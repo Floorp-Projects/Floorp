@@ -112,6 +112,9 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+                              nsIFrame**     aFrame);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);

@@ -40,6 +40,7 @@ class nsFormFrame;
 enum nsMouseState {
   eMouseNone,
   eMouseEnter,
+  eMouseExit,
   eMouseDown,
   eMouseUp
 };

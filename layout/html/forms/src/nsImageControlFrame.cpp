@@ -46,8 +46,9 @@
 enum nsMouseState {
   eMouseNone,
   eMouseEnter,
+  eMouseExit,
   eMouseDown,
-  eMouseExit
+  eMouseUp
 };
 
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -198,8 +199,8 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_METHOD 
 nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                 nsGUIEvent* aEvent,
-                                 nsEventStatus& aEventStatus)
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus)
 {
   if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
     return NS_OK;
@@ -208,79 +209,34 @@ nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
   nsresult result = NS_OK;
 
-  nsIView* view;
-  GetView(view);
-  if (view) {
-    nsIViewManager* viewMan;
-    view->GetViewManager(viewMan);
-    if (viewMan) {
-      nsIView* grabber;
-      viewMan->GetMouseEventGrabber(grabber);
-      if ((grabber == view) || (nsnull == grabber)) {
-        nsIWidget* window;
-        PRBool ignore;
+  switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+	    mLastMouseState = eMouseDown;
+      mGotFocus = PR_TRUE;
+      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      return NS_OK;
+	    break;
+    case NS_MOUSE_LEFT_BUTTON_UP: 
+    {
+      if (eMouseDown == mLastMouseState) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_MOUSE_EVENT;
+        event.message = NS_MOUSE_LEFT_CLICK;
+        mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+  
+        float t2p = aPresContext.GetTwipsToPixels();
+        mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x - mTranslatedRect.x, t2p);
+        mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y - mTranslatedRect.y, t2p);
 
-        switch (aEvent->message) {
-        case NS_MOUSE_ENTER: // not implemented yet on frames, 1st mouse move simulates it
-	        mLastMouseState = eMouseEnter;
-	        break;
-        case NS_MOUSE_LEFT_BUTTON_DOWN:
-	        mLastMouseState = eMouseDown;
-          mGotFocus = PR_TRUE;
-	        break;
-        case NS_MOUSE_MOVE:
-          //printf ("%d mRect=(%d,%d,%d,%d), x=%d, y=%d \n", foo++, mRect.x, mRect.y, mRect.width, mRect.height, aEvent->point.x, aEvent->point.y);
-          
-          if (nsnull == grabber) { // simulated mouse enter
-            GetTranslatedRect(mTranslatedRect);
-            //printf("%d enter\n", foo++);
-            viewMan->GrabMouseEvents(view, ignore);
-            GetWindow(window);
-            if (window) {
-              mPreviousCursor = window->GetCursor(); 
-              window->SetCursor(eCursor_select); // set it to something else to work around bug 
-              window->SetCursor(eCursor_standard); 
-              NS_RELEASE(window);
-            }
-            mLastMouseState = eMouseEnter;
-          // simulated mouse exit
-          } else if (!mTranslatedRect.Contains(aEvent->point)) {
-            viewMan->GrabMouseEvents(nsnull, ignore); 
-            GetWindow(window);
-            if (window) {
-              window->SetCursor(mPreviousCursor);  
-              NS_RELEASE(window);
-            }
-            mLastMouseState = eMouseExit;
-          }
-          break;
-        case NS_MOUSE_LEFT_BUTTON_UP: 
-          {
-            if (eMouseDown == mLastMouseState) {
-              nsEventStatus status = nsEventStatus_eIgnore;
-              nsMouseEvent event;
-              event.eventStructType = NS_MOUSE_EVENT;
-              event.message = NS_MOUSE_LEFT_CLICK;
-              mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
-        
-              float t2p = aPresContext.GetTwipsToPixels();
-              mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x - mTranslatedRect.x, t2p);
-              mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y - mTranslatedRect.y, t2p);
-
-              if (nsEventStatus_eConsumeNoDefault != status) {
-                MouseClicked(&aPresContext);
-              }
-	            mLastMouseState = eMouseEnter;
-	          } 
-	          break;
-          }
-        case NS_MOUSE_EXIT: // doesn't work for frames, yet
-	        break;
+        if (nsEventStatus_eConsumeNoDefault != status) {
+          MouseClicked(&aPresContext);
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault;
-        NS_RELEASE(viewMan);
-        return NS_OK;
-      }
+	    } 
+	    mLastMouseState = eMouseUp;
+      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      return NS_OK;
+	    break;
     }
   }
   return ImageFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
