@@ -21,12 +21,17 @@
 
 #include "xp_core.h"
 
+/* BEGING NEW_STRING_LIB */
+#define RES_OFFSET 7000
+/* END NEW_STRING_LIB */
+
+/*
 #ifdef XP_MAC
 #define RES_OFFSET 4000
 #else
 #define RES_OFFSET 7000
 #endif
-
+*/
 #ifndef RESOURCE_STR
 
 #ifdef WANT_ENUM_STRING_IDS
@@ -83,7 +88,14 @@
 
 #elif defined(XP_MAC)
 	/* Do nothing -- leave ResDef() to be perl'ized via MPW */
-#define ResDef(name,id,msg)	ResDef(name,id,msg)
+/*#define ResDef(name,id,msg)	ResDef(name,id,msg)*/
+/* BEGIN NEW_STRING_LIB */
+		#define RES_START
+		#define BEGIN_STR(arg) char* (arg)(long i); \
+			  				   char* (arg)(long i) { switch (i) {
+		#define ResDef(name,id,msg)	case ((id)+RES_OFFSET): return (msg);
+		#define END_STR(arg) default: return NULL;} return NULL; }
+/* END NEW_STRING_LIB */
 
 #elif defined(XP_UNIX)
 #ifdef RESOURCE_STR_X
