@@ -616,11 +616,11 @@ nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
     }
   }
   else {
-    if (aReflowState.HaveConstrainedWidth()) {
+    if (aReflowState.HaveFixedContentWidth()) {
       result.width = aReflowState.minWidth +
         aBorderPadding.left + aBorderPadding.right;
     }
-    if (aReflowState.HaveConstrainedHeight()) {
+    if (aReflowState.HaveFixedContentHeight()) {
       result.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
   }
@@ -628,10 +628,10 @@ nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      (": nsBodyFrame: columnAvailSpace=%d,%d [%s,%s]\n",
                       result.width, result.height,
-                      aReflowState.HaveConstrainedWidth()
-                      ? "constrained" : "not-constrained",
-                      aReflowState.HaveConstrainedHeight()
-                      ? "constrained" : "not-constrained"));
+                      eHTMLFrameConstraint_Unconstrained == aReflowState.widthConstraint
+                      ? "not-constrained" : "constrained",
+                      eHTMLFrameConstraint_Unconstrained == aReflowState.heightConstraint
+                      ? "not-constrained" : "constrained"));
   return result;
 }
 
@@ -669,7 +669,7 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
 
   // Apply style size if present; XXX note the inner value (style-size -
   // border+padding) should be given to the child as a max-size
-  if (aReflowState.HaveConstrainedWidth()) {
+  if (aReflowState.HaveFixedContentWidth()) {
     width = aReflowState.minWidth + aBorderPadding.left + aBorderPadding.right;
   }
   else {
@@ -681,7 +681,7 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
       }
     }
   }
-  if (aReflowState.HaveConstrainedHeight()) {
+  if (aReflowState.HaveFixedContentHeight()) {
     height = aReflowState.minHeight +
       aBorderPadding.top + aBorderPadding.bottom;
   }

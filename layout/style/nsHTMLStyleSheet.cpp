@@ -1443,21 +1443,13 @@ PRBool
 HTMLStyleSheetImpl::IsScrollable(nsIFrame*             aFrame,
                                  const nsStyleDisplay* aDisplay)
 {
-  // If the overflow property is scroll then it's scrollable regardless
-  // of whether the content overflows the block.
-  // XXX This isn't correct. Only do this if the height is not allowed to
-  // grow to accomodate its child frames...
-  if (NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) {
+  // For the time being it's scrollable if the overflow property is auto or
+  // scroll, regardless of whether the width  or height is fixed in size
+  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
+      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
     return PR_TRUE;
   }
 
-#if 0
-  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
-  // If the element has a fixed height (it isn't auto) and an overflow
-  // property of scroll or auto, then it's potentially scrollable.
-  // XXX Deal with width considerations, too
-      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
-#endif
   return PR_FALSE;
 }
 

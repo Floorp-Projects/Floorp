@@ -107,9 +107,6 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
-  // XXX This is what we should be setting this to, but if we do
-  // it breaks the block and inline code
-#if 0
   // Determine whether the values are constrained or unconstrained
   // by looking at the maxSize
   widthConstraint = NS_UNCONSTRAINEDSIZE == maxSize.width ?
@@ -118,11 +115,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   heightConstraint = NS_UNCONSTRAINEDSIZE == maxSize.height ?
                       eHTMLFrameConstraint_Unconstrained :
                       eHTMLFrameConstraint_Constrained;
-#else
-  // Assume that the values are unconstrained
-  widthConstraint = eHTMLFrameConstraint_Unconstrained;
-  heightConstraint = eHTMLFrameConstraint_Unconstrained;
-#endif
   minWidth = 0;
   minHeight = 0;
 

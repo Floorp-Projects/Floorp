@@ -223,7 +223,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // otherwise tables behave badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
     nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
-    if (aReflowState.HaveConstrainedWidth()) {
+    if (aReflowState.HaveFixedContentWidth()) {
       aDesiredSize.maxElementSize->width = aReflowState.minWidth;
       aDesiredSize.maxElementSize->height = onePixel;
     }
@@ -242,7 +242,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
-  if (aReflowState.HaveConstrainedWidth()) {
+  if (aReflowState.HaveFixedContentWidth()) {
     aDesiredSize.width = aReflowState.minWidth;
   }
   else {
