@@ -83,4 +83,8 @@ NS_END_EXTERN_C
 #define IMAP_SERVER_SAID										5049
 #define IMAP_DONE												5050
 #define IMAP_ENTER_PASSWORD_PROMPT_TITLE			5051
+#define IMAP_UNKNOWN_HOST_ERROR						5052
+#define IMAP_CONNECTION_REFUSED_ERROR               5053
+#define IMAP_NET_TIMEOUT_ERROR                      5054
+
 #endif /* _nsImapStringBundle_H__ */

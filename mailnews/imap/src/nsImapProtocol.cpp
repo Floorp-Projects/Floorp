@@ -53,6 +53,7 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsTextFormatter.h"
 #include "nsAutoLock.h"
+#include "nsIDNSService.h"
 
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
@@ -738,7 +739,8 @@ NS_IMETHODIMP nsImapProtocol::Run()
     me->m_imapMiscellaneousSink = null_nsCOMPtr();
   m_iThread = null_nsCOMPtr();
 
-    NS_RELEASE(me);
+    //this is bogus, we need to find the leak
+    //NS_RELEASE(me);
   return NS_OK;
 }
 
@@ -795,7 +797,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 
   // if the connection is closed,then don't try to send data
   // to the connection.
-  PRBool connectionIsLost = TestFlag(IMAP_CONNECTION_IS_OPEN);
+  PRBool connectionIsLost = !TestFlag(IMAP_CONNECTION_IS_OPEN);
 
   PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
   nsImapServerResponseParser::kFolderSelected && isSaveToClose;
@@ -906,6 +908,8 @@ nsImapProtocol::ImapThreadMainLoop()
       ClearFlag(IMAP_FIRST_PASS_IN_THREAD);
     }
 
+    if (DeathSignalReceived()) break;
+
     PR_EnterMonitor(m_urlReadyToRunMonitor);
 
     PRStatus err;
@@ -936,7 +940,9 @@ void nsImapProtocol::EstablishServerConnection()
 
   // record the fact that we've received a greeting for this connection so we don't ever
   // try to do it again..
-  SetFlag(IMAP_RECEIVED_GREETING);
+  if (serverResponse) {
+    SetFlag(IMAP_RECEIVED_GREETING);
+  }
 
   if (!nsCRT::strncasecmp(serverResponse, "* OK", 4))
   {
@@ -1207,8 +1213,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     nsCOMPtr<nsIImapIncomingServer> aImapServer  = do_QueryInterface(m_server, &rv);
     if (NS_SUCCEEDED(rv))
       aImapServer->RemoveConnection(this);
-        TellThreadToDie(PR_FALSE);
 
+    if (!DeathSignalReceived()) {
+        TellThreadToDie(PR_FALSE);
+    }
   }
   return anotherUrlRun;
 }
@@ -1271,6 +1279,33 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
 NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
     PR_CEnterMonitor(this);
+
+    PRBool killThread = PR_FALSE;
+
+    if (NS_FAILED(aStatus)) {
+        switch (aStatus) {
+            case NS_ERROR_UNKNOWN_HOST:
+                AlertUserEventUsingId(IMAP_UNKNOWN_HOST_ERROR);
+                killThread = PR_TRUE;
+                break;
+            case NS_ERROR_CONNECTION_REFUSED:
+                AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
+                killThread = PR_TRUE;
+                break;
+            case NS_ERROR_NET_TIMEOUT:
+                AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
+                killThread = PR_TRUE;
+                break;
+            default:
+                break;
+        }
+
+        if (killThread == PR_TRUE) {
+          ClearFlag(IMAP_CONNECTION_IS_OPEN);
+          TellThreadToDie(PR_FALSE);
+        }
+    }
+
     m_channel = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
     m_inputStream = null_nsCOMPtr();
@@ -3695,10 +3730,10 @@ char* nsImapProtocol::CreateNewLineFromSocket()
         m_eventQueue->ProcessPendingEvents();
       } while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());
     }
-  } while (!newLine); // until we get the next line and haven't been interrupted
+  } while (!newLine && !DeathSignalReceived()); // until we get the next line and haven't been interrupted
   
   Log("CreateNewLineFromSocket", nsnull, newLine);
-  SetConnectionStatus(newLine && numBytesInLine ? 1 : 0); // set > 0 if string is not null or empty
+  SetConnectionStatus(newLine && numBytesInLine ? 1 : -1); // set > 0 if string is not null or empty
   return newLine;
 }
 

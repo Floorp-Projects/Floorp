@@ -589,9 +589,9 @@ nsImapIncomingServer::CloseCachedConnections()
 
     nsresult rv = m_connectionCache->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt; i++) 
+    for (PRUint32 i = cnt; i>0; i--)
 	{
-        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i-1));
         connection = do_QueryInterface(aSupport);
 		if (connection)
 			rv = connection->TellThreadToDie(PR_TRUE);

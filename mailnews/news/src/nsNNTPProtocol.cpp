@@ -448,6 +448,8 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
     }
+
+	m_runningURL = null_nsCOMPtr();
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -4927,4 +4929,4 @@ nsNNTPProtocol::SetProgressStatus(char *message)
                 }
         }
         PR_FREEIF(progressMsg);
-}                
+}

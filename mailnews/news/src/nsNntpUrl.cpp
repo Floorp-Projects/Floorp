@@ -248,7 +248,6 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 	{
 		nsXPIDLCString spec;
 		GetSpec(getter_Copies(spec));
-		char * uri = nsnull;
 		char * baseMessageURI;
 		nsCreateNewsBaseMessageURI(spec, &baseMessageURI);
 		nsCAutoString uriStr;

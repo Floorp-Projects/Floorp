@@ -29,10 +29,12 @@
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
 #include "nsFileStream.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIDNSService.h"
 
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 NS_IMPL_ISUPPORTS3(nsMsgProtocol, nsIStreamListener, nsIStreamObserver, nsIChannel)
 
 nsMsgProtocol::nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI)
@@ -212,6 +214,31 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	// happens to be using
 	if (m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
+
+	if (NS_FAILED(aStatus)) {
+		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+		if (NS_SUCCEEDED(rv) && dialog) {
+			// todo, put this into a string bundle
+			nsAutoString alertMsg("unknown error.");
+			switch (aStatus) {
+				case NS_ERROR_UNKNOWN_HOST:
+						// todo, put this into a string bundle
+						alertMsg = "Failed to connect to the server.";
+						break;
+               case NS_ERROR_CONNECTION_REFUSED:
+						// todo, put this into a string bundle
+						alertMsg = "Connection refused to the server.";
+						break;
+               case NS_ERROR_NET_TIMEOUT:
+						// todo, put this into a string bundle
+						alertMsg = "Connection to the server timed out.";
+						break;
+               default:
+						break;
+			}
+			dialog->Alert(alertMsg.GetUnicode());
+		}
+	}
 
 	return rv;
 }
