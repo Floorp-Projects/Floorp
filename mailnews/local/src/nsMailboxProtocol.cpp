@@ -195,8 +195,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		if (m_tempMessageFile)
 			PR_Close(m_tempMessageFile);
 
-		// mscott: hack alert...now that the file is done...turn around and fire a file url 
-		// to display the message....
 		char * fileUrl = PR_smprintf("file://%s", MESSAGE_PATH_URL);
 		if (m_displayConsumer)
 			m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
@@ -223,6 +221,12 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		PR_Close(smokeTestFile);
 	}
 #endif
+
+	// when on stop binding is called, we as the protocol are done...let's close down the connection
+	// releasing all of our interfaces. It's important to remember that this on stop binding call
+	// is coming from netlib so they are never going to ping us again with on data available. This means
+	// we'll never be going through the Process loop...
+	CloseConnection(); 
 
 	return NS_OK;
 }
@@ -601,6 +605,17 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 
 PRInt32	  nsMailboxProtocol::CloseConnection()
 {
+	NS_IF_RELEASE(m_outputStream); 
+	m_outputStream = nsnull;
+	NS_IF_RELEASE(m_outputConsumer);
+	m_outputConsumer = nsnull;
+	NS_IF_RELEASE(m_transport);
+	m_transport = nsnull;
+	NS_IF_RELEASE(m_runningUrl);
+	m_runningUrl = nsnull;
+	// release all of our event sinks
+	NS_IF_RELEASE(m_mailboxParser);
+	m_mailboxParser = nsnull;
 	return 0;
 }
 
