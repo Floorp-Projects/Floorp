@@ -192,6 +192,33 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
+  // Activate/deactivate mouse capture on the plugin widget
+  // here, before we pass the Windows event to the plugin
+  // because its possible our widget won't get paired events
+  // (see bug 131007) and we'll look frozen. Note that this
+  // is also done in ChildWindow::DispatchMouseEvent.
+  switch (msg) {
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN: {
+      nsCOMPtr<nsIWidget> widget;
+      win->GetPluginWidget(getter_AddRefs(widget));
+      if (widget)
+        widget->CaptureMouse(PR_TRUE);
+      break;
+    }
+    case WM_MBUTTONUP:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP: {
+      nsCOMPtr<nsIWidget> widget;
+      win->GetPluginWidget(getter_AddRefs(widget));
+      if (widget)
+        widget->CaptureMouse(PR_FALSE);
+      break;
+    }
+  }
+
+
   // Macromedia Flash plugin may flood the message queue with some special messages
   // (WM_USER+1) causing 100% CPU consumption and GUI freeze, see mozilla bug 132759;
   // we can prevent this from happening by delaying the processing such messages;
