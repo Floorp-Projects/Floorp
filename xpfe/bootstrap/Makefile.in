@@ -28,6 +28,13 @@ include $(DEPTH)/config/autoconf.mk
 TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 
+# Hardcoding dlopen()'s?  This needs to get fixed.
+#
+TOOLKIT_CFLAGS := \
+       -DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+       -DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+       $(TK_CFLAGS)
+
 LIBS = \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
