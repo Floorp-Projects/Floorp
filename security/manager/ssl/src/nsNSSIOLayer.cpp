@@ -1760,7 +1760,9 @@ nsresult nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
         *certChoice = ASK;
     }
     else {
-		ret = NS_ERROR_FAILURE;
+      // Most likely we see a nickname from a migrated cert.
+      // We do not currently support that, ask the user which cert to use.
+		  *certChoice = ASK;
 	}
 
 loser:
