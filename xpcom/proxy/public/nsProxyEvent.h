@@ -92,10 +92,11 @@ class nsProxyObject : public nsISupports
             convertAllParameters
 
         } AutoProxyConvertTypes;
-        
+
+#ifdef AUTOPROXIFICATION
         nsresult            AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
                                                    nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
-
+#endif
         nsIEventQueue       *mDestQueue;                 /* destination queue */
         nsISupports         *mRealObject;                /* the non-proxy object that this event is referring to */
         PRBool              mRealObjectOwned;
