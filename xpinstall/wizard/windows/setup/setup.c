@@ -77,6 +77,7 @@ BOOL            gbIgnoreRunAppX;
 BOOL            gbIgnoreProgramFolderX;
 BOOL            gbRestrictedAccess;
 BOOL            gbDownloadTriggered;
+BOOL            gbAllowMultipleInstalls = FALSE;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -127,11 +128,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   if(!hPrevInstance)
   {
+    ParseCommandLine(lpszCmdLine);
+    
+    if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
+    {
     /* Allow only one instance of setup to run.
      * Detect a previous instance of setup, bring it to the 
      * foreground, and quit current instance */
-    if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
-    {
+
       ShowWindow(hwndFW, SW_RESTORE);
       SetForegroundWindow(hwndFW);
       iRv = WIZ_SETUP_ALREADY_RUNNING;

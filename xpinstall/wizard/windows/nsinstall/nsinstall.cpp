@@ -31,7 +31,6 @@
 #define BAR_SPACING   0
 #define BAR_WIDTH     6
 #define MAX_BUF       4096
-#define WIZ_TEMP_DIR  "ns_temp"
 
 /* Mode of Setup to run in */
 #define NORMAL                          0
@@ -50,6 +49,8 @@ char      szCmdLineToSetup[MAX_BUF];
 BOOL      gbUncompressOnly;
 DWORD     dwMode;
 HINSTANCE hInst;
+char      gszWizTempDir[20] = "ns_temp";
+BOOL      gbAllowMultipleInstalls = FALSE;
 
 /////////////////////////////////////////////////////////////////////////////
 // Global Declarations
@@ -76,7 +77,7 @@ GetFullTempPathName(LPCTSTR lpszFileName, DWORD dwBufferLength, LPTSTR lpszBuffe
 	dwLen = GetTempPath(dwBufferLength, lpszBuffer);
 	if (lpszBuffer[dwLen - 1] != '\\')
 		strcat(lpszBuffer, "\\");
-	strcat(lpszBuffer, WIZ_TEMP_DIR);
+	strcat(lpszBuffer, gszWizTempDir);
 
   dwLen = lstrlen(lpszBuffer);
 	if (lpszBuffer[dwLen - 1] != '\\')
@@ -461,6 +462,10 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     else if((lstrcmpi(szArgVBuf, "-u") == 0) || (lstrcmpi(szArgVBuf, "/u") == 0))
     {
       gbUncompressOnly = TRUE;
+    }
+    else if((lstrcmpi(szArgVBuf, "-mmi") == 0) || (lstrcmpi(szArgVBuf, "/mmi") == 0))
+    {
+      gbAllowMultipleInstalls = TRUE;
     }
 
     ++i;
@@ -860,11 +865,10 @@ RunInstaller()
   char                szArcLstFile[MAX_BUF];
   BOOL                bRet;
   char                szText[256];
-  char                szTempPath[4096];
+  char                szTempPath[MAX_BUF];
   char                szTmp[MAX_PATH];
   char                szFilename[MAX_BUF];
   char                szBuf[MAX_BUF];
-  DWORD               dwLen;
 
   if(gbUncompressOnly == TRUE)
     return(TRUE);
@@ -877,12 +881,8 @@ RunInstaller()
   memset(&sti,0,sizeof(sti));
   sti.cb = sizeof(STARTUPINFO);
 
-  dwLen = GetTempPath(4096, szTempPath);
-  if (szTempPath[dwLen - 1] != '\\')
-    strcat(szTempPath, "\\");
-  strcat(szTempPath, WIZ_TEMP_DIR);
-
   // Setup program is in the directory specified for temporary files
+  GetFullTempPathName("", MAX_BUF, szTempPath);
 	GetFullTempPathName("Archive.lst",   sizeof(szArcLstFile),    szArcLstFile);
   GetFullTempPathName("SETUP.EXE",     sizeof(szSetupFile),     szSetupFile);
   GetFullTempPathName("uninstall.exe", sizeof(szUninstallFile), szUninstallFile);
@@ -946,24 +946,44 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
 	hInst = hInstance;
 	LoadString(hInst, IDS_TITLE, szTitle, MAX_BUF);
 
-  /* Allow only one instance of nsinstall to run.
-   * Detect a previous instance of nsinstall, bring it to the 
-   * foreground, and quit current instance */
-  if(FindWindow("NSExtracting", "Extracting...") != NULL)
-    return(1);
+  // Parse the command line
+  ParseCommandLine(lpCmdLine);
+  
+  /*  Allow multiple installer instances with the 
+      provision that each instance is guaranteed 
+      to have its own unique setup directory 
+   */
+  if(FindWindow("NSExtracting", "Extracting...") != NULL ||
+    (hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+  {
+    if (gbAllowMultipleInstalls)
+    {
+      char szTempPath[MAX_BUF];
+      GetFullTempPathName("", MAX_BUF, szTempPath);
+      DWORD dwLen = lstrlen(gszWizTempDir);
 
-  /* Allow only one instance of Setup to run.
-   * Detect a previous instance of Setup, and quit */
-  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+      for(int i = 1; i <= 100 && (FileExists(szTempPath) != FALSE); i++)
+      {
+        itoa(i, (gszWizTempDir + dwLen), 10);
+        GetFullTempPathName("", MAX_BUF, szTempPath);
+      }
+
+      if (FileExists(szTempPath) != FALSE)
+      {
+        MessageBox(NULL, "Cannot create temp directory", NULL, MB_OK | MB_ICONEXCLAMATION);
+        exit(1);
+      }
+    }
+    else
+    {
+      if (hwndFW!=NULL)
   {
     ShowWindow(hwndFW, SW_RESTORE);
     SetForegroundWindow(hwndFW);
+      }
     return(1);
   }
-
-
-  // Parse the command line
-  ParseCommandLine(lpCmdLine);
+  }
 
 	// Figure out the total size of the resources
 	EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)SizeOfResourcesProc, 0);
