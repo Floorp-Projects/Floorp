@@ -234,7 +234,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		      nsWidgetInitData *aInitData,
 		      nsNativeWidget aNativeParent)
 {
-  GtkWidget *mainWindow = 0, *parentWidget = 0;
+  GtkWidget *mainWindow = nsnull;
+  GtkWidget *parentWidget = nsnull;
   mBounds = aRect;
   mAppShell = aAppShell;
 
@@ -242,13 +243,13 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
-
+/*
   if (aParent) {
      parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else if (aAppShell) {
      parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
   }
-
+*/
    // XXX: This is a kludge, need to be able to create multiple top
    // level windows instead.
   if (gFirstTopLevelWindow == 0) {
