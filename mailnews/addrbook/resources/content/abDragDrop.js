@@ -63,8 +63,8 @@ function DragOverTree(event)
 	if ( validFlavor )
 	{
 		//XXX this is really slow and likes to refresh N times per second.
-		var rowGroup = event.target.parentNode.parentNode;
-		rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+		var treeItem = event.target.parentNode.parentNode;
+		treeItem.setAttribute ( "dd-triggerrepaint", 0 );
 		dragSession.canDrop = true;
 		// necessary??
 		retVal = false; // do not propagate message
@@ -137,6 +137,7 @@ function BeginDragResultTree(event)
 function DropOnDirectoryTree(event)
 {
 	debugDump("DropOnTree\n");
+
 	var RDF = GetRDFService();
 	if (!RDF) return(false);
 
@@ -196,8 +197,19 @@ function DropOnDirectoryTree(event)
 		if (!sourceNode)
 			continue;
 		
+		var targetNode = RDF.GetResource(targetID, true);
+		if (!targetNode) 
+			continue;
+
 		// Prevent dropping of a node before, after, or on itself
 		if (sourceNode == targetNode)	continue;
+
+		if (sourceID.substring(0,targetID.length) != targetID)
+		{
+			var cardResource = rdf.GetResource(sourceID);
+			var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+			card.dropCardToDatabase(targetID);
+		}
 	}
 
 	return(false);

@@ -37,6 +37,8 @@ Rights Reserved.
 				  class="addressingWidget"
 				  rows="3"
 				  onclick="awClickEmptySpace(true)"
+				  ondragover="return DragOverTree(event);"
+				  ondragdrop="return DropOnAddressingWidgetTree(event);"
 				  style="width:0px;height:0px;border:solid black 1px">
 				  
 				<treechildren id="addressWidgetBody">

@@ -37,6 +37,8 @@ Rights Reserved.
 		  allownegativeassertions="false"
           coalesceduplicatearcs="false"
           multiple="true"
+          ondragover="return DragOverTree(event);"
+          ondragdrop="return DropOnDirectoryTree(event);"
           persist="sortColumn sortKey sortDirection">
 		
 		<template>

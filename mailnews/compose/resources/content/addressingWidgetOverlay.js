@@ -421,3 +421,87 @@ function awGetNumberOfRecipients()
 {
     return top.MAX_RECIPIENTS;
 }
+
+function DragOverTree(event)
+{
+	var validFlavor = false;
+	var dragSession = null;
+	var retVal = true;
+
+	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	if (dragService) 
+		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+	if (!dragService)	return(false);
+
+	dragSession = dragService.getCurrentSession();
+	if (!dragSession)	return(false);
+
+	if (dragSession.isDataFlavorSupported("text/nsabcard"))	validFlavor = true;
+	//XXX other flavors here...
+
+	// touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
+	if (validFlavor)
+	{
+		//XXX this is really slow and likes to refresh N times per second.
+		var rowGroup = event.target.parentNode.parentNode;
+		rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+		dragSession.canDrop = true;
+		// necessary??
+		retVal = false; // do not propagate message
+	}
+	return(retVal);
+}
+
+function DropOnAddressingWidgetTree(event)
+{
+	dump("DropOnTree\n");
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   
+		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!rdf) return(false);
+
+	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	if (dragService) 
+		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+	if (!dragService)	return(false);
+	
+	var dragSession = dragService.getCurrentSession();
+	if ( !dragSession )	return(false);
+
+	var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
+	if ( !trans ) return(false);
+	trans.addDataFlavor("text/nsabcard");
+
+	for ( var i = 0; i < dragSession.numDropItems; ++i )
+	{
+		dragSession.getData ( trans, i );
+		dataObj = new Object();
+		bestFlavor = new Object();
+		len = new Object();
+		trans.getAnyTransferData ( bestFlavor, dataObj, len );
+		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+		if ( !dataObj )	continue;
+
+		// pull the URL out of the data object
+		var sourceID = dataObj.data.substring(0, len.value);
+		if (!sourceID)	continue;
+
+		var cardResource = rdf.GetResource(sourceID);
+		var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+		var address = "\"" + card.name + "\" <" + card.primaryEmail + ">";
+		dump("    Address #" + i + " = " + address + "\n");
+
+		DropRecipient(address); 
+		
+	}
+
+	return(false);
+}
+
+function DropRecipient(recipient) 
+{ 
+    awClickEmptySpace(true);    //that will automatically set the focus on a new available row, and make sure is visible 
+    var lastInput = awGetInputElement(top.MAX_RECIPIENTS); 
+    lastInput.value = recipient; 
+    awAppendNewRow(true); 
+}

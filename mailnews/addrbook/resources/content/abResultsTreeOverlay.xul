@@ -35,6 +35,9 @@ Rights Reserved.
 		  containment="http://home.netscape.com/NC-rdf#CardChild"
 		  allownegativeassertions="false"
           coalesceduplicatearcs="false"
+          ondragover="return DragOverTree(event);"
+          ondraggesture="return BeginDragResultTree(event);"
+          ondragdrop="return DropOnResultTree(event);"
           multiple="true">
 
 		<template>
