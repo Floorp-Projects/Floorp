@@ -2197,6 +2197,10 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
       *aAfter = HWND_TOP;
     else {
       *aAfter = (HWND)event.mActualBelow->GetNativeData(NS_NATIVE_WINDOW);
+      /* If we have a client window, use the frame */
+      if (WinQueryWindowUShort(*aAfter, QWS_ID) == FID_CLIENT) {
+        *aAfter = WinQueryWindow(*aAfter, QW_PARENT);
+      }
     }
   }
   NS_IF_RELEASE(event.mActualBelow);
