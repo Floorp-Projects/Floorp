@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brian Stell <bstell@ix.netcom.com>.
+ *   Jungshik Shin <jshin@i18nl10n.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -108,5 +109,24 @@ FT_Error FT2GlyphToType1CharString(nsIFreeType2 *aFt2, FT_Face aFace,
 #endif
                                    PRUint32 aGlyphID, int aWmode, int aLenIV,
                                    unsigned char *aBuf);
+#ifdef MOZ_ENABLE_XFT
+// macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
+#define FT_REG_TO_16_16(x) ((x)<<16)
+#ifndef FT_MulFix
+#define FT_MulFix(v, s) (((v)*(s))>>16)
+#endif
+#define FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
+#define FT_TRUNC(x) ((x) >> 6)
+#define FT_DESIGN_UNITS_TO_PIXELS(v, s) FT_TRUNC(FT_ROUND(FT_MulFix((v) , (s))))
+#endif /* MOZ_ENABLE_XFT */
+
+class nsString;
+class nsCString;
+
+PRBool FT2SubsetToType1FontSet(FT_Face aFace, const nsString& aSubset,
+                               int aWmode,  FILE *aFile);
+nsresult FT2ToType1FontName(FT_Face aFace, int aWmode,
+                            nsCString& aFontName);
+  
 
 #endif /* TYPE1_H */

@@ -64,7 +64,7 @@
 #include "nsPrintJobPS.h"
 #include "nsPrintJobFactoryPS.h"
 #if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
-#include "nsType8.h"
+#include "nsType1.h"
 #endif
 
 #ifdef PR_LOGGING
@@ -458,18 +458,15 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
       NS_ASSERTION(submitFP, "No print job submission handle");
 
       // Start writing the print job to the job handler
-      mPSObj->write_prolog(submitFP);
-
 #if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
-      // Before output Type8 font, check whether printer support CID font
-      if (mFTPEnable && mPSFontGeneratorList)
-        if (mPSFontGeneratorList->Count() > 0)
-          AddCIDCheckCode(submitFP);
+      mPSObj->write_prolog(submitFP, mFTPEnable);
+#else 
+      mPSObj->write_prolog(submitFP);
 #endif
- 
+
       /* Core of TrueType printing:
        *   enumerate items("nsPSFontGenerator") in hashtable
-       *   to generate Type8 font and output to Postscript file
+       *   to generate Type1 fonts and output to Postscript file
        */
       if (mPSFontGeneratorList)
         mPSFontGeneratorList->Enumerate(GeneratePSFontCallback,

@@ -190,8 +190,6 @@ public:
                             nsFontMetricsPS* aFontMetrics);
   static nsFontPS* FindFont(PRUnichar aChar, const nsFont& aFont, 
                             nsFontMetricsPS* aFontMetrics);
-  static nsPSFontGenerator* GetPSFontGenerator(nsFontMetricsPS* aFontMetrics,
-                                               nsCStringKey& aKey);
   inline PRInt32 SupportsChar(PRUnichar aChar)
     { return mCCMap && CCMAP_HAS_CHAR(mCCMap, aChar); };
 
@@ -339,6 +337,8 @@ public:
 protected:
   PRUint16        mPixelSize;
   FT_Library      mFreeTypeLibrary;
+  nsCString       mFontNameBase;   // the base name of type 1 (sub) fonts
+  nscoord         mHeight; 
 
   int     ascent();
   int     descent();
@@ -424,7 +424,8 @@ protected:
   nsCOMPtr<nsIFreeType2> mFt2;
   PRUint16        mPixelSize;
   FTC_Image_Desc  mImageDesc;
-
+  nsCString       mFontNameBase;   // the base name of type 1 (sub) fonts
+  nscoord         mHeight; 
 
   static PRBool AddUserPref(nsIAtom *aLang, const nsFont& aFont,
                             fontPSInfo *aFpi);
@@ -453,20 +454,25 @@ public:
   nsPSFontGenerator();
   virtual ~nsPSFontGenerator();
   virtual void  GeneratePSFont(FILE* aFile);
-  void  AddToSubset(const PRUnichar* aString, PRUint32 aLength);
-  void  AddToSubset(const char* aString, PRUint32 aLength);
+  PRInt32  AddToSubset(PRUnichar aChar);
+  nsString *GetSubset();
+
+  // 256 (PS type 1 encoding vector size) - 1 (1 is for mandatory /.notdef)
+  const static PRUint16 kSubFontSize = 255; 
 
 protected:
+  // XXX To support non-BMP characters, we may have to use 
+  // nsValueArray with PRUint32
   nsString mSubset;
 };
 
 
 #ifdef MOZ_ENABLE_XFT
 
-class nsXftType8Generator : public nsPSFontGenerator {
+class nsXftType1Generator : public nsPSFontGenerator {
 public:
-  nsXftType8Generator();
-  ~nsXftType8Generator();
+  nsXftType1Generator();
+  ~nsXftType1Generator();
   nsresult Init(nsXftEntry* aFce);
   void  GeneratePSFont(FILE* aFile);
 
@@ -476,10 +482,10 @@ protected:
 };
 #else
 #ifdef MOZ_ENABLE_FREETYPE2
-class nsFT2Type8Generator : public nsPSFontGenerator {
+class nsFT2Type1Generator : public nsPSFontGenerator {
 public:
-  nsFT2Type8Generator();
-  ~nsFT2Type8Generator();
+  nsFT2Type1Generator();
+  ~nsFT2Type1Generator();
   nsresult Init(nsITrueTypeFontCatalogEntry* aFce);
   void  GeneratePSFont(FILE* aFile);
 

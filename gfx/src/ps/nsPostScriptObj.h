@@ -195,9 +195,11 @@ public:
 
   /** ---------------------------------------------------
    *  Write the document prolog to the given file handle
+   *	@update 2/8/2005 jshin
    *  @param File handle which should receive the prolog.
+   *  @param aFTPenable  FT2 printing is enabled? 
    */
-  void write_prolog(FILE *aHandle);
+  void write_prolog(FILE *aHandle, PRBool aFTPenable = PR_FALSE);
 
   /** ---------------------------------------------------
    *  Write the document script (body) to the given file handle.
@@ -344,6 +346,13 @@ public:
    */
   void show(const PRUnichar* aText, int aLen, const char *aAlign, int aType);
   /** ---------------------------------------------------
+   *  This version takes a PRUnichar string, a font subset string
+   *  for freetype printing and a subfont index
+   *	@update 2/15/2005 jshin@mailaps.org
+   */
+  void show(const PRUnichar* aText, int aLen, const nsAFlatString& aCharList,
+            PRUint16 aSubFontIdx);
+  /** ---------------------------------------------------
    *  set the clipping path to the current path using the winding rule
    *	@update 2/1/99 dwc
    */
@@ -382,7 +391,8 @@ public:
    *  Set up the font
    *    @update 12/17/2002 louie
    */
-  void setfont(const nsCString aFontName, PRUint32 aHeight);
+  void setfont(const nsCString &aFontName, PRUint32 aHeight,
+               PRInt32 aSubFont = -1);
   /** ---------------------------------------------------
    *  output a postscript comment
    *	@update 2/1/99 dwc

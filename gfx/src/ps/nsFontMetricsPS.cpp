@@ -49,11 +49,14 @@
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
-#include "nsType8.h"
+#include "nsType1.h"
 #endif
 #include "prlog.h"
 
+#ifdef MOZ_ENABLE_FREETYPE2
 #include "nsArray.h"
+#endif
+#include "nsAutoBuffer.h"
 
 extern nsIAtom *gUsersLocale;
 #define NS_IS_BOLD(weight) ((weight) > 400 ? 1 : 0)
@@ -759,9 +762,9 @@ CreateFontPS(nsXftEntry *aEntry, const nsFont& aFont,
   
   nsPSFontGenerator* psFontGen = (nsPSFontGenerator*) psFGList->Get(&key);
   if (!psFontGen) {
-    psFontGen = new nsXftType8Generator;
+    psFontGen = new nsXftType1Generator;
     NS_ENSURE_TRUE(psFontGen, nsnull);
-    rv = ((nsXftType8Generator*)psFontGen)->Init(aEntry);
+    rv = ((nsXftType1Generator*)psFontGen)->Init(aEntry);
     if (NS_FAILED(rv)) {
       delete psFontGen;
       return nsnull;
@@ -1058,20 +1061,8 @@ nsFontPSXft::getFTFace()
 nscoord
 nsFontPSXft::GetWidth(const char* aString, PRUint32 aLength)
 {
-  PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-  PRUint32 len, width = 0;
-  while ( aLength > 0 ) {
-    len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-    for (PRUint32 i=0; i < len; i++) {
-      unichars[i] = PRUnichar(PRUint8(aString[i]));
-    }
-    width += GetWidth(unichars, len);
-    aString += len;
-    aLength -= len;
-  }
-  return width;
+  return GetWidth(NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
 }
-
 
 nscoord
 nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
@@ -1113,46 +1104,47 @@ nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
 
 nscoord
 nsFontPSXft::DrawString(nsRenderingContextPS* aContext,
-                             nscoord aX, nscoord aY,
-                             const char* aString, PRUint32 aLength)
+                        nscoord aX, nscoord aY,
+                        const char* aString, PRUint32 aLength)
 {
   NS_ENSURE_TRUE(aContext, 0);
-  nsPostScriptObj* psObj = aContext->GetPostScriptObj();
-  NS_ENSURE_TRUE(psObj, 0);
-  nscoord width = 0;
-  
-  psObj->moveto(aX, aY);
-
-  PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-  PRUint32 len;
-  
-  while ( aLength > 0 ) {
-    len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-    for (PRUint32 i=0; i < len; i++) {
-      unichars[i] = PRUnichar(PRUint8(aString[i]));
-    }
-    psObj->show(unichars, len, "", 1);
-    mPSFontGenerator->AddToSubset(unichars, len);
-    width += GetWidth(unichars, len);
-    aString += len;
-    aLength -= len;
-  }
-  return width;
+  return DrawString(aContext, aX, aY, 
+                    NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
 }
 
 nscoord
 nsFontPSXft::DrawString(nsRenderingContextPS* aContext,
-                             nscoord aX, nscoord aY,
-                             const PRUnichar* aString, PRUint32 aLength)
+                        nscoord aX, nscoord aY,
+                        const PRUnichar* aString, PRUint32 aLength)
 {
-  NS_ENSURE_TRUE(aContext, 0);
+  NS_ENSURE_TRUE(aContext && aLength, 0);
   nsPostScriptObj* psObj = aContext->GetPostScriptObj();
   NS_ENSURE_TRUE(psObj, 0);
 
   psObj->moveto(aX, aY);
-  psObj->show(aString, aLength, "", 1);
+
+  PRInt32 currSubFont, prevSubFont = -1;
+  PRUint32 start = 0;
+  PRUint32 i;
+
+  // XXX : ignore surrogate pairs for now
+  nsString *subSet = mPSFontGenerator->GetSubset();
+  for (i = 0; i < aLength; ++i) {
+    currSubFont = mPSFontGenerator->AddToSubset(aString[i]);
+    if (prevSubFont != currSubFont) {
+      if (prevSubFont != -1)
+        psObj->show(&aString[start], i - start, *subSet, prevSubFont);
+      NS_ASSERTION(!mFontNameBase.IsEmpty(),
+                  "font base name shouldn't be empty");
+      psObj->setfont(mFontNameBase, mHeight, currSubFont);
+      prevSubFont = currSubFont;
+      start = i;
+    }
+  }
+
+  if (prevSubFont != -1)
+    psObj->show(&aString[start], i - start, *subSet, prevSubFont); 
   
-  mPSFontGenerator->AddToSubset(aString, aLength);
   return GetWidth(aString, aLength);
 }
 
@@ -1394,19 +1386,16 @@ nsFontPSXft::SetupFont(nsRenderingContextPS* aContext)
   nsPostScriptObj* psObj = aContext->GetPostScriptObj();
   NS_ENSURE_TRUE(psObj, NS_ERROR_FAILURE);
 
-  nscoord fontHeight = 0;
-  mFontMetrics->GetHeight(fontHeight);
+  mFontMetrics->GetHeight(mHeight);
 
-  nsCString fontName;
-  int wmode = 0;
-  FT_Face face = getFTFace();
-  NS_ENSURE_TRUE(face, NS_ERROR_NULL_POINTER);
-  char *cidFontName = FT2ToType8CidFontName(face, wmode);
-  NS_ENSURE_TRUE(cidFontName, NS_ERROR_FAILURE);
-  fontName.Assign(cidFontName);
-  psObj->setfont(fontName, fontHeight);
-  PR_Free(cidFontName);
-  
+  if (mFontNameBase.IsEmpty()) {
+    int wmode = 0;
+    FT_Face face = getFTFace();
+    NS_ENSURE_TRUE(face, NS_ERROR_NULL_POINTER);
+    if (NS_FAILED(FT2ToType1FontName(face, wmode, mFontNameBase)))
+      return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -1552,9 +1541,9 @@ CreateFontPS(nsITrueTypeFontCatalogEntry *aEntry, const nsFont& aFont,
   
   nsPSFontGenerator* psFontGen = (nsPSFontGenerator*) psFGList->Get(&key);
   if (!psFontGen) {
-    psFontGen = new nsFT2Type8Generator;
+    psFontGen = new nsFT2Type1Generator;
     NS_ENSURE_TRUE(psFontGen, nsnull);
-    rv = ((nsFT2Type8Generator*)psFontGen)->Init(aEntry);
+    rv = ((nsFT2Type1Generator*)psFontGen)->Init(aEntry);
     if (NS_FAILED(rv)) {
       delete psFontGen;
       return nsnull;
@@ -1897,20 +1886,8 @@ nsFontPSFreeType::~nsFontPSFreeType()
 nscoord
 nsFontPSFreeType::GetWidth(const char* aString, PRUint32 aLength)
 {
-  PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-  PRUint32 len, width = 0;
-  while ( aLength > 0 ) {
-    len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-    for (PRUint32 i=0; i < len; i++) {
-      unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-    }
-    width += GetWidth(unichars, len);
-    aString += len;
-    aLength -= len;
-  }
-  return width;
+  return GetWidth(NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
 }
-
 
 nscoord
 nsFontPSFreeType::GetWidth(const PRUnichar* aString, PRUint32 aLength)
@@ -1977,27 +1954,8 @@ nsFontPSFreeType::DrawString(nsRenderingContextPS* aContext,
                              const char* aString, PRUint32 aLength)
 {
   NS_ENSURE_TRUE(aContext, 0);
-  nsPostScriptObj* psObj = aContext->GetPostScriptObj();
-  NS_ENSURE_TRUE(psObj, 0);
-  nscoord width = 0;
-  
-  psObj->moveto(aX, aY);
-
-  PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
-  PRUint32 len;
-  
-  while ( aLength > 0 ) {
-    len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
-    for (PRUint32 i=0; i < len; i++) {
-      unichars[i] = (PRUnichar)((unsigned char)aString[i]);
-    }
-    psObj->show(unichars, len, "", 1);
-    mPSFontGenerator->AddToSubset(unichars, len);
-    width += GetWidth(unichars, len);
-    aString += len;
-    aLength -= len;
-  }
-  return width;
+  return DrawString(aContext, aX, aY, 
+                    NS_ConvertASCIItoUTF16(aString, aLength).get(), aLength);
 }
 
 nscoord
@@ -2005,14 +1963,34 @@ nsFontPSFreeType::DrawString(nsRenderingContextPS* aContext,
                              nscoord aX, nscoord aY,
                              const PRUnichar* aString, PRUint32 aLength)
 {
-  NS_ENSURE_TRUE(aContext, 0);
+  NS_ENSURE_TRUE(aContext && aLength, 0);
   nsPostScriptObj* psObj = aContext->GetPostScriptObj();
   NS_ENSURE_TRUE(psObj, 0);
 
   psObj->moveto(aX, aY);
-  psObj->show(aString, aLength, "", 1);
+
+  PRInt32 currSubFont, prevSubFont = -1;
+  PRUint32 start = 0;
+  PRUint32 i;
+
+  // XXX : ignore surrogate pairs for now
+  nsString *subSet = mPSFontGenerator->GetSubset();
+  for (i = 0; i < aLength; ++i) {
+    currSubFont = mPSFontGenerator->AddToSubset(aString[i]);
+    if (prevSubFont != currSubFont) {
+      if (prevSubFont != -1)
+        psObj->show(&aString[start], i - start, *subSet, prevSubFont); 
+      NS_ASSERTION(!mFontNameBase.IsEmpty(),
+                  "font base name shouldn't be empty");
+      psObj->setfont(mFontNameBase, mHeight, currSubFont);
+      prevSubFont = currSubFont;
+      start = i;
+    }
+  }
+
+  if (prevSubFont != -1)
+    psObj->show(&aString[start], i - start, *subSet, prevSubFont);
   
-  mPSFontGenerator->AddToSubset(aString, aLength);
   return GetWidth(aString, aLength);
 }
 
@@ -2260,18 +2238,15 @@ nsFontPSFreeType::SetupFont(nsRenderingContextPS* aContext)
   nsPostScriptObj* psObj = aContext->GetPostScriptObj();
   NS_ENSURE_TRUE(psObj, NS_ERROR_FAILURE);
 
-  nscoord fontHeight = 0;
-  mFontMetrics->GetHeight(fontHeight);
+  mFontMetrics->GetHeight(mHeight);
 
-  nsCString fontName;
-  int wmode = 0;
-  FT_Face face = getFTFace();
-  NS_ENSURE_TRUE(face, NS_ERROR_NULL_POINTER);
-  char *cidFontName = FT2ToType8CidFontName(face, wmode);
-  NS_ENSURE_TRUE(cidFontName, NS_ERROR_FAILURE);
-  fontName.Assign(cidFontName);
-  psObj->setfont(fontName, fontHeight);
-  PR_Free(cidFontName);
+  if (mFontNameBase.IsEmpty()) {
+    int wmode = 0;
+    FT_Face face = getFTFace();
+    NS_ENSURE_TRUE(face, NS_ERROR_NULL_POINTER);
+    if (NS_FAILED(FT2ToType1FontName(face, wmode, mFontNameBase)))
+      return NS_ERROR_FAILURE;
+  }
   
   return NS_OK;
 }
@@ -2300,11 +2275,6 @@ nsFontPSFreeType::GetBoundingMetrics(const PRUnichar*   aString,
 // Implementation of nsPSFontGenerator
 nsPSFontGenerator::nsPSFontGenerator()
 {
-  // Add a small set of characters to the subset of the user
-  // defined font to produce to make sure the font ends up
-  // being larger than 2000 bytes, a threshold under which
-  // some printers will consider the font invalid.  (bug 253219)
-  AddToSubset("1234567890", 10);
 }
 
 nsPSFontGenerator::~nsPSFontGenerator()
@@ -2316,31 +2286,33 @@ void nsPSFontGenerator::GeneratePSFont(FILE* aFile)
   NS_ERROR("should never call nsPSFontGenerator::GeneratePSFont");
 }
 
-void nsPSFontGenerator::AddToSubset(const PRUnichar* aString, PRUint32 aLength)
+// Add a Unicode character to mSubset which will be divided into 
+// multiple chunks (subfonts) of 255 (kSubFontSize) characters each. 
+// Each chunk will be converted to a Type 1 font. Return the index of 
+// a subfont (chunk) this character belongs to.
+PRInt32
+nsPSFontGenerator::AddToSubset(PRUnichar aChar)
 {
-  for (PRUint32 i=0; i < aLength; i++) {
-    if (mSubset.FindChar(aString[i]) == -1 )
-      mSubset.Append(aString[i]);
+  PRInt32 index = mSubset.FindChar(aChar);
+  if (index == kNotFound) {
+    mSubset.Append(aChar);
+    index = mSubset.Length() - 1;
   }
+  return index / kSubFontSize;
 }
 
-void nsPSFontGenerator::AddToSubset(const char* aString, PRUint32 aLength)
+nsString *nsPSFontGenerator::GetSubset()
 {
-  PRUnichar unichar;
-  for (PRUint32 i=0; i < aLength; i++) {
-    unichar = (PRUnichar)((unsigned char)aString[i]);
-    if (mSubset.FindChar(unichar) == -1 )
-      mSubset.Append(unichar);
-  }
+  return &mSubset;
 }
 
 #ifdef MOZ_ENABLE_XFT
-nsXftType8Generator::nsXftType8Generator()
+nsXftType1Generator::nsXftType1Generator()
 {
 }
 
 nsresult
-nsXftType8Generator::Init(nsXftEntry* aEntry)
+nsXftType1Generator::Init(nsXftEntry* aEntry)
 {
   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
   mEntry = aEntry;
@@ -2355,7 +2327,7 @@ nsXftType8Generator::Init(nsXftEntry* aEntry)
   return NS_OK;
 }
 
-nsXftType8Generator::~nsXftType8Generator()
+nsXftType1Generator::~nsXftType1Generator()
 {
   if (mEntry->mFace) 
     FT_Done_Face(mEntry->mFace);
@@ -2366,7 +2338,7 @@ nsXftType8Generator::~nsXftType8Generator()
   mEntry = nsnull;
 }
 
-void nsXftType8Generator::GeneratePSFont(FILE* aFile)
+void nsXftType1Generator::GeneratePSFont(FILE* aFile)
 {
   FT_Face face = mEntry->mFace;
 
@@ -2379,18 +2351,18 @@ void nsXftType8Generator::GeneratePSFont(FILE* aFile)
 
   int wmode = 0;
   if (!mSubset.IsEmpty())
-    FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
+    FT2SubsetToType1FontSet(face, mSubset, wmode, aFile);
 }
 
 #else
 #ifdef MOZ_ENABLE_FREETYPE2
 
-nsFT2Type8Generator::nsFT2Type8Generator()
+nsFT2Type1Generator::nsFT2Type1Generator()
 {
 }
 
 nsresult
-nsFT2Type8Generator::Init(nsITrueTypeFontCatalogEntry* aEntry)
+nsFT2Type1Generator::Init(nsITrueTypeFontCatalogEntry* aEntry)
 {
   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
   mEntry = aEntry;
@@ -2402,12 +2374,12 @@ nsFT2Type8Generator::Init(nsITrueTypeFontCatalogEntry* aEntry)
   return NS_OK;
 }
 
-nsFT2Type8Generator::~nsFT2Type8Generator()
+nsFT2Type1Generator::~nsFT2Type1Generator()
 {
   mEntry = nsnull;
 }
 
-void nsFT2Type8Generator::GeneratePSFont(FILE* aFile)
+void nsFT2Type1Generator::GeneratePSFont(FILE* aFile)
 {
   nsCAutoString fontName, styleName;
   mEntry->GetFamilyName(fontName);
@@ -2428,7 +2400,7 @@ void nsFT2Type8Generator::GeneratePSFont(FILE* aFile)
  
   int wmode = 0;
   if (!mSubset.IsEmpty())
-    FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
+    FT2SubsetToType1FontSet(face, mSubset, wmode, aFile);
 }
 
 #endif //MOZ_ENABLE_FREETYPE2

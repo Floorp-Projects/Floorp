@@ -106,9 +106,7 @@ endif
 
 ifneq (,$(MOZ_ENABLE_FREETYPE2)$(MOZ_ENABLE_XFT))
 CPPSRCS		+= \
-		nsCidMap.cpp \
 		nsType1.cpp \
-		nsType8.cpp \
 		$(NULL)
 endif
 
