@@ -60,12 +60,12 @@ unset MOZILLA_FIVE_HOME
 PATH=.${PATH+":$PATH"}
 export PATH
 
-BASEDIR=`dirname $0`
+BASEDIR=`dirname "$0"`
 if [ "$BASEDIR" = "" ]; then
     echo "dirname is not in your PATH"
-    ./mozilla-installer-bin $@
+    ./mozilla-installer-bin ${1+"$@"}
 else
-    cd ${BASEDIR:-.}
-    ./mozilla-installer-bin $@
+    cd "${BASEDIR:-.}"
+    ./mozilla-installer-bin ${1+"$@"}
 fi
 

@@ -60,14 +60,14 @@ unset MOZILLA_FIVE_HOME
 PATH=.${PATH+":$PATH"}
 export PATH
 
-BASEDIR=`dirname $0`
-BINNAME=`basename $0`
+BASEDIR=`dirname "$0"`
+BINNAME=`basename "$0"`
 
 if [ "$BASEDIR" = "" ]; then
     echo "dirname is not in your PATH"
-    ./${BINNAME}-bin $@
+    "./${BINNAME}-bin" ${1+"$@"}
 else
-    cd ${BASEDIR:-.}
-    ./${BINNAME}-bin $@
+    cd "${BASEDIR:-.}"
+    "./${BINNAME}-bin" ${1+"$@"}
 fi
 
