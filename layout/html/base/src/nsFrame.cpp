@@ -821,7 +821,6 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
   nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
-  nsRect rect;
 
   while (frame && NS_SUCCEEDED(result))
   {

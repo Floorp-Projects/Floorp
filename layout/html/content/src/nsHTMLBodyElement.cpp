@@ -335,7 +335,6 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresCo
           aPresContext->GetCompatibilityMode(&mode);
           nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
           if (docShell) {
-            nscoord pixel = NSIntPixelsToTwips(1, p2t);
             nscoord frameMarginWidth=-1;  // default value
             nscoord frameMarginHeight=-1; // default value
             docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   

@@ -23,6 +23,7 @@
 #ifndef nsFontMetricsGTK_h__
 #define nsFontMetricsGTK_h__
 
+#include "nsDeviceContextGTK.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsFont.h"
@@ -32,7 +33,6 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsRenderingContextGTK.h"
-#include "nsDeviceContextGTK.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>

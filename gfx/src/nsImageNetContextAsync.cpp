@@ -723,8 +723,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
         }
     }
 
-    PRBool bIsBackground = aURL->GetBackgroundLoad();
-    if (bIsBackground) {
+    if (aURL->GetBackgroundLoad()) {
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
     }
 

@@ -608,12 +608,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
     pMaxElementSize = &maxElementSize;
 
-  // SEC: what about ascent and decent???
-
-  // Compute the insets (sum of border and padding)
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);

@@ -947,7 +947,6 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
     {
         nscoord   pref       = aChildInfos[i].changed;
         nsIFrame* childFrame = aChildInfos[i].child;
-        PRInt32 index        = aChildInfos[i].index;
         nsresult rv;
 
         const nsStyleSpacing* spacing;

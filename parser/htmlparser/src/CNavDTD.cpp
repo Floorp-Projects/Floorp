@@ -1709,7 +1709,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         PRInt32   attrCount;
         PRInt32   theTopIndex = anIndex + 1;
         PRInt32   theTagCount = mBodyContext->GetCount();
-        eHTMLTags theParentTag= mBodyContext->TagAt(anIndex);
+        //eHTMLTags theParentTag= mBodyContext->TagAt(anIndex);
                
         //XXX  In the content sink, FORM behaves as a container for parents 
         //other than eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_col,

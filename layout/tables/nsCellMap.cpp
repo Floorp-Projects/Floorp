@@ -1457,12 +1457,14 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 
   PRBool isZeroRowSpan;
   PRInt32 rowSpan = GetRowSpan(aMap, aRowIndex, startColIndex, PR_FALSE, isZeroRowSpan);
+#if 0 // A bunch of unused stuff assuming no function call side effects
   PRInt32 endRowIndex = aRowIndex + rowSpan - 1;
   PRBool isZeroColSpan;
   PRInt32 endColIndex = startColIndex + 
     GetEffectiveColSpan(aMap, aRowIndex, startColIndex, isZeroColSpan) - 1;
   // record whether removing the cells is going to cause complications due 
   // to existing row spans, col spans or table sizing. 
+#endif
   PRBool spansCauseRebuild = CellsSpanInOrOut(aMap, aRowIndex, aRowIndex + rowSpan - 1, 
                                               startColIndex, numCols - 1);
 

@@ -74,8 +74,8 @@ nsMsgFolder::nsMsgFolder(void)
     mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE),
-    mDeleteIsMoveToTrash(PR_TRUE),
-	mBaseMessageURI(nsnull)
+    mBaseMessageURI(nsnull),
+    mDeleteIsMoveToTrash(PR_TRUE)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 

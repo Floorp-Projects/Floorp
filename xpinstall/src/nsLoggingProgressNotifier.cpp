@@ -114,7 +114,7 @@ nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar*
     nsCString name(UIPackageName);
     nsCString uline;
     uline.SetCapacity(name.Length());
-    for ( int i=0; i < name.Length(); ++i)
+    for ( unsigned int i=0; i < name.Length(); ++i)
         uline.Append('-');
 
     *mLogStream << "     " << name.GetBuffer() << nsEndl;

@@ -437,7 +437,7 @@ exit_js_impl(JNIEnv *jEnv)
 static PRBool PR_CALLBACK
 create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
-    const char* classpath = (const char*)initargs;      // unused (should it be?)
+    // const char* classpath = (const char*)initargs;
     *jvm = (SystemJavaVM*)JVM_GetJVMMgr();              // unused in the browser
     *initialEnv = JVM_GetJNIEnv();
     return (*jvm != NULL && *initialEnv != NULL);

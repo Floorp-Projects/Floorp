@@ -25,17 +25,17 @@
 #include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
 
+#include "nsBlender.h"
 #include "nsFontMetricsGTK.h"
-#include "nsDeviceContextGTK.h"
 #include "nsRenderingContextGTK.h"
 // aka    nsDeviceContextSpecGTK.h
 #include "nsDeviceContextSpecG.h"
 // aka    nsDeviceContextSpecFactoryGTK.h
 #include "nsDeviceContextSpecFactoryG.h"
 #include "nsScreenManagerGtk.h"
-#include "nsBlender.h"
 #include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
+#include "nsDeviceContextGTK.h"
 
 // objects that just require generic constructors
 

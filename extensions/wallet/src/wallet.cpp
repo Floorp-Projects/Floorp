@@ -1635,7 +1635,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
    * checks for eof()
    */
 
-  for (PRInt32 j = 1; j < key.Length(); j++) {
+  for (PRUint32 j = 1; j < key.Length(); j++) {
     if (Wallet_UTF8Get(strm) != ((key.CharAt(j))^Wallet_GetKey(saveCountK, writeCount++))
         || strm.eof()) {
       strm.close();
@@ -1705,7 +1705,7 @@ wallet_WriteKeyFile(PRBool useDefaultKey) {
    */
 
   if (!useDefaultKey && (key.Length() != 0)) {
-    for (PRInt32 i = 1; i < key.Length(); i++) {
+    for (PRUint32 i = 1; i < key.Length(); i++) {
       Wallet_UTF8Put(strm2, (key.CharAt(i))^Wallet_GetKey(saveCountK, writeCount++));
     }
     Wallet_UTF8Put(strm2, (key.CharAt(0))^Wallet_GetKey(saveCountK, writeCount++));
@@ -1924,7 +1924,7 @@ void
 wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line, PRBool obscure,
    nsKeyType saveCount = 0, nsKeyType *writeCount = 0, PRBool inHeader = PR_FALSE)
 {
-  for (int i=0; i<line.Length(); i++) {
+  for (PRUint32 i=0; i<line.Length(); i++) {
     if (inHeader) {
       Wallet_UTF8Put(strm, line.CharAt(i));
     } else {

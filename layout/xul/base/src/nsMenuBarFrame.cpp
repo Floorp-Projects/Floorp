@@ -86,7 +86,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsToolbarFrame)
 // nsMenuBarFrame cntr
 //
 nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell):nsToolbarFrame(aShell),
-mIsActive(PR_FALSE), mTarget(nsnull), mKeyboardNavigator(nsnull), mMenuBarListener(nsnull)
+mMenuBarListener(nsnull), mKeyboardNavigator(nsnull),
+mIsActive(PR_FALSE), mTarget(nsnull)
 {
 
 } // cntr

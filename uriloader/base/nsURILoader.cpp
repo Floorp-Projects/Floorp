@@ -584,10 +584,10 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
     aChannel->GetURI(getter_AddRefs(uri));
     if(uri)
       {
-      PRBool abort = PR_FALSE;
-      winContextListener->OnStartURIOpen(uri, aWindowTarget, &abort);
+      PRBool doAbort = PR_FALSE;
+      winContextListener->OnStartURIOpen(uri, aWindowTarget, &doAbort);
          
-      if(abort)
+      if(doAbort)
          return NS_OK;
       }   
     }

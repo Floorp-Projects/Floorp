@@ -112,8 +112,8 @@ nsNetDiskCache::~nsNetDiskCache()
   if(mDBCorrupted) {
     
     nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
-    nsresult rv = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
-    if ( NS_FAILED ( rv ) )
+    nsresult res = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
+    if ( NS_FAILED ( res ) )
     	return;
 
     nsCString trash("trash") ;
@@ -571,9 +571,9 @@ nsNetDiskCache::RemoveAll(void)
   // Delete all the files in the cache directory
   // Could I just delete the cache folder????? --DJM
   nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
-  nsresult rv = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
-  if ( NS_FAILED ( rv ) )
-  	return rv;
+  nsresult res = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
+  if ( NS_FAILED ( res ) )
+  	return res;
 
   nsCOMPtr<nsIFile> file;
   

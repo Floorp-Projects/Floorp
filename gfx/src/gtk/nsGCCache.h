@@ -27,7 +27,7 @@
 #ifndef nsGCCache_h___
 #define nsGCCache_h___
 
-#define countof(x) (sizeof(x) / sizeof (*x))
+#define countof(x) ((int)(sizeof(x) / sizeof (*x)))
 
 struct GCData
 {

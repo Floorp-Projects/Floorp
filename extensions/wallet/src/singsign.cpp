@@ -1870,7 +1870,6 @@ SI_LoadSignonData(PRBool fullLoad) {
       PRBool isPassword;
       if (buffer.CharAt(0) == '*') {
         isPassword = PR_TRUE;
-        nsAutoString temp;
         buffer.Mid(name, 1, buffer.Length()-1);
         ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCountP, &readCount);
       } else {
@@ -1943,7 +1942,7 @@ si_WriteLine(nsOutputFileStream strmu, nsOutputFileStream strmp,
     nsAutoString lineBuffer, PRBool obscure, PRBool fullSave, 
     nsKeyType saveCount = 0, nsKeyType *writeCount = 0, PRBool inHeader = PR_FALSE) {
 
-  for (int i=0; i<lineBuffer.Length(); i++) {
+  for (PRUint32 i=0; i<lineBuffer.Length(); i++) {
     if (inHeader) {
       Wallet_UTF8Put(strmu, lineBuffer.CharAt(i));
       if (fullSave) {
