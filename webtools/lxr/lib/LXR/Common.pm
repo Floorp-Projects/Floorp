@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.25 2004/04/27 06:10:09 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.26 2004/07/14 23:08:22 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -286,7 +286,7 @@ sub markupfile {
 #	&$outfun("</pre>\n");
 	untie(%xref);
 
-    } elsif ($fname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
+    } elsif ($fname =~ /\.(gif|p?jpe?g|xbm|bmp|[mp]ng)$/i) {
 
 	&$outfun("</PRE>");
 	&$outfun("<UL><TABLE><TR><TH VALIGN=CENTER><B>Image: </B></TH>");
