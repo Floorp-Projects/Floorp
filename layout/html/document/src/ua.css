@@ -76,7 +76,6 @@
   -moz-opacity: inherit;
   page-break-before: inherit;
   page-break-after: inherit;
-  table-layout: inherit;
 }
 
 *|*::-moz-table-row {
