@@ -1601,13 +1601,13 @@ function GenericSendMessage( msgType )
           {
             var result = {value:sComposeMsgsBundle.getString("defaultSubject")};
             if (gPromptService.prompt(
-              window,
-              sComposeMsgsBundle.getString("subjectDlogTitle"),
-              sComposeMsgsBundle.getString("subjectDlogMessage"),
-                        result,
-              null,
-              {value:0}
-              ))
+                  window,
+                  sComposeMsgsBundle.getString("subjectDlogTitle"),
+                  sComposeMsgsBundle.getString("subjectDlogMessage"),
+                  result,
+                  null,
+                  {value:0}
+               ))
               {
                 msgCompFields.subject = result.value;
                 var subjectInputElem = document.getElementById("msgSubject");
@@ -1615,8 +1615,48 @@ function GenericSendMessage( msgType )
               }
               else
                 return;
-            }
           }
+        }
+
+        // check if the user tries to send a message to a newsgroup through a mail account
+        var currentAccountKey = getCurrentAccountKey();
+        var account = gAccountManager.getAccount(currentAccountKey);
+        var servertype = account.incomingServer.type;
+
+        if (servertype != "nntp" && msgCompFields.newsgroups != "")
+        {
+          const kDontAskAgainPref = "mail.compose.dontWarnMail2Newsgroup";
+          // default to ask user if the pref is not set
+          var dontAskAgain = false;
+          try {
+            var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch);
+            dontAskAgain = pref.getBoolPref(kDontAskAgainPref);
+          } catch (ex) {}
+
+          if (!dontAskAgain)
+          {
+            var checkbox = {value:false};
+            var okToProceed = gPromptService.confirmCheck(
+                              window,
+                              sComposeMsgsBundle.getString("subjectDlogTitle"),
+                              sComposeMsgsBundle.getString("recipientDlogMessage"),
+                              sComposeMsgsBundle.getString("CheckMsg"),
+                              checkbox);
+
+            if (!okToProceed)
+              return;
+
+            try {
+              if (checkbox.value)
+                pref.setBoolPref(kDontAskAgainPref, true);
+            } catch (ex) {}
+          }
+
+          // remove newsgroups to prevent news_p to be set 
+          // in nsMsgComposeAndSend::DeliverMessage()
+          msgCompFields.newsgroups = "";
+        }
 
         // Before sending the message, check what to do with HTML message, eventually abort.
         var convert = DetermineConvertibility();
@@ -1692,7 +1732,7 @@ function GenericSendMessage( msgType )
         }
         msgWindow.SetDOMWindow(window);
 
-        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), getCurrentAccountKey(), msgWindow, progress);
+        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), currentAccountKey, msgWindow, progress);
       }
       catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
