@@ -435,11 +435,6 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
         if (NS_SUCCEEDED(rv) && mailnewsUrl && aUrlListener)
             mailnewsUrl->RegisterListener(aUrlListener);
 
-		(*imapUrl)->Initialize(username);
-
-        // *** jefft -- let's only do hostname now. I'll do username later
-        // when the incoming server works were done. We might also need to
-        // pass in the port number
         urlSpec = "imap://";
         urlSpec.Append(username);
         urlSpec.Append('@');
@@ -2074,7 +2069,6 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	nsresult rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, NS_GET_IID(nsIImapUrl), getter_AddRefs(aImapUrl));
     if (NS_SUCCEEDED(rv))
     {
-        aImapUrl->Initialize(nsnull);
         // now extract lots of fun information...
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
         nsCAutoString unescapedSpec = aSpec;
