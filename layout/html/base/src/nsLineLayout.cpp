@@ -836,7 +836,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   mSpaceManager->Translate(tx, ty);
   htmlReflow->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
 
-  // XXX 
+  // XXX See if the frame is a placeholderFrame and if it is process
+  // the floater.
   nsIAtom* frameType;
   aFrame->GetFrameType(&frameType);
   if (frameType) {
