@@ -1399,7 +1399,7 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 
 	if (si_OkToSave(context,
 		context->hist.cur_doc_ptr->address, /* urlname */
-		(char *)(submit->value_array[j]) /* username */)) {
+		((char **)submit->value_array)[j] /* username */)) {
 	    si_PutData(context->hist.cur_doc_ptr->address, submit, TRUE);
 	}
     } else if (passwordCount == 2) {
