@@ -90,7 +90,7 @@ system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 
 # build the self-extracting .exe file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
-system("xcopy /F $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
+system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
 system("$inDistPath\\nszip.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
 
 print " done!\n";
