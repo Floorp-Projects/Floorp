@@ -4875,15 +4875,24 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, /*octal*/ 0600);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIFileOutputStream> strm =
-        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    nsCOMPtr<nsIOutputStream> out;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(out),
+                                     tempFile,
+                                     PR_WRONLY,
+                                     /*octal*/ 0600,
+                                     0);
     if (NS_FAILED(rv))
     {
         tempFile->Remove(PR_FALSE);
         return rv;
     }
 
-    rv = strm->Init(tempFile, PR_WRONLY, /*octal*/ 0600, 0);
+    // We need a buffered output stream for performance.
+    // See bug 202477.
+    nsCOMPtr<nsIOutputStream> strm;
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(strm),
+                                    out,
+                                    4096);
     if (NS_FAILED(rv))
     {
         tempFile->Remove(PR_FALSE);
@@ -4897,6 +4906,7 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     rv |= WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
 
     strm->Close();
+    out->Close();
 
     if (NS_FAILED(rv))
     {
