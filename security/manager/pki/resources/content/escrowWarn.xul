@@ -31,6 +31,8 @@
 <script src="chrome://global/content/strres.js" />
 <script src="pippki.js" />
 <script src="escrowWarn.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
+
 
 <box orient="vertical" style="margin: 5px;" flex="1">
 
@@ -52,7 +54,7 @@
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" onclick="" /> 
+    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?priv_key_copy');" /> 
   </box>
 </box>
 </window>

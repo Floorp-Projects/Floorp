@@ -39,8 +39,10 @@
         title="&certmgr.title;"
         onload="LoadCerts()">
 
+  <script type="application/x-javascript" src="chrome://help/content/help.js" />
   <script src="chrome://global/content/strres.js" />
   <script src="certManager.js"/>
+
 
 <box flex="1">
   <grid flex="1">
@@ -48,7 +50,7 @@
     <rows>
       <row flex="1">
         <tabbox flex="1" orient="vertical">
-          <tabs orient="horizontal">
+          <tabs id="certMgrTabbox" orient="horizontal">
             <tab id="mine_tab" label="&certmgr.tab.mine;" />
 <!--
             <tab id="others_tab" label="&certmgr.tab.others;" />
@@ -70,7 +72,8 @@
         <box orient="horizontal" flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
-                  orient="horizontal" accesskey="h" />
+                  orient="horizontal" accesskey="h" 
+                  oncommand="doHelpButton();" />
           <button id="closeButton" class="normal" 
                   label="&certmgr.close.label;" 
                   orient="horizontal" accesskey="c"

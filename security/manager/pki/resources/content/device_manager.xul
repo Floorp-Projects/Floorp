@@ -40,6 +40,7 @@
 
 <script src="chrome://global/content/strres.js" />
 <script src="device_manager.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 <grid flex="1">
   <columns>
@@ -107,7 +108,8 @@
       <box>
         <button id="help_button" 
                 label="&help.label;" 
-                orient="horizontal" class="normal"/> 
+                orient="horizontal" class="normal"
+                oncommand="openHelp('chrome://help/content/help.xul?sec_devices');" /> 
         <button id="ok_button" 
                 label="&ok.label;" 
                 orient="horizontal" class="normal" 
