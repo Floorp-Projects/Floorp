@@ -28,10 +28,7 @@ Moz::StopForErrors();
 
 chdir("::::");
 
-# Make the dist directory, and essential sub-directories
-PrepareDist();
-
-# Popuplate the dist directory
+# Make and popuplate the dist directory
 DistMozilla();
 
 # Now build the projects

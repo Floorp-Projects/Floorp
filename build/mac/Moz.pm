@@ -9,6 +9,9 @@ B<Moz> - routines for automating CodeWarrior builds, and some extra-curricular a
     OpenErrorLog(":::BuildLog");
     StopForErrors();
 
+		$Moz::QUIET = 1;
+		InstallFromManifest(":projects:MANIFEST", $dist_dir);
+
     BuildProjectClean(":projects:SomeProject.mcp", "SomeTarget");
     MakeAlias(":projects:SomeProject.shlb", $dist_dir);
 
@@ -29,8 +32,8 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias MakeDirectoryPath StopForErrors DontStopForErrors InstallFromManifest);
-@EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest);
+@EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
 	use File::Path;
@@ -91,7 +94,7 @@ BEGIN
 $logging								= 0;
 $recent_errors_file			= "";
 $stop_on_1st_error			= 1;
-
+$QUIET									= 0;
 
 
 
@@ -290,22 +293,11 @@ sub MakeAlias($$)
 
 		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\";";
 		# die "$message symlink doesn't work on directories.\n" if -d $old_file;
-		die "$message because \"$old_file\" doesn't exit.\n" unless -e $old_file;
+		die "$message because \"$old_file\" doesn't exist.\n" unless -e $old_file;
 
 		unlink $new_file;
 		# print "symlink(\"$old_file\", \"$new_file\");\n";
 		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
-	}
-
-
-sub MakeDirectoryPath($)
-	{
-		my ($dir_path) = @_;
-		
-		# should check for trailing : here if necessary, do error checking and test if target already exists
-		
-		mkpath($dir_path);
-	
 	}
 	
 	
@@ -326,7 +318,7 @@ sub InstallFromManifest($;$)
 
 		chop($dest_dir) if $dest_dir =~ m/:$/;
 
-		print "Doing manifest on \"$manifest_file\"\n";
+		print "Doing manifest on \"$manifest_file\"\n" unless $QUIET;
 		
 		my $read = maniread(full_path_to($manifest_file));
 		foreach $file (keys %$read)
