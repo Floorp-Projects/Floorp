@@ -554,12 +554,14 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	{
 		// make sure we have a rendering context
 		mTempRenderingContext = GetRenderingContext();
+		mTempRenderingContextMadeHere = PR_TRUE;
 	}
 	else
 	{
 		// if we already have a rendering context, save its state
 		NS_IF_ADDREF(aRenderingContext);
 		mTempRenderingContext = aRenderingContext;
+		mTempRenderingContextMadeHere = PR_FALSE;
 		mTempRenderingContext->PushState();
 
 		// set the environment to the current widget
@@ -597,12 +599,15 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 //-------------------------------------------------------------------------
 void nsWindow::EndDraw()
 {
-	if (!	mDrawing)
+	if (! mDrawing)
 		return;
 	mDrawing = PR_FALSE;
 
-	PRBool clipEmpty;
-	mTempRenderingContext->PopState(clipEmpty);
+	if (mTempRenderingContextMadeHere)
+	{
+		PRBool clipEmpty;
+		mTempRenderingContext->PopState(clipEmpty);
+	}
 	NS_RELEASE(mTempRenderingContext);
 }
 
@@ -644,66 +649,74 @@ NS_IMETHODIMP	nsWindow::Update()
 	::SectRgn(mWindowPtr->visRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
-		nsIRenderingContext* renderingContext = GetRenderingContext();	// this sets the origin
+		nsIRenderingContext* renderingContext = GetRenderingContext();
 		if (renderingContext)
 		{
-			// initialize the paint event for that widget
+			// determine the rect to draw
 			nsRect rect;
-#if 1
-			GetBounds(rect);
-			rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
-#else
-					//¥TODO: fix this: we don't want to always pass the entire rect
+					//GetBounds(rect);
+					//rect.x = rect.y = 0;
 			Rect macRect = (*updateRgn)->rgnBBox;
 			::OffsetRect(&macRect, -bounds.x, -bounds.y);
-			rect.x = macRect.left;
-			rect.y = macRect.top;
-			rect.width = macRect.right - macRect.left;
-			rect.height = macRect.bottom - macRect.top;
-#endif
+			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
 
-			// 			nsEvent
-			nsPaintEvent paintEvent;
-			paintEvent.eventStructType = NS_PAINT_EVENT;
-			paintEvent.message		= NS_PAINT;
-			paintEvent.point.x		= 0;
-			paintEvent.point.y		= 0;
-			paintEvent.time				= PR_IntervalNow();
+			// update the widget
+			UpdateWidget(rect, renderingContext);
 
-			// 			nsGUIEvent
-			paintEvent.widget			= this;
-			paintEvent.nativeMsg	= nsnull;
-
-			// 			nsPaintEvent
-			paintEvent.renderingContext	= renderingContext;
-			paintEvent.rect							= &rect;
-
-			// draw the widget
-			StartDraw(renderingContext);
-			if (OnPaint(paintEvent))
-				DispatchWindowEvent(paintEvent);
-			EndDraw();
-
-			// recursively scan through its children to draw them too
-			nsIEnumerator* children = GetChildren();
-      if (children)
-			{
-        nsWindow* child;
-				children->First();
-				do
-				{
-          if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
-					  child->Update();
-          }
-				}
-        while (NS_SUCCEEDED(children->Next()));			
-				delete children;
-			}
-			NS_RELEASE(renderingContext);		// this restores the origin to (0, 0)
+			NS_RELEASE(renderingContext);
 		}
 	}
 	::DisposeRgn(updateRgn);
 	return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
+{
+	// initialize the paint event
+	nsPaintEvent paintEvent;
+	paintEvent.eventStructType	= NS_PAINT_EVENT;		// nsEvent
+	paintEvent.message			= NS_PAINT;
+	paintEvent.widget			= this;					// nsGUIEvent
+	paintEvent.nativeMsg		= nsnull;
+	paintEvent.renderingContext	= aContext;				// nsPaintEvent
+	paintEvent.rect				= &aRect;
+
+	// draw the widget
+	StartDraw(aContext);
+	if (OnPaint(paintEvent))
+		DispatchWindowEvent(paintEvent);
+	EndDraw();
+
+	// recursively draw the children
+	nsIEnumerator* children = GetChildren();
+	if (children)
+	{
+		nsWindow* child;
+		children->First();
+		do
+		{
+			if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))
+			{
+				nsRect childBounds;
+				child->GetBounds(childBounds);
+
+				// redraw only the intersection of the child rect and the update rect
+				nsRect intersection;
+				if (intersection.IntersectRect(aRect, childBounds))
+				{
+					intersection.MoveBy(-childBounds.x, -childBounds.y);
+					child->UpdateWidget(intersection, aContext);
+				}
+          	}
+		}
+		while (NS_SUCCEEDED(children->Next()));			
+		delete children;
+	}
 }
 
 
@@ -714,7 +727,44 @@ NS_IMETHODIMP	nsWindow::Update()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-	Invalidate(PR_FALSE);
+	StartDraw();
+
+		// scroll the rect
+		Rect macRect;
+		nsRectToMacRect(*aClipRect, macRect);
+
+		RgnHandle updateRgn = ::NewRgn();
+		if (updateRgn == nil)
+			return NS_ERROR_OUT_OF_MEMORY;
+		::ClipRect(&macRect);
+		::ScrollRect(&macRect, aDx, aDy, updateRgn);
+		::InvalRgn(updateRgn);
+		::DisposeRgn(updateRgn);
+
+		// scroll the children
+		nsIEnumerator* children = GetChildren();
+		if (children)
+		{
+			nsWindow* child;
+			children->First();
+			do
+			{
+				if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child))) {
+					nsRect bounds;
+					child->GetBounds(bounds);
+					bounds.x += aDx;
+					bounds.y += aDy;
+					child->SetBounds(bounds);
+
+					child->Scroll(aDx, aDy, &bounds);
+	          	}
+			}
+			while (NS_SUCCEEDED(children->Next()));			
+			delete children;
+		}
+
+	EndDraw();
+
 	return NS_OK;
 }
 
