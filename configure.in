@@ -3378,16 +3378,9 @@ MOZ_ARG_ENABLE_BOOL(xinerama,
     AC_DEFINE(MOZ_ENABLE_XINERAMA)
 fi ])
 
-dnl ========================================================
-dnl bi-directional support on by default
-dnl ========================================================
+dnl bi-directional support always on
 IBMBIDI=1
-MOZ_ARG_DISABLE_BOOL(bidi,
-[  --disable-bidi          Disable bi-directional support],
-    IBMBIDI= )
-if test "$IBMBIDI"; then
-  AC_DEFINE(IBMBIDI)
-fi
+AC_DEFINE(IBMBIDI)
 
 dnl ========================================================
 dnl complex text support off by default
