@@ -607,7 +607,8 @@ fe_EditorNewPopupMenu(XFE_Frame* frame, Widget parent, MWContext *context)
 	if (!EDT_IS_EDITOR(context))
 		return NULL;
 
-	popup = new XFE_PopupMenu("popup",frame, parent, NULL);
+	popup = new XFE_PopupMenu("popup",frame, parent, 
+                              (MenuSpec*) NULL);
 
 	e_type = EDT_GetCurrentElementType(context);
 
@@ -810,7 +811,7 @@ XFE_EditorFrame::XFE_EditorFrame(Widget toplevel,
   // create html view
   XFE_EditorView *editorview = new XFE_EditorView(this, 
 												  getChromeParent(),
-												  NULL,
+												  (XFE_View *)NULL,
 												  m_context);
 
   editorview->registerInterest(XFE_EditorView::newURLLoading, 
