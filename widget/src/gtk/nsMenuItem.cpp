@@ -168,12 +168,9 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   nsIMenuBar   * menuBar = nsnull;
   nsIPopUpMenu * popup   = nsnull;
   nsISupports  * parent  = aParent;
-
-  // Bump the ref count on the parent, since it gets released unconditionally..
-  NS_ADDREF(parent);
-  while (1) {
+  
+  while(1) {
     if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
-      NS_RELEASE(parent);
       if (NS_OK != menu->GetParent(parent)) {
         NS_RELEASE(menu);
         return nsnull;
@@ -184,7 +181,6 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       if (NS_OK != popup->GetParent(widget)) {
         widget =  nsnull;
       } 
-      NS_RELEASE(parent);
       NS_RELEASE(popup);
       return widget;
 
@@ -192,11 +188,9 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       if (NS_OK != menuBar->GetParent(widget)) {
         widget =  nsnull;
       } 
-      NS_RELEASE(parent);
       NS_RELEASE(menuBar);
       return widget;
     } else {
-      NS_RELEASE(parent);
       return nsnull;
     }
   }
@@ -311,6 +305,7 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
+  NS_ASSERTION(false, "we should never get here");
   NS_IF_RELEASE(mXULCommandListener);
   NS_IF_ADDREF(aMenuListener);
   mXULCommandListener = aMenuListener;
