@@ -306,7 +306,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
                              nsEventStatus*  aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  *aEventStatus = nsEventStatus_eConsumeNoDefault;
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   
   if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
@@ -430,8 +430,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       mOpenTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST);
     }
   }
-  else
-    *aEventStatus = nsEventStatus_eConsumeDoDefault;
+  
   return NS_OK;
 }
 
