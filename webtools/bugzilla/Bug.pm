@@ -20,6 +20,7 @@
 #
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
+#                 Chris Yeh      <cyeh@bluemartini.com>
 
 use diagnostics;
 use strict;
@@ -36,7 +37,7 @@ for my $key (qw (bug_id product version rep_platform op_sys bug_status
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
                 qa_contact status_whiteboard creation_ts groupset 
-                delta_ts error votes) ){
+                delta_ts votes whoid usergroupset comment query error) ){
     $ok_field{$key}++;
     }
 
@@ -79,19 +80,28 @@ sub initBug  {
     return {};
   }
 
-  if (! defined $user_id) {
+# default userid 0, or get DBID if you used an email address
+  unless (defined $user_id) {
     $user_id = 0;
   }
+  else {
+     if ($user_id =~ /^\@/) {
+	$user_id = &::DBname_to_id($user_id); 
+     }
+  }
+     
 
   &::ConnectToDatabase();
   &::GetVersionTable();
 
   # this verification should already have been done by caller
   # my $loginok = quietly_check_login();
-  my $usergroupset = "0";
-  if (defined $::usergroupset) {
-    $usergroupset = $::usergroupset;
-  }
+
+
+  $self->{'whoid'} = $user_id;
+  &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
+  my $usergroupset = &::FetchOneColumn();
+  $self->{'usergroupset'} = $usergroupset;
 
   my $query = "
     select
@@ -221,6 +231,7 @@ sub initBug  {
       $self->{'blocks'} = \@blocks;
     }
   }
+
   return $self;
 }
 
@@ -291,8 +302,6 @@ sub emitXML {
   return $xml;
 }
 
-
-
 sub EmitDependList {
   my ($myfield, $targetfield, $bug_id) = (@_);
   my @list;
@@ -308,8 +317,6 @@ sub EmitDependList {
   return @list;
 }
 
-
-
 sub QuoteXMLChars {
   $_[0] =~ s/</&lt;/g;
   $_[0] =~ s/>/&gt;/g;
@@ -319,7 +326,6 @@ sub QuoteXMLChars {
 # $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
   return($_[0]);
 }
-
 
 sub XML_Header {
   my ($urlbase, $version, $maintainer, $exporter) = (@_);
@@ -344,6 +350,153 @@ sub XML_Header {
 
 sub XML_Footer {
   return ("</bugzilla>\n");
+}
+
+sub UserInGroup {
+    my $self = shift();
+    my ($groupname) = (@_);
+    if ($self->{'usergroupset'} eq "0") {
+        return 0;
+    }
+    &::ConnectToDatabase();
+    &::SendSQL("select (bit & $self->{'usergroupset'}) != 0 from groups where name = " 
+           . &::SqlQuote($groupname));
+    my $bit = &::FetchOneColumn();
+    if ($bit) {
+        return 1;
+    }
+    return 0;
+}
+
+sub CanChangeField {
+   my $self = shift();
+   my ($f, $oldvalue, $newvalue) = (@_);
+   my $UserInEditGroupSet = -1;
+   my $UserInCanConfirmGroupSet = -1;
+   my $ownerid;
+   my $reporterid;
+   my $qacontactid;
+
+    if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
+        if ($oldvalue =~ /^\d+$/) {
+            if ($oldvalue == 0) {
+                $oldvalue = "";
+            } else {
+                $oldvalue = &::DBID_to_name($oldvalue);
+            }
+        }
+    }
+    if ($oldvalue eq $newvalue) {
+        return 1;
+    }
+    if (&::trim($oldvalue) eq &::trim($newvalue)) {
+        return 1;
+    }
+    if ($f =~ /^longdesc/) {
+        return 1;
+    }
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup($self, "editbugs");
+    }
+    if ($UserInEditGroupSet) {
+        return 1;
+    }
+    &::SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
+                "WHERE bug_id = $self->{'bug_id'}");
+    ($reporterid, $ownerid, $qacontactid) = (&::FetchSQLData());
+
+    # Let reporter change bug status, even if they can't edit bugs.
+    # If reporter can't re-open their bug they will just file a duplicate.
+    # While we're at it, let them close their own bugs as well.
+    if ( ($f eq "bug_status") && ($self->{'whoid'} eq $reporterid) ) {
+        return 1;
+    }
+    if ($f eq "bug_status" && $newvalue ne $::unconfirmedstate &&
+        &::IsOpenedState($newvalue)) {
+
+        # Hmm.  They are trying to set this bug to some opened state
+        # that isn't the UNCONFIRMED state.  Are they in the right
+        # group?  Or, has it ever been confirmed?  If not, then this
+        # isn't legal.
+
+        if ($UserInCanConfirmGroupSet < 0) {
+            $UserInCanConfirmGroupSet = &::UserInGroup("canconfirm");
+        }
+        if ($UserInCanConfirmGroupSet) {
+            return 1;
+        }
+        &::SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $self->{'bug_id'}");
+        my $everconfirmed = FetchOneColumn();
+        if ($everconfirmed) {
+            return 1;
+        }
+    } elsif ($reporterid eq $self->{'whoid'} || $ownerid eq $self->{'whoid'} ||
+             $qacontactid eq $self->{'whoid'}) {
+        return 1;
+    }
+    $self->{'error'} = "
+Only the owner or submitter of the bug, or a sufficiently
+empowered user, may make that change to the $f field."
+}
+
+sub Collision {
+    my $self = shift();
+    my $write = "WRITE";        # Might want to make a param to control
+                                # whether we do LOW_PRIORITY ...
+    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+            "profiles $write, dependencies $write, votes $write, " .
+            "keywords $write, longdescs $write, fielddefs $write, " .
+            "keyworddefs READ, groups READ, attachments READ, products READ");
+    &::SendSQL("SELECT delta_ts FROM bugs where bug_id=$self->{'bug_id'}");
+    my $delta_ts = &::FetchOneColumn();
+    &::SendSQL("unlock tables");
+    if ($self->{'delta_ts'} ne $delta_ts) {
+       return 1;
+    }
+    else {
+       return 0;
+    }
+}
+
+sub AppendComment  {
+    my $self = shift();
+    my ($comment) = (@_);
+    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
+        return;
+    }
+
+    &::SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
+            "VALUES($self->{'bug_id'}, $self->{'whoid'}, now(), " . &::SqlQuote($comment) . ")");
+
+    &::SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $self->{'bug_id'}");
+}
+
+
+#from o'reilley's Programming Perl
+sub display {
+    my $self = shift;
+    my @keys;
+    if (@_ == 0) {                  # no further arguments
+        @keys = sort keys(%$self);
+    }  else {
+        @keys = @_;                 # use the ones given
+    }
+    foreach my $key (@keys) {
+        print "\t$key => $self->{$key}\n";
+    }
+}
+
+sub CommitChanges {
+
+#snapshot bug
+#snapshot dependencies
+#check can change fields
+#check collision
+#lock and change fields
+#notify through mail
+
 }
 
 sub AUTOLOAD {
