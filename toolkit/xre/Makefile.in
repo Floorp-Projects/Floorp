@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = xulapp
 LIBRARY_NAME = xulapp_s
 EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
 
 REQUIRES = \
 	appcomps \

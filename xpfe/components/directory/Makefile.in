@@ -43,8 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
+XPIDL_MODULE	= directory
 LIBRARY_NAME	= directory_s
-XPIDL_MODULE=directory
+LIBXUL_LIBRARY	= 1
+
 XPIDLSRCS	= nsIHTTPIndex.idl
 REQUIRES	= xpcom \
 		  string \

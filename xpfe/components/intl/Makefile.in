@@ -42,8 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=appcomps
-LIBRARY_NAME=appcompintl_s
+MODULE            = appcomps
+LIBRARY_NAME      = appcompintl_s
+FORCE_STATIC_LIB  = 1
+LIBXUL_LIBRARY    = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
@@ -67,7 +70,5 @@ CPPSRCS= \
 	nsCharsetMenu.cpp \
 	nsFontPackageHandler.cpp \
 	$(NULL)
-
-FORCE_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk

@@ -1313,7 +1313,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   }
   if (ar) {
     nsCOMPtr<nsILocalFile> lf;
-    rv = NS_GetFileFromPath(arg, getter_AddRefs(lf));
+    rv = XRE_GetFileFromPath(arg, getter_AddRefs(lf));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIProfileUnlocker> unlocker;
@@ -1555,7 +1555,8 @@ public:
 typedef void (*_g_set_application_name_fn)(const gchar *application_name);
 #endif
 
-int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
+int
+XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   nsresult rv;
   NS_TIMELINE_MARK("enter main");
@@ -1643,7 +1644,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
     const char *appDataFile;
     if (CheckArg("app", &appDataFile) == ARG_FOUND) {
       nsCOMPtr<nsILocalFile> lf;
-      NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
+      XRE_GetFileFromPath(appDataFile, getter_AddRefs(lf));
       lf->GetParent(getter_AddRefs(xulAppDir));
     }
 

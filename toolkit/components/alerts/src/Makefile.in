@@ -45,6 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = alerts
 LIBRARY_NAME  = alerts_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
 REQUIRES  = xpcom \
             string \
             windowwatcher \
@@ -54,10 +57,6 @@ REQUIRES  = xpcom \
 CPPSRCS   = \
     nsAlertsService.cpp \
     $(NULL)
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 

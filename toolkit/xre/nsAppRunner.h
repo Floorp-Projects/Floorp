@@ -88,9 +88,6 @@ NS_HIDDEN_(nsresult)
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
 
 NS_HIDDEN_(nsresult)
-NS_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
-
-NS_HIDDEN_(nsresult)
 NS_LockProfilePath(nsILocalFile* aPath, nsIProfileUnlocker* *aUnlocker,
                    nsIProfileLock* *aResult);
 

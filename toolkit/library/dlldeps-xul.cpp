@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla embedding code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,35 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULAppAPI.h"
-#ifdef XP_WIN
-#include <windows.h>
-#include <stdlib.h>
-#endif
-#include "nsBuildID.h"
 
-static const nsXREAppData kAppData = {
-  "Mozilla",
-  "Firefox",
-  APP_VERSION,
-  BUILD_ID,
-  // ec8030f7-c20a-464f-9b0e-13a3a9e97384
-  { 0xec8030f7, 0xc20a, 0x464f, { 0x9b, 0x0e, 0x13, 0xa3, 0xa9, 0xe9, 0x73, 0x84 } },
-  "Copyright (c) 2004 mozilla.org",
-  NS_XRE_ENABLE_PROFILE_MIGRATOR |
-  NS_XRE_ENABLE_EXTENSION_MANAGER
-};
-
-int main(int argc, char* argv[])
+void xxxNeverCalledXUL()
 {
-  return XRE_main(argc, argv, &kAppData);
+  XRE_main(0, nsnull, nsnull);
+  XRE_GetFileFromPath(nsnull, nsnull);
 }
-
-#if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is
-// unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
-{
-    // Do the real work.
-    return main( __argc, __argv );
-}
-#endif

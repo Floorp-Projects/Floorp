@@ -58,7 +58,7 @@ static const nsXREAppData kAppData = {
 
 int main(int argc, char* argv[])
 {
-  return xre_main(argc, argv, &kAppData);
+  return XRE_main(argc, argv, &kAppData);
 }
 
 #if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)

@@ -42,7 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src tools
+DIRS = public src
+
+TOOL_DIRS = tools
 
 include $(topsrcdir)/config/rules.mk
 

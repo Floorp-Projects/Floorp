@@ -42,16 +42,27 @@
 
 #include "prtypes.h"
 #include "nsID.h"
+#include "nscore.h"
+
+// XXXbsmedberg - eventually we're going to freeze the XULAPI
+// symbols, and we don't want every consumer to define MOZ_ENABLE_LIBXUL.
+// Reverse the logic so that those who aren't using libxul have to do the
+// work.
+#ifdef MOZ_ENABLE_LIBXUL
+#ifdef IMPL_XULAPI
+#define XULAPI NS_EXPORT
+#else
+#define XULAPI NS_IMPORT
+#endif
+#else
+#define XULAPI
+#endif
+
+class nsILocalFile;
 
 /**
  * This API is "not even kinda frozen yet"
  */
-
-/**
- * Indicates whether or not to heed "general.startup.*" prefs.
- * XXXbsmedberg this is going away
- */
-#define NS_XRE_USE_STARTUP_PREFS (1 << 0)
 
 /**
  * Indicates whether or not the profile migrator service may be
@@ -130,6 +141,14 @@ struct nsXREAppData
  *                 SetCurrentDirectory, and relative paths on the command line
  *                 won't be correct.
  */
-int xre_main(int argc, char* argv[], const nsXREAppData* aAppData);
+extern "C" XULAPI int
+XRE_main(int argc, char* argv[], const nsXREAppData* aAppData);
+
+/**
+ * Given a path relative to the current working directory (or an absolute
+ * path), return an appropriate nsILocalFile object.
+ */
+extern "C" XULAPI nsresult
+XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
 
 #endif // _nsXULAppAPI_h__
