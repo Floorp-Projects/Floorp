@@ -1120,8 +1120,14 @@ rdf_BlockingWrite(nsIOutputStream* stream, const nsString& s)
 {
     nsresult rv;
     char* utf8 = s.ToNewUTF8String();
+    if (! utf8)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Be sure to grab the UTF-8 encoded string's length, because it
+    // may be longer than the length of the unencoded string.
     PRInt32 len = PL_strlen(utf8);
     rv = rdf_BlockingWrite(stream, utf8, len);
+
     nsCRT::free(utf8);
     return rv;
 }
