@@ -18,7 +18,13 @@
 
 #include <X11/Xlib.h>
 #ifdef HAVE_X11_XKBLIB_H
-#include <X11/XKBlib.h>
+#   if defined (__digital__) && defined (__unix__)
+#   define explicit Explicit
+#   include <X11/XKBlib.h>
+#   undef explicit
+#else
+#   include <X11/XKBlib.h>
+#endif
 #endif
 #include <X11/keysym.h>
 #include <gdk/gdkx.h>
