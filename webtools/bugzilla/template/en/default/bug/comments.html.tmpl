@@ -32,6 +32,11 @@
 
 [% PROCESS bug/time.html.tmpl %]
 
+[%# Note: this template is used in multiple places; if you use this hook,
+  # make sure you are aware of this fact.
+  #%]  
+[% Hook.process("aftercomments") %]
+
 [%############################################################################%]
 [%# Block for individual comments                                            #%]
 [%############################################################################%]
