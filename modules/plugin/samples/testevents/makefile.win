@@ -21,6 +21,7 @@
 
 
 MODULE		= npevents
+REQUIRES	= xpcom plugin
 
 LIBRARY_NAME	= npevents
 
