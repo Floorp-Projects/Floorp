@@ -1429,6 +1429,15 @@ nsDocShell::SetName(const PRUnichar * aName)
 }
 
 NS_IMETHODIMP
+nsDocShell::NameEquals(const PRUnichar *aName, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(aName);
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = mName.Equals(aName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetItemType(PRInt32 * aItemType)
 {
     NS_ENSURE_ARG_POINTER(aItemType);
@@ -1908,7 +1917,6 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
 
     *_retval = nsnull;          // if we don't find one, we return NS_OK and a null result 
 
-    nsDependentString name(aName);
     nsXPIDLString childName;
     PRInt32 i, n = mChildren.Count();
     for (i = 0; i < n; i++) {
@@ -1920,8 +1928,9 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
         if (aSameType && (childType != mItemType))
             continue;
 
-        child->GetName(getter_Copies(childName));
-        if (name.Equals(childName)) {
+        PRBool childNameEquals = PR_FALSE;
+        child->NameEquals(aName, &childNameEquals);
+        if (childNameEquals) {
             *_retval = child;
             NS_ADDREF(*_retval);
             break;
