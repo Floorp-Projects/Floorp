@@ -49,4 +49,6 @@ Rights Reserved.
 </box>
 <html:p/>
 <html:div>&setupAnother.label;</html:div>
+<spring class="spacer"/>
+<html:div>&clickFinish.label;</html:div>
 </window>
