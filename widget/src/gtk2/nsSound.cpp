@@ -147,8 +147,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
     int fd, mask = 0;
     long samples_per_sec, avg_bytes_per_sec;
-    long rate;
-    int format, channels = 1, block_align, bits_per_sample;
+    long rate = 0;
+    int format, channels = 1, block_align, bits_per_sample = 0;
 
     if (PL_strncmp(string, "RIFF", 4)) {
 #ifdef DEBUG
