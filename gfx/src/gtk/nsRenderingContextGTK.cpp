@@ -786,9 +786,8 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
   if (surf)
   {
     NS_ADDREF(surf);
-    if (!mGC)
-      UpdateGC();
-      rv = surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);    
+    UpdateGC();
+    rv = surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);    
   } else {
     rv = NS_ERROR_FAILURE;
   }
