@@ -67,7 +67,6 @@
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if ((mFlags & nsIPlaintextEditor::eEditorReadonlyMask) || (mFlags & nsIPlaintextEditor::eEditorDisabledMask)) \
@@ -1365,25 +1364,3 @@ nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<ns
   }
   return res;
 }
-
-PRBool
-nsTextEditRules::DeleteEmptyTextNode(nsIDOMNode *aNode)
-{
-  if (aNode)
-  {
-    nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-    nodeAsText = do_QueryInterface(aNode);
-    if (nodeAsText)
-    {
-      PRUint32 len;
-      nodeAsText->GetLength(&len);
-      if (!len) 
-      {
-        mEditor->DeleteNode(aNode);
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
