@@ -547,12 +547,14 @@ gif_init_transparency(gif_struct* gs, int index)
 //******************************************************************************
 static void
 gif_destroy_transparency(gif_struct* gs)
-{    
+{
+#if 0
     if (gs->transparent_pixel) {
         /* Destroy the source image's transparent pixel. */
         PR_Free(gs->transparent_pixel);
         gs->transparent_pixel = NULL;
     }
+#endif
 }
 
 //******************************************************************************
