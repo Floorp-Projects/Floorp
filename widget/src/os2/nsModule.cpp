@@ -57,12 +57,37 @@
 
 HMODULE gModuleHandle;
 
+extern "C" {
+
+/* _CRT_init is the C run-time environment initialization function.
+ * It will return 0 to indicate success and -1 to indicate failure.
+ */
+int _CRT_init(void);
+
+/* __ctordtorInit calls the C++ run-time constructors for static objects.
+ */
+void __ctordtorInit(void);
+
+/* __ctordtorTerm calls the C++ run-time destructors for static objects.
+ */
+void __ctordtorTerm(void);
+}
+
 unsigned long _System _DLL_InitTerm(unsigned long mod_handle, unsigned long flag)
 {
-   if (!flag)
+   if (flag == 0) {
       gModuleHandle = mod_handle;
+      if ( _CRT_init() == -1 )
+      {
+        return(0UL);
+      }
+      __ctordtorInit();
+   }
    else
+   {
       gModuleHandle = 0;
+      __ctordtorTerm();
+   }
    return 1;
 }
 
