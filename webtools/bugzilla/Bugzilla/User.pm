@@ -558,12 +558,17 @@ sub match_field {
                            });
         }
 
+        my $limit = 0;
+        if (&::Param('maxusermatches')) {
+            $limit = &::Param('maxusermatches') + 1;
+        }
+
         for my $query (@queries) {
 
             my $users = match(
-                $query,                                 # match string
-                (&::Param('maxusermatches') || 0) + 1,  # match limit
-                1                                       # exclude_disabled
+                $query,   # match string
+                $limit,   # match limit
+                1         # exclude_disabled
             );
 
             # skip confirmation for exact matches
