@@ -3794,7 +3794,6 @@ nsWindow::SetXICSpotLocation(nsIMEGtkIC* aXIC, nsPoint aPoint)
 
 void
 nsWindow::ime_preedit_start() {
-  IMEComposeStart(nsnull);
 }
 
 void
