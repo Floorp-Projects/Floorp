@@ -391,10 +391,6 @@ NS_IMETHODIMP nsViewManager :: ResetScrolling(void)
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
 {
   nsRect              wrect;
-  nsIRenderingContext *onscreencx = nsnull;  // on screen 
-  nsIRenderingContext *offscreencx = nsnull; // secondary buffer
-  // the localcx points to the (offscreencx) if double buffering, 
-  // otherwise it points to (onscreencx)
   nsIRenderingContext *localcx = nsnull;
   nsDrawingSurface    ds = nsnull;
 
@@ -418,16 +414,13 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (nsnull == aContext)
   {
     localcx = CreateRenderingContext(*aView);
-    onscreencx = localcx;
 
     //couldn't get rendering context. this is ok at init time atleast
     if (nsnull == localcx)
       return;
   }
-  else {
+  else
     localcx = aContext;
-    onscreencx = aContext;
-  }
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
@@ -439,9 +432,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     wrect.x = wrect.y = 0;
 
     NS_RELEASE(widget);
- 
-    localcx = CreateRenderingContext(*aView);
-    offscreencx = localcx;
+
     ds = GetDrawingSurface(*localcx, wrect);
   }
 
@@ -459,15 +450,13 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 #ifdef NEW_COMPOSITOR
-    onscreencx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
-    onscreencx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 #endif
 
-  if (onscreencx != aContext)
-    NS_RELEASE(onscreencx);
-
-  NS_IF_RELEASE(offscreencx);
+  if (localcx != aContext)
+    NS_RELEASE(localcx);
 
   // Subtract the area we just painted from the dirty region
   if ((nsnull != region) && !region->IsEmpty())
@@ -489,10 +478,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
 {
   nsRect              wrect, brect;
-  nsIRenderingContext *onscreencx = nsnull;  // on screen 
-  nsIRenderingContext *offscreencx = nsnull; // secondary buffer
-  // the localcx points to the (offscreencx) if double buffering, 
-  // otherwise it points to (onscreencx)
   nsIRenderingContext *localcx = nsnull;
   nsDrawingSurface    ds = nsnull;
 
@@ -515,20 +500,16 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
 
-
   if (nsnull == aContext)
   {
     localcx = CreateRenderingContext(*aView);
-    onscreencx = localcx;
 
     //couldn't get rendering context. this is ok if at startup
     if (nsnull == localcx)
       return;
   }
-  else {
+  else
     localcx = aContext;
-    onscreencx = aContext;
-  }
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
@@ -542,9 +523,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
     NS_RELEASE(widget);
 
-      //Create a new rendering context for the background buffer.
-    localcx = CreateRenderingContext(*aView);
-    offscreencx = localcx;
     ds = GetDrawingSurface(*localcx, wrect);
   }
 
@@ -560,24 +538,21 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 #ifdef NEW_COMPOSITOR
   {
 #ifdef XP_MAC
-    onscreencx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
 #ifdef XP_UNIX
     localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 #endif //unix
-    onscreencx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
+    localcx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
 #endif //mac
   }
 #else
-    onscreencx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 #endif
 
 
-  if (onscreencx != aContext)
-    NS_RELEASE(onscreencx);
-
-  NS_IF_RELEASE(offscreencx);
-
+  if (localcx != aContext)
+    NS_RELEASE(localcx);
 
   // Subtract the area we just painted from the dirty region
   nsIRegion *dirtyRegion;
@@ -1107,7 +1082,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             mBlueCX->Translate(localrect.x, localrect.y);
 
             //buffer swap.
-            aRC.CopyOffScreenBits(gOffScreen, 0, 0, localrect, NS_COPYBITS_XFORM_DEST_VALUES);
+            aRC.CopyOffScreenBits(gOffScreen, 0, 0, localrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
           }
           else
           {
