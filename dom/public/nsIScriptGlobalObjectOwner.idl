@@ -1,0 +1,53 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nscore.h"
+#include "nsIScriptGlobalObject.h"
+%}
+
+/**
+ * Implemented by any object capable of supplying a nsIScriptGlobalObject.
+ * The implentor may create the script global object on demand and is
+ * allowed (though not expected) to throw it away on release.
+ */
+
+interface nsIScriptGlobalObject;
+
+[scriptable, uuid(413E8400-A87F-11d3-AFC6-00A024FFC08C)]
+interface nsIScriptGlobalObjectOwner : nsISupports
+{
+  /**
+   * Returns the script global object
+   */
+	nsIScriptGlobalObject getScriptGlobalObject();
+
+  /**
+   * Error notification method. Informs the owner that an error 
+   * occurred while a script was being evaluted.
+   *
+   */
+	void reportScriptError(in string aErrorString, in string aFileName,
+		in long aLineNo, in string aLineBuf);
+};
