@@ -439,13 +439,14 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 {
-		WindowPtr			whichWindow;
-		PRInt16				partCode;
+  WindowPtr			whichWindow;
+  WindowPartCode				partCode;
 
-	partCode = ::FindWindow(anEvent.where, &whichWindow);
-
+  partCode = ::FindWindow(anEvent.where, &whichWindow);
+  
 	switch (partCode)
 	{
+      case inCollapseBox:   // we never seem to get this.
 			case inSysWindow:
 				if ( gRollupListener && gRollupWidget )
 					gRollupListener->Rollup();
@@ -495,10 +496,14 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::GetRegionBounds(::GetGrayRgn(), &screenRect);
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
 
-				nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
-				if (mw)
-					mw->ComeToFront();
-
+        // only activate if the command key is not down
+        if (!(anEvent.modifiers & cmdKey))
+        {
+          nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
+          if (mw)
+            mw->ComeToFront();
+        }
+        
 				// Dispatch the event because some windows may want to know that they have been moved.
 #if 0
 				// Hack: we can't use GetMouse here because by the time DragWindow returns, the mouse
