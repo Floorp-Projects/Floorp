@@ -43,7 +43,6 @@ JSLIBFILES = \
     $(NULL)
 
 XULLIBFILES = \
-    .\xul\lib\EntryHistory.js \
     .\xul\lib\listbox.js \
     .\xul\lib\munger.js \
     $(NULL)
