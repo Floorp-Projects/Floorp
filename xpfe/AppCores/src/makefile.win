@@ -102,9 +102,23 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\EditorInitPage.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorInitPagePlain.html   $(DIST)\bin\res\samples
 
-	$(MAKE_INSTALL) ..\xul\pref-appearance.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-fonts.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-navigator.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-advanced.html       $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-applications.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-appearance.html       $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-cache.html          $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-colors.html         $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-composer.html       $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-download.html       $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-fonts.html           $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-languages.html      $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-navigator.html      $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-offline.html        $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-proxies.html        $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-publish.html        $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-select.html         $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-smart_browsing.html      $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-smartupdate.html      $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref.css                 $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\prefbottom.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\PrefsWindow.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\PrefsWindow.js   $(DIST)\bin\res\samples
