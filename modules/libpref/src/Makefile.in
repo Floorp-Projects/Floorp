@@ -44,13 +44,12 @@ REQUIRES	= xpcom \
 
 include $(topsrcdir)/config/config.mk
 
-CSRCS		= prefapi.c
-
 CPPSRCS		= nsPref.cpp \
 			  nsPrefBranch.cpp	\
 			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\
 			  nsAutoConfig.cpp      \
+			  prefapi.cpp \
 			 $(NULL)
 
 PREF_JS_EXPORTS	= \

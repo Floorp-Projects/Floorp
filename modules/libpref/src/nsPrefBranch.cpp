@@ -69,7 +69,7 @@ struct PrefCallbackData {
 static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 // Prototypes
-extern "C" PrefResult pref_UnlockPref(const char *key);
+extern PrefResult pref_UnlockPref(const char *key);
 PR_STATIC_CALLBACK(PRIntn) pref_enumChild(PLHashEntry *he, int i, void *arg);
 static int PR_CALLBACK NotifyObserver(const char *newpref, void *data);
 
