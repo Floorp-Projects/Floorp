@@ -33,6 +33,8 @@ interface nsISidebar : nsISupports
     void setWindow (in nsIDOMWindowInternal aWindow);
     void addPanel(in wstring aTitle, in string aContentURL,
                   in string aCustomizeURL);
+    void addPersistentPanel(in wstring aTitle, in string aContentURL,
+                            in string aCustomizeURL);
     void addSearchEngine(in string engineURL, in string iconURL,
                          in wstring suggestedTitle, in wstring suggestedCategory);
 };
