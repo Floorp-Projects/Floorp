@@ -562,10 +562,13 @@ PRInt32 CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
 }
 
 
-void CompareResults(PRBool canContain,PRBool canContainEx,eHTMLTags aChildTag,eHTMLTags aParentTag){
-  if(canContain!=canContainEx){
-//    printf("%s(child:%i,parent:%i)\n","can contain!=can containex",aChildTag,aParentTag);
+void CompareResults(PRBool canContain,eHTMLTags aParentTag,eHTMLTags aChildTag){
+/*
+  PRBool theNewResult=CanContainEx(aParentTag,aChildTag);
+  if(canContain!=theNewResult){
+    printf("%s(child:%i,parent:%i)\n","can contain!=can containex",aChildTag,aParentTag);
   }
+*/
 }
 
 
@@ -594,8 +597,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   }
 
   PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
-  PRBool theCanContainExResult=CanContainEx(theParentTag,aChildTag);
-  CompareResults(theCanContainResult,theCanContainExResult,aChildTag,theParentTag);
+  CompareResults(theCanContainResult,theParentTag,aChildTag);
 
   if(PR_FALSE==theCanContainResult){
     if(CanPropagate(theParentTag,aChildTag))
@@ -608,8 +610,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       result=ReduceContextStackFor(aChildTag);
 
       PRBool theCanContainResult=CanContain(mBodyContext->mElements.Last(),aChildTag);
-      PRBool theCanContainExResult=CanContainEx(mBodyContext->mElements.Last(),aChildTag);
-      CompareResults(theCanContainResult,theCanContainExResult,aChildTag,mBodyContext->mElements.Last());
+      CompareResults(theCanContainResult,mBodyContext->mElements.Last(),aChildTag);
 
       if(PR_FALSE==theCanContainResult) {
         //we unwound too far; now we have to recreate a valid context stack.
@@ -1753,7 +1754,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
       {
         result=CanContain(aParent,aChild);
         PRBool theCanContainExResult=CanContainEx(aParent,aChild);
-        CompareResults(result,theCanContainExResult,aChild,aParent);
+        CompareResults(result,aParent,aChild);
       }
       break;
 
@@ -1816,18 +1817,19 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
  *  @return  PR_TRUE if autoclosure should occur
  */
 PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
-  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt,eHTMLTag_p,eHTMLTag_pre};
+  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt};
 
   PRBool    result=PR_FALSE;
   PRInt32   theParentIndex=kNotFound;
 
+/*
     //force autoclosure if you have p/pre stacks....
   if((eHTMLTag_p==aChildTag) || (eHTMLTag_pre==aChildTag)){
     if((eHTMLTag_p==aParentTag) || (eHTMLTag_pre==aParentTag)){
       return PR_TRUE;
     }
   }
-
+*/
   /***************************************************************************************
     How this works:
       1. Find the nearest parent on the appropriate stack that can gate the given child.
@@ -2181,9 +2183,7 @@ PRBool CNavDTD::ForwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTa
     case eHTMLTag_tr:
       {  
         PRBool theCanContainResult=CanContain(eHTMLTag_td,aChildTag);
-        PRBool theCanContainExResult=CanContainEx(eHTMLTag_td,aChildTag);
-        CompareResults(theCanContainResult,theCanContainExResult,aChildTag,eHTMLTag_td);
-
+        CompareResults(theCanContainResult,eHTMLTag_td,aChildTag);
         if(PR_TRUE==theCanContainResult) {
           aStack.Push(eHTMLTag_td);
           result=BackwardPropagate(aStack,aParentTag,eHTMLTag_td);
@@ -2224,8 +2224,7 @@ PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLT
     }
 
     PRBool theCanContainResult=CanContain(aParentTag,theParentTag);
-    PRBool theCanContainExResult=CanContainEx(aParentTag,theParentTag);
-    CompareResults(theCanContainResult,theCanContainExResult,theParentTag,aParentTag);
+    CompareResults(theCanContainResult,aParentTag,theParentTag);
 
     if(theCanContainResult) {
       //we've found a complete sequence, so push the parent...
