@@ -130,9 +130,9 @@
          </box>
       </box>
           
-      <box id="week-view-all-day-content-box">
+      <box id="week-view-all-day-content-box" align="center">
          <vbox id="weekview-daynumber-spacer-left" flex="1">
-            <label id="all-day-content-box-text-title" value="All Day Events"/>
+            <label class="all-day-content-box-text-title" value="All Day Events"/>
          </vbox>
                
          <hbox class="all-day-content-box-week" id="all-day-content-box-week-1"/>

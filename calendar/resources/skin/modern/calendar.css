@@ -784,7 +784,7 @@
 }
 
 /*--------------------------------------------------------------------
- * Next and Previous buttons. :TODO: Should they have hover?
+ * Next and Previous buttons.
  *-------------------------------------------------------------------*/
 
 #day-previous-button
@@ -792,16 +792,35 @@
    list-style-image        : url("chrome://calendar/skin/arrow_left.png");
 }
 
+#day-previous-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_hover.png");
+}
+
+#day-previous-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_down.png");
+}
+
 #day-next-button
 {
    list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#day-next-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_hover.png");
+}
+
+#day-next-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_down.png");
 }
 
 #day-next-button-box
 {
    -moz-box-pack           : end;
 }
-
 
 /*--------------------------------------------------------------------
  * Box around the all day content at the top
@@ -811,12 +830,11 @@
 {
    min-height           : 25px;
    max-height           : 25px;
-   margin-left          : 2px;
-   margin-rignt         : 2px;
    overflow             : auto;
-   border               : 2px solid #2085c4;
-   -moz-box-pack       : center;
-
+   border-top           : 1px solid #1D7AB5;
+   border-left          : 1px solid #1D7AB5;
+   border-right         : 1px solid #1D7AB5;
+	background-color		: #ffffff;
 }
 
 /*--------------------------------------------------------------------
@@ -952,10 +970,29 @@
    list-style-image        : url("chrome://calendar/skin/arrow_left.png");
 }
 
+#week-previous-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_hover.png");
+}
+
+#week-previous-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_down.png");
+}
 
 #week-next-button
 {
    list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#week-next-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_hover.png");
+}
+
+#week-next-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_down.png");
 }
 
 #week-next-button-box
@@ -1128,7 +1165,7 @@
    min-height       		: 15px;
 }
 
-#all-day-content-box-text-title
+.all-day-content-box-text-title
 {
    font-size            : 10pt;
    font-family          : Arial, Helvetica;

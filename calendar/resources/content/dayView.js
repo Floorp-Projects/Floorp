@@ -121,8 +121,8 @@ DayView.prototype.refreshEvents = function( )
    //if ( TextNode == null ) 
    //{
       HtmlNode = document.createElement( "description" );
-      HtmlNode.setAttribute( "id", "all-day-content-box-text" );
-      TextNode = document.createTextNode( "All-Day Events: " );
+      HtmlNode.setAttribute( "class", "all-day-content-box-text-title" );
+      TextNode = document.createTextNode( "All-Day Events" );
       HtmlNode.appendChild( TextNode );
       document.getElementById( "all-day-content-box" ).appendChild( HtmlNode );
       

@@ -83,8 +83,8 @@
         
       <!-- Day View:  -->
             
-      <box id="all-day-content-box" collapsed="true" flex="1">
-         <label id="all-day-content-box-text" value="All-Day Events: "/>
+      <box id="all-day-content-box" align="center" collapsed="true" flex="1">
+         <label class="all-day-content-box-text-title" value="All Day Events"/>
       </box>
             
       <!-- This is an overlay being included from above -->
