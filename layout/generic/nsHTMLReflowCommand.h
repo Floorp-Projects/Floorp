@@ -57,7 +57,7 @@ public:
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsSize&        aMaxSize,
                       nsIRenderingContext& aRendContext);
-  NS_IMETHOD GetNext(nsIFrame*& aNextFrame);
+  NS_IMETHOD GetNext(nsIFrame*& aNextFrame, PRBool aRemove);
   NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const;
   NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);
   NS_IMETHOD GetType(ReflowType& aReflowType) const;

@@ -165,14 +165,16 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame)
+NS_IMETHODIMP nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame, PRBool aRemove)
 {
   PRInt32 count = mPath.Count();
 
   aNextFrame = nsnull;
   if (count > 0) {
     aNextFrame = (nsIFrame*)mPath[count - 1];
-    mPath.RemoveElementAt(count - 1);
+    if (aRemove) {
+      mPath.RemoveElementAt(count - 1);
+    }
   }
   return NS_OK;
 }
