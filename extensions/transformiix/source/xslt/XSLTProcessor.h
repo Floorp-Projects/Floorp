@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.8 2000/06/11 16:54:54 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.h,v 1.9 2000/06/13 12:10:09 axel%pike.org Exp $
  */
 
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2000/06/11 16:54:54 $
+ * @version $Revision: 1.9 $ $Date: 2000/06/13 12:10:09 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -392,7 +392,7 @@ public:
         WHEN,
         WITH_PARAM,
         MESSAGE,
-        EXPR_DEBUG,  // temporary, used for debugging
+        EXPR_DEBUG  // temporary, used for debugging
     };
 
     XSLType(const XSLType& xslType);
