@@ -1350,8 +1350,8 @@ public class Codegen extends Interpreter {
             aload(contextLocal);  
             // load boolean indicating whether fn name should be set in scope
             boolean setFnName = str != null && str.length() > 0 && 
-                                ((FunctionNode) def).getFunctionType() !=
-                                    FunctionNode.FUNCTION_EXPRESSION;
+                                ((FunctionNode) def).getFunctionType() ==
+                                    FunctionNode.FUNCTION_STATEMENT;
             addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
             
             addScriptRuntimeInvoke("initFunction",
@@ -2665,8 +2665,10 @@ public class Codegen extends Interpreter {
             } else if (op == TokenStream.IN) {
                 generateCodeFromNode(child, node, -1, -1);
                 generateCodeFromNode(child.getNextSibling(), node, -1, -1);
+                aload(variableObjectLocal);
                 addScriptRuntimeInvoke("in",
-                              "(Ljava/lang/Object;Ljava/lang/Object;)","Z");
+                              "(Ljava/lang/Object;Ljava/lang/Object;"+
+                               "Lorg/mozilla/javascript/Scriptable;)","Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
                 addByteCode(ByteCode.GOTO, falseGOTO);
             } else {

@@ -154,13 +154,6 @@ public class Main {
                 processSource(cx, args[i]);
                 continue;
             }
-            if (arg.equals("-debug")) {
-                // XXX check for bad combinations with -opt
-                cx.setOptimizationLevel(-1);
-                cx.setGeneratingDebug(true);
-                invokeDebugger(cx, scope);
-                continue;
-            }
             usage(arg);
         }
         return new String[0];
@@ -209,15 +202,6 @@ public class Main {
                     }
                     if (newline == null) {
                         hitEOF = true;
-                        break;
-                    }
-                    if (newline.equals("#")) {
-                        if (cx.getDebugger() == null) {
-                            globalState.getErr().println(
-                                "Can't invoke debugger: -debug not specified.");
-                        } else {
-                            invokeDebugger(cx, scope);
-                        }
                         break;
                     }
                     source = source + newline + "\n";
@@ -350,15 +334,6 @@ public class Main {
 
     private static void p(String s) {
         globalState.getOut().println(s);
-    }
-
-    
-    private static void invokeDebugger(Context cx, Scriptable scope) {
-      /*
-        if (debugShell == null)
-            debugShell = new DebugShell(cx);
-        debugShell.enterShell(cx, scope);
-      */
     }
     
     public static ScriptableObject getScope() {

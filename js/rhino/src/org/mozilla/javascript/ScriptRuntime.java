@@ -21,6 +21,7 @@
  * Contributor(s):
  * Patrick Beard
  * Norris Boyd
+ * Igor Bukanov 
  * Roger Lawrence
  * Frank Mitchell
  * Andrew Wason
@@ -286,8 +287,7 @@ public class ScriptRuntime {
             // check for "Infinity"
             if (startChar == '+' || startChar == '-')
                 start++;
-            String sub = s.substring(start, end+1);
-            if (sub.equals("Infinity"))
+            if (s.regionMatches(start, "Infinity", 0, 8))
                 return startChar == '-'
                     ? Double.NEGATIVE_INFINITY
                     : Double.POSITIVE_INFINITY;
@@ -439,13 +439,12 @@ public class ScriptRuntime {
 
         if (base != 10) {
             return DToA.JS_dtobasestr(base, d);
+        } else {
+            StringBuffer result = new StringBuffer();
+            DToA.JS_dtostr(result, DToA.DTOSTR_STANDARD, 0, d);
+            return result.toString();
         }
-		else {
-			StringBuffer result = new StringBuffer();
-			DToA.JS_dtostr(result, DToA.DTOSTR_STANDARD, 0, d);
-			return result.toString();
-		}
-	
+    
     }
 
     /**
@@ -627,9 +626,9 @@ public class ScriptRuntime {
         else
             d = Math.ceil(d);
 
-	d = Math.IEEEremainder(d, two32);
+    d = Math.IEEEremainder(d, two32);
 
-	d = d >= 0
+    d = d >= 0
             ? d
             : d + two32;
 
@@ -645,23 +644,23 @@ public class ScriptRuntime {
      * See ECMA 9.7.
      */
     public static char toUint16(Object val) {
-	long int16 = 0x10000;
+    long int16 = 0x10000;
 
-	double d = toNumber(val);
-	if (d != d || d == 0.0 ||
-	    d == Double.POSITIVE_INFINITY ||
-	    d == Double.NEGATIVE_INFINITY)
-	{
-	    return 0;
-	}
+    double d = toNumber(val);
+    if (d != d || d == 0.0 ||
+        d == Double.POSITIVE_INFINITY ||
+        d == Double.NEGATIVE_INFINITY)
+    {
+        return 0;
+    }
 
-	d = Math.IEEEremainder(d, int16);
+    d = Math.IEEEremainder(d, int16);
 
-	d = d >= 0
+    d = d >= 0
             ? d
-	    : d + int16;
+        : d + int16;
 
-	return (char) Math.floor(d);
+    return (char) Math.floor(d);
     }
 
     /**
@@ -841,51 +840,59 @@ public class ScriptRuntime {
         return value;
     }
 
-    // An arbitrary single character int that will serve as an overloaded
-    // return value that must be disambiguated by the caller. We choose
-    // '5' here since it's less common than 0, 1, etc.
-    private static final int NO_INDEX = 5;
-    private static final char NO_INDEX_CHAR = '5';
+    // Return -1L if str is not an index or the index value as lower 32 
+    // bits of the result
+    private static long indexFromString(String str) {
+        // It must be a string.
 
-    // The length of the decimal string representation of Integer.MAX_VALUE.
-    private static final int MAX_VALUE_LENGTH =
-        Integer.toString(Integer.MAX_VALUE).length();
-
-    private static int indexFromString(String str) {
-        /* It must be a string. */
+        // The length of the decimal string representation of 
+        //  Integer.MAX_VALUE, 2147483647
+        final int MAX_VALUE_LENGTH = 10;
+        
         int len = str.length();
-        char c;
-        boolean negate = false;
-        int i = 0;
-        if (len > 0 && (c = str.charAt(0)) == '-') {
-            negate = true;
-            i = 1;
-        }
-        if (len > 0 && '0' <= (c = str.charAt(i)) && c <= '9' &&
-            len <= MAX_VALUE_LENGTH)
-        {
-    	    int index = c - '0';
-            int oldIndex = 0;
-            i++;
-            if (index != 0) {
-                while (i < len && '0' <= (c = str.charAt(i)) && c <= '9') {
-                    oldIndex = index;
-                    index = 10*index + (c - '0');
-    	            i++;
-    	        }
+        if (len > 0) {
+            int i = 0;
+            boolean negate = false;
+            int c = str.charAt(0);
+            if (c == '-') {
+                if (len > 1) {
+                    c = str.charAt(1); 
+                    i = 1; 
+                    negate = true;
+                }
             }
-            /* Make sure all characters were consumed and that it couldn't
-             * have overflowed.
-             */
-            if (i == len &&
-                (oldIndex < (Integer.MAX_VALUE / 10) ||
-                 (oldIndex == (Integer.MAX_VALUE / 10) &&
-                  c < (Integer.MAX_VALUE % 10))))
+            c -= '0';
+            if (0 <= c && c <= 9 
+                && len <= (negate ? MAX_VALUE_LENGTH + 1 : MAX_VALUE_LENGTH))
             {
-                return negate ? -index : index;
+                // Use negative numbers to accumulate index to handle
+                // Integer.MIN_VALUE that is greater by 1 in absolute value
+                // then Integer.MAX_VALUE
+                int index = -c;
+                int oldIndex = 0;
+                i++;
+                if (index != 0) {
+                    // Note that 00, 01, 000 etc. are not indexes
+                    while (i != len && 0 <= (c = str.charAt(i) - '0') && c <= 9)
+                    {
+                        oldIndex = index;
+                        index = 10 * index - c;
+                        i++;
+                    }
+                }
+                // Make sure all characters were consumed and that it couldn't
+                // have overflowed.
+                if (i == len &&
+                    (oldIndex > (Integer.MIN_VALUE / 10) ||
+                     (oldIndex == (Integer.MIN_VALUE / 10) &&
+                      c <= (negate ? -(Integer.MIN_VALUE % 10) 
+                                   : (Integer.MAX_VALUE % 10)))))
+                {
+                    return 0xFFFFFFFFL & (negate ? index : -index);
+                }
             }
         }
-        return NO_INDEX;
+        return -1L;
     }
 
     static String getStringId(Object id) {
@@ -897,12 +904,9 @@ public class ScriptRuntime {
             return toString(id);
         }
         String s = toString(id);
-        int index = indexFromString(s);
-        if (index != NO_INDEX || (s.length() == 1 &&
-                                  s.charAt(0) == NO_INDEX_CHAR))
-        {
-           return null;
-        }
+        long indexTest = indexFromString(s);
+        if (indexTest >= 0)
+            return null;
         return s;
     }
 
@@ -915,12 +919,9 @@ public class ScriptRuntime {
             return 0;
         }
         String s = toString(id);
-        int index = indexFromString(s);
-        if (index != NO_INDEX || (s.length() == 1 &&
-                                  s.charAt(0) == NO_INDEX_CHAR))
-        {
-           return index;
-        }
+        long indexTest = indexFromString(s);
+        if (indexTest >= 0)
+            return (int)indexTest;
         return 0;
     }
 
@@ -933,13 +934,13 @@ public class ScriptRuntime {
             s = ((double) index) == d ? null : toString(id);
         } else {
             s = toString(id);
-            index = indexFromString(s);
-            if (index != NO_INDEX)
+            long indexTest = indexFromString(s);
+            if (indexTest >= 0) {
+                index = (int)indexTest;
                 s = null;
-            else if (s.length() == 1 && s.charAt(0) == NO_INDEX_CHAR) {
-                // disambiguate return value: was actually a number
-                s = null;
-            }
+            } else {
+                index = 0;
+            }                
         }
         Scriptable start = obj instanceof Scriptable
                            ? (Scriptable) obj
@@ -995,12 +996,12 @@ public class ScriptRuntime {
             s = ((double) index) == d ? null : toString(id);
         } else {
             s = toString(id);
-            index = indexFromString(s);
-            if (index != NO_INDEX)
+            long indexTest = indexFromString(s);
+            if (indexTest >= 0) {
+                index = (int)indexTest;
                 s = null;
-            else if (s.length() == 1 && s.charAt(0) == NO_INDEX_CHAR) {
-                // disambiguate return value: was actually a number
-                s = null;
+            } else {
+                index = 0;
             }
         }
 
@@ -1729,7 +1730,8 @@ public class ScriptRuntime {
      *
      * This is a new JS 1.3 language feature.  The in operator mirrors
      * the operation of the for .. in construct, and tests whether the
-     * rhs has the property given by the lhs.  It is different from the for .. in construct in that:
+     * rhs has the property given by the lhs.  It is different from the 
+     * for .. in construct in that:
      * <BR> - it doesn't perform ToObject on the right hand side
      * <BR> - it returns true for DontEnum properties.
      * @param a the left hand operand
@@ -1737,11 +1739,13 @@ public class ScriptRuntime {
      *
      * @return true if property name or element number a is a property of b
      */
-    public static boolean in(Object a, Object b) {
+    public static boolean in(Object a, Object b, Scriptable scope) {
         if (!(b instanceof Scriptable)) {
             throw NativeGlobal.constructError(
-                Context.getContext(), "TypeError",
-                ScriptRuntime.getMessage("msg.instanceof.not.object", null), a);
+                Context.getContext(), 
+                "TypeError",
+                ScriptRuntime.getMessage("msg.instanceof.not.object", null), 
+                scope);
         }
         String s = getStringId(a);
         return s != null

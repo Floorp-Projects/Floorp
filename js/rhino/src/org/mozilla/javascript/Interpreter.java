@@ -1454,7 +1454,7 @@ public class Interpreter extends LabelTable {
                         rhs = stack[stackTop--];
                         lhs = stack[stackTop];
                         stack[stackTop] 
-                                = new Boolean(ScriptRuntime.in(lhs, rhs));
+                                = new Boolean(ScriptRuntime.in(lhs, rhs, scope));
                         break;
                     case TokenStream.INSTANCEOF :
                         rhs = stack[stackTop--];
