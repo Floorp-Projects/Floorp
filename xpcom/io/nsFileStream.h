@@ -478,13 +478,13 @@ public:
                                       nsInputFileStream(
                                           const nsFileSpec& inFile,
                                           int nsprMode = kDefaultMode,
-                                          PRIntn accessMode = 00700); // <- OCTAL
+                                          PRIntn accessMode = 00666);
                                       nsInputFileStream(nsIFileSpec* inFile);
 
     void                              Open(
                                           const nsFileSpec& inFile,
                                           int nsprMode = kDefaultMode,
-                                          PRIntn accessMode = 00700) // <- OCTAL
+                                          PRIntn accessMode = 00666)
                                       {
                                           if (mFile)
                                               mFile->Open(inFile, nsprMode, accessMode);
@@ -594,7 +594,7 @@ public:
                                       nsOutputFileStream(
                                            const nsFileSpec& inFile,
                                            int nsprMode = kDefaultMode,
-                                           PRIntn accessMode = 00700) // <- OCTAL
+                                           PRIntn accessMode = 00666) 
                                       {
                                           nsISupports* stream;
                                           if (NS_FAILED(NS_NewIOFileStream(
@@ -699,7 +699,7 @@ public:
                                       nsIOFileStream(
                                            const nsFileSpec& inFile,
                                            int nsprMode = kDefaultMode,
-                                           PRIntn accessMode = 00700) // <- OCTAL
+                                           PRIntn accessMode = 00666) 
                                       :  nsInputFileStream((nsIInputStream*)nsnull)
                                       ,  nsOutputStream(nsnull)
                                       {
