@@ -331,16 +331,16 @@ nsGopherChannel::GetContentType(char* *aContentType)
     case '1':
         switch (mListFormat) {
         case nsIDirectoryListing::FORMAT_RAW:
-            *aContentType = strdup("text/gopher-dir");
+            *aContentType = nsCRT::strdup("text/gopher-dir");
             break;
         default:
             NS_WARNING("Unknown directory type");
             // fall through
         case nsIDirectoryListing::FORMAT_HTML:
-            *aContentType = strdup(TEXT_HTML);
+            *aContentType = nsCRT::strdup(TEXT_HTML);
             break;
         case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-            *aContentType = strdup(APPLICATION_HTTP_INDEX_FORMAT);
+            *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
             break;
         }
         break;
