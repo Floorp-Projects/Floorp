@@ -46,14 +46,19 @@ CSRCS	=	\
 C_OBJS =	\
 		$(NULL)
 
-CPPSRCS =	nsInterfaceInfoManager.cpp	\
+CPPSRCS =	\
+                nsInterfaceInfoManager.cpp	\
 		nsInterfaceInfo.cpp		\
+                nsInterfaceRecord.cpp           \
+                nsTypelibRecord.cpp             \
 		$(NULL)
 
 
-CPP_OBJS = 	\
+CPP_OBJS =	\
 		.\$(OBJDIR)\nsInterfaceInfoManager.obj	\
 		.\$(OBJDIR)\nsInterfaceInfo.obj		\
+		.\$(OBJDIR)\nsInterfaceRecord.obj	\
+		.\$(OBJDIR)\nsTypelibRecord.obj		\
 		$(NULL)
 
 MODULE	= 	xptinfo

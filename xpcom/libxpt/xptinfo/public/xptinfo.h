@@ -51,6 +51,7 @@
 #define XPTI_FRIEND_API(t)    XPTI_PUBLIC_API(t)
 #define XPTI_FRIEND_DATA(t)   XPTI_PUBLIC_DATA(t)
 
+class nsIInterfaceInfoManager;
 PR_BEGIN_EXTERN_C
 // Even if this is a service, it is cool to provide a direct accessor
 XPTI_PUBLIC_API(nsIInterfaceInfoManager*)

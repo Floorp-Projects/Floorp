@@ -26,14 +26,12 @@
 #include "xpt_cpp.h"
 
 #include "nsInterfaceRecord.h"
-
 #include "nsInterfaceInfoManager.h"
 
 #ifdef DEBUG
 #include <stdio.h>
 #endif
 
-// XXX destroy this!
 class nsInterfaceInfo : public nsIInterfaceInfo
 {
     NS_DECL_ISUPPORTS;
@@ -67,13 +65,10 @@ public:
 #endif
 
 private:
-    // nsInterfaceInfoManager has access to the constructor.
-    friend class nsInterfaceInfoManager;
+    friend class nsInterfaceRecord;
 
     nsInterfaceInfo(nsInterfaceRecord *record, nsInterfaceInfo *parent);
-
     nsInterfaceRecord *mInterfaceRecord;
-    
     nsInterfaceInfo* mParent;
 
     uint16 mMethodBaseIndex;

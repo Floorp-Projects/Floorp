@@ -50,7 +50,6 @@ nsInterfaceInfoManager::GetInterfaceInfoManager()
     if(!impl)
     {
         impl = new nsInterfaceInfoManager();
-        // XXX ought to check for properly formed impl here..
     }
     if(impl)
         NS_ADDREF(impl);
@@ -66,7 +65,7 @@ nsInterfaceInfoManager::GetAllocator(nsInterfaceInfoManager* iim /*= NULL*/)
 
     if(!iiml && !(iiml = GetInterfaceInfoManager()))
         return NULL;
-    if(NULL != (al = iiml->mAllocator))
+    if(NULL != (al = iiml->allocator))
         NS_ADDREF(al);
     if(!iim)
         NS_RELEASE(iiml);
@@ -77,22 +76,22 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : mAllocator(NULL)
+    : allocator(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
     nsServiceManager::GetService(kAllocatorCID,
                                  kIAllocatorIID,
-                                 (nsISupports **)&mAllocator);
+                                 (nsISupports **)&this->allocator);
 
-    PR_ASSERT((mAllocator != NULL));
+    PR_ASSERT(this->allocator != NULL);
 
-    initInterfaceTables();
+    this->initInterfaceTables();
 }
 
-// Stolen and modified from xpt_dump.c
-XPTHeader *getHeader(const char *filename) {
+static
+XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
     XPTState *state = NULL;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header = NULL;
@@ -107,14 +106,12 @@ XPTHeader *getHeader(const char *filename) {
     }
     flen = fileinfo.size;
 
-    whole = (char *)malloc(flen);
+    whole = (char *)al->Alloc(flen);
     if (!whole) {
-        NS_ERROR("FAILED: malloc for whole");
+        NS_ERROR("FAILED: allocation for whole");
         return NULL;
     }
 
-    // XXX changed this to PR_OPEN; does this do binary for windows? ("b")
-//      in = fopen(filename, "rb");
     in = PR_Open(filename, PR_RDONLY, 0);
     if (!in) {
         NS_ERROR("FAILED: fopen");
@@ -148,125 +145,165 @@ XPTHeader *getHeader(const char *filename) {
     if (state != NULL)
         XPT_DestroyXDRState(state);
     if (whole != NULL)
-        free(whole);
+        al->Free(whole);
     if (in != NULL)
         PR_Close(in);
     return header;
 }
 
-static void
-indexify_file(const char *filename,
-              PLHashTable *interfaceTable,
-              nsHashtable *IIDTable,
-              nsIAllocator *al)
+nsresult
+nsInterfaceInfoManager::indexify_file(const char *filename)
 {
-    XPTHeader *header = getHeader(filename);
+    XPTHeader *header = getHeader(filename, this->allocator);
+    if (header == NULL) {
+        // XXX glean something more meaningful from getHeader?
+        return NS_ERROR_FAILURE;
+    }
 
     int limit = header->num_interfaces;
-
-    nsInterfaceRecord *value;
-#ifdef DEBUG_mccabe
-    static int which = 0;
-    which++;
-#endif
+    nsTypelibRecord *tlrecord = new nsTypelibRecord(limit, this->typelibRecords,
+                                                    header, this->allocator);
+    this->typelibRecords = tlrecord; // add it to the list of typelibs
 
     for (int i = 0; i < limit; i++) {
         XPTInterfaceDirectoryEntry *current = header->interface_directory + i;
 
-#ifdef DEBUG_mccabe
-        fprintf(stderr, "%s", current->name);
-#endif
-        // first try to look it up...
-        value = (nsInterfaceRecord *)PL_HashTableLookup(interfaceTable,
-                                                  current->name);
-        // if none found, make a dummy record.
-        if (value == NULL) {
-            value = new nsInterfaceRecord();
-            value->which_header = NULL;
-            value->resolved = PR_FALSE;
-            value->which = -1;
-            value->entry = NULL;
-            value->info = NULL;
-            void *hashEntry =
-                PL_HashTableAdd(interfaceTable, current->name, value);
-#ifdef DEBUG_mccabe
-            fprintf(stderr, "... added, %d\n", which);
-#endif
-            NS_ASSERTION(hashEntry != NULL, "PL_HashTableAdd failed?");
-        }
-#ifdef DEBUG_mccabe
-        else {
-            fprintf(stderr, "... found, %d\n", value->which);
-        }
-#endif
+        // find or create an interface record, and set the appropriate
+        // slot in the nsTypelibRecord array.
+        nsID zero =
+        { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
+        nsInterfaceRecord *record = NULL;
 
-        // save info from the interface in the global table.  if it's resolved.
-        if (current->interface_descriptor != NULL) {
-            // we claim it should only be defined once.  XXX ?
-            NS_ASSERTION(value->which_header == NULL,
-                         "some interface def'd in multiple typelibs.");
-            value->which_header = header;
-            value->resolved = PR_TRUE;
-#ifdef DEBUG_mccabe
-            value->which = which;
-#endif
-            value->entry = current;
+        PRBool iidIsZero = current->iid.Equals(zero);
 
-            // XXX is this a leak?
+        // XXX fix bogus repetitive logic.
+        PRBool foundInIIDTable = PR_FALSE;
+
+        if (iidIsZero == PR_FALSE) {
+            // prefer the iid.
             nsIDKey idKey(current->iid);
-#ifdef DEBUG
-            char * found_name;
-            found_name = (char *)IIDTable->Get(&idKey);
-            NS_ASSERTION(found_name == NULL,
-                         "iid already associated with a name?");
-#endif
-            IIDTable->Put(&idKey, current->name);
-#ifdef DEBUG_mccabe            
-            fprintf(stderr, "\t... resolved, %d\n", value->which);
-#endif
+            record = (nsInterfaceRecord *)this->IIDTable->Get(&idKey);
+        } else {
+            foundInIIDTable = PR_TRUE;
+            // resort to using the name.  Warn?
+            record = (nsInterfaceRecord *)PL_HashTableLookup(this->nameTable,
+                                                             current->name);
         }
+
+        // if none was found, create one and tuck it into the appropriate places.
+        if (record == NULL) {
+            record = new nsInterfaceRecord();
+            record->typelibRecord = tlrecord;
+            record->interfaceDescriptor = NULL;
+            record->info = NULL;
+
+            // XXX copy these values?
+            record->name = current->name;
+            record->name_space = current->name_space;
+
+            // add it to the name->interfaceRecord table
+            // XXX check that result (PLHashEntry *) isn't NULL
+            PL_HashTableAdd(this->nameTable, current->name, record);
+
+            if (iidIsZero == PR_FALSE) {
+                // Add it to the iid table too, if we have an iid.
+                // don't check against old value, b/c we shouldn't have one.
+                foundInIIDTable = PR_TRUE;
+                nsIDKey idKey(current->iid);
+                this->IIDTable->Put(&idKey, record);
+            }
+        }
+                
+        // Is the entry we're looking at resolved?
+        if (current->interface_descriptor != NULL) {
+            if (record->interfaceDescriptor != NULL) {
+                char *warnstr = PR_smprintf
+                    ("interface %s in typelib %s overrides previous definition",
+                     current->name, filename);
+                NS_WARNING(warnstr);
+                PR_smprintf_free(warnstr);
+            }
+            record->interfaceDescriptor = current->interface_descriptor;
+            record->iid = current->iid;
+
+            if (foundInIIDTable == PR_FALSE) {
+                nsIDKey idKey(current->iid);
+                this->IIDTable->Put(&idKey, record);
+            }
+        }
+
+        // all fixed up?  Put a pointer to the interfaceRecord we
+        // found/made into the appropriate place.
+        *(tlrecord->interfaceRecords + i) = record;
     }
+    return NS_OK;
 }
 
 // as many InterfaceDirectoryEntries as we expect to see.
 #define XPT_HASHSIZE 64
 
 #ifdef DEBUG
-static PRIntn
-check_enumerator(PLHashEntry *he, PRIntn index, void *arg); 
+PRIntn check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
+    char *key = (char *)he->key;
+    nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
+    nsHashtable *iidtable = (nsHashtable *)arg;
+
+    fprintf(stderr, "name table has %s\n", key);
+
+    if (value->interfaceDescriptor == NULL) {
+        fprintf(stderr, "unresolved interface %s\n", key);
+    } else {
+        nsIDKey idKey(value->iid);
+        char *name_from_iid = (char *)iidtable->Get(&idKey);
+        NS_ASSERTION(name_from_iid != NULL,
+                     "no name assoc'd with iid for entry for name?");
+
+        // XXX note that below is only ncc'ly the case if xdr doesn't give us
+        // duplicated strings.
+//          NS_ASSERTION(name_from_iid == key,
+//                       "key and iid name xpected to be same");
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+PRBool check_iidtable_enumerator(nsHashKey *aKey, void *aData, void *closure) {
+//      PLHashTable *nameTable = (PLHashTable *)closure;
+    nsInterfaceRecord *record = (nsInterfaceRecord *)aData;
+    // can I do anything with the key?
+    fprintf(stderr, "record has name %s, iid %s\n",
+            record->name, record->iid.ToString());
+    return PR_TRUE;
+}
+
 #endif
 
-void nsInterfaceInfoManager::initInterfaceTables()
+nsresult
+nsInterfaceInfoManager::initInterfaceTables()
 {
-    // make a hashtable to associate names with arbitrary info
-    this->mInterfaceTable = PL_NewHashTable(XPT_HASHSIZE,
-                                            PL_HashString,  // hash keys
-                                            PL_CompareStrings, // compare keys
-                                            PL_CompareValues, // comp values
-                                            NULL, NULL);
-                                          
-    // make a hashtable to map iids to names
-    this->mIIDTable = new nsHashtable(XPT_HASHSIZE);
+    // make a hashtable to map names to interface records.
+    this->nameTable = PL_NewHashTable(XPT_HASHSIZE,
+                                       PL_HashString,  // hash keys
+                                       PL_CompareStrings, // compare keys
+                                       PL_CompareValues, // comp values
+                                       NULL, NULL);
+    if (this->nameTable == NULL)
+        return NS_ERROR_FAILURE;
 
-    // First, find the xpt directory from the env.
-    // XXX don't free this?
-    char *xptdirname = PR_GetEnv("XPTDIR");
-    NS_ASSERTION(xptdirname != NULL,
-                 "set env var XPTDIR to a directory containg .xpt files.");
-
-    // now loop thru the xpt files in the directory.
-
-    // XXX This code stolen with few modifications from nsRepository; any
-    // point in doing it through them instead?)
-
-    PRDir *xptdir = PR_OpenDir(xptdirname);
-    if (xptdir == NULL) {
-        NS_ERROR("Couldn't open XPT directory");
-        return;  // XXX fail gigantically.
+    // make a hashtable to map iids to interface records.
+    this->IIDTable = new nsHashtable(XPT_HASHSIZE);
+    if (this->IIDTable == NULL) {
+        PL_HashTableDestroy(this->nameTable);
+        return NS_ERROR_FAILURE;
     }
 
-    // Create a buffer that has dir/ in it so we can append
-    // the filename each time in the loop
+    // First, find the xpt directory from the env.  XXX Temporary hack.
+    char *xptdirname = PR_GetEnv("XPTDIR");
+    PRDir *xptdir;
+    if (xptdirname == NULL || (xptdir = PR_OpenDir(xptdirname)) == NULL)
+        return NS_ERROR_FAILURE;
+
+    // Create a buffer that has dir/ in it so we can append the
+    // filename each time in the loop
     char fullname[1024]; // NS_MAX_FILENAME_LEN
     PL_strncpyz(fullname, xptdirname, sizeof(fullname));
     unsigned int n = strlen(fullname);
@@ -277,7 +314,7 @@ void nsInterfaceInfoManager::initInterfaceTables()
     char *filepart = fullname + n;
 	
     PRDirEntry *dirent = NULL;
-#ifdef DEBUG_mccabe
+#ifdef DEBUG
     int which = 0;
 #endif
     while ((dirent = PR_ReadDir(xptdir, PR_SKIP_BOTH)) != NULL) {
@@ -291,54 +328,37 @@ void nsInterfaceInfoManager::initInterfaceTables()
             continue;
         // .xpt suffix?
 	int flen = PL_strlen(fullname);
-        if (flen >= 4 && !PL_strcasecmp(&(fullname[flen - 4]), ".xpt")) {
-            // it's a valid file, read it in.
-#ifdef DEBUG_mccabe
-            which++;
-            fprintf(stderr, "%d %s\n", which, fullname);
-#endif
-            indexify_file(fullname,
-                          this->mInterfaceTable,
-                          this->mIIDTable,
-                          this->mAllocator);
-        } else {
+        if (flen < 4 || PL_strcasecmp(&(fullname[flen - 4]), ".xpt"))
             continue;
+
+        // it's a valid file, read it in.
+#ifdef DEBUG
+        which++;
+        fprintf(stderr, "%d %s\n", which, fullname);
+#endif
+        nsresult nsr = this->indexify_file(fullname);
+        if (NS_IS_ERROR(nsr)) {
+            char *warnstr = PR_smprintf("failed to process typelib file %s",
+                                        fullname);
+            NS_WARNING(warnstr);
+            PR_smprintf_free(warnstr);
         }
     }
     PR_CloseDir(xptdir);
 
 #ifdef DEBUG
+    fprintf(stderr, "\nchecking name table for unresolved entries...\n");
     // scan here to confirm that all interfaces are resolved.
-   PL_HashTableEnumerateEntries(this->mInterfaceTable,
-                                check_enumerator,
-                                this->mIIDTable);
+    PL_HashTableEnumerateEntries(this->nameTable,
+                                 check_nametable_enumerator,
+                                 this->IIDTable);
+
+    fprintf(stderr, "\nchecking iid table for unresolved entries...\n");
+    IIDTable->Enumerate(check_iidtable_enumerator, this->nameTable);
+
 #endif
+    return NS_OK;
 }
-
-#ifdef DEBUG
-PRIntn check_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
-    char *key = (char *)he->key;
-    nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
-    nsHashtable *iidtable = (nsHashtable *)arg;
-
-
-    if (value->resolved == PR_FALSE) {
-        fprintf(stderr, "unresolved interface %s\n", key);
-    } else {
-        NS_ASSERTION(value->entry, "resolved, but no entry?");
-        nsIDKey idKey(value->entry->iid);
-        char *name_from_iid = (char *)iidtable->Get(&idKey);
-        NS_ASSERTION(name_from_iid != NULL,
-                     "no name assoc'd with iid for entry for name?");
-
-        // XXX note that below is only ncc'ly the case if xdr doesn't give us
-        // duplicated strings.
-//          NS_ASSERTION(name_from_iid == key,
-//                       "key and iid name xpected to be same");
-    }
-    return HT_ENUMERATE_NEXT;
-}
-#endif
 
 nsInterfaceInfoManager::~nsInterfaceInfoManager()
 {
@@ -347,111 +367,73 @@ nsInterfaceInfoManager::~nsInterfaceInfoManager()
 
 NS_IMETHODIMP
 nsInterfaceInfoManager::GetInfoForIID(const nsIID* iid,
-                                      nsIInterfaceInfo** info)
+                                      nsIInterfaceInfo **info)
 {
     nsIDKey idKey(*iid);
-    char *result_name = (char *)this->mIIDTable->Get(&idKey);
-
-    return this->GetInfoForName(result_name, info);
+    nsInterfaceRecord *record =
+        (nsInterfaceRecord *)this->IIDTable->Get(&idKey);
+    if (record == NULL) {
+        *info = NULL;
+        return NS_ERROR_FAILURE;
+    }
+    
+    return record->GetInfo((nsInterfaceInfo **)info);
 }
 
 NS_IMETHODIMP
 nsInterfaceInfoManager::GetInfoForName(const char* name,
-                                       nsIInterfaceInfo** info)
+                                       nsIInterfaceInfo **info)
 {
     nsInterfaceRecord *record =
-        (nsInterfaceRecord *)PL_HashTableLookup(this->mInterfaceTable, name);
-    if (record == NULL || record->resolved == PR_FALSE) {
+        (nsInterfaceRecord *)PL_HashTableLookup(this->nameTable, name);
+    if (record == NULL) {
         *info = NULL;
         return NS_ERROR_FAILURE;
     }
-    PR_ASSERT(record->entry != NULL);
 
-    // Is there already an II obj associated with the nsInterfaceRecord?
-    if (record->info != NULL) {
-        // yay!
-        *info = record->info;
-        NS_ADDREF(*info);
-        return NS_OK;
-    }
-
-    // nope, better make one.  first, find a parent for it.
-    nsIInterfaceInfo *parent;
-    uint16 parent_index = record->entry->interface_descriptor->parent_interface;
-    // Does it _get_ a parent? (is it nsISupports?)
-    if (parent_index == 0) {
-        // presumably this is only the case for nsISupports.
-        parent = NULL;
-    } else {
-        // there's a parent index that points to an entry in the same table
-        // that this one was defined in.  Accounting for magic offset.
-        XPTInterfaceDirectoryEntry *parent_entry =
-            record->which_header->interface_directory + parent_index - 1;
-        // get a name from it (which should never be null) and build
-        // that.  XXX OPT Hm, could have a helper function to avoid
-        // second lookup if this entry happens to be resolved.
-        nsresult nsr = GetInfoForName(parent_entry->name, &parent);
-        if (NS_IS_ERROR(nsr)) {
-            *info = NULL;
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    // got a parent for it, now build the object itself
-    nsInterfaceInfo *result =
-        new nsInterfaceInfo(record, (nsInterfaceInfo *)parent);
-    *info = result;
-    NS_ADDREF(*info);
-    return NS_OK;
+    return record->GetInfo((nsInterfaceInfo **)info);
 }
 
 NS_IMETHODIMP
 nsInterfaceInfoManager::GetIIDForName(const char* name, nsIID** iid)
 {
     nsInterfaceRecord *record =
-        (nsInterfaceRecord *)PL_HashTableLookup(this->mInterfaceTable, name);
-    if (record == NULL || record->resolved == PR_FALSE) {
+        (nsInterfaceRecord *)PL_HashTableLookup(this->nameTable, name);
+    if (record == NULL) {
         *iid = NULL;
         return NS_ERROR_FAILURE;
     }
-    PR_ASSERT(record->entry != NULL);
-
-    nsIID* p;
-    if(!(p = (nsIID *)mAllocator->Alloc(sizeof(nsIID))))
-        return NS_ERROR_FAILURE;
     
-    // XXX I'm confused here about the lifetime of IID pointers.
-    memcpy(p, &record->entry->iid, sizeof(nsIID));
-    *iid = p;
-    return NS_OK;
+    return record->GetIID(iid);
 }
 
 NS_IMETHODIMP
 nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
 {
     nsIDKey idKey(*iid);
-    char *result_name = (char *)this->mIIDTable->Get(&idKey);
+    nsInterfaceRecord *record =
+        (nsInterfaceRecord *)this->IIDTable->Get(&idKey);
+    if (record == NULL) {
+        *name = NULL;
+        return NS_ERROR_FAILURE;
+    }
 
 #ifdef DEBUG
-    // XXX assert here that lookup in table matches iid?
+    // Note that this might fail for same-name, different-iid interfaces!
     nsIID *newid;
-    nsresult isok = GetIIDForName(result_name, &newid);
+    nsresult isok = GetIIDForName(record->name, &newid);
+    PR_ASSERT(!(NS_IS_ERROR(isok)));
     PR_ASSERT(newid->Equals(*newid));
-    PR_ASSERT(isok == NS_OK);
 #endif
-
-    if (result_name == NULL) {
-        *name = NULL;
-        return NS_ERROR_FAILURE;
-    }
+    PR_ASSERT(record->name != NULL);
     
     char *p;
-    int len = strlen(result_name) + 1;
-    if(!(p = (char *)mAllocator->Alloc(len))) {
+    int len = strlen(record->name) + 1;
+    if((p = (char *)this->allocator->Alloc(len)) == NULL) {
         *name = NULL;
         return NS_ERROR_FAILURE;
     }
-    memcpy(p, result_name, len);
+    memcpy(p, record->name, len);
     *name = p;
     return NS_OK;
 }    
