@@ -79,6 +79,19 @@ XP_FormGetValue(LO_FormElementData *form)
 Bool
 XP_FormGetDisabled(LO_FormElementData *form)
 {
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_SELECT_ONE
+			|| form->type == FORM_TYPE_SELECT_MULT
+			|| form->type == FORM_TYPE_TEXT
+			|| form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA
+			|| form->type == FORM_TYPE_RADIO
+			|| form->type == FORM_TYPE_CHECKBOX
+			|| form->type == FORM_TYPE_SUBMIT
+			|| form->type == FORM_TYPE_RESET
+			|| form->type == FORM_TYPE_BUTTON
+			|| form->type == FORM_TYPE_READONLY);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_SELECT_ONE
 			|| form->type == FORM_TYPE_SELECT_MULT
 			|| form->type == FORM_TYPE_TEXT
@@ -89,11 +102,15 @@ XP_FormGetDisabled(LO_FormElementData *form)
 			|| form->type == FORM_TYPE_RESET
 			|| form->type == FORM_TYPE_BUTTON
 			|| form->type == FORM_TYPE_READONLY);
+#endif /* ENDER */
 
   if (form->type == FORM_TYPE_SELECT_ONE
 			|| form->type == FORM_TYPE_SELECT_MULT
 			|| form->type == FORM_TYPE_TEXT
 			|| form->type == FORM_TYPE_TEXTAREA
+#ifdef ENDER
+			|| form->type == FORM_TYPE_HTMLAREA
+#endif /* ENDER */
 			|| form->type == FORM_TYPE_RADIO
 			|| form->type == FORM_TYPE_CHECKBOX
 			|| form->type == FORM_TYPE_SUBMIT
@@ -109,11 +126,20 @@ XP_FormGetDisabled(LO_FormElementData *form)
 PA_Block
 XP_FormGetDefaultText(LO_FormElementData *form)
 {
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_TEXT
+			|| form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA
+			|| form->type == FORM_TYPE_PASSWORD
+			|| form->type == FORM_TYPE_READONLY
+			|| form->type == FORM_TYPE_FILE);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_TEXT
 			|| form->type == FORM_TYPE_TEXTAREA
 			|| form->type == FORM_TYPE_PASSWORD
 			|| form->type == FORM_TYPE_READONLY
 			|| form->type == FORM_TYPE_FILE);
+#endif /* ENDER */
   
   switch(form->type)
 	{
@@ -123,6 +149,9 @@ XP_FormGetDefaultText(LO_FormElementData *form)
 	case FORM_TYPE_READONLY:
 	  return form->ele_text.default_text;
 	case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+	case FORM_TYPE_HTMLAREA:
+#endif /* ENDER */
 	  return form->ele_textarea.default_text;
 	default:
 	  return NULL;
@@ -132,11 +161,20 @@ XP_FormGetDefaultText(LO_FormElementData *form)
 PA_Block
 XP_FormGetCurrentText(LO_FormElementData *form)
 {
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_TEXT
+			|| form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA
+			|| form->type == FORM_TYPE_PASSWORD
+			|| form->type == FORM_TYPE_READONLY
+			|| form->type == FORM_TYPE_FILE);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_TEXT
 			|| form->type == FORM_TYPE_TEXTAREA
 			|| form->type == FORM_TYPE_PASSWORD
 			|| form->type == FORM_TYPE_READONLY
 			|| form->type == FORM_TYPE_FILE);
+#endif /* ENDER */
   
   switch(form->type)
 	{
@@ -146,6 +184,9 @@ XP_FormGetCurrentText(LO_FormElementData *form)
 	case FORM_TYPE_READONLY:
 	  return form->ele_text.current_text;
 	case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+	case FORM_TYPE_HTMLAREA:
+#endif /* ENDER */
 	  return form->ele_textarea.current_text;
 	default:
 	  return NULL;
@@ -156,11 +197,20 @@ void
 XP_FormSetCurrentText(LO_FormElementData *form,
 					  PA_Block current_text)
 {
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_TEXT
+			|| form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA
+			|| form->type == FORM_TYPE_PASSWORD
+			|| form->type == FORM_TYPE_READONLY
+			|| form->type == FORM_TYPE_FILE);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_TEXT
 			|| form->type == FORM_TYPE_TEXTAREA
 			|| form->type == FORM_TYPE_PASSWORD
 			|| form->type == FORM_TYPE_READONLY
 			|| form->type == FORM_TYPE_FILE);
+#endif /* ENDER */
   
   switch(form->type)
 	{
@@ -171,6 +221,9 @@ XP_FormSetCurrentText(LO_FormElementData *form,
 	  form->ele_text.current_text = current_text;
 	  break;
 	case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+	case FORM_TYPE_HTMLAREA:
+#endif /* ENDER */
 	  form->ele_textarea.current_text = current_text;
 	  break;
 	}
@@ -179,10 +232,18 @@ XP_FormSetCurrentText(LO_FormElementData *form,
 Bool
 XP_FormGetReadonly(LO_FormElementData *form)
 {
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_TEXT
+			|| form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA
+			|| form->type == FORM_TYPE_PASSWORD
+			|| form->type == FORM_TYPE_READONLY);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_TEXT
 			|| form->type == FORM_TYPE_TEXTAREA
 			|| form->type == FORM_TYPE_PASSWORD
 			|| form->type == FORM_TYPE_READONLY);
+#endif /* ENDER */
   
   switch(form->type)
 	{
@@ -191,6 +252,9 @@ XP_FormGetReadonly(LO_FormElementData *form)
 	case FORM_TYPE_READONLY:
 	  return form->ele_text.read_only;
 	case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+	case FORM_TYPE_HTMLAREA:
+#endif /* ENDER */
 	  return form->ele_textarea.read_only;
 	default:
 	  return FALSE;
@@ -226,7 +290,13 @@ XP_FormTextAreaGetDimensions(LO_FormElementData *form,
 							 int32 *rows, 
 							 int32 *cols)
 {
+
+#ifdef ENDER
+  XP_ASSERT(form->type == FORM_TYPE_TEXTAREA
+			|| form->type == FORM_TYPE_HTMLAREA);
+#else  /* ! ENDER */
   XP_ASSERT(form->type == FORM_TYPE_TEXTAREA);
+#endif /* ENDER */
 
   if (rows)
 	*rows = form->ele_textarea.rows;
