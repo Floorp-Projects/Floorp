@@ -24,9 +24,8 @@
 
   TO DO
 
-  1) Convert mBroadcastListeners to a _pointer_ to an nsVoidArray,
-     instead of an automatic nsVoidArray. This should reduce the
-     footprint per element by 40-50 bytes.
+  1) Instead of creating all the properties up front, instantiate them
+     lazily as they are asked for (see Bug 3367).
 
  */
 
@@ -374,7 +373,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
 RDFElementImpl::~RDFElementImpl()
 {
-    delete mAttributes; // nsXULAttributes destructor takes care of the rest.
+    NS_IF_RELEASE(mAttributes);
 
     //NS_IF_RELEASE(mDocument); // not refcounted
     //NS_IF_RELEASE(mParent)    // not refcounted
@@ -687,8 +686,16 @@ RDFElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 RDFElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    if (! mAttributes) {
+        rv = NS_NewXULAttributes(&mAttributes, this);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    NS_ADDREF(mAttributes);
+    *aAttributes = mAttributes;
+    return NS_OK;
 }
 
 
@@ -879,8 +886,24 @@ RDFElementImpl::RemoveAttribute(const nsString& aName)
 NS_IMETHODIMP
 RDFElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aReturn != nsnull, "null ptr");
+    if (! aReturn)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIDOMNamedNodeMap* map;
+    nsresult rv = GetAttributes(&map);
+
+    if (NS_SUCCEEDED(rv)) {
+        nsIDOMNode* node;
+        rv = map->GetNamedItem(aName, &node);
+        if (NS_SUCCEEDED(rv) && node) {
+            rv = node->QueryInterface(nsIDOMAttr::GetIID(), (void**) aReturn);
+            NS_RELEASE(node);
+        }
+        NS_RELEASE(map);
+    }
+
+    return rv;
 }
 
 
@@ -1639,12 +1662,13 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     if (nsnull == aName)
         return NS_ERROR_NULL_POINTER;
 
-    if (nsnull == mAttributes) {
-        if ((mAttributes = new nsXULAttributes()) == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     nsresult rv = NS_OK;
+
+    if (! mAttributes) {
+        rv = NS_NewXULAttributes(&mAttributes, this);
+        if (NS_FAILED(rv))
+            return rv;
+    }
 
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
@@ -1684,9 +1708,9 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         attr->mValue = aValue;
     }
     else { // didn't find it
-        attr = new nsXULAttribute(aNameSpaceID, aName, aValue);
-        if (! attr)
-          return NS_ERROR_OUT_OF_MEMORY;
+        rv = NS_NewXULAttribute(&attr, this, aNameSpaceID, aName, aValue);
+        if (NS_FAILED(rv))
+            return rv;
 
         mAttributes->AppendElement(attr);
     }
@@ -1906,7 +1930,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(index);
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
                 mAttributes->RemoveElementAt(index);
-                delete attr;
+                NS_RELEASE(attr);
                 successful = PR_TRUE;
                 break;
             }
