@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -96,8 +96,9 @@ class nsIMemory;
 class ns4xPlugin : public nsIPlugin
 {
 public:
-
-  ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr);
+  ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
+             NP_PLUGINSHUTDOWN aShutdown,
+             nsIServiceManagerObsolete* serviceMgr);
   virtual ~ns4xPlugin(void);
 
   static void ReleaseStatics();
@@ -123,17 +124,13 @@ public:
                                   const char* aPluginMIMEType,
                                   void **aResult);
   
-  NS_IMETHOD
-  Initialize(void);
+  NS_IMETHOD Initialize(void);
 
-  NS_IMETHOD
-  Shutdown(void);
+  NS_IMETHOD Shutdown(void);
 
-  NS_IMETHOD
-  GetMIMEDescription(const char* *resultingDesc);
+  NS_IMETHOD GetMIMEDescription(const char* *resultingDesc);
 
-  NS_IMETHOD
-  GetValue(nsPluginVariable variable, void *value);
+  NS_IMETHOD GetValue(nsPluginVariable variable, void *value);
 
   ////////////////////////////////////////////////////////////////////
   // ns4xPlugin-specific methods
@@ -181,5 +178,71 @@ protected:
    */
   static NPNetscapeFuncs CALLBACKS;
 };
+
+
+PR_BEGIN_EXTERN_C
+NPObject* NP_EXPORT
+_getwindowobject(NPP npp);
+
+NPObject* NP_EXPORT
+_getpluginelement(NPP npp);
+
+NPIdentifier NP_EXPORT
+_getstringidentifier(const NPUTF8* name);
+
+void NP_EXPORT
+_getstringidentifiers(const NPUTF8** names, int32_t nameCount,
+                      NPIdentifier *identifiers);
+
+bool NP_EXPORT
+_identifierisstring(NPIdentifier identifiers);
+
+NPIdentifier NP_EXPORT
+_getintidentifier(int32_t intid);
+
+NPUTF8* NP_EXPORT
+_utf8fromidentifier(NPIdentifier identifier);
+
+int32_t NP_EXPORT
+_intfromidentifier(NPIdentifier identifier);
+
+NPObject* NP_EXPORT
+_createobject(NPClass* aClass);
+
+NPObject* NP_EXPORT
+_retainobject(NPObject* npobj);
+
+void NP_EXPORT
+_releaseobject(NPObject* npobj);
+
+bool NP_EXPORT
+_call(NPObject* npobj, NPIdentifier method, const NPVariant *args,
+      uint32_t argCount, NPVariant *result);
+
+bool NP_EXPORT
+_evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result);
+
+bool NP_EXPORT
+_getproperty(NPObject* npobj, NPIdentifier property, NPVariant *result);
+
+bool NP_EXPORT
+_setproperty(NPObject* npobj, NPIdentifier property, const NPVariant *value);
+
+bool NP_EXPORT
+_removeproperty(NPObject* npobj, NPIdentifier property);
+
+bool NP_EXPORT
+_hasproperty(NPObject* npobj, NPIdentifier propertyName);
+
+bool NP_EXPORT
+_hasmethod(NPObject* npobj, NPIdentifier methodName);
+
+void NP_EXPORT
+_releasevariantvalue(NPVariant *variant);
+
+void NP_EXPORT
+_setexception(NPObject* npobj, const NPUTF8 *message);
+
+PR_END_EXTERN_C
 
 #endif // ns4xPlugin_h__

@@ -91,6 +91,7 @@ CPPSRCS		= \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
 		nsPluginDirServiceProvider.cpp \
+		nsJSNPRuntime.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)
@@ -131,6 +132,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -55,11 +55,16 @@ EXPORTS		= \
 		nsPluginsCID.h \
 		npapi.h \
 		npupp.h \
+		npruntime.h \
+		nptypes.h \
+		nsINPRuntimePlugin.h \
 		$(NULL)
 
 SDK_HEADERS	 = \
 		npapi.h \
 		npupp.h \
+		nptypes.h \
+		npruntime.h \
 		$(NULL)
 
 XPIDLSRCS 	= \
