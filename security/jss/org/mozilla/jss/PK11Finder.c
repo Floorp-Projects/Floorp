@@ -1574,7 +1574,9 @@ finish:
  * Returns JNI_TRUE if success, JNI_FALSE otherwise
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_jss_CryptoManager_verifyCertNowNative(JNIEnv *env, jobject self, jstring nickString, jboolean checkSig, jint cUsage) {
+Java_org_mozilla_jss_CryptoManager_verifyCertNowNative(JNIEnv *env,
+        jobject self, jstring nickString, jboolean checkSig, jint cUsage)
+{
     SECStatus         rv    = SECFailure;
     SECCertUsage      certUsage;
     CERTCertificate   *cert=NULL;
@@ -1588,12 +1590,11 @@ Java_org_mozilla_jss_CryptoManager_verifyCertNowNative(JNIEnv *env, jobject self
     cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), nickname);
     
     if (cert == NULL) {
-	JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
-	goto finish;
-
+        JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
+        goto finish;
     } else {
-	rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), cert, 
-	       checkSig, certUsage, NULL );
+        rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), cert, 
+            checkSig, certUsage, NULL );
     }
 
 finish: 
