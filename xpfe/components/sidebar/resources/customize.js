@@ -134,24 +134,25 @@ function enableButtons() {
   var list      = document.getElementById('selectList');
   var customize = document.getElementById('customize-button');
   var index = list.selectedIndex;
-  var isFirst = index == 0;
-  var isLast  = index == list.options.length - 1;
+  var noneSelected = (index == -1);
+  var isFirst      = (index == 0);
+  var isLast       = (index == list.options.length - 1);
 
   // up /\ button
-  if (isFirst) {
+  if (noneSelected || isFirst) {
     up.setAttribute('disabled', 'true');
   } else {
     up.setAttribute('disabled', '');
   }
   // down \/ button
-  if (isLast) {
+  if (noneSelected || isLast) {
     down.setAttribute('disabled', 'true');
   } else {
     down.setAttribute('disabled', '');
   }
   // "Customize..." button
   var customizeURL = null;
-  if (index != -1) {
+  if (!noneSelected) {
     var option = list.childNodes.item(index);
     customizeURL = option.getAttribute('customize');
   }
@@ -160,6 +161,26 @@ function enableButtons() {
   } else {
     customize.setAttribute('disabled','');
   }
+}
+
+function CustomizePanel() 
+{
+  var list  = document.getElementById('selectList');	
+  var index = list.selectedIndex;
+
+  if (index != -1) {
+    var title         = list.childNodes.item(index).getAttribute('title');
+    var customize_URL = list.childNodes.item(index).getAttribute('customize');
+
+    if (!title || !customize_URL) return;
+
+    var customize = window.open("chrome://sidebar/content/customize-panel.xul",
+			      "PanelPreview", "chrome");
+
+    customize.panel_name          = title;
+    customize.panel_customize_URL = customize_URL;
+  }
+  enableSave();
 }
 
 function RemovePanel()

@@ -58,7 +58,7 @@
     </html:form>
 
     <box align="vertical" class="button-group" flex="100%">
-      <titledbutton id="customize-button" onclick="" 
+      <titledbutton id="customize-button" onclick="CustomizePanel();" 
          value="&sidebar.customize.customize.label;" />
       <titledbutton onclick="RemovePanel()"
          value="&sidebar.customize.remove.label;" />
