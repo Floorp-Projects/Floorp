@@ -41,7 +41,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsMsgDeliveryListener.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgIdentity.h"
 #include "nsIEnumerator.h"
 #include "nsIMessage.h"
@@ -54,7 +54,6 @@
 #include "nsMsgMimeCID.h"
 
 // CID's needed
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID,      NS_RDFSERVICE_CID);
 
