@@ -219,6 +219,10 @@ protected:
   PRBool mLowerLeft;
 
 private:
+
+protected:
+  GtkWidget *mWidget;
+  GdkGC *mGC;
 };
 
 //

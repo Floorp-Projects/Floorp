@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
+
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
@@ -26,24 +28,15 @@
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
 
-#include "nsXtEventHandler.h"
+#include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
 
 #include "X11/Xlib.h"
-#include "Xm/Xm.h"
-#include "Xm/MainW.h"
-#include "Xm/Frame.h"
-#include "Xm/XmStrDefs.h"
-#include "Xm/DrawingA.h"
 
 #include "X11/Intrinsic.h"
 #include "X11/cursorfont.h"
 
 #include "stdio.h"
-
-#include "Xm/DialogS.h"
-#include "Xm/RowColumn.h"
-#include "Xm/Form.h"
 
 #define DBG 0
 
@@ -97,12 +90,14 @@ nsWindow::nsWindow():
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+#if 0
   OnDestroy();
   XtDestroyWidget(mWidget);
   if (nsnull != mGC) {
     ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
     mGC = nsnull;
   }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -163,6 +158,7 @@ NS_METHOD nsWindow::RemoveTooltips()
 void nsWindow::InitToolkit(nsIToolkit *aToolkit,
                            nsIWidget  *aWidgetParent) 
 {
+#if 0
   if (nsnull == mToolkit) { 
     if (nsnull != aToolkit) {
       mToolkit = (nsToolkit*)aToolkit;
@@ -184,7 +180,7 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
       }
     }
   }
-
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -193,9 +189,9 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
 //
 //-------------------------------------------------------------------------
 void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
-                                 Widget aParentWidget) 
+                                 GtkWidget *aParentWidget) 
 {
-
+#if 0
   // keep a reference to the toolkit object
   if (aContext) {
     mContext = aContext;
@@ -216,12 +212,13 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
       mContext->Init(aParentWidget);
     }
   }
-
+#endif
 }
 
 
 void nsWindow::CreateGC()
 {
+#if 0
   // Create a Writeable GC for this Widget. Unfortunatley, 
   // the Window for the Widget is not created properly at this point and
   // we Need the GC prior to the Rendering Context getting created, so
@@ -243,6 +240,7 @@ void nsWindow::CreateGC()
     
     ::XDestroyWindow(d,w);
   }
+#endif
 }
 
 void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
@@ -254,6 +252,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+#if 0
   Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
@@ -319,6 +318,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
   CreateGC();
+#endif
 }
 
 
@@ -331,6 +331,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+#if 0
   mBounds = aRect;
   mAppShell = aAppShell;
  
@@ -365,6 +366,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
   CreateGC();
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -386,6 +388,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+#if 0
       // keep a reference to the device context
     if (aContext) {
         mContext = aContext;
@@ -409,6 +412,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
   else
     CreateChildWindow(aNativeParent, aWidgetParent, aRect, 
         aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+#endif
 }
 
 
@@ -419,6 +423,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
+#if 0
   XtAddEventHandler(mWidget, 
 		    ButtonPressMask, 
 		    PR_FALSE, 
@@ -472,7 +477,7 @@ void nsWindow::InitCallbacks(char * aName)
                     PR_FALSE, 
                     nsXtWidget_KeyReleaseMask_EventHandler,
                     this);
-
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -482,6 +487,7 @@ void nsWindow::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
+#if 0
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER;
     }
@@ -501,6 +507,7 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     }
 
     return result;
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -517,11 +524,13 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+#if 0
     if (aParent)
       aParent->AddChild(this);
       CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
         aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
         aInitData);
+#endif
   return NS_OK;
 }
 
@@ -538,7 +547,9 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+#if 0
     CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+#endif
   return NS_OK;
 }
 
@@ -625,13 +636,14 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+#if 0
   mShown = bState;
   if (bState) {
     XtManageChild(mWidget);
   }
   else
     XtUnmanageChild(mWidget);
-
+#endif
   return NS_OK;
 }
 
@@ -649,10 +661,12 @@ NS_METHOD nsWindow::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
+#if 0
   mBounds.x = aX;
   mBounds.y = aY;
 
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+#endif
   return NS_OK;
 }
 
@@ -663,11 +677,13 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+#if 0
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+#endif
   return NS_OK;
 }
 
@@ -679,12 +695,14 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+#if 0
   mBounds.x      = aX;
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+#endif
   return NS_OK;
 }
 
@@ -696,7 +714,9 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Enable(PRBool bState)
 {
+#if 0
   XtVaSetValues(mWidget, XmNsensitive, bState, nsnull);
+#endif
   return NS_OK;
 }
 
@@ -708,6 +728,7 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFocus(void)
 {
+#if 0
    // Go get the parent of all widget's to determine which widget 
    // tree to use to set the focus. 
   Widget w = mWidget;
@@ -716,6 +737,7 @@ NS_METHOD nsWindow::SetFocus(void)
   }
 
   XtSetKeyboardFocus(w, mWidget);
+#endif
   return NS_OK;
 }
 
@@ -764,10 +786,12 @@ nscolor nsWindow::GetForegroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetForegroundColor(const nscolor &aColor)
 {
+#if 0
   PRUint32 pixel;
   mForeground = aColor;
   mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mWidget, XtNforeground, pixel, nsnull);
+#endif
   return NS_OK;
 }
 
@@ -791,10 +815,12 @@ nscolor nsWindow::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
+#if 0
   mBackground = aColor ;
   PRUint32 pixel;
   mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
+#endif
   return NS_OK;
 }
 
@@ -819,6 +845,7 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
+#if 0
     if (mContext == nsnull) {
       return NS_ERROR_FAILURE;
     }
@@ -855,7 +882,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
     } else {
       *mFont  = aFont;
     }
-
+#endif
   return NS_OK;
 }
 
@@ -879,6 +906,7 @@ nsCursor nsWindow::GetCursor()
 
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
+#if 0
   Window window = ::XtWindow(mWidget);
   if (nsnull==window)
     return NS_ERROR_FAILURE;
@@ -935,6 +963,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       ::XDefineCursor(display, window, newCursor);
     }
  }
+#endif
   return NS_OK;
 }
     
@@ -945,6 +974,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
+#if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -969,6 +999,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
   evt.xgraphicsexpose.count      = 0;
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
+#endif
   return NS_OK;
 }
 
@@ -980,6 +1011,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+#if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -1004,9 +1036,8 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   evt.xgraphicsexpose.count      = 0;
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
+#endif
   return NS_OK;
-
-  
 }
 
 //-------------------------------------------------------------------------
@@ -1026,6 +1057,7 @@ NS_IMETHODIMP nsWindow::Update()
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
+#if 0
   switch(aDataType) {
 
     case NS_NATIVE_WINDOW:
@@ -1054,7 +1086,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     default:
       break;
   }
-
+#endif
   return NULL;
 }
 
@@ -1066,6 +1098,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 nsIRenderingContext* nsWindow::GetRenderingContext()
 {
+#if 0
   nsIRenderingContext * ctx = nsnull;
 
   if (GetNativeData(NS_NATIVE_WIDGET)) {
@@ -1082,9 +1115,9 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
     
     NS_ASSERTION(NULL != ctx, "Null rendering context");
   }
-  
+ 
   return ctx;
-
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1137,6 +1170,7 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+#if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -1186,6 +1220,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   evt.xgraphicsexpose.count      = 0;
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
+#endif
   return NS_OK;
 }
 
@@ -1220,6 +1255,7 @@ NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
 
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 {
+#if 0
   switch(aStatus) {
     case nsEventStatus_eIgnore:
       return(PR_FALSE);
@@ -1231,6 +1267,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
       NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
       break;
   }
+#endif
   return(PR_FALSE);
 }
 
@@ -1242,6 +1279,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
+#if 0
   NS_ADDREF(event->widget);
 
   aStatus = nsEventStatus_eIgnore;
@@ -1254,16 +1292,18 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
     aStatus = mEventListener->ProcessEvent(*event);
   }
   NS_RELEASE(event->widget);
-
+#endif
   return NS_OK;
 
 }
 
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
+#if 0
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
+#endif
 }
 
 
@@ -1274,6 +1314,7 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
+#if 0
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
     return result;
@@ -1319,6 +1360,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
     } // switch
   } 
   return result;
+#endif
 }
 
 
@@ -1328,6 +1370,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
+#if 0
   nsresult result ;
 
   // call the event callback 
@@ -1364,6 +1407,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
       }
   }
   return result;
+#endif
 }
 
 
@@ -1390,30 +1434,35 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
+#if 0
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
     return DispatchWindowEvent(&aEvent);
   }
+#endif
   return FALSE;
 }
 
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
+#if 0
   if (mEventCallback) {
     return DispatchWindowEvent(aEvent);
   }
   else
+#endif
    return FALSE;
 }
 
 
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
+#if 0
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
-
+#endif
  return FALSE;
 }
 
@@ -1457,6 +1506,7 @@ PRBool nsWindow::GetResized()
 
 void nsWindow::UpdateVisibilityFlag()
 {
+#if 0
   Widget parent = XtParent(mWidget);
 
   if (parent) {
@@ -1473,10 +1523,12 @@ void nsWindow::UpdateVisibilityFlag()
   }
   
   mVisible = PR_TRUE;
+#endif
 }
 
 void nsWindow::UpdateDisplay()
 {
+#if 0
     // If not displayed and needs to be displayed
   if ((PR_FALSE==mDisplayed) &&
      (PR_TRUE==mShown) && 
@@ -1492,6 +1544,7 @@ void nsWindow::UpdateDisplay()
       mDisplayed = PR_FALSE;
     }
   }
+#endif
 }
 
 PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
@@ -1511,12 +1564,15 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 
 void nsWindow_ResetResize_Callback(XtPointer call_data)
 {
+#if 0
     nsWindow* widgetWindow = (nsWindow*)call_data;
     widgetWindow->SetResized(PR_FALSE);
+#endif
 }
 
 void nsWindow_Refresh_Callback(XtPointer call_data)
 {
+#if 0
     nsWindow* widgetWindow = (nsWindow*)call_data;
     nsRect bounds;
     widgetWindow->GetResizeRect(&bounds); 
@@ -1537,6 +1593,7 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
     widgetWindow->OnPaint(pevent);
 
     XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
+#endif
 }
 
 //
@@ -1546,6 +1603,7 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
 
 extern "C" void nsWindow_ResizeWidget(Widget w)
 {
+#if 0
   int width = 0;
   int height = 0;
   nsWindow *win = 0;
@@ -1577,6 +1635,7 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
   }
 
   win->SetResized(PR_TRUE);
+#endif
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
