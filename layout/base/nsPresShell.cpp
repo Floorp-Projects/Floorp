@@ -4504,7 +4504,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
               rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText),spec);
               NS_ENSURE_SUCCESS(rv, rv);
 
-              anchorText = NS_ConvertUTF8toUCS2(spec);
+              CopyUTF8toUTF16(spec, anchorText);
             }
           }
         }

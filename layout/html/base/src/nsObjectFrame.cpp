@@ -476,7 +476,7 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
 
   nsAutoString uType;
   nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, uType);
-  nsCAutoString type = NS_ConvertUCS2toUTF8(uType);
+  NS_ConvertUCS2toUTF8 type(uType);
   PRBool haveType = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!type.IsEmpty());
   if (!haveType) 
   {
