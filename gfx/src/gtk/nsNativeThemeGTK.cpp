@@ -57,9 +57,13 @@ extern "C" {
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 
+GtkWidget* gButtonWidget = nsnull;
+GtkWidget* gCheckboxWidget = nsnull;
+GtkWidget* gScrollbarWidget = nsnull;
+
 nsNativeThemeGTK::nsNativeThemeGTK()
-  : mButtonStyle(NULL),
-    mCheckBoxStyle(NULL)
+  : mProtoWindow(nsnull),
+    mProtoLayout(nsnull)
 {
   NS_INIT_ISUPPORTS();
   mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
@@ -67,10 +71,6 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
-  if (mButtonStyle)
-    gtk_style_unref(mButtonStyle);
-  if (mCheckBoxStyle)
-    gtk_style_unref(mCheckBoxStyle);
 }
 
 static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
@@ -225,34 +225,58 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
 
   switch (aWidgetType) {
+
   case NS_THEME_BUTTON:
-    EnsureButtonStyle();
+    {
+      EnsureButtonWidget();
 
-    GtkWidgetState buttonState;
-    GetGtkWidgetState(aFrame, &buttonState);
-
-    moz_gtk_button_paint(window, mButtonStyle, &gdk_rect, &gdk_clip, &buttonState);
+      GtkWidgetState buttonState;
+      GetGtkWidgetState(aFrame, &buttonState);
+      
+      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip, &buttonState);
+    }
     break;
 
   case NS_THEME_CHECKBOX:
-    EnsureCheckBoxStyle();
-
-    if (aFrame) {
-      // For XUL checkboxes and radio buttons, the state of the parent
-      // determines our state.
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
-      if (content->IsContentOfType(nsIContent::eXUL))
-        aFrame->GetParent(&aFrame);
+    {
+      EnsureCheckBoxWidget();
+      
+      if (aFrame) {
+        // For XUL checkboxes and radio buttons, the state of the parent
+        // determines our state.
+        nsCOMPtr<nsIContent> content;
+        aFrame->GetContent(getter_AddRefs(content));
+        if (content->IsContentOfType(nsIContent::eXUL))
+          aFrame->GetParent(&aFrame);
+      }
+      
+      GtkToggleButtonState checkBoxState;
+      GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
+      checkBoxState.selected = CheckBooleanAttr(aFrame, mCheckedAtom);
+      
+      printf("paint checkbox: gdk_rect=(%d,%d,%d,%d), gdk_clip=(%d,%d,%d,%d)\n",
+             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
+             gdk_clip.y, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+      moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect, &gdk_clip, &checkBoxState);
     }
-
-    GtkToggleButtonState checkBoxState;
-    GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
-    checkBoxState.selected = CheckBooleanAttr(aFrame, mCheckedAtom);
-
-    moz_gtk_checkbox_paint(window, mCheckBoxStyle, &gdk_rect, &gdk_clip, &checkBoxState);
     break;
 
+  case NS_THEME_SCROLLBAR_BUTTON_UP:
+  case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+  case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+  case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    {
+      EnsureScrollbarWidget();
+      
+      GtkWidgetState buttonState;
+      GetGtkWidgetState(aFrame, &buttonState);
+      
+      GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
+      
+      moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style, &gdk_rect, &gdk_clip,
+                                     &buttonState, arrowType);
+    }
+    break;
   }
 
   return NS_OK;
@@ -328,7 +352,10 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_SCROLLBAR_BUTTON_UP:
+  case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+  case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+  case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     return PR_TRUE;
   }
 
@@ -347,51 +374,42 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 }
 
 void
-nsNativeThemeGTK::EnsureButtonStyle()
+nsNativeThemeGTK::SetupWidgetPrototype(GtkWidget* widget)
 {
-  if (mButtonStyle)
-    return;
+  if (!mProtoWindow) {
+    mProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
+    mProtoLayout = gtk_fixed_new();
+    gtk_container_add(GTK_CONTAINER(mProtoWindow), mProtoLayout);
+  }
 
-  GtkWidget *parent = gtk_fixed_new();
-  GtkWidget *button = gtk_button_new();
-  GtkWidget *label = gtk_label_new("M");
-
-  GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-  
-  gtk_container_add(GTK_CONTAINER(button), label);
-  gtk_container_add(GTK_CONTAINER(parent), button);
-  gtk_container_add(GTK_CONTAINER(window), parent);
-
-  gtk_widget_set_rc_style(button);
-  gtk_widget_set_rc_style(label);
-
-  gtk_widget_realize(button);
-  gtk_widget_realize(label);
-
-  mButtonStyle = gtk_widget_get_style(button);
-  gtk_style_ref(mButtonStyle);
-
-  gtk_widget_destroy(window);
+  gtk_container_add(GTK_CONTAINER(mProtoLayout), widget);
+  gtk_widget_set_rc_style(widget);
+  gtk_widget_realize(widget);
 }
 
 void
-nsNativeThemeGTK::EnsureCheckBoxStyle()
+nsNativeThemeGTK::EnsureButtonWidget()
 {
-  if (mCheckBoxStyle)
-    return;
+  if (!gButtonWidget) {
+    gButtonWidget = gtk_button_new_with_label("M");
+    SetupWidgetPrototype(gButtonWidget);
+  }
+}
 
-  GtkWidget *parent = gtk_fixed_new();
-  GtkWidget* checkbox = gtk_check_button_new_with_label("M");
+void
+nsNativeThemeGTK::EnsureCheckBoxWidget()
+{
+  if (!gCheckboxWidget) {
+    gCheckboxWidget = gtk_check_button_new_with_label("M");
+    SetupWidgetPrototype(gCheckboxWidget);
+  }
+}
 
-  GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-  gtk_container_add(GTK_CONTAINER(parent), checkbox);
-  gtk_container_add(GTK_CONTAINER(window), parent);
-  
-  gtk_widget_set_rc_style(checkbox);
-
-  gtk_widget_realize(checkbox);
-
-  mCheckBoxStyle = gtk_widget_get_style(checkbox);
-  gtk_style_ref(mCheckBoxStyle);
-  gtk_widget_destroy(window);
+void
+nsNativeThemeGTK::EnsureScrollbarWidget()
+{
+  if (!gScrollbarWidget) {
+    gScrollbarWidget = gtk_vscrollbar_new(NULL);
+    SetupWidgetPrototype(gScrollbarWidget);
+  }
 }
