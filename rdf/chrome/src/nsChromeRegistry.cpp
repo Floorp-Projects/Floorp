@@ -76,10 +76,13 @@
 #include "nsIImageManager.h"
 #include "nsIBindingManager.h"
 #include "prio.h"
+#include "nsInt64.h"
 
 static char kChromePrefix[] = "chrome://";
+static char kAllPackagesName[] = "all-packages.rdf";
+static char kAllSkinsName[] = "all-skins.rdf";
+static char kAllLocalesName[] = "all-locales.rdf";
 static char kInstalledChromeFileName[] = "installed-chrome.txt";
-
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1561,7 +1564,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
     NS_ERROR("Unable to obtain the SEQ for the package list.");
     return rv;
   }
-  NS_ASSERTION(packageList, "failed to get packageList");
+  // ok for packageList to be null here -- it just means that we haven't encountered that package yet
 
   nsCOMPtr<nsIRDFResource> packageSeq(do_QueryInterface(packageList, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -2194,7 +2197,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
     rv = mChromeDataSource->AddDataSource(dataSource);
     if (NS_FAILED(rv)) return rv;
 
-    name = "all-skins.rdf";
+    name = kAllSkinsName;
     rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = mChromeDataSource->AddDataSource(dataSource);
@@ -2206,13 +2209,13 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
     rv = mChromeDataSource->AddDataSource(dataSource);
     if (NS_FAILED(rv)) return rv;
 
-    name = "all-locales.rdf";
+    name = kAllLocalesName;
     rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = mChromeDataSource->AddDataSource(dataSource);
     if (NS_FAILED(rv)) return rv;
 
-    name = "all-packages.rdf";
+    name = kAllPackagesName;
     rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = mChromeDataSource->AddDataSource(dataSource);
@@ -2227,7 +2230,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   rv = mChromeDataSource->AddDataSource(dataSource);
   if (NS_FAILED(rv)) return rv;
 
-  name = "all-skins.rdf";
+  name = kAllSkinsName;
   rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   if (NS_FAILED(rv)) return rv;
   rv = mChromeDataSource->AddDataSource(dataSource);
@@ -2239,13 +2242,13 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   rv = mChromeDataSource->AddDataSource(dataSource);
   if (NS_FAILED(rv)) return rv;
 
-  name = "all-locales.rdf";
+  name = kAllLocalesName;
   rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   if (NS_FAILED(rv)) return rv;
   rv = mChromeDataSource->AddDataSource(dataSource);
   if (NS_FAILED(rv)) return rv;
 
-  name = "all-packages.rdf";
+  name = kAllPackagesName;
   rv = LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   if (NS_FAILED(rv)) return rv;
   rv = mChromeDataSource->AddDataSource(dataSource);
@@ -2417,21 +2420,54 @@ nsChromeRegistry::CheckForNewChrome()
                                           getter_AddRefs(locator));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIFileSpec> listFileInterface;
+  nsCOMPtr<nsIFileSpec> chromeDirSpec;
   rv = locator->GetFileLocation(nsSpecialFileSpec::App_ChromeDirectory, 
-                                getter_AddRefs(listFileInterface));
+                                getter_AddRefs(chromeDirSpec));
   if (NS_FAILED(rv)) return rv;
 
-  nsFileSpec listFileSpec;
+  nsFileSpec chromeDir;
   nsCOMPtr<nsILocalFile> listFile;
-  rv = listFileInterface->GetFileSpec(&listFileSpec);
+  rv = chromeDirSpec->GetFileSpec(&chromeDir);
   if (NS_FAILED(rv)) return rv;
-  rv = NS_FileSpecToIFile(&listFileSpec, getter_AddRefs(listFile));
+  rv = NS_FileSpecToIFile(&chromeDir, getter_AddRefs(listFile));
   if (NS_FAILED(rv)) return rv;
 
-  PRFileDesc *file;
+  nsCOMPtr<nsIFile> allPkgs;
+  rv = listFile->Clone(getter_AddRefs(allPkgs));
+  if (NS_FAILED(rv)) return rv;
+  rv = allPkgs->Append(kAllPackagesName);
+  if (NS_FAILED(rv)) return rv;
+  nsInt64 allPkgsDate;
+  (void)allPkgs->GetLastModificationDate(&allPkgsDate.mValue);
+
+  nsCOMPtr<nsIFile> allSkns;
+  rv = listFile->Clone(getter_AddRefs(allSkns));
+  if (NS_FAILED(rv)) return rv;
+  rv = allSkns->Append(kAllSkinsName);
+  if (NS_FAILED(rv)) return rv;
+  nsInt64 allSknsDate;
+  (void)allSkns->GetLastModificationDate(&allSknsDate.mValue);
+
+  nsCOMPtr<nsIFile> allLocs;
+  rv = listFile->Clone(getter_AddRefs(allLocs));
+  if (NS_FAILED(rv)) return rv;
+  rv = allLocs->Append(kAllLocalesName);
+  if (NS_FAILED(rv)) return rv;
+  nsInt64 allLocsDate;
+  (void)allLocs->GetLastModificationDate(&allLocsDate.mValue);
+
   rv = listFile->AppendRelativePath(kInstalledChromeFileName);
   if (NS_FAILED(rv)) return rv;
+  nsInt64 listFileDate;
+  (void)listFile->GetLastModificationDate(&listFileDate.mValue);
+
+  if (listFileDate < allPkgsDate &&
+      listFileDate < allSknsDate &&
+      listFileDate < allLocsDate) {
+    return NS_OK;
+  }
+
+  PRFileDesc *file;
   rv = listFile->OpenNSPRFileDesc(PR_RDWR, 0, &file);
   if (NS_FAILED(rv)) return rv;
 
@@ -2451,7 +2487,7 @@ nsChromeRegistry::CheckForNewChrome()
     }
   }
   PR_Close(file);
-  listFile->Delete(PR_FALSE);
+  // listFile->Delete(PR_FALSE);
 
   return rv;
 }
