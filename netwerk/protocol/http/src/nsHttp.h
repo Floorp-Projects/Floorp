@@ -33,6 +33,7 @@
 #include "prtime.h"
 #include "nsISupportsUtils.h"
 #include "nsPromiseFlatString.h"
+#include "nsURLHelper.h"
 #include "netCore.h"
 
 #if defined(PR_LOGGING)
@@ -161,5 +162,7 @@ PRTimeToSeconds(PRTime t_usec)
 
 // round q-value to one decimal place; return most significant digit as uint.
 #define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
+
+#define HTTP_LWS " \t"
 
 #endif // nsHttp_h__
