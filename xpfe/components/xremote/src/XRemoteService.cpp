@@ -107,6 +107,9 @@ XRemoteService::Startup(const char *aProgram)
 
   mProgram.Assign(aProgram);
 
+  // Normalize program names to lowercase.
+  ToLowerCase(mProgram);
+
   mRunning = PR_TRUE;
   if (mNumWindows == 0)
     CreateProxyWindow();
@@ -419,11 +422,9 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
   if (profile.Length())
       profileTmp = profile.get();
 
-  // Normalize program names to lower case and make sure it actually
-  // has a value.
-  ToLowerCase(mProgram);
+  // Make sure we actually have a name.
   const char *programTmp = NULL;
-  if (mProgram.Length())
+  if (!mProgram.IsEmpty())
       programTmp = mProgram.get();
 
   nsresult rv;
