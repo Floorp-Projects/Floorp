@@ -3102,8 +3102,12 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
    }
    else if( mWnd)
    {
+      /* On OS/2, if you pass a titlebar > 512 characters, it doesn't display at all. */
+      /* We are going to limit our titlebars to 256 just to be on the safe side */
+      nsAutoString left;
+      aTitle.Left(left, 256);
       WinSetWindowText( GetMainWindow(),
-                        gWidgetModuleData->ConvertFromUcs( aTitle));
+                        gWidgetModuleData->ConvertFromUcs(left));
    }
    return NS_OK;
 } 
