@@ -454,8 +454,7 @@ void nsXtWidget_RadioButton_DisArmCallback(Widget w, XtPointer p, XtPointer call
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-//  if (DBG) fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
-  printf("***************** nsXtWidget_Scrollbar_Callback\n");
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
 
   nsScrollbarEvent sevent;
 
