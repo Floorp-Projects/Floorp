@@ -657,6 +657,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
   if (rv)  return NS_OK;
   return NS_ERROR_FAILURE;
 #endif
+  return NS_OK;
 }
 
 
@@ -675,6 +676,7 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange& aRange)
   }
   return NS_ERROR_FAILURE;
 #endif
+  return NS_OK;
 }
 
 
