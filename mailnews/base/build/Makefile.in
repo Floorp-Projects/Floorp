@@ -43,7 +43,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL)	\
 		-lmozjs			\
 		-ljsdom			\
-		-lxp			\
 		-lraptorbase	\
 		-lrdfutil_s		\
 		-lmsgbaseutil	\
