@@ -592,6 +592,7 @@ Contributor(s):
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+              onclick="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
               ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
               ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
               ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
