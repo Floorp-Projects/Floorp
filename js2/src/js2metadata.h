@@ -251,8 +251,8 @@ public:
     bool matches(QualifiedName &q)                  { return (*name == *q.id) && listContains(q.nameSpace); }
     bool listContains(Namespace *nameSpace);
 
-    NamespaceList *nsList;
     const String *name;
+    NamespaceList *nsList;
 
     virtual void markChildren();
     virtual ~Multiname()            { }
@@ -770,7 +770,7 @@ public:
     LexicalReference(Multiname *mname, bool strict) : variableMultiname(*mname), env(NULL), strict(strict) { }
     LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
     LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
-
+    virtual ~LexicalReference() { }
     
     Multiname variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
@@ -799,6 +799,7 @@ class DotReference : public Reference {
 public:
     DotReference(const String *name) : propertyMultiname(name) { }
     DotReference(Multiname *mn) : propertyMultiname(*mn) { }
+    virtual ~DotReference() { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
     // is available on the execution stack, not in the reference object (which is a codegen-time only)
@@ -827,6 +828,7 @@ class SlotReference : public Reference {
 // A special case of a DotReference with an Sl instead of a D
 public:
     SlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
+    virtual ~SlotReference()	{ }
 
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotWrite, pos); bCon->addShort((uint16)slotIndex); }

@@ -89,7 +89,6 @@ namespace MetaData {
         baseVal = JS2VAL_VOID;
         indexVal = JS2VAL_VOID;
         pFrame = NULL;
-        int i = 0;
         while (true) {
             try {
                 a = JS2VAL_VOID;
@@ -541,7 +540,7 @@ namespace MetaData {
         if (engine) {
             stdOut << bCon->fName << " ";
             if (bCon->fName.length() < 30) {
-                for (int32 i = 0; i < (30 - bCon->fName.length()); i++)
+                for (uint32 i = 0; i < (30 - bCon->fName.length()); i++)
                     stdOut << " ";
             }
             printFormat(stdOut, "%.4d %.4d ", pc - start, (int32)(engine->sp - engine->execStack));

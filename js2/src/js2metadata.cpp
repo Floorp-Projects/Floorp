@@ -3114,7 +3114,7 @@ static const uint8 urlCharType[256] =
         const String *str = meta->toString(argv[0]);
         const char16 *chars = str->data();
         uint32 length = str->length();
-        char16 *numEnd;
+        const char16 *numEnd;
         uint base = 10;
         
         if (argc > 1) {
@@ -3148,8 +3148,8 @@ static const uint8 urlCharType[256] =
         bCon(new BytecodeContainer()),
         glob(new GlobalObject(world)),
         env(new Environment(new MetaData::SystemFrame(), glob)),
-        showTrees(false),
-        flags(JS1)
+        flags(JS1),
+        showTrees(false)
     {
         engine->meta = this;
 
