@@ -357,10 +357,20 @@ nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
                                                aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!aDocument && mFrameLoader) {
+    // This iframe is being taken out of the document, destroy the
+    // iframe's frame loader (doing that will tear down the window in
+    // this iframe).
+
+    mFrameLoader->Destroy();
+
+    mFrameLoader = nsnull;
+  }
+
   // When document is being set to null on the element's destruction,
   // or when the document is being set to what the document already
   // is, do not call LoadSrc().
-  if (!mParent || !mDocument || aDocument == old_doc) {
+  if (!mParent || !aDocument || aDocument == old_doc) {
     return NS_OK;
   }
 
