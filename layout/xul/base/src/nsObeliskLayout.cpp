@@ -253,7 +253,9 @@ nsObeliskLayout::ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox
   nsCOMPtr<nsIMonument> parent;
   nsCOMPtr<nsIBox> parentBox;
   GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
-
+  if (!parent)
+    return NS_OK;
+  
   nsIBox* child = nsnull;
   aBox->GetChildBox(&child);
   PRInt32 count = 0;

@@ -36,7 +36,8 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
-
+#include "nsIView.h"
+#include "nsIDOMXULElement.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -231,7 +232,76 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
   }
  
   return res;
-}  
+}
+
+nsresult
+nsBoxObject::GetScreenRect(nsRect& aRect)
+{
+  aRect.x = aRect.y = 0;
+  aRect.Empty();
+ 
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+
+  if (doc) {
+    // Get Presentation shell 0
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+    
+    if (presShell) {
+      // Flush all pending notifications so that our frames are uptodate
+      presShell->FlushPendingNotifications();
+
+      nsCOMPtr<nsIPresContext> presContext;
+      presShell->GetPresContext(getter_AddRefs(presContext));
+      
+      if (presContext) {
+        nsIFrame* frame;
+        nsresult rv = presShell->GetPrimaryFrameFor(mContent, &frame);
+        
+        PRInt32 offsetX = 0;
+        PRInt32 offsetY = 0;
+        nsCOMPtr<nsIWidget> widget;
+        
+        while (frame) {
+          // Look for a widget so we can get screen coordinates
+          nsIView* view;
+          rv = frame->GetView(presContext, &view);
+          if (view) {
+            rv = view->GetWidget(*getter_AddRefs(widget));
+            if (widget)
+              break;
+          }
+          
+          // No widget yet, so count up the coordinates of the frame 
+          nsPoint origin;
+          frame->GetOrigin(origin);
+          offsetX += origin.x;
+          offsetY += origin.y;
+      
+          frame->GetParent(&frame);
+        }
+        
+        if (widget) {
+          // Get the scale from that Presentation Context
+          float scale;
+          presContext->GetTwipsToPixels(&scale);
+          
+          // Convert to pixels using that scale
+          offsetX = NSTwipsToIntPixels(offsetX, scale);
+          offsetY = NSTwipsToIntPixels(offsetY, scale);
+          
+          // Add the widget's screen coordinates to the offset we've counted
+          nsRect oldBox(0,0,0,0);
+          widget->WidgetToScreen(oldBox, aRect);
+          aRect.x += offsetX;
+          aRect.y += offsetY;
+        }
+      }
+    }
+  }
+  
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBoxObject::GetX(PRInt32* aResult)
@@ -266,6 +336,30 @@ nsBoxObject::GetHeight(PRInt32* aResult)
   nsRect rect;
   GetOffsetRect(rect);
   *aResult = rect.height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetScreenX(PRInt32 *_retval)
+{
+  nsRect rect;
+  nsresult rv = GetScreenRect(rect);
+  if (NS_FAILED(rv)) return rv;
+  
+  *_retval = rect.x;
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetScreenY(PRInt32 *_retval)
+{
+  nsRect rect;
+  nsresult rv = GetScreenRect(rect);
+  if (NS_FAILED(rv)) return rv;
+  
+  *_retval = rect.y;
+  
   return NS_OK;
 }
 
