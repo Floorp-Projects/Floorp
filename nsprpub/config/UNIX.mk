@@ -21,6 +21,7 @@ LIB_SUFFIX	= a
 DLL_SUFFIX	= so
 AR		= ar cr $@
 
+ifndef USE_AUTOCONF
 ifdef BUILD_OPT
 OPTIMIZER	= -O
 DEFINES		= -UDEBUG -DNDEBUG
@@ -32,7 +33,8 @@ OBJDIR_TAG	= _DBG
 endif
 
 # Name of the binary code directories
-OBJDIR_NAME	= SunOS5.6_sparc_DBG.OBJ
+OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
+endif # !USE_AUTOCONF
 
 MKDEPEND_DIR    = $(DEPTH)/config/mkdepend
 MKDEPEND 	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
