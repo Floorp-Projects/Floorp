@@ -51,7 +51,6 @@
 #include "nsLoadGroup.h"
 #include "nsStreamLoader.h"
 #include "nsUnicharStreamLoader.h"
-#include "nsDownloader.h"
 #include "nsAsyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
@@ -94,6 +93,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamPump)
 
 #include "nsInputStreamChannel.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamChannel)
+
+#include "nsDownloader.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloader)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -606,7 +608,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_DOWNLOADER_CLASSNAME,
       NS_DOWNLOADER_CID,
       NS_DOWNLOADER_CONTRACTID,
-      nsDownloader::Create },
+      nsDownloaderConstructor },
     { NS_REQUESTOBSERVERPROXY_CLASSNAME,
       NS_REQUESTOBSERVERPROXY_CID,
       NS_REQUESTOBSERVERPROXY_CONTRACTID,

@@ -44,6 +44,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
+#include "nsIZipReader.h"
 #include "nsIDownloader.h"
 #include "nsILoadGroup.h"
 #include "nsIFile.h"
@@ -75,7 +76,7 @@ public:
     nsresult Init(nsIURI *uri);
 
 private:
-    nsresult CreateJarInput();
+    nsresult CreateJarInput(nsIZipReaderCache *);
     nsresult EnsureJarInput(PRBool blocking);
 
 #if defined(PR_LOGGING)
@@ -98,8 +99,8 @@ private:
     PRBool                          mIsPending;
 
     nsJARInputThunk                *mJarInput;
+    nsCOMPtr<nsIStreamListener>     mDownloader;
     nsCOMPtr<nsIInputStreamPump>    mPump;
-    nsCOMPtr<nsIDownloader>         mDownloader;
     nsCOMPtr<nsIFile>               mJarFile;
     nsCOMPtr<nsIURI>                mJarBaseURI;
     nsCString                       mJarEntry;

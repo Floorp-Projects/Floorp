@@ -366,24 +366,17 @@ NS_NewLoadGroup(nsILoadGroup      **result,
     return rv;
 }
 
-
 inline nsresult
-NS_NewDownloader(nsIDownloader        **result,
-                 nsIURI                *uri,
-                 nsIDownloadObserver   *observer,
-                 nsISupports           *context = nsnull,
-                 PRBool                 synchronous = PR_FALSE,
-                 nsILoadGroup          *loadGroup = nsnull,
-                 nsIInterfaceRequestor *callbacks = nsnull,
-                 PRUint32               loadFlags = nsIRequest::LOAD_NORMAL)
+NS_NewDownloader(nsIStreamListener   **result,
+                 nsIDownloadObserver  *observer,
+                 nsIFile              *downloadLocation = nsnull)
 {
     nsresult rv;
     static NS_DEFINE_CID(kDownloaderCID, NS_DOWNLOADER_CID);
     nsCOMPtr<nsIDownloader> downloader =
         do_CreateInstance(kDownloaderCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = downloader->Init(uri, observer, context, synchronous, loadGroup,
-                              callbacks, loadFlags);
+        rv = downloader->Init(observer, downloadLocation);
         if (NS_SUCCEEDED(rv))
             NS_ADDREF(*result = downloader);
     }
