@@ -249,7 +249,8 @@ Contributor(s): ______________________________________. -->
 <!-- L10n BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY strresCmd.label "StringBundle Test">
 <!ENTITY languages.label "Languages">
-<!ENTITY da-DK.label "Danish (da-DK)">
+<!ENTITY da-DK-file.label "Danish (da-DK; file)">
+<!ENTITY da-DK-http.label "Danish (da-DK; http)">
 <!-- L10n END   : DO not localize the entities above; test case --> 
 
 <!ENTITY QA.label "QA">
@@ -705,8 +706,10 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
 		<menu value="&languages.label;">
 	    	<menupopup>
-        		<menuitem value="&da-DK.label;" 
+        		<menuitem value="&da-DK-file.label;" 
 			          onaction="localeTo('', 'da-DK');" />
+        		<menuitem value="&da-DK-http.label;" 
+			          onaction="localeTo('http://www.mozilla.org/projects/intl/chrome/', 'da-DK');" />
 			</menupopup>
 
 		</menu>
