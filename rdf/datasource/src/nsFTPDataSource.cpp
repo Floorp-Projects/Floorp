@@ -41,8 +41,6 @@
 #include "prprf.h"
 #include "prio.h"
 
-//#include "net.h"
-//#include "nsINetlibURL.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -63,7 +61,6 @@ static NS_DEFINE_IID(kISupportsIID,                   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,                NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,                    NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,                 NS_IRDFLITERAL_IID);
-//static NS_DEFINE_IID(kINetlibURLIID,                  NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIRDFFTPDataSourceCallbackIID,   NS_IRDFFTPDATASOURCECALLBACK_IID);
 
 
@@ -90,6 +87,8 @@ PRInt32			FTPDataSource::gRefCnt;
 PRInt32			FTPDataSourceCallback::gRefCnt;
 
 nsIRDFResource		*FTPDataSourceCallback::kNC_Child;
+
+
 
 static PRBool
 peq(nsIRDFResource* r1, nsIRDFResource* r2)
@@ -150,24 +149,25 @@ isFTPDirectory(nsIRDFResource *r)
 FTPDataSource::FTPDataSource(void)
 	: mURI(nsnull)
 {
-    NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-    if (gRefCnt++ == 0) {
-        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+	if (gRefCnt++ == 0)
+	{
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                                    kIRDFServiceIID,
                                                    (nsISupports**) &gRDFService);
 
-        PR_ASSERT(NS_SUCCEEDED(rv));
+		PR_ASSERT(NS_SUCCEEDED(rv));
 
-	gRDFService->GetResource(kURINC_child, &kNC_Child);
-	gRDFService->GetResource(kURINC_Name, &kNC_Name);
-	gRDFService->GetResource(kURINC_URL, &kNC_URL);
-	gRDFService->GetResource(kURINC_FTPObject, &kNC_FTPObject);
-	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
-	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
+		gRDFService->GetResource(kURINC_child, &kNC_Child);
+		gRDFService->GetResource(kURINC_Name, &kNC_Name);
+		gRDFService->GetResource(kURINC_URL, &kNC_URL);
+		gRDFService->GetResource(kURINC_FTPObject, &kNC_FTPObject);
+		gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
+		gRDFService->GetResource(kURIRDF_type, &kRDF_type);
 
-        gFTPDataSource = this;
-    }
+		gFTPDataSource = this;
+	}
 }
 
 
@@ -197,30 +197,7 @@ FTPDataSource::~FTPDataSource (void)
 
 
 
-// NS_IMPL_ISUPPORTS(FTPDataSource, kIRDFFTPDataSourceIID);
 NS_IMPL_ISUPPORTS(FTPDataSource, kIRDFDataSourceIID);
-
-#if 0
-NS_IMPL_ADDREF(FTPDataSource);
-NS_IMPL_RELEASE(FTPDataSource);
-
-
-
-nsresult
-FTPDataSource::QueryInterface(REFNSIID aIID, void ** aInstancePtr)
-{
-	nsresult	rv = NS_NOINTERFACE;
-
-	if (nsnull == aInstancePtr)	return(NS_ERROR_NULL_POINTER);
-	if (aIID.Equals(kIRDFDataSourceIID))
-	{
-		*aInstancePtr = (void *)((nsIRDFFTPDataSource *)this);
-		NS_ADDREF_THIS();
-		rv = NS_OK;
-	}
-	return(rv);
-}
-#endif
 
 
 
@@ -361,7 +338,8 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 
 FTPDataSourceCallback::FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent)
 	: mDataSource(ds),
-	  mParent(parent)
+	  mParent(parent),
+	  mLine(nsnull)
 {
 	NS_INIT_REFCNT();
 	NS_ADDREF(mDataSource);
@@ -385,6 +363,13 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 {
 	NS_IF_RELEASE(mDataSource);
 	NS_IF_RELEASE(mParent);
+
+	if (mLine)
+	{
+		delete [] mLine;
+		mLine = nsnull;
+	}
+
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_Child);
@@ -448,7 +433,9 @@ FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, P
 
 	if (aLength > 0)
 	{
-		nsAutoString	line("");
+		nsString	line;
+		if (mLine)	line += mLine;
+
 		char		c;
 		for (PRUint32 loop=0; loop<aLength; loop++)
 		{
@@ -463,24 +450,42 @@ FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, P
 			line += c;
 		}
 
+		PRInt32 eol = line.FindCharInSet("\r\n");
+		if (eol < 0)
+		{
+			if (mLine)	delete []mLine;
+			mLine = line.ToNewCString();
+		}
+
+		nsAutoString	oneLiner("");
+		if (eol > 0)
+		{
+			line.Left(oneLiner, eol);
+		}
+		line.Cut(0, eol+1);
+		if (mLine)	delete []mLine;
+		mLine = line.ToNewCString();
+		if (oneLiner.Length() < 1)	return(rv);
 
 
-	printf("Line: '%s'\n", line.ToNewCString());
+		printf("FTP: '%s'\n", oneLiner.ToNewCString());
 
 
 		// yes, very primitive HTML parsing follows
 
-		PRInt32 hrefStart = line.Find("<A HREF=\"");
+		PRInt32 hrefStart = oneLiner.Find("<A HREF=\"");
 		if (hrefStart >= 0)
 		{
 			hrefStart += PL_strlen("<A HREF=\"");
-			line.Cut(0, hrefStart);
-			PRInt32 hrefEnd = line.Find("\"");
-			PRInt32 isDirectory = line.Find("Directory");
+			oneLiner.Cut(0, hrefStart);
+			PRInt32 hrefEnd = oneLiner.Find("\"");
+			PRInt32 isDirectory = oneLiner.Find("Directory");
 			if (hrefEnd > 0)
 			{
 				nsAutoString	file("");
-				line.Mid(file, 0, hrefEnd);
+				oneLiner.Mid(file, 0, hrefEnd);
+				if (file.Equals("/") || file.Equals(".") || file.Equals(".."))
+					return(rv);
 
 				const char	*parentURL;
 				mParent->GetValue(&parentURL);
