@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdom
-REQUIRES	= xpcom js xpconnect widget layout
+REQUIRES	= xpcom js xpconnect widget layout pref
 
 CPPSRCS		= \
 		nsDOMFactory.cpp \
