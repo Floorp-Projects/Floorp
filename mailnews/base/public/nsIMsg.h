@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsg */
+/* starting interface:    nsIMsg */
 class nsIMsg : public nsISupports {
  public: 
 

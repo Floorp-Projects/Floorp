@@ -13,7 +13,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsgSend */
+/* starting interface:    nsIMsgSend */
 
 /* {9E9BD970-C5D6-11d2-8297-000000000000} */
 #define NS_IMSGSEND_IID_STR "9E9BD970-C5D6-11d2-8297-000000000000"
@@ -23,10 +23,7 @@
 
 class nsIMsgSend : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGSEND_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSEND_IID)
 
   /* void SendMessage (in nsIMsgCompFields fields, in string smtp); */
   NS_IMETHOD SendMessage(nsIMsgCompFields *fields, const char *smtp) = 0;

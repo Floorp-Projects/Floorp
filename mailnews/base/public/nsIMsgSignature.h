@@ -22,10 +22,7 @@
 
 class nsIMsgSignature : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGSIGNATURE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSIGNATURE_IID)
 
   /* attribute string signatureName; */
   NS_IMETHOD GetSignatureName(char * *aSignatureName) = 0;

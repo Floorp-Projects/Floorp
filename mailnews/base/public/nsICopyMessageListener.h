@@ -7,13 +7,15 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIInputStream.h" /* interface nsIInputStream */
+#include "nsIBaseStream.h" /* interface nsIBaseStream */
+#include "nsID.h" /* interface nsID */
 #include "nsIMessage.h" /* interface nsIMessage */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsICopyMessageListener */
+/* starting interface:    nsICopyMessageListener */
 
 /* {53CA78FE-E231-11d2-8A4D-0060B0FC04D2} */
 #define NS_ICOPYMESSAGELISTENER_IID_STR "53CA78FE-E231-11d2-8A4D-0060B0FC04D2"
@@ -23,10 +25,7 @@
 
 class nsICopyMessageListener : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_ICOPYMESSAGELISTENER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOPYMESSAGELISTENER_IID)
 
   /* void BeginCopy (in nsIMessage message); */
   NS_IMETHOD BeginCopy(nsIMessage *message) = 0;

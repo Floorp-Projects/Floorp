@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMessenger */
+/* starting interface:    nsIMessenger */
 
 /* {01883380-cab9-11d2-b7f6-00805f05ffa5} */
 #define NS_IMESSENGER_IID_STR "01883380-cab9-11d2-b7f6-00805f05ffa5"
@@ -22,10 +22,7 @@
 
 class nsIMessenger : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMESSENGER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMESSENGER_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

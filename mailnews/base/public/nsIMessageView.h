@@ -6,12 +6,13 @@
 #define __gen_nsIMessageView_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMessageView */
+/* starting interface:    nsIMessageView */
 
 /* {14495572-E945-11d2-8A52-0060B0FC04D2} */
 #define NS_IMESSAGEVIEW_IID_STR "14495572-E945-11d2-8A52-0060B0FC04D2"
@@ -21,10 +22,7 @@
 
 class nsIMessageView : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMESSAGEVIEW_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMESSAGEVIEW_IID)
 
   /* void SetShowAll (); */
   NS_IMETHOD SetShowAll() = 0;

@@ -7,8 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
-#include "nsIRDFCompositeDataSource.h" /* interface nsIRDFCompositeDataSource */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
+#include "nsICollection.h" /* interface nsICollection */
+#include "nsRDFInterfaces.h" /* interface nsRDFInterfaces */
+#include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 #include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
@@ -17,7 +21,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIDOMMsgAppCore */
+/* starting interface:    nsIDOMMsgAppCore */
 
 /* {4f7966d0-c14f-11d2-b7f2-00805f05ffa5} */
 #define NS_IDOMMSGAPPCORE_IID_STR "4f7966d0-c14f-11d2-b7f2-00805f05ffa5"
@@ -27,10 +31,7 @@
 
 class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IDOMMSGAPPCORE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMSGAPPCORE_IID)
 
   /* void GetNewMail (); */
   NS_IMETHOD GetNewMail() = 0;

@@ -8,6 +8,7 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
 
 #ifdef XPIDL_JS_STUBS
@@ -15,7 +16,7 @@
 #endif
 class nsIFolder; /* forward decl */
 
-/* starting interface nsIFolderListener */
+/* starting interface:    nsIFolderListener */
 
 /* {1c5ef9f0-d1c0-11d2-94CA-006097222B83} */
 #define NS_IFOLDERLISTENER_IID_STR "1c5ef9f0-d1c0-11d2-94CA-006097222B83"
@@ -25,10 +26,7 @@ class nsIFolder; /* forward decl */
 
 class nsIFolderListener : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IFOLDERLISTENER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOLDERLISTENER_IID)
 
   /* void OnItemAdded (in nsIFolder parentFolder, in nsISupports item); */
   NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item) = 0;

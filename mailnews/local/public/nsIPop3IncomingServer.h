@@ -22,10 +22,7 @@
 
 class nsIPop3IncomingServer : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IPOP3INCOMINGSERVER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOP3INCOMINGSERVER_IID)
 
   /* attribute string rootFolderPath; */
   NS_IMETHOD GetRootFolderPath(char * *aRootFolderPath) = 0;

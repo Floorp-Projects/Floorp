@@ -13,7 +13,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsgCompose */
+/* starting interface:    nsIMsgCompose */
 
 /* {4E606270-B588-11D2-8289-00805F2A0107} */
 #define NS_IMSGCOMPOSE_IID_STR "4E606270-B588-11D2-8289-00805F2A0107"
@@ -23,10 +23,7 @@
 
 class nsIMsgCompose : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGCOMPOSE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGCOMPOSE_IID)
 
   /* void CreateAndInitialize (in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master); */
   NS_IMETHOD CreateAndInitialize(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, nsIMsgCompFields *initfields, PRInt32 master) = 0;

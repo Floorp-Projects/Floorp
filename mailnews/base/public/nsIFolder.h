@@ -26,10 +26,7 @@ class nsIFolderListener; /* forward decl */
 
 class nsIFolder : public nsICollection {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IFOLDER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOLDER_IID)
 
   /* readonly attribute string URI; */
   NS_IMETHOD GetURI(char * *aURI) = 0;

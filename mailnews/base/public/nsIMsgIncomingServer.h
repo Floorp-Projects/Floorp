@@ -23,10 +23,7 @@
 
 class nsIMsgIncomingServer : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGINCOMINGSERVER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGINCOMINGSERVER_IID)
 
   /* attribute string key; */
   NS_IMETHOD GetKey(char * *aKey) = 0;

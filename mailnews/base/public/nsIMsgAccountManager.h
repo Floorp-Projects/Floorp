@@ -29,10 +29,7 @@
 
 class nsIMsgAccountManager : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGACCOUNTMANAGER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGACCOUNTMANAGER_IID)
 
   /* nsIMsgAccount createAccount (in nsIMsgIncomingServer server, in nsIMsgIdentity identity); */
   NS_IMETHOD createAccount(nsIMsgIncomingServer *server, nsIMsgIdentity *identity, nsIMsgAccount **_retval) = 0;

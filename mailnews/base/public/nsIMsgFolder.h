@@ -8,9 +8,11 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsIMessage.h" /* interface nsIMessage */
 
@@ -20,7 +22,7 @@
 #include "nsFileSpec.h"
 
 
-/* starting interface nsIMsgFolder */
+/* starting interface:    nsIMsgFolder */
 
 /* {85e39ff0-b248-11d2-b7ef-00805f05ffa5} */
 #define NS_IMSGFOLDER_IID_STR "85e39ff0-b248-11d2-b7ef-00805f05ffa5"
@@ -30,10 +32,7 @@
 
 class nsIMsgFolder : public nsIFolder {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGFOLDER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFOLDER_IID)
 
   /* void AddUnique (in nsISupports element); */
   NS_IMETHOD AddUnique(nsISupports *element) = 0;
@@ -214,7 +213,7 @@ class nsIMsgFolder : public nsIFolder {
 #endif
 };
 
-/* starting interface nsIMsgLocalMailFolder */
+/* starting interface:    nsIMsgLocalMailFolder */
 
 /* {27D2DE40-BAF1-11d2-9578-00805F8AC615} */
 #define NS_IMSGLOCALMAILFOLDER_IID_STR "27D2DE40-BAF1-11d2-9578-00805F8AC615"
@@ -224,10 +223,7 @@ class nsIMsgFolder : public nsIFolder {
 
 class nsIMsgLocalMailFolder : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGLOCALMAILFOLDER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGLOCALMAILFOLDER_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -235,7 +231,7 @@ class nsIMsgLocalMailFolder : public nsISupports {
 #endif
 };
 
-/* starting interface nsIMsgImapMailFolder */
+/* starting interface:    nsIMsgImapMailFolder */
 
 /* {FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2} */
 #define NS_IMSGIMAPMAILFOLDER_IID_STR "FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2"
@@ -245,10 +241,7 @@ class nsIMsgLocalMailFolder : public nsISupports {
 
 class nsIMsgImapMailFolder : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGIMAPMAILFOLDER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGIMAPMAILFOLDER_IID)
 
   /* readonly attribute nsNativeFileSpec pathName; */
   NS_IMETHOD GetPathName(nsNativeFileSpec* *aPathName) = 0;

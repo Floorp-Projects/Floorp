@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsgHost */
+/* starting interface:    nsIMsgHost */
 
 /* {ADFB3740-AA57-11d2-B7ED-00805F05FFA5} */
 #define NS_IMSGHOST_IID_STR "ADFB3740-AA57-11d2-B7ED-00805F05FFA5"
@@ -22,10 +22,7 @@
 
 class nsIMsgHost : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGHOST_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGHOST_IID)
 
   /* attribute string hostname; */
   NS_IMETHOD GetHostname(char * *aHostname) = 0;
