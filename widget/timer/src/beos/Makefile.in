@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = timer_s
+LIBRARY_NAME = timer_beos
 
 MODULE=timer
 
@@ -36,8 +36,8 @@ CPPSRCS = \
 	nsTimer.cpp \
 	$(NULL)
 
-MKSHLIB =
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+#MKSHLIB =
+#override NO_SHARED_LIB=1
+#override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk

@@ -116,6 +116,12 @@ mkdirs(char *path, mode_t mode)
     char *cp;
     struct stat sb;
     int res;
+    int l;
+
+    /* strip trailing "/." */
+    l = strlen(path);
+    if(l > 1 && path[l - 1] == '.' && path[l - 2] == '/')
+        path[l - 2] = 0;
 
     while (*path == '/' && path[1] == '/')
 	path++;

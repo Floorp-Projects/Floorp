@@ -48,6 +48,7 @@
 #include <sys/param.h>
 #include <OS.h>
 #include <image.h>
+#include "prenv.h"
 #endif
 
 #include "plstr.h"
