@@ -5348,7 +5348,7 @@ void nsTableFrame::GetCellInfoAt(PRInt32            aRowX,
 }
 
 NS_IMETHODIMP 
-nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                             nsIDOMElement* &aCell,   //out params
                             PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                             PRInt32& aRowSpan, PRInt32& aColSpan,
@@ -5370,13 +5370,67 @@ nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
   // This will pass the NS_SUCCEEDED() test
   // Thus we can iterate indexes to get all cells in a row or col
   //   and stop when aCell is returned null.
-  if (aRowIndex >= cellMap->GetRowCount() || 
-      aColIndex >= cellMap->GetColCount())
+  PRInt32 rowCount = cellMap->GetRowCount();
+  PRInt32 colCount = cellMap->GetColCount();
+
+  if (aRowIndex >= rowCount || aColIndex >= colCount)
   {
     return NS_TABLELAYOUT_CELL_NOT_FOUND;
   }
   nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  if (!cellFrame) { return NS_ERROR_FAILURE;} // Some other error 
+  if (!cellFrame)
+  { 
+    PRInt32 rowSpan, colSpan;
+    PRInt32 row = aStartRowIndex;
+    PRInt32 col = aStartColIndex;
+
+    // We didn't find a cell at requested location,
+    //  most probably because of ROWSPAN and/or COLSPAN > 1
+    // Find the cell that extends into the location we requested,
+    //  starting at the most likely indexes supplied by the caller
+    //  in aStartRowIndex and aStartColIndex;
+    cellFrame = cellMap->GetCellFrameAt(row, col);
+    if (cellFrame)
+    {
+      rowSpan = cellFrame->GetRowSpan();
+      colSpan = cellFrame->GetColSpan();
+
+      // Check if this extends into the location we want
+      if( aRowIndex >= row && aRowIndex < row+rowSpan && 
+          aColIndex >= col && aColIndex < col+colSpan) 
+      {
+CELL_FOUND:
+        aStartRowIndex = row;
+        aStartColIndex = col;
+        aRowSpan = rowSpan;
+        aColSpan = colSpan;
+        // I know jumps aren't cool, but it's efficient!
+        goto TEST_IF_SELECTED;
+      } else {
+        // Suggested indexes didn't work,
+        // Scan through entire table to find the spanned cell
+        for (row = 0; row < rowCount; row++ )
+        {
+          for (col = 0; col < colCount; col++)
+          {
+            cellFrame = cellMap->GetCellFrameAt(row, col);
+            if (cellFrame)
+            {
+              rowSpan = cellFrame->GetRowSpan();
+              colSpan = cellFrame->GetColSpan();
+              if( aRowIndex >= row && aRowIndex < row+rowSpan && 
+                  aColIndex >= col && aColIndex < col+colSpan) 
+              {
+                goto CELL_FOUND;
+              }
+            }
+          }
+          col = 0;
+        }
+      }
+      return NS_ERROR_FAILURE; // Some other error 
+    }
+  }
 
   result = cellFrame->GetRowIndex(aStartRowIndex);
   if (NS_FAILED(result)) return result;
@@ -5387,6 +5441,7 @@ nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 
+TEST_IF_SELECTED:
   // do this last, because it addrefs, 
   // and we don't want the caller leaking it on error
   nsCOMPtr<nsIContent>content;

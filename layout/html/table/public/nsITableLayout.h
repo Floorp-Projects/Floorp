@@ -48,14 +48,18 @@ public:
    *  @param aRowIndex       a row which the cell intersects
    *  @param aColIndex       a col which the cell intersects
    *  @param aCell           [OUT] the content representing the cell at (aRowIndex, aColIndex)
-   *  @param aStartRowIndex  [OUT] the row in which aCell starts
-   *  @param aStartColIndex  [OUT] the col in which aCell starts
+   *  @param aStartRowIndex  [IN/OUT] the row in which aCell starts
+   *  @param aStartColIndex  [IN/OUT] the col in which aCell starts
+   *                         Initialize these with the "candidate" start indexes to use
+   *                           for searching through the table when a cell isn't found 
+   *                           because of "holes" in the cellmap
+   *                           when ROWSPAN and/or COLSPAN > 1
    *  @param aRowSpan        [OUT] the number of rows aCell spans
    *  @param aColSpan        [OUT] the number of cols aCell spans
    *  @param aIsSelected     [OUT] PR_TRUE if the frame that maps aCell is selected
    *                               in the presentation shell that owns this.
    */
-  NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+  NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                            nsIDOMElement* &aCell,   //out params
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
