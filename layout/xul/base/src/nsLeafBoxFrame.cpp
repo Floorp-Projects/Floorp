@@ -223,6 +223,7 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
   // nsBoxFrame::Reflow in sync.
 
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame", aReflowState.reason);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
