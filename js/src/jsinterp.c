@@ -1404,6 +1404,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_EXCEPTIONS */
               default:;
             }
+            LOAD_INTERRUPT_HANDLER(rt);
         }
 
         switch (op) {
@@ -1479,8 +1480,10 @@ js_Interpret(JSContext *cx, jsval *result)
 
                 if (hookData) {
                     JSInterpreterHook hook = cx->runtime->callHook;
-                    if (hook)
+                    if (hook) {
                         hook(cx, fp, JS_FALSE, &ok, hookData);
+                        LOAD_INTERRUPT_HANDLER(rt);
+                    }
                 }
 #if JS_HAS_ARGS_OBJECT
                 if (fp->argsobj)
@@ -2803,6 +2806,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 if (hook) {
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                             cx->runtime->callHookData);
+                    LOAD_INTERRUPT_HANDLER(rt);
                 }
 
                 /* Switch to new version if currentVersion wasn't overridden. */
@@ -3348,6 +3352,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_EXCEPTIONS */
               default:;
             }
+            LOAD_INTERRUPT_HANDLER(rt);
             break;
 
           case JSOP_ARGUMENTS:
@@ -4022,6 +4027,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_EXCEPTIONS */
                   default:;
                 }
+                LOAD_INTERRUPT_HANDLER(rt);
             }
             break;
           }
@@ -4095,6 +4101,7 @@ out:
               case JSTRAP_CONTINUE:
               default:;
             }
+            LOAD_INTERRUPT_HANDLER(rt);
         }
 
         /*
