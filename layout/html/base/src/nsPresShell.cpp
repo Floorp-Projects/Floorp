@@ -5979,6 +5979,43 @@ PresShell::HandleEvent(nsIView         *aView,
         if (mCurrentEventContent)
           GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
         else {
+#if defined(MOZ_X11)
+          if (NS_IS_IME_EVENT(aEvent)) {
+            // bug 52416
+            // Lookup region (candidate window) of UNIX IME grabs
+            // input focus from Mozilla but wants to send IME event
+            // to redraw pre-edit (composed) string
+            // If Mozilla does not have input focus and event is IME,
+            // sends IME event to pre-focused element
+            nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+            nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+            if (ourWindow) {
+              nsCOMPtr<nsIFocusController> focusController;
+              ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+              if (focusController) {
+                PRBool active = PR_FALSE;
+                // check input focus is in Mozilla
+                focusController->GetActive(&active);
+                if (!active) {
+                  // if not, search for pre-focused element
+                  nsCOMPtr<nsIDOMElement> focusedElement;
+                  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+                  if (focusedElement) {
+                    // get mCurrentEventContent from focusedElement
+                    CallQueryInterface(focusedElement, &mCurrentEventContent);
+                  }
+                }
+              }
+            }
+          }
+
+          if (!mCurrentEventContent) {
+            // fallback, call existing codes
+            mDocument->GetRootContent(&mCurrentEventContent);
+          }
+#else /* defined(MOZ_X11) */
+
           // XXX This is the way key events seem to work?  Why?????
           // They spend time doing calls to GetFrameForPoint with the
           // point as (0,0) (or sometimes something else).
@@ -6005,6 +6042,7 @@ PresShell::HandleEvent(nsIView         *aView,
                 // In this situation, we need to handle key board events but there are no frames, so
                 // we set mCurrentEventContent and that works itself out in HandleEventInternal.
                 mDocument->GetRootContent(&mCurrentEventContent);
+#endif /* defined(MOZ_X11) */
                 mCurrentEventFrame = nsnull;
 /*#else
 								if (aForceHandle) {
