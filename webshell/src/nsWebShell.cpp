@@ -212,6 +212,8 @@ public:
 
   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
+  NS_IMETHOD SetupNewViewer(nsIContentViewer* aViewer);
+
   // nsIContentViewerContainer
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
                    const char* aCommand,
@@ -268,6 +270,7 @@ public:
                      const PRUnichar* aReferrer=nsnull,
                      const char * aWindowTarget = nsnull);
 
+  NS_IMETHOD LoadURI(const PRUnichar* aURI);
   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       nsIInputStream* aPostData, loadType aLoadType);
 
@@ -799,132 +802,39 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
+nsWebShell::SetupNewViewer(nsIContentViewer* aViewer)
+{
+   PRInt32 x, y, cx, cy;
+
+   GetPositionAndSize(&x, &y, &cx, &cy);
+
+   NS_ENSURE_SUCCESS(nsDocShell::SetupNewViewer(aViewer), NS_ERROR_FAILURE);
+    // If the history state has been set by session history,
+    // set it on the pres shell now that we have a content
+    // viewer.
+   if(mContentViewer && mHistoryState)
+      {
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+      if(docv)
+         {
+         nsCOMPtr<nsIPresShell> shell;
+         docv->GetPresShell(*getter_AddRefs(shell));
+         if(shell)
+            shell->SetHistoryState((nsILayoutHistoryState*)mHistoryState);
+         }
+      }
+
+   SetPositionAndSize(x, y, cx, cy, PR_TRUE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::Embed(nsIContentViewer* aContentViewer,
                   const char* aCommand,
                   nsISupports* aExtraInfo)
 {
-  nsresult rv;
-  nsRect bounds;
-
-  WEB_TRACE(WEB_TRACE_CALLS,
-      ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
-       this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
-
-  //
-  // Copy content viewer state from previous or parent content viewer.
-  //
-  // The following logic is mirrored in nsHTMLDocument::StartDocumentLoad!
-  //
-  // Do NOT to maintain a reference to the old content viewer outside
-  // of this "copying" block, or it will not be destroyed until the end of
-  // this routine and all <SCRIPT>s and event handlers fail! (bug 20315)
-  //
-  // In this block of code, if we get an error result, we return it
-  // but if we get a null pointer, that's perfectly legal for parent
-  // and parentContentViewer.
-  //
-  nsCOMPtr<nsIWebShell> parent;
-  rv = GetParent(*getter_AddRefs(parent));
-  if (NS_FAILED(rv)) { return rv; }
-  
-  if (mContentViewer || parent) 
-  {
-    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
-    if (mContentViewer) { // Get any interesting state from old content viewer
-      // XXX: it would be far better to just reuse the document viewer ,
-      //      since we know we're just displaying the same document as before
-      oldMUDV = do_QueryInterface(mContentViewer);
-    }
-    else
-    { // No old content viewer, so get state from parent's content viewer
-      nsCOMPtr<nsIContentViewer> parentContentViewer;
-      rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
-      if (NS_FAILED(rv)) { return rv; }
-      if (parentContentViewer) {
-        oldMUDV = do_QueryInterface(parentContentViewer);
-      }
-    }
-
-    PRUnichar *defaultCharset=nsnull;
-    PRUnichar *forceCharset=nsnull;
-    PRUnichar *hintCharset=nsnull;
-    PRInt32 hintCharsetSource;
-
-    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV = do_QueryInterface(aContentViewer);
-    if (oldMUDV && newMUDV)
-    {
-      NS_ENSURE_SUCCESS(oldMUDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(oldMUDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSet (&hintCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSetSource (&hintCharsetSource), NS_ERROR_FAILURE);
-
-      // set the old state onto the new content viewer
-      NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet (defaultCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet (forceCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet (hintCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSetSource (hintCharsetSource), NS_ERROR_FAILURE);
-
-      if (defaultCharset) {
-        Recycle(defaultCharset);
-      }
-      if (forceCharset) {
-        Recycle(forceCharset);
-      }
-      if (hintCharset) {
-        Recycle(hintCharset);
-      }
-    }
-  }
-  // End copying block (Don't hold content/document viewer ref beyond here!!)
-
-  mContentViewer = nsnull;
-  if (mScriptContext) {
-    mScriptContext->GC();
-  }
-  mContentViewer = aContentViewer;
-
-  // check to see if we have a window to embed into --dwc0001
-  /* Note we also need to check for the presence of a native widget. If the
-     webshell is hidden before it's embedded, which can happen in an onload
-     handler, the native widget is destroyed before this code is run.  This
-     appears to be mostly harmless except on Windows, where the subsequent
-     attempt to create a child window without a parent is met with disdain
-     by the OS. It's handy, then, that GetNativeData on Windows returns
-     null in this case. */
-  if(mWindow && mWindow->GetNativeData(NS_NATIVE_WIDGET)) {
-    mWindow->GetClientBounds(bounds);
-    bounds.x = bounds.y = 0;
-    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET),
-                              mDeviceContext,
-                              mPrefs,
-                              bounds,
-                              mScrollPref);
-
-    // If the history state has been set by session history,
-    // set it on the pres shell now that we have a content
-    // viewer.
-    if (mContentViewer && mHistoryState) {
-      nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(mContentViewer);
-      if (nsnull != docv) {
-        nsCOMPtr<nsIPresShell> shell;
-        rv = docv->GetPresShell(*getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv)) {
-          rv = shell->SetHistoryState((nsILayoutHistoryState*) mHistoryState);
-        }
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      mContentViewer->Show();
-    }
-  } else {
-    mContentViewer = nsnull;
-  }
-
-  // Now that we have switched documents, forget all of our children
-  DestroyChildren();
-
-  return rv;
+   return SetupNewViewer(aContentViewer);
 }
 
 NS_IMETHODIMP
@@ -1399,7 +1309,10 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   // This should probably get saved in mHistoryService or something... 
   // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
-  AddToGlobalHistory(aUri);
+  PRInt32 shouldAdd = PR_FALSE;
+  ShouldAddToGlobalHistory(aUri, &shouldAdd);
+  if(shouldAdd)
+     AddToGlobalHistory(aUri);
 
   nsXPIDLCString urlSpec;
   nsresult rv = NS_OK;
@@ -1624,6 +1537,16 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   return rv;
 }
 
+NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
+{
+#ifdef DOCSHELL_LOAD
+   return nsDocShell::LoadURI(aURI);
+#else  /*!DOCSHELL_LOAD*/
+   return LoadURL(aURI);
+#endif /*!DOCSHELL_LOAD*/
+}
+
+
 NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsIInputStream* aPostData, loadType aLoadType)
 {
@@ -1715,120 +1638,9 @@ nsWebShell::DoContent(const char * aContentType,
 
   OnLoadingSite(aUri);
 
-  return CreateViewer(aOpenedChannel, 
-                      aContentType, 
-                      strCommand, 
-                      aContentHandler);
+   return CreateContentViewer(aContentType, aCommand, aOpenedChannel, 
+      aContentHandler); 
 }
-
-static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
-
-nsresult nsWebShell::CreateViewer(nsIChannel* aChannel,
-                                  const char* aContentType,
-                                  const char* aCommand,
-                                  nsIStreamListener** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIContentViewer* viewer = nsnull;
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  nsCOMPtr<nsILoadGroup> currentLoadGroup;
-
-  /*
-   * Now that the content type is available, create a document
-   * (and viewer) of the appropriate type...
-   */
-  if (mDocLoader) {
-    mDocLoader->GetLoadGroup(getter_AddRefs(loadGroup));
-
-    // Lookup class-id for the command plus content-type combination
-    nsCID cid;
-    char id[500];
-    PR_snprintf(id, sizeof(id),
-                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
-                aCommand ? aCommand : "view",/* XXX bug! shouldn't b needed!*/
-                aContentType);
-    
-    rv = nsComponentManager::ProgIDToClassID(id, &cid);
-    if (NS_SUCCEEDED(rv)) {
-      // Create an instance of the document-loader-factory object
-      nsIDocumentLoaderFactory* factory;
-      rv = nsComponentManager::CreateInstance(cid, (nsISupports *)nsnull,
-                                            kIDocumentLoaderFactoryIID, 
-                                            (void **)&factory);
-      if (NS_SUCCEEDED(rv)) {
-        // Now create an instance of the content viewer
-        rv = factory->CreateInstance(aCommand, 
-                                     aChannel, 
-                                     loadGroup,
-                                     aContentType,
-                                     (nsIWebShell*)this,
-                                     nsnull,
-                                     aResult,
-                                     &viewer);
-        NS_RELEASE(factory);
-      }
-    }
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  if (NS_FAILED(rv)) {
-    printf("DocLoaderFactory: Unable to create ContentViewer for "
-           "command=%s, content-type=%s\n", 
-           aCommand ? aCommand : "(null)", aContentType);
-    // Give content container a chance to do something with this URL.
-    rv = HandleUnknownContentType(mDocLoader, 
-                                  aChannel, 
-                                  aContentType, 
-                                  aCommand );
-    // Stop the binding.
-    // This crashes on Unix/Mac... Stop();
-    goto done;
-  }
-
-  // let's try resetting the load group if we need to...
-  rv = aChannel->GetLoadGroup(getter_AddRefs(currentLoadGroup));
-  if (NS_SUCCEEDED(rv))
-  {
-    if (currentLoadGroup.get() != loadGroup.get()) {
-      nsLoadFlags loadAttribs = 0;
-
-      //Cancel any URIs that are currently loading...
-/// XXX: Need to do this eventually      Stop();
-      //
-      // Retarget the document to this loadgroup...
-      //
-      if (currentLoadGroup) {
-        (void) currentLoadGroup->RemoveChannel(aChannel, nsnull, nsnull, nsnull);
-      }
-      aChannel->SetLoadGroup(loadGroup);
-
-      // Mark the channel as being a document URI...
-      aChannel->GetLoadAttributes(&loadAttribs);
-      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
-
-      aChannel->SetLoadAttributes(loadAttribs);
-
-      loadGroup->AddChannel(aChannel, nsnull);
-    }
-  }
-
-  /*
-   * Give the document container the new viewer...
-   */
-  viewer->SetContainer((nsIWebShell*)this);
-
-  rv = Embed(viewer, aCommand, nsnull);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-done:
-  NS_IF_RELEASE(viewer);
-  return rv;
-}
-
 
 nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
                                       const char * aCommand,
@@ -3740,8 +3552,10 @@ NS_IMETHODIMP nsWebShell::SetVisibility(PRBool aVisibility)
 
 NS_IMETHODIMP nsWebShell::GetMainWidget(nsIWidget** mainWidget)
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(mainWidget);
+   *mainWidget = mWindow;
+   NS_IF_ADDREF(*mainWidget);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShell::SetFocus()
