@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsMsgSearchCore.idl"
 
+interface nsMsgResultElement;
+
 //////////////////////////////////////////////////////////////////////////////
 // The Msg Search Session is an interface designed to make constructing
 // searches easier. Clients typically build up search terms, and then run
@@ -83,6 +85,8 @@ interface nsIMsgSearchSession :  nsISupports {
     
     [noscript] nsMsgSearchType SetSearchParam(in nsMsgSearchType type,
                                               in voidStar param);
+
+	[noscript] void AddResultElement(in nsMsgResultElement element);
 
     readonly attribute long numResults;
     

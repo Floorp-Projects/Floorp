@@ -26,6 +26,8 @@
 #include "nsMsgSearchSession.h"
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
 
 NS_IMPL_ISUPPORTS2(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener)
@@ -344,8 +346,15 @@ nsresult nsMsgSearchSession::BuildUrlQueue ()
 nsresult nsMsgSearchSession::GetNextUrl()
 {
   nsCString nextUrl;
+  nsCOMPtr <nsIMsgMessageService> msgService;
+
   m_urlQueue.CStringAt(0, nextUrl);
-	return NS_OK;
+  nsresult rv = GetMessageServiceFromURI(nextUrl.GetBuffer(), getter_AddRefs(msgService));
+
+  if (NS_SUCCEEDED(rv) && msgService)
+    msgService->Search(this, m_window, nextUrl.GetBuffer());
+
+	return rv;
 
 }
 
@@ -399,6 +408,15 @@ nsresult nsMsgSearchSession::SearchWOUrls ()
 	return err;
 }
 
+
+NS_IMETHODIMP nsMsgSearchSession::AddResultElement (nsMsgResultElement *element)
+{
+	NS_ASSERTION(element, "no null elements");
+
+	m_resultList.AppendElement (element);
+
+	return NS_OK;
+}
 
 
 void nsMsgSearchSession::DestroyResultList ()

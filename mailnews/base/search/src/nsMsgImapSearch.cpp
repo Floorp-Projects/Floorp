@@ -14,11 +14,18 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
  */
+#include "msgCore.h"
+#include "nsMsgSearchAdapter.h"
+#include "nsXPIDLString.h"
+#include "nsMsgSearchScopeTerm.h"
+#include "nsMsgResultElement.h"
+#include "nsMsgSearchTerm.h"
+#include "nsIMsgHdr.h"
 
 // Implementation of search for IMAP mail folders
 
@@ -26,170 +33,155 @@
 //---------- Adapter class for searching online (IMAP) folders ----------------
 //-----------------------------------------------------------------------------
 
-const char *msg_SearchOnlineMail::m_kSearchTemplate  = "SEARCH%s%s";
-
-
-msg_SearchOnlineMail::msg_SearchOnlineMail (MSG_ScopeTerm *scope, MSG_SearchTermArray &termList) : msg_SearchAdapter (scope, termList)
+class nsMsgSearchOnlineMail : public nsMsgSearchAdapter
 {
-    m_encoding = NULL;
+public:
+	nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList);
+	virtual ~nsMsgSearchOnlineMail ();
+
+	NS_IMETHOD ValidateTerms ();
+	NS_IMETHOD Search ();
+	virtual const char *GetEncoding ();
+
+	static nsresult Encode (nsCString *ppEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
+	
+	nsresult AddResultElement (nsIMsgDBHdr *);
+
+protected:
+	nsCString m_encoding;
+};
+
+
+
+nsMsgSearchOnlineMail::nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
+{
 }
 
 
-msg_SearchOnlineMail::~msg_SearchOnlineMail () 
+nsMsgSearchOnlineMail::~nsMsgSearchOnlineMail () 
 {
-    XP_FREEIF(m_encoding);
 }
 
 
-MSG_SearchError msg_SearchOnlineMail::ValidateTerms ()
+nsresult nsMsgSearchOnlineMail::ValidateTerms ()
 {
-    MSG_SearchError err = msg_SearchAdapter::ValidateTerms ();
-    
-    if (SearchError_Success == err)
-    {
-        // ### mwelch Figure out the charsets to use 
-        //            for the search terms and targets.
-        PRInt16 src_csid, dst_csid;
-        GetSearchCSIDs(src_csid, dst_csid);
+  nsresult err = nsMsgSearchAdapter::ValidateTerms ();
+  
+  if (NS_SUCCEEDED(err))
+  {
+      // ### mwelch Figure out the charsets to use 
+      //            for the search terms and targets.
+      nsString srcCharset, dstCharset;
+      GetSearchCharsets(srcCharset, dstCharset);
 
-        // do IMAP specific validation
-        char *tmpEncoding = NULL;
-        err = Encode (&tmpEncoding, m_searchTerms, src_csid, dst_csid);
-        if (SearchError_Success == err)
-        {
-            // we are searching an online folder, right?
-            PR_ASSERT(m_scope->m_folder->GetType() == FOLDER_IMAPMAIL);
-            MSG_IMAPFolderInfoMail *imapFolder = (MSG_IMAPFolderInfoMail *) m_scope->m_folder;
-            m_encoding = CreateImapSearchUrl(imapFolder->GetHostName(),
-                                                      imapFolder->GetOnlineName(),
-                                                      imapFolder->GetOnlineHierarchySeparator(),
-                                                      tmpEncoding,
-                                                      PR_TRUE);    // return UIDs
-            delete [] tmpEncoding;
-        }
-        else 
-            if (err == SearchError_ScopeAgreement)
-                PR_ASSERT(PR_FALSE);
-    }
-    
-    return err;
+      // do IMAP specific validation
+      err = Encode (&m_encoding, m_searchTerms, srcCharset.GetUnicode(), dstCharset.GetUnicode());
+      NS_ASSERTION(NS_SUCCEEDED(err), "failed to encode imap search");
+  }
+  
+  return err;
 }
 
 
-const char *msg_SearchOnlineMail::GetEncoding ()
+const char *nsMsgSearchOnlineMail::GetEncoding ()
 {
     return m_encoding;
 }
 
-
-void msg_SearchOnlineMail::PreExitFunction (URL_Struct * /*url*/, int status, MWContext *context)
+nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
-    MSG_SearchFrame *frame = MSG_SearchFrame::FromContext (context);
-    msg_SearchAdapter *adapter = frame->GetRunningAdapter();
+    nsresult err = NS_OK;
 
-    if (status == MK_INTERRUPTED)
-    {
-        adapter->Abort();
-        frame->EndCylonMode();
-    }
-    else
-    {
-        frame->m_idxRunningScope++;
-        if (frame->m_idxRunningScope >= frame->m_scopeList.GetSize())
-            frame->EndCylonMode();
-    }
-}
+    nsMsgResultElement *newResult = new nsMsgResultElement (this);
 
-
-// stolen from offline mail, talk to phil
-MSG_SearchError msg_SearchOnlineMail::AddResultElement (NeoMessageHdr *pHeaders)
-{
-    MSG_SearchError err = SearchError_Success;
-
-    MSG_ResultElement *newResult = new MSG_ResultElement (this);
-
+    NS_ASSERTION (newResult, "out of memory getting result element");
     if (newResult)
     {
-        PR_ASSERT (newResult);
 
         // This isn't very general. Just add the headers we think we'll be interested in
         // to the list of attributes per result element.
-        MSG_SearchValue *pValue = new MSG_SearchValue;
+        nsMsgSearchValue *pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            ENeoString subject;
-            pValue->attribute = attribSubject;
-            char *reString = (pHeaders->GetFlags() & kHasRe) ? "Re:" : "";
-            pHeaders->GetSubject(subject);
+            nsXPIDLCString subject;
+            PRUint32 flags;
+            pValue->attribute = nsMsgSearchAttrib::Subject;
+            pHeaders->GetFlags(&flags);
+            char *reString = (flags & MSG_FLAG_HAS_RE) ? "Re:" : "";
+            pHeaders->GetSubject(getter_Copies(subject));
             pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribSender;
+            nsXPIDLCString author;
+            pValue->attribute = nsMsgSearchAttrib::Sender;
             pValue->u.string = (char*) PR_Malloc(64);
             if (pValue->u.string)
             {
-                pHeaders->GetAuthor(pValue->u.string, 64);
+                pHeaders->GetAuthor(getter_Copies(author));
+                PL_strncpy(pValue->u.string, (const char *) author, 64);
                 newResult->AddValue (pValue);
             }
             else
-                err = SearchError_OutOfMemory;
+                err = NS_ERROR_OUT_OF_MEMORY;
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribDate;
-            pValue->u.date = pHeaders->GetDate();
+            pValue->attribute = nsMsgSearchAttrib::Date;
+            pHeaders->GetDate(&pValue->u.date);
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribMsgStatus;
-            pValue->u.msgStatus = pHeaders->GetFlags();
+            pValue->attribute = nsMsgSearchAttrib::MsgStatus;
+            pHeaders->GetFlags(&pValue->u.msgStatus);
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribPriority;
-            pValue->u.priority = pHeaders->GetPriority();
+            pValue->attribute = nsMsgSearchAttrib::Priority;
+            pHeaders->GetPriority(&pValue->u.priority);
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribLocation;
-            pValue->u.string = nsCRT::strdup(m_scope->m_folder->GetName());
+          nsXPIDLString folderName;
+            pValue->attribute = nsMsgSearchAttrib::Location;
+            m_scope->m_folder->GetName(getter_Copies(folderName));
+            pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribMessageKey;
-            pValue->u.key = pHeaders->GetMessageKey();
+            pValue->attribute = nsMsgSearchAttrib::MessageKey;
+            pHeaders->GetMessageKey(&pValue->u.key);
             newResult->AddValue (pValue);
         }
-        pValue = new MSG_SearchValue;
+        pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = attribSize;
-            pValue->u.size = pHeaders->GetByteLength();
+            pValue->attribute = nsMsgSearchAttrib::Size;
+            pHeaders->GetMessageSize(&pValue->u.size);
             newResult->AddValue (pValue);
         }
         if (!pValue)
-            err = SearchError_OutOfMemory;
-        m_scope->m_frame->AddResultElement (newResult);
+            err = NS_ERROR_OUT_OF_MEMORY;
+        m_scope->m_searchSession->AddResultElement (newResult);
     }
     return err;
 }
 
 
 #define WHITESPACE " \015\012"     // token delimiter
-
-SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine)
+#if 0  // this code belongs in imap parser or protocol object
+void MSG_AddImapSearchHit (MWContext *context, const char *resultLine)
 {
     MSG_SearchFrame *frame = MSG_SearchFrame::FromContext (context);
     if (frame)
@@ -198,7 +190,7 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
         if (adapter)
         {
             // open the relevant IMAP db
-            MailDB *imapDB = NULL;
+            MailDB *imapDB = nsnull;
             PRBool wasCreated = PR_FALSE;
             ImapMailDB::Open(adapter->m_scope->m_folder->GetMailFolderInfo()->GetPathname(),
                              PR_FALSE,     // do not create if not found
@@ -234,7 +226,7 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
                                 shownUpdateAlert = PR_TRUE;
                             }
                             
-                            hitUidToken = XP_STRTOK(NULL, WHITESPACE);
+                            hitUidToken = XP_STRTOK(nsnull, WHITESPACE);
                         }
                     }
                     
@@ -247,35 +239,37 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
     }
     else
     {
-        PR_ASSERT(PR_FALSE); // apparently, this was left over from trying to do filtering on the server
+        NS_ASSERTION(PR_FALSE, "missing search frame?"); // apparently, this was left over from trying to do filtering on the server
     }
 }
+#endif // 0
 
-MSG_SearchError msg_SearchOnlineMail::Search ()
+nsresult nsMsgSearchOnlineMail::Search ()
 {
     // we should never end up here for a purely online
     // folder.  We might for an offline IMAP folder.
-    MSG_SearchError err = SearchError_NotImplemented;
+    nsresult err = NS_ERROR_NOT_IMPLEMENTED;
 
     return err;
 }
 
 
-MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermArray &searchTerms, PRInt16 src_csid, PRInt16 dest_csid)
+nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset)
 {
-    *ppEncoding = NULL;
-    char *imapTerms = NULL;
+    char *imapTerms = nsnull;
 
 	//check if searchTerms are ascii only
 	PRBool asciiOnly = PR_TRUE;
-	if ( !(src_csid & CODESET_MASK == STATEFUL || src_csid & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
+  // ### what's this mean in the NWO?????
+
+	if (PR_TRUE) // !(srcCharset & CODESET_MASK == STATEFUL || srcCharset & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
 	{
-		int termCount = searchTerms.GetSize();
+		int termCount = searchTerms.Count();
 		int i = 0;
 
 		for (i = 0; i < termCount && asciiOnly; i++)
 		{
-			MSG_SearchTerm *term = searchTerms.GetAt(i);
+			nsMsgSearchTerm *term = searchTerms.ElementAt(i);
 			if (IsStringAttribute(term->m_attribute))
 			{
 				char *pchar = term->m_value.u.string;
@@ -293,34 +287,29 @@ MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermA
 	else
 		asciiOnly = PR_FALSE;
 
+  nsAutoString usAsciiCharSet = "us-ascii";
 	// Get the optional CHARSET parameter, in case we need it.
-    char *csname = GetImapCharsetParam(asciiOnly ? CS_ASCII : dest_csid);
+  char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.GetUnicode() : destCharset);
 
-
-    MSG_SearchError err = msg_SearchAdapter::EncodeImap (&imapTerms,searchTerms, src_csid, asciiOnly ? CS_ASCII : dest_csid, PR_FALSE);
-    if (SearchError_Success == err)
-    {
-        int len = nsCRT::strlen(m_kSearchTemplate) + nsCRT::strlen(imapTerms) + (csname ? nsCRT::strlen(csname) : 0) + 1;
-        *ppEncoding = new char [len];
-        if (*ppEncoding)
-        {
-            PR_snprintf (*ppEncoding, len, m_kSearchTemplate,
-                         csname ? csname : "", imapTerms);
-        }
-        else
-            err = SearchError_OutOfMemory;
-    }
-    XP_FREEIF(csname);
-    return err;
+  nsresult err = nsMsgSearchAdapter::EncodeImap (&imapTerms, searchTerms, srcCharset, asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
+  if (NS_SUCCEEDED(err))
+  {
+    pEncoding->Append("SEARCH");
+    if (csname)
+      pEncoding->Append(csname);
+    pEncoding->Append(imapTerms);
+  }
+  PR_FREEIF(csname);
+  return err;
 }
 
-
-MSG_SearchError msg_SearchValidityManager::InitOfflineMailTable ()
+#if 0
+nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 {
-    PR_ASSERT (NULL == m_offlineMailTable);
-    MSG_SearchError err = NewTable (&m_offlineMailTable);
+    PR_ASSERT (nsnull == m_offlineMailTable);
+    nsresult err = NewTable (&m_offlineMailTable);
 
-    if (SearchError_Success == err)
+    if (NS_SUCCEEDED(err))
     {
         m_offlineMailTable->SetAvailable (attribSender, opContains, 1);
         m_offlineMailTable->SetEnabled   (attribSender, opContains, 1);
@@ -437,12 +426,12 @@ MSG_SearchError msg_SearchValidityManager::InitOfflineMailTable ()
 }
 
 
-MSG_SearchError msg_SearchValidityManager::InitOnlineMailTable ()
+nsresult nsMsgSearchValidityManager::InitOnlineMailTable ()
 {
-    PR_ASSERT (NULL == m_onlineMailTable);
-    MSG_SearchError err = NewTable (&m_onlineMailTable);
+    PR_ASSERT (nsnull == m_onlineMailTable);
+    nsresult err = NewTable (&m_onlineMailTable);
 
-    if (SearchError_Success == err)
+    if (NS_SUCCEEDED(err))
     {
         m_onlineMailTable->SetAvailable (attribSender, opContains, 1);
         m_onlineMailTable->SetEnabled   (attribSender, opContains, 1);
@@ -506,7 +495,7 @@ MSG_SearchError msg_SearchValidityManager::InitOnlineMailTable ()
 }
 
 
-MSG_SearchError msg_SearchValidityManager::InitOnlineMailFilterTable ()
+nsresult nsMsgSearchValidityManager::InitOnlineMailFilterTable ()
 {
     // Oh what a tangled web...
     //
@@ -516,10 +505,10 @@ MSG_SearchError msg_SearchValidityManager::InitOnlineMailFilterTable ()
     // is supposed to be the same as offline mail, except that the body 
     // attribute is omitted
 
-    PR_ASSERT (NULL == m_onlineMailFilterTable);
-    MSG_SearchError err = NewTable (&m_onlineMailFilterTable);
+    PR_ASSERT (nsnull == m_onlineMailFilterTable);
+    nsresult err = NewTable (&m_onlineMailFilterTable);
 
-    if (SearchError_Success == err)
+    if (NS_SUCCEEDED(err))
     {
         m_onlineMailFilterTable->SetAvailable (attribSender, opContains, 1);
         m_onlineMailFilterTable->SetEnabled   (attribSender, opContains, 1);
@@ -621,3 +610,4 @@ MSG_SearchError msg_SearchValidityManager::InitOnlineMailFilterTable ()
     return err;
 }
 
+#endif

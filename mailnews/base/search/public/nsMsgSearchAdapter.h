@@ -36,6 +36,14 @@
 // the special smarts for that protocol.
 //-----------------------------------------------------------------------------
 
+inline PRBool IsStringAttribute (nsMsgSearchAttribute a)
+{
+	return ! (a == nsMsgSearchAttrib::Priority || a == nsMsgSearchAttrib::Date || 
+		a == nsMsgSearchAttrib::MsgStatus || a == nsMsgSearchAttrib::MessageKey ||
+		a == nsMsgSearchAttrib::Size || a == nsMsgSearchAttrib::AgeInDays ||
+		a == nsMsgSearchAttrib::FolderInfo);
+}
+
 class nsMsgSearchAdapter : public nsIMsgSearchAdapter
 {
 public:
@@ -59,15 +67,15 @@ public:
 
 	static nsresult EncodeImap (char **ppEncoding, 
 									   nsMsgSearchTermArray &searchTerms,  
-									   PRInt16 src_csid, 
-									   PRInt16 dest_csid,
+									   const PRUnichar *srcCharset, 
+									   const PRUnichar *destCharset,
 									   PRBool reallyDredd = PR_FALSE);
 	
 	static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
 
-	static char *TryToConvertCharset(char *sourceStr, PRInt16 src_csid, PRInt16 dest_csid, PRBool useMIME2Style);
-	static char *GetImapCharsetParam(PRInt16 dest_csid);
-	void GetSearchCSIDs(PRInt16& src_csid, PRInt16& dst_csid);
+	static char *TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool useMIME2Style);
+	static char *GetImapCharsetParam(const PRUnichar *destCharset);
+	void GetSearchCharsets(nsString &srcCharset, nsString &destCharset);
 
 	// This stuff lives in the base class because the IMAP search syntax 
 	// is used by the Dredd SEARCH command as well as IMAP itself
@@ -103,7 +111,7 @@ protected:
 	char *TransformSpacesToStars (const char *, msg_TransformType transformType);
 	nsresult OpenNewsResultInUnknownGroup (nsMsgResultElement*);
 
-	static nsresult EncodeImapTerm (nsMsgSearchTerm *, PRBool reallyDredd, PRInt16 src_csid, PRInt16 dest_csid, char **ppOutTerm);
+	static nsresult EncodeImapTerm (nsMsgSearchTerm *, PRBool reallyDredd, const char*srcCharset, PRInt16 dest_csid, char **ppOutTerm);
 };
 
 #endif
