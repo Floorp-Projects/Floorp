@@ -74,7 +74,6 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
-#include "nsIWebShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
@@ -990,11 +989,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       sink = aSink;
     else {
       if (IsXHTML()) {
-        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(aContainer));
         nsCOMPtr<nsIXMLContentSink> xmlsink;
 
         rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, aURL,
-                                  webShell, aChannel);
+                                  docShell, aChannel);
 
         sink = xmlsink;
       } else {
