@@ -133,10 +133,17 @@ enum nsAttributeChangeType {
  * presentation context, the style manager, the style set and the root
  * frame.
  */
-class nsIPresShell : public nsISupports {
+
+// hack to make egcs / gcc 2.95.2 happy
+class nsIPresShell_base : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
+};
 
+class nsIPresShell : public nsIPresShell_base
+{
+public:
   NS_IMETHOD Init(nsIDocument* aDocument,
                   nsPresContext* aPresContext,
                   nsIViewManager* aViewManager,
