@@ -567,19 +567,50 @@ function grabAllMedia(aWindow, aDocument)
     return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "img"));
 }  
 
+function getSource( item )
+{
+  // Return the correct source without strict warnings
+  if (item.href != null) {
+    return item.href;
+  } else if (item.src != null) {
+    return item.src;
+  }
+  return null;
+}
+
+function getSelectedItem(outliner)
+{
+  var view = outliner.outlinerBoxObject.view;
+  if (!view.rowCount) return null;
+
+  // Only works if only one item is selected
+  var clickedRow = outliner.outlinerBoxObject.selection.currentIndex;
+  var lineNum = view.getCellText(clickedRow, "image-number");
+  return imageList[lineNum - 1];
+}
+
+function saveMedia()
+{
+  var outliner = document.getElementById("imageoutliner");
+  var item = getSelectedItem(outliner);
+  var url = getAbsoluteURL(getSource(item), item);
+
+  if (url) {
+    saveURL(url, null, 'SaveImageTitle', false );
+  }
+}
+
 function onImageSelect()
 {
   var outliner = document.getElementById("imageoutliner");
-  var preview = document.getElementById("imagepreview");
+  var saveAsButton = document.getElementById("imagesaveasbutton");
 
   if (outliner.outlinerBoxObject.selection.count == 1)
   {
-    var view = outliner.outlinerBoxObject.view;
-    if (!view.rowCount) return;
-    var clickedRow = outliner.outlinerBoxObject.selection.currentIndex;
-    var lineNum = view.getCellText(clickedRow, "image-number");
-
-    makePreview(imageList[lineNum-1]);
+    makePreview(getSelectedItem(outliner));
+    saveAsButton.setAttribute("disabled", "false");
+  } else {
+    saveAsButton.setAttribute("disabled", "true");
   }
 }
 
@@ -687,7 +718,7 @@ function makePreview(item)
   if (nn == "link" || nn == "input")
   {
     newImage = new Image();
-    newImage.src = getAbsoluteURL(item.href || item.src, item);
+    newImage.src = getAbsoluteURL(getSource(item), item);
   }
   else
   {

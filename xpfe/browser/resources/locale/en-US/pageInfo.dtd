@@ -97,6 +97,8 @@
 <!ENTITY  mediaEncryption       "Encryption:">
 <!ENTITY  mediaTitle            "title Attribute:">
 <!ENTITY  mediaLongdesc         "longdesc Attribute:">
+<!ENTITY  mediaSaveAs           "Save As...">
+<!ENTITY  mediaSaveAsAccesskey  "S">
 
 <!ENTITY  framesTab             "Frames">
 <!ENTITY  framesAccesskey       "r">
