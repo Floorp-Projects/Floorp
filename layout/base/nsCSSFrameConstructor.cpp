@@ -6864,37 +6864,19 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
   return rv;
 }
 
-static inline void
-ReplaceFrame(nsIPresContext*  aPresContext,
-             nsIPresShell*    aPresShell,
-             nsIFrameManager* aFrameManager,
-             nsIContent*      aContent,
-             nsIFrame*        aParentFrame,
-             nsIAtom*         aListName,
-             nsIFrame*        aOldFrame,
-             nsIFrame*        aNewFrame,
-             nsIFrame*        aPlaceholderFrame)
+#ifdef NS_DEBUG
+static PRBool
+IsPlaceholderFrame(nsIFrame* aFrame)
 {
-  // Reset the primary frame mapping
-  aFrameManager->SetPrimaryFrameFor(aContent, aNewFrame);
+  nsIAtom*  frameType;
+  PRBool    result;
 
-  if (aPlaceholderFrame) {
-    // Remove the association between the old frame and its placeholder
-    aFrameManager->SetPlaceholderFrameFor(aOldFrame, nsnull);
-
-    // Reuse the existing placeholder frame, and add an association to the
-    // new frame
-    aFrameManager->SetPlaceholderFrameFor(aNewFrame, aPlaceholderFrame);
-
-    // Placeholder frames have a pointer back to the out-of-flow frame.
-    // Make sure that's correct
-    ((nsPlaceholderFrame*)aPlaceholderFrame)->SetOutOfFlowFrame(aNewFrame);
-  }
-
-  // Replace the old frame with the new frame
-  aFrameManager->ReplaceFrame(*aPresContext, *aPresShell, aParentFrame,
-                              aListName, aOldFrame, aNewFrame);
+  aFrame->GetFrameType(&frameType);
+  result = frameType == nsLayoutAtoms::placeholderFrame;
+  NS_IF_RELEASE(frameType);
+  return result;
 }
+#endif
 
 NS_IMETHODIMP
 nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
@@ -6944,41 +6926,114 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       presShell->GetFrameManager(getter_AddRefs(frameManager));
 
       // Replace the old frame with the new frame
-      ReplaceFrame(aPresContext, presShell, frameManager, content,
-                   parentFrame, listName, aFrame, newFrame, placeholderFrame);
+      // Reset the primary frame mapping
+      frameManager->SetPrimaryFrameFor(content, newFrame);
+
+      if (placeholderFrame) {
+        // Remove the association between the old frame and its placeholder
+        frameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+
+        // Reuse the existing placeholder frame, and add an association to the
+        // new frame
+        frameManager->SetPlaceholderFrameFor(newFrame, placeholderFrame);
+
+        // Placeholder frames have a pointer back to the out-of-flow frame.
+        // Make sure that's correct
+        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
+      }
+
+      // Replace the old frame with the new frame
+      frameManager->ReplaceFrame(*aPresContext, *presShell, parentFrame,
+                                 listName, aFrame, newFrame);
     }
 
   } else if ((nsHTMLAtoms::object == tag.get()) ||
              (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
-    // It's an OBJECT element or APPLET, so we should display the contents
+
+    // It's an OBJECT, EMBED, or APPLET, so we should display the contents
     // instead
+    nsIFrame* absoluteContainingBlock;
+    nsIFrame* floaterContainingBlock;
+    nsIFrame* inFlowParent = parentFrame;
+
+    // If the OBJECT frame is out-of-flow, then get the placeholder frame's
+    // parent and use that when determining the absolute containing block and
+    // floater containing block
+    if (placeholderFrame) {
+      placeholderFrame->GetParent(&inFlowParent);
+    }
+
+    absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext, inFlowParent),
+    floaterContainingBlock = GetFloaterContainingBlock(aPresContext, inFlowParent);
+
+#ifdef NS_DEBUG
+    // Verify that we calculated the same containing block
+    if (listName.get() == nsLayoutAtoms::absoluteList) {
+      NS_ASSERTION(absoluteContainingBlock == parentFrame,
+                   "wrong absolute containing block");
+    } else if (listName.get() == nsLayoutAtoms::floaterList) {
+      NS_ASSERTION(floaterContainingBlock == parentFrame,
+                   "wrong floater containing block");
+    }
+#endif
+
+    // Now initialize the frame construction state
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
-                                  GetAbsoluteContainingBlock(aPresContext, parentFrame),
-                                  GetFloaterContainingBlock(aPresContext, parentFrame));
+                                  absoluteContainingBlock, floaterContainingBlock);
     nsFrameItems            frameItems;
     const nsStyleDisplay*   display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
 
-    // Create a frame based on the display type
+    // Create a new frame based on the display type.
+    // Note: if the old frame was out-of-flow, then so will the new frame
+    // and we'll get a new placeholder frame
     rv = ConstructFrameByDisplayType(aPresContext, state, display, content,
-                                     parentFrame, styleContext, PR_FALSE, frameItems);
+                                     inFlowParent, styleContext, PR_FALSE, frameItems);
 
     if (NS_SUCCEEDED(rv)) {
       nsIFrame* newFrame = frameItems.childList;
-      
-      // Replace the old frame with the new frame
-      ReplaceFrame(aPresContext, presShell, state.mFrameManager, content,
-                   parentFrame, listName, aFrame, newFrame, placeholderFrame);
 
+      if (placeholderFrame) {
+        // Remove the association between the old frame and its placeholder
+        // Note: ConstructFrameByDisplayType() will already have added an
+        // association for the new placeholder frame
+        state.mFrameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+
+        // Verify that the new frame is also a placeholder frame
+        NS_ASSERTION(IsPlaceholderFrame(newFrame), "unexpected frame type");
+
+        // Replace the old placeholder frame with the new placeholder frame
+        state.mFrameManager->ReplaceFrame(*aPresContext, *presShell, inFlowParent,
+                                          nsnull, placeholderFrame, newFrame);
+      }
+
+      // Replace the primary frame
+      if (listName.get() == nsLayoutAtoms::absoluteList) {
+        newFrame = state.mAbsoluteItems.childList;
+        state.mAbsoluteItems.childList = nsnull;
+      } else if (listName.get() == nsLayoutAtoms::fixedList) {
+        newFrame = state.mFixedItems.childList;
+        state.mFixedItems.childList = nsnull;
+      } else if (listName.get() == nsLayoutAtoms::floaterList) {
+        newFrame = state.mFloatedItems.childList;
+        state.mFloatedItems.childList = nsnull;
+      }
+      state.mFrameManager->ReplaceFrame(*aPresContext, *presShell, parentFrame,
+                                        listName, aFrame, newFrame);
+
+      // Reset the primary frame mapping. Don't assume that
+      // ConstructFrameByDisplayType() has done this
+      state.mFrameManager->SetPrimaryFrameFor(content, newFrame);
+      
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
       if (state.mAbsoluteItems.childList) {
         rv = state.mAbsoluteItems.containingBlock->AppendFrames(*aPresContext, *presShell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         state.mAbsoluteItems.childList);
+                                                     nsLayoutAtoms::absoluteList,
+                                                     state.mAbsoluteItems.childList);
       }
   
       // If there are new fixed positioned child frames, then notify
@@ -6987,12 +7042,11 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       // determine where in the list they should be inserted...
       if (state.mFixedItems.childList) {
         rv = state.mFixedItems.containingBlock->AppendFrames(*aPresContext, *presShell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      state.mFixedItems.childList);
+                                                  nsLayoutAtoms::fixedList,
+                                                  state.mFixedItems.childList);
       }
   
-      // If there are new floating child frames, then notify
-      // the parent
+      // If there are new floating child frames, then notify the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
       if (state.mFloatedItems.childList) {
