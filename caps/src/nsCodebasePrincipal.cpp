@@ -135,14 +135,14 @@ nsCodebasePrincipal::GetOrigin(char **origin)
     nsXPIDLCString s;
     if (NS_FAILED(mURI->GetScheme(getter_Copies(s))))
         return NS_ERROR_FAILURE;
-    nsAutoString t = (const char *) s;
+    nsAutoString t(s);
     t += "://";
     if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s)))) {
-        t += s;
+        t.Append(s);
     } else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) {
         // Some URIs (e.g., nsSimpleURI) don't support host. Just
         // get the full spec.
-        t = s;
+        t.Assign(s);
     } else {
         return NS_ERROR_FAILURE;
     }
