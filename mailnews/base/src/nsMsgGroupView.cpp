@@ -100,6 +100,32 @@ NS_IMETHODIMP nsMsgGroupView::Open(nsIMsgFolder *aFolder, nsMsgViewSortTypeValue
 
 NS_IMETHODIMP nsMsgGroupView::Close()
 {
+  if (m_db && m_sortType == nsMsgViewSortType::byDate)
+  {
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+    nsresult rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (dbFolderInfo)
+    {
+      PRUint32 expandFlags = 0;
+      PRUint32 num = GetSize();
+	  
+      for (PRUint32 i = 0; i < num; i++) 
+      {
+        if (m_flags[i] & MSG_VIEW_FLAG_ISTHREAD && ! (m_flags[i] & MSG_FLAG_ELIDED))
+        {
+          nsCOMPtr <nsIMsgDBHdr> msgHdr;
+          nsresult rv = GetMsgHdrForViewIndex(i, getter_AddRefs(msgHdr));
+          if (msgHdr)
+          {
+             nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+             if (hashKey)
+               expandFlags |=  1 << ((nsPRUint32Key *)hashKey)->GetValue();
+          }
+        }
+      }
+      dbFolderInfo->SetUint32Property("dateGroupFlags", expandFlags);
+    }
+  }
   // enumerate m_groupsTable releasing the thread objects.
   m_groupsTable.Enumerate(ReleaseThread);
   return nsMsgThreadedDBView::Close();
@@ -327,9 +353,18 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
       AddHdrToThread(msgHdr, &notUsed);
     }
   }
-  *aCount = m_keys.GetSize();
+  PRUint32 expandFlags = 0;
   PRUint32 viewFlag = (m_sortType == nsMsgViewSortType::byDate) ? MSG_VIEW_FLAG_DUMMY : 0;
-  //go through the view updating the flags for threads with more than one message...
+  if (viewFlag)
+  {
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+    nsresult rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (dbFolderInfo)
+      dbFolderInfo->GetUint32Property("dateGroupFlags",  0, &expandFlags);
+
+  }
+  // go through the view updating the flags for threads with more than one message...
+  // and if grouped by date, expanding threads that were expanded before.
   for (PRUint32 viewIndex = 0; viewIndex < m_keys.GetSize(); viewIndex++)
   {
     nsCOMPtr <nsIMsgThread> thread;
@@ -340,8 +375,19 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
       thread->GetNumChildren(&numChildren);
       if (numChildren > 1 || viewFlag)
         OrExtraFlag(viewIndex, viewFlag | MSG_VIEW_FLAG_HASCHILDREN);
+      if (expandFlags)
+      {
+        nsMsgGroupThread *groupThread = NS_STATIC_CAST(nsMsgGroupThread *, (nsIMsgThread *) thread);
+        if (expandFlags & (1 << groupThread->m_threadKey))
+        {
+          PRUint32 numExpanded;
+          ExpandByIndex(viewIndex, &numExpanded);
+          viewIndex += numExpanded;
+        }
+      }
     }
   }
+  *aCount = m_keys.GetSize();
   return rv;
 }
 
