@@ -62,6 +62,7 @@ public:
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
 
+  // XXX do these belong here or are they generic?
   NS_IMETHOD  PrependStyleRule(nsICSSRule* aRule) = 0;
   NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
   NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
