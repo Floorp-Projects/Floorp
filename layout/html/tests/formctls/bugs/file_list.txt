@@ -28,6 +28,7 @@ file:///s|/mozilla/layout/html/tests/formctls/bugs/bug45562.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug45625.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug46099.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug46224.html
+file:///s|/mozilla/layout/html/tests/formctls/bugs/bug48237.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug50419.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug55063.html
 file:///s|/mozilla/layout/html/tests/formctls/bugs/bug58190.html
