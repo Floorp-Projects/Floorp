@@ -85,7 +85,7 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
 
     if (NS_FAILED(rv)) return rv;
 
-    char* lastDot = strrchr(leafName.get(), '.');
+    const char* lastDot = strrchr(leafName.get(), '.');
     char suffix[kMaxFilenameLength + 1] = "";
     if (lastDot)
     {
