@@ -1068,9 +1068,9 @@ $(AIX_HACK): $(AIX_NSPR)
 	$(INSTALL) -m 644 $< .
 endif
 
-install:: $(AIX_HACK) $(EXTRA_REL_FILES) $(filter-out tweak_nspr,$(TARGETS))
+install:: $(AIX_HACK) $(EXTRA_REL_FILES) $(TARGETS)
 ifdef TARGETS
-	$(INSTALL) $(TARGETS) $(DIST)/bin
+	$(INSTALL) $(filter-out tweak_nspr,$(TARGETS)) $(DIST)/bin
 endif
 
 $(VERSION_OBJS): versionn.h
