@@ -845,40 +845,32 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_KEY_PRESS:
       {
+        // For backwards compat, trigger checks/radios/buttons with space or enter (bug 25300)
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-        if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == 0x20) {
+        if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == NS_VK_SPACE) {
           PRInt32 type;
           GetType(&type);
           switch(type) {
-          case NS_FORM_INPUT_CHECKBOX:
+            case NS_FORM_INPUT_CHECKBOX:
+            case NS_FORM_INPUT_RADIO:
+            case NS_FORM_INPUT_BUTTON:
+            case NS_FORM_INPUT_RESET:
+            case NS_FORM_INPUT_SUBMIT:
+//            case NS_FORM_INPUT_IMAGE: // XXX should we do this for images too?
             {
-              PRBool checked;
-              GetChecked(&checked);
-              SetChecked(!checked);
-            }
-            break;
-          case NS_FORM_INPUT_RADIO:
-            SetChecked(PR_TRUE);
-            break;
-          case NS_FORM_INPUT_BUTTON:
-          case NS_FORM_INPUT_RESET:
-          case NS_FORM_INPUT_SUBMIT:
-            {
-              //Checkboxes and radio trigger off return or space but buttons
-              //just trigger off space, go figure.
-              if (keyEvent->charCode == 0x20) {
-                //XXX We should just be able to call Click() here but then
-                //Click wouldn't have a PresContext.
-                nsIFormControlFrame* formControlFrame = nsnull;
-                if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-                  if (formControlFrame) {
-                    formControlFrame->MouseClicked(aPresContext);
-                  }
-                }
-              }
-            }
-            break;
-          }
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsMouseEvent event;
+              event.eventStructType = NS_GUI_EVENT;
+              event.message = NS_MOUSE_LEFT_CLICK;
+              event.isShift = PR_FALSE;
+              event.isControl = PR_FALSE;
+              event.isAlt = PR_FALSE;
+              event.isMeta = PR_FALSE;
+              event.clickCount = 0;
+              event.widget = nsnull;
+              rv = HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            } // case
+          } // switch
         }
       } break;// NS_KEY_PRESS
 

@@ -481,6 +481,38 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
+
+    case NS_KEY_PRESS:
+      {
+        // For backwards compat, trigger buttons with space or enter (bug 25300)
+        nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+        if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == NS_VK_SPACE) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_GUI_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.isShift = PR_FALSE;
+          event.isControl = PR_FALSE;
+          event.isAlt = PR_FALSE;
+          event.isMeta = PR_FALSE;
+          event.clickCount = 0;
+          event.widget = nsnull;
+          rv = HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        }
+      }
+      break;// NS_KEY_PRESS
+
+    case NS_MOUSE_LEFT_CLICK:
+      {
+        // Tell the frame about the click
+        nsIFormControlFrame* formControlFrame = nsnull;
+        rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+        if (NS_SUCCEEDED(rv)) {
+          formControlFrame->MouseClicked(aPresContext);
+        }
+      }
+      break;// NS_MOUSE_LEFT_CLICK
+
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
         nsIEventStateManager *stateManager;
