@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -164,70 +164,76 @@ int main(int argc, char **argv)
     nsIStreamListener *pConsumer;
     nsIURL *pURL;
     nsresult result;
+    int argn, i;
 
     if (argc < 2) {
         printf("test: -trace <URL>\n");
         return 0;
     }
 
-    urlLoaded = 0;
-
     // Turn on netlib tracing...
     if (PL_strcasecmp(argv[1], "-trace") == 0) {
         NET_ToggleTrace();
-        url_address = argv[2];
+        argn = 2;
         bTraceEnabled = PR_TRUE;
     } else {
-        url_address = argv[1];
+        argn = 1;
         bTraceEnabled = PR_FALSE;
     }
 
-    if (bTraceEnabled) {
-        url_address.ToCString(buf, 256);
-        printf("loading URL: %s...\n", buf);
-    }
+    for (i = argn; i < argc; i++) {
+        urlLoaded = 0;
 
-    pConsumer = new TestConsumer;
-    pConsumer->AddRef();
+        url_address = argv[i];
+        if (bTraceEnabled) {
+            url_address.ToCString(buf, 256);
+            printf("loading URL: %s...\n", buf);
+        }
 
-    // Create the URL object...
-    pURL = NULL;
-    result = NS_NewURL(&pURL, url_address);
-    if (NS_OK != result) {
-        return 1;
-    }
+        pConsumer = new TestConsumer;
+        pConsumer->AddRef();
+        
+        // Create the URL object...
+        pURL = NULL;
+        result = NS_NewURL(&pURL, url_address);
+        if (NS_OK != result) {
+            if (bTraceEnabled) {
+                printf("NS_NewURL() failed...\n");
+            }
+            return 1;
+        }
 
 #if 0
-    nsIPostToServer *pPoster;
-    result = pURL->QueryInterface(kIPostToServerIID, (void**)&pPoster);
-    if (result == NS_OK) {
-        pPoster->SendFile("foo.txt");
-    }
-    NS_IF_RELEASE(pPoster);
-#endif
-
-    // Start the URL load...
-    result = pURL->Open(pConsumer);
-
-    /* If the open failed, then do not drop into the message loop... */
-    if (NS_OK != result) {
-        urlLoaded = 1;
-    }
-
-    // Enter the message pump to allow the URL load to proceed.
-    while ( !urlLoaded ) {
-#ifdef XP_PC
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+        nsIPostToServer *pPoster;
+        result = pURL->QueryInterface(kIPostToServerIID, (void**)&pPoster);
+        if (result == NS_OK) {
+            pPoster->SendFile("foo.txt");
         }
+        NS_IF_RELEASE(pPoster);
 #endif
-
-        (void) NET_PollSockets();
+        
+        // Start the URL load...
+        result = pURL->Open(pConsumer);
+        
+        /* If the open failed, then do not drop into the message loop... */
+        if (NS_OK != result) {
+            urlLoaded = 1;
+        }
+        
+        // Enter the message pump to allow the URL load to proceed.
+        while ( !urlLoaded ) {
+#ifdef XP_PC
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+#endif
+            
+            (void) NET_PollSockets();
+        }
+        
+        pURL->Release();
     }
-
-    pURL->Release();
-
+    
     return 0;
-
 }
