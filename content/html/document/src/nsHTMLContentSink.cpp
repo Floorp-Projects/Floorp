@@ -340,7 +340,9 @@ public:
   nsString* mTitle;
   nsString  mUnicodeXferBuf;
 
-  PRBool mLayoutStarted;
+  PRPackedBool mLayoutStarted;
+  PRPackedBool mIsDemotingContainer;
+
   PRInt32 mInScript;
   PRInt32 mInNotification;
   nsIDOMHTMLFormElement* mCurrentForm;
@@ -1517,6 +1519,8 @@ SetDocumentInChildrenOf(nsIContent* aContent,
 nsresult
 SinkContext::DemoteContainer(const nsIParserNode& aNode)
 {
+  mSink->mIsDemotingContainer = PR_TRUE;
+
   nsresult result = NS_OK;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   
@@ -1548,7 +1552,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         sync = PR_TRUE;
       }
       // Otherwise just append the container to the parent without
-      // notification (it the container hasn't already been appended)
+      // notification (if the container hasn't already been appended)
       else if (!(mStack[stackPos].mFlags & APPENDED)) {
         mSink->mInNotification++;
         parent->AppendChildTo(container, PR_FALSE, PR_FALSE);
@@ -1670,7 +1674,9 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
       UpdateChildCounts();
     }
   }
-  
+
+  mSink->mIsDemotingContainer = PR_FALSE;
+
   return result;
 }
 
@@ -4375,7 +4381,8 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument)
   // notification to occur. Since this could result in frame
   // creation, make sure we've flushed everything before we
   // continue
-  if (mInScript && !mInNotification && mCurrentContext) {
+  if (mInScript && !mInNotification && mCurrentContext &&
+      !mIsDemotingContainer) {
     result = mCurrentContext->FlushTags(PR_TRUE);
   }
 

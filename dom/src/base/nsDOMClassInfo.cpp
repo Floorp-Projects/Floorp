@@ -667,7 +667,7 @@ nsDOMClassInfo::Init()
                                         elt, getter_AddRefs(old));
 
   nsCOMPtr<nsIScriptSecurityManager> sm =
-      do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
+    do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   sSecMan = sm;
   NS_ADDREF(sSecMan);
@@ -1120,7 +1120,7 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
   // following lines ensure that the exception is propagated.
 
   nsCOMPtr<nsIXPCNativeCallContext> cnccx;
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
+  sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
   if (cnccx)
     cnccx->SetExceptionWasThrown(PR_TRUE);
 
@@ -2156,7 +2156,7 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    // Fall through to nsArraySH::GetProperty() here
+    return NS_OK; // Don't fall through to nsArraySH::GetProperty() here
   }
 
   return nsArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -2489,12 +2489,13 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
       return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
                         NS_GET_IID(nsISupports), vp);
     }
+
+    return NS_OK; // Don't fall through
   }
 
   int32 n = -1;
 
-  if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
+  if (JSVAL_IS_NUMBER(id) && ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
     nsCOMPtr<nsIFormControl> control;
     form->GetElementAt(n, getter_AddRefs(control));
 
@@ -2586,7 +2587,7 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   int32 n = -1;
 
-  if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
+  if (!(JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) ||
       !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
     return NS_OK;
   }
@@ -3014,7 +3015,7 @@ nsHTMLOptionCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   int32 n = -1;
 
-  if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
+  if (!(JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) ||
       !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
     return NS_OK;
   }
@@ -3189,7 +3190,7 @@ nsMediaListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMMediaList> media_list(do_QueryInterface(aNative));
 
-  return media_list->Item(PRUint32(aNative), aResult);
+  return media_list->Item(PRUint32(aIndex), aResult);
 }
 
 
@@ -3223,7 +3224,7 @@ nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
 
-  return style_decl->Item(PRUint32(aNative), aResult);
+  return style_decl->Item(PRUint32(aIndex), aResult);
 }
 
 
