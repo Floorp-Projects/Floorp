@@ -280,6 +280,7 @@ public:
   static nsIAtom* wbr;
   static nsIAtom* width;
   static nsIAtom* wrap;
+  static nsIAtom* wrappedFramePseudo;
 
   static nsIAtom* xmlRootPseudo;
 

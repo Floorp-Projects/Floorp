@@ -242,6 +242,7 @@ nsIAtom* nsHTMLAtoms::vspace;
 nsIAtom* nsHTMLAtoms::wbr;
 nsIAtom* nsHTMLAtoms::width;
 nsIAtom* nsHTMLAtoms::wrap;
+nsIAtom* nsHTMLAtoms::wrappedFramePseudo;
 nsIAtom* nsHTMLAtoms::xmlRootPseudo;
 nsIAtom* nsHTMLAtoms::zindex;
 
@@ -473,6 +474,7 @@ void nsHTMLAtoms::AddrefAtoms()
     wbr = NS_NewAtom("WBR");
     width = NS_NewAtom("WIDTH");
     wrap = NS_NewAtom("WRAP");
+    wrappedFramePseudo = NS_NewAtom(":WRAPPED-FRAME");
     xmlRootPseudo = NS_NewAtom(":XML-ROOT");
     zindex = NS_NewAtom("ZINDEX");
   }
@@ -695,6 +697,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(wbr);
     NS_RELEASE(width);
     NS_RELEASE(wrap);
+    NS_RELEASE(wrappedFramePseudo);
     NS_RELEASE(xmlRootPseudo);
     NS_RELEASE(zindex);
   }

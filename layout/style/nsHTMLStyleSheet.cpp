@@ -1742,11 +1742,11 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                 wrapperFrame->SetStyleContext(aPresContext, scrolledPseudoStyle);
 
                 // The wrapped frame also gets a pseudo style context, but it doesn't
-                // inherit any background properties
-                // XXX We should define something like :WRAPPED-FRAME in ua.css
+                // inherit any background properties. It does inherit the 'display'
+                // property (very important that it does)
                 nsIStyleContext*  wrappedPseudoStyle;
                 wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                       (aContent, nsHTMLAtoms::columnPseudo,
+                                       (aContent, nsHTMLAtoms::wrappedFramePseudo,
                                         scrolledPseudoStyle);
                 NS_RELEASE(scrolledPseudoStyle);
                 aParentFrame = wrapperFrame;
