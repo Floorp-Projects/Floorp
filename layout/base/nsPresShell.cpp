@@ -1649,9 +1649,8 @@ PresShell::StyleChangeReflow()
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
 	if (NS_FAILED(rv)) return rv;
 
-    // XXX We should be using eReflowReason_StyleChange
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
-                                  eReflowReason_Resize, rcx, maxSize);
+                                  eReflowReason_StyleChange, rcx, maxSize);
     nsIView*          view;
 
     rootFrame->WillReflow(mPresContext);
