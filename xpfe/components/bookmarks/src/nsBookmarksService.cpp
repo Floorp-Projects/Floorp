@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -46,6 +46,7 @@
 #include "xp_core.h"
 
 #include "nsEnumeratorUtils.h"
+#include "nsEscape.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -203,7 +204,7 @@ protected:
 
     nsresult ParseBookmark(const nsString& aLine,
 						   nsCOMPtr<nsIRDFContainer>& aContainer,
-						   nsIRDFResource *nodeType);
+						   nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode);
 
     nsresult ParseBookmarkHeader(const nsString& aLine,
 								 nsCOMPtr<nsIRDFContainer>& aContainer,
@@ -236,7 +237,8 @@ public:
                          PRInt32          aLastVisitDate,
                          PRInt32          aLastModifiedDate,
                          const char*      aShortcutURL,
-                         nsIRDFResource*  aNodeType);
+                         nsIRDFResource*  aNodeType,
+                         nsIRDFResource** bookmarkNode);
 
     nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
     {
@@ -295,6 +297,8 @@ static const char kCloseMenu[]  = "</MENU>";
 static const char kOpenDL[]     = "<DL>";
 static const char kCloseDL[]    = "</DL>";
 
+static const char kOpenDD[]     = "<DD>";
+
 static const char kTargetEquals[]       = "TARGET=\"";
 static const char kAddDateEquals[]      = "ADD_DATE=\"";
 static const char kLastVisitEquals[]    = "LAST_VISIT=\"";
@@ -309,72 +313,117 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 {
 	// tokenize the input stream.
 	// XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
-    nsRandomAccessInputStream in(*mStream);
+	nsRandomAccessInputStream	in(*mStream);
+	nsresult			rv;
 
-	nsresult rv;
-
-    nsCOMPtr<nsIRDFContainer> container;
+	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-											nsnull,
-											nsIRDFContainer::GetIID(),
-											getter_AddRefs(container));
-    if (NS_FAILED(rv)) return rv;
+		nsnull, nsIRDFContainer::GetIID(), getter_AddRefs(container));
+	if (NS_FAILED(rv)) return rv;
 
 	rv = container->Init(mDataSource, aContainer);
 	if (NS_FAILED(rv)) return rv;
 
-    nsAutoString line;
-	while (NS_SUCCEEDED(rv) && !in.eof() && !in.failed()) {
-        line.Truncate();
+	nsCOMPtr<nsIRDFResource>	bookmarkNode;
+	nsAutoString			line, description;
+	PRBool				inDescription = PR_FALSE;
 
-        while (1) {
-            char buf[256];
-            PRBool untruncated = in.readline(buf, sizeof(buf));
+	while (NS_SUCCEEDED(rv) && !in.eof() && !in.failed())
+	{
+		line.Truncate();
 
-            // in.readline() return PR_FALSE if there was buffer overflow,
-            // or there was a catastrophe. Check to see if we're here
-            // because of the latter...
-            NS_ASSERTION (! in.failed(), "error reading file");
-            if (in.failed()) return NS_ERROR_FAILURE;
+		while (PR_TRUE)
+		{
+			char	buf[256];
+			PRBool untruncated = in.readline(buf, sizeof(buf));
 
-            // XXX Bug 5871. What charset conversion should we be
-            // applying here?
-            line.Append(buf);
+			// in.readline() return PR_FALSE if there was buffer overflow,
+			// or there was a catastrophe. Check to see if we're here
+			// because of the latter...
+			NS_ASSERTION (! in.failed(), "error reading file");
+			if (in.failed()) return NS_ERROR_FAILURE;
 
-            if (untruncated)
-                break;
-        }
+			// XXX Bug 5871. What charset conversion should we be
+			// applying here?
+			line.Append(buf);
 
-        PRInt32 offset;
+			if (untruncated)
+				break;
+		}
 
-        if ((offset = line.Find(kHREFEquals)) >= 0) {
-            rv = ParseBookmark(line, container, nodeType);
-        }
-        else if ((offset = line.Find(kOpenHeading)) >= 0 &&
-                 nsString::IsDigit(line.CharAt(offset + 2))) {
-            // XXX Ignore <H1> so that bookmarks root _is_ <H1>
-            if (line.CharAt(offset + 2) != PRUnichar('1'))
-                rv = ParseBookmarkHeader(line, container, nodeType);
-        }
-        else if ((offset = line.Find(kSeparator)) >= 0) {
-            rv = ParseBookmarkSeparator(line, container);
-        }
-        else if ((offset = line.Find(kCloseUL)) >= 0 ||
-                 (offset = line.Find(kCloseMenu)) >= 0 ||
-                 (offset = line.Find(kCloseDL)) >= 0) {
-            return ParseHeaderEnd(line);
-        }
-        else if ((offset = line.Find(kOpenUL)) >= 0 ||
-                 (offset = line.Find(kOpenMenu)) >= 0 ||
-                 (offset = line.Find(kOpenDL)) >= 0) {
-            rv = ParseHeaderBegin(line, container);
-        }
-        else {
-            // XXX Discard the line. We should be treating this as the
-            // description.
-        }
-    }
-    return rv;
+		PRInt32	offset;
+		
+		if (inDescription == PR_TRUE)
+		{
+			offset = line.Find("<");
+			if (offset < 0)
+			{
+				description += line;
+				continue;
+			}
+
+			// handle description [convert some HTML-escaped (such as "&lt;") values back]
+			
+			while ((offset = description.Find("&lt;", PR_TRUE)) > 0)
+			{
+				description.Cut(offset, 4);
+				description.Insert(PRUnichar('<'), offset);
+			}
+			while ((offset = description.Find("&gt;", PR_TRUE)) > 0)
+			{
+				description.Cut(offset, 4);
+				description.Insert(PRUnichar('>'), offset);
+			}
+
+			nsCOMPtr<nsIRDFLiteral>	descLiteral;
+			if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
+			{
+				rv = mDataSource->Assert(bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
+			}
+
+			inDescription = PR_FALSE;
+			description.Truncate();
+		}
+
+		if ((offset = line.Find(kHREFEquals)) >= 0)
+		{
+			rv = ParseBookmark(line, container, nodeType, getter_AddRefs(bookmarkNode));
+		}
+		else if ((offset = line.Find(kOpenHeading)) >= 0 &&
+			nsString::IsDigit(line.CharAt(offset + 2)))
+		{
+			// XXX Ignore <H1> so that bookmarks root _is_ <H1>
+			if (line.CharAt(offset + 2) != PRUnichar('1'))
+				rv = ParseBookmarkHeader(line, container, nodeType);
+		}
+		else if ((offset = line.Find(kSeparator)) >= 0)
+		{
+			rv = ParseBookmarkSeparator(line, container);
+		}
+		else if ((offset = line.Find(kCloseUL)) >= 0 ||
+			(offset = line.Find(kCloseMenu)) >= 0 ||
+			(offset = line.Find(kCloseDL)) >= 0)
+		{
+			return ParseHeaderEnd(line);
+		}
+		else if ((offset = line.Find(kOpenUL)) >= 0 ||
+			(offset = line.Find(kOpenMenu)) >= 0 ||
+			(offset = line.Find(kOpenDL)) >= 0)
+		{
+			rv = ParseHeaderBegin(line, container);
+		}
+		else if ((offset = line.Find(kOpenDD)) >= 0)
+		{
+			inDescription = PR_TRUE;
+			line.Cut(0, offset+sizeof(kOpenDD)-1);
+			description = line;
+		}
+		else
+		{
+			// XXX Discard the line?
+		}
+	}
+	return(rv);
 }
 
 
@@ -396,9 +445,8 @@ BookmarkParser::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
 
 
 nsresult
-BookmarkParser::ParseBookmark(const nsString& aLine,
-							  nsCOMPtr<nsIRDFContainer>& aContainer,
-							  nsIRDFResource *nodeType)
+BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer,
+				nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode)
 {
     NS_PRECONDITION(aContainer != nsnull, "null ptr");
     if (! aContainer)
@@ -530,7 +578,8 @@ BookmarkParser::ParseBookmark(const nsString& aLine,
 							 lastVisitDate,
 							 lastModifiedDate,
 							 cShortcutURL,
-							 nodeType);
+							 nodeType,
+							 bookmarkNode);
 		}
 		delete [] cShortcutURL;
 	}
@@ -550,7 +599,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
                             PRInt32          aLastVisitDate,
                             PRInt32          aLastModifiedDate,
                             const char*      aShortcutURL,
-                            nsIRDFResource*  aNodeType)
+                            nsIRDFResource*  aNodeType,
+                            nsIRDFResource** bookmarkNode)
 {
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
@@ -559,6 +609,12 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return rv;
+	}
+
+	if (bookmarkNode)
+	{
+		*bookmarkNode = bookmark;
+		NS_ADDREF(*bookmarkNode);
 	}
 
 	if (nsnull != mIEFavoritesRoot)
@@ -734,8 +790,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 
 
 nsresult
-BookmarkParser::ParseBookmarkSeparator(const nsString& aLine,
-									   nsCOMPtr<nsIRDFContainer>& aContainer)
+BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer)
 {
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	separator;
@@ -762,8 +817,7 @@ BookmarkParser::ParseBookmarkSeparator(const nsString& aLine,
 
 
 nsresult
-BookmarkParser::ParseHeaderBegin(const nsString& aLine,
-								 nsCOMPtr<nsIRDFContainer>& aContainer)
+BookmarkParser::ParseHeaderBegin(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer)
 {
     return NS_OK;
 }
@@ -1102,7 +1156,7 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	if (NS_FAILED(rv)) return rv;
 
 	rv = parser.AddBookmark(container, aURI, aOptionalTitle,
-							0L, 0L, 0L, nsnull, kNC_Bookmark);
+							0L, 0L, 0L, nsnull, kNC_Bookmark, nsnull);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -1642,14 +1696,11 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 				nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(iSupports);
 				if (!child)	break;
 
-				PRBool	isIERoot = PR_FALSE, isContainer = PR_FALSE;
-				if (child.get() == kNC_IEFavoritesRoot)
+				PRBool	isContainer = PR_FALSE;
+				if (child.get() != kNC_IEFavoritesRoot)
 				{
-					if (isIERoot == PR_FALSE)
+					if (NS_SUCCEEDED(rv = gRDFC->IsContainer(ds, child, &isContainer)))
 					{
-						if (NS_SUCCEEDED(rv = gRDFC->IsContainer(ds, child, &isContainer)))
-						{
-						}
 					}
 				}
 
@@ -1700,8 +1751,11 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						if (url)
 						{
 							nsAutoString	uri(url);
-							// XXX What's the best way to determine if its a separator?
-							if (uri.Find(kURINC_BookmarksRoot) == 0)
+
+							PRBool		isBookmarkSeparator = PR_FALSE;
+							if (NS_SUCCEEDED(mInner->HasAssertion(child, kRDF_type,
+								kNC_BookmarkSeparator, PR_TRUE, &isBookmarkSeparator)) &&
+								(isBookmarkSeparator == PR_TRUE) )
 							{
 								// its a separator
 								strm << "<HR>\n";
@@ -1729,6 +1783,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 								// output title
 								if (name)	strm << name;
 								strm << "</A>\n";
+								
+								// output description (if one exists)
+								WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_FALSE);
 							}
 						}
 					}
@@ -1775,9 +1832,28 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 					{
 						strm << " ";
 					}
-					strm << htmlAttrib;
-					strm << attribute;
-					strm << "\"";
+					if (property == kNC_Description)
+					{
+						if (literalString.Length() > 0)
+						{
+							char *escapedAttrib = nsEscapeHTML(attribute);
+							if (escapedAttrib)
+							{
+								strm << htmlAttrib;
+								strm << escapedAttrib;
+								strm << "\n";
+
+								delete []escapedAttrib;
+								escapedAttrib = nsnull;
+							}
+						}
+					}
+					else
+					{
+						strm << htmlAttrib;
+						strm << attribute;
+						strm << "\"";
+					}
 					delete [] attribute;
 					attribute = nsnull;
 				}
