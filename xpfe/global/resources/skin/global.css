@@ -20,6 +20,18 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 @namespace html url("http://www.w3.org/TR/REC-html40"); 
 
+html|* {
+  border: 1px solid green !important;
+}
+
+html|form {
+  border: none !important;
+}
+
+titledbutton {
+  border: 1px solid purple !important;
+}
+
 /**********************************
  * Window
  **********************************/
@@ -698,6 +710,12 @@ title
 }
 
 title > *
+{
+   margin-left: 5px;
+   margin-right: 5px;
+}
+
+title > html|*
 {
    margin-left: 3px;
    margin-right: 3px;
