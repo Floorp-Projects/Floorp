@@ -55,7 +55,6 @@ public:
 
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 //override of nsFrame method
   NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
                                            PRBool inHint,
@@ -174,17 +173,6 @@ nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRang
   {
     child->SetSelected(aPresContext,aRange, aSelected,aSpread);//dont worry about result. there are more frames to come
     result = child->GetNextSibling(&child);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
-{
-  nsIFrame* frame = mFrames.FirstChild();
-  while (nsnull != frame) {
-    frame->FindTextRuns(aLineLayout);
-    frame->GetNextSibling(&frame);
   }
   return NS_OK;
 }

@@ -53,7 +53,6 @@
 #include "nsIWordBreaker.h"
 
 #include "nsITextContent.h"
-#include "nsTextRun.h"
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
 #include "nsLayoutAtoms.h"
@@ -431,7 +430,6 @@ public:
                                 nsIFrame*               *outChildFrame);
 
   // nsIHTMLReflow
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -2609,17 +2607,6 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   }
 }
 
-NS_IMETHODIMP
-nsTextFrame::FindTextRuns(nsLineLayout& aLineLayout)
-{
-  nsIFrame* prevInFlow;
-  GetPrevInFlow(&prevInFlow);
-  if (nsnull == prevInFlow) {
-    aLineLayout.AddText(this);
-  }
-  return NS_OK;
-}
-
 //---------------------------------------------------
 // Uses a binary search for find where the cursor falls in the line of text
 // It also keeps track of the part of the string that has already been measured
@@ -3978,7 +3965,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         // There is room for this word fragment. It's possible that
         // this word fragment is the end of the text-run. If it's not
         // then we continue with the look-ahead processing.
-        nsIFrame* next = lineLayout.FindNextText(this);
+        nsIFrame* next = lineLayout.FindNextText(aPresContext, this);
         if (nsnull != next) {
 #ifdef DEBUG_WORD_WRAPPING
           nsAutoString tmp(aTx.GetWordBuffer(), lastWordLen);
@@ -4503,7 +4490,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
     }
 
     // Move on to the next frame in the text-run
-    aNextFrame = aLineLayout.FindNextText(aNextFrame);
+    aNextFrame = aLineLayout.FindNextText(aPresContext, aNextFrame);
   }
 
  done:;
@@ -4691,6 +4678,9 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   // Output the tag
   IndentBy(out, aIndent);
   ListTag(out);
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", mParent);
+#endif
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {

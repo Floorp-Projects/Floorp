@@ -78,7 +78,6 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 
   static nsIID kInlineFrameCID;
 

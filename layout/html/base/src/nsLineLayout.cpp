@@ -61,42 +61,6 @@
 #undef REALLY_NOISY_TRIM
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsTextRun);
-
-nsTextRun::nsTextRun()
-{
-  MOZ_COUNT_CTOR(nsTextRun);
-  mNext = nsnull;
-}
-
-nsTextRun::~nsTextRun()
-{
-  MOZ_COUNT_DTOR(nsTextRun);
-}
-
-#ifdef DEBUG
-void
-nsTextRun::List(FILE* out, PRInt32 aIndent)
-{
-  PRInt32 i;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  PRInt32 n = mArray.Count();
-  fprintf(out, "%p: count=%d <", this, n);
-  for (i = 0; i < n; i++) {
-    nsIFrame* text = (nsIFrame*) mArray.ElementAt(i);
-    nsAutoString tmp;
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(text->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      frameDebug->GetFrameName(tmp);
-      fputs(tmp, out);
-    }
-    printf("@%p ", text);
-  }
-  fputs(">\n", out);
-}
-#endif
-
 //----------------------------------------------------------------------
 
 #define PLACED_LEFT  0x1
@@ -128,8 +92,6 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   mPlacedFloaters = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = mBottomEdge = 0;
-  mReflowTextRuns = nsnull;
-  mTextRun = nsnull;
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few
@@ -142,9 +104,6 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   mCurrentSpan = mRootSpan = nsnull;
   mSpanDepth = 0;
 
-  mTextRuns = nsnull;
-  mTextRunP = &mTextRuns;
-  mNewTextRun = nsnull;
   SetFlag(LL_KNOWSTRICTMODE, PR_FALSE);
 }
 
@@ -153,9 +112,6 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsLineLayout);
   
-  mTextRuns = nsnull;
-  mTextRunP = &mTextRuns;
-  mNewTextRun = nsnull;
   mRootSpan = nsnull;
   mSpanFreeList = nsnull;
   mFrameFreeList = nsnull;
@@ -166,7 +122,6 @@ nsLineLayout::~nsLineLayout()
   MOZ_COUNT_DTOR(nsLineLayout);
 
   NS_ASSERTION(nsnull == mRootSpan, "bad line-layout user");
-  nsTextRun::DeleteTextRuns(mTextRuns);
 
   // Free up all of the per-span-data items that were allocated on the heap
   PerSpanData* psd = mSpanFreeList;
@@ -2828,95 +2783,94 @@ nsLineLayout::ForgetWordFrame(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsLineLayout::FindNextText(nsIFrame* aFrame)
+nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
-  // Only the first-in-flows are present in the text run list so
-  // backup from the argument frame to its first-in-flow.
+  // Grovel through the frame hierarchy to find a text frame that is
+  // "adjacent" to aFrame.
+
+  // So this is kind of funky. During reflow, overflow frames will
+  // have their parent pointers set up lazily. We assume that, on
+  // entry, aFrame has it's parent pointer set correctly (as do all of
+  // its ancestors). Starting from that, we need to make sure that as
+  // we traverse through frames trying to find the next text frame, we
+  // leave the frames with their parent pointers set correctly, so the
+  // *next* time we come through here, we're good to go.
+
+  // Build a path from the enclosing block frame down to aFrame. We'll
+  // use this to walk the frame tree. (XXXwaterson if I was clever, I
+  // wouldn't need to build this up before hand, and could incorporate
+  // this logic into the walking code directly.)
+  nsAutoVoidArray stack;
   for (;;) {
-    nsIFrame* prevInFlow;
-    aFrame->GetPrevInFlow(&prevInFlow);
-    if (nsnull == prevInFlow) {
+    stack.InsertElementAt(aFrame, 0);
+
+    aFrame->GetParent(&aFrame);
+
+    NS_ASSERTION(aFrame != nsnull, "wow, no block frame found");
+    if (! aFrame)
       break;
-    }
-    aFrame = prevInFlow;
+
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+
+    if (nsLayoutAtoms::blockFrame == frameType.get())
+      break;
   }
 
-  // Now look for the frame that follows aFrame's first-in-flow
-  nsTextRun* run = mReflowTextRuns;
-  while (nsnull != run) {
-    PRInt32 ix = run->mArray.IndexOf(aFrame);
-    if (ix >= 0) {
-      if (ix < run->mArray.Count() - 1) {
-        return (nsIFrame*) run->mArray[ix + 1];
-      }
+  // Using the path we've built up, walk the frame tree looking for
+  // the text frame that follows aFrame.
+  PRInt32 count;
+  while ((count = stack.Count()) != 0) {
+    PRInt32 lastIndex = count - 1;
+    nsIFrame* top = NS_STATIC_CAST(nsIFrame*, stack.ElementAt(lastIndex));
+
+    nsIFrame* next;
+    top->GetNextSibling(&next);
+
+    if (! next) {
+      // No next. Pop the top element.
+      stack.RemoveElementAt(lastIndex);
+      continue;
     }
-    run = run->mNext;
+
+    // We know top's parent is good, but next's might not be. So let's
+    // set it to be sure.
+    nsIFrame* parent;
+    top->GetParent(&parent);
+    next->SetParent(parent);
+
+    // Save next at the top of the stack...
+    stack.ReplaceElementAt(next, lastIndex);
+
+    // ...and prowl down to next's deepest child
+    for (;;) {
+      nsIFrame* child;
+      next->FirstChild(aPresContext, nsnull, &child);
+
+      if (! child)
+        break;
+
+      stack.AppendElement(child);
+      next = child;
+    }
+
+    // Ignore continuing frames
+    nsIFrame* prevInFlow;
+    next->GetPrevInFlow(&prevInFlow);
+    if (prevInFlow)
+      continue;
+
+    // If this is a text frame, return it.
+    nsCOMPtr<nsIAtom> frameType;
+    next->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::textFrame == frameType.get())
+      return next;
   }
+
+  // If we get here, then there are no more text frames in this block.
   return nsnull;
 }
 
-nsresult
-nsLineLayout::AddText(nsIFrame* aTextFrame)
-{
-  if (nsnull == mNewTextRun) {
-    mNewTextRun = new nsTextRun();
-    if (nsnull == mNewTextRun) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    *mTextRunP = mNewTextRun;
-    mTextRunP = &mNewTextRun->mNext;
-  }
-#ifdef DEBUG_ADD_TEXT
-  {
-    // Check that text-frame is not already there
-    PRInt32 ix = mNewTextRun->mArray.IndexOf((void*)aTextFrame);
-    NS_ASSERTION(ix < 0, "text frame already in text run");
-  }
-#endif
-  mNewTextRun->mArray.AppendElement(aTextFrame);/* XXX out-of-memory */
-  return NS_OK;
-}
-
-void
-nsLineLayout::EndTextRun()
-{
-  if (mNewTextRun) {
-    PRInt32 numTextInRun = mNewTextRun->mArray.Count();
-    if (numTextInRun < 2) {
-      // Don't bother remembering empty text-runs: reset the array
-      // back to zero elements. This effectively prepares this
-      // text-run for the next round. If it turns out there is no next
-      // round then we will get rid of it later in TakeTextRuns.
-      mNewTextRun->mArray.Clear();
-    }
-  }
-  mNewTextRun = nsnull;
-}
-
-nsTextRun*
-nsLineLayout::TakeTextRuns()
-{
-  nsTextRun* result = mTextRuns;
-  mTextRuns = nsnull;
-  mTextRunP = &mTextRuns;
-  mNewTextRun = nsnull;
-
-  // Eliminate any text-runs that are empty
-  nsTextRun** rp = &result;
-  nsTextRun* run = *rp;
-  while (run) {
-    if (0 == run->mArray.Count()) {
-      *rp = run->mNext;
-      delete run;
-    }
-    else {
-      rp = &run->mNext;
-    }
-    run = *rp;
-  }
-
-  return result;
-}
 
 PRBool
 nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)

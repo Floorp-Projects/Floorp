@@ -1685,13 +1685,6 @@ nsFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::FindTextRuns(nsLineLayout& aLineLayout)
-{
-  aLineLayout.EndTextRun();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 {
   aUsedSpace = 0;
@@ -2073,7 +2066,9 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
-
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", mParent);
+#endif
   nsIView*  view;
   GetView(aPresContext, &view);
   if (view) {
