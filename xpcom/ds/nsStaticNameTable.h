@@ -37,8 +37,7 @@
 #ifndef nsStaticNameTable_h___
 #define nsStaticNameTable_h___
 
-#include "nsHashtable.h"
-
+#include "pldhash.h"
 /* This class supports case insensitve lookup. 
  *
  * It differs from atom tables: 
@@ -70,7 +69,7 @@ public:
 
 private:
   nsDependentCString*   mNameArray;
-  nsHashtable* mNameTable;
+  PLDHashTable mNameTable;
   PRInt32      mCount;
   nsDependentCString    mNullStr;
 };

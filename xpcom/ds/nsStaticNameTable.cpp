@@ -36,13 +36,57 @@
 
 #include "nscore.h"
 #include "nsString.h"
-#include "nsStaticNameTable.h"
 #include "nsReadableUtils.h"
 
+#define PL_ARENA_CONST_ALIGN_MASK 3
+#include "nsStaticNameTable.h"
+
+struct nameTableEntry : public PLDHashEntryHdr
+{
+  // no ownership here!
+  const char *mKey;
+  PRInt32 mIndex;
+};
+
+PR_STATIC_CALLBACK(PRBool)
+matchNameKeys(PLDHashTable*, const PLDHashEntryHdr* aHdr,
+              const void* key)
+{
+  const nameTableEntry* entry =
+    NS_STATIC_CAST(const nameTableEntry *, aHdr);
+  const char *keyValue = NS_STATIC_CAST(const char*, key);
+
+  return (strcmp(entry->mKey, keyValue)==0);
+
+}
+
+PR_STATIC_CALLBACK(const void*)
+getNameKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
+{
+  nameTableEntry* entry =
+    NS_STATIC_CAST(nameTableEntry*, aHdr);
+
+  return entry->mKey;
+}
+
+struct PLDHashTableOps nametable_HashTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    getNameKey,
+    PL_DHashStringKey,
+    matchNameKeys,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull,
+};
+
+
 nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
-  : mNameArray(nsnull), mNameTable(nsnull), mCount(0), mNullStr("")
+  : mNameArray(nsnull), mCount(0), mNullStr("")
 {
     MOZ_COUNT_CTOR(nsStaticCaseInsensitiveNameTable);
+    mNameTable.ops = nsnull;
 }  
 
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
@@ -52,7 +96,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
       mNameArray[index].~nsDependentCString();
     }
     nsMemory::Free((void*)mNameArray);
-    delete mNameTable;
+    PL_DHashTableFinish(&mNameTable);
     MOZ_COUNT_DTOR(nsStaticCaseInsensitiveNameTable);
 }  
 
@@ -60,15 +104,15 @@ PRBool
 nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
 {
     NS_ASSERTION(!mNameArray, "double Init");  
-    NS_ASSERTION(!mNameTable, "double Init");  
+    NS_ASSERTION(!mNameTable.ops, "double Init");  
     NS_ASSERTION(Names, "null name table");
     NS_ASSERTION(Count, "0 count");
 
     mCount = Count;
     mNameArray = (nsDependentCString*)nsMemory::Alloc(Count * sizeof(nsDependentCString));
-    // XXX best bucket count heuristic?
-    mNameTable = new nsHashtable(Count<16 ? Count : Count<128 ? Count/4 : 128);
-    if (!mNameArray || !mNameTable) {
+    PL_DHashTableInit(&mNameTable, &nametable_HashTableOps, nsnull,
+                      sizeof(nameTableEntry), Count);
+    if (!mNameArray || !mNameTable.ops) {
         return PR_FALSE;
     }
 
@@ -86,29 +130,38 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
 #endif
         // use placement-new to initialize the string object
         new (&mNameArray[index]) nsDependentCString(raw);
-        nsCStringKey key(raw, len, nsCStringKey::NEVER_OWN);
-        mNameTable->Put(&key, (void*)(index+1)); // to make 0 != nsnull
+
+        nameTableEntry *entry =
+          NS_STATIC_CAST(nameTableEntry*,
+                         PL_DHashTableOperate(&mNameTable, raw, PL_DHASH_ADD));
+        
+        NS_ASSERTION(entry->mKey == 0, "Entry already exists!");
+
+        entry->mKey = raw;      // not owned!
+        entry->mIndex = index;
     }
     return PR_TRUE;
 }  
 
 inline PRInt32
 LookupLowercasedKeyword(const nsACString& aLowercasedKeyword, 
-                        nsHashtable* aTable)
+                        PLDHashTable& aTable)
 {
     const nsPromiseFlatCString& flatString = PromiseFlatCString(aLowercasedKeyword);   
-    nsCStringKey key(flatString);
-
-    void* val = aTable->Get(&key);
-    return val ? NS_PTR_TO_INT32(val) - 1 : 
-                 nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+    nameTableEntry *entry =
+      NS_STATIC_CAST(nameTableEntry*,
+                     PL_DHashTableOperate(&aTable, flatString.get(), PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_FREE(entry))
+      return nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+    
+    return entry->mIndex;
 }  
 
 PRInt32
 nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");  
-    NS_ASSERTION(mNameTable, "not inited");  
+    NS_ASSERTION(mNameTable.ops, "not inited");  
     NS_ASSERTION(mCount,     "not inited");
 
     nsCAutoString strLower(aName);
@@ -120,7 +173,7 @@ PRInt32
 nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");  
-    NS_ASSERTION(mNameTable, "not inited");  
+    NS_ASSERTION(mNameTable.ops, "not inited");  
     NS_ASSERTION(mCount,     "not inited");
    
     nsCAutoString strLower;
@@ -133,7 +186,7 @@ const nsAFlatCString&
 nsStaticCaseInsensitiveNameTable::GetStringValue(PRInt32 index)
 {
     NS_ASSERTION(mNameArray, "not inited");  
-    NS_ASSERTION(mNameTable, "not inited");  
+    NS_ASSERTION(mNameTable.ops, "not inited");  
     NS_ASSERTION(mCount,     "not inited");
     
     if ((NOT_FOUND < index) && (index < mCount)) {
