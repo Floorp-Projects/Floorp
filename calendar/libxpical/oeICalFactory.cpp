@@ -40,7 +40,6 @@
 #include "oeICalContainerImpl.h"
 #include "oeICalEventImpl.h"
 #include "oeDateTimeImpl.h"
-#include "oeICalStartupHandler.h"
 
 #include "nsIGenericFactory.h"
 
@@ -51,7 +50,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalContainerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalTodoImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeDateTimeImpl)
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalStartupHandler)
 
 static const nsModuleComponentInfo pModuleInfo[] =
 {
