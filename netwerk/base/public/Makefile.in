@@ -44,7 +44,6 @@ EXPORTS =			    \
         nsISocketTransportService.h \
 	nsIHeader.h		    \
 	nsIProxy.h		    \
-	nsNetModuleMgr.h            \
 	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
