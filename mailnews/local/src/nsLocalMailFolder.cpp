@@ -259,7 +259,9 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	else if(name == "Templates")
 		folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 
-	mSubFolders->AppendElement(folder);
+	nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
+	if(folder)
+		mSubFolders->AppendElement(supports);
 	folder->SetParent(this);
 	*child = folder;
 	NS_ADDREF(*child);
