@@ -140,6 +140,18 @@
   #define _MAX_PATH       256
 #endif
 
+#ifdef XP_WIN
+  #define DIR_SEPARATOR "\\"
+#endif
+
+#ifdef XP_UNIX
+  #define DIR_SEPARATOR "/"
+#endif
+
+#ifdef XP_MAC
+  #define DIR_SEPARATOR ":"
+#endif
+  
 /*****************************************************/
 
 // File utilities
