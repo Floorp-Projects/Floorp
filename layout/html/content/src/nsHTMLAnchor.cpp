@@ -159,7 +159,7 @@ nsHTMLAnchor::GetAccessKey(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetAccessKey(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::accesskey, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::accesskey, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -172,7 +172,7 @@ nsHTMLAnchor::GetCharset(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetCharset(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::charset, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -185,7 +185,7 @@ nsHTMLAnchor::GetCoords(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetCoords(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::coords, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::coords, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -198,7 +198,7 @@ nsHTMLAnchor::GetHref(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetHref(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::href, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::href, aValue, eSetAttrNotify_Render);
 }
 
 NS_IMETHODIMP
@@ -211,7 +211,7 @@ nsHTMLAnchor::GetHreflang(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetHreflang(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::hreflang, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::hreflang, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -224,7 +224,7 @@ nsHTMLAnchor::GetName(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetName(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::name, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::name, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -237,7 +237,7 @@ nsHTMLAnchor::GetRel(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetRel(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::rel, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::rel, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -250,7 +250,7 @@ nsHTMLAnchor::GetRev(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetRev(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::rev, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::rev, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -263,7 +263,7 @@ nsHTMLAnchor::GetShape(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetShape(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::shape, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::shape, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -284,7 +284,7 @@ NS_IMETHODIMP
 nsHTMLAnchor::SetTabIndex(PRInt32 aValue)
 {
   nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return mInner.SetAttribute(nsHTMLAtoms::tabindex, value, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::tabindex, value, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -297,7 +297,7 @@ nsHTMLAnchor::GetTarget(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetTarget(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::target, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::target, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
@@ -310,18 +310,20 @@ nsHTMLAnchor::GetType(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetType(const nsString& aValue)
 {
-  return mInner.SetAttribute(nsHTMLAtoms::type, aValue, PR_TRUE);
+  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_None);
 }
 
 NS_IMETHODIMP
 nsHTMLAnchor::Blur()
 {
+  // XXX write me
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchor::Focus()
 {
+  // XXX write me
   return NS_OK;
 }
 
