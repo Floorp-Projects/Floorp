@@ -459,6 +459,8 @@ nsEmbedCString::GrowCapacity(size_type aNewCapacity)
 // constructors of nsDependentSubstring work in embed builds.
 // See bug 196506
 
+#ifndef nsReadableUtils_h___
+
 template <class CharT> class CalculateLength
   {
     public:
@@ -498,3 +500,5 @@ Distance( const nsACString::const_iterator& aStart, const nsACString::const_iter
   {
     return Distance_Impl(aStart, aEnd);
   }
+
+#endif // !defined(nsReadableUtils_h___)
