@@ -580,6 +580,7 @@ void
 nsWebCrawler::LoadNextURL()
 {
   if (0 != mDelay) {
+    NS_IF_RELEASE(mTimer);
     NS_NewTimer(&mTimer);
     mTimer->Init(TimerCallBack, (void *)this, mDelay * 1000);
   }
@@ -588,18 +589,22 @@ nsWebCrawler::LoadNextURL()
     while (0 != mPendingURLs.Count()) {
       nsString* url = (nsString*) mPendingURLs.ElementAt(0);
       mPendingURLs.RemoveElementAt(0);
-      if (OkToLoad(*url)) {
-        RecordLoadedURL(*url);
+      if (nsnull != url) {
+        if (OkToLoad(*url)) {
+          RecordLoadedURL(*url);
 
-        nsIWebShell* webShell;
-        mBrowser->GetWebShell(webShell);
-        webShell->LoadURL(*url);
-        NS_RELEASE(webShell);
+          nsIWebShell* webShell;
+          mBrowser->GetWebShell(webShell);
+          webShell->LoadURL(*url);
+          NS_RELEASE(webShell);
 
-        if (mMaxPages > 0) {
-          --mMaxPages;
+          if (mMaxPages > 0) {
+            --mMaxPages;
+          }
+          delete url;
+          return;
         }
-        return;
+        delete url;
       }
     }
   }
