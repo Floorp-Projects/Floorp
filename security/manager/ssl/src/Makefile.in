@@ -65,7 +65,7 @@ CPPSRCS = 				\
 	nsKeygenHandler.cpp		\
 	$(NULL)
 
-REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2
+REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2 pippki
 
 include $(topsrcdir)/config/rules.mk
 
