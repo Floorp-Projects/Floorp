@@ -112,7 +112,7 @@ void CBrowserFrame::BrowserFrameGlueObj::UpdateCurrentURI(nsIURI *aLocation)
 	if(aLocation)
 	{
 		nsXPIDLCString uriString;
-		aLocation->GetSpec(getter_Copies(uriString));
+		aLocation->GetSpec(uriString);
 
 		pThis->m_wndUrlBar.SetCurrentURL(uriString.get());
 	}

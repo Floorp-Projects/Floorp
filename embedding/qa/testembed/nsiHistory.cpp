@@ -361,11 +361,12 @@ void CNsIHistory::GetURIHistTest(nsIHistoryEntry* theHistoryEntry)
 	else
 	{
 		RvTestResult(rv, "GetURI() (URI attribute) test", 1);
-		rv = theUri->GetSpec(&uriSpec);
+		nsCAutoString uriString;
+		rv = theUri->GetSpec(uriString);
 		if (NS_FAILED(rv))
-			QAOutput("We didn't get the uriSpec.", 1);
+			QAOutput("We didn't get the uriString.", 1);
 		else
-			FormatAndPrintOutput("The SH Url = ", uriSpec, 2);
+			FormatAndPrintOutput("The SH Url = ", uriString, 2);
 	}
 }
 
@@ -423,11 +424,12 @@ void CNsIHistory::SimpleEnumTest(nsISimpleEnumerator *theSimpleEnum)
 	 if (!nextHistoryEntry)
 		continue;
 	 rv = nextHistoryEntry->GetURI(getter_AddRefs(theUri));
-	 rv = theUri->GetSpec(&uriSpec);
-	 if (!uriSpec)
-		QAOutput("uriSpec for GetSpec() invalid. Test failed.", 1);
+	 nsCAutoString uriString;
+	 rv = theUri->GetSpec(uriString);
+	 if (NS_FAILED(rv))
+		QAOutput("uriString for GetSpec() invalid. Test failed.", 1);
 	 else
-		FormatAndPrintOutput("The SimpleEnum URL = ", uriSpec, 2);		 
+		FormatAndPrintOutput("The SimpleEnum URL = ", uriString, 2);		 
   } 
 }
 

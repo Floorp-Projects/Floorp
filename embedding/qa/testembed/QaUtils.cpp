@@ -161,6 +161,31 @@ void FormatAndPrintOutput(const char *theInput, const char *theVar, int outputMo
 	}
 }
 
+void FormatAndPrintOutput(const char *theInput, nsCAutoString theVar, int outputMode)
+{
+	nsCString outStr;
+	CString strMsg;
+
+	outStr = theInput;
+	outStr += theVar;
+
+	strMsg = outStr.get();
+
+	switch (outputMode)
+	{
+	case 0:
+		AfxMessageBox(strMsg); 
+		break;
+	case 1:
+		WriteToOutputFile(outStr.get());
+		break;
+	case 2:
+		WriteToOutputFile(outStr.get());
+		AfxMessageBox(strMsg); 
+		break;
+	}
+}
+
 void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode) 
 {
 	nsCString outStr;
@@ -227,11 +252,11 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 void GetTheUri(nsIURI *theUri, int displayMethod)
 {
 	nsresult rv;
-    char *uriSpec;
+	nsCAutoString uriString;
 
-	rv = theUri->GetSpec(&uriSpec);
+	rv = theUri->GetSpec(uriString);
     RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
-    FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
+    FormatAndPrintOutput("the uri = ", uriString, displayMethod);
 }
 
 // used for web progress listener in BrowserImplWebPrgrsLstnr.cpp
