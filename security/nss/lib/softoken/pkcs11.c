@@ -3288,12 +3288,18 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
     PORT_Assert(slot->keyDB);
     if (!keyData->strict && keyData->id) {
 	SECItem result;
+	PRBool haveMatch;
 	unsigned char hashKey[SHA1_LENGTH];
 	result.data = hashKey;
 	result.len = sizeof(hashKey);
 
-	SHA1_HashBuf( hashKey, key->data, key->size );
-	if (SECITEM_ItemsAreEqual(keyData->id,&result)) {
+	if (keyData->id->len == 0) {
+	    haveMatch = PR_TRUE; /* taking any key */
+	} else {
+	    SHA1_HashBuf( hashKey, key->data, key->size ); /* match id */
+	    haveMatch = SECITEM_ItemsAreEqual(keyData->id,&result);
+	}
+	if (haveMatch) {
 	    if (keyData->classFlags & NSC_PRIVATE)  {
 		pk11_addHandle(keyData->searchHandles,
 			pk11_mkHandle(slot,&tmpDBKey,PK11_TOKEN_TYPE_PRIV));
