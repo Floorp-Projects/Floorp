@@ -13,7 +13,6 @@ REQUIRES	= ipcd \
 		  nspr \
 		  string \
 		  xpcom \
-		  necko \
 		  $(NULL)
 
 CPPSRCS = \
@@ -26,7 +25,6 @@ include $(topsrcdir)/config/config.mk
 
 LIBS = \
   $(EXTRA_DSO_LIBS) \
-  $(MOZ_JS_LIBS) \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NULL)

@@ -6,11 +6,17 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 
-#include "nsIURL.h"
-#include "nsNetCID.h"
+#include "nsXPCOMCID.h"
+#include "nsILocalFile.h"
 
 #include "nsString.h"
 #include "prmem.h"
+
+#if defined( XP_WIN ) || defined( XP_OS2 )
+#define TEST_PATH "c:"
+#else
+#define TEST_PATH "/tmp"
+#endif
 
 #define RETURN_IF_FAILED(rv, step) \
     PR_BEGIN_MACRO \
@@ -21,7 +27,6 @@
     PR_END_MACRO
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
 
@@ -36,85 +41,91 @@ static nsresult DoTest()
 
   PRUint32 remoteClientID = 1;
 
-  nsCOMPtr<nsIURL> url;
-  rv = dcon->CreateInstance(remoteClientID, kStandardURLCID, NS_GET_IID(nsIURL), getter_AddRefs(url)); 
+  nsCOMPtr<nsIFile> file;
+  rv = dcon->CreateInstanceByContractID(remoteClientID,
+                                        NS_LOCAL_FILE_CONTRACTID,
+                                        NS_GET_IID(nsIFile),
+                                        getter_AddRefs(file)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> sup = do_QueryInterface(url, &rv);
+  nsCOMPtr<nsISupports> sup = do_QueryInterface(file, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   printf("*** calling QueryInterface\n");
-  nsCOMPtr<nsIURI> uri = do_QueryInterface(url, &rv);
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NAMED_LITERAL_CSTRING(spec, "http://www.mozilla.org/");
+  nsAutoString path;
+  path.AssignLiteral(TEST_PATH);
 
-  printf("*** calling SetSpec\n");
-  rv = uri->SetSpec(spec);
+  printf("*** calling InitWithNativePath\n");
+  rv = localFile->InitWithPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString buf;
-  rv = uri->GetSpec(buf);
+  nsAutoString buf;
+  rv = file->GetPath(buf);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!buf.Equals(spec))
+  if (!buf.Equals(path))
   {
-    printf("*** GetSpec erroneously returned [%s]\n", buf.get());
+    NS_ConvertUTF16toUTF8 temp(buf);
+    printf("*** GetPath erroneously returned [%s]\n", temp.get());
     return NS_ERROR_FAILURE;
   }
 
-  PRBool match;
-  rv = uri->SchemeIs("http", &match);
-  if (NS_FAILED(rv) || !match)
+  PRBool exists;
+  rv = file->Exists(&exists);
+  if (NS_FAILED(rv))
   {
-    printf("*** SchemeIs test failed [rv=%x]\n", rv);
+    printf("*** Exists test failed [rv=%x]\n", rv);
     return NS_ERROR_FAILURE;
   }
+  printf("File exists? [%d]\n", exists);
 
-  nsCString resolvedSpec;
-  rv = uri->Resolve(NS_LITERAL_CSTRING("index.html"), resolvedSpec);
-  if (NS_FAILED(rv) || !resolvedSpec.EqualsLiteral("http://www.mozilla.org/index.html"))
-  {
-    printf("*** Resolve test failed [rv=%x result=%s]\n", rv, resolvedSpec.get());
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 port;
-  rv = uri->GetPort(&port);
-  if (NS_FAILED(rv) || port != -1)
-  {
-    printf("*** GetPort test failed [rv=%x port=%d]\n", rv, port);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> clonedURI;
-  rv = uri->Clone(getter_AddRefs(clonedURI));
-  if (NS_FAILED(rv) || !clonedURI)
+  nsCOMPtr<nsIFile> clone;
+  rv = file->Clone(getter_AddRefs(clone));
+  if (NS_FAILED(rv))
   {
     printf("*** Clone test failed [rv=%x]\n", rv);
     return NS_ERROR_FAILURE;
   }
 
-  rv = clonedURI->GetSpec(buf);
-  if (NS_FAILED(rv) || !buf.Equals(spec))
+  nsAutoString node;
+  node.AssignLiteral("hello.txt");
+
+  rv = clone->Append(node);
+  if (NS_FAILED(rv))
   {
-    printf("*** Clone test (2) failed [rv=%x buf=%s]\n", rv, buf.get());
+    printf("*** Append test failed [rv=%x]\n", rv);
     return NS_ERROR_FAILURE;
   }
 
-  url = do_QueryInterface(clonedURI, &rv);
+  PRBool match;
+  rv = file->Equals(clone, &match);
   if (NS_FAILED(rv))
   {
-    printf("*** QI test failed [rv=%x]\n", rv);
-    return rv;
+    printf("*** Equals test failed [rv=%x]\n", rv);
+    return NS_ERROR_FAILURE;
+  }
+  printf("Files are equals? [%d]\n", match);
+
+  // now test passing local objects to a remote object
+
+  nsCOMPtr<nsILocalFile> myLocalFile;
+  rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(myLocalFile));
+  if (NS_FAILED(rv))
+  {
+    printf("*** NS_NewLocalFile failed [rv=%x]\n", rv);
+    return NS_ERROR_FAILURE;
   }
 
-  rv = url->SetFilePath(NS_LITERAL_CSTRING("/foo/bar/x.y.html?what"));
+  rv = file->Equals(myLocalFile, &match);
   if (NS_FAILED(rv))
   {
-    printf("*** SetFilePath test failed [rv=%x]\n", rv);
-    return rv;
+    printf("*** second Equals test failed [rv=%x]\n", rv);
+    return NS_ERROR_FAILURE;
   }
+  printf("Files are equals? [%d]\n", match);
 
   printf("*** DoTest completed successfully :-)\n");
   return NS_OK;
@@ -123,6 +134,20 @@ static nsresult DoTest()
 int main(int argc, char **argv)
 {
   nsresult rv;
+
+  PRBool serverMode = PR_FALSE;
+  if (argc > 1)
+  {
+    if (strcmp(argv[1], "-server") == 0)
+    {
+      serverMode = PR_TRUE;
+    }
+    else
+    {
+      printf("usage: %s [-server]\n", argv[0]);
+      return -1;
+    }
+  }
 
   {
     nsCOMPtr<nsIServiceManager> servMan;
@@ -147,13 +172,15 @@ int main(int argc, char **argv)
     RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");
     NS_ADDREF(gIpcServ = ipcServ);
 
-    if (argc > 1) {
-        printf("*** using client name [%s]\n", argv[1]);
-        gIpcServ->AddName(argv[1]);
+    if (!serverMode)
+    {
+      rv = DoTest();
+      RETURN_IF_FAILED(rv, "DoTest()");
     }
-
-    rv = DoTest();
-    RETURN_IF_FAILED(rv, "DoTest()");
+    else
+    {
+      gIpcServ->AddName("DConnectServer");
+    }
 
     PLEvent *ev;
     while (gKeepRunning)
