@@ -1203,9 +1203,8 @@ typedef struct ReplaceData {
     size_t      length;         /* result length, 0 initially */
     jsint       index;          /* index in result of next replacement */
     jsint       leftIndex;      /* left context index in base.str->chars */
+    JSSubString dollarStr;      /* for "$$" interpret_dollar result */
 } ReplaceData;
-
-static JSSubString dollarStr;
 
 static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
@@ -1218,12 +1217,13 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     JS_ASSERT(*dp == '$');
 
     /*
-     * Allow a real backslash (literal "\\") to escape "$1" etc.
+     * Allow a real backslash (literal "\\" before "$1") to escape "$1", e.g.
      * Do this for versions less than 1.5 (ECMA 3) only
      */
-    if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4)
+    if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4) {
         if (dp > JSSTRING_CHARS(rdata->repstr) && dp[-1] == '\\')
             return NULL;
+    }
 
     /* Interpret all Perl match-induced dollar variables. */
     res = &cx->regExpStatics;
@@ -1267,9 +1267,9 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     *skip = 2;
     switch (dc) {
       case '$':
-        dollarStr.chars = dp;
-        dollarStr.length = 1;
-        return &dollarStr;
+        rdata->dollarStr.chars = dp;
+        rdata->dollarStr.length = 1;
+        return &rdata->dollarStr;
       case '&':
         return &res->lastMatch;
       case '+':
