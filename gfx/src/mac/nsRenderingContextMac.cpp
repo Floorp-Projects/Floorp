@@ -293,7 +293,7 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	  PRInt32 cnt = mGSArray->Count();
 	  for (PRInt32 i = 0; i < cnt; i ++)
 	  {
-	    GraphicState* gs = (GraphicState*)mGSArray->ElementAt(cnt);
+	    GraphicState* gs = (GraphicState*)mGSArray->ElementAt(i);
     	if (gs)
     		delete gs;
 	  }
@@ -308,7 +308,7 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	  PRInt32 cnt = mGSStack->Count();
 	  for (PRInt32 i = 0; i < cnt; i ++)
 	  {
-	    GraphicState* gs = (GraphicState*)mGSStack->ElementAt(cnt);
+	    GraphicState* gs = (GraphicState*)mGSStack->ElementAt(i);
     	if (gs)
     		delete gs;
 	  }
