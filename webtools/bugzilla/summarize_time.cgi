@@ -204,9 +204,9 @@ sub get_blocker_ids_unique {
 
 sub get_blocker_ids_deep {
     my ($bug_id, $ret) = @_;
-    my @deps = Bugzilla::Bug::EmitDependList("blocked", "dependson", $bug_id);
-    push @{$ret}, @deps;
-    foreach $bug_id (@deps) {
+    my $deps = Bugzilla::Bug::EmitDependList("blocked", "dependson", $bug_id);
+    push @{$ret}, @$deps;
+    foreach $bug_id (@$deps) {
         get_blocker_ids_deep($bug_id, $ret);
     }
 }
@@ -238,7 +238,7 @@ sub query_work_by_buglist {
                       bugs.bug_id = longdescs.bug_id 
                       $date_bits } .
             $dbh->sql_group_by('longdescs.bug_id, profiles.login_name',
-                               'bugs.short_desc, bugs.bug_status') . qq{
+                'bugs.short_desc, bugs.bug_status, longdescs.bug_when') . qq{
                ORDER BY longdescs.bug_when};
     my $sth = $dbh->prepare($q);
     $sth->execute(@{$date_values});

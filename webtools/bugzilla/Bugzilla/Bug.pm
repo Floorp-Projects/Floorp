@@ -644,6 +644,7 @@ sub AppendComment ($$$;$$$) {
              undef, $timestamp, $bugid);
 }
 
+# This method is private and is not to be used outside of the Bug class.
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);
     my $dbh = Bugzilla->dbh;
