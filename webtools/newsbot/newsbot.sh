@@ -13,7 +13,7 @@ CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export CVSROOT
 
 # update the newsbot sources
-cvs -d $CVSROOT update -dP
+cvs -q -d $CVSROOT update -dP
 
 
 # Run newsbot if new mail has arrived or the code has been updated.
