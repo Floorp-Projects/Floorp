@@ -417,9 +417,9 @@ nsSelectionMoveCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refC
     return selCont->ScrollLine(PR_TRUE);
   
   // page move commands
-  else if (cmdString.EqualsWithConversion("cmd_scrollPageUp"))
+  else if (cmdString.EqualsWithConversion("cmd_movePageUp"))
     return selCont->PageMove(PR_FALSE, PR_FALSE);
-  else if (cmdString.EqualsWithConversion("cmd_scrollPageDown"))
+  else if (cmdString.EqualsWithConversion("cmd_movePageDown"))
     return selCont->PageMove(PR_TRUE, PR_FALSE);
   else if (cmdString.EqualsWithConversion("cmd_selectPageUp"))
     return selCont->PageMove(PR_FALSE, PR_TRUE);
