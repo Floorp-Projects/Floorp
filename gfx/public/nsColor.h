@@ -62,7 +62,7 @@ extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor);
 // To determin colors based on the background brightness
 extern "C" NS_GFX_(void) NS_GetSpecial3DColors(nscolor aResult[2],
 											   nscolor aBackgroundColor,
-											   nscolor aElementColor);
+											   nscolor aBorderColor);
 
 // Special method to brighten a Color and have it shift to white when
 // fully saturated.
