@@ -140,7 +140,9 @@ private:
     void        SetDirMIMEType(nsString& aString);
     nsresult    Process();
 
+
     virtual nsresult CreateTransport(const char * host, PRInt32 port,
+                                     PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize,
                                      nsITransport** o_pTrans);
 
     void KillControlConnnection();

@@ -353,7 +353,11 @@ nsFtpState::EstablishControlConnection()
         
     nsCOMPtr<nsITransport> transport;
     // build our own
-    rv = CreateTransport(host, mPort, getter_AddRefs(transport)); // the command transport
+    rv = CreateTransport(host, 
+                         mPort, 
+                         FTP_COMMAND_CHANNEL_SEG_SIZE, 
+                         FTP_COMMAND_CHANNEL_MAX_SIZE, 
+                         getter_AddRefs(transport)); // the command transport
     if (NS_FAILED(rv)) return rv;
         
     mState = FTP_READ_BUF;
@@ -1543,7 +1547,11 @@ nsFtpState::R_pasv() {
     const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer();
 
     // now we know where to connect our data channel
-    rv = CreateTransport(hostStr, port, getter_AddRefs(mDPipe)); // the data channel
+    rv = CreateTransport(hostStr, 
+                         port, 
+                         FTP_DATA_CHANNEL_SEG_SIZE, 
+                         FTP_DATA_CHANNEL_MAX_SIZE, 
+                         getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Created Data Transport (%s:%d)\n", this, hostStr, port));
@@ -1993,7 +2001,7 @@ nsFtpState::SetDirMIMEType(nsString& aString) {
 }
 
 nsresult
-nsFtpState::CreateTransport(const char * host, PRInt32 port, nsITransport** o_pTrans)
+nsFtpState::CreateTransport(const char * host, PRInt32 port, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, nsITransport** o_pTrans)
 {
     nsresult rv;
     
@@ -2025,21 +2033,24 @@ nsFtpState::CreateTransport(const char * host, PRInt32 port, nsITransport** o_pT
             if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(proxyType, "socks") == 0) {
                 
                 return sts->CreateTransportOfType("socks", host, port, proxyHost, proxyPort,
-                                                  FTP_COMMAND_CHANNEL_SEG_SIZE,
-                                                  FTP_COMMAND_CHANNEL_MAX_SIZE, o_pTrans);
+                                                  bufferSegmentSize,
+                                                  bufferMaxSize, 
+                                                  o_pTrans);
                 
             }
                 
             return sts->CreateTransport(host, port, proxyHost, proxyPort,
-                                        FTP_COMMAND_CHANNEL_SEG_SIZE,
-                                        FTP_COMMAND_CHANNEL_MAX_SIZE, o_pTrans);
+                                        bufferSegmentSize,
+                                        bufferMaxSize,
+                                        o_pTrans);
                 
         }
     }
     
     return sts->CreateTransport(host, port, nsnull, -1,
-                                FTP_COMMAND_CHANNEL_SEG_SIZE,
-                                FTP_COMMAND_CHANNEL_MAX_SIZE, o_pTrans);
+                                bufferSegmentSize,
+                                bufferMaxSize,
+                                o_pTrans);
 }
 
 nsresult 
