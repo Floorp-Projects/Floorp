@@ -1712,7 +1712,8 @@ wallet_ReadFromFile
   }
 
   for (;;) {
-    nsAutoString item1;
+    static nsAutoString item1;
+    item1.Truncate(0);
     if (NS_FAILED(wallet_GetLine(strm, item1))) {
       /* end of file reached */
       break;
@@ -1727,7 +1728,8 @@ wallet_ReadFromFile
     }
 #endif
 
-    nsAutoString item2;
+    static nsAutoString item2;
+    item2.Truncate(0);
     if (NS_FAILED(wallet_GetLine(strm, item2))) {
       /* unexpected end of file reached */
       break;
@@ -1739,7 +1741,8 @@ wallet_ReadFromFile
       continue;
     }
 
-    nsAutoString item3;
+    static nsAutoString item3;
+    item3.Truncate(0);
     if (NS_FAILED(wallet_GetLine(strm, item3))) {
       /* end of file reached */
       nsVoidArray* dummy = NULL;
@@ -1771,7 +1774,8 @@ wallet_ReadFromFile
       sublist->item = item3;
       itemList->AppendElement(sublist);
       /* add any following items to sublist up to next blank line */
-      nsAutoString dummy2;
+      static nsAutoString dummy2;
+      dummy2.Truncate(0);
       for (;;) {
         /* get next item for sublist */
         item3.SetLength(0);
@@ -1791,7 +1795,7 @@ wallet_ReadFromFile
         if (!sublist) {
           break;
         }
-        sublist->item = nsAutoString (item3);
+        sublist->item = item3;
         itemList->AppendElement(sublist);
       }
     }
@@ -1839,7 +1843,8 @@ wallet_ReadFromURLFieldToSchemaFile
 
   for (;;) {
 
-    nsAutoString item;
+    static nsAutoString item;
+    item.Truncate(0);
     if (NS_FAILED(wallet_GetLine(strm, item))) {
       /* end of file reached */
       break;
@@ -1853,7 +1858,8 @@ wallet_ReadFromURLFieldToSchemaFile
     wallet_WriteToList(item, dummyString, itemList, list, PR_FALSE, placement);
 
     for (;;) {
-      nsAutoString item1;
+      static nsAutoString item1;
+      item1.Truncate(0);
       if (NS_FAILED(wallet_GetLine(strm, item1))) {
         /* end of file reached */
         break;
@@ -1864,7 +1870,8 @@ wallet_ReadFromURLFieldToSchemaFile
         break;
       }
 
-      nsAutoString item2;
+      static nsAutoString item2;
+      item2.Truncate(0);
       if (NS_FAILED(wallet_GetLine(strm, item2))) {
         /* unexpected end of file reached */
         break;
@@ -1873,7 +1880,8 @@ wallet_ReadFromURLFieldToSchemaFile
       nsVoidArray* dummyList = NULL;
       wallet_WriteToList(item1, item2, dummyList, itemList, PR_FALSE, placement);
 
-      nsAutoString item3;
+      static nsAutoString item3;
+      item3.Truncate(0);
       if (NS_FAILED(wallet_GetLine(strm, item3))) {
         /* end of file reached */
         strm.close();
@@ -2332,6 +2340,7 @@ wallet_FetchFromNetCenter() {
 /*
  * initialization for wallet session (done only once)
  */
+
 static void
 wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
   static PRBool wallet_tablesInitialized = PR_FALSE;
@@ -2366,6 +2375,9 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
 #endif
+//    printf("******** start profile\n");
+//             ProfileStart();
+
     wallet_Clear(&wallet_FieldToSchema_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_URLFieldToSchema_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_SchemaConcat_list); /* otherwise we will duplicate the list */
@@ -2376,6 +2388,9 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
     wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile(URLFieldSchemaFileName, wallet_URLFieldToSchema_list);
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE);
+
+//    ProfileStop();
+//   printf("****** end profile\n");
     wallet_tablesInitialized = PR_TRUE;
   }
 
