@@ -7,6 +7,7 @@ classic.jar:
 +   skin/classic/messenger/primaryToolbar.css       (primaryToolbar.css)
 +   skin/classic/messenger/accountCentral.css       (accountCentral.css)
 +   skin/classic/messenger/messageHeader.css        (messageHeader.css)
++   skin/classic/messenger/messageBody.css          (messageBody.css)
 +   skin/classic/messenger/mailWindow1.css          (mailWindow1.css)
 +   skin/classic/messenger/junkMail.css             (junkMail.css)
 +   skin/classic/messenger/folderMenus.css          (folderMenus.css)

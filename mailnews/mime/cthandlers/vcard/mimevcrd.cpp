@@ -57,6 +57,7 @@
 
 #include "nsIStringBundle.h"
 #include "nsVCardStringResources.h"
+#include "nsPrintfCString.h"
 
 #include "nsCRT.h"
 #include "prprf.h"
@@ -75,6 +76,12 @@ static int s_unique = 0;
 static int BeginVCard (MimeObject *obj);
 static int EndVCard (MimeObject *obj);
 static int WriteOutVCard (MimeObject *obj, VObject* v);
+
+#ifdef MOZ_THUNDERBIRD
+static int GenerateVCardData(MimeObject * aMimeObj, VObject* aVcard);
+static int OutputVcardAttribute(MimeObject *aMimeObj, VObject *aVcard, const char* id, nsACString& vCardOutput);
+static int OutputBasicVcard(MimeObject *aMimeObj, VObject *aVcard, nsACString& vCardOutput);
+#else
 static int WriteOutEachVCardProperty (MimeObject *obj, VObject* v, int* numEmail);
 static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail);
 static int WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion);
@@ -86,6 +93,7 @@ static int WriteValue (MimeObject *obj, const char *);
 static int WriteAttribute (MimeObject *obj, const char *);
 static int WriteOutVCardPhoneProperties (MimeObject *obj, VObject* v);
 static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o);
+#endif
 
 typedef struct
   {
@@ -296,6 +304,38 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
   
   return 0;
 }
+
+static int EndVCard (MimeObject *obj)
+{
+  int status = 0;
+
+  /* Scribble HTML-ending stuff into the stream */
+  char htmlFooters[32];
+  PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", MSG_LINEBREAK, MSG_LINEBREAK);
+  status = COM_MimeObject_write(obj, htmlFooters, strlen(htmlFooters), PR_FALSE);
+
+  if (status < 0) return status;
+
+  return 0;
+}
+
+static int BeginVCard (MimeObject *obj)
+{
+  int status = 0;
+
+  /* Scribble HTML-starting stuff into the stream */
+  char htmlHeaders[32];
+
+  s_unique++;
+  PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", MSG_LINEBREAK, MSG_LINEBREAK);
+    status = COM_MimeObject_write(obj, htmlHeaders, strlen(htmlHeaders), PR_TRUE);
+
+  if (status < 0) return status;
+
+  return 0;
+}
+
+#ifndef MOZ_THUNDERBIRD
 
 static int WriteEachLineToStream (MimeObject *obj, const char *line)
 {
@@ -1209,36 +1249,6 @@ function showBasic%d()\
   return 0;
 }
 
-static int EndVCard (MimeObject *obj)
-{
-  int status = 0;
-
-  /* Scribble HTML-ending stuff into the stream */
-  char htmlFooters[32];
-  PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", MSG_LINEBREAK, MSG_LINEBREAK);
-  status = COM_MimeObject_write(obj, htmlFooters, strlen(htmlFooters), PR_FALSE);
-
-  if (status < 0) return status;
-
-  return 0;
-}
-
-static int BeginVCard (MimeObject *obj)
-{
-  int status = 0;
-
-  /* Scribble HTML-starting stuff into the stream */
-  char htmlHeaders[32];
-
-  s_unique++;
-  PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", MSG_LINEBREAK, MSG_LINEBREAK);
-    status = COM_MimeObject_write(obj, htmlHeaders, strlen(htmlHeaders), PR_TRUE);
-
-  if (status < 0) return status;
-
-  return 0;
-}
-
 static int WriteOutVCard (MimeObject *obj, VObject* v)
 {
   int status = 0;
@@ -1939,3 +1949,168 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
   else
     return tempString;
 }
+
+#else // THUNDERBIRD specific vCard formatting
+
+static int WriteOutVCard (MimeObject * aMimeObj, VObject* aVcard)
+{
+  int status = 0;
+  BeginVCard (aMimeObj);
+
+  GenerateVCardData(aMimeObj, aVcard);
+
+  return EndVCard (aMimeObj);
+}
+
+
+static int GenerateVCardData(MimeObject * aMimeObj, VObject* aVcard)
+{
+  // style is driven from CSS not here. Just layout the minimal vCard data
+  nsCString vCardOutput;
+
+  vCardOutput = "<table class=\"moz-vcard-table\"> <tr> ";  // outer table plus the first (and only row) we use for this table
+
+  // we need to get an escaped vCard url to bind to our add to address book button 
+  nsCOMPtr<nsIMsgVCardService> vCardService = do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+
+  nsCAutoString vCard;
+  nsCAutoString vEscCard;
+  int len = 0;
+
+  vCard.Adopt(vCardService->WriteMemoryVObjects(0, &len, aVcard, PR_FALSE));
+  vEscCard.Adopt(nsEscape (vCard.get(), url_XAlphas));
+
+  // first cell in the outer table row is a clickable image which brings up the rich address book UI for the vcard
+  vCardOutput += "<td valign=\"top\"> <a class=\"moz-vcard-badge\" href=\"addbook:add?action=add?vcard=";
+  vCardOutput += vEscCard; // the href is the vCard
+  vCardOutput += "\"></a></td>";
+  
+  // the 2nd cell in the outer table row is a nested table containing the actual vCard properties
+  vCardOutput += "<td> <table id=\"moz-vcard-properties-table\"> <tr> ";
+
+  OutputBasicVcard(aMimeObj, aVcard, vCardOutput);
+
+  // close the properties table
+  vCardOutput += "</table> </td> ";
+
+  // 2nd  cell in the outer table is our vCard image
+
+  vCardOutput += "</tr> </table>";
+
+  // now write out the vCard
+  return COM_MimeObject_write(aMimeObj, (char *) vCardOutput.get(), vCardOutput.Length(), PR_TRUE);
+}
+
+
+static int OutputBasicVcard(MimeObject *aMimeObj, VObject *aVcard, nsACString& vCardOutput)
+{
+  int status = 0;
+
+  VObject *prop = NULL;
+  VObject *prop2 = NULL;
+  nsCAutoString urlstring;
+  nsCAutoString namestring;
+  nsCAutoString emailstring;
+
+  nsCOMPtr<nsIMsgVCardService> vCardService =  do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+  
+  /* get the name and email */
+  prop = vCardService->IsAPropertyOf(aVcard, VCFullNameProp);
+  if (prop)
+  {
+    if (VALUE_TYPE(prop))
+    {
+      if (VALUE_TYPE(prop) != VCVT_RAW)
+        namestring.Adopt(vCardService->FakeCString(prop));
+      else
+        namestring.Adopt(vCardService->VObjectAnyValue(prop));
+      
+      if (!namestring.IsEmpty())
+      {
+        vCardOutput += "<td class=\"moz-vcard-title-property\"> ";
+
+        prop = vCardService->IsAPropertyOf(aVcard, VCURLProp);
+        if (prop)
+        {
+          urlstring.Adopt(vCardService->FakeCString(prop));
+          if (urlstring.IsEmpty())
+            vCardOutput += namestring;
+          else
+            vCardOutput += nsPrintfCString(512, "<a href=""%s"" private>%s</a>", urlstring.get(), namestring.get());
+        }
+        else 
+          vCardOutput += namestring;
+
+        /* get the email address */
+        prop = vCardService->IsAPropertyOf(aVcard, VCEmailAddressProp);
+        if (prop)
+        {
+          emailstring.Adopt(vCardService->FakeCString(prop));
+          if (!emailstring.IsEmpty())
+          {
+            /* if its an internet address prepend the mailto url */
+            prop2 = vCardService->IsAPropertyOf(prop, VCInternetProp);
+            if (prop2)
+              vCardOutput += nsPrintfCString(512, "&nbsp;&lt;<a href=""mailto:%s"" private>%s</a>&gt;", emailstring.get(), emailstring.get());
+            else
+              vCardOutput += emailstring;
+          }
+        } // if email address property
+
+        vCardOutput += "</td> </tr> "; // end the cell for the name/email address
+      } // if we have a name property
+    }
+  } // if full name property
+
+  // now each basic property goes on its own line
+
+  // title
+  status = OutputVcardAttribute (aMimeObj, aVcard, VCTitleProp, vCardOutput);
+
+  // org name and company name
+  prop = vCardService->IsAPropertyOf(aVcard, VCOrgProp);
+  if (prop)
+  {
+    OutputVcardAttribute (aMimeObj, prop, VCOrgUnitProp, vCardOutput);
+    OutputVcardAttribute (aMimeObj, prop, VCOrgNameProp, vCardOutput);
+  }
+
+  return 0;
+}
+
+static int OutputVcardAttribute(MimeObject *aMimeObj, VObject *aVcard, const char* id, nsACString& vCardOutput) 
+{
+  int status = 0;
+  VObject *prop = NULL;
+  nsCAutoString string;
+
+  nsCOMPtr<nsIMsgVCardService> vCardService = do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+
+  prop = vCardService->IsAPropertyOf(aVcard, id);
+  if (prop)
+    if (VALUE_TYPE(prop))
+    {
+      if (VALUE_TYPE(prop) != VCVT_RAW)
+        string.Adopt(vCardService->FakeCString(prop));
+      else
+        string.Adopt(vCardService->VObjectAnyValue(prop));
+      
+      if (!string.IsEmpty()) 
+      {
+        vCardOutput += "<tr> <td class=\"moz-vcard-property\">";
+        vCardOutput += string;
+        vCardOutput += "</td> </tr> ";
+      }
+    }
+
+  return 0;
+}
+
+#endif
+

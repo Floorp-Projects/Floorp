@@ -263,9 +263,51 @@ span.moz-smiley-s16 {
   background-image: url("chrome://communicator/skin/icons/smileys/smiley-sealed.png");
 }
 
+/* ::::: vcard ::::: */
+
+.moz-vcard-table {
+  -moz-border-radius: 8px;
+  border: thin solid gray;
+  margin-top: 10px;
+}
+
+.moz-vcard-property {
+  font-size: 80%;
+  color: gray;
+}
+
+.moz-vcard-title-property {
+} 
+
+.moz-vcard-badge {
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  display: block;
+  background-image: url("chrome://messenger/skin/addressbook/icons/addressbook-toolbar.png");
+  -moz-image-region: rect(0px 32px 32px 0px);
+}
+
+.moz-vcard-badge:hover {
+  -moz-image-region: rect(32px 32px 64px 0px);
+} 
+
+.moz-vcard-badge:focus {
+  -moz-outline: none;
+}
+
 
 /* Quote Levels Colors */
-blockquote[type=cite] {   color: blue !important;
-   border-color: blue !important;}blockquote[type=cite] > blockquote {   color: green !important;
-   border-color: green !important;}blockquote[type=cite] > blockquote > blockquote {   color: maroon !important;
-   border-color: maroon !important;}
+
+blockquote[type=cite] {
+   color: blue !important;
+   border-color: blue !important;
+}
+blockquote[type=cite] > blockquote {
+   color: green !important;
+   border-color: green !important;
+}
+blockquote[type=cite] > blockquote > blockquote {
+   color: maroon !important;
+   border-color: maroon !important;
+}
