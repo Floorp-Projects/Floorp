@@ -890,7 +890,7 @@ class NS_COM NS_ConvertUCS2toUTF8
         { Init( &aChar, 1 ); }
 
     protected:
-      Init( const PRUnichar* aString, PRUint32 aLength );
+      void Init( const PRUnichar* aString, PRUint32 aLength );
 
     private:
         // NOT TO BE IMPLEMENTED
