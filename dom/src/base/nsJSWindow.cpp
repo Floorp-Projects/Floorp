@@ -414,6 +414,18 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOW_TITLE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetTitle(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
       case WINDOW_INNERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_FALSE);
@@ -1035,6 +1047,18 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
          prop = *vp;
       
           rv = a->SetLocation(prop);
+          
+        }
+        break;
+      }
+      case WINDOW_TITLE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          rv = a->SetTitle(prop);
           
         }
         break;
@@ -2244,66 +2268,6 @@ WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
   JS_DefineProperty(cx, obj, "controllers", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
-  return PR_TRUE;
-}
-
-/***********************************************************************/
-//
-// title Property Getter
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowtitleGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == a) {
-    return JS_TRUE;
-  }
-
-  nsresult rv;
-  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-  if (!secMan)
-      return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, rv);
-  }
-
-          nsAutoString prop;
-          rv = a->GetTitle(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-
-  return PR_TRUE;
-}
-
-/***********************************************************************/
-//
-// title Property Setter
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowtitleSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == a) {
-    return JS_TRUE;
-  }
-
-  nsresult rv;
-  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-  if (!secMan)
-      return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, rv);
-  }
-
-
-  JS_DefineProperty(cx, obj, "title", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -4074,7 +4038,7 @@ static JSPropertySpec WindowProperties[] =
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
   {"location",    WINDOW_LOCATION,    JSPROP_ENUMERATE},
-  {"title",    WINDOW_TITLE,    JSPROP_ENUMERATE, WindowtitleGetter, WindowtitleSetter},
+  {"title",    WINDOW_TITLE,    JSPROP_ENUMERATE},
   {"innerWidth",    WINDOW_INNERWIDTH,    JSPROP_ENUMERATE},
   {"innerHeight",    WINDOW_INNERHEIGHT,    JSPROP_ENUMERATE},
   {"outerWidth",    WINDOW_OUTERWIDTH,    JSPROP_ENUMERATE},
