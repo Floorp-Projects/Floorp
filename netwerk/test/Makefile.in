@@ -29,6 +29,7 @@ CPPSRCS		=  			\
 			TestSocketTransport.cpp \
 			TestFileInput.cpp \
 			nettest.cpp	\
+			TestProtocols.cpp \
 			$(NULL)
 
 BASE_LIBS =	     \
