@@ -106,7 +106,7 @@ static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 
 //----------------------------------------------------------------------
 
-static int
+PR_STATIC_CALLBACK(int)
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
     nsresult rv;
