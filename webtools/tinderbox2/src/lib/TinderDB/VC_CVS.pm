@@ -129,7 +129,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.13 $ )[1];
+$VERSION = ( qw $Revision: 1.14 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -278,108 +278,6 @@ sub find_last_data {
 
   return ($last_tree_data, $second2last_tree_data, $last_cvs_data);
 }
-
-
-
-# Hold this here for a minute while I debug a new version
-# this will be deleted in about 5 minutes.
-
-sub foo {
-  my ($tree) = @_;
-
-  # sort numerically descending
-  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
-
-  my ($last_data);
-
-  my($current_state, $current_begin, @series_times, @delete);
-
-  foreach $time (@times) {
-    
-    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-      
-      if (
-	  ($DATABASE{$tree}{$time}{'treestate'} eq $current_state) &&
-	  (($current_begin - $time) < $main::SECONDS_PER_HOUR)
-	  
-	 ) {
-
-	# if the new state is part of a series of states then add it
-	# to the list.
-
-	push @series_times, $time;
-
-      }else{
-
-	# list complete  or initalize for first time through
-      
-	# schedule a purge if list big enough
-
-	if(scalar(@series_times) > 2) {
-
-	  # Leave the two outlying data points of the series but purge
-	  # the middle ones.
-
-	  shift @series_times;
-	  pop @series_times;
-          push @delete, @series_times;
-	}
-
-	# start again with the new state as the beginning of the
-	# series.
-
-	undef @series_times;
-	push @series_times, $time;
-	$current_state = $DATABASE{$tree}{$time}{'treestate'};
-	$current_begin = $time;
-
-      }
-
-    } # if (defined($DATABASE{$tree}{$time}{'treestate'})
-
-        
-    # find the last time we got data
-
-    (defined($DATABASE{$tree}{$time})) &&
-    (defined($DATABASE{$tree}{$time}{'author'})) &&
-      (!defined($last_data)) &&
-	($last_data = $time);
-    
-    # do not iterate through the whole histroy.  Stop after not more
-    # then two complete series have been done.
-
-    (defined($last_data)) &&
-      ( $time < ($main::TIME - (2*$main::SECONDS_PER_HOUR) ) ) && 
-        last;
-
-  } # foreach $time (@times) 
-
-  # schedule a purge if list big enough
-  
-  if(scalar(@series_times) > 2) {
-    
-    # Leave the two outlying data points of the series but purge
-    # the middle ones.
-    
-    shift @series_times;
-    pop @series_times;
-    push @delete, @series_times;
-  }
-  
-
-  # actually remove the extra data 
-
-  foreach $time (@delete) {
-    delete $DATABASE{$tree}{$time}{'treestate'};
-    
-    (defined($DATABASE{$tree}{$time})) &&
-      (scalar(%{ $DATABASE{$tree}{$time} }) == 0) &&
-        delete $DATABASE{$tree}{$time};
-  }
-
-  return $last_data;
-}
-
 
 
 
@@ -693,7 +591,8 @@ sub status_table_row {
 
     my ($vc_info);
     foreach $key ('module',) {
-      $vc_info .= "$key: $TreeData::VC_TREE{$tree}{$key} <br>\n";
+      my ($value) = $TreeData::VC_TREE{$tree}{$key};
+      $vc_info .= "$key: $value <br>\n";
     }
 
     # I wish we could give only the information for a particular
