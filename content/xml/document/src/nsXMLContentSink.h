@@ -39,36 +39,21 @@
 #ifndef nsXMLContentSink_h__
 #define nsXMLContentSink_h__
 
+#include "nsContentSink.h"
 #include "nsIXMLContentSink.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
-#include "nsWeakReference.h"
-#include "nsIUnicharInputStream.h"
-#include "nsIStreamLoader.h"
-#include "nsCOMArray.h"
-#include "nsINodeInfo.h"
-#include "nsIDOMHTMLTextAreaElement.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsIHTMLContent.h"
-#include "nsIDOMHTMLScriptElement.h"
-#include "nsIScriptLoader.h"
-#include "nsIScriptLoaderObserver.h"
-#include "nsSupportsArray.h"
 #include "nsIExpatSink.h"
 #include "nsIDocumentTransformer.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDocShell.h"
 
-class nsICSSStyleSheet;
+
 class nsIDocument;
 class nsIURI;
 class nsIContent;
-class nsAutoVoidArray;
-class nsIUnicharInputStream;
+class nsINodeInfo;
 class nsIParser;
 class nsINameSpace;
-class nsICSSLoader;
-class nsIElementFactory;
+class nsIViewManager;
 
 typedef enum {
   eXMLContentSinkState_InProlog,
@@ -76,13 +61,9 @@ typedef enum {
   eXMLContentSinkState_InEpilog
 } XMLContentSinkState;
 
-// XXX Till the parser knows a little bit more about XML, 
-// this is a HTMLContentSink.
-class nsXMLContentSink : public nsIXMLContentSink,
+class nsXMLContentSink : public nsContentSink,
+                         public nsIXMLContentSink,
                          public nsITransformObserver,
-                         public nsSupportsWeakReference,
-                         public nsIScriptLoaderObserver,
-                         public nsICSSLoaderObserver,
                          public nsIExpatSink
 {
 public:
@@ -95,8 +76,8 @@ public:
                 nsIChannel* aChannel);
 
   // nsISupports
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTLOADEROBSERVER
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
@@ -107,9 +88,6 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
-
-  // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
@@ -151,42 +129,25 @@ protected:
 
   nsresult ProcessBASETag(nsIContent* aContent);
   nsresult ProcessMETATag(nsIContent* aContent);
-  nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
-                             nsIContent* aContent);
-  nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-  nsresult ProcessLink(nsIContent* aElement, const nsAString& aLinkData);
 
-  nsresult RefreshIfEnabled(nsIViewManager* vm);
   
-  NS_IMETHOD ProcessStyleLink(nsIContent* aElement,
-                              const nsString& aHref,
-                              PRBool aAlternate,
-                              const nsString& aTitle,
-                              const nsString& aType,
-                              const nsString& aMedia);
+  // nsContentSink override
+  virtual nsresult ProcessStyleLink(nsIContent* aElement,
+                                    const nsAString& aHref,
+                                    PRBool aAlternate,
+                                    const nsAString& aTitle,
+                                    const nsAString& aType,
+                                    const nsAString& aMedia);
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
 
-  static void
-  GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
-
-  void ScrollToRef(PRBool aReallyScroll);
-  
   nsresult MaybePrettyPrint();
   
-  nsIDocument*     mDocument;
-  nsIURI*          mDocumentURL;
-  nsIURI*          mDocumentBaseURL; // can be set via HTTP headers
-  nsCOMPtr<nsIDocShell> mDocShell;
-  nsIParser*       mParser;
   nsIContent*      mDocElement;
   PRUnichar*       mText;
-  nsICSSLoader*    mCSSLoader;  
 
-  nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
   XMLContentSinkState mState;
 
-  nsCString mRef; // ScrollTo #ref
   nsString mTitleText; 
   
   PRInt32 mTextLength;
@@ -195,7 +156,6 @@ protected:
   
   PRPackedBool mConstrainSize;
   PRPackedBool mInTitle;
-  PRPackedBool mNeedToBlockParser;
   PRPackedBool mPrettyPrintXML;
   PRPackedBool mPrettyPrintHasSpecialRoot;
   PRPackedBool mPrettyPrintHasFactoredElements;
@@ -203,7 +163,6 @@ protected:
 
   nsCOMArray<nsIContent>           mContentStack;
   nsCOMArray<nsINameSpace>         mNameSpaceStack;
-  nsCOMPtr<nsINodeInfoManager>     mNodeInfoManager;
   nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
 };
 

@@ -38,6 +38,8 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "nsContentSink.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -47,14 +49,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIParser.h"
 #include "nsParserUtils.h"
-#include "nsICSSStyleSheet.h"
-#include "nsICSSLoader.h"
-#include "nsICSSLoaderObserver.h"
 #include "nsIScriptLoader.h"
-#include "nsIScriptLoaderObserver.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLContentContainer.h"
-#include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
@@ -66,8 +62,6 @@
 #include "nsINodeInfo.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
-#include "nsSupportsArray.h"
-#include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 #include "prtime.h"
 #include "prlog.h"
 
@@ -85,7 +79,6 @@
 
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMHTMLOptionElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 
@@ -96,13 +89,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
-#include "nsICharsetConverterManager.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsICharsetAlias.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsCPrefetchService.h"
-
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocument.h"
@@ -129,11 +117,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-// XXX Go through a factory for this one
-#include "nsICSSParser.h"
-
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIDOMHTMLTitleElement.h"
 #include "nsTimer.h"
 #include "nsITimer.h"
 #include "nsDOMError.h"
@@ -145,23 +129,13 @@
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h" // nsHTMLElementFactory supports weak references
 #include "nsIPrompt.h"
-#include "nsIDOMWindowInternal.h"
-
 #include "nsLayoutCID.h"
 #include "nsIFrameManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "plevent.h"
 
-
 #include "nsEscape.h"
-
 #include "nsIElementObserver.h"
-
-#ifdef ALLOW_ASYNCH_STYLE_SHEETS
-const PRBool kBlockByDefault = PR_FALSE;
-#else
-const PRBool kBlockByDefault = PR_TRUE;
-#endif
 
 
 //----------------------------------------------------------------------
@@ -236,16 +210,18 @@ static const contentCreatorCallback sContentCreatorCallbacks[] = {
 
 class SinkContext;
 
-class HTMLContentSink : public nsIHTMLContentSink,
-                        public nsIScriptLoaderObserver,
+class HTMLContentSink : public nsContentSink,
+                        public nsIHTMLContentSink,
                         public nsITimerCallback,
-                        public nsICSSLoaderObserver,
 #ifdef DEBUG
                         public nsIDebugDumpContent,
 #endif
                         public nsIDocumentObserver
 {
 public:
+  friend class SinkContext;
+  friend class DummyParserRequest;
+
   HTMLContentSink();
   virtual ~HTMLContentSink();
 
@@ -255,8 +231,7 @@ public:
                 nsIChannel* aChannel);
 
   // nsISupports
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTLOADEROBSERVER
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -301,12 +276,6 @@ public:
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
   
-  // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
-  {
-    return NS_OK;
-  }
-
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
 
@@ -315,6 +284,7 @@ public:
   NS_IMETHOD DumpContentModel();
 #endif
 
+protected:
   PRBool IsTimeToNotify();
 
   nsresult SetDocumentTitle(const nsAString& aTitle);
@@ -354,13 +324,7 @@ public:
                      void* aThis);
 #endif
 
-  nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
-  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
-  nsIURI* mDocumentURI;
-  nsIURI* mDocumentBaseURL;
-  nsCOMPtr<nsIDocShell> mDocShell;
-  nsIParser* mParser;
 
   // back off timer notification after count
   PRInt32 mBackoffCount;
@@ -391,7 +355,6 @@ public:
 
   PRPackedBool mLayoutStarted;
   PRPackedBool mScrolledToRefAlready;
-  PRPackedBool mNeedToBlockParser;
 
   PRInt32 mInNotification;
   nsCOMPtr<nsIDOMHTMLFormElement> mCurrentForm;
@@ -401,15 +364,10 @@ public:
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
-  nsCOMPtr<nsISupportsArray> mScriptElements;
   nsCOMPtr<nsIRequest> mDummyParserRequest;
-
-  nsCString mRef;
 
   nsString mBaseHREF;
   nsString mBaseTarget;
-
-  nsICSSLoader *mCSSLoader;
 
   // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
@@ -441,7 +399,6 @@ public:
 
   void StartLayout();
 
-  void ScrollToRef(PRBool aReallyScroll);
   void TryToScrollToRef();
 
   /**
@@ -452,22 +409,8 @@ public:
    */
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
-  nsresult ProcessLinkHeader(nsIHTMLContent* aElement,
-                             const nsAString& aLinkData);
-  nsresult ProcessLink(nsIHTMLContent* aElement, const nsString& aHref,
-                       const nsString& aRel, const nsString& aTitle,
-                       const nsString& aType, const nsString& aMedia);
-  nsresult ProcessStyleLink(nsIHTMLContent* aElement,
-                            const nsString& aHref,
-                            const nsStringArray& aLinkTypes,
-                            const nsString& aTitle, const nsString& aType,
-                            const nsString& aMedia);
-  void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
-
   void ProcessBaseHref(const nsAString& aBaseHref);
   void ProcessBaseTarget(const nsAString& aBaseTarget);
-
-  nsresult RefreshIfEnabled(nsIViewManager* vm);
 
   // Routines for tags that require special handling
   nsresult ProcessAREATag(const nsIParserNode& aNode);
@@ -478,16 +421,15 @@ public:
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
-  nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
-                             nsIHTMLContent* aContent = nsnull);
-  nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-
   nsresult OpenHeadContext();
   nsresult CloseHeadContext();
+
   // Script processing related routines
   nsresult ResumeParsing();
-  PRBool PreEvaluateScript();
-  void PostEvaluateScript();
+
+  // nsContentSink overrides
+  virtual void PreEvaluateScript();
+  virtual void PostEvaluateScript();
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent,
@@ -2056,8 +1998,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  HTMLContentSink* it;
-  NS_NEWXPCOM(it, HTMLContentSink);
+  nsRefPtr<HTMLContentSink> it = new HTMLContentSink();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2065,11 +2006,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 
   nsresult rv = it->Init(aDoc, aURL, aContainer, aChannel);
 
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = it;
   NS_ADDREF(*aResult);
@@ -2098,13 +2035,8 @@ HTMLContentSink::~HTMLContentSink()
 
   if (mDocument) {
     mDocument->RemoveObserver(this);
-    NS_RELEASE(mDocument);
   }
   NS_IF_RELEASE(mHTMLDocument);
-  NS_IF_RELEASE(mDocumentURI);
-  NS_IF_RELEASE(mDocumentBaseURL);
-  NS_IF_RELEASE(mParser);
-  NS_IF_RELEASE(mCSSLoader);
 
   if (mNotificationTimer) {
     mNotificationTimer->Cancel();
@@ -2138,23 +2070,21 @@ HTMLContentSink::~HTMLContentSink()
   delete mHeadContext;
 }
 
-#ifdef DEBUG
-NS_IMPL_ISUPPORTS7(HTMLContentSink,
-                   nsIHTMLContentSink,
-                   nsIContentSink,
-                   nsIScriptLoaderObserver,
-                   nsITimerCallback,
-                   nsICSSLoaderObserver,
-                   nsIDocumentObserver,
-                   nsIDebugDumpContent)
+#if DEBUG
+NS_IMPL_ISUPPORTS_INHERITED5(HTMLContentSink,
+                             nsContentSink,
+                             nsIContentSink,
+                             nsIHTMLContentSink,
+                             nsITimerCallback,
+                             nsIDocumentObserver,
+                             nsIDebugDumpContent)
 #else
-NS_IMPL_ISUPPORTS6(HTMLContentSink,
-                   nsIHTMLContentSink,
-                   nsIContentSink,
-                   nsIScriptLoaderObserver,
-                   nsITimerCallback,
-                   nsICSSLoaderObserver,
-                   nsIDocumentObserver)
+NS_IMPL_ISUPPORTS_INHERITED4(HTMLContentSink,
+                             nsContentSink,
+                             nsIContentSink,
+                             nsIHTMLContentSink,
+                             nsITimerCallback,
+                             nsIDocumentObserver)
 #endif
 
 static PRBool
@@ -2202,42 +2132,25 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsISupports* aContainer,
                       nsIChannel* aChannel)
 {
+  NS_ENSURE_TRUE(aContainer, NS_ERROR_NULL_POINTER);
+
+
   MOZ_TIMER_DEBUGLOG(("Reset and start: nsHTMLContentSink::Init(), this=%p\n",
                       this));
   MOZ_TIMER_RESET(mWatch);
   MOZ_TIMER_START(mWatch);
 
-  if (!aDoc || !aURL || !aContainer) {
-    NS_ERROR("Null ptr!");
-
+  nsresult rv = nsContentSink::Init(aDoc, aURL, aContainer, aChannel);
+  if NS_FAILED(rv) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
-
-    return NS_ERROR_NULL_POINTER;
+    return rv;
   }
-
-  nsresult rv;
-
-  rv = NS_NewISupportsArray(getter_AddRefs(mScriptElements));
-  if (NS_FAILED(rv)) return rv;
-
-  mDocument = aDoc;
-  NS_ADDREF(aDoc);
 
   aDoc->AddObserver(this);
   CallQueryInterface(aDoc, &mHTMLDocument);
 
-  rv = mDocument->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDocumentURI = aURL;
-  NS_ADDREF(aURL);
-  mDocumentBaseURL = aURL;
-  NS_ADDREF(aURL);
-  mDocShell = do_QueryInterface(aContainer);
-
   mObservers = nsnull;
-
   nsIParserService* service = nsContentUtils::GetParserServiceWeakRef();
   if (!service) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2245,11 +2158,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
                              getter_AddRefs(mObservers));
-
-  nsCOMPtr<nsIScriptLoader> loader;
-  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
-  NS_ENSURE_SUCCESS(rv, rv);
-  loader->AddObserver(this);
 
   NS_WARN_IF_FALSE(mDocShell, "oops no docshell!");
 
@@ -2332,16 +2240,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   if (prefBranch) {
     prefBranch->GetIntPref("content.maxtextrun", &mMaxTextRun);
   }
-
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(mCSSLoader);
-  }
-
-  // XXX this presumes HTTP header info is alread set in document
-  // XXX if it isn't we need to set it here...
-
-  ProcessHTTPHeaders(aChannel);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
@@ -2511,7 +2409,9 @@ HTMLContentSink::DidBuildModel(void)
     PRUint32 LoadType = 0;
     mDocShell->GetLoadType(&LoadType);
 
-    ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
+    if (ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY))) {
+      mScrolledToRefAlready = PR_TRUE;
+    }
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -2531,7 +2431,7 @@ HTMLContentSink::DidBuildModel(void)
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  NS_IF_RELEASE(mParser);
+  mParser = nsnull;
 
   if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
     // Reset the performance hint which was set to FALSE
@@ -2684,10 +2584,7 @@ HTMLContentSink::WillResume()
 NS_IMETHODIMP
 HTMLContentSink::SetParser(nsIParser* aParser)
 {
-  NS_IF_RELEASE(mParser);
   mParser = aParser;
-  NS_IF_ADDREF(mParser);
-
   return NS_OK;
 }
 
@@ -3933,17 +3830,14 @@ HTMLContentSink::StartLayout()
       shell->InitialReflow(r.width, r.height);
 
       // Now trigger a refresh
-      nsIViewManager* vm = shell->GetViewManager();
-      if (vm) {
-        RefreshIfEnabled(vm);
-      }
+      RefreshIfEnabled(shell->GetViewManager());
     }
   }
 
   // If the document we are loading has a reference or it is a
   // frameset document, disable the scroll bars on the views.
 
-  if (mDocumentURI) {
+  if (mDocumentURL) {
     nsCAutoString ref;
 
     // Since all URI's that pass through here aren't URL's we can't
@@ -3951,7 +3845,7 @@ HTMLContentSink::StartLayout()
     // finding the 'ref' part of the URI, we'll haveto revert to
     // string routines for finding the data past '#'
 
-    rv = mDocumentURI->GetSpec(ref);
+    rv = mDocumentURL->GetSpec(ref);
 
     nsReadingIterator<char> start, end;
 
@@ -3990,51 +3884,6 @@ HTMLContentSink::StartLayout()
   }
 }
 
-// Convert the ref from document charset to unicode.
-nsresult
-CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
-               nsString& aRefInUnicode)
-{
-  nsresult rv;
-
-  nsCOMPtr <nsIAtom> docCharsetAtom;
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoder(aDocCharset.get(), getter_AddRefs(decoder));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRInt32 srcLen = aRefInDocCharset.Length();
-  PRInt32 dstLen;
-  rv = decoder->GetMaxLength(aRefInDocCharset.get(), srcLen, &dstLen);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((dstLen + 1) *
-                                                 sizeof(PRUnichar));
-  if (!ustr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  rv = decoder->Convert(aRefInDocCharset.get(), &srcLen, ustr, &dstLen);
-  if (NS_SUCCEEDED(rv)) {
-    ustr[dstLen] = 0;
-    aRefInUnicode.Assign(ustr, dstLen);
-  }
-
-  nsMemory::Free(ustr);
-
-  return rv;
-}
-
 void
 HTMLContentSink::TryToScrollToRef()
 {
@@ -4046,68 +3895,8 @@ HTMLContentSink::TryToScrollToRef()
     return;
   }
 
-  ScrollToRef(PR_TRUE);
-}
-
-void
-HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
-{
-  // XXX Duplicate code in nsXMLContentSink.
-  // XXX Be sure to change both places if you make changes here.
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  char* tmpstr = ToNewCString(mRef);
-  if (!tmpstr) {
-    return;
-  }
-
-  nsUnescape(tmpstr);
-  nsCAutoString unescapedRef;
-  unescapedRef.Assign(tmpstr);
-  nsMemory::Free(tmpstr);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  // We assume that the bytes are in UTF-8, as it says in the spec:
-  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  nsAutoString ref;
-  CopyUTF8toUTF16(unescapedRef, ref);
-
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
-
-    // Scroll to the anchor
-    if (aReallyScroll) {
-      shell->FlushPendingNotifications(PR_FALSE);
-    }
-
-    // Check an empty string which might be caused by the UTF-8 conversion
-    if (!ref.IsEmpty()) {
-      rv = shell->GoToAnchor(ref, aReallyScroll);
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-
-    // If UTF-8 URL failed then try to assume the string as a
-    // document's charset.
-
-    if (NS_FAILED(rv)) {
-      nsCAutoString docCharset;
-      rv = mDocument->GetDocumentCharacterSet(docCharset);
-
-      if (NS_SUCCEEDED(rv)) {
-        rv = CharsetConvRef(docCharset, unescapedRef, ref);
-
-        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, aReallyScroll);
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      mScrolledToRefAlready = PR_TRUE;
-    }
+  if (ScrollToRef(PR_TRUE)) {
+    mScrolledToRefAlready = PR_TRUE;
   }
 }
 
@@ -4175,8 +3964,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     rv = mDocument->SetBaseURL(baseHrefURI);
 
     if (NS_SUCCEEDED(rv)) {
-      NS_RELEASE(mDocumentBaseURL);
-      mDocument->GetBaseURL(&mDocumentBaseURL);
+      mDocument->GetBaseURL(getter_AddRefs(mDocumentBaseURL));
     }
   } else {
     // NAV compatibility quirk
@@ -4243,29 +4031,6 @@ HTMLContentSink::CloseHeadContext()
   return NS_OK;
 }
 
-nsresult
-HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
-{
-  if (!vm) {
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-
-  if (contentViewer) {
-    PRBool enabled;
-    contentViewer->GetEnableRendering(&enabled);
-    if (enabled) {
-      vm->EnableRefresh(NS_VMREFRESH_NO_SYNC);
-    }
-  }
-
-  return NS_OK;
-}
-
 void
 HTMLContentSink::ProcessBaseTarget(const nsAString& aBaseTarget)
 {
@@ -4325,348 +4090,6 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   }
 
   return result;
-}
-
-
-const PRUnichar kSemiCh = PRUnichar(';');
-const PRUnichar kCommaCh = PRUnichar(',');
-const PRUnichar kEqualsCh = PRUnichar('=');
-const PRUnichar kLessThanCh = PRUnichar('<');
-const PRUnichar kGreaterThanCh = PRUnichar('>');
-
-nsresult
-HTMLContentSink::ProcessLinkHeader(nsIHTMLContent* aElement,
-                                   const nsAString& aLinkData)
-{
-  nsresult result = NS_OK;
-
-  // parse link content and call process style link
-  nsAutoString href;
-  nsAutoString rel;
-  nsAutoString title;
-  nsAutoString type;
-  nsAutoString media;
-  PRBool didBlock = PR_FALSE;
-
-  // copy to work buffer
-  nsAutoString stringList(aLinkData);
-
-  // put an extra null at the end
-  stringList.Append(kNullCh);
-
-  PRUnichar* start = NS_CONST_CAST(PRUnichar *, stringList.get());
-  PRUnichar* end   = start;
-  PRUnichar* last  = start;
-  PRUnichar  endCh;
-
-  while (*start != kNullCh) {
-    // skip leading space
-    while ((*start != kNullCh) && nsCRT::IsAsciiSpace(*start)) {
-      ++start;
-    }
-
-    end = start;
-    last = end - 1;
-
-    // look for semicolon or comma
-    while (*end != kNullCh && *end != kSemiCh && *end != kCommaCh) {
-      PRUnichar ch = *end;
-
-      if (ch == kApostrophe || ch == kQuote || ch == kLessThanCh) {
-        // quoted string
-
-        PRUnichar quote = *end;
-        if (quote == kLessThanCh) {
-          quote = kGreaterThanCh;
-        }
-
-        PRUnichar* closeQuote = (end + 1);
-
-        // seek closing quote
-        while (*closeQuote != kNullCh && quote != *closeQuote) {
-          ++closeQuote;
-        }
-
-        if (quote == *closeQuote) {
-          // found closer
-
-          // skip to close quote
-          end = closeQuote;
-
-          last = end - 1;
-
-          ch = *(end + 1);
-
-          if (ch != kNullCh && ch != kSemiCh && ch != kCommaCh) {
-            // end string here
-            *(++end) = kNullCh;
-
-            ch = *(end + 1);
-
-            // keep going until semi or comma
-            while (ch != kNullCh && ch != kSemiCh && ch != kCommaCh) {
-              ++end;
-
-              ch = *end;
-            }
-          }
-        }
-      }
-
-      ++end;
-      ++last;
-    }
-
-    endCh = *end;
-
-    // end string here
-    *end = kNullCh;
-
-    if (start < end) {
-      if ((*start == kLessThanCh) && (*last == kGreaterThanCh)) {
-        *last = kNullCh;
-
-        if (href.IsEmpty()) { // first one wins
-          href = (start + 1);
-          href.StripWhitespace();
-        }
-      } else {
-        PRUnichar* equals = start;
-
-        while ((*equals != kNullCh) && (*equals != kEqualsCh)) {
-          equals++;
-        }
-
-        if (*equals != kNullCh) {
-          *equals = kNullCh;
-          nsAutoString  attr(start);
-          attr.StripWhitespace();
-
-          PRUnichar* value = ++equals;
-          while (nsCRT::IsAsciiSpace(*value)) {
-            value++;
-          }
-
-          if (((*value == kApostrophe) || (*value == kQuote)) &&
-              (*value == *last)) {
-            *last = kNullCh;
-            value++;
-          }
-
-          if (attr.EqualsIgnoreCase("rel")) {
-            if (rel.IsEmpty()) {
-              rel = value;
-              rel.CompressWhitespace();
-            }
-          } else if (attr.EqualsIgnoreCase("title")) {
-            if (title.IsEmpty()) {
-              title = value;
-              title.CompressWhitespace();
-            }
-          } else if (attr.EqualsIgnoreCase("type")) {
-            if (type.IsEmpty()) {
-              type = value;
-              type.StripWhitespace();
-            }
-          } else if (attr.EqualsIgnoreCase("media")) {
-            if (media.IsEmpty()) {
-              media = value;
-
-              // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-              ToLowerCase(media);
-            }
-          }
-        }
-      }
-    }
-
-    if (endCh == kCommaCh) {
-      // hit a comma, process what we've got so far
-
-      if (!href.IsEmpty() && !rel.IsEmpty()) {
-        result = ProcessLink(aElement, href, rel, title, type, media);
-        if (result == NS_ERROR_HTMLPARSER_BLOCK) {
-          didBlock = PR_TRUE;
-        }
-      }
-
-      href.Truncate();
-      rel.Truncate();
-      title.Truncate();
-      type.Truncate();
-      media.Truncate();
-    }
-
-    start = ++end;
-  }
-
-  if (!href.IsEmpty() && !rel.IsEmpty()) {
-    result = ProcessLink(aElement, href, rel, title, type, media);
-
-    if (NS_SUCCEEDED(result) && didBlock) {
-      result = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-  }
-
-  return result;
-}
-
-nsresult
-HTMLContentSink::ProcessLink(nsIHTMLContent* aElement,
-                             const nsString& aHref, const nsString& aRel,
-                             const nsString& aTitle, const nsString& aType,
-                             const nsString& aMedia)
-{
-  nsresult result = NS_OK;
-
-  // XXX seems overkill to generate this string array
-  nsStringArray linkTypes;
-  nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
-
-  PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
-  // prefetch href if relation is "next" or "prefetch"
-  if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    PrefetchHref(aHref, hasPrefetch);
-  }
-
-  // is it a stylesheet link?
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) != -1) {
-    result = ProcessStyleLink(aElement, aHref, linkTypes, aTitle, aType,
-                              aMedia);
-  }
-
-  return result;
-}
-
-nsresult
-HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
-                                  const nsString& aHref,
-                                  const nsStringArray& aLinkTypes,
-                                  const nsString& aTitle,
-                                  const nsString& aType,
-                                  const nsString& aMedia)
-{
-  nsresult result = NS_OK;
-  PRBool isAlternate = PR_FALSE;
-
-  // if alternate, does it have title?
-  if (aLinkTypes.IndexOf(NS_LITERAL_STRING("alternate")) != -1) {
-    if (aTitle.IsEmpty()) { // alternates must have title
-      // return without error, for now
-
-      return NS_OK;
-    }
-
-    isAlternate = PR_TRUE;
-  }
-
-  nsAutoString  mimeType;
-  nsAutoString  params;
-  nsParserUtils::SplitMimeType(aType, mimeType, params);
-
-  // see bug 18817
-  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
-    // Unknown stylesheet language
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> url;
-  result = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
-
-  if (NS_FAILED(result)) {
-    // The URL is bad, move along, don't propagate the error (for now)
-
-    return NS_OK;
-  }
-
-  if (!isAlternate) {
-    // possibly preferred sheet
-
-    if (!aTitle.IsEmpty()) {
-      nsAutoString preferredStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
-                               preferredStyle);
-      if (preferredStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-      }
-    }
-  }
-
-  PRBool blockParser = kBlockByDefault;
-  if (isAlternate) {
-    blockParser = PR_FALSE;
-  }
-
-  // NOTE: no longer honoring the important keyword to indicate
-  // blocking as it is proprietary and unnecessary since all
-  // non-alternate will block the parser now -mja
-#if 0
-  if (linkTypes.IndexOf("important") != -1) {
-    blockParser = PR_TRUE;
-  }
-#endif
-
-  PRBool doneLoading;
-  result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                     ((blockParser) ? mParser : nsnull),
-                                     doneLoading, 
-                                     this);
-
-  if (NS_SUCCEEDED(result) && blockParser && !doneLoading) {
-    result = NS_ERROR_HTMLPARSER_BLOCK;
-  }
-
-  return result;
-}
-
-void
-HTMLContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
-{
-  //
-  // SECURITY CHECK: disable prefetching from mailnews!
-  //
-  // walk up the docshell tree to see if any containing
-  // docshell are of type MAIL.
-  //
-  if (!mDocShell)
-    return;
-
-  nsCOMPtr<nsIDocShell> docshell = mDocShell;
-
-  nsCOMPtr<nsIDocShellTreeItem> treeItem, parentItem;
-  do {
-    PRUint32 appType = 0;
-    nsresult rv = docshell->GetAppType(&appType);
-    if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL)
-      return; // do not prefetch from mailnews
-    if (treeItem = do_QueryInterface(docshell)) {
-      treeItem->GetParent(getter_AddRefs(parentItem));
-      if (parentItem) {
-        treeItem = parentItem;
-        docshell = do_QueryInterface(treeItem);
-        if (!docshell) {
-          NS_ERROR("cannot get a docshell from a treeItem!");
-          return;
-        }
-      }
-    }
-  } while (parentItem);
-  
-  // OK, we passed the security check...
-  
-  nsCOMPtr<nsIPrefetchService> prefetchService(
-          do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
-  if (prefetchService) {
-    // construct URI using document charset
-    nsCAutoString charset;
-    mDocument->GetDocumentCharacterSet(charset);
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), aHref,
-              charset.IsEmpty() ? nsnull : charset.get(),
-            mDocumentBaseURL);
-    if (uri)
-      prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
-  }
 }
 
 nsresult
@@ -4835,167 +4258,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   return rv;
 }
 
-nsresult
-HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
-{
-  NS_ASSERTION(aChannel, "can't process http headers without a channel");
-
-  nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
-
-  if (!httpchannel) {
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-
-  const char *const headers[] = {
-    "link",
-    "default-style",
-    "content-style-type",
-    // add more http headers if you need
-    0
-  };
-
-  const char *const *name = headers;
-  nsCAutoString tmp;
-
-  while (*name) {
-    rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
-    if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
-      nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
-      ProcessHeaderData(key, NS_ConvertASCIItoUCS2(tmp));
-    }
-    name++;
-  }
-
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
-                                   nsIHTMLContent* aContent)
-{
-  nsresult rv = NS_OK;
-  // XXX necko isn't going to process headers coming in from the
-  // parser
-
-  mDocument->SetHeaderData(aHeader, aValue);
-
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  // see if we have a refresh "header".
-  if (aHeader == nsHTMLAtoms::refresh) {
-    // first get our baseURI
-
-    nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
-    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mDocShell);
-    if (reefer) {
-      rv = reefer->SetupRefreshURIFromHeader(baseURI,
-                                             NS_ConvertUCS2toUTF8(aValue));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  } else if (aHeader == nsHTMLAtoms::setcookie) {
-
-    nsCOMPtr<nsICookieService> cookieServ =
-      do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Get a URI from the document principal
-
-    // We use the original codebase in case the codebase was changed
-    // by SetDomain
-
-    nsCOMPtr<nsIPrincipal> docPrincipal;
-    rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv) || !docPrincipal) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(docPrincipal, &rv));
-    // Document principal should always be an aggregate
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPrincipal> originalPrincipal;
-    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
-    nsCOMPtr<nsICodebasePrincipal> originalCodebase =
-      do_QueryInterface(originalPrincipal, &rv);
-    if (NS_FAILED(rv)) {
-      // Document's principal is not a codebase (may be system), so
-      // can't set cookies
-
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIURI> codebaseURI;
-    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    char *cookie = ToNewUTF8String(aValue);
-    nsCOMPtr<nsIScriptGlobalObject> globalObj;
-    nsCOMPtr<nsIPrompt> prompt;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    if (globalObj) {
-      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
-      if (window) {
-        window->GetPrompter(getter_AddRefs(prompt));
-      }
-    }
-
-    nsCOMPtr<nsIChannel> channel;
-    if (mParser) {
-      mParser->GetChannel(getter_AddRefs(channel));
-    }
-
-    rv = cookieServ->SetCookieString(codebaseURI, prompt, cookie, channel);
-    nsCRT::free(cookie);
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  } else if (aHeader == nsHTMLAtoms::link) {
-    rv = ProcessLinkHeader(aContent, aValue);
-  }
-  else if (aHeader == nsHTMLAtoms::msthemecompatible) {
-    // Disable theming for the presshell if the value is no.
-    nsAutoString value(aValue);
-    if (value.EqualsIgnoreCase("no")) {
-      nsIPresShell *shell = mDocument->GetShellAt(0);
-      if (shell)
-        shell->DisableThemeSupport();
-    }
-  }
-  else if (mParser) {
-    // we also need to report back HTTP-EQUIV headers to the channel
-    // so that it can process things like pragma: no-cache or other
-    // cache-control headers. Ideally this should also be the way for
-    // cookies to be set! But we'll worry about that in the next
-    // iteration
-    nsCOMPtr<nsIChannel> channel;
-    if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel) {
-        const char* header;
-        (void)aHeader->GetUTF8String(&header);
-        (void)httpChannel->SetResponseHeader(nsDependentCString(header),
-                                             NS_ConvertUCS2toUTF8(aValue),
-                                             PR_TRUE);
-      }
-    }
-  }
-
-  return rv;
-}
-
 #ifdef DEBUG
 void
 HTMLContentSink::ForceReflow()
@@ -5144,7 +4406,7 @@ HTMLContentSink::ResumeParsing()
   return result;
 }
 
-PRBool
+void
 HTMLContentSink::PreEvaluateScript()
 {
   // Eagerly append all pending elements (including the current body child)
@@ -5155,90 +4417,12 @@ HTMLContentSink::PreEvaluateScript()
 
   mCurrentContext->FlushTags(PR_FALSE);
   mCurrentContext->SetPreAppend(PR_TRUE);
-
-  return PR_TRUE;
 }
 
 void
 HTMLContentSink::PostEvaluateScript()
 {
   mCurrentContext->SetPreAppend(PR_FALSE);
-}
-
-NS_IMETHODIMP
-HTMLContentSink::ScriptAvailable(nsresult aResult,
-                                 nsIDOMHTMLScriptElement *aElement,
-                                 PRBool aIsInline,
-                                 PRBool aWasPending,
-                                 nsIURI *aURI,
-                                 PRInt32 aLineNo,
-                                 const nsAString& aScript)
-{
-  // Check if this is the element we were waiting for
-  PRUint32 count;
-  mScriptElements->Count(&count);
-
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
-    do_QueryElementAt(mScriptElements, count - 1);
-  if (aElement != scriptElement) {
-    return NS_OK;
-  }
-
-  if (mParser && !mParser->IsParserEnabled()) {
-    // make sure to unblock the parser before evaluating the script,
-    // we must unblock the parser even if loading the script failed or
-    // if the script was empty, if we don't, the parser will never be
-    // unblocked.
-    mParser->UnblockParser();
-  }
-
-  // Mark the current script as loaded
-  mNeedToBlockParser = PR_FALSE;
-
-  if (NS_SUCCEEDED(aResult) && aResult != NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
-    PreEvaluateScript();
-  } else {
-    mScriptElements->RemoveElementAt(count - 1);
-
-    if (mParser && aWasPending) {
-      // Loading external script failed!. So, resume
-      // parsing since the parser got blocked when loading
-      // external script. - Ref. Bug: 94903
-      mParser->ContinueParsing();
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::ScriptEvaluated(nsresult aResult,
-                                 nsIDOMHTMLScriptElement *aElement,
-                                 PRBool aIsInline,
-                                 PRBool aWasPending)
-{
-  // Check if this is the element we were waiting for
-  PRUint32 count;
-  mScriptElements->Count(&count);
-
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
-    do_QueryElementAt(mScriptElements, count - 1);
-  if (aElement != scriptElement) {
-    return NS_OK;
-  }
-
-  // Pop the script element stack
-  mScriptElements->RemoveElementAt(count - 1);
-
-  if (NS_SUCCEEDED(aResult)) {
-    PostEvaluateScript();
-  }
-
-  if (mParser && mParser->IsParserEnabled() && aWasPending) {
-    mParser->ContinueParsing();
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -5329,7 +4513,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mNeedToBlockParser = PR_TRUE;
 
     nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(element);
-    mScriptElements->AppendElement(scriptElement);
+    mScriptElements.AppendObject(scriptElement);
   }
 
   // Insert the child into the content tree. This will evaluate the
@@ -5524,9 +4708,9 @@ HTMLContentSink::DumpContentModel()
       nsIContent* root = nsnull;
       mDocument->GetRootContent(&root);
       if (root) {
-        if (mDocumentURI) {
+        if (mDocumentURL) {
           nsCAutoString buf;
-          mDocumentURI->GetSpec(buf);
+          mDocumentURL->GetSpec(buf);
           fputs(buf.get(), out);
         }
 
