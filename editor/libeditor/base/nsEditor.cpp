@@ -1633,8 +1633,11 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
 
   PRInt32 wrapColumn = 72;
   GetWrapWidth(&wrapColumn);
+  if (wrapColumn > 0)
+    flags |= nsIDocumentEncoder::OutputWrap;
   rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                          aFormat.GetUnicode(), NS_LITERAL_STRING(""), flags, wrapColumn);
+                         aFormat.GetUnicode(), NS_LITERAL_STRING(""),
+                         flags, wrapColumn);
   if (NS_SUCCEEDED(rv))
     DoAfterDocumentSave();
 
@@ -3273,7 +3276,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         nsIDOMNode*  aParent)
 {
 
-  if (gNoisy) { printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", aNewLeftNode, aExistingRightNode, aOffset); }
+  if (gNoisy) { printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", (void*)aNewLeftNode, (void*)aExistingRightNode, aOffset); }
   
   nsresult result;
   NS_ASSERTION(((nsnull!=aExistingRightNode) &&
@@ -4636,7 +4639,7 @@ nsEditor::GetBlockSection(nsIDOMNode *aChild,
   }
   NS_ADDREF((*aRightNode));
   if (gNoisy) { printf("GetBlockSection returning %p %p\n", 
-                      (*aLeftNode), (*aRightNode)); }
+                       (void*)(*aLeftNode), (void*)(*aRightNode)); }
 
   return result;
 }
@@ -4691,7 +4694,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
             result = GetBlockSection(currentNode,
                                      getter_AddRefs(leftNode),
                                      getter_AddRefs(rightNode));
-            if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", currentNode.get(), leftNode.get(), rightNode.get());}
+            if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", (void*)currentNode.get(), (void*)leftNode.get(), (void*)rightNode.get());}
             if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
             {
               // add range to the list if it doesn't overlap with the previous range
@@ -4704,12 +4707,12 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
                 blockParentOfLastStartNode = do_QueryInterface(GetBlockNodeParent(lastStartNode));
                 if (blockParentOfLastStartNode)
                 {
-                  if (gNoisy) {printf("lastStartNode %p has block parent %p\n", lastStartNode.get(), blockParentOfLastStartNode.get());}
+                  if (gNoisy) {printf("lastStartNode %p has block parent %p\n", (void*)lastStartNode.get(), (void*)blockParentOfLastStartNode.get());}
                   nsCOMPtr<nsIDOMElement> blockParentOfLeftNode;
                   blockParentOfLeftNode = do_QueryInterface(GetBlockNodeParent(leftNode));
                   if (blockParentOfLeftNode)
                   {
-                    if (gNoisy) {printf("leftNode %p has block parent %p\n", leftNode.get(), blockParentOfLeftNode.get());}
+                    if (gNoisy) {printf("leftNode %p has block parent %p\n", (void*)leftNode.get(), (void*)blockParentOfLeftNode.get());}
                     if (blockParentOfLastStartNode==blockParentOfLeftNode) {
                       addRange = PR_FALSE;
                     }
@@ -4718,7 +4721,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
               }
               if (PR_TRUE==addRange) 
               {
-                if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
+                if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", (void*)leftNode.get());}
                 nsCOMPtr<nsIDOMRange> range;
                 result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
                                                             NS_GET_IID(nsIDOMRange), getter_AddRefs(range));

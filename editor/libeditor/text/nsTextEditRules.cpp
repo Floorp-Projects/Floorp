@@ -168,14 +168,6 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
 
   mFlags = aFlags;
 
-  if (!alreadyPlaintext && willBePlaintext)
-  {
-    // Call the editor's SetWrapWidth(), which will
-    // set the styles appropriately for plaintext:
-    // XXX This shouldn't be hardcoded!  Why is this here?
-    mEditor->SetWrapWidth(72);
-  }
-
   return NS_OK;
 }
 
