@@ -87,6 +87,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mIsSeparator = PR_FALSE;
   mWebShell    = nsnull;
   mDOMElement  = nsnull;
+  mModifiers   = knsMenuItemNoModifier;
 }
 
 //-------------------------------------------------------------------------
