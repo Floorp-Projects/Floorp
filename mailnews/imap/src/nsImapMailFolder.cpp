@@ -1621,7 +1621,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                 nsCOMPtr<nsIImapIncomingServer> imapServer;
                 nsCOMPtr<nsIMsgIncomingServer> server;
 
-                nsresult rv = GetServer(getter_AddRefs(server));
+                rv = GetServer(getter_AddRefs(server));
                 if (server) 
                 {
                   imapServer = do_QueryInterface(server, &rv);
