@@ -137,6 +137,8 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 NS_IMETHODIMP 
 nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, PRInt32 proxyType, void** aProxyObject)
 {
+    nsresult rv;
+
     nsCOMPtr<nsIEventQueue> postQ(do_QueryInterface(destQueue));
 
     *aProxyObject = nsnull;
@@ -144,7 +146,6 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
     // post to primordial thread event queue if no queue specified
     if (postQ == nsnull)
     {
-        nsresult             rv;
         nsCOMPtr<nsIThread>  mainIThread;
         PRThread            *mainThread;
 
@@ -180,18 +181,26 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
         }
     }
     
-    NS_ADDREF(aObj);
+    nsISupports *realObject;
+    
+    // we need to do make sure that we addref the passed in object as well as ensure
+    // that it is of the requested IID;
+    
+    rv = aObj->QueryInterface(aIID, (void**)&realObject);
+
+    if ( NS_FAILED( rv ) )
+        return rv;
 
     // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
-    if (*aProxyObject != nsnull)
+    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, realObject, aIID);
+    
+    if (*aProxyObject == nsnull)
     {
-        return NS_OK;
+         NS_RELEASE(aObj);
+         return NS_ERROR_NO_INTERFACE; //fix error code?
     }
     
-    NS_RELEASE(aObj);
-
-    return NS_ERROR_NO_INTERFACE; //fix error code?
+    return NS_OK;   
 }   
 
 

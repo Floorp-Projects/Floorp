@@ -73,6 +73,11 @@ nsProxyObjectCallInfo::SetCompleted()
 }
 
 
+#ifdef debug_DOUGT
+static PRUint32 totalProxyObjects = 0;
+static PRUint32 outstandingProxyObjects = 0;
+#endif
+
 NS_IMPL_ISUPPORTS0(nsProxyObject)
 
 nsProxyObject::nsProxyObject()
@@ -81,6 +86,11 @@ nsProxyObject::nsProxyObject()
 }
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
+#ifdef debug_DOUGT
+totalProxyObjects++;
+outstandingProxyObjects++;
+#endif
+
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
@@ -92,6 +102,11 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
+#ifdef debug_DOUGT
+totalProxyObjects++;
+outstandingProxyObjects++;
+#endif
+
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
@@ -106,8 +121,10 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 
 nsProxyObject::~nsProxyObject()
 {   
-    if(mRealObject)
-        NS_RELEASE(mRealObject);
+#ifdef debug_DOUGT
+outstandingProxyObjects--;
+printf("[proxyobjects] %d total used in system, %d outstading\n", totalProxyObjects, outstandingProxyObjects);
+#endif
 }
 
 
