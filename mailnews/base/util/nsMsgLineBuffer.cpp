@@ -331,7 +331,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 		// of bytes left in our buffer, then we need to shift the start pos and its contents
 		// down to the beginning of m_dataBuffer...
 		PRUint32 numFreeBytesInBuffer = (m_dataBuffer + m_dataBufferSize) - (m_startPos + numBytesInBuffer);
-		if (numBytesInStream > numFreeBytesInBuffer)
+		if (numBytesInStream >= numFreeBytesInBuffer)
 		{
 			nsCRT::memcpy(m_dataBuffer, m_startPos, numBytesInBuffer);
 			m_dataBuffer[numBytesInBuffer] = '\0'; // make sure the end of the buffer is terminated
