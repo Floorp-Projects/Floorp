@@ -2720,36 +2720,17 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   aFocusController->SetFocusedWindow(ourWin);
 }
 
-static nsresult
-GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame** aScrollFrame) {
-
-  // Frames: viewport->scroll->scrollport (Gfx) or viewport->scroll (Native)
-  // Types:  viewport->scroll->sroll               viewport->scroll
-
+static nsIFrame*
+GetRootScrollFrame(nsIFrame* aRootFrame) {
   // Ensure root frame is a viewport frame
-  *aScrollFrame = nsnull;
-  if (aRootFrame) {
-    if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
-
-      // If child is scrollframe keep it (native)
-      nsIFrame* theFrame = aRootFrame->GetFirstChild(nsnull);
-      if (theFrame) {
-        if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
-          *aScrollFrame = theFrame;
-
-          // If the first child of that is scrollframe, use it instead (gfx)
-          theFrame = theFrame->GetFirstChild(nsnull);
-          if (theFrame) {
-            if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
-              *aScrollFrame = theFrame;
-            }
-          }
-        }
-      }
+  if (aRootFrame && nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
+    nsIFrame* theFrame = aRootFrame->GetFirstChild(nsnull);
+    if (theFrame && nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
+      return theFrame;
     }
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -3635,15 +3616,20 @@ PresShell::EndLoad(nsIDocument *aDocument)
   docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
 
   if (rootFrame && historyState) {
-    nsIFrame* scrollFrame = nsnull;
-    GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
+    nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
     if (scrollFrame) {
-      FrameManager()->RestoreFrameStateFor(scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
-
       nsIScrollableFrame* scrollableFrame;
       CallQueryInterface(scrollFrame, &scrollableFrame);
       NS_ASSERTION(scrollableFrame, "RootScrollFrame is not scrollable?");
       if (scrollableFrame) {
+        // XXX We shouldn't depend on the scrolling guts here. Make this
+        // go away!
+        nsIFrame* scrollBoxFrame = scrollFrame->GetFirstChild(nsnull);
+
+        if (scrollBoxFrame) {
+          FrameManager()->RestoreFrameStateFor(scrollBoxFrame, historyState,
+                                               nsIStatefulFrame::eDocumentScrollState);
+        }
         scrollableFrame->ScrollToRestoredPosition();
       }
     }
@@ -4601,11 +4587,15 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   // As the scroll position is 0 and this will cause us to loose
   // our previously saved place!
   if (aLeavingPage) {
-    nsIFrame* scrollFrame = nsnull;
-    GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
+    nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
     if (scrollFrame) {
-      FrameManager()->CaptureFrameStateFor(scrollFrame, historyState,
-                                       nsIStatefulFrame::eDocumentScrollState);
+      // XXX We shouldn't depend on the scrolling guts here. Make this
+      // go away!
+      nsIFrame* scrollBoxFrame = scrollFrame->GetFirstChild(nsnull);
+      if (scrollBoxFrame) {
+        FrameManager()->CaptureFrameStateFor(scrollBoxFrame, historyState,
+                                             nsIStatefulFrame::eDocumentScrollState);
+      }
     }
   }
 
