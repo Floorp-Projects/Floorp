@@ -363,6 +363,10 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
   mAbsoluteFrames.DestroyFrames(aPresContext);
 }
 
+/**
+ * NOTE: nsViewportFrame::ReflowFixedFrame is rather similar to this
+ * function, so changes made here may also need to be made there.
+ */
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -395,9 +399,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   kidReflowState.reason = aReason;
 
   // Send the WillReflow() notification and position the frame
-  nscoord x;
-
   aKidFrame->WillReflow(aPresContext);
+
+  // XXXldb We can simplify this if we come up with a better way to
+  // position views.
+  nscoord x;
   if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
     // Just use the current x-offset
     nsPoint origin;
