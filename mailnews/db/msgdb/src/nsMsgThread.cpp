@@ -211,7 +211,7 @@ nsresult nsMsgThread::RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr 
   mdb_pos outPos;
 
   nsMsgKey newHdrAncestor;
-  nsresult rv;
+  nsresult rv = NS_OK;
   // loop trying to find the oldest ancestor of this msg
   // that is a parent of the root. The oldest ancestor will
   // become the root of the thread.
