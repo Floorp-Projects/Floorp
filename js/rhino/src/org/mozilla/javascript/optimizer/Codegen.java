@@ -1239,9 +1239,8 @@ public class Codegen extends Interpreter {
                 break;
 
               case TokenStream.ADD: {
-                    generateCodeFromNode(child, node, trueLabel, falseLabel);
-                    generateCodeFromNode(child.getNext(),
-                                                 node, trueLabel, falseLabel);
+                    generateCodeFromNode(child, node, -1, -1);
+                    generateCodeFromNode(child.getNext(), node, -1, -1);
                     switch (node.getIntProp(Node.ISNUMBER_PROP, -1)) {
                         case Node.BOTH:
                             addByteCode(ByteCode.DADD);
