@@ -274,7 +274,7 @@ sub main {
   my $camino_test8_test              = 1;
   my $camino_layout_performance_test = 1;
   my $camino_startup_test            = 1;
-  my $camino_window_leaks_test       = 1;
+  my $camino_window_leaks_test       = 0;
 
   my $safari_layout_performance_test  = 0;
 
