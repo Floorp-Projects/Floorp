@@ -25,6 +25,8 @@
 #include "nsCRT.h"
 
 #include "nsPhGfxLog.h"
+#include <photon/PhRender.h>
+#include <Pt.h>
 
 //#define GFX_DEBUG
 
@@ -48,10 +50,18 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh()
 {
   NS_INIT_REFCNT();
 
+  mPixmap = nsnull;
+  mGC = nsnull;
+  mWidth = mHeight = 0;
+  mFlags = 0;
+
 }
 
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 {
+   PgShmemDestroy( mPixmap->image );
+   PmMemReleaseMC( (PmMemoryContext_t *) mGC);
+   free (mPixmap);
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -97,31 +107,38 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-
+printf ("kedl: drawingsurface lock\n");
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
+printf ("kedl: drawingsurface unlock\n");
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Unlock - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 {
+  *aWidth = mWidth;
+  *aHeight = mHeight;
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetDimensions - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen(PRBool *aOffScreen)
 {
+  *aOffScreen = mIsOffscreen;
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsOffScreen - Not Implemented\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsPixelAddressable(PRBool *aAddressable)
 {
+// FIXME
+  *aAddressable = PR_FALSE;
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsPixelAddressable - Not Implemented\n"));
 
   return NS_OK;
@@ -133,17 +150,72 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat(nsPixelFormat *aFormat)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t &aGC )
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
 {
+  mGC = aGC;
+  mIsOffscreen = PR_FALSE;	// is onscreen
+  mPixmap = NULL; // is onscreen
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t- Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t\n"));
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t &aGC, PRUint32 aWidth,
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height - Not Implemented\n"));
+//printf ("kedl: init with width and height\n");
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height\n"));
+
+  mholdGC = aGC;
+  mWidth = aWidth;
+  mHeight = aHeight;
+  mFlags = aFlags;
+
+// we can draw on this offscreen because it has no parent
+  mIsOffscreen = PR_TRUE;
+
+  PhImage_t *image;
+  PhDim_t dim;
+  PhArea_t    area;
+  PtArg_t     arg[3];
+
+  image = malloc(sizeof(PhImage_t));
+  mPixmap = image;
+
+  area.pos.x=0;
+  area.pos.y=0;
+  area.size.w=aWidth;
+  area.size.h=aHeight;
+  dim.w = area.size.w;
+  dim.h = area.size.h;
+  dim.h += 100;                 // kedl, uggggg hack! weird font not drawing unless
+                                // the surface is somewhat bigger??
+  dim.w ++;
+
+//printf ("kedl: create drawing surface: %d %d %d %d, %lu\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
+
+  PhPoint_t           translation = { 0, 0 }, center, radii;
+  PmMemoryContext_t   *mc;
+  short               bytes_per_pixel = 3;
+
+  memset( image, 0, sizeof(PhImage_t) );
+  image->type = Pg_IMAGE_DIRECT_888; // 3 bytes per pixel with this type
+  image->size = dim;
+  image->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
+  image->bpl = bytes_per_pixel*dim.w;
+
+  mc = PmMemCreateMC( image, &dim, &translation );
+
+  mGC = (PhGC_t *)mc;
+
+  // now all drawing goes into the memory context
+  PmMemStart( mc );
+
+  // DVS
+  PgSetRegion( mholdGC->rid );
+//  ApplyClipping();
+
   return NS_OK;
 }
 
@@ -157,4 +229,35 @@ NS_IMETHODIMP nsDrawingSurfacePh :: ReleaseGC( void )
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::ReleaseGC - Not Implemented\n"));
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
+{
+  if (mholdGC==nsnull) mholdGC = mGC;
+
+  if (mIsOffscreen)
+  {
+//printf ("going offscreen\n");
+    PmMemStart( (PmMemoryContext_t *) mGC);
+    PgSetRegion(mGC->rid);
+  }
+  else
+  {
+//printf ("going onscreen\n");
+	PgSetGC(mGC);
+	PgSetRegion(mGC->rid);
+  }
+
+  return NS_OK;
+}
+
+void nsDrawingSurfacePh::Stop(void)
+{
+  PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+  PmMemStop( (PmMemoryContext_t *) mGC );
+}
+
+PhGC_t *nsDrawingSurfacePh::GetGC(void)
+{
+	return mGC;
 }
