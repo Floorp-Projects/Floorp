@@ -36,6 +36,52 @@
 
 #define STACK_TREASHOLD 1000
 
+//------------------------------------------------------------------------
+// Carbon compatible accessor functions
+//------------------------------------------------------------------------
+
+#if !TARGET_CARBON
+
+inline void GetPortClipRegion(GrafPtr port, RgnHandle clipRgn)
+{
+	::CopyRgn(port->clipRgn, clipRgn);
+}
+
+inline void GetPortBounds(GrafPtr port, Rect* portRect)
+{
+	*portRect = port->portRect;
+}
+
+inline void SetPortWindowPort(WindowRef window)
+{
+	::SetPort(window);
+}
+
+#endif
+
+//------------------------------------------------------------------------
+// utility port setting class
+//------------------------------------------------------------------------
+
+class StPortSetter {
+public:
+	StPortSetter(WindowPtr destWindowPort)
+	{
+		::GetPort(&mOldPort);
+		::SetPortWindowPort(destWindowPort);
+	}
+				
+	~StPortSetter()
+	{
+		::SetPort(mOldPort);
+	}
+
+protected:
+	GrafPtr		mOldPort;
+};
+
+//------------------------------------------------------------------------
+
 nsRenderingContextMac::nsRenderingContextMac()
 {
 	NS_INIT_REFCNT();
@@ -171,13 +217,8 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 
 	if (!mSavePort) {
 		::GetPort(&mSavePort);
-		if (mSavePort) {
-		  #if TARGET_CARBON
+		if (mSavePort)
 			::GetPortBounds(mSavePort, &mSavePortRect);
-		  #else
-			mSavePortRect = mSavePort->portRect;
-		  #endif
-		}
 	}
 	
 	// if surface is changing, be extra conservative about graphic state changes.
@@ -380,19 +421,13 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 	::SetRect(&macDstRect, dstRect.x, dstRect.y, dstRect.x + dstRect.width, dstRect.y + dstRect.height);
   
 	// get the source clip region
-#if TARGET_CARBON
-	RgnHandle clipRgn = sNativeRegionPool.GetNewRegion();
-#else
-	RgnHandle clipRgn = nsnull;
-#endif
+	StRegionFromPool clipRgn;
+	if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;
+		
 	if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) {
-#if TARGET_CARBON
 		::GetPortClipRegion(srcPort, clipRgn);
-#else
-		clipRgn = srcPort->clipRgn;
-#endif
 	} else
-		clipRgn = mGS->mMainRegion;
+		::CopyRgn(mGS->mMainRegion, clipRgn);
 
 	// get the destination port and surface
 	GrafPtr destPort;
@@ -412,6 +447,9 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 		saveSurface = mCurrentSurface;
 		SelectDrawingSurface(destSurface);
 	}
+
+	// make sure the current port is correct. where else does this need to be done?
+	StPortSetter setter(destPort);
 
 	// set the right colors for CopyBits
 	RGBColor foreColor;
@@ -445,11 +483,6 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 		  &macDstRect,
 		  srcCopy,
 		  clipRgn);
-
-#if TARGET_CARBON
-	if (clipRgn != nsnull)
-		sNativeRegionPool.ReleaseRegion(clipRgn);
-#endif
 
 	// restore colors and surface
 	if (changedForeColor)
