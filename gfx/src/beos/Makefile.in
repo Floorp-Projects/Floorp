@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsRegionBeOS.cpp \
 		nsScreenBeOS.cpp \
 		nsScreenManagerBeOS.cpp \
+		nsPrintOptionsBeOS.cpp \
 		$(NULL)
 
 REQUIRES	= xpcom \
