@@ -31,6 +31,8 @@ NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 //#define PgFLUSH() PgFlush()
 #define PgFLUSH()
 
+extern void do_bmp(char *ptr,int bpl,int x,int y);
+
 // ----------------------------------------------------------------
 nsImagePh :: nsImagePh()
 {
@@ -359,7 +361,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     aWidth = mWidth;
     aHeight = mHeight;
   }
-  
+
+#if 1
   /* Create a new GC just for this image */
   PhGC_t *newGC = PgCreateGC(0);
   PgDefaultGC(newGC);
@@ -373,6 +376,11 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     PhRect_t rect = { {aRect.x,aRect.y}, {aRect.x+aRect.width-1,aRect.y+aRect.height-1}};
     PgSetMultiClip(1,&rect);  
   }
+
+  newGC->translation = previousGC->translation;
+  newGC->rid = previousGC->rid;
+  newGC->target_rid = previousGC->target_rid;
+#endif
   
 #if 1
   /* Print out all the clipping that applies */
@@ -409,15 +417,6 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
   //printf("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl);
-
-#if 0
-if ( (mImage.size.w==100) && (mImage.size.h==38))
-{
-  /* this causes trouble if logging is OFF */
-  printf("skipping image\n");
-  return NS_OK;
-}
-#endif
 
   if( mAlphaBits )
   {
@@ -480,14 +479,31 @@ if ( (mImage.size.w==100) && (mImage.size.h==38))
       abort();
 	  return NS_ERROR_FAILURE;
     }
+
+#if 1
+    /* Try to dump the image to a BMP file */
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image to BMP\n"));
+
+     unsigned char *ptr;
+     ptr = mImage.image;  
+ 
+     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image info w,h,d=(%d,%d,%d) mColorMap=<%p> \n",
+	   mWidth, mHeight, mDepth, mColorMap));
+
+
+    do_bmp(ptr, mImage.bpl/3, mImage.size.w, mImage.size.h);
+#endif
+
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
   //printf("nsImagePh::Draw2 this=<%p> finished \n", this);
 
+#if 1
   /* Restore the old GC */
   PgSetGC(previousGC);
   PgDestroyGC(newGC);
+#endif
 
   PgFLUSH();	//kedl
   return NS_OK;
@@ -589,7 +605,7 @@ PRInt32 nsImagePh::GetWidth()
 
 PRUint8* nsImagePh::GetBits()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBits\n" ));
+  //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBits\n" ));
   return mImageBits;
 }
 
@@ -676,7 +692,7 @@ void* nsImagePh::GetBitInfo()
 NS_IMETHODIMP
 nsImagePh::LockImagePixels(PRBool aMaskPixels)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::LockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
+  //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::LockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
 
   return NS_OK;
 }
@@ -686,7 +702,7 @@ nsImagePh::LockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImagePh::UnlockImagePixels(PRBool aMaskPixels)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::UnlockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
+  //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::UnlockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
 
   return NS_OK;
 }

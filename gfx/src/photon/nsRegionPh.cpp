@@ -376,9 +376,11 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
   nsRegionRect      *rect;
   PhTile_t	        *t = mRegion;
 
-  /* Count the Tiles */
-  t = PhCoalesceTiles( PhMergeTiles( PhSortTiles( t )));  
+/* kirkj this was causing a crash in nsWidget::UpdateWidgetDamage when */
+/*       loading pages under viewer. 11/15/99 */
+//  t = PhCoalesceTiles( PhMergeTiles( PhSortTiles( t )));  
 
+  /* Count the Tiles */
   while(t)
   {
     nbox++;  

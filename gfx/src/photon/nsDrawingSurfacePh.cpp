@@ -83,10 +83,10 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
     }
   }
 
-#if 1
+    Stop();
+	
   if (mIsOffscreen)
   {
-    Stop();
     //PmMemReleaseMC( mMC);				/* this function has an error! */
       free(mMC);
     mMC = nsnull;
@@ -95,7 +95,6 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
     PR_Free (mPixmap);
 	mPixmap = nsnull;
   }
-#endif
 }
 
   /**
@@ -120,7 +119,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock mLocked=<%d>\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock this=<%p> mLocked=<%d>\n", this, mLocked));
 
   if (mLocked)
   {

@@ -43,6 +43,8 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
 
 nsDeviceContextPh :: nsDeviceContextPh()
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::nsDeviceContextPh this=<%p>\n", this));
+
   NS_INIT_REFCNT();
   
   mTwipsToPixels = 1.0;
@@ -66,7 +68,7 @@ nsDeviceContextPh :: nsDeviceContextPh()
 
 nsDeviceContextPh :: ~nsDeviceContextPh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::~nsDeviceContextPh destructor called mSurface=<%p>\n", mSurface));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::~nsDeviceContextPh destructor called this=<%p> mSurface=<%p>\n", this, mSurface));
 
   nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *)mSurface;
 
