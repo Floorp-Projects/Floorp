@@ -32,6 +32,7 @@ GRE_MODULE	= 1
 XPIDLSRCS	= \
 		nsIJVMManager.idl \
 		nsIJVMPluginInstance.idl \
+		nsIJVMAuthTools.idl \
 		$(NULL)
 
 EXPORTS		= \
