@@ -612,12 +612,12 @@ function ThreadPaneOnClick(event)
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
-    if (targetclass == 'twisty') {
+    if (targetclass == 'tree-cell-twisty') {
         // The twisty is nested three below the treeitem:
         // <treeitem>
         //   <treerow>
         //     <treecell>
-        //         <titledbutton class="twisty"> <!-- anonymous -->
+        //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
         var treeitem = event.target.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true")
@@ -670,15 +670,17 @@ function GetServer(uri)
 
 function FolderPaneOnClick(event)
 {
+	debug("in FolderPaneClick()\n");
+
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
-    if (targetclass == 'twisty') {
+    if (targetclass == 'tree-cell-twisty') {
         // The twisty is nested three below the treeitem:
         // <treeitem>
         //   <treerow>
         //     <treecell>
-        //         <titledbutton class="twisty"> <!-- anonymous -->
+        //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
         var treeitem = event.target.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true") {
