@@ -58,8 +58,7 @@
  
   <vbox id="servers" flex="1">
   
-      <description id="allowExcept" value="&allowExcept.label;" hidden="true"/>
-      <description id="blockExcept" value="&blockExcept.label;" hidden="true"/>
+      <description id="allowPopups" value="&allowPopups.label;"/>
 
       <separator class="thin"/>
 
@@ -78,8 +77,8 @@
             hidecolumnpicker="true"
             onkeypress="handlePermissionKeyPress(event)"
             onselect="permissionSelected();"
-            lastSortBlacklist="false" lastSortWhitelist="false"
-            persist="lastSortBlacklist lastSortWhitelist">
+            sortAscending="false"
+            persist="sortAscending">
         <treecols>
           <treecol id="siteCol" label="&treehead.sitename.label;" flex="1"
                    onclick="permissionColumnSort();"/>

@@ -24,24 +24,15 @@
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 const popupType = nsIPermissionManager.POPUP_TYPE;
 
-var popupManager = null;
 var permissionManager = null;
 
 var permissions = [];
 
-var listCapability; // the capability of sites on the currently viewed list
-// TRUE: current popup policy is BLOCK ALL WITH EXCEPTIONS - sites on
-// the whitelist are allowed and have permission.capability = true
-// FALSE: current popup policy is ALLOW ALL WITH EXCEPTIONS - sites on
-// the blacklist are blocked and have permission.capability = false
-
 var additions = [];
 var removals = [];
 
-const SIMPLEURI_CONTRACTID = "@mozilla.org/network/simple-uri;1";
-
 var sortColumn = "host";
-var lastSort = false;
+var sortAscending = false;
 
 var permissionsTreeView = {
     rowCount: 0,
@@ -66,76 +57,27 @@ var permissionsTree;
 var popupStringBundle;
 
 function Startup() {
-  popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
-                           .getService(Components.interfaces.nsIPopupWindowManager);
   permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
-                           .getService(Components.interfaces.nsIPermissionManager);
+                                .getService(Components.interfaces.nsIPermissionManager);
 
   permissionsTree = document.getElementById("permissionsTree");
 
   popupStringBundle = document.getElementById("popupStringBundle");
-  var title;
 
-  if (window.arguments[0]) {
-    document.getElementById("blockExcept").hidden = false;
-    lastSort = (permissionsTree.getAttribute("lastSortWhitelist") == "true");
-    title = popupStringBundle.getString("whitelistTitle");
-  }
-  else {
-    document.getElementById("allowExcept").hidden = false;
-    lastSort = (permissionsTree.getAttribute("lastSortBlacklist") == "true");
-    title = popupStringBundle.getString("blacklistTitle");
-  }
+  // window.args[0]: host to prefill
+  // window.args[1]: true = opened from pref panel, false = opened from tools menu or statusbar icon
 
-  document.getElementById("popupManager").setAttribute("title", title);
-
-  listCapability = window.arguments[0];
+  sortAscending = (permissionsTree.getAttribute("sortAscending") == "true");
 
   loadPermissions(permissions);
   loadTree();
    
-  if (window.arguments[1]) { // dialog opened from statusbar icon
-    if (listCapability) {
-      document.getElementById("addSiteBox").value = window.arguments[1];
-    }
-    else {
-     // pre-pend '.' so we always match on host boundaries. Otherwise 
-     // we might think notfoo.com matches foo.com
-      var currentLoc = '.'+window.arguments[1];
-      var nextHost;
-      var inList;
-
-      var matchIndex;
-      var matchLength = 0;
-
-      for (var i = 0; i < permissionsTreeView.rowCount; i++) {
-        nextHost = '.'+permissions[i].host;
-
-        if (currentLoc.length < nextHost.length)
-          continue; // can't be a match, list host is more specific
-
-        // look for an early out exact match -- check length first for speed
-        if (currentLoc.length == nextHost.length && nextHost == currentLoc) {
-          inList = true;
-          matchIndex = i;
-          break;
-        }
-
-        if (nextHost == currentLoc.substr(currentLoc.length - nextHost.length)) { 
-          inList = true;
-          if (listCapability) // host is already on whitelist, don't prefill
-            break;
-
-          if (nextHost.length > matchLength) {
-            matchIndex = i;
-            matchLength = nextHost.length;
-          }
-        }        
-      }
-      
-      if (inList) // host is in blacklist, select for removal
-        permissionsTree.treeBoxObject.view.selection.select(matchIndex);
-    }
+  if (window.arguments[0] != "") {
+    // fill textbox to unblock/add to whitelist
+    var prefill = window.arguments[0];
+    if (prefill.indexOf("www.") == 0) 
+      prefill = prefill.slice(4);
+    document.getElementById("addSiteBox").value = prefill;
   }
 
   document.documentElement.addEventListener("keypress", onReturnHit, true);
@@ -143,19 +85,47 @@ function Startup() {
   window.sizeToContent();
 }
 
+function getMatch(host) {
+  // pre-pend '.' so we always match on host boundaries. Otherwise 
+  // we might think notfoo.com matches foo.com
+  var currentLoc = '.'+host;
+  var nextHost;
+  var inList;
+
+  var matchIndex = null;
+  var matchLength = 0;
+
+  for (var i = 0; i < permissionsTreeView.rowCount; i++) {
+    nextHost = '.'+permissions[i].host;
+
+    if (currentLoc.length < nextHost.length)
+      continue; // can't be a match, list host is more specific
+
+    // look for an early out exact match -- check length first for speed
+    if (currentLoc.length == nextHost.length && nextHost == currentLoc) {
+      inList = true;
+      matchIndex = i;
+      break;
+    }
+
+    if (nextHost == currentLoc.substr(currentLoc.length - nextHost.length)) { 
+      inList = true;
+      if (nextHost.length > matchLength) {
+        matchIndex = i;
+        matchLength = nextHost.length;
+      }
+    }        
+  }
+      
+  return matchIndex;
+}
+
 function onAccept() {
   finalizeChanges();
   
-  var unblocked; 
+  var unblocked = additions; 
 
-  if (listCapability) {
-    unblocked = additions;
-    permissionsTree.setAttribute("lastSortWhitelist", !lastSort);
-  }
-  else {
-    unblocked = removals;
-    permissionsTree.setAttribute("lastSortBlacklist", !lastSort);
-  }
+  permissionsTree.setAttribute("sortAscending", !sortAscending);
 
   var nextLocation;
   var nextUnblocked;
@@ -195,9 +165,8 @@ function onAccept() {
     } 
   }
 
-  if (window.arguments[2])
+  if (window.arguments[1])
     window.opener.setButtons();
-
 
   return true;                                           
 }
@@ -215,8 +184,7 @@ function loadPermissions(table) {
     var permission = enumerator.getNext();
     if (permission) {
       permission = permission.QueryInterface(Components.interfaces.nsIPermission);
-      if ((permission.type == popupType) &&
-          (permission.capability == listCapability)) {
+      if ((permission.type == popupType) && (permission.capability == nsIPermissionManager.ALLOW_ACTION)) {
         var host = permission.host;
         table[count] = new Permission(host,count++);
       }
@@ -237,9 +205,9 @@ function loadTree() {
 }
 
 function permissionColumnSort() {
-  lastSort = 
+  sortAscending = 
     SortTree(permissionsTree, permissionsTreeView, permissions,
-             sortColumn, sortColumn, lastSort);
+             sortColumn, sortColumn, sortAscending);
 }
 
 function permissionSelected() {
@@ -327,8 +295,7 @@ function finalizeChanges() {
   var uri;
   var host;
   var i;
-
-  var perm = (listCapability == true) ? nsIPermissionManager.ALLOW_ACTION : nsIPermissionManager.DENY_ACTION
+  
   //note: the scheme will be taken off later, it is being added now only to
   //create the uri for add/remove
   for (i in additions) {
@@ -336,7 +303,7 @@ function finalizeChanges() {
     if (host != null) {
       host = "http://" + host;
       uri = ioService.newURI(host, null, null);
-      permissionManager.add(uri, popupType, listCapability);
+      permissionManager.add(uri, popupType, true);
     }
   }
 
@@ -402,7 +369,7 @@ function addPermission() {
       var newPermission = new Permission(host, length);
       permissions.push(newPermission);
 
-      lastSort = !lastSort; //keep same sort direction
+      sortAscending = !sortAscending; //keep same sort direction
       loadTree();
     
       if (removals[host] != null)
@@ -434,7 +401,7 @@ function onReturnHit(event) {
 }
 
 function doHelpButton() {
-  openHelp("pop_up_blocking_prefs");
+  openHelp("pop_up_blocking");
   return true;
 }
 
