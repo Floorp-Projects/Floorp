@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.20 2002/05/21 21:26:14 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.21 2002/06/13 23:25:37 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3565,6 +3565,100 @@ nsslowcert_CertNicknameConflict(char *nickname, SECItem *derSubject,
 #define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
 #endif
 
+static SECStatus
+openNewCertDB(const char *appName, const char *prefix, const char *certdbname, 
+    NSSLOWCERTCertDBHandle *handle, NSSLOWCERTDBNameFunc namecb, void *cbarg)
+{
+    SECStatus rv;
+    certDBEntryVersion *versionEntry = NULL;
+    DB *updatedb = NULL;
+    char *tmpname;
+    PRBool updated = PR_FALSE;
+    PRBool forceUpdate = PR_FALSE;
+
+    if (appName) {
+	handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
+    } else {
+	handle->permCertDB=dbopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
+    }
+
+    /* if create fails then we lose */
+    if ( handle->permCertDB == 0 ) {
+	return SECFailure;
+    }
+
+    rv = db_BeginTransaction(handle->permCertDB);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
+
+    /* Verify version number; */
+
+    if (appName) {
+	updatedb = dbopen(certdbname, NO_RDONLY, 0600, DB_HASH, 0);
+	if (updatedb) {
+	    db_Copy(handle->permCertDB,updatedb);
+	    (*updatedb->close)(updatedb);
+	    db_FinishTransaction(handle->permCertDB,PR_FALSE);
+	    return(SECSuccess);
+	}
+    }
+
+    versionEntry = NewDBVersionEntry(0);
+    if ( versionEntry == NULL ) {
+	rv = SECFailure;
+	goto loser;
+    }
+	
+    rv = WriteDBVersionEntry(handle, versionEntry);
+
+    DestroyDBEntry((certDBEntry *)versionEntry);
+
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+
+    /* try to upgrade old db here */
+    tmpname = (* namecb)(cbarg, 6);	/* get v6 db name */
+    rv = SECSuccess;
+    if ( tmpname ) {
+	updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
+	PORT_Free(tmpname);
+	if ( updatedb ) {
+	    rv = UpdateV6DB(handle, updatedb);
+	} else { /* no v6 db, so try v5 db */
+	    tmpname = (* namecb)(cbarg, 5);	/* get v5 db name */
+	    if ( tmpname ) {
+		updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
+		PORT_Free(tmpname);
+		if ( updatedb ) {
+		    rv = UpdateV5DB(handle, updatedb);
+		} else { /* no v5 db, so try v4 db */
+		    /* try to upgrade v4 db */
+		    tmpname = (* namecb)(cbarg, 4);	/* get v4 db name */
+		    if ( tmpname ) {
+			updatedb = dbopen( tmpname, NO_RDONLY, 0600, 
+			                       DB_HASH, 0 );
+			PORT_Free(tmpname);
+			if ( updatedb ) {
+			    /* NES has v5 db's with v4 db names! */
+			    if (isV4DB(updatedb)) {
+				rv = UpdateV4DB(handle, updatedb);
+			    } else {
+				rv = UpdateV5DB(handle, updatedb);
+			    }
+			}
+		    }
+		}
+	    }
+        }
+    }
+
+loser:
+    db_FinishTransaction(handle->permCertDB,rv != SECSuccess);
+    return rv;
+}
+
 /*
  * Open the certificate database and index databases.  Create them if
  * they are not there or bad.
@@ -3576,12 +3670,8 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 {
     SECStatus rv;
     int openflags;
-    certDBEntryVersion *versionEntry = NULL;
-    DB *updatedb = NULL;
-    char *tmpname;
     char *certdbname;
-    PRBool updated = PR_FALSE;
-    PRBool forceUpdate = PR_FALSE;
+    certDBEntryVersion *versionEntry = NULL;
     
     certdbname = (* namecb)(cbarg, CERT_DB_FILE_VERSION);
     if ( certdbname == NULL ) {
@@ -3625,90 +3715,12 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 	if ( readOnly ) {
 	    goto loser;
 	}
-	
-	if (appName) {
-	    handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
 
-	    updatedb = dbopen(certdbname, NO_RDONLY, 0600, DB_HASH, 0);
-	    if (updatedb) {
-		db_Copy(handle->permCertDB,updatedb);
-		(*updatedb->close)(updatedb);
-		PORT_Free(certdbname);
-		return(SECSuccess);
-	    }
-	} else {
-	    handle->permCertDB=dbopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
-	}
-
-	/* if create fails then we lose */
-	if ( handle->permCertDB == 0 ) {
+	rv = openNewCertDB(appName,prefix,certdbname,handle,namecb,cbarg);
+	if (rv != SECSuccess) {
 	    goto loser;
 	}
 
-	versionEntry = NewDBVersionEntry(0);
-	if ( versionEntry == NULL ) {
-	    goto loser;
-	}
-	
-	rv = WriteDBVersionEntry(handle, versionEntry);
-
-	DestroyDBEntry((certDBEntry *)versionEntry);
-
-	if ( rv != SECSuccess ) {
-	    goto loser;
-	}
-
-	/* try to upgrade old db here */
-	tmpname = (* namecb)(cbarg, 6);	/* get v6 db name */
-	if ( tmpname ) {
-	    updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
-	    PORT_Free(tmpname);
-	    if ( updatedb ) {
-		rv = UpdateV6DB(handle, updatedb);
-		if ( rv != SECSuccess ) {
-		    goto loser;
-		}
-		updated = PR_TRUE;
-	    } else { /* no v6 db, so try v5 db */
-		tmpname = (* namecb)(cbarg, 5);	/* get v5 db name */
-		if ( tmpname ) {
-		    updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
-		    PORT_Free(tmpname);
-		    if ( updatedb ) {
-			rv = UpdateV5DB(handle, updatedb);
-			if ( rv != SECSuccess ) {
-			    goto loser;
-			}
-			updated = PR_TRUE;
-		    } else { /* no v5 db, so try v4 db */
-			/* try to upgrade v4 db */
-			tmpname = (* namecb)(cbarg, 4);	/* get v4 db name */
-			if ( tmpname ) {
-			    updatedb = dbopen( tmpname, NO_RDONLY, 0600, 
-			                       DB_HASH, 0 );
-			    PORT_Free(tmpname);
-			    if ( updatedb ) {
-				/* NES has v5 db's with v4 db names! */
-				if (isV4DB(updatedb)) {
-				    rv = UpdateV4DB(handle, updatedb);
-				} else {
-				    rv = UpdateV5DB(handle, updatedb);
-				}
-				if ( rv != SECSuccess ) {
-				    goto loser;
-				}
-				forceUpdate = PR_TRUE;
-				updated = PR_TRUE;
-			    }
-			}
-		    }
-		}
-	    }
-	}
-
-	/* Root certs are no longer automatically added to the DB. They
-	 * come from and external PKCS #11 file.
-	 */
     }
 
     PORT_Free(certdbname);
