@@ -3269,7 +3269,7 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   if (aNewIndex > aOldIndex)
     ScrollToRow(mTopRowIndex+1);
@@ -3279,7 +3279,7 @@ nsTreeBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex)
 }
   
 NS_IMETHODIMP
-nsTreeBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
+nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
   if (!EnsureScrollbar())
     return NS_ERROR_UNEXPECTED;

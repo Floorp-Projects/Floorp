@@ -101,6 +101,7 @@ nsNativeScrollbar::nsNativeScrollbar()
   : nsMacControl()
   , mContent(nsnull)
   , mMediator(nsnull)
+  , mScrollbar(nsnull)
   , mLineIncrement(0)
   , mMaxValue(0)
   , mVisibleImageSize(0)
@@ -157,7 +158,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
     // update the attributes on the content node (the scroll frame listens
     // for these attributes and will scroll accordingly). However,
     // if we have a mediator, we're in an outliner and we have to scroll by
-    // lines. Outliner ignores the params to ScrollbarButtonPressed() except
+    // lines. Outliner ignores the indexes in ScrollbarButtonPressed() except
     // to check if one is greater than the other to indicate direction.
     //
     
@@ -165,7 +166,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
       newPos = oldPos - (mLineIncrement ? mLineIncrement : 1);
       if ( mMediator ) {
         BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
       } else {
         UpdateContentPosition(newPos);
       }
@@ -175,7 +176,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
       newPos = oldPos + (mLineIncrement ? mLineIncrement : 1);
       if ( mMediator ) {
         BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
       } else {
         UpdateContentPosition(newPos); 
       }
@@ -197,7 +198,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
       
@@ -208,7 +209,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
       
@@ -219,7 +220,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
   }
@@ -512,9 +513,11 @@ nsNativeScrollbar::GetNarrowSize(PRInt32* outSize)
 // care about the mediator for <outliner> so we can do row-based scrolling.
 //
 NS_IMETHODIMP
-nsNativeScrollbar::SetContent(nsIContent* inContent, nsIScrollbarMediator* inMediator)
+nsNativeScrollbar::SetContent(nsIContent* inContent, nsISupports* inScrollbar, 
+                              nsIScrollbarMediator* inMediator)
 {
   mContent = inContent;
   mMediator = inMediator;
+  mScrollbar = inScrollbar;
   return NS_OK;
 }

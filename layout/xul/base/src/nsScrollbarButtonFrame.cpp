@@ -195,7 +195,7 @@ nsScrollbarButtonFrame::MouseClicked()
       nsCOMPtr<nsIScrollbarMediator> m;
       sb->GetScrollbarMediator(getter_AddRefs(m));
       if (m) {
-        m->ScrollbarButtonPressed(oldpos, curpos);
+        m->ScrollbarButtonPressed(sb, oldpos, curpos);
         return;
       }
     }

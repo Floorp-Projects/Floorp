@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
+ *    Nate Nielsen (nielsen@memberwebs.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,21 +40,25 @@
 #ifndef nsIScrollbarMediator_h___
 #define nsIScrollbarMediator_h___
 
-// {351C003A-E8F7-4d10-8BFA-635C9860D650}
+// {b589027f-271b-4c68-91df-04f139885e9a}
 #define NS_ISCROLLBARMEDIATOR_IID \
-{ 0x351c003a, 0xe8f7, 0x4d10, { 0x8b, 0xfa, 0x63, 0x5c, 0x98, 0x60, 0xd6, 0x50 } }
+{ 0xb589027f, 0x271b, 0x4c68, { 0x91, 0xdf, 0x04, 0xf1, 0x39, 0x88, 0x5e, 0x9a } }
 
-static NS_DEFINE_IID(kIScrollbarMediatorIID,     NS_ISCROLLBARMEDIATOR_IID);
+static NS_DEFINE_IID(kIScrollbarMediatorIID, NS_ISCROLLBARMEDIATOR_IID);
 
 class nsIScrollbarMediator : public nsISupports {
 
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLBARMEDIATOR_IID)
-  
-  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
-  NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
-  NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;
+  // The nsISupports aScrollbar argument below denotes the
+  // scrollbar that's firing the notification. It should be
+  // where the same object as where nsIScrollbarFrame is implemented
+
+  NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
+  NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+
+  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) = 0;
 };
 
 #endif

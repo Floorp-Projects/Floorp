@@ -53,10 +53,10 @@ interface nsIContent;
 interface nsIScrollbarMediator;
 
 
-[uuid(dd1cb116-1dd1-11b2-9e67-abac4e09d533)]
+[uuid(b77380bc-610b-49e3-8df7-18cc946285c5)]
 interface nsINativeScrollbar : nsISupports
 {
-  void setContent ( in nsIContent content, in nsIScrollbarMediator mediator);
+  void setContent ( in nsIContent content, in nsISupports scrollbar, in nsIScrollbarMediator mediator);
 
   readonly attribute long narrowSize;     // the width of a vertical scrollbar, height of horizontal  
   

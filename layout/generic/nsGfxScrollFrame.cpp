@@ -1615,7 +1615,7 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
     scrollbar->GetScrollbarMediator(getter_AddRefs(mediator));
     if (mediator) {
       // Inform the mediator of the visibility change.
-      mediator->VisibilityChanged(aVisible);
+      mediator->VisibilityChanged(scrollbar, aVisible);
     }
   }
 }

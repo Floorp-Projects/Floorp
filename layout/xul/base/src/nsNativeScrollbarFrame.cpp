@@ -90,7 +90,7 @@ nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
   // the content node just to be safe about lifetime issues
   nsCOMPtr<nsINativeScrollbar> scrollbar ( do_QueryInterface(mScrollbar) );
   if ( scrollbar )
-    scrollbar->SetContent(nsnull, nsnull);
+    scrollbar->SetContent(nsnull, nsnull, nsnull);
 }
 
 
@@ -240,7 +240,7 @@ nsNativeScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
             nsCOMPtr<nsIScrollbarMediator> mediator;
             scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
             if (mediator)
-              mediator->PositionChanged(oldPosition, /* inout */ curPosition);
+              mediator->PositionChanged(scrollbarFrame, oldPosition, /* inout */ curPosition);
           }
 
           nsAutoString currentStr;
@@ -327,7 +327,7 @@ nsNativeScrollbarFrame::Hookup()
     return;
   }
 
-  scrollbar->SetContent(scrollbarContent, mediator);
+  scrollbar->SetContent(scrollbarContent, sb, mediator);
   mScrollbarNeedsContent = PR_FALSE;
 
   if (!scrollbarContent)
