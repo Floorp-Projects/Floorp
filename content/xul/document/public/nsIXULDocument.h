@@ -50,6 +50,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsIDocument.h"
 
 class nsForwardReference;
 class nsIAtom;
@@ -160,5 +161,6 @@ public:
 
 // factory functions
 nsresult NS_NewXULDocument(nsIXULDocument** result);
+nsresult NS_NewXULDocument(nsIDocument** result);
 
 #endif // nsIXULDocument_h___

@@ -652,7 +652,6 @@ nsHTMLScriptElement::MaybeProcessScript()
     rv = loader->ProcessScriptElement(this, this);
     mEvaluating = PR_FALSE;
   }
-
   if (rv == NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
 
     // If the script has NOT been executed yet then create a script

@@ -43,7 +43,7 @@
 #include "nsAutoPtr.h"
 #include "nsIStringBundle.h"
 
-#define NSMEDIADOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/MediaDocument.properties"
+#define NSMEDIADOCUMENT_PROPERTIES_URI "chrome://global/locale/layout/MediaDocument.properties"
 
 class nsMediaDocument : public nsHTMLDocument
 {
