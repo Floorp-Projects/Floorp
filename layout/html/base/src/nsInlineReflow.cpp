@@ -415,8 +415,8 @@ nsInlineReflow::ComputeAvailableSize()
   // the available space is zero because that way things that end up
   // zero sized won't trigger a new line to be created. We also allow
   // a reflow if we can't break before this frame.
-  mInNBU = mLineLayout.InNonBreakingUnit();
-  if (!mInNBU && mCanBreakBeforeFrame &&
+  mInWord = mLineLayout.InWord();
+  if (!mInWord && mCanBreakBeforeFrame &&
       ((mFrameAvailSize.width < 0) || (mFrameAvailSize.height < 0))) {
     return PR_FALSE;
   }
@@ -578,7 +578,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
   }
 
   // If this frame is part of a non-breaking-unit then it fits
-  if (mInNBU) {
+  if (mInWord) {
     return PR_TRUE;
   }
 
