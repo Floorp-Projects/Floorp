@@ -78,11 +78,13 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: SetValue(nsPluginInstancePeerVariable 
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMIMEType(nsMIMEType *result)
 {
+  *result = "model/vrml";
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMode(nsPluginMode *result)
 {
+  *result = nsPluginMode_Full;
   return NS_OK;
 }
 
@@ -99,6 +101,8 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values)
 {
   n = 0;
+  names = nsnull;
+  values = nsnull;
   return NS_OK;
 }
 
