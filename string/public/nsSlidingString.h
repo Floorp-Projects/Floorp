@@ -92,16 +92,16 @@ class NS_COM nsSlidingSubstring
         }
 
       nsSlidingSubstring( const nsSlidingSubstring& );  // copy-constructor
-      nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
+      nsSlidingSubstring( const nsSlidingSubstring& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd );
       nsSlidingSubstring( const nsSlidingString& );
-      nsSlidingSubstring( const nsSlidingString& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
+      nsSlidingSubstring( const nsSlidingString& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd );
       explicit nsSlidingSubstring( const nsAString& );
         // copy the supplied string into a new buffer ... there will be no modifying instance over this buffer list
 
       void Rebind( const nsSlidingSubstring& );
-      void Rebind( const nsSlidingSubstring&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+      void Rebind( const nsSlidingSubstring&, const nsAString::const_iterator&, const nsAString::const_iterator& );
       void Rebind( const nsSlidingString& );
-      void Rebind( const nsSlidingString&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+      void Rebind( const nsSlidingString&, const nsAString::const_iterator&, const nsAString::const_iterator& );
       void Rebind( const nsAString& );
 
      ~nsSlidingSubstring();
@@ -177,14 +177,14 @@ class NS_COM nsSlidingString
 
 //    void Append( ... ); do you want some |Append|s that copy the supplied data?
 
-      void DiscardPrefix( const nsReadingIterator<PRUnichar>& );
+      void DiscardPrefix( const nsAString::const_iterator& );
         // any other way you want to do this?
 
     protected:
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
       virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) { return 0; }
 
-      void InsertReadable( const nsAString&, const nsReadingIterator<PRUnichar>& ); // ...to implement |nsScannerString::UngetReadable| 
+      void InsertReadable( const nsAString&, const nsAString::const_iterator& ); // ...to implement |nsScannerString::UngetReadable| 
 
     private:
 

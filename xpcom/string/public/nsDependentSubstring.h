@@ -166,14 +166,14 @@ Substring( const nsAString& aString, PRUint32 aStartPos, PRUint32 aSubstringLeng
 
 inline
 const nsDependentCSubstring
-Substring( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
+Substring( const nsACString::const_iterator& aStart, const nsACString::const_iterator& aEnd )
   {
     return nsDependentCSubstring(aStart, aEnd);
   }
 
 inline
 const nsDependentSubstring
-Substring( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+Substring( const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
   {
     return nsDependentSubstring(aStart, aEnd);
   }

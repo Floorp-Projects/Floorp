@@ -40,8 +40,8 @@
 #endif
 
 
-NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
-NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
+NS_COM size_t Distance( const nsAString::const_iterator&, const nsAString::const_iterator& );
+NS_COM size_t Distance( const nsACString::const_iterator&, const nsACString::const_iterator& );
 
 
 NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest );
@@ -140,8 +140,8 @@ NS_COM PRUnichar* CopyUnicodeTo( const nsAString& aSource,
    * @param aSrcEnd end source iterator
    * @param aDest destination for the copy
    */
-NS_COM void CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
-                           const nsReadingIterator<PRUnichar>& aSrcEnd,
+NS_COM void CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
+                           const nsAString::const_iterator& aSrcEnd,
                            nsAString& aDest );
 
   /**
@@ -154,8 +154,8 @@ NS_COM void CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
    * @param aSrcEnd end source iterator
    * @param aDest destination for the copy
    */
-NS_COM void AppendUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
-                             const nsReadingIterator<PRUnichar>& aSrcEnd,
+NS_COM void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
+                             const nsAString::const_iterator& aSrcEnd,
                              nsAString& aDest );
 
   /**
@@ -185,11 +185,11 @@ NS_COM void ToLowerCase( nsACString& );
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster, then we can implement that later.
    */
-NS_COM PRBool FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool FindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
+NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
-NS_COM PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
+NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
 
   /**
@@ -200,8 +200,8 @@ NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadi
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster, then we can implement that later.
    */
-NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
+NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
    /**
    * Finds the leftmost occurance of |aChar|, if any in the range 
@@ -211,8 +211,8 @@ NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsReadingIterator<cha
    * point to the match.  If no match was found, returns |PR_FALSE| and 
    * makes |aSearchStart == aSearchEnd|.
    */
-NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, const nsReadingIterator<PRUnichar>& aSearchEnd );
-NS_COM PRBool FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, const nsReadingIterator<char>& aSearchEnd );
+NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd );
+NS_COM PRBool FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd );
 
     /**
     * Finds the number of occurences of |aChar| in the string |aStr|
