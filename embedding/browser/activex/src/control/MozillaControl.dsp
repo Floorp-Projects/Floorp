@@ -206,10 +206,6 @@ SOURCE=.\DropTarget.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\guids.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\HelperAppDlg.h
 # End Source File
 # Begin Source File
