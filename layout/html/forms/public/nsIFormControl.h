@@ -36,6 +36,7 @@ public:
   virtual PRBool GetChecked(PRBool aGetInitialValue) const = 0;
   virtual void SetChecked(PRBool aState, PRBool aSetInitialValue) = 0;
 
+  virtual PRBool GetCanSubmit() const = 0;
   /**
     * Get the form manager which manages this control.
     * @return the form manager
@@ -93,6 +94,11 @@ public:
     * Set this control back to its initial value
     */
   virtual void Reset() = 0;
+
+  /**
+    * Set this control to be able to cause a form submission if aFlag is true.
+    */
+  virtual void SetCanSubmit(PRBool aFlag) = 0;
 
   /**
     * Set this content of this control. This is a no-op for controls that do not

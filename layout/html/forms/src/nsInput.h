@@ -65,6 +65,8 @@ public:
 
   // nsIFormControl methods
 
+  virtual PRBool GetCanSubmit() const;
+
   virtual PRBool GetContent(nsString& aResult) const;
 
   /**
@@ -96,6 +98,8 @@ public:
     * @see nsIFormControl GetFormManager
     */
   virtual void Reset();
+
+  virtual void SetCanSubmit(PRBool aFlag);
 
   virtual void SetContent(const nsString& aValue);
 
@@ -170,6 +174,7 @@ protected:
   nsISupports*    mWidgetSupports;
   nsIFormManager* mFormMan;
   nsPoint         mLastClickPoint;
+  PRBool          mCanSubmit;
 
   void          CacheAttribute(const nsString& aValue, nsString*& aLoc);
   void          CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc);
@@ -194,6 +199,7 @@ protected:
     NS_DECL_ISUPPORTS
 
     // nsIFormControl
+    virtual PRBool GetCanSubmit() const;
     virtual PRBool GetContent(nsString& aResult) const;
     virtual PRBool GetName(nsString& aName) const;
     virtual void GetType(nsString& aType) const;
@@ -201,6 +207,7 @@ protected:
     virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                   nsString* aValues, nsString* aNames);
     virtual void Reset();
+    virtual void SetCanSubmit(PRBool aFlag);
     virtual void SetContent(const nsString& aValue);
     virtual void SetFormManager(nsIFormManager* aFormMan, PRBool aDecrementRef = PR_TRUE);
     virtual nsIFormManager* GetFormManager() const;

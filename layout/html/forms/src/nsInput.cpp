@@ -53,6 +53,7 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
   mAlign = ALIGN_UNSET;
   mLastClickPoint.x = -1;
   mLastClickPoint.y = -1;
+  mCanSubmit = PR_FALSE;
 }
 
 nsInput::~nsInput()
@@ -76,6 +77,16 @@ void nsInput::SetClickPoint(nscoord aX, nscoord aY)
 {
   mLastClickPoint.x = aX;
   mLastClickPoint.y = aY;
+}
+
+PRBool nsInput::GetCanSubmit() const
+{
+  return mCanSubmit;
+}
+
+void nsInput::SetCanSubmit(PRBool aFlag)
+{
+  mCanSubmit = aFlag;
 }
 
 void nsInput::SetContent(const nsString& aValue)
@@ -516,4 +527,14 @@ void nsInput::AggInputControl::SetContent(const nsString& aValue)
 PRBool nsInput::AggInputControl::GetContent(nsString& aResult) const
 {
   return GET_OUTER()->GetContent(aResult);
+}
+
+void nsInput::AggInputControl::SetCanSubmit(PRBool aFlag)
+{
+  GET_OUTER()->SetCanSubmit(aFlag);
+}
+
+PRBool nsInput::AggInputControl::GetCanSubmit() const
+{
+  return GET_OUTER()->GetCanSubmit();
 }

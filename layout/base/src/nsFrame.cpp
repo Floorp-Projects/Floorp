@@ -179,7 +179,7 @@ nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
 
 nsFrame::~nsFrame()
 {
-  NS_RELEASE(mContent);
+  NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mStyleContext);
   if (nsnull != mView) {
     // Break association between view and frame
