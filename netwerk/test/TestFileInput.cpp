@@ -120,7 +120,7 @@ public:
         char buf[1025];
         while (aLength > 0) {
             PRUint32 amt;
-            nsresult rv = aIStream->Read(buf, 1024, &amt);
+            /*nsresult rv = */aIStream->Read(buf, 1024, &amt);
             buf[amt] = '\0';
             printf(buf);
             aLength -= amt;

@@ -98,7 +98,7 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
   char buf[1025];
   PRUint32 amt;
   do {
-    nsresult rv = aIStream->Read(buf, 1024, &amt);
+    aIStream->Read(buf, 1024, &amt);
     buf[amt] = '\0';
     puts(buf);
   } while (amt != 0);

@@ -54,7 +54,7 @@ static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
-static PRTime gElapsedTime;
+//static PRTime gElapsedTime; // enable when we time it...
 static int gKeepRunning = 0;
 static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
@@ -477,7 +477,7 @@ nsresult NS_AutoregisterComponents()
 int
 main(int argc, char* argv[])
 {
-    nsresult rv= -1;
+    nsresult rv= (nsresult)-1;
     if (argc < 2) {
         printf("usage: %s [-verbose] [-file <name>] <url> <url> ... \n", argv[0]);
         return -1;
@@ -501,7 +501,7 @@ main(int argc, char* argv[])
 
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
-#ifdef NECKO
+#if 0 // Jud sez 
     // fire up an instance of the cookie manager.
     // I'm doing this using the serviceManager for convenience's sake.
     // Presumably an application will init it's own cookie service a 

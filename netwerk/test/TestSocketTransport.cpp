@@ -52,7 +52,7 @@ static nsIEventQueue* gEventQ = nsnull;
 
 static TestConnection* gConnections[NUM_TEST_THREADS];
 static nsIThread*      gThreads[NUM_TEST_THREADS];
-static nsITimer*       gPeriodicTimer;
+//static nsITimer*       gPeriodicTimer;
 
 
 void Pump_PLEvents(void)
@@ -94,7 +94,7 @@ class TestConnection : public nsIRunnable,
 {
 public:
   TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsyncFlag);
-  ~TestConnection();
+  virtual ~TestConnection();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -161,7 +161,7 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
          "\tContext = %p length = %d\n", 
          context, aLength);
   do {
-    nsresult rv = aIStream->Read(buf, 1024, &amt);
+    aIStream->Read(buf, 1024, &amt);
     mBytesRead += amt;
     buf[amt] = '\0';
     puts(buf);
