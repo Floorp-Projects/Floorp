@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -86,7 +86,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
   
   // nsIMsgNewsArticleList
   NS_IMETHOD GetRangeOfArtsToDownload(nsINNTPHost* host,
@@ -107,6 +106,11 @@ public:
   NS_IMETHOD ProcessNonXOVER(char *line);
   NS_IMETHOD FinishXOVER(int status);
 
+private:
+  NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
+
+  NS_METHOD CleanUp();
+    
 #ifdef HAVE_MASTER
   MSG_Master		*GetMaster() {return m_master;}
   void			SetMaster(MSG_Master *master) {m_master = master;}
@@ -224,8 +228,15 @@ nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
     return NS_MSG_SUCCESS;
 }
 
+/* not supposed to be implemented */
+#if 0
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
+}
+#endif
+
+nsresult
+nsNNTPNewsgroupList::CleanUp() {
 	PR_Free(m_url);
 	PR_Free(m_groupName);
     
@@ -239,6 +250,8 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 		m_newsDB->Close();
 #endif
 	delete m_knownArts.set;
+    
+    return NS_OK;
 }
 
 #ifdef HAVE_DBVIEW

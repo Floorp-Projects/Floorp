@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -147,7 +147,7 @@ PR_LOG(NNTP, out, buf) ;
    (the object that is going to manage the NNTP connections. it would keep track of the connection list.)
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
-PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
+PRIVATE PRBool net_news_last_username_probably_valid=PR_FALSE;
 PRInt32 net_NewsChunkSize=-1;  /* default */
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
@@ -400,7 +400,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 			if (MK_NNTP_RESPONSE_TYPE_OK == MK_NNTP_RESPONSE_TYPE(m_previousResponseCode) 
 			{
 				if (net_news_last_username_probably_valid)
-				  net_news_last_username_probably_valid = FALSE;
+				  net_news_last_username_probably_valid = PR_FALSE;
 				else 
 				{
                   m_newsgroup->SetUsername(NULL);
@@ -409,7 +409,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 			}
 			else 
 			{
-			  net_news_last_username_probably_valid = FALSE;
+			  net_news_last_username_probably_valid = PR_FALSE;
 			  if (NNTP_PASSWORD_RESPONSE == m_nextStateAfterResponse) 
 			  {
                   m_newsgroup->SetUsername(NULL);
@@ -426,7 +426,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	}
 	else if (MK_NNTP_RESPONSE_PERMISSION_DENIED == m_responseCode)
 	{
-	    net_news_last_username_probably_valid = FALSE;
+	    net_news_last_username_probably_valid = PR_FALSE;
 #ifdef UNREADY_CODE
 		return net_display_html_error_state(ce);
 #else
@@ -451,7 +451,7 @@ HG43072
  
 PRInt32 nsNNTPProtocol::LoginResponse()
 {
-	XP_Bool postingAllowed = m_responseCode == MK_NNTP_RESPONSE_POSTING_ALLOWED;
+	PRBool postingAllowed = m_responseCode == MK_NNTP_RESPONSE_POSTING_ALLOWED;
 
     if(MK_NNTP_RESPONSE_TYPE(m_responseCode)!=MK_NNTP_RESPONSE_TYPE_OK)
 	{
@@ -461,7 +461,7 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
     	m_nextState = NNTP_ERROR;
 #ifdef UNREADY_CODE
-        cd->control_con->prev_cache = FALSE; /* to keep if from reconnecting */
+        cd->control_con->prev_cache = PR_FALSE; /* to keep if from reconnecting */
 #endif
         return MK_BAD_NNTP_CONNECTION;
 	}
@@ -547,7 +547,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		else
 		{
 			/* tell libmsg that it's ok to ask this news host for extensions */		
-			m_newsHost->SetSupportsExtensions(TRUE);
+			m_newsHost->SetSupportsExtensions(PR_TRUE);
 			/* all extensions received */
 			m_nextState = SEND_LIST_SEARCHES;
 			ClearFlag(NNTP_PAUSE_FOR_READ);
@@ -559,7 +559,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		 * tell libmsg not to ask for any more extensions and move on to
 		 * the real NNTP command we were trying to do. */
 		 
-		 m_newsHost->SetSupportsExtensions(FALSE);
+		 m_newsHost->SetSupportsExtensions(PR_FALSE);
 		 m_nextState = SEND_FIRST_NNTP_COMMAND;
 	}
 
@@ -569,7 +569,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 PRInt32 nsNNTPProtocol::SendListSearches()
 {  
     nsresult rv;
-    PRBool searchable=FALSE;
+    PRBool searchable=PR_FALSE;
 	PRInt32 status = 0;
     
     rv = m_newsHost->QueryExtension("SEARCH",&searchable);
@@ -688,7 +688,7 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 PRInt32 nsNNTPProtocol::GetProperties()
 {
     nsresult rv;
-    PRBool setget=FALSE;
+    PRBool setget=PR_FALSE;
 	PRInt32 status = 0; 
     
     rv = m_newsHost->QueryExtension("SETGET",&setget);
@@ -765,7 +765,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptions()
    PRInt32 status = 0; 
 #if 0
     nsresult rv;
-    PRBool searchable=FALSE;
+    PRBool searchable=PR_FALSE;
     rv = m_newsHost->QueryExtension("LISTSUBSCR",&listsubscr);
     if (NS_SUCCEEDED(rv) && listsubscr)
 #else
@@ -950,7 +950,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 #endif
 
 			nsresult rv;
-			PRBool xactive=FALSE;
+			PRBool xactive=PR_FALSE;
 			rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 			if (NS_SUCCEEDED(rv) && xactive)
 			{
@@ -990,7 +990,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	else if (m_typeWanted == SEARCH_WANTED)
 	{
 		nsresult rv;
-		PRBool searchable=FALSE;
+		PRBool searchable=PR_FALSE;
 		rv = m_newsHost->QueryExtension("SEARCH", &searchable);
 		if (NS_SUCCEEDED(rv) && searchable)
 		{
@@ -1026,7 +1026,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	else if (m_typeWanted == PRETTY_NAMES_WANTED)
 	{
 		nsresult rv;
-		PRBool listpretty=FALSE;
+		PRBool listpretty=PR_FALSE;
 		rv = m_newsHost->QueryExtension("LISTPRETTY",&listpretty);
 		if (NS_SUCCEEDED(rv) && listpretty)
 		{
@@ -1035,7 +1035,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		}
 		else
 		{
-			PR_ASSERT(FALSE);
+			PR_ASSERT(PR_FALSE);
 			m_nextState = NNTP_ERROR;
 		}
 	}
@@ -1117,7 +1117,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 		if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
             m_typeWanted == GROUP_WANTED)
             m_newsHost->GroupNotFound(m_currentGroup,
-                                         TRUE /* opening */);
+                                         PR_TRUE /* opening */);
 #ifdef UNREADY_CODE
 		return net_display_html_error_state(ce);
 #else
@@ -1324,7 +1324,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 		  (m_previousResponseCode == MK_NNTP_RESPONSE_AUTHINFO_OK || 
 		   m_previousResponseCode == MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK ||
 		   m_previousResponseCode == MK_NNTP_RESPONSE_GROUP_SELECTED)) {
-		FREEIF (username);
+		PR_FREEIF (username);
         m_newsgroup->SetUsername(NULL);
         m_newsgroup->SetPassword(NULL);
 	  }
@@ -1393,7 +1393,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 			!PL_strcasecmp(last_username_hostname, m_hostName) )
 			StrAllocCopy(username, last_username);
 		else
-			net_news_last_username_probably_valid = FALSE;
+			net_news_last_username_probably_valid = PR_FALSE;
 	  }
 
 
@@ -1415,7 +1415,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 #endif // UNREADY_CODE
 
 	  /* reset net_news_last_username_probably_valid to false */
-	  net_news_last_username_probably_valid = FALSE;
+	  net_news_last_username_probably_valid = PR_FALSE;
 	  if(!username) 
 	  {
 #ifdef UNREADY_CODE
@@ -1482,7 +1482,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
-		net_news_last_username_probably_valid = TRUE;
+		net_news_last_username_probably_valid = PR_TRUE;
 		return(0); 
 	  }
 	else if (MK_NNTP_RESPONSE_AUTHINFO_CONT == m_responseCode)
@@ -1550,13 +1550,13 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		      XP_GetString
 			  (XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS),
 		      m_hostName,
-		      TRUE, TRUE);
+		      PR_TRUE, PR_TRUE);
 #else
 #ifdef UNREADY_CODE
 			password = FE_PromptPassword(ce->window_id, XP_GetString(XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS ) );
 #endif
 #endif
-		  net_news_last_username_probably_valid = FALSE;
+		  net_news_last_username_probably_valid = PR_FALSE;
 		}
 		  
 		if(!password)	
@@ -1612,7 +1612,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		if (cd->pane)
           m_newsgroup->SetUsername(NULL);
 #endif
-		net_news_last_username_probably_valid = FALSE;
+		net_news_last_username_probably_valid = PR_FALSE;
 
         return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -1647,7 +1647,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
-		net_news_last_username_probably_valid = TRUE;
+		net_news_last_username_probably_valid = PR_TRUE;
         rv = m_newsgroupList->ResetXOVER();
         return(0);
 	  }
@@ -1737,7 +1737,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	{
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	    nsresult rv;
-		PRBool xactive=FALSE;
+		PRBool xactive=PR_FALSE;
 		rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 		if (NS_SUCCEEDED(rv) && xactive)
 		{
@@ -1809,11 +1809,11 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	m_newsHost->AddNewNewsgroup(line, oldest, youngest, flag, PR_FALSE);
 
     nsresult rv;
-    PRBool xactive=FALSE;
+    PRBool xactive=PR_FALSE;
     rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
     if (NS_SUCCEEDED(rv) && xactive)
 	{
-      m_newsHost->SetGroupNeedsExtraInfo(line, TRUE);
+      m_newsHost->SetGroupNeedsExtraInfo(line, PR_TRUE);
 	}
     return(status);
 }
@@ -1871,7 +1871,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     if (line[0]=='.' && line[1]=='\0')
     {
 	    nsresult rv;
-		PRBool listpnames=FALSE;
+		PRBool listpnames=PR_FALSE;
 		rv = m_newsHost->QueryExtension("LISTPNAMES",&listpnames);
 		if (NS_SUCCEEDED(rv) && listpnames)
 			m_nextState = NNTP_LIST_PRETTY_NAMES;
@@ -1907,7 +1907,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
 	/* store all the group names 
 	 */
-    m_newsHost->AddNewNewsgroup(line, 0, 0, "", FALSE);
+    m_newsHost->AddNewNewsgroup(line, 0, 0, "", PR_FALSE);
     return(status);
 }
 
@@ -1942,7 +1942,7 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
     m_newsHost->DisplaySubscribedGroup(group_name,
                                           m_firstPossibleArticle,
                                           m_lastPossibleArticle,
-                                          count, TRUE);
+                                          count, PR_TRUE);
     PR_Free(group_name);
 	if (status < 0) return status;
 
@@ -1970,12 +1970,17 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	if (m_firstArticle > 0) 
 	{
       nsresult rv;
-      /* XXX - parse state stored in MSG_Pane cd->pane */
+      char *groupName;
       nsINNTPNewsgroupList *newsgroupList;
-      rv = m_newsHost->GetNewsgroupList(&newsgroupList);
+
+      rv = m_newsgroup->GetName(&groupName);
+      /* XXX - parse state stored in MSG_Pane cd->pane */
       if (NS_SUCCEEDED(rv))
-        rv = newsgroupList->AddToKnownArticles(m_firstArticle,
-                                               m_lastArticle);
+          rv = m_newsHost->GetNewsgroupList(groupName, &newsgroupList);
+      
+      if (NS_SUCCEEDED(rv))
+          rv = newsgroupList->AddToKnownArticles(m_firstArticle,
+                                                 m_lastArticle);
       
 	  if (NS_FAILED(rv))
       {
@@ -1994,10 +1999,13 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
 
 
-    /* XXX - parse state stored in MSG_Pane cd->pane */
+    char *groupName;
     nsINNTPNewsgroupList *newsgroupList;
-    rv = m_newsHost->GetNewsgroupList(&newsgroupList);
     
+    rv = m_newsgroup->GetName(&groupName);
+    if (NS_SUCCEEDED(rv))
+        rv = m_newsHost->GetNewsgroupList(groupName, &newsgroupList);
+        
     if (NS_SUCCEEDED(rv))
     rv =
       newsgroupList->GetRangeOfArtsToDownload(&status,
@@ -2311,7 +2319,7 @@ PRInt32 nsNNTPProtocol::PostData()
     status = NET_WritePostData(ce->window_id, ce->URL_s,
                                   ce->socket,
 								  &cd->write_post_data_data,
-								  TRUE);
+								  PR_TRUE);
 
     SetFlag(NNTP_PAUSE_FOR_READ);
 
@@ -2333,7 +2341,7 @@ PRInt32 nsNNTPProtocol::PostData()
 #ifdef XP_WIN
 		if(cd->calling_netlib_all_the_time)
 		{
-			cd->calling_netlib_all_the_time = FALSE;
+			cd->calling_netlib_all_the_time = PR_FALSE;
 #if 0
           /* this should be handled by NET_ClearCallNetlibAllTheTime */
 			net_call_all_the_time_count--;
@@ -2554,13 +2562,13 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
         m_newsHost->DisplaySubscribedGroup(group,
                                               low ? atol(low) : 0,
                                               high ? atol(high) : 0,
-                                              atol(num_arts), FALSE);
+                                              atol(num_arts), PR_FALSE);
 		if (status < 0)
 		  return status;
 	  }
 	  else if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
-          m_newsHost->GroupNotFound(m_currentGroup, FALSE);
+          m_newsHost->GroupNotFound(m_currentGroup, PR_FALSE);
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
@@ -2570,7 +2578,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 		/* only on news server error or when zero articles
 		 */
         m_newsHost->DisplaySubscribedGroup(m_currentGroup,
-	                                             0, 0, 0, FALSE);
+	                                             0, 0, 0, PR_FALSE);
 	  }
 
 	m_nextState = NEWS_DISPLAY_NEWS_RC;
@@ -2653,13 +2661,13 @@ PRInt32 nsNNTPProtocol::Cancel()
 	 Don't do this if server tells us it will validate user. DMB 3/19/97
    */
   nsresult rv;
-  PRBool cancelchk=FALSE;
+  PRBool cancelchk=PR_FALSE;
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && cancelchk)
   {
     nsIMsgRFC822Parser *parser;
     nsresult rv;
-    PRBool ok = FALSE;
+    PRBool ok = PR_FALSE;
 
     rv = NS_NewRFC822Parser(&parser);
     if (NS_SUCCEEDED(rv)) 
@@ -2729,8 +2737,8 @@ PRInt32 nsNNTPProtocol::Cancel()
   
 /* so that this would compile - will probably change later */
 #if 0
-									   FALSE,
-									   FALSE  
+									   PR_FALSE,
+									   PR_FALSE  
 									   );
 #endif
 
@@ -2958,7 +2966,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 
 			line[i] = 0; /* terminate group name */
 			if (i > 0)
-              m_newsHost->AddPrettyName(line,prettyName);
+              m_newsHost->SetPrettyName(line,prettyName);
 #ifdef DEBUG_bienvenu1
 			PR_LogPrint("adding pretty name %s\n", prettyName);
 #endif
@@ -3053,7 +3061,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 
                 m_newsHost->AddNewNewsgroup(line,
                                           m_firstPossibleArticle,
-                                          m_lastPossibleArticle, flags, TRUE);
+                                          m_lastPossibleArticle, flags, PR_TRUE);
 				/* we're either going to list prettynames first, or list
                    all prettynames every time, so we won't care so much
                    if it gets interrupted. */
@@ -3064,13 +3072,13 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
                     initialized to false for new groups. And it's
                     an expensive call.
 				*/
-				/* MSG_SetGroupNeedsExtraInfo(cd->host, line, FALSE); */
+				/* MSG_SetGroupNeedsExtraInfo(cd->host, line, PR_FALSE); */
 			}
 		}
 		else
 		{
           nsresult rv;
-          PRBool xactive=FALSE;
+          PRBool xactive=PR_FALSE;
           rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
           if (m_typeWanted == NEW_GROUPS &&
               NS_SUCCEEDED(rv) && xactive)
@@ -3183,7 +3191,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 
 PRInt32 nsNNTPProtocol::Search()
 {
-	PR_ASSERT(FALSE);
+	PR_ASSERT(PR_FALSE);
 	return 0;
 }
 
@@ -3508,7 +3516,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 	            cd->next_state = NEWS_FREE;
                 /* set the connection unbusy
      	         */
-    		    cd->control_con->busy = FALSE;
+    		    cd->control_con->busy = PR_FALSE;
                 NET_TotalNumberOfOpenConnections--;
 
 				NET_ClearReadSelect(ce->window_id, cd->control_con->csock);
@@ -3523,7 +3531,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 	            m_nextState = NEWS_FREE;
     	        /* set the connection unbusy
      	         */
-    		    cd->control_con->busy = FALSE;
+    		    cd->control_con->busy = PR_FALSE;
                 NET_TotalNumberOfOpenConnections--;
 
 				if(cd->control_con->csock != NULL)
@@ -3550,7 +3558,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 #ifdef XP_WIN
 					if(cd->calling_netlib_all_the_time)
 					{
-						cd->calling_netlib_all_the_time = FALSE;
+						cd->calling_netlib_all_the_time = PR_FALSE;
 						NET_ClearCallNetlibAllTheTime(ce->window_id,"mknews");
 					}
 #endif /* XP_WIN */

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -86,7 +86,7 @@ nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
 #endif
 	m_idsOnServer.set = nsNNTPArticleSet::Create();
 #ifdef HAVE_PANES
-	MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, FALSE);
+	MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
 	if (newsFolder)
 	{
 		char *url = newsFolder->BuildUrl(NULL, MSG_MESSAGEKEYNONE);
@@ -98,7 +98,7 @@ nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
 #endif
 		m_dbIndex = 0;
 
-		FREEIF(url);
+		PR_FREEIF(url);
 	}
 #endif
     return NS_MSG_SUCCESS;
@@ -126,7 +126,7 @@ nsNNTPArticleList::AddArticleKey(PRInt32 key)
 		while (idInDBToCheck < key)
 		{
 #ifdef HAVE_NEWSDB
-			m_newsDB->DeleteMessage(idInDBToCheck, NULL, FALSE);
+			m_newsDB->DeleteMessage(idInDBToCheck, NULL, PR_FALSE);
 #endif
 #ifdef DEBUG_bienvenu
 			m_idsDeleted.Add(idInDBToCheck);
