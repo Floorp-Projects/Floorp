@@ -52,9 +52,7 @@ endif
 
 CPPSRCS		= \
 		nsModuleFactory.cpp \
-		nsCookie.cpp \
 		nsPermission.cpp \
-		nsCookieService.cpp \
 		nsImgManager.cpp \
 		nsPermissionManager.cpp \
 		nsPopupWindowManager.cpp \
@@ -62,25 +60,12 @@ CPPSRCS		= \
 		nsCookiePermission.cpp \
 		$(NULL)
 
-SDK_XPIDLSRCS   = \
-		nsICookie.idl \
-		nsICookieManager.idl \
-		$(NULL)
-
 XPIDLSRCS	= \
-		nsICookie2.idl \
-		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
 		nsIPermission.idl \
 		nsICookieAcceptDialog.idl \
 		nsICookiePromptService.idl \
-		nsICookieManager2.idl \
-		nsICookiePermission.idl \
-		$(NULL)
-
-EXPORTS		= \
-		nsCCookieManager.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

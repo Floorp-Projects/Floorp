@@ -388,6 +388,9 @@ netwerk/build2/Makefile
 netwerk/cache/Makefile
 netwerk/cache/public/Makefile
 netwerk/cache/src/Makefile
+netwerk/cookie/Makefile
+netwerk/cookie/public/Makefile
+netwerk/cookie/src/Makefile
 netwerk/dns/Makefile
 netwerk/dns/public/Makefile
 netwerk/dns/src/Makefile

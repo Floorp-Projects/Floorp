@@ -40,8 +40,6 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsCCookieManager.h"
-#include "nsCookieService.h"
 #include "nsImgManager.h"
 #include "nsPermissionManager.h"
 #include "nsPopupWindowManager.h"
@@ -51,7 +49,6 @@
 #include "nsXPIDLString.h"
 
 // Define the constructor function for the objects
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImgManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPopupWindowManager, Init)
@@ -92,16 +89,6 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = {
-    { "CookieManager",
-      NS_COOKIEMANAGER_CID,
-      NS_COOKIEMANAGER_CONTRACTID,
-      nsCookieServiceConstructor
-    },
-    { "CookieService",
-      NS_COOKIESERVICE_CID,
-      NS_COOKIESERVICE_CONTRACTID,
-      nsCookieServiceConstructor
-    },
     { "ImgManager",
       NS_IMGMANAGER_CID,
       NS_IMGMANAGER_CONTRACTID,

@@ -30,8 +30,21 @@ MODULE		= necko
 XPIDL_MODULE	= necko_cookie
 GRE_MODULE	= 1
 
+SDK_XPIDLSRCS   = \
+		nsICookieManager.idl \
+		nsICookie.idl \
+        $(NULL)
+
 XPIDLSRCS	= \
 		nsICookieService.idl \
+		nsICookie2.idl \
+		nsICookieConsent.idl \
+		nsICookieManager2.idl \
+		nsICookiePermission.idl \
+		$(NULL)
+
+EXPORTS		= \
+		nsCCookieManager.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

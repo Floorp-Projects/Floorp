@@ -139,6 +139,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirIndex)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#include "nsCookieService.h"
+#include "nsCCookieManager.h"
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
+
+///////////////////////////////////////////////////////////////////////////////
 // protocols
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -997,6 +1003,18 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        NS_CACHESERVICE_CID,
        NS_CACHESERVICE_CONTRACTID,
        nsCacheService::Create
+    },
+
+    { "CookieManager",
+      NS_COOKIEMANAGER_CID,
+      NS_COOKIEMANAGER_CONTRACTID,
+      nsCookieServiceConstructor
+    },
+
+    { "CookieService",
+      NS_COOKIESERVICE_CID,
+      NS_COOKIESERVICE_CONTRACTID,
+      nsCookieServiceConstructor
     },
 
 };
