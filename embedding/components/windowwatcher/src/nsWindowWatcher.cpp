@@ -558,7 +558,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     NS_ASSERTION(mWindowCreator, "attempted to open a new window with no WindowCreator");
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
-      CreateChromeWindow(parentChrome, chromeFlags, getter_AddRefs(newChrome));
+      mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
+                        getter_AddRefs(newChrome));
       if (newChrome) {
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
@@ -699,23 +700,6 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowWatcher::CreateChromeWindow(nsIWebBrowserChrome *aParent,
-                                    PRUint32 aChromeFlags,
-                                    nsIWebBrowserChrome **_retval)
-{
-  NS_ASSERTION(mWindowCreator, "can't proceed without a window creator!");
-  if (!mWindowCreator)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv;
-
-  rv = mWindowCreator->CreateChromeWindow(aParent, aChromeFlags, _retval);
-  if (NS_SUCCEEDED(rv))
-    rv = InitializeDocshell(*_retval);
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -1315,59 +1299,22 @@ nsWindowWatcher::FindItemWithName(
   return rv;
 }
 
-#define INITSYNCH
-//#undef INITSYNCH
-#ifndef INITSYNCH
-
-// also makefile.win and nsDocshellLoadProgress.*
-#include "nsDocshellLoadProgress.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-static void RunEventLoop(PRBool *aRunCondition) {
-
-  nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
-  if (!appShell) return;
-
-  appShell->Create(0, nsnull);
-  appShell->Spinup();
-
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  nsresult rv = NS_OK;
-  if (stack  && NS_SUCCEEDED(stack->Push(nsnull))) {
-    while (NS_SUCCEEDED(rv) && *aRunCondition) {
-      void* data;
-      PRBool isRealEvent;
-
-      rv = appShell->GetNativeEvent(isRealEvent, data);
-      if (NS_SUCCEEDED(rv))
-        appShell->DispatchNativeEvent(isRealEvent, data);
-    }
-    JSContext* cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
-  } else
-    rv = NS_ERROR_FAILURE;
-
-  appShell->Spindown();
-}
-
-#endif
-
-
-/* Synchronously load about:blank to force docshell initialization.
-   This will allow, for instance, script executed immediately following
-   window.open to access the docshell (which can be something as
-   straightforward as newWindow.document.write, or something more indirect,
-   such as window.resizeTo.) This step is unnecessary in Mozilla, since
-   its chrome windows contain XUL docshells, but is important for most
-   (all) embedding apps. */
+/*   Force docshell initialization. This will allow, for instance, script
+   executed immediately following window.open to access the docshell
+   (which can be something as straightforward as newWindow.document.write,
+   or something more indirect, such as window.resizeTo.)
+     This step is not necessary in Mozilla, since its content docshells
+   are loaded during XUL chrome docshell initialization (though it may
+   be desirable; to be determined). But this step is important for probably
+   all embedding apps. */
+/* Note this is not in use at time of writing (7 Nov 01), its functionality
+   replaced by lazy instantiation of the content viewer in nsDocShell
+   and by the DOM document in nsGlobalWindow. This method to be removed
+   when we're quite sure the lazy way will work. */
 nsresult
 nsWindowWatcher::InitializeDocshell(nsIWebBrowserChrome *aBrowserChrome)
 {
-#ifdef INITSYNCH
-
+return NS_OK;
   nsCOMPtr<nsIDocShell> docshell;
 
   // embedded window path: docshell corresponding to the primary content
@@ -1377,70 +1324,14 @@ nsWindowWatcher::InitializeDocshell(nsIWebBrowserChrome *aBrowserChrome)
     if (sgo)
       sgo->GetDocShell(getter_AddRefs(docshell));
   }
-  // XUL Window path
+  // XUL Window path (should we decide this to be useful)
   // XXX: teach nsContentTreeOwner to give up its nsIDocShell
   if (!docshell) {
   }
 
-  // Asking Mozilla's docshell for its document will force it
-  // to generate one, and its content viewer. This is just what
-  // we need here. But it is a rather sneaky back door.
+  // asking mozilla's docshell for its document will force it to generate one
   if (docshell)
     nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(docshell));
-
-#else
-
-  NS_ASSERTION(mWindowCreator, "can't proceed without a window creator!");
-  if (!mWindowCreator)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWebBrowser> browser;
-  aBrowserChrome->GetWebBrowser(getter_AddRefs(browser));
-  if (!browser) {
-    /* All embedded apps must implement this, but Mozilla doesn't. And handily,
-       Mozilla doesn't need any special docshell initialization and in fact
-       doesn't want it. So exit and be happy. This is a small worry; we won't
-       catch legitimate cases of embedded apps missing their WebBrowsers. */
-    return NS_OK;
-  }
-
-  // create a progress listener
-  PRBool docshellLoading = PR_TRUE;
-  nsDocshellLoadProgress *progress = new nsDocshellLoadProgress(&docshellLoading);
-  if (!progress)
-    return NS_ERROR_FAILURE;
-
-  // (note that this COM ref going out of scope will delete the object)
-  nsCOMPtr<nsISupportsWeakReference> supWeak(do_QueryInterface(NS_STATIC_CAST(nsISupportsWeakReference *, progress)));
-  if (!supWeak) {
-    delete progress;
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIWeakReference> weakListener;
-  supWeak->GetWeakReference(getter_AddRefs(weakListener));
-  if (!weakListener)
-    return NS_ERROR_FAILURE;
-
-  // attach our new progress listener to the WebBrowser
-  browser->AddWebBrowserListener(weakListener, nsIWebProgressListener::GetIID());
-
-  // start a load of about:blank
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(browser));
-  if (webNav) {
-    EventQueueAutoPopper queueGuard;
-    queueGuard.Push();
-
-    webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(), nsIWebNavigation::LOAD_FLAGS_NONE);
-
-    // sit-'n-spin until it finishes loading
-    NS_WARNING("open-window entering synchronous docshell load");
-    RunEventLoop(&docshellLoading);
-  }
-
-  browser->RemoveWebBrowserListener(weakListener, nsIWebProgressListener::GetIID());
-
-  NS_WARNING("finished synchronous docshell load");
-#endif
 
   return NS_OK;
 }
