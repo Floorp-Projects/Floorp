@@ -501,7 +501,7 @@ NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
 }
 
 NS_IMETHODIMP 
-nsMsgWindow::DisplayHTMLInMessageWindow(const PRUnichar *title, const PRUnichar *body)
+nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *body)
 {
     nsresult rv;
 

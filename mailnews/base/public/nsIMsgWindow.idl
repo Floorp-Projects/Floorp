@@ -44,7 +44,7 @@ interface nsIMsgWindow : nsISupports {
 	attribute nsIMessageView messageView;
 	attribute nsIMsgFolder openFolder;
 	attribute nsIDocShell rootDocShell;
-    void displayHTMLInMessageWindow(in wstring title, in wstring body);
+    void displayHTMLInMessagePane(in wstring title, in wstring body);
 
     readonly attribute nsIPrompt promptDialog;
     attribute wstring mailCharacterSet;

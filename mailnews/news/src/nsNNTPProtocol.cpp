@@ -2042,7 +2042,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
                 }
             }
             if (!m_msgWindow) return NS_ERROR_FAILURE;
-            rv = m_msgWindow->DisplayHTMLInMessageWindow((const PRUnichar *)titleStr, errorHtml.GetUnicode());
+            rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.GetUnicode());
             NS_ENSURE_SUCCESS(rv,rv);
         }
 		return MK_NNTP_SERVER_ERROR;
