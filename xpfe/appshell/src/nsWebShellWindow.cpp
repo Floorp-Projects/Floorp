@@ -2769,7 +2769,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   if (offset <= 0)
      return NS_ERROR_FAILURE;
 
-  PRInt32 offset2= url.Find("mailto:");
+  PRInt32 offset2= url.Find("mailto:", PR_TRUE);
 
   PRInt32  ret=0;
   if (offset2 == 0) {
