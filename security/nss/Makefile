@@ -104,7 +104,11 @@ ifdef USE_DEBUG_RTL
 NSPR_CONFIGURE_OPTS += --enable-debug-rtl
 endif
 
+ifeq ($(OS_ARCH),OS2)
+NSPR_PREFIX = $(shell pwd)/../../dist/$(OBJDIR_NAME)
+else
 NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
+endif
 
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	$(NSINSTALL) -D $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)
