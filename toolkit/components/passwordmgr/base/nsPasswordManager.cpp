@@ -632,21 +632,32 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       form->ResolveName(e->userField, getter_AddRefs(foundNode));
       temp = do_QueryInterface(foundNode);
 
-      if (temp)
-        userField = temp;
-      else
+      nsAutoString oldUserValue;
+
+      if (temp) {
+        temp->GetValue(oldUserValue);
+        if (oldUserValue.IsEmpty())
+          userField = temp;
+      } else {
         continue;
+      }
 
       form->ResolveName(e->passField, getter_AddRefs(foundNode));
       temp = do_QueryInterface(foundNode);
 
-      if (temp)
-        passField = temp;
-      else
-        continue;
+      nsAutoString oldPassValue;
 
-      if (firstMatch) {
-        // We've found more than one possible signon for this form.
+      if (temp) {
+        temp->GetValue(oldPassValue);
+        if (oldPassValue.IsEmpty())
+          passField = temp;
+      } else {
+        continue;
+      }
+
+      if (firstMatch || !oldUserValue.IsEmpty() || !oldPassValue.IsEmpty()) {
+        // We've found more than one possible signon for this form, or
+        // the fields were already populated using the value attribute.
         // Listen for blur and autocomplete events on the username field so
         // that we can attempt to prefill the password after the user has
         // entered the username.
