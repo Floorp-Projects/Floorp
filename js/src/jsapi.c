@@ -2430,6 +2430,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
     if (!ts)
 	return NULL;
     ts->filename = filename;
+    /* XXXshaver js_NewFileTokenStream should do this, because it drops */
     if (principals) {
         ts->principals = principals;
         JSPRINCIPALS_HOLD(cx, ts->principals);
