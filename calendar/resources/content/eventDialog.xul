@@ -164,7 +164,7 @@
                         </hbox>
                         <hbox  id="start-date-box" align="center">
                             <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="start-time-text" 
+                            <textbox id="start-time-text"
                                      readonly="true"
                                      value=""
                                      onmousedown="prepareTimePicker('start-time-text')"
@@ -246,12 +246,12 @@
                             <label for="uri-field" value="&newevent.uri.label;"/>
                         </hbox>
                         <hbox>
-                          <textbox id="uri-field"
-                                   type="autocomplete"
-                                   searchSessions="history"
-                                   flex="1"/>
-                          <button label="&newevent.uri.visit.label;"
-                                  oncommand="loadURL()"/>
+                            <textbox id="uri-field"
+                                     type="autocomplete"
+                                     searchSessions="history"
+                                     flex="1"/>
+                            <button label="&newevent.uri.visit.label;"
+                                    oncommand="loadURL()"/>
                         </hbox>
                      </row>
               
@@ -294,8 +294,10 @@
                               </menulist>
                               <menulist id="alarm-trigger-relation" crop="none">
                                  <menupopup>
-                                    <menuitem label="&newevent.beforealarm.label;" value="ICAL_RELATED_START"/>
-                                    <menuitem label="&newevent.beforealarmends.label;" value="ICAL_RELATED_END"/>
+                                    <menuitem label="&newevent.beforealarm.label;"
+                                              value="ICAL_RELATED_START"/>
+                                    <menuitem label="&newevent.beforealarmends.label;"
+                                              value="ICAL_RELATED_END"/>
                                  </menupopup>
                               </menulist>
                            </hbox>
@@ -315,7 +317,7 @@
                         </vbox>
                      </row>
    
-                     <!-- Calendar Status -->
+                     <!-- Status -->
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.status.longlabel;"/>
@@ -331,7 +333,7 @@
                             </menupopup>
                         </menulist>
                      </row>
-                     
+
                      <!-- Categories -->
                      <row align="center">
                         <hbox class="field-label-box-class" pack="end">
@@ -466,8 +468,8 @@
                         collapsed="true"
                         align="center">
                      <vbox align="center">
-		<radiogroup id="advanced-repeat-month"
-                            disable-controller="repeat">
+                        <radiogroup id="advanced-repeat-month"
+                                    disable-controller="repeat">
                            <radio disable-controller="repeat"
                                   id="advanced-repeat-dayofmonth"
                                   label="&newevent.advanced.repeat.dayofmonth.label;"
@@ -504,11 +506,11 @@
                            </hbox>
                         </vbox>
                         <vbox id="repeat-end-box" align="center">
-                              <hbox>
-                                 <radio id="repeat-until-radio"
-                                        disable-controller="repeat"
-                                        label="&newevent.until.label;"
-                                        oncommand="commandUntil()"/>
+                            <hbox>
+                                <radio id="repeat-until-radio"
+                                       disable-controller="repeat"
+                                       label="&newevent.until.label;"
+                                       oncommand="commandUntil()"/>
                                  <spacer id="until-spacer"/>
                                  <datepicker id="repeat-end-date-picker"
                                              value=""
@@ -519,7 +521,7 @@
                                      value="&newevent.recurend.warning;"
                                      collapsed="true"/>
                         </vbox>
-							</radiogroup>
+                     </radiogroup>
                   </hbox>
                     
                   <hbox align="center">
@@ -537,7 +539,7 @@
                                     <datepicker id="exceptions-date-picker"
                                                 disable-controller="repeat"
                                                 value=""/>
-                                 </hbox>   
+                                 </hbox>
                                  <button id="exception-add-button"
                                          label="&newevent.addexceptions.label;"
                                          disable-controller="repeat"
@@ -653,9 +655,9 @@
                       <label value="&ab-selectAddressesDialogInviteList.label;"/>
                       
                       <tree id="addressBucket"
-                                     flex="1"
-                                     hidecolumnpicker="true"
-                                     onclick="selectEventRecipient( this );">
+                            flex="1"
+                            hidecolumnpicker="true"
+                            onclick="selectEventRecipient( this );">
                           <treecols>
                               <treecol id="addressCol"
                                        flex="1"
