@@ -118,6 +118,11 @@ public:
 	virtual void  LocalToWindowCoordinate(nsPoint& aPoint);
 	virtual void  LocalToWindowCoordinate(nscoord& aX, nscoord& aY);
     virtual void  LocalToWindowCoordinate(nsRect& aRect);
+    
+    virtual void  ConvertToLocalCoordinates(nscoord &aX, nscoord &aY);
+	virtual void  WindowToLocalCoordinate(nsPoint& aPoint);
+	virtual void  WindowToLocalCoordinate(nscoord& aX, nscoord& aY);
+    virtual void  WindowToLocalCoordinate(nsRect& aRect);
 
     NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar);
     virtual nsIMenuBar* GetMenuBar();
