@@ -40,7 +40,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.17 2005/02/23 19:43:02 wtchang%redhat.com Exp $
+ * $Id: secoidt.h,v 1.18 2005/03/02 02:54:54 neil.williams%sun.com Exp $
  */
 
 #include "secitem.h"
@@ -401,6 +401,7 @@ typedef enum {
 
     /* More PKIX OIDs */
     SEC_OID_PKIX_CA_ISSUERS          = 273,
+    SEC_OID_PKCS9_EXTENSION_REQUEST  = 274,
 
     SEC_OID_TOTAL
 } SECOidTag;
