@@ -789,7 +789,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserEditPage(url)
   {
-    window.openDialog( "chrome://editor/content", "_new", "chrome,all,dialog=no", url );
+    window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
   }
   
   function BrowserNewEditorWindow()
@@ -801,7 +801,7 @@ function OpenSearch(tabName, searchStr)
   function BrowserOpenWindow()
   {
     //opens a window where users can select a web location to open
-    window.openDialog( "chrome://navigator/content/openLocation.xul", "_new", "chrome", appCore );
+    window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome", appCore );
   }
   
   function createInstance( progid, iidName ) {
@@ -810,7 +810,7 @@ function OpenSearch(tabName, searchStr)
   }
 
   function openNewWindowWith( url ) {
-    var newWin = window.openDialog( "chrome://navigator/content/navigator.xul", "_new", "chrome,all,dialog=no", url );
+    var newWin = window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
 
     // Fix new window.    
     newWin.saveFileAndPos = true;
@@ -1057,23 +1057,23 @@ function OpenSearch(tabName, searchStr)
 
   function OpenMessenger()
   {
-	window.open("chrome://messenger/content/", "_new", "chrome,menubar,toolbar,resizable");
+	window.open("chrome://messenger/content/", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
   function OpenAddressbook()
   {
-	window.open("chrome://addressbook/content/", "_new", "chrome,menubar,toolbar,resizable");
+	window.open("chrome://addressbook/content/", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
   function MsgNewMessage()
   {
     // Open message compose window.
-    window.openDialog( "chrome://messengercompose/content/", "_new", "chrome,all,dialog=no", "" );
+    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no", "" );
   }
   
   function BrowserViewSource()
   {
-    window.openDialog( "chrome://navigator/content/viewSource.xul", "_new", "chrome,all,dialog=no", window.content.location );
+    window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
   }
 
 
