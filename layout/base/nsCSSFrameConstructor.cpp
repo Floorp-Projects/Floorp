@@ -5031,9 +5031,10 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                           PR_FALSE, childItems);
 
-
     // Set the frame's initial child list
-    newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    if (childItems.childList) {
+      newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    }
   }
 
   // If the frame is positioned, then create a placeholder frame
