@@ -1951,9 +1951,9 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     
     if (NS_SUCCEEDED(rv)) 
     {
-        mWritePipeIn = do_QueryInterface(aFromStream, &rv);
-        if (NS_FAILED(rv))
-        {
+//        mWritePipeIn = do_QueryInterface(aFromStream, &rv);
+//        if (NS_FAILED(rv))
+//        {
             // If the input stream does not support nsIInputStream, then
             // an intermediate buffer is necessary to move the data from the
             // stream to the network...
@@ -1970,7 +1970,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
             // Reset to buffer index and length.
             mWriteBufferLength = 0;
             mWriteBufferIndex  = 0;
-        }
+//        }
     }
     
     if (NS_SUCCEEDED(rv))
