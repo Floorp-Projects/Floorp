@@ -136,7 +136,7 @@ function bov_scrollto (line, align)
 BasicOView.prototype.__defineGetter__("selectedIndex", bov_getsel);
 function bov_getsel()
 {
-    if (this.outliner.selection.getRangeCount() < 1)
+    if (!this.outliner || this.outliner.selection.getRangeCount() < 1)
         return -1;
 
     var min = new Object();
@@ -1116,6 +1116,9 @@ function tov_ctrln (line)
 TreeOView.prototype.__defineGetter__("rowCount", tov_getRowCount);
 function tov_getRowCount ()
 {
+    if (!this.childData)
+        return 0;
+    
     return this.childData.visualFootprint;
 }
 
@@ -1136,7 +1139,7 @@ function tov_isctr (index)
 TreeOView.prototype.__defineGetter__("selectedIndex", tov_getsel);
 function tov_getsel()
 {
-    if (this.outliner.selection.getRangeCount() < 1)
+    if (!this.outliner || this.outliner.selection.getRangeCount() < 1)
         return -1;
 
     var min = new Object();
