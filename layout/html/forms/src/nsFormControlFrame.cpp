@@ -512,6 +512,7 @@ nsFormControlFrame::GetName(nsString* aResult)
   return result;
 }
 
+
 NS_IMETHODIMP
 nsFormControlFrame::GetValue(nsString* aResult)
 {
@@ -532,6 +533,7 @@ nsFormControlFrame::GetValue(nsString* aResult)
   }
   return result;
 }
+
 
 PRBool
 nsFormControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)

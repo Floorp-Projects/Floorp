@@ -917,3 +917,48 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
   aRenderingContext.PopState(clip);
 }
 
+
+nsresult
+nsFormControlHelper::GetName(nsIContent* aContent,nsString* aResult)
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (nsnull != aContent) {
+    nsIHTMLContent* formControl = nsnull;
+    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      nsHTMLValue value;
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(*aResult);
+        }
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+
+nsresult
+nsFormControlHelper::GetValue(nsIContent* aContent, nsString* aResult)
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (nsnull != aContent) {
+    nsIHTMLContent* formControl = nsnull;
+    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      nsHTMLValue value;
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(*aResult);
+        }
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+

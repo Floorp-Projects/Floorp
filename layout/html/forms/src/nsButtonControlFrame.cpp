@@ -222,7 +222,9 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             nsFramePaintLayer aWhichLayer)
 {
   if (eFramePaintLayer_Content == aWhichLayer) {
-    PaintButton(aPresContext, aRenderingContext, aDirtyRect);
+    nsString label;
+    nsresult result = GetValue(&label);
+    PaintButton(aPresContext, aRenderingContext, aDirtyRect, label);
   }
   return NS_OK;
 }
@@ -385,16 +387,15 @@ nsButtonControlFrame::GetFrameName(nsString& aResult) const
 void 
 nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
-                                  const nsRect& aDirtyRect)
+                                  const nsRect& aDirtyRect,
+                                  nsString& aLabel)
 {
 
-  nsString label;
-  nsresult result = GetValue(&label);
   nsFormControlHelper::PaintRectangularButton(aPresContext,
                             aRenderingContext,
                             aDirtyRect, mRect.width, 
                             mRect.height,PR_FALSE, PR_FALSE,
-                            mStyleContext, label, this);
+                            mStyleContext, aLabel, this);
   
 }
 

@@ -285,6 +285,8 @@ nsFileControlFrame::GetName(nsString* aResult)
   return result;
 }
 
+
+
 PRInt32 
 nsFileControlFrame::GetMaxNumValues()
 {
@@ -358,12 +360,49 @@ nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   return 0;
 }
 
+
 NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  if (nsHTMLAtoms::value == aName) {
+    mTextFrame->SetTextControlFrameState(aValue);                                         
+  }
   return NS_OK;
-}
+}      
 
 NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+  // Return the value of the property from the widget it is not null.
+  // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
+
+  if (nsHTMLAtoms::value == aName) {
+    mTextFrame->GetTextControlFrameState(aValue);
+  }
+ 
   return NS_OK;
+}  
+
+
+NS_METHOD
+nsFileControlFrame::Paint(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
+{
+    // Since the file control has a mTextFrame which does not live in the content model
+    // it is necessary to get the current text value from the nsFileControlFrame through the
+    // content model, then explicitly ask the test frame to draw it.
+    // The mTextFrame's Paint method will still be called, but it will not render the current
+    // contents because it will not be possible for the content associated with the mTextFrame to
+    // get a handle to it frame in the presentation shell 0.
+ 
+  //  mTextFrame->Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect, nsAutoString("Browse"));
+    if (eFramePaintLayer_Content == aWhichLayer) {
+      nsString text;
+      if (NS_SUCCEEDED(nsFormControlHelper::GetValue(mContent, &text))) {
+        mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
+      }
+    }
+
+    return NS_OK;
 }

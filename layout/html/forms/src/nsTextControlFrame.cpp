@@ -578,15 +578,14 @@ nsTextControlFrame::GetFrameName(nsString& aResult) const
 void
 nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
                                      nsIRenderingContext& aRenderingContext,
-                                     const nsRect& aDirtyRect)
+                                     const nsRect& aDirtyRect,
+                                     nsString& aText,
+                                     nsIStyleContext* aStyleContext)
 {
     aRenderingContext.PushState();
 
-    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                              eFramePaintLayer_Content);
-
     const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     nsMargin border;
     spacing->CalcBorderFor(this, border);
 
@@ -627,10 +626,8 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
     nscoord textWidth;
     nscoord textHeight;
-    nsString text;
-
-    GetText(&text, PR_FALSE);
-    aRenderingContext.GetWidth(text, textWidth);
+ 
+    aRenderingContext.GetWidth(aText, textWidth);
 
     nsIFontMetrics* metrics;
     context->GetMetricsFor(font, metrics);
@@ -648,13 +645,13 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
         metrics->GetMaxAscent(textHeight);
         y = ((inside.height  - textHeight) / 2)  + inside.y;
         PRInt32 i;
-        PRInt32 len = text.Length();
-        text.SetLength(0);
+        PRInt32 len = aText.Length();
+        aText.SetLength(0);
         for (i=0;i<len;i++) {
-          text.Append("*");
+          aText.Append("*");
         }
       }
-      aRenderingContext.DrawString(text, x, y); 
+      aRenderingContext.DrawString(aText, x, y); 
     } else {
       float sbWidth;
       float sbHeight;
@@ -674,35 +671,35 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
       // Draw multi-line text
       PRInt32 oldPos = 0;
-      PRInt32 pos    = text.Find('\n', 0);
+      PRInt32 pos    = aText.Find('\n', 0);
       while (1) {
         nsString substr;
         if (-1 == pos) {
              // Single line, no carriage return.
-          text.Right(substr, text.Length()-oldPos);
+          aText.Right(substr, aText.Length()-oldPos);
           aRenderingContext.DrawString(substr, x, y); 
           break;     
         } 
           // Strip off substr up to carriage return
-        text.Mid(substr, oldPos, ((pos - oldPos) - 1));
+        aText.Mid(substr, oldPos, ((pos - oldPos) - 1));
   
         aRenderingContext.DrawString(substr, x, y);
         y += textHeight;
           // Advance to the next carriage return
         pos++;
         oldPos = pos;
-        pos = text.Find('\n', pos);
+        pos = aText.Find('\n', pos);
       }
 
       aRenderingContext.PopState(clipEmpty);
 
       // Scrollbars
-      const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleColor* myColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
       nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
-      nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+      nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext);
       NS_RELEASE(sbAtom);
       sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
-      nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+      nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext);
       NS_RELEASE(sbAtom);
 
       nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);
@@ -734,8 +731,11 @@ nsTextControlFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (eFramePaintLayer_Content == aWhichLayer) {
-    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect);
+    nsString text;
+    GetText(&text, PR_FALSE);
+    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
   }
   return NS_OK;
 }
@@ -767,7 +767,7 @@ void nsTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     nsITextWidget* text = nsnull;
     nsITextAreaWidget* textArea = nsnull;   
     PRUint32 size = 0;
-    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+    if (NS_SUCCEEDED(mWidget->QueryInterface(kITextWidgetIID,(void**)&text))) {
       text->SetText(aValue,size);
       NS_RELEASE(text);
     } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,

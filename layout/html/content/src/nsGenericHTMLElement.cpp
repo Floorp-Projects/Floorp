@@ -1415,22 +1415,24 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
                                       nsIFormControlFrame *&aFormControlFrame)
 {
   nsIDocument* doc = nsnull;
-  nsresult res;
+  nsresult res = NS_OK;
    // Get the document
   if (NS_OK == aContent->GetDocument(doc)) {
-     // Get presentation shell 0
-    nsIPresShell* presShell = doc->GetShellAt(0);
-    if (nsnull != presShell) {
-      nsIFrame *frame = nsnull;
-      presShell->GetPrimaryFrameFor(aContent, frame);
-      if (nsnull != frame) {
-        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+    if (nsnull != doc) {
+       // Get presentation shell 0
+      nsIPresShell* presShell = doc->GetShellAt(0);
+      if (nsnull != presShell) {
+        nsIFrame *frame = nsnull;
+        presShell->GetPrimaryFrameFor(aContent, frame);
+        if (nsnull != frame) {
+          res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+        }
+        NS_RELEASE(presShell);
       }
-      NS_RELEASE(presShell);
+      NS_RELEASE(doc);
     }
-  NS_RELEASE(doc);
   }
-
+ 
   return res;
 }         
           
