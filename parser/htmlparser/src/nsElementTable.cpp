@@ -707,7 +707,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_label,
-    /*req-parent excl-parent*/          eHTMLTag_form,eHTMLTag_unknown,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kInlineEntity, kSelf,	
@@ -1147,7 +1147,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_xmp},
 
   { /*tag*/                             eHTMLTag_text,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+    /*req-parent excl-parent*/          eHTMLTag_body,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
