@@ -61,6 +61,10 @@
  * implementation.
  */
 #ifdef AIX
+#ifdef SF_CLOSE
+#define HAVE_SEND_FILE
+#endif
+
 #ifdef HAVE_SEND_FILE
 
 #define AIX_SEND_FILE(a, b, c) send_file(a, b, c)
