@@ -16,11 +16,9 @@
  * Reserved.
  */
 
-#include "msgCore.h" // for pre-compiled headers...
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsMsgLocalCID.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
 
