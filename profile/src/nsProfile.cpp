@@ -2307,9 +2307,11 @@ nsProfile::RemigrateProfile(const PRUnichar* profileName)
      
     // Backup what we're remigrating by renaming it and leaving in place
     // XXX todo: what if <xxxxxxxx>.slt-old already exists?
-    rv = profileDir->MoveToNative(nsnull, origDirLeafName + NS_LITERAL_CSTRING("-old"));
+    nsCAutoString oldLeafName;
+    oldLeafName = origDirLeafName + NS_LITERAL_CSTRING("-old");
+    rv = profileDir->MoveToNative(nsnull, oldLeafName);
     NS_ENSURE_SUCCESS(rv,rv);
-    
+     
     // Create a new directory for the remigrated profile
     rv = newProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create new directory for the remigrated profile");
