@@ -87,9 +87,9 @@ private:
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;
-	nsCOMPtr<nsMsgCompFields>	m_compFields;
+	nsCOMPtr<nsIMsgCompFields> 	m_compFields;
 	PRBool						m_composeHTML;
-  nsCOMPtr<QuotingOutputStreamImpl>  mOutStream;
+  QuotingOutputStreamImpl *mOutStream;
   nsCOMPtr<nsIOutputStream>          mBaseStream;
   nsCOMPtr<nsIMsgQuote>              mQuote;
 };

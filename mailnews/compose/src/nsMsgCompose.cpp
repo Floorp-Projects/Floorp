@@ -52,6 +52,7 @@ nsMsgCompose::nsMsgCompose()
 	m_webShell = nsnull;
 	m_webShellWin = nsnull;
 	m_editor = nsnull;
+  mOutStream=nsnull;
 	m_compFields = do_QueryInterface(new nsMsgCompFields);
 
 	// Get the default charset from pref, use this as a mail charset.
@@ -70,6 +71,7 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
+  NS_IF_RELEASE(mOutStream);
   NS_RELEASE(m_editor);
 }
 
@@ -129,7 +131,9 @@ nsresult nsMsgCompose::LoadFields()
 		
     if (m_editor)
     {
-    	nsAutoString msgBody(m_compFields->GetBody());
+      char *body;
+      m_compFields->GetBody(&body);
+    	nsAutoString msgBody(body);
     	if (msgBody.Length())
     	{
     		nsString fileName(TEMP_PATH_DIR);
@@ -184,11 +188,21 @@ nsresult nsMsgCompose::LoadFields()
 					{
 						nsString id;
 						inputElement->GetId(id);
-						if (id == "msgTo") inputElement->SetValue(m_compFields->GetTo());
-						if (id == "msgCc") inputElement->SetValue(m_compFields->GetCc());
-						if (id == "msgBcc") inputElement->SetValue(m_compFields->GetBcc());
-                        if (id == "msgNewsgroup") inputElement->SetValue(m_compFields->GetNewsgroups());
-						if (id == "msgSubject") inputElement->SetValue(m_compFields->GetSubject());
+            char *elementValue;
+            m_compFields->GetTo(&elementValue);
+						if (id == "msgTo") inputElement->SetValue(elementValue);
+
+            m_compFields->GetCc(&elementValue);
+						if (id == "msgCc") inputElement->SetValue(elementValue);
+
+            m_compFields->GetBcc(&elementValue);
+						if (id == "msgBcc") inputElement->SetValue(elementValue);
+
+            m_compFields->GetNewsgroups(&elementValue);
+            if (id == "msgNewsgroup") inputElement->SetValue(elementValue);
+
+            m_compFields->GetSubject(&elementValue);
+						if (id == "msgSubject") inputElement->SetValue(elementValue);
 					}
                     
 				}
@@ -682,12 +696,14 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
     return NS_ERROR_FAILURE;
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
-  mOutStream = do_QueryInterface(new QuotingOutputStreamImpl());
+  mOutStream = new QuotingOutputStreamImpl();
+  
   if (!mOutStream)
   {
     printf("Failed to create nsIOutputStream\n");
     return NS_ERROR_FAILURE;
   }
+  NS_ADDREF(mOutStream);
 
   NS_ADDREF(this);
   mOutStream->SetComposeObj(this);
