@@ -354,7 +354,7 @@ sub BuildCommonProjects()
 
 	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
 
-	BuildProject(":mozilla:network:macbuild:network.mcp",		"networkModular$D.o");
+	BuildProject(":mozilla:network:macbuild:network.mcp",		"NetworkModular$D.o");
 
 }
 
