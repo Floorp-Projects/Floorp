@@ -22,16 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
-
-DIRS		= \
-		about \
-		data \
-		file \
-		resource \
-		ftp \
-		http \
-		$(NULL)
+DIRS		= about data file resource ftp http
 
 include $(topsrcdir)/config/rules.mk
 
