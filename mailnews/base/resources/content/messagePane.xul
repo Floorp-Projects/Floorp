@@ -18,7 +18,7 @@ window {
 </html:style>
 <box align="vertical" style="width: 100%; height: 100%">
 <box align="horizontal" flex="100%">
-<html:iframe src="http://www.mozilla.org/mailnews/prefs-info.html" name="browser.webwindow" width="100%" height="325px" flex="100%"> </html:iframe>
+<html:iframe name="browser.webwindow" width="100%" height="325px" flex="100%"> </html:iframe>
 </box>
 </box>
 </window>

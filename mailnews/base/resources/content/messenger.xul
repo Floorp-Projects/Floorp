@@ -236,8 +236,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&messengerWindow.title;"
-	onload="OnLoad()"
-	onunload="OnUnload()"
+	onload="OnLoadMessenger()"
+	onunload="OnUnloadMessenger()"
     style="width:100%;height:100%">
 
 <html:script src="chrome://messenger/content/widgetglue.js"/>
@@ -535,7 +535,7 @@
     </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe src="chrome://messenger/content/3panemail.html" name="browser.3panemail" flex="100%" />
+    <html:iframe src="chrome://messenger/content/3panemail.html" name="browser.3panemail" flex="100%" id="messengerContent"/>
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="status-bar">
