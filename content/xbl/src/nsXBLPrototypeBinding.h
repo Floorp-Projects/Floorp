@@ -80,10 +80,12 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding);
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
+                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex,
+                               nsIContent** aDefaultContent);
 
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultiple);
+                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultiple,
+                                     nsIContent** aDefaultContent);
 
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag);
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
