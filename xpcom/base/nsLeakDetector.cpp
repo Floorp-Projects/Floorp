@@ -35,6 +35,7 @@ extern "C" {
 extern FILE *GC_stdout, *GC_stderr;
 extern void GC_gcollect(void);
 extern void GC_clear_roots(void);
+extern void GC_trace_object(void* object);
 }
 
 static nsresult nextLeakFile()
@@ -53,6 +54,19 @@ static nsresult nextLeakFile()
 	GC_stderr = fopen(reportName, "w");
 	
 	return NS_OK;
+}
+
+static FILE* openTraceFile()
+{
+	// generate a time stamped report name.
+	time_t timer;
+	time(&timer);
+	tm* now = localtime(&timer);
+	
+	char reportName[256];
+	sprintf(reportName, "Trace%02d%02d%02d",
+			now->tm_hour, now->tm_min, now->tm_sec);
+	return fopen(reportName, "w");
 }
 
 class nsLeakDetector : public nsILeakDetector {
@@ -76,6 +90,20 @@ NS_METHOD nsLeakDetector::DumpLeaks()
 	GC_gcollect();
 
 	return nextLeakFile();
+}
+
+NS_METHOD nsLeakDetector::TraceObject(nsISupports* object)
+{
+    FILE* trace = openTraceFile();
+    if (trace != NULL) {
+        FILE* old_stderr = GC_stderr;
+        GC_stderr = trace;
+        GC_trace_object(object);
+        GC_stderr = old_stderr;
+        fclose(trace);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 #define NS_CLEAKDETECTOR_CID_STR "bb1ba360-1dd1-11b2-b30e-aa2314429f54"
@@ -108,7 +136,6 @@ nsresult NS_InitLeakDetector()
 
 nsresult NS_ShutdownLeakDetector()
 {
-	// Run a collection to get unreferenced leaks.
 	GC_gcollect();
 
 #if 0
