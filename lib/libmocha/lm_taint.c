@@ -1110,7 +1110,7 @@ canExtendTrust(JSContext *cx, void *from, void *to)
 }
 
 static JSPrincipals *
-newJSPrincipalsFromArray(JSContext *cx, void *principalsArray);
+newJSPrincipalsFromArray(JSContext *cx, void *principalsArray, void *pNSISecurityContext);
 
 extern JSBool
 lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
