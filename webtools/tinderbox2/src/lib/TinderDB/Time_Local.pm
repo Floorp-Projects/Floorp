@@ -29,8 +29,8 @@
 
 
 
-# $Revision: 1.2 $ 
-# $Date: 2003/08/17 01:37:52 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/08/17 16:04:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time_Local.pm,v $ 
 # $Name:  $ 
@@ -47,7 +47,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 
 sub new {
@@ -158,36 +158,76 @@ sub status_table_row {
   my ($month, $day) = ( $pretty_time =~ m!(\d\d)/(\d\d)! );
   my ($hour, $min) = ( $pretty_time =~ m!(\d\d):(\d\d)! );
 
-  $display_time = "\t\t<noscript>$pretty_time</noscript>\n";
-
   # if it is a new hour or we have checkins for this period make a
   # link for a cvs query for all checkins since this time otherwise
   # just display the date.
 
+  my $display_time = '';
+  $display_time .= "\t\t<noscript>$pretty_time</noscript>\n";
+
   my ($query_link) = '';
   if ($self->last_hour() != $hour) {
 
-  $display_time = (
-		   "\t\t<script type=\"text/javascript\">".
-		   "show_time($month,$day,$hour,$min, 1);".
-		   "</script>\n".
-		   "");
 
-    $query_link = "\t\t".
-	VCDisplay::query(
-			 'tree' => $tree,
-			 'mindate' => $time,
-			 'linktxt' => $display_time,
-			 );
- } else {
+      $display_time .= (
+                        "\t\t<script type=\"text/javascript\">".
+                        "show_time($month,$day,$hour,$min, 1);".
+                        "</script>\n".
+                        "");
 
-  $display_time .= (
-		    "\t\t<script type=\"text/javascript\">".
-		    "show_time($month,$day,$hour,$min, 0);".
-		    "</script>\n".
-		    "");
+      # First make a popup window which tells the server time and UTC
+      # time. OTherwise these times might be hard for developers who
+      # travel a bunch to figure out.
 
-    $query_link =   $display_time;
+      # I would like to put the local browser time in this popup
+      # window, but how? The VCDisplay popup window expects a static
+      # string, I would need to change everything to allow part of the
+      # string to be an interpolated JavaScript function. Perhaps I
+      # could change the code to take a string OR a reference to a
+      # list.  The list would contain either strings or
+      # javascript. This would solve the problem, but is it worth it
+      # for one tiny portion of the tinderbox code? For now just leave
+      # out the local time.  Users can see that time anyway since it
+      # is in the cell that they click on to get this window.
+
+      my $vc_link = "\t\t".
+          VCDisplay::query(
+                           'tree' => $tree,
+                           'mindate' => $time,
+                           'linktxt' => "Check-ins at this time",
+                           );
+      
+      my ($pretty_gmtime) = HTMLPopUp::gmtimeHTML($time); 
+      my ($pretty_servertime) = HTMLPopUp::timeHTML($time);
+      
+      my $txt = (
+                 "UTC: $pretty_gmtime<br>\n".
+                 "Server Time: $pretty_servertime<br>\n".
+                 "$vc_link<br>\n".
+                 "");
+
+      my $title = "Tinderbox Times";
+      
+      # Now make the link for the time cell.
+
+      $query_link = VCDisplay::query(
+                                     "windowtxt"=>$txt,
+                                     "windowtitle" => $title,
+                                     
+                                     'tree' => $tree,
+                                     'mindate' => $time,
+                                     'linktxt' => $display_time,
+                                     );
+
+  } else {
+
+      $display_time .= (
+                        "\t\t<script type=\"text/javascript\">".
+                        "show_time($month,$day,$hour,$min, 0);".
+                        "</script>\n".
+                        "");
+      
+      $query_link =   $display_time;
   }
 
   # the background for odd hours is a light grey, 
