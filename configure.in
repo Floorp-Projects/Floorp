@@ -1454,6 +1454,14 @@ AM_PATH_LIBIDL($LIBIDL_VERSION,,
   [AC_MSG_ERROR(libIDL not installed.)])
 fi
 
+if test -n "$CROSS_COMPILE"; then
+    if test -z "$HOST_LIBIDL_CONFIG"; then
+        HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
+    fi
+    HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
+    HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
+fi
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
 AC_C_CONST
@@ -3315,6 +3323,10 @@ AC_SUBST(HOST_CXXFLAGS)
 AC_SUBST(HOST_AR)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_NSPR_MDCPUCFG)
+
+AC_SUBST(HOST_LIBIDL_CONFIG)
+AC_SUBST(HOST_LIBIDL_CFLAGS)
+AC_SUBST(HOST_LIBIDL_LIBS)
 
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_OS)
