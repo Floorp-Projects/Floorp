@@ -218,7 +218,8 @@ retry:
             (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes))
         {
 	    JS_ARENA_ALLOCATE(thing, &rt->gcArenaPool, sizeof(JSGCThing));
-	    JS_ARENA_ALLOCATE(flagp, &rt->gcFlagsPool, sizeof(uint8));
+            if (thing)
+                JS_ARENA_ALLOCATE(flagp, &rt->gcFlagsPool, sizeof(uint8));
 	}
 	if (!thing || !flagp) {
 	    if (thing)
