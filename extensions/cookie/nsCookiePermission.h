@@ -57,7 +57,7 @@ public:
 
   nsCookiePermission() 
     : mCookiesLifetimeSec(LL_MAXINT)
-    , mCookiesLifetimePolicy(LL_MAXINT)
+    , mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
     , mCookiesAlwaysAcceptSession(PR_FALSE)
 #ifdef MOZ_MAIL_NEWS
     , mCookiesDisabledForMailNews(PR_TRUE)
