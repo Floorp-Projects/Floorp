@@ -393,6 +393,48 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
   return ulSize - cplen;
 }
 
+int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize )
+{
+  UconvObject* pConverter = 0;
+  /* Free any converters that were created */
+  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
+    if (gUconvInfo[i].mCodePage == CodePage) {
+      if (!gUconvInfo[i].mConverter) {
+        UniChar codepage[20];
+        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
+        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
+        break;
+      } /* endif */
+      pConverter = &gUconvInfo[i].mConverter;
+    } /* endif */
+  } /* endfor */
+  if (!pConverter) {
+      pConverter = &gUconvInfo[0].mConverter;
+  } /* endif */
+
+  char *ucsString = (char*) pText;
+  size_t   ucsLen = ulLength;
+  size_t   cplen = ulSize;
+  size_t   cSubs = 0;
+
+  PRUnichar *tmp = szBuffer; // function alters the out pointer
+
+   int unirc = UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
+                                &tmp, &cplen, &cSubs);
+
+  if( unirc == UCONV_E2BIG) // k3w1
+  {
+    // terminate output string (truncating)
+    *(szBuffer + ulSize - 1) = '\0';
+  }
+  else if( unirc != ULS_SUCCESS)
+  {
+     printf("very bad");
+  }
+  return ulSize - cplen;
+}
+
+
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
 {
     POINTL ptls[5];
