@@ -32,6 +32,30 @@
   <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>:
 </p>
 
+<hr>
+<table border="0" cellspacing="0" width="100%">
+  <tr>
+    <td valign="top" align="left" nowrap="nowrap">
+      <font size="+1">
+        <b>[%+ terms.Bugzilla %] [%+ terms.Bug %] [%+ bug.bug_id %]</b>
+      </font>
+    </td>
+    <td valign="middle" align="left">
+      &nbsp;
+    </td>
+    <td valign="middle" align="left">
+      [% bug.short_desc FILTER html %]
+    </td>
+    <td valign="middle" align="right">
+      Last modified: [% bug.delta_ts FILTER time %]
+    </td>
+  </tr>
+</table>
+
+[% PROCESS bug/navigate.html.tmpl %]
+
+<hr>
+
 [% PROCESS "bug/edit.html.tmpl" %]
 
 <hr>
