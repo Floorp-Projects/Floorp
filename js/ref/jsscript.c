@@ -304,6 +304,60 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
     return JS_TRUE;
 }
 
+#ifdef JS_XDR_SCRIPT_VERIFIER
+/*
+ * Make sure that the script is "safe".
+ * We currently only check for a balanced stack budget.
+ */
+static JSBool
+VerifyScript(JSContext *cx, JSScript *scr) {
+    int depth = 0;
+    jsbytecode *pc, *endpc;
+
+    pc = script->code;
+    endpc = pc + script->length; /* XXX attack based on falsified length? */
+
+    while (pc < endpc) {
+        JSCodeSpec *cs = &js_CodeSpec[(JSOp)*pc];
+        intN nuses = cs->nuses;
+        if (nuses < 0)
+            nuses = 2 + GET_ARGC(pc);
+        depth -= nuses;
+        if (depth < 0) {        /* underflow */
+            JS_ReportError(cx,
+                           "script verification failed: stack underflow\n");
+            return JS_FALSE;
+        }
+        depth += cs->ndefs;
+        if (depth > maxdepth) {
+            maxdepth = depth;
+            if (depth > script->depth) { /* overflow */
+                JS_ReportError(cx,
+                               "script verification failed: stack overflow\n");
+                return JS_FALSE;
+            }
+        }
+        if (cs->format & JOF_TYPEMASK == JOF_TABLESWITCH ||
+            cs->format & JOF_TYPEMASK == JOF_LOOKUPSWITCH) {
+            /*
+             * the immediate operand is the length of the switch/lookup table
+             * (also the default offset)
+             */
+            pc += GET_JUMP_OFFSET(pc);
+        } else {
+            pc += cs->length;
+        }
+    }
+    if (maxdepth != script->depth) { /* perhaps not attack, but malformed */
+        JS_ReportError(cx,
+                       "script stack budget mismatch (max %d, declared %d)\n",
+                       maxdepth, script->depth);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+#endif
+
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
 {
@@ -348,6 +402,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
     if (xdr->mode == JSXDR_DECODE) {
 	script->lineno = (uintN)lineno;
 	script->depth = (uintN)depth;
+#ifdef JS_XDR_SCRIPT_VERIFIER
+        if (!VerifyScript(xdr->cx, script)) {
+            js_DestroyScript(xdr->cx, script);
+            *scriptp = NULL;
+            return JS_FALSE;
+        }
+#endif
     }
     return JS_TRUE;
 }
