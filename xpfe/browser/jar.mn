@@ -1,8 +1,7 @@
 comm.jar:
         content/navigator/contents.rdf                 (resources/content/contents.rdf)
         content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
-        content/navigator/viewsource.js                (resources/content/viewsource.js)
-        content/navigator/viewSource.xul               (resources/content/viewSource.xul)
+        content/navigator/browser.js                   (resources/content/browser.js)
         content/navigator/pageInfo.js                  (resources/content/pageInfo.js)
         content/navigator/pageInfo.xul                 (resources/content/pageInfo.xul)
         content/navigator/navigator.xul                (resources/content/navigator.xul)
@@ -24,6 +23,8 @@ comm.jar:
         content/navigator/linkToolbarOverlay.xul       (resources/content/linkToolbarOverlay.xul)
         content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)
         content/navigator/turboDialog.xul              (resources/content/turboDialog.xul)
+        content/navigator/viewsource.js                (resources/content/viewsource.js)
+        content/navigator/viewSource.xul               (resources/content/viewSource.xul)
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
