@@ -363,10 +363,11 @@ var homeButtonObserver = {
                                               iconURL, checkValue, 2, 0, null, pressedVal);
           nsPreferences.setBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
 
-          setHomepage = pressedVal.value;
+          setHomepage = pressedVal.value == 0 ? true : false;
         }
       else
         setHomepage = true;
+    dump("*** pressedVal = " + pressedVal.value + "\n");        
       if (setHomepage)
         nsPreferences.setUnicharPref("browser.startup.homepage", url);                                           
     },
