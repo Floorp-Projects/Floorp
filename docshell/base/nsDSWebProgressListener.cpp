@@ -68,8 +68,9 @@ NS_IMETHODIMP nsDSWebProgressListener::OnProgressChange(nsIChannel* aChannel,
    mCurTotalProgress = aCurTotalProgress;
    mMaxTotalProgress = aMaxTotalProgress;
 
-   mDocShell->FireOnProgressChange(aChannel, aCurSelfProgress, aMaxSelfProgress,
-      aCurTotalProgress, aMaxTotalProgress);
+   if(mDocShell)
+      mDocShell->FireOnProgressChange(aChannel, aCurSelfProgress, 
+      aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
 
    return NS_OK;
 }
@@ -77,7 +78,8 @@ NS_IMETHODIMP nsDSWebProgressListener::OnProgressChange(nsIChannel* aChannel,
 NS_IMETHODIMP nsDSWebProgressListener::OnChildProgressChange(nsIChannel* aChannel,
    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
 {
-   mDocShell->FireOnChildProgressChange(aChannel, aCurSelfProgress, 
+   if(mDocShell)
+      mDocShell->FireOnChildProgressChange(aChannel, aCurSelfProgress, 
       aMaxSelfProgress);
 
    return NS_OK;
@@ -89,8 +91,8 @@ NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
    mProgressStatusFlags = aProgressStatusFlags;
    //XXX Need to mask in flag_windowActivity when animation is occuring in the
    // window
-
-   mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
+   if(mDocShell)
+      mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
 
    return NS_OK;
 }
@@ -98,7 +100,8 @@ NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
 NS_IMETHODIMP nsDSWebProgressListener::OnChildStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
-   mDocShell->FireOnChildStatusChange(aChannel, aProgressStatusFlags);
+   if(mDocShell)
+      mDocShell->FireOnChildStatusChange(aChannel, aProgressStatusFlags);
 
    return NS_OK;
 }
