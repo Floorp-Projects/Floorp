@@ -36,7 +36,6 @@
 *
 * Date:    08 November 2003
 * SUMMARY: |expr()| should cause a TypeError if |typeof expr| != 'function'
-* In other word
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=224956
 *
