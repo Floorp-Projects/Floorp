@@ -50,6 +50,9 @@
 
 class nsFontXft;
 
+typedef void (*GlyphEnumeratorCallback) (FcChar32 aChar, nsFontXft *aFont,
+                                        void *aData);
+
 class nsFontMetricsXft : public nsIFontMetricsGTK
 {
 public:
@@ -204,6 +207,13 @@ public:
     static nsresult FamilyExists (nsIDeviceContext *aDevice,
                                   const nsString &aName);
 
+    void        DrawStringCallback     (FcChar32 aChar, nsFontXft *aFont,
+                                        void *aData);
+    void        TextDimensionsCallback (FcChar32 aChar, nsFontXft *aFont,
+                                        void *aData);
+    void        GetWidthCallback       (FcChar32 aChar, nsFontXft *aFont,
+                                        void *aData);
+
 private:
     // local methods
     nsresult    RealizeFont      (void);
@@ -215,11 +225,15 @@ private:
     gint        RawGetWidth      (const PRUnichar* aString,
                                   PRUint32         aLength);
     nsresult    SetupMiniFont    (void);
-    nsresult    DrawUnknownGlyph (PRUint32   aChar,
+    nsresult    DrawUnknownGlyph (FcChar32   aChar,
                                   nscoord    aX,
                                   nscoord    aY,
                                   XftColor  *aColor,
                                   XftDraw   *aDraw);
+    void        EnumerateGlyphs  (FcChar32 *aChars,
+                                  PRUint32  aLen,
+                                  GlyphEnumeratorCallback aCallback,
+                                  void     *aCallbackData);
     void        PrepareToDraw    (nsRenderingContextGTK *aContext,
                                   nsDrawingSurfaceGTK *aSurface,
                                   XftDraw **aDraw, XftColor &aColor);
