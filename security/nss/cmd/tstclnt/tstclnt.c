@@ -752,6 +752,9 @@ int main(int argc, char **argv)
 	error = 1;
 	goto done;
     }
+
+    /* Wait until the pseudo stdin is readable (for debugging).  --wtc */
+    PR_Poll(&pollset[1], 1, PR_INTERVAL_NO_TIMEOUT);
   }
 #endif
 
