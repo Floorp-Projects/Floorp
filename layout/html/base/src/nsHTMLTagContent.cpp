@@ -320,6 +320,7 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   if (nsnull != aDocument) {
     if (NS_OK == aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc)) {
       htmlDoc->GetAttributeStyleSheet(&sheet);
+      NS_RELEASE(htmlDoc);
     }
   }
   NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
@@ -336,7 +337,10 @@ nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
 
   if (nsnull != mAttributes) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    sheet->SetAttributesFor(this, mAttributes); // sync attributes with sheet
+    if (nsnull != sheet) {
+      sheet->SetAttributesFor(this, mAttributes); // sync attributes with sheet
+      NS_RELEASE(sheet);
+    }
   }
   return rv;
 }
@@ -560,7 +564,10 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
 
     if (nsnull != mDocument) {  // set attr via style sheet
       nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
+      if (nsnull != sheet) {
+        result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
+        NS_RELEASE(sheet);
+      }
     }
     else {  // manage this ourselves and re-sync when we connect to doc
       result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
@@ -584,7 +591,10 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
+    if (nsnull != sheet) {
+      result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
+      NS_RELEASE(sheet);
+    }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
     result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
@@ -605,7 +615,10 @@ nsHTMLTagContent::UnsetAttribute(nsIAtom* aAttribute)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->UnsetAttributeFor(aAttribute, this, mAttributes);
+    if (nsnull != sheet) {
+      result = sheet->UnsetAttributeFor(aAttribute, this, mAttributes);
+      NS_RELEASE(sheet);
+    }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
     result = EnsureWritableAttributes(this, mAttributes, PR_FALSE);
@@ -658,7 +671,10 @@ nsHTMLTagContent::SetID(nsIAtom* aID)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetIDFor(aID, this, mAttributes);
+    if (nsnull != sheet) {
+      result = sheet->SetIDFor(aID, this, mAttributes);
+      NS_RELEASE(sheet);
+    }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
     EnsureWritableAttributes(this, mAttributes, PRBool(nsnull != aID));
@@ -689,7 +705,10 @@ nsHTMLTagContent::SetClass(nsIAtom* aClass)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetClassFor(aClass, this, mAttributes);
+    if (nsnull != sheet) {
+      result = sheet->SetClassFor(aClass, this, mAttributes);
+      NS_RELEASE(sheet);
+    }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
     EnsureWritableAttributes(this, mAttributes, PRBool(nsnull != aClass));
