@@ -20,7 +20,7 @@ date
 
 # update the lxr sources
 pwd
-time cvs -Q -d $CVSROOT update -dP
+time cvs -d $CVSROOT update -dP
 
 date
 
