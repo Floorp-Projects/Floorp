@@ -36,6 +36,7 @@ class nsVoidArray;
 class nsXIFConverter;
 class nsIDOMEvent;
 class nsIContent;
+class nsISupportsArray;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -117,6 +118,40 @@ public:
    * </UL>
    */
   NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const = 0;
+
+  /**
+   * Remove an attribute so that it is no longer explicitly specified.
+   *
+   * @param aAttribute the name of the attribute to unset
+   * 
+   * @param aNotify specifies whether or not the document should be
+   * notified of the attribute change
+   *
+   */
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) = 0;
+
+
+  /**
+   * Get the list of all specified attribute. The returned array
+   * contains nsIAtom's representing the attribute names.
+   * 
+   * @param aArray an array to be filled in with attribute names
+   * 
+   * @param aCountResult an out parameter to be filled in with
+   *        the number of attributes
+   *
+   */
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aCountResult) const = 0;
+
+  /**
+   * Get the number of all specified attributes.
+   *
+   * @param aCountResult an out parameter to be filled in with
+   *        the number of attributes
+   *
+   */
+  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const = 0;
 
   /**
    * List the content (and anything it contains) out to the given

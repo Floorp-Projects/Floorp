@@ -42,6 +42,8 @@ MISCDEP =				\
  $(DIST)\lib\raptorhtmlforms_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorhtmltable_s.lib	\
+ $(DIST)\lib\raptorxmlcontent_s.lib	\
+ $(DIST)\lib\raptorxmldoc_s.lib		\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom32.lib		\
  $(DIST)\lib\raptorbase.lib		\
@@ -68,6 +70,8 @@ LLIBS=					\
  $(DIST)\lib\raptorhtmlforms_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorhtmltable_s.lib	\
+ $(DIST)\lib\raptorxmlcontent_s.lib	\
+ $(DIST)\lib\raptorxmldoc_s.lib		\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom32.lib		\
  $(DIST)\lib\raptorbase.lib		\

@@ -48,6 +48,9 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
+#include "nsIXMLDocument.h"
+#include "nsIXMLContent.h"
+
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
@@ -64,16 +67,7 @@
 #include "prmem.h"
 
 // XXX todo: add in missing out-of-memory checks
-
-NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
-NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-//NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
@@ -84,474 +78,8 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
-
-// Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr and nsIDOMNode and
-// nsIScriptObjectOwner
-class DOMAttribute : public nsIDOMAttr, public nsIScriptObjectOwner {
-public:
-  DOMAttribute(const nsString &aName, const nsString &aValue);
-  ~DOMAttribute();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMAttr interface
-  NS_IMETHOD GetSpecified(PRBool* aSpecified);
-  NS_IMETHOD GetName(nsString& aReturn);
-  NS_IMETHOD GetValue(nsString& aReturn);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  
-  // nsIDOMNode interface
-  NS_IMETHOD GetNodeName(nsString& aNodeName);
-  NS_IMETHOD GetNodeValue(nsString& aNodeValue);
-  NS_IMETHOD SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode);
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling);
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-
-private:
-  nsString mName;
-  nsString mValue;
-  void* mScriptObject;
-};
-
-// Another helper class that implements the nsIDOMNamedNodeMap interface.
-class DOMAttributeMap : public nsIDOMNamedNodeMap,
-                        public nsIScriptObjectOwner
-{
-public:
-  DOMAttributeMap(nsIHTMLContent* aContent);
-  virtual ~DOMAttributeMap();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMNamedNodeMap interface
-  NS_IMETHOD GetLength(PRUint32* aSize);
-  NS_IMETHOD GetNamedItem(const nsString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD SetNamedItem(nsIDOMNode* aNode, nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-private:
-  nsIHTMLContent* mContent;
-  void* mScriptObject;
-};
-
-
-// Class that holds the child list of a content element and also
-// implements the nsIDOMNodeList interface.
-class nsChildContentList : public nsIDOMNodeList, 
-                           public nsIScriptObjectOwner 
-{
-public:
-  nsChildContentList(nsGenericHTMLContainerElement *aContent);
-  virtual ~nsChildContentList() {}
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
-  // nsIDOMNodeList interface
-  NS_DECL_IDOMNODELIST
-  
-  void DropReference();
-
-private:
-  nsGenericHTMLContainerElement *mContent;
-  void *mScriptObject;
-};
-
-//----------------------------------------------------------------------
-
-DOMAttribute::DOMAttribute(const nsString& aName, const nsString& aValue)
-  : mName(aName), mValue(aValue)
-{
-  mRefCnt = 1;
-  mScriptObject = nsnull;
-}
-
-DOMAttribute::~DOMAttribute()
-{
-}
-
-nsresult
-DOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMAttrIID)) {
-    nsIDOMAttr* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMAttr* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(DOMAttribute)
-
-NS_IMPL_RELEASE(DOMAttribute)
-
-nsresult
-DOMAttribute::GetScriptObject(nsIScriptContext *aContext,
-                                void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttr(aContext, 
-                           (nsISupports *)(nsIDOMAttr *)this, 
-                           nsnull,
-                           (void **)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-DOMAttribute::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult
-DOMAttribute::GetName(nsString& aName)
-{
-  aName = mName;
-  return NS_OK;
-}
-
-nsresult
-DOMAttribute::GetValue(nsString& aValue)
-{
-  aValue = mValue;
-  return NS_OK;
-}
-
-nsresult
-DOMAttribute::SetValue(const nsString& aValue)
-{
-  mValue = aValue;
-  return NS_OK;
-}
-
-nsresult
-DOMAttribute::GetSpecified(PRBool* aSpecified)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetNodeName(nsString& aNodeName)
-{
-  return GetName(aNodeName);
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetNodeValue(nsString& aNodeValue)
-{
-  return GetValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-DOMAttribute::SetNodeValue(const nsString& aNodeValue)
-{
-  // You can't actually do this, but we'll fail silently
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  *aChildNodes = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
-{
-  *aHasChildNodes = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  *aFirstChild = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetLastChild(nsIDOMNode** aLastChild)
-{
-  *aLastChild = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  *aPreviousSibling = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  *aNextSibling = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  *aAttributes = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-DOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-DOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-DOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-DOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  DOMAttribute* newAttr = new DOMAttribute(mName, mValue);
-  if (nsnull == newAttr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aReturn = newAttr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-DOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  // XXX TBI
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-DOMAttributeMap::DOMAttributeMap(nsIHTMLContent* aContent)
-  : mContent(aContent)
-{
-  mRefCnt = 1;
-  NS_ADDREF(mContent);
-  mScriptObject = nsnull;
-}
-
-DOMAttributeMap::~DOMAttributeMap()
-{
-  NS_RELEASE(mContent);
-}
-
-nsresult
-DOMAttributeMap::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNamedNodeMapIID)) {
-    nsIDOMNamedNodeMap* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNamedNodeMap* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(DOMAttributeMap)
-
-NS_IMPL_RELEASE(DOMAttributeMap)
-
-nsresult
-DOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
-                                   void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptNamedNodeMap(aContext, 
-                                   (nsISupports *)(nsIDOMNamedNodeMap *)this, 
-                                   nsnull,
-                                   (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-DOMAttributeMap::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult
-DOMAttributeMap::GetNamedItem(const nsString &aAttrName,
-                                nsIDOMNode** aAttribute)
-{
-  nsAutoString value;
-  mContent->GetAttribute(aAttrName, value);
-  *aAttribute  = (nsIDOMNode *) new DOMAttribute(aAttrName, value);
-  return NS_OK;
-}
-
-nsresult
-DOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
-{
-  nsIDOMAttr *attribute;
-  nsAutoString name, value;
-  nsresult err;
-
-  if (NS_OK != (err = aNode->QueryInterface(kIDOMAttrIID,
-                                            (void **)&attribute))) {
-    return err;
-  }
-
-  attribute->GetName(name);
-  attribute->GetValue(value);
-  NS_RELEASE(attribute);
-
-  mContent->SetAttribute(name, value, PR_TRUE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
-{
-  nsresult res = GetNamedItem(aName, aReturn);
-  if (NS_OK == res) {
-    nsAutoString upper;
-    aName.ToUpperCase(upper);
-    nsIAtom* attr = NS_NewAtom(upper);
-    mContent->UnsetAttribute(attr, PR_TRUE);
-  }
-
-  return res;
-}
-
-nsresult
-DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  nsresult res = NS_ERROR_FAILURE;
-  nsAutoString name, value;
-  nsISupportsArray *attributes = nsnull;
-  if (NS_OK == NS_NewISupportsArray(&attributes)) {
-    PRInt32 count;
-    mContent->GetAllAttributeNames(attributes, count);
-    if (count > 0) {
-      if ((PRInt32)aIndex < count) {
-        nsISupports *att = attributes->ElementAt(aIndex);
-        static NS_DEFINE_IID(kIAtom, NS_IATOM_IID);
-        nsIAtom *atName = nsnull;
-        if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
-          atName->ToString(name);
-          if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(name, value)) {
-            *aReturn = (nsIDOMNode *)new DOMAttribute(name, value);
-            res = NS_OK;
-          }
-          NS_RELEASE(atName);
-        }
-      }
-    }
-    NS_RELEASE(attributes);
-  }
-
-  return res;
-}
-
-nsresult
-DOMAttributeMap::GetLength(PRUint32 *aLength)
-{
-  PRInt32 n;
-  nsresult rv = mContent->GetAttributeCount(n);
-  *aLength = PRUint32(n);
-  return rv;
-}
+static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
+static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -702,42 +230,9 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
   NS_RELEASE(aAttributes);
 }
 
-// XXX Currently, the script object factory is global. The way we
-// obtain it should, at least, be made thread-safe later. Ideally,
-// we'd find a better way.
-nsIDOMScriptObjectFactory* nsGenericHTMLElement::gScriptObjectFactory = nsnull;
-
-static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-nsresult 
-nsGenericHTMLElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
-{
-  nsresult result = NS_OK;
-
-  if (nsnull == gScriptObjectFactory) {
-    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          kIDOMScriptObjectFactoryIID,
-                                          (nsISupports **)&gScriptObjectFactory);
-    if (result != NS_OK) {
-      return result;
-    }
-  }
-
-  *aResult = gScriptObjectFactory;
-  NS_ADDREF(gScriptObjectFactory);
-  return result;
-}
-
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
-  mDocument = nsnull;
-  mParent = nsnull;
   mAttributes = nsnull;
-  mTag = nsnull;
-  mContent = nsnull;
-  mDOMSlots = nsnull;
-  mListenerManager = nsnull;
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
@@ -745,261 +240,6 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   if (nsnull != mAttributes) {
     ReleaseAttributes(mAttributes);
   }
-  NS_IF_RELEASE(mTag);
-  NS_IF_RELEASE(mListenerManager);
-  if (nsnull != mDOMSlots) {
-    if (nsnull != mDOMSlots->mChildNodes) {
-      mDOMSlots->mChildNodes->DropReference();
-      NS_RELEASE(mDOMSlots->mChildNodes);
-    }
-    if (nsnull != mDOMSlots->mStyle) {
-      mDOMSlots->mStyle->DropReference();
-      NS_RELEASE(mDOMSlots->mStyle);
-    } 
-    // XXX Should really be arena managed
-    PR_DELETE(mDOMSlots);
-  }
-}
-
-nsDOMSlots *
-nsGenericHTMLElement::GetDOMSlots()
-{
-  if (nsnull == mDOMSlots) {
-    mDOMSlots = PR_NEW(nsDOMSlots);
-    mDOMSlots->mScriptObject = nsnull;
-    mDOMSlots->mChildNodes = nsnull;
-    mDOMSlots->mStyle = nsnull;
-  }
-  
-  return mDOMSlots;
-}
-
-void
-nsGenericHTMLElement::Init(nsIHTMLContent* aOuterContentObject,
-                           nsIAtom* aTag)
-{
-  NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
-               "null ptr");
-  mContent = aOuterContentObject;
-  mTag = aTag;
-  NS_IF_ADDREF(aTag);
-}
-
-nsresult
-nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
-{
-  return GetTagName(aNodeName);
-}
-
-nsresult
-nsGenericHTMLElement::GetNodeValue(nsString& aNodeValue)
-{
-  aNodeValue.Truncate();
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetNodeValue(const nsString& aNodeValue)
-{
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetParentNode(nsIDOMNode** aParentNode)
-{
-  if (nsnull != mParent) {
-    nsresult res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
-    NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-    return res;
-  }
-  else {
-    *aParentNode = nsnull;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetPreviousSibling(nsIDOMNode** aNode)
-{
-  if (nsnull != mParent) {
-    PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
-    if (pos > -1) {
-      nsIContent* prev;
-      mParent->ChildAt(--pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
-    }
-  }
-  *aNode = nsnull;
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  if (nsnull != mParent) {
-    PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
-    if (pos > -1 ) {
-      nsIContent* prev;
-      mParent->ChildAt(++pos, prev);
-      if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
-        NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-        NS_RELEASE(prev); // balance the AddRef in ChildAt()
-        return res;
-      }
-    }
-  }
-  *aNextSibling = nsnull;
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  // XXX Actually the owner document is the document in whose context
-  // the element has been created. We should be able to get at it
-  // whether or not we are attached to the document.
-  if (nsnull != mDocument) {
-    return mDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
-  }
-  else {
-    *aOwnerDocument = nsnull;
-    return NS_OK;
-  }
-}
-
-nsresult
-nsGenericHTMLElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
-  if (nsnull != mAttributes) {
-    // XXX Should we create a new one every time or should we
-    // cache one after we create it? If we find that this is
-    // something that's called often, we might need to do the
-    // latter.
-    *aAttributes = new DOMAttributeMap(mContent);
-  }
-  else {
-    *aAttributes = nsnull;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetTagName(nsString& aTagName)
-{
-  aTagName.Truncate();
-  if (nsnull != mTag) {
-    mTag->ToString(aTagName);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
-{
-  GetAttribute(aName, aReturn);
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetDOMAttribute(const nsString& aName,
-                                      const nsString& aValue)
-{
-  SetAttribute(aName, aValue, PR_TRUE);
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
-{
-  nsAutoString upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-  UnsetAttribute(attr, PR_TRUE);
-  NS_RELEASE(attr);
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
-                                       nsIDOMAttr** aReturn)
-{
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(aName, value)) {
-    *aReturn = new DOMAttribute(aName, value);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::SetAttributeNode(nsIDOMAttr* aAttribute, 
-                                       nsIDOMAttr** aReturn)
-{
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
-
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
-    nsAutoString name, value;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      res = aAttribute->GetValue(value);
-      if (NS_OK == res) {
-        SetAttribute(name, value, PR_TRUE);
-      }
-    }
-  }
-  return res;
-}
-
-nsresult
-nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, 
-                                          nsIDOMAttr** aReturn)
-{
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
-
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
-    nsAutoString name;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      nsAutoString upper;
-      name.ToUpperCase(upper);
-      nsIAtom* attr = NS_NewAtom(upper);
-      UnsetAttribute(attr, PR_TRUE);
-    }
-  }
-
-  return res;
-}
-
-nsresult
-nsGenericHTMLElement::GetElementsByTagName(const nsString& aTagname,
-                                           nsIDOMNodeList** aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;/* XXX */
-}
-
-nsresult
-nsGenericHTMLElement::Normalize()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;/* XXX */
 }
 
 nsresult
@@ -1079,7 +319,10 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mStyle) {
-    slots->mStyle = new nsDOMCSSAttributeDeclaration(mContent);
+    nsIHTMLContent* htmlContent;
+    mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    slots->mStyle = new nsDOMCSSAttributeDeclaration(htmlContent);
+    NS_RELEASE(htmlContent);
     if (nsnull == slots->mStyle) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1092,126 +335,63 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return res;
 }
 
-nsresult
-nsGenericHTMLElement::GetDocument(nsIDocument*& aResult) const
-{
-  NS_IF_ADDREF(mDocument);
-  aResult = mDocument;
-  return NS_OK;
-}
-
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
   nsIHTMLStyleSheet*  sheet = nsnull;
   nsIHTMLDocument*  htmlDoc;
-
+  nsIXMLDocument* xmlDoc;
+  
   if (nsnull != aDocument) {
     if (NS_OK == aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc)) {
       htmlDoc->GetAttributeStyleSheet(&sheet);
       NS_RELEASE(htmlDoc);
+    }
+    // XXX The method GetAttributeStyleSheet should be factored into
+    // another interface for any document capable of containing HTML
+    // content.
+    else if (NS_OK == aDocument->QueryInterface(kIXMLDocumentIID, (void **)&xmlDoc)) {
+      xmlDoc->GetAttributeStyleSheet(&sheet);
+      NS_RELEASE(xmlDoc);
     }
   }
   NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
   return sheet;
 }
 
-static void
-SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
-{
-  PRInt32 i, n;
-  aContent->ChildCount(n);
-  for (i = 0; i < n; i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
-    if (nsnull != child) {
-      child->SetDocument(aDocument, PR_TRUE);
-      NS_RELEASE(child);
-    }
-  }
-}
-
 nsresult
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
-  // If we were part of a document, make sure we get rid of the
-  // script context reference to our script object so that our
-  // script object can be freed (or collected).
-  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-      (nsnull != mDOMSlots->mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
-        context->RemoveReference((void *)&mDOMSlots->mScriptObject,
-                                mDOMSlots->mScriptObject);
-        NS_RELEASE(context);
-      }
-      NS_RELEASE(owner);
-    }
+  nsresult result = nsGenericElement::SetDocument(aDocument, aDeep);
+  
+  if (NS_OK != result) {
+    return result;
   }
 
-  mDocument = aDocument;
+  nsIHTMLContent* htmlContent;
+  nsIXMLContent* xmlContent = nsnull;
 
-  // If we already have a script object and now we're being added
-  // to a document, make sure that the script context adds a 
-  // reference to our script object. This will ensure that it
-  // won't be freed (or collected) out from under us.
-  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-      (nsnull != mDOMSlots->mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
-        nsAutoString tag;
-        char tagBuf[50];
-        
-        mTag->ToString(tag);
-        tag.ToCString(tagBuf, sizeof(tagBuf));
-        context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
-                                   mDOMSlots->mScriptObject,
-                                   tagBuf);
-        NS_RELEASE(context);
-      }
-      NS_RELEASE(owner);
-    }
+  // XXX Current XMLContent is also HTMLContent. However, we don't
+  // want to use the attribute stylesheet for XMLContent. This code
+  // will go away when XMLContent is more pure.
+  // TODO However, we still may want to use the attribute stylesheet
+  // for attributes in XMLContent with the HTML namespace.
+  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
+
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
   }
 
-  if ((nsnull != mDocument) && (nsnull != mAttributes)) {
+  if ((nsnull != mDocument) && (nsnull != mAttributes) && (nsnull == xmlContent)) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
-      sheet->SetAttributesFor(mContent, mAttributes); // sync attributes with sheet
+      sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
       NS_RELEASE(sheet);
     }
   }
 
-  if (PR_TRUE == aDeep) {
-    SetDocumentInChildrenOf(mContent, aDocument);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetParent(nsIContent*& aResult) const
-{
-  NS_IF_ADDREF(mParent);
-  aResult = mParent;
-  return NS_OK;;
-}
-
-nsresult
-nsGenericHTMLElement::SetParent(nsIContent* aParent)
-{
-  mParent = aParent;
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetTag(nsIAtom*& aResult) const
-{
-  NS_IF_ADDREF(mTag);
-  aResult = mTag;
-  return NS_OK;
+  NS_RELEASE(htmlContent);
+  return result;
 }
 
 //void
@@ -1224,62 +404,6 @@ nsGenericHTMLElement::GetTag(nsIAtom*& aResult) const
 //    mAttributes->SizeOf(aHandler);
 //  }
 //}
-
-nsresult
-nsGenericHTMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                                     nsEvent* aEvent,
-                                     nsIDOMEvent** aDOMEvent,
-                                     PRUint32 aFlags,
-                                     nsEventStatus& aEventStatus)
-{
-  aEventStatus = nsEventStatus_eIgnore;
-  nsresult ret = NS_OK;
-  
-  nsIDOMEvent* domEvent = nsnull;
-  if (DOM_EVENT_INIT == aFlags) {
-    nsIEventStateManager *manager;
-    if (NS_OK == aPresContext.GetEventStateManager(&manager)) {
-      manager->SetEventTarget(mContent);
-      NS_RELEASE(manager);
-    }
-    aDOMEvent = &domEvent;
-  }
-  
-  //Capturing stage
-  
-  //Local handling stage
-  if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
-  }
-
-  //Bubbling stage
-  if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull)) {
-    ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                  DOM_EVENT_BUBBLE, aEventStatus);
-  }
-
-  if (DOM_EVENT_INIT == aFlags) {
-    // We're leaving the DOM event loop so if we created a DOM event,
-    // release here.
-    if (nsnull != *aDOMEvent) {
-      nsrefcnt rc;
-      NS_RELEASE2(*aDOMEvent, rc);
-      if (0 != rc) {
-        // Okay, so someone in the DOM loop (a listener, JS object)
-        // still has a ref to the DOM Event but the internal data
-        // hasn't been malloc'd.  Force a copy of the data here so the
-        // DOM Event is still valid.
-        nsIPrivateDOMEvent *privateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
-          privateEvent->DuplicatePrivateData();
-          NS_RELEASE(privateEvent);
-        }
-      }
-    }
-    aDOMEvent = nsnull;
-  }
-  return ret;
-}
 
 nsresult
 nsGenericHTMLElement::SetAttribute(const nsString& aName,
@@ -1375,23 +499,38 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
 
     nsHTMLValue val;
+    nsIHTMLContent* htmlContent;
+    nsIXMLContent* xmlContent = nsnull;
+    
+    // XXX Current XMLContent is also HTMLContent. However, we don't
+    // want to use the attribute stylesheet for XMLContent. This code
+    // will go away when XMLContent is more pure.
+    // TODO However, we still may want to use the attribute stylesheet
+    // for attributes in XMLContent with the HTML namespace.
+    result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
+    
+    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    if (NS_OK != result) {
+      return result;
+    }
     if (NS_CONTENT_ATTR_NOT_THERE !=
-        mContent->StringToAttribute(aAttribute, aValue, val)) {
+        htmlContent->StringToAttribute(aAttribute, aValue, val)) {
       // string value was mapped to nsHTMLValue, set it that way
       result = SetAttribute(aAttribute, val, aNotify);
+      NS_RELEASE(htmlContent);
       return result;
     }
     else {
       // set as string value to avoid another string copy
-      if (nsnull != mDocument) {  // set attr via style sheet
+      if ((nsnull != mDocument) && (nsnull == xmlContent)) {  // set attr via style sheet
         nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
         if (nsnull != sheet) {
-          result = sheet->SetAttributeFor(aAttribute, aValue, mContent, mAttributes);
+          result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent, mAttributes);
           NS_RELEASE(sheet);
         }
       }
       else {  // manage this ourselves and re-sync when we connect to doc
-        result = EnsureWritableAttributes(mContent, mAttributes, PR_TRUE);
+        result = EnsureWritableAttributes(htmlContent, mAttributes, PR_TRUE);
         if (nsnull != mAttributes) {
           PRInt32   count;
           result = mAttributes->SetAttribute(aAttribute, aValue, count);
@@ -1401,6 +540,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
         }
       }
     }
+    NS_RELEASE(htmlContent);
 
     if (aNotify && (nsnull != mDocument)) {
       mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
@@ -1415,19 +555,35 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
                                    PRBool aNotify)
 {
   nsresult  result = NS_OK;
+  nsIHTMLContent* htmlContent;
+  nsIXMLContent* xmlContent = nsnull;
+
+  // XXX Current XMLContent is also HTMLContent. However, we don't
+  // want to use the attribute stylesheet for XMLContent. This code
+  // will go away when XMLContent is more pure.
+  // TODO However, we still may want to use the attribute stylesheet
+  // for attributes in XMLContent with the HTML namespace.
+  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
+
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
+  }
   if (nsnull != mDocument) {  // set attr via style sheet
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
-      result = sheet->SetAttributeFor(aAttribute, aValue, mContent,
-                                      mAttributes);
-      NS_RELEASE(sheet);
+    if (nsnull == xmlContent) {
+      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+      if (nsnull != sheet) {
+        result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent,
+                                        mAttributes);
+        NS_RELEASE(sheet);
+      }
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    result = EnsureWritableAttributes(mContent, mAttributes, PR_TRUE);
+    result = EnsureWritableAttributes(htmlContent, mAttributes, PR_TRUE);
     if (nsnull != mAttributes) {
       PRInt32   count;
       result = mAttributes->SetAttribute(aAttribute, aValue, count);
@@ -1436,6 +592,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       }
     }
   }
+  NS_RELEASE(htmlContent);
   return result;
 }
 
@@ -1462,18 +619,34 @@ nsresult
 nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 {
   nsresult result = NS_OK;
+  nsIHTMLContent* htmlContent;
+  nsIXMLContent* xmlContent = nsnull;
+
+  // XXX Current XMLContent is also HTMLContent. However, we don't
+  // want to use the attribute stylesheet for XMLContent. This code
+  // will go away when XMLContent is more pure.
+  // TODO However, we still may want to use the attribute stylesheet
+  // for attributes in XMLContent with the HTML namespace.
+  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
+
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
+  }
   if (nsnull != mDocument) {  // set attr via style sheet
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    if (nsnull != sheet) {
-      result = sheet->UnsetAttributeFor(aAttribute, mContent, mAttributes);
-      NS_RELEASE(sheet);
+    if (nsnull == xmlContent) {
+      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+      if (nsnull != sheet) {
+        result = sheet->UnsetAttributeFor(aAttribute, htmlContent, mAttributes);
+        NS_RELEASE(sheet);
+      }
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    result = EnsureWritableAttributes(mContent, mAttributes, PR_FALSE);
+    result = EnsureWritableAttributes(htmlContent, mAttributes, PR_FALSE);
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->UnsetAttribute(aAttribute, count);
@@ -1482,6 +655,7 @@ nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
       }
     }
   }
+  NS_RELEASE(htmlContent);
   return result;
 }
 
@@ -1507,11 +681,18 @@ nsGenericHTMLElement::GetAttribute(nsIAtom *aAttribute,
   char cbuf[20];
   nscolor color;
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    // Try subclass conversion routine first
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        mContent->AttributeToString(aAttribute, value, aResult)) {
+    nsIHTMLContent* htmlContent;
+    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    if (NS_OK != result) {
       return result;
     }
+    // Try subclass conversion routine first
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        htmlContent->AttributeToString(aAttribute, value, aResult)) {
+      NS_RELEASE(htmlContent);
+      return result;
+    }
+    NS_RELEASE(htmlContent);
 
     // Provide default conversions for most everything
     switch (value.GetUnit()) {
@@ -1594,15 +775,21 @@ nsresult
 nsGenericHTMLElement::SetID(nsIAtom* aID)
 {
   nsresult result = NS_OK;
+  nsIHTMLContent* htmlContent;
+
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
+  }
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
-      result = sheet->SetIDFor(aID, mContent, mAttributes);
+      result = sheet->SetIDFor(aID, htmlContent, mAttributes);
       NS_RELEASE(sheet);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(mContent, mAttributes, PRBool(nsnull != aID));
+    EnsureWritableAttributes(htmlContent, mAttributes, PRBool(nsnull != aID));
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->SetID(aID, count);
@@ -1611,6 +798,7 @@ nsGenericHTMLElement::SetID(nsIAtom* aID)
       }
     }
   }
+  NS_RELEASE(htmlContent);
   return result;
 }
 
@@ -1628,15 +816,21 @@ nsresult
 nsGenericHTMLElement::SetClass(nsIAtom* aClass)
 {
   nsresult result = NS_OK;
+  nsIHTMLContent* htmlContent;
+
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
+  }
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
-      result = sheet->SetClassFor(aClass, mContent, mAttributes);
+      result = sheet->SetClassFor(aClass, htmlContent, mAttributes);
       NS_RELEASE(sheet);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(mContent, mAttributes, PRBool(nsnull != aClass));
+    EnsureWritableAttributes(htmlContent, mAttributes, PRBool(nsnull != aClass));
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->SetClass(aClass, count);
@@ -1645,6 +839,7 @@ nsGenericHTMLElement::SetClass(nsIAtom* aClass)
       }
     }
   }
+  NS_RELEASE(htmlContent);
   return result;
 }
 
@@ -1716,7 +911,7 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
-  nsIHTMLContent* hc = mContent;
+  nsIContent* hc = mContent;  
   nsrefcnt r = NS_ADDREF(hc) - 1;
   NS_RELEASE(hc);
   fprintf(out, " refcount=%d<", r);
@@ -1821,359 +1016,6 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 
 //----------------------------------------------------------------------
 
-nsresult
-nsGenericHTMLElement::RenderFrame()
-{
-  nsPoint offset;
-  nsRect bounds;
-
-  // Trigger damage repairs for each frame that maps the given content
-  PRInt32 i, n;
-  n = mDocument->GetNumberOfShells();
-  for (i = 0; i < n; i++) {
-    nsIPresShell* shell;
-    shell = mDocument->GetShellAt(i);
-    nsIFrame* frame;
-    frame = shell->FindFrameWithContent(mContent);
-    while (nsnull != frame) {
-      nsIViewManager* vm;
-      nsIView* view;
-
-      // Determine damaged area and tell view manager to redraw it
-      frame->GetRect(bounds);
-      bounds.x = bounds.y = 0;
-
-      // XXX We should tell the frame the damage area and let it invalidate
-      // itself. Add some API calls to nsIFrame to allow a caller to invalidate
-      // parts of the frame...
-      frame->GetOffsetFromView(offset, view);
-      view->GetViewManager(vm);
-      bounds.x += offset.x;
-      bounds.y += offset.y;
-
-      vm->UpdateView(view, bounds, NS_VMREFRESH_IMMEDIATE);
-      NS_RELEASE(vm);
-
-      // If frame has a next-in-flow, repaint it too
-      frame->GetNextInFlow(frame);
-    }
-    NS_RELEASE(shell);
-  }
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-// nsIScriptObjectOwner implementation
-
-nsresult
-nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
-                                      void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (nsnull == slots->mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-    
-    nsAutoString tag;
-    mTag->ToString(tag);
-    res = factory->NewScriptElement(tag, aContext, mContent,
-                                    mParent, (void**)&slots->mScriptObject);
-    NS_RELEASE(factory);
-    
-    char tagBuf[50];
-    tag.ToCString(tagBuf, sizeof(tagBuf));
-    if (nsnull != mDocument) {
-      aContext->AddNamedReference((void *)&slots->mScriptObject,
-                                  slots->mScriptObject,
-                                  tagBuf);
-    }
-  }
-  *aScriptObject = slots->mScriptObject;
-  return res;
-}
-
-nsresult
-nsGenericHTMLElement::SetScriptObject(void *aScriptObject)
-{
-  nsDOMSlots *slots = GetDOMSlots();
-
-  slots->mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-// nsIDOMEventReceiver implementation
-
-nsresult
-nsGenericHTMLElement::GetListenerManager(nsIEventListenerManager** aResult)
-{
-  if (nsnull != mListenerManager) {
-    NS_ADDREF(mListenerManager);
-    *aResult = mListenerManager;
-    return NS_OK;
-  }
-  nsresult rv = NS_NewEventListenerManager(aResult);
-  if (NS_OK == rv) {
-    mListenerManager = *aResult;
-    NS_ADDREF(mListenerManager);
-  }
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::GetNewListenerManager(nsIEventListenerManager** aResult)
-{
-  return NS_NewEventListenerManager(aResult);
-} 
-
-nsresult
-nsGenericHTMLElement::AddEventListener(nsIDOMEventListener* aListener,
-                                       const nsIID& aIID)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListener(aListener, aIID);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericHTMLElement::RemoveEventListener(nsIDOMEventListener* aListener,
-                                          const nsIID& aIID)
-{
-  if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListener(aListener, aIID);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-// nsIJSScriptObject implementation
-
-PRBool    
-nsGenericHTMLElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsGenericHTMLElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsGenericHTMLElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
-{
-  return PR_TRUE;
-}
- 
-PRBool    
-nsGenericHTMLElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
-{
-  nsIScriptObjectOwner *owner;
-
-  if (NS_OK != mContent->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner)) {
-    return PR_FALSE;
-  }
-
-  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
-    nsAutoString propName, prefix;
-    propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    prefix.SetString(propName, 2);
-    if (prefix == "on") {
-      nsIEventListenerManager *manager = nsnull;
-
-      if (propName == "onmousedown" || propName == "onmouseup" || propName ==  "onclick" ||
-         propName == "onmouseover" || propName == "onmouseout") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onkeydown" || propName == "onkeyup" || propName == "onkeypress") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMKeyListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onmousemove") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseMotionListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onfocus" || propName == "onblur") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFocusListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onsubmit" || propName == "onreset" || propName == "onchange") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFormListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onload" || propName == "onunload" || propName == "onabort" ||
-               propName == "onerror") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMLoadListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (propName == "onpaint") {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)
-            JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
-                                                    kIDOMPaintListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      NS_IF_RELEASE(manager);
-    }
-  }
-
-  NS_IF_RELEASE(owner);
-
-  return PR_TRUE;
-}
- 
-PRBool    
-nsGenericHTMLElement::EnumerateProperty(JSContext *aContext)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsGenericHTMLElement::Resolve(JSContext *aContext, jsval aID)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsGenericHTMLElement::Convert(JSContext *aContext, jsval aID)
-{
-  return PR_TRUE;
-}
-
-void      
-nsGenericHTMLElement::Finalize(JSContext *aContext)
-{
-}
- 
-//----------------------------------------------------------------------
-
-// nsISupports implementation
-
-NS_IMETHODIMP
-nsGenericHTMLElement::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  return mContent->QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsGenericHTMLElement::AddRef()
-{
-  return NS_ADDREF(mContent);
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsGenericHTMLElement::Release()
-{
-  nsIHTMLContent* content = mContent;
-
-  // Release the copy since the macro will null the pointer.
-  return NS_RELEASE(content);
-}
-
-
-//----------------------------------------------------------------------
-
-nsresult
-nsGenericHTMLElement::AddScriptEventListener(nsIAtom* aAttribute,
-                                             const nsString& aValue,
-                                             REFNSIID aIID)
-{
-  nsresult ret = NS_OK;
-  nsIScriptContext* context;
-  nsIScriptContextOwner* owner;
-
-  if (nsnull != mDocument) {
-    owner = mDocument->GetScriptContextOwner();
-    if (NS_OK == owner->GetScriptContext(&context)) {
-      if (nsHTMLAtoms::body == mTag || nsHTMLAtoms::frameset == mTag) {
-        nsIDOMEventReceiver *receiver;
-        nsIScriptGlobalObject *global = context->GetGlobalObject();
-
-        if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
-          nsIEventListenerManager *manager;
-          if (NS_OK == receiver->GetListenerManager(&manager)) {
-            nsIScriptObjectOwner *mObjectOwner;
-            if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-              ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID);
-              NS_RELEASE(mObjectOwner);
-            }
-            NS_RELEASE(manager);
-          }
-          NS_RELEASE(receiver);
-        }
-        NS_IF_RELEASE(global);
-      }
-      else {
-        nsIEventListenerManager *manager;
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsIScriptObjectOwner* owner;
-          if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
-                                                (void**) &owner)) {
-            ret = manager->AddScriptEventListener(context, owner,
-                                                  aAttribute, aValue, aIID);
-            NS_RELEASE(owner);
-          }
-          NS_RELEASE(manager);
-        }
-      }
-      NS_RELEASE(context);
-    }
-    NS_RELEASE(owner);
-  }
-  return ret;
-}
 
 nsresult
 nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
@@ -2872,46 +1714,6 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
   }
 }
 
-void
-nsGenericHTMLElement::TriggerLink(nsIPresContext& aPresContext,
-                                  const nsString& aBase,
-                                  const nsString& aURLSpec,
-                                  const nsString& aTargetSpec,
-                                  PRBool aClick)
-{
-  nsILinkHandler* handler;
-  nsresult rv = aPresContext.GetLinkHandler(&handler);
-  if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
-    // Resolve url to an absolute url
-    nsIURL* docURL = nsnull;
-    nsIDocument* doc;
-    rv = GetDocument(doc);
-    if (NS_SUCCEEDED(rv) && (nsnull != doc)) {
-      docURL = doc->GetDocumentURL();
-      NS_RELEASE(doc);
-    }
-
-    nsAutoString absURLSpec;
-    if (aURLSpec.Length() > 0) {
-      nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
-    }
-    else {
-      absURLSpec = aURLSpec;
-    }
-
-    NS_IF_RELEASE(docURL);
-
-    // Now pass on absolute url to the click handler
-    if (aClick) {
-      handler->OnLinkClick(nsnull, absURLSpec, aTargetSpec);
-    }
-    else {
-      handler->OnOverLink(nsnull, absURLSpec, aTargetSpec);
-    }
-    NS_RELEASE(handler);
-  }
-}
-
 //----------------------------------------------------------------------
 
 nsGenericHTMLLeafElement::nsGenericHTMLLeafElement()
@@ -2923,7 +1725,7 @@ nsGenericHTMLLeafElement::~nsGenericHTMLLeafElement()
 }
 
 nsresult
-nsGenericHTMLLeafElement::CopyInnerTo(nsIHTMLContent* aSrcContent,
+nsGenericHTMLLeafElement::CopyInnerTo(nsIContent* aSrcContent,
                                       nsGenericHTMLLeafElement* aDst)
 {
   aDst->mContent = aSrcContent;
@@ -2948,6 +1750,13 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
 }
 
+// XXX not really implemented (yet)
+nsresult
+nsGenericHTMLLeafElement::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  return NS_OK;
+}
 
 nsresult
 nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
@@ -3004,117 +1813,6 @@ nsGenericHTMLLeafElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
   return NS_OK;
 }
 
-// XXX not really implemented (yet)
-nsresult
-nsGenericHTMLLeafElement::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsChildContentList::nsChildContentList(nsGenericHTMLContainerElement *aContent)
-{
-  NS_INIT_REFCNT();
-  // This reference is not reference-counted. The content
-  // object tells us when its about to go away.
-  mContent = aContent;
-  mScriptObject = nsnull;
-}
-
-NS_IMPL_ADDREF(nsChildContentList);
-NS_IMPL_RELEASE(nsChildContentList);
-
-nsresult
-nsChildContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNodeListIID)) {
-    nsIDOMNodeList* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNodeList* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-nsresult 
-nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, mContent, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult 
-nsChildContentList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsChildContentList::GetLength(PRUint32* aLength)
-{
-  if (nsnull != mContent) {
-    PRInt32 length;
-    mContent->ChildCount(length);
-    *aLength = (PRUint32)length;
-  }
-  else {
-    *aLength = 0;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  nsIContent *content;
-  nsresult res = NS_OK;
-  
-  if (nsnull != mContent) {
-    mContent->ChildAt(aIndex, content);
-    if (nsnull != content) {
-      res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
-      NS_RELEASE(content);
-    }
-    else {
-      *aReturn = nsnull;
-    }
-  }
-  else {
-    *aReturn = nsnull;
-  }
-
-  return res;
-}
-
-void
-nsChildContentList::DropReference()
-{
-  mContent = nsnull;
-}
-
 //----------------------------------------------------------------------
 
 nsGenericHTMLContainerElement::nsGenericHTMLContainerElement()
@@ -3131,7 +1829,7 @@ nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
 }
 
 nsresult
-nsGenericHTMLContainerElement::CopyInnerTo(nsIHTMLContent* aSrcContent,
+nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
                                            nsGenericHTMLContainerElement* aDst)
 {
   aDst->mContent = aSrcContent;
@@ -3147,7 +1845,7 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
+    slots->mChildNodes = new nsChildContentList(mContent);
     NS_ADDREF(slots->mChildNodes);
   }
 
@@ -3301,13 +1999,6 @@ nsGenericHTMLContainerElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** a
 }
 
 nsresult
-nsGenericHTMLContainerElement::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   nsresult rv = NS_OK;
@@ -3366,6 +2057,13 @@ nsresult
 nsGenericHTMLContainerElement::Compact()
 {
   mChildren.Compact();
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLContainerElement::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
   return NS_OK;
 }
 
@@ -3488,3 +2186,4 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
   return NS_OK;
 }
+

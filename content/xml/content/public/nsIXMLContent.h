@@ -1,0 +1,48 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
+
+#ifndef nsIXMLContent_h___
+#define nsIXMLContent_h___
+
+#include "nsISupports.h"
+#include "nsIContent.h"
+
+#define gNameSpaceId_Unknown 0
+
+#define NS_IXMLCONTENT_IID \
+ { 0xa6cf90cb, 0x15b3, 0x11d2, \
+ { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
+
+/**
+ * XML content extensions to nsIContent
+ */
+class nsIXMLContent : public nsIContent {
+public:
+  // XXX A convenience - the id can be used to get the namespace Atom
+  NS_IMETHOD SetNameSpace(nsIAtom* aNameSpace)=0;
+  NS_IMETHOD GetNameSpace(nsIAtom*& aNameSpace)=0;
+
+  NS_IMETHOD SetNameSpaceIdentifier(PRInt32 aNSIdentifier)=0;
+  NS_IMETHOD GetNameSpaceIdentifier(PRInt32& aNSIdentifier)=0;
+};
+
+extern nsresult
+NS_NewXMLElement(nsIXMLContent** aResult, nsIAtom* aTag);
+
+#endif // nsIXMLContent_h___

@@ -47,6 +47,8 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
+INCLUDES +=  -I../../html/base/src
+
 REQUIRES = xpcom raptor dom netlib js pref
 
 TARGETS = $(LIBRARY)

@@ -52,6 +52,8 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
+INCLUDES +=  -I../../html/base/src
+
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES = xpcom raptor dom netlib js pref

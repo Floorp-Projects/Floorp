@@ -22,7 +22,6 @@
 #include "nsHTMLValue.h"
 class nsString;
 class nsIFrame;
-class nsISupportsArray;
 class nsIStyleRule;
 class nsIStyleContext;
 class nsIPresContext;
@@ -55,17 +54,12 @@ public:
                           const nsHTMLValue& aValue,
                           PRBool aNotify) = 0;
 
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) = 0;
-
-  NS_IMETHOD GetAttribute(const nsString& aName,
+  NS_IMETHOD GetAttribute(const nsString& aName, 
                           nsString& aResult) const = 0;
   NS_IMETHOD GetAttribute(nsIAtom *aAttribute,
                           nsString &aResult) const = 0;
   NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
                           nsHTMLValue& aValue) const = 0;
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
-                                  PRInt32& aCountResult) const = 0;
-  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const = 0;
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const = 0;
 
   NS_IMETHOD SetID(nsIAtom* aID) = 0;
