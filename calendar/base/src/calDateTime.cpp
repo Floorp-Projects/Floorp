@@ -325,7 +325,7 @@ calDateTime::GetScriptableFlags(PRUint32 *aScriptableFlags)
     *aScriptableFlags =
         nsIXPCScriptable::WANT_GETPROPERTY |
         nsIXPCScriptable::WANT_SETPROPERTY |
-        nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY;
+        nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE;
     return NS_OK;
 }
 
