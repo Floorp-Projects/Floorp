@@ -4,6 +4,8 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
+
+
 <window>
   <xul:commands>
     <xul:command name="nsCmd:BrowserBack" onCommand="window.back();"/>

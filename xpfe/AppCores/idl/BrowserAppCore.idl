@@ -11,9 +11,12 @@ interface BrowserAppCore : BaseAppCore
 
 	void setToolbarWindow(in Window win);
 	void setContentWindow(in Window win);
+	void setWebShellWindow(in Window win);
 
-	void disableCallback(in wstring script);
-	void enableCallback(in wstring script);
+	void showPasswordDialog(in Window win);
+
+	void setDisableCallback(in wstring script);
+	void setEnableCallback(in wstring script);
 
 };
 

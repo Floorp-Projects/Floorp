@@ -29,19 +29,43 @@
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsCOMPtr.h"
 
-// Globals
+#include "nsIServiceManager.h"
+#include "nsIURL.h"
+#include "nsIWidget.h"
+#include "plevent.h"
+
+#include "nsIAppShell.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+
+/* Define Class IDs */
+static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
+
+/* Define Interface IDs */
+static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
+
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIBrowserAppCoreIID,        NS_IDOMBROWSERAPPCORE_IID);
 
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::IID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::IID());
 
-static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
+
+static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
+static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
+
+static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -57,6 +81,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mToolbarScriptContext = nsnull;
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
+  mWebShellWin          = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -68,6 +93,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mToolbarScriptContext);
   NS_IF_RELEASE(mContentWindow);
   NS_IF_RELEASE(mContentScriptContext);
+  NS_IF_RELEASE(mWebShellWin);
   DecInstanceCount();  
 }
 
@@ -91,7 +117,18 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kINetSupportIID)) {
+    *aInstancePtr = (void*) ((nsINetSupport*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStreamObserverIID)) {
+    *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
  
+
   return nsBaseAppCore::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -129,9 +166,9 @@ nsBrowserAppCore::Init(const nsString& aId)
 NS_IMETHODIMP    
 nsBrowserAppCore::Back()
 {
-  ExecuteScript(mToolbarScriptContext, mDisableScript);
-  ExecuteScript(mContentScriptContext, "window.back()");
-  ExecuteScript(mToolbarScriptContext, mEnableScript);
+  //ExecuteScript(mToolbarScriptContext, mDisableScript);
+  ExecuteScript(mContentScriptContext, "window.back();");
+  //ExecuteScript(mToolbarScriptContext, mEnableScript);
 	return NS_OK;
 }
 
@@ -145,14 +182,14 @@ nsBrowserAppCore::Forward()
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::DisableCallback(const nsString& aScript)
+nsBrowserAppCore::SetDisableCallback(const nsString& aScript)
 {
   mDisableScript = aScript;
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::EnableCallback(const nsString& aScript)
+nsBrowserAppCore::SetEnableCallback(const nsString& aScript)
 {
   mEnableScript = aScript;
 	return NS_OK;
@@ -180,8 +217,56 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   mContentWindow = aWin;
   NS_ADDREF(aWin);
   mContentScriptContext = GetScriptContext(aWin);
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( mContentWindow );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
 
-	return NS_OK;
+  nsIWebShell * webShell;
+  globalObj->GetWebShell(&webShell);
+  if (nsnull != webShell) {
+    webShell->SetObserver(this);
+    PRUnichar * name;
+    webShell->GetName( &name);
+    nsAutoString str(name);
+
+    printf("Attaching to Content WebShell [%s]\n", str.ToNewCString());
+    NS_RELEASE(webShell);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
+{
+  if (!mContentWindow) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( aWin );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIWebShell * webShell;
+  globalObj->GetWebShell(&webShell);
+  if (nsnull != webShell) {
+    PRUnichar * name;
+    webShell->GetName( &name);
+    nsAutoString str(name);
+
+    printf("Attaching to WebShellWindow[%s]\n", str.ToNewCString());
+
+    nsIWebShellContainer * webShellContainer;
+    webShell->GetContainer(webShellContainer);
+    if (nsnull != webShellContainer) {
+      if (NS_OK == webShellContainer->QueryInterface(kIWebShellWindowIID, (void**) &mWebShellWin)) {
+      }
+      NS_RELEASE(webShellContainer);
+    }
+    NS_RELEASE(webShell);
+  }
+  return NS_OK;
 }
 
 
@@ -192,11 +277,192 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     const char* url = "";
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
+    printf("Executing [%s]\n", aScript.ToNewCString());
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 
   return NS_OK;
 }
 
 
+
+
+NS_IMETHODIMP    
+nsBrowserAppCore::DoDialog()
+{
+  nsresult rv;
+  nsString controllerCID;
+
+  char *  urlstr=nsnull;
+  char *   progname = nsnull;
+  char *   width=nsnull, *height=nsnull;
+  char *  iconic_state=nsnull;
+
+  nsIAppShellService* appShell = nsnull;
+
+      urlstr = "resource:/res/samples/Password.html";
+  /*
+   * Create the Application Shell instance...
+   */
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (!NS_SUCCEEDED(rv)) {
+    goto done;
+  }
+
+  /*
+   * Initialize the Shell...
+   */
+  rv = appShell->Initialize();
+  if (!NS_SUCCEEDED(rv)) {
+    goto done;
+  }
+ 
+  /*
+   * Post an event to the shell instance to load the AppShell 
+   * initialization routines...  
+   * 
+   * This allows the application to enter its event loop before having to 
+   * deal with GUI initialization...
+   */
+  ///write me...
+  nsIURL* url;
+  nsIWidget* newWindow;
+  
+  rv = NS_NewURL(&url, urlstr);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  nsIWidget * parent;
+  mWebShellWin->GetWidget(parent);
+
+  /*
+   * XXX: Currently, the CID for the "controller" is passed in as an argument 
+   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
+   *      components this will be specified in the XUL description...
+   */
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+  appShell->CreateDialogWindow(parent, url, controllerCID, newWindow, (nsIStreamObserver *)this);
+  newWindow->Resize(300, 200, PR_TRUE);
+  NS_RELEASE(url);
+  NS_RELEASE(parent);
+  
+   /*
+    * Start up the main event loop...
+    */
+  //rv = appShell->Run();
+  rv = NS_OK;
+  while (rv == NS_OK) {
+    void * data;
+    PRBool inWin;
+    PRBool isMouseEvent;
+    rv = appShell->GetNativeEvent(data, newWindow, inWin, isMouseEvent);
+    if (rv == NS_OK) {
+      printf("In win %d   is mouse %d\n", inWin, isMouseEvent);
+    } else {
+      rv = NS_OK;
+    }
+    if (rv == NS_OK && (inWin || (!inWin && !isMouseEvent))) {
+      appShell->DispatchNativeEvent(data);
+    }
+  }
+
+  /*
+   * Shut down the Shell instance...  This is done even if the Run(...)
+   * method returned an error.
+   */
+  (void) appShell->Shutdown();
+
+done:
+
+  /* Release the shell... */
+  if (nsnull != appShell) {
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStartBinding(nsIURL* aURL, const char *aContentType)
+{
+  nsresult rv = NS_OK;
+printf("OnStartBinding\n");
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  nsresult rv = NS_OK;
+printf("OnStartBinding\n");
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+{
+  nsresult rv = NS_OK;
+printf("OnStartBinding\n");
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+{
+  nsresult rv = NS_OK;
+printf("OnStartBinding\n");
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP_(void)
+nsBrowserAppCore::Alert(const nsString &aText)
+{
+printf("Alert\n");
+}
+
+NS_IMETHODIMP_(PRBool)
+nsBrowserAppCore::Confirm(const nsString &aText)
+{
+  PRBool bResult = PR_FALSE;
+printf("Confirm\n");
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsBrowserAppCore::Prompt(const nsString &aText,
+                   const nsString &aDefault,
+                   nsString &aResult)
+{
+  PRBool bResult = PR_FALSE;
+printf("Prompt\n");
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsBrowserAppCore::PromptUserAndPassword(const nsString &aText,
+                                  nsString &aUser,
+                                  nsString &aPassword)
+{
+  PRBool bResult = PR_FALSE;
+printf("PromptUserAndPassword\n");
+DoDialog();
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsBrowserAppCore::PromptPassword(const nsString &aText,
+                           nsString &aPassword)
+{
+  PRBool bResult = PR_FALSE;
+printf("PromptPassword\n");
+  return bResult;
+}
 
 

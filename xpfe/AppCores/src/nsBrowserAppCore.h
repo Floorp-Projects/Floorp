@@ -26,18 +26,24 @@
 
 #include "nsIDOMBrowserAppCore.h"
 #include "nsBaseAppCore.h"
+#include "nsINetSupport.h"
+#include "nsIStreamObserver.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
 class nsIScriptContext;
 class nsIDOMWindow;
+class nsIURL;
+class nsIWebShellWindow;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBrowserAppCore : public nsBaseAppCore, 
-                         public nsIDOMBrowserAppCore
+                         public nsIDOMBrowserAppCore,
+                         public nsINetSupport,
+                         public nsIStreamObserver
 {
   public:
 
@@ -55,10 +61,34 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);
-    NS_IMETHOD    DisableCallback(const nsString& aScript);
-    NS_IMETHOD    EnableCallback(const nsString& aScript);
+    NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);
+    NS_IMETHOD    SetDisableCallback(const nsString& aScript);
+    NS_IMETHOD    SetEnableCallback(const nsString& aScript);
+
+    // nsIStreamObserver
+    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+
+    // nsINetSupport
+    NS_IMETHOD_(void) Alert(const nsString &aText);
+  
+    NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+
+    NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                               const nsString &aDefault,
+                               nsString &aResult);
+
+    NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                              nsString &aUser,
+                                              nsString &aPassword);
+
+    NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                       nsString &aPassword);  
 
   protected:
+    NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
 
     nsString            mEnableScript;     
@@ -69,6 +99,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     nsIDOMWindow       *mToolbarWindow;
     nsIDOMWindow       *mContentWindow;
+
+    nsIWebShellWindow  *mWebShellWin;
 };
 
 #endif // nsBrowserAppCore_h___

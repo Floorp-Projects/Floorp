@@ -45,9 +45,11 @@ public:
 
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
 
-  NS_IMETHOD    DisableCallback(const nsString& aScript)=0;
+  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin)=0;
 
-  NS_IMETHOD    EnableCallback(const nsString& aScript)=0;
+  NS_IMETHOD    SetDisableCallback(const nsString& aScript)=0;
+
+  NS_IMETHOD    SetEnableCallback(const nsString& aScript)=0;
 };
 
 
@@ -57,8 +59,9 @@ public:
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
-  NS_IMETHOD    DisableCallback(const nsString& aScript);  \
-  NS_IMETHOD    EnableCallback(const nsString& aScript);  \
+  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
+  NS_IMETHOD    SetDisableCallback(const nsString& aScript);  \
+  NS_IMETHOD    SetEnableCallback(const nsString& aScript);  \
 
 
 
@@ -68,8 +71,9 @@ public:
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to##LoadUrl(aUrl); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \
-  NS_IMETHOD    DisableCallback(const nsString& aScript) { return _to##DisableCallback(aScript); }  \
-  NS_IMETHOD    EnableCallback(const nsString& aScript) { return _to##EnableCallback(aScript); }  \
+  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
+  NS_IMETHOD    SetDisableCallback(const nsString& aScript) { return _to##SetDisableCallback(aScript); }  \
+  NS_IMETHOD    SetEnableCallback(const nsString& aScript) { return _to##SetEnableCallback(aScript); }  \
 
 
 extern nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype);

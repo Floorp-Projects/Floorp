@@ -6,4 +6,5 @@ nsAppShellCIDs.h
 nsIAppShellService.h
 nsICmdLineService.h
 nsIWebShellWindow.h
+nsIXULCommand.h
 nsIWidgetController.h

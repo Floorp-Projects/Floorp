@@ -4,6 +4,54 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
+<script LANGUAGE="JavaScript">
+
+function SendMailMessage()
+{
+  var appCore = AppCoresManager.Find("MailCore");
+  if (appCore==null) {
+    appCore = new MailCore();
+    if (appCore != null) {
+      appCore.Init("MailCore");
+	    appCore.MailCompleteCallback("MailSent()");
+	    appCore.SetWindow(window);
+	    appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
+    } 
+  } else {
+	  appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
+  }
+  
+}
+
+function MailSent()
+{
+
+	// Clear Them
+	  document.forms[0].elements[1].value = "";
+	  document.forms[0].elements[2].value = "";
+	  document.forms[0].elements[4].value = "";
+
+    /*dump("top name: "+top.name+"\n");
+	  if (window.parent.frames[2] != null) {
+		  dump("frame[2] name: "+window.parent.frames[2].name+"\n");
+		  var parent = window.parent.frames[0].parent;
+		  dump("parent name: "+parent.name+"\n");
+		  var doc = window.parent.frames[2].document;
+		  var win = window.parent.frames[2];
+		  if (doc != null) {
+		    //dump("Doc name: "+doc.name);
+		    doc.elements[8].value = "xxxxxx";
+		  } else {
+		    dump("doc was null\n");
+		  }
+      } else {
+	    dump("parent is null\n");
+	  }*/
+}
+
+</script>
+
+
 <window>
   <xul:commands>
     <xul:command name="nsCmd:MailSendMsg" onCommand="SendMailMessage()"/>

@@ -34,7 +34,7 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsIXULCommand.h"
-//#include "nsXULCommand.h"
+#include "nsXULCommand.h"
 #include "nsIDOMCharacterData.h"
 
 #include "nsIMenuBar.h"
@@ -453,7 +453,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           element->GetAttribute(nsAutoString("name"), name);
           element->GetAttribute(nsAutoString("onCommand"), value);
 
-          nsIXULCommand * xulCmdInterface = nsnull;
+          /*nsIXULCommand * xulCmdInterface = nsnull;
           rv = nsRepository::CreateInstance(kXULCommandCID, nsnull, kIXULCommandIID,
             (void**)&xulCmdInterface);
           if (NS_OK == rv) {
@@ -462,9 +462,9 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
             xulCmdInterface->SetWebShell(aWebShell);// Added to nsIXULCommand
             xulCmdInterface->SetDOMElement(element);// Added to nsIXULCommand
 		        mCommands.AppendElement(xulCmdInterface);
-          }
+          }*/
 
-          /*
+          
           nsXULCommand * xulCmd = new nsXULCommand();
           xulCmd->SetName(name);//nsIXULCommand
           xulCmd->SetCommand(value);//nsIXULCommand
@@ -474,7 +474,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
             mCommands.AppendElement(icmd);
           }
-          */
+          
           //printf("Commands[%s] value[%s]\n", nsAutoCString(name), nsAutoCString(value));
         }
       }
@@ -502,7 +502,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
         if (name.Equals(nsAutoString("BUTTON")))
            ConnectCommandToOneGUINode(node, element, name);
         else if (name.Equals(nsAutoString("INPUT"))) {
-          nsIXULCommand * xulCmdInterface = nsnull;
+          /*nsIXULCommand * xulCmdInterface = nsnull;
           rv = nsRepository::CreateInstance(kXULCommandCID, nsnull, kIXULCommandIID,
             (void**)&xulCmdInterface);
           if (NS_OK == rv) {
@@ -514,8 +514,8 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
             mCommands.AppendElement(xulCmdInterface);
             
             xulCmdInterface->AddUINode(node);
-          }
-          /*
+          }*/
+          
           nsXULCommand * xulCmd = new nsXULCommand();
           xulCmd->SetName(name);
           xulCmd->SetCommand(value);
@@ -526,7 +526,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
             mCommands.AppendElement(icmd);
           }
           xulCmd->AddUINode(node);
-          */
+          
           //printf("Linking cmd to button [%s]\n", nsAutoCString(cmdName));
         }
       }
@@ -543,10 +543,14 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
   // Enable All Command
   PRInt32 i, n = mCommands.Count();
   for (i = 0; i < n; i++) {
-    nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
+    nsXULCommand* cmd = (nsXULCommand*) mCommands.ElementAt(i);
     cmd->SetEnabled(PR_TRUE);
   }
   //SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
+  nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(nsAutoString("nsCmd:StartUp")));
+  if (cmd) {
+    cmd->DoCommand();
+  }
   
   UpdateButtonStatus(PR_FALSE);
 }
@@ -851,8 +855,8 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     nsCOMPtr<nsIDOMNode> parent(GetParentNodeFromDOMDoc(toolbarDOMDoc));
     if (!parent)
       return NS_ERROR_FAILURE;
-    LoadCommands(contentWebShell, toolbarDOMDoc);
-    //LoadCommands(toolbarWebShell, toolbarDOMDoc);
+    //LoadCommands(contentWebShell, toolbarDOMDoc);
+    LoadCommands(toolbarWebShell, toolbarDOMDoc);
           
     PRInt32 count = 0;
     nsCOMPtr<nsIDOMNode> imgNode(FindNamedDOMNode(nsAutoString("IMG"), parent, count, 7));

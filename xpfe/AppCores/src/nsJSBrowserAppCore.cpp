@@ -317,14 +317,14 @@ BrowserAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
 
 //
-// Native method DisableCallback
+// Native method SetWebShellWindow
 //
 PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreDisableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+BrowserAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsAutoString b0;
+  nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -335,16 +335,22 @@ BrowserAppCoreDisableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   if (argc >= 1) {
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
 
-    if (NS_OK != nativeThis->DisableCallback(b0)) {
+    if (NS_OK != nativeThis->SetWebShellWindow(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function disableCallback requires 1 parameters");
+    JS_ReportError(cx, "Function setWebShellWindow requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -353,10 +359,10 @@ BrowserAppCoreDisableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
 
 //
-// Native method EnableCallback
+// Native method SetDisableCallback
 //
 PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreEnableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+BrowserAppCoreSetDisableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -373,14 +379,50 @@ BrowserAppCoreEnableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->EnableCallback(b0)) {
+    if (NS_OK != nativeThis->SetDisableCallback(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function enableCallback requires 1 parameters");
+    JS_ReportError(cx, "Function setDisableCallback requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetEnableCallback
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreSetEnableCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->SetEnableCallback(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setEnableCallback requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -425,8 +467,9 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
-  {"disableCallback",          BrowserAppCoreDisableCallback,     1},
-  {"enableCallback",          BrowserAppCoreEnableCallback,     1},
+  {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
+  {"setDisableCallback",          BrowserAppCoreSetDisableCallback,     1},
+  {"setEnableCallback",          BrowserAppCoreSetEnableCallback,     1},
   {0}
 };
 
