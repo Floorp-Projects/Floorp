@@ -29,12 +29,13 @@ interface nsIProfileServices : nsISupports
 {
 	void CreateNewProfile(in string data);
 	void RenameProfile(in string oldName, in string newName);
-	void DeleteProfile(in string profileName);
+	void DeleteProfile(in string profileName, in string canDeleteFiles);
 	string GetProfileList();
 	void StartCommunicator(in string profileName);
 	string GetCurrentProfile();
 	void MigrateProfile(in string profileName);
 	void ProcessPREGInfo(in string data);
+	void CloneProfile(in string profileName);
 };
 
 
