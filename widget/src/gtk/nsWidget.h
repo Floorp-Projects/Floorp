@@ -192,6 +192,7 @@ class nsWidget : public nsBaseWidget
   void InstallMotionNotifySignal(GtkWidget * aWidget);
 
   void InstallDragMotionSignal(GtkWidget * aWidget);
+  void InstallDragLeaveSignal(GtkWidget * aWidget);
   void InstallDragBeginSignal(GtkWidget * aWidget);
   void InstallDragDropSignal(GtkWidget * aWidget);
 
@@ -222,6 +223,13 @@ class nsWidget : public nsBaseWidget
                                   gint            x,
                                   gint            y,
                                   guint           time);
+/* OnDragEnterSignal is not a real signal.. it is only called from OnDragMotionSignal */
+  virtual void OnDragEnterSignal(GdkDragContext *aGdkDragContext,
+                                 gint            x,
+                                 gint            y,
+                                 guint           time);
+  virtual void OnDragLeaveSignal(GdkDragContext   *context,
+                                 guint             time);
   virtual void OnDragBeginSignal(GdkDragContext *aGdkDragContext);
   virtual void OnDragDropSignal(GdkDragContext *aGdkDragContext,
                                 gint            x,
@@ -259,6 +267,11 @@ private:
                                gint             y,
                                guint            time,
                                void             *data);
+
+  static void DragLeaveSignal(GtkWidget *      aWidget,
+                              GdkDragContext   *aDragContext,
+                              guint            time,
+                              void             *aData);
 
   static gint DragBeginSignal(GtkWidget *       aWidget,
                               GdkDragContext   *context,
@@ -338,8 +351,9 @@ protected:
 
     PRUint32 mPreferredWidth, mPreferredHeight;
 private:
-    static nsILookAndFeel *sLookAndFeel;
-    static PRUint32 sWidgetCount;
+  PRBool mIsDragDest;
+  static nsILookAndFeel *sLookAndFeel;
+  static PRUint32 sWidgetCount;
 
   //
   // Keep track of the last widget being "dragged"

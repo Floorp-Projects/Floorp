@@ -71,6 +71,7 @@ nsWidget::nsWidget()
   mBounds.width = 0;
   mBounds.height = 0;
   mIsDestroying = PR_FALSE;
+  mIsDragDest = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mUpdateArea.SetRect(0, 0, 0, 0);
@@ -839,6 +840,29 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
+
+  InstallButtonPressSignal(mWidget);
+  InstallButtonReleaseSignal(mWidget);
+
+  InstallMotionNotifySignal(mWidget);
+
+  InstallEnterNotifySignal(mWidget);
+  InstallLeaveNotifySignal(mWidget);
+
+
+  // Drag & Drop events.
+  InstallDragBeginSignal(mWidget);
+  InstallDragLeaveSignal(mWidget);
+  InstallDragMotionSignal(mWidget);
+  InstallDragDropSignal(mWidget);
+
+
+  // Focus
+  InstallFocusInSignal(mWidget);
+  InstallFocusOutSignal(mWidget);
+
+
+
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
 
@@ -1173,7 +1197,7 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 //////////////////////////////////////////////////////////////////
 void
 nsWidget::AddToEventMask(GtkWidget * aWidget,
-						 gint        aEventMask)
+                         gint        aEventMask)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( 0 != aEventMask, "mask is 0");
@@ -1189,6 +1213,16 @@ nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget)
   InstallSignal(aWidget,
 				"motion_notify_event",
 				GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal));
+}
+
+void 
+nsWidget::InstallDragLeaveSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+                "drag_leave",
+                GTK_SIGNAL_FUNC(nsWidget::DragLeaveSignal));
 }
 
 void 
@@ -1360,13 +1394,18 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   Release();
 }
 
-
 /* virtual */ void 
 nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
                              gint            x,
                              gint            y,
                              guint           time)
 {
+  if (!mIsDragDest)
+  {
+    // this will happen on the first motion event, so we will generate an ENTER event
+    OnDragEnterSignal(aGdkDragContext, x, y, time);
+  }
+
   nsMouseEvent event;
 
   event.message = NS_DRAGDROP_OVER;
@@ -1384,6 +1423,62 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
   Release();
 }
 
+/* not a real signal.. called from OnDragMotionSignal */
+/* virtual */ void 
+nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
+                             gint            x,
+                             gint            y,
+                             guint           time)
+{
+  // we are a drag dest.. cool huh?
+  mIsDragDest = PR_TRUE;
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_ENTER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = this;
+
+  event.point.x = x;
+  event.point.y = y;
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+
+/* virtual */ void 
+nsWidget::OnDragLeaveSignal(GdkDragContext   *context,
+                            guint             time)
+{
+  mIsDragDest = PR_FALSE;
+
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_EXIT;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = this;
+
+  //  GdkEvent *current_event;
+  //  current_event = gtk_get_current_event();
+
+  //  g_print("current event's x_root = %i , y_root = %i\n", current_event->dnd.x_root, current_event->dnd.y_root);
+
+  // FIXME
+  event.point.x = 0;
+  event.point.y = 0;
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
 
 /* virtual */ void 
 nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
@@ -1834,6 +1929,18 @@ nsWidget::DragMotionSignal(GtkWidget *      aWidget,
   widget->OnDragMotionSignal(aDragContext, x, y, time);
 
   return PR_TRUE;
+}
+
+/* static */ void
+nsWidget::DragLeaveSignal(GtkWidget *      aWidget,
+                          GdkDragContext   *aDragContext,
+                          guint            time,
+                          void             *aData)
+{
+  nsWidget * widget = (nsWidget *) aData;
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  widget->OnDragLeaveSignal(aDragContext, time);
 }
 
 /* static */ gint
