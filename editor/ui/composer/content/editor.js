@@ -343,7 +343,7 @@ function editorSendPage()
   {
     var pageTitle = window.editorShell.editorDocument.title;
     window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                        "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
+                        "chrome,all,dialog=no", "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +
                         "',subject='" + pageTitle + "',bodyislink=true");
   } 
   else if (CheckAndSaveDocument(GetString("SendPageReason")), DocumentHasBeenSaved())
