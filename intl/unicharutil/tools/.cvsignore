@@ -1,1 +1,7 @@
 Makefile
+ucgendat
+case.dat
+ctype.dat
+decomp.dat
+cmbcl.dat
+num.dat
