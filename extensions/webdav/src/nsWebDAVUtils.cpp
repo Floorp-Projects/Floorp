@@ -136,17 +136,3 @@ NS_WD_GetDocAndResponseListFromBuffer(const nsACString &buffer,
     NS_ADDREF(*responseList = list.get());
     return NS_OK;
 }
-                                      
-nsresult
-NS_WD_StreamReaderStringAppendCallback(nsIInputStream *in, void *closure,
-                                       const char *fromRawSegment,
-                                       PRUint32 toOffset, PRUint32 count,
-                                       PRUint32 *writeCount)
-{
-    nsACString *strp = NS_STATIC_CAST(nsACString *, closure);
-    
-    strp->Append(fromRawSegment, count);
-    *writeCount = count;
-    return NS_OK;
-}
-

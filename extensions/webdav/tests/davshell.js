@@ -95,7 +95,8 @@ function OperationListener()
 OperationListener.opToName = { };
 OperationListener.opNames =
     ["PUT", "GET", "MOVE", "COPY", "REMOVE",
-     "MAKE_COLLECTION", "LOCK", "UNLOCK"];
+     "MAKE_COLLECTION", "LOCK", "UNLOCK", "GET_PROPERTIES",
+     "GET_PROPERTY_NAMES"];
 for (var i in OperationListener.opNames) {
     var opName = OperationListener.opNames[i];
     OperationListener.opToName[CI.nsIWebDAVOperationListener[opName]] = opName;
@@ -109,37 +110,28 @@ OperationListener.prototype =
              " complete: " + status + "\n");
         stopEventPump();
     },
-}
 
-function PropfindListener()
-{
-}
-
-PropfindListener.prototype =
-{
-    onGetPropertyNamesResult: function (status, URL, props)
+    onOperationDetail: function (status, resource, op, detail)
     {
-        var keys = propertiesToKeyArray(props);
-        dump(URL + " (" + status + "):\n");
-        for (var i = 0; i < keys.length; i++ )
-            dump("  " + keys[i] + "\n");
-    },
+        dump(resource + " " + OperationListener.opToName[op] + " (" +
+             status + "):\n");
+        switch(op) {
+          case CI.nsIWebDAVOperationListener.GET_PROPERTY_NAMES:
+            var keys =
+                propertiesToKeyArray(detail.QueryInterface(CI.nsIProperties));
+            for (var i = 0; i < keys.length; i++ )
+                dump("  " + keys[i] + "\n");
+            break;
+                
+          case CI.nsIWebDAVOperationListener.GET_PROPERTIES:
+            dump("detail: " + detail + "\n");
+            var propObj =
+                propertiesToObject(detail.QueryInterface(CI.nsIProperties));
+            for (var i in propObj)
+                dump("  " + i + " = " + propObj[i] + "\n");
 
-    onGetPropertiesResult: function (status, URL, props)
-    {
-        var propObj = propertiesToObject(props);
-        dump(URL + " (" + status + "):\n");
-
-        for (var i in propObj) {
-            dump("  " + i + " = " + propObj[i] + "\n");
+            break;
         }
-    },
-
-    onMetadataComplete: function (status, resource, method)
-    {
-        dump(method + " on " + resource.urlSpec + " completed: " + status +
-             "\n");
-        stopEventPump();
     }
 }
     
@@ -165,8 +157,6 @@ function stopEventPump()
 
 function PROPFIND(url, depth, props)
 {
-    var listener = new PropfindListener();
-
     if (props) {
         var length = props.length;
     } else {
@@ -175,14 +165,14 @@ function PROPFIND(url, depth, props)
     }
 
     davSvc.getResourceProperties(new Resource(url), length, props, depth,
-                                 listener);
+                                 new OperationListener());
     runEventPump();
 }
 
 function PROPFIND_names(url, depth)
 {
-    var listener = new PropfindListener();
-    davSvc.getResourcePropertyNames(new Resource(url), depth, listener);
+    davSvc.getResourcePropertyNames(new Resource(url), depth,
+                                    new OperationListener);
     runEventPump();
 }
 

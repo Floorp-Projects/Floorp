@@ -59,7 +59,6 @@ REQUIRES        = xpcom     \
 		  $(NULL)
 
 CPPSRCS         = nsWebDAVService.cpp            \
-		  nsPropfindStreamListener.cpp   \
 		  nsOperationStreamListeners.cpp \
 		  nsWebDAVUtils.cpp              \
 		  $(NULL)

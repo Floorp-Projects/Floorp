@@ -37,29 +37,6 @@
 #include "nsISupports.idl"
 #include "nsIWebDAVResource.idl"
 
-interface nsIProperties;
-
-[scriptable,uuid(abfdf17a-d4d1-4e02-9485-75e01da62a22)]
-interface nsIWebDAVMetadataListener : nsISupports
-{
-    void onGetPropertyNamesResult(in unsigned long aStatusCode,
-                                  in AUTF8String aResource,
-                                  in nsIProperties aPropertyNames);
-
-    void onGetPropertiesResult(in unsigned long aStatusCode,
-                               in AUTF8String aResource,
-                               in nsIProperties aProperties);
-
-    void onOptionsResult(in unsigned long aStatusCode,
-                         in nsIWebDAVResource aResource,
-                         in AString aOptions,
-                         in AString aDavCapabilities);
-
-    void onMetadataComplete(in unsigned long aStatusCode,
-                            in nsIWebDAVResource aResource,
-                            in ACString method);
-};
-
 [scriptable,uuid(e198a0fd-9e62-4299-84e3-d93c0cd68881)]
 interface nsIWebDAVOperationListener : nsISupports
 {
@@ -71,15 +48,24 @@ interface nsIWebDAVOperationListener : nsISupports
     const unsigned long MAKE_COLLECTION = 6;
     const unsigned long LOCK = 7; // XXX need a different listener for token?
     const unsigned long UNLOCK = 8;
+    /**
+     * @param detail will be nsIProperties of the properties.
+     */
+    const unsigned long GET_PROPERTIES = 9;
+    /**
+     * @param detail will be nsIProperties of the property names.
+     */
+    const unsigned long GET_PROPERTY_NAMES = 10;
+    /**
+     * @param detail will be nsISupportsString (ugh) of options list
+     */
+    const unsigned long GET_OPTIONS = 11;
 
-    void onOperationComplete(in unsigned long aStatusCode,
-                             in nsIWebDAVResource aResource,
-                             in unsigned long aOperation);
-};
+    void onOperationComplete(in unsigned long statusCode,
+                             in nsIWebDAVResource resource,
+                             in unsigned long operation);
 
-[scriptable,uuid(be99d517-9161-4a7d-8bee-2ee98c1c2c6f)]
-interface nsIWebDAVDetailedOperationListener : nsIWebDAVOperationListener
-{
-    void onResultDetail(in unsigned long statusCode, in AUTF8String resource,
-                        in AString method);
+    void onOperationDetail(in unsigned long statusCode,
+                           in AUTF8String resource, in unsigned long operation,
+                           in nsISupports detail);
 };
