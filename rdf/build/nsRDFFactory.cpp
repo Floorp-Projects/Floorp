@@ -37,6 +37,7 @@
 #include "nsRDFBuiltInDataSources.h"
 #include "nsIRDFFileSystem.h"
 #include "nsIRDFFind.h"
+#include "nsIRelatedLinksDataSource.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
@@ -49,28 +50,29 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
-static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
-static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
-static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,NS_RDFFILESYSTEMDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFFindDataSourceCID,      NS_RDFFINDDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFFTPDataSourceCID,       NS_RDFFTPDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
-static NS_DEFINE_CID(kRDFHistoryDataSourceCID,   NS_RDFHISTORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFMenuBuilderCID,         NS_RDFMENUBUILDER_CID);
-static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFToolbarBuilderCID,      NS_RDFTOOLBARBUILDER_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
-static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,	         NS_XULDATASOURCE_CID);
-static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
-static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
-static NS_DEFINE_CID(kXULDocumentInfoCID,        NS_XULDOCUMENTINFO_CID);
+static NS_DEFINE_CID(kLocalStoreCID,                      NS_LOCALSTORE_CID);
+static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,           NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID,          NS_RDFCOMPOSITEDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFContentSinkCID,                  NS_RDFCONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFDefaultResourceCID,              NS_RDFDEFAULTRESOURCE_CID);
+static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFFindDataSourceCID,               NS_RDFFINDDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFHTMLBuilderCID,                  NS_RDFHTMLBUILDER_CID);
+static NS_DEFINE_CID(kRDFHistoryDataSourceCID,            NS_RDFHISTORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFMenuBuilderCID,                  NS_RDFMENUBUILDER_CID);
+static NS_DEFINE_CID(kRDFRelatedLinksDataSourceCID,       NS_RDFRELATEDLINKSDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFToolbarBuilderCID,               NS_RDFTOOLBARBUILDER_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,                  NS_RDFTREEBUILDER_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,                   NS_RDFXULBUILDER_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,	                  NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -193,6 +195,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFHistoryDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewHistoryDataSource((nsIHistoryDataSource**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFRelatedLinksDataSourceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFRelatedLinksDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kXULDocumentCID)) {
@@ -337,17 +343,20 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "history",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kRDFRelatedLinksDataSourceCID,  
+                                         "RDF Related Links Data Source",
+                                         NS_RDF_DATASOURCE_PROGID_PREFIX "relatedlinks",
+                                         aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFInMemoryDataSourceCID,
                                          "RDF In-Memory Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
-
+    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kLocalStoreCID,
                                     "Local Store",
                                     NS_RDF_DATASOURCE_PROGID_PREFIX "local-store",
                                     aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXMLDataSourceCID,
                                          "RDF XML Data Source",
@@ -452,6 +461,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kRDFFTPDataSourceCID,       aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFHistoryDataSourceCID,   aPath);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kRDFRelatedLinksDataSourceCID,   aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
     if (NS_FAILED(rv)) goto done;
