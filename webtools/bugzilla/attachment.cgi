@@ -1060,11 +1060,6 @@ sub update
   # Get the bug ID for the bug to which this attachment is attached.
   SendSQL("SELECT bug_id FROM attachments WHERE attach_id = $::FORM{'id'}");
   my $bugid = FetchSQLData();
-  unless ($bugid) 
-  {
-    ThrowUserError("invalid_bug_id",
-                   { bug_id => $bugid });
-  }
   
   # Lock database tables in preparation for updating the attachment.
   SendSQL("LOCK TABLES attachments WRITE , flags WRITE , " . 

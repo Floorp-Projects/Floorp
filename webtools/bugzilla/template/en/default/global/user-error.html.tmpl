@@ -262,11 +262,6 @@
     [% title = "Description Required" %]
     You must provide a description of the [% terms.bug %].
 
-  [% ELSIF error == "dupe_invalid_bug_id" %]
-    [% title = BLOCK %]Valid [% terms.Bug %] Number Required[% END %]
-    You must specify a valid [% terms.bug %] number of which this 
-    [%+ terms.bug %] is a duplicate.  The [% terms.bug %] has not been changed.
-
   [% ELSIF error == "dupe_of_self_disallowed" %]
     [% title = "Cannot mark $terms.abug as a duplicate of itself" %]
     You can't mark [% terms.abug %] as a duplicate of itself.
@@ -468,19 +463,24 @@
     [% title = "Invalid Attachment ID" %]
     The attachment id [% attach_id FILTER html %] is invalid.
 
-  [% ELSIF error == "invalid_bug_id" %]
-    [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
-    The [% terms.bug %] id [% bug_id FILTER html %] is invalid.
-
   [% ELSIF error == "invalid_bug_id_non_existent" %]
     [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
     [% terms.Bug %] #[% bug_id FILTER html %] does not exist.
     
   [% ELSIF error == "invalid_bug_id_or_alias" %]
     [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
-    '[% bug_id FILTER html %]' is not a valid [% terms.bug %] number
-    [% IF Param("usebugaliases") %] nor an alias
-    to [% terms.abug %] number[% END %].
+    [% IF bug_id %]
+      '[% bug_id FILTER html %]' is not a valid [% terms.bug %] number
+      [% IF Param("usebugaliases") %]
+        nor an alias to [% terms.abug %] number
+      [% END %].
+    [% ELSE %]
+      [% IF field %]
+        The '[% field_descs.$field FILTER html %]' field
+        cannot be empty.
+      [% END %]
+      You must enter a valid [% terms.bug %] number!
+    [% END %]
     <noscript>
       If you are trying to use QuickSearch, you need to enable
       JavaScript in your browser.
@@ -518,10 +518,6 @@
   [% ELSIF error == "invalid_group_ID" %]
     [% title = "Invalid group ID" %]
     The group you specified doesn't exist.
-
-  [% ELSIF error == "invalid_group_name" %]
-    [% title = "Invalid group name" %]
-    The group you specified, [% name FILTER html %], is not valid here.
 
   [% ELSIF error == "invalid_group_name" %]
     [% title = "Invalid group name" %]

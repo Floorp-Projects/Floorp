@@ -256,7 +256,7 @@ foreach my $field ("dependson", "blocked") {
         my @validvalues;
         foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
             next unless $id;
-            ValidateBugID($id, 1);
+            ValidateBugID($id, $field);
             push(@validvalues, $id);
         }
         $::FORM{$field} = join(",", @validvalues);

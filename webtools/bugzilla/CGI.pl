@@ -148,7 +148,7 @@ sub ValidateBugID {
     # database, and that the user is authorized to access that bug.
     # We detaint the number here, too
 
-    my ($id, $skip_authorization) = @_;
+    my ($id, $field) = @_;
     
     # Get rid of white-space around the ID.
     $id = trim($id);
@@ -157,7 +157,9 @@ sub ValidateBugID {
     my $alias = $id;
     if (!detaint_natural($id)) {
         $id = BugAliasToID($alias);
-        $id || ThrowUserError("invalid_bug_id_or_alias", {'bug_id' => $alias});
+        $id || ThrowUserError("invalid_bug_id_or_alias",
+                              {'bug_id' => $alias,
+                               'field'  => $field });
     }
     
     # Modify the calling code's original variable to contain the trimmed,
@@ -170,7 +172,7 @@ sub ValidateBugID {
     FetchOneColumn()
       || ThrowUserError("invalid_bug_id_non_existent", {'bug_id' => $id});
 
-    return if $skip_authorization;
+    return if ($field eq "dependson" || $field eq "blocked");
     
     return if Bugzilla->user->can_see_bug($id);
 

@@ -120,21 +120,11 @@ foreach my $field ("dependson", "blocked") {
         my @validvalues;
         foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
             next unless $id;
-            ValidateBugID($id, 1);
+            ValidateBugID($id, $field);
             push(@validvalues, $id);
         }
         $::FORM{$field} = join(",", @validvalues);
     }
-}
-
-# If we are duping bugs, let's also make sure that we can change 
-# the original.  This takes care of issue A on bug 96085.
-if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
-    ValidateBugID($::FORM{'dup_id'});
-
-    # Also, let's see if the reporter has authorization to see the bug
-    # to which we are duping.  If not we need to prompt.
-    DuplicateUserConfirm();
 }
 
 # do a match on the fields if applicable
@@ -490,8 +480,8 @@ sub DuplicateUserConfirm {
         return;
     }
 
-    my $dupe = trim($::FORM{'id'});
-    my $original = trim($::FORM{'dup_id'});
+    my $dupe = $::FORM{'id'};
+    my $original = $::FORM{'dup_id'};
     
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
@@ -520,7 +510,7 @@ sub DuplicateUserConfirm {
     $template->process("bug/process/confirm-duplicate.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
-} # end DuplicateUserConfirm()
+}
 
 if (defined $::FORM{'id'}) {
     # since this means that we were called from show_bug.cgi, now is a good
@@ -976,28 +966,22 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
-        ChangeStatus('RESOLVED');
-        ChangeResolution('DUPLICATE');
-        CheckFormFieldDefined(\%::FORM,'dup_id');
-        my $num = trim($::FORM{'dup_id'});
-        SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
-        $num = FetchOneColumn();
-        if (!$num) {
-            ThrowUserError("dupe_invalid_bug_id")
-        }
-        if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
+        # Make sure we can change the original bug (issue A on bug 96085)
+        CheckFormFieldDefined(\%::FORM, 'dup_id');
+        ValidateBugID($::FORM{'dup_id'}, 'dup_id');
+
+        # Also, let's see if the reporter has authorization to see
+        # the bug to which we are duping. If not we need to prompt.
+        DuplicateUserConfirm();
+
+        $duplicate = $::FORM{'dup_id'};
+        if (!defined($::FORM{'id'}) || $duplicate == $::FORM{'id'}) {
             ThrowUserError("dupe_of_self_disallowed");
         }
-        my $checkid = trim($::FORM{'id'});
-        SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
-        $checkid = FetchOneColumn();
-        if (!$checkid) {
-            ThrowUserError("invalid_bug_id",
-                           { bug_id => $checkid });
-        }
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
-        $duplicate = $num;
-
+        ChangeStatus('RESOLVED');
+        ChangeResolution('DUPLICATE');
+        $::FORM{'comment'} .= "\n\n*** This bug has been marked " .
+                              "as a duplicate of $duplicate ***";
         last SWITCH;
     };
 
