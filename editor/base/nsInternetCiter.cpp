@@ -34,7 +34,7 @@
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 
-/** Mail citations using the Internet style >> This is a citation <<
+/** Mail citations using the Internet style: > This is a citation
   */
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
