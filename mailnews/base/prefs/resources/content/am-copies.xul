@@ -8,15 +8,15 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-copies.xul');">
 
-  <!-- stringbundle is used by msgFolderPickerOverlay.js-->     
+  <!-- stringbundle is used by msgFolderPickerOverlay.js-->
   <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  </stringbundleset>                                                            
+  </stringbundleset>
 
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
-  
+
   <broadcaster id="broadcaster_doFcc"/>
 
   <label hidden="true" wsm_persist="true" id="identity.fccFolder"
@@ -40,12 +40,12 @@
                 prefstring="mail.identity.%identitykey%.tmpl_folder_picker_mode"/>
 
   <dialogheader title="&copyAndFolderTitle.label;"/>
-  
+
   <groupbox>
     <caption label="&sendingPrefix.label;"/>
 
     <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
+      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;"
                 accesskey="&fccMailFolder.accesskey;"
                 prefattribute="value"
                 prefstring="mail.identity.%identitykey%.fcc"
@@ -54,29 +54,29 @@
       <radiogroup id="doFcc">
       <grid class="specialFolderPickerGrid">
         <columns>
+          <column/>
           <column flex="1"/>
-          <column flex="2"/>
         </columns>
         <rows>
           <row align="center">
-            <radio id="fcc_selectAccount" 
+            <radio id="fcc_selectAccount"
                    value="0" label="&sentFolderOn.label;"
                    accesskey="&sentFolderOn.accesskey;"
-                   oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)" 
+                   oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)"
                    observes="broadcaster_doFcc"/>
   	    <menulist id="msgFccAccountPicker"
-	              oncommand="noteSelectionChange('fcc_selectAccount')" 
-	              flex="1" observes="broadcaster_doFcc"/>
+	              oncommand="noteSelectionChange('fcc_selectAccount')"
+	              observes="broadcaster_doFcc"/>
           </row> 
           <row align="center">
-            <radio id="fcc_selectFolder" 
+            <radio id="fcc_selectFolder"
                    value="1" label="&sentInOtherFolder.label;"
                    accesskey="&sentInOtherFolder.accesskey;"
-                   oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)" 
+                   oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)"
                    observes="broadcaster_doFcc"/>
-  	    <menulist id="msgFccFolderPicker" 
-	              oncommand="noteSelectionChange('fcc_selectFolder')" 
-		      flex="1" observes="broadcaster_doFcc"/>
+  	    <menulist id="msgFccFolderPicker"
+	              oncommand="noteSelectionChange('fcc_selectFolder')"
+		      observes="broadcaster_doFcc"/>
           </row>
         </rows>
       </grid>
@@ -87,7 +87,7 @@
                 accesskey="&bccAddress.accesskey;"
                 control="identity.doBccList"
                 oncommand="setupBccTextbox();"
-                prefattribute="value" 
+                prefattribute="value"
                 prefstring="mail.identity.%identitykey%.doBcc"/>
 
       <textbox wsm_persist="true" id="identity.doBccList" flex="1"
@@ -106,27 +106,25 @@
     <radiogroup id="messageDrafts">
       <grid class="specialFolderPickerGrid">
         <columns>
+          <column/>
           <column flex="1"/>
-          <column flex="2"/>
         </columns>
         <rows>
           <row align="center">
-            <radio id="draft_selectAccount" 
+            <radio id="draft_selectAccount"
                    oncommand="setPickersState('msgDraftsAccountPicker', 'msgDraftsFolderPicker', event)"
                    value="0" label="&draftsFolderOn.label;"
                    accesskey="&draftsFolderOn.accesskey;"/>
- 	    <menulist id="msgDraftsAccountPicker" 
-	              oncommand="noteSelectionChange('draft_selectAccount')"
-                      flex="1"/>
+ 	    <menulist id="msgDraftsAccountPicker"
+	              oncommand="noteSelectionChange('draft_selectAccount')"/>
           </row> 
           <row align="center">
-            <radio id="draft_selectFolder" 
+            <radio id="draft_selectFolder"
                    oncommand="setPickersState('msgDraftsFolderPicker', 'msgDraftsAccountPicker', event)"
                    value="1" label="&draftInOtherFolder.label;"
                    accesskey="&draftInOtherFolder.accesskey;"/>
   	    <menulist id="msgDraftsFolderPicker"
-                      oncommand="noteSelectionChange('draft_selectFolder')" 
-                      flex="1"/>
+                      oncommand="noteSelectionChange('draft_selectFolder')"/>
           </row>
         </rows>
       </grid>
@@ -138,27 +136,25 @@
     <radiogroup id="messageTemplates">
       <grid class="specialFolderPickerGrid">
         <columns>
+          <column/>
           <column flex="1"/>
-          <column flex="2"/>
         </columns>
         <rows>
           <row align="center">
-            <radio id="tmpl_selectAccount" 
+            <radio id="tmpl_selectAccount"
                    oncommand="setPickersState('msgStationeryAccountPicker', 'msgStationeryFolderPicker', event)"
                    value="0" label="&templatesFolderOn.label;"
                    accesskey="&templatesFolderOn.accesskey;"/>
   	    <menulist id="msgStationeryAccountPicker"
-                      oncommand="noteSelectionChange('tmpl_selectAccount')" 
-                      flex="1"/>
+                      oncommand="noteSelectionChange('tmpl_selectAccount')"/>
           </row> 
           <row align="center">
-            <radio id="tmpl_selectFolder" 
+            <radio id="tmpl_selectFolder"
                    oncommand="setPickersState('msgStationeryFolderPicker', 'msgStationeryAccountPicker', event)"
                    value="1" label="&templateInOtherFolder.label;"
                    accesskey="&templateInOtherFolder.accesskey;"/>
             <menulist id="msgStationeryFolderPicker"
-                      oncommand="noteSelectionChange('tmpl_selectFolder')" 
-                      flex="1"/>
+                      oncommand="noteSelectionChange('tmpl_selectFolder')"/>
           </row>
         </rows>
       </grid>

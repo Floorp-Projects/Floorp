@@ -134,28 +134,28 @@ function SetFolderDisplay(pickerMode, disableMode,
     var accountPicker = document.getElementById(accountPickerId);
     var folderPicker = document.getElementById(folderPickerId);
     var rg = selectAccountRadioElem.radioGroup;
+    var folderPickedElement = document.getElementById(folderPickedField);
+    var uri = folderPickedElement.getAttribute("value");
+    // Get message folder from the given uri. Second argument (false) siginifies
+    // that there is no need to check for the existence of special folders as 
+    // these folders are created on demand at runtime in case of imap accounts.
+    // For POP3 accounts, special folders are created at the account creation time.
+    var msgFolder = GetMsgFolderFromUri(uri, false);
+    SetFolderPicker(msgFolder.server.serverURI, accountPickerId);
+    InitFolderDisplay(folderPickedField, folderPickerId);
+
     switch (pickerMode) 
     {
         case "0" :
             rg.selectedItem = selectAccountRadioElem;
-
-            var folderPickedElement = document.getElementById(folderPickedField);
-            var uri = folderPickedElement.getAttribute("value");
-            // Get message folder from the given uri. Second argument (false) siginifies
-            // that there is no need to check for the existence of special folders as 
-            // these folders are created on demand at runtime in case of imap accounts.
-            // For POP3 accounts, special folders are created at the account creation time.
-            var msgFolder = GetMsgFolderFromUri(uri, false);
-            SetFolderPicker(msgFolder.server.serverURI, accountPickerId);
             SetPickerEnabling(accountPickerId, folderPickerId);
             break;
 
         case "1"  :
             rg.selectedItem = selectFolderRadioElem;
-		    	
-            InitFolderDisplay(folderPickedField, folderPickerId);
             SetPickerEnabling(folderPickerId, accountPickerId);
             break;
+
         default :
             dump("Error in setting initial folder display on pickers\n");
             break;
