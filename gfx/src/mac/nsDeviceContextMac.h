@@ -37,8 +37,6 @@ class nsDeviceContextMac : public DeviceContextImpl
 public:
   nsDeviceContextMac();
 
-	NS_DECL_ISUPPORTS_INHERITED
-
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
