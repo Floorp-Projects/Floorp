@@ -487,7 +487,8 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mFloat(aCopy.mFloat),
     mClear(aCopy.mClear),
     mClip(aCopy.mClip),
-    mOverflow(aCopy.mOverflow),
+    mOverflowX(aCopy.mOverflowX),
+    mOverflowY(aCopy.mOverflowY),
     mVisibility(aCopy.mVisibility),
     mOpacity(aCopy.mOpacity),
     // temp fix for bug 24000
@@ -523,7 +524,8 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   mClip.List(out, eCSSProperty_clip);
   buffer.SetLength(0);
-  mOverflow.AppendToString(buffer, eCSSProperty_overflow);
+  mOverflowX.AppendToString(buffer, eCSSProperty_overflow_x);
+  mOverflowY.AppendToString(buffer, eCSSProperty_overflow_y);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 #endif

@@ -3362,13 +3362,15 @@ nsCSSFrameConstructor::ConstructDocElementTableFrame(nsIPresShell*        aPresS
 static PRBool CheckOverflow(nsPresContext* aPresContext,
                             const nsStyleDisplay* aDisplay)
 {
-  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_VISIBLE)
+  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)
     return PR_FALSE;
 
-  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_CLIP)
-    aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_HIDDEN);
+  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_CLIP)
+    aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_HIDDEN,
+                                              NS_STYLE_OVERFLOW_HIDDEN);
   else
-    aPresContext->SetViewportOverflowOverride(aDisplay->mOverflow);
+    aPresContext->SetViewportOverflowOverride(aDisplay->mOverflowX,
+                                              aDisplay->mOverflowY);
   return PR_TRUE;
 }
 
@@ -3385,7 +3387,8 @@ nsIContent*
 nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
 {
   // Set default
-  aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_AUTO);
+  aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_AUTO,
+                                            NS_STYLE_OVERFLOW_AUTO);
 
   // We never mess with the viewport scroll state
   // when printing or in print preview

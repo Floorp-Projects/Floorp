@@ -630,6 +630,14 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         aValue.Append(PRUnichar(' '));
       AppendValueToString(eCSSProperty_list_style_image, aValue);
       break;
+    case eCSSProperty_overflow: {
+      nsCSSValue xValue, yValue;
+      GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
+      GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
+      if (xValue == yValue)
+        AppendValueToString(eCSSProperty_overflow_x, aValue);
+      break;
+    }
     case eCSSProperty_pause: {
       if (AppendValueToString(eCSSProperty_pause_after, aValue)) {
         aValue.Append(PRUnichar(' '));
@@ -969,6 +977,27 @@ nsCSSDeclaration::UseBackgroundPosition(nsAString & aString,
   aBgPositionY = 0;
 }
 
+void
+nsCSSDeclaration::TryOverflowShorthand(nsAString & aString,
+                                       PRInt32 & aOverflowX,
+                                       PRInt32 & aOverflowY) const
+{
+  PRBool isImportant;
+  if (aOverflowX && aOverflowY &&
+      AllPropertiesSameImportance(aOverflowX, aOverflowY,
+                                  0, 0, 0, 0, isImportant)) {
+    nsCSSValue xValue, yValue;
+    GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
+    GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
+    if (xValue == yValue) {
+      AppendCSSValueToString(eCSSProperty_overflow_x, xValue, aString);
+      AppendImportanceToString(isImportant, aString);
+      aString.AppendLiteral("; ");
+      aOverflowX = aOverflowY = 0;
+    }
+  }
+}
+
 #define NS_CASE_OUTPUT_PROPERTY_VALUE(_prop, _index) \
 case _prop: \
           if (_index) { \
@@ -1013,6 +1042,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   PRInt32 paddingTop = 0, paddingBottom = 0, paddingLeft = 0, paddingRight = 0;
   PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
   PRInt32 bgPositionX = 0, bgPositionY = 0;
+  PRInt32 overflowX = 0, overflowY = 0;
   PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
@@ -1072,6 +1102,9 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_background_attachment: bgAttachment  = index+1; break;
       case eCSSProperty_background_x_position: bgPositionX   = index+1; break;
       case eCSSProperty_background_y_position: bgPositionY   = index+1; break;
+
+      case eCSSProperty_overflow_x:            overflowX     = index+1; break;
+      case eCSSProperty_overflow_y:            overflowY     = index+1; break;
 
       default: break;
     }
@@ -1141,6 +1174,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   TryBackgroundShorthand(aString,
                          bgColor, bgImage, bgRepeat, bgAttachment,
                          bgPositionX, bgPositionY);
+  TryOverflowShorthand(aString, overflowX, overflowY);
 
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
@@ -1215,6 +1249,9 @@ nsCSSDeclaration::ToString(nsAString& aString) const
         }
         break;
       }
+
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_x, overflowX)
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_y, overflowY)
 
       case eCSSProperty_margin_left_ltr_source:
       case eCSSProperty_margin_left_rtl_source:

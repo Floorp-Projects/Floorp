@@ -42,10 +42,10 @@
 #include "nsCoord.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableViewProvider.h"
+#include "nsPresContext.h"
 
 class nsIFrame;
 class nsIBox;
-class nsPresContext;
 class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface
@@ -65,13 +65,7 @@ public:
   NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
 
-  struct ScrollbarStyles {
-    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
-    // NS_STYLE_OVERFLOW_AUTO
-    PRUint8 mHorizontal, mVertical;
-    ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
-    ScrollbarStyles() {}
-  };
+  typedef nsPresContext::ScrollbarStyles ScrollbarStyles;
 
   virtual ScrollbarStyles GetScrollbarStyles() const = 0;
 
