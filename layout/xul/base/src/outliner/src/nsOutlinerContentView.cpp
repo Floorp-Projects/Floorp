@@ -766,8 +766,34 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
                                       nsIContent* aChild,
                                       PRInt32 aIndexInContainer)
 {
+  // Make sure this notification concerns us.
+  // First check the tag to see if it's one that we care about.
   nsCOMPtr<nsIAtom> childTag;
   aChild->GetTag(*getter_AddRefs(childTag));
+
+  if ((childTag != nsXULAtoms::outlineritem) &&
+      (childTag != nsXULAtoms::outlinerseparator) &&
+      (childTag != nsHTMLAtoms::option) &&
+      (childTag != nsXULAtoms::outlinerchildren) &&
+      (childTag != nsXULAtoms::outlinerrow) &&
+      (childTag != nsXULAtoms::outlinercell))
+    return NS_OK;
+
+  // If we have a legal tag, go up to the outliner/select and make sure
+  // that it's ours.
+  nsCOMPtr<nsIContent> element = aContainer;
+  nsCOMPtr<nsIAtom> parentTag;
+  
+  while (element) {
+    element->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag == nsXULAtoms::outliner || parentTag == nsHTMLAtoms::select)
+      if (element == mRoot) // this is for us, stop looking
+        break;
+      else // this is not for us, we can bail out
+        return NS_OK;
+    nsCOMPtr<nsIContent> temp = element;
+    temp->GetParent(*getter_AddRefs(element));
+  }
 
   if (childTag == nsXULAtoms::outlineritem ||
       childTag == nsXULAtoms::outlinerseparator) {
@@ -786,6 +812,12 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
     PRInt32 count;
     InsertRow(parentIndex, index, aChild, &count);
     mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+  }
+  else if (childTag == nsHTMLAtoms::option) {
+    PRInt32 count;
+    PRInt32 parentIndex = FindContent(aContainer);
+    InsertRow(parentIndex, aIndexInContainer, aChild, &count);
+    mBoxObject->RowCountChanged(parentIndex + aIndexInContainer + 1, count);
   }
   else if (childTag == nsXULAtoms::outlinerchildren) {
     PRInt32 index = FindContent(aContainer);
@@ -841,7 +873,8 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
   aChild->GetTag(*getter_AddRefs(tag));
 
   if (tag == nsXULAtoms::outlineritem ||
-      tag == nsXULAtoms::outlinerseparator) {
+      tag == nsXULAtoms::outlinerseparator ||
+      tag == nsHTMLAtoms::option) {
     PRInt32 index = FindContent(aChild);
     if (index >= 0) {
       PRInt32 count;
@@ -1107,6 +1140,8 @@ nsOutlinerContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIConten
     SerializeItem(aContent, aParentIndex, &aIndex, rows);
   else if (tag == nsXULAtoms::outlinerseparator)
     SerializeSeparator(aContent, aParentIndex, &aIndex, rows);
+  else if (tag == nsHTMLAtoms::option)
+    SerializeOption(aContent, aParentIndex, &aIndex, rows);
   mRows.InsertElementsAt(rows, aParentIndex + aIndex + 1);
   PRInt32 count = rows.Count();
 
