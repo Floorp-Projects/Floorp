@@ -41,8 +41,8 @@ XPIDLSRCS = \
 	$(NULL)
 
 CPPSRCS = \
-	bsConnection.cpp \
-	bsConnectionFactory.cpp \
+	bsXPCConnection.cpp \
+	bsXPCConnectionFactory.cpp \
 	$(NULL)
 
 REQUIRES = bs xpcom
