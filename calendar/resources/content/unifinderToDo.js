@@ -181,6 +181,7 @@ function unifinderClickToDo( event )
       
    var tree = document.getElementById( ToDoUnifinderTreeName );
    var ThisToDo = getToDoFromEvent( event );
+   
    var row = new Object();
    var childElt = { };
    var colID = { };
@@ -194,6 +195,7 @@ function unifinderClickToDo( event )
          treeitem.removeAttribute( "checked" )
       else
          treeitem.setAttribute(" checked", true );
+      
       checkboxClick( ThisToDo, !isChecked )
    }
 }
@@ -409,6 +411,9 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
 
 function refreshToDoTree( eventArray )
 {
+   if( !eventArray )
+      eventArray = gEventSource.getAllToDos();
+
    // get the old tree children item and remove it
    
    var tree = document.getElementById( ToDoUnifinderTreeName );
