@@ -249,14 +249,15 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     mIsToplevel = PR_TRUE;
     break;
   case eWindowType_toplevel :
+  case eWindowType_invisible :
     mIsToplevel = PR_TRUE;
     break;
   case eWindowType_dialog :
     mIsToplevel = PR_TRUE;
-		break;
+    break;
   case eWindowType_child :
     mIsToplevel = PR_FALSE;
-		break;
+    break;
   }
 	
   if ( mWindowType == eWindowType_child )

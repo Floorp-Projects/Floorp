@@ -333,6 +333,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
     break;
 
   case eWindowType_toplevel:
+  case eWindowType_invisible:
     mIsToplevel = PR_TRUE;
     parent = XRootWindowOfScreen(mScreen);
     mBaseWindow = XCreateWindow(mDisplay, parent, mBounds.x, mBounds.y,

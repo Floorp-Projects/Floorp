@@ -766,7 +766,8 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
    mWindowState = nsWindowState_eInCreate;
 
   if( aInitData && (aInitData->mWindowType == eWindowType_dialog ||
-                    aInitData->mWindowType == eWindowType_toplevel))
+                    aInitData->mWindowType == eWindowType_toplevel ||
+                    aInitData->mWindowType == eWindowType_invisible))
     mIsTopWidgetWindow = PR_TRUE;
   else
     mIsTopWidgetWindow = PR_FALSE;
