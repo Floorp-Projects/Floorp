@@ -66,6 +66,8 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
+#include "nsIDocument.h"
+#include "nsINodeInfo.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -512,17 +514,30 @@ void RectArea::ParseCoords(const nsString& aSpec)
     if (NS_FAILED(rv))
       return;
     nsXPIDLString errorText;
-    const PRUnichar* flatSpec = aSpec.get();
     rv =
       bundle->FormatStringFromName(NS_LITERAL_STRING("ImageMapRectBoundsError").get(),
-                                   &flatSpec, 1,
+                                   nsnull, 0,
                                    getter_Copies(errorText));
     if (NS_FAILED(rv))
       return;
 
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    mArea->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
+    
+    nsCOMPtr<nsIDocument> doc;
+    nodeInfo->GetDocument(*getter_AddRefs(doc));
+    nsCAutoString urlSpec;
+    if (doc) {
+      nsCOMPtr<nsIURI> uri;
+      doc->GetDocumentURL(getter_AddRefs(uri));
+      if (uri) {
+        uri->GetSpec(urlSpec);
+      }
+    }
     rv = errorObject->Init(errorText.get(),
-                           NS_LITERAL_STRING("").get(), /* file name */
-                           NS_LITERAL_STRING("").get(), /* source line */
+                           NS_ConvertUTF8toUCS2(urlSpec).get(), /* file name */
+                           aSpec.get(), /* source line */
                            0, /* line number */
                            0, /* column number */
                            flag,
