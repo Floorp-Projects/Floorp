@@ -153,9 +153,10 @@ get_current_time()
     PRInt64 now_seconds;
     LL_DIV(now_seconds, now_useconds, usecPerSec);
 
-    // assert(!now_seconds.hi);
+    time_t current_time_in_seconds;
+    LL_L2I(current_time_in_seconds, now_seconds);
 
-    return now_seconds.lo;
+    return current_time_in_seconds;
   }
 
 /* StrAllocCopy and StrAllocCat should really be defined elsewhere */
