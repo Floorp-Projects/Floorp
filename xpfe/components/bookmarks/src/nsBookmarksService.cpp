@@ -1749,7 +1749,7 @@ nsBookmarksService::Init()
 	{
 		char	*prefVal = nsnull;
 		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
-			&prefVal)) && (prefVal))
+			&prefVal)) && (prefVal) && (*prefVal))
 		{
 			mPersonalToolbarName = prefVal;
 #ifdef	DEBUG
