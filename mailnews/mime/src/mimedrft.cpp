@@ -631,7 +631,7 @@ mime_fix_up_html_address( char **addr)
       NS_ASSERTION (*addr, "out of memory fixing up html address");
       lt = PL_strchr(*addr, '<');
       NS_ASSERTION(lt, "couldn't find < char in address");
-      nsCRT::memmove(lt+4, lt+1, newLen - 4 - (lt - *addr));
+      memmove(lt+4, lt+1, newLen - 4 - (lt - *addr));
       *lt++ = '&';
       *lt++ = 'l';
       *lt++ = 't';

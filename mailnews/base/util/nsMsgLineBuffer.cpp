@@ -356,7 +356,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 		{
       if (m_numBytesInBuffer && m_startPos)
       {
-          nsCRT::memmove(m_dataBuffer, startOfLine, m_numBytesInBuffer);
+          memmove(m_dataBuffer, startOfLine, m_numBytesInBuffer);
           m_dataBuffer[m_numBytesInBuffer] = '\0'; // make sure the end
                                                    // of the buffer is
                                                    // terminated

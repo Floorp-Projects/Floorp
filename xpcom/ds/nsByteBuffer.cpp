@@ -137,7 +137,7 @@ ByteBufferImpl::Fill(nsresult* aErrorCode, nsIInputStream* aStream,
 
   if (0 != aKeep) {
     // Slide over kept data
-    nsCRT::memmove(mBuffer, mBuffer + (mLength - aKeep), aKeep);
+    memmove(mBuffer, mBuffer + (mLength - aKeep), aKeep);
   }
 
   // Read in some new data

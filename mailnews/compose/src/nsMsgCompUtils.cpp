@@ -719,7 +719,7 @@ mime_generate_headers (nsMsgCompFields *fields,
       while (references && PL_strlen(references) >= 986 && trimAt) {
         ptr = PL_strchr(trimAt+1, '<');
         if (ptr)
-          nsCRT::memmove(trimAt, ptr, PL_strlen(ptr)+1); // including the
+          memmove(trimAt, ptr, PL_strlen(ptr)+1); // including the
         else
           break;
       }

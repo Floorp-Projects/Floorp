@@ -167,8 +167,8 @@ nsresult nsUint8Array::InsertAt(PRInt32 nIndex, PRUint8 newElement, PRInt32 nCou
 		PRInt32 nOldSize = m_nSize;
 		SetSize(m_nSize + nCount);  // grow it to new size
 		// shift old data up to fill gap
-    nsCRT::memmove(&m_pData[nIndex+nCount], &m_pData[nIndex],
-			(nOldSize-nIndex) * sizeof(PRUint8));
+        memmove(&m_pData[nIndex+nCount], &m_pData[nIndex],
+                (nOldSize-nIndex) * sizeof(PRUint8));
 
 		// re-init slots we copied from
 
@@ -196,8 +196,8 @@ void nsUint8Array::RemoveAt(PRInt32 nIndex, PRInt32 nCount)
 
 	NS_ASSERTION(nMoveCount >= 0, "can't remove nothing");
 	if (nMoveCount >= 0)
-    nsCRT::memmove(&m_pData[nIndex], &m_pData[nIndex + nCount],
-			nMoveCount * sizeof(PRUint8));
+      memmove(&m_pData[nIndex], &m_pData[nIndex + nCount],
+              nMoveCount * sizeof(PRUint8));
 	m_nSize -= nCount;
 }
 

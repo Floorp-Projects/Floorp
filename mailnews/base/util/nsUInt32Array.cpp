@@ -202,8 +202,8 @@ void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCou
 		SetSize(m_nSize + nCount);
 
 		// Move the data after the insertion point
-		nsCRT::memmove(&m_pData[nIndex + nCount], &m_pData[nIndex],
-			       (nOldSize - nIndex) * sizeof(PRUint32));
+		memmove(&m_pData[nIndex + nCount], &m_pData[nIndex],
+		        (nOldSize - nIndex) * sizeof(PRUint32));
 	}
 
 	// Insert the new elements
@@ -241,8 +241,8 @@ void nsUInt32Array::RemoveAt(PRUint32 nIndex, PRUint32 nCount)
 		// Make sure not to overstep the end of the array
 		int nMoveCount = m_nSize - (nIndex + nCount);
 		if (nCount && nMoveCount)
-			nsCRT::memmove(&m_pData[nIndex], &m_pData[nIndex + nCount],
-		               nMoveCount * sizeof(PRUint32));
+			memmove(&m_pData[nIndex], &m_pData[nIndex + nCount],
+			        nMoveCount * sizeof(PRUint32));
 
 		m_nSize -= nCount;
 	}

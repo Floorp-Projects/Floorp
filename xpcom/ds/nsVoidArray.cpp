@@ -414,8 +414,8 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   if (0 != slide)
   {
     // Slide data over to make room for the insertion
-    nsCRT::memmove(mImpl->mArray + aIndex + 1, mImpl->mArray + aIndex,
-                   slide * sizeof(mImpl->mArray[0]));
+    memmove(mImpl->mArray + aIndex + 1, mImpl->mArray + aIndex,
+            slide * sizeof(mImpl->mArray[0]));
   }
 
   mImpl->mArray[aIndex] = aElement;
@@ -459,8 +459,8 @@ PRBool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
   if (0 != slide)
   {
     // Slide data over to make room for the insertion
-    nsCRT::memmove(mImpl->mArray + aIndex + otherCount, mImpl->mArray + aIndex,
-                   slide * sizeof(mImpl->mArray[0]));
+    memmove(mImpl->mArray + aIndex + otherCount, mImpl->mArray + aIndex,
+            slide * sizeof(mImpl->mArray[0]));
   }
 
   for (PRInt32 i = 0; i < otherCount; i++)
@@ -552,15 +552,15 @@ PRBool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
   if (aTo < aFrom)
   {
     // Moving one element closer to the head; the elements inbetween move down
-    nsCRT::memmove(mImpl->mArray + aTo + 1, mImpl->mArray + aTo,
-                   (aFrom-aTo) * sizeof(mImpl->mArray[0]));
+    memmove(mImpl->mArray + aTo + 1, mImpl->mArray + aTo,
+            (aFrom-aTo) * sizeof(mImpl->mArray[0]));
     mImpl->mArray[aTo] = tempElement;
   }
   else // already handled aFrom == aTo
   {
     // Moving one element closer to the tail; the elements inbetween move up
-    nsCRT::memmove(mImpl->mArray + aFrom, mImpl->mArray + aFrom + 1,
-                   (aTo-aFrom) * sizeof(mImpl->mArray[0]));
+    memmove(mImpl->mArray + aFrom, mImpl->mArray + aFrom + 1,
+            (aTo-aFrom) * sizeof(mImpl->mArray[0]));
     mImpl->mArray[aTo] = tempElement;
   }
 
@@ -584,8 +584,8 @@ PRBool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
   // last element in the array
   if (aIndex < (oldCount - aCount))
   {
-    nsCRT::memmove(mImpl->mArray + aIndex, mImpl->mArray + aIndex + aCount,
-                   (oldCount - (aIndex + aCount)) * sizeof(mImpl->mArray[0]));
+    memmove(mImpl->mArray + aIndex, mImpl->mArray + aIndex + aCount,
+            (oldCount - (aIndex + aCount)) * sizeof(mImpl->mArray[0]));
   }
 
   mImpl->mCount -= aCount;
