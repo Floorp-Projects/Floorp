@@ -46,7 +46,7 @@ public class KeyWrapping {
 
       try {
 
-        CryptoManager.initialize("dbdir");
+        CryptoManager.initialize(".");
         CryptoManager cm = CryptoManager.getInstance();
         CryptoToken token = cm.getInternalCryptoToken();
         CryptoToken keyToken = cm.getInternalKeyStorageToken();

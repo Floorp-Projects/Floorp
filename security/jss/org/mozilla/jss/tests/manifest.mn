@@ -48,6 +48,7 @@ PRIVATE_CLASSES = 											\
                     CloseDBs                                \
                     KeyWrapping                             \
                     ListCerts                               \
+                    socketTest                             \
 			        $(NULL)
 
 JSRCS = 											\
@@ -59,4 +60,5 @@ JSRCS = 											\
                     CloseDBs.java                           \
                     KeyWrapping.java                        \
                     ListCerts.java                           \
+                    socketTest.java                           \
 			        $(NULL)

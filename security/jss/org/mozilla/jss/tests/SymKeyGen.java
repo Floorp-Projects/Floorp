@@ -64,7 +64,7 @@ public class SymKeyGen {
         }
         keyData = key.getKeyData();
         if( keyData.length != 8 ) {
-            throw new Exception("key data wrong length");
+            throw new Exception("key data wrong length: " + keyData.length);
         }
         System.out.println("DES key is correct");
 
@@ -104,7 +104,7 @@ public class SymKeyGen {
         }
         keyData = key.getKeyData();
         if( keyData.length != 24 ) {
-            throw new Exception("key data wrong length");
+            throw new Exception("key data wrong length: " + keyData.length);
         }
         System.out.println("DES3 key is correct");
 
@@ -123,7 +123,7 @@ public class SymKeyGen {
         }
         keyData = key.getKeyData();
         if( keyData.length != 16 ) {
-            throw new Exception("key data wrong length");
+            throw new Exception("key data wrong length: " + keyData.length);
         }
         System.out.println("RC4 key is correct");
         
@@ -150,7 +150,7 @@ public class SymKeyGen {
         }
         keyData = key.getKeyData();
         if( keyData.length != 8 ) {
-            throw new Exception("key data wrong length");
+            throw new Exception("key data wrong length: " + keyData.length);
         }
         System.out.println("PBE key is correct");
 

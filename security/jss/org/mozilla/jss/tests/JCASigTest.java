@@ -56,8 +56,6 @@ public class JCASigTest {
 		KeyPairGenerator kpgen;
 		KeyPair keyPair;
 
-		Debug.setLevel(Debug.OBNOXIOUS);
-
 		if(args.length != 2) {
 			usage();
 			return;
@@ -70,6 +68,8 @@ public class JCASigTest {
                 CryptoManager.InitializationValues ( args[0] );
             CryptoManager.initialize(vals);
 		    manager = CryptoManager.getInstance();
+
+		    Debug.setLevel(Debug.OBNOXIOUS);
 
 			token = manager.getTokenByName(tokenname);
 

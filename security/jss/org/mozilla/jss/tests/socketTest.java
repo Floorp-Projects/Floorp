@@ -41,10 +41,12 @@ public class socketTest {
 
         // initialize CryptoManager.
         CryptoManager.initialize(".");
+        //SSLSocket.setCipherPolicy(SSLSocket.CipherPolicy.DOMESTIC);
 
-        SSLSocket sslSocket = new SSLSocket("www.verisign.com", 443);
+        SSLSocket sslSocket = new SSLSocket("www.amazon.com", 443);
+        sslSocket.forceHandshake();
 
-        System.out.println("Test");
+        System.out.println("Test, forced handshake");
         } catch( Exception e ) {
             e.printStackTrace();
         }
