@@ -66,6 +66,7 @@ public:
   // nsIContent
   virtual nsIAtom *Tag() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  NS_IMETHOD_(PRBool) MayHaveFrame() const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

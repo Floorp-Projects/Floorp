@@ -2580,6 +2580,22 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
+{
+  if (aMayHaveFrame) {
+    SetFlags(GENERIC_ELEMENT_MAY_HAVE_FRAME);
+  } else {
+    UnsetFlags(GENERIC_ELEMENT_MAY_HAVE_FRAME);
+  }
+}
+
+NS_IMETHODIMP_(PRBool)
+nsGenericElement::MayHaveFrame() const
+{
+  return !!(GetFlags() & GENERIC_ELEMENT_MAY_HAVE_FRAME);
+}
+
 nsresult
 nsGenericElement::InsertChildAt(nsIContent* aKid,
                                 PRUint32 aIndex,

@@ -96,8 +96,7 @@ static void PrintReqURL(imgIRequest* req) {
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
-    mLoadingEnabled(PR_TRUE),
-    mHaveHadObserver(PR_FALSE)
+    mLoadingEnabled(PR_TRUE)
 {
   if (!nsContentUtils::GetImgLoader())
     mLoadingEnabled = PR_FALSE;
@@ -249,8 +248,6 @@ nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);
 
-  mHaveHadObserver = PR_TRUE;
-  
   if (!mObserverList.mObserver) {
     mObserverList.mObserver = aObserver;
     // Don't touch the linking of the list!
@@ -447,13 +444,16 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
+  NS_ENSURE_TRUE(thisContent, rv);
+
   // It may be that one of our frames has replaced itself with alt text... This
   // would only have happened if our mCurrentRequest had issues, and we would
   // have set it to null by now in that case.  Have to save that information
   // here, since LoadImage may clobber the value of mCurrentRequest.  On the
   // other hand, if we've never had an observer, we know there aren't any frames
   // that have changed to alt text on us yet.
-  PRBool mayNeedReframe = mHaveHadObserver && !mCurrentRequest;
+  PRBool mayNeedReframe = thisContent->MayHaveFrame() && !mCurrentRequest;
   
   rv = nsContentUtils::LoadImage(imageURI, doc, doc->GetDocumentURI(),
                                  this, nsIRequest::LOAD_NORMAL,
@@ -473,9 +473,6 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // a useful chunk of the content model and _may_ have a frame.  This should
   // eliminate things like SetAttr calls during the parsing process, as well as
   // things like setting src on |new Image()|-type things.
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
-  NS_ENSURE_TRUE(thisContent, rv);
-
   if (!thisContent->GetDocument() || !thisContent->GetParent()) {
     return NS_OK;
   }

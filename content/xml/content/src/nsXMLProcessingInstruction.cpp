@@ -133,6 +133,12 @@ nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags) const
   return !(aFlags & ~ePROCESSING_INSTRUCTION);
 }
 
+NS_IMETHODIMP_(PRBool)
+nsXMLProcessingInstruction::MayHaveFrame() const
+{
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeName(nsAString& aNodeName)
 {

@@ -90,11 +90,14 @@ typedef unsigned long PtrBits;
 /** Whether this content has had any properties set on it */
 #define GENERIC_ELEMENT_HAS_PROPERTIES         0x00000010U
 
+/** Whether this content may have a frame */
+#define GENERIC_ELEMENT_MAY_HAVE_FRAME         0x00000020U
+
 /** Three bits are element type specific. */
-#define ELEMENT_TYPE_SPECIFIC_BITS_OFFSET      5
+#define ELEMENT_TYPE_SPECIFIC_BITS_OFFSET      6
 
 /** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 8
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 9
 
 /** This mask masks out the bits that are used for the content ID */
 #define GENERIC_ELEMENT_CONTENT_ID_MASK \
@@ -435,6 +438,9 @@ public:
   virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
   virtual void*    UnsetProperty(nsIAtom *aPropertyName,
                                  nsresult *aStatus = nsnull);
+  NS_IMETHOD_(void) SetMayHaveFrame(PRBool aMayHaveFrame);
+  NS_IMETHOD_(PRBool) MayHaveFrame() const;
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
