@@ -534,17 +534,20 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel,
       }
     }
 
+    //
+    // Fire the OnStateChange(...) notification for stop request
+    //
+    doStopURLLoad(aChannel, aStatus);
+    FireOnEndURLLoad(this, aChannel, aStatus);
+    
     rv = mLoadGroup->GetActiveCount(&count);
     if (NS_FAILED(rv)) return rv;
 
     //
     // The load group for this DocumentLoader is idle...
     //
-    if (0 == count) 
+    if (0 == count) {
       DocLoaderIsEmpty(aStatus);
-    else  {
-      doStopURLLoad(aChannel, aStatus);
-      FireOnEndURLLoad(this, aChannel, aStatus);
     }
   }
   else {
@@ -569,16 +572,6 @@ nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
 
 void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
-#if 0
-  if (mParent) { 
-      mParent->DocLoaderIsEmpty(aStatus); 
-      // 
-      // New code to break the circular reference between 
-      // the load group and the docloader... 
-      // 
-      mLoadGroup->SetDefaultLoadChannel(nsnull); 
-  } 
-#endif /* 0 */
   if (mIsLoadingDocument) {
     PRBool busy = PR_FALSE;
     /* In the unimagineably rude circumstance that onload event handlers
@@ -705,7 +698,6 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIChannel* aChannel,
                     aChannel,
                     nsIWebProgressListener::flag_stop |
                     nsIWebProgressListener::flag_is_document |
-                    nsIWebProgressListener::flag_is_request |
                     nsIWebProgressListener::flag_is_network,
                     aStatus);
 }
