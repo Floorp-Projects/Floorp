@@ -381,19 +381,19 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   PRInt32 result=anErrorCode;
   if(mParserContext->mDTD) {
     result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext));
-  }
 
-  //Now it's time to recycle our used tokens.
-  //The current context has a deque full of them,
-  //and the ones that preceed currentpos are no
-  //longer needed. Let's recycle them.
-  nsDeque&  theDeque=mParserContext->mTokenDeque;
-  nsITokenRecycler* theRecycler=mParserContext->mDTD->GetTokenRecycler();
-  if(theRecycler) {
-    CToken* theToken=(CToken*)theDeque.Pop();
-    while(theToken) {
-      theRecycler->RecycleToken(theToken);
-      theToken=(CToken*)theDeque.Pop();
+    //Now it's time to recycle our used tokens.
+    //The current context has a deque full of them,
+    //and the ones that preceed currentpos are no
+    //longer needed. Let's recycle them.
+    nsDeque&  theDeque=mParserContext->mTokenDeque;
+    nsITokenRecycler* theRecycler=mParserContext->mDTD->GetTokenRecycler();
+    if(theRecycler) {
+      CToken* theToken=(CToken*)theDeque.Pop();
+      while(theToken) {
+        theRecycler->RecycleToken(theToken);
+        theToken=(CToken*)theDeque.Pop();
+      }
     }
   }
 
