@@ -41,7 +41,6 @@ XPIDLSRCS =                             \
 	.\nsINetModuleMgr.idl           \
 	.\nsINetNotify.idl              \
 	.\nsILoadGroup.idl              \
-	.\nsIStreamConverter2.idl       \
         .\nsISocketTransportService.idl \
         .\nsIFileTransportService.idl   \
         $(NULL)
