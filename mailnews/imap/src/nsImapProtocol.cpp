@@ -47,6 +47,7 @@ PRLogModuleInfo *IMAP;
 #include "nsString2.h"
 
 #include "nsIMsgIncomingServer.h"
+#include "nsIImapIncomingServer.h"
 
 // for temp message hack
 #ifdef XP_UNIX
@@ -363,8 +364,6 @@ nsImapProtocol::SetupSinkProxy()
                      "fatal... null sink event queue or thread");
         nsresult res;
 
-        if (!m_server)
-            m_runningUrl->GetServer(getter_AddRefs(m_server));
         if (!m_imapLog)
         {
             nsCOMPtr<nsIImapLog> aImapLog;
@@ -436,35 +435,17 @@ nsImapProtocol::SetupSinkProxy()
 // Setup With Url is intended to set up data which is held on a PER URL basis and not
 // a per connection basis. If you have data which is independent of the url we are currently
 // running, then you should put it in Initialize(). 
-void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
+nsresult nsImapProtocol::SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
+        nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
                                            (void **)&m_runningUrl);
-        if (NS_FAILED(rv)) return;
+        if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIMsgIncomingServer> aServer;
-        rv = m_runningUrl->GetServer(getter_AddRefs(aServer));
-        if (NS_FAILED(rv)) return;
-
-        char *username = nsnull;
-        const char* hostname = nsnull;
-        aServer->GetUserName(&username);
-        m_runningUrl->GetHost(&hostname);
-
-        if (PL_strcmp(GetImapHostName(), hostname) ||
-            PL_strcmp(GetImapUserName(), username))
-        {
-            // ** jt - we might want to check for the port number too.
-            // wrong hostname and username, must be reusing the connection for
-            // different account -- *** jt
-            m_transport = null_nsCOMPtr();
-            m_outputStream = null_nsCOMPtr();
-            m_outputConsumer = null_nsCOMPtr();
-        }
-        PR_FREEIF(username);
+        if (!m_server)
+            m_runningUrl->GetServer(getter_AddRefs(m_server));
 
 		if ( m_runningUrl && !m_transport /* and we don't have a transport yet */)
 		{
@@ -547,9 +528,15 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
 
     me->m_eventQueue = null_nsCOMPtr();
 
-    // ***** Important need to remove the connection out from the connection
-    // pool - nsImapService **********
-    delete me;
+    if (me->m_server)
+    {
+        nsCOMPtr<nsIImapIncomingServer>
+            aImapServer(do_QueryInterface(me->m_server, &result));
+        if (NS_SUCCEEDED(result))
+            aImapServer->RemoveConnection(me);
+    }
+        
+    NS_RELEASE(me);
 }
 
 PRBool
@@ -596,11 +583,38 @@ nsImapProtocol::WaitForFEEventCompletion()
     PR_ExitMonitor(m_eventCompletionMonitor);
 }
 
+NS_IMETHODIMP
+nsImapProtocol::TellThreadToDie(PRBool isSafeToDie)
+{
+    // **** jt - This routine should only be called by imap service.
+    static char logoutString[] = "???? logout\r\n";
+    SendData(logoutString);
+    // GetServerStateParser().ParseIMAPServerResponse(logoutString);
+
+    m_transport = null_nsCOMPtr();
+    m_outputStream = null_nsCOMPtr();
+    m_outputConsumer = null_nsCOMPtr();
+
+    PR_EnterMonitor(m_threadDeathMonitor);
+    m_threadShouldDie = PR_TRUE;
+    PR_ExitMonitor(m_threadDeathMonitor);
+
+    PR_EnterMonitor(m_eventCompletionMonitor);
+    PR_NotifyAll(m_eventCompletionMonitor);
+    PR_ExitMonitor(m_eventCompletionMonitor);
+
+    PR_EnterMonitor(m_urlReadyToRunMonitor);
+    PR_NotifyAll(m_urlReadyToRunMonitor);
+    PR_ExitMonitor(m_urlReadyToRunMonitor);
+
+    return NS_OK;
+}
+
 void
 nsImapProtocol::ImapThreadMainLoop()
 {
     // ****** please implement PR_LOG 'ing ******
-    while (ImapThreadIsRunning())
+    while (ImapThreadIsRunning() && !DeathSignalReceived())
     {
 		// if we are making our first pass through this loop and
 		// we already have a url to process then jump right in and
@@ -620,6 +634,7 @@ nsImapProtocol::ImapThreadMainLoop()
 
         PR_ExitMonitor(m_urlReadyToRunMonitor);
     }
+    m_imapThreadIsRunning = PR_FALSE;
 }
 
 void nsImapProtocol::EstablishServerConnection()
@@ -803,7 +818,20 @@ void nsImapProtocol::ProcessCurrentURL()
 			SetCurrentEntryStatus(0);
 #endif
         if (DeathSignalReceived())
+        {
            	HandleCurrentUrlError();
+        }
+        else
+        {
+            if (m_server)
+            {
+                nsresult rv;
+                nsCOMPtr<nsIImapIncomingServer>
+                    aImapServer(do_QueryInterface(m_server, &rv));
+                if (NS_SUCCEEDED(rv))
+                    aImapServer->LoadNextQueuedUrl();
+            }
+        }
 	}
     else if (!logonFailed)
         HandleCurrentUrlError(); 
@@ -813,11 +841,6 @@ void nsImapProtocol::ProcessCurrentURL()
 
 	// release the url as we are done with it...
 	ReleaseUrlState();
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-    if (NS_SUCCEEDED(rv))
-        imapService->LoadNextQueuedUrl();
 }
 
 void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
@@ -862,14 +885,16 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 
 NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-	m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
+    if (m_runningUrl)
+        m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
 	return NS_OK;
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-	m_runningUrl->SetUrlState(PR_FALSE, aStatus); // set change in url
+    if (m_runningUrl)
+        m_runningUrl->SetUrlState(PR_FALSE, aStatus); // set change in url
 	return NS_OK;
 }
 
@@ -937,7 +962,8 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 		if (aConsumer)
 			m_displayConsumer = do_QueryInterface(aConsumer);
 
-		SetupWithUrl(aURL); 
+		rv = SetupWithUrl(aURL, aConsumer); 
+        if (NS_FAILED(rv)) return rv;
     	SetupSinkProxy(); // generate proxies for all of the event sinks in the url
 		
 		if (m_transport && m_runningUrl)

@@ -42,10 +42,6 @@ public:
 	// we suppport the nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD CreateImapConnection (nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
-                                     nsIImapProtocol ** aImapConnection);
-    NS_IMETHOD LoadNextQueuedUrl();
-
 	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder *aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
@@ -172,14 +168,7 @@ protected:
                          const char *howToDiddle,
                          imapMessageFlagsType flags,
                          PRBool messageIdsAreUID);
-	nsIImapHostSessionList * m_sessionList; // the one and only list of all host sessions...
 
-	// the connection cache right now is just a simple array of open nsIImapProtocol instances.
-	// we just iterate over all known connections and see if one of the connections can run 
-	// our current request...we can look into making a more sophisticated cache later...
-	nsCOMPtr<nsISupportsArray> m_connectionCache;
-    nsCOMPtr<nsISupportsArray> m_urlQueue;
-    nsVoidArray m_urlConsumers;
 };
 
 #endif /* nsImapService_h___ */

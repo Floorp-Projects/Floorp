@@ -2298,4 +2298,3 @@ nsImapServerResponseParser::GetHostSessionList()
     return fHostSessionList;
 }
 
-        

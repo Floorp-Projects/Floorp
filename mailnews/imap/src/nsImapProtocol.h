@@ -108,6 +108,8 @@ public:
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags);
 
 	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell);
+    // Tell thread to die. This can only be called by imap service
+    NS_IMETHOD TellThreadToDie(PRBool isSafeToDie);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +361,7 @@ private:
 	PRUint32	*m_fetchBodyIdList;
 
 	// initialization function given a new url and transport layer
-	void SetupWithUrl(nsIURL * aURL);
+	nsresult  SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer);
 	void ReleaseUrlState(); // release any state that is stored on a per action basis.
 
 	////////////////////////////////////////////////////////////////////////////////////////

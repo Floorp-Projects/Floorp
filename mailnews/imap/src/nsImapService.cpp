@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,9 +28,9 @@
 #include "nsIIMAPHostSessionList.h"
 #include "nsImapService.h"
 #include "nsImapUrl.h"
-#include "nsImapProtocol.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
+#include "nsIImapIncomingServer.h"
 
 #include "nsImapUtils.h"
 
@@ -45,14 +45,10 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
-
-#define MAXIMUM_CONNECTION 5
 
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
@@ -61,22 +57,10 @@ NS_IMPL_THREADSAFE_RELEASE(nsImapService);
 nsImapService::nsImapService()
 {
     NS_INIT_REFCNT();
-
-	// mscott - the imap service really needs to be a service listener
-	// on the host session list...
-	nsresult rv = nsServiceManager::GetService(kCImapHostSessionList, nsIImapHostSessionList::GetIID(),
-                                  (nsISupports**)&m_sessionList);
-
-	// I don't know how we're going to report this error if we failed to create the isupports array...
-	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
-    rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
 }
 
 nsImapService::~nsImapService()
 {
-	// release the host session list
-	if (m_sessionList)
-		(void)nsServiceManager::ReleaseService(kCImapHostSessionList, m_sessionList);
 }
 
 nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
@@ -109,83 +93,6 @@ nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP
-nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl, 
-                                    nsIImapProtocol ** aImapConnection)
-{
-	nsresult rv = NS_OK;
-	PRBool canRunUrl = PR_FALSE;
-    PRBool hasToWait = PR_FALSE;
-	nsCOMPtr<nsIImapProtocol> connection;
-    nsCOMPtr<nsIImapProtocol> freeConnection;
-    PRBool isBusy = PR_FALSE;
-    PRBool isInboxConnection = PR_FALSE;
-
-    PR_CEnterMonitor(this);
-
-    *aImapConnection = nsnull;
-
-	// iterate through the connection cache for a connection that can handle this url.
-	PRUint32 cnt;
-    rv = m_connectionCache->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
-	{
-        connection = do_QueryInterface(m_connectionCache->ElementAt(i));
-		if (connection)
-			connection->CanHandleUrl(aImapUrl, canRunUrl, hasToWait);
-        
-        if (!freeConnection && !canRunUrl && !hasToWait && connection)
-        {
-            connection->IsBusy(isBusy, isInboxConnection);
-            if (!isBusy && !isInboxConnection)
-                freeConnection = connection;
-        }
-	}
-
-	// if we got here and we have a connection, then we should return it!
-	if (canRunUrl && connection)
-	{
-		*aImapConnection = connection;
-		NS_IF_ADDREF(*aImapConnection);
-	}
-    else if (hasToWait)
-    {
-        // do nothing; return NS_OK; for queuing
-    }
-	else if (cnt < MAXIMUM_CONNECTION && aEventQueue)
-	{	
-		// create a new connection and add it to the connection cache
-		// we may need to flag the protocol connection as busy so we don't get
-        // a race 
-		// condition where someone else goes through this code 
-		nsIImapProtocol * protocolInstance = nsnull;
-		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-                                                nsIImapProtocol::GetIID(),
-                                                (void **) &protocolInstance);
-		if (NS_SUCCEEDED(rv) && protocolInstance)
-			rv = protocolInstance->Initialize(m_sessionList, aEventQueue);
-		
-		// take the protocol instance and add it to the connectionCache
-		if (protocolInstance)
-			m_connectionCache->AppendElement(protocolInstance);
-		*aImapConnection = protocolInstance; // this is already ref counted.
-
-	}
-    else if (freeConnection)
-    {
-        *aImapConnection = freeConnection;
-        NS_IF_ADDREF(*aImapConnection);
-    }
-    else // cannot get anyone to handle the url queue it
-    {
-        // queue the url
-    }
-
-    PR_CExitMonitor(this);
-	return rv;
-}
-
 nsresult
 nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
                              nsString2& folderName)
@@ -205,42 +112,6 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     PR_FREEIF(hostname);
     if (NS_SUCCEEDED(rv))
         folderName = name;
-    return rv;
-}
-
-NS_IMETHODIMP
-nsImapService::LoadNextQueuedUrl()
-{
-    PRUint32 cnt = 0;
-    nsresult rv = NS_OK;
-    m_urlQueue->Count(&cnt);
-    if (cnt > 0)
-    {
-        nsCOMPtr<nsIImapUrl>
-            aImapUrl(do_QueryInterface(m_urlQueue->ElementAt(0)));
-
-        if (aImapUrl)
-        {
-            nsISupports *aConsumer =
-                (nsISupports*)m_urlConsumers.ElementAt(0);
-
-            NS_IF_ADDREF(aConsumer);
-            
-            nsIImapProtocol * protocolInstance = nsnull;
-            rv = CreateImapConnection(nsnull, aImapUrl,
-                                               &protocolInstance);
-            if (NS_SUCCEEDED(rv) && protocolInstance)
-            {
-                rv = protocolInstance->LoadUrl(aImapUrl, aConsumer);
-                if (NS_SUCCEEDED(rv))
-                {
-                    m_urlQueue->RemoveElementAt(0);
-                    m_urlConsumers.RemoveElementAt(0);
-                }
-            }
-            NS_IF_RELEASE(aConsumer);
-        }
-    }
     return rv;
 }
 
@@ -488,38 +359,6 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
     PR_FREEIF(hostname);
     PR_FREEIF(username);
 	return rv;
-}
-
-nsresult
-nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
-                                           nsIImapUrl* aImapUrl,
-                                           nsIUrlListener* aUrlListener,
-                                           nsISupports* aConsumer,
-                                           nsIURL** aURL)
-{
-    nsresult rv = NS_OK;
-    nsIImapProtocol* aProtocol = nsnull;
-    
-    rv = CreateImapConnection(aClientEventQueue, aImapUrl, &aProtocol);
-    if (NS_FAILED(rv)) return rv;
-    aImapUrl->RegisterListener(aUrlListener);
-    if (aProtocol)
-    {
-        rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
-    }
-    else
-    {
-        m_urlQueue->AppendElement(aImapUrl);
-        m_urlConsumers.AppendElement((void*)aConsumer);
-        NS_IF_ADDREF(aConsumer);
-    }
-    if (aURL)
-    {
-        *aURL = aImapUrl;
-        NS_IF_RELEASE(*aURL);
-    }
-
-    return rv;
 }
 
 /* fetching the headers of RFC822 messages */
@@ -1215,6 +1054,30 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     PR_FREEIF(srcUsername);
     PR_FREEIF(dstHostname);
     PR_FREEIF(dstUsername);
+    return rv;
+}
+
+nsresult
+nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
+                                           nsIImapUrl* aImapUrl,
+                                           nsIUrlListener* aUrlListener,
+                                           nsISupports* aConsumer,
+                                           nsIURL** aURL)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+    rv = aImapUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
+    if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+    {
+        nsCOMPtr<nsIImapIncomingServer>
+            aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+        if (NS_SUCCEEDED(rv) && aImapServer)
+            rv = aImapServer->GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                          aImapUrl,
+                                                          aUrlListener,
+                                                          aConsumer,
+                                                          aURL);
+    }
     return rv;
 }
 
