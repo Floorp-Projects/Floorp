@@ -146,6 +146,7 @@ struct input_callback_stack {
     IncludePathEntry *include_path;
 };
 
+/* XXX pass in input_callback_data so we can get line number for error */
 static FILE *
 fopen_from_includes(const char *filename, const char *mode,
                     IncludePathEntry *include_path)
@@ -312,8 +313,23 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
     assert(start < data->buf + data->len);
     end = strchr(filename, '\"');
     if (!end) {
-        fprintf(stderr, "didn't find end of quoted include name %s\n",
-                filename - 1);
+        /* filename probably stops at next whitespace */
+        char *data_end = data->buf + data->len;
+        start = end = filename - 1;
+        
+        while (end < data_end) {
+            if (*end == ' ' || *end == '\n' || *end == '\r' || *end == '\t') {
+                *end = '\0';
+                break;
+            }
+            end++;
+        }
+        
+        /* make sure we have accurate line info */
+        IDL_file_get(&scratch, &data->lineno);
+        fprintf(stderr,
+                "didn't find end of quoted include name %*s at %s:%d\n",
+                end - start, start, scratch, data->lineno);
         return -1;
     }
     *end = '\0';
@@ -399,7 +415,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 {
  struct input_callback_stack *stack = user_data;
     struct input_callback_data *data = stack->top, *new_data = NULL;
-    unsigned int len, copy, avail;
+    unsigned int len, copy, avail, rv;
     char *start;
 
     switch(reason) {
@@ -521,11 +537,20 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          */
 
         /* XXX should check for errors here, too */
-        if (!NextIsRaw(data, &start, &len) &&
-            !NextIsComment(data, &start, &len) &&
-            /* includes might need to push a new file */
-            !NextIsInclude(stack, &start, &len))
-            FindSpecial(data, &start, &len);
+        rv = NextIsRaw(data, &start, &len);
+        if (rv == -1) return -1;
+        if (!rv) {
+            rv = NextIsComment(data, &start, &len);
+            if (rv == -1) return -1;
+            if (!rv) {
+                /* includes might need to push a new file */
+                rv = NextIsInclude(stack, &start, &len);
+                if (rv == -1) return -1;
+                if (!rv)
+                    /* FindSpecial can't fail? */
+                    FindSpecial(data, &start, &len);
+            }
+        }
 
         assert(start);
         copy = MIN(len, (int) cb_data->fill.max_size);
