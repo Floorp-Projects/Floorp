@@ -24,9 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
-EXPORT_RESOURCE_SAMPLES = \
-	$(NULL)
-
 EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/Mail_Forward.gif \
 	$(srcdir)/resources/Mail_GetMsg.gif \
@@ -108,7 +105,6 @@ EXPORT_RESOURCE_THROBBER = \
 	$(NULL)
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 
