@@ -276,8 +276,10 @@ static PRBool PR_CALLBACK DatasourceEnumerator(nsHashKey *aKey, void *aData, voi
 
 nsChromeRegistry::~nsChromeRegistry()
 {
-  mDataSourceTable->Enumerate(DatasourceEnumerator, mChromeDataSource);
-  delete mDataSourceTable;
+  if (mDataSourceTable) {  
+      mDataSourceTable->Enumerate(DatasourceEnumerator, mChromeDataSource);
+      delete mDataSourceTable;
+  }
    
   if (mRDFService) {
     nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
