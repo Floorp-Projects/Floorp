@@ -370,8 +370,11 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
                       if (nameString) {
                         char* valueString = NULL;
                         SINGSIGN_RestoreSignonData(URLName, nameString, &valueString);
-                        nsAutoString value(valueString);                                    
-                        rv = inputElement->SetValue(value);
+                        if (valueString) {
+                          nsAutoString value(valueString);                                    
+                          rv = inputElement->SetValue(value);
+                          delete[] valueString;
+                        }
                         delete[] nameString;
                       }
                     }
