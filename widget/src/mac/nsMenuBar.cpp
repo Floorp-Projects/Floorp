@@ -735,13 +735,26 @@ NS_IMETHODIMP
 nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
                               PRInt32 aNewIndexInContainer)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuBar::ContentInserted( nsIDocument * aDocument, nsIContent  * aContainer,
-                          nsIContent  * aChild, PRInt32 aIndexInContainer)
-{
+ nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+  if ( aContainer == me.get() ) {
+    //Register(aContainer, );
+    //InsertMenu ( aNewIndexInContainer );
+  }
+  else {
+    nsCOMPtr<nsIChangeObserver> obs;
+    Lookup ( aContainer, getter_AddRefs(obs) );
+    if ( obs )
+      obs->ContentInserted ( aDocument, aContainer, aNewIndexInContainer );
+    else {
+      nsCOMPtr<nsIContent> parent;
+      aContainer->GetParent(*getter_AddRefs(parent));
+      if(parent) {
+        Lookup ( parent, getter_AddRefs(obs) );
+        if ( obs )
+          obs->ContentInserted ( aDocument, aContainer, aNewIndexInContainer );
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -826,10 +839,45 @@ nsMenuBar::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
     Lookup ( aContainer, getter_AddRefs(obs) );
     if ( obs )
       obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
+    else {
+      nsCOMPtr<nsIContent> parent;
+      aContainer->GetParent(*getter_AddRefs(parent));
+      if(parent) {
+        Lookup ( parent, getter_AddRefs(obs) );
+        if ( obs )
+          obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
+      }
+    }
   }
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMenuBar::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
+                            nsIContent * aChild, PRInt32 aIndexInContainer )
+{  
+  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+  if ( aContainer == me.get() ) {
+    //Register(aChild, );
+    //InsertMenu ( aIndexInContainer );
+  }
+  else {
+    nsCOMPtr<nsIChangeObserver> obs;
+    Lookup ( aContainer, getter_AddRefs(obs) );
+    if ( obs )
+      obs->ContentInserted ( aDocument, aChild, aIndexInContainer );
+    else {
+      nsCOMPtr<nsIContent> parent;
+      aContainer->GetParent(*getter_AddRefs(parent));
+      if(parent) {
+        Lookup ( parent, getter_AddRefs(obs) );
+        if ( obs )
+          obs->ContentInserted ( aDocument, aChild, aIndexInContainer );
+      }
+    }
+  }
+  return NS_OK;
+}
 
 #pragma mark - 
 
