@@ -43,7 +43,6 @@
 #include "nsDirectoryServiceDefs.h"
 
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsIFilePicker.h"
 
 #include "nsCExternalHandlerService.h" // contains progids for the helper app service
 
@@ -514,10 +513,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   else
     mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
 
-  // be sure to release our reference on the context now that we are done with it to avoid any circular reference
-  // chains...
-  mWindowContext = nsnull;
-
   return NS_OK;
 }
 
@@ -607,26 +602,11 @@ NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
 
 nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
 {
-  // I'm thinking the best thing to do here is to pass this call through to 
-  // someone else and let them bring up the dialog. This keeps dialog dependencies out
-  // of the uriloader...
+  // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
+  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_PROGID ) );
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
-  if (filePicker)
-  {
-    // HACK!! Find a string bundle to extract this string from.
-     filePicker->Init(nsnull, NS_LITERAL_STRING("Enter name of file to save to"), nsIFilePicker::modeSave);
-     filePicker->SetDefaultString(aDefaultFile);
-     filePicker->AppendFilter(NS_ConvertASCIItoUCS2(mTempFileExtension), NS_ConvertASCIItoUCS2(mTempFileExtension));
-     filePicker->AppendFilters(nsIFilePicker::filterAll);
-
-     PRInt16 dialogResult;
-     filePicker->Show(&dialogResult);
-     if (dialogResult == nsIFilePicker::returnCancel)
-       rv = NS_ERROR_FAILURE;
-     else          
-       rv = filePicker->GetFile(aNewFile);
-  }
+  if ( dlgService ) 
+    rv = dlgService->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension), aNewFile);
 
   return rv;
 }
