@@ -144,7 +144,6 @@ protected:
     HT_Resource getMenuFolder         ();
 	XP_Bool		getOnlyHeaders		  ();
 
-    void        setItemLabelString    (Widget menu, HT_Resource entry);
     void getStyleAndLayout(HT_Resource , int32 *, unsigned char * );
 
     // Item callbacks

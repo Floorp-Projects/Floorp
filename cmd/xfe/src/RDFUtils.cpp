@@ -35,6 +35,10 @@
 
 #include "xfe.h"			// For fe_FormatDocTitle()
 
+#include <Xfe/Xfe.h>		// For XfeIsAlive()
+#include <Xfe/Label.h>		// For XfeIsLabel()
+#include <Xm/Label.h>		// For XmIsLabel()
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XFE Command utilities
@@ -384,5 +388,31 @@ XFE_RDFUtils::getStringFromResource(MWContext *		context,
 	xmname = XFE_RDFUtils::entryToXmString(entry, charSetInfo);
 	
     return xmname;
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void 
+XFE_RDFUtils::setItemLabelString(MWContext *	context,
+								 Widget			item,
+								 HT_Resource	entry)
+{
+    XP_ASSERT( XfeIsAlive(item) );
+ 
+   XP_ASSERT( entry != NULL );
+
+    XP_ASSERT( XmIsLabel(item) || 
+               XmIsLabelGadget(item) ||
+               XfeIsLabel(item) );
+
+    INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
+
+    // Create am XmString from the entry
+    XmString xmname = XFE_RDFUtils::entryToXmString(entry,charSetInfo);
+	
+    if (xmname != NULL)
+    {
+        XtVaSetValues(item,XmNlabelString,xmname,NULL);
+		
+        XmStringFree(xmname);
+    }
 }
 //////////////////////////////////////////////////////////////////////////

@@ -99,6 +99,11 @@ public:
 	static XmString	getStringFromResource	(MWContext *		context,
 											 HT_Resource		entry);
 
+
+	// Set the XmNlabelString for a widget
+	static void		setItemLabelString		(MWContext *	context,
+											 Widget			item,
+											 HT_Resource	entry);
 };
 
 #endif // _xfe_rdf_utils_h_

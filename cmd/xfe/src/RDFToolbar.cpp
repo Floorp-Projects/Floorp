@@ -465,7 +465,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
 
     // Set the item's label
-    setItemLabelString(button,entry);
+    XFE_RDFUtils::setItemLabelString(_frame->getContext(),button,entry);
 
     configureXfeButton(button,entry);
 
@@ -540,7 +540,7 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
 
     
     // Set the item's label
-    setItemLabelString(cascade,entry);
+    XFE_RDFUtils::setItemLabelString(_frame->getContext(),cascade,entry);
 
     configureXfeCascade(cascade,entry);
 

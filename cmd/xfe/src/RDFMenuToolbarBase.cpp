@@ -677,7 +677,7 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
                               &pulldown);
 
     // Set the item's label
-    setItemLabelString(cascade,entry);
+    XFE_RDFUtils::setItemLabelString(_frame->getContext(),cascade,entry);
     
     // Configure the new cascade button
     if (_fancyItems)
@@ -774,7 +774,7 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
     }
 
     // Set the item's label
-    setItemLabelString(button,entry);
+    XFE_RDFUtils::setItemLabelString(_frame->getContext(),button,entry);
 
     // Create a new bookmark data structure for the callbacks
     data = XP_NEW_ZAP(ItemCallbackStruct);
@@ -1084,31 +1084,6 @@ time_t
 XFE_RDFMenuToolbarBase::getDropLastAccess()
 {
     return _dropLastAccess;
-}
-//////////////////////////////////////////////////////////////////////////
-
-void 
-XFE_RDFMenuToolbarBase::setItemLabelString(Widget item,HT_Resource entry)
-{
-    XP_ASSERT( XfeIsAlive(item) );
-    XP_ASSERT( entry != NULL );
-    XP_ASSERT( XmIsLabel(item) || 
-               XmIsLabelGadget(item) ||
-               XfeIsLabel(item) );
-
-    MWContext * context = _frame->getContext();
-    INTL_CharSetInfo charSetInfo =
-        LO_GetDocumentCharacterSetInfo(context);
-
-    // Create am XmString from the entry
-    XmString xmname = XFE_RDFUtils::entryToXmString(entry, charSetInfo);
-
-    if (xmname != NULL)
-    {
-        XtVaSetValues(item,XmNlabelString,xmname,NULL);
-
-        XmStringFree(xmname);
-    }
 }
 //////////////////////////////////////////////////////////////////////////
 void
