@@ -738,7 +738,7 @@ nsMsgAccountManager::LoadAccounts()
       str = token;
       str.StripWhitespace();
       
-      if (!str.IsEmtpy()) {
+      if (!str.IsEmpty()) {
         account = getter_AddRefs(LoadAccount(str));
         if (account) {
           rv = AddAccount(account);
@@ -1189,7 +1189,7 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
     str = token;
     str.StripWhitespace();
     
-    if (!str.IsEmtpy()) {
+    if (!str.IsEmpty()) {
 	  numAccounts++;
       // str is the hostname
       if (NS_FAILED(MigrateImapAccount(identity,str,numAccounts))) {
