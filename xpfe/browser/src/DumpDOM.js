@@ -19,17 +19,18 @@ function DumpDOM(node)
 function DumpNodeAndChildren(node, prefix)
 {
 	dump(prefix + "<" + node.nodeName);
+
 	if ( node.nodeType == 1 )
 	{
-		DumpAttribute(node, "name");
-		DumpAttribute(node, "style");
-		DumpAttribute(node, "flex");
-		
 		// id
 		var text = node.getAttribute('id');
 		if ( text && text[0] != '$' )
 			dump(" id=\"" + text + "\"");
 		
+		DumpAttribute(node, "name");
+		DumpAttribute(node, "class");
+		DumpAttribute(node, "style");
+		DumpAttribute(node, "flex");
 		DumpAttribute(node, "value");
 		DumpAttribute(node, "src");
 		DumpAttribute(node, "onclick");
