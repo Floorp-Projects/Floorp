@@ -2016,7 +2016,6 @@ nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView**
   nsIFrame* childFrame = popup->GetFirstChild(nsnull);
   if (childFrame) {
     *aView = popup->GetScrollableView(childFrame);
-    (*aView)->SetLineHeight(childFrame->GetSize().height);
   }
 
   return NS_OK;
