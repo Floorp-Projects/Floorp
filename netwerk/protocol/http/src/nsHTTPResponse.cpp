@@ -480,9 +480,10 @@ nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
     *aHeaderIsPresent = PR_TRUE;
 
     PRStatus status;
+
     status = PR_ParseTimeString((const char*)header, PR_TRUE, aResultTime);
-    if (status != PR_SUCCESS)
-        return NS_ERROR_FAILURE;
+    if (status != PR_SUCCESS && aResultTime)
+        *aResultTime = 0;
     
     return NS_OK;
 }
