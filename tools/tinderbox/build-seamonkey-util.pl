@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.96 $ ';
+$::UtilsVersion = '$Revision: 1.97 $ ';
 
 package TinderUtils;
 
@@ -958,7 +958,7 @@ sub run_all_tests {
 				::hostname() . "\">Txul:$open_time" . "ms</a>\n";
 
 			if($Settings::TestsPhoneHome) {
-			  send_xulwinopen_results_to_server($open_time, "no data", ::hostname());
+			  send_xulwinopen_results_to_server($open_time, "--", ::hostname());
 			}
 		} else {
 			$test_result = 'testfailed';
