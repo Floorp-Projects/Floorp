@@ -538,7 +538,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
   if (whichLoad == -1) return NS_ERROR_FAILURE;
 
-  if (whichLoad == 2) {
+  if (whichLoad == 1) {
     if (NS_SUCCEEDED(aStatus)) {
       if (mLoads[0].mRequest) {
         mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
@@ -1040,7 +1040,6 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
                        aWhichLayer);
 
     nsCOMPtr<imgIContainer> imgCon;
-    nsCOMPtr<imgIContainer> lowImgCon;
 
     PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
 
@@ -1073,8 +1072,6 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         if (loadStatus & imgIRequest::STATUS_ERROR) {
           if (imgCon) {
             inner.SizeTo(mComputedSize);
-          } else if (lowImgCon) {
-            // XXX need to handle low image...
           }
         }
 
