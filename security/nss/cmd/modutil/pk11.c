@@ -272,30 +272,31 @@ AddModule(char *moduleName, char *libFile, char *cipherString,
 
 	mechanisms =
 		getFlagsFromString(mechanismString, mechanismStrings,
-		  numMechanismStrings);
+		                   numMechanismStrings);
 	ciphers =
 		getFlagsFromString(cipherString, cipherStrings, numCipherStrings);
 
 	status =
 		SECMOD_AddNewModuleEx(moduleName, libFile,
-		  SECMOD_PubMechFlagstoInternal(mechanisms),
-		  SECMOD_PubCipherFlagstoInternal(ciphers),
+		          SECMOD_PubMechFlagstoInternal(mechanisms),
+		          SECMOD_PubCipherFlagstoInternal(ciphers),
                   modparms, NULL );
 
 	if(status != SECSuccess) {
-                char* errtxt=NULL;
-                PRInt32 copied = 0;
-                if (PR_GetErrorTextLength()) {
-                    errtxt = PR_Malloc(PR_GetErrorTextLength());
-                    copied = PR_GetErrorText(errtxt);
-                }
-                if (copied && errtxt) {
-		    PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_STATUS_ERR], moduleName, errtxt);
-                    PR_Free(errtxt);
-                }
-                else {
-                    PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_ERR], moduleName);
-                }
+		char* errtxt=NULL;
+		PRInt32 copied = 0;
+		if (PR_GetErrorTextLength()) {
+			errtxt = PR_Malloc(PR_GetErrorTextLength());
+			copied = PR_GetErrorText(errtxt);
+		}
+		if (copied && errtxt) {
+			PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_STATUS_ERR], 
+			           moduleName, errtxt);
+			PR_Free(errtxt);
+		} else {
+			PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_ERR], 
+			           moduleName);
+		}
 		return ADD_MODULE_FAILED_ERR;
 	} else {
 		PR_fprintf(PR_STDOUT, msgStrings[ADD_MODULE_SUCCESS_MSG], moduleName);
@@ -345,14 +346,19 @@ RawListModule(char *modulespec)
 
 	module = SECMOD_LoadModule(modulespec,NULL,PR_FALSE);
 	if (module == NULL) {
-	    /* handle error */
-	    return NO_SUCH_MODULE_ERR;
+		/* handle error */
+		return NO_SUCH_MODULE_ERR;
 	}
 
 	moduleSpecList = SECMOD_GetModuleSpecList(module);
+	if (!moduleSpecList || !moduleSpecList[0]) {
+		SECU_PrintError("modutil",
+                            "no specs in secmod DB");
+		return NO_SUCH_MODULE_ERR;
+	}
 
 	for ( ;*moduleSpecList; moduleSpecList++) {
-		printf("%s\n",*moduleSpecList);
+		printf("%s\n\n",*moduleSpecList);
 	}
 
 	return SUCCESS;
@@ -361,27 +367,27 @@ RawListModule(char *modulespec)
 Error
 RawAddModule(char *dbmodulespec, char *modulespec)
 {
-    SECMODModule *module;
-    SECMODModule *dbmodule;
+	SECMODModule *module;
+	SECMODModule *dbmodule;
 
 
-    dbmodule = SECMOD_LoadModule(dbmodulespec,NULL,PR_TRUE);
-    if (dbmodule == NULL) {
-	 /* handle error */
-	return NO_SUCH_MODULE_ERR;
-    }
+	dbmodule = SECMOD_LoadModule(dbmodulespec,NULL,PR_TRUE);
+	if (dbmodule == NULL) {
+		/* handle error */
+		return NO_SUCH_MODULE_ERR;
+	}
 
-    module = SECMOD_LoadModule(modulespec,dbmodule,PR_FALSE);
-    if (module == NULL) {
-	 /* handle error */
-	return NO_SUCH_MODULE_ERR;
-    }
+	module = SECMOD_LoadModule(modulespec,dbmodule,PR_FALSE);
+	if (module == NULL) {
+		/* handle error */
+		return NO_SUCH_MODULE_ERR;
+	}
 
-    if( SECMOD_UpdateModule(module) != SECSuccess ) {
-	PR_fprintf(PR_STDERR, errStrings[UPDATE_MOD_FAILED_ERR], modulespec);
-	return UPDATE_MOD_FAILED_ERR;
-    }
-    return SUCCESS;
+	if( SECMOD_UpdateModule(module) != SECSuccess ) {
+		PR_fprintf(PR_STDERR, errStrings[UPDATE_MOD_FAILED_ERR], modulespec);
+		return UPDATE_MOD_FAILED_ERR;
+	}
+	return SUCCESS;
 }
 
 /************************************************************************
@@ -453,7 +459,7 @@ ListModules()
 			PR_fprintf(PR_STDOUT, "\t slot: %s\n", PK11_GetSlotName(slot));
 			PR_fprintf(PR_STDOUT, "\ttoken: %s\n", PK11_GetTokenName(slot));
 		}
-    }
+	}
 
 	PR_fprintf(PR_STDOUT,
 		"-----------------------------------------------------------\n");
@@ -802,11 +808,11 @@ SetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 	Error errcode = UNSPECIFIED_ERR;
 
 	if (pk11_DefaultArray == NULL) {
-	    pk11_DefaultArray = PK11_GetDefaultArray(&pk11_DefaultArraySize);
-	    if (pk11_DefaultArray == NULL) {
-		/* should assert. This shouldn't happen */
-		goto loser;
-	    }
+		pk11_DefaultArray = PK11_GetDefaultArray(&pk11_DefaultArraySize);
+		if (pk11_DefaultArray == NULL) {
+			/* should assert. This shouldn't happen */
+			goto loser;
+		}
 	}
 
 	mechFlags =  SECMOD_PubMechFlagstoInternal(mechFlags);
@@ -823,10 +829,10 @@ SetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 		slot = module->slots[s];
 
 		if ((slotName != NULL) &&
-			!((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
-			(strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
-		    /* we are only interested in changing the one slot */
-		    continue;
+		    !((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
+		    (strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
+			/* we are only interested in changing the one slot */
+			continue;
 		}
 
 		found = PR_TRUE;
@@ -876,11 +882,11 @@ UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 	PRBool found = PR_FALSE;
 
 	if (pk11_DefaultArray == NULL) {
-	    pk11_DefaultArray = PK11_GetDefaultArray(&pk11_DefaultArraySize);
-	    if (pk11_DefaultArray == NULL) {
-		/* should assert. This shouldn't happen */
-		return UNSPECIFIED_ERR;
-	    }
+		pk11_DefaultArray = PK11_GetDefaultArray(&pk11_DefaultArraySize);
+		if (pk11_DefaultArray == NULL) {
+			/* should assert. This shouldn't happen */
+			return UNSPECIFIED_ERR;
+		}
 	}
 
 	mechFlags =  SECMOD_PubMechFlagstoInternal(mechFlags);
@@ -894,10 +900,10 @@ UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 	for(s=0; s < module->slotCount; s++) {
 		slot = module->slots[s];
 		if ((slotName != NULL) &&
-			!((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
-			(strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
-		    /* we are only interested in changing the one slot */
-		    continue;
+		    !((strcmp(PK11_GetSlotName(slot),slotName) == 0) ||
+		    (strcmp(PK11_GetTokenName(slot),slotName) == 0)) ) {
+			/* we are only interested in changing the one slot */
+			continue;
 		}
 		for(i=0; i < pk11_DefaultArraySize ; i++) {
 			if(pk11_DefaultArray[i].flag & mechFlags) {
