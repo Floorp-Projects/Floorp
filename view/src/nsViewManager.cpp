@@ -432,7 +432,7 @@ nsrefcnt nsViewManager::Release(void)
       delete this;
       return 0;
     }
-  --mRefCnt;
+  mRefCnt--;
   return mRefCnt;
 }
 
