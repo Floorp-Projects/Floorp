@@ -499,10 +499,8 @@ nsListBoxBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOld
 NS_IMETHODIMP
 nsListBoxBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
-  nsBoxLayoutState state(mPresContext);
-
   // now create or destroy any rows as needed
-  CreateRows(state);
+  CreateRows();
 
   // keep scrollbar in sync
   if (mAdjustScroll) {
@@ -513,6 +511,7 @@ nsListBoxBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
   // if the row height changed then mark everything as a style change. 
   // That will dirty the entire listbox
   if (mRowHeightWasSet) {
+     nsBoxLayoutState state(mPresContext);
      MarkStyleChange(state);
      PRInt32 pos = mCurrentIndex * mRowHeight;
      if (mYPosition != pos) 
@@ -1035,7 +1034,7 @@ nsListBoxBodyFrame::GetLastFrame()
 ////////// lazy row creation and destruction
 
 void
-nsListBoxBodyFrame::CreateRows(nsBoxLayoutState& aState)
+nsListBoxBodyFrame::CreateRows()
 {
   // Get our client rect.
   nsRect clientRect;
@@ -1332,9 +1331,9 @@ nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* a
     mLinkupFrame = nextSiblingFrame;
   }
   
+  CreateRows();
   nsBoxLayoutState state(aPresContext);
   MarkDirtyChildren(state);
-  shell->FlushPendingNotifications(Flush_OnlyReflow);
 }
 
 // 
@@ -1403,7 +1402,6 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
   }
 
   MarkDirtyChildren(state);
-  aPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
 }
 
 void

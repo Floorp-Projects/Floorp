@@ -116,7 +116,7 @@ public:
   nsIFrame* GetLastFrame();
 
   // lazy row creation and destruction
-  void CreateRows(nsBoxLayoutState& aState);
+  void CreateRows();
   void DestroyRows(PRInt32& aRowsToLose);
   void ReverseDestroyRows(PRInt32& aRowsToLose);
   nsIBox* GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated);
