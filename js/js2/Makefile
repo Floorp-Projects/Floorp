@@ -12,16 +12,27 @@ objs = 	hash.o \
 	world.o \
 	vmtypes.o
 
-libs =	../../gc/boehm/gc.a -lstdc++ -lm
+gc_path = ../../gc/boehm/
+
+libs =	gc.a -lstdc++ -lm
 
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
-js2: $(objs)
-	$(CC) -o $@ -ggdb $^ $(libs)
+js2: $(objs) gc.a
+	$(CC) -o $@ -ggdb $(objs) $(libs)
+
+gc.a:
+	(cd $(gc_path) ; ln -f -s Makefile.unix Makefile ; make gc.a)
+	ln -f -s $(gc_path)gc.a ./gc.a
 
 gctest: gc_allocator.o
 	$(CC) -o $@ -ggdb $^ $(libs)
 
 clean:
 	rm -f $(objs)
+
+depend:
+	gcc -MM *.cpp > dependencies
+
+include dependencies
