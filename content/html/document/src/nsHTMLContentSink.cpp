@@ -1753,8 +1753,6 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
     AddAttributes(aNode,mBody,sco,PR_TRUE);
     NS_IF_RELEASE(sco);      
-    NS_ADDREF(mBody);
-    mCurrentContext->mStackPos++;
     return NS_OK;
   }
 
