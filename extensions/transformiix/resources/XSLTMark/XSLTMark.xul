@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+
+<!-- 
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is mozilla.org.
+  
+  The Initial Developer of the Original Code is Axel Hecht.
+  Portions created by Axel Hecht are Copyright (C) 2002 Axel Hecht.
+  All Rights Reserved.
+  
+  Contributor(s):
+    Axel Hecht <axel@pike.org> (Original Author)
+  --> 
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="XSLTMark.css" type="text/css"?>
+<window id="XSLTMarkHarness"
+        title="XSLTMark"
+        onload="view.onLoad()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical">
+<script type="application/x-javascript" src="XSLTMark-static.js" />
+<script type="application/x-javascript" src="XSLTMark-test.js" />
+<script type="application/x-javascript" src="XSLTMark-view.js" />
+
+<hbox>
+  <groupbox orient="horizontal">
+    <caption label="test description file" />
+    <label value=""/><!-- needed, otherwise groupbox fucks up :-( -->
+    <textbox id="config" persist="value" readonly="true"/>
+    <button label="browse..." oncommand="view.browseForConfig();" />
+  </groupbox>
+  <groupbox orient="horizontal">
+    <caption label="test control" />
+    <button label="run..."
+            oncommand="setTimeout('view.runBenchmark();', 0);" />
+    <button label="stop" oncommand="view.onStop();" />
+  </groupbox>
+  <groupbox orient="horizontal">
+    <caption label="options" />
+    <label value="responsiveness: "/>
+    <menulist label="sloppy">
+      <menupopup>
+      <menuitem label="sloppy" selected="true"/>
+      <menuitem label="bad"/>
+      </menupopup>
+    </menulist>
+  </groupbox>
+</hbox>
+<hbox>
+  <textbox id="currentStatus" readonly="true" flex="1"/>
+  <progressmeter id="currentProgress" mode="normal" value="0" flex="2"/>
+  <progressmeter id="totalProgress" mode="normal" value="0" flex="2"/>
+</hbox>
+<hbox flex="1">
+  <textbox id="transformOutput" class="out" readonly="true" multiline="true" flex="1"/>
+</hbox>
+<hbox flex="1">
+  <textbox id="transformDetailedOutput" class="out" readonly="true" multiline="true" flex="1"/>
+</hbox>
+</window>
