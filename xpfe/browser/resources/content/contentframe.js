@@ -23,12 +23,22 @@ function init_sidebar(name, uri, width) {
     prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   }
   if (prefs) {
-    prefs.SetDefaultBoolPref(sidebar_pref + '.open', false);
+    try {
+	    prefs.SetDefaultBoolPref(sidebar_pref + '.open', false);
+    }
+    catch (ex) {
+	    dump("failed to set the sidebar_pref\n");
+    }
 
     // The sidebar is closed by default, so open it only if the
     //    preference is set to true.
-    if (prefs.GetBoolPref(sidebar_pref + '.open')) {
-      toggle_open_close();
+    try {
+	    if (prefs.GetBoolPref(sidebar_pref + '.open')) {
+	      toggle_open_close();
+	    }
+    }
+    catch (ex) {
+	dump("failed to get sidebar_pref\n");
     }
   }
 }
@@ -59,8 +69,13 @@ function toggle_open_close() {
     is_sidebar_open = true;
   }  
 
-  // Save new open/close state in prefs
-  if (prefs) {
-    prefs.SetBoolPref(sidebar_pref + '.open', is_sidebar_open);
+  try {
+	  // Save new open/close state in prefs
+	  if (prefs) {
+	    prefs.SetBoolPref(sidebar_pref + '.open', is_sidebar_open);
+	  }
+  }
+  catch (ex) {
+  	dump("failed to set the sidebar pref\n");
   }
 }
