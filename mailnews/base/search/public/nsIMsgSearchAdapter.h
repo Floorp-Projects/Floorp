@@ -31,7 +31,7 @@
 class nsMsgSearchScopeTerm;
 class nsMsgSearchTermArray;
 class nsMsgResultElement;
-class nsMsgSearchValue;
+struct nsMsgSearchValue;
 
 class nsIMsgSearchAdapter : public nsISupports
 {
