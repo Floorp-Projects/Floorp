@@ -68,6 +68,10 @@ typedef unsigned long       size_t;
 [ref, domstring] native DOMStringRef(ignored);
 [ptr, domstring] native DOMStringPtr(ignored);
 
+[ref, domstring] native AString(ignored);
+[ref, domstring] native AStringRef(ignored);
+[ptr, domstring] native AStringPtr(ignored);
+
 %{C++
 /* 
  * End commenting out the C++ versions of the above in the output header
