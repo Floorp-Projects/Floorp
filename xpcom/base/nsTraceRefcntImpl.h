@@ -205,7 +205,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // And now for that utility that you've all been asking for...
 
-extern NS_COM void 
+extern "C" NS_COM void 
 NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
                  double *meanResult, double *stdDevResult);
 
