@@ -226,6 +226,7 @@
 <!ENTITY insertanchor.accesskey "a">
 <!ENTITY insertImageCmd.label "Image...">
 <!ENTITY insertimage.accesskey "i">
+<!ENTITY insertImageMapCmd.label "Image Map...">
 <!ENTITY insertHLineCmd.label "Horizontal Line">
 <!ENTITY inserthline.accesskey "h">
 <!ENTITY insertTableCmd.label "Table...">
