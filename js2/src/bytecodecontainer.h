@@ -49,6 +49,7 @@ namespace MetaData {
 
 
 class Multiname;
+class Frame;
 
 class BytecodeContainer {
 public:
@@ -85,8 +86,10 @@ public:
     static uint16 getShort(void *pc)        { return *((uint16 *)pc); }
 
     void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
-    static Multiname *getMultiname(void *pc){ return (Multiname *)getLong(pc); }
 
+    void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort(mFrameList.size() - 1); }
+
+    
     void addString(const StringAtom &x, size_t pos)     { emitOp(eString, pos); addPointer(&x); }
     void addString(String &x, size_t pos)               { emitOp(eString, pos); addPointer(&x); }
     void addString(String *x, size_t pos)               { emitOp(eString, pos); addPointer(x); }
@@ -97,6 +100,7 @@ public:
 
     CodeBuffer mBuffer;
     std::vector<Multiname *> mMultinameList;      // gc tracking 
+    std::vector<Frame *> mFrameList;              // gc tracking 
 
     int32 mStackTop;                // keep these as signed so as to
     int32 mStackMax;                // track if they go negative.

@@ -61,7 +61,8 @@ enum JS2Op {
     eReturnVoid,
     eNewObject,         // <argCount:16>
     eMultiname,         // <multiname index>
-    eUse,
+    ePushFrame,         // <frame index>
+    ePopFrame
 };
 
 
@@ -111,6 +112,7 @@ public:
     StringAtom &null_StringAtom;
     StringAtom &undefined_StringAtom;
     StringAtom &public_StringAtom;
+    StringAtom &private_StringAtom;
     StringAtom &object_StringAtom;
     
     js2val *execStack;

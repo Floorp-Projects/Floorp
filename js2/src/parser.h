@@ -59,6 +59,7 @@ namespace JavaScript {
 #ifdef EPIMETHEUS
     namespace MetaData {
         class Context;
+        class JS2Class;
     }
 #endif
 
@@ -678,7 +679,9 @@ namespace JavaScript {
 #ifdef DIKDIK
         JS2Runtime::JSType *mType;      // used by backend
 #endif
-
+#ifdef EPIMETHEUS
+        MetaData::JS2Class *c;
+#endif
         ClassStmtNode(size_t pos, ExprNode *attributes, const StringAtom &name, ExprNode *superclass, BlockStmtNode *body):
                 NamespaceStmtNode(pos, Class, attributes, name), superclass(superclass), body(body) {}
 

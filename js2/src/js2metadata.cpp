@@ -71,8 +71,6 @@ namespace MetaData {
      * Validate the linked list of statement nodes beginning at 'p'
      */
     void JS2Metadata::ValidateStmtList(StmtNode *p) {
-        cxt.openNamespaces.clear();
-        cxt.openNamespaces.push_back(publicNamespace);
         while (p) {
             ValidateStmt(&cxt, &env, p);
             p = p->next;
@@ -192,14 +190,67 @@ namespace MetaData {
                 }
             }
             break;
+        case StmtNode::Class:
+            {
+                ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
+                JS2Class *superClass = objectClass;
+                if (classStmt->superclass) {
+                    ValidateExpression(cxt, env, classStmt->superclass);                    
+                    js2val av = EvalExpression(env, CompilePhase, classStmt->superclass);
+                    if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
+                        reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
+                    JS2Object *obj = JS2VAL_TO_OBJECT(av);
+                    if (obj->kind != ClassKind)
+                        reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
+                    superClass = checked_cast<JS2Class *>(obj);
+                }
+                Attribute *attr = NULL;
+                if (classStmt->attributes) {
+                    ValidateAttributeExpression(cxt, env, classStmt->attributes);
+                    attr = EvalAttributeExpression(env, CompilePhase, classStmt->attributes);
+                }
+                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                if (!superClass->complete || superClass->final)
+                    reportError(Exception::definitionError, "Illegal inheritance", p->pos);
+                JS2Object *proto = NULL;
+                bool final;
+                switch (a->memberMod) {
+                case Attribute::NoModifier: 
+                    final = false; 
+                    break;
+                case Attribute::Static: 
+                    if (env->getTopFrame()->kind != ClassKind)
+                        reportError(Exception::definitionError, "Illegal use of static modifier", p->pos);
+                    final = false;
+                    break;
+                case Attribute::Final:
+                    final = true;
+                    break;
+                default:
+                    reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
+                    break;
+                }
+                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->public_StringAtom), (a->dynamic || superClass->dynamic), final);
+                classStmt->c = c;
+                Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
+                defineStaticMember(env, classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                if (classStmt->body) {
+                    env->addFrame(c);
+                    ValidateStmtList(cxt, env, classStmt->body->statements);
+                    ASSERT(env->getTopFrame() == c);
+                    env->removeTopFrame();
+                }
+                c->complete = true;
+            }
         }   // switch (p->getKind())
     }
 
+
     /*
-     * Evaluate the linked list of statement nodes beginning at 'p' (generate bytecode)
-     * and then execute that bytecode
+     * Evaluate the linked list of statement nodes beginning at 'p' 
+     * (generate bytecode and then execute that bytecode
      */
-    js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p)
+    js2val JS2Metadata::ExecuteStmtList(Phase phase, StmtNode *p)
     {
         BytecodeContainer *saveBacon = bCon;
         bCon = new BytecodeContainer();
@@ -265,6 +316,25 @@ namespace MetaData {
             break;
         case StmtNode::Use:
             {
+            }
+            break;
+        case StmtNode::Class:
+            {
+                ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
+                JS2Class *c = classStmt->c;
+                if (classStmt->body) {
+                    env->addFrame(c);
+                    bCon->emitOp(ePushFrame, p->pos);
+                    bCon->addFrame(c);
+                    StmtNode *bp = classStmt->body->statements;
+                    while (bp) {
+                        EvalStmt(env, phase, bp);
+                        bp = bp->next;
+                    }
+                    ASSERT(env->getTopFrame() == c);
+                    env->removeTopFrame();
+                    bCon->emitOp(ePopFrame, p->pos);
+                }
             }
             break;
         default:
@@ -970,6 +1040,8 @@ namespace MetaData {
         glob(world),
         env(new MetaData::SystemFrame(), &glob)
     {
+        cxt.openNamespaces.clear();
+        cxt.openNamespaces.push_back(publicNamespace);
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
@@ -1364,6 +1436,27 @@ namespace MetaData {
         if (nextPond)
             nextPond->moveUnmarkedToFreeList();
     }
+
+
+ /************************************************************************************
+ *
+ *  JS2Class
+ *
+ ************************************************************************************/
+
+    JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final) 
+        : Frame(ClassKind), 
+            instanceInitOrder(NULL), 
+            complete(false), 
+            super(super), 
+            prototype(proto), 
+            privateNamespace(privateNamespace), 
+            dynamic(dynamic),
+            primitive(false),
+            final(final),
+            call(NULL),
+            construct(NULL)
+    { }
 
  /************************************************************************************
  *

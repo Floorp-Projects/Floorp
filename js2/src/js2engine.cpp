@@ -209,6 +209,7 @@ JS2Engine::JS2Engine(World &world)
               INIT_STRINGATOM(null),
               INIT_STRINGATOM(undefined),
               INIT_STRINGATOM(public),
+              INIT_STRINGATOM(private),
               INIT_STRINGATOM(object)
 {
     nanValue = (float64 *)gc_alloc_8();
@@ -245,8 +246,9 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eMultiname:
         return 1;       // push the multiname object
 
-    case eUse:
-        return -1;      // consume a namespace object
+    case ePushFrame:
+    case ePopFrame:
+        return 0;
 
     default:
         ASSERT(false);

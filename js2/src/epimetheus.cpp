@@ -147,7 +147,7 @@ static int readEvalPrint(FILE *in)
                 metadata->setCurrentParser(&p);  // for error reporting
 
                 metadata->ValidateStmtList(parsedStatements);
-                js2val rval = metadata->EvalStmtList(RunPhase, parsedStatements);
+                js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
                 if (!JS2VAL_IS_VOID(rval))
                     stdOut << *metadata->engine->toString(rval) << '\n';                
             }

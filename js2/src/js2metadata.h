@@ -353,7 +353,7 @@ public:
 
 class JS2Class : public Frame {
 public:
-    JS2Class() : Frame(ClassKind) { }
+    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final);
 
     StringAtom &getName();
         
@@ -559,6 +559,9 @@ public:
     Frame *getTopFrame()                { return firstFrame; }
     Frame *getPackageOrGlobalFrame();
 
+    void addFrame(Frame *f)             { f->nextFrame = firstFrame; firstFrame = f; }
+    void removeTopFrame()               { firstFrame = firstFrame->nextFrame; }
+
     js2val findThis(bool allowPrototypeThis);
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
@@ -629,7 +632,7 @@ public:
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
-    js2val EvalStmtList(Environment *env, Phase phase, StmtNode *p);
+    js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
     Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
@@ -680,6 +683,7 @@ public:
     JS2Class *stringClass;
     JS2Class *objectClass;
     JS2Class *namespaceClass;
+    JS2Class *classClass;
 
     Parser *mParser;                // used for error reporting
 
