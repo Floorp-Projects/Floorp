@@ -634,4 +634,5 @@
 (run-regexp "(aa|aabaac|ba|b|c)*" "aabaac")
 |#
 
+#+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
 (length (grammar-states *rg*))
