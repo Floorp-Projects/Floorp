@@ -123,7 +123,7 @@
 
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "S">
-<!ENTITY searchInternet.commandKey "f">
+<!ENTITY searchInternet.commandKey "s">
 
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
@@ -134,9 +134,9 @@
 <!ENTITY bookmarksMenu.accesskey "B">
 <!ENTITY addCurPageCmd.label "Bookmark This Page">
 <!ENTITY addCurPageCmd.accesskey "B">
-<!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY addCurPageAsCmd.label "File Bookmark...">
 <!ENTITY addCurPageAsCmd.accesskey "F">
+<!ENTITY addCurPageAsCmd.commandkey "d">
 <!ENTITY addCurTabsAsCmd.label "Bookmark This Group of Tabs...">
 <!ENTITY addCurTabsAsCmd.accesskey "G">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">

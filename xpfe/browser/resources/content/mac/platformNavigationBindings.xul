@@ -14,6 +14,9 @@
     <key key="." oncommand="BrowserStop();" modifiers="accel"/>
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="meta"/>
     <key id="key_newTabWithTarget" keycode="VK_INSERT" modifiers="shift" command="cmd_newTabWithTarget"/>
+
+    <!-- Support Accel+Shift for Add Bookmark -->
+    <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel,shift"/>
   </keyset>  
 
 </overlay>
