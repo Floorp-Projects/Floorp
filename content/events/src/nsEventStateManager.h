@@ -209,16 +209,21 @@ protected:
 
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
-  nsresult GetParentScrollingView(nsMouseScrollEvent* aEvent,
+  nsresult GetParentScrollingView(nsInputEvent* aEvent,
                                   nsIPresContext* aPresContext,
                                   nsIFrame* &targetOuterFrame,
                                   nsIPresContext* &presCtxOuter);
-  nsresult DoWheelScroll(nsIPresContext* aPresContext,
-                         nsIFrame* aTargetFrame,
-                         nsMouseScrollEvent* aMSEvent, PRInt32 aNumLines,
-                         PRBool aScrollHorizontal, PRBool aScrollPage, PRBool aUseTargetFrame);
+  nsresult DoScrollText(nsIPresContext* aPresContext,
+                        nsIFrame* aTargetFrame,
+                        nsInputEvent* aEvent,
+                        PRInt32 aNumLines,
+                        PRBool aScrollHorizontal,
+                        PRBool aScrollPage,
+                        PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefBranch();
+  void DoScrollHistory(PRInt32 direction);
+  void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult ChangeTextSize(PRInt32 change);
   // end mousewheel functions
 
