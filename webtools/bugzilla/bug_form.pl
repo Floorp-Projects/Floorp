@@ -312,7 +312,7 @@ while (MoreSQLData()) {
     }
     my $link = "showattachment.cgi?attach_id=$attachid";
     $desc = value_quote($desc);
-    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp&nbsp&nbsp($mimetype)</td></tr><tr><td></td>};
+    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp;&nbsp;&nbsp;($mimetype)</td></tr><tr><td></td>};
 }
 print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
