@@ -37,6 +37,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
+#include "nsIURIContentListener.h"
 
 #include "nsIPref.h"
 #include "nsIProfile.h"
@@ -57,6 +58,7 @@
 
 #include "nsIProtocolProxyService.h"
 #include "nsXPIDLString.h"
+#include "nsCURILoader.h"
 
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
@@ -80,6 +82,7 @@ nsPSMComponent::nsPSMComponent()
 {
     NS_INIT_REFCNT();
     mControl = nsnull;
+    mCertContentListener = nsnull;
 }
 
 nsPSMComponent::~nsPSMComponent()
@@ -88,6 +91,16 @@ nsPSMComponent::~nsPSMComponent()
     {
         CMT_CloseControlConnection(mControl);
         mControl = nsnull;
+    }
+    if (mCertContentListener) {
+      nsresult rv = NS_ERROR_FAILURE;
+      
+      NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = dispatcher->UnRegisterContentListener(mCertContentListener);
+      }
+      
+      mCertContentListener = nsnull;
     }
 }
 
@@ -106,17 +119,33 @@ nsPSMComponent::CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aR
     if (mInstance == nsnull) 
     {
         mInstance = new nsPSMComponent();
+        if (mInstance)
+          mInstance->RegisterCertContentListener();
     }
 
     if (mInstance == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    nsresult rv = mInstance->QueryInterface(aIID, aResult);                        
+    nsresult rv = mInstance->QueryInterface(aIID, aResult);
     if (NS_FAILED(rv)) 
-    {                                             
-        *aResult = nsnull;                                           
-    }                                                                
+    {
+        *aResult = nsnull;
+    }
     return rv;                                                       
+}
+
+nsresult
+nsPSMComponent::RegisterCertContentListener()
+{
+  nsresult rv = NS_OK;
+  if (mCertContentListener == nsnull) {
+    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_PROGID);
+      rv = dispatcher->RegisterContentListener(mCertContentListener);
+    }
+  }
+  return rv;
 }
 
 /* nsISupports Implementation for the class */
@@ -613,13 +642,14 @@ CertDownloader::~CertDownloader()
 
 NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
 
+const PRInt32 kDefaultCertAllocLength = 2048;
 
 NS_IMETHODIMP
 CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
     channel->GetContentLength(&mContentLength);
     if (mContentLength == -1)
-        return NS_ERROR_FAILURE;
+      mContentLength = kDefaultCertAllocLength;
     
     mBufferOffset = 0;
     mByteData = (char*) nsMemory::Alloc(mContentLength);
@@ -642,10 +672,21 @@ CertDownloader::OnDataAvailable(nsIChannel* channel,
 
     PRUint32 amt;
     nsresult err;
-
+    //Do a check to see if we need to allocate more memory.
+    if ((mBufferOffset + (PRInt32)aLength) > mContentLength) {
+      size_t newSize = mContentLength + kDefaultCertAllocLength;
+      char *newBuffer;
+      newBuffer = (char*)nsMemory::Realloc(mByteData, newSize);
+      if (newBuffer == nsnull) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mByteData = newBuffer;
+      mContentLength = newSize;
+    }
     do 
     {
-        err = aIStream->Read(mByteData+mBufferOffset, mContentLength-mBufferOffset, &amt);
+        err = aIStream->Read(mByteData+mBufferOffset, 
+                             mContentLength-mBufferOffset, &amt);
         if (amt == 0) break;
         if (NS_FAILED(err))  return err;
         
@@ -667,13 +708,21 @@ CertDownloader::OnStopRequest(nsIChannel* channel,
 
     nsCOMPtr<nsIPSMComponent> psm = do_QueryInterface(context);
 
-    if (!psm) return NS_ERROR_FAILURE;
+    if (!psm) {
+      nsresult rv = nsPSMComponent::CreatePSMComponent(nsnull, 
+                                                  NS_GET_IID(nsIPSMComponent),
+                                                       getter_AddRefs(psm));
+      if (NS_FAILED(rv)) 
+        return rv;
+
+    }
 
     CMT_CONTROL *controlConnection;
     psm->GetControlConnection( &controlConnection );
     unsigned int certID;
                     
-    certID = CMT_DecodeAndCreateTempCert(controlConnection, mByteData, mContentLength, mType);
+    certID = CMT_DecodeAndCreateTempCert(controlConnection, mByteData, 
+                                         mBufferOffset, mType);
 
     if (certID)
         CMT_DestroyResource(controlConnection, certID, SSM_RESTYPE_CERTIFICATE);
@@ -691,6 +740,34 @@ application/pre-encrypted
 
 */
 
+const char * kCACert     = "application/x-x509-ca-cert";
+const char * kServerCert = "application/x-x509-server-cert";
+const char * kUserCert   = "application/x-x509-user-cert";
+const char * kEmailCert  = "application/x-x509-email-cert";
+
+CMUint32
+getPSMCertType(const char * aContentType)
+{
+  CMUint32 type = (CMUint32)-1;
+
+  if ( nsCRT::strcasecmp(aContentType, kCACert) == 0)
+    {
+      type = 1;  //CA cert
+    }
+  else if (nsCRT::strcasecmp(aContentType, kServerCert) == 0)
+    {
+      type =  2; //Server cert
+    }
+  else if (nsCRT::strcasecmp(aContentType, kUserCert) == 0)
+    {
+      type =  3; //User cert
+    }
+  else if (nsCRT::strcasecmp(aContentType, kEmailCert) == 0)
+    {
+      type =  4; //Someone else's email cert
+    }
+  return type;
+}
 
 NS_IMETHODIMP 
 nsPSMComponent::HandleContent(const char * aContentType, 
@@ -705,25 +782,8 @@ nsPSMComponent::HandleContent(const char * aContentType,
     nsresult rv = NS_OK;
     if (!aChannel) return NS_ERROR_NULL_POINTER;
     
-    CMUint32 type = -1;
+    CMUint32 type = getPSMCertType(aContentType);
 
-    if ( nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert") == 0)
-    {
-        type = 1;  //CA cert
-    }
-    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert") == 0)
-    {
-        type =  2; //Server cert
-    }
-    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-user-cert") == 0)
-    {
-        type =  3; //User cert
-    }
-    else if (nsCRT::strcasecmp(aContentType, "application/x-x509-email-cert") == 0)
-    {
-        type =  4; //Someone else's email cert
-    }
-    
     if (type != -1)
     {
         // I can't directly open the passed channel cause it fails :-(
@@ -742,6 +802,125 @@ nsPSMComponent::HandleContent(const char * aContentType,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMPL_ISUPPORTS(CertContentListener, NS_GET_IID(nsIURIContentListener)); 
+
+
+CertContentListener::CertContentListener()
+{
+  NS_INIT_REFCNT();
+  mLoadCookie = nsnull;
+  mParentContentListener = nsnull;
+}
+
+CertContentListener::~CertContentListener()
+{
+
+}
+
+nsresult
+CertContentListener::init()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget,
+                                    PRBool *aAbortOpen)
+{
+  //if we don't want to handle the URI, return PR_TRUE in
+  //*aAbortOpen
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::GetProtocolHandler(nsIURI *aURI, 
+                                        nsIProtocolHandler **aProtocolHandler)
+{
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::IsPreferred(const char * aContentType,
+                                 nsURILoadCommand aCommand,
+                                 const char * aWindowTarget,
+                                 char ** aDesiredContentType,
+                                 PRBool * aCanHandleContent)
+{
+  return CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                          aDesiredContentType, aCanHandleContent);
+}
+
+NS_IMETHODIMP
+CertContentListener::CanHandleContent(const char * aContentType,
+                                      nsURILoadCommand aCommand,
+                                      const char * aWindowTarget,
+                                      char ** aDesiredContentType,
+                                      PRBool * aCanHandleContent)
+{
+  CMUint32 type;
+
+  type = getPSMCertType(aContentType);
+  if (type != (CMUint32)-1) {
+    *aCanHandleContent = PR_TRUE;
+  } else {
+    *aCanHandleContent = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::DoContent(const char * aContentType,
+                               nsURILoadCommand aCommand,
+                               const char * aWindowTarget,
+                               nsIChannel * aOpenedChannel,
+                               nsIStreamListener ** aContentHandler,
+                               PRBool * aAbortProcess)
+{
+  CMUint32 type;
+  CertDownloader *downLoader;
+  type = getPSMCertType(aContentType);
+  if (type != (CMUint32)-1) {
+    downLoader = new CertDownloader(type);
+    if (downLoader) {
+      downLoader->QueryInterface(NS_GET_IID(nsIStreamListener), 
+                                            (void **)aContentHandler);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CertContentListener::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+  *aLoadCookie = mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mLoadCookie = aLoadCookie;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::GetParentContentListener(nsIURIContentListener ** aContentListener)
+{
+  *aContentListener = mParentContentListener;
+  NS_IF_ADDREF(*aContentListener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CertContentListener::SetParentContentListener(nsIURIContentListener * aContentListener)
+{
+  mParentContentListener = aContentListener;
+  return NS_OK;
+}
 
 //---------------------------------------------
 // Functions Implenenting NSISignatureVerifier

@@ -21,17 +21,39 @@
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
 */
-
+#ifndef _NSPSMCOMPONENT_H
+#define  _NSPSMCOMPONENT_H
 #include "nscore.h"
 #include "nsIPSMComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIStringBundle.h"
 
 #include "nsIContentHandler.h"
+#include "nsIURIContentListener.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
 #define NS_PSMCOMPONENT_CID {0xddcae170, 0x5412, 0x11d3, {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}}
+
+#define NS_CERTCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
+#define NS_CERTCONTENTLISTEN_PROGID "netscape://security/certdownload"
+
+//--------------------------------------------
+// Now we need a content listener to register 
+//--------------------------------------------
+
+class CertContentListener : public nsIURIContentListener {
+public:
+  CertContentListener();
+  virtual ~CertContentListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURICONTENTLISTENER
+  nsresult init ();
+private:
+  nsCOMPtr<nsISupports> mLoadCookie;
+  nsCOMPtr<nsIURIContentListener> mParentContentListener;
+};
 
 // Implementation of the PSM component interface.
 class nsPSMComponent : public nsIPSMComponent, 
@@ -50,11 +72,14 @@ public:
   NS_DECL_NSISIGNATUREVERIFIER
 
   static NS_METHOD CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aResult);
-
+  nsresult RegisterCertContentListener();
 private:
   
   PCMT_CONTROL mControl;
   
   nsCOMPtr<nsISupports> mSecureBrowserIU;
+  nsCOMPtr<nsIURIContentListener> mCertContentListener;
   static nsPSMComponent* mInstance;
 }; 
+
+#endif //_NSPSMCOMPONENT_H

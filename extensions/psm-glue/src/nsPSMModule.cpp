@@ -51,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFSecretDecoderRing, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCrypto, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPkcs11, init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertContentListener, init);
 
 static nsModuleComponentInfo components[] =
 {
@@ -150,8 +151,13 @@ static nsModuleComponentInfo components[] =
         NS_PKCS11_CID,
         NS_PKCS11_PROGID,
         nsPkcs11Constructor
+    },
+    {
+      "Generic Certificate Content Handler",
+      NS_CERTCONTENTLISTEN_CID,
+      NS_CERTCONTENTLISTEN_PROGID,
+      CertContentListenerConstructor
     }
-
 };
 
 #if 0
