@@ -279,16 +279,14 @@ public:
                        const nsRect&        aColumnRect,
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer);
+                       const nsRect&        aDirtyRect);
 
   // This method paints a single row in the tree.
   nsresult PaintRow(PRInt32              aRowIndex,
                     const nsRect&        aRowRect,
                     nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer);
+                    const nsRect&        aDirtyRect);
 
   // This method paints a specific cell in a given row of the tree.
   nsresult PaintCell(PRInt32              aRowIndex, 
@@ -296,8 +294,7 @@ public:
                      const nsRect&        aCellRect,
                      nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer);
+                     const nsRect&        aDirtyRect);
 
   // This method paints the twisty inside a cell in the primary column of an tree.
   nsresult PaintTwisty(PRInt32              aRowIndex,
@@ -306,7 +303,6 @@ public:
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer,
                        nscoord&             aRemainingWidth,
                        nscoord&             aCurrX);
 
@@ -317,7 +313,6 @@ public:
                       nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
-                      nsFramePaintLayer    aWhichLayer,
                       nscoord&             aRemainingWidth,
                       nscoord&             aCurrX);
 
@@ -327,8 +322,7 @@ public:
                      const nsRect&        aTextRect,
                      nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer);
+                     const nsRect&        aDirtyRect);
 
   // This method paints the checkbox inside a particular cell of the tree.
   nsresult PaintCheckbox(PRInt32              aRowIndex, 
@@ -336,8 +330,7 @@ public:
                          const nsRect&        aCheckboxRect,
                          nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect,
-                         nsFramePaintLayer    aWhichLayer);
+                         const nsRect&        aDirtyRect);
 
   // This method paints the progress meter inside a particular cell of the tree.
   nsresult PaintProgressMeter(PRInt32              aRowIndex, 
@@ -345,14 +338,13 @@ public:
                               const nsRect&        aProgressMeterRect,
                               nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect,
-                              nsFramePaintLayer    aWhichLayer);
+                              const nsRect&        aDirtyRect);
 
   // This method paints a drop feedback of the tree.
-  nsresult PaintDropFeedback(nsIPresContext*      aPresContext,
+  nsresult PaintDropFeedback(const nsRect&        aDropFeedbackRect, 
+                             nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer);
+                             const nsRect&        aDirtyRect);
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.

@@ -28,6 +28,7 @@
  *  Brian Ryner <bryner@netscape.com>
  *  Blake Ross <blaker@netscape.com>
  *  Pierre Chanial <pierrechanial@netscape.net>
+ *  Rene Pronk <r.pronk@its.tudelft.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -2065,11 +2066,6 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
                        nsFramePaintLayer    aWhichLayer,
                        PRUint32             aFlags)
 {
-  // XXX This trap handles an odd bogus 1 pixel invalidation that we keep getting 
-  // when scrolling.
-  if (aDirtyRect.width == 1)
-    return NS_OK;
-
   if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND &&
       aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
     return NS_OK;
@@ -2083,33 +2079,45 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
   nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FAILED(rv)) return rv;
 
-  if (!mView)
-    return NS_OK;
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    if (!mView)
+      return NS_OK;
 
-  PRBool clipState = PR_FALSE;
+    if (mDropAllowed && (mDropOrient == nsITreeView::inDropBefore ||
+        mDropOrient == nsITreeView::inDropAfter)) {
+      nsRect feedbackRect(mInnerBox.x, mInnerBox.y+mRowHeight*(mDropRow-mTopRowIndex), mInnerBox.width, mRowHeight);
+      if (mDropOrient == nsITreeView::inDropAfter)
+        feedbackRect.y += mRowHeight;
+
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
+        PaintDropFeedback(feedbackRect, aPresContext, aRenderingContext, aDirtyRect);
+      }
+    }
+
+    PRBool clipState = PR_FALSE;
   
-  // Update our available height and our page count.
-  CalcInnerBox();
-  PRInt32 oldPageCount = mPageCount;
-  if (!mHasFixedRowCount)
-    mPageCount = mInnerBox.height/mRowHeight;
+    // Update our available height and our page count.
+    CalcInnerBox();
+    PRInt32 oldPageCount = mPageCount;
+    if (!mHasFixedRowCount)
+      mPageCount = mInnerBox.height/mRowHeight;
 
-  if (oldPageCount != mPageCount) {
-    // Schedule a ResizeReflow that will update our page count properly.
-    nsBoxLayoutState state(mPresContext);
-    MarkDirty(state);
-  }
+    if (oldPageCount != mPageCount) {
+      // Schedule a ResizeReflow that will update our page count properly.
+      nsBoxLayoutState state(mPresContext);
+      MarkDirty(state);
+    }
 
-  PRInt32 rowCount = 0;
-  mView->GetRowCount(&rowCount);
-  
-  // Ensure our column info is built.
-  EnsureColumns();
+    PRInt32 rowCount = 0;
+    mView->GetRowCount(&rowCount);
 
-  // Loop through our columns and paint them (e.g., for sorting).  This is only
-  // relevant when painting backgrounds, since columns contain no content.  Content
-  // is contained in the rows.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    // Ensure our column info is built.
+    EnsureColumns();
+
+    // Loop through our columns and paint them (e.g., for sorting).  This is only
+    // relevant when painting backgrounds, since columns contain no content.  Content
+    // is contained in the rows.
     nscoord currX = mInnerBox.x;
     for (nsTreeColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
          currCol = currCol->GetNext()) {
@@ -2119,36 +2127,33 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
         colRect.width -= overflow;
       nsRect dirtyRect;
       if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
-        PaintColumn(currCol, colRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+        PaintColumn(currCol, colRect, aPresContext, aRenderingContext, aDirtyRect); 
       }
       currX += currCol->GetWidth();
     }
-  }
 
-  // Loop through our on-screen rows.
-  for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
-    nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
-    nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, rowRect) && rowRect.y < (mInnerBox.y+mInnerBox.height)) {
-      PRBool clip = (rowRect.y + rowRect.height > mInnerBox.y + mInnerBox.height);
-      if (clip) {
-        // We need to clip the last row, since it extends outside our inner box.  Push
-        // a clip rect down.
-        PRInt32 overflow = (rowRect.y+rowRect.height) - (mInnerBox.y+mInnerBox.height);
-        nsRect clipRect(rowRect.x, rowRect.y, mInnerBox.width, mRowHeight-overflow);
-        aRenderingContext.PushState();
-        aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+    // Loop through our on-screen rows.
+    for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
+      nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, rowRect) && rowRect.y < (mInnerBox.y+mInnerBox.height)) {
+        PRBool clip = (rowRect.y + rowRect.height > mInnerBox.y + mInnerBox.height);
+        if (clip) {
+          // We need to clip the last row, since it extends outside our inner box.  Push
+          // a clip rect down.
+          PRInt32 overflow = (rowRect.y+rowRect.height) - (mInnerBox.y+mInnerBox.height);
+          nsRect clipRect(rowRect.x, rowRect.y, mInnerBox.width, mRowHeight-overflow);
+          aRenderingContext.PushState();
+          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+        }
+
+        PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect);
+
+        if (clip)
+          aRenderingContext.PopState(clipState);
       }
-
-      PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-      if (clip)
-        aRenderingContext.PopState(clipState);
     }
   }
-
-  if (mDropAllowed)
-    PaintDropFeedback(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
 
   return NS_OK;
 }
@@ -2158,8 +2163,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
                              const nsRect&        aColumnRect,
                              nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer)
+                             const nsRect&        aDirtyRect)
 {
   if (aColumnRect.width == 0)
     return NS_OK; // Don't paint hidden columns.
@@ -2202,8 +2206,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
                           const nsRect&        aRowRect,
                           nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer)
+                          const nsRect&        aDirtyRect)
 {
   // We have been given a rect for our row.  We treat this row like a full-blown
   // frame, meaning that it can have borders, margins, padding, and a background.
@@ -2229,29 +2232,27 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   rowMarginData->GetMargin(rowMargin);
   rowRect.Deflate(rowMargin);
 
-  // If the layer is the background layer, we must paint our borders and background for our
-  // row rect. If a -moz-appearance is provided, use theme drawing only if the current row
+  // Paint our borders and background for our row rect.
+  // If a -moz-appearance is provided, use theme drawing only if the current row
   // is not selected (since we draw the selection as part of drawing the background).
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PRBool useTheme = PR_FALSE;
-    nsCOMPtr<nsITheme> theme;
-    const nsStyleDisplay* displayData = (const nsStyleDisplay*)rowContext->GetStyleData(eStyleStruct_Display);
-    if ( displayData->mAppearance ) {
-      aPresContext->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
-        useTheme = PR_TRUE;
-    }
-    PRBool isSelected = PR_FALSE;
-    nsCOMPtr<nsITreeSelection> selection;
-    GetSelection(getter_AddRefs(selection));
-    if ( selection ) 
-      selection->IsSelected(aRowIndex, &isSelected);
-    if ( useTheme && !isSelected )
-      theme->DrawWidgetBackground(&aRenderingContext, this, 
-                                    displayData->mAppearance, rowRect, aDirtyRect);     
-    else
-      PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
+  PRBool useTheme = PR_FALSE;
+  nsCOMPtr<nsITheme> theme;
+  const nsStyleDisplay* displayData = (const nsStyleDisplay*)rowContext->GetStyleData(eStyleStruct_Display);
+  if ( displayData->mAppearance ) {
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
+      useTheme = PR_TRUE;
   }
+  PRBool isSelected = PR_FALSE;
+  nsCOMPtr<nsITreeSelection> selection;
+  GetSelection(getter_AddRefs(selection));
+  if ( selection ) 
+    selection->IsSelected(aRowIndex, &isSelected);
+  if ( useTheme && !isSelected )
+    theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                displayData->mAppearance, rowRect, aDirtyRect);     
+  else
+    PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
   
   // Adjust the rect for its border and padding.
   AdjustForBorderPadding(rowContext, rowRect);
@@ -2314,7 +2315,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
         cellRect.width -= overflow;
       nsRect dirtyRect;
       if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
-        PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+        PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect); 
       currX += currCol->GetWidth();
     }
   }
@@ -2328,8 +2329,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
                            const nsRect&        aCellRect,
                            nsIPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect,
-                           nsFramePaintLayer    aWhichLayer)
+                           const nsRect&        aDirtyRect)
 {
   if (aCellRect.width == 0)
     return NS_OK; // Don't paint cells in hidden columns.
@@ -2351,10 +2351,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   cellMarginData->GetMargin(cellMargin);
   cellRect.Deflate(cellMargin);
 
-  // If the layer is the background layer, we must paint our borders and background for our
-  // row rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
-    PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
+  // Paint our borders and background for our row rect.
+  PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
 
   // Adjust the rect for its border and padding.
   AdjustForBorderPadding(cellContext, cellRect);
@@ -2383,7 +2381,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)lineContext->GetStyleData(eStyleStruct_Visibility);
     
-    if (vis->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    if (vis->IsVisibleOrCollapsed() && level) {
       // Paint the connecting lines.
 
       // Get the size of the twisty. We don't want to paint the twisty
@@ -2459,7 +2457,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
 
     // Always leave space for the twisty.
     nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
-    PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+    PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect,
                 remainingWidth, currX);
   }
   
@@ -2467,7 +2465,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   nsRect iconRect(currX, cellRect.y, remainingWidth, cellRect.height);
   nsRect dirtyRect;
   if (dirtyRect.IntersectRect(aDirtyRect, iconRect))
-    PaintImage(aRowIndex, aColumn, iconRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+    PaintImage(aRowIndex, aColumn, iconRect, aPresContext, aRenderingContext, aDirtyRect,
                remainingWidth, currX);
 
   // Now paint our element, but only if we aren't a cycler column.
@@ -2479,10 +2477,10 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
       switch (aColumn->GetType()) {
         case nsTreeColumn::eText:
-          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
           break;
         case nsTreeColumn::eCheckbox:
-          PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+          PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
           break;
         case nsTreeColumn::eProgressMeter:
           PRInt32 state;
@@ -2490,11 +2488,11 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
           switch (state) {
             case nsITreeView::progressNormal:
             case nsITreeView::progressUndetermined:
-              PaintProgressMeter(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+              PaintProgressMeter(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
               break;
             case nsITreeView::progressNone:
             default:
-              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
               break;
           }
           break;
@@ -2512,7 +2510,6 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
                              nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
                              nscoord&             aRemainingWidth,
                              nscoord&             aCurrX)
 {
@@ -2583,43 +2580,40 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   aCurrX += copyRect.width;
 
   if (shouldPaint) {
-    // If the layer is the background layer, we must paint our borders and background for our
-    // image rect.
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
-      PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
-    else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-      if ( useTheme ) {
-        // yeah, i know it says we're drawing a background, but a twisty is really a fg
-        // object since it doesn't have anything that gecko would want to draw over it. Besides,
-        // we have to prevent imagelib from drawing it.
-        theme->DrawWidgetBackground(&aRenderingContext, this, 
-                                      twistyDisplayData->mAppearance, twistyRect, aDirtyRect);
-      }
-      else {
-        // Time to paint the twisty.
-        // Adjust the rect for its border and padding.
-        nsMargin bp(0,0,0,0);
-        GetBorderPadding(twistyContext, bp);
-        twistyRect.Deflate(bp);
-        imageSize.Deflate(bp);
+    // Paint our borders and background for our image rect.
+    PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
 
-        // Get the image for drawing.
-        nsCOMPtr<imgIContainer> image;
-        PRBool useImageRegion = PR_TRUE;
-        GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, twistyContext, useImageRegion, getter_AddRefs(image));
-        if (image) {
-          nsPoint p(twistyRect.x, twistyRect.y);
-          
-          // Center the image. XXX Obey vertical-align style prop?
-          if (imageSize.height < twistyRect.height) {
-            p.y += (twistyRect.height - imageSize.height)/2;
-          }
-          
-          // Paint the image.
-          aRenderingContext.DrawImage(image, &imageSize, &p);
-        }
-      }        
+    if ( useTheme ) {
+      // yeah, i know it says we're drawing a background, but a twisty is really a fg
+      // object since it doesn't have anything that gecko would want to draw over it. Besides,
+      // we have to prevent imagelib from drawing it.
+      theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                  twistyDisplayData->mAppearance, twistyRect, aDirtyRect);
     }
+    else {
+      // Time to paint the twisty.
+      // Adjust the rect for its border and padding.
+      nsMargin bp(0,0,0,0);
+      GetBorderPadding(twistyContext, bp);
+      twistyRect.Deflate(bp);
+      imageSize.Deflate(bp);
+
+      // Get the image for drawing.
+      nsCOMPtr<imgIContainer> image;
+      PRBool useImageRegion = PR_TRUE;
+      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, twistyContext, useImageRegion, getter_AddRefs(image));
+      if (image) {
+        nsPoint p(twistyRect.x, twistyRect.y);
+
+        // Center the image. XXX Obey vertical-align style prop?
+        if (imageSize.height < twistyRect.height) {
+          p.y += (twistyRect.height - imageSize.height)/2;
+        }
+          
+        // Paint the image.
+        aRenderingContext.DrawImage(image, &imageSize, &p);
+      }
+    }        
   }
 
   return NS_OK;
@@ -2632,7 +2626,6 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
                             nscoord&             aRemainingWidth,
                             nscoord&             aCurrX)
 {
@@ -2667,43 +2660,40 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   aRemainingWidth -= copyRect.width;
   aCurrX += copyRect.width;
 
-  // If the layer is the background layer, we must paint our borders and background for our
-  // image rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+  // Get the image for drawing.
+  PRBool useImageRegion = PR_TRUE;
+  nsCOMPtr<imgIContainer> image; 
+  GetImage(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext, useImageRegion, getter_AddRefs(image));
+  if (image) {
+    // Paint our borders and background for our image rect
     PaintBackgroundLayer(imageContext, aPresContext, aRenderingContext, imageRect, aDirtyRect);
-  else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+ 
     // Time to paint the twisty.
     // Adjust the rect for its border and padding.
     nsMargin bp(0,0,0,0);
     GetBorderPadding(imageContext, bp);
     imageRect.Deflate(bp);
     imageSize.Deflate(bp);
-
-    // Get the image for drawing.
-    PRBool useImageRegion = PR_TRUE;
-    nsCOMPtr<imgIContainer> image; 
-    GetImage(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext, useImageRegion, getter_AddRefs(image));
-    if (image) {
-      nsPoint p(imageRect.x, imageRect.y);
+ 
+    nsPoint p(imageRect.x, imageRect.y);
       
-      // Center the image. XXX Obey vertical-align style prop?
+    // Center the image. XXX Obey vertical-align style prop?
 
-      float t2p, p2t;
-      mPresContext->GetTwipsToPixels(&t2p);
-      mPresContext->GetPixelsToTwips(&p2t);
+    float t2p, p2t;
+    mPresContext->GetTwipsToPixels(&t2p);
+    mPresContext->GetPixelsToTwips(&p2t);
 
-      if (imageSize.height < imageRect.height) {
-        p.y += (imageRect.height - imageSize.height)/2;
-      }
-
-      // For cyclers, we also want to center the image in the column.
-      if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
-        p.x += (imageRect.width - imageSize.width)/2;
-      }
-
-      // Paint the image.
-      aRenderingContext.DrawImage(image, &imageSize, &p);
+    if (imageSize.height < imageRect.height) {
+      p.y += (imageRect.height - imageSize.height)/2;
     }
+
+    // For cyclers, we also want to center the image in the column.
+    if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
+      p.x += (imageRect.width - imageSize.width)/2;
+    }
+
+    // Paint the image.
+    aRenderingContext.DrawImage(image, &imageSize, &p);
   }
 
   return NS_OK;
@@ -2715,8 +2705,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            const nsRect&        aTextRect,
                            nsIPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect,
-                           nsFramePaintLayer    aWhichLayer)
+                           const nsRect&        aDirtyRect)
 {
   // Now obtain the text for our cell.
   nsAutoString text;
@@ -2750,6 +2739,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 
   nsCOMPtr<nsIFontMetrics> fontMet;
   deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+
   nscoord height, baseline;
   fontMet->GetHeight(height);
   fontMet->GetMaxAscent(baseline);
@@ -2787,7 +2777,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
       switch (aColumn->GetCropStyle()) {
         default:
         case 0: {
-          // Crop right. 
+          // Crop right.
           nscoord cwidth;
           nscoord twidth = 0;
           int length = text.Length();
@@ -2870,62 +2860,58 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   aRenderingContext.GetWidth(text, width);
   textRect.width = width;
 
-  // If the layer is the background layer, we must paint our borders and background for our
-  // text rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    textRect.Inflate(bp);
-    PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
-  }
-  else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    // Time to paint our text. 
+  textRect.Inflate(bp);
+  PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
 
-    // Set our color.
-    const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
-    aRenderingContext.SetColor(colorStyle->mColor);
+  // Time to paint our text.
+  textRect.Deflate(bp);
 
-    // Draw decorations.
-    const nsStyleTextReset* textStyle = (const nsStyleTextReset*)textContext->GetStyleData(eStyleStruct_TextReset);
-    PRUint8 decorations = textStyle->mTextDecoration;
+  // Set our color.
+  const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
+  aRenderingContext.SetColor(colorStyle->mColor);
 
-    nscoord offset;
-    nscoord size;
-    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
-      fontMet->GetUnderline(offset, size);
-      if (decorations & NS_FONT_DECORATION_OVERLINE)
-        aRenderingContext.FillRect(textRect.x, textRect.y, width, size);
-      if (decorations & NS_FONT_DECORATION_UNDERLINE)
-        aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
-    }
-    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-      fontMet->GetStrikeout(offset, size);
+  // Draw decorations.
+  const nsStyleTextReset* textStyle = (const nsStyleTextReset*)textContext->GetStyleData(eStyleStruct_TextReset);
+  PRUint8 decorations = textStyle->mTextDecoration;
+
+  nscoord offset;
+  nscoord size;
+  if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
+    fontMet->GetUnderline(offset, size);
+    if (decorations & NS_FONT_DECORATION_OVERLINE)
+      aRenderingContext.FillRect(textRect.x, textRect.y, width, size);
+    if (decorations & NS_FONT_DECORATION_UNDERLINE)
       aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
-    }
+  }
+  if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
+    fontMet->GetStrikeout(offset, size);
+    aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
+  }
 #ifdef MOZ_TIMELINE
-    NS_TIMELINE_START_TIMER("Render Outline Text");
+  NS_TIMELINE_START_TIMER("Render Outline Text");
 #endif
 #ifdef IBMBIDI
-    nsresult rv = NS_ERROR_FAILURE;
-    nsBidiPresUtils* bidiUtils;
-    aPresContext->GetBidiUtils(&bidiUtils);
-    
-    if (bidiUtils) {
-      const nsStyleVisibility* vis;
-      GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-      nsBidiDirection direction = 
-        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-        NSBIDI_RTL : NSBIDI_LTR;
-      PRUnichar* buffer = (PRUnichar*) text.get();
-      rv = bidiUtils->RenderText(buffer, text.Length(), direction,
-                                 aPresContext, aRenderingContext,
-                                 textRect.x, textRect.y + baseline);
-    }
-    if (NS_FAILED(rv))
-#endif // IBMBIDI
-    aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
+  nsresult rv = NS_ERROR_FAILURE;
+  nsBidiPresUtils* bidiUtils;
+  aPresContext->GetBidiUtils(&bidiUtils);
+
+  if (bidiUtils) {
+    const nsStyleVisibility* vis;
+    GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
+    nsBidiDirection direction =
+      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+      NSBIDI_RTL : NSBIDI_LTR;
+    PRUnichar* buffer = (PRUnichar*) text.get();
+    rv = bidiUtils->RenderText(buffer, text.Length(), direction,
+                               aPresContext, aRenderingContext,
+                               textRect.x, textRect.y + baseline);
   }
+  if (NS_FAILED(rv))
+#endif // IBMBIDI
+  aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
 #ifdef MOZ_TIMELINE
-    NS_TIMELINE_STOP_TIMER("Render Outline Text");
-    NS_TIMELINE_MARK_TIMER("Render Outline Text");
+  NS_TIMELINE_STOP_TIMER("Render Outline Text");
+  NS_TIMELINE_MARK_TIMER("Render Outline Text");
 #endif
 
   return NS_OK;
@@ -2937,8 +2923,7 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
                                const nsRect&        aCheckboxRect,
                                nsIPresContext*      aPresContext,
                                nsIRenderingContext& aRenderingContext,
-                               const nsRect&        aDirtyRect,
-                               nsFramePaintLayer    aWhichLayer)
+                               const nsRect&        aDirtyRect)
 {
   return NS_OK;
 }
@@ -2949,8 +2934,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                                     const nsRect&        aProgressMeterRect,
                                     nsIPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
-                                    const nsRect&        aDirtyRect,
-                                    nsFramePaintLayer    aWhichLayer)
+                                    const nsRect&        aDirtyRect)
 {
 
   // Resolve style for the progress meter.  It contains all the info we need
@@ -2966,52 +2950,49 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
   meterMarginData->GetMargin(meterMargin);
   meterRect.Deflate(meterMargin);
 
-  // If the layer is the background layer, we must paint our borders and
-  // background for our progress meter rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
-    PaintBackgroundLayer(meterContext, aPresContext, aRenderingContext, meterRect, aDirtyRect);
-  else {
-    // Time to paint our progress. 
-    PRInt32 state;
-    mView->GetProgressMode(aRowIndex, aColumn->GetID().get(), &state);
-    if (state == nsITreeView::progressNormal) {
-      // Adjust the rect for its border and padding.
-      AdjustForBorderPadding(meterContext, meterRect);
+  // Paint our borders and background for our progress meter rect.
+  PaintBackgroundLayer(meterContext, aPresContext, aRenderingContext, meterRect, aDirtyRect);
 
-      // Set our color.
-      const nsStyleColor* colorStyle = (const nsStyleColor*)meterContext->GetStyleData(eStyleStruct_Color);
-      aRenderingContext.SetColor(colorStyle->mColor);
+  // Time to paint our progress. 
+  PRInt32 state;
+  mView->GetProgressMode(aRowIndex, aColumn->GetID().get(), &state);
+  if (state == nsITreeView::progressNormal) {
+    // Adjust the rect for its border and padding.
+    AdjustForBorderPadding(meterContext, meterRect);
 
-      // Now obtain the value for our cell.
-      nsAutoString value;
-      mView->GetCellValue(aRowIndex, aColumn->GetID().get(), value);
+    // Set our color.
+    const nsStyleColor* colorStyle = (const nsStyleColor*)meterContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(colorStyle->mColor);
 
-      PRInt32 rv;
-      PRInt32 intValue = value.ToInteger(&rv);
-      if (intValue < 0)
-        intValue = 0;
-      else if (intValue > 100)
-        intValue = 100;
+    // Now obtain the value for our cell.
+    nsAutoString value;
+    mView->GetCellValue(aRowIndex, aColumn->GetID().get(), value);
 
-      meterRect.width = NSToCoordRound((float)intValue / 100 * meterRect.width);
-      PRBool useImageRegion = PR_TRUE;
-      nsCOMPtr<imgIContainer> image;
-      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
-      if (image)
-        aRenderingContext.DrawTile(image, 0, 0, &meterRect);
-      else
-        aRenderingContext.FillRect(meterRect);
-    }
-    else if (state == nsITreeView::progressUndetermined) {
-      // Adjust the rect for its border and padding.
-      AdjustForBorderPadding(meterContext, meterRect);
+    PRInt32 rv;
+    PRInt32 intValue = value.ToInteger(&rv);
+    if (intValue < 0)
+      intValue = 0;
+    else if (intValue > 100)
+      intValue = 100;
 
-      PRBool useImageRegion = PR_TRUE;
-      nsCOMPtr<imgIContainer> image;
-      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
-      if (image)
-        aRenderingContext.DrawTile(image, 0, 0, &meterRect);
-    }
+    meterRect.width = NSToCoordRound((float)intValue / 100 * meterRect.width);
+    PRBool useImageRegion = PR_TRUE;
+    nsCOMPtr<imgIContainer> image;
+    GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
+    if (image)
+      aRenderingContext.DrawTile(image, 0, 0, &meterRect);
+    else
+      aRenderingContext.FillRect(meterRect);
+  }
+  else if (state == nsITreeView::progressUndetermined) {
+    // Adjust the rect for its border and padding.
+    AdjustForBorderPadding(meterContext, meterRect);
+
+    PRBool useImageRegion = PR_TRUE;
+    nsCOMPtr<imgIContainer> image;
+    GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
+    if (image)
+      aRenderingContext.DrawTile(image, 0, 0, &meterRect);
   }
 
   return NS_OK;
@@ -3019,115 +3000,102 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
 
 
 nsresult
-nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
+nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
+                                   nsIPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
-                                   const nsRect&        aDirtyRect,
-                                   nsFramePaintLayer    aWhichLayer)
+                                   const nsRect&        aDirtyRect)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (mDropOrient == nsITreeView::inDropBefore ||
-        mDropOrient == nsITreeView::inDropAfter) {
-      // Paint the drop feedback in between rows.
+  // Paint the drop feedback in between rows.
 
-      nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(mDropRow-mTopRowIndex), mInnerBox.width, mRowHeight);
-      // Paint the drop feedback at the same position for both orientations.
-      if (mDropOrient == nsITreeView::inDropAfter)
-        rowRect.y += mRowHeight;
+  // Find the primary cell.
+  nscoord currX = aDropFeedbackRect.x;
+  nsTreeColumn* currCol;
+  for (currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width;
+       currCol = currCol->GetNext()) {
+    if (currCol->IsPrimary())
+      break;
+    currX += currCol->GetWidth();
+  }
+  PrefillPropertyArray(mDropRow, currCol);
 
-      nsRect dirtyRect;
-      if (dirtyRect.IntersectRect(aDirtyRect, rowRect)) {
-        // Find the primary cell.
-        nscoord currX = rowRect.x;
-        nsTreeColumn* currCol;
-        for (currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width;
-             currCol = currCol->GetNext()) {
-          if (currCol->IsPrimary())
-            break;
-          currX += currCol->GetWidth();
-        }
-        PrefillPropertyArray(mDropRow, currCol);
+  // Resolve the style to use for the drop feedback.
+  nsStyleContext* feedbackContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreedropfeedback);
 
-        // Resolve the style to use for the drop feedback.
-        nsStyleContext* feedbackContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreedropfeedback);
-
-        const nsStyleVisibility* vis = 
-          (const nsStyleVisibility*)feedbackContext->GetStyleData(eStyleStruct_Visibility);
+  const nsStyleVisibility* vis = 
+    (const nsStyleVisibility*)feedbackContext->GetStyleData(eStyleStruct_Visibility);
     
-        // Paint only if it is visible.
-        if (vis->IsVisibleOrCollapsed()) {
-          PRInt32 level;
-          mView->GetLevel(mDropRow, &level);
+  // Paint only if it is visible.
+  if (vis->IsVisibleOrCollapsed()) {
+    PRInt32 level;
+    mView->GetLevel(mDropRow, &level);
 
-          // If our previous or next row has greater level use that for 
-          // correct visual indentation.
-          if (mDropOrient == nsITreeView::inDropBefore) {
-            if (mDropRow > 0) {
-              PRInt32 previousLevel;
-              mView->GetLevel(mDropRow - 1, &previousLevel);
-              if (previousLevel > level)
-                level = previousLevel;
-            }
-          }
-          else {
-            PRInt32 rowCount;
-            mView->GetRowCount(&rowCount);
-            if (mDropRow < rowCount - 1) {
-              PRInt32 nextLevel;
-              mView->GetLevel(mDropRow + 1, &nextLevel);
-              if (nextLevel > level)
-                level = nextLevel;
-            }
-          }
-
-          currX += mIndentation * level;
-
-          nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
-          nsRect twistySize = GetImageSize(mDropRow, currCol->GetID().get(), PR_TRUE, twistyContext);
-          const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
-          nsMargin twistyMargin;
-          twistyMarginData->GetMargin(twistyMargin);
-          twistySize.Inflate(twistyMargin);
-          currX += twistySize.width;
-
-          const nsStylePosition* stylePosition = (const nsStylePosition*)
-            feedbackContext->GetStyleData(eStyleStruct_Position);
-
-          // Obtain the width for the drop feedback or use default value.
-          nscoord width;
-          if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord)
-            width = stylePosition->mWidth.GetCoordValue();
-          else {
-            // Use default width 50px.
-            float p2t;
-            mPresContext->GetPixelsToTwips(&p2t);
-            width = NSIntPixelsToTwips(50, p2t);
-          }
-
-          // Obtain the height for the drop feedback or use default value.
-          nscoord height;
-          if (stylePosition->mHeight.GetUnit() == eStyleUnit_Coord)
-            height = stylePosition->mHeight.GetCoordValue();
-          else {
-            // Use default height 2px.
-            float p2t;
-            mPresContext->GetPixelsToTwips(&p2t);
-            height = NSIntPixelsToTwips(2, p2t);
-          }
-
-          // Obtain the margins for the drop feedback and then deflate our rect
-          // by that amount.
-          nsRect feedbackRect(currX, rowRect.y, width, height);
-          const nsStyleMargin* styleMargin = (const nsStyleMargin*)
-            feedbackContext->GetStyleData(eStyleStruct_Margin);
-          nsMargin margin;
-          styleMargin->GetMargin(margin);
-          feedbackRect.Deflate(margin);
-
-          // Finally paint the drop feedback.
-          PaintBackgroundLayer(feedbackContext, aPresContext, aRenderingContext, feedbackRect, aDirtyRect);
-        }
+    // If our previous or next row has greater level use that for 
+    // correct visual indentation.
+    if (mDropOrient == nsITreeView::inDropBefore) {
+      if (mDropRow > 0) {
+        PRInt32 previousLevel;
+        mView->GetLevel(mDropRow - 1, &previousLevel);
+        if (previousLevel > level)
+          level = previousLevel;
       }
     }
+    else {
+      PRInt32 rowCount;
+      mView->GetRowCount(&rowCount);
+      if (mDropRow < rowCount - 1) {
+        PRInt32 nextLevel;
+        mView->GetLevel(mDropRow + 1, &nextLevel);
+        if (nextLevel > level)
+          level = nextLevel;
+      }
+    }
+
+    currX += mIndentation * level;
+
+    nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
+    nsRect twistySize = GetImageSize(mDropRow, currCol->GetID().get(), PR_TRUE, twistyContext);
+    const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin twistyMargin;
+    twistyMarginData->GetMargin(twistyMargin);
+    twistySize.Inflate(twistyMargin);
+    currX += twistySize.width;
+
+    const nsStylePosition* stylePosition = (const nsStylePosition*)
+      feedbackContext->GetStyleData(eStyleStruct_Position);
+
+    // Obtain the width for the drop feedback or use default value.
+    nscoord width;
+    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord)
+      width = stylePosition->mWidth.GetCoordValue();
+    else {
+      // Use default width 50px.
+      float p2t;
+      mPresContext->GetPixelsToTwips(&p2t);
+      width = NSIntPixelsToTwips(50, p2t);
+    }
+
+    // Obtain the height for the drop feedback or use default value.
+    nscoord height;
+    if (stylePosition->mHeight.GetUnit() == eStyleUnit_Coord)
+      height = stylePosition->mHeight.GetCoordValue();
+    else {
+      // Use default height 2px.
+      float p2t;
+      mPresContext->GetPixelsToTwips(&p2t);
+      height = NSIntPixelsToTwips(2, p2t);
+    }
+
+    // Obtain the margins for the drop feedback and then deflate our rect
+    // by that amount.
+    nsRect feedbackRect(currX, aDropFeedbackRect.y, width, height);
+    const nsStyleMargin* styleMargin = (const nsStyleMargin*)
+    feedbackContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin margin;
+    styleMargin->GetMargin(margin);
+    feedbackRect.Deflate(margin);
+
+    // Finally paint the drop feedback.
+    PaintBackgroundLayer(feedbackContext, aPresContext, aRenderingContext, feedbackRect, aDirtyRect);
   }
 
   return NS_OK;
@@ -3135,12 +3103,11 @@ nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
 
 nsresult
 nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
-                                      nsIPresContext*      aPresContext, 
-                                      nsIRenderingContext& aRenderingContext, 
+                                      nsIPresContext*      aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aRect,
                                       const nsRect&        aDirtyRect)
 {
-
   const nsStyleBackground* myColor = (const nsStyleBackground*)
       aStyleContext->GetStyleData(eStyleStruct_Background);
   const nsStyleBorder* myBorder = (const nsStyleBorder*)
