@@ -44,6 +44,16 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
 {
     NS_INIT_REFCNT();
 
+    /*
+     * Cache the thread which is making the network request.  Any cross-thread
+     * marshalling events will be sent to its event queue...
+     *
+     * XXX:  Currently, this assumes that the nsConnectionInfo is *always* 
+     *       created on the requesting thread...  The requesting thread
+     *       should really be passed in via the public APIs...
+     */
+    mRequestingThread = PR_GetCurrentThread();
+
     mStatus    = nsConnectionActive;
     pURL       = aURL;
     pNetStream = aStream;

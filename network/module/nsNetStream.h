@@ -61,6 +61,7 @@ public:
     nsNetlibStream        *pNetStream;
     nsIStreamListener     *pConsumer;
     nsConnectionStatus    mStatus;
+    PRThread*             mRequestingThread;
 };
 
 
