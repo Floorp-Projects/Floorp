@@ -143,7 +143,7 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
                      nsNSSSocketInfo *infoObject,
                      const char *host);
 static nsresult
-nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp, 
+nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS, 
                        const char *proxyHost, const char *host, PRInt32 port,
                        nsNSSSocketInfo *infoObject);
 
@@ -151,9 +151,10 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp,
 nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
-    mForTLSStepUp(PR_FALSE),
+    mForSTARTTLS(PR_FALSE),
     mFirstWrite(PR_TRUE),
-    mTLSIntolerant(PR_FALSE),
+    mCanceled(PR_FALSE),
+    mHasCleartextPhase(PR_FALSE),
     mPort(0),
     mCAChain(nsnull)
 { 
@@ -215,18 +216,24 @@ nsNSSSocketInfo::GetPort(PRInt32 *aPort)
   return NS_OK;
 }
 
-nsresult
-nsNSSSocketInfo::GetTLSIntolerant(PRBool *aTLSIntolerant)
+void nsNSSSocketInfo::SetCanceled(PRBool aCanceled)
 {
-  *aTLSIntolerant = mTLSIntolerant;
-  return NS_OK;
+  mCanceled = aCanceled;
 }
 
-nsresult
-nsNSSSocketInfo::SetTLSIntolerant(PRBool aTLSIntolerant)
+PRBool nsNSSSocketInfo::GetCanceled()
 {
-  mTLSIntolerant = aTLSIntolerant;
-  return NS_OK;
+  return mCanceled;
+}
+
+void nsNSSSocketInfo::SetHasCleartextPhase(PRBool aHasCleartextPhase)
+{
+  mHasCleartextPhase = aHasCleartextPhase;
+}
+
+PRBool nsNSSSocketInfo::GetHasCleartextPhase()
+{
+  return mHasCleartextPhase;
 }
 
 NS_IMETHODIMP
@@ -318,38 +325,38 @@ nsNSSSocketInfo::SetForceHandshake(PRBool forceHandshake)
 }
 
 nsresult
-nsNSSSocketInfo::GetForTLSStepUp(PRBool* aResult)
+nsNSSSocketInfo::GetForSTARTTLS(PRBool* aForSTARTTLS)
 {
-  *aResult = mForTLSStepUp;
+  *aForSTARTTLS = mForSTARTTLS;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetForTLSStepUp(PRBool forTLSStepUp)
+nsNSSSocketInfo::SetForSTARTTLS(PRBool aForSTARTTLS)
 {
-  mForTLSStepUp = forTLSStepUp;
+  mForSTARTTLS = aForSTARTTLS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::ProxyStepUp()
+nsNSSSocketInfo::ProxyStartSSL()
 {
-  return TLSStepUp();
+  return ActivateSSL();
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::TLSStepUp()
+nsNSSSocketInfo::StartTLS()
+{
+  return ActivateSSL();
+}
+
+nsresult nsNSSSocketInfo::ActivateSSL()
 {
   if (SECSuccess != SSL_OptionSet(mFd, SSL_SECURITY, PR_TRUE))
     return NS_ERROR_FAILURE;
 
   if (SECSuccess != SSL_ResetHandshake(mFd, PR_FALSE))
     return NS_ERROR_FAILURE;
-
-  // This is a work around for NSS bug 56924 which is scheduled
-  // for a fix in NSS 3.3, but we're currently on version 3.2.1,
-  // so we need this work around.
-  PR_Write(mFd, nsnull, 0);
 
   mFirstWrite = PR_TRUE;
 
@@ -442,6 +449,13 @@ displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject)
 static nsresult
 nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
 {
+  if (socketInfo->GetCanceled()) {
+    // If the socket has been flagged as canceled,
+    // the code who did was responsible for showing
+    // an error message (if desired).
+    return NS_OK;
+  }
+
   nsresult rv;
   NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
@@ -957,12 +971,8 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
   nsNSSSocketInfo *socketInfo = nsnull;
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
-  PRBool tlsIntolerant;
-  socketInfo->GetTLSIntolerant(&tlsIntolerant);
-  if (tlsIntolerant) {
-    // By returning 0 here, necko will retry the connection
-    // again. 
-    return 0;
+  if (socketInfo->GetCanceled()) {
+    return PR_FAILURE;
   }
 
   PRInt32 bytesRead = fd->lower->methods->read(fd->lower, buf, amount);
@@ -986,7 +996,7 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 {
   if (!fd || !fd->lower)
     return PR_FAILURE;
-    
+
 #ifdef DEBUG_SSL_VERBOSE
   DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
 #endif
@@ -994,6 +1004,11 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   PRBool firstWrite;
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
+
+  if (socketInfo->GetCanceled()) {
+    return PR_FAILURE;
+  }
+
   socketInfo->GetFirstWrite(&firstWrite);
   PRBool oldBlockVal = PR_FALSE;
   PRBool oldBlockReset = PR_FALSE;
@@ -1029,19 +1044,27 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   // there are enough broken servers out there that such a gross work-around
   // is necessary.  :(
 
-  
-  if (bytesWritten == -1) {
+  if (bytesWritten == -1 && firstWrite) {
     // Let's see if there was an error set by the SSL libraries that we
     // should tell the user about.
     PRInt32 err = PR_GetError();
-    if (firstWrite) {
+    PRBool wantRetry = PR_FALSE;
+    PRBool withInitialCleartext = socketInfo->GetHasCleartextPhase();
+
+    // When not using a proxy we'll see a connection reset error.
+    // When using a proxy, we'll see an end of file error.
+
+    if ((!withInitialCleartext && PR_CONNECT_RESET_ERROR == err)
+        ||
+        (withInitialCleartext && PR_END_OF_FILE_ERROR == err)) {
+
       PRBool tlsOn;
       SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &tlsOn);
       if (tlsOn) {
-        // Make necko re-try this connection by sending back an EOF
-        // on the first read. (ie premature EOF)
-        bytesWritten = 0;
-        socketInfo->SetTLSIntolerant(PR_TRUE);
+        // We don't want to communicate over this socket any longer.
+        // Mark it as canceled, and make both our read and write
+        // functions return failure.
+        socketInfo->SetCanceled(PR_TRUE);
         // Now let's add this site to the list of TLS intolerant
         // sites.
         char buf[1024];
@@ -1054,19 +1077,25 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
         // We don't really wanna associate a value.  If it's
         // in the table, that means it's TLS intolerant and
         // we don't really need to know anything else.
-        gTLSIntolerantSites->Put(&key, nsnull);    
-      } else if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
-         // This is the case where  the first write failed with 
-         // TLS turned off.
-         nsHandleSSLError(socketInfo, err);
-       }
-     } else if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
-       // This is the case where a subsequent write has failed, 
-       // ie not the first write.
-       nsHandleSSLError(socketInfo, err);
+        gTLSIntolerantSites->Put(&key, nsnull);
+        
+        wantRetry = PR_TRUE;
 
+        // We want to cause the network layer to retry the connection.
+        // It won't retry on an end of file error.
+        // If we were using a proxy, change the error code
+        // to the connection reset error.
+        if (withInitialCleartext && PR_END_OF_FILE_ERROR == err) {
+          PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+        }
+      }
+    }
+
+    if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err))) {
+      nsHandleSSLError(socketInfo, err);
     }
   }
+
   // TLS intolerant servers only cause the first write to fail, so let's 
   // set the fristWrite attribute to false so that we don't try the logic
   // above again in a subsequent write.
@@ -1108,7 +1137,7 @@ nsSSLIOLayerNewSocket(const char *host,
                       PRInt32 proxyPort,
                       PRFileDesc **fd,
                       nsISupports** info,
-                      PRBool forTLSStepUp)
+                      PRBool forSTARTTLS)
 {
   // XXX - this code is duplicated in nsSSLIOLayerAddToSocket
   if (firstTime) {
@@ -1123,7 +1152,7 @@ nsSSLIOLayerNewSocket(const char *host,
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = nsSSLIOLayerAddToSocket(host, port, proxyHost, proxyPort,
-                                        sock, info, forTLSStepUp);
+                                        sock, info, forSTARTTLS);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
     return rv;
@@ -2086,6 +2115,10 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   }
   NS_RELEASE(nssCert);
   CERT_DestroyCertificate(peerCert); 
+  if (rv != SECSuccess) {
+    // if the cert is bad, we don't want to connect
+    infoObject->SetCanceled(PR_TRUE);
+  }
   return rv;
 }
 
@@ -2120,15 +2153,18 @@ loser:
 }
 
 static nsresult
-nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp, 
+nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS, 
                        const char *proxyHost, const char *host, PRInt32 port,
                        nsNSSSocketInfo *infoObject)
 {
-  if ((forTLSStepUp || proxyHost) &&
-      SECSuccess != SSL_OptionSet(fd, SSL_SECURITY, PR_FALSE))
-    return NS_ERROR_FAILURE;
+  if (forSTARTTLS || proxyHost) {
+    if (SECSuccess != SSL_OptionSet(fd, SSL_SECURITY, PR_FALSE)) {
+      return NS_ERROR_FAILURE;
+    }
+    infoObject->SetHasCleartextPhase(PR_TRUE);
+  }
 
-  if (forTLSStepUp) {
+  if (forSTARTTLS) {
     if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SSL2, PR_FALSE)) {
       return NS_ERROR_FAILURE;
     }
@@ -2173,7 +2209,7 @@ nsSSLIOLayerAddToSocket(const char* host,
                         PRInt32 proxyPort,
                         PRFileDesc* fd,
                         nsISupports** info,
-                        PRBool forTLSStepUp)
+                        PRBool forSTARTTLS)
 {
   PRFileDesc* layer = nsnull;
   nsresult rv;
@@ -2191,7 +2227,7 @@ nsSSLIOLayerAddToSocket(const char* host,
   if (!infoObject) return NS_ERROR_FAILURE;
   
   NS_ADDREF(infoObject);
-  infoObject->SetForTLSStepUp(forTLSStepUp);
+  infoObject->SetForSTARTTLS(forSTARTTLS);
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
 
@@ -2203,7 +2239,7 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   infoObject->SetFileDescPtr(sslSock);
 
-  rv = nsSSLIOLayerSetOptions(sslSock, forTLSStepUp, proxyHost, host, port,
+  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, proxyHost, host, port,
                               infoObject);
 
   if (NS_FAILED(rv))
@@ -2226,7 +2262,7 @@ nsSSLIOLayerAddToSocket(const char* host,
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
 
   // We are going use a clear connection first //
-  if (forTLSStepUp || proxyHost) {
+  if (forSTARTTLS || proxyHost) {
     infoObject->SetFirstWrite(PR_FALSE);
   }
 

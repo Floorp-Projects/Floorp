@@ -908,9 +908,9 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
               
                 if (NS_FAILED(rv) || !mSocketFD) break;
 
-                // if the service was ssl or tlsstepup, we want to hold onto the socket info
+                // if the service was ssl or starttls, we want to hold onto the socket info
                 if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
-                    nsCRT::strcmp(mSocketTypes[type], "tlsstepup") == 0) {
+                    nsCRT::strcmp(mSocketTypes[type], "starttls") == 0) {
                     mSecurityInfo = socketInfo;
                     nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(mSecurityInfo));
                     if (secCtrl)
@@ -1040,10 +1040,10 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         // if the connection phase is finished, and the ssl layer
         // has been pushed, and we were proxying (transparently; ie. nothing
         // has to happen in the protocol layer above us), it's time
-        // for the ssl to "step up" and start doing it's thing.
+        // for the ssl to start doing it's thing.
         nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(mSecurityInfo, &rv);
         if (NS_SUCCEEDED(rv) && sslControl)
-            sslControl->ProxyStepUp();
+            sslControl->ProxyStartSSL();
     }
     return rv;
 }

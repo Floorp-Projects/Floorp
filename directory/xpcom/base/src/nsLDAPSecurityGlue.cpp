@@ -177,7 +177,7 @@ nsLDAPSSLConnect(const char *hostlist, int defport, int timeout,
 
     // Add the NSPR layer for SSL provided by PSM to this socket. 
     //
-    tlsSocketProvider = do_GetService(NS_TLSSTEPUPSOCKETPROVIDER_CONTRACTID, 
+    tlsSocketProvider = do_GetService(NS_STARTTLSSOCKETPROVIDER_CONTRACTID, 
 				      &rv);
     if (NS_FAILED(rv)) {
 	NS_ERROR("nsLDAPSSLConnect(): unable to get socket provider service");
@@ -203,16 +203,18 @@ nsLDAPSSLConnect(const char *hostlist, int defport, int timeout,
 
     // If possible we want to avoid using SSLv2, as this can confuse
     // some directory servers (notably the netscape 4.1 ds).  The only
-    // way that PSM provides for us to do this is to invoke TLSStepUp.
+    // way that PSM provides for us to do this is to use a socket that can
+    // be used for the STARTTLS protocol, because the STARTTLS protocol disallows
+    // the use of SSLv2.
     // (Thanks to Brian Ryner for helping figure this out).
     //
     sslSocketControl = do_QueryInterface(securityInfo, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("nsLDAPSSLConnect(): unable to QI to nsISSLSocketControl");
     } else {
-	rv = sslSocketControl->TLSStepUp();
+	rv = sslSocketControl->StartTLS();
 	if (NS_FAILED(rv)) {
-	    NS_WARNING("nsLDAPSSLConnect(): TLSStepUp failed");
+	    NS_WARNING("nsLDAPSSLConnect(): StartTLS failed");
 	}
     }
 

@@ -319,7 +319,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     if (m_prefTrySSL != PREF_SSL_NEVER) {
-        rv = OpenNetworkSocket(aURL, "tlsstepup", callbacks);
+        rv = OpenNetworkSocket(aURL, "starttls", callbacks);
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
             m_prefTrySSL = PREF_SSL_NEVER;
             rv = OpenNetworkSocket(aURL, nsnull, callbacks);
@@ -710,7 +710,7 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
           nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
 
           if (NS_SUCCEEDED(rv) && sslControl) {
-              rv = sslControl->TLSStepUp();
+              rv = sslControl->StartTLS();
           }
       }
 
