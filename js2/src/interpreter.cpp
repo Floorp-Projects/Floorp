@@ -23,6 +23,8 @@
 
 namespace JavaScript {
     namespace Interpreter {
+
+        using namespace JSTypes;
         // operand access macros.
 #define op1(i) (i->o1())
 #define op2(i) (i->o2())

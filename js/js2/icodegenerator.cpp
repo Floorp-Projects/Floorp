@@ -42,6 +42,9 @@
 
 namespace JavaScript {
     namespace ICG {
+
+        using namespace VM;
+
         
         Formatter& operator<<(Formatter &f, ICodeGenerator &i)
         {
@@ -611,7 +614,7 @@ complete()
 
         Formatter& ICodeGenerator::print(Formatter& f)
         {
-            f << "ICG! " << iCode->size() << "\n";
+            f << "ICG! " << (uint32)iCode->size() << "\n";
             for (InstructionIterator i = iCode->begin(); 
                  i != iCode->end(); i++) {
 
