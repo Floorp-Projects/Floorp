@@ -40,6 +40,7 @@
 #***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -71,9 +72,10 @@
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
-  <command id="cmd_print" oncommand="PrintUtils.print();"/>
-  <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_savePage" disabled="true" oncommand="ViewSourceSavePage();"/>
+  <command id="cmd_print" oncommand="PrintUtils.print();"/>
+  <command id="cmd_printpreview" oncommand="PrintUtils.printPreview(onEnterPP, onExitPP);"/>
+  <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
@@ -107,6 +109,8 @@
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
           <menuitem command="cmd_pagesetup"
                     label="&pageSetupCmd.label;" accesskey="&pageSetupCmd.accesskey;"/>
+          <menuitem command="cmd_printpreview"
+                    label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"/>
           <menuitem key="key_print" command="cmd_print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
