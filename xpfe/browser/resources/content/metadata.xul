@@ -69,7 +69,7 @@
       </columns>
       <rows>
         <row id="link-url">
-          <label value="&link-url.label;"/>
+          <label value="&link-url.label; "/>
           <hbox>
             <label id="link-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
@@ -77,23 +77,23 @@
           </hbox>
         </row>
         <row id="link-target">
-          <label value="&link-target.label;"/>
+          <label value="&link-target.label; "/>
           <label id="link-target-text" value=""/>
         </row>
         <row id="link-type">
-          <label value="&link-type.label;"/>
+          <label value="&link-type.label; "/>
           <label id="link-type-text" value=""/>
         </row>
         <row id="link-lang">
-          <label value="&link-lang.label;"/>
+          <label value="&link-lang.label; "/>
           <label id="link-lang-text" value=""/>
         </row>
         <row id="link-rel">
-          <label value="&link-rel.label;"/>
+          <label value="&link-rel.label; "/>
           <label id="link-rel-text" value=""/>
         </row>
         <row id="link-rev">
-          <label value="&link-rev.label;"/>
+          <label value="&link-rev.label; "/>
           <label id="link-rev-text" value=""/>
         </row>
       </rows>
@@ -108,7 +108,7 @@
       </columns>
       <rows>
         <row id="image-url">
-          <label value="&image-url.label;"/>
+          <label value="&image-url.label; "/>
           <hbox>
             <label id="image-url-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
@@ -116,21 +116,21 @@
           </hbox>
         </row>
         <row id="image-width">
-          <label value="&image-width.label;"/>
+          <label value="&image-width.label; "/>
           <hbox>
             <label id="image-width-text" value=""/>
             <label value=" &image-pixels.label;"/>
           </hbox>
         </row>
         <row id="image-height">    
-          <label value="&image-height.label;"/>
+          <label value="&image-height.label; "/>
           <hbox>
             <label id="image-height-text" value=""/>
-            <label value="&image-pixels.label;"/>
+            <label value=" &image-pixels.label;"/>
           </hbox>
         </row>
         <row id="image-desc">
-          <label value="&image-desc.label;"/>
+          <label value="&image-desc.label; "/>
           <hbox>
             <label id="image-desc-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
@@ -149,7 +149,7 @@
       </columns>
       <rows>
         <row id="insdel-cite">
-          <label value="&insdel-cite.label;"/>
+          <label value="&insdel-cite.label; "/>
           <hbox>
             <label id="insdel-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
@@ -157,7 +157,7 @@
           </hbox>
         </row>
         <row id="insdel-date">
-          <label value="&insdel-date.label;"/>
+          <label value="&insdel-date.label; "/>
           <label id="insdel-date-text" value=""/>
         </row>
       </rows>
@@ -172,7 +172,7 @@
       </columns>
       <rows>
         <row id="quote-cite">
-          <label value="&quote-cite.label;"/>
+          <label value="&quote-cite.label; "/>
           <hbox>
             <label id="quote-cite-text" value="" class="text-link" 
                   onclick="openLink(this)"/>
@@ -191,17 +191,17 @@
       </columns>
       <rows>
         <row id="misc-lang">
-          <label value="&misc-lang.label;"/>
+          <label value="&misc-lang.label; "/>
           <label id="misc-lang-text" value=""/>
         </row>
         <row id="misc-title">
-          <label value="&misc-title.label;"/>
+          <label value="&misc-title.label; "/>
           <hbox>
           <description id="misc-title-text" width="100%" style="margin: 0px;"/>
           </hbox>
         </row>
         <row id="misc-tblsummary">
-          <label value="&misc-tblsummary.label;"/>
+          <label value="&misc-tblsummary.label; "/>
           <label id="misc-tblsummary-text" value=""/>
         </row>
       </rows>
