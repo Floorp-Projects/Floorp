@@ -363,7 +363,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
         if (globalObject) {
           nsIContent* currentFocus = mCurrentFocus;
-          mCurrentFocus = nsnull;
+          mCurrentFocus = nsnull; // keep the owning reference in currentFocus
           if(gLastFocusedDocument != mDocument) {
             mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
             if (currentFocus && currentFocus != gLastFocusedContent)
@@ -371,7 +371,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           }
           
           globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
-          mCurrentFocus = currentFocus;
+          NS_IF_RELEASE(mCurrentFocus);
+          mCurrentFocus = currentFocus; // we kept this reference above
           NS_IF_RELEASE(gLastFocusedContent);
           gLastFocusedContent = mCurrentFocus;
           NS_IF_ADDREF(gLastFocusedContent);
