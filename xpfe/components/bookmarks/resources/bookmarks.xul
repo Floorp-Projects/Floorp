@@ -19,8 +19,7 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
-<?xml-stylesheet href="chrome://bookmarks/skin/manage-bookmarks.css"
-   type="text/css"?>
+<?xml-stylesheet href="chrome://bookmarks/skin/manage-bookmarks.css" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bookmarks.dtd">
@@ -115,13 +114,41 @@
 
   <treehead>
     <treerow>
-      <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');"/>
-      <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');"/>
-      <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');"/>
-      <treecell onclick="return doSort('DescriptionColumn');" value="&tree.header.description.label;"/>
-      <treecell onclick="return doSort('LastVisitColumn');" value="&tree.header.lastvisit.label;"/>
-      <treecell onclick="return doSort('AddedOnColumn');" value="&tree.header.addedon.label;"/>
-      <treecell onclick="return doSort('LastModColumn');" value="&tree.header.lastmod.label;"/>
+      <treecell onclick="return doSort('NameColumn');">
+      	<observes element="NameColumn" attribute="sortActive"/>
+      	<observes element="NameColumn" attribute="sortDirection"/>
+      	&tree.header.name.label;
+      </treecell>
+      <treecell onclick="return doSort('URLColumn');">
+      	<observes element="URLColumn" attribute="sortActive"/>
+      	<observes element="URLColumn" attribute="sortDirection"/>
+      	&tree.header.url.label;
+      </treecell>
+      <treecell onclick="return doSort('ShortcutURLColumn');">
+      	<observes element="ShortcutURLColumn" attribute="sortActive"/>
+      	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
+      	&tree.header.shortcut.label;
+      </treecell>
+      <treecell onclick="return doSort('DescriptionColumn');">
+      	<observes element="DescriptionColumn" attribute="sortActive"/>
+      	<observes element="DescriptionColumn" attribute="sortDirection"/>
+      	&tree.header.description.label;
+      </treecell>
+      <treecell onclick="return doSort('LastVisitColumn');">
+      	<observes element="LastVisitColumn" attribute="sortActive"/>
+      	<observes element="LastVisitColumn" attribute="sortDirection"/>
+      	&tree.header.lastvisit.label;
+      </treecell>
+      <treecell onclick="return doSort('AddedOnColumn');">
+      	<observes element="AddedOnColumn" attribute="sortActive"/>
+      	<observes element="AddedOnColumn" attribute="sortDirection"/>
+      	&tree.header.addedon.label;
+      </treecell>
+      <treecell onclick="return doSort('LastModColumn');">
+      	<observes element="LastModColumn" attribute="sortActive"/>
+      	<observes element="LastModColumn" attribute="sortDirection"/>
+      	&tree.header.lastmod.label;
+      </treecell>
     </treerow>
   </treehead>
 </tree>

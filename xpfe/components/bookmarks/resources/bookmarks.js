@@ -20,6 +20,8 @@
   Script for the bookmarks properties window
 */
 
+
+
 function BookmarkProperties()
 {
   var tree = document.getElementById('bookmarksTree');
@@ -40,10 +42,14 @@ function BookmarkProperties()
   }
 }
 
+
+
 function OpenSearch(tabName)
 {
 	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
 }
+
+
 
 function OpenURL(event, node)
 {
@@ -101,210 +107,7 @@ function OpenURL(event, node)
     return(true);
 }
 
-var htmlInput = null;
-var saveNode = null;
-var newValue = "";
-var timerID = null;
-var gEditNode = null;
 
-function DoSingleClick(event, node)
-{
-  var type = node.parentNode.parentNode.getAttribute('type');
-  var selected = node.parentNode.parentNode.getAttribute('selected');
-  
-  if (gEditNode == node) {
-    // Only start an inline edit if it is the second consecutive click
-    // on the same node that is not already editing or a separator.
-    if (!htmlInput &&
-        type != "http://home.netscape.com/NC-rdf#BookmarkSeparator") {
-      // Edit node if we don't get a double-click in less than 1/2 second
-      timerID = setTimeout("OpenEditNode()", 500);
-    }
-  } else {
-    if (htmlInput) {
-      // Clicked during an edit
-      // Save the changes and move on
-      CloseEditNode(true);
-    }
-    gEditNode = node;
-  }
-  return false;
-}
-
-function OpenEditNode()
-{
-    dump("OpenEditNode entered.\n");
-
-    // clear any single-click/edit timeouts
-    if (timerID != null)
-    {
-        clearTimeout(timerID);
-        timerID = null;
-    }
-
-    // XXX uncomment the following line to replace the whole input row we do this
-    // (and, therefore, only allow editing on the name column) until we can
-    // arbitrarily change the content model (bugs prevent this at the moment)
-    gEditNode = gEditNode.parentNode;
-
-    var name = gEditNode.parentNode.getAttribute("Name");
-    dump("Single click on '" + name + "'\n");
-
-    var theParent = gEditNode.parentNode;
-    dump("Parent node is a " + theParent.nodeName + "\n\n");
-
-    saveNode = gEditNode;
-
-    // unselect all nodes!
-    var select_list = document.getElementsByAttribute("selected", "true");
-    dump("# of Nodes selected: " + select_list.length + "\n\n");
-    for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-    {
-        var node = select_list[nodeIndex];
-        if (node)
-        {
-          dump("Unselecting node "+node.getAttribute("Name") + "\n");
-          node.removeAttribute("selected");
-        }
-    }
-
-    // XXX for now, just remove the child from the parent
-    // optimally, we'd like to not remove the child-parent relationship
-    // and instead just set a "display: none;" attribute on the child node
-
-//    gEditNode.setAttribute("style", "display: none;");
-//    dump("gEditNode hidden.\n");
-    theParent.removeChild(gEditNode);
-    gEditNode = null;
-    dump("gEditNode removed.\n");
-
-    // create the html:input node
-    htmlInput = document.createElement("html:input");
-    htmlInput.setAttribute("value", name);
-    htmlInput.setAttribute("onkeydown", "return EditNodeKeyDown(event)");
-    htmlInput.setAttribute("onkeyup", "return EditNodeKeyUp(event)");
-
-    theParent.appendChild(htmlInput);
-    dump("html:input node added.\n");
-
-    htmlInput.focus();
-
-    dump("OpenEditNode done.\n");
-    return(true);
-}
-
-function CloseEditNode(saveChangeFlag)
-{
-    dump("CloseEditNode entered.\n");
-
-    if (htmlInput)
-    {
-        if (saveChangeFlag)
-        {
-            newValue = htmlInput.value;
-        }
-        dump("  Got html input: "+newValue+" \n");
-
-        var theParent = htmlInput.parentNode;
-        theParent.removeChild(htmlInput);
-        theParent.appendChild(saveNode);
-        dump("  child node appended.\n");
-
-        if (saveNode && saveChangeFlag)
-        {
-            var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-            RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-            var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-            dump("Got bookmarks datasource.\n");
-
-            // XXX once we support multi-column editing, get the property
-            // from the column in the content model
-            var propertyName = "http://home.netscape.com/NC-rdf#Name";
-            var propertyNode = RDF.GetResource(propertyName, true);
-            dump("  replacing value of property '" + propertyName + "'\n");
-            
-            // get the URI
-            var theNode = saveNode;
-            var bookmarkURL = "";
-            while(true)
-            {
-                var tag = theNode.nodeName;
-                if (tag == "treeitem")
-                {
-                    bookmarkURL = theNode.getAttribute("id");
-                    break;
-                }
-                theNode = theNode.parentNode;
-            }
-            dump("  uri is '" + bookmarkURL + "'\n");
-
-            if (bookmarkURL == "")    return(false);
-            var bookmarkNode = RDF.GetResource(bookmarkURL, true);
-
-
-            dump("  newValue = '" + newValue + "'\n");
-            newValue = (newValue != "") ? RDF.GetLiteral(newValue) : null;
-
-            var oldValue = Bookmarks.GetTarget(bookmarkNode, propertyNode, true);
-            if (oldValue)
-            {
-                oldValue = oldValue.QueryInterface(Components.interfaces.nsIRDFLiteral);
-                dump("  oldValue = '" + oldValue + "'\n");
-            }
-
-            if (oldValue != newValue)
-            {
-                if (oldValue && !newValue)
-                {
-                    Bookmarks.Unassert(bookmarkNode, propertyNode, oldValue);
-                    dump("  Unassert used.\n");
-                }
-                else if (!oldValue && newValue)
-                {
-                    Bookmarks.Assert(bookmarkNode, propertyNode, newValue, true);
-                    dump("  Assert used.\n");
-                }
-                else if (oldValue && newValue)
-                {
-                    Bookmarks.Change(bookmarkNode, propertyNode, oldValue, newValue);
-                    dump("  Change used.\n");
-                }
-
-                dump("re-writing bookmarks.html\n");
-                var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-                remote.Flush();
-            }
-
-            newValue = "";
-            saveNode = null;
-        }
-        else dump("saveNode was null?\n");
-        htmlInput = null;
-    }
-    else dump("htmlInput was null?\n");
-
-    dump("CloseEditNode done.\n");
-}
-
-function EditNodeKeyDown(event)
-{
-    if (event.which == 27)
-    {
-        CloseEditNode(false);
-        return(false);
-    }
-    return(true);
-}
-
-function EditNodeKeyUp(event)
-{
-    if (event.which == 13 || event.which == 10)
-    {
-        CloseEditNode(true);
-        return(false);
-    }
-    return(true);
-}
 
 function doSort(sortColName)
 {
@@ -333,12 +136,12 @@ function doSort(sortColName)
       return(false);
     }
     rdfCore.Init("RDFCore");
-//    XPAppCoresManager.Add(rdfCore);
   }
   // sort!!!
   rdfCore.doSort(node, sortResource, sortDirection);
   return(false);
 }
+
 
 
 function fillContextMenu(name)
