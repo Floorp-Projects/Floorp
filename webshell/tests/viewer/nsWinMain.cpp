@@ -56,12 +56,12 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 }
 
 nsEventStatus
-nsNativeBrowserWindow::DispatchMenuItem(nsGUIEvent* aEvent)
+nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
   // Dispatch windows-only menu code goes here
 
   // Dispatch xp menu items
-  return nsBrowserWindow::DispatchMenuItem(aEvent);
+  return nsBrowserWindow::DispatchMenuItem(aID);
 }
 
 //----------------------------------------------------------------------
