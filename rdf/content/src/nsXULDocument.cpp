@@ -659,9 +659,9 @@ public:
 
     NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
+    NS_IMETHOD CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
 
-    virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+    NS_IMETHOD ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
     virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
@@ -2443,16 +2443,18 @@ XULDocumentImpl::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool 
     return NS_ERROR_FAILURE;
 }
 
-void 
+NS_IMETHODIMP 
 XULDocumentImpl::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
     PR_ASSERT(0);
+    return NS_OK;
 }
 
-void 
+NS_IMETHODIMP 
 XULDocumentImpl::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
     PR_ASSERT(0);
+    return NS_OK;
 }
 
 void 
