@@ -249,11 +249,9 @@
       // If not updating (i.e., a newly encountered mime type),
       // then update extension list and description.
       if (!entry.mUpdateMode) {
-        var extCount           = { value: 0 };
-        var extArray           = { value: null };
-        info.GetFileExtensions(extCount, extArray);
-        for (var i = 0; i < extArray.value.length; i++) {
-          entry.addExtension(extArray.value[i]);
+        var extEnumerator = info.getFileExtensions();
+        while (extEnumerator.hasMore()) {
+            entry.addExtension(extEnumerator.getNext());
         }
         entry.description = info.Description;
         entry.appDisplayName = "";

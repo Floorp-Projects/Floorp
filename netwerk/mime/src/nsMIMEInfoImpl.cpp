@@ -38,6 +38,7 @@
 #include "nsMIMEInfoImpl.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsStringEnumerator.h"
 
 // nsISupports methods
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
@@ -59,32 +60,9 @@ nsMIMEInfoImpl::GetExtCount() {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
-    PRUint32 count = mExtensions.Count();
-    *elementCount = count; 
-    *extensions = nsnull;
-    if (count < 1) {
-      return NS_OK;
-    }
-
-    char **_retExts = (char**)nsMemory::Alloc((count)*sizeof(char*));
-    if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
-
-    for (PRUint32 i=0; i < count; i++) {
-        nsCString* ext = mExtensions.CStringAt(i);
-        _retExts[i] = ToNewCString(*ext);
-        if (!_retExts[i]) {
-            // clean up all the strings we've allocated
-            while (i-- != 0) nsMemory::Free(_retExts[i]);
-            nsMemory::Free(_retExts);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
-
-    *elementCount = count;
-    *extensions   = _retExts;
-
-    return NS_OK;
+nsMIMEInfoImpl::GetFileExtensions(nsIUTF8StringEnumerator** aResult)
+{
+  return NS_NewUTF8StringEnumerator(aResult, &mExtensions, this);
 }
 
 NS_IMETHODIMP
