@@ -29,7 +29,7 @@ sub Help {
         'hi' => 'To greet the bot.',
         'bye' => 'To say goodbye to the bot.',
         'ping' => 'To check the bot is alive.',
-        'uptime' => 'Gives the amount of time that the bot has been active.',
+        'status' => 'Gives the amount of time that the bot has been active.',
         'seen' => 'Says how long it\'s been since the last time someone was seen. Syntax: seen victim',
     };
 }
