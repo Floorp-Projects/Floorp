@@ -64,7 +64,6 @@ function SetSortColumn(column_name)
     }
 }
 
-
 function sort_column(column, direction)
 {
     var isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
