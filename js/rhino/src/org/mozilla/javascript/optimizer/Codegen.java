@@ -271,15 +271,8 @@ public class Codegen extends Interpreter {
 /*
     we generate ..
         Scriptable directConstruct(<directCallArgs>) {
-            Scriptable newInstance = new NativeObject();
-            newInstance.setPrototype(getClassPrototype());
-            newInstance.setParentScope(getParentScope());
-
-            Object val = callDirect(<directCallArgs>);
-            // except that the incoming thisArg is discarded
-            // and replaced by newInstance
-            //
-
+            Scriptable newInstance = createObject(cx, scope);
+            Object val = callDirect(cx, scope, newInstance, <directCallArgs>);
             if (val != null && val != Undefined.instance &&
                 val instanceof Scriptable)
             {
@@ -296,43 +289,22 @@ public class Codegen extends Interpreter {
                         flags);
 
         int argCount = fnNode.getVariableTable().getParameterCount();
-        short firstLocal = (short)((4 + argCount * 3) + 1);
+        int firstLocal = (4 + argCount * 3) + 1;
 
-        addByteCode(ByteCode.NEW, "org/mozilla/javascript/NativeObject");
-        addByteCode(ByteCode.DUP);
-        classFile.add(ByteCode.INVOKESPECIAL,
-                                "org/mozilla/javascript/NativeObject",
-                                "<init>", "()", "V");
-        astore(firstLocal);
-
-        aload(firstLocal);
-        aload((short)0);
-        addVirtualInvoke("org/mozilla/javascript/NativeFunction",
-                            "getClassPrototype",
-                            "()", "Lorg/mozilla/javascript/Scriptable;");
-        classFile.add(ByteCode.INVOKEINTERFACE,
-                        "org/mozilla/javascript/Scriptable",
-                        "setPrototype",
-                        "(Lorg/mozilla/javascript/Scriptable;)",
-                        "V");
-
-
-        aload(firstLocal);
-        aload((short)0);
-        addVirtualInvoke("org/mozilla/javascript/NativeFunction",
-                            "getParentScope",
-                            "()", "Lorg/mozilla/javascript/Scriptable;");
-        classFile.add(ByteCode.INVOKEINTERFACE,
-                        "org/mozilla/javascript/Scriptable",
-                        "setPrototype",
-                        "(Lorg/mozilla/javascript/Scriptable;)",
-                        "V");
-
+        aload((short)0); // this
+        aload((short)1); // cx
+        aload((short)2); // scope
+        addVirtualInvoke("org/mozilla/javascript/BaseFunction",
+                         "createObject",
+                         "(Lorg/mozilla/javascript/Context;"
+                         +"Lorg/mozilla/javascript/Scriptable;)",
+                         "Lorg/mozilla/javascript/Scriptable;");
+        astore((short)firstLocal);
 
         aload((short)0);
         aload((short)1);
         aload((short)2);
-        aload(firstLocal);
+        aload((short)firstLocal);
         for (int i = 0; i < argCount; i++) {
             aload((short)(4 + (i * 3)));
             dload((short)(5 + (i * 3)));
@@ -358,7 +330,7 @@ public class Codegen extends Interpreter {
         addByteCode(ByteCode.ARETURN);
         markLabel(exitLabel);
 
-        aload(firstLocal);
+        aload((short)firstLocal);
         addByteCode(ByteCode.ARETURN);
 
         classFile.stopMethod((short)(firstLocal + 2), null);
