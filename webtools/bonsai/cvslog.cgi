@@ -172,7 +172,7 @@ my $sortstr = $opt_sort eq "author" ? "&sort=author" : "";
 print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$start_rev}), "GMT")."\n";
 print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
 
-my $ctype = $::FORM{ctype};
+my $ctype = $::FORM{ctype} || "html";
 if ($ctype eq "rss") {
     print "Content-Type: application/rss+xml\n\n";
     display_rss();

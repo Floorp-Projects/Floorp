@@ -60,8 +60,9 @@ require 'cvsblame.pl';
 print "Content-Type:text/html\n";
 if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
     # Expire the cookie 5 months from now
-    print "Set-Cookie: line_nums=$::FORM{set_line}; expires="
-        . toGMTString(time + 86400 * 152) . "; path=/\n";
+    print "Set-Cookie: line_nums="
+	. &ExpectOnOff("set_line", $::FORM{set_line}) . "; expires="
+        . &toGMTString(time + 86400 * 152) . "; path=/\n";
 }
 
 # Some Globals
@@ -592,13 +593,15 @@ sub print_usage {
     if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
   
         # Expire the cookie 5 months from now
-        my $set_cookie = "Set-Cookie: line_nums=$::FORM{set_line}; expires="
+        my $set_cookie = "Set-Cookie: line_nums="
+	    . &ExpectOnOff("set_line", $::FORM{set_line}) . "; expires="
             .&toGMTString(time + 86400 * 152)."; path=/";
 	# XXX Hey, nothing is done with this handy cookie string! ### XXX
     }
     if ( not defined $::COOKIE{line_nums} and not defined $::FORM{set_line}) {
         $new_linenum = 'on';
-    } elsif ($::COOKIE{line_nums} eq 'off' or $::FORM{set_line} eq 'off') {
+    } elsif ((defined($::COOKIE{line_nums}) && $::COOKIE{line_nums} eq 'off')
+	     or (defined($::FORM{line_nums}) && $::FORM{set_line} eq 'off')) {
         $linenum_message = 'Line numbers are currently <b>off</b>.';
         $new_linenum = 'on';
     } else {
