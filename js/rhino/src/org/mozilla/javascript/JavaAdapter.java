@@ -55,10 +55,7 @@ public class JavaAdapter extends ScriptableObject {
         return "JavaAdapter";
     }
 
-    public static Object convertResult(Object result, String classname)
-        throws ClassNotFoundException
-    {
-        Class c = ScriptRuntime.loadClassName(classname);
+    public static Object convertResult(Object result, Class c) {
         if (result == Undefined.instance &&
             (c != ScriptRuntime.ObjectClass &&
              c != ScriptRuntime.StringClass))
@@ -621,10 +618,16 @@ public class JavaAdapter extends ScriptableObject {
             String retTypeStr = retType.getName();
             cfw.addLoadConstant(retTypeStr);
             cfw.add(ByteCode.INVOKESTATIC,
+                    "java/lang/Class",
+                    "forName",
+                    "(Ljava/lang/String;)",
+                    "Ljava/lang/Class;");
+
+            cfw.add(ByteCode.INVOKESTATIC,
                     "org/mozilla/javascript/JavaAdapter",
                     "convertResult",
                     "(Ljava/lang/Object;" +
-                    "Ljava/lang/String;)",
+                    "Ljava/lang/Class;)",
                     "Ljava/lang/Object;");
             // Now cast to return type
             cfw.add(ByteCode.CHECKCAST, retTypeStr.replace('.', '/'));
@@ -686,8 +689,8 @@ public class JavaAdapter extends ScriptableObject {
                 // Get argument Class
                 cfw.addLoadConstant(parms[i].getName());
                 cfw.add(ByteCode.INVOKESTATIC,
-                        "org/mozilla/javascript/ScriptRuntime",
-                        "loadClassName",
+                        "java/lang/Class",
+                        "forName",
                         "(Ljava/lang/String;)",
                         "Ljava/lang/Class;");
 
