@@ -2190,7 +2190,24 @@ static PRBool areTheSameFileNames(char * name1, char * name2)
   if(PL_strlen(filename1) != PL_strlen(filename2))
     return PR_FALSE;
 
+  // this one MUST be case insensitive for Windows and MUST be case sensitive
+  // for Unix. How about Win2000?
   return (nsnull == PL_strncasecmp(filename1, filename2, PL_strlen(filename1)));
+}
+
+static PRBool isJavaPlugin(nsPluginTag * tag)
+{
+  if(tag->mFileName == nsnull)
+    return PR_FALSE;
+
+  char * filename = PL_strrchr(tag->mFileName, '\\');
+
+  if(filename != nsnull)
+		filename++;
+	else
+		filename = tag->mFileName;
+
+  return (nsnull == PL_strncasecmp(filename, "npjava", 6));
 }
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
@@ -2207,7 +2224,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   if(!pluginsDir4x.Valid() && !pluginsDirMoz.Valid())
   	return NS_ERROR_FAILURE;
 
-	// firts, make a list from MOZ_LOCAL installation
+	// first, make a list from MOZ_LOCAL installation
   for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
   {
 		const nsFileSpec& file = iter;
@@ -2260,21 +2277,30 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 				pluginTag->mLibrary = pluginLibrary;
 
         // search for a match in the list of MOZ_LOCAL plugins, ignore if found, add if not
-        PRBool bFound = PR_FALSE;
-        for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
+        PRBool bAddIt = PR_TRUE;
+
+        // make sure we ignore 4.x Java plugins no matter what
+        if(isJavaPlugin(pluginTag))
+          bAddIt = PR_FALSE;
+        else
         {
-          if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
+          for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
           {
-            bFound = PR_TRUE;
-            break;
+            if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
+            {
+              bAddIt = PR_FALSE;
+              break;
+            }
           }
         }
 
-        if(!bFound)
+        if(bAddIt)
         {
 				  pluginTag->mNext = mPlugins;
 				  mPlugins = pluginTag;
         }
+        else
+          delete pluginTag;
 
 #ifndef XP_WIN
 			}
