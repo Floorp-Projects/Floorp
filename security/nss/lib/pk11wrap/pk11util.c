@@ -55,7 +55,8 @@ extern PK11DefaultArrayEntry PK11_DefaultArray[];
 extern int num_pk11_default_mechanisms;
 
 
-void SECMOD_Init() {
+void
+SECMOD_Init() {
     /* don't initialize twice */
     if (moduleLock) return;
 
@@ -64,7 +65,8 @@ void SECMOD_Init() {
 }
 
 
-void SECMOD_Shutdown() {
+SECStatus
+SECMOD_Shutdown() {
     /* destroy the lock */
     if (moduleLock) {
 	SECMOD_DestroyListLock(moduleLock);
@@ -106,6 +108,7 @@ void SECMOD_Shutdown() {
 	PORT_Assert(secmod_PrivateModuleCount == 0);
     }
 #endif
+   return (secmod_PrivateModuleCount == 0) ? SECSuccess : SECFailure;
 }
 
 

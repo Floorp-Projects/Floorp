@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.43 2002/04/12 19:05:09 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.44 2002/04/26 22:36:05 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -454,13 +454,16 @@ NSS_NoDB_Init(const char * configdir)
 				PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
 }
 
-void
+SECStatus
 NSS_Shutdown(void)
 {
+    SECStatus rv;
+
     SECOID_Shutdown();
     STAN_Shutdown();
-    SECMOD_Shutdown();
+    rv = SECMOD_Shutdown();
     nss_IsInitted = PR_FALSE;
+    return rv;
 }
 
 
