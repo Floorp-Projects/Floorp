@@ -1070,10 +1070,10 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
         if (!type.Equals(NS_LITERAL_STRING("text/html"))) {
           sheet->GetTitle(title);
           if (!title.IsEmpty()) {  // if sheet has title
-            PRBool disabled = (aData.IsEmpty() ||
-                               !title.Equals(aData,
-                                             nsCaseInsensitiveStringComparator()));
-            SetStyleSheetDisabledState(sheet, disabled);
+            PRBool enabled = (!aData.IsEmpty() &&
+                              title.Equals(aData,
+                                           nsCaseInsensitiveStringComparator()));
+            sheet->SetEnabled(enabled);
           }
         }
       }
