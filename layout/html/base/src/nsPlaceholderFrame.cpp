@@ -87,6 +87,13 @@ nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPlaceholderFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+{
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsPlaceholderFrame::Paint(nsIPresContext*      aPresContext,
@@ -122,12 +129,12 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
+  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", (void*)view);
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {

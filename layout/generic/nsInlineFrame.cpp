@@ -111,6 +111,84 @@ nsInlineFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+inline PRBool
+IsBorderZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0));
+}
+
+inline PRBool
+IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return (aUnit == eStyleUnit_Null ||
+            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+}
+
+inline PRBool
+IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return (aUnit == eStyleUnit_Null ||
+            aUnit == eStyleUnit_Auto ||
+            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+}
+
+NS_IMETHODIMP
+nsInlineFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult)
+{
+  if (!aIsQuirkMode) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+  const nsStyleMargin* margin = NS_STATIC_CAST(const nsStyleMargin*,
+                             mStyleContext->GetStyleData(eStyleStruct_Margin));
+  const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
+                             mStyleContext->GetStyleData(eStyleStruct_Border));
+  const nsStylePadding* padding = NS_STATIC_CAST(const nsStylePadding*,
+                            mStyleContext->GetStyleData(eStyleStruct_Padding));
+  nsStyleCoord coord;
+  if ((border->IsBorderSideVisible(NS_SIDE_TOP) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      (border->IsBorderSideVisible(NS_SIDE_RIGHT) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      (border->IsBorderSideVisible(NS_SIDE_BOTTOM) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      (border->IsBorderSideVisible(NS_SIDE_LEFT) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      !IsPaddingZero(padding->mPadding.GetTopUnit(),
+                    padding->mPadding.GetTop(coord)) ||
+      !IsPaddingZero(padding->mPadding.GetRightUnit(),
+                    padding->mPadding.GetRight(coord)) ||
+      !IsPaddingZero(padding->mPadding.GetBottomUnit(),
+                    padding->mPadding.GetBottom(coord)) ||
+      !IsPaddingZero(padding->mPadding.GetLeftUnit(),
+                    padding->mPadding.GetLeft(coord)) ||
+      !IsMarginZero(margin->mMargin.GetTopUnit(),
+                    margin->mMargin.GetTop(coord)) ||
+      !IsMarginZero(margin->mMargin.GetRightUnit(),
+                    margin->mMargin.GetRight(coord)) ||
+      !IsMarginZero(margin->mMargin.GetBottomUnit(),
+                    margin->mMargin.GetBottom(coord)) ||
+      !IsMarginZero(margin->mMargin.GetLeftUnit(),
+                    margin->mMargin.GetLeft(coord))) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  *aResult = PR_TRUE;
+  for (nsIFrame *kid = mFrames.FirstChild(); kid; kid->GetNextSibling(&kid)) {
+    kid->IsEmpty(aIsQuirkMode, aIsPre, aResult);
+    if (! *aResult)
+      break;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsInlineFrame::AppendFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,

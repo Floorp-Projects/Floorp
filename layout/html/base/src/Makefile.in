@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsSelectsAreaFrame.cpp \
 		nsAbsoluteContainingBlock.cpp \
 		nsAreaFrame.cpp \
 		nsBRFrame.cpp \
@@ -74,10 +73,11 @@ CPPSRCS		= \
 		nsFirstLetterFrame.cpp \
 		nsFrame.cpp \
 		nsFrameManager.cpp \
+		nsGfxScrollFrame.cpp \
 		nsHRFrame.cpp \
 		nsHTMLContainerFrame.cpp \
-		nsHTMLIIDs.cpp \
 		nsHTMLFrame.cpp \
+		nsHTMLIIDs.cpp \
 		nsHTMLReflowCommand.cpp \
 		nsHTMLReflowState.cpp \
 		nsImageFrame.cpp \
@@ -90,15 +90,15 @@ CPPSRCS		= \
 		nsPageFrame.cpp \
 		nsPlaceholderFrame.cpp \
 		nsPresShell.cpp \
-		nsSimplePageSequence.cpp \
 		nsScrollFrame.cpp \
+		nsScrollPortFrame.cpp \
+		nsSelectsAreaFrame.cpp \
+		nsSimplePageSequence.cpp \
 		nsSpacerFrame.cpp \
 		nsSplittableFrame.cpp \
 		nsTextFrame.cpp \
 		nsTextTransformer.cpp \
 		nsViewportFrame.cpp \
-		nsGfxScrollFrame.cpp \
-		nsScrollPortFrame.cpp \
 		$(NULL)
 ifdef IBMBIDI
 CPPSRCS		+= \

@@ -1069,28 +1069,28 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
+  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
   }
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", mNextSibling);
+    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
   }
   if (nsnull != mPrevInFlow) {
-    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, mPrevInFlow));
   }
   if (nsnull != mNextInFlow) {
-    fprintf(out, " next-in-flow=%p", mNextInFlow);
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, mNextInFlow));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fprintf(out, " [content=%p]", mContent);
-  fprintf(out, " [sc=%p]", mStyleContext);
+  fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
+  fprintf(out, " [sc=%p]", NS_STATIC_CAST(void*, mStyleContext));
 
   // Output the children
   nsIAtom* listName = nsnull;

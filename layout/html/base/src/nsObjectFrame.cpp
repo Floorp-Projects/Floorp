@@ -120,7 +120,7 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 #include "nsIJVMManager.h"
 
 #include "nsContentCID.h"
-static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
+static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
 
 // XXX temporary for Mac double buffering pref
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -362,10 +362,10 @@ NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::Release(void)
   return 1;
 }
 
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
+static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_CID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRIntn
 nsObjectFrame::GetSkipSides() const

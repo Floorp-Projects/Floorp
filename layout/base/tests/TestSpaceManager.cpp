@@ -44,7 +44,8 @@
 
 class MySpaceManager: public nsSpaceManager {
 public:
-  MySpaceManager(nsIFrame* aFrame) : nsSpaceManager(aFrame) {}
+  MySpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
+      : nsSpaceManager(aPresShell, aFrame) {}
 
   PRBool  TestAddBand();
   PRBool  TestAddBandOverlap();
@@ -810,7 +811,7 @@ PRBool MySpaceManager::TestGetBandData()
 int main(int argc, char** argv)
 {
   // Create a space manager
-  MySpaceManager* spaceMgr = new MySpaceManager(nsnull);
+  MySpaceManager* spaceMgr = new MySpaceManager(nsnull, nsnull);
   
   NS_ADDREF(spaceMgr);
 

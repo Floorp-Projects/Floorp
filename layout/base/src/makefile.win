@@ -50,46 +50,24 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS =				\
-	nsAutoCopy.cpp			\
-	nsCopySupport.cpp   \
-	nsImageLoader.cpp		\
-	nsFrameList.cpp                 \
-	nsFrameTraversal.cpp            \
-	nsFrameUtil.cpp			\
-	nsGalleyContext.cpp		\
-	nsPresContext.cpp		\
-	nsPresState.cpp			\
-	nsPrintContext.cpp		\
-	nsPrintPreviewContext.cpp	\
-	nsSpaceManager.cpp		\
-	nsStyleChangeList.cpp		\
-	nsLayoutDebugger.cpp		\
-	nsCaret.cpp			\
-	nsLayoutHistoryState.cpp	\
-!ifdef IBMBIDI
-	nsBidiPresUtils.cpp		\
-!endif        
-	$(NULL)
-
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsAutoCopy.obj		\
-	.\$(OBJDIR)\nsCopySupport.obj         \
-	.\$(OBJDIR)\nsImageLoader.obj	\
+	.\$(OBJDIR)\nsCaret.obj			\
+	.\$(OBJDIR)\nsCopySupport.obj		\
 	.\$(OBJDIR)\nsFrameList.obj		\
-	.\$(OBJDIR)\nsFrameTraversal.obj        \
+	.\$(OBJDIR)\nsFrameTraversal.obj	\
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
+	.\$(OBJDIR)\nsImageLoader.obj		\
+	.\$(OBJDIR)\nsIntervalSet.obj		\
+	.\$(OBJDIR)\nsLayoutDebugger.obj	\
+	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPresState.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleChangeList.obj	\
-	.\$(OBJDIR)\nsLayoutDebugger.obj	\
-	.\$(OBJDIR)\nsCaret.obj			\
-	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
 !ifdef IBMBIDI
 	.\$(OBJDIR)\nsBidiPresUtils.obj		\
 !endif        

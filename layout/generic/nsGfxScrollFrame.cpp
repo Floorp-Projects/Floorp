@@ -70,9 +70,9 @@
 #include "nsIGfxTextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_CID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 
 
 

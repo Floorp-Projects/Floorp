@@ -214,6 +214,20 @@ public:
    */
   NS_IMETHOD ClearRegions() = 0;
 
+  /**
+   * Methods for dealing with the propagation of float damage during
+   * reflow.
+   *
+   * (Yes, this is bad XPCOM style, but I want to remove the interface
+   * here -- see bug 102453.  Once that's done, these (and many others)
+   * could be inline functions.)
+   */
+  NS_IMETHOD_(PRBool) HasFloatDamage() = 0;
+  NS_IMETHOD_(void) IncludeInDamage(nscoord aIntervalBegin,
+                                    nscoord aIntervalEnd) = 0;
+  NS_IMETHOD_(PRBool) IntersectsDamage(nscoord aIntervalBegin,
+                                       nscoord aIntervalEnd) = 0;
+
 #ifdef DEBUG
   /**
    * Dump the state of the spacemanager out to a file

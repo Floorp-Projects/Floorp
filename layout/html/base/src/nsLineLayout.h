@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:cindent:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -104,10 +105,6 @@ public:
                        nsReflowStatus& aReflowStatus,
                        nsHTMLReflowMetrics* aMetrics,
                        PRBool& aPushedFrame);
-
-  nscoord GetCarriedOutBottomMargin() const {
-    return mCarriedOutBottomMargin;
-  }
 
   nsresult AddBulletFrame(nsIFrame* aFrame,
                           const nsHTMLReflowMetrics& aMetrics);
@@ -269,7 +266,7 @@ public:
 protected:
   // This state is constant for a given block frame doing line layout
   nsISpaceManager* mSpaceManager;
-  const nsStyleText* mStyleText;
+  const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
   nsBlockReflowState* mBlockRS;/* XXX hack! */
   nscoord mMinLineHeight;
@@ -294,7 +291,6 @@ protected:
   nscoord mBottomEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
-  nscoord mCarriedOutBottomMargin;
 
   // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.

@@ -1647,8 +1647,6 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   // Record ascent and update max-ascent and max-descent values
   pfd->mAscent = aMetrics.ascent;
   pfd->mDescent = aMetrics.descent;
-//XXX  mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
-  mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
 
   // If the band was updated during the reflow of that frame then we
   // need to adjust any prior frames that were reflowed.
@@ -1710,8 +1708,8 @@ void
 nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 {
   nsFrame::IndentBy(stdout, aIndent);
-  printf("%p: left=%d x=%d right=%d\n", psd, psd->mLeftEdge,
-         psd->mX, psd->mRightEdge);
+  printf("%p: left=%d x=%d right=%d\n", NS_STATIC_CAST(void*, psd),
+         psd->mLeftEdge, psd->mX, psd->mRightEdge);
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
     nsFrame::IndentBy(stdout, aIndent+1);
@@ -2129,7 +2127,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   nsCOMPtr<nsIFontMetrics> fm;
   rc->GetFontMetrics(*getter_AddRefs(fm));
 
-  PRBool zeroEffectiveSpanBox = PR_FALSE;
   PRBool preMode = (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_PRE) ||
     (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
 
@@ -2189,6 +2186,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // This code works correctly for preMode, because a blank line
   // in PRE mode is encoded as a text node with a LF in it, since
   // text nodes with only whitespace are considered in preMode.
+  //
+  // Much of this logic is shared with the various implementations of
+  // nsIFrame::IsEmpty since they need to duplicate the way it makes
+  // some lines empty.  However, nsIFrame::IsEmpty can't be reused here
+  // since this code sets zeroEffectiveSpanBox even when there are
+  // non-empty children.
+  PRBool zeroEffectiveSpanBox = PR_FALSE;
   if ((emptyContinuation || !InStrictMode()) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&

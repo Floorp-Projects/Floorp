@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -80,25 +81,31 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
 }
 
-nscoord
+void
 nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
-                                                nsHTMLReflowState& aRS)
+                                                nsHTMLReflowState& aRS,
+                                   /* inout */  nsCollapsingMargin& aMargin)
 {
   // Get aFrame's top margin
-  nscoord topMargin = aRS.mComputedMargin.top;
+  aMargin.Include(aRS.mComputedMargin.top);
+
+#ifdef NOISY_VERTICAL_MARGINS
+  nsFrame::ListTag(stdout, aRS.frame);
+  printf(": %d => %d\n", aRS.mComputedMargin.top, aMargin.get());
+#endif
 
   // Calculate aFrame's generational top-margin from its child
   // blocks. Note that if aFrame has a non-zero top-border or
   // top-padding then this step is skipped because it will be a margin
   // root.  It is also skipped if the frame is a margin root for other
   // reasons.
-  nscoord generationalTopMargin = 0;
   if (0 == aRS.mComputedBorderPadding.top) {
     nsFrameState state;
     aRS.frame->GetFrameState(&state);
     if (!(state & NS_BLOCK_MARGIN_ROOT)) {
       nsBlockFrame* bf;
-      if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID, (void**)&bf))) {
+      if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID,
+                                         NS_REINTERPRET_CAST(void**, &bf)))) {
         // Ask the block frame for the top block child that we should
         // try to collapse the top margin with.
 
@@ -109,7 +116,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
         nsIFrame* childFrame = bf->GetTopBlockChild();
         if (nsnull != childFrame) {
 
-          // Here is where we recurse. Now that we have determined that a
+          // Here is where we recur. Now that we have determined that a
           // generational collapse is required we need to compute the
           // child blocks margin and so in so that we can look into
           // it. For its margins to be computed we need to have a reflow
@@ -117,24 +124,16 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
           nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
           nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
                                         availSpace);
-          generationalTopMargin =
-            ComputeCollapsedTopMargin(aPresContext, reflowState);
+          ComputeCollapsedTopMargin(aPresContext, reflowState, aMargin);
         }
       }
     }
   }
 
-  // Now compute the collapsed top-margin value. At this point we have
-  // the child frames effective top margin value.
-  nscoord collapsedTopMargin = MaxMargin(topMargin, generationalTopMargin);
-
 #ifdef NOISY_VERTICAL_MARGINS
   nsFrame::ListTag(stdout, aRS.frame);
-  printf(": topMargin=%d generationalTopMargin=%d => %d\n",
-         topMargin, generationalTopMargin, collapsedTopMargin);
+  printf(": => %d\n", aMargin.get());
 #endif
-
-  return collapsedTopMargin;
 }
 
 struct nsBlockHorizontalAlign {
@@ -245,7 +244,7 @@ nsresult
 nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                   const nsRect& aSpace,
                                   PRBool aApplyTopMargin,
-                                  nscoord aPrevBottomMargin,
+                                  nsCollapsingMargin& aPrevBottomMargin,
                                   PRBool aIsAdjacentWithTop,
                                   nsMargin& aComputedOffsets,
                                   nsReflowStatus& aFrameReflowStatus)
@@ -422,7 +421,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
                                     nsIFrame* aFrame,
                                     const nsRect& aSpace,
                                     PRBool aApplyTopMargin,
-                                    nscoord aPrevBottomMargin,
+                                    nsCollapsingMargin& aPrevBottomMargin,
                                     PRBool aIsAdjacentWithTop,
                                     nsMargin& aComputedOffsets,
                                     nsReflowStatus& aFrameReflowStatus)
@@ -438,32 +437,25 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   mIsTable = NS_STYLE_DISPLAY_TABLE == aReflowState.mStyleDisplay->mDisplay;
   mComputedWidth = aReflowState.mComputedWidth;
 
-  nscoord topMargin = 0;
   if (aApplyTopMargin) {
     // Compute the childs collapsed top margin (its margin collpased
     // with its first childs top-margin -- recursively).
-    topMargin = ComputeCollapsedTopMargin(mPresContext, aReflowState);
+    ComputeCollapsedTopMargin(mPresContext, aReflowState, aPrevBottomMargin);
 
 #ifdef NOISY_VERTICAL_MARGINS
     nsFrame::ListTag(stdout, mOuterReflowState.frame);
     printf(": reflowing ");
     nsFrame::ListTag(stdout, aFrame);
-    printf(" prevBottomMargin=%d, collapsedTopMargin=%d => %d\n",
-           aPrevBottomMargin, topMargin,
-           MaxMargin(topMargin, aPrevBottomMargin));
+    printf(" margin => %d\n", aPrevBottomMargin.get());
 #endif
-
-    // Collapse that value with the previous bottom margin to perform
-    // the sibling to sibling collaspe.
-    topMargin = MaxMargin(topMargin, aPrevBottomMargin);
 
     // Adjust the available height if its constrained so that the
     // child frame doesn't think it can reflow into its margin area.
-    if (aApplyTopMargin && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
-      aReflowState.availableHeight -= topMargin;
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
+      aReflowState.availableHeight -= aPrevBottomMargin.get();
     }
   }
-  mTopMargin = topMargin;
+  mTopMargin = aPrevBottomMargin.get();
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
@@ -473,7 +465,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   mStyleMargin = aReflowState.mStyleMargin;
   mStylePadding = aReflowState.mStylePadding;
   nscoord x;
-  nscoord y = aSpace.y + topMargin;
+  nscoord y = aSpace.y + mTopMargin;
 
   // If it's a right floated element, then calculate the x-offset
   // differently
@@ -698,14 +690,13 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
 PRBool
 nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
                                  const nsMargin& aComputedOffsets,
-                                 nscoord* aBottomMarginResult,
+                                 nsCollapsingMargin& aBottomMarginResult,
                                  nsRect& aInFlowBounds,
                                  nsRect& aCombinedRect)
 {
   // Compute collapsed bottom margin value
-  nscoord collapsedBottomMargin = MaxMargin(mMetrics.mCarriedOutBottomMargin,
-                                            mMargin.bottom);
-  *aBottomMarginResult = collapsedBottomMargin;
+  aBottomMarginResult = mMetrics.mCarriedOutBottomMargin;
+  aBottomMarginResult.Include(mMargin.bottom);
 
   // See if the block will fit in the available space
   PRBool fits = PR_TRUE;
@@ -723,8 +714,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   {
     // Collapse the bottom margin with the top margin that was already
     // applied.
-    nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
-    *aBottomMarginResult = newBottomMargin;
+    aBottomMarginResult.Include(mTopMargin);
 #ifdef NOISY_VERTICAL_MARGINS
     printf("  ");
     nsFrame::ListTag(stdout, mOuterReflowState.frame);

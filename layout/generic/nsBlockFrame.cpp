@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -71,6 +72,7 @@
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 #include "nsSpaceManager.h"
+#include "nsIntervalSet.h"
 #include "prenv.h"
 #include "plstr.h"
 #include "nsGUIEvent.h"
@@ -339,7 +341,8 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  if ( aIID.Equals(NS_GET_IID(nsILineIterator)) || aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)) )
+  if ( aIID.Equals(NS_GET_IID(nsILineIterator)) ||
+       aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)) )
   {
     nsLineIterator* it = new nsLineIterator;
     if (!it) {
@@ -379,18 +382,18 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
   }
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", mNextSibling);
+    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
   }
 
   // Output the flow linkage
   if (nsnull != mPrevInFlow) {
-    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, mPrevInFlow));
   }
   if (nsnull != mNextInFlow) {
-    fprintf(out, " next-in-flow=%p", mNextInFlow);
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, mNextInFlow));
   }
 
   // Output the rect and state
@@ -400,27 +403,28 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   }
   PRInt32 numInlineLines = 0;
   PRInt32 numBlockLines = 0;
-  if (nsnull != mLines) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
-      if (line->IsBlock()) {
+  if (! mLines.empty()) {
+    for (const_line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end;
+         ++line)
+    {
+      if (line->IsBlock())
         numBlockLines++;
-      }
-      else {
+      else
         numInlineLines++;
-      }
-      line = line->mNext;
     }
   }
-  fprintf(out, " sc=%p(i=%d,b=%d)<\n", mStyleContext, numInlineLines, numBlockLines);
+  fprintf(out, " sc=%p(i=%d,b=%d)<\n",
+          NS_STATIC_CAST(void*, mStyleContext), numInlineLines, numBlockLines);
   aIndent++;
 
   // Output the lines
-  if (nsnull != mLines) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
+  if (! mLines.empty()) {
+    for (const_line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end;
+         ++line)
+    {
       line->List(aPresContext, out, aIndent);
-      line = line->mNext;
     }
   }
 
@@ -444,7 +448,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
       while (nsnull != kid) {
         nsIFrameDebug*  frameDebug;
 
-        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+        if (NS_SUCCEEDED(CallQueryInterface(kid, &frameDebug))) {
           frameDebug->List(aPresContext, out, aIndent + 1);
         }
         kid->GetNextSibling(&kid);
@@ -491,12 +495,14 @@ nsBlockFrame::FirstChild(nsIPresContext* aPresContext,
     return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
   else if (nsnull == aListName) {
-    *aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
+    *aFirstChild = (mLines.empty()) ? nsnull : mLines.front()->mFirstChild;
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::overflowList) {
-    nsLineBox*  overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-    *aFirstChild = overflowLines ? overflowLines->mFirstChild : nsnull;
+    nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+    *aFirstChild = overflowLines
+                       ? overflowLines->front()->mFirstChild
+                       : nsnull;
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::floaterList) {
@@ -689,7 +695,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // only when there are actually floats to manage.  Otherwise things
   // like tables will gain significant bloat.
   if (NS_BLOCK_SPACE_MGR & mState) {
-    nsSpaceManager* rawPtr = nsSpaceManager::Create(this);
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsSpaceManager* rawPtr = nsSpaceManager::Create(shell, this);
     if (!rawPtr) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -710,7 +718,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (eReflowReason_Resize != aReflowState.reason) {
 #ifdef IBMBIDI
-    if (mLines) {
+    if (! mLines.empty()) {
       PRBool bidiEnabled;
       aPresContext->GetBidiEnabled(&bidiEnabled);
       if (bidiEnabled) {
@@ -719,11 +727,15 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
         if (bidiUtils) {
           PRBool forceReflow;
           nsresult rc = bidiUtils->Resolve(aPresContext, this,
-                                           mLines->mFirstChild, forceReflow);
+                                           mLines.front()->mFirstChild,
+                                           forceReflow);
           if (NS_SUCCEEDED(rc) && forceReflow) {
             // Mark everything dirty
             // XXXldb This should be done right.
-            for (nsLineBox* line = mLines; line; line = line->mNext) {
+            for (line_iterator line = begin_lines(), line_end = end_lines();
+                 line != line_end;
+                 ++line)
+            {
               line->MarkDirty();
             }
           }
@@ -792,6 +804,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     break;
 
   case eReflowReason_StyleChange:
+    DrainOverflowLines(aPresContext);
     rv = PrepareStyleChangedReflow(state);
     break;
 
@@ -998,7 +1011,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
            aMetrics.width, aMetrics.height,
-           aMetrics.mCarriedOutBottomMargin);
+           aMetrics.mCarriedOutBottomMargin.get());
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       printf(" combinedArea={%d,%d,%d,%d}",
              aMetrics.mOverflowArea.x,
@@ -1018,7 +1031,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     PRTime end = PR_Now();
 
     PRInt32 ectc = nsLineBox::GetCtorCount();
-    PRInt32 numLines = nsLineBox::ListLength(mLines);
+    PRInt32 numLines = mLines.size();
     if (!numLines) numLines = 1;
     PRTime delta, perLineDelta, lines;
     LL_I2L(lines, numLines);
@@ -1177,9 +1190,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // exactly one line and that line is not a block line AND that
       // line doesn't end in a BR of any sort THEN we remain a compact
       // frame.
-      if ((nsnull == mLines) ||
-          ((nsnull == mLines->mNext) && !mLines->IsBlock() &&
-           (NS_STYLE_CLEAR_NONE == mLines->GetBreakType())
+      if ((mLines.empty()) ||
+          ((mLines.front() == mLines.back()) && !mLines.front()->IsBlock() &&
+           (NS_STYLE_CLEAR_NONE == mLines.front()->GetBreakType())
            /*XXX && (computedWidth <= aState.mCompactMarginWidth) */
             )) {
         compact = PR_TRUE;
@@ -1252,7 +1265,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         reflowState.reason = eReflowReason_Resize;
         reflowState.mSpaceManager->ClearRegions();
 
+#ifdef DEBUG
         nscoord oldDesiredWidth = aMetrics.width;
+#endif
         nsBlockReflowState state(reflowState, aState.mPresContext, this, aMetrics,
                                  NS_BLOCK_MARGIN_ROOT & mState);
         ReflowDirtyLines(state);
@@ -1285,8 +1300,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // unless the bottom of the last line adjoins the bottom of our
     // content area.
     if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
-      if (aState.mY + aState.mPrevBottomMargin != aMetrics.height) {
-        aState.mPrevBottomMargin = 0;
+      if (aState.mY + aState.mPrevBottomMargin.get() != aMetrics.height) {
+        aState.mPrevBottomMargin.Zero();
       }
     }
   }
@@ -1298,7 +1313,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // When we are a bottom-margin root make sure that our last
       // childs bottom margin is fully applied.
       // XXX check for a fit
-      autoHeight += aState.mPrevBottomMargin;
+      autoHeight += aState.mPrevBottomMargin.get();
     }
     autoHeight += borderPadding.bottom;
 
@@ -1339,8 +1354,14 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // Return bottom margin information
-  aMetrics.mCarriedOutBottomMargin =
-    aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? 0 : aState.mPrevBottomMargin;
+  // rbs says he hit this assertion occasionally (see bug 86947), so
+  // just set the margin to zero and we'll figure out why later
+  //NS_ASSERTION(aMetrics.mCarriedOutBottomMargin.IsZero(),
+  //             "someone else set the margin");
+  if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT))
+    aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
+  else
+    aMetrics.mCarriedOutBottomMargin.Zero();
 
 #ifdef DEBUG_blocks
   if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
@@ -1383,8 +1404,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 // XXX_perf: This can be done incrementally
   nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
   if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
+    for (line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end;
+         ++line)
+    {
       // Compute min and max x/y values for the reflowed frame's
       // combined areas
       nsRect lineCombinedArea;
@@ -1405,7 +1428,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       if (ymost > yb) {
         yb = ymost;
       }
-      line = line->mNext;
     }
 
     // Factor the bullet in; normally the bullet will be factored into
@@ -1484,12 +1506,17 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 {
   // Determine the line being impacted
   PRBool isFloater;
-  nsLineBox* prevLine;
-  nsLineBox* line = FindLineFor(aState.mNextRCFrame, &prevLine, &isFloater);
-  if (! line) {
+  line_iterator line;
+  FindLineFor(aState.mNextRCFrame, &isFloater, &line);
+  if (line == end_lines()) {
     // This assertion actually fires on lots of pages
     // (e.g., bugzilla, bugzilla query page), so limit it
     // to a few people until we fix the problem causing it.
+    //
+    // I think waterson explained once why it was happening -- I think
+    // it has something to do with the interaction of the unconstrained
+    // reflow in multi-pass reflow with the reflow command's chain, but
+    // I don't remember the details.
 #if defined(DEBUG_dbaron) || defined(DEBUG_waterson)
     NS_NOTREACHED("We don't have a line for the target of the reflow.  "
                   "Being inefficient");
@@ -1506,19 +1533,21 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 
   if (line->IsInline()) {
     aState.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
-
-    // Don't mark the prevLine as dirty if BRS_ISINLINEINCRREFLOW
-    prevLine = nsnull;
   }
 
-  // Figure out which line to mark dirty.
-  MarkLineDirty(line, prevLine);
+  // Just mark this line dirty.  We never need to mark the
+  // previous line dirty since either:
+  //  * the line is a block, and there would never be a chance to pull
+  //    something up
+  //  * It's an incremental reflow to something within an inline, which
+  //    we know must be very limited.
+  line->MarkDirty();
 
   return NS_OK;
 }
 
 nsresult
-nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
+nsBlockFrame::MarkLineDirty(line_iterator aLine)
 {
   // Mark aLine dirty
   aLine->MarkDirty();
@@ -1526,22 +1555,23 @@ nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": mark line %p dirty\n", aLine);
+    printf(": mark line %p dirty\n", NS_STATIC_CAST(void*, aLine.get()));
   }
 #endif
 
   // Mark previous line dirty if its an inline line so that it can
   // maybe pullup something from the line just affected.
   // XXX We don't need to do this if aPrevLine ends in a break-after...
-  // XXXldb Couldn't we additionally limit this to when
-  // !aLine->IsBlock() ?
-  if (aPrevLine && !aPrevLine->IsBlock()) {
-    aPrevLine->MarkDirty();
+  if (aLine != mLines.front() &&
+      aLine->IsInline() &&
+      aLine.prev()->IsInline()) {
+    aLine.prev()->MarkDirty();
 #ifdef DEBUG
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": mark prev-line %p dirty\n", aPrevLine);
+      printf(": mark prev-line %p dirty\n",
+             NS_STATIC_CAST(void*, aLine.prev().get()));
     }
 #endif
   }
@@ -1562,10 +1592,11 @@ nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
     if (mBullet && HaveOutsideBullet()) {
       // We now have an inside bullet, but used to have an outside
       // bullet.  Adjust the frame line list
-      if (mLines) {
+      if (! mLines.empty()) {
         // if we have a line already, then move the bullet to the front of the
         // first line
         nsIFrame* child = nsnull;
+        nsLineBox* firstLine = mLines.front();
         
 #ifdef DEBUG
         // bullet should not have any siblings if it was an outside bullet
@@ -1574,20 +1605,20 @@ nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
         NS_ASSERTION(!next, "outside bullet should not have siblings");
 #endif
         // move bullet to front and chain the previous frames, and update the line count
-        child = mLines->mFirstChild;
-        mLines->mFirstChild = mBullet;
+        child = firstLine->mFirstChild;
+        firstLine->mFirstChild = mBullet;
         mBullet->SetNextSibling(child);
-        PRInt32 count = mLines->GetChildCount();
-        mLines->SetChildCount(count+1);
+        PRInt32 count = firstLine->GetChildCount();
+        firstLine->SetChildCount(count+1);
         // dirty it here in case the caller does not
-        mLines->MarkDirty();
+        firstLine->MarkDirty();
       } else {
         // no prior lines, just create a new line for the bullet
         nsLineBox* line = aState.NewLineBox(mBullet, 1, PR_FALSE);
         if (!line) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        mLines = line;
+        mLines.push_back(line);
       }
     }
     mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
@@ -1597,24 +1628,24 @@ nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
       // We now have an outside bullet, but used to have an inside
       // bullet. Take the bullet frame out of the first lines frame
       // list.
-      if ((nsnull != mLines) && (mBullet == mLines->mFirstChild)) {
+      if ((! mLines.empty()) && (mBullet == mLines.front()->mFirstChild)) {
         nsIFrame* next;
         mBullet->GetNextSibling(&next);
         mBullet->SetNextSibling(nsnull);
-        PRInt32 count = mLines->GetChildCount() - 1;
+        PRInt32 count = mLines.front()->GetChildCount() - 1;
         NS_ASSERTION(count >= 0, "empty line w/o bullet");
-        mLines->SetChildCount(count);
+        mLines.front()->SetChildCount(count);
         if (0 == count) {
-          nsLineBox* nextLine = mLines->mNext;
-          aState.FreeLineBox(mLines);
-          mLines = nextLine;
-          if (nsnull != nextLine) {
-            nextLine->MarkDirty();
+          nsLineBox* oldFront = mLines.front();
+          mLines.pop_front();
+          aState.FreeLineBox(oldFront);
+          if (! mLines.empty()) {
+            mLines.front()->MarkDirty();
           }
         }
         else {
-          mLines->mFirstChild = next;
-          mLines->MarkDirty();
+          mLines.front()->mFirstChild = next;
+          mLines.front()->MarkDirty();
         }
       }
     }
@@ -1632,10 +1663,11 @@ nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
   nsresult rv = UpdateBulletPosition(aState);
 
   // Mark everything dirty
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line)
+  {
     line->MarkDirty();
-    line = line->mNext;
   }
   return rv;
 }
@@ -1684,7 +1716,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
   }
 #endif
 
-  nsLineBox* line = mLines;
   if (tryAndSkipLines) {
     nscoord newAvailWidth = aState.mReflowState.mComputedBorderPadding.left;
      
@@ -1714,8 +1745,10 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 #endif
 
     PRBool wrapping = !aState.GetFlag(BRS_NOWRAP);
-    while (nsnull != line) {
-
+    for (line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end;
+         ++line)
+    {
       // We let child blocks make their own decisions the same
       // way we are here.
       //
@@ -1724,7 +1757,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       if (line->IsBlock() ||
           line->HasPercentageChild() || 
           (wrapping &&
-           ((line->mNext && !line->HasBreak()) ||
+           ((line != mLines.back() && !line->HasBreak()) ||
            line->ResizeReflowOptimizationDisabled() ||
            line->HasFloaters() ||
            line->IsImpactedByFloater() ||
@@ -1742,7 +1775,8 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       if (gNoisyReflow && !line->IsDirty() && wrapping) {
         IndentBy(stdout, gNoiseIndent + 1);
         printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
-           line, line->mNext,
+           NS_STATIC_CAST(void*, line.get()),
+           NS_STATIC_CAST(void*, line.next().get()),
            line->IsBlock() ? "block" : "inline",
            "wrapping",
            line->HasBreak() ? "has-break " : "",
@@ -1752,15 +1786,15 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
            line->mBounds.XMost());
       }
 #endif
-
-      line = line->mNext;
     }
   }
   else {
     // Mark everything dirty
-    while (nsnull != line) {
+    for (line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end;
+         ++line)
+    {
       line->MarkDirty();
-      line = line->mNext;
     }
   }
   return NS_OK;
@@ -1768,22 +1802,23 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 
 //----------------------------------------
 
-nsLineBox*
+PRBool
 nsBlockFrame::FindLineFor(nsIFrame* aFrame,
-                          nsLineBox** aPrevLineResult,
-                          PRBool* aIsFloaterResult)
+                          PRBool* aIsFloaterResult,
+                          line_iterator* aFoundLine)
 {
-  // This assertion actually fires on lots of pages
-  // (e.g., bugzilla, bugzilla query page), so limit it
-  // to a few people until we fix the problem causing it.
+  // This assertion actually fires on lots of pages (e.g., bugzilla,
+  // bugzilla query page), so limit it to a few people until we fix the
+  // problem causing it.  It's related to the similarly |#ifdef|ed
+  // assertion in |PrepareChildIncrementalReflow|.
 #if defined(DEBUG_dbaron) || defined(DEBUG_waterson)
   NS_PRECONDITION(aFrame, "why pass a null frame?");
 #endif
 
-  nsLineBox* prevLine = nsnull;
-  nsLineBox* line = mLines;
   PRBool isFloater = PR_FALSE;
-  while (nsnull != line) {
+  line_iterator line = begin_lines(),
+                line_end = end_lines();
+  for ( ; line != line_end; ++line) {
     if (line->Contains(aFrame)) {
       break;
     }
@@ -1798,14 +1833,12 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
         fc = fc->Next();
       }
     }
-    prevLine = line;
-    line = line->mNext;
   }
 
  done:
   *aIsFloaterResult = isFloater;
-  *aPrevLineResult = prevLine;
-  return line;
+  *aFoundLine = line;
+  return (line != line_end);
 }
 
 // SEC: added GetCurrentLine() for bug 45152
@@ -1819,118 +1852,117 @@ nsBlockFrame::GetCurrentLine(nsBlockReflowState *aState, nsLineBox ** aOutCurren
   return NS_OK;  
 }
 
+/**
+ * Remember regions of reflow damage from floaters that changed size (so
+ * far, only vertically, which is a bug) in the space manager so that we
+ * can mark any impacted lines dirty in |PropagateFloaterDamage|.
+ */
 void
-nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
-                               nsLineBox* aLine,
-                               nsRect* aDamageRect)
+nsBlockFrame::RememberFloaterDamage(nsBlockReflowState& aState,
+                                    nsLineBox* aLine,
+                                    const nsRect& aOldCombinedArea)
 {
-  PRBool applyTopMargin = PR_FALSE;
-  if (aLine->IsBlock()) {
-    nsIFrame* framePrevInFlow;
-    aLine->mFirstChild->GetPrevInFlow(&framePrevInFlow);
-    if (nsnull == framePrevInFlow) {
-      applyTopMargin = ShouldApplyTopMargin(aState, aLine);
-    }
-  }
+  nsRect lineCombinedArea;
+  aLine->GetCombinedArea(&lineCombinedArea);
+  if (lineCombinedArea != aLine->mBounds &&
+      lineCombinedArea != aOldCombinedArea) {
+    // The line's combined-area changed. Therefore we need to damage
+    // the lines below that were previously (or are now) impacted by
+    // the change. It's possible that a floater shrunk or grew so
+    // use the larger of the impacted area.
 
-  aState.RecoverStateFrom(aLine, applyTopMargin, aDamageRect);
+    // XXXldb If just the width of the floater changed, then this code
+    // won't be triggered and the code below (in |PropagateFloaterDamage|)
+    // won't kick in for "non-Block lines".  See
+    // "XXX: Maybe the floater itself changed size?" below.
+    //
+    // This is a major flaw in this code.
+    //
+    nscoord newYMost = lineCombinedArea.YMost();
+    nscoord oldYMost = aOldCombinedArea.YMost();
+    nscoord impactYB = newYMost < oldYMost ? oldYMost : newYMost;
+    nscoord impactYA = lineCombinedArea.y;
+    nsISpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
+    spaceManager->IncludeInDamage(impactYA, impactYB);
+  }
 }
 
 /**
- * Propagate reflow "damage" from the just reflowed line (aLine) to
- * any subsequent lines that were affected. The only thing that causes
- * damage is a change to the impact that floaters make.
+ * Propagate reflow "damage" from from earlier lines to the current
+ * line.  The reflow damage comes from the following sources:
+ *  1. The regions of floater damage remembered in
+ *     |RememberFloaterDamage|.
+ *  2. The combination of nonzero |aDeltaY| and any impact by a floater,
+ *     either the previous reflow or now.
  *
- * XXX_perf: This is O(N^2) because we loop over all following lines
- * for each line that is damaged.  See bug 61962.
+ * When entering this function, |aLine| is still at its old position and
+ * |aDeltaY| indicates how much it will later be slid (assuming it
+ * doesn't get marked dirty and reflowed entirely).
  */
 void
-nsBlockFrame::PropagateReflowDamage(nsBlockReflowState& aState,
-                                    nsLineBox* aLine,
-                                    const nsRect& aOldCombinedArea,
-                                    nscoord aDeltaY)
+nsBlockFrame::PropagateFloaterDamage(nsBlockReflowState& aState,
+                                     nsLineBox* aLine,
+                                     nscoord aDeltaY)
 {
-  // See if the line has a relevant combined area, and if it does if
-  // the combined area has changed.
-  nsRect lineCombinedArea;
-  aLine->GetCombinedArea(&lineCombinedArea);
-  if (lineCombinedArea != aLine->mBounds) {
-    if (lineCombinedArea != aOldCombinedArea) {
-      // The line's combined-area changed. Therefore we need to damage
-      // the lines below that were previously (or are now) impacted by
-      // the change. It's possible that a floater shrunk or grew so
-      // use the larger of the impacted area.
-      nscoord newYMost = lineCombinedArea.YMost();
-      nscoord oldYMost = aOldCombinedArea.YMost();
-      nscoord impactYB = newYMost < oldYMost ? oldYMost : newYMost;
-      nscoord impactYA = lineCombinedArea.y;
+  NS_PRECONDITION(!aLine->IsDirty(), "should never be called on dirty lines");
 
-      // Loop over each subsequent line and mark them dirty if they
-      // intersect the impacted area. Note: we cannot stop after the
-      // first non-intersecting line because lines might be
-      // overlapping because of negative margins.
-      nsLineBox* next = aLine->mNext;
-      while (nsnull != next) {
-        nscoord lineYA = next->mBounds.y + aDeltaY;
-        nscoord lineYB = lineYA + next->mBounds.height;
-        if ((lineYB >= impactYA) && (lineYA < impactYB)) {
-          next->MarkDirty();
-        }
-        next = next->mNext;
-      }
-    }
-    else {
-      // The line's combined area didn't change from last
-      // time. Therefore just sliding subsequent lines will work.
+  // Check the damage region recorded in the float damage.
+  nsISpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
+  if (spaceManager->HasFloatDamage()) {
+    nscoord lineYA = aLine->mBounds.y + aDeltaY;
+    nscoord lineYB = lineYA + aLine->mBounds.height;
+    if (spaceManager->IntersectsDamage(lineYA, lineYB)) {
+      aLine->MarkDirty();
       return;
     }
   }
 
   if (aDeltaY) {
-    nsLineBox* next = aLine->mNext;
-    while (nsnull != next) {
-      if (!next->IsDirty()) {
-        // Cases we need to find:
-        //
-        // 1. the line was impacted by a floater and now isn't
-        // 2. the line wasn't impacted by a floater and now is
-        //
-        //XXXPerf: An optimization: if the line was and is completely
-        //impacted by a floater and the floater hasn't changed size,
-        //then we don't need to mark the line dirty.
-        aState.GetAvailableSpace(next->mBounds.y + aDeltaY);
-        PRBool wasImpactedByFloater = next->IsImpactedByFloater();
-        PRBool isImpactedByFloater = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
+    // Cases we need to find:
+    //
+    // 1. the line was impacted by a floater and now isn't
+    // 2. the line wasn't impacted by a floater and now is
+    // 3. the line is impacted by a floater both before and after and 
+    //    the floater has changed position relative to the line (or it's
+    //    a different floater).  (XXXPerf we don't currently
+    //    check whether the floater changed size.  We currently just
+    //    mark blocks dirty and ignore any possibility of damage to
+    //    inlines by it being a different floater with a different
+    //    size.)
+    //
+    //    XXXPerf: An optimization: if the line was and is completely
+    //    impacted by a floater and the floater hasn't changed size,
+    //    then we don't need to mark the line dirty.
+    aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY);
+    PRBool wasImpactedByFloater = aLine->IsImpactedByFloater();
+    PRBool isImpactedByFloater = aState.IsImpactedByFloater();
 #ifdef REALLY_NOISY_REFLOW
-        printf("nsBlockFrame::PropagateReflowDamage %p was = %d, is=%d\n", 
-           this, wasImpactedByFloater, isImpactedByFloater);
+    printf("nsBlockFrame::PropagateFloaterDamage %p was = %d, is=%d\n", 
+       this, wasImpactedByFloater, isImpactedByFloater);
 #endif
-        if (wasImpactedByFloater != isImpactedByFloater) {
-          next->MarkDirty();
-        }
-        else if (isImpactedByFloater) {
-          //XXX: Maybe the floater itself changed size?
-          if (next->IsBlock()) {
-            //XXXPerf
-            // Case:
-            // It's possible that more/less of the line is impacted by
-            // the floater than last time. So reflow.
-            next->MarkDirty();
-          }
-        }
-      }
-      next = next->mNext;
+    // Mark the line dirty if:
+    //  1. It used to be impacted by a floater and now isn't, or vice
+    //     versa.
+    //  2. It is impacted by a floater and it is a block, which means
+    //     that more or less of the line could be impacted than was in
+    //     the past.  (XXXPerf This could be optimized further, since
+    //     we're marking the whole line dirty.)
+    if ((wasImpactedByFloater != isImpactedByFloater) ||
+        (isImpactedByFloater && aLine->IsBlock())) {
+      aLine->MarkDirty();
     }
   }
 }
 
+// NOTE:  The first parameter *must* be passed by value.
 static PRBool
-WrappedLinesAreDirty(nsLineBox* aLine)
+WrappedLinesAreDirty(nsLineList::iterator aLine,
+                     const nsLineList::iterator aLineEnd)
 {
   if (aLine->IsInline()) {
     while (aLine->IsLineWrapped()) {
-      aLine = aLine->mNext;
-      if (!aLine) {
+      ++aLine;
+      if (aLine == aLineEnd) {
         break;
       }
 
@@ -1972,6 +2004,8 @@ PRBool nsBlockFrame::IsIncrementalDamageConstrained(const nsBlockReflowState& aS
   return PR_FALSE;  // default case, damage is not constrained (or unknown)
 }
 
+static void PlaceFrameView(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
 /**
  * Reflow the dirty lines
  */
@@ -1980,6 +2014,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 {
   nsresult rv = NS_OK;
   PRBool keepGoing = PR_TRUE;
+  PRBool repositionViews = PR_FALSE; // should we really need this?
 
 #ifdef DEBUG
   if (gNoisyReflow) {
@@ -2008,24 +2043,30 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
                               aState.mReflowState.reason ==
                               eReflowReason_Dirty;
   
+    // the amount by which we will slide the current line if it is not
+    // dirty
   nscoord deltaY = 0;
 
-  // Reflow the lines that are already ours
-  aState.mPrevLine = nsnull;
-  nsLineBox* line = mLines;
+    // whether we did NOT reflow the previous line and thus we need to
+    // recompute the carried out margin before the line if we want to
+    // reflow it or if its previous margin is dirty
+  PRBool needToRecoverMargin = PR_FALSE;
   
-  while (line) {
+  // Reflow the lines that are already ours
+  line_iterator line = begin_lines(), line_end = end_lines();
+  for ( ; line != line_end; ++line, aState.AdvanceToNextLine()) {
 #ifdef DEBUG
     if (gNoisyReflow) {
       nsRect lca;
       line->GetCombinedArea(&lca);
       IndentBy(stdout, gNoiseIndent);
       printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
-             line, aState.mY, line->IsDirty() ? "yes" : "no",
+             NS_STATIC_CAST(void*, line.get()), aState.mY,
+             line->IsDirty() ? "yes" : "no",
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
              lca.x, lca.y, lca.width, lca.height,
-             deltaY, aState.mPrevBottomMargin);
+             deltaY, aState.mPrevBottomMargin.get());
       gNoiseIndent++;
     }
 #endif
@@ -2033,11 +2074,55 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // If we're supposed to update our maximum width, then we'll also need to
     // reflow this line if it's line wrapped and any of the continuing lines
     // are dirty
-    if (line->IsDirty() || (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && ::WrappedLinesAreDirty(line))) {
+    if (!line->IsDirty() &&
+        (aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
+         ::WrappedLinesAreDirty(line, line_end))) {
+      line->MarkDirty();
+    }
+
+    // Make sure |aState.mPrevBottomMargin| is at the correct position
+    // before calling PropagateFloaterDamage.
+    if (needToRecoverMargin) {
+      needToRecoverMargin = PR_FALSE;
+      // We need to reconstruct the bottom margin only if we didn't
+      // reflow the previous line and we do need to reflow (or repair
+      // the top position of) the next line.
+      if (line->IsDirty() || line->IsPreviousMarginDirty())
+        aState.ReconstructMarginAbove(line);
+    }
+
+    if (line->IsPreviousMarginDirty() && !line->IsDirty()) {
+      // If the previous margin is dirty and we're not going to reflow
+      // the line we need to pull out the correct top margin and set
+      // |deltaY| correctly.
+      // If there's float damage we might end up doing this work twice,
+      // but whatever...
+      if (line->IsBlock()) {
+        // XXXPerf We could actually make this faster by stealing code
+        // from the top of nsBlockFrame::ReflowBlockFrame, but it's an
+        // edge case that will generally happen at most once in a given
+        // reflow (insertion of a new line before a block)
+        line->MarkDirty();
+      } else {
+        deltaY = aState.mY + aState.mPrevBottomMargin.get() - line->mBounds.y;
+      }
+    }
+    line->ClearPreviousMarginDirty();
+
+    // See if there's any reflow damage that requires that we mark the
+    // line dirty.
+    if (!line->IsDirty()) {
+      PropagateFloaterDamage(aState, line, deltaY);
+    }
+
+    // Now repair the line and update |aState.mY| by calling
+    // |ReflowLine| or |SlideLine|.
+    if (line->IsDirty()) {
       // Compute the dirty lines "before" YMost, after factoring in
       // the running deltaY value - the running value is implicit in
       // aState.mY.
-      nscoord oldHeight = line->mBounds.height;
+      nscoord oldY = line->mBounds.y;
+      nscoord oldYMost = line->mBounds.YMost();
       nsRect oldCombinedArea;
       line->GetCombinedArea(&oldCombinedArea);
 
@@ -2053,35 +2138,40 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
       if (!keepGoing) {
         if (0 == line->GetChildCount()) {
-          DeleteLine(aState, line);
+          DeleteLine(aState, line, line_end);
         }
         break;
       }
-      nscoord newHeight = line->mBounds.height;
-      deltaY += newHeight - oldHeight;
+      if (oldY == 0 && deltaY != line->mBounds.y) {
+        // This means the current line was just reflowed for the first
+        // time.  Thus we must mark the the previous margin of the next
+        // line dirty.
+        // XXXldb Move this into where we insert the line!  (or will
+        // that mess up deltaY manipulation?)
+        if (line.next() != end_lines()) {
+          line.next()->MarkPreviousMarginDirty();
+          // since it's marked dirty, nobody will care about |deltaY|
+        }
+      } else {
+        deltaY = line->mBounds.YMost() - oldYMost;
+      }
 
-      // If the next line is clean then check and see if reflowing the
-      // current line "damaged" the next line. Damage occurs when the
-      // current line contains floaters that intrude upon the
-      // subsequent lines.
-      nsLineBox* next = line->mNext;
-      if (next && !next->IsDirty()) {
-        PropagateReflowDamage(aState, line, oldCombinedArea, deltaY);
-      }
-    }
-    else {
-      // XXX what if the slid line doesn't fit because we are in a
-      // vertically constrained situation?
-      // Recover state as if we reflowed this line
-      nsRect  damageRect;
-      RecoverStateFrom(aState, line, incrementalReflow ? &damageRect : 0);
-      if (incrementalReflow && !damageRect.IsEmpty()) {
-#ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 5 (%d, %d, %d, %d)\n",
-               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-        Invalidate(aState.mPresContext, damageRect);
-      }
+      // Remember any things that could potentially be changes in the
+      // positions of floaters in this line so that we later damage the
+      // lines adjacent to those changes.
+      RememberFloaterDamage(aState, line, oldCombinedArea);
+    } else {
+      if (deltaY != 0)
+        SlideLine(aState, line, deltaY);
+      else
+        repositionViews = PR_TRUE;
+
+      // XXX EVIL O(N^2) EVIL
+      aState.RecoverStateFrom(line, deltaY);
+
+      // Keep mY up to date in case we're propagating reflow damage.
+      aState.mY = line->mBounds.YMost();
+      needToRecoverMargin = PR_TRUE;
     }
 
 #ifdef DEBUG
@@ -2091,45 +2181,50 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       line->GetCombinedArea(&lca);
       IndentBy(stdout, gNoiseIndent);
       printf("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
-             line, aState.mY,
+             NS_STATIC_CAST(void*, line.get()), aState.mY,
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
              lca.x, lca.y, lca.width, lca.height,
-             deltaY, aState.mPrevBottomMargin);
+             deltaY, aState.mPrevBottomMargin.get());
     }
 #endif
-
-    // If this is an inline frame then its time to stop
-    aState.mPrevLine = line;
-    line = line->mNext;
-    aState.AdvanceToNextLine();
   }
+
+  if (needToRecoverMargin) {
+    // Is this expensive?
+    aState.ReconstructMarginAbove(line);
+  }
+
+  // Should we really have to do this?
+  if (repositionViews)
+    ::PlaceFrameView(aState.mPresContext, this);
 
   // Pull data from a next-in-flow if there's still room for more
   // content here.
   while (keepGoing && (nsnull != aState.mNextInFlow)) {
     // Grab first line from our next-in-flow
-    line = aState.mNextInFlow->mLines;
-    if (nsnull == line) {
+    nsBlockFrame* nextInFlow = aState.mNextInFlow;
+    line_iterator nifLine = nextInFlow->begin_lines();
+    if (nifLine == nextInFlow->end_lines()) {
       aState.mNextInFlow = (nsBlockFrame*) aState.mNextInFlow->mNextInFlow;
       continue;
     }
     // XXX See if the line is not dirty; if it's not maybe we can
     // avoid the pullup if it can't fit?
-    aState.mNextInFlow->mLines = line->mNext;
-    line->mNext = nsnull;
-    if (0 == line->GetChildCount()) {
+    nsLineBox *toMove = nifLine;
+    nextInFlow->mLines.erase(nifLine);
+    if (0 == toMove->GetChildCount()) {
       // The line is empty. Try the next one.
-      NS_ASSERTION(nsnull == line->mFirstChild, "bad empty line");
-      aState.FreeLineBox(line);
+      NS_ASSERTION(nsnull == toMove->mFirstChild, "bad empty line");
+      aState.FreeLineBox(toMove);
       continue;
     }
 
     // XXX move to a subroutine: run-in, overflow, pullframe and this do this
     // Make the children in the line ours.
-    nsIFrame* frame = line->mFirstChild;
+    nsIFrame* frame = toMove->mFirstChild;
     nsIFrame* lastFrame = nsnull;
-    PRInt32 n = line->GetChildCount();
+    PRInt32 n = toMove->GetChildCount();
     while (--n >= 0) {
       frame->SetParent(this);
       // When pushing and pulling frames we need to check for whether any
@@ -2141,15 +2236,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     lastFrame->SetNextSibling(nsnull);
 
     // Add line to our line list
-    if (nsnull == aState.mPrevLine) {
-      NS_ASSERTION(nsnull == mLines, "bad aState.mPrevLine");
-      mLines = line;
-    }
-    else {
-      NS_ASSERTION(nsnull == aState.mPrevLine->mNext, "bad aState.mPrevLine");
-      aState.mPrevLine->mNext = line;
-      aState.mPrevChild->SetNextSibling(line->mFirstChild);
-    }
+    if (aState.mPrevChild)
+      aState.mPrevChild->SetNextSibling(toMove->mFirstChild);
+    line = mLines.before_insert(end_lines(), toMove);
 
     // If line contains floaters, remove them from aState.mNextInFlow's
     // floater list. They will be pushed onto this blockframe's floater
@@ -2175,27 +2264,27 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // (we have to loop here because reflowing the line may case a new
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
-    while (nsnull != line) {
-      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow /* force invalidate */);
+    while (line != end_lines()) {
+      rv = ReflowLine(aState, line, &keepGoing,
+                      incrementalReflow /* force invalidate */);
       if (NS_FAILED(rv)) {
         return rv;
       }
       if (!keepGoing) {
         if (0 == line->GetChildCount()) {
-          DeleteLine(aState, line);
+          DeleteLine(aState, line, line_end);
         }
         break;
       }
 
       // If this is an inline frame then its time to stop
-      aState.mPrevLine = line;
-      line = line->mNext;
+      ++line;
       aState.AdvanceToNextLine();
     }
   }
 
   // Handle an odd-ball case: a list-item with no lines
-  if (mBullet && HaveOutsideBullet() && !mLines) {
+  if (mBullet && HaveOutsideBullet() && mLines.empty()) {
     nsHTMLReflowMetrics metrics(nsnull);
     ReflowBullet(aState, metrics);
 
@@ -2219,19 +2308,21 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
 void
 nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
-                         nsLineBox* aLine)
+                         nsLineList::iterator aLine,
+                         nsLineList::iterator aLineEnd)
 {
   NS_PRECONDITION(0 == aLine->GetChildCount(), "can't delete !empty line");
   if (0 == aLine->GetChildCount()) {
-    if (nsnull == aState.mPrevLine) {
-      NS_ASSERTION(aLine == mLines, "huh");
-      mLines = nsnull;
-    }
-    else {
-      NS_ASSERTION(aState.mPrevLine->mNext == aLine, "bad prev-line");
-      aState.mPrevLine->mNext = aLine->mNext;
-    }
-    aState.FreeLineBox(aLine);
+    NS_ASSERTION(aState.mCurrentLine == aLine,
+                 "using function more generally than designed, "
+                 "but perhaps OK now");
+    nsLineBox *line = aLine;
+    aLine = mLines.erase(aLine);
+    aState.FreeLineBox(line);
+    // Mark the previous margin of the next line dirty since we need to
+    // recompute its top position.
+    if (aLine != aLineEnd)
+      aLine->MarkPreviousMarginDirty();
   }
 }
 
@@ -2242,7 +2333,7 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
-                         nsLineBox* aLine,
+                         line_iterator aLine,
                          PRBool* aKeepReflowGoing,
                          PRBool aDamageDirtyArea)
 {
@@ -2333,10 +2424,11 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // XXX This approach doesn't work when floaters are involved in which case
     // we'll either need to recover the floater state that applies to the
     // unconstrained reflow or keep it around in a separate space manager...
-    PRBool  isBeginningLine = !aState.mPrevLine || !aState.mPrevLine->IsLineWrapped();
+    PRBool isBeginningLine = aState.mCurrentLine == begin_lines() ||
+                             !aState.mCurrentLine.prev()->IsLineWrapped();
     if (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && isBeginningLine) {
       nscoord oldY = aState.mY;
-      nscoord oldPrevBottomMargin = aState.mPrevBottomMargin;
+      nsCollapsingMargin oldPrevBottomMargin(aState.mPrevBottomMargin);
       PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
       // First reflow the line with an unconstrained width. When doing this
@@ -2429,7 +2521,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::PullFrame(nsBlockReflowState& aState,
-                        nsLineBox* aLine,
+                        line_iterator aLine,
                         PRBool aDamageDeletedLines,
                         nsIFrame*& aFrameResult)
 {
@@ -2438,8 +2530,8 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
   aFrameResult = nsnull;
 
   // First check our remaining lines
-  while (nsnull != aLine->mNext) {
-    rv = PullFrameFrom(aState, aLine, &aLine->mNext, PR_FALSE,
+  while (end_lines() != aLine.next()) {
+    rv = PullFrameFrom(aState, aLine, mLines, aLine.next(), PR_FALSE,
                        aDamageDeletedLines, aFrameResult, stopPulling);
     if (NS_FAILED(rv) || stopPulling) {
       return rv;
@@ -2449,13 +2541,13 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
   // Pull frames from the next-in-flow(s) until we can't
   nsBlockFrame* nextInFlow = aState.mNextInFlow;
   while (nsnull != nextInFlow) {
-    nsLineBox* line = nextInFlow->mLines;
-    if (nsnull == line) {
+    if (nextInFlow->mLines.empty()) {
       nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
       aState.mNextInFlow = nextInFlow;
       continue;
     }
-    rv = PullFrameFrom(aState, aLine, &nextInFlow->mLines, PR_TRUE,
+    rv = PullFrameFrom(aState, aLine, nextInFlow->mLines,
+                       nextInFlow->mLines.begin(), PR_TRUE,
                        aDamageDeletedLines, aFrameResult, stopPulling);
     if (NS_FAILED(rv) || stopPulling) {
       return rv;
@@ -2465,11 +2557,10 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 }
 
 /**
- * Try to pull a frame out of a line pointed at by aFromList. If a
- * frame is pulled then aPulled will be set to PR_TRUE. In addition,
- * if aUpdateGeometricParent is set then the pulled frames geometric
- * parent will be updated (e.g. when pulling from a next-in-flows line
- * list).
+ * Try to pull a frame out of a line pointed at by aFromLine. If a frame
+ * is pulled then aPulled will be set to PR_TRUE.  In addition, if
+ * aUpdateGeometricParent is set then the pulled frames geometric parent
+ * will be updated (e.g. when pulling from a next-in-flows line list).
  *
  * Note: pulling a frame from a line that is a place-holder frame
  * doesn't automatically remove the corresponding floater from the
@@ -2481,13 +2572,14 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
                             nsLineBox* aLine,
-                            nsLineBox** aFromList,
+                            nsLineList& aFromContainer,
+                            nsLineList::iterator aFromLine,
                             PRBool aUpdateGeometricParent,
                             PRBool aDamageDeletedLines,
                             nsIFrame*& aFrameResult,
                             PRBool& aStopPulling)
 {
-  nsLineBox* fromLine = *aFromList;
+  nsLineBox* fromLine = aFromLine;
   NS_ABORT_IF_FALSE(fromLine, "bad line to pull from");
   NS_ABORT_IF_FALSE(fromLine->GetChildCount(), "empty line");
   NS_ABORT_IF_FALSE(aLine->GetChildCount(), "empty line");
@@ -2517,7 +2609,9 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       if (aDamageDeletedLines) {
         Invalidate(aState.mPresContext, fromLine->mBounds);
       }
-      *aFromList = fromLine->mNext;
+      if (aFromLine.next() != end_lines())
+        aFromLine.next()->MarkPreviousMarginDirty();
+      aFromContainer.erase(aFromLine);
       aState.FreeLineBox(fromLine);
     }
 
@@ -2563,15 +2657,19 @@ PlaceFrameView(nsIPresContext* aPresContext,
   nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
 
-// XXXldb If I understand correctly what's going on here, this should never
-// be called with nonzero |aDY| on a line for which |IsBlock| is false.
-// XXX_perf Shouldn't we optimize for |aDY == 0|?
 void
 nsBlockFrame::SlideLine(nsBlockReflowState& aState,
                         nsLineBox* aLine, nscoord aDY)
 {
+  NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
+
+  PRBool doInvalidate = !aLine->mBounds.IsEmpty();
+  if (doInvalidate)
+    Invalidate(aState.mPresContext, aLine->mBounds);
   // Adjust line state
   aLine->SlideBy(aDY);
+  if (doInvalidate)
+    Invalidate(aState.mPresContext, aLine->mBounds);
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
@@ -2634,8 +2732,9 @@ nsresult
 nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
                                  nsISpaceManager* aSpaceManager)
 {
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     // Place the floaters in the spacemanager
     if (line->HasFloaters()) {
       nsFloaterCache* fc = line->GetFirstFloater();
@@ -2663,7 +2762,7 @@ nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
       // the reflow began).
       nsBlockFrame* bf;
       nsresult rv = line->mFirstChild->QueryInterface(kBlockFrameCID,
-                                                      (void**) &bf);
+                                            NS_REINTERPRET_CAST(void**, &bf));
       if (NS_SUCCEEDED(rv)) {
         nsPoint origin;
         bf->GetOrigin(origin);
@@ -2676,8 +2775,6 @@ nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
         aSpaceManager->Translate(-origin.x, -origin.y);
       }
     }
-    
-    line = line->mNext;
   }
 
   return NS_OK;
@@ -2725,7 +2822,7 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
       // make the assumption that all related list items share a
       // common block parent.
       // XXXldb I think that's a bad assumption.
-      while (nextAncestor != nsnull) {
+      while (nextAncestor) {
         if (NS_OK == nextAncestor->QueryInterface(kBlockFrameCID, 
                                                   (void**)&blockParent)) {
           break;
@@ -2758,6 +2855,77 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
+inline PRBool
+IsBorderZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0));
+}
+
+inline PRBool
+IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return (aUnit == eStyleUnit_Null ||
+            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+}
+
+inline PRBool
+IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+{
+    return (aUnit == eStyleUnit_Null ||
+            aUnit == eStyleUnit_Auto ||
+            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+            (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
+}
+
+NS_IMETHODIMP
+nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+{
+  // XXXldb In hindsight, I'm not sure why I made this check the margin,
+  // but it seems to work right and I'm a little hesitant to change it.
+  const nsStyleMargin* margin = NS_STATIC_CAST(const nsStyleMargin*,
+                             mStyleContext->GetStyleData(eStyleStruct_Margin));
+  const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
+                             mStyleContext->GetStyleData(eStyleStruct_Border));
+  const nsStylePadding* padding = NS_STATIC_CAST(const nsStylePadding*,
+                            mStyleContext->GetStyleData(eStyleStruct_Padding));
+  nsStyleCoord coord;
+  if ((border->IsBorderSideVisible(NS_SIDE_TOP) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      (border->IsBorderSideVisible(NS_SIDE_BOTTOM) &&
+       !IsBorderZero(border->mBorder.GetTopUnit(),
+                     border->mBorder.GetTop(coord))) ||
+      !IsPaddingZero(padding->mPadding.GetTopUnit(),
+                    padding->mPadding.GetTop(coord)) ||
+      !IsPaddingZero(padding->mPadding.GetBottomUnit(),
+                    padding->mPadding.GetBottom(coord)) ||
+      !IsMarginZero(margin->mMargin.GetTopUnit(),
+                    margin->mMargin.GetTop(coord)) ||
+      !IsMarginZero(margin->mMargin.GetBottomUnit(),
+                    margin->mMargin.GetBottom(coord))) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+
+  const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
+      mStyleContext->GetStyleData(eStyleStruct_Text));
+  PRBool isPre =
+      ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
+       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace));
+  *aResult = PR_TRUE;
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line)
+  {
+    line->IsEmpty(aIsQuirkMode, isPre, aResult);
+    if (! *aResult)
+      break;
+  }
+  return NS_OK;
+}
+
 PRBool
 nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
                                    nsLineBox* aLine)
@@ -2776,8 +2944,9 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   }
 
   // Determine if this line is "essentially" the first line
-  nsLineBox* line = mLines;
-  while (line != aLine) {
+  for (line_iterator line = begin_lines();
+       line != aLine;
+       ++line) {
     if (line->IsBlock()) {
       // A line which preceeds aLine contains a block; therefore the
       // top margin applies.
@@ -2788,7 +2957,6 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
     }
     // No need to apply the top margin if the line has floaters.  We
     // should collapse anyway (bug 44419)
-    line = line->mNext;
   }
 
   // The line being reflowed is "essentially" the first line in the
@@ -2800,17 +2968,18 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 nsIFrame*
 nsBlockFrame::GetTopBlockChild()
 {
-  nsIFrame* firstChild = mLines ? mLines->mFirstChild : nsnull;
+  nsIFrame* firstChild = mLines.empty() ? nsnull : mLines.front()->mFirstChild;
   if (firstChild) {
-    if (mLines->IsBlock()) {
+    if (mLines.front()->IsBlock()) {
       // Winner
       return firstChild;
     }
 
     // If the first line is not a block line then the second line must
     // be a block line otherwise the top child can't be a block.
-    nsLineBox* next = mLines->mNext;
-    if ((nsnull == next) || !next->IsBlock()) {
+    line_iterator next = begin_lines();
+    ++next;
+    if ((next == end_lines()) || !next->IsBlock()) {
       // There is no line after the first line or its not a block so
       // don't bother trying to skip over the first line.
       return nsnull;
@@ -2830,7 +2999,7 @@ nsBlockFrame::GetTopBlockChild()
 
     // See if each frame is a text frame that contains nothing but
     // whitespace.
-    PRInt32 n = mLines->GetChildCount();
+    PRInt32 n = mLines.front()->GetChildCount();
     while (--n >= 0) {
       nsIContent* content;
       nsresult rv = firstChild->GetContent(&content);
@@ -2868,7 +3037,7 @@ nsBlockFrame::GetTopBlockChild()
 
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
-                               nsLineBox* aLine,
+                               line_iterator aLine,
                                PRBool* aKeepReflowGoing)
 {
   NS_PRECONDITION(*aKeepReflowGoing, "bad caller");
@@ -2931,14 +3100,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                   frame, availSpace);
 
-    // Now compute the collapsed margin-top value
-    topMargin =
-      nsBlockReflowContext::ComputeCollapsedTopMargin(aState.mPresContext,
-                                                      reflowState);
-
-    // And collapse it with the previous bottom margin to get the final value
-    topMargin =
-      nsBlockReflowContext::MaxMargin(topMargin, aState.mPrevBottomMargin);
+    // Now compute the collapsed margin-top value into aState.mPrevBottomMargin
+    nsCollapsingMargin oldPrevBottomMargin = aState.mPrevBottomMargin;
+    nsBlockReflowContext::ComputeCollapsedTopMargin(aState.mPresContext,
+                                                    reflowState,
+                                                    aState.mPrevBottomMargin);
+    topMargin = aState.mPrevBottomMargin.get();
+    aState.mPrevBottomMargin = oldPrevBottomMargin; // perhaps not needed
 
     // Temporarily advance the running Y value so that the
     // GetAvailableSpace method will return the right available
@@ -2996,7 +3164,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
     // None of the child block fits.
-    PushLines(aState);
+    PushLines(aState, aLine.prev());
     *aKeepReflowGoing = PR_FALSE;
     aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
   }
@@ -3005,11 +3173,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
     // Try to place the child block
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
-    nscoord collapsedBottomMargin;
+    nsCollapsingMargin collapsedBottomMargin;
     nsRect combinedArea(0,0,0,0);
     *aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, computedOffsets,
-                                       &collapsedBottomMargin,
+                                       collapsedBottomMargin,
                                        aLine->mBounds, combinedArea);
+    aLine->SetCarriedOutBottomMargin(collapsedBottomMargin);
 
     if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
       // Mark the line as dirty so once we known the final shrink wrap width
@@ -3033,7 +3202,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // Advance to new Y position
       nscoord newY = aLine->mBounds.YMost();
       aState.mY = newY;
-      aLine->SetCarriedOutBottomMargin(brc.GetCarriedOutBottomMargin());
 
       // Continue the block frame now if it didn't completely fit in
       // the available space.
@@ -3052,8 +3220,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           if (nsnull == line) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
-          line->mNext = aLine->mNext;
-          aLine->mNext = line;
+          mLines.after_insert(aLine, line);
 
           // Do not count the continuation child on the line it used
           // to be on
@@ -3062,8 +3229,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
         // Advance to next line since some of the block fit. That way
         // only the following lines will be pushed.
-        aState.mPrevLine = aLine;
-        PushLines(aState);
+        PushLines(aState, aLine);
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
         *aKeepReflowGoing = PR_FALSE;
 
@@ -3078,7 +3244,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         printf(" prevBottomMargin=%d, setting to zero\n",
                aState.mPrevBottomMargin);
 #endif
-        aState.mPrevBottomMargin = 0;
+        aState.mPrevBottomMargin.Zero();
       }
       else {
 #ifdef NOISY_VERTICAL_MARGINS
@@ -3086,7 +3252,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         printf(": reflow complete for ");
         nsFrame::ListTag(stdout, frame);
         printf(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
-               aState.mPrevBottomMargin, collapsedBottomMargin);
+               aState.mPrevBottomMargin, collapsedBottomMargin.get());
 #endif
         aState.mPrevBottomMargin = collapsedBottomMargin;
       }
@@ -3095,7 +3261,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       printf(": frame=");
       nsFrame::ListTag(stdout, frame);
       printf(" carriedOutBottomMargin=%d collapsedBottomMargin=%d => %d\n",
-             aLine->GetCarriedOutBottomMargin(), collapsedBottomMargin,
+             brc.GetCarriedOutBottomMargin(), collapsedBottomMargin.get(),
              aState.mPrevBottomMargin);
 #endif
 
@@ -3146,8 +3312,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // contains a block (example: <LI>\n<P>... ). This is where
       // the second case can happen.
       if (mBullet && HaveOutsideBullet() &&
-          ((aLine == mLines) ||
-           ((0 == mLines->mBounds.height) && (aLine == mLines->mNext)))) {
+          ((aLine == mLines.front()) ||
+           ((0 == mLines.front()->mBounds.height) &&
+            (aLine == begin_lines().next())))) {
         // Reflow the bullet
         nsHTMLReflowMetrics metrics(nsnull);
         ReflowBullet(aState, metrics);
@@ -3172,7 +3339,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // Tall bullets won't look particularly nice here...
         nsRect bbox;
         mBullet->GetRect(bbox);
-        nscoord bulletTopMargin = applyTopMargin ? collapsedBottomMargin : 0;
+        nscoord bulletTopMargin = applyTopMargin
+                                    ? collapsedBottomMargin.get()
+                                    : 0;
         bbox.y = aState.BorderPadding().top + ascent -
           metrics.ascent + bulletTopMargin;
         mBullet->SetRect(aState.mPresContext, bbox);
@@ -3180,7 +3349,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
     else {
       // None of the block fits. Determine the correct reflow status.
-      if (aLine == mLines) {
+      if (aLine == mLines.front()) {
         // If it's our very first line then we need to be pushed to
         // our parents next-in-flow. Therefore, return break-before
         // status for our reflow status.
@@ -3189,7 +3358,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       else {
         // Push the line that didn't fit and any lines that follow it
         // to our next-in-flow.
-        PushLines(aState);
+        PushLines(aState, aLine.prev());
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
       }
     }
@@ -3206,7 +3375,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
-                                 nsLineBox* aLine,
+                                 line_iterator aLine,
                                  PRBool* aKeepReflowGoing,
                                  PRBool aDamageDirtyArea,
                                  PRBool aUpdateMaximumWidth)
@@ -3249,7 +3418,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
-                                         nsLineBox* aLine,
+                                         line_iterator aLine,
                                          PRBool* aKeepReflowGoing,
                                          PRUint8* aLineReflowStatus,
                                          PRBool aUpdateMaximumWidth,
@@ -3273,7 +3442,7 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
-                                       nsLineBox* aLine,
+                                       line_iterator aLine,
                                        PRBool* aKeepReflowGoing,
                                        PRUint8* aLineReflowStatus,
                                        PRBool aUpdateMaximumWidth,
@@ -3294,7 +3463,7 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    nsLineLayout& aLineLayout,
-                                   nsLineBox* aLine,
+                                   line_iterator aLine,
                                    PRBool* aKeepReflowGoing,
                                    PRUint8* aLineReflowStatus,
                                    PRBool aUpdateMaximumWidth,
@@ -3307,7 +3476,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   // Setup initial coordinate system for reflowing the inline frames
   // into. Apply a previous block frame's bottom margin first.
-  aState.mY += aState.mPrevBottomMargin;
+  aState.mY += aState.mPrevBottomMargin.get();
   aState.GetAvailableSpace();
   PRBool impactedByFloaters = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
   aLine->SetLineIsImpactedByFloater(impactedByFloaters);
@@ -3369,15 +3538,16 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       // It is possible that one or more of next lines are empty
       // (because of DeleteChildsNextInFlow). If so, delete them now
       // in case we are finished.
-      nsLineBox* nextLine = aLine->mNext;
-      while ((nsnull != nextLine) && (0 == nextLine->GetChildCount())) {
+      ++aLine;
+      while ((aLine != end_lines()) && (0 == aLine->GetChildCount())) {
         // XXX Is this still necessary now that DeleteChildsNextInFlow
         // uses DoRemoveFrame?
-        aLine->mNext = nextLine->mNext;
-        NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad empty line");
-        aState.FreeLineBox(nextLine);
-        nextLine = aLine->mNext;
+        nsLineBox *toremove = aLine;
+        aLine = mLines.erase(aLine);
+        NS_ASSERTION(nsnull == toremove->mFirstChild, "bad empty line");
+        aState.FreeLineBox(toremove);
       }
+      --aLine;
       break;
     }
     frame->GetNextSibling(&frame);
@@ -3452,7 +3622,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 nsLineLayout& aLineLayout,
-                                nsLineBox* aLine,
+                                line_iterator aLine,
                                 nsIFrame* aFrame,
                                 PRUint8* aLineReflowStatus)
 {
@@ -3579,7 +3749,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
         // Mark next line dirty in case SplitLine didn't end up
         // pushing any frames.
-        nsLineBox* next = aLine->mNext;
+        nsLineBox* next = aLine.next();
         if ((nsnull != next) && !next->IsBlock()) {
           next->MarkDirty();
         }
@@ -3623,7 +3793,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
       // Mark next line dirty in case SplitLine didn't end up
       // pushing any frames.
-      nsLineBox* next = aLine->mNext;
+      nsLineBox* next = aLine.next();
       if ((nsnull != next) && !next->IsBlock()) {
         next->MarkDirty();
       }
@@ -3664,7 +3834,7 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
-                        nsLineBox* aLine,
+                        line_iterator aLine,
                         nsIFrame* aFrame)
 {
   NS_ABORT_IF_FALSE(aLine->IsInline(), "illegal SplitLine on block line");
@@ -3675,7 +3845,8 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 #ifdef DEBUG
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("split line: from line=%p pushCount=%d aFrame=", aLine, pushCount);
+    printf("split line: from line=%p pushCount=%d aFrame=",
+           NS_STATIC_CAST(void*, aLine.get()), pushCount);
     if (aFrame) {
       nsFrame::ListTag(stdout, aFrame);
     }
@@ -3698,8 +3869,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     if (!newLine) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    newLine->mNext = aLine->mNext;
-    aLine->mNext = newLine;
+    mLines.after_insert(aLine, newLine);
     aLine->SetChildCount(aLine->GetChildCount() - pushCount);
 #ifdef DEBUG
     if (gReallyNoisyReflow) {
@@ -3718,32 +3888,31 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 }
 
 PRBool
-nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine)
+nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState,
+                                line_iterator aLine)
 {
-  nsLineBox* next = aLine->mNext;
-  while (nsnull != next) {
+  while (++aLine != end_lines()) {
     // There is another line
-    if (0 != next->GetChildCount()) {
+    if (0 != aLine->GetChildCount()) {
       // If the next line is a block line then we must not justify
       // this line because it means that this line is the last in a
       // group of inline lines.
-      return !next->IsBlock();
+      return !aLine->IsBlock();
     }
-
     // The next line is empty, try the next one
-    next = next->mNext;
   }
 
   // XXX Not sure about this part
   // Try our next-in-flows lines to answer the question
   nsBlockFrame* nextInFlow = (nsBlockFrame*) mNextInFlow;
   while (nsnull != nextInFlow) {
-    nsLineBox* line = nextInFlow->mLines;
-    while (nsnull != line) {
-      if (0 != line->GetChildCount()) {
+    for (line_iterator line = nextInFlow->begin_lines(),
+                   line_end = nextInFlow->end_lines();
+         line != line_end;
+         ++line)
+    {
+      if (0 != line->GetChildCount())
         return !line->IsBlock();
-      }
-      line = line->mNext;
     }
     nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
   }
@@ -3755,15 +3924,14 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine)
 nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         nsLineLayout& aLineLayout,
-                        nsLineBox* aLine,
+                        line_iterator aLine,
                         PRBool* aKeepReflowGoing,
                         PRBool aUpdateMaximumWidth)
 {
   nsresult rv = NS_OK;
 
   // Trim extra white-space from the line before placing the frames
-  PRBool trimmed = aLineLayout.TrimTrailingWhiteSpace();
-  aLine->SetTrimmed(trimmed);
+  aLineLayout.TrimTrailingWhiteSpace();
 
   // Vertically align the frames on this line.
   //
@@ -3781,8 +3949,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // case is happening then the worst that will happen is that the
   // bullet frame will be reflowed twice.
   PRBool addedBullet = PR_FALSE;
-  if (mBullet && HaveOutsideBullet() && (aLine == mLines) &&
-      (!aLineLayout.IsZeroHeight() || !aLine->mNext)) {
+  if (mBullet && HaveOutsideBullet() && (aLine == mLines.front()) &&
+      (!aLineLayout.IsZeroHeight() || (aLine == mLines.back()))) {
     nsHTMLReflowMetrics metrics(nsnull);
     ReflowBullet(aState, metrics);
     aLineLayout.AddBulletFrame(mBullet, metrics);
@@ -3792,7 +3960,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nscoord lineAscent;
   aLineLayout.VerticalAlignLine(aLine, maxElementSize, lineAscent);
   // Our ascent is the ascent of our first line
-  if (aLine == mLines) {
+  if (aLine == mLines.front()) {
     mAscent = lineAscent;
   }
 
@@ -3807,19 +3975,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     }
   }
 #ifdef DEBUG
-	{
-		static nscoord lastHeight = 0;
-	  if (CRAZY_HEIGHT(aLine->mBounds.y)) {
-	  	lastHeight = aLine->mBounds.y;
-	  	if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
-		    nsFrame::ListTag(stdout);
-		    printf(": line=%p y=%d line.bounds.height=%d\n",
-		           aLine, aLine->mBounds.y, aLine->mBounds.height);
-	    }
-	  }
-	  else {
-	  	lastHeight = 0;
-	  }
+  {
+    static nscoord lastHeight = 0;
+    if (CRAZY_HEIGHT(aLine->mBounds.y)) {
+      lastHeight = aLine->mBounds.y;
+      if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
+        nsFrame::ListTag(stdout);
+        printf(": line=%p y=%d line.bounds.height=%d\n",
+               NS_STATIC_CAST(void*, aLine.get()),
+               aLine->mBounds.y, aLine->mBounds.height);
+      }
+    }
+    else {
+      lastHeight = 0;
+    }
   }
 #endif
 
@@ -3870,8 +4039,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         aState.mPresContext->GetBidiUtils(&bidiUtils);
 
         if (bidiUtils && bidiUtils->IsSuccessful() ) {
-          nsIFrame* nextInFlow = (aLine->mNext)
-                                 ? aLine->mNext->mFirstChild : nsnull;
+          nsIFrame* nextInFlow = (aLine.next() != end_lines())
+                                 ? aLine.next()->mFirstChild : nsnull;
 
           bidiUtils->ReorderFrames(aState.mPresContext,
                                    aState.mReflowState.rendContext,
@@ -3900,28 +4069,29 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aLine->mBounds.height > 0) {
     // This line has some height. Therefore the application of the
     // previous-bottom-margin should stick.
-    aState.mPrevBottomMargin = 0;
+    aState.mPrevBottomMargin.Zero();
     newY = aLine->mBounds.YMost();
   }
   else {
     // Don't let the previous-bottom-margin value affect the newY
     // coordinate (it was applied in ReflowInlineFrames speculatively)
     // since the line is empty.
-    nscoord dy = -aState.mPrevBottomMargin;
+    nscoord dy = -aState.mPrevBottomMargin.get();
     newY = aState.mY + dy;
     aLine->SlideBy(dy);
     // keep our ascent in sync
-    if (mLines == aLine) {
+    if (mLines.front() == aLine) {
       mAscent += dy;
     }
   }
 
   // See if the line fit. If it doesn't we need to push it. Our first
   // line will always fit.
-  if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
+  if ((mLines.front() != aLine) && (newY > aState.mBottomEdge)) {
     // Push this line and all of it's children and anything else that
     // follows to our next-in-flow
-    PushLines(aState);
+    NS_ASSERTION((aState.mCurrentLine == aLine), "oops");
+    PushLines(aState, aLine.prev());
 
     // Stop reflow and whack the reflow status if reflow hasn't
     // already been stopped.
@@ -4137,7 +4307,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 #ifdef DEBUG
   if (CRAZY_WIDTH(xmost)) {
     ListTag(stdout);
-    printf(": line=%p xmost=%d\n", aLine, xmost);
+    printf(": line=%p xmost=%d\n", NS_STATIC_CAST(void*, aLine), xmost);
   }
 #endif
   if (xmost > aState.mKidXMost) {
@@ -4149,35 +4319,47 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 }
 
 void
-nsBlockFrame::PushLines(nsBlockReflowState& aState)
+nsBlockFrame::PushLines(nsBlockReflowState& aState,
+                        nsLineList::iterator aLineBefore)
 {
-  NS_ASSERTION(nsnull != aState.mPrevLine, "bad push");
+  nsLineList::iterator overBegin(aLineBefore.next());
+  NS_ASSERTION(overBegin != begin_lines(), "bad push");
 
-  nsLineBox* lastLine = aState.mPrevLine;
-  nsLineBox* nextLine = lastLine->mNext;
-
-  if (nextLine) {
-    lastLine->mNext = nsnull;
-    SetOverflowLines(aState.mPresContext, nextLine);
+  if (overBegin != end_lines()) {
+    // XXXldb use presshell arena!
+    nsLineList* overflowLines = new nsLineList();
+    overflowLines->splice(overflowLines->end(), mLines, overBegin,
+                          end_lines());
+    NS_ASSERTION(!overflowLines->empty(), "should not be empty");
+      // this takes ownership but it won't delete it immediately so we
+      // can keep using it.
+    SetOverflowLines(aState.mPresContext, overflowLines);
   
     // Mark all the overflow lines dirty so that they get reflowed when
     // they are pulled up by our next-in-flow.
 
     // XXXldb Can this get called O(N) times making the whole thing O(N^2)?
-    while (nsnull != nextLine) {
-      nextLine->MarkDirty();
-      nextLine = nextLine->mNext;
+    for (line_iterator line = overflowLines->begin(),
+                   line_end = overflowLines->end();
+         line != line_end;
+         ++line)
+    {
+      line->MarkDirty();
     }
   }
 
   // Break frame sibling list
-  nsIFrame* lastFrame = lastLine->LastChild();
-  lastFrame->SetNextSibling(nsnull);
+  aLineBefore->LastChild()->SetNextSibling(nsnull);
 
 #ifdef DEBUG
   VerifyOverflowSituation(aState.mPresContext);
 #endif
 }
+
+
+// The overflowLines property is stored as a pointer to a line list,
+// which must be deleted.  However, the following functions all maintain
+// the invariant that the property is never set if the list is empty.
 
 PRBool
 nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
@@ -4186,18 +4368,20 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
   VerifyOverflowSituation(aPresContext);
 #endif
   PRBool drained = PR_FALSE;
-  nsLineBox* overflowLines;
+  nsLineList* overflowLines;
 
   // First grab the prev-in-flows overflow lines
   nsBlockFrame* prevBlock = (nsBlockFrame*) mPrevInFlow;
   if (nsnull != prevBlock) {
     overflowLines = prevBlock->GetOverflowLines(aPresContext, PR_TRUE);
     if (nsnull != overflowLines) {
+      NS_ASSERTION(! overflowLines->empty(),
+                   "overflow lines should never be set and empty");
       drained = PR_TRUE;
 
       // Make all the frames on the overflow line list mine
       nsIFrame* lastFrame = nsnull;
-      nsIFrame* frame = overflowLines->mFirstChild;
+      nsIFrame* frame = overflowLines->front()->mFirstChild;
       while (nsnull != frame) {
         frame->SetParent(this);
 
@@ -4234,42 +4418,40 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
       }
 
       // Join the line lists
-      if (nsnull == mLines) {
-        mLines = overflowLines;
-      }
-      else {
+      NS_ASSERTION(lastFrame, "overflow list was created with no frames");
+      if (! mLines.empty()) {
         // Join the sibling lists together
-        lastFrame->SetNextSibling(mLines->mFirstChild);
-
-        // Place overflow lines at the front of our line list
-        nsLineBox* lastLine = nsLineBox::LastLine(overflowLines);
-        lastLine->mNext = mLines;
-        mLines = overflowLines;
+        lastFrame->SetNextSibling(mLines.front()->mFirstChild);
       }
+      // Place overflow lines at the front of our line list
+      mLines.splice(mLines.begin(), *overflowLines);
+      NS_ASSERTION(overflowLines->empty(), "splice should empty list");
+      delete overflowLines;
     }
   }
 
   // Now grab our own overflow lines
   overflowLines = GetOverflowLines(aPresContext, PR_TRUE);
   if (overflowLines) {
+    NS_ASSERTION(! overflowLines->empty(),
+                 "overflow lines should never be set and empty");
     // This can happen when we reflow and not everything fits and then
     // we are told to reflow again before a next-in-flow is created
     // and reflows.
-    nsLineBox* lastLine = nsLineBox::LastLine(mLines);
-    if (nsnull == lastLine) {  // if we had no lines before the drain operation
-      mLines = overflowLines;  // set our mLines to the overflow
+
+    if (! mLines.empty()) {
+      mLines.back()->LastChild()->SetNextSibling(
+          overflowLines->front()->mFirstChild );
     }
-    else {                     // otherwise, append the overflow to the mLines list
-      lastLine->mNext = overflowLines;
-      nsIFrame* lastFrame = lastLine->LastChild();
-      lastFrame->SetNextSibling(overflowLines->mFirstChild);
-    }
+    // append the overflow to mLines
+    mLines.splice(mLines.end(), *overflowLines);
     drained = PR_TRUE;
+    delete overflowLines;
   }
   return drained;
 }
 
-nsLineBox*
+nsLineList*
 nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
                                PRBool          aRemoveProperty) const
 {
@@ -4282,14 +4464,18 @@ nsBlockFrame::GetOverflowLines(nsIPresContext* aPresContext,
   
     if (frameManager) {
       PRUint32  options = 0;
-      void*     value;
+      nsLineList* value;
   
       if (aRemoveProperty) {
         options |= NS_IFRAME_MGR_REMOVE_PROP;
       }
-      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowLinesProperty,
-                                     options, &value);
-      return (nsLineBox*)value;
+      frameManager->GetFrameProperty(NS_CONST_CAST(nsBlockFrame*, this),
+                                     nsLayoutAtoms::overflowLinesProperty,
+                                     options,
+                                     NS_REINTERPRET_CAST(void**, &value));
+      NS_ASSERTION(!value || !value->empty(),
+                   "value should never be stored as empty");
+      return value;
     }
   }
 
@@ -4304,17 +4490,23 @@ DestroyOverflowLines(nsIPresContext* aPresContext,
                      void*           aPropertyValue)
 {
   if (aPropertyValue) {
-    nsLineBox* lines = (nsLineBox*) aPropertyValue;
-    nsLineBox::DeleteLineList(aPresContext, lines);
+    nsLineList* lines = NS_STATIC_CAST(nsLineList*, aPropertyValue);
+    nsLineBox::DeleteLineList(aPresContext, *lines);
+    delete lines;
   }
 }
 
+// This takes ownership of aOverflowLines.
+// XXX We should allocate overflowLines from presShell arena!
 nsresult
 nsBlockFrame::SetOverflowLines(nsIPresContext* aPresContext,
-                               nsLineBox*      aOverflowFrames)
+                               nsLineList*     aOverflowLines)
 {
   nsCOMPtr<nsIPresShell>     presShell;
   nsresult                   rv = NS_ERROR_FAILURE;
+
+  NS_ASSERTION(aOverflowLines, "null lines");
+  NS_ASSERTION(! aOverflowLines->empty(), "empty lines");
 
   aPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
@@ -4322,8 +4514,10 @@ nsBlockFrame::SetOverflowLines(nsIPresContext* aPresContext,
     presShell->GetFrameManager(getter_AddRefs(frameManager));
   
     if (frameManager) {
-      rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowLinesProperty,
-                                          aOverflowFrames, DestroyOverflowLines);
+      rv = frameManager->SetFrameProperty(this,
+                                          nsLayoutAtoms::overflowLinesProperty,
+                                          aOverflowLines,
+                                          DestroyOverflowLines);
 
       // Verify that we didn't overwrite an existing overflow list
       NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
@@ -4338,9 +4532,8 @@ nsBlockFrame::SetOverflowLines(nsIPresContext* aPresContext,
 nsIFrame*
 nsBlockFrame::LastChild()
 {
-  if (mLines) {
-    nsLineBox* line = nsLineBox::LastLine(mLines);
-    return line->LastChild();
+  if (! mLines.empty()) {
+    return mLines.back()->LastChild();
   }
   return nsnull;
 }
@@ -4370,7 +4563,7 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
 
   // Find the proper last-child for where the append should go
   nsIFrame* lastKid = nsnull;
-  nsLineBox* lastLine = nsLineBox::LastLine(mLines);
+  nsLineBox* lastLine = mLines.empty() ? nsnull : mLines.back();
   if (lastLine) {
     lastKid = lastLine->LastChild();
   }
@@ -4452,17 +4645,22 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
   aPresContext->GetShell(getter_AddRefs(presShell));
 
   // Attempt to find the line that contains the previous sibling
-  nsLineBox* prevSibLine = nsnull;
+  nsLineList::iterator prevSibLine = end_lines();
   PRInt32 prevSiblingIndex = -1;
   if (aPrevSibling) {
+    // XXX_perf This is technically O(N^2) in some cases, but by using
+    // RFind instead of Find, we make it O(N) in the most common case,
+    // which is appending cotent.
+
     // Find the line that contains the previous sibling
-    prevSibLine = nsLineBox::FindLineContaining(mLines, aPrevSibling,
-                                                &prevSiblingIndex);
-    NS_ASSERTION(nsnull != prevSibLine, "prev sibling not in line list");
-    if (nsnull == prevSibLine) {
-      // Note: defensive code! FindLineContaining must not return
-      // null in this case, so if it does...
+    if (! nsLineBox::RFindLineContaining(aPrevSibling,
+                                         begin_lines(), prevSibLine,
+                                         &prevSiblingIndex)) {
+      // Note: defensive code! RFindLineContaining must not return
+      // false in this case, so if it does...
+      NS_NOTREACHED("prev sibling not in line list");
       aPrevSibling = nsnull;
+      prevSibLine = end_lines();
     }
   }
 
@@ -4481,8 +4679,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      line->mNext = prevSibLine->mNext;
-      prevSibLine->mNext = line;
+      mLines.after_insert(prevSibLine, line);
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() - rem);
       prevSibLine->MarkDirty();
     }
@@ -4490,8 +4687,8 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     // Now (partially) join the sibling lists together
     aPrevSibling->SetNextSibling(aFrameList);
   }
-  else if (mLines) {
-    prevSiblingNextFrame = mLines->mFirstChild;
+  else if (! mLines.empty()) {
+    prevSiblingNextFrame = mLines.front()->mFirstChild;
   }
 
   // Walk through the new frames being added and update the line data
@@ -4502,24 +4699,23 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
 
     // If the frame is a block frame, or if there is no previous line
     // or if the previous line is a block line then make a new line.
-    if (isBlock || !prevSibLine || prevSibLine->IsBlock()) {
+    if (isBlock || prevSibLine == end_lines() || prevSibLine->IsBlock()) {
       // Create a new line for the frame and add its line to the line
       // list.
       nsLineBox* line = NS_NewLineBox(presShell, newFrame, 1, isBlock);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      if (prevSibLine) {
+      if (prevSibLine != end_lines()) {
         // Append new line after prevSibLine
-        line->mNext = prevSibLine->mNext;
-        prevSibLine->mNext = line;
+        mLines.after_insert(prevSibLine, line);
+        ++prevSibLine;
       }
       else {
         // New line is going before the other lines
-        line->mNext = mLines;
-        mLines = line;
+        mLines.push_front(line);
+        prevSibLine = begin_lines();
       }
-      prevSibLine = line;
     }
     else {
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() + 1);
@@ -4579,20 +4775,18 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
     mFloaters.RemoveFrame(aOldFrame);
 
     // Find which line contains the floater
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
+    line_iterator line = begin_lines(), line_end = end_lines();
+    for ( ; line != line_end; ++line) {
       if (line->IsInline() && line->RemoveFloater(aOldFrame)) {
         aOldFrame->Destroy(aPresContext);
-        goto found_it;
+        break;
       }
-      line = line->mNext;
     }
-   found_it:
 
     // Mark every line at and below the line where the floater was dirty
-    while (nsnull != line) {
+    // XXXldb This could be done more efficiently.
+    for ( ; line != line_end; ++line) {
       line->MarkDirty();
-      line = line->mNext;
     }
   }
 #ifdef IBMBIDI
@@ -4627,11 +4821,11 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
   nsBlockFrame* flow = this;
-  nsLineBox** linep = &flow->mLines;
-  nsLineBox* line = flow->mLines;
-  nsLineBox* prevLine = nsnull;
+  nsLineList& lines = flow->mLines;
+  nsLineList::iterator line = lines.begin(),
+                       line_end = lines.end();
   nsIFrame* prevSibling = nsnull;
-  while (nsnull != line) {
+  for ( ; line != line_end; ++line) {
     nsIFrame* frame = line->mFirstChild;
     PRInt32 n = line->GetChildCount();
     while (--n >= 0) {
@@ -4641,13 +4835,10 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       prevSibling = frame;
       frame->GetNextSibling(&frame);
     }
-    linep = &line->mNext;
-    prevLine = line;
-    line = line->mNext;
   }
  found_frame:;
 #ifdef NS_DEBUG
-  NS_ASSERTION(nsnull != line, "can't find deleted frame in lines");
+  NS_ASSERTION(line != line_end, "can't find deleted frame in lines");
   if (nsnull != prevSibling) {
     nsIFrame* tmp;
     prevSibling->GetNextSibling(&tmp);
@@ -4657,7 +4848,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
 
   // Remove frame and all of its continuations
   while (nsnull != aDeletedFrame) {
-    while ((nsnull != line) && (nsnull != aDeletedFrame)) {
+    while ((line != line_end) && (nsnull != aDeletedFrame)) {
 #ifdef NS_DEBUG
       nsIFrame* parent;
       aDeletedFrame->GetParent(&parent);
@@ -4680,16 +4871,19 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       if (line->mFirstChild == aDeletedFrame) {
         line->mFirstChild = nextFrame;
       }
-      if (prevLine && !prevLine->IsBlock()) {
+
+      --line;
+      if (line != line_end && !line->IsBlock()) {
         // Since we just removed a frame that follows some inline
         // frames, we need to reflow the previous line.
-        prevLine->MarkDirty();
+        line->MarkDirty();
       }
+      ++line;
 
       // Take aDeletedFrame out of the sibling list. Note that
       // prevSibling will only be nsnull when we are deleting the very
       // first frame.
-      if (nsnull != prevSibling) {
+      if (prevSibling) {
         prevSibling->SetNextSibling(nextFrame);
       }
 
@@ -4703,8 +4897,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         nsSplittableFrame::RemoveFromFlow(aDeletedFrame);
       }
 #ifdef NOISY_REMOVE_FRAME
-      printf("DoRemoveFrame: prevLine=%p line=%p frame=",
-             prevLine, line);
+      printf("DoRemoveFrame: line=%p frame=", line);
       nsFrame::ListTag(stdout, aDeletedFrame);
       printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
 #endif
@@ -4712,24 +4905,29 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       aDeletedFrame = nextInFlow;
 
       // If line is empty, remove it now
-      nsLineBox* next = line->mNext;
       PRInt32 lineChildCount = line->GetChildCount();
       if (0 == --lineChildCount) {
-        *linep = next;
-        line->mNext = nsnull;
+        nsLineBox *cur = line;
+        line = lines.erase(line);
         // Invalidate the space taken up by the line.
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
         // cases...
         nsRect lineCombinedArea;
-        line->GetCombinedArea(&lineCombinedArea);
+        cur->GetCombinedArea(&lineCombinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
 #endif
         Invalidate(aPresContext, lineCombinedArea);
-        line->Destroy(presShell);
-        line = next;
+        cur->Destroy(presShell);
+
+        // If we're removing a line, ReflowDirtyLines isn't going to
+        // know that it needs to slide lines unless something is marked
+        // dirty.  So mark the previous margin of the next line dirty if
+        // there is one.
+        if (line != line_end)
+          line->MarkPreviousMarginDirty();
       }
       else {
         // Make the line that just lost a frame dirty
@@ -4739,9 +4937,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         // If we just removed the last frame on the line then we need
         // to advance to the next line.
         if (isLastFrameOnLine) {
-          prevLine = line;
-          linep = &line->mNext;
-          line = next;
+          ++line;
         }
       }
 
@@ -4768,9 +4964,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
       // add defensive pointer check for bug 56894
       if(flow) {
-        prevLine = nsnull;
-        line = flow->mLines;
-        linep = &flow->mLines;
+        lines = flow->mLines;
+        line = lines.begin();
+        line_end = lines.end();
         prevSibling = nsnull;
       }
     }
@@ -4799,7 +4995,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
   nsBlockFrame* parent;
   nextInFlow->GetParent((nsIFrame**)&parent);
   NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
-  NS_PRECONDITION(nsnull != parent->mLines, "next-in-flow with weird parent");
+  NS_PRECONDITION(! parent->mLines.empty(), "next-in-flow with weird parent");
 //  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
   parent->DoRemoveFrame(aPresContext, nextInFlow);
 #ifdef IBMBIDI
@@ -4861,7 +5057,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
 
   nsReflowStatus frameReflowStatus;
-  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
+  nsCollapsingMargin margin;
+  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, margin,
+                                isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
   if (NS_SUCCEEDED(rv) && isAutoWidth) {
     nscoord maxElementWidth = brc.GetMaxElementSize().width;
@@ -4870,7 +5068,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       // width. Reflow it again, this time pinning the width to the
       // maxElementSize.
       availSpace.width = maxElementWidth;
-      rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
+      nsCollapsingMargin marginMES;
+      rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, marginMES,
+                           isAdjacentWithTop,
                            aComputedOffsetsResult, frameReflowStatus);
     }
   }
@@ -4893,9 +5093,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   const nsMargin& m = brc.GetMargin();
   aMarginResult.top = brc.GetTopMargin();
   aMarginResult.right = m.right;
-  aMarginResult.bottom = 
-    nsBlockReflowContext::MaxMargin(brc.GetCarriedOutBottomMargin(),
-                                    m.bottom);
+  brc.GetCarriedOutBottomMargin().Include(m.bottom);
+  aMarginResult.bottom = brc.GetCarriedOutBottomMargin().get();
   aMarginResult.left = m.left;
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
@@ -4903,6 +5102,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
+  // XXXldb This seems like the wrong place to be doing this -- shouldn't
+  // we be doing this in nsBlockReflowState::FlowAndPlaceFloater after
+  // we've positioned the floater, and shouldn't we be doing the equivalent
+  // of |::PlaceFrameView| here?
   floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
   nsIView*  view;
   floater->GetView(aState.mPresContext, &view);
@@ -4944,16 +5147,18 @@ nsBlockFrame::GetSkipSides() const
 }
 
 #ifdef DEBUG
-static void ComputeCombinedArea(nsLineBox* aLine,
+static void ComputeCombinedArea(nsLineList& aLines,
                                 nscoord aWidth, nscoord aHeight,
                                 nsRect& aResult)
 {
   nscoord xa = 0, ya = 0, xb = aWidth, yb = aHeight;
-  while (nsnull != aLine) {
+  for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end();
+       line != line_end;
+       ++line) {
     // Compute min and max x/y values for the reflowed frame's
     // combined areas
     nsRect lineCombinedArea;
-    aLine->GetCombinedArea(&lineCombinedArea);
+    line->GetCombinedArea(&lineCombinedArea);
     nscoord x = lineCombinedArea.x;
     nscoord y = lineCombinedArea.y;
     nscoord xmost = x + lineCombinedArea.width;
@@ -4970,7 +5175,6 @@ static void ComputeCombinedArea(nsLineBox* aLine,
     if (ymost > yb) {
       yb = ymost;
     }
-    aLine = aLine->mNext;
   }
 
   aResult.x = xa;
@@ -5154,7 +5358,9 @@ nsBlockFrame::PaintFloaters(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
-  for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     if (!line->HasFloaters()) {
       continue;
     }
@@ -5194,7 +5400,9 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
   }
 #endif
 
-  for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     // If the line's combined area (which includes child frames that
     // stick outside of the line's bounding box or our bounding box)
     // intersects the dirty rect then paint the line.
@@ -5206,7 +5414,8 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
         line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
         printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-               line, line->mBounds.x, line->mBounds.y,
+               NS_STATIC_CAST(void*, line.get()),
+               line->mBounds.x, line->mBounds.y,
                line->mBounds.width, line->mBounds.height,
                lineCombinedArea.x, lineCombinedArea.y,
                lineCombinedArea.width, lineCombinedArea.height);
@@ -5231,7 +5440,8 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
         line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
         printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-               line, line->mBounds.x, line->mBounds.y,
+               NS_STATIC_CAST(void*, line.get()),
+               line->mBounds.x, line->mBounds.y,
                line->mBounds.width, line->mBounds.height,
                lineCombinedArea.x, lineCombinedArea.y,
                lineCombinedArea.width, lineCombinedArea.height);
@@ -5252,7 +5462,7 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
   if (gLamePaintMetrics) {
     PRTime end = PR_Now();
 
-    PRInt32 numLines = nsLineBox::ListLength(mLines);
+    PRInt32 numLines = mLines.size();
     if (!numLines) numLines = 1;
     PRTime lines, deltaPerLine, delta;
     LL_I2L(lines, numLines);
@@ -5386,15 +5596,13 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to
-    nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
-    nsCOMPtr<nsIFocusTracker> tracker;
-  	aPresContext->GetShell(getter_AddRefs(shell));
+    aPresContext->GetShell(getter_AddRefs(shell));
     if (!shell)
       return NS_OK;
-    result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
+    nsCOMPtr<nsIFocusTracker> tracker( do_QueryInterface(shell, &result) );
 
-    result = mainframe->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+    nsCOMPtr<nsILineIterator> it( do_QueryInterface(mainframe, &result) );
     nsIView* parentWithView;
     nsPoint origin;
     nsPeekOffsetStruct pos;
@@ -5426,7 +5634,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
       
       if (NS_SUCCEEDED(result) && pos.mResultFrame){
         if (result == NS_OK)
-          result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));//if this fails thats ok
+          it = do_QueryInterface(pos.mResultFrame, &result);//if this fails thats ok
         resultFrame = pos.mResultFrame;
         mainframe = resultFrame;
       }
@@ -5590,18 +5798,19 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 
     // Mark the line containing the child frame dirty.
     PRBool isFloater;
-    nsLineBox* prevLine;
-    nsLineBox* line = FindLineFor(aChild, &prevLine, &isFloater);
+    line_iterator fline;
+    FindLineFor(aChild, &isFloater, &fline);
     
     if (!isFloater) {
-      if (line)
-        MarkLineDirty(line, prevLine);
+      if (fline != end_lines())
+        MarkLineDirty(fline);
     }
     else {
-      line = mLines;
-      while (nsnull != line) {
+      // XXXldb Could we do this more efficiently?
+      for (line_iterator line = begin_lines(), line_end = end_lines();
+           line != line_end;
+           ++line) {
         line->MarkDirty();
-        line = line->mNext;
       }
     }
   }
@@ -5658,27 +5867,28 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 
 #ifdef NS_DEBUG
 static PRBool
-InLineList(nsLineBox* aLines, nsIFrame* aFrame)
+InLineList(nsLineList& aLines, nsIFrame* aFrame)
 {
-  while (nsnull != aLines) {
-    nsIFrame* frame = aLines->mFirstChild;
-    PRInt32 n = aLines->GetChildCount();
+  for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end();
+       line != line_end;
+       ++line) {
+    nsIFrame* frame = line->mFirstChild;
+    PRInt32 n = line->GetChildCount();
     while (--n >= 0) {
       if (frame == aFrame) {
         return PR_TRUE;
       }
       frame->GetNextSibling(&frame);
     }
-    aLines = aLines->mNext;
   }
   return PR_FALSE;
 }
 
 static PRBool
-InSiblingList(nsLineBox* aLine, nsIFrame* aFrame)
+InSiblingList(nsLineList& aLines, nsIFrame* aFrame)
 {
-  if (nsnull != aLine) {
-    nsIFrame* frame = aLine->mFirstChild;
+  if (! aLines.empty()) {
+    nsIFrame* frame = aLines.front()->mFirstChild;
     while (nsnull != frame) {
       if (frame == aFrame) {
         return PR_TRUE;
@@ -5700,8 +5910,8 @@ nsBlockFrame::IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
   if (InLineList(mLines, aFrame) && InSiblingList(mLines, aFrame)) {
     return PR_TRUE;
   }
-  nsLineBox* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-  if (InLineList(overflowLines, aFrame) && InSiblingList(overflowLines, aFrame)) {
+  nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+  if (InLineList(*overflowLines, aFrame) && InSiblingList(*overflowLines, aFrame)) {
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -5724,12 +5934,12 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   PRUint32 sum = sizeof(*this);
 
   // Add in size of each line object
-  nsLineBox* line = mLines;
-  while (line) {
+  for (const_line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     PRUint32  lineBoxSize;
     nsIAtom* atom = line->SizeOf(aHandler, &lineBoxSize);
     aHandler->AddSize(atom, lineBoxSize);
-    line = line->mNext;
   }
 
   *aResult = sum;
@@ -5900,8 +6110,10 @@ nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
 
   while (nsnull != aBlockFrame) {
     // Examine each line in the block
-    nsLineBox* line = aBlockFrame->mLines;
-    while (line) {
+    for (line_iterator line = aBlockFrame->begin_lines(),
+                       line_end = aBlockFrame->end_lines();
+         line != line_end;
+         ++line) {
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->GetChildCount();
       while (--n >= 0) {
@@ -5912,7 +6124,6 @@ nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
         }
         kid->GetNextSibling(&kid);
       }
-      line = line->mNext;
     }
 
     // Advance to the next continuation
@@ -6038,8 +6249,9 @@ nsBlockFrame::BuildFloaterList()
 {
   nsIFrame* head = nsnull;
   nsIFrame* current = nsnull;
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
+  for (line_iterator line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     if (line->HasFloaters()) {
       nsFloaterCache* fc = line->GetFirstFloater();
       while (fc) {
@@ -6054,7 +6266,6 @@ nsBlockFrame::BuildFloaterList()
         fc = fc->Next();
       }
     }
-    line = line->mNext;
   }
 
   // Terminate end of floater list just in case a floater was removed
@@ -6073,8 +6284,7 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
   if (!gVerifyLines) {
     return;
   }
-  nsLineBox* line = mLines;
-  if (!line) {
+  if (mLines.empty()) {
     return;
   }
 
@@ -6082,7 +6292,10 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
   // set properly.
   PRInt32 count = 0;
   PRBool seenBlock = PR_FALSE;
-  while (nsnull != line) {
+  line_iterator line, line_end;
+  for (line = begin_lines(), line_end = end_lines();
+       line != line_end;
+       ++line) {
     if (aFinalCheckOK) {
       NS_ABORT_IF_FALSE(line->GetChildCount(), "empty line");
       if (line->IsBlock()) {
@@ -6093,12 +6306,11 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
       }
     }
     count += line->GetChildCount();
-    line = line->mNext;
   }
 
   // Then count the frames
   PRInt32 frameCount = 0;
-  nsIFrame* frame = mLines->mFirstChild;
+  nsIFrame* frame = mLines.front()->mFirstChild;
   while (nsnull != frame) {
     frameCount++;
     frame->GetNextSibling(&frame);
@@ -6106,17 +6318,16 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
   NS_ASSERTION(count == frameCount, "bad line list");
 
   // Next: test that each line has right number of frames on it
-  line = mLines;
-  nsLineBox* prevLine = nsnull;
-  while (nsnull != line) {
+  for (line = begin_lines(), line_end = end_lines();
+       line != line_end;
+        ) {
     count = line->GetChildCount();
     frame = line->mFirstChild;
     while (--count >= 0) {
       frame->GetNextSibling(&frame);
     }
-    prevLine = line;
-    line = line->mNext;
-    if ((nsnull != line) && (0 != line->GetChildCount())) {
+    ++line;
+    if ((line != line_end) && (0 != line->GetChildCount())) {
       NS_ASSERTION(frame == line->mFirstChild, "bad line list");
     }
   }
@@ -6130,10 +6341,10 @@ nsBlockFrame::VerifyOverflowSituation(nsIPresContext* aPresContext)
 {
   nsBlockFrame* flow = (nsBlockFrame*) GetFirstInFlow();
   while (nsnull != flow) {
-    nsLineBox* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
+    nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
     if (nsnull != overflowLines) {
-      NS_ASSERTION(nsnull != overflowLines->mFirstChild,
-                   "bad overflow list");
+      NS_ASSERTION(! overflowLines->empty(), "should not be empty if present");
+      NS_ASSERTION(overflowLines->front()->mFirstChild, "bad overflow list");
     }
     flow = (nsBlockFrame*) flow->mNextInFlow;
   }

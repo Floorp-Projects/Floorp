@@ -55,6 +55,65 @@ struct nsSize;
 #endif
 
 /**
+ * An nsCollapsingMargin represents a vertical collapsing margin between
+ * blocks as described in section 8.3.1 of CSS2,
+ * <URL: http://www.w3.org/TR/REC-CSS2/box.html#collapsing-margins >.
+ *
+ * All adjacent vertical margins collapse, and the resulting margin is
+ * the sum of the largest positive margin included and the smallest (most
+ * negative) negative margin included.
+ */
+struct nsCollapsingMargin {
+  private:
+    nscoord mMostPos;  // the largest positive margin included
+    nscoord mMostNeg;  // the smallest negative margin included
+
+  public:
+    nsCollapsingMargin()
+        : mMostPos(0),
+          mMostNeg(0)
+      {
+      }
+
+    nsCollapsingMargin(const nsCollapsingMargin& aOther)
+        : mMostPos(aOther.mMostPos),
+          mMostNeg(aOther.mMostNeg)
+      {
+      }
+
+    nsCollapsingMargin& operator=(const nsCollapsingMargin& aOther)
+      {
+        mMostPos = aOther.mMostPos;
+        mMostNeg = aOther.mMostNeg;
+        return *this;
+      }
+
+    void Include(nscoord aCoord)
+      {
+        if (aCoord > mMostPos)
+          mMostPos = aCoord;
+        else if (aCoord < mMostNeg)
+          mMostNeg = aCoord;
+      }
+
+    void Zero()
+      {
+        mMostPos = 0;
+        mMostNeg = 0;
+      }
+
+    PRBool IsZero() const
+      {
+        return (mMostPos == 0) && (mMostNeg == 0);
+      }
+
+    nscoord get() const
+      {
+        return mMostPos + mMostNeg;
+      }
+};
+
+/**
  * Reflow metrics used to return the frame's desired size and alignment
  * information.
  *
@@ -83,7 +142,7 @@ struct nsHTMLReflowMetrics {
 
   // Carried out bottom margin values. This is the collapsed
   // (generational) bottom margin value.
-  nscoord mCarriedOutBottomMargin;
+  nsCollapsingMargin mCarriedOutBottomMargin;
   
   // For frames that have content that overflow their content area
   // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle represents the total area
@@ -104,7 +163,6 @@ struct nsHTMLReflowMetrics {
     maxElementSize = aMaxElementSize;
     mMaximumWidth = 0;
     mFlags = aFlags;
-    mCarriedOutBottomMargin = 0;
     mOverflowArea.x = 0;
     mOverflowArea.y = 0;
     mOverflowArea.width = 0;

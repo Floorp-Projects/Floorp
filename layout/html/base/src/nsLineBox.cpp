@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@fas.harvard.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,10 +42,12 @@
 #include "nsIStyleContext.h"
 #include "nsLineLayout.h"
 #include "prprf.h"
+#include "nsBlockFrame.h"
+#include "nsITextContent.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef DEBUG
 #include "nsISizeOfHandler.h"
-#include "nsLayoutAtoms.h"
 #endif
 
 #ifdef DEBUG
@@ -55,11 +59,10 @@ MOZ_DECL_CTOR_COUNTER(nsLineBox)
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
-    mNext(nsnull),
     mBounds(0, 0, 0, 0),
     mMaxElementWidth(0),
-    mData(nsnull),
-    mMaximumWidth(-1)
+    mMaximumWidth(-1),
+    mData(nsnull)
 {
   MOZ_COUNT_CTOR(nsLineBox);
 #ifdef DEBUG
@@ -139,7 +142,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
     nsFrame::IndentBy(out, aIndent);
     nsPlaceholderFrame* ph = fc->mPlaceholder;
     if (nsnull != ph) {
-      fprintf(out, "placeholder@%p ", ph);
+      fprintf(out, "placeholder@%p ", NS_STATIC_CAST(void*, ph));
       nsIFrame* frame = ph->GetOutOfFlowFrame();
       if (nsnull != frame) {
         nsIFrameDebug*  frameDebug;
@@ -163,19 +166,19 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 }
 #endif
 
+#ifdef DEBUG
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
   PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s[0x%x]",
               IsBlock() ? "block" : "inline",
               IsDirty() ? "dirty" : "clean",
+              IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
               IsImpactedByFloater() ? "IMPACTED" : "NOT Impacted",
-              IsTrimmed() ? "trimmed" : "",
               mAllFlags);
   return aBuf;
 }
 
-#ifdef DEBUG
 void
 nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
@@ -184,9 +187,10 @@ nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
-          this, GetChildCount(), StateToString(cbuf, sizeof(cbuf)));
-  if (0 != GetCarriedOutBottomMargin()) {
-    fprintf(out, "bm=%d ", GetCarriedOutBottomMargin());
+          NS_STATIC_CAST(const void*, this), GetChildCount(),
+          StateToString(cbuf, sizeof(cbuf)));
+  if (IsBlock() && !GetCarriedOutBottomMargin().IsZero()) {
+    fprintf(out, "bm=%d ", GetCarriedOutBottomMargin().get());
   }
   if (0 != mMaxElementWidth) {
     fprintf(out, "mew=%d ", mMaxElementWidth);
@@ -253,67 +257,103 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
   return -1;
 }
 
-void
-nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineBox* aLine)
+nsresult
+nsLineBox::IsEmpty(PRBool aIsQuirkMode, PRBool aParentIsPre,
+                   PRBool *aResult) const
 {
-  if (nsnull != aLine) {
+  if (IsBlock())
+    return mFirstChild->IsEmpty(aIsQuirkMode, aParentIsPre, aResult);
+
+  *aResult = PR_TRUE;
+  PRInt32 n;
+  nsIFrame *kid;
+  for (n = GetChildCount(), kid = mFirstChild;
+       n > 0;
+       --n, kid->GetNextSibling(&kid))
+  {
+    kid->IsEmpty(aIsQuirkMode, aParentIsPre, aResult);
+    if (! *aResult)
+      break;
+  }
+  return NS_OK;
+}
+
+void
+nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines)
+{
+  if (! aLines.empty()) {
     // Delete our child frames before doing anything else. In particular
     // we do all of this before our base class releases it's hold on the
     // view.
-    for (nsIFrame* child = aLine->mFirstChild; child; ) {
+    for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild;
       child->GetNextSibling(&nextChild);
       child->Destroy(aPresContext);
       child = nextChild;
     }
 
-    while (nsnull != aLine) {
-      nsLineBox* next = aLine->mNext;
-      delete aLine;
-      aLine = next;
+    while (! aLines.empty()) {
+      nsLineBox* line = aLines.front();
+      aLines.pop_front();
+      delete line;
     }
   }
 }
 
 nsLineBox*
-nsLineBox::LastLine(nsLineBox* aLine)
-{
-  if (nsnull != aLine) {
-    while (nsnull != aLine->mNext) {
-      aLine = aLine->mNext;
-    }
-  }
-  return aLine;
-}
-
-nsLineBox*
-nsLineBox::FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame,
+nsLineBox::FindLineContaining(nsLineList& aLines, nsIFrame* aFrame,
                               PRInt32* aFrameIndexInLine)
 {
-  NS_PRECONDITION(aFrameIndexInLine && aLine && aFrame, "null ptr");
-  while (nsnull != aLine) {
-    PRInt32 ix = aLine->IndexOf(aFrame);
+  NS_PRECONDITION(aFrameIndexInLine && !aLines.empty() && aFrame, "null ptr");
+  for (nsLineList::iterator line = aLines.begin(),
+                            line_end = aLines.end();
+       line != line_end;
+       ++line)
+  {
+    PRInt32 ix = line->IndexOf(aFrame);
     if (ix >= 0) {
       *aFrameIndexInLine = ix;
-      return aLine;
+      return line;
     }
-    aLine = aLine->mNext;
   }
   *aFrameIndexInLine = -1;
   return nsnull;
 }
 
-nscoord
+PRBool
+nsLineBox::RFindLineContaining(nsIFrame* aFrame,
+                               const nsLineList::iterator& aBegin,
+                               nsLineList::iterator& aEnd,
+                               PRInt32* aFrameIndexInLine)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+  while (aBegin != aEnd) {
+    --aEnd;
+    PRInt32 ix = aEnd->IndexOf(aFrame);
+    if (ix >= 0) {
+      *aFrameIndexInLine = ix;
+      return PR_TRUE;
+    }
+  }
+  *aFrameIndexInLine = -1;
+  return PR_FALSE;
+}
+
+nsCollapsingMargin
 nsLineBox::GetCarriedOutBottomMargin() const
 {
-  return (IsBlock() && mBlockData) ? mBlockData->mCarriedOutBottomMargin : 0;
+  NS_ASSERTION(IsBlock(),
+               "GetCarriedOutBottomMargin called on non-block line.");
+  return (IsBlock() && mBlockData)
+    ? mBlockData->mCarriedOutBottomMargin
+    : nsCollapsingMargin();
 }
 
 void
-nsLineBox::SetCarriedOutBottomMargin(nscoord aValue)
+nsLineBox::SetCarriedOutBottomMargin(nsCollapsingMargin aValue)
 {
   if (IsBlock()) {
-    if (aValue) {
+    if (! aValue.IsZero()) {
       if (!mBlockData) {
         mBlockData = new ExtraBlockData(mBounds);
       }
@@ -338,7 +378,7 @@ nsLineBox::MaybeFreeData()
         mInlineData = nsnull;
       }
     }
-    else if (0 == mBlockData->mCarriedOutBottomMargin) {
+    else if (mBlockData->mCarriedOutBottomMargin.IsZero()) {
       delete mBlockData;
       mBlockData = nsnull;
     }
@@ -462,17 +502,6 @@ nsLineBox::GetCombinedArea(nsRect* aResult)
 }
 
 #ifdef DEBUG
-PRInt32
-nsLineBox::ListLength(nsLineBox* aLine)
-{
-  PRInt32 count = 0;
-  while (aLine) {
-    count++;
-    aLine = aLine->mNext;
-  }
-  return count;
-}
-
 nsIAtom*
 nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -533,17 +562,12 @@ nsLineIterator::~nsLineIterator()
 NS_IMPL_ISUPPORTS2(nsLineIterator, nsILineIterator, nsILineIteratorNavigator)
 
 nsresult
-nsLineIterator::Init(nsLineBox* aLines, PRBool aRightToLeft)
+nsLineIterator::Init(nsLineList& aLines, PRBool aRightToLeft)
 {
   mRightToLeft = aRightToLeft;
 
   // Count the lines
-  PRInt32 numLines = 0;
-  nsLineBox* line = aLines;
-  while (line) {
-    numLines++;
-    line = line->mNext;
-  }
+  PRInt32 numLines = aLines.size();
   if (0 == numLines) {
     // Use gDummyLines so that we don't need null pointer checks in
     // the accessor methods
@@ -560,10 +584,11 @@ nsLineIterator::Init(nsLineBox* aLines, PRBool aRightToLeft)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsLineBox** lp = mLines;
-  line = aLines;
-  while (line) {
+  for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end() ;
+       line != line_end;
+       ++line)
+  {
     *lp++ = line;
-    line = line->mNext;
   }
   mNumLines = numLines;
   return NS_OK;
@@ -618,8 +643,6 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
     flags |= NS_LINE_FLAG_IS_BLOCK;
   }
   else {
-    if (line->IsTrimmed())
-      flags |= NS_LINE_FLAG_IS_TRIMMED;
     if (line->HasBreak())
       flags |= NS_LINE_FLAG_ENDS_IN_BREAK;
   }
@@ -634,13 +657,12 @@ nsLineIterator::FindLineContaining(nsIFrame* aFrame,
 {
   nsLineBox* line = mLines[0];
   PRInt32 lineNumber = 0;
-  while (line) {
+  while (lineNumber != mNumLines) {
     if (line->Contains(aFrame)) {
       *aLineNumberResult = lineNumber;
       return NS_OK;
     }
-    line = line->mNext;
-    lineNumber++;
+    line = mLines[++lineNumber];
   }
   *aLineNumberResult = -1;
   return NS_OK;
@@ -656,13 +678,12 @@ nsLineIterator::FindLineAt(nscoord aY,
     return NS_OK;
   }
   PRInt32 lineNumber = 0;
-  while (line) {
+  while (lineNumber != mNumLines) {
     if ((aY >= line->mBounds.y) && (aY < line->mBounds.YMost())) {
       *aLineNumberResult = lineNumber;
       return NS_OK;
     }
-    line = line->mNext;
-    lineNumber++;
+    line = mLines[++lineNumber];
   }
   *aLineNumberResult = mNumLines;
   return NS_OK;
@@ -686,7 +707,7 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
   PRInt32   lineFrameCount;
   PRUint32  lineFlags;
 
-  nsresult  result;
+  nsresult  result = NS_OK;
 
   // an RTL paragraph is always considered as reordered
   // in an LTR paragraph, find out by examining the coordinates of each frame in the line

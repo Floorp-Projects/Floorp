@@ -100,7 +100,7 @@ nsAutoTextBuffer::GrowTo(PRInt32 aNewSize, PRBool aCopyToHead)
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 static nsICaseConversion* gCaseConv =  nsnull;
 

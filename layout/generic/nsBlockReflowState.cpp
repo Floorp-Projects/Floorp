@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,7 +61,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mReflowState(aReflowState),
     mLastFloaterY(0),
     mNextRCFrame(nsnull),
-    mPrevBottomMargin(0),
+    mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0)
 {
@@ -93,7 +94,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mReflowStatus = NS_FRAME_COMPLETE;
 
   mPresContext = aPresContext;
-  mBlock->GetNextInFlow((nsIFrame**)&mNextInFlow);
+  mBlock->GetNextInFlow(NS_REINTERPRET_CAST(nsIFrame**, &mNextInFlow));
   mKidXMost = 0;
 
   // Compute content area width (the content area is inside the border
@@ -143,8 +144,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mBand.Init(mSpaceManager, mContentArea);
 
   mPrevChild = nsnull;
-  mCurrentLine = nsnull;
-  mPrevLine = nsnull;
+  mCurrentLine = aFrame->end_lines();
 
   const nsStyleText* styleText;
   mBlock->GetStyleData(eStyleStruct_Text,
@@ -366,7 +366,7 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
   case NS_STYLE_CLEAR_RIGHT:
   case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
     // Apply the previous margin before clearing
-    saveY = mY + mPrevBottomMargin;
+    saveY = mY + mPrevBottomMargin.get();
     ClearFloaters(saveY, aBreakType);
 #ifdef NOISY_FLOATER_CLEARING
     nsFrame::ListTag(stdout, mBlock);
@@ -398,7 +398,9 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
       // XXXldb This doesn't handle collapsing with negative margins
       // correctly, although it's arguable what "correct" is.
 
-      mPrevBottomMargin = deltaY;
+      // XXX Are all the other margins included by this point?
+      mPrevBottomMargin.Zero();
+      mPrevBottomMargin.Include(deltaY);
       mY = saveY;
 
       // Force margin to be applied in this circumstance
@@ -408,73 +410,77 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
       // Put mY back to its original value since no clearing
       // happened. That way the previous blocks bottom margin will
       // be applied properly.
-      mY = saveY - mPrevBottomMargin;
+      mY = saveY - mPrevBottomMargin.get();
     }
     break;
   }
   return applyTopMargin;
 }
 
-// Recover the collapsed vertical margin values for aLine. Note that
-// the values are not collapsed with aState.mPrevBottomMargin, nor are
-// they collapsed with each other when the line height is zero.
+/*
+ * Reconstruct the vertical margin before the line |aLine| in order to
+ * do an incremental reflow that begins with |aLine| without reflowing
+ * the line before it.  |aLine| may point to the fencepost at the end of
+ * the line list, and it is used this way since we (for now, anyway)
+ * always need to recover margins at the end of a block.
+ *
+ * The reconstruction involves walking backward through the line list to
+ * find any collapsed margins preceding the line that would have been in
+ * the reflow state's |mPrevBottomMargin| when we reflowed that line in
+ * a full reflow (under the rule in CSS2 that all adjacent vertical
+ * margins of blocks collapse).
+ */
 void
-nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
-                                           PRBool aApplyTopMargin,
-                                           nscoord* aTopMarginResult,
-                                           nscoord* aBottomMarginResult)
+nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
 {
-  if (aLine->IsBlock()) {
-    // Update band data
-    GetAvailableSpace();
+  mPrevBottomMargin.Zero();
+  nsBlockFrame *block = mBlock;
 
-    // Setup reflow state to compute the block childs top and bottom
-    // margins
-    nsIFrame* frame = aLine->mFirstChild;
-    nsRect availSpaceRect;
-    const nsStyleDisplay* display;
-    frame->GetStyleData(eStyleStruct_Display,
-                        (const nsStyleStruct*&) display);
-    nsSplittableType splitType = NS_FRAME_NOT_SPLITTABLE;
-    frame->IsSplittable(splitType);
-    ComputeBlockAvailSpace(frame, splitType, display, availSpaceRect);
-    nsSize availSpace(availSpaceRect.width, availSpaceRect.height);
-    nsHTMLReflowState reflowState(mPresContext, mReflowState,
-                                  frame, availSpace);
+  const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
+      block->mStyleContext->GetStyleData(eStyleStruct_Text));
+  PRBool isPre =
+      ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
+       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace));
 
-    // Compute collapsed top margin
-    nscoord topMargin = 0;
-    if (aApplyTopMargin) {
-      topMargin =
-        nsBlockReflowContext::ComputeCollapsedTopMargin(mPresContext,
-                                                        reflowState);
+  nsCompatibility mode;
+  mPresContext->GetCompatibilityMode(&mode);
+  PRBool isQuirkMode = mode == eCompatibility_NavQuirks;
+
+  nsLineList::iterator firstLine = block->begin_lines();
+  for (;;) {
+    --aLine;
+    if (aLine->IsBlock()) {
+      mPrevBottomMargin = aLine->GetCarriedOutBottomMargin();
+      break;
     }
-
-    // Compute collapsed bottom margin
-    nscoord bottomMargin = reflowState.mComputedMargin.bottom;
-    bottomMargin =
-      nsBlockReflowContext::MaxMargin(bottomMargin,
-                                      aLine->GetCarriedOutBottomMargin());
-    *aTopMarginResult = topMargin;
-    *aBottomMarginResult = bottomMargin;
-  }
-  else {
-    // XXX_ib, see bug 44188
-    *aTopMarginResult = 0;
-    *aBottomMarginResult = 0;
+    PRBool isEmpty;
+    aLine->IsEmpty(isQuirkMode, isPre, &isEmpty);
+    if (! isEmpty) {
+      break;
+    }
+    if (aLine == firstLine) {
+      // If the top margin was carried out (and thus already applied),
+      // set it to zero.  Either way, we're done.
+      if ((0 == mReflowState.mComputedBorderPadding.top) &&
+          !(block->mState & NS_BLOCK_MARGIN_ROOT)) {
+        mPrevBottomMargin.Zero();
+      }
+      break;
+    }
   }
 }
 
 void
-nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
-                                     PRBool aApplyTopMargin,
-                                     nsRect* aDamageRect)
+nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
+                                     nscoord aDeltaY)
 {
   // Make the line being recovered the current line
   mCurrentLine = aLine;
 
   // Update aState.mPrevChild as if we had reflowed all of the frames
   // in this line.
+  // XXXldb This is expensive in some cases, since it requires walking
+  // |GetNextSibling|.
   mPrevChild = aLine->LastChild();
 
   // Recover mKidXMost and mMaxElementSize
@@ -506,83 +512,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     UpdateMaximumWidth(aLine->mMaximumWidth);
   }
 
-  // The line may have clear before semantics.
-  if (aLine->IsBlock() && aLine->HasBreak()) {
-    // Clear past floaters before the block if the clear style is not none
-    aApplyTopMargin = ClearPastFloaters(aLine->GetBreakType());
-#ifdef NOISY_VERTICAL_MARGINS
-    nsFrame::ListTag(stdout, mBlock);
-    printf(": RecoverStateFrom: y=%d child ", mY);
-    nsFrame::ListTag(stdout, aLine->mFirstChild);
-    printf(" has clear of %d => %s, mPrevBottomMargin=%d\n", aLine->mBreakType,
-           aApplyTopMargin ? "applyTopMargin" : "nope", mPrevBottomMargin);
-#endif
-  }
-
-  // Recover mPrevBottomMargin and calculate the line's new Y
-  // coordinate (newLineY)
-  nscoord newLineY = mY;
-  nsRect lineCombinedArea;
-  aLine->GetCombinedArea(&lineCombinedArea);
-  if (aLine->IsBlock()) {
-    if ((0 == aLine->mBounds.height) && (0 == lineCombinedArea.height)) {
-      // The line's top and bottom margin values need to be collapsed
-      // with the mPrevBottomMargin to determine a new
-      // mPrevBottomMargin value.
-      nscoord topMargin, bottomMargin;
-      RecoverVerticalMargins(aLine, aApplyTopMargin,
-                             &topMargin, &bottomMargin);
-      nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
-                                                  mPrevBottomMargin);
-      m = nsBlockReflowContext::MaxMargin(m, topMargin);
-      mPrevBottomMargin = m;
-    }
-    else {
-      // Recover the top and bottom margins for this line
-      nscoord topMargin, bottomMargin;
-      RecoverVerticalMargins(aLine, aApplyTopMargin,
-                             &topMargin, &bottomMargin);
-
-      // Compute the collapsed top margin value
-      nscoord collapsedTopMargin =
-        nsBlockReflowContext::MaxMargin(topMargin, mPrevBottomMargin);
-
-      // The lineY is just below the collapsed top margin value. The
-      // mPrevBottomMargin gets set to the bottom margin value for the
-      // line.
-      newLineY += collapsedTopMargin;
-      mPrevBottomMargin = bottomMargin;
-    }
-  }
-  else if (0 == aLine->GetHeight()) {
-    // For empty inline lines we leave the previous bottom margin
-    // alone so that it's collpased with the next line.
-  }
-  else {
-    // For non-empty inline lines the previous margin is applied
-    // before the line. Therefore apply it now and zero it out.
-    newLineY += mPrevBottomMargin;
-    mPrevBottomMargin = 0;
-  }
-
-  // Save away the old combined area for later
-  nsRect oldCombinedArea = lineCombinedArea;
-
-  // Slide the frames in the line by the computed delta. This also
-  // updates the lines Y coordinate and the combined area's Y
-  // coordinate.
-  nscoord finalDeltaY = newLineY - aLine->mBounds.y;
-  mBlock->SlideLine(*this, aLine, finalDeltaY);
-  // aLine has been slided, but...
-  // XXX it is not necessary to worry about the ascent of mBlock here, right?
-  // Indeed, depending on the status of the first line of mBlock, we can either have:
-  // case first line of mBlock is dirty : it will be reflowed by mBlock and so
-  // mBlock->mAscent will be recomputed by the block frame, and we will
-  // never enter into this RecoverStateFrom(aLine) function.
-  // case first line of mBlock is clean : it is untouched by the incremental reflow.
-  //      In other words, aLine is never equals to mBlock->mLines in this function.
-  //      so mBlock->mAscent will remain unchanged. 
-
   // Place floaters for this line into the space manager
   if (aLine->HasFloaters()) {
     // Undo border/padding translation since the nsFloaterCache's
@@ -596,11 +525,11 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     nsRect r;
     nsFloaterCache* fc = aLine->GetFirstFloater();
     while (fc) {
-      fc->mRegion.y += finalDeltaY;
-      fc->mCombinedArea.y += finalDeltaY;
+      fc->mRegion.y += aDeltaY;
+      fc->mCombinedArea.y += aDeltaY;
       nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
       floater->GetRect(r);
-      floater->MoveTo(mPresContext, r.x, r.y + finalDeltaY);
+      floater->MoveTo(mPresContext, r.x, r.y + aDeltaY);
 #ifdef DEBUG
       if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
         nscoord tx, ty;
@@ -609,8 +538,8 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
         printf("RecoverState: txy=%d,%d (%d,%d) ",
                tx, ty, mSpaceManagerX, mSpaceManagerY);
         nsFrame::ListTag(stdout, floater);
-        printf(" r.y=%d finalDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
-               r.y, finalDeltaY, r.y + finalDeltaY,
+        printf(" r.y=%d aDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
+               r.y, aDeltaY, r.y + aDeltaY,
                fc->mRegion.x, fc->mRegion.y,
                fc->mRegion.width, fc->mRegion.height);
       }
@@ -627,32 +556,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     // And then put the translation back again
     mSpaceManager->Translate(bp.left, bp.top);
   }
-
-  // Recover mY
-  mY = aLine->mBounds.YMost();
-
-  // Compute the damage area
-  if (aDamageRect) {
-    if (0 == finalDeltaY) {
-      aDamageRect->Empty();
-    } else {
-      aLine->GetCombinedArea(&lineCombinedArea);
-      aDamageRect->UnionRect(oldCombinedArea, lineCombinedArea);
-    }
-  }
-
-// XXX Does this do anything?  It doesn't seem to work.... (bug 29413)
-  // It's possible that the line has clear after semantics
-  if (!aLine->IsBlock() && aLine->HasBreak()) {
-    PRUint8 breakType = aLine->GetBreakType();
-    switch (breakType) {
-    case NS_STYLE_CLEAR_LEFT:
-    case NS_STYLE_CLEAR_RIGHT:
-    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-      ClearFloaters(mY, breakType);
-      break;
-    }
-  }
 }
 
 PRBool
@@ -662,7 +565,7 @@ nsBlockReflowState::IsImpactedByFloater() const
   printf("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
          this, mBand.GetFloaterCount());
 #endif
-  return mBand.GetFloaterCount();
+  return mBand.GetFloaterCount() > 0;
 }
 
 
@@ -694,7 +597,7 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
                                nsPlaceholderFrame* aPlaceholder,
                                PRBool aInitialReflow)
 {
-  NS_PRECONDITION(nsnull != mCurrentLine, "null ptr");
+  NS_PRECONDITION(mBlock->end_lines() != mCurrentLine, "null ptr");
 
   // Allocate a nsFloaterCache for the floater
   nsFloaterCache* fc = mFloaterCacheFreeList.Alloc();

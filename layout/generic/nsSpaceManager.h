@@ -39,6 +39,9 @@
 
 #include "nsISpaceManager.h"
 #include "prclist.h"
+#include "nsIntervalSet.h"
+
+class nsIPresShell;
 
 #define NS_SPACE_MANAGER_CACHE_SIZE 4
 
@@ -48,7 +51,8 @@
  */
 class nsSpaceManager : public nsISpaceManager {
 public:
-  static nsSpaceManager *Create(nsIFrame* aFrame);
+  static nsSpaceManager *Create(nsIPresShell* aPresShell,
+                                nsIFrame* aFrame);
   static void Shutdown();
 
   // nsISupports
@@ -76,13 +80,19 @@ public:
 
   NS_IMETHOD ClearRegions();
 
+  NS_IMETHOD_(PRBool) HasFloatDamage();
+  NS_IMETHOD_(void) IncludeInDamage(nscoord aIntervalBegin,
+                                    nscoord aIntervalEnd);
+  NS_IMETHOD_(PRBool) IntersectsDamage(nscoord aIntervalBegin,
+                                       nscoord aIntervalEnd);
+
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out);
   void       SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
 protected:
-  nsSpaceManager(nsIFrame* aFrame);
+  nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame);
 
   // Structure that maintains information about the region associated
   // with a particular frame
@@ -166,6 +176,7 @@ protected:
   nscoord         mX, mY;     // translation from local to global coordinate space
   BandList        mBandList;  // header/sentinel for circular linked list of band rects
   FrameInfo*      mFrameInfoMap;
+  nsIntervalSet   mFloatDamage;
 
 protected:
   virtual ~nsSpaceManager();

@@ -59,118 +59,73 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-EXPORTS =				\
-	nsIHTMLContent.h		\
-	nsILineIterator.h		\
-	nsHTMLParts.h			\
+EXPORTS = \
+	nsIHTMLContent.h \
+	nsILineIterator.h \
+	nsHTMLParts.h \
 !ifdef IBMBIDI
-	nsTextTransformer.h		\
-	nsBidiFrames.h			\
-!endif        
+	nsTextTransformer.h \
+	nsBidiFrames.h \
+!endif	
 	$(NULL)
 
-CPPSRCS=				\
-        nsSelectsAreaframe.cpp	        \
-        nsScrollPortFrame.cpp	        \
-        nsGfxScrollFrame.cpp	        \
-	nsAbsoluteContainingBlock.cpp	\
-	nsAreaFrame.cpp			\
-	nsBRFrame.cpp			\
-	nsBlockBandData.cpp		\
-	nsBlockFrame.cpp		\
-	nsBlockReflowContext.cpp	\
-	nsBlockReflowState.cpp          \
-	nsBulletFrame.cpp		\
-	nsContainerFrame.cpp		\
-	nsDST.cpp		\
-	nsFirstLetterFrame.cpp		\
-	nsFrame.cpp			\
-	nsFrameManager.cpp		\
-	nsHRFrame.cpp			\
-	nsHTMLContainerFrame.cpp	\
-	nsHTMLIIDs.cpp			\
-	nsHTMLFrame.cpp			\
-	nsHTMLReflowCommand.cpp		\
-	nsHTMLReflowState.cpp		\
-	nsImageFrame.cpp		\
-	nsImageMap.cpp			\
-	nsInlineFrame.cpp		\
-	nsLeafFrame.cpp			\
-	nsLineBox.cpp			\
-	nsLineLayout.cpp		\
-	nsObjectFrame.cpp		\
-	nsPageFrame.cpp			\
-	nsPlaceholderFrame.cpp		\
-	nsPresShell.cpp			\
-	nsSimplePageSequence.cpp	\
-	nsScrollFrame.cpp		\
-	nsSpacerFrame.cpp		\
-	nsSplittableFrame.cpp		\
-	nsTextFrame.cpp			\
-	nsTextTransformer.cpp		\
-	nsViewportFrame.cpp		\
+CPP_OBJS= \
+	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj \
+	.\$(OBJDIR)\nsAreaFrame.obj \
+	.\$(OBJDIR)\nsBRFrame.obj \
+	.\$(OBJDIR)\nsBlockBandData.obj \
+	.\$(OBJDIR)\nsBlockFrame.obj \
+	.\$(OBJDIR)\nsBlockReflowContext.obj \
+	.\$(OBJDIR)\nsBlockReflowState.obj \
+	.\$(OBJDIR)\nsBulletFrame.obj \
+	.\$(OBJDIR)\nsContainerFrame.obj \
+	.\$(OBJDIR)\nsDST.obj \
+	.\$(OBJDIR)\nsFirstLetterFrame.obj \
+	.\$(OBJDIR)\nsFrame.obj \
+	.\$(OBJDIR)\nsFrameManager.obj \
+	.\$(OBJDIR)\nsGfxScrollFrame.obj \
+	.\$(OBJDIR)\nsHRFrame.obj \
+	.\$(OBJDIR)\nsHTMLContainerFrame.obj \
+	.\$(OBJDIR)\nsHTMLFrame.obj \
+	.\$(OBJDIR)\nsHTMLIIDs.obj \
+	.\$(OBJDIR)\nsHTMLReflowCommand.obj \
+	.\$(OBJDIR)\nsHTMLReflowState.obj \
+	.\$(OBJDIR)\nsImageFrame.obj \
+	.\$(OBJDIR)\nsImageMap.obj \
+	.\$(OBJDIR)\nsInlineFrame.obj \
+	.\$(OBJDIR)\nsLeafFrame.obj \
+	.\$(OBJDIR)\nsLineBox.obj \
+	.\$(OBJDIR)\nsLineLayout.obj \
+	.\$(OBJDIR)\nsObjectFrame.obj \
+	.\$(OBJDIR)\nsPageFrame.obj \
+	.\$(OBJDIR)\nsPlaceholderFrame.obj \
+	.\$(OBJDIR)\nsPresShell.obj \
+	.\$(OBJDIR)\nsScrollFrame.obj \
+	.\$(OBJDIR)\nsScrollPortFrame.obj \
+	.\$(OBJDIR)\nsSelectsAreaFrame.obj \
+	.\$(OBJDIR)\nsSimplePageSequence.obj \
+	.\$(OBJDIR)\nsSpacerFrame.obj \
+	.\$(OBJDIR)\nsSplittableFrame.obj \
+	.\$(OBJDIR)\nsTextFrame.obj \
+	.\$(OBJDIR)\nsTextTransformer.obj \
+	.\$(OBJDIR)\nsViewportFrame.obj \
 !ifdef IBMBIDI
-	nsBidiFrames.cpp		\
-!endif        
+	.\$(OBJDIR)\nsBidiFrames.obj \
+!endif
 	$(NULL)
 
-CPP_OBJS=						\
-        .\$(OBJDIR)\nsSelectsAreaFrame.obj         	\
-        .\$(OBJDIR)\nsScrollPortFrame.obj         	\
-        .\$(OBJDIR)\nsGfxScrollFrame.obj         	\
-	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj	\
-	.\$(OBJDIR)\nsAreaFrame.obj			\
-	.\$(OBJDIR)\nsBRFrame.obj			\
-	.\$(OBJDIR)\nsBlockBandData.obj			\
-	.\$(OBJDIR)\nsBlockFrame.obj			\
-	.\$(OBJDIR)\nsBlockReflowContext.obj		\
-	.\$(OBJDIR)\nsBlockReflowState.obj              \
-	.\$(OBJDIR)\nsBulletFrame.obj			\
-	.\$(OBJDIR)\nsContainerFrame.obj		\
-	.\$(OBJDIR)\nsDST.obj		\
-	.\$(OBJDIR)\nsFirstLetterFrame.obj		\
-	.\$(OBJDIR)\nsFrame.obj				\
-	.\$(OBJDIR)\nsFrameManager.obj			\
-	.\$(OBJDIR)\nsHRFrame.obj			\
-	.\$(OBJDIR)\nsHTMLContainerFrame.obj		\
-	.\$(OBJDIR)\nsHTMLFrame.obj			\
-	.\$(OBJDIR)\nsHTMLIIDs.obj			\
-	.\$(OBJDIR)\nsHTMLReflowCommand.obj		\
-	.\$(OBJDIR)\nsHTMLReflowState.obj		\
-	.\$(OBJDIR)\nsImageFrame.obj			\
-	.\$(OBJDIR)\nsImageMap.obj			\
-	.\$(OBJDIR)\nsInlineFrame.obj			\
-	.\$(OBJDIR)\nsLeafFrame.obj			\
-	.\$(OBJDIR)\nsLineBox.obj			\
-	.\$(OBJDIR)\nsLineLayout.obj			\
-	.\$(OBJDIR)\nsObjectFrame.obj			\
-	.\$(OBJDIR)\nsPageFrame.obj			\
-	.\$(OBJDIR)\nsPlaceholderFrame.obj		\
-	.\$(OBJDIR)\nsPresShell.obj			\
-	.\$(OBJDIR)\nsSimplePageSequence.obj		\
-	.\$(OBJDIR)\nsScrollFrame.obj			\
-	.\$(OBJDIR)\nsSpacerFrame.obj			\
-	.\$(OBJDIR)\nsSplittableFrame.obj		\
-	.\$(OBJDIR)\nsTextFrame.obj			\
-	.\$(OBJDIR)\nsTextTransformer.obj		\
-	.\$(OBJDIR)\nsViewportFrame.obj			\
-!ifdef IBMBIDI
-	.\$(OBJDIR)\nsBidiFrames.obj			\
-!endif        
-	$(NULL)
-
-LINCS=\
- -I..\..\style\src						\
- -I..\..\forms\src						\
- -I..\..\..\base\src \
- -I..\..\..\xul\content\src				\
- -I..\..\..\xul\base\src				\
+LINCS= \
+	-I..\..\style\src \
+	-I..\..\forms\src \
+	-I..\..\..\base\src \
+	-I..\..\..\xul\content\src \
+	-I..\..\..\xul\base\src \
 	$(NULL)
 
 LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
+	$(LCFLAGS) \
+	$(DEFINES) \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
