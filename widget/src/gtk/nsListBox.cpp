@@ -332,6 +332,20 @@ NS_METHOD nsListBox::Deselect()
 
 //-------------------------------------------------------------------------
 //
+// Set initial parameters
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  if (nsnull != aInitData) {
+    nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
+    mMultiSelect = data->mMultiSelect;
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Create the native widget
 //
 //-------------------------------------------------------------------------
@@ -348,6 +362,7 @@ NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
   gtk_clist_column_titles_hide(GTK_CLIST(mCList));
   // Default (it may be changed)
   gtk_clist_set_selection_mode(GTK_CLIST(mCList), GTK_SELECTION_BROWSE);
+  SetMultipleSelection(mMultiSelect);
   gtk_widget_show(mCList);
 
   gtk_container_add (GTK_CONTAINER (mWidget), mCList);

@@ -47,6 +47,7 @@ public:
 
 
     // nsIListBox interface
+    NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
     NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
     NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
     PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
