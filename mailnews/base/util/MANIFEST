@@ -26,4 +26,5 @@ nsMsgIdentity.h
 nsMsgIncomingServer.h
 nsNewsSummarySpec.h
 nsMsgUtils.h
+nsMessage.h
 

@@ -36,6 +36,7 @@ EXPORTS = \
 	nsMsgIdentity.h	\
 	nsMsgIncomingServer.h	\
 	nsMsgUtils.h \
+	nsMessage.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -49,6 +50,7 @@ CPPSRCS = \
 	nsMsgIdentity.cpp	\
 	nsMsgIncomingServer.cpp	\
 	nsMsgUtils.cpp \
+	nsMessage.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
