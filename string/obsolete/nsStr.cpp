@@ -1112,10 +1112,14 @@ static inline PRInt32
 TranslateCompareResult(const PRInt32 aDestLength, const PRInt32& aSourceLength, PRInt32 result, PRInt32 aCount)
 {
 
-  if (0==result && -1==aCount) {
-    //Since the caller didn't give us a length to test, and minlen characters matched,
-    //we have to assume that the longer string is greater.
-      
+  if (0==result && (-1==aCount ||
+                    aDestLength < aCount ||
+                    aSourceLength < aCount)) {
+
+    //Since the caller didn't give us a length to test, or strings shorter
+    //than aCount, and minlen characters matched, we have to assume that the
+    //longer string is greater.
+
     if (aDestLength != aSourceLength) {
       //we think they match, but we've only compared minlen characters. 
       //if the string lengths are different, then they don't really match.
