@@ -56,6 +56,7 @@
 #include "nsMessage.h"
 #include "nsMIMEMessage.h"
 #include "nsMIMEBodyPart.h"
+#include "nsMIMEBasicBodyPart.h"
 #include "nsXPFCSubject.h"
 #include "nsXPFCCommand.h"
 #include "nsXPFCCanvas.h"
@@ -117,6 +118,7 @@ static NS_DEFINE_IID(kCMessageCID,                NS_MESSAGE_CID);
 static NS_DEFINE_IID(kCMIMEMessageCID,            NS_MIME_MESSAGE_CID);
 static NS_DEFINE_IID(kCMIMEServiceCID,            NS_MIME_SERVICE_CID);
 static NS_DEFINE_IID(kCMIMEBodyPartCID,           NS_MIME_BODY_PART_CID);
+static NS_DEFINE_IID(kCMIMEBasicBodyPartCID,      NS_MIME_BASIC_BODY_PART_CID);
 
 class nsxpfcFactory : public nsIFactory
 {   
