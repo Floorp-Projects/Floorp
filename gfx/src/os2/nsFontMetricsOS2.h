@@ -93,6 +93,7 @@ struct nsMiniFontMetrics
   USHORT  fsType;
   USHORT  fsDefn;
   USHORT  fsSelection;
+  USHORT  usCodePage;
 };
 
 class nsGlobalFont
