@@ -8,8 +8,7 @@
 ; 
 ; Sample App:
 ; 
-;  coming soon!
-
+gtkEmbed
 
 ; 
 ; NSPR:
@@ -76,6 +75,7 @@ components/editor.xpt
 
 ; embedding                   
 components/libmozbrwsr.so                 
+components/libwebbrwsr.so
 components/mozbrwsr.xpt                 
 components/webBrowser_core.xpt
 components/webBrowser_setup.xpt
@@ -131,7 +131,7 @@ components/shistory.xpt
 
 ; required l10n libraries
 
-components/libucharuti.so
+components/libunicharutil.so
 components/libuconv.so
 components/uconv.xpt
 components/liblwbrk.so
@@ -147,10 +147,11 @@ components/unicharutil.xpt
 ; components/libucvibm.so for ibm
 
 ; uriloader
-components/liburildr.so
+components/liburiloader.so
 components/uriloader.xpt
 
 ; widget
+components/libwidget_gtk.so
 components/widget.xpt
 
 ; xpconnect
@@ -162,17 +163,14 @@ components/xpconnect_tests.xpt
 components/xpcom_base.xpt
 components/xpcom_components.xpt
 components/xpcom_ds.xpt
-components/xpcom_eventloop_windows.xpt
-components/xpcom_eventloop_xp.xpt
 components/xpcom_io.xpt
-components/xpcom_nativeapp.xpt
-components/xpcom_thread.xpt
+components/xpcom_threads.xpt
 components/xpcom_xpti.xpt
 
 ; 
 ; Widget-Toolit:
 ; 
-chrome/packages/widget-toolkit/global`content/*
+chrome/packages/widget-toolkit/global/content/*
 chrome/skins/modern/manifest.rdf
 
 chrome/skins/modern/global/skin/*
