@@ -813,6 +813,7 @@ SECMOD_WaitForAnyTokenEvent;
 ;+};
 ;+NSS_3.10 { 	# NSS 3.10 release
 ;+    global:
+CERT_CacheCRL;
 CERT_DecodeAltNameExtension;
 CERT_DecodeAuthInfoAccessExtension;
 CERT_DecodeAuthKeyID;
@@ -824,6 +825,7 @@ CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
 CERT_GetPrevGeneralName;
 CERT_GetPrevNameConstraint;
+CERT_UncacheCRL;
 HASH_Clone;
 HASH_HashBuf;
 HASH_ResultLenByOidTag;
