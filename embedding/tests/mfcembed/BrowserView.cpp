@@ -228,7 +228,11 @@ HRESULT CBrowserView::CreateBrowser()
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser, &rv);
 	if(NS_FAILED(rv))
 		return rv;
-    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+
+    // If the browser window hosting chrome or content?
+    dsti->SetItemType(((CMfcEmbedApp *)AfxGetApp())->m_bChrome ?
+        nsIDocShellTreeItem::typeChromeWrapper :
+        nsIDocShellTreeItem::typeContentWrapper);
 
     // Create the real webbrowser window
   
