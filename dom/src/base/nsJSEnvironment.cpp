@@ -59,11 +59,11 @@ NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 		}
 
 		if(report->filename) {
-			printf("URL :%s ", report->filename);
+			printf("URL: %s ", report->filename);
 		}
 
 		if(report->lineno) {
-			printf("LineNo :%u", report->lineno);
+			printf("LineNo: %u", report->lineno);
 		}
 
 		printf("\n");
