@@ -63,7 +63,7 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
 		"Please fix.");
 	if (inMakeDirs)
     {
-        const int mode = 0700;
+        const int mode = 0755;
         nsSimpleCharString unixStylePath = ioPath;
         nsFileSpecHelpers::NativeToUnix(unixStylePath);
         nsFileSpecHelpers::MakeAllDirectories((const char*)unixStylePath, mode);
