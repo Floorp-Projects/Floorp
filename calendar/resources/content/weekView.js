@@ -484,7 +484,7 @@ WeekView.prototype.refreshDisplay = function( )
          }
       } else {
          /* it's not a weekend */
-        this.removeAttributeFromElements("day", dayIndex);
+        this.removeAttributeFromElements("weekend", dayIndex);
       }
       
       // advance to next day 
