@@ -632,6 +632,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf[length] = '\0';
         mDomainStack.AppendElement((void*)buf);
+	nsMemory::Free(buf);
       }
       break;
     case END_DOMAIN_SEGMENT:
@@ -656,6 +657,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf[length] = '\0';
         mPathStack.AppendElement((void*)buf);
+	nsMemory::Free(buf);
       }
       break;
     case END_PATH_SEGMENT:
@@ -704,6 +706,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf[length] = '\0';
         mCurrCookie.id.Assign(buf);
+	nsMemory::Free(buf);
       }
       break;
     case COOKIE_DATA:
@@ -712,6 +715,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf[length] = '\0';
         mCurrCookie.data.Assign(buf);
+	nsMemory::Free(buf);
       }
       break;
     case COOKIE_EXPIRY:
@@ -740,6 +744,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->Read16(&length);
         mStream->ReadBytes(length, &buf);
         buf[length] = '\0';
+	nsMemory::Free(buf);
       }
       break;
     case COOKIE_VERSION: 
@@ -959,7 +964,9 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
     parentFolder = root;
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
+  printf("*** about to copy smart keywords\n");
   CopySmartKeywords(bms, bundle, parentFolder);
+  printf("*** done copying smart keywords\n");
 #endif
 
   nsCOMPtr<nsIRDFResource> toolbar;
