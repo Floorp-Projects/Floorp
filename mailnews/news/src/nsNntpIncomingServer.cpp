@@ -23,7 +23,6 @@
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
-#include "prenv.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
@@ -150,22 +149,11 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
 
     rv = prefs->GetFilePref(PREF_MAIL_NEWSRC_ROOT, aNewsrcRootPath);
     if (NS_SUCCEEDED(rv)) return rv;
-#ifdef XP_UNIX
-    nsFileSpec dir;
-    // root the newsrc files to <profile>/News, except on UNIX
-    // on UNIX, set it to ~.
-    // this may change soon, and on UNIX, the default will also be <profile>/News
-    char *unixHomeDirectory = PR_GetEnv("HOME");
-    dir = unixHomeDirectory;
-    rv = NS_NewFileSpecWithSpec(dir, aNewsrcRootPath);
-    if (NS_FAILED(rv)) return rv;
-#else
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = locator->GetFileLocation(nsSpecialFileSpec::App_NewsDirectory50, aNewsrcRootPath);
     if (NS_FAILED(rv)) return rv;
-#endif /* XP_UNIX */
 
     rv = SetNewsrcRootPath(*aNewsrcRootPath);
     return rv;
