@@ -25,6 +25,10 @@
 
 /* ::::: formatting buttons ::::: */
 
+#FormatToolbar {
+  background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
+}
+
 #FormatToolbar > toolbarbutton {
   border: none !important;
 }

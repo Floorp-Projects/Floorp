@@ -32,3 +32,7 @@
 #home-button {
   list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
 }
+
+#PersonalToolbar {
+  background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
+}
