@@ -50,7 +50,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkres_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkabout_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkkwd_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -74,6 +73,7 @@ LOCAL_INCLUDES	= \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
+		$(ZLIB_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
