@@ -119,7 +119,7 @@ public:
   NS_IMETHOD SyncViewWithFrame();
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
-  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aContent);
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);

@@ -1335,11 +1335,6 @@ nsListControlFrame::Reset()
   }
   NS_RELEASE(options);
 
-  // Start with index 0 selected if nothing is selected
-  if (mSelectedIndex == kNothingSelected) {
-    mSelectedIndex = 0;
-    SetContentSelected(0, PR_TRUE);
-  }
   InitSelectionCache(numOptions);
 } 
 
@@ -1486,9 +1481,7 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
     if (numOptions == 0) {
       rv = NS_OK;
     } else {
-      PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex);
-
-      nsIDOMHTMLOptionElement* optionElement = GetOption(*options, selectedIndex);
+      nsIDOMHTMLOptionElement* optionElement = GetOption(*options, mSelectedIndex);
       if (nsnull != optionElement) {
         nsAutoString text;
         rv = optionElement->GetLabel(text);
@@ -1605,21 +1598,18 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
   PRInt32 numOptions;
   GetNumberOfOptions(&numOptions);
 
-  PRInt32 selectedIndex;
-  GetSelectedIndexFromDOM(&selectedIndex); // comes from the DOM
+//  PRInt32 oldSelectedIndex = mSelectedIndex;
+  GetSelectedIndexFromDOM(&mSelectedIndex); // comes from the DOM
 
-  if (1 == numOptions || mSelectedIndex == kNothingSelected || selectedIndex != mSelectedIndex) {
-    mSelectedIndex = selectedIndex;
-    if (mComboboxFrame) {
-      mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
-    }
-  } else {
-    mSelectedIndex = selectedIndex;
-    InitSelectionCache(-1); // Reset sel cache so as not to send event
-  }
+  // Adding an option to the select can cause a change in selection
+  // if the new option has it's selected attribute set.
+  // selectionChanged = (1 == numOptions ||
+  // kNothingSelected == oldSelectedIndex || mSelectedIndex != oldSelectedIndex)
+
+  // For now, we don't care because we're not dispatching an event:
+  InitSelectionCache(-1); // Reset sel cache so as not to send event
   return NS_OK;
 }
-  
 
 NS_IMETHODIMP
 nsListControlFrame::RemoveOption(PRInt32 aIndex)
@@ -1627,20 +1617,22 @@ nsListControlFrame::RemoveOption(PRInt32 aIndex)
   PRInt32 numOptions;
   GetNumberOfOptions(&numOptions);
 
-  PRInt32 selectedIndex;
-  GetSelectedIndexFromDOM(&selectedIndex); // comes from the DOM
+//  PRInt32 oldSelectedIndex = mSelectedIndex;
+  GetSelectedIndexFromDOM(&mSelectedIndex); // comes from the DOM
 
-  if (aIndex == mSelectedIndex) {
-    // Don't need to deselect option as it is being removed anyway.
-    SetContentSelected(selectedIndex, PR_TRUE); // Select the new selectedIndex
-  }
-  mSelectedIndex = selectedIndex;
-  if (nsnull != mComboboxFrame) {
-    mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
-  } else {
-    InitSelectionCache(-1); // Reset cache to not send event
+  // Select the new selectedIndex
+  // Don't need to deselect option as it is being removed anyway.
+  if (mSelectedIndex >= 0) {
+    SetContentSelected(mSelectedIndex, PR_TRUE);
   }
 
+  // Only if aIndex != -1 can we determine if there was a change in selection
+  // selectionChanged = (aIndex == mSelectedIndex) || (mSelectedIndex ==
+  // oldSelectedIndex - (oldSelectedIndex > aIndex)?1:0);
+  // Call SelectionChanged to dispatch an event if so!
+
+  // For now, we don't care because we're not dispatching an event:
+  InitSelectionCache(-1); // Reset cache to not send event
   return NS_OK;
 }
 
@@ -1711,7 +1703,7 @@ nsListControlFrame::InitSelectionCache(PRInt32 aLength)
 // Compare content state with local cache of last known state
 // If there was a change, call SelectionChanged()
 NS_IMETHODIMP
-nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aContent)
+nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent)
 {
   nsresult rv = NS_OK;
   PRBool changed = PR_FALSE;
@@ -1738,13 +1730,11 @@ nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aConten
       }
     }
 
-    if (changed) {
-      if (aDoDispatchEvent) {
-        rv = SelectionChanged(aContent); // Dispatch event
-      }
-      if (mComboboxFrame) {
-        rv = mComboboxFrame->SelectionChanged(); // Update view
-      }
+    if (changed && aDoDispatchEvent) {
+      rv = SelectionChanged(aContent); // Dispatch event
+    }
+    if ((changed || aForceUpdate) && mComboboxFrame) {
+      rv = mComboboxFrame->SelectionChanged(); // Update view
     }
   }
   return rv;
@@ -2150,7 +2140,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   } else {
     mButtonDown = PR_FALSE;
     CaptureMouseEvents(PR_FALSE);
-    UpdateSelection(PR_TRUE, mContent);
+    UpdateSelection(PR_TRUE, PR_FALSE, mContent);
   }
 
   return NS_OK;
@@ -2385,7 +2375,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             mComboboxFrame->ListWasSelected(mPresContext);
           } else {
-	    UpdateSelection(PR_TRUE, mContent);
+	    UpdateSelection(PR_TRUE, PR_FALSE, mContent);
 	  }
         } if (code == nsIDOMUIEvent::DOM_VK_ESCAPE) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {

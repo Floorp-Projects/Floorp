@@ -185,36 +185,44 @@ nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
-
-// Initialize the text string in the combobox using either the current
-// selection in the list box or the first item item in the list box.
-
-void 
-nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
+// If nothing is selected, and we have options, select item 0
+// This is a UI decision that goes against the HTML 4 spec.
+// See bugzilla bug 15841 for justification of this deviation.
+nsresult
+nsComboboxControlFrame::MakeSureSomethingIsSelected()
 {
   nsIFormControlFrame* fcFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult result = dropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
- 
-   // Update the selected text string
-  mListControlFrame->GetSelectedItem(mTextStr);
-
-  if (mTextStr == "") {
-     // No selection so use the first item in the list box
- 
-    if ((NS_OK == result) && (nsnull != fcFrame)) {
-      // Find out if there are any options in the list to select
+  nsresult rv = dropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  if (NS_SUCCEEDED(rv) && fcFrame) {
+    // If nothing selected, and there are options, default selection to item 0
+   rv = mListControlFrame->GetSelectedIndex(&mSelectedIndex);
+    if (NS_SUCCEEDED(rv) && (mSelectedIndex < 0)) {
+       // Find out if there are any options in the list to select
       PRInt32 length = 0;
       mListControlFrame->GetNumberOfOptions(&length);
       if (length > 0) {
          // Set listbox selection to first item in the list box
-        fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
+        rv = fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
         mSelectedIndex = 0;
-         // Get the listbox selection as a string
-        mListControlFrame->GetSelectedItem(mTextStr);
       }
+      UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
     }
+    
+    // Don't NS_RELEASE fcFrame here as it isn't addRef'd in the QI (???)
   }
+  return rv;
+}  
+
+// Initialize the text string in the combobox using either the current
+// selection in the list box or the first item item in the list box.
+void 
+nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
+{
+  MakeSureSomethingIsSelected();
+
+  // Update the selected text string
+  mListControlFrame->GetSelectedItem(mTextStr);
 
    // Update the display by setting the value attribute
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, aUpdate);
@@ -977,7 +985,6 @@ nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex)
 {
@@ -985,8 +992,8 @@ nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUp
      // Check to see if the selection changed
     if (mSelectedIndex != aNewIndex || aForceUpdate) {
       mListControlFrame->GetSelectedItem(mTextStr); // Update text box
-      mListControlFrame->UpdateSelection(aDoDispatchEvent, mContent);
-    } 
+      mListControlFrame->UpdateSelection(aDoDispatchEvent, aForceUpdate, mContent);
+    }
     mSelectedIndex = aNewIndex;
   }
 
@@ -1063,6 +1070,8 @@ nsComboboxControlFrame::AddOption(PRInt32 aIndex)
     rv = listFrame->AddOption(aIndex);
     NS_RELEASE(listFrame);
   }
+  // If we added the first option, we might need to select it.
+  MakeSureSomethingIsSelected();
   return rv;
 }
   
@@ -1078,6 +1087,9 @@ nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
     rv = listFrame->RemoveOption(aIndex);
     NS_RELEASE(listFrame);
   }
+  // If we removed the selected option, nothing is selected any more.
+  // Restore selection to option 0 if there are options left.
+  MakeSureSomethingIsSelected();
   return rv;
 }
 
