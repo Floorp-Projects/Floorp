@@ -25,6 +25,8 @@ EXPORTS =				\
 	nsIDocumentObserver.h		\
 	nsIFrame.h			\
 	nsIFrameImageLoader.h		\
+	nsINameSpace.h		\
+	nsINameSpaceManager.h		\
 	nsIFrameReflow.h		\
 	nsIFrameUtil.h			\
 	nsIPageSequenceFrame.h		\
