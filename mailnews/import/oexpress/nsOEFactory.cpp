@@ -15,160 +15,182 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+  
 /*
-
 	Outlook Express (Win32) import module
 */
 
 #include "nsCOMPtr.h"
-#include "nscore.h"
-#include "nsOEImport.h"
-#include "nsIComponentManager.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIRegistry.h"
-#include "nsXPComFactory.h"
 #include "nsIImportService.h"
+#include "nsOEImport.h"
 
 #include "OEDebugLog.h"
 
-static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,         	NS_IFACTORY_IID);
-static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
 
 
-class OEFactoryImpl : public nsIFactory
+// Module implementation for the Outlook Express import library
+class nsOEImportModule : public nsIModule
 {
 public:
-    OEFactoryImpl(const nsCID &aClass, const char* className, const char* progID);
+    nsOEImportModule();
+    virtual ~nsOEImportModule();
 
-    // nsISupports methods
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
+    NS_DECL_NSIMODULE
 
 protected:
-    virtual ~OEFactoryImpl();
+    nsresult Initialize();
 
-protected:
-    nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
-OEFactoryImpl::OEFactoryImpl(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
-{
-    NS_INIT_REFCNT();
+// Functions used to create new instances of a given object by the
+// generic factory.
+
+#define MAKE_CTOR(_iface, _name)                                     \
+static NS_IMETHODIMP                                                 \
+CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
+{                                                                    \
+    if (!aResult) {                                                  \
+        return NS_ERROR_INVALID_POINTER;                             \
+    }                                                                \
+    if (aOuter) {                                                    \
+        *aResult = nsnull;                                           \
+        return NS_ERROR_NO_AGGREGATION;                              \
+    }                                                                \
+    nsI##_iface* inst;                                                \
+    nsresult rv = NS_New##_name(&inst);                              \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+        return rv;                                                   \
+    }                                                                \
+    rv = inst->QueryInterface(aIID, aResult);                        \
+    if (NS_FAILED(rv)) {                                             \
+        *aResult = nsnull;                                           \
+    }                                                                \
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      \
+    return rv;                                                       \
 }
 
-OEFactoryImpl::~OEFactoryImpl()
+MAKE_CTOR(ImportModule, OEImport)
+
+//----------------------------------------------------------------------
+
+static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
+
+nsOEImportModule::nsOEImportModule()
+    : mInitialized(PR_FALSE)
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+    NS_INIT_ISUPPORTS();
 }
 
-NS_IMETHODIMP
-OEFactoryImpl::QueryInterface(const nsIID &aIID, void **aResult)
+nsOEImportModule::~nsOEImportModule()
 {
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+    Shutdown();
+}
 
-    // Always NULL result, in case of failure
-    *aResult = nsnull;
+NS_IMPL_ISUPPORTS(nsOEImportModule, kIModuleIID)
 
-    if (aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsISupports*, this);
-        AddRef();
-        return NS_OK;
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = NS_STATIC_CAST(nsIFactory*, this);
-        AddRef();
+// Perform our one-time intialization for this module
+nsresult
+nsOEImportModule::Initialize()
+{
+    if (mInitialized) {
         return NS_OK;
     }
-    return NS_NOINTERFACE;
+    mInitialized = PR_TRUE;
+    return NS_OK;
 }
 
-NS_IMPL_ADDREF(OEFactoryImpl);
-NS_IMPL_RELEASE(OEFactoryImpl);
-
-NS_IMETHODIMP
-OEFactoryImpl::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
+// Shutdown this module, releasing all of the module resources
+void
+nsOEImportModule::Shutdown()
 {
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+    // Release the factory object
+    mFactory = nsnull;
+}
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsOEImportModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
     nsresult rv;
 
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kOEImportCID)) {
-        if (NS_FAILED(rv = NS_NewOEImport((nsIImportModule**) &inst)))
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
             return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kOEImportCID)) {
+        if (!mFactory) {
+            // Create and save away the factory object for creating
+            // new instances of Sample. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+                                      CreateNewOEImport);
+        }
+        fact = mFactory;
     }
     else {
-        return NS_ERROR_NO_INTERFACE;
+		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsOEImportModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
     }
 
-    if (! inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult))) {
-        // We didn't get the right interface.
-        NS_ERROR("didn't support the interface you wanted");
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
     }
 
-    NS_IF_RELEASE(inst);
     return rv;
 }
 
-nsresult OEFactoryImpl::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
+//----------------------------------------
 
-////////////////////////////////////////////////////////////////////////
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
 
-
-
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-    if (! aFactory)
-        return NS_ERROR_NULL_POINTER;
-
-    OEFactoryImpl* factory = new OEFactoryImpl(aClass, aClassName, aProgID);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
-}
-
+// The list of components we register
+static Components gComponents[] = {
+    { "Outlook Express Import Component", &kOEImportCID,
+      "component://mozilla/import/import-oe", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 {
@@ -198,37 +220,36 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 	return( rv);
 }
 
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
+NS_IMETHODIMP
+nsOEImportModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
 {
-    nsresult rv;
-    
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) {
-    	IMPORT_LOG0( "*** Import OExpress, ERROR GETTING THE SERVICE MANAGER\n");
-    	return rv;
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering Outlook Express import components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsOEImportModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
     }
 
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) {
-    	IMPORT_LOG0( "*** Import OExpress, ERROR GETTING THE COMPONENT MANAGER\n");
-    	return rv;
-    }
-
-    rv = compMgr->RegisterComponent(kOEImportCID,
-                                    "Outlook Express import Component",
-                                    "component://netscape/import/import-oe",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    if (NS_FAILED(rv)) {
-    	IMPORT_LOG0( "*** Import OExpress, ERROR CALLING REGISTERCOMPONENT\n");
-    	return rv;
-    }
-
-    
     {
-    	NS_WITH_SERVICE1( nsIRegistry, reg, servMgr, kRegistryCID, &rv);
+    	NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
     	if (NS_FAILED(rv)) {
 	    	IMPORT_LOG0( "*** Import OExpress, ERROR GETTING THE Registry\n");
     		return rv;
@@ -260,26 +281,72 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     	if (NS_FAILED(rv)) return( rv);  	
     }
     
-	IMPORT_LOG0( "*** Outlook Express import component registered\n");
-	
-    return NS_OK;
+    return rv;
 }
 
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+NS_IMETHODIMP
+nsOEImportModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->UnregisterComponent(kOEImportCID, aPath);
-    if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG
+    printf("*** Unregistering Outlook Express import components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsOEImportModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsOEImportModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsOEImportModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsOEImportModule: Module already created.");
+
+    // Create an initialize the layout module instance
+    nsOEImportModule *m = new nsOEImportModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
+}
+
+
 
