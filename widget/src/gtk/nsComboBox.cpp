@@ -314,6 +314,7 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
   ::gtk_widget_set_name(mWidget, "nsComboBox");
   mCombo = ::gtk_combo_new();
   gtk_widget_show(mCombo);
+  gtk_widget_show(mAlign);
   /* make the stuff uneditable */
   gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(mCombo)->entry), PR_FALSE);
   gtk_container_add(GTK_CONTAINER(mAlign), mCombo);
