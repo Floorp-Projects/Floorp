@@ -45,6 +45,16 @@
 #include "nsAEGetURLSuiteHandler.h"
 #include "nsCommandLineServiceMac.h"
 
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#include "nsIWindowMediator.h"
+#include "nsIXULWindow.h"
+
+
+PRBool AEGetURLSuiteHandler::sReuseWindowPrefInited = PR_FALSE;
+PRBool AEGetURLSuiteHandler::sReuseWindow = PR_FALSE;
+
 
 /*----------------------------------------------------------------------------
 	AEGetURLSuiteHandler 
@@ -52,6 +62,14 @@
 ----------------------------------------------------------------------------*/
 AEGetURLSuiteHandler::AEGetURLSuiteHandler()
 {
+  if ( !sReuseWindowPrefInited ) {
+    nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+    if ( prefService ) {
+      prefService->GetBoolPref("browser.always_reuse_window", &sReuseWindow);
+      prefService->RegisterCallback("browser.always_reuse_window", ReuseWindowPrefCallback, nsnull);
+    }
+    sReuseWindowPrefInited = PR_TRUE;
+  }
 }
 
 /*----------------------------------------------------------------------------
@@ -143,17 +161,50 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, Apple
 		ConstAETokenDesc	tokenContainer(&tokenDesc);
 		targetWindow = tokenContainer.GetWindowPtr();		
 	}
-	
-	if (targetWindow)
-	{
-		LoadURLInWindow(targetWindow, urlString);
-	}
-	else
-	{
-		nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
-		cmdLine.DispatchURLToNewBrowser(urlString);
-	}
-	
+
+  // if the AE didn't specify a target, the user may still want it to reuse
+  // an existing window. Look if they have the pref specified. If they did
+  // specify the window, we have its windowPtr so dispatch to that.
+  PRBool dispatched = PR_FALSE;
+  if ( !targetWindow )
+  {
+    if ( sReuseWindow ) {
+//    nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+      nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(kWindowMediatorCID) );
+      if ( mediator ) {
+        nsCOMPtr<nsISimpleEnumerator> windowEnum;
+        mediator->GetZOrderXULWindowEnumerator(NS_LITERAL_STRING("navigator:browser").get(), PR_TRUE, getter_AddRefs(windowEnum));
+        if ( windowEnum ) {
+          nsCOMPtr<nsISupports> windowSupports;
+          windowEnum->GetNext(getter_AddRefs(windowSupports));
+          nsCOMPtr<nsIXULWindow> xulwindow ( do_QueryInterface(windowSupports) );
+          if ( xulwindow )
+            LoadURLInXULWindow(xulwindow, urlString);
+          else
+            LoadURLInWindow(nsnull, urlString);
+        }
+      }
+    }
+    else
+      LoadURLInWindow(nsnull, urlString);
+  }
+  else
+    LoadURLInWindow(targetWindow, urlString);
+
 	nsMemory::Free(urlString);	
 }
+
+
+int
+AEGetURLSuiteHandler::ReuseWindowPrefCallback ( const char* inPref, void* inClosure )
+{
+  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+  if ( prefService )
+    prefService->GetBoolPref("browser.always_reuse_window", &sReuseWindow);
+  
+  return NS_OK;
+}
+
+
 

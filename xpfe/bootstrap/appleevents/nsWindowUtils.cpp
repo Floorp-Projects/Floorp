@@ -63,6 +63,7 @@
 #include "nsMacUtils.h"
 #include "nsXPIDLString.h"
 #include "nsXULWindow.h"
+#include "nsWindowUtils.h"
 
 #include "nsAEUtils.h"
 
@@ -474,32 +475,39 @@ void GetWindowGlobalBounds(WindowPtr wind, Rect* outBounds)
 ----------------------------------------------------------------------------*/
 void LoadURLInWindow(WindowPtr wind, const char* urlString)
 {
-	OSErr		err = noErr;
-	
-	if (wind == nil)
-	{
-		// this makes a new window
-		nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
-		err = cmdLine.DispatchURLToNewBrowser(urlString);
-		ThrowIfOSErr(err);
-	}
+  OSErr err = noErr;
 
-	// existing window. Go through hoops to load a URL in it
-	nsCOMPtr<nsIXULWindow>		xulWindow;
-	GetXULWindowFromWindowPtr(wind, getter_AddRefs(xulWindow));
-	ThrowErrIfNil(xulWindow, paramErr);
-	
-	nsCOMPtr<nsIDocShellTreeItem>		contentShell;
-	xulWindow->GetPrimaryContentShell(getter_AddRefs(contentShell));
-	ThrowErrIfNil(contentShell, paramErr);
+  if ( !wind )
+  {
+    // this makes a new window
+    nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
+    err = cmdLine.DispatchURLToNewBrowser(urlString);
+    ThrowIfOSErr(err);
+  }
+  else {
+    // existing window. Go through hoops to load a URL in it
+    nsCOMPtr<nsIXULWindow> xulWindow;
+    GetXULWindowFromWindowPtr(wind, getter_AddRefs(xulWindow));
+    ThrowErrIfNil(xulWindow, paramErr);
 
-	nsCOMPtr<nsIWebNavigation>			webNav(do_QueryInterface(contentShell));
-	ThrowErrIfNil(webNav, paramErr);
-
-	nsAutoString		urlWString; urlWString.AssignWithConversion(urlString);	
-	webNav->LoadURI(urlWString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
-
+    LoadURLInXULWindow(xulWindow, urlString);
+  }
 }
+
+
+void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
+{
+  nsCOMPtr<nsIDocShellTreeItem> contentShell;
+  inWindow->GetPrimaryContentShell(getter_AddRefs(contentShell));
+  ThrowErrIfNil(contentShell, paramErr);
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
+  ThrowErrIfNil(webNav, paramErr);
+
+  nsAutoString urlWString; urlWString.AssignWithConversion(urlString);	
+  webNav->LoadURI(urlWString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+}
+
 
 #pragma mark -
 
