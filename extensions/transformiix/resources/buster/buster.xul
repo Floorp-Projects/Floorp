@@ -26,7 +26,7 @@
 <window id="XalanBuster"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()" onunload="onUnload()"
-        title="Xalan testcase harnish"
+        title="Xalan testcase harness"
         orient="vertical">
 <script type="application/x-javascript" src="buster-statics.js" />
 <script type="application/x-javascript" src="buster-test.js" />
