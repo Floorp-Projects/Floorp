@@ -126,11 +126,11 @@ nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal,
                               nsITarget* ignoreTarget, 
                               nsPermission *state)
 {
+   *state = nsPermission_Unknown;
    nsTarget *target = nsTarget::findTarget(ALL_JAVA_PERMISSION);
    nsresult result = NS_OK;
    if( target == NULL )
    {
-      *state = nsPermission_Unknown;
       return NS_OK;
    }
    if (m_pNSPrivilegeManager != NULL)
@@ -237,13 +237,51 @@ nsCCapsManager::~nsCCapsManager()
 
 NS_METHOD
 nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal, 
-                               nsPrincipal **ppNSPRincipal)
+                               nsPrincipal **ppNSPrincipal)
 {
    nsISupports *pNSISupports   = NULL;
    nsPrincipal *pNSPrinicipal  = NULL;
+   *ppNSPrincipal = NULL;
+
+   if ( pNSIPrincipal == NULL )
+   {
+      return NS_ERROR_NULL_POINTER;
+   }
 
    NS_DEFINE_IID(kICertPrincipalIID, NS_ICERTPRINCIPAL_IID);
    NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
+   NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICODESOURCEPRINCIPAL_IID);
+
+   if (pNSIPrincipal->QueryInterface(kICodeSourcePrincipalIID,
+                            (void**)&pNSISupports) == NS_OK) 
+   {
+      nsCCodeSourcePrincipal *pNSCCodeSourcePrincipal = (nsCCodeSourcePrincipal *)pNSIPrincipal;
+      nsICertPrincipal       *pNSICertPrincipal       = pNSCCodeSourcePrincipal->GetCertPrincipal();
+      nsICodebasePrincipal   *pNSICodebasePrincipal   = pNSCCodeSourcePrincipal->GetCodebasePrincipal();
+      PRBool bIsTrusted = PR_FALSE;
+      if(pNSICertPrincipal != NULL )
+      {
+          pNSICertPrincipal->IsTrusted(NULL, &bIsTrusted);
+      }
+      if (bIsTrusted)
+      {
+          nsCCertPrincipal *pNSCCertPrincipal = (nsCCertPrincipal *)pNSICertPrincipal;
+          pNSPrinicipal = pNSCCertPrincipal->GetPeer();
+          pNSCCertPrincipal->Release();
+      }
+      else
+      if(pNSICodebasePrincipal != NULL )
+      {
+          nsCCodebasePrincipal *pNSCCodebasePrincipal = (nsCCodebasePrincipal *)pNSICodebasePrincipal;
+          pNSPrinicipal = pNSCCodebasePrincipal->GetPeer();
+          pNSCCodebasePrincipal->Release();
+      }
+      else
+      {
+         return NS_ERROR_NULL_POINTER;
+      }
+   }
+   else
    if (pNSIPrincipal->QueryInterface(kICertPrincipalIID,
                             (void**)&pNSISupports) == NS_OK) 
    {
@@ -264,7 +302,7 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
    {
       return NS_ERROR_NO_INTERFACE;
    }
-   *ppNSPRincipal = pNSPrinicipal;
+   *ppNSPrincipal = pNSPrinicipal;
    return NS_OK;
 }
 
@@ -287,7 +325,6 @@ nsCCapsManager::ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege)
 nsPrivilege *
 nsCCapsManager::ConvertPermissionToPrivilege(nsPermission state)
 {
-    nsPrivilege *pNSPrivilege;
     nsPermissionState permission;
     nsDurationState duration;
 

@@ -114,6 +114,8 @@ public:
     // from nsCCodeSourcePrincipal:
     nsCCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsresult *result);
     virtual ~nsCCodeSourcePrincipal(void);
+    nsICertPrincipal     *GetCertPrincipal()     { return m_pNSICertPrincipal;}
+    nsICodebasePrincipal *GetCodebasePrincipal() { return m_pNSICodebasePrincipal; }
 
 protected:
     nsICertPrincipal     *m_pNSICertPrincipal;
