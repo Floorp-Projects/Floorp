@@ -43,7 +43,9 @@
 
 typedef enum {
 	nsMailboxActionParseMailbox = 0,
-	nsMailboxActionDisplayMessage
+	nsMailboxActionDisplayMessage,
+	nsMailboxActionCopyMessage,
+	nsMailboxActionMoveMessage
 } nsMailboxAction;
 
 class nsIMailboxUrl : public nsIMsgMailNewsUrl
@@ -69,6 +71,14 @@ public:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer) = 0;
 
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer) = 0;
+
+
+	/////////////////////////////////////////////////////////////////////////////// 
+	// Copy/Move mailbox urls require a mailbox copy handler which actually performs
+	// the copy.
+	///////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD SetMailboxCopyHandler(nsIStreamListener *  aConsumer) = 0;
+	NS_IMETHOD GetMailboxCopyHandler(nsIStreamListener ** aConsumer) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the mailbox url state
