@@ -2216,16 +2216,11 @@ static void
 MapBdoAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                      nsRuleData* aData)
 {
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-  if (aData->mSID != eStyleStruct_Text || !aData->mTextData)
-    return;
-  if (aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
-    // Get dir attribute
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-    if (eHTMLUnit_Enumerated == value.GetUnit())
-      aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
+  if (aData->mSID == eStyleStruct_TextReset &&
+    aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
+    aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
   }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 #endif // IBMBIDI
 
@@ -3053,23 +3048,30 @@ void
 nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                               nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Visibility || !aData->mDisplayData)
-    return;
-
-  if (aData->mDisplayData->mDirection.GetUnit() == eCSSUnit_Null) {
+  if (aData->mSID == eStyleStruct_TextReset) {
+    if (aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mTextData->mUnicodeBidi.SetIntValue(
+            NS_STYLE_UNICODE_BIDI_EMBED, eCSSUnit_Enumerated);
+    }
+  } else if (aData->mSID == eStyleStruct_Visibility) {
+    if (aData->mDisplayData->mDirection.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mDisplayData->mDirection.SetIntValue(value.GetIntValue(),
+                                                    eCSSUnit_Enumerated);
+    }
     nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated)
-      aData->mDisplayData->mDirection.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-  }
-  
-  nsHTMLValue value;
-  aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
-  if (value.GetUnit() == eHTMLUnit_String) {
-    // Register a post-resolve callback for filling in the language atom
-    // over in the computed style data.
-    aData->mAttributes = (nsIHTMLMappedAttributes*)aAttributes;
-    aData->mPostResolveCallback = &PostResolveCallback;
+    aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
+    if (value.GetUnit() == eHTMLUnit_String) {
+      // Register a post-resolve callback for filling in the language atom
+      // over in the computed style data.
+      aData->mAttributes = (nsIHTMLMappedAttributes*)aAttributes;
+      aData->mPostResolveCallback = &PostResolveCallback;
+    }
   }
 }
 

@@ -511,6 +511,10 @@ struct nsStyleTextReset : public nsStyleStruct {
   PRInt32 CalcDifference(const nsStyleTextReset& aOther) const;
   
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
+#ifdef IBMBIDI
+  PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
+#endif // IBMBIDI
+
   nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 };
 
@@ -534,9 +538,6 @@ struct nsStyleText : public nsStyleStruct {
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
   PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
-#ifdef IBMBIDI
-  PRUint8 mUnicodeBidi;                 // [inherited] see nsStyleConsts.h
-#endif // IBMBIDI
 
   nsStyleCoord  mLetterSpacing;         // [inherited] 
   nsStyleCoord  mLineHeight;            // [inherited] 
