@@ -377,12 +377,12 @@ function Startup()
   
   // Focus the content area unless we're loading a blank page
   var elt;
-  if (uriToLoad == "about:blank" && !toolbar.hidden &&
-      gURLBar && !gURLBar.parentNode.parentNode.collapsed)
-  {
-    elt = gURLBar;
-  } else {
-    elt = _content;
+  if (uriToLoad == "about:blank") {
+    var navBar = document.getElementById("nav-bar");
+    if (navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
+      elt = gURLBar;
+    else
+      elt = _content;
   }
   
   setTimeout(delayedStartup, 0, elt);
@@ -407,7 +407,6 @@ function delayedStartup(aElt)
   checkForDefaultBrowser();
 
   // now load bookmarks after a delay
-
   BMSVC.ReadBookmarks();
   var bt = document.getElementById("bookmarks-toolbar");
   if (bt && "toolbar" in bt)
@@ -3997,8 +3996,7 @@ nsContextMenu.prototype = {
             result = true;
 
           // format "Search for <selection>" string to show in menu
-          var bundle = document.getElementById("contentAreaBundle");
-          searchSelectText = bundle.getFormattedString("searchText", [searchSelectText]);
+          searchSelectText = gNavigatorBundle.getFormattedString("searchText", [searchSelectText]);
           this.setItemAttr("context-searchselect", "label", searchSelectText);
         } 
         return result;
