@@ -583,6 +583,12 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
 	PK11_ReferenceSlot(slot);
     }
 
+    if (id == CK_INVALID_HANDLE) {
+	PK11_FreeSlot(slot);
+	PORT_SetError( SEC_ERROR_BAD_KEY );
+	return SECFailure;
+    }
+
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_VerifyRecoverInit(session,&mech,id);
@@ -634,6 +640,12 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
             
     } else {
 	PK11_ReferenceSlot(slot);
+    }
+
+    if (id == CK_INVALID_HANDLE) {
+	PK11_FreeSlot(slot);
+	PORT_SetError( SEC_ERROR_BAD_KEY );
+	return SECFailure;
     }
 
     session = pk11_GetNewSession(slot,&owner);
@@ -792,6 +804,12 @@ pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
     }
 
     id = PK11_ImportPublicKey(slot,key,PR_FALSE);
+
+    if (id == CK_INVALID_HANDLE) {
+	PK11_FreeSlot(slot);
+	PORT_SetError( SEC_ERROR_BAD_KEY );
+	return SECFailure;
+    }
 
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
