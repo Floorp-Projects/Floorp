@@ -276,6 +276,7 @@
 ; link should be one of:
 ;   :reference   if this is a reference of this general-nonterminal;
 ;   :external    if this is an external reference of this general-nonterminal;
+;   a string     if this is an external reference of this general-nonterminal to the given html file;
 ;   :definition  if this is a definition of this general-nonterminal;
 ;   nil          if this use of the general-nonterminal should not be cross-referenced.
 (defun depict-general-nonterminal (markup-stream general-nonterminal link &optional subscript)
@@ -370,6 +371,7 @@
 ; link should be one of:
 ;   :reference   if this is a reference of this general-grammar-symbol;
 ;   :external    if this is an external reference of this general-grammar-symbol;
+;   a string     if this is an external reference of this general-grammar-symbol to the given html file;
 ;   :definition  if this is a definition of this general-grammar-symbol;
 ;   nil          if this use of the general-grammar-symbol should not be cross-referenced.
 (defun depict-general-grammar-symbol (markup-stream general-grammar-symbol link &optional subscript)
@@ -378,14 +380,14 @@
     (depict-terminal markup-stream general-grammar-symbol subscript)))
 
 
-; Styled text can include (:grammar-symbol <grammar-symbol-source> [<subscript>]) as long as
+; Styled text can include (:grammar-symbol <grammar-symbol-source> [<subscript>] [<link>]) as long as
 ; *styled-text-grammar-parametrization* is bound around the call to depict-styled-text.
 (defvar *styled-text-grammar-parametrization*)
 
-(defun depict-grammar-symbol-styled-text (markup-stream grammar-symbol-source &optional subscript)
+(defun depict-grammar-symbol-styled-text (markup-stream grammar-symbol-source &optional subscript link)
   (depict-general-grammar-symbol markup-stream
                                  (grammar-parametrization-intern *styled-text-grammar-parametrization* grammar-symbol-source)
-                                 :reference
+                                 (or link :reference)
                                  subscript))
 
 (setf (styled-text-depictor :grammar-symbol) #'depict-grammar-symbol-styled-text)
