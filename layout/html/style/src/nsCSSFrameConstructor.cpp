@@ -2813,64 +2813,9 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext* aPresContext,
     return PR_TRUE;
   }
 
-// #ifdef INCLUDE_XUL 
-// XXX should pseudo frames be created in these cases?
-#if 0
-  if (  (nsXULAtoms::button          == aTag)  ||
-	      (nsXULAtoms::titledbutton    == aTag)  ||
-        (nsXULAtoms::image           == aTag)  ||
-        (nsXULAtoms::grippy          == aTag)  ||
-        (nsXULAtoms::splitter        == aTag)  ||
-        (nsXULAtoms::slider          == aTag)  ||
-        (nsXULAtoms::spinner         == aTag)  ||
-        (nsXULAtoms::scrollbar       == aTag)  ||
-        (nsXULAtoms::scrollbarbutton == aTag)  ||
-        (nsXULAtoms::thumb           == aTag)  ||
-        (nsXULAtoms::colorpicker     == aTag)  ||
-        (nsXULAtoms::fontpicker      == aTag)  ||
-        (nsXULAtoms::text            == aTag)  ||
-        (nsXULAtoms::widget          == aTag)  ||
-        (nsXULAtoms::tree            == aTag)  ||
-        (nsXULAtoms::treechildren    == aTag)  ||
-        (nsXULAtoms::treeitem        == aTag)  ||
-        (nsXULAtoms::treerow         == aTag)  ||
-        (nsXULAtoms::treecell        == aTag)  ||
-        (nsXULAtoms::treeindentation == aTag)  ||
-        (nsXULAtoms::treecol         == aTag)  ||
-        (nsXULAtoms::treecolgroup    == aTag)  ||
-        (nsXULAtoms::treefoot        == aTag)  ||
-        (nsXULAtoms::menu            == aTag)  ||
-        (nsXULAtoms::menuitem        == aTag)  || 
-        (nsXULAtoms::menubar         == aTag)  ||
-        (nsXULAtoms::menupopup       == aTag)  ||
-        (nsXULAtoms::popupset        == aTag)  ||
-        (nsXULAtoms::popup           == aTag)  ||
-        (nsXULAtoms::toolbox         == aTag)  ||
-        (nsXULAtoms::toolbar         == aTag)  ||
-        (nsXULAtoms::toolbaritem     == aTag)  ||
-        (nsXULAtoms::stack           == aTag)  ||
-        (nsXULAtoms::deck            == aTag)  ||
-        (nsXULAtoms::spring          == aTag)  ||
-        (nsXULAtoms::title           == aTag)  ||
-        (nsXULAtoms::titledbox       == aTag)  ||
-        (nsXULAtoms::tabcontrol      == aTag)  ||
-        (nsXULAtoms::tabbox          == aTag)  ||
-        (nsXULAtoms::tabpanel        == aTag)  ||
-        (nsXULAtoms::tabpage         == aTag)  ||
-        (nsXULAtoms::checkbox        == aTag)  ||
-        (nsXULAtoms::radio           == aTag)  ||
-        (nsXULAtoms::menulist        == aTag)  ||
-        (nsXULAtoms::menubutton      == aTag)  ||
-        (nsXULAtoms::textfield       == aTag)  ||
-        (nsXULAtoms::textarea        == aTag) ) {
-    return PR_TRUE;
-  }
-#endif
-
 // MathML Mod - DJF
-// #ifdef MOZ_MATHML
-// XXX should pseudo frames be created in this case
-#if 0
+#ifdef MOZ_MATHML
+// XXX should pseudo frames be created in this case?
   if (  (nsMathMLAtoms::math         == aTag) ) {
     return PR_TRUE;
   }
@@ -2914,7 +2859,9 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
       aParentFrameIn->GetParent(&parentFrame);
     }
   }
-  else if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent)) {
+  // Do not construct pseudo frames for trees 
+  else if (!aTableCreator.IsTreeCreator() &&
+           MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent)) {
     // this frame may have a pseudo parent, use block frame type to trigger foreign
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::blockFrame, aState, parentFrame, aIsPseudoParent);
