@@ -34,13 +34,13 @@ interface nsIWebBrowserNav : nsISupports
 	Indicates if the browser if it can go back.  If true this indicates that
 	there is back session history available to navigate to.
 	*/
-	readonly attribute canGoBack;
+	readonly attribute boolean canGoBack;
 
 	/*
 	Indicates if the browser if it can go forward.  If true this indicates that
 	there is forward session history available to navigate to.
 	*/
-	readonly attribute canGoForward;
+	readonly attribute boolean canGoForward;
 
 	/*
 	Tells the browser to navigate to the next Back session history item.
