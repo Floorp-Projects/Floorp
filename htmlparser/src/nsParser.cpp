@@ -1608,8 +1608,8 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
 
   if (IsComplete()) {
     if(mParserContext && !mParserContext->mPrevContext) {
-      if(mParserContext->mDTD) {
-        result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
+      if (mParserContext->mDTD) {
+        result = mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
       }
       //Ref. to bug 61462.
       NS_IF_RELEASE(mBundle); 
@@ -1903,11 +1903,14 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
       nsIDTD *theDTD=0; 
       eAutoDetectResult theStatus=eUnknownDetect; 
 
-      if(mParserContext && (mParserContext->mMimeType==aMimeType)) { 
-        mParserContext->mDTD->CreateNewInstance(&theDTD); // To fix 32263
-        theStatus=mParserContext->mAutoDetectStatus; 
-
-        //added this to fix bug 32022.
+      if (mParserContext && mParserContext->mMimeType==aMimeType) {
+        NS_ASSERTION(mParserContext->mDTD,"How come the DTD is null?"); // Ref. Bug 90379
+        
+        if (mParserContext->mDTD) {
+          mParserContext->mDTD->CreateNewInstance(&theDTD); // To fix 32263
+          theStatus=mParserContext->mAutoDetectStatus; 
+          //added this to fix bug 32022.
+        }
       } 
 
       pc=new CParserContext(theScanner,aKey, mCommand,0,theDTD,theStatus,aLastCall); 
@@ -2096,10 +2099,13 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
         // (and cache any data coming in) until the parser is re-enabled.
 
         if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-              //BLOCK == 2152596464
-           mParserContext->mDTD->WillInterruptParse();
-           BlockParser();
-           return NS_OK;
+          //BLOCK == 2152596464
+          if (mParserContext->mDTD) {
+            mParserContext->mDTD->WillInterruptParse();
+          }
+          
+          BlockParser();
+          return NS_OK;
         }
         
         else if (NS_ERROR_HTMLPARSER_STOPPARSING==result) {
@@ -2160,7 +2166,9 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
         if((kEOF==theTokenizerResult) || (result==NS_ERROR_HTMLPARSER_INTERRUPTED)) {
           result = (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
-          mParserContext->mDTD->WillInterruptParse();
+          if (mParserContext->mDTD) {
+            mParserContext->mDTD->WillInterruptParse();
+          }
         }
 
 
@@ -2197,7 +2205,7 @@ nsresult nsParser::BuildModel() {
   CParserContext* theRootContext=mParserContext;
   nsITokenizer*   theTokenizer=0;
 
-  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
+  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
   if(theTokenizer){
 
     while(theRootContext->mPrevContext) {
@@ -2758,7 +2766,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
  */
 PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
   nsITokenizer* theTokenizer=0;
-  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
+  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
   if (theTokenizer) {
     result = theTokenizer->WillTokenize(aIsFinalChunk,&mTokenAllocator);
   }  
@@ -2779,7 +2787,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
   ++mMajorIteration; 
 
   nsITokenizer* theTokenizer=0;
-  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
+  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
 
   if(theTokenizer){    
     PRBool flushTokens=PR_FALSE;
@@ -2832,7 +2840,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   PRBool result=PR_TRUE;
 
   nsITokenizer* theTokenizer=0;
-  nsresult rv=mParserContext->mDTD->GetTokenizer(theTokenizer);
+  nsresult rv = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
 
   if (NS_SUCCEEDED(rv) && theTokenizer) {
     result = theTokenizer->DidTokenize(aIsFinalChunk);
