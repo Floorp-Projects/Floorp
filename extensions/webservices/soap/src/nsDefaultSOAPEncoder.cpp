@@ -2218,7 +2218,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             if (NS_FAILED(rc))
               return rc;
             nsCOMPtr<nsIDOMElement> after;
-            rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
+            rc = DecodeStructParticle(aEncoding, next, child, aAttachments, aDestination, getter_AddRefs(after));
             if (!NS_FAILED(rc)) {
                next = after;
             }
