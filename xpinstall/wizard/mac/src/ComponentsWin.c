@@ -348,7 +348,10 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 			ClearDiskSpaceMsgs();
 						
 			KillControls(gWPtr);
-			ShowAdditionsWin();
+			if (gControls->cfg->bAdditionsExist)
+				ShowAdditionsWin();
+			else
+				ShowTerminalWin();
 			return;
 		}
 	}
