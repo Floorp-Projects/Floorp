@@ -126,7 +126,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 # when using gcc the assembly is inlined in the C-file (see jslock.c)
 ifdef NS_USE_NATIVE
-ASFILES = $(wildcard $(srcdir)/*_$(OS_ARCH).s)
+ASFILES = $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
 endif
 
 JS_SAFE_ARENA = 1

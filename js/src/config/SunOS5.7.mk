@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for SunOS5.6
+# Config stuff for SunOS5.7
 #
 
 include $(DEPTH)/config/SunOS5.5.mk
