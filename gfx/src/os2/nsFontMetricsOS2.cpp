@@ -804,7 +804,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
   nsresult  res;
   HWND      win = NULL;
   HDC       ps = NULL;
-  LONG      lHeight;
+  float     fHeight;
   SIZEF     charbox;
 
   if (NULL != mDeviceContext->mPrintDC){
@@ -934,7 +934,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
 
    // 8) If we're using an image font, load the font with the closest
    //    matching size
-  int points = mFont->size / 20;
+  int points = NSTwipsToIntPoints( mFont->size * textZoom );
   if( fattrs->fsFontUse == 0 )    /* if image font */
   {
     char alias[FACESIZE];
@@ -968,6 +968,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
           if (pMetrics[i].sNominalPointSize / 10 == points)
           {
             // image face found fine, set required size in fattrs.
+            curPoints = pMetrics[i].sNominalPointSize / 10;
             fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
             fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
             break;
@@ -993,24 +994,23 @@ nsresult nsFontMetricsOS2::RealizeFont()
         }
       } /* endfor */
 
+      points = curPoints;
       delete [] pMetrics;
     }
   }
 
    // set up the charbox;  set for image fonts also, in case we need to
    //  substitute a font later on (for UTF-8, etc)
-  if (!mDeviceContext->mPrintDC)
+  if( !mDeviceContext->mPrintDC ) /* if not printing */
     if( fattrs->fsFontUse == 0 )    /* if image font */
-      lHeight = NSToIntRound( points * gDPI / 72 );
+      fHeight = points * gDPI / 72;
     else
-      lHeight = NSToIntRound( mFont->size * app2dev * textZoom * gDPI / 96 );
+      fHeight = mFont->size * app2dev * textZoom;
   else
-    if( fattrs->fsFontUse == 0 )
-      lHeight = NSToIntRound( points * 20 * app2dev * textZoom );
-    else
-      lHeight = NSToIntRound( mFont->size * app2dev * textZoom );
+    fHeight = mFont->size * app2dev * textZoom;
 
-  fh->charbox.cx = MAKEFIXED(lHeight, 0);
+  long lFloor = NSToIntFloor( fHeight ); 
+  fh->charbox.cx = MAKEFIXED( lFloor, (fHeight - (float)lFloor) * 65536.0f );
   fh->charbox.cy = fh->charbox.cx;
 
    // 9) Record font handle & record various font metrics to cache
@@ -1486,7 +1486,9 @@ nsFontMetricsOS2::SetUnicodeFont( HPS aPS, LONG lcid )
     long lFonts = 0;
     PFONTMETRICS pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS );
 
-    int points = mFont->size / 20;
+    float textZoom = 1.0;
+    mDeviceContext->GetTextZoom( textZoom );
+    int points = NSTwipsToIntPoints( mFont->size * textZoom );
     int curPoints = 0;
     for( int i = 0; i < lFonts; i++)
     {
