@@ -211,6 +211,11 @@ nsCmdLineService::GetArgc(PRInt32 * aResult)
 
     if (nsnull == aResult)
         return NS_ERROR_NULL_POINTER;
+
+    // if we are null, we were never initialized.
+    if (mArgc == 0)
+      return NS_ERROR_FAILURE;
+
     *aResult =  mArgc;
     return NS_OK;
 }
@@ -220,6 +225,11 @@ nsCmdLineService::GetArgv(char *** aResult)
 {
     if (nsnull == aResult)
       return NS_ERROR_NULL_POINTER;
+
+    // if we are 0, we were never set.
+    if (!mArgv)
+      return NS_ERROR_FAILURE;
+
     *aResult = mArgv;
 
     return NS_OK;
