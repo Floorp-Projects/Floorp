@@ -2174,18 +2174,12 @@ NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIA
     
     if (nsHTMLAtoms::value == aName) 
     {
-      if (mEditor) {
-        mEditor->EnableUndo(PR_FALSE);    // wipe out undo info
-      }
       if (mEditor && mUseEditor) {
         // If the editor exists, the control needs to be informed that the value
         // has changed.
         SetValueChanged(PR_TRUE);
       }
       SetValue(aValue);   // set new text value
-      if (mEditor)  {
-        mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
-      }
     }
     else if (nsHTMLAtoms::select == aName && mSelCon)
     {
