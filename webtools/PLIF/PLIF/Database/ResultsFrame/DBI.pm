@@ -30,28 +30,47 @@ package PLIF::Database::ResultsFrame::DBI;
 use strict;
 use vars qw(@ISA);
 use PLIF;
-use DBI;
+use DBI; # DEPENDENCY
 @ISA = qw(PLIF);
 1;
 
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
-    my($handle) = @_;
+    my($handle, $database, $executed) = @_;
     $self->handle($handle);
+    $self->database($database);
+    $self->executed($executed);
 }
 
 sub row {
     my $self = shift;
+    $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
     return $self->handle->fetchrow_array();
 }
 
 sub rows {
     my $self = shift;
+    $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
     return $self->handle->fetchall_arrayref();
+}
+
+sub reexecute {
+    my $self = shift;
+    my(@values) = @_;
+    if ($self->handle->execute(@values)) {
+        $self->executed(1);
+        return $self;
+    } else {
+        return undef;
+    }
+}
+
+sub ID {
+    my $self = shift;
+    return $self->handle->database->{'mysql_insertid'}
 }
 
 # other possible APIs:
 # $ary_ref  = $sth->fetchrow_arrayref;
 # $hash_ref = $sth->fetchrow_hashref;
-# reexecute with new bound values

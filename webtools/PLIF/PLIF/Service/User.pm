@@ -82,6 +82,12 @@ sub getUserByID {
     }
 }
 
+sub getNewUser {
+    my $self = shift;
+    my($app, $password) = @_;
+    return $self->objectCreate($app, undef, 0, $password, '', '', '', '', {}, {}, []);
+}
+
 sub objectProvides {
     my $class = shift;
     my($service) = @_;
@@ -91,9 +97,10 @@ sub objectProvides {
 sub objectInit {
     my $self = shift;
     my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
+    $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
-    $self->mode($mode);
+    $self->mode($mode); # active (0), disabled (1), logging out (2) XXX need a way to make this extensible
     $self->password($password);
     $self->adminMessage($adminMessage);
     $self->newFieldID($newFieldID);
@@ -107,8 +114,9 @@ sub objectInit {
         $self->insertField($fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID}));
     }
     $self->groups({%$groups}); # hash of groupID => groupName
+    $self->originalGroups({%$groups}); # a backup used to make a comparison when saving the groups
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
-    $self->{'_DIRTY'} = {};
+    $self->{'_DIRTY'}->{'properties'} = 0;
 }
 
 sub hasRight {
@@ -126,6 +134,8 @@ sub hasField {
     return undef;
 }
 
+# if you want to add a field, you do:
+#     $user->getField('category', 'name')->data = $myData;
 sub getField {
     my $self = shift;
     my($category, $name) = @_;
@@ -133,14 +143,6 @@ sub getField {
     if (not defined($field)) {
         $field = $self->insertField($fieldFactory->createFieldByName($app, $self, $fieldCategory, $fieldName));
     }
-    return $field;
-}
-
-sub insertField {
-    my $self = shift;
-    my($field) = @_;
-    $self->fields->{$field->category}->{$field->name} = $field;
-    $self->fieldsByID->{$field->fieldID} = $field;
     return $field;
 }
 
@@ -218,6 +220,7 @@ sub hash {
         'rights' => keys(%{$self->rights});
     };
     foreach my $field (values(%{$self->fieldsByID})) {
+        # XXX should we also pass the field metadata on? (e.g. typeData)
         $result->{'fields'}->{$field->fieldID} = $field->data;
         $result->{'fields'}->{$field->category.':'.$field->name} = $field->data;
     }
@@ -244,6 +247,17 @@ sub leaveGroup {
     delete($self->{'groups'}->{$groupID});
     $self->invalidateRights();
     $self->{'_DIRTY'}->{'groups'} = 1;
+}
+
+
+# internal routines
+
+sub insertField {
+    my $self = shift;
+    my($field) = @_;
+    $self->fields->{$field->category}->{$field->name} = $field;
+    $self->fieldsByID->{$field->fieldID} = $field;
+    return $field;
 }
 
 sub invalidateRights {
@@ -292,14 +306,25 @@ sub DESTROY {
 
 sub writeProperties {
     my $self = shift;
-    $self->app->getService('dataSource.user')->setUser($elf->app, $self->userID, $self->mode, 
+    $self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode, 
                                                        $self->password, $self->adminMessage, 
                                                        $self->newFieldID, $self->newFieldValue, $self->newFieldKey);
 }
 
 sub writeGroups {
     my $self = shift;
-    $self->app->getService('dataSource.user')->setUserGroups($self->app, $self->userID, keys(%{$self->{'groups'}}));
+    # compare the group lists before and after and see which got added and which got removed
+    my $dataSource = $self->app->getService('dataSource.user');
+    foreach my $group (keys(%{$self->{'groups'}})) {
+        if (not defined($self->{'originalGroups'}->{$group})) {
+            $dataSource->addUserGroup($self->app, $self->userID, $group);
+        }
+    }
+    foreach my $group (keys(%{$self->{'originalGroups'}})) {
+        if (not defined($self->{'groups'}->{$group})) {
+            $dataSource->removeUserGroup($self->app, $self->userID, $group);
+        }
+    }
 }
 
 # fields write themselves out

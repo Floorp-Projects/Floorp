@@ -77,21 +77,33 @@ sub setUser {
     $self->notImplemented();
 }
 
-sub setUserField
+sub setUserField {
     my $self = shift;
     my($app, $userID, $fieldID, $data) = @_;
     $self->notImplemented();
 }
 
-sub removeUserField
+sub removeUserField {
     my $self = shift;
     my($app, $userID, $fieldID) = @_;
     $self->notImplemented();
 }
 
-sub setUserGroups
+sub setUserGroups {
     my $self = shift;
     my($app, $userID, @groupIDs) = @_;
+    $self->notImplemented();
+}
+
+sub addUserGroup {
+    my $self = shift;
+    my($app, $userID, $groupID) = @_;
+    $self->notImplemented();
+}
+
+sub removeUserGroup {
+    my $self = shift;
+    my($app, $userID, $groupID) = @_;
     $self->notImplemented();
 }
 
@@ -128,8 +140,10 @@ sub setField {
 sub removeField {
     my $self = shift;
     my($app, $fieldID) = @_;
-    # This should handle the case where the field to be removed is
-    # still referenced by some users
+    # The caller should make sure that the relevant service
+    # ('user.field.$type.remover') is notified
+    # ('removeField($fieldID)') so that any additional database
+    # cleanup can be performed.
     $self->notImplemented();
 }
 

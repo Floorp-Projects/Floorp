@@ -40,14 +40,16 @@ sub databaseType {
 sub getString { 
     my $self = shift;
     my($app, $variant, $string) = @_;    
-    return $self->database($app)->execute("SELECT data FROM strings WHERE variant = ? AND name = ?", $variant, $string)->row;
+    return $self->database($app)->execute('SELECT data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
 }
 
 sub getVariants {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $self->database($app)->execute("SELECT id, quality, type, encoding, charset, language FROM stringVariants WHERE protocol = ?", $protocol)->rows;
+    return $self->database($app)->execute('SELECT id, quality, type, encoding, charset, language FROM stringVariants WHERE protocol = ?', $protocol)->rows;
 }
+
+# XXX setters would be nice too!
 
 sub setupInstall {
     my $self = shift;

@@ -84,13 +84,25 @@ sub propertyGetUndefined {
     return $self->SUPER::propertyGetUndefined(@_);
 }
 
+sub prepare {
+    my $self = shift;
+    my($statement) = @_;
+    $self->createResultsFrame($statement);
+}
+
 sub execute {
     my $self = shift;
     my($statement, @values) = @_;
+    $self->createResultsFrame($statement, 1, @values); # note: @values might be empty
+}
+
+sub createResultsFrame {
+    my $self = shift;
+    my($statement, $execute, @values) = @_;
     $self->assert($self->handle, 1, 'No database handle: '.(defined($self->errstr) ? $self->errstr : 'unknown error'));
     my $handle = $self->handle->prepare($statement);
-    if ($handle and $handle->execute(@values)) {
-        return PLIF::Database::ResultsFrame::DBI->create($handle);
+    if ($handle and ((not defined($execute)) or $handle->execute(@values))) {
+        return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);
     } else {
         $self->error(1, $handle->errstr);
     }

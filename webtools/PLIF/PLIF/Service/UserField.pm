@@ -47,9 +47,15 @@ sub provides {
 # represents a string that is prefixed to the data of the user field
 # to obtain the username that should be used for this user field.
 
+# the 'mode' field of field descriptions is one of the following:
+#  0: enabled
+#  1: disabled (but shown) -- XXX do we need this?
+#  2: hidden
+# XXX need a way to make this extensible
+
 sub init {
     my $self = shift;
-    my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldData) = @_;
+    my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldMode, $fieldData) = @_;
     # do not hold on to $user!
     $self->app($app);
     $self->userID($user->userID); # change this at your peril
@@ -57,6 +63,7 @@ sub init {
     $self->category($fieldCategory); # change this at your peril
     $self->name($fieldName); # change this at your peril
     $self->typeData($fieldTypeData); # change this at your peril
+    $self->mode($fieldMode); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
     # don't forget to update the user's 'hash' function if you add more fields
     $self->{'_DELETE'} = 0;

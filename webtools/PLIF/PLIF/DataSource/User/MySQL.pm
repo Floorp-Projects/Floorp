@@ -45,10 +45,10 @@ sub getUserIDByUsername {
     # example, for the field 'contact.icq', the type data field might
     # contain the string 'ICQ:' and the user field might be '55378571'
     # making the username 'ICQ:55378571'.
-    return $self->database($app)->execute("SELECT userData.userID
+    return $self->database($app)->execute('SELECT userData.userID
                                            FROM userData, userDataTypes
                                            WHERE userData.fieldID = userDataTypes.fieldID
-                                           AND CONCAT(userDataTypes.data, userData.data) = ?", $username)->row;
+                                           AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row->[0];
     # return userID
 }
 
@@ -56,26 +56,26 @@ sub getUserByID {
     my $self = shift;
     my($app, $id) = @_;
     $self->notImplemented();
-    my @userData = $self->database($app)->execute("SELECT userID, mode, password, adminMessage, newFieldID, newFieldValue, newFieldKey
-                                                   FROM user WHERE userID = ?", $id)->row;
+    my @userData = $self->database($app)->execute('SELECT userID, mode, password, adminMessage, newFieldID, newFieldValue, newFieldKey
+                                                   FROM user WHERE userID = ?', $id)->row;
     if (@userData) {
         # fields
-        my $fieldData = $self->database($app)->execute("SELECT userData.fieldID, userData.data
+        my $fieldData = $self->database($app)->execute('SELECT userData.fieldID, userData.data
                                                         FROM userData
-                                                        WHERE userData.userID = ?", $id)->rows;
+                                                        WHERE userData.userID = ?', $id)->rows;
         my %fieldData = map { $$_[0] => $$_[1] } @$fieldData;
         # groups
-        my $groupData = $self->database($app)->execute("SELECT groups.groupID, groups.name
+        my $groupData = $self->database($app)->execute('SELECT groups.groupID, groups.name
                                                         FROM groups, userGroupsMapping
                                                         WHERE userGroupsMapping.userID = ?
-                                                        AND userGroupsMapping.groupID = groups.groupID", $id)->rows;
+                                                        AND userGroupsMapping.groupID = groups.groupID', $id)->rows;
         my %groupData = map { $$_[0] => $$_[1] } @$groupData;
         # rights
-        my $rightsData = $self->database($app)->execute("SELECT rights.name
+        my $rightsData = $self->database($app)->execute('SELECT rights.name
                                                          FROM rights, userGroupsMapping, groupRightsMapping
                                                          WHERE userGroupsMapping.userID = ?
                                                          AND userGroupsMapping.groupID = groupRightsMapping.groupID
-                                                         AND groupRightsMapping.rightID = rights.rightID", $id)->rows;
+                                                         AND groupRightsMapping.rightID = rights.rightID', $id)->rows;
         my @rightsData = map { $$_[0] } @$rightsData;
         # bake it all up and send it to the customer
         return (@userData, \%fieldData, \%groupData, \@rightsData);
@@ -87,83 +87,123 @@ sub getUserByID {
     # [rightNames]*; or () if unsuccessful
 }
 
-# XXX XXX
-
 sub setUser {
     my $self = shift;
     my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey) = @_;
     # if userID is undefined, then add a new entry and return the
     # userID (so that it can be used in setUserField and
     # setUserGroups, later).
-    $self->notImplemented();
+    if (defined($userID)) {
+        $self->database($app)->execute('UPDATE user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?
+                                        WHERE userID = ?', $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey, $userID);
+    } else {
+        return $self->database($app)->execute('INSERT INTO user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?',
+                                              $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey)->ID;
+    }
 }
 
-sub setUserField
+sub setUserField {
     my $self = shift;
     my($app, $userID, $fieldID, $data) = @_;
-    $self->notImplemented();
+    # $data may be undefined and frequently will be if the row doesn't
+    # exist yet
+    $self->database($app)->execute('REPLACE INTO userData SET userID=?, fieldID=?, data=?', $userID, $fieldID, $data);
 }
 
-sub removeUserField
+sub removeUserField {
     my $self = shift;
     my($app, $userID, $fieldID) = @_;
-    $self->notImplemented();
+    $self->database($app)->execute('DELETE FROM userData WHERE userID = ? AND fieldID = ?', $userID, $fieldID);
 }
 
-sub setUserGroups
+sub setUserGroups {
     my $self = shift;
     my($app, $userID, @groupIDs) = @_;
-    $self->notImplemented();
+    $self->database($app)->execute('DELETE FROM userGroupsMapping WHERE userID = ?', $userID);
+    my $handle = $self->database($app)->prepare('INSERT INTO userGroupsMapping SET userID=?, groupID=?');
+    foreach my $groupID (@groupIDs) {
+        $handle->reexecute($userID, $groupID);
+    }
+}
+
+sub addUserGroup {
+    my $self = shift;
+    my($app, $userID, $groupID) = @_;
+    $self->database($app)->execute('REPLACE INTO userGroupsMapping SET userID=?, groupID=?', $userID, $groupID);
+}
+
+sub removeUserGroup {
+    my $self = shift;
+    my($app, $userID, $groupID) = @_;
+    $self->database($app)->execute('DELETE FROM userGroupsMapping WHERE userID = ? AND groupID = ?', $userID, $groupID);
 }
 
 # returns the userDataTypes table, basically...
 sub getFields {
     my $self = shift;
     my($app) = @_;
-    $self->notImplemented();
-    # return [type, fieldID, category, name, typeData]*
+    return $self->database($app)->execute('SELECT type, fieldID, category, name, data, mode FROM userDataTypes')->rows;
+    # return [type, fieldID, category, name, typeData, mode]*, or something close to that... XXX
 }
 
 sub getFieldByID {
     my $self = shift;
     my($app, $fieldID) = @_;
-    return $self->database($app)->execute("SELECT type, fieldID, categorym name, data FROM userDataTypes WHERE fieldID = ?", $fieldID)->row;
+    return $self->database($app)->execute('SELECT type, fieldID, category, name, data, mode FROM userDataTypes WHERE fieldID = ?', $fieldID)->row;
 }
 
 sub getFieldByName {
     my $self = shift;
     my($app, $category, $name) = @_;
-    $self->notImplemented();
+    return $self->database($app)->execute('SELECT type, fieldID, category, name, data, mode FROM userDataTypes WHERE category = ? AND name = ?', $category, $name)->row;
     # return [type, fieldID, category, name, typeData]
 }
 
 sub setField {
     my $self = shift;
-    my($app, $fieldID, $category, $name, $type, $data) = @_;
+    my($app, $fieldID, $category, $name, $type, $data, $mode) = @_;
     # if fieldID is undefined, then add a new entry and return the
-    # fieldID. Typically data will be undefined then too.
-    $self->notImplemented();
+    # fieldID. $data will often be undefined or empty
+    if (defined($fieldID)) {
+        $self->database($app)->execute('UPDATE userDataTypes SET category=?, name=?, type=?, data=?, mode=? WHERE fieldID = ?', 
+                                       $category, $name, $type, $data, $mode, $fieldID);
+    } else {
+        return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
+                                              $category, $name, $type, $data, $mode)->ID;
+    }
 }
 
 sub removeField {
     my $self = shift;
     my($app, $fieldID) = @_;
-    # This should handle the case where the field to be removed is
-    # still referenced by some users
-    $self->notImplemented();
+    $self->database($app)->execute('DELETE FROM userData WHERE fieldID = ?', $fieldID);
+    $self->database($app)->execute('DELETE FROM userDataTypes WHERE fieldID = ?', $fieldID);    
 }
 
 sub getGroups {
     my $self = shift;
     my($app) = @_;
-    $self->notImplemented();
+    # groups
+    my $groups = $self->database($app)->execute('SELECT groups.groupID, groups.name FROM groups')->rows;
+    foreach my $group (@$groups) {
+        # rights
+        my $rights = $self->database($app)->execute('SELECT rights.name
+                                                     FROM rights, groupRightsMapping
+                                                     AND userGroupsMapping.groupID = ?
+                                                     AND groupRightsMapping.rightID = rights.rightID', $group->[0])->rows;
+        foreach my $right (@$rights) {
+            $right = $right->[0];
+        }
+        push(@$group, $rights);
+    }
+    return $groups;
     # return [groupID, name, [rightName]*]*
 }
 
 sub getGroupName {
     my $self = shift;
     my($app, $groupID) = @_;
-    $self->notImplemented();
+    return $self->database($app)->execute('SELECT name FROM groups WHERE groupID = ?', $groupID)->row->[0];
     # return name
 }
 
@@ -173,23 +213,57 @@ sub setGroup {
     # If groupID is undefined, then add a new entry and return the new
     # groupID. If groupName is undefined, then leave it as is. If both
     # groupID and groupName are undefined, there is an error.
+    # This probably doesn't need to be too efficient... 
     $self->assert(defined($groupID) or defined($groupName), 1, 
                   'Invalid arguments to DataSource::User::setGroup: \'groupID\' and \'groupName\' both undefined');
-    $self->notImplemented();
+
+    if (defined($fieldID)) {
+    } else {
+        return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
+                                              $category, $name, $type, $data, $mode)->ID;
+    }
+
+    if (not defined($groupID)) {
+        # add a new record
+        $groupID = $self->database($app)->execute('INSERT INTO groups SET name=?', $name)->ID;
+    } elsif (defined($groupName)) {
+        # replace the existing record
+        $self->database($app)->execute('UPDATE groups SET name=? WHERE groupID = ?', $name, $groupID);
+    }
+    # now update the rights mapping table
+    $self->database($app)->execute('DELETE FROM groupRightsMapping WHERE groupID = ?', $groupID);
+    my $handle = $self->database($app)->prepare('INSERT INTO groupRightsMapping SET groupID=?, rightID=?');
+    foreach my $right (@rightNames) {
+        $handle->reexecute($groupID, $self->getRightID($app, $right));
+    }
+    return $groupID;
 }
 
 sub getRights {
     my $self = shift;
     my($app, @groups) = @_;
-    $self->notImplemented();
+    my $rights = $self->database($app)->execute('SELECT rights.name FROM rights')->rows;
+    foreach my $right (@$rights) {
+        $right = $right->[0];
+    }
+    return $rights;
     # return [rightName]*
 }
 
 sub addRight {
     my $self = shift;
     my($app, $name) = @_;
-    # only adds $name if it isn't there already
-    $self->notImplemented();
+    # only adds $name if it isn't there already, because name is a unique index
+    my $rightID = $self->database($app)->execute('INSERT INTO rights SET name=?', $name)->ID;
+}
+
+
+# internal routines
+
+sub getRightID {
+    my $self = shift;
+    my($app, $name) = @_;    
+    return $self->database($app)->execute('SELECT rightID FROM rights WHERE name = ?', $name)->row->[0];    
 }
 
 sub setupInstall {
@@ -241,7 +315,7 @@ sub setupInstall {
         # +-------------------+
         # | userID         K1 | points to entries in the table above
         # | fieldID        K1 | points to entries in the table below
-        # | data              | e.g. "ian@hixie.ch" or "1979-12-27" or an index into another table
+        # | data              | e.g. 'ian@hixie.ch' or '1979-12-27' or an index into another table
         # +-------------------+
     } else {
         # check its schema is up to date
@@ -256,6 +330,7 @@ sub setupInstall {
                                   name varchar(64) NOT NULL,
                                   type varchar(64) NOT NULL,
                                   data text,
+                                  mode integer unsigned DEFAULT 0,
                                   UNIQUE KEY (category, name)
                                   )
         ');
@@ -266,7 +341,8 @@ sub setupInstall {
         # | category       K2 | e.g. contact, personal, setting [1]
         # | name           K2 | e.g. sms, homepage, notifications [1]
         # | type              | e.g. number, string, notifications [2]
-        # | data              | e.g. "SMS", "optional", null
+        # | data              | e.g. 'SMS', 'optional', null
+        # | mode              | enabled, disabled, hidden, etc
         # +-------------------+
         # [1] used to find the fieldID for a particular category.name combination
         # [2] used to find the factory for the relevant user field object
