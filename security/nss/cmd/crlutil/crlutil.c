@@ -45,6 +45,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "nss.h"
+#include "pk11func.h"
 
 #define SEC_CERT_DB_EXISTS 0
 #define SEC_CREATE_CERT_DB 1
@@ -178,6 +179,7 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
     CERTSignedCrl *crl = NULL;
     SECItem crlDER;
     int rv;
+    PRInt32 importOptions;
 
     crlDER.data = NULL;
 
@@ -188,12 +190,13 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 	SECU_PrintError(progName, "unable to read input file");
 	return (SECFailure);
     }
-    
-    if (PR_FALSE == bypassChecks) {
-        crl = CERT_ImportCRL (certHandle, &crlDER, url, type, NULL);
-    } else {
-        crl = SEC_NewCrl (certHandle, url, &crlDER, type);
+ 
+    importOptions = CRL_IMPORT_DEFAULT_OPTIONS;
+    if (PR_TRUE == bypassChecks) {
+        importOptions |= CRL_IMPORT_BYPASS_CHECKS;
     }
+    crl = PK11_ImportCRL(PK11_GetInternalKeySlot(), &crlDER, url, type,
+          NULL, importOptions, NULL, CRL_DECODE_DONT_COPY_DER);
     if (!crl) {
 	const char *errString;
 
