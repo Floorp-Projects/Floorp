@@ -622,7 +622,8 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
 
     if (ch == ')') {
       Pushback(ch);
-      // empty url spec: this is invalid
+      // empty url spec; just get out of here
+      aToken.mType = eCSSToken_URL;
     } else {
       // start of a non-quoted url
       Pushback(ch);
