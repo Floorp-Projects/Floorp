@@ -124,14 +124,16 @@ PR_END_MACRO
 // nsCOMPtr.h allows these macros to be defined by clients
 // These logging functions require dynamic_cast<void *>, so we don't
 // define these macros if we don't have dynamic_cast.
-#define NSCAP_LOG_ASSIGNMENT(_c, _p)               \
-  if ((_p)) nsTraceRefcnt::LogAddCOMPtr((_c),NS_STATIC_CAST(nsISupports*,_p))
+#define NSCAP_LOG_ASSIGNMENT(_c, _p)                                \
+  if (_p)                                                           \
+    nsTraceRefcnt::LogAddCOMPtr((_c),NS_STATIC_CAST(nsISupports*,_p))
 
-#define NSCAP_RELEASE(_c, _p);                                      \
-  if ((_p)) {                                                       \
-    nsTraceRefcnt::LogReleaseCOMPtr((_c),NS_STATIC_CAST(nsISupports*,_p)); \
-    NS_RELEASE(_p);                                                 \
-  }
+#define NSCAP_LOG_RELEASE(_c, _p)                                   \
+  if (_p)                                                           \
+    nsTraceRefcnt::LogReleaseCOMPtr((_c), NS_STATIC_CAST(nsISupports*,_p))
+
+#define NSCAP_ADDREF(_c, _p)    NS_ADDREF(_p)
+#define NSCAP_RELEASE(_c, _p)   NS_RELEASE(_p)
 
 #endif /* HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR */
 
