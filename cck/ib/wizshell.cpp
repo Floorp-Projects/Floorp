@@ -12,7 +12,7 @@ extern CString configName;//	= GetGlobal("CustomizationList");
 extern CString configPath;//  = rootPath + "Configs\\" + configName;
 extern CString cdPath ;//		= configPath + "\\CD";
 extern CString workspacePath;// = configPath + "\\Workspace";
- 
+extern CString cdshellPath;
 //CString CDout="CD_output";
 
 void CreateRshell (void)
@@ -54,8 +54,8 @@ void CreateRshell (void)
 		rshell <<jsprefname<<"\n";
 	}
 	rshell <<"caption="<<fvalue1<<"\n";
-	rshell <<"bk_bitmap="<<fvalue2<<"\n";
-	rshell <<"button2_cmdline=exe,"<<fvalue4<<"\n";
+//	rshell <<"bk_bitmap="<<fvalue2<<"\n";
+//	rshell <<"button2_cmdline=exe,"<<fvalue4<<"\n";
 
 	rshell <<"dialog_title_txt="<<fvalue3<<"\n";
 	if(!part2) {
@@ -67,5 +67,8 @@ void CreateRshell (void)
 		rshell <<jsprefname<<"\n";
 	}
 	rshell.close();
-
+	CString bmpdest = cdshellPath + "\\bmps\\Install.bmp";
+	CString txtdest = configPath + "\\Output\\install.txt";
+	CopyFile(fvalue2,bmpdest,FALSE);
+	CopyFile(fvalue4,txtdest,FALSE);
 }
