@@ -118,12 +118,9 @@ nsresult nsNewsDownloader::DownloadNext(PRBool firstTimeP)
       m_listener->OnStopRunningUrl(nsnull, NS_OK);
     return NS_OK;
   }
-//		return 0;
-//	char *url = m_folder->BuildUrl(m_newsDB, m_keyToDownload);
-	m_numwrote++;
 
-	StartDownload();
-	m_wroteAnyP = PR_FALSE;
+  StartDownload();
+  m_wroteAnyP = PR_FALSE;
   nsCOMPtr <nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID,&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
