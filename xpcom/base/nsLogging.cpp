@@ -30,7 +30,6 @@
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsSpecialSystemDirectory.h"
-#include <math.h>
 #ifdef XP_PC
 #include <windows.h>
 #endif
@@ -41,31 +40,52 @@
 static PRMonitor* gLogMonitor = nsnull;
 static nsObjectHashtable* gSettings = nsnull;
 
-NS_DECL_LOG(LogInfo);
+NS_IMPL_LOG_ENABLED(LogInfo)
+#define PRINTF  NS_LOG_PRINTF(LogInfo)
+#define FLUSH   NS_LOG_FLUSH(LogInfo)
 
 NS_DEFINE_CID(kLoggingServiceCID, NS_LOGGINGSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLoggingService
 
+static nsLoggingService* gLoggingService = nsnull;
+
 nsLoggingService::nsLoggingService()
-    : mDefaultControlFlags(nsILog::PRINT_THREAD_ID |
-                           nsILog::PRINT_LOG_NAME |
-                           nsILog::PRINT_LEVEL |
-                           nsILog::TIMING_PER_THREAD),
-      mLogs(16)
+    : mLogs(16),
+      mDefaultControlFlags(nsILog::DEFAULT_DISABLED |
+                           nsILog::PRINT_THREAD_ID |
+                           nsILog::PRINT_LOG_NAME)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsLoggingService::~nsLoggingService()
 {
-    NS_INIT_LOG(LogInfo);
     DescribeLogs(LogInfo);
-    DescribeTimings(LogInfo);
 }
 
-NS_IMPL_ISUPPORTS1(nsLoggingService, nsILoggingService)
+NS_IMPL_QUERY_INTERFACE1(nsLoggingService, nsILoggingService)
+NS_IMPL_ADDREF(nsLoggingService)
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsLoggingService::Release(void) 
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release"); 
+  NS_ASSERT_OWNINGTHREAD(nsLoggingService); 
+  --mRefCnt; 
+  NS_LOG_RELEASE(this, mRefCnt, "nsLoggingService"); 
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */ 
+    NS_DELETEXPCOM(this);
+    
+    // special action -- null out global 
+    gLoggingService = nsnull;
+
+    return 0; 
+  } 
+  return mRefCnt; 
+} 
 
 static void*
 levelClone(nsHashKey *aKey, void *aData, void* closure)
@@ -83,35 +103,35 @@ levelDestroy(nsHashKey *aKey, void *aData, void* closure)
 static void
 RecordSetting(const char* name, const char* value)
 {
-    PRUint32 level = nsILog::LEVEL_ERROR;
+    PRUint32 level = 2;
     if (nsCRT::strcasecmp(value, "ERROR") == 0 ||
         nsCRT::strcasecmp(value, "2") == 0) {
-        level = nsILog::LEVEL_ERROR;
-        fprintf(stderr, "### NS_LOG: %s = ERROR\n", name);
+        level = 2;
+        PRINTF("### NS_LOG: %s = ERROR\n", name);
     }
     else if (nsCRT::strcasecmp(value, "WARN") == 0 ||
              nsCRT::strcasecmp(value, "WARNING") == 0 ||
              nsCRT::strcasecmp(value, "3") == 0) {
-        level = nsILog::LEVEL_WARN;
-        fprintf(stderr, "### NS_LOG: %s = WARN\n", name);
+        level = 3;
+        PRINTF("### NS_LOG: %s = WARN\n", name);
     }
     else if (nsCRT::strcasecmp(value, "STDOUT") == 0 ||
              nsCRT::strcasecmp(value, "OUT") == 0 ||
              nsCRT::strcasecmp(value, "4") == 0) {
-        level = nsILog::LEVEL_STDOUT;
-        fprintf(stderr, "### NS_LOG: %s = STDOUT\n", name);
+        level = 4;
+        PRINTF("### NS_LOG: %s = STDOUT\n", name);
     }
     else if (nsCRT::strcasecmp(value, "DBG") == 0 ||
              nsCRT::strcasecmp(value, "DEBUG") == 0 ||
              nsCRT::strcasecmp(value, "5") == 0) {
-        level = nsILog::LEVEL_DBG;
-        fprintf(stderr, "### NS_LOG: %s = DBG\n", name);
+        level = 5;
+        PRINTF("### NS_LOG: %s = DBG\n", name);
     }
     else {
-        fprintf(stderr, "### NS_LOG error: %s = %s (bad level)\n", name, value);
+        PRINTF("### NS_LOG error: %s = %s (bad level)\n", name, value);
     }
 
-    nsStringKey key(name);
+    nsCStringKey key(name);
     gSettings->Put(&key, (void*)level);
 }
 
@@ -119,7 +139,7 @@ nsresult
 nsLoggingService::Init()
 {
     nsresult rv;
-    nsStandardLogEventSink* defaultSink = nsnull;
+    nsFileLogEventSink* defaultSink = nsnull;
     const char* outputPath = nsnull;
 
     if (gLogMonitor == nsnull) {
@@ -142,7 +162,7 @@ nsLoggingService::Init()
     {
         const char* nspr_log_modules = getenv("NSPR_LOG_MODULES");
         if (nspr_log_modules) {
-            fprintf(stderr, "### NS_LOG: using NSPR_LOG_MODULES (instead of .nslog)\n");
+            PRINTF("### NS_LOG: using NSPR_LOG_MODULES (instead of .nslog)\n");
             char* head = nsCRT::strdup(nspr_log_modules);
             char* rest = nsCRT::strdup(nspr_log_modules);
             while (1) {
@@ -156,7 +176,7 @@ nsLoggingService::Init()
         }
         const char* nspr_log_file = getenv("NSPR_LOG_FILE");
         if (nspr_log_file) {
-            fprintf(stderr, "### NS_LOG: using NSPR_LOG_FILE (instead of .nslog) -- logging to %s\n", 
+            PRINTF("### NS_LOG: using NSPR_LOG_FILE (instead of .nslog) -- logging to %s\n", 
                     nspr_log_file);
             outputPath = nspr_log_file;
         }
@@ -183,7 +203,7 @@ nsLoggingService::Init()
         }
     }
 
-    defaultSink = new nsStandardLogEventSink();
+    defaultSink = new nsFileLogEventSink();
     if (defaultSink == nsnull) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto error;
@@ -191,13 +211,17 @@ nsLoggingService::Init()
 
     NS_ADDREF(defaultSink);
     if (outputPath)
-        rv = defaultSink->Init(outputPath, nsILog::LEVEL_ERROR);
+        rv = defaultSink->Init(outputPath);
     else
-        rv = defaultSink->InitFromFILE("stderr", stderr, nsILog::LEVEL_ERROR);
+        rv = defaultSink->InitFromFILE("stderr", stderr);
     if (NS_FAILED(rv)) goto error;
 
     mDefaultSink = defaultSink;
     NS_RELEASE(defaultSink);
+
+#ifdef DEBUG
+    DescribeLogs(LogInfo);
+#endif
     return NS_OK;
 
   error:
@@ -209,6 +233,28 @@ nsLoggingService::Init()
     return rv;
 }
 
+static nsresult
+EnsureLoggingService()
+{
+    nsresult rv;
+    if (gLoggingService == nsnull) {
+        gLoggingService = new nsLoggingService();
+        if (gLoggingService == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = gLoggingService->Init();
+        if (NS_FAILED(rv)) {
+            delete gLoggingService;
+            return rv; 
+        }
+        // Note that there's no AddRef here. That's because when the service manager
+        // gets around to calling Create (below) sometime later, we'll AddRef it then
+        // and the service manager will be the sole owner. This allows us to use it
+        // before xpcom has started up.
+    }
+    return NS_OK;
+}
+
 NS_METHOD
 nsLoggingService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
@@ -216,22 +262,12 @@ nsLoggingService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstance
     if (outer)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsLoggingService* it = new nsLoggingService();
-    if (it == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = it->Init();
-    if (NS_FAILED(rv)) {
-        delete it;
-        return rv; 
+    if (gLoggingService == nsnull) {
+        rv = EnsureLoggingService();
+        if (NS_FAILED(rv)) return rv;
     }
 
-    rv = it->QueryInterface(aIID, aInstancePtr);
-    if (NS_FAILED(rv)) {
-        delete it;
-        return rv;
-    }
-    return rv;
+    return gLoggingService->QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -239,7 +275,7 @@ nsLoggingService::GetLog(const char* name, nsILog* *result)
 {
     nsAutoMonitor monitor(gLogMonitor);
     
-    nsStringKey key(name);
+    nsCStringKey key(name);
     nsILog* log = (nsILog*)mLogs.Get(&key);
     if (log) {
         *result = log;
@@ -254,10 +290,33 @@ nsLoggingService::GetLog(const char* name, nsILog* *result)
         delete newLog;
         return rv;
     }
+    NS_ADDREF(newLog);
     mLogs.Put(&key, newLog);
     *result = newLog;
-    NS_ADDREF(newLog);
     return NS_OK;
+}
+
+PR_IMPLEMENT(nsILog*)
+NS_GetLog(const char* name, PRUint32 controlFlags)
+{
+    nsresult rv;
+
+    if (gLoggingService == nsnull) {
+        rv = EnsureLoggingService();
+        if (NS_FAILED(rv)) return nsnull;
+    }
+    
+    nsILog* log;
+    rv = gLoggingService->GetLog(name, &log);
+    if (NS_FAILED(rv)) return nsnull;
+
+    // add in additional flags:
+    PRUint32 flags;
+    log->GetControlFlags(&flags);
+    flags |= controlFlags;
+    log->SetControlFlags(flags);
+
+    return log;
 }
 
 static PRBool
@@ -272,31 +331,8 @@ DescribeLog(nsHashKey *aKey, void *aData, void* closure)
 NS_IMETHODIMP
 nsLoggingService::DescribeLogs(nsILog* out)
 {
-    NS_LOG(out, STDOUT, ("%-20.20s %-8.8s %s\n", "LOG NAME", "ENABLED", "DESTINATION"));
+    NS_LOG_PRINTF(out)("%-20.20s %-8.8s %s\n", "LOG NAME", "ENABLED", "DESTINATION");
     mLogs.Enumerate(DescribeLog, out);
-    return NS_OK;
-}
-
-static PRBool
-DescribeTiming(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsILog* log = (nsILog*)aData;
-    nsILog* out = (nsILog*)closure;
-    nsresult rv;
-    PRUint32 sampleSize;
-    double meanTime;
-    double stdDevTime;
-    rv = log->GetTimingStats(&sampleSize, &meanTime, &stdDevTime);
-    if (NS_SUCCEEDED(rv) && sampleSize > 0)
-        (void)log->DescribeTiming(out, "TOTAL TIME");
-    return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsLoggingService::DescribeTimings(nsILog* out)
-{
-    NS_LOG(out, STDOUT, ("  %-20.20s %-8.8s %s\n", "LOG NAME", "ENABLED", "DESTINATION"));
-    mLogs.Enumerate(DescribeTiming, out);
     return NS_OK;
 }
 
@@ -334,11 +370,9 @@ nsLoggingService::SetDefaultLogEventSink(nsILogEventSink* sink)
 
 nsLog::nsLog()
     : mName(nsnull),
-      mControlFlags(0),
       mIndentLevel(0)
 {
-    mEnabledLevel = LEVEL_ERROR;
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsLog::~nsLog()
@@ -347,13 +381,6 @@ nsLog::~nsLog()
 }
 
 NS_IMPL_ISUPPORTS1(nsLog, nsILog)
-
-static void PR_CALLBACK
-DeleteTimingData(void *priv)
-{
-    nsTimingData* data = (nsTimingData*)priv;
-    delete data;
-}
 
 nsresult
 nsLog::Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink)
@@ -364,15 +391,11 @@ nsLog::Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink)
     mControlFlags = controlFlags; 
     mSink = sink;
 
-    nsStringKey key(name);
+    nsCStringKey key(name);
     PRUint32 level = (PRUint32)gSettings->Get(&key);
-    if (level != LEVEL_NEVER) {
-        mEnabledLevel = level;
+    if (level != 0) {
+        mControlFlags |= nsILog::DEFAULT_ENABLED;
     }
-    PRStatus status = PR_NewThreadPrivateIndex(&mThreadTimingDataIndex,
-                                               DeleteTimingData);
-    if (status != PR_SUCCESS)
-        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
@@ -384,36 +407,19 @@ nsLog::GetName(char* *aName)
 }
 
 NS_IMETHODIMP
-nsLog::GetLevel(PRUint32 *aLevel)
+nsLog::Enabled(PRBool *result)
 {
-    *aLevel = mEnabledLevel;
+    *result = Test();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLog::SetLevel(PRUint32 aLevel)
-{
-    mEnabledLevel = aLevel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::Enabled(PRUint32 level, PRBool *result)
-{
-    *result = Test(level);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::Print(PRUint32 level, const PRUnichar *message)
+nsLog::Print(const PRUnichar *message)
 {
     nsAutoMonitor monitor(gLogMonitor);
-    
-    nsCString str(message);
-    char* msg = str.ToNewCString();
-    nsLogEvent event(this, level);
-    nsresult rv = event.Printf(msg);
-    nsCRT::free(msg);
+
+    nsCString str; str.AssignWithConversion(message);
+    nsresult rv = Printf(str.GetBuffer());
     return rv;
 }
 
@@ -422,15 +428,7 @@ nsLog::Flush(void)
 {
     nsAutoMonitor monitor(gLogMonitor);
     
-    return mSink->Flush();
-}
-
-NS_IMETHODIMP
-nsLog::PrintEvent(nsLogEvent& event)
-{
-    nsAutoMonitor monitor(gLogMonitor);
-    
-    return mSink->PrintEvent(event);
+    return mSink->Flush(this);
 }
 
 NS_IMETHODIMP
@@ -447,7 +445,7 @@ nsLog::DecreaseIndent()
 {
     nsAutoMonitor monitor(gLogMonitor);
     
-//    PR_ASSERT(mIndentLevel > 0);      // XXX layout is having trouble
+    PR_ASSERT(mIndentLevel > 0);
     if (mIndentLevel == 0)
         return NS_ERROR_FAILURE;
     mIndentLevel--;
@@ -465,6 +463,7 @@ NS_IMETHODIMP
 nsLog::Describe(nsILog* out)
 {
     nsresult rv;
+#if 0
     const char* levelName;
     switch (mEnabledLevel) {
       case nsILog::LEVEL_NEVER:  levelName = "NEVER"; break;
@@ -474,126 +473,17 @@ nsLog::Describe(nsILog* out)
       case nsILog::LEVEL_DBG:    levelName = "DBG"; break;
       default:                   levelName = "<unknown>"; break;
     }
+#endif
     char* dest = nsnull;
     rv = mSink->GetDestinationName(&dest);
     if (NS_FAILED(rv)) {
         dest = nsCRT::strdup("<unknown>");
     }
-    NS_LOG(out, STDOUT, ("  %-20.20s %-8.8s %s\n", mName, levelName, dest));
+//    NS_LOG(out, ("  %-20.20s %-8.8s %s\n", mName, levelName, dest));
+    PRBool enabled = mControlFlags & nsILog::DEFAULT_ENABLED;
+    NS_LOG_PRINTF(out)("%-20.20s %-8.8s %s\n", 
+                       mName, (enabled ? "yes" : "no"), dest);
     if (dest) nsCRT::free(dest);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::BeginTiming(void)
-{
-    nsTimingData* data;
-    if (mControlFlags & TIMING_PER_THREAD) {
-        data = (nsTimingData*)PR_GetThreadPrivate(mThreadTimingDataIndex);
-        if (data == nsnull) {
-            data = new nsTimingData;
-            if (data == nsnull) 
-                return NS_ERROR_OUT_OF_MEMORY;
-            PRStatus status = PR_SetThreadPrivate(mThreadTimingDataIndex, data);
-            if (status != PR_SUCCESS)
-                return NS_ERROR_FAILURE;
-        }
-    }
-    else {
-        data = &mTimingData;
-    } 
-
-    PR_ASSERT(data->mStartTime == 0);
-    if (data->mStartTime != 0)
-        return NS_ERROR_FAILURE;
-    data->mStartTime = PR_IntervalNow();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::EndTiming(PRIntervalTime *elapsedTime)
-{
-    nsTimingData* data;
-    if (mControlFlags & TIMING_PER_THREAD)
-        data = (nsTimingData*)PR_GetThreadPrivate(mThreadTimingDataIndex);
-    else
-        data = &mTimingData;
-    
-    PR_ASSERT(data->mStartTime != 0);
-    if (data->mStartTime == 0)
-        return NS_ERROR_FAILURE;
-    PRIntervalTime elapsed = PR_IntervalNow();
-    elapsed -= data->mStartTime;
-    data->mStartTime = 0;
-    data->mTimingSamples++;
-    data->mTotalTime += elapsed;
-    data->mTotalSquaredTime += elapsed * elapsed;
-    *elapsedTime = elapsed;
-
-    if (mControlFlags & TIMING_PER_THREAD) {
-        // dump per-thread data into per-log data:
-        mTimingData.mTotalTime += data->mTotalTime;
-        mTimingData.mTotalSquaredTime += data->mTotalSquaredTime;
-        mTimingData.mTimingSamples += data->mTimingSamples;
-
-        // destroy TLS:
-        PRStatus status = PR_SetThreadPrivate(mThreadTimingDataIndex, nsnull);
-        if (status != PR_SUCCESS)
-            return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::GetTimingStats(PRUint32 *sampleSize,
-                      double *meanTime,
-                      double *stdDevTime)
-{
-    *sampleSize = mTimingData.mTimingSamples;
-    double mean = mTimingData.mTotalTime / mTimingData.mTimingSamples;
-    *meanTime = (PRIntervalTime)mean;
-    double variance = fabs(mTimingData.mTotalSquaredTime / mTimingData.mTimingSamples - mean * mean);
-    *stdDevTime = sqrt(variance);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::DescribeTiming(nsILog* out, const char* msg)
-{
-    nsresult rv;
-    
-    PR_ASSERT(mTimingData.mStartTime == 0);
-    if (mTimingData.mStartTime != 0) {
-        NS_LOG(this, STDOUT, ("%s: TIMING ERROR\n", msg));
-        return NS_ERROR_FAILURE;
-    }
-
-    PRUint32 realTimeSamples;
-    double realTimeMean, realTimeStdDev;
-    rv = GetTimingStats(&realTimeSamples, &realTimeMean, &realTimeStdDev);
-    if (NS_FAILED(rv)) return rv;
-    PRUint32 tps = PR_TicksPerSecond();
-    if (realTimeSamples > 1) {
-        NS_LOG(out, STDOUT, ("%s: %.2f +/- %.2f ms (%d samples)\n", 
-                             msg,
-                             realTimeMean * 1000 / tps,
-                             realTimeStdDev * 1000 / tps,
-                             realTimeSamples));
-    }
-    else {
-        NS_LOG(out, STDOUT, ("%s: %.2f ms\n", 
-                             msg, realTimeMean * 1000 / tps));
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLog::ResetTiming(void)
-{
-    PR_ASSERT(mTimingData.mStartTime == 0);
-    mTimingData.mTotalTime = 0;
-    mTimingData.mTotalSquaredTime = 0;
-    mTimingData.mTimingSamples = 0;
     return NS_OK;
 }
 
@@ -635,43 +525,58 @@ nsLog::SetLogEventSink(nsILogEventSink* sink)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLogEvent
+// nsLog
 
-nsresult
-nsLogEvent::Printf(const char* format, ...)
+NS_IMETHODIMP
+nsLog::Printf(const char* format, ...)
 {
-    if (mMessage == nsnull) {
-        va_list args;
-        va_start(args, format);
-        mMessage = PR_vsmprintf(format, args);
-        va_end(args);
-    }
-    return mLog->PrintEvent(*this);
+    nsAutoMonitor monitor(gLogMonitor);
+    
+    va_list args;
+    va_start(args, format);
+    const char* msg = PR_vsmprintf(format, args);
+    va_end(args);
+    return mSink->Print(this, msg);
 }
 
-nsresult
-nsLogEvent::Vprintf(const char* format, va_list args)
+NS_IMETHODIMP
+nsLog::Vprintf(const char* format, va_list args)
 {
-    if (mMessage == nsnull) {
-        mMessage = PR_vsmprintf(format, args);
-    }
-    return mLog->PrintEvent(*this);
+    nsAutoMonitor monitor(gLogMonitor);
+    
+    const char* msg = PR_vsmprintf(format, args);
+    return mSink->Print(this, msg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsStandardLogEventSink 
+// nsLogIndent
 
-nsStandardLogEventSink::nsStandardLogEventSink()
+nsLogIndent::nsLogIndent(nsILog* log, const char* msg)
+    : mLog(log), mHeaderMsg(msg)
+{
+    if (mHeaderMsg) mLog->Printf("[ Begin %s", mHeaderMsg);
+    (void)mLog->IncreaseIndent();
+}
+
+nsLogIndent::~nsLogIndent()
+{
+    (void)mLog->DecreaseIndent();
+    if (mHeaderMsg) mLog->Printf("] End   %s", mHeaderMsg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsFileLogEventSink 
+
+nsFileLogEventSink::nsFileLogEventSink()
     : mName(nsnull),
       mOutput(nsnull),
-      mDebugLevel(nsILog::LEVEL_NEVER),
       mBeginningOfLine(PR_TRUE),
       mCloseFile(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
 
-nsStandardLogEventSink::~nsStandardLogEventSink()
+nsFileLogEventSink::~nsFileLogEventSink()
 {
     if (mCloseFile) {
         ::fclose(mOutput);
@@ -680,19 +585,19 @@ nsStandardLogEventSink::~nsStandardLogEventSink()
     if (mName) nsCRT::free(mName);
 }
 
-NS_IMPL_ISUPPORTS2(nsStandardLogEventSink, 
-                   nsIStandardLogEventSink,
+NS_IMPL_ISUPPORTS2(nsFileLogEventSink, 
+                   nsIFileLogEventSink,
                    nsILogEventSink)
 
 NS_IMETHODIMP
-nsStandardLogEventSink::GetDestinationName(char* *result)
+nsFileLogEventSink::GetDestinationName(char* *result)
 {
     *result = nsCRT::strdup(mName);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsStandardLogEventSink::Init(const char* filePath, PRUint32 levelForDebugOutput)
+nsFileLogEventSink::Init(const char* filePath)
 {
     FILE* filePtr;
     if (nsCRT::strcmp(filePath, "1") == 0) {
@@ -707,73 +612,64 @@ nsStandardLogEventSink::Init(const char* filePath, PRUint32 levelForDebugOutput)
             return NS_ERROR_FAILURE;
         mCloseFile = PR_TRUE;
     }
-    return InitFromFILE(filePath, filePtr, levelForDebugOutput);
+    return InitFromFILE(filePath, filePtr);
 }
 
 NS_IMETHODIMP
-nsStandardLogEventSink::InitFromFILE(const char* name, FILE* filePtr, PRUint32 levelForDebugOutput)
+nsFileLogEventSink::InitFromFILE(const char* name, FILE* filePtr)
 {
     mOutput = filePtr;
-    mDebugLevel = levelForDebugOutput;
     mName = nsCRT::strdup(name);
     return mName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsStandardLogEventSink::PrintEvent(nsLogEvent& event)
+nsFileLogEventSink::Print(nsILog* log, const char* msg)
 {
     nsresult rv;
-    nsILog* log = event.GetLog();
-    PRUint32 level = event.GetLevel();
-    const char* msg = event.GetMsg();
 
-    if (level == nsILog::LEVEL_NEVER) 
-        return NS_OK;
-
-    // do debug output first
-    if (level <= mDebugLevel) {
-#ifdef XP_PC
-        OutputDebugString(msg);
-#elif defined(XP_MAC)
-        {
-#           define BUF_SIZE 1024
-            char buf[BUF_SIZE];
-            PRUint32 len =
-                PL_snprintf(buf+1, BUF_SIZE-1, "ERROR: %s", msg);
-            buf[0] = (char) (len > 255 ? 255 : len);
-            DebugStr(StringPtr(buf));
-        }
-#endif
-    }
-
-    if (!log->Test(level))
+    if (!NS_LOG_ENABLED(log))
         return NS_OK;
 
     nsAutoMonitor monitor(gLogMonitor);
     
+    // do debug output first
+#ifdef XP_PC
+    OutputDebugString(msg);
+#elif defined(XP_MAC)
+    {
+#       define BUF_SIZE 1024
+        char buf[BUF_SIZE];
+        PRUint32 len =
+            PR_snprintf(buf+1, BUF_SIZE-1, "%s", msg);
+        buf[0] = (char) (len > 255 ? 255 : len);
+        DebugStr(StringPtr(buf));
+    }
+#endif
+
     if (!mBeginningOfLine) {
         ::fputc('\n', mOutput);
+        mBeginningOfLine = PR_TRUE;
     }
 
     // print preamble
-    char levels[] = { 'X', 'E', 'W', ' ', 'D' };
     PRUint32 flags;
     rv = log->GetControlFlags(&flags);
     if (NS_FAILED(rv)) return rv;
+
     if (flags & nsILog::PRINT_THREAD_ID) {
-        ::fprintf(mOutput, "%8x ", PR_CurrentThread());
-    }
-    else {
-        ::fprintf(mOutput, "%8s ", "");
+        ::fprintf(mOutput, "%8x ", (PRInt32)PR_CurrentThread());
+        mBeginningOfLine = PR_FALSE;
     }
 
-    char* name;
-    rv = log->GetName(&name);
-    ::fprintf(mOutput, "%-8.8s %c ",
-              flags & nsILog::PRINT_LOG_NAME ? name : "",
-              flags & nsILog::PRINT_LEVEL ? levels[level] : ' ');
-    nsCRT::free(name);
-    mBeginningOfLine = PR_FALSE;
+    if (flags & nsILog::PRINT_LOG_NAME) {
+        char* name;
+        rv = log->GetName(&name);
+        ::fprintf(mOutput, "%-8.8s ",
+                  flags & nsILog::PRINT_LOG_NAME ? name : "");
+        nsCRT::free(name);
+        mBeginningOfLine = PR_FALSE;
+    }
 
     PRUint32 indentLevel;
     rv = log->GetIndentLevel(&indentLevel);
@@ -782,7 +678,8 @@ nsStandardLogEventSink::PrintEvent(nsLogEvent& event)
       indent:
         // do indentation
         for (PRUint32 i = 0; i < indentLevel; i++) {
-            ::fputs("|  ", mOutput);
+            ::fprintf(mOutput, "|  ");
+            mBeginningOfLine = PR_FALSE;
         }
 
         char c;
@@ -795,20 +692,29 @@ nsStandardLogEventSink::PrintEvent(nsLogEvent& event)
                     break;
                 }
                 else {
-                    ::fputs("\n                    ", mOutput);
+                    ::fprintf(mOutput, "\n                    ");
+                    mBeginningOfLine = PR_FALSE;
                     goto indent;
                 }
               default:
                 ::fputc(c, mOutput);
+                mBeginningOfLine = PR_FALSE;
             }
         }
     } while (0);
+
+    if (!mBeginningOfLine) {
+        ::fputc('\n', mOutput);
+        mBeginningOfLine = PR_TRUE;
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStandardLogEventSink::Flush()
+nsFileLogEventSink::Flush(nsILog* log)
 {
+    nsAutoMonitor monitor(gLogMonitor);
+    
     ::fflush(mOutput);
     return NS_OK;
 }

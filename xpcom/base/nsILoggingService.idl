@@ -23,125 +23,18 @@
 /**
  * LOGGING SERVICE
  *
- * We all know and love PR_LOG, but let's face it, it has some deficiencies:
- *      - can't direct output for different logs to different places,
- *      - isn't scriptable,
- *      - can't control printing format, including indentation,
- *      - no facilities for interval timing.
- * We've solved these problems with NS_LOG, the new modern equivalent. Here's
- * how you use it:
- *
- *     // First declare a new log:
- *     NS_DECL_LOG(Foo);
- *
- *     void main() {
- *         nsresult rv;
- *
- *         // Initialize the log somewhere in your startup code:
- *         NS_INIT_LOG(Foo, &rv);
- *
- *         // Then use it like this:
- *         NS_LOG(Foo, OUT, ("hello world"));
- *     }
- *
- * The above log statement will print something like this:
- *
- *     a33e50 Foo         hello world
- *
- * The hex number at the beginning of the line indicates the ID of the thread
- * executing the NS_LOG statement. The name of the log appears next. And if
- * the constant ERROR, WARN, or DBG had appeared instead of OUT in the NS_LOG
- * statement, the character 'E', 'W' or 'D' would have appeared before the
- * message to indicate the type of log statement. The level displayed can
- * be controlled by calling SetLevel on the log.
- *
- *     // You can also cause it to indent its output to help you log recursive execution:
- *     int fact(int n) {
- *        NS_LOG_WITH_INDENT(Foo, "fact");
- *        NS_LOG(Main, ERROR, ("calling fact of %d\n", n));
- *        if (n == 0) return 1;
- *        int result = n * fact(n - 1);
- *        NS_LOG(Foo, DBG, ("fact of %d is %d\n", n, result));
- *        return result;
- *     }
- *
- * Calling fact(3) will produce a log that looks like this:
- *
- *     a33e50 Foo       D |  calling fact of 3
- *     a33e50 Foo       D |  |  calling fact of 2
- *     a33e50 Foo       D |  |  |  calling fact of 1
- *     a33e50 Foo       D |  |  |  |  calling fact of 0
- *     a33e50 Foo       D |  |  |  fact of 1 is 1
- *     a33e50 Foo       D |  |  fact of 2 is 2
- *     a33e50 Foo       D |  fact of 3 is 6
- *
- * You can compute elapsed time for a series of runs, and then ask the log for
- * statistical information on them:
- *
- *     void TestTiming() {
- *         for (int i = 0; i < 100; i++) {
- *             NS_LOG_BEGIN_TIMING(Foo);
- *             CallTestToTime();
- *             PRIntervalTime elapsed;
- *             NS_LOG_END_TIMING(Foo, &elapsed);
- *             NS_LOG(Foo, OUT, ("time for this run: %f\n", elapsed));
- *         }
- *     #ifdef NS_ENABLE_LOGGING
- *         PRUint32 samples;
- *         double mean, stdDev;
- *         Foo->GetTimingStats(&samples, &mean, &stdDev);
- *         printf("samples: %d, mean: %f, standard deviation: %f\n",
- *                samples, mean, stdDev);
- *     #endif
- *     }
- *
- * You can control where the output of the log goes by setting its
- * log event sink to an appropriate nsILogEventSink. By default the
- * standard log event sink does the following:
- *      - outputs to stderr
- *      - outputs to the platform's debug output for errors
- * New log event sinks can be instantiated via the component manager:
- *
- *     nsComponentManager::CreateInstance(kStandardLogEventSinkCID,
- *                                        nsnull, NS_GET_IID(nsIStandardLogEventSink),
- *                                        &logEventSink);
- *     logEventSink->Init(stdout,               // stdout instead of stderr
- *                        nsILog::LEVEL_WARN);  // level to log to debug output
- *     Foo->SetLogEventSink(logEventSink);
- *
- * or the application can implement its own nsILogEventSink.
+ * See notes at the top of nslog.h for C++ usage.
  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "nsISupports.idl"
-
 %{C++
-
-#include "prlog.h" // include prlog.h because we're going to override it's ancient macros
 #include "prprf.h"
 #include "prinrval.h"
-#include "nsDebug.h"
-#include "nsIServiceManager.h"
 #include <stdio.h>
-
-#if (defined(DEBUG) || defined(NS_DEBUG) || defined(FORCE_PR_LOG)) && !defined(WIN16)
-// enable logging by default
-#define NS_ENABLE_LOGGING
-#endif
-
-#ifdef NS_DISABLE_LOGGING
-// override, if you want DEBUG, but *not* logging (for some reason)
-#undef NS_ENABLE_LOGGING
-#endif
-
-#ifdef NS_ENABLE_LOGGING
-
-class nsLogEvent;
-
 %}
 
-[ref] native nsLogEvent(nsLogEvent);
+#include "nsISupports.idl"
 
 typedef unsigned long PRIntervalTime;
 
@@ -152,29 +45,26 @@ interface nsILog;
 [scriptable, uuid(28efb190-b114-11d3-93b6-00104ba0fd40)]
 interface nsILogEventSink : nsISupports
 {
-    [noscript] void printEvent(in nsLogEvent event);
-    void flush();
     readonly attribute string destinationName;
+    void print(in nsILog log, in string msg);
+    void flush(in nsILog log);
 };
 
 [ptr] native FILE(FILE);
 
-interface nsIStandardLogEventSink : nsILogEventSink
+interface nsIFileLogEventSink : nsILogEventSink
 {
     /**
      * @param filePath - a native path to a log file,
      *                   or if "1", stdout, 
      *                   or if "2", stderr.
      */
-    void init(in string filePath,
-              in unsigned long levelForDebugOutput);
-    [noscript] void initFromFILE(in string name,
-                                 in FILE filePtr,
-                                 in unsigned long levelForDebugOutput);
+    void init(in string filePath);
+    [noscript] void initFromFILE(in string name, in FILE filePtr);
 };
 
 %{C++
-#define NS_STANDARDLOGEVENTSINK_CID                  \
+#define NS_FILELOGEVENTSINK_CID                  \
 { /* 0ebdebe0-b14a-11d3-93b6-00104ba0fd40 */         \
     0x0ebdebe0,                                      \
     0xb14a,                                          \
@@ -182,8 +72,8 @@ interface nsIStandardLogEventSink : nsILogEventSink
     {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-#define NS_STANDARDLOGEVENTSINK_CONTRACTID          "@mozilla.org/standard-log-event-sink;1"
-#define NS_STANDARDLOGEVENTSINK_CLASSNAME       "Standard Log Event Sink"
+#define NS_FILELOGEVENTSINK_CONTRACTID      "@mozilla.org/file-log-event-sink;1"
+#define NS_FILELOGEVENTSINK_CLASSNAME       "File Log Event Sink"
 %}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +85,6 @@ interface nsILoggingService : nsISupports
     attribute unsigned long defaultControlFlags;
     attribute nsILogEventSink defaultLogEventSink;
     void describeLogs(in nsILog output);
-    void describeTimings(in nsILog output);
 };
 
 %{C++
@@ -207,7 +96,7 @@ interface nsILoggingService : nsISupports
     {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-#define NS_LOGGINGSERVICE_CONTRACTID        "@mozilla.org/logging-service;1"
+#define NS_LOGGINGSERVICE_CONTRACTID    "@mozilla.org/logging-service;1"
 #define NS_LOGGINGSERVICE_CLASSNAME     "Logging Service"
 %}
 
@@ -218,29 +107,12 @@ interface nsILog : nsISupports
 {
     readonly attribute string name;
 
-    const unsigned long LEVEL_NEVER     = 0;
-    const unsigned long LEVEL_ERROR     = 1;
-    const unsigned long LEVEL_WARN      = 2;
-    const unsigned long LEVEL_STDOUT    = 3;
-    const unsigned long LEVEL_DBG       = 4;
-
-    attribute unsigned long level;
-
-    // Backward compatibility with PR_LOG -- don't use explicitly!
-    const unsigned long LEVEL_PR_LOG_NONE       = LEVEL_NEVER;
-    const unsigned long LEVEL_PR_LOG_ERROR      = LEVEL_ERROR;
-    const unsigned long LEVEL_PR_LOG_WARNING    = LEVEL_WARN;
-    const unsigned long LEVEL_PR_LOG_ALWAYS     = LEVEL_STDOUT;
-    const unsigned long LEVEL_PR_LOG_DEBUG      = LEVEL_DBG;
-
     ////////////////////////////////////////////////////////////////////////////
     // Printing Routines
 
-    boolean enabled(in unsigned long level);
-    void print(in unsigned long level, in wstring message);
+    boolean enabled();
+    void print(in wstring message);
     void flush();
-
-    [noscript] void printEvent(in nsLogEvent event);
 
     void increaseIndent();
     void decreaseIndent();
@@ -249,23 +121,12 @@ interface nsILog : nsISupports
     void describe(in nsILog outLog);
 
     ////////////////////////////////////////////////////////////////////////////
-    // Timing Routines
-
-    void beginTiming();
-    PRIntervalTime endTiming();
-    void getTimingStats(out unsigned long sampleSize,
-                        out double meanTime,
-                        out double stdDevTime);
-    void describeTiming(in nsILog outLog, in string msg);
-    void resetTiming();
-
-    ////////////////////////////////////////////////////////////////////////////
     // Control Routines
 
-    const unsigned long PRINT_THREAD_ID         = 1 << 0;
-    const unsigned long PRINT_LOG_NAME          = 1 << 1;
-    const unsigned long PRINT_LEVEL             = 1 << 2;
-    const unsigned long TIMING_PER_THREAD       = 1 << 3;
+    const unsigned long DEFAULT_DISABLED        = 0 << 0;
+    const unsigned long DEFAULT_ENABLED         = 1 << 1;
+    const unsigned long PRINT_THREAD_ID         = 1 << 2;
+    const unsigned long PRINT_LOG_NAME          = 1 << 3;
 
     attribute unsigned long controlFlags;
 
@@ -281,160 +142,12 @@ interface nsILog : nsISupports
     // implementation to implement this part.)
 %{C++
     public:
-        PRBool Test(PRUint32 level) { return mEnabledLevel >= level; }
+        inline PRBool Test() { return mControlFlags & DEFAULT_ENABLED; }
+        NS_IMETHOD Printf(const char* format, ...) = 0;
+        NS_IMETHOD Vprintf(const char* format, va_list args) = 0;
     protected:
-        PRUint32 mEnabledLevel;
+        PRUint32 mControlFlags;
 %}
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-%{C++
-
-/**
- * nsLogEvent: This little closure class is used to capture the log
- * level so that the NS_LOG macro is more manageable. 
- */
-class NS_COM nsLogEvent
-{
-public:
-    nsLogEvent(nsILog* log, PRUint32 level)
-        : mLog(log), mLevel(level), mMessage(nsnull) {
-    }
-    ~nsLogEvent() {
-        if (mMessage) PR_smprintf_free(mMessage);
-    }
-
-    nsresult Printf(const char* format, ...);
-    nsresult Vprintf(const char* format, va_list args);
-
-    nsILog* GetLog() { return mLog; }
-    PRUint32 GetLevel() { return mLevel; }
-    const char* GetMsg() { return mMessage; }
-
-protected:
-    nsILog*     mLog;
-    PRUint32    mLevel;
-    char*       mMessage;
-};
-
-/**
- * nsLogIndent: This class allows indentation to occur in a block scope. The
- * automatic destructor takes care of resetting the indentation. Use the
- * NS_LOG_WITH_INDENT macro.
- */
-class NS_COM nsLogIndent
-{
-public:
-    nsLogIndent(nsILog* log, const char* msg) : mLog(log), mMsg(msg) {
-        nsLogEvent(mLog, nsILog::LEVEL_STDOUT).Printf("[ Begin %s", mMsg);
-        mLog->IncreaseIndent();
-    }
-    ~nsLogIndent() {
-        mLog->DecreaseIndent();
-        nsLogEvent(mLog, nsILog::LEVEL_STDOUT).Printf("] End   %s", mMsg);
-    }
-protected:
-    nsILog*     mLog;
-    const char* mMsg;
-};
-
-/**
- * nsLogTiming: This class allows timing to occur in a block scope. The
- * automatic destructor takes care of stopping the timing. Use the
- * NS_LOG_WITH_TIMING macro.
- */
-class NS_COM nsLogTiming
-{
-public:
-    nsLogTiming(nsILog* log) : mLog(log) {
-        mLog->BeginTiming();
-    }
-    ~nsLogTiming() {
-        PRIntervalTime elapsed;
-        mLog->EndTiming(&elapsed);
-    }
-protected:
-    nsILog*     mLog;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define NS_DECL_LOG(_log)                                                    \
-    nsILog* _log
-
-#define NS_INIT_LOG(_log)                                                    \
-    PR_BEGIN_MACRO                                                           \
-    if (_log == nsnull) {                                                    \
-        nsresult _rv;                                                        \
-        static NS_DEFINE_CID(kLoggingServiceCID, NS_LOGGINGSERVICE_CID);     \
-        NS_WITH_SERVICE(nsILoggingService, _serv, kLoggingServiceCID, &_rv); \
-        if (NS_SUCCEEDED(_rv)) {                                             \
-            _rv = _serv->GetLog(#_log, &_log);                               \
-            PR_ASSERT(NS_SUCCEEDED(_rv));                                    \
-        }                                                                    \
-    }                                                                        \
-    PR_END_MACRO
-
-#define NS_LOG_TEST(_log, _level)                                            \
-    ((_log)->Test(nsILog::LEVEL_##_level))
-
-#define NS_LOG(_log, _level, _printfArgs)                                    \
-    PR_BEGIN_MACRO                                                           \
-      if (NS_LOG_TEST(_log, _level)) {                                       \
-          nsLogEvent(_log, nsILog::LEVEL_##_level)                           \
-            .Printf _printfArgs;                                             \
-      }                                                                      \
-    PR_END_MACRO
-
-#define NS_DEFINE_LOG(_log, _level)                                          \
-    (!NS_LOG_TEST(_log, _level))                                             \
-        ? NS_OK                                                              \
-        : nsLogEvent(_log, nsILog::LEVEL_##_level).Printf
-
-#define NS_LOG_FLUSH(_log)                ((_log)->Flush())
-
-#define NS_LOG_WITH_INDENT(_log, _msg)    nsLogIndent _indent_##_log(_log, _msg)
-#define NS_LOG_BEGIN_INDENT(_log)         ((_log)->IncreaseIndent())
-#define NS_LOG_END_INDENT(_log)           ((_log)->DecreaseIndent())
-
-#define NS_LOG_WITH_TIMING(_log)          nsLogTiming _timing_##_log(_log)
-#define NS_LOG_BEGIN_TIMING(_log)         ((_log)->BeginTiming())
-#define NS_LOG_END_TIMING(_log, _elapsed) ((_log)->EndTiming(_elapsed))
-#define NS_LOG_DESCRIBE_TIMING(_log,_msg) ((_log)->DescribeTiming(_msg))
-#define NS_LOG_RESET_TIMING(_log)         ((_log)->ResetTiming())
-
-#else  // !NS_ENABLE_LOGGING
-
-#define NS_DECL_LOG(_log)                 void _not_used() // something that can be used with extern 
-#define NS_INIT_LOG(_log)                 ((void)0)
-#define NS_LOG_TEST(_module, _level)      0
-#define NS_LOG(_module, _level, _args)    ((void)0)
-#define NS_DEFINE_LOG(_log, _level)       NS_OK
-#define NS_LOG_FLUSH(_log)                NS_OK
-#define NS_LOG_WITH_INDENT(_log, _msg)    ((void)0)
-#define NS_LOG_BEGIN_INDENT(_log)         ((void)0)
-#define NS_LOG_END_INDENT(_log)           ((void)0)
-#define NS_LOG_WITH_TIMING(_log)          ((void)0)
-#define NS_LOG_BEGIN_TIMING(_log)         ((void)0)
-#define NS_LOG_END_TIMING(_log, _elapsed) (*(_elapsed) = 0)
-#define NS_LOG_DESCRIBE_TIMING(_log,_msg) NS_OK
-#define NS_LOG_RESET_TIMING(_log)         NS_OK
-
-#endif // !NS_ENABLE_LOGGING
-
-// Redefine NSPR's logging system:
-#undef  PR_LOG_TEST
-#define PR_LOG_TEST     NS_LOG_TEST
-#undef  PR_LOG
-#define PR_LOG          NS_LOG
-#define PRLogModuleInfo #error use_NS_DECL_LOG_instead
-#define PR_NewLogModule #error use_NS_INIT_LOG_instead
-#undef  PR_ASSERT
-#define PR_ASSERT(x)    NS_ASSERTION(x, #x)
-#define printf          use_NS_DECL_LOG_instead
-#define fprintf         use_NS_DECL_LOG_instead
-
-%}
 
 ////////////////////////////////////////////////////////////////////////////////

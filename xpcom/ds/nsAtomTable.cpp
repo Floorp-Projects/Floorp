@@ -26,6 +26,11 @@
 #include "nsCRT.h"
 #include "plhash.h"
 #include "nsISizeOfHandler.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsAtomTableLog)
+#define PRINTF NS_LOG_PRINTF(nsAtomTableLog)
+#define FLUSH  NS_LOG_FLUSH(nsAtomTableLog)
 
 /**
  * The shared hash table for atom lookups.
@@ -53,8 +58,8 @@ NS_COM void NS_PurgeAtomTable(void)
   if (gAtomHashTable) {
 #if defined(DEBUG) && (defined(XP_UNIX) || defined(XP_PC))
     if (gAtoms) {
-      if (getenv("MOZ_DUMP_ATOM_LEAKS")) {
-        printf("*** leaking %d atoms\n", gAtoms);
+      if (NS_LOG_ENABLED(nsAtomTableLog)) {
+        PRINTF("*** leaking %d atoms\n", gAtoms);
         PL_HashTableEnumerateEntries(gAtomHashTable, DumpAtomLeaks, 0);
       }
     }
