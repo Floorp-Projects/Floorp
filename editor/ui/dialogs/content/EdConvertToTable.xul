@@ -53,7 +53,7 @@
     <radio group="SepRadioGroup" id="space"    label="&spaceRadio.label;"    oncommand="SelectCharacter('1');"/>
     <box autostretch="never">
       <radio group="SepRadioGroup" id="other"  label="&otherRadio.label;"    oncommand="SelectCharacter('2');"/>
-      <textbox class="narrow" id="SepCharacterInput" oninput="LimitStringLength(this.id, 1)"/>
+      <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
     </box>
   </radiogroup> 
   <spring class="spacer"/>
