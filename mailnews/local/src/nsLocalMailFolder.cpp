@@ -1844,12 +1844,14 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   nsXPIDLCString userName;
   rv = url->GetPreHost(getter_Copies(userName));
   if (NS_FAILED(rv)) return "";
-  nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+  if ((const char *) userName)
+	nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
 
   nsXPIDLCString hostName;
   rv = url->GetHost(getter_Copies(hostName));
   if (NS_FAILED(rv)) return "";
-  nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
+  if ((const char *) hostName)
+	nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
 
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
                   NS_MSGACCOUNTMANAGER_PROGID, &rv);
