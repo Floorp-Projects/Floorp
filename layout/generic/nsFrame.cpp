@@ -876,7 +876,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
 
   //return offset;
   aAcutalContentOffset = 0;
-  aOffset = -1;
+  aOffset = 0;
 
   return NS_OK;
 }
