@@ -2219,12 +2219,22 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     // "containment" arcs out of the element's resource.
     nsresult rv;
 
-    // See if the item is even "open". If not, then just pretend it
+    // If it's XUL, then see if the item is even "open" (HTML content
+    // must be generated eagerly). If not, then just pretend it
     // doesn't have _any_ contents. We check this _before_ checking
     // the contents-generated attribute so that we don't eagerly set
     // contents-generated on a closed node.
-    if (!IsOpen(aElement))
-        return NS_OK;
+    {
+        PRInt32 nameSpaceID;
+        rv = aElement->GetNameSpaceID(nameSpaceID);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace ID");
+        if (NS_FAILED(rv)) return rv;
+
+        if (nameSpaceID == kNameSpaceID_XUL) {
+            if (! IsOpen(aElement))
+                return NS_OK;
+        }
+    }
 
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
@@ -2618,17 +2628,13 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
 {
     nsresult rv;
 
-    // needs to be a the valid insertion root or an item to begin with.
-    PRInt32 nameSpaceID;
-    if (NS_FAILED(rv = aElement->GetNameSpaceID(nameSpaceID))) {
-        NS_ERROR("unable to get namespace ID");
-        return PR_FALSE;
-    }
+    nsCOMPtr<nsIAtom> tag;
+    rv = aElement->GetTag(*getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv;
 
-    if (nameSpaceID != kNameSpaceID_XUL)
-        return PR_TRUE;
-
-    if (aElement == mRoot.get())
+    // Treat the 'root' element as always open, -unless- it's a
+    // menu/menupopup. We don't need to "fake" these as being open.
+    if ((aElement == mRoot.get()) && (tag.get() != kMenuAtom))
       return PR_TRUE;
 
     nsAutoString value;
