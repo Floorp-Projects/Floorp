@@ -78,26 +78,10 @@
 
 		<treehead>
 			<treerow>
-				<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');">
-					<observes element="NameColumn" attribute="sortActive"/>
-					<observes element="NameColumn" attribute="sortDirection"/>
-					&name.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#Relevance" onclick="return doSort('RelevanceColumn');" sortActive="true" sortDirection="descending" >
-					<observes element="RelevanceColumn" attribute="sortActive"/>
-					<observes element="RelevanceColumn" attribute="sortDirection"/>
-					&relevance.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#Site" onclick="return doSort('SiteColumn');">
-					<observes element="SiteColumn" attribute="sortActive"/>
-					<observes element="SiteColumn" attribute="sortDirection"/>
-					&site.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#Engine" onclick="return doSort('EngineColumn');">
-					<observes element="EngineColumn" attribute="sortActive"/>
-					<observes element="EngineColumn" attribute="sortDirection"/>
-					&engine.column.label;
-				</treecell>
+				<treecell value="&name.column.label;" observes="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" />
+				<treecell value="&relevance.column.label;" observes="RelevanceColumn" resource="http://home.netscape.com/NC-rdf#Relevance" onclick="return doSort('RelevanceColumn');" sortActive="true" sortDirection="descending" />
+				<treecell value="&site.column.label;" observes="SiteColumn" resource="http://home.netscape.com/NC-rdf#Site" onclick="return doSort('SiteColumn');" />
+				<treecell value="&engine.column.label;" observes="EngineColumn" resource="http://home.netscape.com/NC-rdf#Engine" onclick="return doSort('EngineColumn');" />
 			</treerow>
 		</treehead>
 	</tree>
