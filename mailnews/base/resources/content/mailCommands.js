@@ -422,6 +422,69 @@ const nsIJunkMailPlugin = Components.interfaces.nsIJunkMailPlugin;
 const nsIMsgDBHdr = Components.interfaces.nsIMsgDBHdr;
 
 var gJunkmailComponent;
+var gJunkKeys = [];
+var gJunkTargetFolder;
+
+function saveJunkMsgForAction(aServer, aMsgURI, aClassification)
+{
+  // we only care when the message gets marked as junk
+  if (aClassification == nsIJunkMailPlugin.GOOD)
+    return;
+ 
+  var spamSettings = aServer.spamSettings
+ 
+  // if the spam feature is disabled,
+  // or if the move functionality is turned off, bail out.
+  // the user could still run the JMC manually,
+  // but let's not move in that scenario
+  if (!spamSettings.level || !spamSettings.moveOnSpam)
+    return;   
+  
+  var msgHdr = messenger.messageServiceFromURI(aMsgURI).messageURIToMsgHdr(aMsgURI);
+  
+  // don't move if we are already in the junk folder
+  if (msgHdr.folder.flags & MSG_FOLDER_FLAG_JUNK)
+    return;
+ 
+  var spamFolderURI = spamSettings.spamFolderURI;
+  if (!spamFolderURI)
+    return;
+  
+  var spamFolder = GetMsgFolderFromUri(spamFolderURI);
+
+  if (spamFolder) 
+  {
+    gJunkKeys[gJunkKeys.length] = msgHdr.messageKey;
+    gJunkTargetFolder = spamFolder;
+  }
+}
+
+function performActionOnJunkMsgs()
+{
+  if (!gJunkKeys.length)
+  {
+    gJunkTargetFolder = [];
+    return;
+  }
+
+  var indices = new Array(gJunkKeys.length);
+  for (var i=0;i<gJunkKeys.length;i++)
+    indices[i] = gDBView.findIndexFromKey(gJunkKeys[i], true /* expand */);
+
+  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+  var treeSelection = treeView.selection;
+  treeSelection.clearSelection();
+   
+  // select the messages
+  for (i=0;i<indices.length;i++)
+    treeSelection.rangedSelect(indices[i], indices[i], true /* augment */);
+
+  SetNextMessageAfterDelete();  
+  gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, gJunkTargetFolder);
+  
+  gJunkKeys = [];
+  gJunkTargetFolder = null;
+}
 
 function getJunkmailComponent()
 {
@@ -453,6 +516,7 @@ function analyze(aMsgHdr, aNextFunction)
             db.setStringProperty(aMsgHdr.messageKey, "junkscore", score);
             db.setStringProperty(aMsgHdr.messageKey, "junkscoreorigin", 
                                  "plugin");
+            saveJunkMsgForAction(aMsgHdr.folder.server, aMsgURI, aClassification);
             aNextFunction();
         }
     };
@@ -520,6 +584,7 @@ function analyzeMessages(messages)
         else {
             dump('[bayesian filter message analysis complete.]\n');
             gJunkmailComponent.endBatch();
+            performActionOnJunkMsgs();
         }
     }
 
