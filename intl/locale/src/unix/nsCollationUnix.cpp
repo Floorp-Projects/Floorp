@@ -19,9 +19,14 @@
 #include  <locale.h>
 #include "prmem.h"
 #include "nsCollationUnix.h"
+#include "nsIComponentManager.h"
+#include "nsLocaleCID.h"
+#include "nsIPosixLocale.h"
 
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 
 NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 
@@ -52,7 +57,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
 
   // store platform locale
-  mLocale.SetString("en_US"); //TODO: get locale from ILocale
+  mLocale.SetString("en_US");
 
   if (locale != nsnull) {
     nsString aLocale;
@@ -61,8 +66,18 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     if (NS_FAILED(res)) {
       return res;
     }
-    //TODO: Use GetPlatformLocale() when it's ready
-    //TODO: Get a charset name from the locale
+
+    nsIPosixLocale* posixLocale;
+    char locale[32];
+    size_t length = 32;
+    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    if (NS_SUCCEEDED(res = posixLocale->GetPlatformLocale(&aCategory, locale, length))) {
+      mLocale.SetString(locale);
+    }
+    posixLocale->Release();
   }
 
   return NS_OK;
