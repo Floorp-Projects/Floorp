@@ -983,6 +983,7 @@ case "$target" in
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
     AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
+    AC_CHECK_LIB(zeta,main,LIBS="$LIBS -lzeta")
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
     _MOZ_USE_RTTI=1
