@@ -173,7 +173,10 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
       if (res != NS_ERROR_UENC_NOMAPPING) break;
     }
 
-    if (i>=4) res = NS_ERROR_UENC_NOMAPPING;
+    if (i>=4) {
+      res = NS_ERROR_UENC_NOMAPPING;
+      src++;
+    }
     if (res != NS_OK) break;
 
     bcw = destEnd - dest;
