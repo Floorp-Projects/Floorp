@@ -103,6 +103,7 @@ static const char kIncludeDefaultsStr[] = "\n"
 "#include \"nsIScriptObjectOwner.h\"\n"
 "#include \"nsIScriptGlobalObject.h\"\n"
 "#include \"nsCOMPtr.h\"\n"
+"#include \"nsDOMPropEnums.h\"\n"
 #ifndef USE_COMPTR
 "#include \"nsIPtr.h\"\n"
 #endif
@@ -476,7 +477,7 @@ static const char kPropCaseBeginStr[] =
 "      case %s_%s:\n"
 "      {\n"
 "        PRBool ok = PR_FALSE;\n"
-"        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", %s, &ok);\n"
+"        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_%s_%s, %s, &ok);\n"
 "        if (!ok) {\n"
 "          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);\n"
 "        }\n";
@@ -551,19 +552,19 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
       any = PR_TRUE;
       
-      char lwr_attr_name[128];
-      strcpy(lwr_attr_name, attr_name);
-      StrLwr(lwr_attr_name);
+      char upr_attr_name[128];
+      strcpy(upr_attr_name, attr_name);
+      StrUpr(upr_attr_name);
 
-      char lwr_iface_name[128];
-      strcpy(lwr_iface_name, iface_name);
-      StrLwr(lwr_iface_name);
+      char upr_iface_name[128];
+      strcpy(upr_iface_name, iface_name);
+      StrUpr(upr_iface_name);
 
       if (aIsGetter) {
-        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name, "PR_FALSE");
+        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, upr_iface_name, upr_attr_name, "PR_FALSE");
       }
       else {
-        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name, "PR_TRUE");
+        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, upr_iface_name, upr_attr_name, "PR_TRUE");
       }
       *file << buf;
 
@@ -1008,7 +1009,7 @@ static const char kMethodBodyBeginStr[] = "\n"
 "  }\n"
 "  {\n"
 "    PRBool ok;\n"
-"    secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\",PR_FALSE , &ok);\n"
+"    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_%s_%s,PR_FALSE , &ok);\n"
 "    if (!ok) {\n"
 "      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);\n"
 "    }\n"
@@ -1208,16 +1209,16 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
         *file << buf;
       }
 
-      char lwr_method_name[128];
-      strcpy(lwr_method_name, method_name);
-      StrLwr(lwr_method_name);
+      char upr_method_name[128];
+      strcpy(upr_method_name, method_name);
+      StrUpr(upr_method_name);
 
-      char lwr_iface_name[128];
-      strcpy(lwr_iface_name, iface->GetName());
-      StrLwr(lwr_iface_name);
+      char upr_iface_name[128];
+      strcpy(upr_iface_name, iface->GetName());
+      StrUpr(upr_iface_name);
 
-      sprintf(buf, kMethodBodyBeginStr, lwr_iface_name,
-              lwr_method_name);
+      sprintf(buf, kMethodBodyBeginStr, upr_iface_name,
+              upr_method_name);
       *file << buf;
       
       if (pcount > 0) {

@@ -146,7 +146,6 @@ LocationImpl::CheckURL(nsIURI* aURL)
     return NS_ERROR_FAILURE;
 
   // Check to see if URI is allowed.
-  PRBool ok = PR_FALSE;
   if (NS_FAILED(result = secMan->CheckLoadURIFromScript(scriptCX, aURL))) 
     return result;
 

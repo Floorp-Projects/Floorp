@@ -65,7 +65,7 @@ GetCurrentContext() {
     return cx;
 }
 
-static PRInt16 
+static nsDOMProp 
 findDomProp(const char *propName, int n);
 
 /////////////////////
@@ -332,12 +332,11 @@ NS_IMPL_RELEASE(nsScriptSecurityManager);
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
-                                           void *aObj, const char *aProp, 
+                                           void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite, PRBool *aResult)
 {
+    nsDOMProp domProp = (nsDOMProp) domPropInt;
     *aResult = PR_FALSE;
-    PRInt16 domProp = findDomProp(aProp, PL_strlen(aProp));
-    NS_ASSERTION(domProp > 0, "dom prop not found");
     PolicyType type = domPropertyPolicyTypes[domProp];
     if (type == POLICY_TYPE_NONE) {
         *aResult = PR_TRUE;
@@ -345,7 +344,7 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
     }
     JSContext *cx = (JSContext *)aContext->GetNativeContext();
     nsXPIDLCString capability;
-    PRInt32 secLevel = GetSecurityLevel(cx, (char *) aProp, type, isWrite,
+    PRInt32 secLevel = GetSecurityLevel(cx, domProp, type, isWrite,
                                         getter_Copies(capability));
     switch (secLevel) {
       case SCRIPT_SECURITY_ALL_ACCESS:
@@ -948,14 +947,12 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
 
 
 PRInt32 
-nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *propName, 
+nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, nsDOMProp domProp, 
                                           PolicyType type, PRBool isWrite, 
                                           char **capability)
 {
-    if (propName == nsnull) 
-        return SCRIPT_SECURITY_NO_ACCESS;
     nsXPIDLCString prefName;
-    if (NS_FAILED(GetPrefName(cx, propName, type, getter_Copies(prefName))))
+    if (NS_FAILED(GetPrefName(cx, domProp, type, getter_Copies(prefName))))
         return SCRIPT_SECURITY_NO_ACCESS;
     PRInt32 secLevel;
     char *secLevelString;
@@ -1000,50 +997,6 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *propName,
 
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetPrefName(JSContext *cx, char *propName, 
-                                     PolicyType type, char **result)
-{
-    nsresult rv;
-    static const char *defaultStr = "default";
-    nsAutoString s = "security.policy.";
-    if (type == POLICY_TYPE_DEFAULT) {
-        s += defaultStr;
-    } else if (type == POLICY_TYPE_PERDOMAIN) {
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
-            return NS_ERROR_FAILURE;
-        }
-        PRBool equals;
-        if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
-            return NS_ERROR_FAILURE;
-        if (equals) {
-            s += defaultStr;
-        } else {
-            nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal, &rv);
-            if (NS_FAILED(rv))
-                return rv;
-            nsXPIDLCString origin;
-            if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
-                return rv;
-            nsCString *policy = nsnull;
-            if (mOriginToPolicyMap) {
-                nsStringKey key(origin);
-                policy = (nsCString *) mOriginToPolicyMap->Get(&key);
-            }
-            if (policy)
-                s += *policy;
-            else
-                s += defaultStr;
-        }
-    }
-    s += '.';
-    s += propName;
-    *result = s.ToNewCString();
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-
-NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
     PRBool ok = PR_FALSE;
@@ -1071,7 +1024,7 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     return NS_OK;
 }
 
-static char *domPropNames[DOMPROP_MAX] = {
+static char *domPropNames[NS_DOM_PROP_MAX] = {
     "appcoresmanager.add",
     "appcoresmanager.find",
     "appcoresmanager.remove",
@@ -1084,36 +1037,6 @@ static char *domPropNames[DOMPROP_MAX] = {
     "baseappcore.id",
     "baseappcore.init",
     "baseappcore.setdocumentcharset",
-    "browserappcore.back",
-    "browserappcore.backbuttonpopup",
-    "browserappcore.close",
-    "browserappcore.cookieviewer",
-    "browserappcore.copy",
-    "browserappcore.exit",
-    "browserappcore.find",
-    "browserappcore.findnext",
-    "browserappcore.forward",
-    "browserappcore.forwardbuttonpopup",
-    "browserappcore.gotohistoryindex",
-    "browserappcore.loadinitialpage",
-    "browserappcore.loadurl",
-    "browserappcore.newwindow",
-    "browserappcore.openwindow",
-    "browserappcore.print",
-    "browserappcore.printpreview",
-    "browserappcore.reload",
-    "browserappcore.selectall",
-    "browserappcore.setcontentwindow",
-    "browserappcore.settoolbarwindow",
-    "browserappcore.setwebshellwindow",
-    "browserappcore.signonviewer",
-    "browserappcore.stop",
-    "browserappcore.walletchangepassword",
-    "browserappcore.walleteditor",
-    "browserappcore.walletpreview",
-    "browserappcore.walletquickfillin",
-    "browserappcore.walletrequesttocapture",
-    "browserappcore.walletsamples",
     "characterdata.appenddata", 
     "characterdata.data", 
     "characterdata.deletedata", 
@@ -1652,6 +1575,7 @@ static char *domPropNames[DOMPROP_MAX] = {
     "htmltextareaelement.accesskey", 
     "htmltextareaelement.blur", 
     "htmltextareaelement.cols", 
+    "htmltextareaelement.controllers", 
     "htmltextareaelement.defaultvalue", 
     "htmltextareaelement.disabled", 
     "htmltextareaelement.focus", 
@@ -1966,7 +1890,51 @@ static char *domPropNames[DOMPROP_MAX] = {
     "xultreeelement.toggleitemselection",
 };
 
-static PRInt16 
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetPrefName(JSContext *cx, nsDOMProp domProp, 
+                                     PolicyType type, char **result)
+{
+    nsresult rv;
+    static const char *defaultStr = "default";
+    nsAutoString s = "security.policy.";
+    if (type == POLICY_TYPE_DEFAULT) {
+        s += defaultStr;
+    } else if (type == POLICY_TYPE_PERDOMAIN) {
+        nsCOMPtr<nsIPrincipal> principal;
+        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+            return NS_ERROR_FAILURE;
+        }
+        PRBool equals;
+        if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
+            return NS_ERROR_FAILURE;
+        if (equals) {
+            s += defaultStr;
+        } else {
+            nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal, &rv);
+            if (NS_FAILED(rv))
+                return rv;
+            nsXPIDLCString origin;
+            if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
+                return rv;
+            nsCString *policy = nsnull;
+            if (mOriginToPolicyMap) {
+                nsStringKey key(origin);
+                policy = (nsCString *) mOriginToPolicyMap->Get(&key);
+            }
+            if (policy)
+                s += *policy;
+            else
+                s += defaultStr;
+        }
+    }
+    s += '.';
+    s += domPropNames[domProp];
+    *result = s.ToNewCString();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+static nsDOMProp 
 findDomProp(const char *propName, int n) 
 {
     int hi = sizeof(domPropNames)/sizeof(domPropNames[0]) - 1;
@@ -1975,15 +1943,15 @@ findDomProp(const char *propName, int n)
         int mid = (hi + lo) / 2;
         int cmp = PL_strncmp(propName, domPropNames[mid], n);
         if (cmp == 0)
-            return mid;
+            return (nsDOMProp) mid;
         if (cmp < 0)
             hi = mid - 1;
         else
             lo = mid + 1;
     } while (hi > lo);
     if (PL_strncmp(propName, domPropNames[lo], n) == 0)
-        return lo;
-    return -1;
+        return (nsDOMProp) lo;
+    return NS_DOM_PROP_MAX;
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -2059,8 +2027,8 @@ enumeratePolicy(const char *prefName, void *data) {
         // security.policy.<policyname>.<object>.<property>[.read|.write]
         const char *domPropName = dots[2] + 1;
         int domPropLength = dots[4] - domPropName;
-        PRInt16 domProp = findDomProp(domPropName, domPropLength);
-        if (domProp >= 0) {
+        nsDOMProp domProp = findDomProp(domPropName, domPropLength);
+        if (domProp < NS_DOM_PROP_MAX) {
             nsScriptSecurityManager::PolicyType *policyType = 
                 info->policies + domProp;
             if (!isDefault)

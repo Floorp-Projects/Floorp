@@ -27,8 +27,7 @@
 #include "jsapi.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsHashtable.h"
-
-enum { DOMPROP_MAX=892 };
+#include "nsDOMPropEnums.h"
 
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
@@ -69,11 +68,11 @@ private:
     CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
                      PRBool* result);
     PRInt32 
-    GetSecurityLevel(JSContext *cx, char *prop_name, PolicyType type, 
+    GetSecurityLevel(JSContext *cx, nsDOMProp domProp, PolicyType type, 
                      PRBool isWrite, char **capability);
 
     NS_IMETHOD
-    GetPrefName(JSContext *cx, char *propName, PolicyType type, 
+    GetPrefName(JSContext *cx, nsDOMProp domProp, PolicyType type, 
                 char **result);
 
     NS_IMETHOD
@@ -84,7 +83,7 @@ private:
 
     nsIPrincipal *mSystemPrincipal;
     nsSupportsHashtable *mPrincipals;
-    PolicyType domPropertyPolicyTypes[DOMPROP_MAX];
+    PolicyType domPropertyPolicyTypes[NS_DOM_PROP_MAX];
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
