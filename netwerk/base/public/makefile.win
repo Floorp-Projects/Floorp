@@ -28,6 +28,7 @@ EXPORTS =                           \
         netCore.h                   \
         nsNetUtil.h                 \
         nsUnixColorPrintf.h         \
+	nsIPasswordManagerUtils.h   \
 	$(NULL)
 
 XPIDLSRCS =                             \
@@ -40,6 +41,7 @@ XPIDLSRCS =                             \
         .\nsINetModRegEntry.idl         \
         .\nsINetModuleMgr.idl           \
         .\nsINetNotify.idl              \
+	.\nsIPasswordManager.idl        \
         .\nsIProgressEventSink.idl      \
         .\nsIPrompt.idl                 \
         .\nsIProtocolHandler.idl        \

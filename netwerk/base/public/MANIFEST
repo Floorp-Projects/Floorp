@@ -5,3 +5,4 @@
 netCore.h
 nsNetUtil.h
 nsUnixColorPrintf.h
+nsIPasswordManagerUtils.h
