@@ -3848,6 +3848,9 @@ nsMsgDBFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagge
 NS_IMETHODIMP
 nsMsgDBFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue aLabel)
 {
+  GetDatabase(nsnull);
+  if (mDatabase)
+  {
   PRUint32 count;
   NS_ENSURE_ARG(aMessages);
   nsresult rv = aMessages->Count(&count);
@@ -3855,11 +3858,13 @@ nsMsgDBFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue 
 
   for(PRUint32 i = 0; i < count; i++)
   {
+      nsMsgKey msgKey;
     nsCOMPtr<nsIMsgDBHdr> message = do_QueryElementAt(aMessages, i, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = message->SetLabel(aLabel);
+      (void) message->GetMessageKey(&msgKey);
+      rv = mDatabase->SetLabel(msgKey, aLabel);
     NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   return NS_OK;
 }
