@@ -714,14 +714,9 @@ SECKEY_CopyPublicKey;
 ;+    local:
 ;+       *;
 ;+};
-;+NSS_3.6.1 {       # NSS 3.6.1 release
-;+    global:
-CERT_CRLCacheRefreshIssuer;
-;+    local:
-;+       *;
-;+};
 ;+NSS_3.7 { 	# NSS 3.7 release
 ;+    global:
+CERT_CRLCacheRefreshIssuer;
 CERT_GetFirstEmailAddress;
 CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;
