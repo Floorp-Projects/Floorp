@@ -452,7 +452,6 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libzpw.a \
 		  $(DIST)/lib/libiawt.a \
 		  $(DIST)/lib/libmmedia.a \
-		  $(DIST)/lib/libsoftupdate.a \
 		  $(DIST)/lib/libprgrss.a \
 		  $(DIST)/lib/libcon.a \
 		  $(DIST)/lib/libjbn.a \
@@ -483,7 +482,6 @@ ifdef NSJVM
 ifdef EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
-BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
 else # !NSJVM
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libstubsj.a \
@@ -504,6 +502,12 @@ BASIC_LIBS	+= \
 
 endif  # !MOZ_OJI
 endif  # !MOZ_JAVA
+
+ifdef MOZ_SMARTUPDATE
+BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a \
+ 		   $(DIST)/lib/libprgrss.a \
+		   $(NULL)
+endif
 
 ifdef MOZ_NATIVE_ZLIB
 BASIC_LIBS	+= -lz
