@@ -2093,7 +2093,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 
 			nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
             PRInt32 leafNameStart = 
-                cStrFolderName.RFindChar('/'); // ** troublesome hierarchyseparator
+            cStrFolderName.RFindChar(hierarchySeparator);
             if (leafNameStart != -1)
             {
                 cStrFolderName.SetLength(leafNameStart+1);

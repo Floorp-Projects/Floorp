@@ -29,12 +29,14 @@ interface nsIImapIncomingServer;
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
   void RemoveSubFolder(in nsIMsgFolder folder);
-  void CreateClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter);
+  void CreateClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags);
   void List();
   void RenameLocal(in string newname);
   void PrepareToRename();
   void PerformExpand(in nsIMsgWindow aMsgWindow);
   void RecursiveCloseActiveConnections(in nsIImapIncomingServer aImapServer);
+  void RenameClient(in nsIMsgFolder msgFolder, in string oldName, in string newName);
+  void RenameSubfolders( in nsIMsgFolder oldFolder);
 
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;

@@ -994,7 +994,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			}
 		}
 
-        hostFolder->CreateClientSubfolderInfo(dupFolderPath, hierarchyDelimiter);
+        hostFolder->CreateClientSubfolderInfo(dupFolderPath, hierarchyDelimiter,boxFlags);
 		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
     }
 	if (child)
@@ -1096,32 +1096,25 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
     nsresult rv = NS_ERROR_FAILURE;
     if (newName && *newName)
     {
-        nsCOMPtr<nsIFolder> iFolder;
-        nsCOMPtr<nsIMsgImapMailFolder> parent;
         nsCOMPtr<nsIMsgFolder> me;
         rv = GetFolder(oldName, getter_AddRefs(me));
         if (NS_FAILED(rv)) return rv;
-
+        
         nsCOMPtr<nsIMsgImapMailFolder> folder;
         folder = do_QueryInterface(me, &rv);
         if (NS_SUCCEEDED(rv))
             folder->RenameLocal(newName);
 
-        nsCOMPtr<nsIFolder> rootFolder;
-        rv = GetRootFolder(getter_AddRefs(rootFolder));
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr<nsIFolder> parent ;
+        rv = me->GetParent(getter_AddRefs(parent));
+		if (NS_SUCCEEDED(rv) && parent) 
         {
-			PRUnichar hierarchyDelimiter = '/';
-            if (parent)
-                parent->GetHierarchyDelimiter(&hierarchyDelimiter);
-
-            nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
-                do_QueryInterface(rootFolder, &rv);
-            if (NS_SUCCEEDED(rv))
-            rv = imapRootFolder->CreateClientSubfolderInfo(newName, hierarchyDelimiter);
+	    nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
+        if (parentImapFolder)
+            parentImapFolder->RenameClient(me,oldName, newName);
         }
     }
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP  nsImapIncomingServer::FolderIsNoSelect(const char *aFolderName, PRBool *result) 

@@ -408,7 +408,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (!NS_SUCCEEDED(rv) || numFolders == 0 || !inboxFolder)
       {
         // create an inbox if we don't have one.
-        CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown);
+        CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown,0);
       }
     }
     UpdateSummaryTotals(PR_FALSE);
@@ -493,7 +493,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
           GetHasSubFolders(&hasSubFolders);
           if (!hasSubFolders)
           {
-              rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown);
+              rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown,0);
               if (NS_FAILED(rv)) 
                   return rv;
           }
@@ -563,7 +563,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName, PRUnichar hierarchyDelimiter)
+NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName, PRUnichar hierarchyDelimiter, PRInt32 flags)
 {
   nsresult rv = NS_OK;
     
@@ -609,7 +609,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         nsCAutoString leafnameC;
         leafnameC.AssignWithConversion(leafName);
-      return parentFolder->CreateClientSubfolderInfo(leafnameC, hierarchyDelimiter);
+		return parentFolder->CreateClientSubfolderInfo(leafnameC, hierarchyDelimiter,flags);
     }
     
   // if we get here, it's really a leaf, and "this" is the parent.
@@ -668,6 +668,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
         imapFolder->SetOnlineName(onlineName.GetBuffer());
         imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+        imapFolder->SetBoxFlags(flags);
         // store the online name as the mailbox name in the db folder info
         // I don't think anyone uses the mailbox name, so we'll use it
         // to restore the online name when blowing away an imap db.
@@ -1080,6 +1081,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
 
     m_msgParser = null_nsCOMPtr();
     PrepareToRename();
+    NotifyStoreClosedAllHeaders();
     ForceDBClosed();
 
     nsresult rv = NS_OK;
@@ -1106,17 +1108,12 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
     nsCAutoString newNameStr = leafname;
     newNameStr += ".msf";
     oldSummarySpec.Delete(PR_FALSE);
-        if (parentFolder)
-        {
-            SetParent(nsnull);
-            parentFolder->PropagateDelete(this, PR_FALSE);
-        }
-        if (cnt > 0)
-        {
-            newNameStr = leafname;
-            newNameStr += ".sbd";
-            dirSpec.Rename(newNameStr.GetBuffer());
-        }
+    if (cnt > 0)
+    {
+       newNameStr = leafname;
+       newNameStr += ".sbd";
+       dirSpec.Rename(newNameStr.GetBuffer());
+    }
     return rv;
 }
 
@@ -1421,6 +1418,7 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
   {
     nsAutoString onlineName; onlineName.AssignWithConversion(aOnlineFolderName);
     rv = folderInfo->SetProperty("onlineName", &onlineName);
+    rv = folderInfo->SetMailboxName(&onlineName);
     // so, when are we going to commit this? Definitely not every time!
     // We could check if the online name has changed.
     db->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -1480,6 +1478,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             nsXPIDLCString name;
             rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
             m_onlineFolderName.Assign(name);
+            autoOnlineName.AssignWithConversion(name);
           }
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
         }
@@ -4590,3 +4589,208 @@ NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
     }
     return rv;
 }
+
+NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const char* oldName, const char* newName )
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIFileSpec> pathSpec;
+    rv = GetPath(getter_AddRefs(pathSpec));
+    if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec path;
+    rv = pathSpec->GetFileSpec(&path);
+    if (NS_FAILED(rv)) return rv;
+		
+    nsCOMPtr<nsIMsgImapMailFolder> oldImapFolder = do_QueryInterface(msgFolder, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUnichar hierarchyDelimiter = '/';
+    oldImapFolder->GetHierarchyDelimiter(&hierarchyDelimiter);
+    PRInt32 boxflags=0;
+    oldImapFolder->GetBoxFlags(&boxflags);
+
+    nsAutoString newLeafName; 
+    newLeafName.AssignWithConversion(newName);
+    nsAutoString parentName = newLeafName;
+    nsAutoString folderNameStr;
+    PRInt32 folderStart = newLeafName.RFindChar('/');  //internal use of hierarchyDelimiter is always '/'
+    if (folderStart > 0)
+    {
+        parentName.Right(newLeafName, newLeafName.Length() - folderStart - 1);
+        rv = AddDirectorySeparator(path);
+    }
+
+
+    // if we get here, it's really a leaf, and "this" is the parent.
+    folderNameStr = newLeafName;
+    
+    // Create an empty database for this mail folder, set its name from the user  
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+    nsCOMPtr<nsIMsgFolder> child;
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder;
+
+    rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
+    if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+      nsCOMPtr<nsIMsgDatabase> unusedDB;
+      nsCOMPtr <nsIFileSpec> dbFileSpec;
+
+      nsXPIDLCString uniqueLeafName;
+      nsCAutoString proposedDBName(newLeafName.ToNewCString());
+	  //nsCAutoString proposedDBName(folderName);
+      proposedDBName += ".msf";
+
+      rv = CreatePlatformLeafNameForDisk(proposedDBName, path, getter_Copies(uniqueLeafName));
+
+      // take off the ".msf" on the end.
+      proposedDBName = uniqueLeafName;
+      proposedDBName.Truncate(proposedDBName.Length() - 4);
+
+      path.SetLeafName(proposedDBName);
+
+      NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
+      rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
+
+      if (NS_SUCCEEDED(rv) && unusedDB)
+      {
+        //need to set the folder name
+        nsCOMPtr <nsIDBFolderInfo> folderInfo;
+        rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
+
+        //Now let's create the actual new folder
+        rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
+
+        imapFolder = do_QueryInterface(child);
+        if (imapFolder)
+		{
+          nsCAutoString onlineName(m_onlineFolderName); 
+          if (onlineName.Length() > 0)
+          onlineName.AppendWithConversion(hierarchyDelimiter);
+          onlineName.AppendWithConversion(folderNameStr);
+          imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
+          imapFolder->SetOnlineName(onlineName.GetBuffer());
+          imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+          imapFolder->SetBoxFlags(boxflags);
+
+        // store the online name as the mailbox name in the db folder info
+        // I don't think anyone uses the mailbox name, so we'll use it
+        // to restore the online name when blowing away an imap db.
+           if (folderInfo)
+           {
+             nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
+             folderInfo->SetMailboxName(&unicodeOnlineName);
+           }
+        }
+
+        unusedDB->SetSummaryValid(PR_TRUE);
+        unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
+        unusedDB->Close(PR_TRUE);
+
+	    imapFolder->RenameSubfolders(msgFolder);
+	  }
+    }
+
+    msgFolder->SetParent(nsnull);
+    PropagateDelete(msgFolder,PR_FALSE);
+
+    if(NS_SUCCEEDED(rv) && child)
+    {
+       nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+       nsCOMPtr<nsISupports> folderSupports;
+       rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+       if(childSupports && NS_SUCCEEDED(rv))
+	   {
+          NotifyItemAdded(folderSupports, childSupports, "folderView");
+	   }
+	}
+       
+  return rv;
+
+}
+
+NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
+{
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  oldFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  nsCOMPtr<nsISupports> aSupport;
+  rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+			
+     nsCOMPtr<nsIMsgFolder>msgFolder = do_QueryInterface(aSupport);
+     nsCOMPtr<nsIMsgImapMailFolder> folder = do_QueryInterface(msgFolder, &rv);
+     if (NS_FAILED(rv)) return rv;
+
+     PRUnichar hierarchyDelimiter = '/';
+     folder->GetHierarchyDelimiter(&hierarchyDelimiter);
+				
+     PRInt32 boxflags;
+     folder->GetBoxFlags(&boxflags);
+
+     PRBool verified;
+     folder->GetVerifiedAsOnlineFolder(&verified);
+				
+     nsCOMPtr<nsIFileSpec> oldPathSpec;
+     rv = msgFolder->GetPath(getter_AddRefs(oldPathSpec));
+     if (NS_FAILED(rv)) return rv;
+
+     nsFileSpec oldPath;
+     rv = oldPathSpec->GetFileSpec(&oldPath);
+     if (NS_FAILED(rv)) return rv;
+
+     nsCOMPtr<nsIFileSpec> newParentPathSpec;
+     rv = GetPath(getter_AddRefs(newParentPathSpec));
+     if (NS_FAILED(rv)) return rv;
+
+     nsFileSpec newParentPath;
+     rv = newParentPathSpec->GetFileSpec(&newParentPath);
+     if (NS_FAILED(rv)) return rv;
+
+     rv = AddDirectorySeparator(newParentPath);
+     newParentPath += oldPath.GetLeafName();
+     nsCString newPathStr(newParentPath.GetNativePathCString());
+     nsCOMPtr<nsIFileSpec> newPathSpec;
+     rv = NS_NewFileSpec(getter_AddRefs(newPathSpec));
+     if (NS_FAILED(rv)) return rv;
+     rv = newPathSpec->SetNativePath(newPathStr.GetBuffer());
+	 	  
+     nsFileSpec newPath;
+     rv = newPathSpec->GetFileSpec(&newPath);
+     if (NS_FAILED(rv)) return rv;
+
+     nsCOMPtr<nsIFileSpec> dbFileSpec;
+     NS_NewFileSpecWithSpec(newPath, getter_AddRefs(dbFileSpec));
+     nsCOMPtr<nsIMsgFolder> child;
+				
+     char *leafName;
+     leafName = newPath.GetLeafName();
+     nsAutoString currentFolderNameStr;
+     currentFolderNameStr.AssignWithConversion(leafName);
+     nsAutoString utf7LeafName = currentFolderNameStr;
+
+     AddSubfolderWithPath(&utf7LeafName, dbFileSpec, getter_AddRefs(child));
+	 
+     nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
+     nsXPIDLCString onlineName;
+     GetOnlineName(getter_Copies(onlineName));
+     nsCAutoString onlineCName(onlineName);
+     onlineCName.AppendWithConversion(hierarchyDelimiter);
+     onlineCName.Append(leafName);
+     imapFolder->SetVerifiedAsOnlineFolder(verified);
+     imapFolder->SetOnlineName(onlineCName.GetBuffer());
+     imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+     imapFolder->SetBoxFlags(boxflags);
+
+     rv = aEnumerator->Next();
+	
+     imapFolder->RenameSubfolders(msgFolder);
+     m_initialized = PR_TRUE; 
+     PL_strfree(leafName);
+
+  }
+  return rv;
+}
+
