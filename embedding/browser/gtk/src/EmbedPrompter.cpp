@@ -133,6 +133,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
     // now pack the label into the vbox
     GtkWidget* label = gtk_label_new(mMessageText.get());
     gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
     gtk_box_pack_start(GTK_BOX(contentsVBox), label, FALSE, FALSE, 0);
 
     int widgetFlags = DialogTable[aType].flags;
