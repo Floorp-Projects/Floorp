@@ -18,7 +18,6 @@
 #ifndef nsIRunaround_h___
 #define nsIRunaround_h___
 
-#include <stdio.h>
 #include "nsIFrame.h"
 
 // IID for the nsIRunaround interface {3C6ABCF0-C028-11d1-853F-00A02468FAB6}
