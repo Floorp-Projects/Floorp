@@ -373,17 +373,40 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext)
     mHasCachedPadding = PR_FALSE;
   }
 
-  if (IsFixedData(mBorder, PR_TRUE)) {
+  if (((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_LEFT]) || IsFixedUnit(mBorder.GetLeftUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_TOP]) || IsFixedUnit(mBorder.GetTopUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_RIGHT]) || IsFixedUnit(mBorder.GetRightUnit(), PR_TRUE)) &&
+      ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_BOTTOM]) || IsFixedUnit(mBorder.GetBottomUnit(), PR_TRUE))) {
     nsStyleCoord  coord;
-    mCachedBorder.left = CalcCoord(mBorder.GetLeft(coord), kBorderWidths, 3);
-    mCachedBorder.top = CalcCoord(mBorder.GetTop(coord), kBorderWidths, 3);
-    mCachedBorder.right = CalcCoord(mBorder.GetRight(coord), kBorderWidths, 3);
-    mCachedBorder.bottom = CalcCoord(mBorder.GetBottom(coord), kBorderWidths, 3);
+    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_LEFT]) {
+      mCachedBorder.left = 0;
+    }
+    else {
+      mCachedBorder.left = CalcCoord(mBorder.GetLeft(coord), kBorderWidths, 3);
+    }
+    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_TOP]) {
+      mCachedBorder.top = 0;
+    }
+    else {
+      mCachedBorder.top = CalcCoord(mBorder.GetTop(coord), kBorderWidths, 3);
+    }
+    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_RIGHT]) {
+      mCachedBorder.right = 0;
+    }
+    else {
+      mCachedBorder.right = CalcCoord(mBorder.GetRight(coord), kBorderWidths, 3);
+    }
+    if (NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[NS_SIDE_BOTTOM]) {
+      mCachedBorder.bottom = 0;
+    }
+    else {
+      mCachedBorder.bottom = CalcCoord(mBorder.GetBottom(coord), kBorderWidths, 3);
+    }
 
-    mHasCachedPadding = PR_TRUE;
+    mHasCachedBorder = PR_TRUE;
   }
   else {
-    mHasCachedPadding = PR_FALSE;
+    mHasCachedBorder = PR_FALSE;
   }
 
   if (mHasCachedBorder && mHasCachedPadding) {
