@@ -1472,9 +1472,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
-					return NS_OK;
-				} 
-				err = NS_ERROR_FAILURE;
+				}
 			}
  		}
 	}
@@ -1532,9 +1530,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
-					return NS_OK;
-				} 
-				err = NS_ERROR_FAILURE;
+				}
 			}
  		}
 	}
@@ -1597,9 +1593,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
-					return NS_OK;
-				} 
-				err = NS_ERROR_FAILURE;
+				}
 			}
  		}
 	}
