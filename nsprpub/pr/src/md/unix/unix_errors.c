@@ -1450,7 +1450,7 @@ void _MD_unix_map_select_error(int err)
     }
 }
 
-#ifdef _PR_POLL_AVAILABLE
+#if defined(_PR_POLL_AVAILABLE) || defined(_PR_NEED_FAKE_POLL)
 void _MD_unix_map_poll_error(int err)
 {
     PRErrorCode prerror;
@@ -1483,7 +1483,7 @@ void _MD_unix_map_poll_revents_error(int err)
 	else
 		PR_SetError(PR_UNKNOWN_ERROR, err);
 }
-#endif /* _PR_POLL_AVAILABLE */
+#endif /* _PR_POLL_AVAILABLE || _PR_NEED_FAKE_POLL */
 
 
 void _MD_unix_map_flock_error(int err)
