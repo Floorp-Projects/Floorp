@@ -257,7 +257,149 @@ NS_IMETHODIMP CPromptService::ConfirmEx(nsIDOMWindow *parent, const PRUnichar *d
                                         const PRUnichar *checkMsg, PRBool *checkValue,
                                         PRInt32 *buttonPressed)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(buttonPressed);
+
+    nsresult resultErr = NS_OK;
+
+    StDialogHandler	theHandler(dlog_ConfirmEx, CBrowserChrome::GetLWindowForDOMWindow(parent));
+    LWindow			 *theDialog = theHandler.GetDialog();
+    nsCAutoString   cStr;
+    Str255          pStr;
+    SDimension16    oldSize;
+    SInt16          bestWidth, bestHeight, baselineOffset;
+
+    if (dialogTitle) {
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(dialogTitle), pStr);
+        theDialog->SetDescriptor(pStr);
+    }
+
+    LCheckBox *checkBox = nil;
+    if (checkMsg && checkValue) {
+        checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(checkMsg), pStr);
+        checkBox->SetDescriptor(pStr);
+        checkBox->SetValue(*checkValue ? 1 : 0);
+        
+        // Let the checkbox text first stretch the width of the dialog.
+        // Do not let it reduce the width.
+        // For checkboxes, CalcBestControlRect will attempt to keep the text on one line.
+        if (checkBox->SupportsCalcBestRect()) {
+            checkBox->GetFrameSize(oldSize);
+            checkBox->CalcBestControlRect(bestWidth, bestHeight, baselineOffset);
+            // The view is set up so that this will shift and stretch everything properly.
+            if (bestWidth > oldSize.width)
+                theDialog->ResizeWindowBy(bestWidth - oldSize.width, bestHeight - oldSize.height);
+        }
+    }
+
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
+    
+    // For static text, CalcBestControlRect will stretch vertically
+    if (msgText->SupportsCalcBestRect()) {
+        msgText->GetFrameSize(oldSize);
+        msgText->CalcBestControlRect(bestWidth, bestHeight, baselineOffset);
+        // The view is set up so that this will shift and stretch everything properly.
+        // Do not let it reduce the width of the dialog.
+        SInt16 hDelta = bestWidth - oldSize.width;
+        if (hDelta < 0)
+            hDelta = 0;
+        theDialog->ResizeWindowBy(hDelta, bestHeight - oldSize.height);
+    }
+    
+    const PRUnichar* buttonTitles[3] = { button0Title, button1Title, button2Title };
+    PaneIDT buttonIDs[3] = { 'Btn0', 'Btn1', 'Btn2' };
+    SInt16 buttonShift = 0;
+    
+    for (int i = 0; i < 3; i++)
+    {
+        LPushButton *button = dynamic_cast<LPushButton*>(theDialog->FindPaneByID(buttonIDs[i]));
+        if (!button)
+            continue;
+            
+        SInt16 strIndex = -1;
+        Boolean hidden = false;
+        
+        switch (buttonFlags & 0x00FF)
+        {
+            case 0:
+                button->Hide();
+                hidden = true;
+                break;
+            case BUTTON_TITLE_OK:
+                strIndex = str_OK;
+                break;
+            case BUTTON_TITLE_CANCEL:
+                strIndex = str_Cancel;
+                break;
+            case BUTTON_TITLE_YES:
+                strIndex = str_Yes;
+                break;
+            case BUTTON_TITLE_NO:
+                strIndex = str_No;
+                break;
+            case BUTTON_TITLE_SAVE:
+                strIndex = str_Save;
+                break;
+            case BUTTON_TITLE_DONT_SAVE:
+                strIndex = str_DontSave;
+                break;
+            case BUTTON_TITLE_REVERT:
+                strIndex = str_Revert;
+                break;
+            case BUTTON_TITLE_IS_STRING:
+                {
+                CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(buttonTitles[i]), pStr);
+                button->SetDescriptor(pStr);
+                }
+                break;
+        }
+        if (strIndex != -1) {
+            LStr255 buttonTitle(STRx_StdButtonTitles, strIndex);
+            button->SetDescriptor(buttonTitle);
+        }
+        if (!hidden) {
+            if (button->SupportsCalcBestRect()) {
+                button->GetFrameSize(oldSize);
+                button->CalcBestControlRect(bestWidth, bestHeight, baselineOffset);
+                buttonShift += bestWidth - oldSize.width;
+                button->MoveBy(-buttonShift, 0, false);
+                button->ResizeFrameTo(bestWidth, bestHeight, false);
+            }
+        }
+        buttonFlags >>= 8;
+    }
+        
+    theDialog->Show();
+    theDialog->Select();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == 'Btn0')
+		{
+		    *buttonPressed = 0;
+   		    break;
+   		}
+   		else if (hitMessage == 'Btn1')
+   		{
+   		    *buttonPressed = 1;
+   		    break;
+   		}
+   		else if (hitMessage == 'Btn2')
+   		{
+   		    *buttonPressed = 2;
+   		    break;
+   		}
+	}
+
+    if (checkBox)
+        *checkValue = checkBox->GetValue();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
