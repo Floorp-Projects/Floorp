@@ -20,9 +20,9 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+PROGRAM = xpidl
 
-MODULE = xpidl
+include $(DEPTH)/config/autoconf.mk
 
 CSRCS = \
 	xpidl.c \
@@ -33,29 +33,17 @@ CSRCS = \
 	xpidl_doc.c \
 	$(NULL)
 
+LIBS = -lxpt $(LIBIDL_LIBS)
+
 include $(topsrcdir)/config/config.mk
 
-# LIBIDL_CFLAGS, LIBIDL_LIBS set in libIDL.m4
 CFLAGS += $(LIBIDL_CFLAGS)
 
-# separate out to get dependancies right
-LIBXPT=$(DIST)/lib/libxpt.a
-
-EX_LIBS = -L$(DIST)/bin $(LIBXPT) $(LIBIDL_LIBS)
-
-PROGS = $(OBJDIR)/xpidl
-
-TARGETS= $(PROGS)
+# Build statically, so xpidl is available during the build
+# without setting the shared library path.
+LDFLAGS += -static
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS) $(LIBXPT)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $(OBJS) $(LD_FLAGS) $(EX_LIBS) $(OS_LIBS)
-
-export:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-
-clobber::
-	rm -f $(DIST)/bin/xpidl
-	rm -f $(PROGS) $(OBJS)
+# Build xpidl early.
+export:: install
