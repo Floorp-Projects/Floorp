@@ -189,7 +189,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
       strcpy( szFamily, "System Proportional");
 
    // 2) Get a representative PS for doing font queries into
-   HPS hps = mContext->GetRepresentativePS();
+   HPS hps = WinGetPS((HWND)mContext->mWidget);
 
    // 3) Work out what our options are wrt. image/outline, prefer image.
    BOOL bOutline = FALSE, bImage = FALSE;
@@ -354,7 +354,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
    GpiSetCharSet( hps, LCID_DEFAULT);
    if( !GpiDeleteSetId( hps, 1))
       PMERROR( "GpiDeleteSetID (FM)");
-   mContext->ReleaseRepresentativePS( hps);
+   WinReleasePS(hps);
 
    return NS_OK;
 }
