@@ -355,7 +355,8 @@ ER3(SEC_ERROR_BAD_NICKNAME,			(SEC_ERROR_BASE + 103),
 ER3(SEC_ERROR_NOT_FORTEZZA_ISSUER,       	(SEC_ERROR_BASE + 104),
 "Peer FORTEZZA chain has a non-FORTEZZA Certificate.")
 
-/* ER3(SEC_ERROR_UNKNOWN, 			(SEC_ERROR_BASE + 105), */
+ER3(SEC_ERROR_CANNOT_MOVE_SENSITIVE_KEY, 	(SEC_ERROR_BASE + 105),
+"A sensitive key cannot be moved to the slot where it is needed.")
 
 ER3(SEC_ERROR_JS_INVALID_MODULE_NAME, 		(SEC_ERROR_BASE + 106),
 "Invalid module name.")

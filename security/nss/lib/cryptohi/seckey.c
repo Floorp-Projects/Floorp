@@ -139,11 +139,10 @@ const SEC_ASN1Template SECKEY_KEAParamsTemplate[] = {
     { 0, }
 };
 
-
-/*
- * NOTE: This only generates RSA Private Key's. If you need more,
- * We need to pass in some more params...
- */
+/* Create an RSA key pair is any slot able to do so.
+** The created keys are "session" (temporary), not "token" (permanent), 
+** and they are "sensitive", which makes them costly to move to another token.
+*/
 SECKEYPrivateKey *
 SECKEY_CreateRSAPrivateKey(int keySizeInBits,SECKEYPublicKey **pubk, void *cx)
 {
@@ -160,14 +159,25 @@ SECKEY_CreateRSAPrivateKey(int keySizeInBits,SECKEYPublicKey **pubk, void *cx)
     return(privk);
 }
 
+/* Create a DH key pair in any slot able to do so, 
+** This is a "session" (temporary), not "token" (permanent) key. 
+** Because of the high probability that this key will need to be moved to
+** another token, and the high cost of moving "sensitive" keys, we attempt
+** to create this key pair without the "sensitive" attribute, but revert to 
+** creating a "sensitive" key if necessary.
+*/
 SECKEYPrivateKey *
 SECKEY_CreateDHPrivateKey(DHParams *param, SECKEYPublicKey **pubk, void *cx)
 {
     SECKEYPrivateKey *privk;
     PK11SlotInfo *slot = PK11_GetBestSlot(CKM_DH_PKCS_KEY_PAIR_GEN,cx);
-    
-    privk = PK11_GenerateKeyPair(slot,CKM_DH_PKCS_KEY_PAIR_GEN,param,pubk,
-					PR_FALSE, PR_TRUE, cx);
+
+    privk = PK11_GenerateKeyPair(slot, CKM_DH_PKCS_KEY_PAIR_GEN, param, 
+                                 pubk, PR_FALSE, PR_FALSE, cx);
+    if (!privk) 
+	privk = PK11_GenerateKeyPair(slot, CKM_DH_PKCS_KEY_PAIR_GEN, param, 
+	                             pubk, PR_FALSE, PR_TRUE, cx);
+
     PK11_FreeSlot(slot);
     return(privk);
 }
