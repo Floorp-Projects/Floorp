@@ -180,11 +180,10 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
     mRelativeFontSize--;
     return NS_OK;
   }
-  
-  nsAutoString value;
+
   PRInt32 index;
-  PropItem *item = nsnull;
-  
+  PropItem *item;
+
   if (IsPropSet(aProp,aAttr,nsnull,index))
   {
     // if it's already set, update the value
@@ -239,7 +238,7 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
 
 
 /***************************************************************************
- *    TakeClearProperty: hands back next poroperty item on the clear list.
+ *    TakeClearProperty: hands back next property item on the clear list.
  *                       caller assumes ownership of PropItem and must delete it.
  */  
 nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
