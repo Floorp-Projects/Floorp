@@ -261,6 +261,7 @@ public:
     void               IMEComposeText    (const PRUnichar *aText,
                                           const PRInt32 aLen,
                                           const gchar *aPreeditString,
+                                          const gint aCursorPos,
                                           const PangoAttrList *aFeedback);
     void               IMEComposeEnd     (void);
     GtkIMContext*      IMEGetContext     (void);
