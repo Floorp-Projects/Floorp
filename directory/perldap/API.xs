@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.11 1998/08/03 19:23:01 leif Exp $
+ * $Id: API.xs,v 1.12 1998/08/03 19:25:03 leif Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -812,9 +812,11 @@ ldap_get_lderrno(ld, ...)
            SV *tmp, *m = (SV *)NULL, *s = (SV *)NULL;
 
 	   if (items > 1)
+	   {
 	      m = ST(1);
-	   if (items > 2)
-	      s = ST(2);
+	      if (items > 2)
+	         s = ST(2);
+           }
 
 	   RETVAL = ldap_get_lderrno(ld, (m && SvROK(m)) ? &match : (char **)NULL,
 	                                 (s && SvROK(s)) ? &msg : (char **)NULL);
