@@ -100,7 +100,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
         context->IsArabicEncoding(arabicCharset);
         if (arabicCharset) {
           nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
-          nsBidiOptions bidiOptions;
+          PRUint32 bidiOptions;
           PRBool isVisual;
           PRBool isBidiSystem;
     
