@@ -3760,7 +3760,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				}
 				NS_IF_RELEASE(decoder);
 				// convert the unicode to 8 bit ascii.
-				nsString2 unicodeStr(unichars, eTwoByte);
+				nsString2 unicodeStr(unichars);
 				convertedString = (char *) PR_Malloc(unicharLength + 1);
 				if (convertedString)
 					unicodeStr.ToCString(convertedString, unicharLength + 1, 0);
@@ -3769,7 +3769,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 		else
 		{
 			// convert from 8 bit ascii string to modified utf7
-			nsString2 unicodeStr(aSourceString, eTwoByte);
+			nsString2 unicodeStr(aSourceString);
 			nsIUnicodeEncoder* encoder = nsnull;
 			aCharset.SetString("x-imap4-modified-utf7");
 			res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
@@ -3790,7 +3790,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				}
 			}
 			NS_IF_RELEASE(encoder);
-			nsString2 unicodeStr2(dstPtr, eTwoByte);
+			nsString2 unicodeStr2(dstPtr);
 			convertedString = (char *) PR_Malloc(dstLength + 1);
 			if (convertedString)
 				unicodeStr2.ToCString(convertedString, dstLength + 1, 0);
