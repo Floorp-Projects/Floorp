@@ -42,6 +42,7 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsFormControlAccessible.h"
+#include "nsIAccessibleEditableText.h"
 
 class nsICheckboxControlFrame;
 
@@ -92,13 +93,22 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
-class nsHTMLTextFieldAccessible : public nsFormControlAccessible
+class nsIEditor;
+
+class nsHTMLTextFieldAccessible : public nsFormControlAccessible,
+                                  public nsIAccessibleEditableText
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEEDITABLETEXT
+
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccValue(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+
+protected:
+  NS_IMETHOD MakeSelection(PRInt32 aStartPos, PRInt32 aEndPos, nsIEditor **aEditor);
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessible
