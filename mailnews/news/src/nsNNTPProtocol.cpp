@@ -1789,13 +1789,77 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
     else
       {
 		if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
-            m_typeWanted == GROUP_WANTED)
+            m_typeWanted == GROUP_WANTED) {
+            
+            printf("group not found!\n");            
+#ifdef UNREADY_CODE
+        MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, TRUE /* opening group */);
+#else
             m_newsHost->GroupNotFound(m_currentGroup,
-                                         PR_TRUE /* opening */);
+                                          PR_TRUE /* opening */);
+#endif
+        }
 #ifdef UNREADY_CODE
 		return net_display_html_error_state(ce);
 #else
-		return 0;
+        /* if the server returned a 400 error then it is an expected
+         * error.  the NEWS_ERROR state will not sever the connection
+         */
+        if(major_opcode == 4)
+          m_nextState = NEWS_ERROR;
+        else
+          m_nextState = NNTP_ERROR;
+
+        /* START OF HACK */
+        nsresult rv = NS_OK;
+        char *group_name = nsnull;
+        char outputBuffer[OUTPUT_BUFFER_SIZE];
+            
+        if (m_newsgroup) {
+            rv = m_newsgroup->GetName(&group_name);
+        }
+
+        if (NS_SUCCEEDED(rv) && group_name) {
+#if 0
+            PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", "news:", m_hostName, group_name, "Click here to remove all expired articles");
+#else
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"Path: secnews.netscape.com!not-for-mail\nFrom: article expired\nSubject: Error!  Article cancelled.\nOrganization: article expired\nNewsgroups: article expired\nLines: 5\nMime-Version: 1.0\nContent-Type: text/html; charset=us-ascii\nContent-Transfer-Encoding: 7bit\nX-Mailer: Mozilla 5.0 [en] (Unix; I)\nX-Accept-Language: en\n\n<h1>Error!</h1><br>\nnewsgroup server responded: Bad article number<br>\nPerhaps the article has expired<br>\n &lt;%s&gt; (%d)<br>\n<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", "foobar", -1, "news:", m_hostName, group_name, "Click here to remove all expired articles");
+#endif
+        }
+
+        m_tempArticleFile.Delete(PR_FALSE);
+        nsISupports * supports;
+        NS_NewIOFileStream(&supports, m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+        m_tempArticleStream = do_QueryInterface(supports);
+        NS_IF_RELEASE(supports);
+  
+        if (m_tempArticleStream) {
+            PRUint32 count = 0;
+        	m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+        }
+
+        // and close the article file if it was open....
+		if (m_tempArticleStream)
+			m_tempArticleStream->Close();
+
+        /* cut and paste from below */
+        if (m_displayConsumer)
+		{
+			nsFilePath filePath(ARTICLE_PATH);
+			nsFileURL  fileURL(filePath);
+			char * article_path_url = PL_strdup(fileURL.GetAsString());
+
+#ifdef DEBUG_NEWS
+			printf("load this url to display the message: %s\n", article_path_url);
+#endif
+
+			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			
+			PR_FREEIF(article_path_url);
+		}
+        /* cut and paste from below */
+        /* END OF HACK */        
+		return MK_NNTP_SERVER_ERROR;
 #endif
       }
 
@@ -2702,6 +2766,11 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
       char *groupName;
       
 	  rv = m_newsgroup->GetName(&groupName);
+
+#ifdef DEBUG_sspitzer
+      printf("leaking group name?\n");
+#endif
+      
       /* XXX - parse state stored in MSG_Pane cd->pane */
       if (NS_SUCCEEDED(rv))
           rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
@@ -4505,6 +4574,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 	            break;
 
 	        case NEWS_ERROR:
+				printf("NEWS_ERROR!\n");
 				m_runningURL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 				m_nextState = NEWS_FREE;
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
@@ -4524,6 +4594,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 	            break;
 
 	        case NNTP_ERROR:
+			printf("NNTP_ERROR!\n");
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 	            if(cd->stream)
 				  {
