@@ -141,7 +141,7 @@ CTagList  gDTKids(1,eHTMLTag_dt);
 CTagList  gFieldsetKids(1,eHTMLTag_legend);
 CTagList  gFormKids(1,eHTMLTag_keygen);
 CTagList  gFramesetKids(3,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes);
-CTagList  gHtmlKids(5,eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_noscript,eHTMLTag_script);
+CTagList  gHtmlKids(6,eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script);
 CTagList  gHeadKids(7,eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title);
 CTagList  gMapKids(1,eHTMLTag_area);
 CTagList  gNoframesKids(1,eHTMLTag_body);
