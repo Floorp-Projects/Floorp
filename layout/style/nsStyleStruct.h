@@ -702,7 +702,6 @@ struct nsStyleVisibility : public nsStyleStruct {
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
   nsCOMPtr<nsILanguageAtom> mLanguage; // [inherited]
-  float mOpacity;                      // [inherited]
  
   PRBool IsVisible() const {
 		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
@@ -742,6 +741,7 @@ struct nsStyleDisplay : public nsStyleStruct {
 #else
   nsRect    mClip;              // [reset] offsets from upper-left border edge
 #endif
+  float   mOpacity;             // [reset]
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
   PRUint8 mAppearance;          // [reset]
@@ -751,7 +751,6 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRPackedBool mBreakBefore;    // [reset] 
   PRPackedBool mBreakAfter;     // [reset] 
   PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
-
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||

@@ -249,11 +249,10 @@ private:
                nsIRegion *region, PRUint32 aUpdateFlags);
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRegion& aRegion,
-                   PRBool aRCIsOffscreen);
+                   nsDrawingSurface aRCSurface);
 
   void RenderDisplayListElement(DisplayListElement2* element,
-                                nsIRenderingContext &aRC,
-                                BlendingBuffers* aBuffers, const nsRect& aTranslucentArea);
+                                nsIRenderingContext* aRC);
 
   void PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
                  const nsRect &aDamageRect);
@@ -262,9 +261,9 @@ private:
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
-  BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC,
-                                         PRBool aTranslucentWindow, PRBool aTranslucentViews,
-                                         const nsRect& aTranslucentArea);
+  BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
+                                         nsDrawingSurface aBorrowSurface, PRBool aNeedAlpha,
+                                         const nsRect& aArea);
 
   void ReparentViews(DisplayZTreeNode* aNode);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
@@ -299,6 +298,9 @@ private:
   void OptimizeDisplayListClipping(nsAutoVoidArray* aDisplayList, PRBool aHaveClip,
                                    nsRect& aClipRect, PRInt32& aIndex,
                                    PRBool& aAnyRendered);
+  nsRect OptimizeTranslucentRegions(const nsAutoVoidArray& aDisplayList,
+                                    PRInt32* aIndex, nsRegion* aOpaqueRegion);
+
   void ShowDisplayList(nsAutoVoidArray* aDisplayList);
 
   // Utilities

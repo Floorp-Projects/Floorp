@@ -711,9 +711,10 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // DISPLAY
   IndentBy(out,aIndent);
   const nsStyleDisplay* disp = GetStyleDisplay();
-  fprintf(out, "<display data=\"%d %d %d %d %d %d %d %d %ld %ld %ld %ld %s\" />\n",
+  fprintf(out, "<display data=\"%d %d %f %d %d %d %d %d %d %ld %ld %ld %ld %s\" />\n",
     (int)disp->mPosition,
     (int)disp->mDisplay,
+    (float)disp->mOpacity,      
     (int)disp->mFloats,
     (int)disp->mBreakType,
     (int)disp->mBreakBefore,
@@ -730,10 +731,9 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // VISIBILITY
   IndentBy(out,aIndent);
   const nsStyleVisibility* vis = GetStyleVisibility();
-  fprintf(out, "<visibility data=\"%d %d %f\" />\n",
+  fprintf(out, "<visibility data=\"%d %d\" />\n",
     (int)vis->mDirection,
-    (int)vis->mVisible,
-    (float)vis->mOpacity
+    (int)vis->mVisible
     );
 
   // TABLE

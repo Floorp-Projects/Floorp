@@ -460,12 +460,11 @@ nsComputedDOMStyle::GetOpacity(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleVisibility *visibility = nsnull;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)visibility,
-               aFrame);
+  const nsStyleDisplay *display = nsnull;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  if (visibility) {
-    val->SetNumber(visibility->mOpacity);
+  if (display) {
+    val->SetNumber(display->mOpacity);
   } else {
     val->SetNumber(1.0f);
   }

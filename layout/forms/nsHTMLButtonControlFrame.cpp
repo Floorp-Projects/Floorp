@@ -450,8 +450,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
       SetView(view);
 
       // set the opacity
-      viewMan->SetViewOpacity(view, GetStyleColor()->mOpacity);
-
+      viewMan->SetViewOpacity(view, GetStyleDisplay()->mOpacity);
     }
     mDidInit = PR_TRUE;
   }
