@@ -79,6 +79,17 @@
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
 
+#define IS_GFX
+
+nsresult
+NS_NewThumbFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewScrollPortFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewGfxScrollFrame ( nsIFrame** aNewFrame );
+
 nsresult
 NS_NewTabFrame ( nsIFrame** aNewFrame );
 
@@ -1316,29 +1327,15 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
     (const nsStyleDisplay*) aStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (IsScrollable(aPresContext, styleDisplay)) {
-    // Create a scroll frame and initialize it
-    rv = NS_NewScrollFrame(&aNewTopFrame);
-    if (NS_FAILED(rv)) return rv;
-    aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
-
-    // The scroll frame gets the original style context, the scrolled frame gets  
-    // a pseudo element style context that inherits the background properties
-    nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsLayoutAtoms::scrolledContentPseudo,
-                                               aStyleContext, PR_FALSE,
-                                               getter_AddRefs(scrolledPseudoStyle));
 
     // Create an area container for the frame
     rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(&aNewGroupFrame)
                        : aTableCreator.CreateTableColGroupFrame(&aNewGroupFrame);
-    
-    if (NS_FAILED(rv)) return rv;
-    // Initialize the frame and force it to have a view
-    aNewGroupFrame->Init(*aPresContext, aContent, aNewTopFrame, scrolledPseudoStyle,
-                         nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewGroupFrame,
-                                             scrolledPseudoStyle, PR_TRUE);
-    aNewTopFrame->SetInitialChildList(*aPresContext, nsnull, aNewGroupFrame);
+
+    rv = BuildScrollFrame(aPresContext, aState, aContent, aNewGroupFrame, aParentFrame,
+                                      aStyleContext, aNewTopFrame, PR_FALSE, PR_FALSE, PR_FALSE,
+                                      PR_FALSE);
+
   } else {
     rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(&aNewTopFrame)
                        : aTableCreator.CreateTableColGroupFrame(&aNewTopFrame);
@@ -2154,6 +2151,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
   return NS_OK;
 }
 
+/*
 NS_IMETHODIMP
 nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
                                           nsIContent*     aDocElement,
@@ -2244,12 +2242,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   nsIFrame* scrollFrame;
   nsCOMPtr<nsIStyleContext> scrollFrameStyle;
   if (isScrollable) {
+  
     NS_NewScrollFrame(&scrollFrame);
     aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportScrollPseudo,
                                                viewportPseudoStyle, PR_FALSE,
                                                getter_AddRefs(scrollFrameStyle));
     scrollFrame->Init(*aPresContext, nsnull, viewportFrame, scrollFrameStyle,
                       nsnull);
+    
 
     // Inform the view manager about the root scrollable view
     nsIView*            scrollFrameView;
@@ -2348,6 +2348,261 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     if (isScrollable) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
       viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+    } else {
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+    }
+  }
+
+  aNewFrame = viewportFrame;
+  return NS_OK;  
+}
+*/
+
+NS_IMETHODIMP
+nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
+                                          nsIContent*     aDocElement,
+                                          nsIFrame*&      aNewFrame)
+{
+#ifdef NS_DEBUG
+  nsCOMPtr<nsIDocument>  doc;
+  nsIContent*            rootContent;
+
+  // Verify that the content object is really the root content object
+  aDocElement->GetDocument(*getter_AddRefs(doc));
+  rootContent = doc->GetRootContent();
+  NS_ASSERTION(rootContent == aDocElement, "unexpected content");
+  NS_RELEASE(rootContent);
+#endif
+
+  nsIFrame*                 viewportFrame;
+  nsCOMPtr<nsIStyleContext> viewportPseudoStyle;
+
+  // Create the viewport frame
+  NS_NewViewportFrame(&viewportFrame);
+
+  // Create a pseudo element style context
+  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportPseudo,
+                                             nsnull, PR_FALSE,
+                                             getter_AddRefs(viewportPseudoStyle));
+
+  { // ensure that the viewport thinks it is a block frame, layout goes pootsy if it doesn't
+    nsStyleDisplay* display = (nsStyleDisplay*)viewportPseudoStyle->GetMutableStyleData(eStyleStruct_Display);
+    display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+  }
+
+  // Initialize the viewport frame. It has a NULL content object
+  viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle, nsnull);
+
+  // Bind the viewport frame to the root view
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIViewManager> viewManager;
+  presShell->GetViewManager(getter_AddRefs(viewManager));
+  nsIView*        rootView;
+
+  viewManager->GetRootView(rootView);
+  viewportFrame->SetView(rootView);
+
+  // If the device supports scrolling (e.g., in galley mode on the screen and
+  // for print-preview, but not when printing), then create a scroll frame that
+  // will act as the scrolling mechanism for the viewport. 
+  // XXX Do we even need a viewport when printing to a printer?
+  // XXX It would be nice to have a better way to query for whether the device
+  // is scrollable
+  PRBool  isScrollable = PR_TRUE;
+  if (aPresContext) {
+    nsIDeviceContext* dc;
+    aPresContext->GetDeviceContext(&dc);
+    if (dc) {
+      PRBool  supportsWidgets;
+      if (NS_SUCCEEDED(dc->SupportsNativeWidgets(supportsWidgets))) {
+        isScrollable = supportsWidgets;
+      }
+      NS_RELEASE(dc);
+    }
+  }
+
+  // As long as the webshell doesn't prohibit it, and the device supports
+  // it, create a scroll frame that will act as the scolling mechanism for
+  // the viewport.
+  nsISupports* container;
+  if (nsnull != aPresContext) {
+    aPresContext->GetContainer(&container);
+    if (nsnull != container) {
+      nsIWebShell* webShell = nsnull;
+      container->QueryInterface(kIWebShellIID, (void**) &webShell);
+      if (nsnull != webShell) {
+        PRInt32 scrolling = -1;
+        webShell->GetScrolling(scrolling);
+        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+          isScrollable = PR_FALSE;
+        }
+        NS_RELEASE(webShell);
+      }
+      NS_RELEASE(container);
+    }
+  }
+
+  // If the viewport should offer a scrolling mechanism, then create a
+  // scroll frame
+  nsIFrame* scrollFrame = nsnull;
+  nsIFrame* gfxScrollFrame = nsnull;
+
+  if (isScrollable) {
+
+    nsIFrame* parent = nsnull;
+
+    if (IsGfxMode(aPresContext))  {
+       NS_NewGfxScrollFrame(&gfxScrollFrame);
+       gfxScrollFrame->Init(*aPresContext, aDocElement, viewportFrame, viewportPseudoStyle,
+                            nsnull);
+       NS_NewScrollPortFrame(&scrollFrame);
+       parent = gfxScrollFrame;
+    } else {
+       NS_NewScrollFrame(&scrollFrame);
+       parent = viewportFrame;
+    }
+
+    // XXX should probably be a scrolled content pseudo style context
+    scrollFrame->Init(*aPresContext, nsnull, parent, viewportPseudoStyle,
+                      nsnull);
+    
+    // Inform the view manager about the root scrollable view
+    nsIView*            scrollFrameView;
+    nsIScrollableView*  scrollingView;
+
+    scrollFrame->GetView(&scrollFrameView);
+    NS_ASSERTION(scrollFrameView, "scroll frame has no view");
+    scrollFrameView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    viewManager->SetRootScrollableView(scrollingView);
+
+  }
+  
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
+    
+    nsIFrame* pageSequenceFrame;
+
+    // Create a page sequence frame
+    NS_NewSimplePageSequenceFrame(&pageSequenceFrame);
+    // XXX should probably be a page sequence pseudo style context
+    pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
+                            viewportFrame, viewportPseudoStyle, nsnull);
+    if (isScrollable) {
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
+                                               viewportPseudoStyle, PR_TRUE);
+    }
+
+    // Create the first page
+    nsIFrame* pageFrame;
+    NS_NewPageFrame(&pageFrame);
+
+    // The page is the containing block for 'fixed' elements. which are repeated
+    // on every page
+    mFixedContainingBlock = pageFrame;
+
+    // Initialize the page and force it to have a view. This makes printing of
+    // the pages easier and faster.
+    // XXX Use a PAGE style context...
+    nsCOMPtr<nsIStyleContext> pagePseudoStyle;
+
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(pagePseudoStyle));
+
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle,
+                    nsnull);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
+                                             pagePseudoStyle, PR_TRUE);
+
+    // The eventual parent of the document element frame
+    mDocElementContainingBlock = pageFrame;
+
+
+    // Set the initial child lists
+    pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
+    if (isScrollable) {
+        scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+
+        if (IsGfxMode(aPresContext)) {
+        nsFrameConstructorState state(aPresContext,
+                                      nsnull,
+                                      nsnull,
+                                      nsnull);
+        nsFrameItems children;
+
+        children.AddChild(scrollFrame);
+
+        // if there are any anonymous children for the nsScrollFrame create frames for them.
+        // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
+        CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, state, aDocElement, gfxScrollFrame,
+                              children);
+
+         //viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+
+         viewportFrame->SetInitialChildList(*aPresContext, nsnull, gfxScrollFrame);
+         gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, children.childList);
+
+      } else
+         viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+    } else {
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+    }
+    
+
+  } else {
+    // The viewport is the containing block for 'fixed' elements
+    mFixedContainingBlock = viewportFrame;
+
+    // Create the root frame. The document element's frame is a child of the
+    // root frame.
+    //
+    // The root frame serves two purposes:
+    // - reserves space for any margins needed for the document element's frame
+    // - makes sure that the document element's frame covers the entire canvas
+    nsIFrame* rootFrame;
+    NS_NewRootFrame(&rootFrame);
+
+    // XXX this should be a root pseudo style context
+    rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
+                    viewportFrame, viewportPseudoStyle, nsnull);
+    if (isScrollable) {
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
+                                               viewportPseudoStyle, PR_TRUE);
+    }
+
+    // The eventual parent of the document element frame
+    mDocElementContainingBlock = rootFrame;
+
+    // Set the initial child lists
+    if (isScrollable) {
+      scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+
+      if (IsGfxMode(aPresContext)) {
+        
+        nsFrameConstructorState state(aPresContext,
+                                      nsnull,
+                                      nsnull,
+                                      nsnull);
+                                      
+        nsFrameItems children;
+
+        children.AddChild(scrollFrame);
+
+        // if there are any anonymous children for the nsScrollFrame create frames for them.
+        // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
+        CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, state, aDocElement, gfxScrollFrame,
+                              children);
+
+      //   viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+
+        viewportFrame->SetInitialChildList(*aPresContext, nsnull, gfxScrollFrame);
+        gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, children.childList);
+
+      } else
+         viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+
     } else {
       viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
     }
@@ -2573,6 +2828,18 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresContext*          aPresC
   return rv;
 }
 
+PRBool
+nsCSSFrameConstructor::IsGfxMode(nsIPresContext* aPresContext)
+{
+  return PR_FALSE;
+ 
+  /*
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+  return (eWidgetRendering_Gfx == mode);
+ */
+}
+
 nsresult
 nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContext,
                                             nsFrameConstructorState& aState,
@@ -2645,8 +2912,13 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
           // Initialize the scroll frame positioned. Note that it is NOT initialized as
           // absolutely positioned.
           nsIFrame* newFrame = nsnull;
-          InitializeScrollFrame(aPresContext, aState, listFrame, aContent, comboboxFrame,
-                               listStyle, newFrame, PR_FALSE, PR_FALSE, PR_TRUE);
+          nsIFrame* scrolledFrame = nsnull;
+          NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+          InitializeScrollFrame(aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
+                               listStyle, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE);
+
+          newFrame = listFrame;
 
             // Set flag so the events go to the listFrame not child frames.
             // XXX: We should replace this with a real widget manager similar
@@ -2684,9 +2956,14 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
         nsIFrame * listFrame;
         rv = NS_NewListControlFrame(&listFrame);
         aNewFrame = listFrame;
-        InitializeScrollFrame(aPresContext, aState, listFrame, aContent, aParentFrame,
-                              aStyleContext, aNewFrame, aIsAbsolutelyPositioned, PR_FALSE,
+        nsIFrame* scrolledFrame = nsnull;
+        NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+        InitializeScrollFrame(aPresContext, aState, listFrame, scrolledFrame, aContent, aParentFrame,
+                              aStyleContext, aIsAbsolutelyPositioned, PR_TRUE, PR_FALSE,
                               PR_TRUE);
+
+        aNewFrame = listFrame;
 
           // Set flag so the events go to the listFrame not child frames.
           // XXX: We should replace this with a real widget manager similar
@@ -3226,18 +3503,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
           isFixedPositioned = PR_TRUE;
         }
 
-        // Create a scroll frame
-        nsIFrame* scrollFrame;
-        NS_NewScrollFrame(&scrollFrame);
 
-        // Initialize it
-        InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
-                              aStyleContext, newFrame, isAbsolutelyPositioned, isFixedPositioned,
+        // Build it
+        BuildBoxScrollFrame(aPresContext, aState, aContent, aParentFrame,
+                              aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
                               PR_FALSE);
+
         frameHasBeenInitialized = PR_TRUE;
       }
-    }
-    // End of BOX CONSTRUCTION logic
+    } // End of BOX CONSTRUCTION logic
 
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton) {
@@ -3292,7 +3566,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::thumb) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewTitledButtonFrame(&newFrame);
+      rv = NS_NewThumbFrame(&newFrame);
     }
     // End of THUMB CONSTRUCTION logic
 
@@ -3384,14 +3658,146 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 }
 #endif
 
+/**
+ * Create a scroll frame whose scrolled content needs a block frame
+ */
 nsresult
-nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresContext,
+nsCSSFrameConstructor::BuildBlockScrollFrame    (nsIPresContext*          aPresContext,
+                                                  nsFrameConstructorState& aState,
+                                                  nsIContent*              aContent,
+                                                  nsIFrame*                aParentFrame,
+                                                  nsIStyleContext*         aStyleContext,
+                                                  nsIFrame*&               aNewFrame,
+                                                  PRBool                   aProcessChildren,
+                                                  PRBool                   aIsAbsolutelyPositioned,
+                                                  PRBool                   aIsFixedPositioned,
+                                                  PRBool                   aCreateBlock)
+{
+  // Create an area container for the frame
+  nsIFrame* scrolledFrame;
+  NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+
+  nsresult rv = BuildScrollFrame(aPresContext, aState, aContent, scrolledFrame, aParentFrame,
+                                      aStyleContext, aNewFrame, aProcessChildren, aIsAbsolutelyPositioned, aIsFixedPositioned,
+                                      aCreateBlock);
+
+  return rv;
+}
+
+/**
+ * Create a scroll frame whose scrolled content needs a box frame
+ */
+nsresult
+nsCSSFrameConstructor::BuildBoxScrollFrame      (nsIPresContext*          aPresContext,
+                                                  nsFrameConstructorState& aState,
+                                                  nsIContent*              aContent,
+                                                  nsIFrame*                aParentFrame,
+                                                  nsIStyleContext*         aStyleContext,
+                                                  nsIFrame*&               aNewFrame,
+                                                  PRBool                   aProcessChildren,                                      
+                                                  PRBool                   aIsAbsolutelyPositioned,
+                                                  PRBool                   aIsFixedPositioned,
+                                                  PRBool                   aCreateBlock)
+{
+  // Create an area container for the frame
+  nsIFrame* scrolledFrame;
+  NS_NewBoxFrame(&scrolledFrame);
+
+
+  nsresult rv = BuildScrollFrame(aPresContext, aState, aContent, scrolledFrame, aParentFrame,
+                                      aStyleContext, aNewFrame, aProcessChildren, aIsAbsolutelyPositioned, aIsFixedPositioned,
+                                      aCreateBlock);
+
+  return rv;
+}
+
+/**
+ * Create a new scroll frame. Populate it and return it.
+ */
+nsresult
+nsCSSFrameConstructor::BuildScrollFrame      (nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aScrolledFrame,
+                                               nsIFrame*                aParentFrame,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsIFrame*&               aNewFrame,                                                                                             
+                                               PRBool                   aProcessChildren,                                              
+                                               PRBool                   aIsAbsolutelyPositioned,
+                                               PRBool                   aIsFixedPositioned,
+                                               PRBool                   aCreateBlock)
+{
+
+  nsIFrame* scrollFrame = nsnull;
+  nsIFrame* gfxScrollFrame = nsnull;
+  nsFrameItems anonymousItems;
+
+  if (IsGfxMode(aPresContext)) {
+    // if gfx we need to make a special scrollframe
+
+    // create the frames
+    nsresult rv = BuildGfxScrollFrame(aPresContext, aState, aContent, aParentFrame,
+                                       aStyleContext, gfxScrollFrame, anonymousItems);
+
+    // get the scrollframe from the anonymous list
+    scrollFrame = anonymousItems.childList;
+
+    aParentFrame = gfxScrollFrame;
+    aNewFrame = gfxScrollFrame;
+  } else {
+    NS_NewScrollFrame(&scrollFrame);
+    aNewFrame = scrollFrame;
+  }
+
+  // Initialize it
+  nsresult rv = InitializeScrollFrame(aPresContext, aState, scrollFrame, aScrolledFrame, aContent, aParentFrame,
+                                      aStyleContext, aProcessChildren, aIsAbsolutelyPositioned, aIsFixedPositioned,
+                                      aCreateBlock);
+
+  if (IsGfxMode(aPresContext))
+     gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, anonymousItems.childList);
+
+  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresContext*          aPresContext,
                                              nsFrameConstructorState& aState,
-                                             nsIFrame*                scrollFrame,
                                              nsIContent*              aContent,
                                              nsIFrame*                aParentFrame,
                                              nsIStyleContext*         aStyleContext,
                                              nsIFrame*&               aNewFrame,
+                                             nsFrameItems&            aAnonymousFrames)
+{
+  NS_NewGfxScrollFrame(&aNewFrame);
+
+  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                  nsnull);
+
+  nsIFrame* scrollbox = nsnull;
+  NS_NewScrollPortFrame(&scrollbox);
+
+
+  aAnonymousFrames.AddChild(scrollbox);
+
+  // if there are any anonymous children for the nsScrollFrame create frames for them.
+  // for now make say its tag is "input". This is a hack to make sure we check for the anonymous interface
+  CreateAnonymousFrames(aPresContext, nsHTMLAtoms::input, aState, aContent, aNewFrame,
+                        aAnonymousFrames);
+
+  return NS_OK;
+} 
+
+nsresult
+nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIFrame*                scrollFrame,
+                                             nsIFrame*                scrolledFrame,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aParentFrame,
+                                             nsIStyleContext*         aStyleContext,
+                                             PRBool                   aProcessChildren,
                                              PRBool                   aIsAbsolutelyPositioned,
                                              PRBool                   aIsFixedPositioned,
                                              PRBool                   aCreateBlock)
@@ -3404,8 +3810,6 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
   } else if (aIsFixedPositioned) {
     geometricParent = aState.mFixedItems.containingBlock;
   }
-  scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
-                    nsnull);
 
   // The scroll frame gets the original style context, and the scrolled
   // frame gets a SCROLLED-CONTENT pseudo element style context that
@@ -3416,10 +3820,13 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
                                           aStyleContext, PR_FALSE,
                                           getter_AddRefs(scrolledPseudoStyle));
 
-  // Create an area container for the frame
-  nsIFrame* scrolledFrame;
-  NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
-
+  if (IsGfxMode(aPresContext)) {
+    scrollFrame->Init(*aPresContext, aContent, geometricParent, scrolledPseudoStyle,
+                        nsnull);
+  } else {
+    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                        nsnull);
+  }
   // Initialize the frame and force it to have a view
   scrolledFrame->Init(*aPresContext, aContent, scrollFrame,
                       scrolledPseudoStyle, nsnull);
@@ -3475,6 +3882,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
                                        nsLayoutAtoms::absoluteList,
                                        aState.mAbsoluteItems.childList);
   }
+
   if (aState.mFloatedItems.childList) {
     scrolledFrame->SetInitialChildList(*aPresContext,
                                        nsLayoutAtoms::floaterList,
@@ -3483,8 +3891,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
 
   // Set the scroll frame's initial child list
   scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
-  aNewFrame = scrollFrame;
-
+                                            
   return NS_OK;
 }
 
@@ -3535,13 +3942,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
       isFixedPositioned = PR_TRUE;
     }
 
-    // Create a scroll frame
-    nsIFrame* scrollFrame;
-    NS_NewScrollFrame(&scrollFrame);
-
-    // Initialize it
-    InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
-                          aStyleContext, newFrame, isAbsolutelyPositioned, isFixedPositioned,
+    // Build the scrollframe it
+    BuildBlockScrollFrame(aPresContext, aState, aContent, aParentFrame,
+                          aStyleContext, newFrame, PR_TRUE, isAbsolutelyPositioned, isFixedPositioned,
                           PR_FALSE);
   }
   // See if the frame is absolute or fixed positioned

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef nsIAnonymousContentCreator_h___
-#define nsIAnonymousContentCreator_h___
+#ifndef nsIAnonymousContent_h___
+#define nsIAnonymousContent_h___
 
 #include "nsISupports.h"
 #include "nsIContent.h"
@@ -27,24 +27,16 @@
 class nsISupportsArray;
 class nsIAtom;
 
-
-// {41a69e00-2d6d-11d3-b033-a1357139787c}
-#define NS_IANONYMOUS_CONTENT_CREATOR_IID { 0x41a69e00, 0x2d6d, 0x11d3, { 0xb0, 0x33, 0xa1, 0x35, 0x71, 0x39, 0x78, 0x7c } }
+#define NS_IANONYMOUS_CONTENT_IID { 0x41a69e00, 0x2d6d, 0x12d3, { 0xb0, 0x33, 0xa1, 0x38, 0x71, 0x39, 0x78, 0x7c } }
 
 
 /**
- * Any source for anonymous content can implement this interface to provide it.
- * HTML frames like nsFileControlFrame currently use this as well as XUL frames
- * like nsScrollbarFrame & nsSliderFrame.
+ * If a node is anonymous. Then it should implement this interface.
  */
-class nsIAnonymousContentCreator : public nsISupports {
+class nsIAnonymousContent : public nsISupports {
 public:
-     static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_CREATOR_IID; return iid; }
-     NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems)=0;
+     static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_IID; return iid; }
 };
-
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
-
 
 #endif
 

@@ -516,16 +516,67 @@ protected:
   nsIFrame* GetFloaterContainingBlock(nsIPresContext* aPresContext,
                                       nsIFrame*       aFrame);
 
-  nsresult InitializeScrollFrame(nsIPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
-                                 nsIFrame*                aScrollFrame,
-                                 nsIContent*              aContent,
-                                 nsIFrame*                aParentFrame,
-                                 nsIStyleContext*         aStyleContext,
-                                 nsIFrame*&               aNewFrame,
-                                 PRBool                   aIsAbsolutelyPositioned,
-                                 PRBool                   aIsFixedPositioned,
-                                 PRBool                   aCreateBlock);
+  nsresult BuildBlockScrollFrame    (nsIPresContext*          aPresContext,
+                                  nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIStyleContext*         aStyleContext,
+                                  nsIFrame*&               aNewFrame,
+                                  PRBool                   aProcessChildren,
+                                  PRBool                   aIsAbsolutelyPositioned,
+                                  PRBool                   aIsFixedPositioned,
+                                  PRBool                   aCreateBlock);
+
+
+  nsresult BuildBoxScrollFrame      (nsIPresContext*          aPresContext,
+                                  nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIStyleContext*         aStyleContext,
+                                  nsIFrame*&               aNewFrame,
+                                  PRBool                   aProcessChildren,
+                                  PRBool                   aIsAbsolutelyPositioned,
+                                  PRBool                   aIsFixedPositioned,
+                                  PRBool                   aCreateBlock);
+
+nsresult
+BuildScrollFrame      (nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aScrolledFrame,
+                                               nsIFrame*                aParentFrame,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsIFrame*&               aNewFrame,
+                                               PRBool                   aProcessChildren,
+                                               PRBool                   aIsAbsolutelyPositioned,
+                                               PRBool                   aIsFixedPositioned,
+                                               PRBool                   aCreateBlock);
+
+nsresult
+BuildGfxScrollFrame (nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aParentFrame,
+                                             nsIStyleContext*         aStyleContext,
+                                             nsIFrame*&               aNewFrame,
+                                             nsFrameItems&            aAnonymousFrames);
+
+
+nsresult
+InitializeScrollFrame(nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIFrame*                scrollFrame,
+                                             nsIFrame*                scrolledFrame,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aParentFrame,
+                                             nsIStyleContext*         aStyleContext,
+                                             PRBool                   aProcessChildren,
+                                             PRBool                   aIsAbsolutelyPositioned,
+                                             PRBool                   aIsFixedPositioned,
+                                             PRBool                   aCreateBlock);
+
+  PRBool IsGfxMode(nsIPresContext* aPresContext);
+
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
                                     nsIContent* aContent);

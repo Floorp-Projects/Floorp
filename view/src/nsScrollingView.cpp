@@ -943,47 +943,48 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       mVScrollBarView->GetWidget(win);
 
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv)) {
-        if ((mSizeY > (controlRect.height - ((nsnull != scrollh) ? hheight : 0))) &&
-            (mScrollPref != nsScrollPreference_kNeverScroll)) {
-          //we need to be able to scroll
+        if ((mSizeY > (controlRect.height - ((nsnull != scrollh) ? hheight : 0)))) {
+          // if we are scrollable
+          if (mScrollPref != nsScrollPreference_kNeverScroll) {
+            //we need to be able to scroll
 
-          ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_TRUE);
-          win->Enable(PR_TRUE);
+            ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_TRUE);
+            win->Enable(PR_TRUE);
 
-          //now update the scroller position for the new size
+            //now update the scroller position for the new size
 
-          PRUint32  oldpos = 0;
-          float     p2t;
-          PRInt32   availheight;
+            PRUint32  oldpos = 0;
+            float     p2t;
+            PRInt32   availheight;
 
-          scrollv->GetPosition(oldpos);
-          px->GetDevUnitsToAppUnits(p2t);
+            scrollv->GetPosition(oldpos);
+            px->GetDevUnitsToAppUnits(p2t);
 
-          availheight = controlRect.height - ((nsnull != scrollh) ? hheight : 0);
+            availheight = controlRect.height - ((nsnull != scrollh) ? hheight : 0);
 
-          // XXX Check for 0 initial size. This is really indicative
-          // of a problem. 
-          if (0 == oldsizey)
-            mOffsetY = 0;
-            else
-          {
-            mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
-
-            if ((mSizeY - mOffsetY) < availheight)
+            // XXX Check for 0 initial size. This is really indicative
+            // of a problem. 
+            if (0 == oldsizey)
+              mOffsetY = 0;
+              else
             {
-              mOffsetY = mSizeY - availheight;
+              mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
 
-              if (mOffsetY < 0)
-                mOffsetY = 0;
+              if ((mSizeY - mOffsetY) < availheight)
+              {
+                mOffsetY = mSizeY - availheight;
+
+                if (mOffsetY < 0)
+                  mOffsetY = 0;
+              }
             }
+
+            dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
+
+            scrollv->SetParameters(mSizeY, availheight,
+                                   mOffsetY, mLineHeight);
           }
-
-          dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
-
-          scrollv->SetParameters(mSizeY, availheight,
-                                 mOffsetY, mLineHeight);
-        }
-        else
+        } else
         {
           // The scrolled view is entirely visible vertically. Either hide the
           // vertical scrollbar or disable it
@@ -1019,48 +1020,47 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       mHScrollBarView->GetWidget(win);
 
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
-        if ((mSizeX > (controlRect.width - ((nsnull != scrollv) ? vwidth : 0))) &&
-            (mScrollPref != nsScrollPreference_kNeverScroll)) {
-          //we need to be able to scroll
+        if ((mSizeX > (controlRect.width - ((nsnull != scrollv) ? vwidth : 0)))) {
+          if (mScrollPref != nsScrollPreference_kNeverScroll) {
+            //we need to be able to scroll
 
-          ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_TRUE);
-          win->Enable(PR_TRUE);
+            ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_TRUE);
+            win->Enable(PR_TRUE);
 
-          //now update the scroller position for the new size
+            //now update the scroller position for the new size
 
-          PRUint32  oldpos = 0;
-          float     p2t;
-          PRInt32   availwidth;
+            PRUint32  oldpos = 0;
+            float     p2t;
+            PRInt32   availwidth;
 
-          scrollh->GetPosition(oldpos);
-          px->GetDevUnitsToAppUnits(p2t);
+            scrollh->GetPosition(oldpos);
+            px->GetDevUnitsToAppUnits(p2t);
 
-          availwidth = controlRect.width - ((nsnull != scrollv) ? vwidth : 0);
+            availwidth = controlRect.width - ((nsnull != scrollv) ? vwidth : 0);
 
-          // XXX Check for 0 initial size. This is really indicative
-          // of a problem. 
-          if (0 == oldsizex)
-            mOffsetX = 0;
-          else
-          {
-            mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
-
-            if ((mSizeX - mOffsetX) < availwidth)
+            // XXX Check for 0 initial size. This is really indicative
+            // of a problem. 
+            if (0 == oldsizex)
+              mOffsetX = 0;
+            else
             {
-              mOffsetX = mSizeX - availwidth;
+              mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
 
-              if (mOffsetX < 0)
-                mOffsetX = 0;
+              if ((mSizeX - mOffsetX) < availwidth)
+              {
+                mOffsetX = mSizeX - availwidth;
+
+                if (mOffsetX < 0)
+                  mOffsetX = 0;
+              }
             }
+
+            dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
+
+            scrollh->SetParameters(mSizeX, availwidth,
+                                   mOffsetX, mLineHeight);
           }
-
-          dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
-
-          scrollh->SetParameters(mSizeX, availwidth,
-                                 mOffsetX, mLineHeight);
-        }
-        else
-        {
+        } else {
           // The scrolled view is entirely visible horizontally. Either hide the
           // horizontal scrollbar or disable it
           mOffsetX = 0;

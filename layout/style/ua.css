@@ -1252,3 +1252,127 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 
 :-moz-letter-frame {
 }
+
+xul|titledbutton {
+   display: block;
+   border:2px solid blue;
+}
+
+
+xul|thumb {
+   display: block;
+   background-color: rgb(206, 207, 206);
+   border: 2px outset rgb(156, 154, 156);
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz.gif)
+}
+
+xul|thumb:hover {
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-hover.gif);
+}
+
+xul|thumb[disabled="true"] {
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-disabled.gif);
+}
+
+xul|slider[align="vertical"] xul|thumb {
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert.gif)
+}
+
+xul|slider[align="vertical"] xul|thumb:hover {
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert-hover.gif);
+
+}
+
+xul|slider[align="vertical"] xul|thumb[disabled="true"] {
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert-disabled.gif);
+}
+
+xul|thumb:active {
+   background-color: rgb(220, 210, 210);
+}
+
+xul|slider[align="vertical"] xul|thumb:active {
+   background-color: rgb(220, 210, 210);
+}
+
+
+xul|slider {
+   display: block;
+   border: 1px solid black;
+   background-color: rgb(240,240,240);
+ //  background-image: url("resource:/res/samples/bg.jpg");
+}
+
+xul|scrollbarbutton {
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+xul|scrollbarbutton:active {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+xul|scrollbarbutton[type="decrement"] {
+   list-style-image: url(chrome://global/skin/scroll-left.gif)
+}
+
+xul|scrollbarbutton[type="decrement"]:hover {
+   list-style-image: url(chrome://global/skin/scroll-left-hover.gif)
+}
+
+xul|scrollbarbutton[type="decrement"][disabled="true"] {
+   list-style-image: url(chrome://global/skin/scroll-left-disabled.gif) 
+}
+
+xul|scrollbarbutton[type="increment"] {
+   list-style-image: url(chrome://global/skin/scroll-right.gif)
+}
+
+xul|scrollbarbutton[type="increment"]:hover {
+   list-style-image: url(chrome://global/skin/scroll-right-hover.gif)
+}
+
+xul|scrollbarbutton[type="increment"][disabled="true"] {
+   list-style-image: url(chrome://global/skin/scroll-right-disabled.gif) 
+}
+
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="decrement"] {
+   list-style-image: url(chrome://global/skin/scrollUp.gif)
+}
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="decrement"]:hover {
+   list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
+}
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="decrement"][disabled="true"] {
+   list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
+}
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="increment"] {
+   list-style-image: url(chrome://global/skin/scrollDown.gif)
+}
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="increment"]:hover {
+   list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
+}
+
+xul|scrollbar[align="vertical"] xul|scrollbarbutton[type="increment"][disabled="true"] {
+   list-style-image: url(chrome://global/skin/scrollDown_dis.gif) 
+}
+
+xul|scrollbar[value="hidden"] {
+   visibility: hidden;
+}

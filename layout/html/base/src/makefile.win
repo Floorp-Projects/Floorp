@@ -32,6 +32,8 @@ EXPORTS =				\
 	$(NULL)
 
 CPPSRCS=				\
+        nsScrollPortFrame.cpp	        \
+        nsGfxScrollFrame.cpp	        \
 	nsAbsoluteContainingBlock.cpp	\
 	nsAreaFrame.cpp			\
 	nsBRFrame.cpp			\
@@ -72,6 +74,8 @@ CPPSRCS=				\
 	$(NULL)
 
 CPP_OBJS=						\
+        .\$(OBJDIR)\nsScrollPortFrame.obj         	\
+        .\$(OBJDIR)\nsGfxScrollFrame.obj         	\
 	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj	\
 	.\$(OBJDIR)\nsAreaFrame.obj			\
 	.\$(OBJDIR)\nsBRFrame.obj			\
@@ -119,7 +123,9 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I$(PUBLIC)\pref \
  -I$(PUBLIC)\lwbrk \
  -I$(PUBLIC)\unicharutil \
- -I$(PUBLIC)\oji
+ -I$(PUBLIC)\oji \
+ -I..\..\..\xul\content\src				\
+ -I..\..\..\xul\base\src				\
 
 LCFLAGS = \
         $(LCFLAGS) \

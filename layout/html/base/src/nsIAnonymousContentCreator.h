@@ -21,7 +21,12 @@
 #define nsIAnonymousContentCreator_h___
 
 #include "nsISupports.h"
+#include "nsIContent.h"
+#include "nsCOMPtr.h"
+
 class nsISupportsArray;
+class nsIAtom;
+
 
 // {41a69e00-2d6d-11d3-b033-a1357139787c}
 #define NS_IANONYMOUS_CONTENT_CREATOR_IID { 0x41a69e00, 0x2d6d, 0x11d3, { 0xb0, 0x33, 0xa1, 0x35, 0x71, 0x39, 0x78, 0x7c } }
@@ -37,6 +42,8 @@ public:
      static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_CREATOR_IID; return iid; }
      NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems)=0;
 };
+
+nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
 
 
 #endif

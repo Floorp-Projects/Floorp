@@ -36,6 +36,7 @@
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
 #include "nsSliderFrame.h"
+#include "nsRepeatService.h"
 
 //
 // NS_NewToolbarFrame
@@ -61,32 +62,68 @@ NS_NewScrollbarButtonFrame ( nsIFrame** aNewFrame )
 /*
 nsScrollbarButtonFrame::nsScrollbarButtonFrame()
 {
+}*/
+
+static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
+
+
+NS_IMETHODIMP 
+nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (aIID.Equals(kITimerCallbackIID)) {                                         
+    *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsTitledButtonFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
-*/
 
 NS_IMETHODIMP
 nsScrollbarButtonFrame::HandleEvent(nsIPresContext& aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {  
-   /*
-  XXX Eric, this seems to be redundant, since titledbutton's handle event
-  also calls MouseClicked. I'm commenting this out to avoid receiving two
-  mouse clicked messages - Dave H.
-  */
-  /*
-  switch (aEvent->message) {
-    case NS_MOUSE_LEFT_CLICK:
-       MouseClicked(aPresContext);
-    break;
-   }
-  */
-
+  // XXX hack until handle release is actually called in nsframe.
+  if (aEvent->message == NS_MOUSE_EXIT|| aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+     HandleRelease(aPresContext, aEvent, aEventStatus);
+  
   return nsTitledButtonFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+}
+
+
+NS_IMETHODIMP
+nsScrollbarButtonFrame::HandlePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
+{
+  nsRepeatService::GetInstance()->Start(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsScrollbarButtonFrame::HandleRelease(nsIPresContext& aPresContext, 
+                                 nsGUIEvent*     aEvent,
+                                 nsEventStatus&  aEventStatus)
+{
+  nsRepeatService::GetInstance()->Stop();
+  return NS_OK;
+}
+
+
+void nsScrollbarButtonFrame::Notify(nsITimer *timer)
+{
+  MouseClicked();
 }
 
 void
 nsScrollbarButtonFrame::MouseClicked(nsIPresContext& aPresContext) 
+{
+  MouseClicked();
+}
+
+void
+nsScrollbarButtonFrame::MouseClicked() 
 {
    // when we are clicked either increment or decrement the slider position.
 
@@ -111,7 +148,7 @@ nsScrollbarButtonFrame::MouseClicked(nsIPresContext& aPresContext)
    PRInt32 increment = nsSliderFrame::GetIncrement(content);
 
    nsString value;
-   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, value))
+   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value))
    {
      // if our class is DecrementButton subtract the current pos by increment amount
      // if our class is IncrementButton increment the current pos by the decrement amount

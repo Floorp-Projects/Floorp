@@ -63,6 +63,8 @@ CPPSRCS=				\
 	nsTextFrame.cpp			\
 	nsTextTransformer.cpp		\
 	nsViewportFrame.cpp		\
+        nsGfxScrollFrame.cpp            \
+        nsScrollPortFrame.cpp           \
 	$(NULL)
 
 EXPORTS =				\
@@ -81,7 +83,7 @@ include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
-INCLUDES += -I$(srcdir)/../../style/src -I$(srcdir)/../../content/src -I$(srcdir)/../../../base/src -I$(srcdir)/.  -I$(DIST)/oji
+INCLUDES += -I$(srcdir)/../../../xul/base/src -I$(srcdir)/../../../xul/content/src -I$(srcdir)/../../style/src -I$(srcdir)/../../content/src -I$(srcdir)/../../../base/src -I$(srcdir)/.  -I$(DIST)/oji
 
 MKSHLIB :=
 
