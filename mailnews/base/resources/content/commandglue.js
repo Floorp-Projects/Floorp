@@ -258,3 +258,4 @@ function RefreshThreadTreeView()
 	var currentFolderID = currentFolder.getAttribute('id');
 	currentFolder.setAttribute('id', currentFolderID);
 }
+
