@@ -3713,6 +3713,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
   NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
   nsresult rv = NS_OK;
+  PRBool sendEndCopyNotification = PR_FALSE;
+
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
   SetNotifyDownloadedLines(PR_FALSE);
@@ -3734,7 +3736,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 #endif
 
    if (imapUrl)
-    {
+   {
         nsImapAction imapAction = nsIImapUrl::nsImapTest;
         imapUrl->GetImapAction(&imapAction);
         switch(imapAction)
@@ -3785,6 +3787,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
             }
             ClearCopyState(aExitCode);
+            sendEndCopyNotification = PR_TRUE;
           }
           break;
         case nsIImapUrl::nsImapSubtractMsgFlags:
@@ -3875,8 +3878,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
       rv = mailUrl->UnRegisterListener(this);
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
-  if (mCopyListener)
-	  mCopyListener->OnStopCopy(aExitCode);
+  // Only send the OnStopCopy notification if we have no copy state (which means we're doing an online
+  // move/copy, and have cleared the copy state above) or if we've finished the move/copy
+  // of multiple imap messages, one msg at a time (i.e., moving to a local folder).
+  if (mCopyListener && sendEndCopyNotification)
+    mCopyListener->OnStopCopy(aExitCode);
   return rv;
 }
 
@@ -4405,13 +4411,17 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
             do_QueryInterface(mailCopyState->m_srcSupport, &rv);
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
-            srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
-                                      PR_TRUE, PR_TRUE, nsnull);
-		    nsCOMPtr<nsIMsgLocalMailFolder> popFolder = do_QueryInterface(srcFolder); 
-		    if (popFolder)   //needed if move pop->imap to notify FE
-		        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-		}
-
+          srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
+            PR_TRUE, PR_TRUE, nsnull);
+          // we want to send this notification after the source messages have
+          // been deleted.
+          if (mCopyListener)
+            mCopyListener->OnStopCopy(NS_OK);
+          nsCOMPtr<nsIMsgLocalMailFolder> popFolder = do_QueryInterface(srcFolder); 
+          if (popFolder)   //needed if move pop->imap to notify FE
+            srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+        }
+        
 
     }
     return rv;

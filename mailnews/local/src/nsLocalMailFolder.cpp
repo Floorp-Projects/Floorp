@@ -2326,7 +2326,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     if (mCopyState->m_listener) // CopyFileMessage() only
       mCopyState->m_listener->SetMessageKey((PRUint32) mCopyState->m_curDstKey);
-    }
+  }
 
   if (!multipleCopiesFinished && !mCopyState->m_copyingMultipleMessages)
   { // CopyMessages() goes here; CopyFileMessage() never gets in here because
@@ -2372,49 +2372,49 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       EnableNotifications(allMessageCountNotifications, PR_TRUE);
     }
   }
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 {
 
-	nsresult result;
-
-	if (mCopyState->m_curCopyIndex == mCopyState->m_totalMsgCount)
-	{
-
-		nsCOMPtr <nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result); 
-		if (copyService && NS_SUCCEEDED(result))
-		{
-			//Notify that a completion finished.
-			nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-			if(srcFolder)
-			{
+  nsresult result;
+  
+  if (mCopyState && mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount)
+  {
+    
+    nsCOMPtr <nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result); 
+    if (copyService && NS_SUCCEEDED(result))
+    {
+      //Notify that a completion finished.
+      nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+      if(srcFolder)
+      {
         // lets delete these all at once - much faster that way
-    		result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull);
+        result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull);
         srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-			}
-
-            // enable the dest folder
-            EnableNotifications(allMessageCountNotifications, PR_TRUE);
-
-   			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
-  				mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
-
+      }
+      
+      // enable the dest folder
+      EnableNotifications(allMessageCountNotifications, PR_TRUE);
+      
+      if (mTxnMgr  && mCopyState->m_undoMsgTxn)
+        mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+    
       nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-
-			ClearCopyState(PR_TRUE); // ### we don't know if it succeeded
-            ClearCopyState(PR_TRUE);
-			//passing in NS_OK because we only get in here if copy portion succeeded
-
-            copyService->NotifyCompletion(srcSupport, this, NS_OK);
-			
-		}
-
-	}
-
-	return NS_OK;
+    
+      if (mCopyState->m_listener) 
+        mCopyState->m_listener->OnStopCopy(NS_OK);
+      ClearCopyState(PR_TRUE); // ### we don't know if it succeeded
+      //passing in NS_OK because we only get in here if copy portion succeeded
+    
+      copyService->NotifyCompletion(srcSupport, this, NS_OK);
+                        
+    }
+  }
+  
+  return NS_OK;
 
 }
 
