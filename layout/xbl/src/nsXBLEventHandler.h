@@ -105,7 +105,7 @@ protected:
 
   NS_IMETHOD GetController(nsIController** aResult);
 
-  NS_IMETHOD ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent);
+  NS_IMETHOD ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent);
 
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
