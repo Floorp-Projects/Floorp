@@ -54,6 +54,8 @@ Rights Reserved.
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()" disabled="true"/>
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
  	<broadcaster id="cmd_quit"/>
@@ -73,7 +75,9 @@ Rights Reserved.
 
 <keyset id="keyset">
 	<!-- File Menu -->
-	<key id="key_PrintCard" command="true" key="P" observes="cmd_PrintCard" />
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_PrintCard" command="true" key="&printCardViewCmd.key;" observes="cmd_PrintCard" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
@@ -92,16 +96,18 @@ Rights Reserved.
 	<menubar>
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
-				<menu value="&newMenu.label;">
+				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
+				<menu id="menu_New">
 					<menupopup>
-					<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
-					<menuitem value="&newMessageCmd.label;" oncommand="AbNewMessage();"/>
+						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
+						<menuitem value="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
+						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" oncommand="AbNewDirectoryt()"/>
+						<menuseparator/>
+						<menuitem id="menu_newNavigator"/>
+						<menuitem id="menu_newMessage"/>
+						<menuitem id="cmd_newCard"/>
 					</menupopup>
 				</menu>
-				<menuitem value="&newCardCmd.label;" oncommand="AbNewCard()"/>
-				<menuitem value="&newListCmd.label;" oncommand="AbNewList()"/>
-				<menuitem value="&newAddressBookCmd.label;" oncommand="AbNewAddressBook()"/>
-				<menuitem value="&newDirectoryCmd.label;" oncommand="AbNewDirectoryt()"/>
 				<menuseparator/>
 				<menuitem id="menu_close"/>
 				<menuseparator/>

@@ -40,7 +40,7 @@ Contributor(s): ______________________________________. -->
     <key id="openFileKb"        disabled="false" command="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
     <key id="printKb"           disabled="false" command="true" key="&printCmd.commandkey;" observes="Browser:Print" />
 	<key id="key_close"/>
-    <key id="quitKb"            disabled="false" command="true" key="&quitCmd.commandkey;" observes="Browser:Quit" />
+	<key id="key_quit"/>
 
 	<!-- Edit Menu -->
 	<key id="key_undo"/>
@@ -67,6 +67,7 @@ Contributor(s): ______________________________________. -->
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newMessage"/>
+ 	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
 	<broadcaster id="cmd_undo"/>
@@ -101,8 +102,6 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"     	 oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
   
- 
-	<broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="goQuitApplication();"/>
   
 	<broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
 	<broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
@@ -117,7 +116,7 @@ Contributor(s): ______________________________________. -->
 <!-- Menu -->
 <menubar id="main-menubar" chromeclass="menubar">
 	<menu id="menu_File">
-	    <menupopup>
+	    <menupopup id="menu_FilePopup">
 			<menuitem value="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 			<menu id="menu_New">
 				<menupopup>
@@ -150,7 +149,6 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
 	      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
-	      <menuitem accesskey="&quitCmd.accesskey;" key="quitKb" observes="Browser:Quit"/>
 	  </menupopup>
 	</menu>
 

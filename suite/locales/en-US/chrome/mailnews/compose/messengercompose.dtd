@@ -8,7 +8,8 @@
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
-<!ENTITY newCmd.label ".New">
+<!ENTITY newMessage.label				"New Message">  
+<!ENTITY newMessage.accesskey			"n">  
 <!ENTITY saveCmd.label ".Save">
 <!ENTITY saveAsCmd.label "Save As (Draft)">
 <!ENTITY saveAsTemplateCmd.label "Save As (Template)">

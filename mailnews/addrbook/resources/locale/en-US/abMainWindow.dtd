@@ -24,17 +24,19 @@ Rights Reserved.
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
 <!-- File Menu -->
-<!ENTITY newMenu.label						"New"> 
-<!ENTITY newNavCmd.label						".Navigator">  
-<!ENTITY newMessageCmd.label					"Message">  
-<!ENTITY newCardCmd.label					"New Card...">  
-<!ENTITY newListCmd.label					".New List...">  
-<!ENTITY newAddressBookCmd.label			"New Address Book...">  
-<!ENTITY newDirectoryCmd.label				".New Directory...">  
-<!ENTITY importCmd.label					".Import..."> 
+<!ENTITY newCard.label						"New Address Book Card">  
+<!ENTITY newCard.accesskey					"n">  
+<!ENTITY newListCmd.label					".Mailing List">  
+<!ENTITY newListCmd.accesskey				"l">  
+<!ENTITY newAddressBookCmd.label			"Address Book">  
+<!ENTITY newAddressBookCmd.accesskey		"b">  
+<!ENTITY newDirectoryCmd.label				".Directory">  
+<!ENTITY newDirectoryCmd.accesskey			"d">  
+<!ENTITY importCmd.label					"Import..."> 
 <!ENTITY exportCmd.label					".Export...">  
 <!ENTITY printPreviewCmd.label				".Print Preview">  
 <!ENTITY printCardViewCmd.label				".Print Card View...">  
+<!ENTITY printCardViewCmd.key				"P">
 <!ENTITY printAddressBook.label				".Print Address Book...">  
 
 <!-- Edit Menu -->

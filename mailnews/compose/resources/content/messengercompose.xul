@@ -69,6 +69,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -83,6 +85,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 <keyset id="keyset">
 	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
@@ -103,8 +107,15 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 <toolbox>
   <menubar>
 	<menu id="menu_File">
-	    <menupopup id="menu_FilePopup">
-		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
+      <menupopup id="menu_FilePopup">
+        <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
+        <menu id="menu_New">
+          <menupopup>
+            <menuitem id="menu_newNavigator"/>
+            <menuitem id="menu_newMessage"/>
+            <menuitem id="cmd_newCard"/>
+          </menupopup>
+        </menu>
 		<menuseparator/>
 		<menuitem id="menu_close"/>
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>

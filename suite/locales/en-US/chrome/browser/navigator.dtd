@@ -43,9 +43,6 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "p">
 <!ENTITY printCmd.commandkey "p">
-<!ENTITY quitCmd.label "Quit">
-<!ENTITY quitCmd.accesskey "q">
-<!ENTITY quitCmd.commandkey "q">
 
 <!-- LOCALIZATION NOTE   walletMenu.label: Do NOT localize below line -->
 <!ENTITY walletMenu.label "Wallet">
