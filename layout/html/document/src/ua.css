@@ -44,13 +44,11 @@ FRAMESET {
   font-size: medium;
   background: rgb(192,192,192);
   color: black;
-  margin: 0px;
   display: block;
 }
 
 // XXX Used when PagePreview'ing
 PAGE {
-  margin: 10px;
   background: white;
   border: black solid 1px;
   display: block;
@@ -102,8 +100,13 @@ UL LI, OL LI {
   padding-left: 40px;		/* nav4's value */
 }
 
-DT { margin-bottom: 0 }
-DD { margin-top: 0; margin-left: .25in; }
+DT {
+  margin-bottom: 0;
+}
+DD {
+  margin-top: 0;
+  margin-left: .25in;
+}
 
 A:link { color: blue; text-decoration: underline; cursor: hand; }
 A:visited { color: purple; text-decoration: underline; cursor: hand; }
@@ -158,43 +161,31 @@ H1 {
   display: block;
   font-size: 22pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 H2 {
   display: block;
   font-size: 16pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 H3 {
   display: block;
   font-size: 13pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 H4 {
   display: block;
   font-size: 12pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 H5 {
   display: block;
   font-size: 9pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 H6 {
   display: block;
   font-size: 8pt;
   font-weight: bold;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 LISTING {
   display: block;
@@ -204,12 +195,10 @@ LISTING {
 }
 NOBR {
   display: inline;
-  white-space: pre; // XXX approximation?
+  white-space: nowrap; // XXX approximation?
 }
 P {
   display: block;
-  margin-top: 2pt;
-  margin-bottom: 2pt;
 }
 PLAINTEXT, XMP, PRE {
   display: block; // Note: need before and after breaks
@@ -242,14 +231,6 @@ CAPTION {
 MULTICOL {
   display: block;
 }
-
-// XXX Special rule to eliminate margin around for nav4 compatability
-// XXX This isn't good enough because we only want the margin eliminated
-// around the first paragraph!
-/*TD P, TH P {
-  margin-top: 0;
-  margin-bottom: 0;
-}*/
 
 // Span tags
 B, STRONG {
