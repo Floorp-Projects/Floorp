@@ -69,7 +69,6 @@ try {
   // checking the confirmEx method.
 
   var checkbox = {value:1};
-  var buttonPressed = {value:0};
   // first variation.
   /*
   var std_buttons = (promptObj.BUTTON_TITLE_OK * promptObj.BUTTON_POS_0) +
@@ -81,11 +80,11 @@ try {
   var std_buttons = (promptObj.BUTTON_TITLE_IS_STRING * promptObj.BUTTON_POS_0) +
                       (promptObj.BUTTON_TITLE_IS_STRING * promptObj.BUTTON_POS_1) +
                       (promptObj.BUTTON_TITLE_IS_STRING * promptObj.BUTTON_POS_2);
-  promptObj.confirmEx("confirmEx dialog", "text message", std_buttons,
+  var buttonPressed = promptObj.confirmEx("confirmEx dialog", "text message", std_buttons,
                       "Button0", "Button1", "Button2",
-                      "check or uncheck", checkbox, buttonPressed);
+                      "check or uncheck", checkbox);
   alert("Checkbox checked: " + checkbox.value);
-  alert("Button pressed: " + buttonPressed.value);
+  alert("Button pressed: " + buttonPressed);
   */
 
   // checking the prompt method.
