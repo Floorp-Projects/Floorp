@@ -28,23 +28,35 @@
 
 #define NS_IDOMPROFILECORE_IID \
  { 0x0573a2a3, 0xf838, 0x11d2, \
-    {0x90, 0x6d, 0x00, 0x80, 0x5f, 0x8a, 0x08, 0xdc}}
+    {0x90, 0x6d, 0x00, 0x80, 0x5f, 0x8a, 0x08, 0xdc}} 
 
 class nsIDOMProfileCore : public nsIDOMBaseAppCore {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPROFILECORE_IID; return iid; }
 
   NS_IMETHOD    CreateNewProfile(const nsString& aData)=0;
+
+  NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName)=0;
+
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName)=0;
+
+  NS_IMETHOD    GetProfileList(nsString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMPROFILECORE   \
   NS_IMETHOD    CreateNewProfile(const nsString& aData);  \
+  NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName);  \
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName);  \
+  NS_IMETHOD    GetProfileList(nsString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMPROFILECORE(_to)  \
   NS_IMETHOD    CreateNewProfile(const nsString& aData) { return _to CreateNewProfile(aData); }  \
+  NS_IMETHOD    RenameProfile(const nsString& aOldName, const nsString& aNewName) { return _to RenameProfile(aOldName, aNewName); }  \
+  NS_IMETHOD    DeleteProfile(const nsString& aProfileName) { return _to DeleteProfile(aProfileName); }  \
+  NS_IMETHOD    GetProfileList(nsString& aReturn) { return _to GetProfileList(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitProfileCoreClass(nsIScriptContext *aContext, void **aPrototype);
