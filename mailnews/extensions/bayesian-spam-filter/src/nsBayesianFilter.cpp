@@ -902,7 +902,7 @@ nsBayesianFilter::nsBayesianFilter()
 {
     if (!BayesianFilterLogModule)
       BayesianFilterLogModule = PR_NewLogModule("BayesianFilter");
-
+    
     PRInt32 junkThreshold = 0;
     nsresult rv;
     nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
@@ -914,6 +914,8 @@ nsBayesianFilter::nsBayesianFilter()
       mJunkProbabilityThreshold = kDefaultJunkThreshold;
 
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("junk probabilty threshold: %f", mJunkProbabilityThreshold));
+
+    getTrainingFile(getter_AddRefs(mTrainingFile));
 
     PRBool ok = (mGoodTokens && mBadTokens);
     NS_ASSERTION(ok, "error allocating tokenizers");
@@ -1345,20 +1347,6 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
     }
 }
 
-static nsresult getTrainingFile(nsCOMPtr<nsILocalFile>& file)
-{
-    // should we cache the profile manager's directory?
-    nsCOMPtr<nsIFile> profileDir;
-
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = profileDir->Append(NS_LITERAL_STRING("training.dat"));
-    if (NS_FAILED(rv)) return rv;
-    
-    file = do_QueryInterface(profileDir, &rv);
-    return rv;
-}
-
 /*
     Format of the training file for version 1:
     [0xFEEDFACE]
@@ -1446,62 +1434,80 @@ static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
     return PR_TRUE;
 }
 
+
+nsresult nsBayesianFilter::getTrainingFile(nsILocalFile ** aTrainingFile)
+{
+  // should we cache the profile manager's directory?
+  nsCOMPtr<nsIFile> profileDir;
+
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = profileDir->Append(NS_LITERAL_STRING("training.dat"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return profileDir->QueryInterface(NS_GET_IID(nsILocalFile), (void **) aTrainingFile);
+}
+
 static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
 
 void nsBayesianFilter::writeTrainingData()
 {
-    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("writeTrainingData() entered"));
-    nsCOMPtr<nsILocalFile> file;
-    nsresult rv = getTrainingFile(file);
-    if (NS_FAILED(rv)) return;
- 
-    // open the file, and write out training data
-    FILE* stream;
-    rv = file->OpenANSIFileDesc("wb", &stream);
-    if (NS_FAILED(rv)) return;
+  PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("writeTrainingData() entered"));
+  if (!mTrainingFile) 
+    return;
 
-    if (!((fwrite(kMagicCookie, sizeof(kMagicCookie), 1, stream) == 1) &&
-          (writeUInt32(stream, mGoodCount) == 1) &&
-          (writeUInt32(stream, mBadCount) == 1) &&
-           writeTokens(stream, mGoodTokens) &&
-           writeTokens(stream, mBadTokens))) {
-        NS_WARNING("failed to write training data.");
-        fclose(stream);
-        // delete the training data file, since it is potentially corrupt.
-        file->Remove(PR_FALSE);
-    } else {
-        fclose(stream);
-        mNumDirtyingMessages = 0;
-    }
+  // open the file, and write out training data
+  FILE* stream;
+  nsresult rv = mTrainingFile->OpenANSIFileDesc("wb", &stream);
+  if (NS_FAILED(rv)) 
+    return;
+
+  if (!((fwrite(kMagicCookie, sizeof(kMagicCookie), 1, stream) == 1) &&
+        (writeUInt32(stream, mGoodCount) == 1) &&
+        (writeUInt32(stream, mBadCount) == 1) &&
+         writeTokens(stream, mGoodTokens) &&
+         writeTokens(stream, mBadTokens))) 
+  {
+    NS_WARNING("failed to write training data.");
+    fclose(stream);
+    // delete the training data file, since it is potentially corrupt.
+    mTrainingFile->Remove(PR_FALSE);
+  } 
+  else 
+  {
+    fclose(stream);
+    mNumDirtyingMessages = 0;
+  }
 }
 
 void nsBayesianFilter::readTrainingData()
 {
-    nsCOMPtr<nsILocalFile> file;
-    nsresult rv = getTrainingFile(file);
-    if (NS_FAILED(rv)) return;
-    
-    PRBool exists;
-    rv = file->Exists(&exists);
-    if (NS_FAILED(rv) || !exists) return;
+  if (!mTrainingFile) 
+    return;
+  
+  PRBool exists;
+  nsresult rv = mTrainingFile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) 
+    return;
 
-    FILE* stream;
-    rv = file->OpenANSIFileDesc("rb", &stream);
-    if (NS_FAILED(rv)) return;
+  FILE* stream;
+  rv = mTrainingFile->OpenANSIFileDesc("rb", &stream);
+  if (NS_FAILED(rv)) 
+    return;
 
-    // FIXME:  should make sure that the tokenizers are empty.
-    char cookie[4];
-    if (!((fread(cookie, sizeof(cookie), 1, stream) == 1) &&
-          (memcmp(cookie, kMagicCookie, sizeof(cookie)) == 0) &&
-          (readUInt32(stream, &mGoodCount) == 1) &&
-          (readUInt32(stream, &mBadCount) == 1) &&
-           readTokens(stream, mGoodTokens) &&
-           readTokens(stream, mBadTokens))) {
-        NS_WARNING("failed to read training data.");
-        PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("failed to read training data."));
-    }
-    
-    fclose(stream);
+  // FIXME:  should make sure that the tokenizers are empty.
+  char cookie[4];
+  if (!((fread(cookie, sizeof(cookie), 1, stream) == 1) &&
+        (memcmp(cookie, kMagicCookie, sizeof(cookie)) == 0) &&
+        (readUInt32(stream, &mGoodCount) == 1) &&
+        (readUInt32(stream, &mBadCount) == 1) &&
+         readTokens(stream, mGoodTokens) &&
+         readTokens(stream, mBadTokens))) {
+      NS_WARNING("failed to read training data.");
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("failed to read training data."));
+  }
+  
+  fclose(stream);
 }
 
 NS_IMETHODIMP nsBayesianFilter::GetUserHasClassified(PRBool *aResult)
@@ -1541,10 +1547,9 @@ NS_IMETHODIMP nsBayesianFilter::ResetTrainingData()
   }
 
   // now remove training.dat
-  nsCOMPtr<nsILocalFile> file;
-  nsresult rv = getTrainingFile(file);
-  if (file)
-    file->Remove(PR_FALSE);
+  if (mTrainingFile)
+    mTrainingFile->Remove(PR_FALSE);
 
   return NS_OK;
 }
+

@@ -153,6 +153,7 @@ public:
 
     void writeTrainingData();
     void readTrainingData();
+    nsresult getTrainingFile(nsILocalFile ** aFile);
     
 protected:
 
@@ -166,6 +167,7 @@ protected:
     PRInt32 mMinFlushInterval; // in miliseconds, must be positive
                                //and not too close to 0
     nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<nsILocalFile> mTrainingFile;
 };
 
 #endif // _nsBayesianFilter_h__
