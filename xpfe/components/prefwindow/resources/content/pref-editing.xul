@@ -62,15 +62,14 @@
           <radio data="0" value="&useNavigator.label;" accesskey="&useNavigator.accesskey;" oncommand="useNavigatorColors();"/>
           <radio data="1" value="&useCustomColors.label;" accesskey="&useCustomColors.accesskey;" oncommand="useCustomColors()"/>
         </radiogroup>
-        <grid class="indent">
+       <grid class="indent">
           <columns>
             <column flex="1"/>
             <column/>
           </columns>
-  
           <rows>
             <row>
-              <text class="label" id="textLabel" value="&NormalText.label;" accesskey="&NormalText.accesskey;" for="textMenu"/>
+              <text class="label" id="textLabel" value="&NormalText.label;&colon.char;" accesskey="&NormalText.accesskey;" for="textMenu"/>
               <menu id="textMenu" allowevents="true" class="colorpicker">
                 <html:div id="textDiv" style="width:30px; background-color:white"/>
                 <titledbutton class="popup" align="right"/>
@@ -82,7 +81,7 @@
             </row>
   
             <row>
-              <text class="label" id="linkLabel" value="&LinkText.label;" accesskey="&LinkText.accesskey;" for="linkMenu"/>
+              <text class="label" id="linkLabel" value="&LinkText.label;&colon.char;" accesskey="&LinkText.accesskey;" for="linkMenu"/>
               <menu id="linkMenu" allowevents="true" class="colorpicker">
                 <html:div id="linkDiv" style="width:30px; background-color:white"/>
                 <titledbutton class="popup" align="right"/>
@@ -94,7 +93,7 @@
             </row>
   
             <row>
-              <text class="label" id="aLinkLabel" value="&ActiveLinkText.label;" accesskey="&ActiveLinkText.accesskey;" for="aLinkMenu"/>
+              <text class="label" id="aLinkLabel" value="&ActiveLinkText.label;&colon.char;" accesskey="&ActiveLinkText.accesskey;" for="aLinkMenu"/>
               <menu id="aLinkMenu" allowevents="true" class="colorpicker">
                 <html:div id="aLinkDiv" style="width:30px; background-color:white"/>
                 <titledbutton class="popup" align="right"/>
@@ -105,7 +104,7 @@
               <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
             </row>
             <row>
-              <text class="label" id="fLinkLabel" value="&FollowedLinkText.label;" accesskey="&FollowedLinkText.accesskey;" for="fLinkMenu"/>
+              <text class="label" id="fLinkLabel" value="&FollowedLinkText.label;&colon.char;" accesskey="&FollowedLinkText.accesskey;" for="fLinkMenu"/>
               <menu id="fLinkMenu" allowevents="true" class="colorpicker">
                 <html:div id="fLinkDiv" style="width:30px; background-color:white"/>
                 <titledbutton class="popup" align="right"/>
@@ -116,7 +115,7 @@
               <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
             </row>
             <row>
-              <text class="label" id="backgroundLabel" value="&BackgroundColor.label;" accesskey="&BackgroundColor.accesskey;" for="backgroundMenu"/>
+              <text class="label" id="backgroundLabel" value="&BackgroundColor.label;&colon.char;" accesskey="&BackgroundColor.accesskey;" for="backgroundMenu"/>
               <menu id="backgroundMenu" allowevents="true" class="colorpicker">
                 <html:div id="backgroundDiv" style="width:30px; background-color:white"/>
                 <titledbutton class="popup" align="right"/>
@@ -133,13 +132,20 @@
       <separator orient="vertical"/>
       
       <box orient="vertical" flex="1">
+        <box />
+        <separator orient="vertical"/>
+        
         <box class="inset" id="backgroundcolor" orient="vertical" flex="1">
+          <separator/>
           <text class="label" id="normaltext" value="&NormalText.label;"/>
+          <separator class="thin"/>
           <text class="label" id="linktext" value="&LinkText.label;"/>
+          <separator class="thin"/>
           <text class="label" id="activelinktext" value="&ActiveLinkText.label;"/>
+          <separator class="thin"/>
           <text class="label" id="followedlinktext" value="&FollowedLinkText.label;"/>
+          <separator/>
         </box>
-        <button id="useDefaults" class="dialog" value="&UseDefaults.label;" accesskey="&UseDefaults.accesskey;" oncommand="useDefaultColors();"/>
       </box>
       
     </box>                       
@@ -150,8 +156,10 @@
          area if it is available (locally, or network connection is open) -->    
     <text class="label" value="&defaultBackgroundImage.label;" accesskey="&defaultBackgroundImage.accesskey;"/>
     <box autostretch="never">
-      <textfield id="backroundImageField" flex="1" pref="true" preftype="string"
-                 prefstring="editor.default_background_image" prefattribute="value"/>
+      <textfield id="backroundImageField" flex="1" 
+                 pref="true" preftype="string"
+                 prefstring="editor.default_background_image" 
+                 prefattribute="value"/>
       <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" oncommand="prefNavSelectFile('backroundImageField','choosefile',true);"/>
     </box>
 
