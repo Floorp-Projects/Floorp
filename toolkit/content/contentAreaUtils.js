@@ -298,7 +298,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
         return "DeskV";
 #endif
 #ifdef XP_MACOSX
-        return "Desk";
+        return "UsrDsk";
 #endif
         return "Home";
       }
