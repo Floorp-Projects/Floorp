@@ -390,7 +390,7 @@ public:
   }
 
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
-  nsresult IsEmpty(PRBool aIsQuirkMode, PRBool aParentIsPre,
+  nsresult IsEmpty(nsCompatibility aCompatMode, PRBool aParentIsPre,
                    PRBool *aResult) const;
 
 #ifdef DEBUG

@@ -42,6 +42,7 @@
 #include "nsCoord.h"
 #include "nsAString.h"
 #include "nsIRequest.h"
+#include "nsCompatibility.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -77,11 +78,6 @@ class nsIRenderingContext;
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
-
-enum nsCompatibility {
-  eCompatibility_Standard   = 1,
-  eCompatibility_NavQuirks  = 2
-};
 
 enum nsWidgetRendering {
   eWidgetRendering_Native   = 1,

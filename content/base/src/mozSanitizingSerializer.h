@@ -101,7 +101,7 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode)
                                                     { return NS_OK; }
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsAString& aCharset);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }

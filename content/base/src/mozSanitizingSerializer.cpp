@@ -377,8 +377,7 @@ mozSanitizingHTMLSerializer::SetTitle(const nsString& aValue)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AddDocTypeDecl(const nsIParserNode& aNode,
-                                            PRInt32 aMode)
+mozSanitizingHTMLSerializer::AddDocTypeDecl(const nsIParserNode& aNode)
 {
   return NS_OK;
 }

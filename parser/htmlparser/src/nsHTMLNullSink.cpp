@@ -68,7 +68,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() {return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsAString& aCharset) {return NS_OK;}
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
@@ -546,7 +546,7 @@ nsHTMLNullSink::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsHTMLNullSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
+nsHTMLNullSink::AddDocTypeDecl(const nsIParserNode& aNode)
 {
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);

@@ -3,6 +3,7 @@
 #
 nsBidi.h
 nsBidiPresUtils.h
+nsCompatibility.h
 nsFrameList.h
 nsFrameTraversal.h
 nsHTMLReflowMetrics.h

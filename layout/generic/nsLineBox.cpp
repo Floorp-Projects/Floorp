@@ -278,11 +278,11 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
 }
 
 nsresult
-nsLineBox::IsEmpty(PRBool aIsQuirkMode, PRBool aParentIsPre,
+nsLineBox::IsEmpty(nsCompatibility aCompatMode, PRBool aParentIsPre,
                    PRBool *aResult) const
 {
   if (IsBlock())
-    return mFirstChild->IsEmpty(aIsQuirkMode, aParentIsPre, aResult);
+    return mFirstChild->IsEmpty(aCompatMode, aParentIsPre, aResult);
 
   *aResult = PR_TRUE;
   PRInt32 n;
@@ -291,7 +291,7 @@ nsLineBox::IsEmpty(PRBool aIsQuirkMode, PRBool aParentIsPre,
        n > 0;
        --n, kid->GetNextSibling(&kid))
   {
-    kid->IsEmpty(aIsQuirkMode, aParentIsPre, aResult);
+    kid->IsEmpty(aCompatMode, aParentIsPre, aResult);
     if (! *aResult)
       break;
   }

@@ -148,7 +148,9 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
-  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult);
+  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
+                     PRBool aIsPre,
+                     PRBool* aResult);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -196,9 +198,6 @@ public:
   static void CombineRects(const nsRect& r1, nsRect& r2);
 
   inline nscoord GetAscent() { return mAscent; }
-
-  // Return true if aFrame is the (only) child of an nsTableCellFrame which has a TD content node.
-  static PRBool IsTDTableCellBlock(nsIFrame& aFrame);
 
 protected:
   nsBlockFrame();

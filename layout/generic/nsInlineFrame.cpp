@@ -135,9 +135,10 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 NS_IMETHODIMP
-nsInlineFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult)
+nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
+                       PRBool* aResult)
 {
-  if (!aIsQuirkMode) {
+  if (aCompatMode == eCompatibility_FullStandards) {
     *aResult = PR_FALSE;
     return NS_OK;
   }
@@ -182,7 +183,7 @@ nsInlineFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult)
 
   *aResult = PR_TRUE;
   for (nsIFrame *kid = mFrames.FirstChild(); kid; kid->GetNextSibling(&kid)) {
-    kid->IsEmpty(aIsQuirkMode, aIsPre, aResult);
+    kid->IsEmpty(aCompatMode, aIsPre, aResult);
     if (! *aResult)
       break;
   }

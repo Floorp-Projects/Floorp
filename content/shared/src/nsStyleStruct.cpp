@@ -915,12 +915,12 @@ nsStyleTableBorder::nsStyleTableBorder(nsIPresContext* aPresContext)
 { 
   mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
 
-  nsCompatibility compatMode = eCompatibility_Standard;
+  nsCompatibility compatMode = eCompatibility_FullStandards;
   if (aPresContext)
-		aPresContext->GetCompatibilityMode(&compatMode);
-  mEmptyCells = (compatMode == eCompatibility_NavQuirks
+    aPresContext->GetCompatibilityMode(&compatMode);
+  mEmptyCells = (compatMode == eCompatibility_NavQuirks)
                   ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
-                  : NS_STYLE_TABLE_EMPTY_CELLS_SHOW);
+                  : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   mCaptionSide = NS_SIDE_TOP;
   mBorderSpacingX.Reset();
   mBorderSpacingY.Reset();

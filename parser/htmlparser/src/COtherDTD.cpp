@@ -279,7 +279,8 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
       }
       else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
         switch(aParserContext.mDTDMode) {
-          case eDTDMode_strict:
+          case eDTDMode_full_standards:
+          case eDTDMode_almost_standards:
             result=ePrimaryDetect;
             break;
           default:
@@ -296,7 +297,8 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
             aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
             if(!theBufHasXML) {
               switch(aParserContext.mDTDMode) {
-                case eDTDMode_strict:
+                case eDTDMode_full_standards:
+                case eDTDMode_almost_standards:
                   result=ePrimaryDetect;
                   break;
                 default:

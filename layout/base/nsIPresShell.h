@@ -41,6 +41,7 @@
 #include "nsCoord.h"
 #include "nsEvent.h"
 #include "nsReflowType.h"
+#include "nsCompatibility.h"
 
 class nsIAtom;
 class nsIContent;
@@ -126,7 +127,7 @@ public:
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet,
-                  PRBool aIsQuirksMode) = 0;
+                  nsCompatibility aCompatMode) = 0;
 
   /**
    * All callers are responsible for calling |Destroy| after calling

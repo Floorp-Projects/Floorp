@@ -136,7 +136,8 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
 {
   NS_INIT_REFCNT();
   
-  if (aParseMode==eDTDMode_strict) {
+  if (aParseMode==eDTDMode_full_standards ||
+      aParseMode==eDTDMode_almost_standards) {
     mFlags = NS_IPARSER_FLAG_STRICT_MODE;
   }
   else if (aParseMode==eDTDMode_quirks)  {

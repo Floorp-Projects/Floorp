@@ -39,7 +39,7 @@
 #define nsIHTMLDocument_h___
 
 #include "nsISupports.h"
-#include "nsIDTD.h"
+#include "nsCompatibility.h"
 
 class nsIImageMap;
 class nsString;
@@ -76,10 +76,10 @@ public:
   NS_IMETHOD SetReferrer(const nsAString& aReferrer) = 0;
 
   /**
-   * Access DTD compatibility mode for this document
+   * Access compatibility mode for this document
    */
-  NS_IMETHOD GetDTDMode(nsDTDMode& aMode) = 0;
-  NS_IMETHOD SetDTDMode(nsDTDMode aMode) = 0;
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode) = 0;
+  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   /*
    * Returns true if document.domain was set for this document

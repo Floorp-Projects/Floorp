@@ -3847,8 +3847,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
   // Setup hierarchical relationship in view manager
   aPO->mViewManager->SetRootView(aPO->mRootView);
   aPO->mPresShell->Init(document, aPO->mPresContext,
-                        aPO->mViewManager, aPO->mStyleSet,
-                        mode != eCompatibility_Standard);
+                        aPO->mViewManager, aPO->mStyleSet, mode);
 
   if (!containerIsSet) {
     nsCOMPtr<nsISupports> supps(do_QueryInterface(aPO->mWebShell));

@@ -25,6 +25,7 @@ XPIDL_MODULE=layout_base
 include <$(DEPTH)\config\config.mak>
 
 EXPORTS =				\
+	nsCompatibility.h		\
 	nsFrameList.h			\
 	nsFrameTraversal.h		\
 	nsHTMLReflowMetrics.h		\

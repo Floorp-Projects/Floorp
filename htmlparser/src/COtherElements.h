@@ -1738,7 +1738,7 @@ public:
       theStr.Truncate(theLen-1);
       theStr.Cut(0,2);
   
-      result = aSink->AddDocTypeDecl(*aNode,eDTDMode_strict);
+      result = aSink->AddDocTypeDecl(*aNode);
     }
     return result;
   }

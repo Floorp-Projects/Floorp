@@ -149,7 +149,7 @@ nsPresContext::nsPresContext()
     mNoTheme(PR_FALSE)
 {
   NS_INIT_REFCNT();
-  mCompatibilityMode = eCompatibility_Standard;
+  mCompatibilityMode = eCompatibility_FullStandards;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
   mImageAnimationModePref = imgIContainer::kNormalAnimMode;
@@ -769,7 +769,7 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
   nsCOMPtr<nsIStyleSet> set;
   mShell->GetStyleSet(getter_AddRefs(set));
   if (set) {
-    set->EnableQuirkStyleSheet(mCompatibilityMode != eCompatibility_Standard);
+    set->EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
   }
   return NS_OK;
 }

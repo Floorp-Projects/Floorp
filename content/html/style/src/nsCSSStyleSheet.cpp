@@ -3309,13 +3309,11 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
 
+  // get the compat. mode (unless it is provided)
   if(!aCompat) {
-    // get the compat. mode (unless it is provided)
-    nsCompatibility quirkMode = eCompatibility_Standard;
-    mPresContext->GetCompatibilityMode(&quirkMode);
-    mIsQuirkMode = eCompatibility_Standard == quirkMode ? PR_FALSE : PR_TRUE;
+    mPresContext->GetCompatibilityMode(&mCompatMode);
   } else {
-    mIsQuirkMode = eCompatibility_Standard == *aCompat ? PR_FALSE : PR_TRUE;
+    mCompatMode = *aCompat;
   }
 
 
@@ -3628,7 +3626,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
-        if (data.mIsQuirkMode &&
+        if (data.mCompatMode == eCompatibility_NavQuirks &&
             // global selector:
             !aSelector->mTag && !aSelector->mClassList &&
             !aSelector->mIDList && !aSelector->mAttrList &&
@@ -3792,7 +3790,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
     result = localFalse;
     if (data.mStyledContent) {
-      PRBool isCaseSensitive = !data.mIsQuirkMode; // bug 93371
+      // case sensitivity: bug 93371
+      PRBool isCaseSensitive = data.mCompatMode != eCompatibility_NavQuirks;
       nsAtomList* IDList = aSelector->mIDList;
       if (nsnull == IDList) {
         result = PR_TRUE;
@@ -3863,7 +3862,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
 
       // for adjacent sibling combinators, the content to test against the
       // selector is the previous sibling
-      nsCompatibility compat = curdata->mIsQuirkMode ? eCompatibility_NavQuirks : eCompatibility_Standard;
+      nsCompatibility compat = curdata->mCompatMode;
       RuleProcessorData* newdata;
       if (PRUnichar('+') == selector->mOperator) {
         newdata = curdata->mPreviousSiblingData;
@@ -4438,11 +4437,11 @@ CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
   }
 
   if (mSheets) {
-    nsCompatibility quirkMode = eCompatibility_Standard;
+    nsCompatibility quirkMode;
     aPresContext->GetCompatibilityMode(&quirkMode);
 
     cascade = new RuleCascadeData(aMedium,
-                                  eCompatibility_Standard != quirkMode);
+                                  eCompatibility_NavQuirks == quirkMode);
     if (cascade) {
       *cascadep = cascade;
 

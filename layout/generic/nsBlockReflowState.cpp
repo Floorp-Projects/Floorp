@@ -450,12 +450,8 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
       ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
        (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace));
 
-  // IsEmpty treats standards and quirks mode differently. We want
-  // quirks behavior for a table cell block.
   nsCompatibility mode;
   mPresContext->GetCompatibilityMode(&mode);
-  PRBool isQuirkMode = (mode == eCompatibility_NavQuirks) ||
-                        nsBlockFrame::IsTDTableCellBlock(*mBlock);
 
   nsLineList::iterator firstLine = block->begin_lines();
   for (;;) {
@@ -465,7 +461,7 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
       break;
     }
     PRBool isEmpty;
-    aLine->IsEmpty(isQuirkMode, isPre, &isEmpty);
+    aLine->IsEmpty(mode, isPre, &isEmpty);
     if (! isEmpty) {
       break;
     }

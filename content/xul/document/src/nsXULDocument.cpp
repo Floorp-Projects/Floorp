@@ -1059,7 +1059,8 @@ nsXULDocument::CreateShell(nsIPresContext* aContext,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = shell->Init(this, aContext, aViewManager, aStyleSet, PR_FALSE);
+    rv = shell->Init(this, aContext, aViewManager, aStyleSet,
+                     eCompatibility_FullStandards);
     if (NS_FAILED(rv)) {
         NS_RELEASE(shell);
         return rv;
@@ -1571,7 +1572,8 @@ nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
     if (NS_SUCCEEDED(result)) {
       result = mCSSLoader->Init(this);
       mCSSLoader->SetCaseSensitive(PR_TRUE);
-      mCSSLoader->SetQuirkMode(PR_FALSE); // no quirks in XUL
+      // no quirks in XUL
+      mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
     }
   }
   aLoader = mCSSLoader;

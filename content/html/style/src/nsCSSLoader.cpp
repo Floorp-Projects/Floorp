@@ -216,7 +216,7 @@ public:
   NS_IMETHOD DropDocumentReference(void);
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
-  NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
+  NS_IMETHOD SetCompatibilityMode(nsCompatibility aCompatMode);
   NS_IMETHOD SetPreferredSheet(const nsAString& aTitle);
 
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
@@ -290,7 +290,7 @@ public:
   nsIDocument*  mDocument;  // the document we live for
 
   PRBool        mCaseSensitive; // is document CSS case sensitive
-  PRBool        mNavQuirkMode;  // should CSS be in quirk mode
+  nsCompatibility mCompatMode;
   nsString      mPreferredSheet;    // title of preferred sheet
 
   nsISupportsArray* mParsers;     // array of CSS parsers
@@ -445,7 +445,7 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   NS_INIT_REFCNT();
   mDocument = nsnull;
   mCaseSensitive = PR_FALSE;
-  mNavQuirkMode = PR_FALSE;
+  mCompatMode = eCompatibility_FullStandards;
   mParsers = nsnull;
   SetCharset(NS_LITERAL_STRING(""));
 }
@@ -526,9 +526,9 @@ CSSLoaderImpl::SetCaseSensitive(PRBool aCaseSensitive)
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::SetQuirkMode(PRBool aQuirkMode)
+CSSLoaderImpl::SetCompatibilityMode(nsCompatibility aCompatMode)
 {
-  mNavQuirkMode = aQuirkMode;
+  mCompatMode = aCompatMode;
   return NS_OK;
 }
 
@@ -579,7 +579,7 @@ CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet,
   }
   if (*aParser) {
     (*aParser)->SetCaseSensitive(mCaseSensitive);
-    (*aParser)->SetQuirkMode(mNavQuirkMode);
+    (*aParser)->SetQuirkMode(mCompatMode == eCompatibility_NavQuirks);
     (*aParser)->SetCharset(mCharset);
     if (aSheet) {
       (*aParser)->SetStyleSheet(aSheet);
@@ -636,13 +636,13 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   
   if (realDocument && aString && aStringLen>0) {
     nsCAutoString contentType;
-    if (! (mLoader->mNavQuirkMode)) {
+    if (mLoader->mCompatMode != eCompatibility_NavQuirks) {
       nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
       if (channel) {
         channel->GetContentType(contentType);
       }
     }
-    if (mLoader->mNavQuirkMode ||
+    if (mLoader->mCompatMode == eCompatibility_NavQuirks ||
         contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
         contentType.IsEmpty()) {
       /*
