@@ -160,7 +160,6 @@ private:
   
   nsresult MigratePopAccount(nsIMsgIdentity *identity);
   
-  nsresult CreateLocalMailAccount(nsIMsgIdentity *identity);
   nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
   nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   

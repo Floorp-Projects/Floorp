@@ -28,7 +28,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIArena.h"
 
-  static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
+static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 const char *kFoldersScope = "ns:msg:db:row:scope:folders:all";	// scope for all folders table
@@ -49,6 +49,7 @@ public:
     
 // } ===== end nsIMdbHeap methods =====
   nsresult Init();
+  virtual ~FolderCachePool() {};
 protected:
 	nsCOMPtr <nsIArena> m_arena;
 };

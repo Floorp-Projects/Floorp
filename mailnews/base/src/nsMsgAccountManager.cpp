@@ -454,11 +454,9 @@ nsresult
 nsMsgAccountManager::CreateIncomingServer(const char* type,
                                           nsIMsgIncomingServer **_retval)
 {
-
   if (!_retval) return NS_ERROR_NULL_POINTER;
   const char *key = getUniqueKey("server", &m_incomingServers);
   return createKeyedServer(key, type, _retval);
-
 }
 
 nsresult
@@ -1161,17 +1159,11 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("FAIL:  don't proceed with migration.\n");
 #endif
-      // but before we do that, create the default Local Mail Account
-      rv = CreateLocalMailAccount(nsnull /* no identity yet */);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create the Local Mail account");
-      // return NS_ERROR_FAILURE because we failed to upgrade the pref.js
-      // by returning a failure code, this will case the Account Wizard
-      // to be automatically opened.
-      return NS_ERROR_FAILURE;
+      return rv;
     }
 #ifdef DEBUG_ACCOUNTMANAGER
     else {
-        printf("PASS:  proceed with migration.\n");
+      printf("PASS:  proceed with migration.\n");
     }
 #endif 
 
@@ -1196,10 +1188,6 @@ nsMsgAccountManager::UpgradePrefs()
     if ( oldMailType == POP_4X_MAIL_TYPE) {
       // in 4.x, you could only have one pop account
       rv = MigratePopAccount(identity);
-      if (NS_FAILED(rv)) return rv;
-
-      // you got to have one, so we just create it here.
-      rv = CreateLocalMailAccount(identity);
       if (NS_FAILED(rv)) return rv;
 	}
     else if (oldMailType == IMAP_4X_MAIL_TYPE) {
@@ -1492,7 +1480,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
 {
   nsresult rv;
@@ -2391,7 +2379,7 @@ nsMsgAccountManager::FindServer(const char* username,
   nsresult rv;
   nsCOMPtr<nsISupportsArray> servers;
 	
-#ifdef DEBUG_ACCOUNTMANAGER_
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
 #endif
  
@@ -2399,10 +2387,16 @@ nsMsgAccountManager::FindServer(const char* username,
   if (NS_FAILED(rv)) return rv;
 
   findServerEntry serverInfo;
-  serverInfo.hostname = hostname;
+
+  // "" acts as the wild card.
+
+  // hostname might be blank, pass "" instead
+  serverInfo.hostname = hostname ? hostname : "";
   // username might be blank, pass "" instead
-  serverInfo.username = username ? username : ""; 
-  serverInfo.type = type;
+  serverInfo.username = username ? username : "";
+  // type might be blank, pass "" instead
+  serverInfo.type = type ? type : "";
+
   serverInfo.server = *aResult = nsnull;
   
   servers->EnumerateForwards(findServer, (void *)&serverInfo);
@@ -2485,26 +2479,23 @@ nsMsgAccountManager::findServer(nsISupports *aElement, void *data)
   rv = server->GetUsername(getter_Copies(thisUsername));
   if (NS_FAILED(rv)) return PR_TRUE;
  
-  
   nsXPIDLCString thisType;
   rv = server->GetType(getter_Copies(thisType));
   if (NS_FAILED(rv)) return PR_TRUE;
  
-  if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
-      PL_strcmp(entry->type, thisType)==0) {
-        // if we aren't looking for a username, don't compare.  we have a match
-  	if (PL_strcmp(entry->username,"")==0) {
-		entry->server = server;
-		return PR_FALSE;            // stop on first find 
-        }
-        else {
-      		if (PL_strcmp(entry->username, thisUsername)==0) {
-		   entry->server = server;
-		   return PR_FALSE;            // stop on first find 
-		}
-	}
+  // treat "" as a wild card, so if the caller passed in "" for the desired attribute
+  // treat it as a match
+  PRBool checkType = PL_strcmp(entry->type, "");
+  PRBool checkHostname = PL_strcmp(entry->hostname,"");
+  PRBool checkUsername = PL_strcmp(entry->username,"");
+  if ((!checkType || (PL_strcmp(entry->type, thisType)==0)) && 
+      (!checkHostname || (PL_strcasecmp(entry->hostname, thisHostname)==0)) && 
+      (!checkUsername || (PL_strcmp(entry->username, thisUsername)==0))) 
+  {
+    entry->server = server;
+    return PR_FALSE;            // stop on first find 
   }
-
+  
   return PR_TRUE;
 }
 
