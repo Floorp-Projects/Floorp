@@ -266,6 +266,7 @@ private:
   nsCOMPtr<nsINntpIncomingServer> m_nntpServer;
 
 	nsresult GetNewsStringByName(const char *aName, PRUnichar **aString);
+	nsresult GetNewsStringByID(PRInt32 stringID, PRUnichar **aString);
 
   PRInt32 PostMessageInFile(nsIFileSpec * filePath);
 
@@ -400,6 +401,7 @@ private:
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
   nsCOMPtr <nsITimer> mUpdateTimer; 
+	nsresult AlertError(PRInt32 errorCode, const char *text);
 };
 
 NS_BEGIN_EXTERN_C

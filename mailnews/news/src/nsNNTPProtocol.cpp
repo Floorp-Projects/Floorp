@@ -158,7 +158,6 @@ typedef struct _cancelInfoEntry {
 } cancelInfoEntry;
 
 // quiet compiler warnings by defining these function prototypes
-char *NET_ExplainErrorDetails (int code, ...);
 char *MSG_UnEscapeSearchUrl (const char *commandSpecificData);
 
 /* Logging stuff */
@@ -326,22 +325,6 @@ char *XP_AppCodeName = "Mozilla";
 const char *XP_AppCodeName = "Mozilla";
 #endif
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
-
-/*
- * This function takes an error code and associated error data
- * and creates a string containing a textual description of
- * what the error is and why it happened.
- *
- * The returned string is allocated and thus should be freed
- * once it has been used.
- *
- * This function is defined in mkmessag.c.
- */
-char * NET_ExplainErrorDetails (int code, ...)
-{
-	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
-	return rv;
-}
 
 char * NET_SACopy (char **destination, const char *source)
 {
@@ -979,9 +962,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   if (NS_FAILED(rv))
   {
-#ifdef UNREADY_CODE
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(*status);
-#endif
+	  AlertError(rv, nsnull);
       return rv;
   }
   else 
@@ -1255,6 +1236,10 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	
 	if (m_responseCode == MK_NNTP_RESPONSE_AUTHINFO_DENIED) {
+		/* login failed */
+		AlertError(MK_NNTP_AUTH_FAILED, m_responseText);
+
+		/* forget the password & username, since login failed */
 		if (m_newsFolder) {
 			rv = m_newsFolder->ForgetGroupUsername();
 			rv = m_newsFolder->ForgetGroupPassword();	
@@ -1292,9 +1277,7 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
     if(MK_NNTP_RESPONSE_TYPE(m_responseCode)!=MK_NNTP_RESPONSE_TYPE_OK)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText));
+		AlertError(MK_NNTP_ERROR_MESSAGE, m_responseText);
 
     	m_nextState = NNTP_ERROR;
 #ifdef UNREADY_CODE
@@ -1698,9 +1681,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 
 		if(!last_update)
 		{
-			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-			if (mailnewsurl)
-				mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_NEWSGROUP_SCAN_ERROR));
+			AlertError(MK_NNTP_NEWSGROUP_SCAN_ERROR, nsnull);
 			m_nextState = NEWS_ERROR;
 			return(MK_INTERRUPTED);
 		}
@@ -2454,10 +2435,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
         }
 
         if (NS_FAILED(rv)) {
-            nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-            if (mailnewsurl)
-                mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
-
+			AlertError(MK_NNTP_AUTH_FAILED, "Aborted by user");
             return(MK_NNTP_AUTH_FAILED);
         } 
 	} // !username
@@ -2558,9 +2536,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
             }
             
             if (NS_FAILED(rv)) {
-                nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-                if (mailnewsurl)
-                    mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
+				AlertError(MK_NNTP_AUTH_FAILED,"Aborted by user");
                 return(MK_NNTP_AUTH_FAILED);
             }
 		}
@@ -2594,11 +2570,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 	else
 	{
         /* login failed */
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
-									MK_NNTP_AUTH_FAILED,
-									m_responseText ? m_responseText : ""));
+		AlertError(MK_NNTP_AUTH_FAILED, m_responseText);
 
 		if (m_newsFolder) {
 			rv = m_newsFolder->ForgetGroupUsername();
@@ -2654,11 +2626,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 	else
 	{
         /* login failed */
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
-									MK_NNTP_AUTH_FAILED,
-									m_responseText ? m_responseText : ""));
+		AlertError(MK_NNTP_AUTH_FAILED, m_responseText);
 
 		if (m_newsFolder) {
 			rv = m_newsFolder->ForgetGroupUsername();
@@ -3320,6 +3288,47 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 }
 
 #define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
+
+nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString)
+{
+	nsresult res;
+	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	if (!m_stringBundle)
+	{
+		char*       propertyURL = NEWS_MSGS_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+		}
+	}
+	if (m_stringBundle) {
+		PRUnichar *ptrv = nsnull;
+		res = m_stringBundle->GetStringFromID(stringID, &ptrv);
+
+		if (NS_FAILED(res)) 
+		{
+			resultString.AssignWithConversion("[StringID");
+			resultString.AppendInt(stringID, 10);
+			resultString.AppendWithConversion("?]");
+			*aString = resultString.ToNewUnicode();
+		}
+		else
+		{
+			*aString = ptrv;
+		}
+	}
+	else
+	{
+		res = NS_OK;
+		*aString = resultString.ToNewUnicode();
+	}
+	return res;
+}
+
 nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
 {
 	nsresult res;
@@ -3462,6 +3471,7 @@ PRInt32 nsNNTPProtocol::PostDataResponse()
 {
 	if (m_responseCode != MK_NNTP_RESPONSE_POST_OK) 
 	{
+	  AlertError(MK_NNTP_ERROR_MESSAGE,m_responseText);
 #ifdef UNREADY_CODE
 	  ce->URL_s->error_msg =
 		NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, 
@@ -3861,9 +3871,6 @@ PRInt32 nsNNTPProtocol::DoCancel()
 		  // XXX:  todo, check rv?
           
           status = MK_NNTP_CANCEL_DISALLOWED;
-		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		  if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(PL_strdup("not implemented"));
           m_nextState = NEWS_ERROR; /* even though it worked */
           ClearFlag(NNTP_PAUSE_FOR_READ);
           goto FAIL;
@@ -3943,7 +3950,9 @@ PRInt32 nsNNTPProtocol::DoCancel()
 		status = SendData(mailnewsurl, data);
     PR_Free (data);
     if (status < 0) {
-		mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, status));
+		nsCAutoString errorText;
+		errorText.AppendInt(status);
+		AlertError(MK_TCP_WRITE_ERROR,(const char *)errorText);
 		goto FAIL;
 	}
 
@@ -4042,9 +4051,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 
 	if (m_responseCode != MK_NNTP_RESPONSE_XPAT_OK)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg  = NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText);
-#endif
+		AlertError(MK_NNTP_ERROR_MESSAGE,m_responseText);
     	m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		return MK_NNTP_SERVER_ERROR;
@@ -5040,4 +5047,28 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 	}
 	if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;
+}
+
+nsresult
+nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
+{
+	nsresult rv;
+	nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!dialog) return NS_ERROR_FAILURE;
+
+	nsXPIDLString newsString;
+	rv = GetNewsStringByID(errorCode, getter_Copies(newsString));
+	if (NS_FAILED(rv)) return rv;
+
+	nsAutoString alertText;
+	alertText.AssignWithConversion("NEWS ERROR:  ");
+	alertText.Append((const PRUnichar *)newsString);
+
+	if (text) {
+		alertText.AppendWithConversion(text);
+	}
+
+	rv = dialog->Alert(nsnull, alertText.GetUnicode());
+    return rv;
 }
