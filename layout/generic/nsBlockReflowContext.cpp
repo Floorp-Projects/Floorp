@@ -26,9 +26,11 @@
 #include "nsHTMLContainerFrame.h"
 
 #ifdef NS_DEBUG
-#define NOISY_SPECULATIVE_TOP_MARGIN
+#undef  NOISY_SPECULATIVE_TOP_MARGIN
+#undef  NOISY_MAX_ELEMENT_SIZE
 #else
-#undef NOISY_SPECULATIVE_TOP_MARGIN
+#undef  NOISY_SPECULATIVE_TOP_MARGIN
+#undef  NOISY_MAX_ELEMENT_SIZE
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
@@ -169,6 +171,16 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     mMetrics.maxElementSize->width = 0;
     mMetrics.maxElementSize->height = 0;
   }
+  if ((nsnull != mMetrics.maxElementSize) &&
+      ((mMetrics.maxElementSize->width > mMetrics.width) ||
+       (mMetrics.maxElementSize->height > mMetrics.height))) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
+           mMetrics.maxElementSize->width,
+           mMetrics.maxElementSize->height,
+           mMetrics.width, mMetrics.height);
+  }
   if ((mMetrics.width == nscoord(0xdeadbeef)) ||
       (mMetrics.height == nscoord(0xdeadbeef)) ||
       (mMetrics.ascent == nscoord(0xdeadbeef)) ||
@@ -177,6 +189,16 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     nsFrame::ListTag(stdout, aFrame);
     printf(" didn't set whad %d,%d,%d,%d!\n", mMetrics.width, mMetrics.height,
            mMetrics.ascent, mMetrics.descent);
+  }
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  if (nsnull != mMetrics.maxElementSize) {
+    printf("  ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(": maxElementSize=%d,%d wh=%d,%d\n",
+           mMetrics.maxElementSize->width,
+           mMetrics.maxElementSize->height,
+           mMetrics.width, mMetrics.height);
   }
 #endif
 

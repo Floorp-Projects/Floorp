@@ -37,6 +37,7 @@
 #undef  NOISY_PUSHING
 #undef   REALLY_NOISY_PUSHING
 #define DEBUG_ADD_TEXT
+#undef  NOISY_MAX_ELEMENT_SIZE
 #else
 #undef NOISY_HORIZONTAL_ALIGN
 #undef  REALLY_NOISY_HORIZONTAL_ALIGN
@@ -47,6 +48,7 @@
 #undef NOISY_PUSHING
 #undef  REALLY_NOISY_PUSHING
 #undef DEBUG_ADD_TEXT
+#undef NOISY_MAX_ELEMENT_SIZE
 #endif
 
 nsTextRun::nsTextRun()
@@ -759,14 +761,34 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     metrics.maxElementSize->width = 0;
     metrics.maxElementSize->height = 0;
   }
+  if (mComputeMaxElementSize &&
+      ((metrics.maxElementSize->width > metrics.width) ||
+       (metrics.maxElementSize->height > metrics.height))) {
+    printf("nsLineLayout: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
+           metrics.maxElementSize->width,
+           metrics.maxElementSize->height,
+           metrics.width, metrics.height);
+  }
   if ((metrics.width == nscoord(0xdeadbeef)) ||
       (metrics.height == nscoord(0xdeadbeef)) ||
       (metrics.ascent == nscoord(0xdeadbeef)) ||
       (metrics.descent == nscoord(0xdeadbeef))) {
-    printf("nsBlockReflowContext: ");
+    printf("nsLineLayout: ");
     nsFrame::ListTag(stdout, aFrame);
     printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
            metrics.ascent, metrics.descent);
+  }
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  if (mComputeMaxElementSize) {
+    printf("  ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(": maxElementSize=%d,%d wh=%d,%d,\n",
+           metrics.maxElementSize->width,
+           metrics.maxElementSize->height,
+           metrics.width, metrics.height);
   }
 #endif
 
