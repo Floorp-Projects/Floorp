@@ -77,7 +77,7 @@ function getReferrer(doc)
   var sourceURL = getContentFrameURI(focusedWindow);
 
   try {
-    return makeURL(sourceURL);
+    return makeURI(sourceURL);
   } catch (e) {
     return null;
   }
@@ -219,7 +219,8 @@ function findParentNode(node, parentNode)
 //
 function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache)
 {
-  saveInternal(aURL, null, aFileName, aFilePickerTitleKey, aShouldBypassCache);
+  internalSave(aURL, null, aFileName, aShouldBypassCache,
+               aFilePickerTitleKey, null);
 }
 
 function saveFrameDocument()
@@ -234,139 +235,101 @@ function saveDocument(aDocument)
   // In both cases here, we want to use cached data because the
   // document is currently visible.
   if (aDocument)
-    saveInternal(aDocument.location.href, aDocument, false);
+    internalSave(aDocument.location.href, aDocument,
+                 null, false, null, null);
   else
-    saveInternal(content.location.href, null, false);
+    internalSave(content.location.href,  null,
+                 null, false, null, null);
 }
 
-function saveInternal(aURL, aDocument,
-                      aFileName, aFilePickerTitleKey,
-                      aShouldBypassCache)
+/**
+ * internalSave: Used when saving a document or URL. This method:
+ *  - Determines a local target filename to use (unless parameter
+ *    aChosenData is non-null)
+ *  - Determines content-type if possible
+ *  - Prompts the user to confirm the destination filename and save mode
+ *    (content-type affects this)
+ *  - Creates a 'Persist' object (which will perform the saving in the
+ *    background) and then starts it.
+ *
+ * @param aURL The String representation of the URL of the document being saved
+ * @param aDocument The document to be saved
+ * @param aDefaultFileName The caller-provided suggested filename if we don't
+ *        find a better one
+ * @param aShouldBypassCache If true, the document will always be refetched
+ *        from the server
+ * @param aFilePickerTitleKey Alternate title for the file picker
+ * @param aChosenData If non-null this contains an instance of object AutoChosen
+ *        (see below) which holds pre-determined data so that the user does not
+ *        need to be prompted for a target filename.
+ */
+function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
+                      aFilePickerTitleKey, aChosenData)
 {
-  var data = {
-    url: aURL,
-    fileName: aFileName,
-    filePickerTitle: aFilePickerTitleKey,
-    document: aDocument,
-    bypassCache: aShouldBypassCache,
-    window: window
-  };
-  var sniffer = new nsHeaderSniffer(aURL, foundHeaderInfo, data);
-}
+  // Note: aDocument == null when this code is used by save-link-as...
+  var contentType = (aDocument ? aDocument.contentType : null);
 
-function foundHeaderInfo(aSniffer, aData)
-{
-  var contentType = aSniffer.contentType;
-  var contentEncodingType = aSniffer.contentEncodingType;
-
-  var shouldDecode = false;
-  var urlExt = null;
-  // Are we allowed to decode?
-  try {
-    const helperAppService =
-      Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].
-        getService(Components.interfaces.nsIExternalHelperAppService);
-    var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
-    urlExt = url.fileExtension;
-    if (contentEncodingType &&
-        helperAppService.applyDecodingForExtension(urlExt,
-                                                   contentEncodingType)) {
-      shouldDecode = true;
-    }
-  }
-  catch (e) {
-  }
-
-  var fp = makeFilePicker();
-  var titleKey = aData.filePickerTitle || "SaveLinkTitle";
-  var bundle = getStringBundle();
-  fp.init(window, bundle.GetStringFromName(titleKey),
-          Components.interfaces.nsIFilePicker.modeSave);
+  // Find the URI object for aURL and the FileName/Extension to use when saving.
+  // FileName/Extension will be ignored if aChosenData supplied.
+  var fileInfo = new FileInfo(aDefaultFileName);
+  if (!aChosenData)
+    initFileInfo(fileInfo, aURL, aDocument, contentType);
 
   var saveMode = GetSaveModeForContentType(contentType);
-  var isDocument = aData.document != null && saveMode;
-  if (!isDocument && !shouldDecode && contentEncodingType) {
-    // The data is encoded, we are not going to decode it, and this is not a
-    // document save so we won't be doing a "save as, complete" (which would
-    // break if we reset the type here).  So just set our content type to
-    // correspond to the outermost encoding so we get extensions and the like
-    // right.
-    contentType = contentEncodingType;
+  var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
+
+  // Show the file picker that allows the user to confirm the target filename:
+  var prefs = getPrefsBrowserDownload("browser.download.");
+  var fpParams = {
+    fp: makeFilePicker(),
+    prefs: prefs,
+    userDirectory: getUserDownloadDir(prefs),
+    fpTitleKey: aFilePickerTitleKey,
+    isDocument: isDocument,
+    fileInfo: fileInfo,
+    contentType: contentType,
+    saveMode: saveMode
+  };
+  // If aChosenData is null then the file picker is shown.
+  if (!aChosenData) {
+    if (!poseFilePicker(fpParams))
+      // If the method returned false this is because the user cancelled from
+      // the save file picker dialog.
+      return;
   }
 
-  appendFiltersForContentType(fp, contentType, urlExt,
-                              isDocument ? saveMode : SAVEMODE_FILEONLY);
-
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
-
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-  try {
-    fp.displayDirectory = prefs.getComplexValue("dir", nsILocalFile);
-  }
-  catch (e) {
-  }
-
-  if (isDocument) {
-    try {
-      fp.filterIndex = prefs.getIntPref("save_converter_index");
-    }
-    catch (e) {
-    }
-  }
-
-  // Determine what the 'default' string to display in the File Picker dialog
-  // should be.
-  var defaultFileName = getDefaultFileName(aData.fileName,
-                                           aSniffer.suggestedFileName,
-                                           aSniffer.uri,
-                                           aData.document);
-  var defaultExtension = getDefaultExtension(defaultFileName, aSniffer.uri, contentType);
-  fp.defaultExtension = defaultExtension;
-  fp.defaultString = getNormalizedLeafName(defaultFileName, defaultExtension);
-
-  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-    return;
-
-  if (isDocument)
-    prefs.setIntPref("save_converter_index", fp.filterIndex);
-  var directory = fp.file.parent.QueryInterface(nsILocalFile);
-  prefs.setComplexValue("dir", nsILocalFile, directory);
-
-  fp.file.leafName = validateFileName(fp.file.leafName);
 
   // XXX We depend on the following holding true in appendFiltersForContentType():
   // If we should save as a complete page, the filterIndex is 0.
   // If we should save as text, the filterIndex is 2.
   var useSaveDocument = isDocument &&
-                        ((saveMode & SAVEMODE_COMPLETE_DOM && fp.filterIndex == 0) ||
-                         (saveMode & SAVEMODE_COMPLETE_TEXT && fp.filterIndex == 2));
+                        (((fpParams.saveMode & SAVEMODE_COMPLETE_DOM) && (fpParams.fp.filterIndex == 0)) ||
+                         ((fpParams.saveMode & SAVEMODE_COMPLETE_TEXT) && (fpParams.fp.filterIndex == 2)));
 
   // If we're saving a document, and are saving either in complete mode or
   // as converted text, pass the document to the web browser persist component.
   // If we're just saving the HTML (second option in the list), send only the URI.
-  var source = useSaveDocument ? aData.document : aSniffer.uri;
+  var source = useSaveDocument ? aDocument : fileInfo.uri;
   var persistArgs = {
     source      : source,
-    contentType : (useSaveDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
-    target      : makeFileURL(fp.file),
+    contentType : (!aChosenData && useSaveDocument && fpParams.fp.filterIndex == 2) ? "text/plain" : contentType,
+    target      : (aChosenData ? makeFileURI(aChosenData.file) : fpParams.fp.fileURL),
     postData    : isDocument ? getPostData() : null,
-    bypassCache : aData.bypassCache
+    bypassCache : aShouldBypassCache
   };
 
   var persist = makeWebBrowserPersist();
 
   // Calculate persist flags.
   const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
-  const flags = nsIWBP.PERSIST_FLAGS_NO_CONVERSION | nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-  if (aData.bypassCache)
+  const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  if (aShouldBypassCache)
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
   else
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
 
-  if (shouldDecode)
-    persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
+  // Leave it to WebBrowserPersist to discover the encoding type (or lack thereof):
+  persist.persistFlags |= nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   // Create download and initiate it (below)
   var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
@@ -376,7 +339,8 @@ function foundHeaderInfo(aSniffer, aData)
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
       // Create the local directory into which to save associated files.
-      filesFolder = fp.file.clone();
+      var destFile = (aChosenData ? aChosenData.file : fpParams.fp.file);
+      filesFolder = destFile.clone();
 
       var nameWithoutExtension = filesFolder.leafName.replace(/\.[^.]*$/, "");
       var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
@@ -397,167 +361,143 @@ function foundHeaderInfo(aSniffer, aData)
     }
 
     const kWrapColumn = 80;
-    dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
+    dl.init((aChosenData ? aChosenData.uri : fileInfo.uri),
+            persistArgs.target, null, null, null, persist);
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder,
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    dl.init(source, persistArgs.target, null, null, null, persist);
+    dl.init((aChosenData ? aChosenData.uri : source),
+            persistArgs.target, null, null, null, persist);
     var referer = getReferrer(document);
-    persist.saveURI(source, null, referer, persistArgs.postData, null, persistArgs.target);
+    persist.saveURI((aChosenData ? aChosenData.uri : source),
+                    null, referer, persistArgs.postData, null, persistArgs.target);
   }
 }
 
-function nsHeaderSniffer(aURL, aCallback, aData)
+/**
+ * Structure for holding info about automatically supplied parameters for
+ * internalSave(...). This allows parameters to be supplied so the user does not
+ * need to be prompted for file info.
+ * @param aFileAutoChosen This is an nsILocalFile object that has been
+ *        pre-determined as the filename for the target to save to
+ * @param aUriAutoChosen  This is the nsIURI object for the target
+ */
+function AutoChosen(aFileAutoChosen, aUriAutoChosen) {
+  this.file = aFileAutoChosen;
+  this.uri  = aUriAutoChosen;
+}
+
+/**
+ * Structure for holding info about a URL and the target filename it should be
+ * saved to. This structure is populated by initFileInfo(...).
+ * @param aSuggestedFileName This is used by initFileInfo(...) when it
+ *        cannot 'discover' the filename from the url 
+ * @param aFileName The target filename
+ * @param aFileBaseName The filename without the file extension
+ * @param aFileExt The extension of the filename
+ * @param aUri An nsIURI object for the url that is being saved
+ */
+function FileInfo(aSuggestedFileName, aFileName, aFileBaseName, aFileExt, aUri) {
+  this.suggestedFileName = aSuggestedFileName;
+  this.fileName = aFileName;
+  this.fileBaseName = aFileBaseName;
+  this.fileExt = aFileExt;
+  this.uri = aUri;
+}
+
+/**
+ * Determine what the 'default' filename string is, its file extension and the
+ * filename without the extension. This filename is used when prompting the user
+ * for confirmation in the file picker dialog.
+ * @param aFI A FileInfo structure into which we'll put the results of this method.
+ * @param aURL The String representation of the URL of the document being saved
+ * @param aDocument The document to be saved
+ * @param aContentType The content type of the document, if it could be
+ *        determined by the caller.
+ */
+function initFileInfo(aFI, aURL, aDocument, aContentType)
 {
-  this.mCallback = aCallback;
-  this.mData = aData;
-
-  this.uri = makeURL(aURL);
-
-  this.linkChecker = Components.classes["@mozilla.org/network/urichecker;1"]
-    .createInstance(Components.interfaces.nsIURIChecker);
-  this.linkChecker.init(this.uri);
-
-  var flags;
-  if (aData.bypassCache) {
-    flags = Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
-  } else {
-    flags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
-  }
-  this.linkChecker.loadFlags = flags;
-
-  // Set referrer, ignore errors
+  var docCharset = (aDocument ? aDocument.characterSet : null);
   try {
-    var referrer = getReferrer(document);
-    this.linkChecker.baseChannel.QueryInterface(Components.interfaces.nsIHttpChannel).referrer = referrer;
-  }
-  catch (ex) { }
+    // Get an nsIURI object from aURL if possible:
+    try {
+      aFI.uri = makeURI(aURL, docCharset);
+      // Assuming nsiUri is valid, calling QueryInterface(...) on it will
+      // populate extra object fields (eg filename and file extension).
+      var url = aFI.uri.QueryInterface(Components.interfaces.nsIURL);
+    } catch (e) {
+    }
 
-  this.linkChecker.asyncCheck(this, null);
+    // Get the default filename:
+    aFI.fileName = getDefaultFileName((aFI.suggestedFileName || aFI.fileName),
+                                      aFI.uri, aDocument);
+    aFI.fileExt = url.fileExtension;
+    // If aFI.fileExt is still blank, consider: aFI.suggestedFileName is supplied
+    // if saveURL(...) was the original caller (hence both aContentType and
+    // aDocument are blank). If they were saving a link to a website then make
+    // the extension .htm .
+    if (!aFI.fileExt && !aDocument && !aContentType && (aURL.length > 7) &&
+      aURL.substring(0,7).toUpperCase() == "HTTP://") {
+      aFI.fileExt = "htm";
+      aFI.fileBaseName = aFI.fileName;
+    } else {
+      aFI.fileExt    = getDefaultExtension(aFI.fileName, aFI.uri, aContentType);
+      aFI.fileBaseName = getFileBaseName(aFI.fileName, aFI.fileExt);
+    }
+  } catch (e) {
+  }
 }
 
-nsHeaderSniffer.prototype = {
+/** 
+ * Given the Filepicker Parameters (aFpP), show the file picker dialog,
+ * prompting the user to confirm (or change) the fileName.
+ * @param aFpP a structure (see definition in internalSave(...) method)
+ *        containing all the data used within this method.
+ * @return true if the user confirmed a filename in the picker; false if they
+ *         dismissed the picker.
+ */
+function poseFilePicker(aFpP)
+{
+  var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
+  var bundle = getStringBundle();
+  var fp = aFpP.fp; // simply for smaller readable code
+  fp.init(window, bundle.GetStringFromName(titleKey),
+          Components.interfaces.nsIFilePicker.modeSave);
 
-  // ---------- nsISupports methods ----------
-  QueryInterface: function (iid) {
-    if (iid.equals(Components.interfaces.nsIRequestObserver) ||
-        iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIInterfaceRequestor))
-      return this;
+  const nsILocalFile = Components.interfaces.nsILocalFile;
+  try {
+    fp.displayDirectory = aFpP.userDirectory;
+  }
+  catch (e) {
+  }
 
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  },
+  fp.defaultExtension = aFpP.fileInfo.fileExt;
+  fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
+                                           aFpP.fileInfo.fileExt);
+  appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt,
+                              aFpP.saveMode);
 
-  // ---------- nsIInterfaceRequestor methods ----------
-  getInterface : function(iid) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
-      // use the window watcher service to get a nsIAuthPrompt impl
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      return ww.getNewAuthPrompter(window);
-    }
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  },
-
-  // ---------- nsIRequestObserver methods ----------
-  onStartRequest: function (aRequest, aContext) { },
-
-  onStopRequest: function (aRequest, aContext, aStatus) {
+  if (aFpP.isDocument) {
     try {
-      if (aStatus == 0) { // NS_BINDING_SUCCEEDED, so there's something there
-        var linkChecker = aRequest.QueryInterface(Components.interfaces.nsIURIChecker);
-        var channel = linkChecker.baseChannel;
-        this.contentType = channel.contentType;
-        try {
-          var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-          var encodedChannel = channel.QueryInterface(Components.interfaces.nsIEncodedChannel);
-          this.contentEncodingType = null;
-          // There may be content-encodings on the channel.  Multiple content
-          // encodings are allowed, eg "Content-Encoding: gzip, uuencode".  This
-          // header would mean that the content was first gzipped and then
-          // uuencoded.  The encoding enumerator returns MIME types
-          // corresponding to each encoding starting from the end, so the first
-          // thing it returns corresponds to the outermost encoding.
-          var encodingEnumerator = encodedChannel.contentEncodings;
-          if (encodingEnumerator && encodingEnumerator.hasMore()) {
-            try {
-              this.contentEncodingType = encodingEnumerator.getNext();
-            } catch (e) {
-            }
-          }
-          this.mContentDisposition = httpChannel.getResponseHeader("content-disposition");
-        }
-        catch (e) {
-        }
-        if (!this.contentType || this.contentType == "application/x-unknown-content-type") {
-          // We didn't get a type from the server.  Fall back on other type detection mechanisms
-          throw "Unknown Type";
-        }
-      }
-      else {
-        dump("Error saving link aStatus = 0x" + aStatus.toString(16) + "\n");
-        var bundle = getStringBundle();
-        var errorTitle = bundle.GetStringFromName("saveLinkErrorTitle");
-        var errorMsg = bundle.GetStringFromName("saveLinkErrorMsg");
-        const promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-        promptService.alert(this.mData.window, errorTitle, errorMsg);
-        return;
-      }
+      fp.filterIndex = aFpP.prefs.getIntPref("save_converter_index");
     }
     catch (e) {
-      if (this.mData.document) {
-        this.contentType = this.mData.document.contentType;
-      } else {
-        var type = getMIMETypeForURI(this.uri);
-        if (type)
-          this.contentType = type;
-      }
     }
-    this.mCallback(this, this.mData);
-  },
-
-  // ------------------------------------------------
-
-  get promptService()
-  {
-    var promptSvc;
-    try {
-      promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-      promptSvc = promptSvc.QueryInterface(Components.interfaces.nsIPromptService);
-    }
-    catch (e) {}
-    return promptSvc;
-  },
-
-  get suggestedFileName()
-  {
-    var fileName = "";
-
-    if ("mContentDisposition" in this) {
-      const mhpContractID = "@mozilla.org/network/mime-hdrparam;1"
-      const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
-      const mhp = Components.classes[mhpContractID].getService(mhpIID);
-      var dummy = { value: null }; // To make JS engine happy.
-      var charset = getCharsetforSave(null);
-
-      try {
-        fileName = mhp.getParameter(this.mContentDisposition, "filename", charset, true, dummy);
-      }
-      catch (e) {
-        try {
-          fileName = mhp.getParameter(this.mContentDisposition, "name", charset, true, dummy);
-        }
-        catch (e) {
-        }
-      }
-    }
-
-    fileName = fileName.replace(/^"|"$/g, "");
-    return fileName;
   }
-};
+
+  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
+    return false;
+
+  if (aFpP.isDocument) 
+    aFpP.prefs.setIntPref("save_converter_index", fp.filterIndex);
+
+  // Now that the user has had a chance to change the directory and/or filename,
+  // re-read those values...
+  var directory = fp.file.parent.QueryInterface(nsILocalFile);
+  aFpP.prefs.setComplexValue("dir", nsILocalFile, directory);
+  fp.file.leafName = validateFileName(fp.file.leafName);
+  return true;
+}
 
 // We have no DOM, and can only save the URL as is.
 const SAVEMODE_FILEONLY      = 0x00;
@@ -667,6 +607,25 @@ function getStringBundle()
   return sbs.createBundle(bundleURL, appLocale);
 }
 
+// Get the preferences branch ("browser.download." for normal 'save' mode)...
+function getPrefsBrowserDownload(branch)
+{
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;                              
+  return Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch(branch);
+}
+
+// Get the current user download directory, return it to the caller:
+function getUserDownloadDir(prefs)
+{
+  try {
+    return prefs.getComplexValue("dir", Components.interfaces.nsILocalFile);
+  }
+  catch (e) {
+  }
+  return null;
+}
+
 function makeWebBrowserPersist()
 {
   const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
@@ -674,14 +633,20 @@ function makeWebBrowserPersist()
   return Components.classes[persistContractID].createInstance(persistIID);
 }
 
-function makeURL(aURL)
+/**
+ * Constructs a new URI, using nsIIOService.
+ * @param aURL The URI spec.
+ * @param aOriginCharset The charset of the URI.
+ * @return an nsIURI object based on aURL.
+ */
+function makeURI(aURL, aOriginCharset)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                 .getService(Components.interfaces.nsIIOService);
-  return ioService.newURI(aURL, null, null);
+  return ioService.newURI(aURL, aOriginCharset, null);
 }
 
-function makeFileURL(aFile)
+function makeFileURI(aFile)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                 .getService(Components.interfaces.nsIIOService);
@@ -701,6 +666,13 @@ function getMIMEService()
   const mimeSvcIID = Components.interfaces.nsIMIMEService;
   const mimeSvc = Components.classes[mimeSvcContractID].getService(mimeSvcIID);
   return mimeSvc;
+}
+
+// Given aFileName, find the fileName without the extension on the end.
+function getFileBaseName(aFileName, aFileExt)
+{
+  // Remove the file extension from aFileName:
+  return aFileName.replace(/\.[^.]*$/, "");
 }
 
 function getMIMETypeForURI(aURI)
@@ -723,16 +695,12 @@ function getMIMEInfoForType(aMIMEType, aExtension)
   return null;
 }
 
-function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aDocument)
+function getDefaultFileName(aDefaultFileName, aDocumentURI, aDocument)
 {
-  if (aNameFromHeaders)
-    // 1) Use the name suggested by the HTTP headers
-    return validateFileName(aNameFromHeaders);
-
   try {
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
-      // 2) Use the actual file name, if present
+      // 1) Use the actual file name, if present
       return validateFileName(decodeURIComponent(url.fileName));
     }
   } catch (e) {
@@ -753,35 +721,35 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
     var docTitle = GenerateValidFilename(aDocument.title, "");
 
     if (docTitle) {
-      // 3) Use the document title
+      // 2) Use the document title
       return docTitle;
     }
   }
 
   if (aDefaultFileName)
-    // 4) Use the caller-provided name, if any
+    // 3) Use the caller-provided name, if any
     return validateFileName(aDefaultFileName);
 
-  // 5) If this is a directory, use the last directory name
+  // 4) If this is a directory, use the last directory name
   var path = aDocumentURI.path.match(/\/([^\/]+)\/$/);
   if (path && path.length > 1) {
-      return validateFileName(path[1]);
+    return validateFileName(path[1]);
   }
 
   try {
     if (aDocumentURI.host)
-      // 6) Use the host.
+      // 5) Use the host.
       return aDocumentURI.host;
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
   try {
-    // 7) Use the default file name
+    // 6) Use the default file name
     return getStringBundle().GetStringFromName("DefaultSaveFileName");
   } catch (e) {
     //in case localized string cannot be found
   }
-  // 8) If all else fails, use "index"
+  // 7) If all else fails, use "index"
   return "index";
 }
 

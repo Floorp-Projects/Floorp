@@ -165,6 +165,8 @@ private:
     PRBool SerializeNextFile();
     void CalcTotalProgress();
 
+    void SetApplyConversionIfNeeded(nsIChannel *aChannel);
+
     // Hash table enumerators
     static PRBool PR_CALLBACK EnumPersistURIs(
         nsHashKey *aKey, void *aData, void* closure);

@@ -56,6 +56,7 @@
 #include "nsICachingChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
+#include "nsIStringEnumerator.h"
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
 
@@ -669,6 +670,15 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 
     if (data && data->mFile)
     {
+        // If PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION is set in mPersistFlags,
+        // try to determine whether this channel needs to apply Content-Encoding
+        // conversions.
+        NS_ASSERTION(!((mPersistFlags & PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION) &&
+                      (mPersistFlags & PERSIST_FLAGS_NO_CONVERSION)),
+                     "Conflict in persist flags: both AUTODETECT and NO_CONVERSION set");
+        if (mPersistFlags & PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION)
+            SetApplyConversionIfNeeded(channel);
+
         if (data->mCalcFileExt && !(mPersistFlags & PERSIST_FLAGS_DONT_CHANGE_FILENAMES))
         {
             // this is the first point at which the server can tell us the mimetype
@@ -3724,6 +3734,50 @@ nsWebBrowserPersist::SetDocumentBase(
     baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
 
     return NS_OK;
+}
+
+// Decide if we need to apply conversion to the passed channel.
+void nsWebBrowserPersist::SetApplyConversionIfNeeded(nsIChannel *aChannel)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface(aChannel, &rv);
+    if (NS_FAILED(rv))
+        return;
+
+    // Set the default conversion preference:
+    encChannel->SetApplyConversion(PR_FALSE);
+
+    nsCOMPtr<nsIURI> thisURI;
+    aChannel->GetURI(getter_AddRefs(thisURI));
+    nsCOMPtr<nsIURL> sourceURL(do_QueryInterface(thisURI));
+    if (!sourceURL)
+        return;
+    nsCAutoString extension;
+    sourceURL->GetFileExtension(extension);
+
+    nsCOMPtr<nsIUTF8StringEnumerator> encEnum;
+    encChannel->GetContentEncodings(getter_AddRefs(encEnum));
+    if (!encEnum)
+        return;
+    nsCOMPtr<nsIExternalHelperAppService> helperAppService =
+        do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return;
+    PRBool hasMore;
+    rv = encEnum->HasMore(&hasMore);
+    if (NS_SUCCEEDED(rv) && hasMore)
+    {
+        nsCAutoString encType;
+        rv = encEnum->GetNext(encType);
+        if (NS_SUCCEEDED(rv))
+        {
+            PRBool applyConversion = PR_FALSE;
+            rv = helperAppService->ApplyDecodingForExtension(extension, encType,
+                                                             &applyConversion);
+            if (NS_SUCCEEDED(rv))
+                encChannel->SetApplyConversion(applyConversion);
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
