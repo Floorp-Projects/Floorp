@@ -35,13 +35,13 @@ interface nsIJSStackFrameLocation : nsISupports
 interface nsIXPCException : nsISupports
 {
     readonly attribute string                  message;
-    readonly attribute nsresult                code;
+    readonly attribute nsresult                result;
     readonly attribute string                  name;
     readonly attribute nsIJSStackFrameLocation location;
     readonly attribute nsISupports             data;
 
     void initialize(in string                  aMessage,
-                    in nsresult                aCode,
+                    in nsresult                aResult,
                     in string                  aName,
                     in nsIJSStackFrameLocation aLocation,
                     in nsISupports             aData);

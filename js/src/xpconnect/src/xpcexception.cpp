@@ -86,7 +86,7 @@ NS_IMPL_ISUPPORTS1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
-      mCode(0),
+      mResult(0),
       mName(nsnull),
       mLocation(nsnull),
       mData(nsnull),
@@ -126,15 +126,15 @@ nsXPCException::GetMessage(char * *aMessage)
     XPC_STRING_GETTER_BODY(aMessage, mMessage);
 }
 
-/* readonly attribute nsresult code; */
+/* readonly attribute nsresult result; */
 NS_IMETHODIMP
-nsXPCException::GetCode(nsresult *aCode)
+nsXPCException::GetResult(nsresult *aResult)
 {
-    if(!aCode)
+    if(!aResult)
         return NS_ERROR_NULL_POINTER;
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
-    *aCode = mCode;
+    *aResult = mResult;
     return NS_OK;
 }
 
@@ -147,7 +147,7 @@ nsXPCException::GetName(char * *aName)
 
     const char* name = mName;
     if(!name)
-        NameAndFormatForNSResult(mCode, &name, nsnull);
+        NameAndFormatForNSResult(mResult, &name, nsnull);
 
     XPC_STRING_GETTER_BODY(aName, name);
 }
@@ -178,9 +178,9 @@ nsXPCException::GetData(nsISupports * *aData)
     return NS_OK;
 }
 
-/* void initialize (in string aMessage, in nsresult aCode, in string aName, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
+/* void initialize (in string aMessage, in nsresult aResult, in string aName, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
 NS_IMETHODIMP
-nsXPCException::Initialize(const char *aMessage, nsresult aCode, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
+nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
 {
     if(mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
@@ -201,7 +201,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aCode, const char *aNa
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mCode = aCode;
+    mResult = aResult;
 
     if(aLocation)
     {
@@ -254,11 +254,11 @@ nsXPCException::ToString(char **_retval)
     const char* location = indicatedLocation ?
                                 indicatedLocation : defaultLocation;
     const char* resultName = mName;
-    if(!resultName && !NameAndFormatForNSResult(mCode, &resultName, nsnull))
+    if(!resultName && !NameAndFormatForNSResult(mResult, &resultName, nsnull))
         resultName = "<unknown>";
     const char* data = mData ? "yes" : "no";
 
-    char* temp = JS_smprintf(format, msg, mCode, resultName, location, data);
+    char* temp = JS_smprintf(format, msg, mResult, resultName, location, data);
     if(indicatedLocation)
         nsAllocator::Free(indicatedLocation);
 
@@ -277,7 +277,7 @@ nsXPCException::ToString(char **_retval)
 // static
 nsXPCException*
 nsXPCException::NewException(const char *aMessage,
-                             nsresult aCode,
+                             nsresult aResult,
                              nsIJSStackFrameLocation *aLocation,
                              nsISupports *aData,
                              PRInt32 aLeadingFramesToTrim)
@@ -319,7 +319,7 @@ nsXPCException::NewException(const char *aMessage,
             location = caller;
         }
         // at this point we have non-null location with one extra addref
-        rv = e->Initialize(aMessage, aCode, nsnull, location, aData);
+        rv = e->Initialize(aMessage, aResult, nsnull, location, aData);
         NS_RELEASE(location);
         if(NS_FAILED(rv))
             NS_RELEASE(e);

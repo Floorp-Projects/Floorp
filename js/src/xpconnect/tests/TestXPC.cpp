@@ -1086,9 +1086,10 @@ sm_test_done:
         if(NS_SUCCEEDED(rv))
         {
             PRInt32 count;
-            if(NS_SUCCEEDED(stack->GetCount(&count)))
-                printf("\tstack->GetCount() : %s\n",
-                        count == 0 ? "passed" : "failed!");
+            PRInt32 base_count;
+
+            if(NS_SUCCEEDED(stack->GetCount(&base_count)))
+                printf("\tstack->GetCount() : passed\n");
             else
                 printf("\tstack->GetCount() failed!\n");
 
@@ -1099,7 +1100,7 @@ sm_test_done:
 
             if(NS_SUCCEEDED(stack->GetCount(&count)))
                 printf("\tstack->GetCount() : %s\n",
-                        count == 1 ? "passed" : "failed!");
+                        count == base_count+1 ? "passed" : "failed!");
             else
                 printf("\tstack->GetCount() failed!\n");
 
@@ -1122,7 +1123,7 @@ sm_test_done:
 
             if(NS_SUCCEEDED(stack->GetCount(&count)))
                 printf("\tstack->GetCount() : %s\n",
-                        count == 0 ? "passed" : "failed!");
+                        count == base_count ? "passed" : "failed!");
             else
                 printf("\tstack->GetCount() failed!\n");
         }

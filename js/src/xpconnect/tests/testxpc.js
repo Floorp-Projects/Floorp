@@ -255,9 +255,9 @@ try {
     all_ok = false;
 } catch(e) {
     var lastResult = Components.lastResult;
-    if(e.code != lastResult) {
+    if(e.result != lastResult) {
         all_ok = false;
-        print("expected: NS_ERROR_NULL_POINTER = "+Components.results.NS_ERROR_NULL_POINTER+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        print("expected: NS_ERROR_NULL_POINTER = "+Components.results.NS_ERROR_NULL_POINTER+"  e.result was: "+e.result+"  Components.lastResult: "+lastResult);
         
     }
     if(Components.results.NS_ERROR_NULL_POINTER != lastResult) {
@@ -271,9 +271,9 @@ try {
     all_ok = false;
 } catch(e) {
     var lastResult = Components.lastResult;
-    if(e.code != lastResult) {
+    if(e.result != lastResult) {
         all_ok = false;
-        print("expected: NS_ERROR_UNEXPECTED = "+Components.results.NS_ERROR_UNEXPECTED+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        print("expected: NS_ERROR_UNEXPECTED = "+Components.results.NS_ERROR_UNEXPECTED+"  e.result was: "+e.result+"  Components.lastResult: "+lastResult);
         
     }
     if(Components.results.NS_ERROR_UNEXPECTED != lastResult) {
@@ -287,9 +287,9 @@ try {
     all_ok = false;
 } catch(e) {
     var lastResult = Components.lastResult;
-    if(e.code != lastResult) {
+    if(e.result != lastResult) {
         all_ok = false;
-        print("expected: NS_ERROR_OUT_OF_MEMORY = "+Components.results.NS_ERROR_OUT_OF_MEMORY+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        print("expected: NS_ERROR_OUT_OF_MEMORY = "+Components.results.NS_ERROR_OUT_OF_MEMORY+"  e.result was: "+e.result+"  Components.lastResult: "+lastResult);
         
     }
     if(Components.results.NS_ERROR_OUT_OF_MEMORY != lastResult) {
