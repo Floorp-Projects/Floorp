@@ -40,6 +40,7 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmunderFrame.h"
+#include "nsMathMLmsubFrame.h"
 
 //
 // <munder> -- attach an underscript to a base - implementation
@@ -184,18 +185,23 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }
   }
 
-  //The REC says:
+  /* The REC says:
+     Within underscript, <munder> always sets displaystyle to "false", 
+     but increments scriptlevel by 1 only when accentunder is "false".
+   */
   /*
-  Within underscript, <munder> always sets displaystyle to "false", 
-  but increments scriptlevel by 1 only when accentunder is "false".
+     The TeXBook treats 'under' like a subscript, so p.141 or Rule 13a 
+     say it should be compressed
   */
-
-  PRInt32 incrementScriptLevel;
-
   if (underscriptMathMLFrame) {
-    incrementScriptLevel = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
-    underscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE, PR_FALSE);
-    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE, PR_FALSE);
+    PRInt32 increment;
+    increment = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
+    underscriptMathMLFrame->UpdatePresentationData(increment,
+      ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+       NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+      ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+       NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
   }
 
   // switch the style of the underscript
@@ -213,13 +219,13 @@ The REC says:
   the accentunder attribute is ignored. This is often used
   for limits on symbols such as &sum;. 
 
-TODO:
+i.e.,:
  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
   // place like subscript
  }
  else {
-  // place like accentunder 
+  // place like underscript 
  }
 */
 
@@ -230,6 +236,16 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv = NS_OK;
+
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    // place like subscript
+    return nsMathMLmsubFrame::PlaceSubScript(aPresContext,
+                                             aRenderingContext,
+                                             aPlaceOrigin,
+                                             aDesiredSize,
+                                             this);
+  }
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -290,7 +306,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   nscoord delta2 = 0; // extra space beneath underscript
   if (!NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)) {    
     // Rule 13a, App. G, TeXbook
-//    GetItalicCorrectionFromChild (baseFrame, italicCorrection);
+    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing2, bigOpSpacing4, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       dummy, bigOpSpacing2, 
@@ -321,9 +337,13 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
   
   aDesiredSize.ascent = baseSize.ascent;
-  aDesiredSize.descent = mBoundingMetrics.descent + delta2;
+  aDesiredSize.descent = 
+    PR_MAX(mBoundingMetrics.descent + delta2,
+           bmBase.descent + delta1 + bmUnder.ascent + underSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.width = 
+    PR_MAX(baseSize.width/2,(underSize.width + italicCorrection/2)/2) +
+    PR_MAX(baseSize.width/2,(underSize.width - italicCorrection/2)/2);
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;

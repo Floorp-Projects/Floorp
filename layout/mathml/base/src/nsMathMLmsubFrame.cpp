@@ -69,10 +69,10 @@ nsMathMLmsubFrame::~nsMathMLmsubFrame()
 
 NS_IMETHODIMP
 nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
-			nsIContent*      aContent,
-			nsIFrame*        aParent,
-			nsIStyleContext* aContext,
-			nsIFrame*        aPrevInFlow)
+      nsIContent*      aContent,
+      nsIFrame*        aParent,
+      nsIStyleContext* aContext,
+      nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -91,18 +91,49 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
   }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-//  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
   return rv;
 }
 
 NS_IMETHODIMP
-nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         PRBool               aPlaceOrigin,
-                         nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          PRBool               aPlaceOrigin,
+                          nsHTMLReflowMetrics& aDesiredSize)
+{
+  return nsMathMLmsubFrame::PlaceSubScript(aPresContext, 
+                                           aRenderingContext,
+                                           aPlaceOrigin,
+                                           aDesiredSize,
+                                           this,
+                                           mSubScriptShift,
+                                           mScriptSpace);
+}
+
+// exported routine that both munder and msub share.
+// munder uses this when movablelimits is set.
+nsresult
+nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   PRBool               aPlaceOrigin,
+                                   nsHTMLReflowMetrics& aDesiredSize,
+                                   nsIFrame*            aFrame,
+                                   nscoord              aUserSubScriptShift,
+                                   nscoord              aScriptSpace)
 {
   nsresult rv = NS_OK;
+
+  // the caller better be a mathml frame
+  nsIMathMLFrame* mathMLFrame = nsnull;
+  rv = aFrame->QueryInterface (NS_GET_IID(nsIMathMLFrame), 
+                                     (void**)&mathMLFrame);
+  if (NS_FAILED(rv) || !mathMLFrame) return rv;
+
+  // force the scriptSpace to be atleast 1 pixel 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  aScriptSpace = PR_MAX(NSIntPixelsToTwips(1, p2t), aScriptSpace);
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -117,36 +148,42 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
 
   nsBoundingMetrics bmBase, bmSubScript;
 
-  nsIFrame* aChildFrame = mFrames.FirstChild();
+  nsIFrame* aChildFrame = nsnull;
+  rv = aFrame->FirstChild (aPresContext, nsnull, &aChildFrame);
+  if (!NS_SUCCEEDED(rv) || (nsnull == aChildFrame)) {
+    return rv;
+  }
   while (nsnull != aChildFrame)
   {
     if (!IsOnlyWhitespace(aChildFrame)) {
       if (0 == count) {
-	// base 
-	baseFrame = aChildFrame;
+        // base 
+        baseFrame = aChildFrame;
         GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
       }
       else if (1 == count) {
-	// subscript
-	subScriptFrame = aChildFrame;
+        // subscript
+        subScriptFrame = aChildFrame;
         GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
-	// get the subdrop from the subscript font
-	nscoord aSubDrop;
-	GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
-	// parameter v, Rule 18a, App. G, TeXbook
-	minSubScriptShift = bmBase.descent + aSubDrop;
+        // get the subdrop from the subscript font
+        nscoord aSubDrop;
+        GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
+        // parameter v, Rule 18a, App. G, TeXbook
+        minSubScriptShift = bmBase.descent + aSubDrop;
       }
       count++;
     }
-    rv = aChildFrame->GetNextSibling(&aChildFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    aChildFrame->GetNextSibling(&aChildFrame);
   }
 #ifdef NS_DEBUG
-  if (2 != count) printf("msub: invalid markup");
+  if (2 != count) printf("msub: invalid markup\n");
 #endif
   if ((2 != count) || !baseFrame || !subScriptFrame) {
     // report an error, encourage people to get their markups in order
-    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+    return NS_STATIC_CAST(nsMathMLContainerFrame*, 
+                          aFrame)->ReflowError(aPresContext, 
+                                               aRenderingContext, 
+                                               aDesiredSize);
   }
 
   //////////////////
@@ -177,21 +214,29 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   GetSubScriptShifts (fm, aSubScriptShift, dummy);
 
   aSubScriptShift = 
-    PR_MAX(aSubScriptShift, mSubScriptShift);
+    PR_MAX(aSubScriptShift, aUserSubScriptShift);
 
   // get actual subscriptshift to be used
   // Rule 18b, App. G, TeXbook
   nscoord actualSubScriptShift = 
     PR_MAX(minSubScriptShift,PR_MAX(aSubScriptShift,minShiftFromXHeight));
   // get bounding box for base + subscript
-  mBoundingMetrics.ascent = 
+  nsBoundingMetrics boundingMetrics;
+  boundingMetrics.ascent = 
     PR_MAX(bmBase.ascent, bmSubScript.ascent - actualSubScriptShift);
-  mBoundingMetrics.descent = 
+  boundingMetrics.descent = 
     PR_MAX(bmBase.descent, bmSubScript.descent + actualSubScriptShift);
-  // add mScriptSpace between base and supscript
-  mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSubScript.width;
-  mBoundingMetrics.leftBearing = bmBase.leftBearing;
-  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSubScript.rightBearing;
+  // add aScriptSpace between base and supscript
+  boundingMetrics.width = 
+    bmBase.width 
+    + aScriptSpace 
+    + bmSubScript.width;
+  boundingMetrics.leftBearing = bmBase.leftBearing;
+  boundingMetrics.rightBearing = 
+    bmBase.width 
+    + aScriptSpace 
+    + bmSubScript.rightBearing;
+  mathMLFrame->SetBoundingMetrics (boundingMetrics);
 
   // reflow metrics
   aDesiredSize.ascent = 
@@ -199,10 +244,9 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.descent = 
     PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
+  aDesiredSize.width = bmBase.width + aScriptSpace + subScriptSize.width;
 
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
+  mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
@@ -210,11 +254,12 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
     dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
     FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
     // ... and subscript
-    dx = baseSize.width; 
+    // XXX adding mScriptSpace seems to add more space than i like
+    // may want to remove later.
+    dx = bmBase.width + aScriptSpace; 
     dy = aDesiredSize.ascent - (subScriptSize.ascent - actualSubScriptShift);
     FinishReflowChild (subScriptFrame, aPresContext, subScriptSize, dx, dy, 0);
   }
 
   return NS_OK;
 }
-

@@ -48,6 +48,16 @@ public:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
+  static nsresult
+  PlaceSubSupScript(nsIPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    PRBool               aPlaceOrigin,
+                    nsHTMLReflowMetrics& aDesiredSize,
+                    nsIFrame*            aForFrame,
+                    nscoord              aUserSubScriptShift = 0,
+                    nscoord              aUserSupScriptShift = 0,
+                    nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
+
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
@@ -55,7 +65,18 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 1, PR_FALSE, PR_FALSE);
+    // 1. The REC says:
+    //    The <msubsup> element increments scriptlevel by 1, and sets displaystyle to
+    //    "false", within subscript and superscript, but leaves both attributes
+    //    unchanged within base.
+    // 2. The TeXbook (Ch 17. p.141) says the superscript inherits the compression
+    //    while the subscript is compressed
+    UpdatePresentationDataFromChildAt(1, -1, 1,
+      ~NS_MATHML_DISPLAYSTYLE,
+       NS_MATHML_DISPLAYSTYLE);
+    UpdatePresentationDataFromChildAt(1,  1, 0,
+       NS_MATHML_COMPRESSED,
+       NS_MATHML_COMPRESSED);
     // switch the style of the subscript and superscript
     InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator

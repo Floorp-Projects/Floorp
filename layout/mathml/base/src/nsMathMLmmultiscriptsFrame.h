@@ -55,7 +55,13 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 1, PR_FALSE, PR_FALSE);
+    // The REC says:
+    // The <mmultiscripts> element increments scriptlevel by 1, and sets
+    // displaystyle to "false", within each of its arguments except base, but
+    // leaves both attributes unchanged within base. 
+    // XXX Need to update the compression flags in the sub/sup pairs as per TeX
+    UpdatePresentationDataFromChildAt(1, -1, 1,
+      ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
     // switch the style of the postscripts and prescripts
     InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator
