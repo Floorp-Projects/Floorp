@@ -86,6 +86,7 @@ protected:
   nsWebCrawler* mCrawler;
   PRBool mAllowPlugins;
   PRBool mIsInitialized;
+  PRInt32 mWidth, mHeight;
 };
 
 class nsNativeViewerApp : public nsViewerApp {

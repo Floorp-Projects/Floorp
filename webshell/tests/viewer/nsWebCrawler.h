@@ -65,16 +65,6 @@ public:
     mDelay = aSeconds;
   }
 
-  /** Set the initial window width */
-  void SetWidth(PRInt32 aWidth) {
-    mWidth = aWidth;
-  }
-
-  /** Set the initial window width */
-  void SetHeight(PRInt32 aHeight) {
-    mHeight = aHeight;
-  }
-
   void EnableJiggleLayout() {
     mJiggleLayout = PR_TRUE;
   }
@@ -151,8 +141,6 @@ protected:
   PRBool mJiggleLayout;
   PRBool mPostExit;
   PRInt32 mDelay;
-  PRInt32 mWidth;
-  PRInt32 mHeight;
   PRInt32 mMaxPages;
 
   nsString mCurrentURL;

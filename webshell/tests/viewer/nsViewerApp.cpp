@@ -100,6 +100,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
 
+#define DEFAULT_WIDTH 620
+#define DEFAULT_HEIGHT 400
 
 
 nsViewerApp::nsViewerApp()
@@ -117,6 +119,8 @@ nsViewerApp::nsViewerApp()
   mNumSamples = 14;
   mAllowPlugins = PR_TRUE;
   mIsInitialized = PR_FALSE;
+  mWidth = DEFAULT_WIDTH;
+  mHeight = DEFAULT_HEIGHT;
 }
 
 nsViewerApp::~nsViewerApp()
@@ -490,7 +494,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->SetWidth(width);
+        mWidth = width > 0 ? width : DEFAULT_WIDTH;
       }
       else if (PL_strcmp(argv[i], "-h") == 0) {
         int height;
@@ -500,7 +504,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->SetHeight(height);
+        mHeight = height > 0 ? height : DEFAULT_HEIGHT;
       }
       else if (PL_strcmp(argv[i], "-r") == 0) {
         i++;
@@ -593,7 +597,8 @@ nsViewerApp::OpenWindow()
     return rv;
   }
   bw->SetApp(this);
-  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
+  bw->Init(mAppShell, mPrefs, nsRect(0, 0, mWidth, mHeight),
+           PRUint32(~0), mAllowPlugins);
   bw->Show();
   nsIBrowserWindow*	bwCurrent;
   mCrawler->GetBrowserWindow(&bwCurrent);
