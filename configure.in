@@ -4433,14 +4433,26 @@ MOZ_ARG_ENABLE_BOOL(svg,
     MOZ_SVG= )
 if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
-  MOZ_SVG_RENDERER_NOT_FOUND=1
 fi
 
-MOZ_ARG_ENABLE_BOOL(svg-renderer-gdiplus,
-[  --enable-svg-renderer-gdiplus Enable SVG gdi+ renderer],
-    MOZ_SVG_RENDERER_GDIPLUS=1,
-    MOZ_SVG_RENDERER_GDIPLUS= )
-if test -n "$MOZ_SVG_RENDERER_GDIPLUS"; then
+dnl default svg renderer - gdiplus on win32, cairo everywhere else
+case "$target_os" in
+msvc*|mks*|cygwin*|mingw*)
+  SVG_DEFAULT_RENDERER=gdiplus
+  ;;
+*)
+  SVG_DEFAULT_RENDERER=cairo
+  ;;
+esac
+
+MOZ_ARG_ENABLE_STRING(svg-renderer,
+[  --enable-svg-renderer={gdiplus,libart,cairo}],
+[ SVG_RENDERER=$enableval ],
+[ SVG_RENDERER=$SVG_DEFAULT_RENDERER])
+
+case "$SVG_RENDERER" in
+gdiplus)
+  MOZ_SVG_RENDERER_GDIPLUS=1
   dnl XXX This is the test we'd like to perform but it isn't working
   dnl under Windows for some reason:
   dnl   AC_CHECK_HEADER(Gdiplus.h,,
@@ -4455,31 +4467,26 @@ if test -n "$MOZ_SVG_RENDERER_GDIPLUS"; then
                  AC_MSG_ERROR([Building the SVG GDI+ renderer requires an appropriate Microsoft SDK.]))
   AC_LANG_RESTORE
   AC_DEFINE(MOZ_SVG_RENDERER_GDIPLUS)
-  MOZ_SVG_RENDERER_NOT_FOUND=
-fi
+  ;;
 
-MOZ_ARG_ENABLE_BOOL(svg-renderer-libart,
-[  --enable-svg-renderer-libart Enable SVG libart renderer],
-    MOZ_SVG_RENDERER_LIBART=1,
-    MOZ_SVG_RENDERER_LIBART= )
-if test -n "$MOZ_SVG_RENDERER_LIBART"; then
+libart)
+  MOZ_SVG_RENDERER_LIBART=1
   AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
-  MOZ_SVG_RENDERER_NOT_FOUND=
-fi
+  ;;
 
-MOZ_ARG_ENABLE_BOOL(svg-renderer-cairo,
-[  --enable-svg-renderer-cairo Enable SVG cairo renderer ],
-    MOZ_SVG_RENDERER_CAIRO=1,
-    MOZ_SVG_RENDERER_CAIRO= )
-if test -n "$MOZ_SVG_RENDERER_CAIRO"; then
+cairo)
+  MOZ_SVG_RENDERER_CAIRO=1
   AC_DEFINE(MOZ_SVG_RENDERER_CAIRO)
-  MOZ_SVG_RENDERER_NOT_FOUND=
-fi
-AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
+  ;;
 
-if test -n "$MOZ_SVG_RENDERER_NOT_FOUND"; then
-  AC_MSG_ERROR([Must choose a SVG renderer if SVG is enabled.])
-fi
+*)
+  AC_MSG_ERROR([unknown svg renderer $SVG_RENDERER])
+  ;;
+esac
+
+dnl ========================================================
+dnl Transformiix
+dnl ========================================================
 
 dnl To build transformiix standalone, set TX_EXE while configuring
 if test "$TX_EXE"; then
@@ -5891,6 +5898,7 @@ AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
 AC_SUBST(MOZ_SVG_RENDERER_LIBART)
+AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
 AC_SUBST(TX_EXE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
