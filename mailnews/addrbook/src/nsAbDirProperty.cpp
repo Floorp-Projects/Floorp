@@ -62,6 +62,9 @@ nsAbDirProperty::nsAbDirProperty(void)
 
 nsAbDirProperty::~nsAbDirProperty(void)
 {
+#if 0
+  // this code causes a regression #138647
+  // don't turn it on until you figure it out
   if (m_AddressList) {
     PRUint32 count;
     nsresult rv;
@@ -71,6 +74,7 @@ nsAbDirProperty::~nsAbDirProperty(void)
     for (i = count - 1; i >= 0; i--)
       m_AddressList->RemoveElementAt(i);
   }
+#endif
 }
 
 NS_IMPL_ISUPPORTS1(nsAbDirProperty,nsIAbDirectory)
