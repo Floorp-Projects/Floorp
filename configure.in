@@ -2254,6 +2254,7 @@ case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
     *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
