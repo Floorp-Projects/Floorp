@@ -253,65 +253,6 @@ public:
 
 NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIStreamObserver);
 
-nsresult
-TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
-{
-    nsresult rv;
-
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsFileSpec fs(fileName);
-    nsIChannel* fileTrans;
-    nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
-    if (NS_FAILED(rv)) return rv;
-    rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
-    if (NS_FAILED(rv)) return rv;
-
-    MyListener* listener = new MyListener(1);
-    if (listener == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(listener);
-    rv = listener->Init(fs);
-    if (NS_FAILED(rv)) return rv;
-
-    MyOpenObserver* openObserver = new MyOpenObserver();
-    if (openObserver == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(openObserver);
-
-    gDone = PR_FALSE;
-    rv = fileTrans->AsyncOpen(openObserver, nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fileTrans->SetTransferOffset(offset + 10);
-    if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->SetTransferCount(length);
-    if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->AsyncRead(nsnull, listener);
-    if (NS_FAILED(rv)) return rv;
-#if 0
-    rv = fileTrans->AsyncRead(offset, length, nsnull, listener);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fileTrans->AsyncRead(offset + 100, length, nsnull, listener);
-    if (NS_FAILED(rv)) return rv;
-#endif
-    while (!gDone) {
-        PLEvent* event;
-        rv = gEventQ->GetEvent(&event);
-        if (NS_FAILED(rv)) return rv;
-        rv = gEventQ->HandleEvent(event);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    NS_RELEASE(openObserver);
-    NS_RELEASE(listener);
-    NS_RELEASE(fileTrans);
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
@@ -352,9 +293,6 @@ main(int argc, char* argv[])
 
     rv = TestAsyncRead(fileName, 10, 100);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
-
-    rv = TestAsyncOpen(fileName, 10, 100);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncOpen failed");
 
     NS_RELEASE(gEventQ);
     return NS_OK;
