@@ -31,7 +31,7 @@ ifeq ($(OS_ARCH),WINNT)
 	CCC = cl
 	EXC_FLAGS = -GX
 	OS_DLLFLAGS = -nologo -DLL -incremental:yes -subsystem:console -machine:I386 wsock32.lib
-	EF_LIBS = $(DIST)/lib/EF.lib
+	EF_LIBS = $(DIST)/lib/EF.lib $(DIST)/lib/DebuggerChannel.lib $(DIST)/lib/EFDisassemble
 	EF_LIB_FILES = $(EF_LIBS)
 	NSPR_LIBS = $(DIST)/lib/libnspr21.lib $(DIST)/lib/libplc21_s.lib
 	BROWSE_INFO_DIR = $(DEPTH)/$(OBJDIR)/BrowseInfo
@@ -49,11 +49,10 @@ else
 	CCC = gcc
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
-	CFLAGS += -fdollars-in-identifiers
 	EXC_FLAGS = -fexceptions
-	EF_LIBS = -L$(DIST)/lib -lEF 
-	EF_LIB_FILES = $(DIST)/lib/libEF.a
-	NSPR_LIBS = -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21
+	EF_LIBS = -L$(DIST)/lib -lEF -lDebuggerChannel -lEFDisassemble
+	EF_LIB_FILES = $(DIST)/lib/libEF.a $(DIST)/lib/libDebuggerChannel.a $(DIST)/lib/libEFDisassemble.a
+	NSPR_LIBS = -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21 $(NSPR_THREAD_LIBS)
 	MKDIR = mkdir -p
 	LN = ln -s -f
 endif
@@ -97,7 +96,7 @@ CFLAGS += $(ARCH_DEFINES)
 # Some tools.
 #
 NFSPWD = 		$(DEPTH)/config/$(OBJDIR)/nfspwd
-JAVAH =			$(DIST)/bin/javah$(PROG_SUFFIX)
+JAVAH =			LD_LIBRARY_PATH=$(DIST)/lib $(DIST)/bin/javah$(PROG_SUFFIX)
 BURG = 			$(DEPTH)/Tools/Burg/$(OBJDIR)/burg$(PROG_SUFFIX)
 PERL = 			perl
 
