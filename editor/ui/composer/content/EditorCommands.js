@@ -190,11 +190,6 @@ function _EditorNotImplemented()
   dump("Function not implemented\n");
 }
 
-function _EditorObsolete()
-{
-  dump("Function is obsolete\n");
-}
-
 function EditorShutdown()
 {
   dump("In EditorShutdown..\n");
@@ -336,16 +331,6 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
 // --------------------------- File menu ---------------------------
 
 
-function EditorOpen()
-{
-  return _EditorObsolete();
-}
-
-function EditorOpenRemote()
-{
-  return _EditorObsolete();
-}
-
 // used by openLocation. see openLocation.js for additional notes.
 function delayedOpenWindow(chrome, flags, url)
 {
@@ -371,36 +356,7 @@ function EditorSaveDocument(doSaveAs, doSaveCopy)
   editorShell.saveDocument(doSaveAs, doSaveCopy);
 }
 
-function EditorSave()
-{
-  return _EditorObsolete();
-}
-
-function EditorSaveAs()
-{
-  return _EditorObsolete();
-}
-
-function EditorPrint()
-{
-  return _EditorObsolete();
-}
-
-function EditorPrintSetup()
-{
-  return _EditorObsolete();
-}
-
-function EditorPrintPreview()
-{
-  return _EditorObsolete();
-}
-
 function EditorClose()
-{
-  return _EditorObsolete();
-}
-
 // Check for changes to document and allow saving before closing
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)
 function EditorCanClose()
@@ -411,50 +367,6 @@ function EditorCanClose()
 
 // --------------------------- Edit menu ---------------------------
 
-function EditorUndo()
-{
-  return _EditorObsolete();
-}
-
-function EditorRedo()
-{
-  return _EditorObsolete();
-}
-
-function EditorCut()
-{
-  return _EditorObsolete();
-}
-
-function EditorCopy()
-{
-  return _EditorObsolete();
-}
-
-function EditorPaste()
-{
-  return _EditorObsolete();
-}
-
-function EditorPasteAsQuotation()
-{
-  return _EditorObsolete();
-}
-
-function EditorSelectAll()
-{
-  return _EditorObsolete();
-}
-
-function EditorFind()
-{
-  return _EditorObsolete();
-}
-
-function EditorFindNext()
-{
-  return _EditorObsolete();
-}
 
 // --------------------------- View menu ---------------------------
 
@@ -662,16 +574,6 @@ function EditorSetFontSize(size)
   contentWindow.focus();
 }
 
-function EditorIncreaseFontSize()
-{
-  return _EditorObsolete();
-}
-
-function EditorDecreaseFontSize()
-{
-  return _EditorObsolete();
-}
-
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
@@ -761,16 +663,6 @@ function EditorApplyStyle(tagName)
   contentWindow.focus();
 }
 
-function EditorRemoveStyle(tagName)
-{
-  return _EditorObsolete();
-}
-
-function EditorToggleStyle(styleName)
-{
-  return _EditorObsolete();
-}
-
 function EditorRemoveLinks()
 {
   editorShell.RemoveTextProperty("href", "");
@@ -829,62 +721,7 @@ function EditorObjectProperties()
   }
 }
 
-function EditorListProperties()
-{
-  return _EditorObsolete();
-}
-
-function EditorPageProperties()
-{
-  return _EditorObsolete();
-}
-
-function EditorColorProperties()
-{
-  return _EditorObsolete();
-}
-
 // --------------------------- Dialogs ---------------------------
-
-function EditorInsertHTML()
-{
-  return _EditorObsolete();
-}
-
-function EditorInsertOrEditLink()
-{
-  return _EditorObsolete();
-}
-
-function EditorInsertOrEditImage()
-{
-  return _EditorObsolete();
-}
-
-function EditorInsertOrEditHLine()
-{
- return _EditorObsolete();
-}
-
-function EditorInsertChars()
-{
-  return _EditorObsolete();
-}
-
-function EditorInsertOrEditNamedAnchor()
-{
-  return _EditorObsolete();
-}
-
-function EditorIndent(indent)
-{
-  return _EditorObsolete();
-}
-
-function EditorMakeOrChangeList(listType)
-{
-  return _EditorObsolete();
-}
 
 function EditorAlign(commandID, alignType)
 {
@@ -1049,16 +886,6 @@ function EditorToggleParagraphMarks()
     else
       menuItem.setAttribute("checked", "true");
   }
-}
-
-function EditorPreview()
-{
-  return _EditorObsolete();
-}
-
-function CheckSpelling()
-{
-  return _EditorObsolete();
 }
 
 function SetBackColorString(xulElementID)
@@ -1459,12 +1286,6 @@ function EditorSetSelectionFromOffsets(selRanges)
     selection.addRange(range);
   }
 }
-
-function EditorExit()
-{
-  return _EditorObsolete();
-}
-
 
 //--------------------------------------------------------------------
 function initFontStyleMenu(menuPopup)

@@ -201,8 +201,6 @@ function GetString(id)
   return editorShell.GetString(id);
 }
 
-// -------------------------- Key Bindings -------------------------
-
 // ------------------------- Move Selection ------------------------
 function SelectionBeginningOfLine()
 {
@@ -356,7 +354,6 @@ function EditorSaveDocument(doSaveAs, doSaveCopy)
   editorShell.saveDocument(doSaveAs, doSaveCopy);
 }
 
-function EditorClose()
 // Check for changes to document and allow saving before closing
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)
 function EditorCanClose()
@@ -364,9 +361,6 @@ function EditorCanClose()
   // Returns FALSE only if user cancels save action
   return editorShell.CheckAndSaveDocument(GetString("BeforeClosing"));
 }
-
-// --------------------------- Edit menu ---------------------------
-
 
 // --------------------------- View menu ---------------------------
 

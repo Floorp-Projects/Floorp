@@ -24,7 +24,7 @@
 
 editor.xul
 TextEditorAppShell.xul
-EditorCommands.js
+editor.js
 ComposerCommands.js
 EditorCommandsDebug.js
 EditorCommandsOverlay.xul

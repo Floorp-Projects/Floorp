@@ -27,14 +27,14 @@ CHROME_TYPE=content
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\editor\content
-	$(MAKE_INSTALL) editor.xul         $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) manifest.rdf               $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) editor.xul                 $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) TextEditorAppShell.xul     $(DIST)\bin\chrome\editor\content
-	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) editor.js                  $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) ComposerCommands.js        $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorCommandsDebug.js     $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorCommandsOverlay.xul  $(DIST)\bin\chrome\editor\content
-	$(MAKE_INSTALL) EditorContextMenu.js     $(DIST)\bin\chrome\editor\content
+	$(MAKE_INSTALL) EditorContextMenu.js       $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorContextMenuOverlay.xul $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content
@@ -152,7 +152,7 @@ install::
 clobber::
   rm -f $(DIST)\bin\chrome\editor\content\editor.xul
   rm -f $(DIST)\bin\chrome\editor\content\TextEditorAppShell.xul
-  rm -f $(DIST)\bin\chrome\editor\content\EditorCommands.js	
+  rm -f $(DIST)\bin\chrome\editor\content\editor.js	
   rm -f $(DIST)\bin\chrome\editor\content\ComposerCommands.js	
   rm -f $(DIST)\bin\chrome\editor\content\EditorCommandsDebug.js	
   rm -f $(DIST)\bin\chrome\editor\content\EditorCommandsOverlay.xul	
