@@ -111,11 +111,9 @@ checkbox[disabled="true"] {
   background: -moz-Field no-repeat 50% 50%;
 }
 
-#ifdef MOZ_WIDGET_GTK2
 checkbox:hover {
   color: -moz-buttonhovertext;
 }
-#endif
 
 checkbox:hover:active > .checkbox-spacer-box > .checkbox-check {
   background-color: -moz-Dialog;
