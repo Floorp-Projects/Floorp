@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 
 XPIDLSRCS	= \
+		nsILanguageAtom.idl \
+		nsILanguageAtomService.idl \
 		nsILocale.idl \
 		nsILocaleService.idl \
 		nsIScriptableDateFormat.idl \
