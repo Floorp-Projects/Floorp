@@ -27,6 +27,9 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 
+extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
+                                 int ns_aware, const char** colon);
+
 nsParserService::nsParserService() : mEntries(0)
 {
   mHaveNotifiedCategoryObservers = PR_FALSE;
