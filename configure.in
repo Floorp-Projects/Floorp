@@ -443,6 +443,27 @@ dnl the qsort routine under solaris is faulty
 
 esac
 
+dnl ========================================================
+dnl =
+dnl = --diable-pic-dso-cflags
+dnl =
+dnl = A hack to disable the generation of PIC for shared libs
+dnl =
+dnl ========================================================
+ENABLE_PIC_DSO_CFLAGS=1
+
+MOZ_ARG_DISABLE_BOOL(pic-dso-cflags,
+[  --disable-pic-dso-cflags         Dont generate PIC for shared libs)],
+  ENABLE_PIC_DSO_CFLAGS= )
+
+if test ! "$ENABLE_PIC_DSO_CFLAGS"
+then
+  DSO_PIC_CFLAGS=""
+fi
+
+dnl ========================================================
+
+
 dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
