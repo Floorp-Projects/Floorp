@@ -8,13 +8,39 @@
     <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLIP_CHILDREN</style>
     <pos>-1,-1</pos>
 
+    <!-- Browser context menus -->
+
+    <object class="wxMenu" name="context_browser_document">
+      <object class="wxMenuItem">
+        <label>This space for rent context_browser_document</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_link">
+      <object class="wxMenuItem">
+        <label>This space for rent context_browser_link</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_image">
+      <object class="wxMenuItem">
+        <label>This space for rent context_browser_image</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_text">
+      <object class="wxMenuItem">
+        <label>This space for rent context_browser_text</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_input">
+      <object class="wxMenuItem">
+        <label>This space for rent context_browser_input</label>
+      </object>
+    </object>
 
     <!-- Browser menu -->
     <object class="wxMenuBar" name="mainmenu">
       <style>wxMB_DOCKABLE</style>
       <object class="wxMenu" name="menu_file">
         <label>_File</label>
-        <style>wxMENU_TEAROFF</style>
         <object class="wxMenuItem" name="menu_about">
           <label>_About...</label>
         </object>
@@ -38,10 +64,13 @@
           <label>Stop</label>
         </object>
       </object>
-      <object class="wxMenu" name="menu_apps">
+      <object class="wxMenu" name="menu_other_apps">
         <label>_Other Apps</label>
         <object class="wxMenuItem" name="menu_mail">
-          <label>_Mail\tAlt-M</label>
+          <label>_Mail</label>
+        </object>
+        <object class="wxMenuItem" name="menu_chat">
+          <label>_Chat</label>
         </object>
       </object>
     </object>
