@@ -302,17 +302,17 @@ nsSubDocumentFrame::GetDesiredSize(nsPresContext* aPresContext,
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
-    aDesiredSize.width = PR_MIN(PR_MAX(NSIntPixelsToTwips(300, p2t),
-                                       aReflowState.mComputedMinWidth),
-                                aReflowState.mComputedMaxWidth);
+    aDesiredSize.width = PR_MAX(PR_MIN(NSIntPixelsToTwips(300, p2t),
+                                       aReflowState.mComputedMaxWidth), 
+                                aReflowState.mComputedMinWidth);
   }
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
     aDesiredSize.height = aReflowState.mComputedHeight;
   }
   else {
-    aDesiredSize.height = PR_MIN(PR_MAX(NSIntPixelsToTwips(150, p2t),
-                                        aReflowState.mComputedMinHeight),
-                                 aReflowState.mComputedMaxHeight);
+    aDesiredSize.height = PR_MAX(PR_MIN(NSIntPixelsToTwips(150, p2t),
+                                        aReflowState.mComputedMaxHeight),
+                                 aReflowState.mComputedMinHeight);
   }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -370,16 +370,30 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
     vm->ResizeView(mInnerView, nsRect(0, 0, innerSize.width, innerSize.height), PR_TRUE);
   }
 
-  if (aDesiredSize.mComputeMEW) {
-    // If our width is set by style to some fixed length,
-    // then our actual width is our minimum width
+  if (aDesiredSize.mComputeMEW) {   
+    nscoord defaultAutoWidth = NSIntPixelsToTwips(300, aPresContext->ScaledPixelsToTwips());
+    if (mContent->IsContentOfType(nsIContent::eXUL)) {
+        // XUL frames don't have a default 300px width
+        defaultAutoWidth = 0;
+    }
     nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
-    if (widthUnit != eStyleUnit_Percent && widthUnit != eStyleUnit_Auto) {
-      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-    } else {
-      // if our width is auto or a percentage, then we can shrink until
+    switch (widthUnit) {
+    case eStyleUnit_Percent:
+      // if our width is percentage, then we can shrink until
       // there's nothing left but our borders
       aDesiredSize.mMaxElementWidth = border.left + border.right;
+      break;
+    case eStyleUnit_Auto:
+      aDesiredSize.mMaxElementWidth = PR_MAX(PR_MIN(defaultAutoWidth,
+                                                    aReflowState.mComputedMaxWidth),
+                                             aReflowState.mComputedMinWidth) +
+                                      border.left + border.right;
+      break;
+    default:
+      // If our width is set by style to some fixed length,
+      // then our actual width is our minimum width
+      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+      break;
     }
   }
 
