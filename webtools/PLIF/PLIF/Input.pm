@@ -69,9 +69,10 @@ sub getArgument {
     $self->notImplemented();
 }
 
-# returns the argument if it has been provided, otherwise undef.
+# returns the argument if it has been provided, otherwise an empty list.
 sub peekArgument {
-    return undef;
+    my $self = shift;
+    $self->notImplemented();
 }
 
 # returns all the arguments in a form of a hash:

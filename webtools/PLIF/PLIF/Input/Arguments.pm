@@ -100,8 +100,9 @@ sub peekArgument {
         } elsif (@{$self->{"argument $argument"}}) {
             return $self->{"argument $argument"}->[0];
         }
+    } else {
+        return;
     }
-    return undef;
 }
 
 
