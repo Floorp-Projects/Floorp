@@ -22,7 +22,9 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
+#ifdef PLUGGABLE_EVENTS
 #include "nsIPluggableEventListener.h"
+#endif
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -34,8 +36,10 @@ class nsIListControlFrame;
 
 class nsComboboxControlFrame : public nsHTMLContainerFrame,
                                public nsIFormControlFrame,
-                               public nsIPluggableEventListener,
                                public nsIComboboxControlFrame
+#ifdef PLUGGABLE_EVENTS
+                               public nsIPluggableEventListener
+#endif
 {
 public:
   nsComboboxControlFrame();
