@@ -1,5 +1,5 @@
 calendar.jar:
-        skin/classic/calendar/calendar.css
++       skin/classic/calendar/calendar.css
         skin/classic/calendar/toolbar-large.png
         skin/classic/calendar/toolbar-small.png
         skin/classic/calendar/pageupdown.png
@@ -12,6 +12,6 @@ calendar.jar:
         skin/classic/calendar/datetimepickers/clock_disabled.png    (datetimepickers/clock_disabled.png)
         skin/classic/calendar/datetimepickers/clock_hover.png       (datetimepickers/clock_hover.png)
         skin/classic/calendar/datetimepickers/clock_up.png          (datetimepickers/clock_up.png)
-        skin/classic/calendar/datetimepickers/datepicker.css        (datetimepickers/datepicker.css)
-        skin/classic/calendar/datetimepickers/minimonth.css         (datetimepickers/minimonth.css)
-        skin/classic/calendar/datetimepickers/timepicker.css        (datetimepickers/timepicker.css)
++       skin/classic/calendar/datetimepickers/datepicker.css        (datetimepickers/datepicker.css)
++       skin/classic/calendar/datetimepickers/minimonth.css         (datetimepickers/minimonth.css)
++       skin/classic/calendar/datetimepickers/timepicker.css        (datetimepickers/timepicker.css)
