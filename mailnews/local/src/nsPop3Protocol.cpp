@@ -705,10 +705,12 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
     nsXPIDLString passwordTemplate;
     // if the last prompt got us a bad password then show a special dialog
     if (TestFlag(POP3_PASSWORD_FAILED))
-    { 
-      // if we haven't successfully logged onto the server in this session,
+    {
+      // if we haven't successfully logged onto the server in this session
+      // and tried at least twice or if the server threw the specific error,
       // forget the password.
-      if (!isAuthenticated && m_pop3ConData->logonFailureCount > 1)
+      if ((!isAuthenticated && m_pop3ConData->logonFailureCount > 1) ||
+          TestFlag(POP3_AUTH_FAILURE))
         rv = server->ForgetPassword();
       if (NS_FAILED(rv)) return rv;
       mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, getter_Copies(passwordTemplate));
@@ -733,7 +735,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
       nsTextFormatter::smprintf_free(passwordPromptString);
     }
     
-    ClearFlag(POP3_PASSWORD_FAILED);
+    ClearFlag(POP3_PASSWORD_FAILED|POP3_AUTH_FAILURE);
     if (NS_FAILED(rv))
       m_pop3ConData->next_state = POP3_ERROR_DONE;
   } // if we have a server
@@ -982,13 +984,14 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
   
   if(pauseForMoreData || !line)
   {
-    m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
+    m_pop3ConData->pause_for_read = PR_TRUE; /* pause */
+
     PR_Free(line);
     return(ln);
   }
-  
+
   PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-  
+
   if(*line == '+')
   {
     m_pop3ConData->command_succeeded = PR_TRUE;
@@ -1383,7 +1386,15 @@ PRInt32 nsPop3Protocol::AuthFallback()
                          ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE));
 
         // response code received shows that server is certain about the
-        // credential was wrong -> no fallback, show alert and pw dialog
+        // credential was wrong, or fallback has been disabled by pref
+        // -> no fallback, show alert and pw dialog
+        PRBool logonFallback = PR_TRUE;
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+        if (server)
+          server->GetLogonFallback(&logonFallback);
+        if (!logonFallback)
+          SetFlag(POP3_AUTH_FAILURE);
+
         if (TestFlag(POP3_AUTH_FAILURE))
         {
             Error((m_password_already_sent) 

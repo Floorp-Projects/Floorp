@@ -389,6 +389,7 @@ pref("mail.server.default.login_at_startup", false);
 pref("mail.server.default.allows_specialfolders_usage", true);
 pref("mail.server.default.canCreateFolders", true);
 pref("mail.server.default.canFileMessages", true);
+pref("mail.server.default.logon_fallback", true);
 
 // special enhancements for IMAP servers
 pref("mail.server.default.store_read_mail_in_pfc", false);  

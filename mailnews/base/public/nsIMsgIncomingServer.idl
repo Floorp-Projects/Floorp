@@ -56,7 +56,7 @@ interface nsIUrlListener;
  * often you will want to add extra interfaces that give you server-specific
  * attributes and methods.
  */
-[scriptable, uuid(55569286-ee09-45ec-a83b-96d0273a5ed8)]
+[scriptable, uuid(dc2f06f9-0ee8-47ad-901e-168d14323576)]
 interface nsIMsgIncomingServer : nsISupports {
 
   /**
@@ -177,6 +177,11 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* should we use secure authentication? */
   attribute boolean useSecAuth;
+
+  /* if a logon mechanism fails, should we fallback to a different
+     mechanism?
+  */
+  attribute boolean logonFallback;
 
   /* can server support a secure channel? */
   readonly attribute boolean isSecureServer;

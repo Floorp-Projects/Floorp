@@ -76,7 +76,7 @@ nsresult
 nsMovemailIncomingServer::GetLocalStoreType(char **type)
 {
     NS_ENSURE_ARG_POINTER(type);
-    *type = nsCRT::strdup("mailbox");
+    *type = strdup("mailbox");
     return NS_OK;
 }
 
