@@ -711,14 +711,16 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
     GetView(&view);
-    const nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-    nsViewVisibility newVis = NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow;
-    nsViewVisibility oldVis;
-    // only change if different.
-    view->GetVisibility(oldVis);
-    if (newVis != oldVis) 
-      view->SetVisibility(newVis);
+    if (view) {
+      const nsStyleDisplay* display;
+      GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+      nsViewVisibility newVis = NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow;
+      nsViewVisibility oldVis;
+      // only change if different.
+      view->GetVisibility(oldVis);
+      if (newVis != oldVis) 
+        view->SetVisibility(newVis);
+    }
   }
   
   return rv;
