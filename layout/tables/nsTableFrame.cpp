@@ -2027,6 +2027,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
           if (cellData) {
             cellFrame = cellData->mOrigCell;
             if (cellFrame) { // the cell originates at (rowX, colX)
+              // reset the collapse offsets since they may have been collapsed previously
+              cellFrame->SetCollapseOffsetX(aPresContext, 0);
+              cellFrame->SetCollapseOffsetY(aPresContext, 0);
               cellFrame->GetRect(cellRect);
               if (collapseGroup || collapseCol) {
                 if (lastCell != cellFrame) { // do it only once if there is a row span
