@@ -304,7 +304,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mImageCache(nsnull),
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
- mVerticalOverflow(PR_FALSE), mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull), mOpenTimerRow(-1)
+ mVerticalOverflow(PR_FALSE), mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -2990,7 +2990,6 @@ nsOutlinerBodyFrame::OnDragExit(nsIDOMEvent* aEvent)
   if (mOpenTimer) {
     mOpenTimer->Cancel();
     mOpenTimer = nsnull;
-    mOpenTimerRow = -1;
   }
 
   return NS_OK;
@@ -3032,11 +3031,10 @@ nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
       InvalidatePrimaryCell(mDropRow);
     }
 
-    if (mOpenTimer && newRow != mOpenTimerRow) {
+    if (mOpenTimer) {
       // timer is active but for a different row than the current one - kill it
       mOpenTimer->Cancel();
       mOpenTimer = nsnull;
-      mOpenTimerRow = -1;
     }
 
     // cache the new row and orientation regardless so we can check if it changed
@@ -3046,7 +3044,7 @@ nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
     mDropAllowed = PR_FALSE;
 
     if (mDropRow >= 0) {
-      if (!mOpenTimer) {
+      if (!mOpenTimer && mDropOrient == nsIOutlinerView::inDropOn) {
         // either there wasn't a timer running or it was just killed above.
         // if over a folder, start up a timer to open the folder.
         PRBool isContainer = PR_FALSE;
@@ -3056,7 +3054,6 @@ nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
           mView->IsContainerOpen(mDropRow, &isOpen);
           if (!isOpen) {
             // this node isn't expanded - set a timer to expand it
-            mOpenTimerRow = mDropRow;
             mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
             mOpenTimer->Init(this, 1000, NS_PRIORITY_HIGHEST);
           }
@@ -3287,9 +3284,7 @@ nsOutlinerBodyFrame::Notify(nsITimer* aTimer)
     // open the node
     mOpenTimer->Cancel();
     mOpenTimer = nsnull;
-    if (mOpenTimerRow >= 0) {
-      mView->ToggleOpenState(mOpenTimerRow);
-      mOpenTimerRow = -1;
-    }
+    if (mDropRow >= 0)
+      mView->ToggleOpenState(mDropRow);
   }
 }
