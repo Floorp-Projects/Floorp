@@ -1147,7 +1147,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
   if (NS_FAILED(rv)) return rv;
 
-  parser->SetCommand("view");
+  parser->SetCommand(eViewNormal);
 
   nsAutoString utf8("UTF-8");
   parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
