@@ -65,15 +65,15 @@ NS_IMPL_ISUPPORTS6(nsDocShellBase, nsIDocShell, nsIDocShellEdit,
 // nsDocShellBase::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::LoadURI(const PRUnichar* uri, 
+NS_IMETHODIMP nsDocShellBase::LoadURI(nsIURI* aUri, 
    nsIPresContext* presContext)
 {
-   //NS_ENSURE_ARG(uri);  // Done in LoadURIVia for us.
+   //NS_ENSURE_ARG(aUri);  // Done in LoadURIVia for us.
 
-   return LoadURIVia(uri, presContext, 0);
+   return LoadURIVia(aUri, presContext, 0);
 }
 
-NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* aUri, 
+NS_IMETHODIMP nsDocShellBase::LoadURIVia(nsIURI* aUri, 
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
    NS_ENSURE_ARG(aUri);
@@ -83,17 +83,13 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* aUri,
          nsnull, NS_GET_IID(nsIURILoader), getter_AddRefs(uriLoader)), 
          NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIURI> uri;
-   NS_ENSURE_SUCCESS(NewURI(aUri, getter_AddRefs(uri)), NS_ERROR_FAILURE);  
-
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+   mContentListener->SetPresContext(aPresContext);
 
-   /*
-   Call uriloader passing mContentListener as the nsIURIContentListener
-   uriLoader->OpenURI(uri, nsnull, nsnull, 
-   */
+   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, nsnull, nsnull,
+      nsnull, mContentListener, nsnull), NS_ERROR_FAILURE);
 
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
@@ -112,6 +108,16 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::GetCurrentURI(nsIURI** aURI)
+{
+   NS_ENSURE_ARG_POINTER(aURI);
+   
+   *aURI = mCurrentURI;
+   NS_IF_ADDREF(*aURI);
+
+   return NS_OK;
 }
 
 // SetDocument is only meaningful for doc shells that support DOM documents.  Not all do.
@@ -1116,12 +1122,6 @@ nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
    return NS_OK;
 }
 
-nsresult nsDocShellBase::NewURI(const PRUnichar* aUri, nsIURI** aURI)
-{
-   //XXX Get new URI
-   return NS_ERROR_FAILURE;
-}
-
 nsresult nsDocShellBase::EnsureContentListener()
 {
    if(mContentListener)
@@ -1134,5 +1134,10 @@ nsresult nsDocShellBase::EnsureContentListener()
    mContentListener->DocShellBase(this);
 
    return NS_OK;
+}
+
+void nsDocShellBase::SetCurrentURI(nsIURI* aUri)
+{
+   mCurrentURI = aUri; //This assignment addrefs
 }
 
