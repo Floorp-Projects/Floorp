@@ -50,19 +50,5 @@ CSRCS		= secutil.c \
 		ffs.c \
 		$(NULL)
 
-OLD_CSRCS	= dongle.c \
-		  derprint.c \
-		  err.c \
-		  fe_util.c \
-		  ffs.c \
-		  filestub.c \
-		  secarb.c \
-		  secpwd.c \
-		  secutil.c \
-		  sslstubs.c \
-		  strerror.c \
-		  stubs.c \
-		  $(NULL)
-
 REQUIRES	= nss nspr dbm
 
