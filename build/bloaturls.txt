@@ -1,3 +1,2 @@
 http://www.mozilla.org
 res:///res/samples/test2.html
-
