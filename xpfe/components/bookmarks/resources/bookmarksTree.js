@@ -630,6 +630,7 @@ BookmarksTree.prototype = {
     isCommandEnabled: function (aCommand)
     {
       var numSelectedItems = gBookmarksShell.tree.selectedItems.length;
+      var seln, firstSelected, folderType, bItemCountCorrect;
       switch(aCommand) {
       case "cmd_undo":
       case "cmd_redo":
@@ -643,7 +644,7 @@ BookmarksTree.prototype = {
       case "cmd_bm_selectAll":
         return true;
       case "cmd_open":
-        var seln = gBookmarksShell.tree.selectedItems;
+         seln = gBookmarksShell.tree.selectedItems;
         return numSelectedItems == 1 && seln[0].getAttribute("type") == NC_NS + "Bookmark";
       case "cmd_openfolder":
       case "cmd_openfolderinnewwindow":
@@ -662,24 +663,24 @@ BookmarksTree.prototype = {
         return numSelectedItems == 1 && seln[0].getAttribute("type") != NC_NS + "BookmarkSeparator";
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
-        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
-        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
         return bItemCountCorrect && !(NODE_ID(firstSelected) == "NC:NewBookmarkFolder") && folderType;
       case "cmd_setpersonaltoolbarfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
-        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
-        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
         return bItemCountCorrect && !(NODE_ID(firstSelected) == "NC:PersonalToolbarFolder") && folderType;
       case "cmd_setnewsearchfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
-        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
-        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
         return bItemCountCorrect == 1 && !(NODE_ID(firstSelected) == "NC:NewSearchFolder") && folderType;
       case "cmd_bm_fileBookmark":
-        var seln = gBookmarksShell.tree.selectedItems;
+        seln = gBookmarksShell.tree.selectedItems;
         return seln.length > 0;
       default:
         return false;
