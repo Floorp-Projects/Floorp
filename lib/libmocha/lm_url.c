@@ -827,18 +827,28 @@ loc_toString(JSContext *cx, JSObject *obj,
 }
 
 PR_STATIC_CALLBACK(JSBool)
-loc_assign(JSContext *cx, JSObject *obj,
-	   uint argc, jsval *argv, jsval *rval)
+loc_assign(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSURL *url;
     jsval v;
+    JSObject *locobj;
 
-    if (!(url = JS_GetInstancePrivate(cx, obj, &lm_location_class, argv)))
+    if (!JS_InstanceOf(cx, obj, &lm_location_class, NULL))  {
+        if(!JS_LookupProperty(cx, obj, lm_location_str, &v))  {
+	    return JS_FALSE;
+	}
+	if(!JSVAL_IS_OBJECT(v) || !JSVAL_TO_OBJECT(v))  {
+	    return JS_TRUE;
+	}
+	locobj = JSVAL_TO_OBJECT(v);
+    }  else  {
+        locobj = obj;
+    }
+    if (!(url = JS_GetInstancePrivate(cx, locobj, &lm_location_class, NULL)))
         return JS_FALSE;
-    v = argv[0];
-    if (!loc_setProperty(cx, obj, INT_TO_JSVAL(URL_HREF), &v))
+    if (!loc_setProperty(cx, locobj, INT_TO_JSVAL(URL_HREF), vp))
 	return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(url->url_object);
+    *vp = OBJECT_TO_JSVAL(url->url_object);
     return JS_TRUE;
 }
 
@@ -859,16 +869,19 @@ loc_replace(JSContext *cx, JSObject *obj,
 	    uint argc, jsval *argv, jsval *rval)
 {
     JSURL *url;
+    JSBool ans;
 
     if (!(url = JS_GetInstancePrivate(cx, obj, &lm_location_class, argv)))
         return JS_FALSE;
     url->url_decoder->replace_location = JS_TRUE;
-    return loc_assign(cx, obj, argc, argv, rval);
+    /* Note: loc_assign ignores the id in favor of its own id anyway */
+    ans = loc_assign(cx, obj, 0, argv);
+    *rval = *argv;
+    return ans;
 }
 
 static JSFunctionSpec loc_methods[] = {
     {lm_toString_str,   loc_toString,  0},
-    {lm_assign_str,     loc_assign,     1},
     {lm_reload_str,     loc_reload,     1},
     {lm_replace_str,    loc_replace,    1},
     {0}
@@ -907,13 +920,13 @@ lm_DefineLocation(MochaDecoder *decoder)
 	return NULL;
 
     if (!JS_DefineProperty(cx, decoder->window_object, lm_location_str,
-			   OBJECT_TO_JSVAL(obj), NULL, NULL,
-			   JSPROP_ENUMERATE | JSPROP_READONLY)) {
+			   OBJECT_TO_JSVAL(obj), NULL, loc_assign,
+			   JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
 	return NULL;
     }
     if (!JS_DefineProperty(cx, decoder->document, lm_location_str, 
-                           OBJECT_TO_JSVAL(obj), NULL, NULL, 
-                           JSPROP_ENUMERATE | JSPROP_READONLY)) {
+                           OBJECT_TO_JSVAL(obj), NULL, loc_assign, 
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
 	return NULL;
     }
 
