@@ -47,16 +47,9 @@
 [ptr] native JSDStackFrameInfo(JSDStackFrameInfo);
 [ptr] native JSDThreadState(JSDThreadState);
 [ptr] native JSDValue(JSDValue);
+native jsuword(jsuword);
 
 interface jsdIValue;
-
-/*
-[scriptable, uuid(e7c8ea2c-1dd1-11b2-9242-f2768e04e92e)]
-interface jsdIHandle : nsISupports
-{
-    [noscript] readonly attribute voidPtr data;
-};
-*/
 
 /* handle objects */
 [scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
@@ -70,6 +63,18 @@ interface jsdIObject : nsISupports
 {
     [noscript] readonly attribute JSDContext JSDContext;
     [noscript] readonly attribute JSDObject  JSDObject;
+
+    readonly attribute string        creatorURL;
+    readonly attribute unsigned long creatorLine;
+    readonly attribute string        constructorURL;
+    readonly attribute unsigned long constructorLine;
+    readonly attribute jsdIValue     value;
+};
+
+[scriptable, uuid(e7c8ea2c-1dd1-11b2-9242-f2768e04e92e)]
+interface jsdIPC : nsISupports
+{
+    [noscript] readonly attribute jsuword pc;
 };
 
 [scriptable, uuid(b8816e56-1dd1-11b2-81dc-8ba99a833d9e)]
@@ -104,6 +109,12 @@ interface jsdIScript : nsISupports
     readonly attribute string        functionName;
     readonly attribute unsigned long baseLineNumber;
     readonly attribute unsigned long lineExtent;
+
+    unsigned long pcToLine (in jsdIPC pc);
+    jsdIPC lineToPc (in unsigned long line);    
+    void setBreakpoint (in jsdIPC pc);
+    void clearBreakpoint (in jsdIPC pc);
+    void clearAllBreakpoints ();
 };
 
 [scriptable, uuid(a47adad2-1dd1-11b2-b9e9-8e67a47beca5)]
@@ -119,7 +130,7 @@ interface jsdIStackFrame : nsISupports
     
     readonly attribute jsdIStackFrame callingFrame;
     readonly attribute jsdIScript     script;
-    readonly attribute unsigned long  pc;
+    readonly attribute jsdIPC         pc;
     readonly attribute unsigned long  line;
     readonly attribute jsdIValue      callee;
     readonly attribute jsdIValue      scope;
@@ -128,9 +139,6 @@ interface jsdIStackFrame : nsISupports
     jsdIValue eval (in AString bytes, in string fileName,
                     in unsigned long line);
 
-    unsigned long pcToLine (in unsigned long pc);
-    unsigned long lineToPc (in unsigned long line);
-    
 };
 
 [scriptable, uuid(b6d1c006-1dd1-11b2-b9d8-b4d1ccfb74d8)]
@@ -190,8 +198,8 @@ interface jsdIValue : nsISupports
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
 interface jsdIScriptHook : nsISupports
 {
-    void onScriptLoaded (in jsdIContext aCx, in jsdIScript aScript,
-                         in boolean aCreating);
+    void onScriptLoaded (in jsdIContext cx, in jsdIScript script,
+                         in boolean creating);
 };
 
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
@@ -210,21 +218,25 @@ interface jsdIExecutionHook : nsISupports
     const unsigned long RETURN_THROW_WITH_VAL = 4;
     const unsigned long RETURN_CONTINUE_THROW = 5;
 
-    unsigned long onExecute (in jsdIContext aCx,
-                             in jsdIThreadState aThreadState,
-                             in unsigned long aType, out jsdIValue rval);
+    unsigned long onExecute (in jsdIContext cx,
+                             in jsdIThreadState threadState,
+                             in unsigned long type, out jsdIValue rval);
 };
 
 /* debugger service */
 [scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
 interface jsdIDebuggerService : nsISupports
 {
-    void init ();
-
+    attribute jsdIExecutionHook breakpointHook;
     attribute jsdIExecutionHook debugBreakHook;
     attribute jsdIExecutionHook debuggerHook;
     attribute jsdIExecutionHook interruptHook;
     attribute jsdIScriptHook    scriptHook;
+    
+    void on ();
+    void off ();
+
+    void clearAllBreakpoints ();
     
     /* XXX temporary hacks */
     unsigned long enterNestedEventLoop ();
