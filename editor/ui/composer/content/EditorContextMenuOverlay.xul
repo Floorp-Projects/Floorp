@@ -29,13 +29,12 @@
 <overlay id="ComposerContextMenuOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://navigator/content/nsContextMenu.js"/>
 <script language="JavaScript" src="chrome://editor/content/EditorContextMenu.js"/>
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    oncreate="return fillContentContextMenu(event, this);" 
-	 ondestroy="cleanupContextMenu(event, this); contextMenu.onDestroy(); contextMenu = null;">
+	 ondestroy="cleanupContextMenu(event, this);">
 		<menuitem id="menu_undo_cm" observes="cmd_undo"/>
 		<menuitem id="menu_redo_cm" observes="cmd_redo"/>
 		<menuseparator id="undoredo-separator"/>
