@@ -568,6 +568,9 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
         result = domText->SetData(aText);
 
         if (NS_SUCCEEDED(result)) {
+          // If we used an existing node, the notification will not happen (the
+          // notification typically happens in AppendChildTo).
+          NotifyTextChanged();
           usedExistingTextNode = PR_TRUE;
         }
 
