@@ -29,14 +29,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsXULAtoms.h"
-
-// XXX Notes to self
-// 1. The menu bar should get its own view, and it should capture all events when the ALT key
-// goes down.
-//
-// 2. Collapsing the menu bar will destroy the frame. The menu bar will need to unregister its
-// listeners when this happens.
-//
+#include "nsMenuFrame.h"
 
 //
 // NS_NewMenuBarFrame
@@ -128,9 +121,9 @@ nsMenuBarFrame::ToggleMenuActiveState()
     mIsActive = PR_FALSE;
     if (mCurrentMenu) {
       // Deactivate the menu.
-      nsCOMPtr<nsIContent> content;
-      mCurrentMenu->GetContent(getter_AddRefs(content));
-      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+      menuFrame->OpenMenu(PR_FALSE);
+      menuFrame->SelectMenu(PR_FALSE);
       mCurrentMenu = nsnull;
     }
   }
@@ -144,10 +137,9 @@ nsMenuBarFrame::ToggleMenuActiveState()
     nsIFrame* firstFrame;
     GetNextMenuItem(nsnull, &firstFrame);
     if (firstFrame) {
-      // Activate the item.
-      firstFrame->GetContent(getter_AddRefs(firstMenuItem));
-      firstMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-
+      nsMenuFrame* menuFrame = (nsMenuFrame*)firstFrame;
+      menuFrame->SelectMenu(PR_TRUE);
+      
       // Track this item for keyboard navigation.
       mCurrentMenu = firstFrame;
     }
@@ -160,10 +152,19 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
   if (!mCurrentMenu)
     return;
 
-  if (aDirection == NS_VK_RIGHT ||
-      aDirection == NS_VK_LEFT) {
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+   
+  PRBool handled = PR_FALSE;
+  if (menuFrame->IsOpen()) {
+    // Let the child menu try to handle it.
+    menuFrame->KeyboardNavigation(aDirection, handled);
+  }
+
+  if (handled)
+    return;
+
+  if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT) {
     
-    // Activate the child at the position specified by index.
     nsIFrame* nextItem;
     
     if (aDirection == NS_VK_RIGHT)
@@ -172,13 +173,24 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 
     SetCurrentMenuItem(nextItem);
   }
+  else if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
+    // Open the menu and select its first item.
+    menuFrame->OpenMenu(PR_TRUE);
+    menuFrame->SelectFirstItem();
+  }
 }
 
 NS_IMETHODIMP
 nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  nsIFrame* currFrame = aStart ? aStart : mFrames.FirstChild();
-  currFrame->GetNextSibling(&currFrame);
+  nsIFrame* currFrame;
+  if (aStart) {
+    currFrame = aStart;
+    if (currFrame)
+      currFrame->GetNextSibling(&currFrame);
+  }
+  else currFrame = mFrames.FirstChild();
+
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
@@ -219,8 +231,14 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 NS_IMETHODIMP
 nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  nsIFrame* currFrame = aStart ? aStart : mFrames.LastChild();
-  currFrame = mFrames.GetPrevSiblingFor(currFrame);
+  nsIFrame* currFrame;
+  if (aStart) {
+    currFrame = aStart;
+    if (currFrame)
+      currFrame = mFrames.GetPrevSiblingFor(currFrame);
+  }
+  else currFrame = mFrames.LastChild();
+
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
@@ -263,19 +281,24 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
 
- // Unset the current child.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  PRBool wasOpen = PR_FALSE;
+  
+  // Unset the current child.
   if (mCurrentMenu) {
-    nsCOMPtr<nsIContent> content;
-    mCurrentMenu->GetContent(getter_AddRefs(content));
-    content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    wasOpen = menuFrame->IsOpen();
+    menuFrame->OpenMenu(PR_FALSE);
+    menuFrame->SelectMenu(PR_FALSE);
   }
 
   // Set the new child.
   if (aMenuItem) {
-    nsCOMPtr<nsIContent> content;
-    aMenuItem->GetContent(getter_AddRefs(content));
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    nsMenuFrame* newFrame = (nsMenuFrame*)aMenuItem;
+    newFrame->SelectMenu(PR_TRUE);
+    if (wasOpen)
+      newFrame->OpenMenu(PR_TRUE);
   }
+
   mCurrentMenu = aMenuItem;
 
   return NS_OK;

@@ -34,6 +34,8 @@ public:
   NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem) = 0;
   NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult) = 0;
   NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult) = 0;
+
+  NS_IMETHOD SetActive() = 0;
 };
 
 #endif

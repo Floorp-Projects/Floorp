@@ -45,7 +45,8 @@ public:
   NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
-  
+  NS_IMETHOD SetActive() { mIsActive = PR_TRUE; return NS_OK; };
+
   NS_IMETHOD IsActive() { return mIsActive; };
 
   NS_IMETHOD Init(nsIPresContext&  aPresContext,

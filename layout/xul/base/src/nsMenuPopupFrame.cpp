@@ -29,6 +29,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
+#include "nsMenuFrame.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -219,8 +220,14 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsMenuPopupFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  nsIFrame* currFrame = aStart ? aStart : mFrames.FirstChild();
-  currFrame->GetNextSibling(&currFrame);
+  nsIFrame* currFrame;
+  if (aStart) {
+    currFrame = aStart; 
+    if (currFrame)
+      currFrame->GetNextSibling(&currFrame);
+  }
+  else currFrame = mFrames.FirstChild();
+  
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
@@ -261,8 +268,14 @@ nsMenuPopupFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 NS_IMETHODIMP
 nsMenuPopupFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  nsIFrame* currFrame = aStart ? aStart : mFrames.LastChild();
-  currFrame = mFrames.GetPrevSiblingFor(currFrame);
+  nsIFrame* currFrame;
+  if (aStart) {
+    currFrame = aStart;
+    if (currFrame)
+      currFrame = mFrames.GetPrevSiblingFor(currFrame);
+  }
+  else currFrame = mFrames.LastChild();
+
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
@@ -305,19 +318,24 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
 
- // Unset the current child.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  PRBool wasOpen = PR_FALSE;
+  
+  // Unset the current child.
   if (mCurrentMenu) {
-    nsCOMPtr<nsIContent> content;
-    mCurrentMenu->GetContent(getter_AddRefs(content));
-    content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    wasOpen = menuFrame->IsOpen();
+    menuFrame->OpenMenu(PR_FALSE);
+    menuFrame->SelectMenu(PR_FALSE);
   }
 
   // Set the new child.
   if (aMenuItem) {
-    nsCOMPtr<nsIContent> content;
-    aMenuItem->GetContent(getter_AddRefs(content));
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    nsMenuFrame* newFrame = (nsMenuFrame*)aMenuItem;
+    newFrame->SelectMenu(PR_TRUE);
+    if (wasOpen)
+      newFrame->OpenMenu(PR_TRUE);
   }
+
   mCurrentMenu = aMenuItem;
 
   return NS_OK;
@@ -348,3 +366,38 @@ nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
+void
+nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
+{
+  // This method only gets called if we're open.
+  if (!mCurrentMenu) {
+    // We've been opened, but we haven't had anything selected.
+    // We can't handle LEFT or RIGHT, but our parent can.
+    if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT)
+      return;
+  }
+
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  
+  if (menuFrame && menuFrame->IsOpen()) {
+    // Give our child a shot.
+    menuFrame->KeyboardNavigation(aDirection, aHandledFlag);
+  }
+
+  if (aHandledFlag)
+    return; // The child menu took it for us.
+
+  // For the vertical direction, we can move up or down.
+  if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
+    
+    nsIFrame* nextItem;
+    
+    if (aDirection == NS_VK_DOWN)
+      GetNextMenuItem(mCurrentMenu, &nextItem);
+    else GetPreviousMenuItem(mCurrentMenu, &nextItem);
+
+    SetCurrentMenuItem(nextItem);
+
+    aHandledFlag = PR_TRUE;
+  }
+}

@@ -46,6 +46,7 @@ public:
   NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
+  NS_IMETHOD SetActive() { return NS_OK; }; // We don't care.
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
@@ -61,6 +62,8 @@ public:
   nsresult SyncViewWithFrame(PRBool aOnMenuBar);
 
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+
+  void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
 
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.

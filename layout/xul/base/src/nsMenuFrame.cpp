@@ -246,8 +246,14 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   if (aActivateFlag) {
     // Open the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
-    if (child)
+    if (child) {
+      // We've got some children for real.
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+      
+      // Tell the menu bar we're active.
+      mMenuParent->SetActive();
+    }
+
     mMenuOpen = PR_TRUE;
     //if (menuPopup)
     //  menuPopup->CaptureMouseEvents(PR_TRUE);
@@ -317,4 +323,19 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   aDesiredSize.maxElementSize->height = maxHeight;
  
   return rv;
+}
+
+void
+nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
+{
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+    popup->KeyboardNavigation(aDirection, aHandledFlag);
+  }
+}
+
+void
+nsMenuFrame::SelectFirstItem()
+{
 }
