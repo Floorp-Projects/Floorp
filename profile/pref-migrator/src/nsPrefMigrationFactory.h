@@ -21,23 +21,30 @@
 #define nsPrefMigrationFactory_h___
 
 #include "nsPrefMigrationCIDs.h"
-#include "nsIFactory.h"
 #include "nsIPrefMigration.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
-class nsPrefMigrationFactory : public nsIFactory 
+// Module implementation
+class nsPrefMigrationModule : public nsIModule
 {
-  public:
-
-    nsPrefMigrationFactory();
-    virtual ~nsPrefMigrationFactory();
+public:
+    nsPrefMigrationModule();
+    virtual ~nsPrefMigrationModule();
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                                    REFNSIID aIID,
-                                    void **aResult);
+    NS_DECL_NSIMODULE
 
-    NS_IMETHOD LockFactory(PRBool aLock);
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
 };
+
 
 #endif
