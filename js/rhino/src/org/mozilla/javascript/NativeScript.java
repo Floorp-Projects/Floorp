@@ -55,7 +55,7 @@ import java.io.IOException;
  * @author Norris Boyd
  */
 
-class NativeScript extends NativeFunction implements Script
+class NativeScript extends NativeFunction
 {
     private static final Object SCRIPT_TAG = new Object();
 
@@ -112,19 +112,6 @@ class NativeScript extends NativeFunction implements Script
         return super.getEncodedSource();
     }
 
-    /**
-     * @deprecated
-     *
-     * NativeScript implements {@link Script} and its
-     * {@link Script#exec(Context cx, Scriptable scope)} method only for
-     * backward compatibility.
-     */
-    public Object exec(Context cx, Scriptable scope)
-        throws JavaScriptException
-    {
-        return script == null ? Undefined.instance : script.exec(cx, scope);
-    }
-
     protected void initPrototypeId(int id)
     {
         String s;
@@ -161,9 +148,8 @@ class NativeScript extends NativeFunction implements Script
           case Id_toString: {
             NativeScript real = realThis(thisObj, f);
             Script realScript = real.script;
-            if (realScript == null) { realScript = real; }
-            return cx.decompileScript(realScript,
-                                      getTopLevelScope(scope), 0);
+            if (realScript == null) { return ""; }
+            return cx.decompileScript(realScript, 0);
           }
 
           case Id_exec: {
