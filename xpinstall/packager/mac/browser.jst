@@ -17,7 +17,7 @@ if (verifyDiskSpace(fProgram, srDest))
 
     logComment("addDirectory() returned: " + err);
 
-    var cf = getFolder(fProgram,"chrome");
+    var cf = getFolder("Chrome");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"toolkit.jar"),"content/global/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/communicator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/editor/");
