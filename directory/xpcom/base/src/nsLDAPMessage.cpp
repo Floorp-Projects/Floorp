@@ -31,7 +31,6 @@
  * GPL.
  */
 
-#include <stdio.h>
 #include "nsLDAPMessage.h"
 
 #ifdef DEBUG
@@ -77,14 +76,14 @@ nsLDAPMessage::~nsLDAPMessage(void)
 	    break;
 	case LDAP_SUCCESS:
 	    // timed out (dunno why LDAP_SUCCESS is used to indicate this) 
-	    fprintf(stderr, 
+	    PR_fprintf(PR_STDERR,
 		"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() timed out.\n");
 	    break;
 	default:
 	    // other failure
 	    // XXX - might errno conceivably be useful here?
-	    fprintf(stderr,"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree: %s\n",
-		    ldap_err2string(rc));
+	    PR_fprintf(PR_STDERR,"nsLDAPMessage::~nsLDAPMessage: "
+		       "ldap_msgfree: %s\n", ldap_err2string(rc));
 	    break;
 	}
     }
@@ -160,9 +159,10 @@ nsLDAPMessage::GetErrorString(void)
   rc = ldap_parse_result(mConnectionHandle, mMsgHandle, &errcode, &matcheddn,
 			 &errmsg, &referrals, &serverctrls, 0);
   if (rc != LDAP_SUCCESS) {
-    fprintf(stderr, "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
-	    ldap_err2string(rc));
-    exit(-1);
+      PR_fprintf(PR_STDERR, 
+		 "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
+		 ldap_err2string(rc));
+      // XXX need real err handling here
   }
 
   if (matcheddn) ldap_memfree(matcheddn);

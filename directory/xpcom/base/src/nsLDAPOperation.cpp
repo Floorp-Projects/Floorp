@@ -247,7 +247,7 @@ nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
 				   aAttrsOnly);
     if (this->mMsgId == -1) {
 	// XXX
-	abort();
+	PR_Abort();
 #ifdef DEBUG
     char *s;
 
