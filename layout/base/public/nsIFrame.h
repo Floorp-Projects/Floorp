@@ -143,7 +143,7 @@ typedef PRUint32 nsFrameState;
 
 // If this bit is set, then there is a child frame in the frame that
 // extends outside this frame's bounding box. The implication is that
-// the frames rect does not completely cover its children and
+// the frame's rect does not completely cover its children and
 // therefore operations like rendering and hit testing (for example)
 // must operate differently.
 #define NS_FRAME_OUTSIDE_CHILDREN                     0x00000008
@@ -165,7 +165,7 @@ typedef PRUint32 nsFrameState;
 // its lifetime.
 #define NS_FRAME_HAS_LOADED_IMAGES                    0x00000080
 
-// If this bit is set, then the frame is has been moved out of the flow,
+// If this bit is set, then the frame has been moved out of the flow,
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW                          0x00000100
 
@@ -671,7 +671,7 @@ public:
                          nsIFrame**      aFirstChild) const = 0;
 
   /**
-   * Child frames are linked together in a singly-linked
+   * Child frames are linked together in a singly-linked list
    */
   nsresult GetNextSibling(nsIFrame** aNextSibling) const {
     *aNextSibling = mNextSibling;
@@ -684,7 +684,7 @@ public:
   }
 
   /**
-   * Paint is responsible for painting the a frame. The aWhichLayer
+   * Paint is responsible for painting the frame. The aWhichLayer
    * argument indicates which layer of painting should be done during
    * the call.
    */
@@ -695,7 +695,7 @@ public:
                     PRUint32             aFlags = 0) = 0;
 
   /* 
-   * Does the frame paint its background. If not, then all or part of it will be
+   * Does the frame paint its background? If not, then all or part of it will be
    * painted by ancestors.
    */
   virtual PRBool CanPaintBackground() { return PR_TRUE; }
@@ -1016,8 +1016,8 @@ public:
    *  to redraw event if aSelected == the frame selection with the last parameter.
    *  data in struct may be changed when passed in.
    *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
-   *  @param aSelected is it selected
-   *  @param aSpread should is spread selection to flow elements around it? or go down to its children?
+   *  @param aSelected is it selected?
+   *  @param aSpread should it spread the selection to flow elements around it? or go down to its children?
    */
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
                           nsIDOMRange*    aRange,
@@ -1127,7 +1127,7 @@ public:
 
   /**
    * Determines whether a frame is visible for painting
-   * this takes into acount whether it is painting selection for printin
+   * this takes into account whether it is painting a selection or printing.
    * @param aPresContext PresContext
    * @param aRenderingContext PresContext
    * @param aCheckVis indicates whether it should check for CSS visibility, 
@@ -1173,7 +1173,7 @@ protected:
   nsIContent*      mContent;
   nsIStyleContext* mStyleContext;
   nsIFrame*        mParent;
-  nsIFrame*        mNextSibling;  // singly linked list of frames
+  nsIFrame*        mNextSibling;  // singly-linked list of frames
   nsFrameState     mState;
 
 private:
