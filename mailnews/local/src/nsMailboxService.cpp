@@ -65,7 +65,7 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 
 			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 			if (protocol)
-				protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
+				rv = protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
 
 			if (aURL)
 				*aURL = url;
@@ -109,7 +109,7 @@ nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgK
 			// create a protocol instance to run the url..
 			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 			if (protocol)
-				protocol->LoadURL(url, aDisplayConsumer);
+				rv = protocol->LoadURL(url, aDisplayConsumer);
 
 			if (aURL)
 				*aURL = url;
