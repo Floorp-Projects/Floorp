@@ -76,7 +76,8 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
 	  return rv;
   }
 
-  if (NS_FAILED(rv)) return rv;
+  // if you fail after looking at all "pop3" and all "none", you fail.
+  return rv;
 }
 
 nsresult
