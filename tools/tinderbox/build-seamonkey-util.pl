@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.133 $ ';
+$::UtilsVersion = '$Revision: 1.134 $ ';
 
 package TinderUtils;
 
@@ -615,6 +615,10 @@ sub BuildIt {
         if ($Settings::UseTimeStamp) {
             $start_time = adjust_start_time($start_time);
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
+            my $timezone = POSIX::strftime("%Z", localtime($start_time));
+            # assume PST if no timezone is found
+            $timezone = "PST" if ($timezone eq "");
+            $time_str .= " $timezone";
             $ENV{MOZ_CO_DATE} = "$time_str";
             $cvsco = "$Settings::CVSCO -D '$time_str'";
         } else {
