@@ -48,6 +48,20 @@ PlugletViewMotif::PlugletViewMotif() {
     frame = NULL;
     WindowID = 0;
 }
+
+#ifdef SOLARIS    //following futures are not available under Linux Blackdown JDK
+extern "C" void getAwtData(int          *awt_depth,
+                Colormap     *awt_cmap,
+                Visual       **awt_visual,
+                int          *awt_num_colors,
+                void         *pReserved);
+
+static int awt_depth;
+static Colormap awt_cmap;
+static Visual * awt_visual;
+static int awt_num_colors;
+#endif 
+
 void PlugletViewMotif::Initialize() {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	   ("PlugletViewMotif.Initialize\n"));
@@ -63,6 +77,9 @@ void PlugletViewMotif::Initialize() {
         clazz = NULL;
         return;
     }
+#ifdef SOLARIS 
+  getAwtData(&awt_depth, &awt_cmap, &awt_visual, &awt_num_colors, NULL);
+#endif
 }
 
 #define AWT_LOCK()      (env)->MonitorEnter(awt_lock)
@@ -130,6 +147,11 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
     XtSetArg(args[argc], XmNx, 0); argc++;
     XtSetArg(args[argc], XmNy, 0); argc++;
     XtSetArg(args[argc],XmNmappedWhenManaged,False); argc++;
+#ifdef SOLARIS
+    XtSetArg(args[argc], XmNvisual, awt_visual); argc++;
+    XtSetArg(args[argc], XmNdepth, awt_depth); argc++;
+    XtSetArg(args[argc], XmNcolormap, awt_cmap); argc++;
+#endif 
     Widget w = XtAppCreateShell("AWTapp", "XApplication", 
                                 vendorShellWidgetClass,
                                 awt_display,
