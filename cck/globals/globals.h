@@ -12,5 +12,8 @@ extern "C" __declspec(dllimport) WIDGET* findWidget(CString theName);
 extern "C" __declspec(dllimport) void CopyDir(CString from, CString to, LPCTSTR extension, int overwrite);
 extern "C" __declspec(dllexport) void ExecuteCommand(char *command, int showflag, DWORD wait);
 extern "C" __declspec(dllimport) int GetAttrib(CString theValue, char* attribArray[]);
+extern "C" __declspec(dllimport) void CopyDirectory(CString source, CString dest, BOOL subdir);
 extern "C" __declspec(dllimport) void EraseDirectory(CString sPath);
+__declspec(dllimport) CString SearchDirectory(CString dirPath, BOOL subDir, CString searchStr);
+extern "C" __declspec(dllimport) void CreateDirectories(CString instblobPath);
 __declspec(dllimport) CString GetModulePath();

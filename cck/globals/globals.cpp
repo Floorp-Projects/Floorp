@@ -138,6 +138,38 @@ void ExecuteCommand(char *command, int showflag, DWORD wait)
 }
 
 extern "C" __declspec(dllexport)
+void CopyDirectory(CString source, CString dest, BOOL subdir)
+// Copy files in subdirectories if the subdir flag is set (equal to 1).
+{
+	CFileFind finder;
+	CString sFileToFind = source + "\\*.*";
+	BOOL bWorking = finder.FindFile(sFileToFind);
+	while (bWorking) 
+	{
+		bWorking = finder.FindNextFile();
+		CString newPath=dest + "\\";
+
+		if (finder.IsDots()) continue;
+		if (finder.IsDirectory()) 
+		{
+			CString dirPath = finder.GetFilePath();
+			newPath += finder.GetFileName();
+			_mkdir(newPath);
+			if (subdir == TRUE)
+				CopyDirectory(dirPath, newPath, TRUE);
+			if (!CopyFile(dirPath,newPath,0))
+				DWORD e = GetLastError();
+			continue; 
+		}
+
+		newPath += finder.GetFileName();
+		CString source = finder.GetFilePath();
+		if (!CopyFile(source,newPath,0))
+			DWORD e = GetLastError();
+	}
+}
+
+extern "C" __declspec(dllexport)
 void EraseDirectory(CString sPath)
 {
         CFileFind finder;
@@ -157,6 +189,125 @@ void EraseDirectory(CString sPath)
          	}
          	_unlink( finder.GetFilePath() );
      	}
+}
+
+__declspec(dllexport)
+CString SearchDirectory(CString dirPath, BOOL subDir, CString serachStr)
+// This function searches all the files in the directory dirPath,
+// for the file whose name contains the search string serachStr,
+// searching recursively if subDir is TRUE 
+{
+	CFileFind finder;
+	CString filePath;
+	CString fileName;
+	CString retval;
+	CString sFileToFind = dirPath + "\\*.*";
+	BOOL found = finder.FindFile(sFileToFind);
+	while (found) 
+	{
+		found = finder.FindNextFile();
+
+		if (finder.IsDots()) continue;
+
+		filePath = finder.GetFilePath();
+		fileName = finder.GetFileName();
+		if (fileName.Find(serachStr) != -1)
+			return fileName;
+
+		if (finder.IsDirectory()) 
+		{
+			if (subDir == TRUE)
+			retval = SearchDirectory(filePath, TRUE, serachStr);
+			return retval;
+		}		
+	}
+	return fileName;
+}
+
+extern "C" __declspec(dllexport)
+void CreateDirectories(CString instblobPath)
+// Create appropriate platform and language directories
+{
+	CString quotes          = "\"";
+	CString rootPath        = GetGlobal("Root");
+	CString curVersion      = GetGlobal("Version");
+	int instblobPathlen     = instblobPath.GetLength();
+	int findfilePos         = instblobPath.Find('.');
+	int finddirPos          = instblobPath.ReverseFind('\\');
+	CString instDirname     = instblobPath.Left(finddirPos);
+	CString instFilename    = instblobPath.Right(instblobPathlen - finddirPos -1);
+	CString fileExtension   = instblobPath.Right(instblobPathlen - findfilePos -1);
+	SetGlobal("InstallerFilename",instFilename); 
+
+	// Is the blob path a Linux blob installer
+	if (fileExtension == "tar.gz")
+	{
+		char oldDir[MAX_SIZE];
+		CString platformInfo = "Linux";
+		CString platformPath = rootPath + "Version\\" + curVersion + "\\" + platformInfo;
+		CString extractPath  = platformPath + "\\" + "temp";
+		CString tempPath     = extractPath;
+
+		if (GetFileAttributes(platformPath) == -1)
+		// platform directory does not exist
+			_mkdir(platformPath);
+
+		// extract contents of Linux blob installer
+		_mkdir(extractPath);
+		GetCurrentDirectory(sizeof(oldDir), oldDir);
+		SetCurrentDirectory((char *)(LPCTSTR) instDirname);
+		tempPath.Replace("\\","/");
+		tempPath.Replace(":","");
+		tempPath.Insert(0,"/cygdrive/");
+		CString command = "tar -zxvf " + instFilename + " -C " + quotes + tempPath + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+		CString searchStr = "defl";
+		searchStr = SearchDirectory(extractPath, TRUE, searchStr);
+
+		if (searchStr != "")
+		{
+			CString languageInfo = searchStr.Mid(4,4);
+			CString languagePath = rootPath + "Version\\" + curVersion + "\\" + platformInfo + "\\" + languageInfo;
+			CString nscpxpiPath  = languagePath + "\\Nscpxpi";
+						
+			_mkdir(languagePath);
+			_mkdir(nscpxpiPath);
+
+			// checking if nscpxpi directory is non-empty  
+			// to avoid the steps of populating installer files 
+			BOOL empty = TRUE;
+			CFileFind fn;
+			if (fn.FindFile(nscpxpiPath+"\\*.*") != 0)
+			{
+				while (TRUE)
+				{
+					int fileExist = fn.FindNextFile();
+					if (!fn.IsDots()) 
+					{
+						empty = FALSE;
+						break;
+					}
+					if (fileExist == 0) break;
+				}
+			}
+			if (empty)
+			{
+				CString nsinstallerStr = "\\netscape-installer";
+				_mkdir(nscpxpiPath+nsinstallerStr);
+				CopyDirectory(extractPath+nsinstallerStr+"\\xpi",
+					nscpxpiPath, TRUE);
+				CopyDirectory(extractPath+nsinstallerStr, 
+					nscpxpiPath+nsinstallerStr, FALSE);
+				CopyFile(nscpxpiPath+nsinstallerStr+"\\Config.ini", 
+					nscpxpiPath+"\\Config.ini", FALSE);
+				CopyFile(rootPath+"script_linux.ib", 
+					languagePath+"\\script.ib", FALSE);
+			}		
+		}
+		EraseDirectory(extractPath);
+		RemoveDirectory(extractPath);
+		SetCurrentDirectory(oldDir);
+	}
 }
 
 __declspec(dllexport)

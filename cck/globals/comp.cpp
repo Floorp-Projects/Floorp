@@ -16,14 +16,6 @@ CString iniDstPath;
 CString scriptPath;
 CString nscpxpiPath;
 
-CString linuxOption;
-CString linuxblobPath;
-CString linuxDir;
-CString nsinstPath;
-CString xpiDir;
-CString tarfile;
-CString quotes;
-
 COMPONENT Components[100];
 int numComponents;
 
@@ -111,54 +103,16 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 	configPath = rootPath + "Configs\\" + configName;
 	workspacePath = configPath + "\\Workspace";
 	nscpxpiPath;
+	CString curVersion  = GetGlobal("Version");
+	CString curPlatform = GetGlobal("lPlatform");
+	CString curLanguage = GetGlobal("Language");
+	CString localePath  = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
 
-	linuxOption = GetGlobal("lPlatform");
-	if (linuxOption == "Linux")
-	{
-		linuxblobPath = GetGlobal("LinuxPath");
-		linuxDir = "nscpxpiLinux";
-		nsinstPath = "\\netscape-installer\\xpi";
-		xpiDir = "\\xpi";
-		CString tnscpxpilinuxPath = rootPath + linuxDir;
-		CString nscpxpilinuxPath = tnscpxpilinuxPath;
-		int pathlen = linuxblobPath.GetLength();
-		int pos = linuxblobPath.ReverseFind('\\');
-		pos += 1;
-		CString linuxinstDirPath = linuxblobPath.Left(pos);
-		tarfile = linuxblobPath.Right(pathlen-pos);
-
-		int direxist = GetFileAttributes(nscpxpilinuxPath);
-		if ((direxist == -1) && (linuxblobPath != "")) 
-		// nscpxpiLinux directory does not exist	
-		{
-			quotes = "\"";
-			char currentdir[_MAX_PATH];
-			_getcwd(currentdir, _MAX_PATH);
-			_chdir(rootPath);
-			_mkdir(linuxDir);
-			_chdir(linuxinstDirPath);
-			tnscpxpilinuxPath.Replace("\\","/");
-			tnscpxpilinuxPath.Replace(":","");
-			tnscpxpilinuxPath.Insert(0,"/cygdrive/");
-			CString command = "tar -zxvf " + tarfile + " -C " + quotes + tnscpxpilinuxPath + quotes;
-			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-
-			nscpxpiPath = nscpxpilinuxPath + nsinstPath;
-			CString tempxpiPath = nscpxpiPath;
-			tempxpiPath.Replace(xpiDir,"");
-			CopyFile(tempxpiPath+"\\Config.ini", nscpxpiPath+"\\Config.ini", 
-				FALSE);
-			_chdir(currentdir);
-		}
-		nscpxpiPath = nscpxpilinuxPath + nsinstPath;
-	}
-	else
-	{
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
-		nscpxpiPath = rootPath + "NSCPXPI";
-	}
+		nscpxpiPath = localePath + "\\Nscpxpi";
+
 	iniSrcPath = nscpxpiPath + "\\config.ini";
 
 	BuildComponentList(Components, &numComponents, iniSrcPath, 1);
