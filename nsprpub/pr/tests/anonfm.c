@@ -171,7 +171,7 @@ static void ServerOne( void )
     PRFileMap   *fm;
     PRStatus    rc;
     PRIntn      i;
-    char        *addr;
+    volatile char *addr;
     char        fmString[256];
     char        envBuf[256];
     char        *child_argv[8];
