@@ -204,7 +204,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
   if (aURI) {
     aURI->GetSpec(getter_Copies(mFileName));
   } else {
-    mFileName = "from DOM";
+    mFileName.Adopt(nsCRT::strdup("from DOM"));
   }
   mColNumber = 0;
 #endif // CSS_REPORT_PARSE_ERRORS
