@@ -615,7 +615,6 @@ nsDeviceContextGTK::GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFo
     {
       fontName = XGetAtomName( fontPrivate->xdisplay, pr );
       aFont->name.AssignWithConversion( fontName );
-      aFont->name.ToLowerCase();
       ::XFree( fontName );
     }
   

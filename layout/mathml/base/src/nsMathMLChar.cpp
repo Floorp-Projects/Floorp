@@ -1276,7 +1276,6 @@ SetFirstFamily(nsFont& aFont, const nsString& aFamily)
 {
   // overwrite the old value of font-family:
   aFont.name.Assign(aFamily);
-  aFont.name.ToLowerCase();
 }
 
 nsresult

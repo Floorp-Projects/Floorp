@@ -1598,7 +1598,6 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     if (dc) {
       nsAutoString  familyList;
       fontData.mFamily.GetStringValue(familyList);
-      familyList.ToLowerCase();
       font->mFont.name = familyList;
       nsAutoString  face;
 
@@ -1640,7 +1639,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
 
       // find the correct font if we are usingDocumentFonts OR we are overriding for XUL
       // MJA: bug 31816
-      PRBool isMozFixed = font->mFont.name.EqualsWithConversion("-moz-fixed");
+      PRBool isMozFixed = font->mFont.name.EqualsIgnoreCase("-moz-fixed");
       if (chromeOverride || useDocumentFonts) {
         font->mFont.name += nsAutoString(NS_LITERAL_STRING(",")) + defaultFont.name;
         font->mFixedFont.name += nsAutoString(NS_LITERAL_STRING(",")) + defaultFixedFont.name;
