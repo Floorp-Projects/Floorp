@@ -55,6 +55,7 @@
 #include "prtypes.h"
 #include "prtime.h"
 #include "prlong.h"
+#include "prinrval.h"
 
 #include "pkcs11.h"
 
@@ -68,6 +69,7 @@ CK_ULONG systemFlags;
 #define FLAG_NEGATE 0x80000000
 #define FLAG_Verify 0x00000001
 #define FLAG_VerifyFile 0x00000002
+#define CKR_QUIT 0x80000000
 
 int ArgSize(ArgType type);
 const char *constLookup(const char *bp, CK_ULONG *value, ConstType *type);
@@ -1178,6 +1180,15 @@ parseArgs(int index, const char * bp)
 	    return NULL;
 	}
 
+	/* collect all the rest of the command line and send
+	 * it as a single argument */
+	if (cp->args[i] & ArgFull) {
+	    int size = strlen(bp)+1;
+	    argList[i] = NewValue(type, size);
+	    memcpy(argList[i]->data, bp, size);
+	    break;
+	}
+
 	/*
 	 * look up the argument in our variable list first... only 
 	 * exception is the new argument type for set...
@@ -1420,24 +1431,47 @@ loadModule(Module *module, char *library)
 static void
 printHelp(int index, int full)
 {
-   int j;
-   printf(" %s", commands[index].fname);
-   for (j=0; j < MAX_ARGS; j++) {
+    int j;
+    printf(" %s", commands[index].fname);
+    for (j=0; j < MAX_ARGS; j++) {
 	ArgType type = commands[index].args[j] & ArgMask;
 	if (type == ArgNone) {
 	    break;
 	}
 	printf(" %s", valueString[type]);
-   }
-   printf("\n");
-   printf(" %s\n",commands[index].helpString);
+    }
+    printf("\n");
+    printf(" %s\n",commands[index].helpString);
 }
 
 /* add Topical help here ! */
 static CK_RV
 printTopicHelp(char *topic)
 {
-    return CKR_DATA_INVALID;
+    int size,i;
+    int topicLen;
+
+    topicLen = PL_strlen(topic);
+
+    for ( i = 0; i < topicCount; i++) {
+	size = PL_strlen(topics[i].name);
+
+	if (size <= topicLen) {
+	    if (PL_strncasecmp(topic,topics[i].name,size) == 0) {
+		break;
+	    }
+	}
+    }
+
+    if (i == topicCount) {
+	fprintf(stderr,"Can't find topic '%s'\n", topic);
+	return CKR_DATA_INVALID;
+    }
+
+    printf(" %s", topic);
+    printf("\n");
+    printf(" %s\n",topics[i].helpString);
+    return CKR_OK;
 }
 
 static CK_RV
@@ -1451,10 +1485,17 @@ printGeneralHelp(void)
     }
     printf("\n");
     /* print help topics */
+    printf(" To get help on a topic, select from the list below:");
+    for ( i = 0; i < topicCount; i++) {
+       if (i % 5 == 0) printf("\n");
+       printf("%s,", topics[i].name);
+    }
+    printf("\n");
    return CKR_OK;
 }
 
-CK_RV run(char *); 
+CK_RV run(const char *); 
+CK_RV timeCommand(const char *); 
 
 /*
  * Actually dispatch the function... Bad things happen
@@ -1864,6 +1905,8 @@ do_func(int index, Value **a)
 	return list();
     case F_Run:
 	return run(a[0]->data);
+    case F_Time:
+	return timeCommand(a[0]->data);
     case F_Load:
 	return loadModule(&module,a[0]->data);
     case F_Unload:
@@ -1902,7 +1945,7 @@ do_func(int index, Value **a)
 	}
 	return printGeneralHelp();
     case F_Quit:
-	return 0x80000000;
+	return CKR_QUIT;
     default:
 	fprintf(stderr,
 		"Function %s not yet supported\n",commands[index].fname );
@@ -1912,55 +1955,80 @@ do_func(int index, Value **a)
     return CKR_OK;
 }
 
+CK_RV
+processCommand(const char * buf)
+{
+    CK_RV error = CKR_OK;
+    int index;
+    const char *bp;
+    Value **arglist;
+
+    bp = strip(buf);
+    /* allow comments and blank lines in scripts */
+    if ((*bp == '#') || (*bp == 0) || (*bp == '\n')){
+	return CKR_OK;
+    }
+
+    index = lookup(bp);
+
+    if (index < 0) {
+	return CKR_OK;
+    }
+
+    arglist = parseArgs(index,bp);
+    if (arglist == NULL) {
+	return CKR_OK;
+    }
+
+    error = do_func(index,arglist);
+    if (error == CKR_OK) {
+	putOutput(arglist);
+    } else if (error != CKR_QUIT) {
+	printf(">> Error : ");
+	printConst(error, ConstResult, 1);
+    }
+
+    parseFree(arglist);
+    return error;
+}
+
+CK_RV  timeCommand(const char *command) 
+{
+    CK_RV ckrv;
+    PRIntervalTime startTime = PR_IntervalNow();
+    PRIntervalTime endTime;
+    PRIntervalTime elapsedTime;
+
+    ckrv = processCommand(command);
+
+    endTime = PR_IntervalNow();
+    elapsedTime = endTime - startTime;
+    printf("Time -- %d msec \n", 
+	PR_IntervalToMilliseconds(elapsedTime));
+    
+    return ckrv;
+}
+
+
 
 CK_RV
 process(FILE *inFile,int user)
 {
     char buf[2048];
-    Value **arglist;
     CK_RV error;
     CK_RV ckrv = CKR_OK;
 
     if (user) { printf("pkcs11> "); fflush(stdout); }
 
     while (fgets(buf,2048,inFile) != NULL) {
-	int index;
-	const char *bp;
 
 	if (!user) printf("* %s",buf);
-	bp = strip(buf);
-	/* allow comments in scripts */
-	if (*bp == '#') {
-	    goto done;
-	}
-
-
-	index = lookup(bp);
-
-	if (index < 0) {
-	    goto done;
-	}
-
-	arglist = parseArgs(index,bp);
-	if (arglist == NULL) {
-	    goto done;
-	}
-
-	error = do_func(index,arglist);
-	if (error == 0x80000000) {
-	    parseFree(arglist);
+	error = processCommand(buf);
+	if (error == CKR_QUIT) {
 	    break;
-	}
-	if (error) {
+	} else if (error != CKR_OK) {
 	    ckrv = error;
-	    printf(">> Error : ");
-	    printConst(error, ConstResult, 1);
 	}
-
-	putOutput(arglist);
-
-	parseFree(arglist);
-done:
 	if (user) { 
 	    printf("pkcs11> "); fflush(stdout); 
 	}
@@ -1968,7 +2036,7 @@ done:
     return ckrv;
 }
 
-CK_RV  run(char *filename) 
+CK_RV  run(const char *filename) 
 {
     FILE *infile;
     CK_RV ckrv;

@@ -29,6 +29,7 @@ typedef enum {
     F_Load,
     F_Unload,
     F_System,
+    F_Time,
     F_Help,
     F_Quit,
 } FunctionType;
@@ -59,6 +60,7 @@ typedef enum {
     ArgFile = 0x800,
     ArgStatic = 0x1000,
     ArgOpt = 0x2000,
+    ArgFull = 0x4000,
 } ArgType;
 
 typedef enum _constType
@@ -135,6 +137,10 @@ typedef struct _module {
     CK_FUNCTION_LIST *functionList;
 } Module;
 
+typedef struct _topics {
+    char	*name;
+    char	*helpString;
+} Topics;
 
 /*
  * the command array itself. Make name to function and it's arguments
@@ -148,4 +154,6 @@ extern const Constant *consts;
 extern const int constCount;
 extern const Commands *commands;
 extern const int commandCount;
+extern const Topics *topics;
+extern const int topicCount;
 
