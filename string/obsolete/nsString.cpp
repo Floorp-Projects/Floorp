@@ -848,14 +848,35 @@ PRInt32 nsCString::Find(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOf
  *  
  *  @update  gess 2/04/00
  *  @param   char is the character you're trying to find.
- *  @param   aIgnorecase indicates case sensitivity of search
  *  @param   anOffset tells us where to start the search; -1 means start at 0.
  *  @param   aCount tell us how many chars to search from offset; -1 means use full length.
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsCString::FindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStrPrivate::FindChar1(*this,aChar,anOffset,aCount);
-  return result;
+  if (anOffset < 0)
+    anOffset=0;
+  
+  if (aCount < 0)
+    aCount = (PRInt32)mLength;
+  
+  if ((aChar < 256) && (0 < mLength) &&
+      ((PRUint32)anOffset < mLength) && (0 < aCount)) {
+    // We'll only search if the given aChar is 8-bit,
+    // since this string is 8-bit.
+
+    PRUint32 last = anOffset + aCount;
+    PRUint32 end = (last < mLength) ? last : mLength;
+    PRUint32 searchLen = end - anOffset; // Will be > 0 by the conditions above
+    const char* leftp = mStr + anOffset;
+    unsigned char theChar = (unsigned char) aChar;
+    
+    const char* result = (const char*)memchr(leftp, (int)theChar, searchLen);
+      
+    if (result)
+      return result - mStr;
+  }
+
+  return kNotFound;
 }
 
 /**
@@ -868,21 +889,46 @@ PRInt32 nsCString::FindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) con
  *  @return  
  */
 PRInt32 nsCString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
-  NS_ASSERTION(0!=aCStringSet,kNullPointerError);
+  if (anOffset < 0)
+    anOffset = 0;
 
-  PRInt32 result=kNotFound;
-  if(aCStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCharTraits<char>::length(aCStringSet);
-    temp.mStr=(char*)aCStringSet;
-    result=nsStrPrivate::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
+  if(*aCStringSet && (PRUint32)anOffset < mLength) {
+    // Build filter that will be used to filter out characters with
+    // bits that none of the terminal chars have. This works very well
+    // because searches are often done for chars with only the last
+    // 4-6 bits set and normal ascii letters have bit 7 set. Other
+    // letters have even higher bits set.
+
+    // Calculate filter
+    char filter = nsStrPrivate::GetFindInSetFilter(aCStringSet);
+    
+    const char* endChar = mStr + mLength;
+    for(char *charp = mStr + anOffset; charp < endChar; ++charp) {
+      char currentChar = *charp;
+      // Check if all bits are in the required area
+      if (currentChar & filter) {
+        // They were not. Go on with the next char.
+        continue;
+      }
+      
+      // Test all chars
+      const char *charInSet = aCStringSet;
+      char setChar = *charInSet;
+      while (setChar) {
+        if (setChar == currentChar) {
+          // Found it!
+          return charp - mStr; // The index of the found char
+        }
+        setChar = *(++charInSet);
+      }
+    } // end for all chars in the string
   }
-  return result;
+  return kNotFound;
 }
 
 PRInt32 nsCString::FindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::FindCharInSet1(*this,aSet,PR_FALSE,anOffset);
+  // This assumes that the set doesn't contain the null char.
+  PRInt32 result = FindCharInSet(aSet.get(), anOffset);
   return result;
 }
 
@@ -952,19 +998,46 @@ PRInt32 nsCString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) co
 PRInt32 nsCString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aCStringSet,kNullPointerError);
 
-  PRInt32 result=kNotFound;
-  if(aCStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCharTraits<char>::length(aCStringSet);
-    temp.mStr=(char*)aCStringSet;
-    result=nsStrPrivate::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
+  if (anOffset < 0 || (PRUint32)anOffset > mLength-1)
+    anOffset = mLength-1;
+
+  if(*aCStringSet) {
+    // Build filter that will be used to filter out characters with
+    // bits that none of the terminal chars have. This works very well
+    // because searches are often done for chars with only the last
+    // 4-6 bits set and normal ascii letters have bit 7 set. Other
+    // letters have even higher bits set.
+    
+    // Calculate filter
+    char filter = nsStrPrivate::GetFindInSetFilter(aCStringSet);
+    
+    const char* end = mStr;
+    for(char *charp = mStr + anOffset; charp > end; --charp) {
+      char currentChar = *charp;
+      // Check if all bits are in the required area
+      if (currentChar & filter) {
+        // They were not. Go on with the next char.
+        continue;
+      }
+        
+      // Test all chars
+      const char *setp = aCStringSet;
+      char setChar = *setp;
+      while (setChar) {
+        if (setChar == currentChar) {
+          // Found it!
+          return charp - mStr;
+        }
+        setChar = *(++setp);
+      }
+    } // end for all chars in the string
   }
-  return result;
+  return kNotFound;
 }
 
 PRInt32 nsCString::RFindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStrPrivate::RFindCharInSet1(*this,aSet,PR_FALSE,anOffset);
+  // Assumes that the set doesn't contain any nulls.
+  PRInt32 result = RFindCharInSet(aSet.get(), anOffset);
   return result;
 }
 

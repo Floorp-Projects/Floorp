@@ -857,6 +857,39 @@ nsString::Mid( self_type& aResult, index_type aStartPos, size_type aLengthToCopy
   Searching methods...                
  *********************************************************************/
  
+  /**
+   *  Search for given character within this string
+   *  
+   *  @param   aChar is the character to search for
+   *  @param   anOffset tells us where in this string to start searching
+               (optional parameter)
+   *  @param   aCount tells us how far from the offset we are to search. Use
+               -1 to search the whole string. (optional parameter)
+   *  @return  offset in string, or -1 (kNotFound)
+   */
+PRInt32 nsString::FindChar(PRUnichar aChar, PRInt32 anOffset/*=0*/, PRInt32 aCount/*=-1*/) const{
+  if (anOffset < 0)
+    anOffset=0;
+  
+  if (aCount < 0)
+    aCount = (PRInt32)mLength;
+  
+  if ((0 < mLength) && ((PRUint32)anOffset < mLength) && (0 < aCount)) {
+    PRUint32 last = anOffset + aCount;
+    PRUint32 end = (last < mLength) ? last : mLength;
+    const PRUnichar* charp = mUStr + anOffset;
+    const PRUnichar* endp = mUStr + end;
+
+    while (charp < endp && *charp != aChar) {
+      ++charp;
+    }
+
+    if (charp < endp)
+      return charp - mUStr;
+  }
+  return kNotFound;
+}
+
 /**
  *  search for given string within this string
  *  
@@ -938,15 +971,42 @@ PRInt32 nsString::Find(const nsAFlatString& aString,PRInt32 anOffset,PRInt32 aCo
 PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aCStringSet,kNullPointerError);
 
-  PRInt32 result=kNotFound;
-  if(aCStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCharTraits<char>::length(aCStringSet);
-    temp.mStr = NS_CONST_CAST(char*, aCStringSet);
-    result=nsStrPrivate::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
+  if (anOffset < 0)
+    anOffset = 0;
+
+  if(*aCStringSet && (PRUint32)anOffset < mLength) {
+    // Build filter that will be used to filter out characters with
+    // bits that none of the terminal chars have. This works very well
+    // because searches are often done for chars with only the last
+    // 4-6 bits set and normal ascii letters have bit 7 set. Other
+    // letters have even higher bits set.
+
+    // Calculate filter
+    PRUnichar filter = (~PRUnichar(0)^~char(0)) |
+                       nsStrPrivate::GetFindInSetFilter(aCStringSet);
+
+    const PRUnichar* endChar = mUStr + mLength;
+    for(PRUnichar *charp = mUStr + anOffset; charp < endChar; ++charp) {
+      PRUnichar currentChar = *charp;
+      // Check if all bits are in the required area
+      if (currentChar & filter) {
+        // They were not. Go on with the next char.
+        continue;
+      }
+        
+      // Test all chars
+      const char *setp = aCStringSet;
+      PRUnichar setChar = PRUnichar(*setp);
+        while (setChar) {
+          if (setChar == currentChar) {
+            // Found it!
+            return charp - mUStr; // The index of the found char
+          }
+          setChar = PRUnichar(*(++setp));
+        }
+    } // end for all chars in the string
   }
-  return result;
+  return kNotFound;
 }
 
 /**
@@ -961,15 +1021,41 @@ PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
 PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aStringSet,kNullPointerError);
 
-  PRInt32 result=kNotFound;
-  if(aStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eTwoByte);
-    temp.mLength=nsCharTraits<PRUnichar>::length(aStringSet);
-    temp.mUStr=NS_CONST_CAST(PRUnichar*, aStringSet);
-    result=nsStrPrivate::FindCharInSet2(*this,temp,anOffset);
+  if (anOffset < 0)
+    anOffset = 0;
+
+  if (*aStringSet && (PRUint32)anOffset < mLength) {
+    // Build filter that will be used to filter out characters with
+    // bits that none of the terminal chars have. This works very well
+    // because searches are often done for chars with only the last
+    // 4-6 bits set and normal ascii letters have bit 7 set. Other
+    // letters have even higher bits set.
+
+    // Calculate filter
+    PRUnichar filter = nsStrPrivate::GetFindInSetFilter(aStringSet);
+
+    const PRUnichar* endChar = mUStr + mLength;
+    for(PRUnichar *charp = mUStr + anOffset;charp < endChar; ++charp) {
+      PRUnichar currentChar = *charp;
+      // Check if all bits are in the required area
+      if (currentChar & filter) {
+        // They were not. Go on with the next char.
+        continue;
+      }
+
+      // Test all chars
+      const PRUnichar *setp = aStringSet;
+      PRUnichar setChar = *setp;
+      while (setChar) {
+        if (setChar == currentChar) {
+          // Found it!
+          return charp - mUStr; // The index of the found char
+        }
+        setChar = *(++setp);
+      }
+    } // end for all chars in the string
   }
-  return result;
+  return kNotFound;
 }
 
 /**
@@ -1056,15 +1142,41 @@ PRInt32 nsString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) con
 PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aStringSet,kNullPointerError);
 
-  PRInt32 result=kNotFound;
-  if(aStringSet) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eTwoByte);
-    temp.mLength = nsCharTraits<PRUnichar>::length(aStringSet);
-    temp.mUStr = NS_CONST_CAST(PRUnichar*, aStringSet);
-    result=nsStrPrivate::RFindCharInSet2(*this,temp,anOffset);
+  if (anOffset < 0 || (PRUint32)anOffset >= mLength)
+    anOffset = mLength - 1;
+
+  if(*aStringSet) {
+    // Build filter that will be used to filter out characters with
+    // bits that none of the terminal chars have. This works very well
+    // because searches are often done for chars with only the last
+    // 4-6 bits set and normal ascii letters have bit 7 set. Other
+    // letters have even higher bits set.
+
+    // Calculate filter
+    PRUnichar filter = nsStrPrivate::GetFindInSetFilter(aStringSet);
+    
+    const PRUnichar* endp = mUStr - 1;
+    for(PRUnichar *charp = mUStr + anOffset; charp > endp; --charp) {
+      PRUnichar currentChar = *charp;
+      // Check if all bits are in the required area
+      if (currentChar & filter) {
+        // They were not. Go on with the next char.
+        continue;
+      }
+      
+      // Test all chars
+      const PRUnichar* setp = aStringSet;
+      PRUnichar setChar = *setp;
+      while (setChar) {
+        if (setChar == currentChar) {
+          // Found it!
+          return charp - mUStr;
+        }
+        setChar = *(++setp);
+      }
+    } // end for all chars in the string
   }
-  return result;
+  return kNotFound;
 }
 
 

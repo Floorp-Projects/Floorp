@@ -468,7 +468,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
 
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
-        PRUnichar theChar=aDest.GetCharAt(theIndex);
+        PRUnichar theChar=GetCharAt(aDest, theIndex);
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound==thePos)
           break;
@@ -489,7 +489,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
       theIndex=aDest.mLength;
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
-        PRUnichar theChar=aDest.GetCharAt(theIndex);  //read at end now...
+        PRUnichar theChar=GetCharAt(aDest, theIndex);  //read at end now...
         PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
@@ -715,57 +715,6 @@ PRInt32 nsStrPrivate::FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOf
 }
 
 
-/**
- *  This searches aDest for a character found in aSet. 
- *  
- *  @update  gess 3/25/98
- *  @param   aDest string to search
- *  @param   aSet contains a list of chars to be searched for
- *  @param   aIgnorecase indicates case sensitivity of search
- *  @param   anOffset tells us where to start the search
- *  @return  index in aDest where member of aSet occurs, or -1 if not found
- */
-PRInt32 nsStrPrivate::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
-
-  NS_ASSERTION(aSet.GetCharSize() == eOneByte, "Must be 1 byte");
-
-  PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
-  PRInt32 thePos;
-
-    // Note that the search is inverted here. We're scanning aDest,
-    // one char at a time but doing the search against the given
-    // set. That's why we use 0 as the offset below.
-  if((0<aDest.mLength) && (0<aSet.mLength)){
-    while(++index<(PRInt32)aDest.mLength) {
-      PRUnichar theChar=aDest.GetCharAt(index);
-      thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
-      if(kNotFound!=thePos)
-        return index;
-    } //while
-  }
-  return kNotFound;
-}
-PRInt32 nsStrPrivate::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset) {
-
-  NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
-  
-  PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
-  PRInt32 thePos;
-
-    // Note that the search is inverted here. We're scanning aDest,
-    // one char at a time but doing the search against the given
-    // set. That's why we use 0 as the offset below.
-  if((0<aDest.mLength) && (0<aSet.mLength)){
-    while(++index<(PRInt32)aDest.mLength) {
-      PRUnichar theChar=aDest.GetCharAt(index);
-      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
-      if(kNotFound!=thePos)
-        return index;
-    } //while
-  }
-  return kNotFound;
-}
-
   /**************************************************************
     Reverse Searching methods...
    **************************************************************/
@@ -922,57 +871,6 @@ PRInt32 nsStrPrivate::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anO
 PRInt32 nsStrPrivate::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");
   return ::RFindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aCount);
-}
-
-
-/**
- *  This searches aDest (in reverese) for a character found in aSet. 
- *  
- *  @update  gess 3/25/98
- *  @param   aDest string to search
- *  @param   aSet contains a list of chars to be searched for
- *  @param   aIgnorecase indicates case sensitivity of search
- *  @param   anOffset tells us where to start the search
- *  @return  index in aDest where member of aSet occurs, or -1 if not found
- */
-PRInt32 nsStrPrivate::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
-
-  NS_ASSERTION(aSet.GetCharSize() == eOneByte, "Must be 1 byte");
-
-  PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
-  PRInt32 thePos;
-
-    //note that the search is inverted here. We're scanning aDest, one char at a time
-    //but doing the search against the given set. That's why we use 0 as the offset below.
-  if(0<aDest.mLength) {
-    while(--index>=0) {
-      PRUnichar theChar=aDest.GetCharAt(index);
-      thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
-      if(kNotFound!=thePos)
-        return index;
-    } //while
-  }
-  return kNotFound;
-}
-
-PRInt32 nsStrPrivate::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset) {
-
-  NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
-  
-  PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
-  PRInt32 thePos;
-
-    //note that the search is inverted here. We're scanning aDest, one char at a time
-    //but doing the search against the given set. That's why we use 0 as the offset below.
-  if(0<aDest.mLength) {
-    while(--index>=0) {
-      PRUnichar theChar=aDest.GetCharAt(index);
-      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
-      if(kNotFound!=thePos)
-        return index;
-    } //while
-  }
-  return kNotFound;
 }
 
 // from the start of the old nsStrPrivate::StrCompare - now used as helper
