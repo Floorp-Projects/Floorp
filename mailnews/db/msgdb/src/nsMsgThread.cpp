@@ -700,6 +700,9 @@ nsresult nsMsgThreadEnumerator::Prefetch()
         mDone = PR_TRUE;
         return rv;
     }
+	else
+		mNeedToPrefetch = PR_FALSE;
+
 #ifdef DEBUG_bienvenu1
 	nsMsgKey debugMsgKey;
 	mResultHdr->GetMessageKey(&debugMsgKey);
