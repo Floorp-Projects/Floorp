@@ -197,7 +197,7 @@ function ViewCookieSelected( e )
   if( !cookie || cookie.getAttribute("id").indexOf("tree_") == -1)
     return false;
   var idx = parseInt(cookie.getAttribute("id").substring(5,cookie.getAttribute("id").length));
-  for (x=0; x<cookies.length; x++) {
+  for (var x=0; x<cookies.length; x++) {
     if (cookies[x].number == idx) {
       idx = x;
       break;
@@ -207,9 +207,9 @@ function ViewCookieSelected( e )
                cookies[idx].domaintype, cookies[idx].domain, cookies[idx].path,
                cookies[idx].secure, cookies[idx].expire];
 
-  rows =
+  var rows =
     [null,"ifl_name","ifl_value","ifl_domaintype","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(i = 1; i < props.length; i++)
+  for(var i = 1; i < props.length; i++)
   {
     if(i == 3) {
       var dtypecell = document.getElementById("ifl_domaintype");
@@ -254,8 +254,8 @@ function DeleteAllCookies() {
   // delete selected item
   gone_c += DeleteAllItems(cookies.length, "tree_", "cookielist");
   // set fields
-  rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(k = 0; k < rows.length; k++) 
+  var rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
+  for(var k = 0; k < rows.length; k++) 
   {
     var row = document.getElementById(rows[k]);
     row.setAttribute("value","");
