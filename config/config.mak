@@ -56,10 +56,8 @@ LCFLAGS=$(LCFLAGS) -DJS_THREADSAFE
 LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 !endif
 
-!ifndef NECKO
 NECKO=1
 LCFLAGS=$(LCFLAGS) -DNECKO
-!endif
 
 !ifndef MOZ_JAVA
 MOZ_OJI = 1             # on by default now
