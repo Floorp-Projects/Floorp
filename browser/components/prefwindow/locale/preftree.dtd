@@ -9,3 +9,5 @@
 <!ENTITY privacy.label "Privacy">
 <!ENTITY advance.label "Advanced">
 <!ENTITY connection.label "Connection">
+<!ENTITY scriptsAndWindows.label "Scripts &amp; Windows">
+<!ENTITY cache.label "Cache">

@@ -45,7 +45,7 @@
   <script type="application/x-javascript">
     <![CDATA[
       var panel = "chrome://browser/content/pref/pref-scripts.xul";
-      var _elementIDs = ["javascriptAllowNavigator",
+      var _elementIDs = ["enableJavascript",
                          "allowWindowOpen",
                          "allowWindowMoveResize",
                          "allowWindowFlip",
@@ -57,15 +57,15 @@
     ]]>
   </script>
 
-  <groupbox id="javascriptPreferences" flex="1">
-    <caption label="&enableJavaScript.label;"/>
-
-    <checkbox id="javascriptAllowNavigator" label="&navigator.label;" accesskey="&navigator.accesskey;"
+  <groupbox flex="1">
+    <caption>
+      <hbox>
+        <checkbox id="enableJavascript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
                   prefstring="javascript.enabled"
-                  oncommand="javascriptEnabledChange();"/>
+                  oncommand="javascriptEnabledChange(!this.checked);"/>
+      </hbox>
+    </caption>
  
-    <separator/>
-  
     <label id="allowScripts" value="&allowScripts.label;"/>
 
     <listbox id="AllowList" flex="1">

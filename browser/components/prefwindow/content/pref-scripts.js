@@ -53,18 +53,13 @@ function changeDisabledState(state){
   document.getElementById("allowHideStatusBar").disabled = state;
 }
 
-function javascriptEnabledChange(){
-  // if javascriptAllowMailNews is overlayed (mailnews is installed), then if javascriptAllowMailnews 
-  // and javascriptAllowNavigator are unchecked, we disable the tree items. 
-  // If javascriptAllowMailNews is not available, we only take javascriptAllowNavigator in consideration
-
-  if (document.getElementById('javascriptAllowMailNews')){
-    if (!document.getElementById('javascriptAllowNavigator').checked && !document.getElementById('javascriptAllowMailNews').checked)
-      changeDisabledState(true);
-    else changeDisabledState(false);
-  } else {
-    changeDisabledState(!document.getElementById('javascriptAllowNavigator').checked);
-  }
+function javascriptEnabledChange(aEnable){
+  var label = document.getElementById("allowScripts");
+  var listbox = document.getElementById("AllowList");
+  label.disabled = aEnable;
+  
+  //XXXBlake this should work...
+  listbox.disabled = aEnable;
 }
 
 function getPrefValueForCheckbox(prefName){
@@ -83,7 +78,7 @@ function getPrefValueForCheckbox(prefName){
 
 function Startup(){
 
-  data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
+  data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-scripts.xul"];
 
   //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
   if (!("scriptData" in data)){
@@ -110,15 +105,9 @@ function Startup(){
     document.getElementById("allowDocumentCookieGet").checked = getPrefValueForCheckbox("dom.disable_cookie_get");
     document.getElementById("allowDocumentCookieSet").checked = getPrefValueForCheckbox("dom.disable_cookie_set");
     document.getElementById("allowHideStatusBar").checked = getPrefValueForCheckbox("dom.disable_window_open_feature.status");
-
-    //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
-    var pluginGroup = document.getElementById("pluginPreferences")
-    var children = pluginGroup.childNodes;
-    if (!children || children.length <= 1)    // 1 for the caption
-      pluginGroup.setAttribute("hidden", "true");
   }
 
-  javascriptEnabledChange();
+  javascriptEnabledChange(!document.getElementById("enableJavascript").checked);
 
   document.getElementById("AllowList").addEventListener("CheckboxStateChange", onCheckboxCheck, false);
 
@@ -141,7 +130,7 @@ function doOnOk(){
     return data[name].checked;
   }
 
-  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-scripts.xul"];
  
   if (data.scriptData["allowWindowOpenChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load",
