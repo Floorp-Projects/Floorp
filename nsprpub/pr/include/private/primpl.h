@@ -1696,7 +1696,9 @@ struct PRFilePrivate {
     PRBool nonblocking;
     _PRTriStateBool inheritable;
     PRFileDesc *next;
-    PRIntn lockCount;
+    PRIntn lockCount;   /*   0: not locked
+                         *  -1: a native lockfile call is in progress
+                         * > 0: # times the file is locked */
 #ifdef _PR_HAVE_PEEK_BUFFER
     char *peekBuffer;
     PRInt32 peekBufSize;

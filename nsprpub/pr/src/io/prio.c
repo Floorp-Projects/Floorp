@@ -40,6 +40,7 @@
 /************************************************************************/
 
 PRLock *_pr_flock_lock;
+PRCondVar *_pr_flock_cv;
 
 void _PR_InitIO(void)
 {
@@ -48,6 +49,7 @@ void _PR_InitIO(void)
     _PR_InitFdCache();
 
     _pr_flock_lock = PR_NewLock();
+    _pr_flock_cv = PR_NewCondVar(_pr_flock_lock);
 
 #ifdef WIN32
     _pr_stdin = PR_AllocFileDesc((PRInt32)GetStdHandle(STD_INPUT_HANDLE),
