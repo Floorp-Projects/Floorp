@@ -380,8 +380,9 @@ function disableQuickSearchClearButton()
 function Search(str)
 {
   GetSearchInput();
- 
-  gQSViewIsDirty = str != gSearchInput.value;
+
+  if (str != gSearchInput.value)
+    gQSViewIsDirty = true; 
 
   gSearchInput.value = str;  //on input does not get fired for some reason
   onSearchInput(true);
