@@ -124,6 +124,8 @@ private:
     PRUint32                     mBufLen;
     char *                       mBuffer;
     PRBool                       mStopped;
+    PRBool                       mCloseRequested;
+    PRBool                       mStopNotificationPending;
 }; // nsDownloadProgressDialog
     
 #endif

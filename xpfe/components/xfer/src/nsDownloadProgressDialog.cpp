@@ -34,9 +34,16 @@ static nsresult setAttribute( nsIDOMXULDocument *, const char*, const char*, con
 
 void
 nsDownloadProgressDialog::OnClose() {
-    // Close the window.
+    // Close the window (if broadcaster/observer traffic isn't pending).
     if( mWindow ) {
-        mWindow->Close();
+        if ( mStopNotificationPending ) {
+            // Remember that we need to close the window when that
+            // notification completes.
+            mCloseRequested = PR_TRUE;
+        } else {
+            // Go ahead and close the window.
+            mWindow->Close();
+        }
     }
 }
 
@@ -72,7 +79,9 @@ nsDownloadProgressDialog::nsDownloadProgressDialog( nsIURL *aURL,
           mFileName( anOutputFileName ),
           mBufLen( 8192 ),
           mBuffer( new char[ mBufLen ] ),
-          mStopped( PR_FALSE ) {
+          mStopped( PR_FALSE ),
+          mCloseRequested( PR_FALSE ),
+          mStopNotificationPending( PR_FALSE ) {
     // Initialize ref count.
     NS_INIT_REFCNT();
 }
@@ -260,7 +269,14 @@ nsDownloadProgressDialog::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
         mOutput->close();
     }
     // Signal UI that download is complete.
+    mStopNotificationPending = PR_TRUE;
     setAttribute( mDocument, "data.progress", "completed", "true" );
+    mStopNotificationPending = PR_FALSE;
+    // See if that notification triggered close request.
+    if ( mCloseRequested ) {
+        // Close the window now.
+        OnClose();
+    }
     return rv;
 }
 
