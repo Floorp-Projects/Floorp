@@ -54,9 +54,16 @@ public:
   virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState)=0;
 
-
-  
-
+  /**
+    * Calculate the basis for percent width calculations of the table elements
+    * @param aReflowState   - the reflow state of the table
+    * @param aAvailWidth    - the available width for the table
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    * @return               - the basis for percent calculations
+    */
+  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                       nscoord                  aAvailWidth,
+                                       float                    aPixelToTwips)=0;
 
 #ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;

@@ -61,6 +61,9 @@ public:
   virtual PRBool  BalanceColumnWidths(nsIPresContext*          aPresContext,
                                       const nsHTMLReflowState& aReflowState);
 
+  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                       nscoord                  aAvailWidth,
+                                       float                    aPixelToTwips) {return 0;};
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     *aResult = sizeof(*this);

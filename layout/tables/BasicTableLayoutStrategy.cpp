@@ -122,7 +122,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContex
 
   // calc the min, desired, preferred widths from what we know so far
   nscoord minWidth, prefWidth;
-  mTableFrame->CalcMinAndPreferredWidths(aReflowState, minWidth, prefWidth);
+  mTableFrame->CalcMinAndPreferredWidths(aPresContext, aReflowState, PR_FALSE, minWidth, prefWidth);
   if (hasPctCol && mTableFrame->IsAutoWidth()) {
     prefWidth = CalcPctAdjTableWidth(aReflowState, boxWidth, p2t);
   }
@@ -224,6 +224,11 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   nscoord perAdjTableWidth = 0;
   if (mTableFrame->HasPctCol()) {
     perAdjTableWidth = AssignPctColumnWidths(aReflowState, maxWidth, tableIsAutoWidth, p2t);
+    if (perAdjTableWidth > 0) {
+      // if an auto table has a pct col or cell, set the preferred table width 
+      // here so that CalcPctAdjTableWidth wont't need to be called by the table
+      mTableFrame->SetPreferredWidth(perAdjTableWidth);
+    }
     perAdjTableWidth = PR_MIN(perAdjTableWidth, maxWidth);
     perAdjTableWidth -= horBorderPadding;
     perAdjTableWidth = PR_MAX(perAdjTableWidth, 0);
