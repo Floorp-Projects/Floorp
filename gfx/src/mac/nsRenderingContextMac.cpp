@@ -28,7 +28,7 @@
 #include "nsGfxCIID.h"
 #include "nsCOMPtr.h"
 
-//#define USE_ATSUI_HACK
+//#define USE_ATSUI_HACK	// Note: ATSUI is not used for 7-bit text. See GetHints().
 
 #ifdef USE_ATSUI_HACK
 #include <ATSUnicode.h>
@@ -811,6 +811,19 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 
 
 #pragma mark -
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::GetHints(PRUint32& aResult)
+{
+  PRUint32 result = 0;
+
+  // QuickDraw is prefered over to ATSUI for drawing 7-bit text
+  // (it's not 8-bit: the name of the constant is misleading)
+  result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+
+  aResult = result;
+  return NS_OK;
+}
 
 //------------------------------------------------------------------------
 
@@ -1073,6 +1086,8 @@ NS_IMETHODIMP nsRenderingContextMac :: GetCurrentTransform(nsTransform2D *&aTran
   return NS_OK;
 }
 
+
+#pragma mark -
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
@@ -1343,6 +1358,8 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord a
   return NS_OK;
 }
 
+
+#pragma mark -
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: GetWidth(char ch, nscoord &aWidth)
@@ -1425,6 +1442,8 @@ NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint
   return NS_OK;
 }
 
+
+#pragma mark -
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
@@ -1643,8 +1662,6 @@ static Boolean IsATSUIAvailable()
 
 
 //------------------------------------------------------------------------
-// ATSUI Hack 
-//------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
@@ -1729,6 +1746,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const nsString& aString,
 	return rv;
 }
 
+
+#pragma mark -
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
