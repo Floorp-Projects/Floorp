@@ -47,15 +47,10 @@ SHARED_LIBRARY_LIBS = ../xp/libxp_eventloop.a
 
 EXTRA_DSO_LDOPTS = \
 		$(TOOLKIT_DSO_LDOPTS) \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(TK_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(TK_CFLAGS)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

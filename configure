@@ -3894,8 +3894,8 @@ fi
 _COMPILER_PREFIX=
 
 if test "$GNU_CC"; then
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
@@ -3915,8 +3915,8 @@ if test "$GNU_CC"; then
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 else
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-shared -h $@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
@@ -4101,8 +4101,8 @@ case "$target" in
         DLL_SUFFIX='_shr.a'
         ;;
     esac
-    MKSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS)'
-    MKCSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS)'
+    MKSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS) -o $@'
     cat >> confdefs.h <<\EOF
 #define NSCAP_DISABLE_DEBUG_PTR_TYPES 1
 EOF
@@ -4110,7 +4110,7 @@ EOF
     ;;
 
 *-beos*)
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
     MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
@@ -4154,15 +4154,15 @@ EOF
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then
-	DSO_LDOPTS='-b -Wl,+s -L$(DIST)/bin'
-	DSO_CFLAGS=""
-	DSO_PIC_CFLAGS="+Z"
-	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
-	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+    	DSO_LDOPTS='-b -Wl,+s -L$(DIST)/bin'
+    	DSO_CFLAGS=""
+    	DSO_PIC_CFLAGS="+Z"
+    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     else
-	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
-	MKSHLIB='$(LD) $(DSO_LDOPTS)'
-	MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+    	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
+    	MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    	MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
     fi
     MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     cat >> confdefs.h <<\EOF
@@ -4188,8 +4188,8 @@ EOF
 EOF
 
     DSO_LDOPTS='-elf -shared'
-    MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+    MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -4305,8 +4305,8 @@ EOF
 						NEED_BASE_DLL_NAME_ALSO=1
 		;;
 	*86)
-		MKSHLIB='$(LD) $(DSO_LDOPTS)'
-		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+		MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+		MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
 		;;
     esac
         if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
@@ -4328,8 +4328,8 @@ EOF
     DSO_LDOPTS="-M $DSO_LDOPTS"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS="-shared -Wc,-fPIC -DPIC"
-    MKSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
-    MKCSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
+    MKSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS) -o $@'
     AR='qcc -Vgcc_ntox86'
     AR_FLAGS='-M -a $@'
     AR_LIST='ar t'
@@ -4351,8 +4351,8 @@ EOF
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -h $@'
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
     fi
@@ -4456,8 +4456,8 @@ alpha*-*-osf*)
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
-	MKSHLIB='-$(LD) $(DSO_LDOPTS)'
-	MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
+	MKSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
+	MKCSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
 	MKSHLIB_FORCE_ALL='-all'
 	MKSHLIB_UNFORCE_ALL='-none'
 		cat >> confdefs.h <<\EOF
@@ -4521,8 +4521,8 @@ EOF
     TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
     CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
     CXXFLAGS="$CXXFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
-    MKSHLIB='$(CXX) $(CXXFLAGS) -arch ppc $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) -arch ppc $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
     MKSHLIB_FORCE_ALL=''
     MKSHLIB_UNFORCE_ALL=''
     ;;
@@ -4554,8 +4554,8 @@ EOF
 EOF
 
        LDFLAGS='-xildoff'
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -h $@'
@@ -4580,8 +4580,8 @@ EOF
            ;;
        esac
     else
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
        DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
@@ -4602,8 +4602,8 @@ EOF
 
 *-sunos*) 
     DSO_LDOPTS='-Bdynamic'
-    MKSHLIB='-$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
+    MKSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
     cat >> confdefs.h <<\EOF
 #define SUNOS4 1
 EOF
@@ -10253,7 +10253,7 @@ if test "${enable_wrap_malloc+set}" = set; then
   if test "$enableval" = "yes"; then
      if test "$GNU_CC"; then
       WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-      MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
+      MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
     fi
   elif test "$enableval" = "no"; then
     :
@@ -11809,10 +11809,10 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 if test ! "$MOZ_NATIVE_NSPR" && test -z "$USE_NSPR_AUTOCONF"
 then
-  rm -f ${srcdir}/nsprpub/config/my_config.mk
-  rm -f ${srcdir}/nsprpub/config/my_overrides.mk
-  cp build/unix/nspr_my_config.mk ${srcdir}/nsprpub/config/my_config.mk
-  cp build/unix/nspr_my_overrides.mk ${srcdir}/nsprpub/config/my_overrides.mk
+  rm -f ${MOZ_BUILD_ROOT}/nsprpub/config/my_config.mk
+  rm -f ${MOZ_BUILD_ROOT}/nsprpub/config/my_overrides.mk
+  cp ${srcdir}/build/unix/nspr_my_config.mk ${MOZ_BUILD_ROOT}/nsprpub/config/my_config.mk
+  cp ${srcdir}/build/unix/nspr_my_overrides.mk ${MOZ_BUILD_ROOT}/nsprpub/config/my_overrides.mk
 fi
 
 CC="$_SUBDIR_CC" 

@@ -55,13 +55,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../proxy/src \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
-		-L$(DIST)/lib \
-		$(NULL)
-
 ifdef MOZ_DEMANGLE_SYMBOLS
 EXTRA_DSO_LDOPTS += -liberty
 endif
@@ -79,6 +72,4 @@ EXTRA_DSO_LDOPTS += -lbe
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

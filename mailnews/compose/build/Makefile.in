@@ -45,9 +45,6 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \
@@ -56,6 +53,4 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

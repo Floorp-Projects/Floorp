@@ -60,9 +60,6 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lraptorgfx \
 		$(MOZ_TIMER_LIBS) \
@@ -104,8 +101,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
 		$(NULL)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 ICON_FILES	= \
 		$(srcdir)/mozicon50.xpm \

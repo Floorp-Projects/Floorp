@@ -91,9 +91,6 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
@@ -115,8 +112,6 @@ INCLUDES	+= -I$(srcdir)/../html/base/src \
 ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
 endif
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 $(BUILD_DATE):	FORCE
 	$(RM) $@

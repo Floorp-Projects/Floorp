@@ -60,12 +60,6 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
-		$(NULL)
-
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
 else
@@ -90,6 +84,4 @@ INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
 		$(NULL)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

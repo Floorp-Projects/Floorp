@@ -36,14 +36,7 @@ REQUIRES	= xpcom
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libbrprof_s.$(LIB_SUFFIX)
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL)
-
 include $(topsrcdir)/config/rules.mk
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/directory.rdf $(DIST)/bin/res/samples

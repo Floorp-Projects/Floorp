@@ -38,9 +38,6 @@ EXPORTS		= \
 		gtkmozembed.h
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgtksuperwin \
 		$(NULL)

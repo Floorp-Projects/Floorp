@@ -38,9 +38,6 @@ SHARED_LIBRARY_LIBS= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
 		-lmozjs \
 		-ljsdom \
@@ -54,6 +51,4 @@ INCLUDES	+= \
 		-I$(srcdir)			\
 		-I$(srcdir)/../base		\
 		$(NULL)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
