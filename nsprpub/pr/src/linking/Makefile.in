@@ -65,7 +65,7 @@ endif
 
 # On Mac OS X use flat #includes.
 ifeq ($(OS_TARGET),MacOSX)
-INCLUDES    += -I/Developer/Headers/FlatCarbon
+INCLUDES    += -I$(NEXT_ROOT)/Developer/Headers/FlatCarbon
 endif
 
 DEFINES += -D_NSPR_BUILD_
