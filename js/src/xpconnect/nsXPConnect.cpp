@@ -110,6 +110,8 @@ nsXPConnect::nsXPConnect()
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
+
+    nsXPCWrappedNativeClass::OneTimeInit();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
     mArbitraryScriptable = new nsXPCArbitraryScriptable();
 
@@ -140,21 +142,60 @@ NS_IMETHODIMP
 nsXPConnect::InitJSContext(JSContext* aJSContext,
                             JSObject* aGlobalJSObj)
 {
-    if(!aJSContext || !aGlobalJSObj ||
-       mContextMap->Find(aJSContext) || !NewContext(aJSContext, aGlobalJSObj))
+    if(aJSContext)
     {
-        NS_ASSERTION(0,"nsXPConnect::InitJSContext failed");
-        return NS_ERROR_FAILURE;
+        if(!aGlobalJSObj)
+            aGlobalJSObj = JS_GetGlobalObject(aJSContext);
+        if(aGlobalJSObj && 
+           !mContextMap->Find(aJSContext) &&
+           NewContext(aJSContext, aGlobalJSObj))
+        {
+            return NS_OK;
+        }
+    }        
+    NS_ASSERTION(0,"nsXPConnect::InitJSContext failed");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
+                          nsISupports* aCOMObj,
+                          REFNSIID aIID,
+                          nsIXPConnectWrappedNative** aWrapper)
+{
+    nsXPCWrappedNative* wrapper = NULL;
+    XPCContext* xpcc = NULL;
+    if(!mContextMap->Find(aJSContext) &&
+       NULL != (xpcc = NewContext(aJSContext, NULL, JS_FALSE)))
+    {
+        wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
+        if(wrapper)
+        {
+            if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
+               xpcc->Init(wrapper->GetJSObject()))
+            {
+                *aWrapper = wrapper;
+                return NS_OK;
+            }
+        }
     }
-    return NS_OK;
+    if(wrapper)
+        NS_RELEASE(wrapper);
+    if(xpcc)
+    {
+        mContextMap->Remove(xpcc);
+        delete xpcc;
+    }
+    *aWrapper = NULL;
+    return NS_ERROR_FAILURE;
 }
 
 XPCContext*
-nsXPConnect::NewContext(JSContext* cx, JSObject* global)
+nsXPConnect::NewContext(JSContext* cx, JSObject* global, 
+                        JSBool doInit /*= JS_TRUE*/)
 {
     XPCContext* xpcc;
     NS_PRECONDITION(cx,"bad param");
-    NS_PRECONDITION(global,"bad param");
     NS_PRECONDITION(!mContextMap->Find(cx),"bad param");
 
     xpcc = XPCContext::newXPCContext(cx, global,
@@ -162,6 +203,11 @@ nsXPConnect::NewContext(JSContext* cx, JSObject* global)
                                   NATIVE_MAP_SIZE,
                                   JS_CLASS_MAP_SIZE,
                                   NATIVE_CLASS_MAP_SIZE);
+    if(doInit && xpcc && !xpcc->Init())
+    {
+        delete xpcc;
+        xpcc = NULL;
+    }
     if(xpcc)
         mContextMap->Add(xpcc);
     return xpcc;

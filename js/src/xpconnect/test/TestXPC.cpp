@@ -141,7 +141,14 @@ class MyScriptable : public nsIXPCScriptable
 {
     NS_DECL_ISUPPORTS;
     XPC_DECLARE_IXPCSCRIPTABLE;
+    MyScriptable();
 };
+
+MyScriptable::MyScriptable()
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}    
 
 NS_IMPL_ISUPPORTS(MyScriptable,NS_IXPCSCRIPTABLE_IID);
 
@@ -244,6 +251,7 @@ static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID)
 
 /***************************************************************************/
 FILE *gOutFile = NULL;
+FILE *gErrFile = NULL;
 
 static JSBool
 Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -263,8 +271,38 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uintN i;
+    JSString *str;
+    const char *filename;
+    JSScript *script;
+    JSBool ok;
+    jsval result;
+
+    for (i = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
+        if (!str)
+            return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
+        filename = JS_GetStringBytes(str);
+        script = JS_CompileFile(cx, obj, filename);
+        if (!script)
+            ok = JS_FALSE;
+        else {
+            ok = JS_ExecuteScript(cx, obj, script, &result);
+            JS_DestroyScript(cx, script);
+        }
+        if (!ok)
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0},
+    {"load",            Load,           1},
     {0}
 };
 
@@ -286,6 +324,7 @@ int main()
     JSContext *cx;
     JSObject *glob;
 
+    gErrFile = stderr;
     gOutFile = stdout;
 
     RegAllocator();
@@ -299,6 +338,10 @@ int main()
 
     JS_SetErrorReporter(cx, my_ErrorReporter);
 
+    nsIXPConnect* xpc = XPC_GetXPConnect();
+
+/*
+    // old code where global object was plain object
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
     if (!glob)
         return 1;
@@ -308,8 +351,8 @@ int main()
     if (!JS_DefineFunctions(cx, glob, glob_functions))
         return 1;
 
-    nsIXPConnect* xpc = XPC_GetXPConnect();
     xpc->InitJSContext(cx, glob);
+*/
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
 
@@ -322,8 +365,16 @@ int main()
 
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
+/*
     if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFooIID, &wrapper)))
+*/
+    // new code where global object is a wrapped xpcom object
+    if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(cx, foo, kIFooIID, 
+                                                           &wrapper)))
     {
+        wrapper->GetJSObject(&glob);
+        JS_DefineFunctions(cx, glob, glob_functions);
+
         if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFoo2IID, &wrapper2)))
         {
             JSObject* js_obj;
@@ -338,27 +389,8 @@ int main()
             JS_SetProperty(cx, glob, "foo", &v);
 
             char* txt[] = {
-  "print('foo = '+foo);",
-  "foo.toString = new Function('return \"foo toString called\";')",
-  "foo.toStr = new Function('return \"foo toStr called\";')",
-  "print('foo = '+foo);",
-  "print('foo.toString() = '+foo.toString());",
-  "print('foo.toStr() = '+foo.toStr());",
-  "print('foo.five = '+ foo.five);",
-  "print('foo.six = '+ foo.six);",
-  "print('foo.bogus = '+ foo.bogus);",
-  "foo.bogus = 5;",
-  "print('foo.bogus = '+ foo.bogus);",
-  "print('foo.Test(10,20) returned: '+foo.Test(10,20));",
-  "function Test(p1, p2){print('test called in JS with p1 = '+p1+' and p2 = '+p2);return p1+p2;}",
-  "bar = new Object();",
-  "bar.Test = Test;",
-//  "bar.Test(5,7);",
-  "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
-  "bar.QueryInterface = QI;",
-  "print('foo properties:');",
-  "for(i in foo)print('  foo.'+i+' = '+foo[i]);",
-  0,
+              "load('testxpc.js');",
+              0,
             };
 
             for(char** p = txt; *p; p++)
@@ -407,3 +439,43 @@ int main()
 
     return 0;
 }
+
+/***************************************************************************/
+
+#include "jsatom.h"
+int
+DumpAtom(JSHashEntry *he, int i, void *arg)
+{
+    FILE *fp = (FILE *)arg;
+    JSAtom *atom = (JSAtom *)he;
+
+    fprintf(fp, "%3d %08x %5lu ",
+            i, (uintN)he->keyHash, (unsigned long)atom->number);
+    if (ATOM_IS_STRING(atom))
+        fprintf(fp, "\"%s\"\n", ATOM_BYTES(atom));
+    else if (ATOM_IS_INT(atom))
+        fprintf(fp, "%ld\n", (long)ATOM_TO_INT(atom));
+    else
+        fprintf(fp, "%.16g\n", *ATOM_TO_DOUBLE(atom));
+    return HT_ENUMERATE_NEXT;
+}
+
+int
+DumpSymbol(JSHashEntry *he, int i, void *arg)
+{
+    FILE *fp = (FILE *)arg;
+    JSSymbol *sym = (JSSymbol *)he;
+
+    fprintf(fp, "%3d %08x", i, (uintN)he->keyHash);
+    if (JSVAL_IS_INT(sym_id(sym)))
+        fprintf(fp, " [%ld]\n", (long)JSVAL_TO_INT(sym_id(sym)));
+    else
+        fprintf(fp, " \"%s\"\n", ATOM_BYTES(sym_atom(sym)));
+    return HT_ENUMERATE_NEXT;
+}
+
+/* These are callable from gdb. */
+JS_BEGIN_EXTERN_C
+void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
+void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
+JS_END_EXTERN_C

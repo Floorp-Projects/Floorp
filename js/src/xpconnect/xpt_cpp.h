@@ -104,7 +104,7 @@ public:
 
     uint8 GetInterfaceIsArgNumber() const
     {
-        NS_PRECONDITION(GetType() == nsXPTType::T_INTERFACE_IS,"not an interface_is");
+        NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE_IS,"not an interface_is");
         return type.type.argnum;
     }
 

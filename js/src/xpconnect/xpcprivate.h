@@ -49,6 +49,11 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj);
 
+    NS_IMETHOD InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
+                          nsISupports* aCOMObj,
+                          REFNSIID aIID,
+                          nsIXPConnectWrappedNative** aWrapper);
+
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
@@ -76,7 +81,8 @@ public:
     virtual ~nsXPConnect();
 private:
     nsXPConnect();
-    XPCContext*  NewContext(JSContext* cx, JSObject* global);
+    XPCContext*  NewContext(JSContext* cx, JSObject* global, 
+                            JSBool doInit = JS_TRUE);
 
 private:
     static nsXPConnect* mSelf;
@@ -109,6 +115,8 @@ public:
     Native2WrappedNativeMap*   GetWrappedNativeMap()      {return mWrappedNativeMap;}
     IID2WrappedJSClassMap*     GetWrappedJSClassMap()     {return mWrappedJSClassMap;}
     IID2WrappedNativeClassMap* GetWrappedNativeClassMap() {return mWrappedNativeClassMap;}
+
+    JSBool Init(JSObject* aGlobalObj = NULL);
 
     ~XPCContext();
 private:
@@ -280,7 +288,7 @@ public:
     void SetWritableAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RW;}
 
     XPCNativeMemberDescriptor()
-        : invokeFuncObj(NULL), id(0){}
+        : invokeFuncObj(NULL), id(0), flags(0) {}
 private:
     uint16          flags;
 };
@@ -318,6 +326,8 @@ public:
         {return GetXPCContext()->GetXPConnect()->GetArbitraryScriptable();}
 
     static JSBool InitForContext(XPCContext* xpcc);
+    static JSBool OneTimeInit();
+
     JSObject* NewInstanceJSObject(nsXPCWrappedNative* self);
     static nsXPCWrappedNative* GetWrappedNativeOfJSObject(JSContext* cx,
                                                           JSObject* jsobj);

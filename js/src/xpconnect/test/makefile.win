@@ -22,8 +22,11 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPC.exe
 PROGRAMS = $(PROG1)
+TESTCASES = testxpc.js
 
-LCFLAGS=-DUSE_NSREG
+LCFLAGS=-DUSE_NSREG -DJSFILE
+
+DEFINES=-DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE -DDEBUG
 
 REQUIRES=xpcom js xpconnect
 
@@ -43,6 +46,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p

@@ -114,6 +114,11 @@ public:
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj) = 0;
 
+    NS_IMETHOD InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
+                          nsISupports* aCOMObj,
+                          REFNSIID aIID,
+                          nsIXPConnectWrappedNative** aWrapper) = 0;
+
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,

@@ -454,11 +454,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         }
         else
         {
-            if(type.IsPointer())
-            {
-                dp->flags = nsXPCVariant::PTR_IS_DATA;
-                dp->ptr = &dp->val;
-            }
             src = argv[i];
         }
 
@@ -1154,13 +1149,19 @@ static JSClass WrappedNative_class = {
 
 // static
 JSBool
-nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
+nsXPCWrappedNativeClass::OneTimeInit()
 {
     WrappedNative_ops.newObjectMap = js_ObjectOps.newObjectMap;
     WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+    WrappedNative_ops.dropProperty = js_ObjectOps.dropProperty;
+    return JS_TRUE;
+}        
 
+// static
+JSBool
+nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
+{
     // XXX do we really want this class init'd this way? access to ctor?
-
     if (!JS_InitClass(xpcc->GetJSContext(), xpcc->GetGlobalObject(),
         0, &WrappedNative_class, 0, 0,
         0, 0,
