@@ -3331,7 +3331,6 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     PRBool isUnique = PR_FALSE;
     PRBool isCA = PR_FALSE;
     char *nickname = NULL;
-    char *tmpnickname = NULL;
     unsigned int certType;
 
     if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
@@ -3371,12 +3370,7 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     if (isUnique) {
 	CERT_DupCertificate(newCert);
 
-        tmpnickname = STAN_GetCERTCertificateName(c);
-        if (tmpnickname) {
-            nickname = PORT_ArenaStrdup(certList->arena, tmpnickname);
-            PORT_Assert(nickname);
-            PORT_Free(tmpnickname);
-        }
+	nickname = STAN_GetCERTCertificateName(certList->arena, c);
 
 	/* put slot certs at the end */
 	if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
@@ -3398,12 +3392,8 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
 	    /* put the same CERTCertificate in the list for all instances */
 	    CERT_DupCertificate(newCert);
 
-            tmpnickname = STAN_GetCERTCertificateNameForInstance(c, instance);
-            if (tmpnickname) {
-                nickname = PORT_ArenaStrdup(certList->arena, tmpnickname);
-                PORT_Assert(nickname);
-                PORT_Free(tmpnickname);
-            }
+	    nickname = STAN_GetCERTCertificateNameForInstance(
+			certList->arena, c, instance);
 
 	    /* put slot certs at the end */
 	    if (slot && !PK11_IsInternal(slot)) {
