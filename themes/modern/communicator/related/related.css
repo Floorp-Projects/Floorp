@@ -44,6 +44,11 @@ treeitem > treerow.relatedresult > treecell > titledbutton:active {
   text-decoration: underline;
 }
 
+treeitem[selected="true"] > treerow.relatedresult > treecell {
+  color: HighlightText;
+  text-decoration: none;
+}
+
 treeitem[container="true"][open="true"][loading="true"]
     > treerow.relatedresult > .treecell-indent
 {

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /*
 
   Style rules specific to the related links panel
@@ -57,6 +59,12 @@ treeitem > treerow.relatedresult > treecell:hover
   text-decoration: underline;
   cursor              : pointer;
 }
+
+treeitem[selected="true"] > treerow.relatedresult > treecell {
+  color: HighlightText;
+  text-decoration: none;
+}
+
 treeitem > treerow.relatedresult > treecell > titledbutton:active
 {
   color: red;
