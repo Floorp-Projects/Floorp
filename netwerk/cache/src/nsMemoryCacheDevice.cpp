@@ -101,6 +101,13 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 
 
 nsresult
+nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult
 nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
                                            nsITransport **transport )
 {

@@ -87,6 +87,14 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+nsresult
+nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 nsresult
 nsDiskCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
                                            nsITransport **transport )
