@@ -61,7 +61,7 @@
         var hbox = (document.getAnonymousNodes(this))[0].firstChild;
         this.toolbar.controllers.appendController(this.commandController);
         var theToolbar = this;
-        this.resizeFunc = function(event) { 
+        var resizeFunc = function(event) { 
           theToolbar._overflowTimerInEffect = false;
           var buttons = (document.getAnonymousNodes(theToolbar))[0].firstChild;
           var menu = buttons.nextSibling.childNodes[1];
@@ -89,7 +89,8 @@
             }
           }
         };
-        window.addEventListener("resize", this.resizeFunc, false);
+        this.resizeFunc = resizeFunc;
+        window.addEventListener("resize", resizeFunc, false);
         hbox.database.AddObserver(this);
       ]]></constructor>
 
