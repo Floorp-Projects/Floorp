@@ -128,14 +128,14 @@ function ReadDirectory(url)
     var ios = Components.classes['component://netscape/network/net-service'].getService();
     ios = ios.QueryInterface(Components.interfaces.nsIIOService);
 
-    var uri = ios.NewURI(url, null);
+    var uri = ios.newURI(url, null);
 
     // Create a channel...
-    var channel = ios.NewChannelFromURI('load', uri, null, null);
+    var channel = ios.newChannelFromURI('load', uri, null, null);
 
     // ...so that we can pipe it into a new HTTPIndex listener to
     // parse the directory's contents.
-    channel.AsyncRead(0, -1, null, HTTPIndex.CreateListener());
+    channel.asyncRead(0, -1, null, HTTPIndex.CreateListener());
 }
 
 
