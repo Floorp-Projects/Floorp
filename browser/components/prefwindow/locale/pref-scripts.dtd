@@ -11,6 +11,4 @@
 <!ENTITY allowWindowFlip.label           "Raise or lower windows">
 <!ENTITY allowWindowStatusChange.label   "Change status bar text">
 <!ENTITY allowWindowImageSrcChange.label "Change images">
-<!ENTITY allowDocumentCookieSet.label    "Create or change cookies">
-<!ENTITY allowDocumentCookieGet.label    "Read cookies">
 <!ENTITY allowHideStatusBar.label        "Hide the status bar">
