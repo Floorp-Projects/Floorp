@@ -232,12 +232,13 @@ extern void SECU_PrintGeneralizedTime(FILE *out, SECItem *t, char *m,
 /* Dump all key nicknames */
 extern int SECU_PrintKeyNames(SECKEYKeyDBHandle *handle, FILE *out);
 
+/* callback for listing certs through pkcs11 */
+extern SECStatus SECU_PrintCertNickname(CERTCertificate *cert, void *data);
+
 /* Dump all certificate nicknames in a database */
-extern int SECU_PrintCertificateNames(CERTCertDBHandle *handle, FILE *out);
-#if 0
-SECU_PrintCertificateNames_(PRFileDesc* out, PRBool sortByName, 
-                            PRBool sortByTrust);
-#endif
+extern SECStatus
+SECU_PrintCertificateNames(CERTCertDBHandle *handle, PRFileDesc* out, 
+                           PRBool sortByName, PRBool sortByTrust);
 
 /* See if nickname already in database. Return 1 true, 0 false, -1 error */
 int SECU_CheckCertNameExists(CERTCertDBHandle *handle, char *nickname);
