@@ -222,6 +222,8 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 2 );
+	block->SetString( eEditfield1Value, *outUser );
+	block->SetString( eEditfield2Value, *outPassword );
 	
 	
 	rv = DoDialog( inParent, block, kPromptURL );
