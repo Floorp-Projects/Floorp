@@ -121,8 +121,7 @@ void
 nsPresContext::GetUserPreferences()
 {
   PRInt32 prefInt;
-  char  prefChar[512];
-  int   charSize = sizeof(prefChar);
+  char  *prefChar;
 
   if (NS_OK == mPrefs->GetIntPref("browser.base_font_scaler", &prefInt)) {
     mFontScaler = prefInt;
@@ -148,8 +147,9 @@ nsPresContext::GetUserPreferences()
   key.Append(".win.prop_font");  
 
   key.ToCString(keychar, 256); 
-  if (NS_OK == mPrefs->GetCharPref(keychar, &(prefChar[0]), &charSize)) {
+  if (NS_OK == mPrefs->CopyCharPref(keychar, &prefChar)) {
     mDefaultFont.name = prefChar;
+    PL_strfree(prefChar);
   }
   
   key = startKey;
@@ -163,8 +163,9 @@ nsPresContext::GetUserPreferences()
   key.Append(".win.fixed_font");  
   key.ToCString(keychar, 256);
 
-  if (NS_OK == mPrefs->GetCharPref(keychar, &(prefChar[0]), &charSize)) {
+  if (NS_OK == mPrefs->CopyCharPref(keychar, &prefChar)) {
     mDefaultFixedFont.name = prefChar;
+    PL_strfree(prefChar);
   }
   
   key = startKey;
