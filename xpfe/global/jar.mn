@@ -74,7 +74,6 @@ toolkit.jar:
 en-US.jar:
     locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
     locale/en-US/global/intl.css                    (resources/locale/en-US/intl.css) 
-    locale/en-US/global/globalOverlay.dtd           (resources/locale/en-US/globalOverlay.dtd) 
     locale/en-US/global/dialogOverlay.dtd           (resources/locale/en-US/dialogOverlay.dtd) 
     locale/en-US/global/commonDialog.dtd            (resources/locale/en-US/commonDialog.dtd) 
     locale/en-US/global/charsetOverlay.dtd          (resources/locale/en-US/charsetOverlay.dtd) 
