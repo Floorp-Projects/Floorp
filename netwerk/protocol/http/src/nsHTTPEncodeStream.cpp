@@ -98,6 +98,7 @@ nsHTTPEncodeStream::GetData(char* buf, PRUint32 bufLen, PRUint32 *readCount)
     if (bufLen > 0) {
         // get more from the input stream
         rv = mInput->Read(buf, bufLen, &amt);
+        *readCount += amt;
     }
     return rv;
 }
@@ -116,10 +117,13 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 #define BUF_SIZE 1024
     char readBuf[BUF_SIZE];
     PRUint32 amt = 0;
+    PRUint32 bytesRead = 0;
 
     while (outBufCnt > 0) {
         PRUint32 readCnt = PR_MIN(outBufCnt, BUF_SIZE);
         rv = GetData(readBuf, readCnt, &amt);
+	bytesRead += amt;
+	*result = bytesRead;
         if (NS_FAILED(rv)) return rv;
         if (rv == NS_BASE_STREAM_WOULD_BLOCK || amt == 0)
             return rv;
