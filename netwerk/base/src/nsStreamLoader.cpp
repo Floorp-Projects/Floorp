@@ -46,32 +46,14 @@
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 NS_IMETHODIMP
-nsStreamLoader::Init(nsIURI* aURL,
+nsStreamLoader::Init(nsIChannel *channel,
                      nsIStreamLoaderObserver* observer,
-                     nsISupports* context,
-                     nsILoadGroup* aGroup,
-                     nsIInterfaceRequestor* notificationCallbacks,
-                     nsLoadFlags loadAttributes,
-                     nsIURI *referrer)
+                     nsISupports* context)
 {
-  nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsIChannel> channel;
+  NS_ENSURE_ARG_POINTER(channel);
+  NS_ENSURE_ARG_POINTER(observer);
 
-  rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, aGroup,
-                     notificationCallbacks, loadAttributes);
-  if (NS_FAILED(rv)) return rv;
-
-  if (referrer) {
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-
-    if (httpChannel) {
-      rv = httpChannel->SetReferrer(referrer);
-      if (NS_FAILED(rv)) return rv;
-    }
-  }
-
-  rv = channel->AsyncOpen(this, context);
+  nsresult rv = channel->AsyncOpen(this, context);
 
   if (NS_FAILED(rv) && observer) {
     // don't callback synchronously as it puts the caller

@@ -232,6 +232,16 @@ nsSyncLoader::LoadDocument(nsIURI* aDocumentURI,
         return NS_ERROR_NOT_INITIALIZED;
     }
 
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+    if (httpChannel) {
+        httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                      NS_LITERAL_CSTRING(""));
+        httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                      NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"));
+
+        // XXX need to set the HTTP referrer
+    }
+
     // Tell the document to start loading
     nsCOMPtr<nsIDocument> document = do_QueryInterface(DOMDocument, &rv);
     NS_ENSURE_SUCCESS(rv, rv);

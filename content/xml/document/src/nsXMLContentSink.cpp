@@ -768,9 +768,24 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   rv = parser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)getter_AddRefs(sl));
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_OpenURI(sl, nsnull, aUrl);
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), aUrl);
+  if (NS_FAILED(rv)) return rv;
 
-  return rv;
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (httpChannel) {
+    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                  NS_LITERAL_CSTRING(""));
+    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                  NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"));
+
+    // XXX need to set the referrer equal to the document URI!
+    // httpChannel->SetReferrer(documentURI);
+  }
+
+  // XXX need to set a load group on this channel!
+
+  return channel->AsyncOpen(sl, nsnull);
 }
 
 NS_IMETHODIMP

@@ -57,13 +57,9 @@ interface nsIStreamLoaderObserver : nsISupports
 [scriptable, uuid(31d37360-8e5a-11d3-93ad-00104ba0fd40)]
 interface nsIStreamLoader : nsISupports
 {
-    void init(in nsIURI uri,
-              in nsIStreamLoaderObserver completionObserver,
-              in nsISupports ctxt,
-              in nsILoadGroup loadGroup,
-              in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes,
-              in nsIURI referrer);
+    void init(in nsIChannel aChannel,
+              in nsIStreamLoaderObserver aObserver,
+              in nsISupports aContext);
 
     /**
      * Gets the number of bytes read so far.

@@ -59,6 +59,7 @@
 #include "nsIChannel.h"
 #include "nsIStreamIOChannel.h"
 #include "nsITransport.h"
+#include "nsIHttpChannel.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIDownloader.h"
@@ -408,6 +409,29 @@ NS_NewDownloader(nsIDownloader* *result,
 }
 
 inline nsresult
+NS_NewStreamLoader(nsIStreamLoader **aResult,
+                   nsIChannel *aChannel,
+                   nsIStreamLoaderObserver *aObserver,
+                   nsISupports *aContext)
+{
+    nsresult rv;
+    nsCOMPtr<nsIStreamLoader> loader;
+    static NS_DEFINE_CID(kStreamLoaderCID, NS_STREAMLOADER_CID);
+    rv = nsComponentManager::CreateInstance(kStreamLoaderCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIStreamLoader),
+                                            getter_AddRefs(loader));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = loader->Init(aChannel, aObserver, aContext);
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = loader;
+    NS_ADDREF(*aResult);
+    return rv;
+}
+
+inline nsresult
 NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsIURI* uri,
                    nsIStreamLoaderObserver* observer,
@@ -418,20 +442,21 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsIURI* referrer = nsnull)
 {
     nsresult rv;
-    nsCOMPtr<nsIStreamLoader> loader;
-    static NS_DEFINE_CID(kStreamLoaderCID, NS_STREAMLOADER_CID);
-    rv = nsComponentManager::CreateInstance(kStreamLoaderCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIStreamLoader),
-                                            getter_AddRefs(loader));
+
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nsnull,
+                       loadGroup,
+                       notificationCallbacks,
+                       loadAttributes);
     if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, observer, context, loadGroup,
-                      notificationCallbacks, loadAttributes, referrer);
-                      
-    if (NS_FAILED(rv)) return rv;
-    *result = loader;
-    NS_ADDREF(*result);
-    return rv;
+
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+    if (httpChannel)
+        httpChannel->SetReferrer(referrer);
+
+    return NS_NewStreamLoader(result, channel, observer, context);
 }
 
 inline nsresult

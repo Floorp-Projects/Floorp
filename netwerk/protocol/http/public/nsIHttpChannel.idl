@@ -52,7 +52,8 @@ interface nsIHttpChannel : nsIChannel
     attribute nsIURI documentURI;
 
     /**
-     * Header strings are case insensitive
+     * Header strings are case insensitive.  Setting a header is additive; to
+     * clear a header, assign an empty string.
      */
     ACString getRequestHeader(in ACString header);
     void     setRequestHeader(in ACString header, in ACString value);
@@ -67,7 +68,8 @@ interface nsIHttpChannel : nsIChannel
     readonly attribute boolean requestSucceeded;
 
     /**
-     * Header strings are case insensitive
+     * Header strings are case insensitive.  Setting a header is additive; to
+     * clear a header, assign an empty string.
      */
     ACString getResponseHeader(in ACString header);
     void     setResponseHeader(in ACString header, in ACString value);

@@ -385,9 +385,21 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
       nsCOMPtr<nsIChannel> channel;
-      rv = NS_NewStreamLoader(getter_AddRefs(loader), scriptURI, this,
-                              reqsup, loadGroup, prompter,
-                              nsIChannel::LOAD_NORMAL, documentURI);
+      rv = NS_NewChannel(getter_AddRefs(channel),
+                         scriptURI, nsnull, loadGroup,
+                         prompter, nsIRequest::LOAD_NORMAL);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+        if (httpChannel) {
+          // HTTP content negotation has little value in this context.
+          httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                        NS_LITERAL_CSTRING(""));
+          httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                        NS_LITERAL_CSTRING("*/*"));
+          httpChannel->SetReferrer(documentURI);
+        }
+        rv = NS_NewStreamLoader(getter_AddRefs(loader), channel, this, reqsup);
+      }
       if (NS_FAILED(rv)) {
         mPendingRequests.RemoveElement(reqsup, 0);
         return FireErrorNotification(rv, aElement, aObserver);
