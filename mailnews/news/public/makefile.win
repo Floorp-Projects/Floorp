@@ -18,6 +18,8 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+MODULE=news
+
 XPIDLSRCS= \
 	.\nsIMsgOfflineNewsState.idl \
 	.\nsINNTPArticleList.idl \
@@ -43,9 +45,6 @@ EXPORTS =							\
 		nsINntpService.h			\
 		nsINntpIncomingServer.h			\
         $(NULL)
-
-MODULE=mailnews
-
 
 include <$(DEPTH)\config\rules.mak>
 
