@@ -191,16 +191,20 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStatus(nsIURI* aURL, const PRUnicha
 
 NS_IMETHODIMP nsCopyMessageStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
+	nsresult rv = NS_OK;
+	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);
+	rv = mDestination->EndCopy(copySucceeded);
 	//If this is a move and we finished the copy, delete the old message.
-	if(aStatus == NS_BINDING_SUCCEEDED)
+	if(copySucceeded)
 	{
 		PRBool moveMessage;
 		IsMoveMessage(aURL, &moveMessage);
 		if(moveMessage)
 		{
-			DeleteMessage(aURL, mSrcFolder);
+			rv = DeleteMessage(aURL, mSrcFolder);
 		}
 	}
-
-	return mDestination->EndCopy(aStatus == NS_BINDING_SUCCEEDED);
+	//Even if the above actions failed we probably still want to return NS_OK.  There should probably
+	//be some error dialog if either the copy or delete failed.
+	return NS_OK;
 }
