@@ -188,7 +188,6 @@ XFE_PersonalDrop::XFE_PersonalDrop(Widget					dropWidget,
 								   XFE_PersonalToolbar *	toolbar) :
     XFE_ToolbarDrop(dropWidget),
 	_personalToolbar(toolbar),
-	_lastRaisedWidget(NULL),
 	_dropWidget(NULL)
 {
 }
@@ -221,6 +220,8 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 
 	XP_ASSERT( guessed_title != NULL );
 
+	unsigned char location = _personalToolbar->getDropTargetLocation();
+
 	// If the drop occurred on a cascade item, then we need to waid for 
 	// the drop operation to complete before posting the submenu id and 
 	// allowing the user to place the new bookmark.  This will happen
@@ -229,26 +230,50 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 	if (XfeIsCascade(_dropWidget))
 	{
 		BM_Entry * entry = (BM_Entry *) XfeUserData(_dropWidget);
-
-// 		XP_ASSERT( entry != NULL );
-// 		XP_ASSERT( BM_IsHeader(entry) );
-
-		// If the folder is empty, then just add the new bm to it
-		if (entry && BM_IsHeader(entry) && !BM_GetChildren(entry))
+		
+		if (entry != NULL)
 		{
-			_personalToolbar->addEntryToFolder(address,
-											   guessed_title,
-											   lastAccess,
-											   entry);
-			
-			_dropWidget = NULL;
-		}
-		// Otherwise need to popup the bookmark placement gui later
-		else
-		{
-			_personalToolbar->setDropAddress(address);
-			_personalToolbar->setDropTitle(guessed_title);
-			_personalToolbar->setDropLastAccess(lastAccess);
+			if (location == XmINDICATOR_LOCATION_BEGINNING)
+			{
+				_personalToolbar->addEntryBefore(address,
+												 guessed_title,
+												 lastAccess,
+												 entry);
+
+				// Clear drop widget so dropComplete() does not get hosed
+				_dropWidget = NULL;
+			}
+			else if (location == XmINDICATOR_LOCATION_END)
+			{
+				_personalToolbar->addEntryAfter(address,
+												guessed_title,
+												lastAccess,
+												entry);
+
+				// Clear drop widget so dropComplete() does not get hosed
+				_dropWidget = NULL;
+			}
+			else if (location == XmINDICATOR_LOCATION_MIDDLE)
+			{
+				// If the folder is empty, then just add the new bm to it
+				if (BM_IsHeader(entry) && !BM_GetChildren(entry))
+				{
+					_personalToolbar->addEntryToFolder(address,
+													   guessed_title,
+													   lastAccess,
+													   entry);
+					
+					// Clear drop widget so dropComplete() does not get hosed
+					_dropWidget = NULL;
+				}
+				// Otherwise need to popup the bookmark placement gui later
+				else
+				{
+					_personalToolbar->setDropAddress(address);
+					_personalToolbar->setDropTitle(guessed_title);
+					_personalToolbar->setDropLastAccess(lastAccess);
+				}
+			}
 		}
 	}
 	// If the drop occurred on a button, then we add the new bookmark
@@ -259,24 +284,35 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 
 		if (entry)
 		{
-			_personalToolbar->addEntryBefore(address,
-											 guessed_title,
-											 lastAccess,
-											 entry);
+			if (location == XmINDICATOR_LOCATION_BEGINNING)
+			{
+				_personalToolbar->addEntryBefore(address,
+												 guessed_title,
+												 lastAccess,
+												 entry);
+			}
+			else if (location == XmINDICATOR_LOCATION_END)
+			{
+				_personalToolbar->addEntryAfter(address,
+												guessed_title,
+												lastAccess,
+												entry);
+			}
+			else
+			{
+				_personalToolbar->addEntry(address,guessed_title,lastAccess);
+			}
 		}
-		else
-		{
-			_personalToolbar->addEntry(address,guessed_title,lastAccess);
-		}
-
+		
 		// Clear the drop widget so that dropComplete() does not get hosed
 		_dropWidget = NULL;
  	}
-	// If the drop occurred anywhere else on the personal toolbar, then
-	// we simple add the new bookmark at the end of the toolbar.
-	else if (XfeIsToolBar(_dropWidget))
+	// Other toolbar items - should not get here
+	else
 	{
-		_personalToolbar->addEntry(address,guessed_title,lastAccess);
+		// Separators (and maybe other items) are going to be a problem
+		// hmmmm...
+		XP_ASSERT( 0 );
 
 		// Clear the drop widget so that dropComplete() does not get hosed
 		_dropWidget = NULL;
@@ -286,6 +322,8 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 /* virtual */ void
 XFE_PersonalDrop::dropComplete()
 {
+	_personalToolbar->clearDropTargetItem();
+
 	// If the drop widget is still alive and kicking, it means that a drop
 	// occurred on a cascade item.  Here we deal with this unique case.
 	if (XfeIsAlive(_dropWidget) && XfeIsSensitive(_dropWidget))
@@ -327,59 +365,37 @@ XFE_PersonalDrop::dragIn()
 /* virtual */ void
 XFE_PersonalDrop::dragOut()
 {
-	_dropWidget = NULL;
+    _dropWidget = _personalToolbar->getDropTargetItem();
 
-	if (XfeIsAlive(_lastRaisedWidget))
-	{
-		XtVaSetValues(_lastRaisedWidget,XmNraised,False,NULL);
-
-		_dropWidget = _lastRaisedWidget;
-	}
-
-	_lastRaisedWidget = NULL;
+	_personalToolbar->clearDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_PersonalDrop::dragMotion()
 {
-	Widget raised = getRaisedWidget();
-
-	if (raised == _lastRaisedWidget)
-	{
-		return;
-	}
-
-	if (XfeIsAlive(_lastRaisedWidget))
-	{
-		XtVaSetValues(_lastRaisedWidget,XmNraised,False,NULL);
-	}
-
-	_lastRaisedWidget = raised;
-
-	if (XfeIsAlive(_lastRaisedWidget))
-	{
-		XtVaSetValues(_lastRaisedWidget,XmNraised,True,NULL);
-	}
-}
-//////////////////////////////////////////////////////////////////////////
-Widget
-XFE_PersonalDrop::getRaisedWidget()
-{
-	Widget raised = XfeDescendantFindByCoordinates(_widget,
+	Widget target = XfeDescendantFindByCoordinates(_widget,
 												   _dropEventX,
 												   _dropEventY);
 
-	if (!raised)
-	{
-		raised = _widget;
+    if (XfeIsAlive(target))
+    {
+		_personalToolbar->setDropTargetItem(target,_dropEventX - XfeX(target));
+    }
+    else
+    {
+		target = _personalToolbar->getLastItem();
+
+		if (XfeIsAlive(target))
+		{
+			_personalToolbar->setDropTargetItem(target,1000);
+		}
+		else
+		{
+			_personalToolbar->clearDropTargetItem();
+		}
 	}
 
-	if (!XfeIsSensitive(raised))
-	{
-		raised = _widget;
-	}
-
-	return raised;
+    _dropWidget = _personalToolbar->getDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
 

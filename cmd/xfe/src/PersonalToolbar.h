@@ -50,12 +50,19 @@ public:
 
 	// Access methods
 	Widget			getToolBarWidget	();
+	Widget			getLastItem			();
 
 	void			setRaised			(XP_Bool);
 
 	void			addEntry				(const char *	address,
 											 const char *	title,
 											 BM_Date		lastAccess);
+	// DND feedback methods
+	Widget			getDropTargetItem		();
+	unsigned char	getDropTargetLocation	();
+
+	void 			setDropTargetItem		(Widget	item,int x);
+	void 			clearDropTargetItem		();
 
 	static void			setToolbarFolder		(BM_Entry *		entry,
 												 XP_Bool		notify);
@@ -84,6 +91,11 @@ private:
 	Widget				m_toolBar;			// The toolbar 
 	XFE_PersonalDrop *  m_dropSite;			// The proxy icon drop site
 	BM_Entry *			m_toolBarFolder;	// The toolbar folder
+
+	// DND feedback members
+	Widget				m_dropTargetItem;		// The drop target item
+	unsigned char		m_dropTargetLocation;	// The drop target location
+	int					m_dropTargetPosition;	// The drop target position
 
 	void			destroyToolbarWidgets			();
 

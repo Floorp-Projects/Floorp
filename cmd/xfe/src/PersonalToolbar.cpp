@@ -44,6 +44,7 @@
 #include "prefapi.h"
 
 #include <Xfe/ToolItem.h>
+#include <Xfe/ToolBar.h>
 
 #define DEFAULT_TOOLBAR_FOLDER_NAME		"Personal Toolbar Folder"
 #define MIN_TOOLBAR_HEIGHT				26
@@ -66,6 +67,8 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 	XFE_ToolboxItem(frame,parent_toolbox),
 	XFE_BookmarkBase(bookmarkContext,frame,False,True),
 	m_toolBarFolder(NULL),
+	m_dropTargetItem(NULL),
+	m_dropTargetLocation(XmINDICATOR_LOCATION_NONE),
 	m_popup(NULL)
 {
 	XP_ASSERT( name != NULL );
@@ -92,7 +95,7 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 								XmNchildForceHeight,		True,
 								XmNchildUsePreferredWidth,	True,
 								XmNchildUsePreferredHeight,	False,
-								XmNminHeight,				MIN_TOOLBAR_HEIGHT,
+//								XmNminHeight,				MIN_TOOLBAR_HEIGHT,
 								NULL);
 	
 	// Create the logo
@@ -420,6 +423,12 @@ XFE_PersonalToolbar::getToolBarWidget()
 	return m_toolBar;
 }
 //////////////////////////////////////////////////////////////////////////
+Widget
+XFE_PersonalToolbar::getLastItem()
+{
+	return XfeToolBarGetLastItem(m_toolBar);
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_PersonalToolbar::setRaised(XP_Bool state)
 {
@@ -469,7 +478,7 @@ XFE_PersonalToolbar::destroyToolbarWidgets()
 	{
 		XtUnmanageChildren(children,num_children);
       
-		fe_DestroyWidgetTree(children,num_children);
+		XfeDestroyMenuWidgetTree(children,num_children,True);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -582,6 +591,52 @@ XFE_PersonalToolbar::getToolbarFolderName()
 
 
 //
+// DND feedback methods
+//
+Widget
+XFE_PersonalToolbar::getDropTargetItem()
+{
+	return m_dropTargetItem;
+}
+//////////////////////////////////////////////////////////////////////////
+unsigned char
+XFE_PersonalToolbar::getDropTargetLocation()
+{
+	return m_dropTargetLocation;
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_PersonalToolbar::setDropTargetItem(Widget item,int x)
+{
+	assert( XfeIsAlive(item) );
+
+	m_dropTargetItem = item;
+	
+	m_dropTargetLocation = XfeToolBarXYToIndicatorLocation(m_toolBar,
+														   m_dropTargetItem,
+														   x,0);
+	
+	int position = XfeChildGetIndex(m_dropTargetItem);
+
+	XtVaSetValues(m_toolBar,
+				  XmNindicatorPosition,		position,
+				  XmNindicatorLocation,		m_dropTargetLocation,
+				  NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_PersonalToolbar::clearDropTargetItem()
+{
+	m_dropTargetItem = NULL;
+
+	XtVaSetValues(m_toolBar,
+				  XmNindicatorPosition,		XmINDICATOR_DONT_SHOW,
+				  NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+
+
+//
 // Popup menu stuff
 //
 /* static */ void
@@ -621,3 +676,4 @@ XFE_PersonalToolbar::handlePopup(Widget w,XEvent * event)
 //	BM_Entry * entry;
 }
 //////////////////////////////////////////////////////////////////////////
+

@@ -80,10 +80,7 @@ protected:
 private:
 
     XFE_PersonalToolbar *	_personalToolbar;
-	Widget					_lastRaisedWidget;
 	Widget					_dropWidget;
-
-	Widget			getRaisedWidget();
 };
 
 //
