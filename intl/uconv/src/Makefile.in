@@ -39,6 +39,7 @@ CPPSRCS		= \
                   nsUNIXCharset.cpp \
                   nsCharsetAliasImp.cpp \
                   nsUConvDll.cpp \
+                  nsURLProperties.cpp \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
