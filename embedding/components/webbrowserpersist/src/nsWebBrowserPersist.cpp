@@ -2980,6 +2980,10 @@ nsWebBrowserPersist::SaveSubframeContent(
     mCurrentThingsToPersist++;
     SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
 
+    // Store the updated uri to the frame
+    aData->mFile = frameURI;
+    aData->mSubFrameExt.Truncate(); // we already put this in frameURI
+
     return NS_OK;
 }
 
