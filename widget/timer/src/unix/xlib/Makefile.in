@@ -42,6 +42,11 @@ MODULE_NAME	= nsXlibTimerModule
 CPPSRCS		+= nsTimerXlibFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_XLIB_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
+# If not primary toolkit, install in secondary path
+ifneq (xlib, $(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= $(MOZ_XLIB_CFLAGS) -I$(srcdir)/..

@@ -41,6 +41,11 @@ MODULE_NAME	= nsGtkTimerModule
 CPPSRCS		+= nsTimerGtkFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_GTK_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
+# If not primary toolkit, install in secondary path
+ifneq (gtk, $(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= $(MOZ_GTK_CFLAGS) -I$(srcdir)/..

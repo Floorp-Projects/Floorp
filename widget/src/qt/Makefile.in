@@ -79,6 +79,11 @@ EXTRA_DSO_LDOPTS = \
 
 EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_QT_LDFLAGS) $(MOZ_XLIB_LDFLAGS)
 
+# If not primary toolkit, install in secondary path
+ifneq (qt,$(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
@@ -100,7 +105,8 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
  
-INCLUDES	+= -I$(srcdir)/../xpwidgets \
+LOCAL_INCLUDES	= -I$(srcdir)/../xpwidgets \
 		   -I$(srcdir) \
 		   -I$(topsrcdir)/gfx/src/qt \
 		   $(NULL)
+

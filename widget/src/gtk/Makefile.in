@@ -78,6 +78,11 @@ EXTRA_DSO_LDOPTS = \
 
 EXTRA_DSO_LDOPTS +=  -L$(DIST)/lib -lgtksuperwin $(MOZ_GTK_LDFLAGS)
 
+# If not primary toolkit, install in secondary path
+ifneq (gtk,$(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
@@ -99,7 +104,7 @@ DEFINES		+= -D_TIME_H=1
 endif
 endif
 
-INCLUDES	+= \
+LOCAL_INCLUDES	= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
 		-I$(topsrcdir)/gfx/src/gtk \
@@ -112,3 +117,5 @@ ICON_FILES	= \
 
 install::
 	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
+
+

@@ -385,6 +385,17 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
+# Allow components to be installed into a secondary path 
+# that is not searched by xpcom.
+ifndef COMPONENTS_PATH
+ifdef INACTIVE_COMPONENT
+COMPONENTS_PATH = components_inactive
+else
+COMPONENTS_PATH = components
+endif
+endif
+
+#
 # MacOS X specific stuff
 #
 
@@ -574,7 +585,7 @@ ifeq ($(OS_ARCH),OS2)
 	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 else
 ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/components
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
 else
 	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
@@ -587,13 +598,13 @@ endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/components
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
 else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
-	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
+	$(ELF_DYNSTR_GC) $(DIST)/lib/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
 endif
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
-	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/$(COMPONENTS_PATH)
+	$(ELF_DYNSTR_GC) $(DIST)/bin/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
@@ -1274,7 +1285,7 @@ $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
 
 install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
 
 endif
 
