@@ -176,9 +176,16 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
   int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.GetUnicode()), 0);
+  if ( uLen > 0 ) {
+    uLen += 5;      // Allow for the "extra" chars UniStrxfrm() will out put
+                    // (overrunning the buffer if you let it...)
+    uLen *= 2;      // And then adjust uLen to be the size in bytes,
+                    // not unicode character count
+  } else {
+    uLen = 0;
+  }  
+  *outLen = uLen;
   UniFreeLocaleObject(locObj);
-  
-  *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
   return res;
 }
 
@@ -198,9 +205,56 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
 
-  int length = UniStrlen(NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()));
-  int uLen = UniStrxfrm(locObj, (UniChar*)key, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()), length);
-  *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
+  res = NS_ERROR_FAILURE;               // From here on out assume failure...
+  int length = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()),0);
+  if (length >= 0) {
+    length += 5;                        // Allow for the "extra" chars UniStrxfrm()
+                                        //  will out put (overrunning the buffer if
+                                        // you let it...)
+    // Magic, persistant buffer.  If it's not twice the size we need,
+    // we grow/reallocate it 4X so it doesn't grow often.
+    static UniChar* pLocalBuffer = NULL;
+    static int iBufferLength = 100;
+    if (iBufferLength < length*2) {
+      if ( pLocalBuffer ) {
+        free(pLocalBuffer);
+        pLocalBuffer = nsnull;
+      }
+      iBufferLength = length*4;
+    }
+    if (!pLocalBuffer)
+      pLocalBuffer = (UniChar*) malloc(sizeof(UniChar) * iBufferLength);
+    if (pLocalBuffer) {
+      // Do the Xfrm
+      int uLen = UniStrxfrm(locObj, pLocalBuffer, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()), iBufferLength);
+      // See how big the result really is
+      uLen = UniStrlen(pLocalBuffer);
+      // make sure it will fit in the output buffer...
+      if (uLen < length)
+          // Success!
+          // Give 'em the real size in bytes...
+          *outLen = uLen * 2;
+          // And copy the string, byte reversed, so that it can be
+          // memcmp'ed
+          char *srcLow, *srcHi, *dst;
+          srcLow = (char*) pLocalBuffer;
+          srcHi = srcLow+1;
+          dst = (char*) key;
+          while( uLen ) {
+            *dst = *srcHi;
+            dst++;
+            *dst = *srcLow;
+            dst++;
+            srcLow += 2;
+            srcHi += 2;
+            uLen--;
+          }
+          *dst = 0;
+          dst++;
+          *dst = 0;
+          res = NS_OK;
+    }
+  }
   UniFreeLocaleObject(locObj);
 
   return res;
