@@ -1,23 +1,27 @@
 <!-- extracted from content/pref-cache.xul -->
 
 <!--LOCALIZATION NOTE : FILE Cache prefs dialog -->
-<!ENTITY  title.label "Cache">
-<!ENTITY  lHeader "Cache">
-<!ENTITY  rHeader "Designate the size of the cache">
-<!ENTITY cachePara "The cache is used to keep local copies of frequently accessed documents
-	  and thus reduce time connected to the network. The Reload button will always
-	  compare the cache document to the network and show the most recent one.">
-<!ENTITY memCache "Memory Cache:">
-<!ENTITY diskCache "Disk Cache:">
-<!ENTITY kbyes "KBytes">
-<!ENTITY diskCacheFolder "Disk Cache Folder:">
-<!ENTITY clearMemcacheButton.label "Clear Memory Cache">
-<!ENTITY clearDiskcacheButton.label "Clear Disk Cache">
-<!ENTITY docCache "Document in cache is compared to document on network:">
-<!ENTITY chooseFolder "Choose Folder...">
-<!ENTITY oncePsessionRadio.label "Once per session">
-<!ENTITY oncePsessionRadio.accesskey "o">
-<!ENTITY everyTimeRadio.label "Every time">
-<!ENTITY everyTimeRadio.accesskey "e">
-<!ENTITY neverRadio.label "Never">
-<!ENTITY neverRadio.accesskey "n">
+<!ENTITY  title.label                   "Cache">
+<!ENTITY  lHeader                       "Cache">
+<!ENTITY  rHeader                       "Designate the size of the cache">
+<!ENTITY  cachePara                     "The cache is used to keep local copies of frequently accessed documents and thus reduce time connected to the network. The Reload button will always compare the cache document to the network and show the most recent one.">
+<!ENTITY  memCache.label                "Memory Cache:">
+<!ENTITY  memCache.accesskey            "m">
+<!ENTITY  diskCache.label               "Disk Cache:">
+<!ENTITY  diskCache.accesskey           "d">
+<!ENTITY  kbyes                         "KBytes">
+<!ENTITY  diskCacheFolder.label         "Disk Cache Folder:">
+<!ENTITY  diskCacheFolder.accesskey     "h">
+<!ENTITY  clearMemCache.label           "Clear Memory Cache">
+<!ENTITY  clearMemCache.accesskey       "c">
+<!ENTITY  clearDiskCache.label          "Clear Disk Cache">
+<!ENTITY  clearDiskCache.accesskey      "l">
+<!ENTITY  docCache                      "Document in cache is compared to document on network:">
+<!ENTITY  chooseFolder.label            "Choose Folder...">
+<!ENTITY  chooseFolder.accesskey        "f">
+<!ENTITY  oncePsessionRadio.label       "Once per session">
+<!ENTITY  oncePsessionRadio.accesskey   "o">
+<!ENTITY  everyTimeRadio.label          "Every time">
+<!ENTITY  everyTimeRadio.accesskey      "e">
+<!ENTITY  neverRadio.label              "Never">
+<!ENTITY  neverRadio.accesskey          "n">

@@ -3,36 +3,17 @@
 <!--LOCALIZATION NOTE : FILE 'Composer' prefs dialog. Similar to Communcator 4.x Document Properties/Colors and Background -->
 
 <!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
-<!ENTITY  title.label "Composer">
-<!ENTITY  title2.label "Editing">
-<!ENTITY  lHeader "Composer">
-<!ENTITY  rHeader "Set preferences for authoring of new Web pages">
-<!ENTITY  rHeader2 "Set editing preferences for authoring of Web pages">
-<!ENTITY  authorName "Author Name">
-<!--LOCALIZATION NOTE (AutoSaveCheck.label): Edit box appears between these two strings. Translators may need to alter the word order over the two strings according to locale. -->
-<!ENTITY  AutoSaveCheck.label "Automatically save page every">
-<!--LOCALIZATION NOTE (minText): Edit box appears between these two strings. Translators may need to alter the word order over the two strings according to locale. -->
-<!ENTITY  minText "minutes">
-<!ENTITY  exterLegend.label "External Editors">
-<!ENTITY  htmlSource "HTML Source:">
-<!ENTITY  imageeditor.label "Images:">
-<!ENTITY  chooseButton.label "Choose...">
-<!ENTITY  pageColorHeader "Default Page Colors">
-<!ENTITY  backgroundImage.label "Background Image">
-<!ENTITY  UseNavigatorColor.label "Reset to Navigator's Colors">
-<!ENTITY  NormalText.label "Normal Text">
-<!ENTITY  LinkText.label "Link Text">
-<!ENTITY  ActiveLinkText.label "Active Link Text">
-<!ENTITY  FollowedLinkText.label "Followed Link Text">
-<!ENTITY  BackgroundColor.label "Background">
-<!--LOCALIZATION NOTE (colorPick): DONT_TRANSLATE -->
-<!ENTITY  colorPick "ColorPicker">
+<!ENTITY  title.label               "Composer">
+<!ENTITY  lHeader                   "Composer">
+<!ENTITY  rHeader                   "Settings for authoring of new Web pages">
 
-<!--LOCALIZATION NOTE: the following strings are not finalized -->
-<!ENTITY  maintainTableStructure.label "Maintain table structure during delete tasks">
-<!ENTITY  returnkey.label "Pressing [Return] key inserts:">
-<!ENTITY  enterkey.label "Pressing [Enter] key inserts:">
-<!ENTITY  returnkeyradio0.label "&lt;BR&gt; (mail compose rules)">
-<!ENTITY  returnkeyradio1.label "&lt;P&gt; HTML Paragraphs (blank space)">
-<!ENTITY  returnkeyradio2.label "&lt;P&gt; and CSS to suppress blank space">
-<!ENTITY  returnkeyradio3.label "&lt;DIV&gt; to suppress blank space">
+<!ENTITY  tableEditing.label                    "Table Editing">
+
+<!ENTITY  maintainTableStructure.label          "Maintain table structure during delete tasks">
+<!ENTITY  maintainStructure.accesskey           "m">
+
+<!ENTITY  pressingTheDeleteKey.label            "Pressing the [Delete] key should">
+<!ENTITY  deleteCell.label                      "delete cell (content and structure)">
+<!ENTITY  deleteCell.accesskey                  "s">
+<!ENTITY  deleteContent.label                   "delete only cell content">
+<!ENTITY  deleteContent.accesskey               "c">

@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_SKIN = \
 		$(srcdir)/pref.css \
-		$(srcdir)/preftree.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

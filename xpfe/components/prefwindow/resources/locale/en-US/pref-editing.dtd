@@ -1,0 +1,47 @@
+<!ENTITY  returnkey.label           "Pressing [Return] key inserts:">
+<!ENTITY  enterkey.label            "Pressing [Enter] key inserts:">
+<!ENTITY  insertBR.label            "&lt;BR&gt; (mail compose rules)">
+<!ENTITY  insertBRe.accesskey       "b">
+<!ENTITY  insertBRr.accesskey       "r">
+<!ENTITY  insertP.label             "&lt;P&gt; HTML Paragraphs (blank space)">
+<!ENTITY  insertPe.accesskey        "p">
+<!ENTITY  insertPr.accesskey        "h">
+<!ENTITY  insertPCSS.label          "&lt;P&gt; and CSS to suppress blank space">
+<!ENTITY  insertPCSSe.accesskey     "c">
+<!ENTITY  insertPCSSr.accesskey     "s">
+<!ENTITY  insertDIV.label           "&lt;DIV&gt; to suppress blank space">
+<!ENTITY  insertDIVe.accesskey      "d">
+<!ENTITY  insertDIVr.accesskey      "v">
+
+<!ENTITY  keyMappings.label         "Keyboard mappings">
+
+<!ENTITY  lHeader                   "New Page Settings">
+<!ENTITY  rHeader                   "Defaults for new pages">
+
+<!ENTITY  authorName.label          "Author:">
+<!ENTITY  authorName.accesskey      "a">
+<!ENTITY  pageColorHeader           "Default Page Colors">
+
+<!ENTITY  NormalText.label          "Normal text:">
+<!ENTITY  NormalText.accesskey      "n">
+<!ENTITY  LinkText.label            "Link text:">
+<!ENTITY  LinkText.accesskey        "l">
+<!ENTITY  ActiveLinkText.label      "Active link text:">
+<!ENTITY  ActiveLinkText.accesskey  "c">
+<!ENTITY  FollowedLinkText.label    "Followed link text:">
+<!ENTITY  FollowedLinkText.accesskey "f">
+<!ENTITY  BackgroundColor.label     "Background color:">
+<!ENTITY  BackgroundColor.accesskey "b">
+
+<!ENTITY  UseDefaults.label         "Use Default Colors">
+<!ENTITY  UseDefaults.accesskey     "d">
+
+<!ENTITY  useNavigator.label        "Use browser colors (don't specify)">
+<!ENTITY  useNavigator.accesskey    "w">
+<!ENTITY  useCustomColors.label     "Use custom colors:">
+<!ENTITY  useCustomColors.accesskey "u">
+
+<!ENTITY  defaultBackgroundImage.label      "Default Background image:">
+<!ENTITY  defaultBackgroundImage.accesskey  "g">
+<!ENTITY  chooseFile.label                  "Choose File...">
+<!ENTITY  chooseFile.accesskey              "o">

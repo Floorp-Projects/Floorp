@@ -25,7 +25,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
   $(MAKE_INSTALL) pref.css  $(DIST)\bin\chrome\communicator\skin\pref
-  $(MAKE_INSTALL) preftree.css  $(DIST)\bin\chrome\communicator\skin\pref
 
 clobber::
   rm -f $(DIST)\bin\chrome\communicator\skin\pref\*.*

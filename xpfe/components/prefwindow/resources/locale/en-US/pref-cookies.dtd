@@ -1,32 +1,30 @@
-<!-- LOCALIZATION NOTE : FILE Cookie management prefs -->
 
-<!ENTITY window.title "Cookies">
-<!ENTITY window.titleWithImages "Cookies/Images">
-<!ENTITY lHeader "Cookies">
-<!ENTITY lHeaderWithImages "Cookies/Images">
-<!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
-<!ENTITY rHeader "Manage cookies stored on your computer">
-<!ENTITY rHeaderWithImages "Manage cookies/images stored on your computer">
-<!ENTITY cookies "Cookies">
-<!ENTITY accAllCookiesRadio.label "Accept all cookies">
-<!ENTITY accAllCookiesRadio.accesskey "a">
-<!ENTITY accpOrgCookiesRadio.label "Accept cookies that get sent back to the originating server only">
-<!ENTITY accpOrgCookiesRadio.accesskey "o">
-<!ENTITY disCookRadio.label "Reject all cookies">
-<!ENTITY disCookRadio.accesskey "r">
-<!ENTITY warnCookCheck.label "Warn me before accepting a cookie">
-<!ENTITY warnCookCheck.accesskey "w">
-<!ENTITY cookieDetails "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
-<!ENTITY viewCookies.label "View Stored Cookies">
+<!ENTITY window.title                   "Cookies/Images">
+<!ENTITY lHeader                        "Cookies/Images">
+<!ENTITY remSignCheck.label             "Automatically prefill usernames and passwords">
+<!ENTITY rHeader                        "Control how cookies and images are handled.">
+<!ENTITY cookies                        "Cookies">
+<!ENTITY accAllCookiesRadio.label       "Accept all cookies">
+<!ENTITY accAllCookiesRadio.accesskey   "a">
+<!ENTITY accOrgCookiesRadio.label       "Accept cookies that get sent back to the originating server only">
+<!ENTITY accOrgCookiesRadio.accesskey   "o">
+<!ENTITY disableCookies.label           "Reject all cookies">
+<!ENTITY disableCookies.accesskey       "r">
+<!ENTITY warnAboutCookies.label         "Warn me before accepting a cookie">
+<!ENTITY warnAboutCookies.accesskey     "w">
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
+<!ENTITY viewCookies.label              "View Stored Cookies">
+<!ENTITY viewCookies.accesskey          "v">
 
-<!ENTITY images "Images">
-<!ENTITY imageDetails "Images are the pictures that websites display on your computer.">
-<!ENTITY accAllImagesRadio.label "Accept all images">
-<!ENTITY accAllImagesRadio.accesskey "a">
-<!ENTITY accpOrgImagesRadio.label "Accept images that come from the originating site only">
-<!ENTITY accpOrgImagesRadio.accesskey "o">
-<!ENTITY disImagesRadio.label "Reject all images">
-<!ENTITY disImagesRadio.accesskey "r">
-<!ENTITY warnImagesCheck.label "Warn me before accepting an image">
-<!ENTITY warnImagesCheck.accesskey "w">
-<!ENTITY viewImages.label "View Image Sites">
+<!ENTITY images                         "Image Blocking">
+<!ENTITY imageDetails                   "Images are the pictures that websites display on your computer.">
+<!ENTITY accAllImagesRadio.label        "Accept all images">
+<!ENTITY accAllImagesRadio.accesskey    "i">
+<!ENTITY accOrgImagesRadio.label        "Accept images that come from the originating server only">
+<!ENTITY accOrgImagesRadio.accesskey    "n">
+<!ENTITY disableImages.label            "Do not load any images">
+<!ENTITY disableImages.accesskey        "y">
+<!ENTITY warnAboutImages.label          "Warn me before accepting an image">
+<!ENTITY warnAboutImages.accesskey      "e">
+<!ENTITY viewImages.label               "View Image Sites">
+<!ENTITY viewImages.accesskey           "s">

@@ -1,29 +1,35 @@
-<!-- extracted from content/pref-navigator.xul -->
 
-<!--LOCALIZATION NOTE : FILE Navigator prefs screen -->
-<!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
-<!ENTITY  title.label "Navigator">
-<!ENTITY  lHeader "Navigator">
-<!ENTITY  rHeader "Specify the home page location">
-<!ENTITY  navRadio "Navigator starts with">
-<!ENTITY  blankRadio "Blank page">
-<!ENTITY  header2.label "Home page">
-<!ENTITY  lastPageRadio "Last page visited">
-<!ENTITY  homepageRadio "Home page">
-<!ENTITY  clickRadio "Clicking the Home button will take you to this page.">
-<!ENTITY  location "Location:">
-<!ENTITY  useCurrent "Use Current Page">
-<!ENTITY  browseFile "Choose File...">
-<!ENTITY  browseBookmarks "Choose from Bookmarks...">
-<!ENTITY  header3.label "History">
-<!ENTITY  historyPages "List of the pages you have previously visited.">
-<!--LOCALIZATION NOTE (histDay): DONT_TRANSLATE -->
-<!ENTITY  histDay "9">
-<!ENTITY  daysRadio "days">
-<!ENTITY  homepageRadio "Homepage">
-<!ENTITY  pagesHis "Pages in history expire after:">
-<!ENTITY  clearRadio "Clear the list of sites on the location bar: ">
-<!ENTITY  clearHis "Clear History">
-<!ENTITY  header4.label "Location Bar History">
-<!ENTITY  clearBar "Clear the list of sites on the location bar:">
-<!ENTITY  clearLoc "Clear Location Bar">
+<!ENTITY  title.label               "Navigator">
+<!ENTITY  lHeader                   "Navigator">
+<!ENTITY  rHeader                   "Homepage and history settings">
+
+<!ENTITY  navRadio                  "Navigator starts with">
+<!ENTITY  blankPageRadio.label      "Blank page">
+<!ENTITY  blankPageRadio.accesskey  "n">
+<!ENTITY  homePageRadio.label       "Home page">
+<!ENTITY  homePageRadio.accesskey   "h">
+<!ENTITY  lastPageRadio.label       "Last page visited">
+<!ENTITY  lastPageRadio.accesskey   "l">
+
+<!ENTITY  header2.label             "Home page">
+<!ENTITY  homePageIntro.label       "Clicking the Home button will take you to this page.">
+<!ENTITY  location.label            "Location:">
+<!ENTITY  location.accesskey        "a">
+<!ENTITY  useCurrent.label          "Use Current Page">
+<!ENTITY  useCurrent.accesskey      "u">
+<!ENTITY  browseFile.label          "Choose File...">
+<!ENTITY  browseFile.accesskey      "c">
+
+<!ENTITY  header3.label             "History">
+<!ENTITY  historyPages.label        "History is a list of pages you have previously visited.">
+<!ENTITY  pageHis.label             "Pages in history expire after:">
+<!ENTITY  pageHis.accesskey         "x">
+<!ENTITY  days.label                "days.">
+<!ENTITY  clearHistory.label        "Clear History">
+<!ENTITY  clearHistory.accesskey    "r">
+
+<!ENTITY  locationBarHistory.label  "Location Bar History">
+<!ENTITY  clearLocationBar.label    "Clear the list of sites stored in the location bar.">
+<!ENTITY  clearLocationBarButton.label      "Clear Location Bar">
+<!ENTITY  clearLocationBarButton.accesskey  "b">
+  

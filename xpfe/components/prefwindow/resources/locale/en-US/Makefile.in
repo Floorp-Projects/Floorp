@@ -27,8 +27,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/PrefsWindow.dtd \
 		$(srcdir)/pref-advanced.dtd \
+		$(srcdir)/pref-advanced-imageblocking.dtd \
 		$(srcdir)/pref-appearance.dtd \
 		$(srcdir)/pref-applications.dtd \
 		$(srcdir)/pref-cache.dtd \
@@ -36,13 +36,14 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-themes.dtd \
 		$(srcdir)/pref-charset.dtd \
 		$(srcdir)/pref-composer.dtd \
-		$(srcdir)/pref-cookies.dtd \
+		$(srcdir)/pref-editing.dtd \
 		$(srcdir)/pref-debug.dtd \
 		$(srcdir)/pref-download.dtd \
 		$(srcdir)/pref-fonts.dtd \
 		$(srcdir)/pref-languages.dtd \
 		$(srcdir)/pref-navigator.dtd \
 		$(srcdir)/pref-offline.dtd \
+		$(srcdir)/pref-policies.dtd \
 		$(srcdir)/pref-proxies.dtd \
 		$(srcdir)/pref-proxy-manual.dtd \
 		$(srcdir)/pref-publish.dtd \

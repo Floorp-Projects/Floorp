@@ -1,23 +1,50 @@
-<!-- extracted from content/pref-advanced.xul -->
 
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
-<!ENTITY window.title "Advanced">
-<!ENTITY lHeader "Advanced">
-<!ENTITY autoLoadImgCheck.label "Automatically load images"> 
-<!ENTITY autoLoadImgCheck.accesskey "i">
-<!--LOCALIZATION NOTE (enbJavaCheck.label): 'Java' should never be translated -->
-<!ENTITY enbJavaCheck.label "Enable Java">
-<!ENTITY enbJavaCheck.accesskey "j">
-<!--LOCALIZATION NOTE (enbJsCheck.label): 'JavaScript' should never be translated -->
-<!ENTITY enbJsCheck.label "Enable JavaScript in Navigator">
-<!ENTITY enbJsCheck.accesskey "r">
-<!ENTITY enbJsCheck.labelforMailNNews "Enable JavaScript for Mail and News">
-<!ENTITY enbJsCheck.accesskeyforMailNews "m">
-<!ENTITY enbCssCheck.label "Enable style sheets">
-<!ENTITY enbCssCheck.accesskey "s">
-<!ENTITY sendAddFtpCheck.label "Send email address as anonymous FTP password">
-<!ENTITY sendAddFtpCheck.accesskey "e">
-<!ENTITY rHeader "Changing preferences that affect the entire product">
-<!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
-<!ENTITY server.label "Server for wallet tables">
+<!ENTITY window.title                 "Advanced">
 
+<!ENTITY lHeader                      "Advanced">
+<!ENTITY rHeader                      "Changing preferences that affect the entire product">
+
+<!ENTITY autoLoadImgCheck.label       "Automatically load images"> 
+<!ENTITY autoLoadImgCheck.accesskey   "i">
+
+<!--LOCALIZATION NOTE (enbJavaCheck.label): 'Java' should never be translated -->
+<!ENTITY enbJavaCheck.label           "Enable Java">
+<!ENTITY enbJavaCheck.accesskey       "j">
+
+<!--LOCALIZATION NOTE (enbJsCheck.label): 'JavaScript' should never be translated -->
+<!ENTITY enbJsCheck.label             "Enable JavaScript in Navigator">
+<!ENTITY enbJsCheck.accesskey         "r">
+
+<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript for Mail and News">
+<!ENTITY enbJsCheckMailNews.accesskey "m">
+
+<!ENTITY enbCssCheck.label            "Enable style sheets">
+<!ENTITY enbCssCheck.accesskey        "s">
+
+<!ENTITY sendAddFtpCheck.label        "Send email address as anonymous FTP password">
+<!ENTITY sendAddFtpCheck.accesskey    "e">
+
+<!ENTITY imageBlocking.label          "Image Blocking...">
+<!ENTITY imageBlocking.accesskey      "b">
+
+<!-- cookies -->
+
+<!ENTITY cookies                        "Cookies">
+
+<!ENTITY accAllCookiesRadio.label       "Accept all cookies">
+<!ENTITY accAllCookiesRadio.accesskey   "a">
+
+<!ENTITY accOrgCookiesRadio.label       "Accept cookies that get sent back to the originating server only">
+<!ENTITY accOrgCookiesRadio.accesskey   "o">
+
+<!ENTITY disableCookies.label           "Reject all cookies">
+<!ENTITY disableCookies.accesskey       "r">
+
+<!ENTITY warnAboutCookies.label         "Warn me before accepting a cookie">
+<!ENTITY warnAboutCookies.accesskey     "w">
+
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
+
+<!ENTITY viewCookies.label              "View Stored Cookies">
+<!ENTITY viewCookies.accesskey          "v">

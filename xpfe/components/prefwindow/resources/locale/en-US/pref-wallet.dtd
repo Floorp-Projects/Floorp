@@ -1,18 +1,23 @@
-<!ENTITY window.title "Forms/Passwords">
-<!ENTITY lHeader "Forms/Passwords">
-<!ENTITY remSignCheck.label "Manage stored passwords and user names">
-<!ENTITY capFormsCheck.label "Enable prefilling of forms">
-<!ENTITY rHeader "Manage stored data about yourself">
-<!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
-<!ENTITY server.label "Server for tables">
-<!ENTITY walletHeader "Form Manager">
-<!ENTITY walletDetails "Form Manager stores personal information so that filling out forms on webpages is easier.">
-<!ENTITY viewWallet.label "View Stored Information">
-<!ENTITY signonHeader "Password Manager">
-<!ENTITY signonDetails "Password Manager stores your usernames and passwords for web sites that require you to log in, and enters them for you automatically when you visit those sites.">
-<!ENTITY viewSignons.label "View Stored Passwords">
-<!ENTITY signonEnabledCheck.label "Enable Password Manager.">
-<!ENTITY signonEnabledCheck.accesskey "s">
-<!ENTITY walletEnabledCheck.label "Save form data when submitting forms.">
-<!ENTITY walletEnabledCheck.accesskey "w">
-<!ENTITY changePasswords.label "Change Master Password">
+<!ENTITY  window.title                "SmartFill">
+<!ENTITY  lHeader                     "SmartFill">
+<!ENTITY  rHeader                     "Manage personal information and passwords">
+
+<!ENTITY  walletHeader.label          "&brandShortName; SmartFill">
+<!ENTITY  walletDescription.label     "&brandShortName; SmartFill can remember information about you so that filling out forms on webpages is faster.">
+<!ENTITY  walletServer.label          "Server for SmartFill tables:">
+<!ENTITY  walletServer.accesskey      "s">
+<!ENTITY  walletEnabled.label         "Save form data from webpages when completing forms.">
+<!ENTITY  walletEnabled.accesskey     "f">
+<!ENTITY  viewWallet.label            "View Saved Data...">
+<!ENTITY  viewWallet.accesskey        "v">
+
+<!ENTITY  signonHeader.label          "&brandShortName; Single Signon">
+<!ENTITY  signonDescription.label     "&brandShortName; Single Signon stores your usernames and passwords for sites that require you to log in, and enters them automatically when you visit those sites.">
+<!ENTITY  signonEnabled.label         "Remember passwords for sites that require me to log in.">
+<!ENTITY  signonEnabled.accesskey     "r">
+<!ENTITY  viewSignons.label           "View Saved Signons...">
+<!ENTITY  viewSignons.accesskey       "e">
+
+<!ENTITY  changePasswords.label       "Change SmartFill Password...">
+<!ENTITY  changePasswords.accesskey   "c">
+
