@@ -4648,7 +4648,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     }
     if (allowSubframes) {
       // make <noframes> be display:none if frames are enabled
-      nsStyleDisplay* mutdisplay = (nsStyleDisplay*)aStyleContext->GetUniqueStyleData(aPresContext, eStyleStruct_Display);
+      nsStyleDisplay* mutdisplay = (nsStyleDisplay*)aStyleContext->GetUniqueStyleData(eStyleStruct_Display);
       mutdisplay->mDisplay = NS_STYLE_DISPLAY_NONE;
       aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
     } 
