@@ -71,6 +71,7 @@ ifdef BUILD_OPT
 	OPTIMIZER  += -O2
 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
 	DLLFLAGS   += -OUT:"$@"
+	LDFLAGS    += /SUBSYSTEM:WINDOWS /NOLOGO
 else
 	#
 	# Define USE_DEBUG_RTL if you want to use the debug runtime library
