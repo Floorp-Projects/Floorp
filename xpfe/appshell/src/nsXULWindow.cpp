@@ -328,17 +328,7 @@ NS_IMETHODIMP nsXULWindow::GetPrimaryContentShell(nsIDocShellTreeItem**
    aDocShellTreeItem)
 {
   NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
-  *aDocShellTreeItem = nsnull;
-
-  PRInt32 count = mContentShells.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
-    if (shellInfo->primary) {
-      *aDocShellTreeItem = shellInfo->child;       
-      NS_IF_ADDREF(*aDocShellTreeItem);
-      return NS_OK;
-    }
-  }
+  NS_IF_ADDREF(*aDocShellTreeItem = mPrimaryContentShell);
   return NS_OK;
 }
 
@@ -522,6 +512,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       delete shellInfo;
    }
    mContentShells.Clear();
+   mPrimaryContentShell = nsnull;
 
    if(mContentTreeOwner) {
       mContentTreeOwner->XULWindow(nsnull);
@@ -1610,17 +1601,17 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   PRInt32 i;
   for (i = 0; i < count; i++) {
     nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
-    if (info->child == aContentShell) {
+    if (info->id.Equals(aID)) {
       // We already exist. Do a replace.
-      info->id = newID;
-      info->primary = aPrimary;
+      info->child = aContentShell;
       shellInfo = info;
-      break;
     }
+    else if (info->child == aContentShell)
+      info->child = nsnull;
   }
 
   if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(newID, aPrimary, aContentShell);
+    shellInfo = new nsContentShellInfo(newID, aContentShell);
     mContentShells.AppendElement((void*)shellInfo);
   }
     
@@ -1628,10 +1619,13 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   if (aPrimary) {
     NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
     aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
+    mPrimaryContentShell = aContentShell;
   }
   else {
     NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
     aContentShell->SetTreeOwner(mContentTreeOwner);
+    if (mPrimaryContentShell == aContentShell)
+      mPrimaryContentShell = nsnull;
   }
 
   return NS_OK;
@@ -1976,9 +1970,7 @@ void nsXULWindow::PlaceWindowLayersBehind(PRUint32 aLowLevel,
 
 void nsXULWindow::SetContentScrollbarVisibility(PRBool aVisible) {
 
-  nsCOMPtr<nsIDocShellTreeItem> content;
-  GetPrimaryContentShell(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(content));
+  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
   if (contentWin) {
     nsCOMPtr<nsIDOMBarProp> scrollbars;
     contentWin->GetScrollbars(getter_AddRefs(scrollbars));
@@ -1991,9 +1983,7 @@ PRBool nsXULWindow::GetContentScrollbarVisibility() {
 
   PRBool visible = PR_TRUE;
 
-  nsCOMPtr<nsIDocShellTreeItem> content;
-  GetPrimaryContentShell(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(content));
+  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
   if (contentWin) {
     nsCOMPtr<nsIDOMBarProp> scrollbars;
     contentWin->GetScrollbars(getter_AddRefs(scrollbars));
@@ -2080,10 +2070,8 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 //*****************************************************************************   
 
 nsContentShellInfo::nsContentShellInfo(const nsAString& aID,
-                                       PRBool aPrimary,
                                        nsIDocShellTreeItem* aContentShell)
   : id(aID),
-    primary(aPrimary),
     child(aContentShell)
 {
 }

@@ -145,7 +145,8 @@ protected:
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
    nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
-   nsVoidArray             mContentShells;
+   nsCOMPtr<nsIDocShellTreeItem> mPrimaryContentShell;
+   nsVoidArray             mContentShells; // array of doc shells by id
    nsresult                mModalStatus;
    PRPackedBool            mContinueModalLoop;
    PRPackedBool            mDebuting;       // being made visible right now
@@ -169,13 +170,11 @@ class nsContentShellInfo
 {
 public:
    nsContentShellInfo(const nsAString& aID,
-                      PRBool aPrimary,
                       nsIDocShellTreeItem* aContentShell);
    ~nsContentShellInfo();
 
 public:
    nsAutoString                  id;   // The identifier of the content shell
-   PRBool                        primary; // Signals the fact that the shell is primary
    nsCOMPtr<nsIDocShellTreeItem> child; // content shell
 };
 
