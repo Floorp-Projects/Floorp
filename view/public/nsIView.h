@@ -421,6 +421,13 @@ public:
    */
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
+  /**
+   * Set flags on view to allow customization of view behavior during
+   * event handling
+   * @param aFlags flags to be added to view
+   */
+  NS_IMETHOD SetViewFlags(PRInt32 aFlags) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
@@ -454,5 +461,9 @@ private:
 //of front to back and back to front painting, this flag will be set
 //while in the front to back pass
 #define NS_VIEW_FLAG_FRONT_TO_BACK  0x0040
+
+//Flag to determine whether the view will check if events can be handled
+//by its children or just handle the events itself
+#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
 
 #endif

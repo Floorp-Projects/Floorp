@@ -72,6 +72,7 @@ nsView :: nsView()
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
   mVFlags = ~ALL_VIEW_FLAGS;
+  mEventFlags = 0;
   mOpacity = 1.0f;
 }
 
@@ -740,9 +741,10 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
   aStatus = nsEventStatus_eIgnore;
+  PRBool handledByChild = PR_FALSE;
 
   //see if any of this view's children can process the event
-  if (aStatus == nsEventStatus_eIgnore) {
+  if (aStatus == nsEventStatus_eIgnore && !(mEventFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN)) {
     PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
@@ -760,6 +762,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
       if (trect.Contains(x, y))
       {
+        handledByChild = PR_TRUE;
         //the x, y position of the event in question
         //is inside this child view, so give it the
         //opportunity to handle the event
@@ -778,8 +781,8 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     }
   }
 
-  //if the view's children didn't take the event, check the view itself.
-  if ((aStatus == nsEventStatus_eIgnore) && (nsnull != mClientData))
+  //if no child's bounds matched the event, check the view itself.
+  if (!handledByChild && nsnull != mClientData)
   {
     nsIViewObserver *obs;
 
@@ -1250,6 +1253,12 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
+}
+
+NS_IMETHODIMP nsView :: SetViewFlags(PRInt32 aFlags)
+{
+  mVFlags &= aFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
