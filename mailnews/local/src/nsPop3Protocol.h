@@ -106,12 +106,13 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_CRAM_MD5      = 0x00002000,
     POP3_HAS_AUTH_APOP          = 0x00004000,
     POP3_HAS_AUTH_NTLM          = 0x00008000,
-    POP3_HAS_RESP_CODES         = 0x00010000,
-    POP3_HAS_AUTH_RESP_CODE     = 0x00020000
+    POP3_HAS_AUTH_MSN           = 0x00010000,
+    POP3_HAS_RESP_CODES         = 0x00020000,
+    POP3_HAS_AUTH_RESP_CODE     = 0x00040000
 };
 
 #define POP3_HAS_AUTH_ANY         0x00001C00
-#define POP3_HAS_AUTH_ANY_SEC     0x0000E000
+#define POP3_HAS_AUTH_ANY_SEC     0x0001E000
 
 enum Pop3StatesEnum {
     POP3_READ_PASSWORD,                         // 0

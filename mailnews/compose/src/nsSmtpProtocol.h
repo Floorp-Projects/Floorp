@@ -56,8 +56,8 @@ typedef enum _SmtpState {
 SMTP_RESPONSE = 0,                                  // 0
 SMTP_START_CONNECT,                                 // 1
 SMTP_FINISH_CONNECT,                                // 2
-SMTP_LOGIN_RESPONSE,                                // 3
-SMTP_SEND_HELO_RESPONSE,                            // 4
+SMTP_SEND_HELO_RESPONSE,                            // 3
+SMTP_SEND_EHLO_RESPONSE,                            // 4
 SMTP_SEND_VRFY_RESPONSE,                            // 5
 SMTP_SEND_MAIL_RESPONSE,                            // 6
 SMTP_SEND_RCPT_RESPONSE,                            // 7
@@ -67,11 +67,11 @@ SMTP_SEND_MESSAGE_RESPONSE,                         // 10
 SMTP_DONE,                                          // 11
 SMTP_ERROR_DONE,                                    // 12
 SMTP_FREE,                                          // 13
-SMTP_EXTN_LOGIN_RESPONSE,                           // 14
-SMTP_SEND_EHLO_RESPONSE,                            // 15
-SMTP_SEND_AUTH_LOGIN,                               // 16
-SMTP_SEND_AUTH_LOGIN_USERNAME,                      // 17
-SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 18
+SMTP_AUTH_LOGIN_STEP0_RESPONSE,                     // 14
+SMTP_EXTN_LOGIN_RESPONSE,                           // 15
+SMTP_SEND_AUTH_LOGIN_STEP0,                         // 16
+SMTP_SEND_AUTH_LOGIN_STEP1,                         // 17
+SMTP_SEND_AUTH_LOGIN_STEP2,                         // 18
 SMTP_AUTH_LOGIN_RESPONSE,                           // 19
 SMTP_TLS_RESPONSE,                                  // 20
 SMTP_AUTH_EXTERNAL_RESPONSE,                        // 21
@@ -106,8 +106,9 @@ SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 23
 #define SMTP_AUTH_CRAM_MD5_ENABLED      0x00000400
 #define SMTP_AUTH_DIGEST_MD5_ENABLED    0x00000800
 #define SMTP_AUTH_NTLM_ENABLED          0x00001000
-#define SMTP_AUTH_ANY_ENABLED           0x00001C1C
-#define SMTP_EHLO_SIZE_ENABLED          0x00002000
+#define SMTP_AUTH_MSN_ENABLED           0x00002000
+#define SMTP_AUTH_ANY_ENABLED           0x00003C1C
+#define SMTP_EHLO_SIZE_ENABLED          0x00004000
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -227,10 +228,10 @@ private:
     PRInt32 SendHeloResponse(nsIInputStream * inputStream, PRUint32 length);
     PRInt32 SendEhloResponse(nsIInputStream * inputStream, PRUint32 length);	
 
-    PRInt32 SendAuthLogin();
-    PRInt32 LoginResponse();
-    PRInt32 AuthLoginUsername();
-    PRInt32 AuthLoginPassword();
+    PRInt32 AuthLoginStep0();
+    PRInt32 AuthLoginStep0Response();
+    PRInt32 AuthLoginStep1();
+    PRInt32 AuthLoginStep2();
     PRInt32 AuthLoginResponse(nsIInputStream * stream, PRUint32 length);
 
     PRInt32 SendTLSResponse();

@@ -1134,6 +1134,13 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
         if (NS_SUCCEEDED(rv))
             SetCapFlag(POP3_HAS_AUTH_NTLM);
     }
+    else if (!PL_strcasecmp (line, "MSN"))
+    {
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+            SetCapFlag(POP3_HAS_AUTH_NTLM|POP3_HAS_AUTH_MSN);
+    }
     else if (!PL_strcasecmp (line, "PLAIN")) 
         SetCapFlag(POP3_HAS_AUTH_PLAIN);
     else if (!PL_strcasecmp (line, "LOGIN")) 
@@ -1298,7 +1305,7 @@ PRInt32 nsPop3Protocol::AuthFallback()
                 ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
             else if (TestCapFlag(POP3_HAS_AUTH_NTLM))
                 // if NTLM enabled, disable it
-                ClearCapFlag(POP3_HAS_AUTH_NTLM);
+                ClearCapFlag(POP3_HAS_AUTH_NTLM|POP3_HAS_AUTH_MSN);
             else if (TestCapFlag(POP3_HAS_AUTH_APOP))
             {
                 // if APOP enabled, disable it
@@ -1415,7 +1422,8 @@ PRInt32 nsPop3Protocol::AuthLoginResponse()
 // responds + to "AUTH NTLM"
 PRInt32 nsPop3Protocol::AuthNtlm()
 {
-    nsCAutoString command("AUTH NTLM" CRLF);
+    nsCAutoString command (TestCapFlag(POP3_HAS_AUTH_MSN) ? "AUTH MSN" CRLF :
+                                                            "AUTH NTLM" CRLF);
     m_pop3ConData->next_state_after_response = POP3_AUTH_NTLM_RESPONSE;
     m_pop3ConData->pause_for_read = PR_TRUE;
 
@@ -1430,7 +1438,7 @@ PRInt32 nsPop3Protocol::AuthNtlmResponse()
     if (!m_pop3ConData->command_succeeded) 
     {
         // we failed with NTLM, remove it
-        ClearCapFlag(POP3_HAS_AUTH_NTLM);
+        ClearCapFlag(POP3_HAS_AUTH_NTLM|POP3_HAS_AUTH_MSN);
 
         m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     }
