@@ -3189,7 +3189,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
       if (m_imapMessageSink)
         m_imapMessageSink->GetNotifyDownloadedLines(&echoLineToMessageSink);
     }
-    if (m_imapMessageSink && downloadLineDontDelete && echoLineToMessageSink)
+    if (m_imapMessageSink && downloadLineDontDelete && echoLineToMessageSink && !GetPseudoInterrupted())
     {
       m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
       downloadLineDontDelete->uidOfMessage);
