@@ -55,7 +55,9 @@ class nsFTPAsyncReadEvent : public nsAsyncEvent
 {
 public:
     nsFTPAsyncReadEvent(nsIStreamListener* listener, nsIChannel* channel, nsISupports* context);
-    virtual ~nsFTPAsyncReadEvent() {};
+    virtual ~nsFTPAsyncReadEvent() {
+        MOZ_COUNT_DTOR(nsFTPAsyncReadEvent);
+    }
 
     NS_IMETHOD HandleEvent();
 protected:
@@ -72,7 +74,9 @@ public:
                          nsIStreamObserver* observer,
                          nsIChannel* channel, 
                          nsISupports* context);
-    virtual ~nsFTPAsyncWriteEvent() {};
+    virtual ~nsFTPAsyncWriteEvent() {
+        MOZ_COUNT_DTOR(nsFTPAsyncWriteEvent);
+    }
 
     NS_IMETHOD HandleEvent();
 protected:
@@ -87,8 +91,13 @@ class nsFTPReleaseEvent : public nsAsyncEvent
 {
 public:
     nsFTPReleaseEvent(nsISupports *aRef)
-        : nsAsyncEvent(nsnull, nsnull) { mRef = aRef; };
-    virtual ~nsFTPReleaseEvent() {};
+        : nsAsyncEvent(nsnull, nsnull) {
+        MOZ_COUNT_CTOR(nsFTPReleaseEvent);
+        mRef = aRef;
+    }
+    virtual ~nsFTPReleaseEvent() {
+        MOZ_COUNT_DTOR(nsFTPReleaseEvent);
+    }
 
     // nothing to do but have the destructor called.
     NS_IMETHOD HandleEvent() { return NS_OK; };

@@ -76,7 +76,9 @@ nsFTPAsyncReadEvent::nsFTPAsyncReadEvent(nsIStreamListener* listener,
                                          nsIChannel* channel,
                                          nsISupports* context)
                     : nsAsyncEvent(channel, context), mListener(listener)
-{ }
+{
+    MOZ_COUNT_CTOR(nsFTPAsyncReadEvent);
+}
 
 NS_IMETHODIMP
 nsFTPAsyncReadEvent::HandleEvent()
@@ -93,6 +95,7 @@ nsFTPAsyncWriteEvent::nsFTPAsyncWriteEvent(nsIInputStream* inStream,
     : nsAsyncEvent(channel, context), mObserver(observer),
       mInStream(inStream), mWriteCount(writeCount)
 {
+    MOZ_COUNT_CTOR(nsFTPAsyncWriteEvent);
 }
 
 NS_IMETHODIMP
