@@ -54,6 +54,7 @@
 #include "prmem.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
@@ -1094,7 +1095,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           }
         }
         else {
-          // we didn't find a src or data param, so just set the url to the base
+          // we didn't find a src or data param, so just set the url
+          // to the base
+
           fullURL = baseURL;
         }
 
@@ -1708,7 +1711,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 // Screen painting code
 #if defined (XP_MAC)
   // delegate all painting to the plugin instance.
-  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && (nsnull != mInstanceOwner))
+  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
 #elif defined (XP_PC)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
@@ -2085,28 +2088,28 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   mOwner = nsnull;
 
   for (cnt = 0; cnt < (mNumCachedAttrs + 1 + mNumCachedParams); cnt++) {
-    if ((nsnull != mCachedAttrParamNames) && (nsnull != mCachedAttrParamNames[cnt])) {
+    if (mCachedAttrParamNames && mCachedAttrParamNames[cnt]) {
       PR_Free(mCachedAttrParamNames[cnt]);
       mCachedAttrParamNames[cnt] = nsnull;
     }
 
-    if ((nsnull != mCachedAttrParamValues) && (nsnull != mCachedAttrParamValues[cnt])) {
+    if (mCachedAttrParamValues && mCachedAttrParamValues[cnt]) {
       PR_Free(mCachedAttrParamValues[cnt]);
       mCachedAttrParamValues[cnt] = nsnull;
     }
   }
 
-  if (nsnull != mCachedAttrParamNames) {
+  if (mCachedAttrParamNames) {
     PR_Free(mCachedAttrParamNames);
     mCachedAttrParamNames = nsnull;
   }
 
-  if (nsnull != mCachedAttrParamValues) {
+  if (mCachedAttrParamValues) {
     PR_Free(mCachedAttrParamValues);
     mCachedAttrParamValues = nsnull;
   }
 
-  if (nsnull != mTagText) {
+  if (mTagText) {
     nsCRT::free(mTagText);
     mTagText = nsnull;
   }
@@ -2860,103 +2863,139 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 }
 
 
-// Cache the attributes and/or parameters of our tag into a single set of arrays
-// to be compatible with 4.x. The attributes go first, followed by a PARAM/null and 
-// then any PARAM tags. Also, hold the cached array around for the duration
-// of the life of the instance because 4.x did. See bug 111008.
+// Cache the attributes and/or parameters of our tag into a single set
+// of arrays to be compatible with 4.x. The attributes go first,
+// followed by a PARAM/null and then any PARAM tags. Also, hold the
+// cached array around for the duration of the life of the instance
+// because 4.x did. See bug 111008.
+
 nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 {
   if (mCachedAttrParamValues)
     return NS_OK;
 
-  NS_PRECONDITION((((mNumCachedAttrs + mNumCachedParams) == 0) && !mCachedAttrParamNames),
-                  "re-cache of attrs/params not implemented! use the DOM node directy instead");
+  NS_PRECONDITION(((mNumCachedAttrs + mNumCachedParams) == 0) &&
+                  !mCachedAttrParamNames,
+                  "re-cache of attrs/params not implemented! use the DOM "
+                  "node directy instead");
   NS_ENSURE_TRUE(mOwner, NS_ERROR_NULL_POINTER);
 
-  // first, we need to find out how much we need to allocate for our arrays
-  // count up attributes
+  // first, we need to find out how much we need to allocate for our
+  // arrays count up attributes
   mNumCachedAttrs = 0;
+
   nsCOMPtr<nsIContent> content; 
   nsresult rv = mOwner->GetContent(getter_AddRefs(content));
   NS_ENSURE_TRUE(content, rv);
+
   PRInt32 cattrs;
   rv = content->GetAttrCount(cattrs);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (cattrs < 0x0000FFFF)
-    mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);  // signed 32 bits to unsigned 16 bits conversion
-  else 
+
+  if (cattrs < 0x0000FFFF) {
+    // signed 32 bits to unsigned 16 bits conversion
+
+    mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);
+  } else { 
     mNumCachedParams = 0xFFFF;
+  }
 
   // now, we need to find all the PARAM tags that are children of us
-  // however, be carefull NOT to include any PARAMs that don't have us as a direct
-  // parent. For nested object (or applet) tags, be sure to only round up the
-  // param tags that coorespond with THIS instance. And also, weed out any bogus
-  // tags that may get in the way, see bug 39609. Then, with any param tag that meet our
-  // qualification, temporarly cache them in an nsISupportsArray until we can figure out
-  // what size to make our fixed char* array.
+  // however, be carefull NOT to include any PARAMs that don't have us
+  // as a direct parent. For nested object (or applet) tags, be sure
+  // to only round up the param tags that coorespond with THIS
+  // instance. And also, weed out any bogus tags that may get in the
+  // way, see bug 39609. Then, with any param tag that meet our
+  // qualification, temporarly cache them in an nsISupportsArray until
+  // we can figure out what size to make our fixed char* array.
+
   mNumCachedParams = 0;
   nsCOMPtr<nsISupportsArray> ourParams;
   rv = NS_NewISupportsArray(getter_AddRefs(ourParams));
   NS_ENSURE_SUCCESS(rv, rv);
  
-  nsCOMPtr<nsIDOMNode> mydomNode = do_QueryInterface(content);
-  NS_ENSURE_TRUE(mydomNode, NS_ERROR_NO_INTERFACE);
-  
-  // use the DOM to get us ALL our dependant PARAM tags, even if not ours
-  nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(mydomNode);
+  // use the DOM to get us ALL our dependant PARAM tags, even if not
+  // ours
+  nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(content);
   NS_ENSURE_TRUE(mydomElement, NS_ERROR_NO_INTERFACE);
+
   nsCOMPtr<nsIDOMNodeList> allParams; 
-  mydomElement->GetElementsByTagName(NS_LITERAL_STRING("PARAM"), getter_AddRefs(allParams));
+
+  nsCOMPtr<nsINodeInfo> ni;
+  content->GetNodeInfo(*getter_AddRefs(ni));
+
+  if (ni->NamespaceEquals(kNameSpaceID_XHTML)) {
+    // For XHTML elements we need to take the namespace URI into
+    // account when looking for param elements.
+
+    NS_NAMED_LITERAL_STRING(xhtml_ns, "http://www.w3.org/1999/xhtml");
+
+    mydomElement->GetElementsByTagNameNS(xhtml_ns, NS_LITERAL_STRING("param"),
+                                         getter_AddRefs(allParams));
+  } else {
+    // If content is not XHTML, it must be HTML, no need to worry
+    // about namespaces then...
+
+    mydomElement->GetElementsByTagName(NS_LITERAL_STRING("param"),
+                                       getter_AddRefs(allParams));
+  }    
+
   if (allParams) {
     PRUint32 numAllParams; 
     allParams->GetLength(&numAllParams);
-    // loop through every so called dependant PARAM tag to check if it "belongs" to us
+    // loop through every so called dependant PARAM tag to check if it
+    // "belongs" to us
+
     for (PRUint32 i = 0; i < numAllParams; i++) {
       nsCOMPtr<nsIDOMNode> pnode;
       allParams->Item(i, getter_AddRefs(pnode));
-      if (pnode) {
-        nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(pnode);
-        if (domelement) {
-          // let's NOT count up param tags that don't have a name attribute
-          nsAutoString name;
-          domelement->GetAttribute(NS_LITERAL_STRING("name"), name);
-          if (name.Length() > 0) {
-            nsCOMPtr<nsIDOMNode> parent;
-            nsCOMPtr<nsIDOMHTMLObjectElement> domobject;
-            nsCOMPtr<nsIDOMHTMLAppletElement> domapplet;
-            pnode->GetParentNode(getter_AddRefs(parent));
-            // walk up the parents of this PARAM until we find an object (or applet) tag
-            while (!(domobject || domapplet) && parent) {
-              domobject = do_QueryInterface(parent);
-              domapplet = do_QueryInterface(parent);
-              nsCOMPtr<nsIDOMNode> temp;
-              parent->GetParentNode(getter_AddRefs(temp));
-              parent = temp;
-            }
-            if (domapplet || domobject) {
-              if (domapplet)
-                parent = do_QueryInterface(domapplet);
-              else
-                parent = do_QueryInterface(domobject);
-              // now check to see if this PARAM's parent is us. if so, cache it for later
-              if (parent.get() == mydomNode.get()) {
-                nsCOMPtr<nsISupports> sup = do_QueryInterface(pnode);
-                NS_ASSERTION(sup,  "lame! DOM node does doesn't QI to nsISupports");
-                ourParams->AppendElement(sup);
-              }
+
+      nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(pnode);
+      if (domelement) {
+        // let's NOT count up param tags that don't have a name attribute
+        nsAutoString name;
+        domelement->GetAttribute(NS_LITERAL_STRING("name"), name);
+        if (name.Length() > 0) {
+          nsCOMPtr<nsIDOMNode> parent;
+          nsCOMPtr<nsIDOMHTMLObjectElement> domobject;
+          nsCOMPtr<nsIDOMHTMLAppletElement> domapplet;
+          pnode->GetParentNode(getter_AddRefs(parent));
+          // walk up the parents of this PARAM until we find an object
+          // (or applet) tag
+
+          while (!(domobject || domapplet) && parent) {
+            domobject = do_QueryInterface(parent);
+            domapplet = do_QueryInterface(parent);
+            nsCOMPtr<nsIDOMNode> temp;
+            parent->GetParentNode(getter_AddRefs(temp));
+            parent = temp;
+          }
+
+          if (domapplet || domobject) {
+            if (domapplet)
+              parent = do_QueryInterface(domapplet);
+            else
+              parent = do_QueryInterface(domobject);
+
+            // now check to see if this PARAM's parent is us. if so,
+            // cache it for later
+
+            nsCOMPtr<nsIDOMNode> mydomNode = do_QueryInterface(mydomElement);
+            if (parent == mydomNode) {
+              ourParams->AppendElement(pnode);
             }
           }
         }
       }
     }
   }
+
   PRUint32 cparams;
   ourParams->Count(&cparams); // unsigned 32 bits to unsigned 16 bits conversion
   if (cparams < 0x0000FFFF)
     mNumCachedParams = NS_STATIC_CAST(PRUint16, cparams);
   else 
     mNumCachedParams = 0xFFFF;
-
 
   // now lets make the arrays
   mCachedAttrParamNames  = (char **)PR_Calloc(sizeof(char *) * (mNumCachedAttrs + 1 + mNumCachedParams), 1);
