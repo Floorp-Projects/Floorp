@@ -262,6 +262,8 @@ public:
     NS_DECL_IDOMXULELEMENT
 
     // Implementation methods
+    nsresult GetRefResource(nsIRDFResource** aResult);
+
     nsresult EnsureContentsGenerated(void) const;
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
@@ -292,6 +294,7 @@ private:
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
     static nsIAtom*             kIdAtom;
+    static nsIAtom*             kRefAtom;
     static nsIAtom*             kClassAtom;
     static nsIAtom*             kStyleAtom;
     static nsIAtom*             kContainerAtom;
@@ -323,6 +326,7 @@ nsrefcnt             RDFElementImpl::gRefCnt;
 nsIRDFService*       RDFElementImpl::gRDFService;
 nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
 nsIAtom*             RDFElementImpl::kIdAtom;
+nsIAtom*             RDFElementImpl::kRefAtom;
 nsIAtom*             RDFElementImpl::kClassAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
 nsIAtom*             RDFElementImpl::kContainerAtom;
@@ -363,6 +367,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
 
         kIdAtom        = NS_NewAtom("id");
+        kRefAtom       = NS_NewAtom("ref");
         kClassAtom     = NS_NewAtom("class");
         kStyleAtom     = NS_NewAtom("style");
         kContainerAtom = NS_NewAtom("container");
@@ -428,6 +433,7 @@ RDFElementImpl::~RDFElementImpl()
         }
 
         NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kClassAtom);
         NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kContainerAtom);
@@ -1331,16 +1337,24 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
     nsCOMPtr<nsIRDFDocument> rdfDoc;
     if (mDocument) {
-        // Need to do a GetResource() here, because changing the document
-        // may actually change the element's URI.
-        nsCOMPtr<nsIRDFResource> resource;
-        GetResource(getter_AddRefs(resource));
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
+        if (rdfdoc) {
+            // Need to do a GetResource() here, because changing the document
+            // may actually change the element's URI.
+            nsCOMPtr<nsIRDFResource> resource;
+            GetResource(getter_AddRefs(resource));
 
-        // Remove this element from the RDF resource-to-element map in
-        // the old document.
-        if (resource) {
-            if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-                rv = rdfDoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+            // Remove this element from the RDF resource-to-element map in
+            // the old document.
+            if (resource) {
+                rv = rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
+            }
+
+            GetRefResource(getter_AddRefs(resource));
+            if (resource) {
+                rv = rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
                 NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
             }
         }
@@ -1365,16 +1379,24 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument = aDocument; // not refcounted
 
     if (mDocument) {
-        // Need to do a GetResource() here, because changing the document
-        // may actually change the element's URI.
-        nsCOMPtr<nsIRDFResource> resource;
-        GetResource(getter_AddRefs(resource));
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
+        if (rdfdoc) {
+            // Need to do a GetResource() here, because changing the document
+            // may actually change the element's URI.
+            nsCOMPtr<nsIRDFResource> resource;
+            GetResource(getter_AddRefs(resource));
 
-        // Add this element to the RDF resource-to-element map in the
-        // new document.
-        if (resource) {
-            if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-                rv = rdfDoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+            // Add this element to the RDF resource-to-element map in the
+            // new document.
+            if (resource) {
+                rv = rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
+            }
+
+            GetRefResource(getter_AddRefs(resource));
+            if (resource) {
+                rv = rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
                 NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
             }
         }
@@ -1823,6 +1845,21 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         NS_IF_RELEASE(popupListener);
     }
 
+    // Check to see if the REF attribute is being set. If so, we need
+    // to update the element map.  First, remove the old mapping, if
+    // necessary...
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kRefAtom)) {
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        if (rdfdoc) {
+            nsCOMPtr<nsIRDFResource> resource;
+
+            GetRefResource(getter_AddRefs(resource));
+            if (resource) {
+                rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+            }
+        }
+    }
+
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
     
@@ -1846,6 +1883,21 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
         mAttributes->AppendElement(attr);
     }
+
+    // Check for REF attribute, part deux. Add the new REF to the map,
+    // if appropriate.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kRefAtom)) {
+        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        if (rdfdoc) {
+            nsCOMPtr<nsIRDFResource> resource;
+
+            GetRefResource(getter_AddRefs(resource));
+            if (resource) {
+                rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
+            }
+        }
+    }
+        
 
     // Check for event handlers
     nsString attributeName;
@@ -2420,6 +2472,7 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 }
 
 
+// XXX This _should_ be an implementation method, _not_ publicly exposed :-(
 NS_IMETHODIMP
 RDFElementImpl::GetResource(nsIRDFResource** aResource)
 {
@@ -2438,10 +2491,45 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
     return NS_OK;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
+
+nsresult
+RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
+{
+    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+    if (! mDocument)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (mAttributes) {
+        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
+            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
+            if (attr->mNameSpaceID != kNameSpaceID_None)
+                continue;
+
+            if (attr->mName != kRefAtom)
+                continue;
+
+            // Found it!
+            nsresult rv;
+
+            // ...now resolve it to an absolute URI.
+            nsCOMPtr<nsIURL> base = dont_AddRef(mDocument->GetDocumentURL());
+
+            nsAutoString uri(attr->mValue);
+            rv = rdf_MakeAbsoluteURI(base, uri);
+            if (NS_FAILED(rv)) return rv;
+
+            // ...then, setup the new mapping.
+            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
+        }
+    }
+
+    // If we get here, there was no 'ref' attribute. So return a null resource.
+    *aResource = nsnull;
+    return NS_OK;
+}
+
 
 nsresult
 RDFElementImpl::EnsureContentsGenerated(void) const
