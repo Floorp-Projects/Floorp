@@ -57,20 +57,16 @@
       </hbox>
 
       <separator orient="horizontal" class="thin"/>
-      <radiogroup id="mode" oncommand="dialog.toggleChoice()">
-        <hbox flex="1">
-          <hbox align="center" flex="1">
-            <radio id="openUsing"
+      <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
+        <hbox flex="1" align="center">
+            <radio id="openUsing" flex="1"
                    label="&openUsing.label;"
                    accesskey="&openUsing.accesskey;"/>
-          </hbox>
-               
-          <hbox class="indent" align="center">
+            <spacer flex="1"/>
             <button id="chooseApp"
                     label="&chooseApp.label;"
                     accesskey="&chooseApp.accesskey;"
                     oncommand="dialog.chooseApp()"/>
-          </hbox>
         </hbox>
         <vbox>
           <hbox align="center">
