@@ -36,7 +36,7 @@ nsRDFTreeDataModel::nsRDFTreeDataModel(void)
 
 nsRDFTreeDataModel::~nsRDFTreeDataModel(void)
 {
-    for (PRUint32 i = mColumns.GetUpperBound(); i >= 0; --i) {
+    for (PRUint32 i = 0; i < mColumns.GetSize(); ++i) {
         nsRDFTreeColumn* column = static_cast<nsRDFTreeColumn*>(mColumns[i]);
 
         PR_ASSERT(column);
@@ -126,7 +126,7 @@ NS_IMETHODIMP
 nsRDFTreeDataModel::GetVisibleColumnCount(PRUint32& count) const
 {
     count = 0;
-    for (PRInt32 i = mColumns.GetUpperBound(); i >= 0; --i) {
+    for (PRUint32 i = 0; i < mColumns.GetSize(); ++i) {
         nsRDFTreeColumn* column = static_cast<nsRDFTreeColumn*>(mColumns.Get(i));
         if (column->IsVisible())
             ++count;
@@ -170,6 +170,11 @@ nsRDFTreeDataModel::GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef DYNAMIC_CASTING
+#define DYNAMIC_CAST(__type, __pointer) dynamic_cast<__type>(__pointer)
+#else
+#define DYNAMIC_CAST(__type, __pointer) ((__type)(__pointer))
+#endif
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
@@ -182,14 +187,14 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
 
     // XXX may need to turn off the dynamic_cast stuff...
     nsRDFTreeDataModelItem* item =
-        dynamic_cast<nsRDFTreeDataModelItem*>(pItem);
+        DYNAMIC_CAST(nsRDFTreeDataModelItem*, pItem);
 
     PR_ASSERT(item);
     if (! item)
         return NS_ERROR_UNEXPECTED; // XXX
 
     nsRDFTreeColumn* column =
-        dynamic_cast<nsRDFTreeColumn*>(pColumn);
+        DYNAMIC_CAST(nsRDFTreeColumn*, pColumn);
 
     PR_ASSERT(column);
     if (! column)
@@ -272,4 +277,15 @@ nsRDFTreeDataModel::AddColumn(const nsString& name, RDF_Resource property)
 {
     nsRDFTreeColumn* column = new nsRDFTreeColumn(*this, name, property);
     mColumns.Add(column);
+}
+
+
+NS_METHOD
+nsRDFTreeDataModel::CreateItem(RDF_Resource r, nsRDFDataModelItem*& result)
+{
+    result = new nsRDFTreeDataModelItem(*this, r);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
 }

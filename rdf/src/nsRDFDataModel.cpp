@@ -72,6 +72,7 @@ static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
 NS_IMPL_QUERY_INTERFACE(nsRDFDataModel, kIDataModelIID);
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDataModel interface
 
 NS_IMETHODIMP
 nsRDFDataModel::InitFromURL(const nsString& url)
@@ -134,8 +135,10 @@ nsRDFDataModel::Initialize(const nsString& aUrl)
     PL_strfree(const_cast<char*>(dbstr[0]));
 
     RDF_Resource r = RDF_GetResource(mDB, url, PR_TRUE);
-    if ((mRoot = new nsRDFDataModelItem(*this, r)) != NULL)
+    if ((mRoot = new nsRDFDataModelItem(*this, r)) != NULL) {
         mRoot->AddRef();
+        mRoot->SetOpenState(PR_TRUE);
+    }
 
     delete url;
 }

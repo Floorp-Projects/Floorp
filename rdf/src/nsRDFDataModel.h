@@ -41,8 +41,8 @@ private:
     nsRDFDataModelItem* mRoot;
     nsIDMWidget*        mWidget;
 
-    RDF_Resource mArcProperty;
-    nsRDFArcType mArcType;
+    RDF_Resource        mArcProperty;
+    nsRDFArcType        mArcType;
 
 public:
     nsRDFDataModel(void);
@@ -97,6 +97,9 @@ public:
     nsRDFArcType GetArcType(void) const {
         return mArcType;
     }
+
+    virtual NS_METHOD
+    CreateItem(RDF_Resource r, nsRDFDataModelItem*& result) = 0;
 };
 
 #endif // nsRDFDataModel_h__

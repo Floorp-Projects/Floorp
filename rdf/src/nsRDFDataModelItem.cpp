@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsRDFDataModel.h"
 #include "nsRDFDataModelItem.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -33,6 +34,10 @@ nsRDFDataModelItem::nsRDFDataModelItem(nsRDFDataModel& model, RDF_Resource resou
 
 nsRDFDataModelItem::~nsRDFDataModelItem(void)
 {
+    for (PRUint32 i = 0; i < mChildren.GetSize(); ++i) {
+        nsRDFDataModelItem* child = static_cast<nsRDFDataModelItem*>(mChildren[i]);
+        child->Release();
+    }
 }
 
 NS_IMPL_ADDREF(nsRDFDataModelItem);
@@ -42,6 +47,7 @@ static NS_DEFINE_IID(kIDMItemIID, NS_IDMITEM_IID);
 NS_IMPL_QUERY_INTERFACE(nsRDFDataModelItem, kIDMItemIID);
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDMItem interface
 
 NS_IMETHODIMP
 nsRDFDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
@@ -55,6 +61,18 @@ NS_IMETHODIMP
 nsRDFDataModelItem::GetOpenState(PRBool& result) const
 {
     result = IsOpen();
+    return NS_OK;
+}
+
+// XXX I assume this is coming...
+NS_IMETHODIMP
+nsRDFDataModelItem::SetOpenState(PRBool open)
+{
+    if (open)
+        Open();
+    else
+        Close();
+
     return NS_OK;
 }
 
@@ -147,12 +165,20 @@ nsRDFDataModelItem::GetSubtreeSize(void) const
 nsRDFDataModelItem*
 nsRDFDataModelItem::GetNth(PRUint32 n) const
 {
+    // XXX this algorithm sucks: it's O(m*log(n)), where m is the
+    // branching factor and n is the depth of the tree. We need to
+    // eventually do something like the old HT did: keep a
+    // vector. Alternatively, hyatt suggested that is we can keep a
+    // pointer to the topmost node, m will be kept small.
+
     if (n == 0)
         return const_cast<nsRDFDataModelItem*>(this);
 
-    PRUint32 upperBound = mChildren.GetUpperBound();
+    // iterate through all of the children. since we know the subtree
+    // height of each child, we can determine a range of indices
+    // contained within the subtree.
     PRUint32 firstIndexInSubtree = 1;
-    for (PRUint32 i = 0; i < upperBound; ++i) {
+    for (PRUint32 i = 0; i < mChildren.GetSize(); ++i) {
         nsRDFDataModelItem* child =
             static_cast<nsRDFDataModelItem*>(mChildren[i]);
 
@@ -166,4 +192,59 @@ nsRDFDataModelItem::GetNth(PRUint32 n) const
     // n was larger than the total number of elements in the tree!
     PR_ASSERT(0);
     return NULL;
+}
+
+
+void
+nsRDFDataModelItem::Open(void)
+{
+    RDF_Cursor cursor;
+    if (mDataModel.GetArcType() == eRDFArcType_Outbound) {
+        // Arcs are outbound, that is, from a parent to it's
+        // child. Find all arcs whose source is "me".
+        cursor = RDF_GetSources(mDataModel.GetDB(),
+                                GetResource(),
+                                mDataModel.GetArcProperty(),
+                                RDF_RESOURCE_TYPE,
+                                PR_TRUE);
+    }
+    else {
+        // Arcs are inbound, that is, from a child to it's
+        // parent. Find all arcs whose target is "me".
+        cursor = RDF_GetTargets(mDataModel.GetDB(),
+                                GetResource(),
+                                mDataModel.GetArcProperty(),
+                                RDF_RESOURCE_TYPE,
+                                PR_TRUE);
+    }
+
+    if (cursor) {
+        PRUint32 index = 0;
+        RDF_Resource r;
+        while ((r = static_cast<RDF_Resource>(RDF_NextValue(cursor))) != NULL) {
+            nsRDFDataModelItem* child;
+            if (NS_FAILED(mDataModel.CreateItem(r, child)))
+                continue;
+
+            mChildren[index++] = child;
+            child->mParent = this;
+        }
+        RDF_DisposeCursor(cursor);
+    }
+    
+    InvalidateCachedSubtreeSize();
+    mOpen = PR_TRUE;
+}
+
+
+void
+nsRDFDataModelItem::Close(void)
+{
+    for (PRUint32 i = 0; i < mChildren.GetSize(); ++i) {
+        nsRDFDataModelItem* child = static_cast<nsRDFDataModelItem*>(mChildren[i]);
+        child->Release();
+    }
+
+    InvalidateCachedSubtreeSize();
+    mOpen = PR_FALSE;
 }
