@@ -36,6 +36,7 @@
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
+#include "nsPrintOptionsMac.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -49,7 +50,7 @@ static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_
 static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
-
+static NS_DEFINE_IID(kCPrintOptions, NS_PRINTOPTIONS_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
@@ -125,6 +126,9 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 	else if (mClassID.Equals(kCDeviceContextSpec)) {
 		NS_NEWXPCOM(inst, nsDeviceContextSpecMac);
 	}
+  	else if (mClassID.Equals(kCPrintOptions)) {
+    	NS_NEWXPCOM(inst, nsPrintOptionsMac);
+  	}
 	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
 		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);
 	}
