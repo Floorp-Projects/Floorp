@@ -980,9 +980,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
     nsCAutoString parentName(folderName);
 
     if (leafPos > 0)
-	  {
-		// If there is a hierarchy, there is a parent.
-		// Don't strip off slash if it's the first character
+    {
+      // If there is a hierarchy, there is a parent.
+      // Don't strip off slash if it's the first character
       parentName.Truncate(leafPos);
       // get the corresponding RDF resource
       // RDF will create the folder resource if it doesn't already exist
@@ -993,15 +993,15 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
       if (NS_FAILED(status)) return status;
 
       msgParent = do_QueryInterface(resource, &status);
-	  }
+    }
   }
   if (msgParent)
   {
     nsXPIDLString folderName;
     GetName(getter_Copies(folderName));
     nsresult rv;
-	  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
-	  if (NS_SUCCEEDED(rv) && imapService)
+    nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
+    if (NS_SUCCEEDED(rv) && imapService)
     {
       nsCOMPtr <nsIURI> uri;
       imapService->EnsureFolderExists(m_eventQueue, msgParent, folderName.get(), urlListener, getter_AddRefs(uri));
@@ -1030,16 +1030,16 @@ NS_IMETHODIMP nsImapMailFolder::SetVerifiedAsOnlineFolder(PRBool aVerifiedAsOnli
 
 NS_IMETHODIMP nsImapMailFolder::GetOnlineDelimiter(char** onlineDelimiter)
 {
-    if (onlineDelimiter)
-    {
-        nsresult rv;
-        PRUnichar delimiter = 0;
-        rv = GetHierarchyDelimiter(&delimiter);
-        nsAutoString aString(delimiter);
-        *onlineDelimiter = ToNewCString(aString);
-        return rv;
-    }
-    return NS_ERROR_NULL_POINTER;
+  if (onlineDelimiter)
+  {
+    nsresult rv;
+    PRUnichar delimiter = 0;
+    rv = GetHierarchyDelimiter(&delimiter);
+    nsAutoString aString(delimiter);
+    *onlineDelimiter = ToNewCString(aString);
+    return rv;
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsImapMailFolder::SetHierarchyDelimiter(PRUnichar aHierarchyDelimiter)
@@ -1064,7 +1064,7 @@ NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
   m_boxFlags = aBoxFlags;
   PRUint32 newFlags = mFlags;
 
-    newFlags |= MSG_FOLDER_FLAG_IMAPBOX;
+  newFlags |= MSG_FOLDER_FLAG_IMAPBOX;
 
   if (m_boxFlags & kNoinferiors)
     newFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
@@ -2304,6 +2304,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
   ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
   ChangeNumPendingUnread(-GetNumPendingUnread());
   m_numStatusRecentMessages = 0; // clear this since we selected the folder.
+  m_numStatusUnseenMessages = 0; // clear this since we selected the folder.
 
   
   if (!mDatabase)
