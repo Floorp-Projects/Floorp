@@ -75,6 +75,7 @@ protected:
     PRBool              m_bFirstLineParsed;
     nsHTTPResponse*     m_pResponse;
     nsIHTTPChannel*     m_pConnection;
+    nsIStreamListener*  m_pConsumer;
     PRUint32            m_ReadLength; // Already read
 };
 

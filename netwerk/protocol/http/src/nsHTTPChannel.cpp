@@ -24,6 +24,7 @@
 #include "nsHTTPResponse.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
+#include "nsIStreamListener.h"
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -172,7 +173,25 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
-    return Open();
+    nsresult rv = NS_OK;
+
+    // Initial parameter checks...
+    if (m_pResponseDataListener) {
+        rv = NS_ERROR_IN_PROGRESS;
+    } 
+    else if (!listener) {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    // Initiate the loading of the URL...
+    if (NS_SUCCEEDED(rv)) {
+        m_pResponseDataListener = listener;
+        NS_ADDREF(m_pResponseDataListener);
+
+        rv = Open();
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -260,16 +279,16 @@ nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
 NS_IMETHODIMP
 nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
 {
-  nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
-  if (aListener) {
-    *aListener = m_pResponseDataListener;
-    NS_IF_ADDREF(m_pResponseDataListener);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
+    if (aListener) {
+        *aListener = m_pResponseDataListener;
+        NS_IF_ADDREF(m_pResponseDataListener);
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
 
-  return rv;
+    return rv;
 }
 
 
