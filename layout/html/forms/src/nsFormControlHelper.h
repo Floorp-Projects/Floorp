@@ -167,6 +167,7 @@ public:
    * @param aContent the content to get the name of
    * @param aResult the returned name of the form control [OUT]
    * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NO_VALUE if the name attr is present but is empty
    * @return NS_CONTENT_ATTR_NOT_THERE if the name attribute is undefined
    * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
    */
@@ -176,6 +177,7 @@ public:
    * @param aContent the content to get the name of
    * @param aType the returned type of the form control [OUT]
    * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NO_VALUE if the type attr is present but is empty
    * @return NS_CONTENT_ATTR_NOT_THERE if the type attribute is undefined
    * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
    */
@@ -185,6 +187,7 @@ public:
    * @param aContent the content to get the name of
    * @param aResult the returned value of the form control [OUT]
    * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NO_VALUE if the value attr is present but is empty
    * @return NS_CONTENT_ATTR_NOT_THERE if the value attribute is undefined
    * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
    */
