@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -26,6 +26,8 @@ EditAggregateTxn::EditAggregateTxn()
 {
   // base class does this: NS_INIT_REFCNT();
   mChildren = new nsVoidArray();
+  SetTransactionDescriptionID( kTransactionID );
+  /* log description initialized in parent constructor */
 }
 
 EditAggregateTxn::~EditAggregateTxn()
@@ -229,7 +231,8 @@ NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePt
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
  
   if (aIID.Equals(EditAggregateTxn::GetCID())) {
-    *aInstancePtr = (nsISupports*)(EditAggregateTxn*)(this);
+    *aInstancePtr = NS_STATIC_CAST(EditAggregateTxn*, this);
+//    *aInstancePtr = (nsISupports*)(EditAggregateTxn*)(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
