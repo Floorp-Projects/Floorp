@@ -39,7 +39,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
 nsCacheService::nsCacheService()
     : mCacheServiceLock(nsnull),
       mMemoryDevice(nsnull),
-      mDiskDevice(nsnull)
+      mDiskDevice(nsnull),
+      mDeactivateFailures(0),
+      mDeactivatedUnboundEntries(0)
 {
   NS_INIT_REFCNT();
 
@@ -371,6 +373,17 @@ nsCacheService::BindEntry(nsCacheEntry * entry)
 }
 
 
+
+nsresult
+nsCacheService::ValidateEntry(nsCacheEntry * entry)
+{
+    //** bind if not bound
+    //** convert pending requests to descriptors, etc.
+    entry->MarkValid();
+    return NS_OK;
+}
+
+
 nsresult
 nsCacheService::DoomEntry(nsCacheEntry * entry)
 {
@@ -463,15 +476,26 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
 void
 nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 {
-    //** check if entry is doomed
-    //** remove from hashtable
+    nsresult  rv = NS_OK;
+
+    if (entry->IsDoomed()) {
+        // remove from Doomed list
+        PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
+    } else {
+        // remove from active entries
+        rv = mActiveEntries.RemoveEntry(entry);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove an active entry !?!");
+    }
+
     nsCacheDevice * device = entry->CacheDevice();
     if (device) {
-        nsresult rv = device->DeactivateEntry(entry);
+        rv = device->DeactivateEntry(entry);
         if (NS_FAILED(rv)) {
-        //** what do we do on errors?
+            // increment deactivate failure count
+            ++mDeactivateFailures;
         }
     } else {
-        //** increment deactivating unbound entry statistic
+        // increment deactivating unbound entry statistic
+        ++mDeactivatedUnboundEntries;
     }
 }

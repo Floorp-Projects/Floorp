@@ -51,10 +51,10 @@ public:
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
  
 private:
-    nsCacheEntryHashTable   mInactiveEntries;
+    nsCacheEntryHashTable   mMemCacheEntries;
 
-    PRUint32                mTemporaryMaxLimit;
-    PRUint32                mNormalMaxLimit;
+    PRUint32                mHardLimit;
+    PRUint32                mSoftLimit;
     PRUint32                mCurrentTotal;
 
     PRCList                 mEvictionList;
@@ -62,49 +62,5 @@ private:
     //** what other stats do we want to keep?
 };
 
-#if 0
-class nsMemoryCacheEntry
-{
-public:
-
-
-    nsMemoryCacheEntry(nsCacheEntry *entry)
-    {
-        PR_INIT_CLIST(&mListLink);
-        entry->GetKey(&mKey);
-        GetFetchCount(&mFetchCount);
-        GetLastFetched(&mLastFetched);
-        GetLastValidated(&mLastValidated);
-        GetExpirationTime(&mExpirationTime);
-        //** flags
-        GetDataSize(&mDataSize);
-        GetMetaDataSize(&mMetaSize);
-        GetData(getter_AddRefs(mData)); //** check about ownership
-        GetMetaData
-    }
-
-    ~nsMemoryCacheEntry() {}
-
-    PRCList *                        GetListNode(void)         { return &mListLink; }
-    static nsMemoryCacheEntry * GetInstance(PRCList * qp) {
-        return (nsMemoryCacheEntry*)((char*)qp -
-                                     offsetof(nsMemoryCacheEntry, mListLink));
-    }
-
-
-private:
-    PRCList                mListLink;       // 8
-    nsCString *            mKey;            // 4  //** ask scc about const'ness
-    PRUint32               mFetchCount;     // 4
-    PRTime                 mLastFetched;    // 8
-    PRTime                 mLastValidated;  // 8
-    PRTime                 mExpirationTime; // 8
-    PRUint32               mFlags;          // 4
-    PRUint32               mDataSize;       // 4
-    PRUint32               mMetaSize;       // 4
-    nsCOMPtr<nsISupports>  mData;           // 4 //** issues with updating/replacing
-    nsCacheMetaData *      mMetaData;       // 4
-};
-#endif
 
 #endif // _nsMemoryCacheDevice_h_
