@@ -48,7 +48,7 @@ MAPFILE = $(OBJDIR)/softokn.def
 # the directory R/W and key4.db doesn't exist. If we open the directory up
 # R/O it opens and used the old key3.db without any update at all.
 #
-DEFINES += -DNSS_USE_KEY4_DB
+#DEFINES += -DNSS_USE_KEY4_DB
 
 
 EXPORTS = \
