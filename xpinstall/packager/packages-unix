@@ -62,6 +62,8 @@ bin/xpicleanup
 bin/res/cmessage.txt
 ; this is used by gtk embedding clients
 bin/libgtkembedmoz.so
+; this is used by Xprint and Xlib gfx
+bin/libxlibrgb.so
 bin/components/libappcomps.so
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
