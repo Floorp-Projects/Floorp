@@ -34,6 +34,7 @@ NS_IMPL_RELEASE(nsTextWidget)
 //-------------------------------------------------------------------------
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
+  NS_INIT_REFCNT();
   mBackground = NS_RGB(124, 124, 124);
 }
 
