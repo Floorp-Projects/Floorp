@@ -289,11 +289,6 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   mRangeHelper = do_CreateInstance(kRangeUtilsCID);
   if (!mRangeHelper) return NS_ERROR_NULL_POINTER;
    
-  // Init mEditProperty
-  result = NS_NewEditProperty(getter_AddRefs(mEditProperty));
-  if (NS_FAILED(result)) { return result; }
-  if (!mEditProperty) {return NS_ERROR_NULL_POINTER;}
-
   if (1)
   {
     // block to scope nsAutoEditInitRulesTrigger
@@ -641,16 +636,16 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
 
   // Nodes we know we want to treat as block
   // even though the parser says they're not:
-  if (tagAtom==nsIEditProperty::body       ||
-      tagAtom==nsIEditProperty::head       ||
-      tagAtom==nsIEditProperty::tbody      ||
-      tagAtom==nsIEditProperty::thead      ||
-      tagAtom==nsIEditProperty::tfoot      ||
-      tagAtom==nsIEditProperty::tr         ||
-      tagAtom==nsIEditProperty::th         ||
-      tagAtom==nsIEditProperty::td         ||
-      tagAtom==nsIEditProperty::li         ||
-      tagAtom==nsIEditProperty::pre)
+  if (tagAtom==nsEditProperty::body       ||
+      tagAtom==nsEditProperty::head       ||
+      tagAtom==nsEditProperty::tbody      ||
+      tagAtom==nsEditProperty::thead      ||
+      tagAtom==nsEditProperty::tfoot      ||
+      tagAtom==nsEditProperty::tr         ||
+      tagAtom==nsEditProperty::th         ||
+      tagAtom==nsEditProperty::td         ||
+      tagAtom==nsEditProperty::li         ||
+      tagAtom==nsEditProperty::pre)
   {
     *aIsBlock = PR_TRUE;
     return NS_OK;
@@ -668,31 +663,31 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
 
 #ifdef DEBUG
   // Check this against what we would have said with the old code:
-  if (tagAtom==nsIEditProperty::p          ||
-      tagAtom==nsIEditProperty::div        ||
-      tagAtom==nsIEditProperty::blockquote ||
-      tagAtom==nsIEditProperty::h1         ||
-      tagAtom==nsIEditProperty::h2         ||
-      tagAtom==nsIEditProperty::h3         ||
-      tagAtom==nsIEditProperty::h4         ||
-      tagAtom==nsIEditProperty::h5         ||
-      tagAtom==nsIEditProperty::h6         ||
-      tagAtom==nsIEditProperty::ul         ||
-      tagAtom==nsIEditProperty::ol         ||
-      tagAtom==nsIEditProperty::dl         ||
-      tagAtom==nsIEditProperty::noscript   ||
-      tagAtom==nsIEditProperty::form       ||
-      tagAtom==nsIEditProperty::hr         ||
-      tagAtom==nsIEditProperty::table      ||
-      tagAtom==nsIEditProperty::fieldset   ||
-      tagAtom==nsIEditProperty::address    ||
-      tagAtom==nsIEditProperty::caption    ||
-      tagAtom==nsIEditProperty::col        ||
-      tagAtom==nsIEditProperty::colgroup   ||
-      tagAtom==nsIEditProperty::li         ||
-      tagAtom==nsIEditProperty::dt         ||
-      tagAtom==nsIEditProperty::dd         ||
-      tagAtom==nsIEditProperty::legend     )
+  if (tagAtom==nsEditProperty::p          ||
+      tagAtom==nsEditProperty::div        ||
+      tagAtom==nsEditProperty::blockquote ||
+      tagAtom==nsEditProperty::h1         ||
+      tagAtom==nsEditProperty::h2         ||
+      tagAtom==nsEditProperty::h3         ||
+      tagAtom==nsEditProperty::h4         ||
+      tagAtom==nsEditProperty::h5         ||
+      tagAtom==nsEditProperty::h6         ||
+      tagAtom==nsEditProperty::ul         ||
+      tagAtom==nsEditProperty::ol         ||
+      tagAtom==nsEditProperty::dl         ||
+      tagAtom==nsEditProperty::noscript   ||
+      tagAtom==nsEditProperty::form       ||
+      tagAtom==nsEditProperty::hr         ||
+      tagAtom==nsEditProperty::table      ||
+      tagAtom==nsEditProperty::fieldset   ||
+      tagAtom==nsEditProperty::address    ||
+      tagAtom==nsEditProperty::caption    ||
+      tagAtom==nsEditProperty::col        ||
+      tagAtom==nsEditProperty::colgroup   ||
+      tagAtom==nsEditProperty::li         ||
+      tagAtom==nsEditProperty::dt         ||
+      tagAtom==nsEditProperty::dd         ||
+      tagAtom==nsEditProperty::legend     )
   {
     if (!(*aIsBlock))
     {
@@ -721,39 +716,39 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
       nsIAtom *tagAtom = NS_NewAtom(tagName);
       if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
 
-      if (tagAtom==nsIEditProperty::p          ||
-          tagAtom==nsIEditProperty::div        ||
-          tagAtom==nsIEditProperty::blockquote ||
-          tagAtom==nsIEditProperty::h1         ||
-          tagAtom==nsIEditProperty::h2         ||
-          tagAtom==nsIEditProperty::h3         ||
-          tagAtom==nsIEditProperty::h4         ||
-          tagAtom==nsIEditProperty::h5         ||
-          tagAtom==nsIEditProperty::h6         ||
-          tagAtom==nsIEditProperty::ul         ||
-          tagAtom==nsIEditProperty::ol         ||
-          tagAtom==nsIEditProperty::dl         ||
-          tagAtom==nsIEditProperty::pre        ||
-          tagAtom==nsIEditProperty::noscript   ||
-          tagAtom==nsIEditProperty::form       ||
-          tagAtom==nsIEditProperty::hr         ||
-          tagAtom==nsIEditProperty::fieldset   ||
-          tagAtom==nsIEditProperty::address    ||
-          tagAtom==nsIEditProperty::body       ||
-          tagAtom==nsIEditProperty::caption    ||
-          tagAtom==nsIEditProperty::table      ||
-          tagAtom==nsIEditProperty::tbody      ||
-          tagAtom==nsIEditProperty::thead      ||
-          tagAtom==nsIEditProperty::tfoot      ||
-          tagAtom==nsIEditProperty::tr         ||
-          tagAtom==nsIEditProperty::td         ||
-          tagAtom==nsIEditProperty::th         ||
-          tagAtom==nsIEditProperty::col        ||
-          tagAtom==nsIEditProperty::colgroup   ||
-          tagAtom==nsIEditProperty::li         ||
-          tagAtom==nsIEditProperty::dt         ||
-          tagAtom==nsIEditProperty::dd         ||
-          tagAtom==nsIEditProperty::legend     )
+      if (tagAtom==nsEditProperty::p          ||
+          tagAtom==nsEditProperty::div        ||
+          tagAtom==nsEditProperty::blockquote ||
+          tagAtom==nsEditProperty::h1         ||
+          tagAtom==nsEditProperty::h2         ||
+          tagAtom==nsEditProperty::h3         ||
+          tagAtom==nsEditProperty::h4         ||
+          tagAtom==nsEditProperty::h5         ||
+          tagAtom==nsEditProperty::h6         ||
+          tagAtom==nsEditProperty::ul         ||
+          tagAtom==nsEditProperty::ol         ||
+          tagAtom==nsEditProperty::dl         ||
+          tagAtom==nsEditProperty::pre        ||
+          tagAtom==nsEditProperty::noscript   ||
+          tagAtom==nsEditProperty::form       ||
+          tagAtom==nsEditProperty::hr         ||
+          tagAtom==nsEditProperty::fieldset   ||
+          tagAtom==nsEditProperty::address    ||
+          tagAtom==nsEditProperty::body       ||
+          tagAtom==nsEditProperty::caption    ||
+          tagAtom==nsEditProperty::table      ||
+          tagAtom==nsEditProperty::tbody      ||
+          tagAtom==nsEditProperty::thead      ||
+          tagAtom==nsEditProperty::tfoot      ||
+          tagAtom==nsEditProperty::tr         ||
+          tagAtom==nsEditProperty::td         ||
+          tagAtom==nsEditProperty::th         ||
+          tagAtom==nsEditProperty::col        ||
+          tagAtom==nsEditProperty::colgroup   ||
+          tagAtom==nsEditProperty::li         ||
+          tagAtom==nsEditProperty::dt         ||
+          tagAtom==nsEditProperty::dd         ||
+          tagAtom==nsEditProperty::legend     )
       {
         *aIsBlock = PR_TRUE;
       }
@@ -948,7 +943,7 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
         nsCOMPtr<nsIAtom> currentContentTag;
         currentContent->GetTag(*getter_AddRefs(currentContentTag));
         // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
-        if (nsIEditProperty::br==currentContentTag)
+        if (nsEditProperty::br==currentContentTag)
         {
           lastRange = nsnull;
         }
@@ -2532,7 +2527,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     }
     do {
       // retrieve the computed style of background-color for blockParent
-      mHTMLCSSUtils->GetComputedProperty(blockParent, nsIEditProperty::cssBackgroundColor,
+      mHTMLCSSUtils->GetComputedProperty(blockParent, nsEditProperty::cssBackgroundColor,
                                          aOutColor);
       tmp = blockParent;
       res = tmp->GetParentNode(getter_AddRefs(blockParent));
@@ -2567,7 +2562,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       else {
         // no, it's not; let's retrieve the computed style of background-color for the
         // node to examine
-        mHTMLCSSUtils->GetComputedProperty(nodeToExamine, nsIEditProperty::cssBackgroundColor,
+        mHTMLCSSUtils->GetComputedProperty(nodeToExamine, nsEditProperty::cssBackgroundColor,
                             aOutColor);
         if (!aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
           break;
@@ -3506,7 +3501,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
               res = attribute->GetValue(value);
               if (NS_FAILED(res)) return res;
 
-              res = SetInlineProperty(nsIEditProperty::a, name, value);
+              res = SetInlineProperty(nsEditProperty::a, name, value);
               if (NS_FAILED(res)) return res;
             }
           }
@@ -4136,7 +4131,7 @@ nsCOMPtr<nsIDOMNode> nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode *aNode)
   nsAutoString mozUserSelectValue;
   while (node)
   {
-    mHTMLCSSUtils->GetComputedProperty(node, nsIEditProperty::cssMozUserSelect, mozUserSelectValue);
+    mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssMozUserSelect, mozUserSelectValue);
     if (mozUserSelectValue.Equals(NS_LITERAL_STRING("all")))
     {
       resultNode = node;
@@ -4680,13 +4675,13 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
     {
       nsCOMPtr<nsIAtom> atom;
       content->GetTag(*getter_AddRefs(atom));
-      if (atom.get() == nsIEditProperty::table ||
-          atom.get() == nsIEditProperty::tbody ||
-          atom.get() == nsIEditProperty::thead ||
-          atom.get() == nsIEditProperty::tfoot ||
-          atom.get() == nsIEditProperty::caption ||
-          atom.get() == nsIEditProperty::tr ||
-          atom.get() == nsIEditProperty::td )
+      if (atom.get() == nsEditProperty::table ||
+          atom.get() == nsEditProperty::tbody ||
+          atom.get() == nsEditProperty::thead ||
+          atom.get() == nsEditProperty::tfoot ||
+          atom.get() == nsEditProperty::caption ||
+          atom.get() == nsEditProperty::tr ||
+          atom.get() == nsEditProperty::td )
       {
         nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
         nsCOMPtr<nsIDOMNode> parent;
@@ -4930,8 +4925,8 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 
   nsIAtom *tagAtom = NS_NewAtom(*aTagName);
   if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
-  if (tagAtom==nsIEditProperty::th)
-    tagAtom=nsIEditProperty::td;
+  if (tagAtom==nsEditProperty::th)
+    tagAtom=nsEditProperty::td;
 
   nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(aCurrentElement);
   if (!currentNode)

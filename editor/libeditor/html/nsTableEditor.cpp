@@ -182,7 +182,7 @@ PRBool IsRowNode(nsIDOMNode *aNode)
   if (content)
   {
     content->GetTag(*getter_AddRefs(atom));
-    if (atom && atom.get() == nsIEditProperty::tr)
+    if (atom && atom.get() == nsEditProperty::tr)
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -283,7 +283,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
     {
       nsCOMPtr<nsIAtom> atom;
       content->GetTag(*getter_AddRefs(atom));
-      if (atom.get() == nsIEditProperty::tr)
+      if (atom.get() == nsEditProperty::tr)
       {
         // Found a row directly under <table>
         *aRowNode = tableChild.get();
@@ -291,9 +291,9 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
         return NS_OK;
       }
       // Look for row in one of the row container elements      
-      if (atom.get() == nsIEditProperty::tbody ||
-          atom.get() == nsIEditProperty::thead ||
-          atom.get() == nsIEditProperty::tfoot )
+      if (atom.get() == nsEditProperty::tbody ||
+          atom.get() == nsEditProperty::thead ||
+          atom.get() == nsEditProperty::tfoot )
       {
         nsCOMPtr<nsIDOMNode> rowNode;
         res = tableChild->GetFirstChild(getter_AddRefs(rowNode));

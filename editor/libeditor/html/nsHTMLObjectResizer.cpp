@@ -298,11 +298,11 @@ nsHTMLEditor::SetResizerPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer
   y.AppendInt(aY);
 
   mHTMLCSSUtils->SetCSSProperty(aResizer,
-                                nsIEditProperty::cssLeft,
+                                nsEditProperty::cssLeft,
                                 x + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
   mHTMLCSSUtils->SetCSSProperty(aResizer,
-                                nsIEditProperty::cssTop,
+                                nsEditProperty::cssTop,
                                 y + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 }
@@ -597,11 +597,11 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   w.AppendInt(mResizedObjectWidth);
   h.AppendInt(mResizedObjectHeight);
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssWidth,
+                                nsEditProperty::cssWidth,
                                 w + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssHeight,
+                                nsEditProperty::cssHeight,
                                 h + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 
@@ -685,11 +685,11 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
   x.AppendInt(aX + 20);
   y.AppendInt(aY + 20);
   mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
-                                nsIEditProperty::cssLeft,
+                                nsEditProperty::cssLeft,
                                 x + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
   mHTMLCSSUtils->SetCSSProperty(mResizingInfo,
-                                nsIEditProperty::cssTop,
+                                nsEditProperty::cssTop,
                                 y + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 
@@ -745,11 +745,11 @@ nsHTMLEditor::SetShadowPosition(nsIDOMElement *aResizedObject,
   x.AppendInt(aX);
   y.AppendInt(aY);
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssLeft,
+                                nsEditProperty::cssLeft,
                                 x + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
   mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssTop,
+                                nsEditProperty::cssTop,
                                 y + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 
@@ -862,19 +862,19 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     h.AppendInt(newHeight);
 
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssLeft,
+                                nsEditProperty::cssLeft,
                                 x + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssTop,
+                                nsEditProperty::cssTop,
                                 y + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssWidth,
+                                nsEditProperty::cssWidth,
                                 w + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
     mHTMLCSSUtils->SetCSSProperty(mResizingShadow,
-                                nsIEditProperty::cssHeight,
+                                nsEditProperty::cssHeight,
                                 h + NS_LITERAL_STRING("px"),
                                 PR_TRUE);
 
@@ -921,11 +921,11 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
       RemoveAttribute(mResizedObject, heightStr);
 
     mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsIEditProperty::cssWidth,
+                                  nsEditProperty::cssWidth,
                                   w + NS_LITERAL_STRING("px"),
                                   PR_FALSE);
     mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsIEditProperty::cssHeight,
+                                  nsEditProperty::cssHeight,
                                   h + NS_LITERAL_STRING("px"),
                                   PR_FALSE);
   }
@@ -936,11 +936,11 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
     // triggering an immediate reflow; otherwise, we have problems
     // with asynchronous reflow
     mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsIEditProperty::cssWidth,
+                                  nsEditProperty::cssWidth,
                                   w + NS_LITERAL_STRING("px"),
                                   PR_FALSE);
     mHTMLCSSUtils->SetCSSProperty(mResizedObject,
-                                  nsIEditProperty::cssHeight,
+                                  nsEditProperty::cssHeight,
                                   h + NS_LITERAL_STRING("px"),
                                   PR_FALSE);
 
@@ -948,11 +948,11 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
     SetAttribute(mResizedObject, heightStr, h);
 
     mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                     nsIEditProperty::cssWidth,
+                                     nsEditProperty::cssWidth,
                                      NS_LITERAL_STRING(""),
                                      PR_FALSE);
     mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
-                                    nsIEditProperty::cssHeight,
+                                    nsEditProperty::cssHeight,
                                     NS_LITERAL_STRING(""),
                                     PR_FALSE);
   }
@@ -1056,11 +1056,11 @@ nsHTMLEditor::CheckResizingState(nsISelection *aSelection)
 
     nsCOMPtr<nsIDOMNode> tableContainer = GetEnclosingTable(focusNode);
 
-    if (nsIEditProperty::img == tagAtom ||
+    if (nsEditProperty::img == tagAtom ||
         tableContainer) {
       mResizedObjectIsAnImage = PR_FALSE;
 
-      if (nsIEditProperty::img == tagAtom)
+      if (nsEditProperty::img == tagAtom)
         mResizedObjectIsAnImage = PR_TRUE;
       else {
         focusNode = tableContainer;

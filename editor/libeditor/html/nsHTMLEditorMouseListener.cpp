@@ -56,7 +56,7 @@
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsIEditProperty.h"
+#include "nsEditProperty.h"
 #include "nsTextEditUtils.h"
 
 /*

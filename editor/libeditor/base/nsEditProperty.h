@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,27 +40,27 @@
 #ifndef __nsEditProperty_h__
 #define __nsEditProperty_h__
 
-#include "nsIEditProperty.h"
-#include "nsIAtom.h"
-#include "nsCOMPtr.h"
 #include "nsISupports.h"
 
-/** simple class for describing a single property as it relates to a range of content.
-  * not ref counted.
+class nsIAtom;
+class nsString;
+
+/** simple interface for describing a single property as it relates to a range of content.
   *
-  */ 
-class nsEditProperty : public nsIEditProperty
+  */
+
+class nsEditProperty
 {
 public:
-  /*interfaces for addref and release and queryinterface*/
-  NS_DECL_ISUPPORTS
 
-protected:
-  nsEditProperty ();
-  virtual ~nsEditProperty();
+    static void RegisterAtoms();
 
-  friend nsresult NS_NewEditProperty(nsIEditProperty **aResult);
+#define EDITOR_ATOM(name_, value_) static nsIAtom* name_;
+#include "nsEditPropertyAtomList.h"
+#undef EDITOR_ATOM
+
 };
+
 
 
 #endif
