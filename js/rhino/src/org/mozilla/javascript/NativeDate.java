@@ -156,7 +156,7 @@ final class NativeDate extends IdScriptable {
                     return wrap_double(jsStaticFunction_UTC(args));
 
                 case ConstructorId_parse:
-                    return wrap_double(jsStaticFunction_parse
+                    return wrap_double(date_parseString
                         (ScriptRuntime.toString(args, 0)));
 
                 case Id_constructor:
@@ -457,12 +457,9 @@ final class NativeDate extends IdScriptable {
             if (TimeFromYear(mid) > t) {
                 hi = mid - 1;
             } else {
-                if (TimeFromYear(mid) <= t) {
-                    int temp = mid + 1;
-                    if (TimeFromYear(temp) > t) {
-                        return mid;
-                    }
-                    lo = mid + 1;
+                lo = mid + 1;
+                if (TimeFromYear(lo) > t) {
+                    return mid;
                 }
             }
         }
@@ -808,34 +805,33 @@ final class NativeDate extends IdScriptable {
         10000 + 8 * 60, 10000 + 7 * 60
     };
 
-    /* helper for date_parse */
-    private static boolean date_regionMatches(String s1, int s1off,
+    /** helper for date_parse, return true if matches, otherwise, false */
+    private static boolean date_regionMatches(String pattern,
                                               String s2, int s2off,
                                               int count)
     {
-        boolean result = false;
-        /* return true if matches, otherwise, false */
-        int s1len = s1.length();
+        int s1off = 0;
+        int s1len = pattern.length();
         int s2len = s2.length();
 
-        while (count > 0 && s1off < s1len && s2off < s2len) {
-            if (Character.toLowerCase(s1.charAt(s1off)) !=
-                Character.toLowerCase(s2.charAt(s2off)))
-                break;
+        while (count > 0) {
+            if (s1off >= s1len || s2off >= s2len) {
+                return false;
+            }
+            int c = s2.charAt(s2off);
+            if ('A' <= c && c <= 'Z') { c += 'a' - 'A'; }
+            if (pattern.charAt(s1off) != c) {
+                return false;
+            }
             s1off++;
             s2off++;
             count--;
         }
 
-        if (count == 0) {
-            result = true;
-        }
-        return result;
+        return true;
     }
 
     private static double date_parseString(String s) {
-        double msec;
-
         int year = -1;
         int mon = -1;
         int mday = -1;
@@ -962,7 +958,7 @@ final class NativeDate extends IdScriptable {
                 if (i <= st + 1)
                     return ScriptRuntime.NaN;
                 for (k = wtb.length; --k >= 0;)
-                    if (date_regionMatches(wtb[k], 0, s, st, i-st)) {
+                    if (date_regionMatches(wtb[k], s, st, i-st)) {
                         int action = ttb[k];
                         if (action != 0) {
                             if (action < 0) {
@@ -1004,19 +1000,13 @@ final class NativeDate extends IdScriptable {
             min = 0;
         if (hour < 0)
             hour = 0;
+
+        double msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
         if (tzoffset == -1) { /* no time zone specified, have to use local */
-            double time;
-            time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-            return internalUTC(time);
+            return internalUTC(msec);
+        } else {
+            return msec + tzoffset * msPerMinute;
         }
-
-        msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-        msec += tzoffset * msPerMinute;
-        return msec;
-    }
-
-    private static double jsStaticFunction_parse(String s) {
-        return date_parseString(s);
     }
 
     private static final int FORMATSPEC_FULL = 0;
@@ -1030,65 +1020,47 @@ final class NativeDate extends IdScriptable {
         StringBuffer result = new StringBuffer(60);
         double local = LocalTime(t);
 
-        /* offset from GMT in minutes.  The offset includes daylight savings,
-           if it applies. */
-        int minutes = (int) Math.floor((LocalTZA + DaylightSavingTA(t))
-                                       / msPerMinute);
-        /* map 510 minutes to 0830 hours */
-        int offset = (minutes / 60) * 100 + minutes % 60;
-
-        String dateStr = Integer.toString(DateFromTime(local));
-        String hourStr = Integer.toString(HourFromTime(local));
-        String minStr = Integer.toString(MinFromTime(local));
-        String secStr = Integer.toString(SecFromTime(local));
-        String offsetStr = Integer.toString(offset > 0 ? offset : -offset);
-        int year = YearFromTime(local);
-        String yearStr = Integer.toString(year > 0 ? year : -year);
-
         /* Tue Oct 31 09:41:40 GMT-0800 (PST) 2000 */
         /* Tue Oct 31 2000 */
         /* 09:41:40 GMT-0800 (PST) */
 
         if (format != FORMATSPEC_TIME) {
-            result.append(days[WeekDay(local)]);
+            appendWeekDayName(result, WeekDay(local));
             result.append(' ');
-            result.append(months[MonthFromTime(local)]);
-            if (dateStr.length() == 1)
-                result.append(" 0");
-            else
-                result.append(' ');
-            result.append(dateStr);
+            appendMonthName(result, MonthFromTime(local));
             result.append(' ');
-            if (year < 0)
+            append0PaddedUint(result, DateFromTime(local), 2);
+            result.append(' ');
+            int year = YearFromTime(local);
+            if (year < 0) {
                 result.append('-');
-            for (int i = yearStr.length(); i < 4; i++)
-                result.append('0');
-            result.append(yearStr);
+                year = -year;
+            }
+            append0PaddedUint(result, year, 4);
             if (format != FORMATSPEC_DATE)
                 result.append(' ');
         }
 
         if (format != FORMATSPEC_DATE) {
-            if (hourStr.length() == 1)
-                result.append('0');
-            result.append(hourStr);
-            if (minStr.length() == 1)
-                result.append(":0");
-            else
-                result.append(':');
-            result.append(minStr);
-            if (secStr.length() == 1)
-                result.append(":0");
-            else
-                result.append(':');
-            result.append(secStr);
-            if (offset > 0)
+            append0PaddedUint(result, HourFromTime(local), 2);
+            result.append(':');
+            append0PaddedUint(result, MinFromTime(local), 2);
+            result.append(':');
+            append0PaddedUint(result, SecFromTime(local), 2);
+
+            // offset from GMT in minutes.  The offset includes daylight
+            // savings, if it applies.
+            int minutes = (int) Math.floor((LocalTZA + DaylightSavingTA(t))
+                                           / msPerMinute);
+            // map 510 minutes to 0830 hours
+            int offset = (minutes / 60) * 100 + minutes % 60;
+            if (offset > 0) {
                 result.append(" GMT+");
-            else
+            } else {
                 result.append(" GMT-");
-            for (int i = offsetStr.length(); i < 4; i++)
-                result.append('0');
-            result.append(offsetStr);
+                offset = -offset;
+            }
+            append0PaddedUint(result, offset, 4);
 
             if (timeZoneFormatter == null)
                 timeZoneFormatter = new java.text.SimpleDateFormat("zzz");
@@ -1100,7 +1072,6 @@ final class NativeDate extends IdScriptable {
                 result.append(')');
             }
         }
-
         return result.toString();
     }
 
@@ -1177,15 +1148,6 @@ final class NativeDate extends IdScriptable {
     /* constants for toString, toUTCString */
     private static String js_NaN_date_str = "Invalid Date";
 
-    private static String[] days = {
-        "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
-    };
-
-    private static String[] months = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-
     private static String toLocale_helper(double t,
                                           java.text.DateFormat formatter)
     {
@@ -1222,47 +1184,78 @@ final class NativeDate extends IdScriptable {
     private static String js_toUTCString(double date) {
         StringBuffer result = new StringBuffer(60);
 
-        String dateStr = Integer.toString(DateFromTime(date));
-        String hourStr = Integer.toString(HourFromTime(date));
-        String minStr = Integer.toString(MinFromTime(date));
-        String secStr = Integer.toString(SecFromTime(date));
-        int year = YearFromTime(date);
-        String yearStr = Integer.toString(year > 0 ? year : -year);
-
-        result.append(days[WeekDay(date)]);
+        appendWeekDayName(result, WeekDay(date));
         result.append(", ");
-        if (dateStr.length() == 1)
-            result.append('0');
-        result.append(dateStr);
+        append0PaddedUint(result, DateFromTime(date), 2);
         result.append(' ');
-        result.append(months[MonthFromTime(date)]);
-        if (year < 0)
-            result.append(" -");
-        else
-            result.append(' ');
-        int i;
-        for (i = yearStr.length(); i < 4; i++)
-            result.append('0');
-        result.append(yearStr);
-
-        if (hourStr.length() == 1)
-            result.append(" 0");
-        else
-            result.append(' ');
-        result.append(hourStr);
-        if (minStr.length() == 1)
-            result.append(":0");
-        else
-            result.append(':');
-        result.append(minStr);
-        if (secStr.length() == 1)
-            result.append(":0");
-        else
-            result.append(':');
-        result.append(secStr);
-
+        appendMonthName(result, MonthFromTime(date));
+        result.append(' ');
+        int year = YearFromTime(date);
+        if (year < 0) {
+            result.append('-'); year = -year;
+        }
+        append0PaddedUint(result, year, 4);
+        result.append(' ');
+        append0PaddedUint(result, HourFromTime(date), 2);
+        result.append(':');
+        append0PaddedUint(result, MinFromTime(date), 2);
+        result.append(':');
+        append0PaddedUint(result, SecFromTime(date), 2);
         result.append(" GMT");
         return result.toString();
+    }
+
+    private static void append0PaddedUint(StringBuffer sb, int i, int minWidth)
+    {
+        if (i < 0) Context.codeBug();
+        int scale = 1;
+        --minWidth;
+        if (i >= 10) {
+            if (i < 1000 * 1000 * 1000) {
+                for (;;) {
+                    int newScale = scale * 10;
+                    if (i < newScale) { break; }
+                    --minWidth;
+                    scale = newScale;
+                }
+            } else {
+                // Separated case not to check against 10 * 10^9 overflow
+                minWidth -= 9;
+                scale = 1000 * 1000 * 1000;
+            }
+        }
+        while (minWidth > 0) {
+            sb.append('0');
+            --minWidth;
+        }
+        while (scale != 1) {
+            sb.append((char)('0' + (i / scale)));
+            i %= scale;
+            scale /= 10;
+        }
+        sb.append((char)('0' + i));
+    }
+
+    private static void appendMonthName(StringBuffer sb, int index)
+    {
+        // Take advantage of the fact that all month abbreviations
+        // have the same length to minimize amount of strings runtime has
+        // to keep in memory
+        String months = "Jan"+"Feb"+"Mar"+"Apr"+"May"+"Jun"
+                       +"Jul"+"Aug"+"Sep"+"Oct"+"Nov"+"Dec";
+        index *= 3;
+        for (int i = 0; i != 3; ++i) {
+            sb.append(months.charAt(index + i));
+        }
+    }
+
+    private static void appendWeekDayName(StringBuffer sb, int index)
+    {
+        String days = "Sun"+"Mon"+"Tue"+"Wed"+"Thu"+"Fri"+"Sat";
+        index *= 3;
+        for (int i = 0; i != 3; ++i) {
+            sb.append(days.charAt(index + i));
+        }
     }
 
     private static double js_getYear(Context cx, double date) {
