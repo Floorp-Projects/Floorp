@@ -52,6 +52,7 @@ class nsIWebShell;
 #define IMAP_RECEIVED_GREETING		0x00000001  /* should we pause for the next read */
 #define IMAP_FIRST_PASS_IN_THREAD   0x00000002  /* entering thread for the first time? */
 #define	IMAP_CONNECTION_IS_OPEN		0x00000004  /* is the connection currently open? */
+#define IMAP_WAITING_FOR_DATA		0x00000008
 
 class nsImapProtocol : public nsIImapProtocol
 {

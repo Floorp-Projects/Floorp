@@ -804,7 +804,14 @@ void nsImapProtocol::EstablishServerConnection()
 void nsImapProtocol::ProcessCurrentURL()
 {
 	PRBool	logonFailed = FALSE;
- 
+
+	if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
+	{
+		nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
+		m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
+		SetFlag(IMAP_CONNECTION_IS_OPEN);
+	}
+    
 	// we used to check if the current running url was 
 	// Reinitialize the parser
 	GetServerStateParser().InitializeState();
@@ -953,6 +960,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIChannel * /* aChannel */, nsISu
 
         // if we received data, we need to signal the data available monitor...
 		// Read next line from input will actually read the data out of the stream
+		ClearFlag(IMAP_WAITING_FOR_DATA); // we are no longer waiting for data
 		PR_EnterMonitor(m_dataAvailableMonitor);
         PR_Notify(m_dataAvailableMonitor);
 		PR_ExitMonitor(m_dataAvailableMonitor);
@@ -1090,12 +1098,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 			// we're pulling out a selected state connection, but maybe we
 			// can get away with this.
 			m_needNoop = (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapDeleteAllMsgs);
-			if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
-			{
-				nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
-				m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
-				SetFlag(IMAP_CONNECTION_IS_OPEN);
-			}
+
 			// We now have a url to run so signal the monitor for url ready to be processed...
 			PR_EnterMonitor(m_urlReadyToRunMonitor);
 			m_nextUrlReadyToRun = PR_TRUE;
@@ -3390,15 +3393,24 @@ char* nsImapProtocol::CreateNewLineFromSocket()
 		newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, numBytesInLine, needMoreData); 
 		if (needMoreData)
 		{
-			// wait on the data available monitor!!
-			PR_EnterMonitor(m_dataAvailableMonitor);
-			// wait for data arrival
-			PR_Wait(m_dataAvailableMonitor, PR_INTERVAL_NO_TIMEOUT);
-			PR_ExitMonitor(m_dataAvailableMonitor);
-			// once data has arrived, recursively 
+			SetFlag(IMAP_WAITING_FOR_DATA);
+			// we want to put this thread to rest until the on data available monitor goes off..
+			// so sleep until the timeout hits, then pump some events. This may cause the IMAP_WAITING_FOR_DATA
+			// flag to get cleared which means data has arrived so we can kick out of the loop or the
+			// death signal may have been received which means we should still kick out of the loop.
+			do
+			{
+				// wait on the data available monitor!!
+				PR_EnterMonitor(m_dataAvailableMonitor);
+				// wait for data arrival
+				PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ 50);
+				PR_ExitMonitor(m_dataAvailableMonitor);
 
+				// now that we are awake...process some events
+				m_eventQueue->ProcessPendingEvents();
+			} while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());
 		}
-	} while (!newLine && !DeathSignalReceived()); // until we get the next line and haven't been interrupted
+	} while (!newLine); // until we get the next line and haven't been interrupted
 	
 	Log("CreateNewLineFromSocket", nsnull, newLine);
 	SetConnectionStatus(newLine ? PL_strlen(newLine) : 0);
