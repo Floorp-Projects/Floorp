@@ -748,6 +748,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
+#define FIX_FOR_BUG_40596
 #ifdef FIX_FOR_BUG_40596
      if (mRect.width > minSize.width)
 #else
