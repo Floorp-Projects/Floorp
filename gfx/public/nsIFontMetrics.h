@@ -132,7 +132,7 @@ public:
    */
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_PC)
 #define NEW_FONT_HEIGHT_APIS 1
 #endif
 #ifdef NEW_FONT_HEIGHT_APIS

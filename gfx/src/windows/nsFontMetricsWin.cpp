@@ -2534,10 +2534,13 @@ HDC   dc1 = NULL;
 #endif
   }
 
-  mHeight = NSToCoordRound(metrics.tmHeight * dev2app);
-  mAscent = NSToCoordRound(metrics.tmAscent * dev2app);
-  mDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mLeading = NSToCoordRound(metrics.tmInternalLeading * dev2app);
+  mEmHeight = NSToCoordRound((metrics.tmHeight - metrics.tmInternalLeading) *
+                             dev2app);
+  mEmAscent = NSToCoordRound((metrics.tmAscent - metrics.tmInternalLeading) *
+                             dev2app);
+  mEmDescent = NSToCoordRound(metrics.tmDescent * dev2app);
+  mMaxHeight = NSToCoordRound(metrics.tmHeight * dev2app);
   mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
@@ -2606,7 +2609,14 @@ nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 NS_IMETHODIMP
 nsFontMetricsWin :: GetHeight(nscoord &aHeight)
 {
-  aHeight = mHeight;
+  aHeight = mMaxHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
   return NS_OK;
 }
 
@@ -2614,6 +2624,34 @@ NS_IMETHODIMP
 nsFontMetricsWin :: GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin :: GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
