@@ -213,9 +213,10 @@ nsresult nsRenderingContextXlib::CommonInit(void)
 
   Drawable drawable = mRenderingSurface->GetDrawable();
 
+#ifdef XLIB_GFX_NOISY
   printf("XGetGeometry(display=%p,drawable=%p)\n",
-         mDisplay,
-         drawable);
+         (void *) mDisplay,
+         (void *) drawable);
 
   XGetGeometry(mDisplay, 
                drawable, 
@@ -226,6 +227,7 @@ nsresult nsRenderingContextXlib::CommonInit(void)
                &height, 
                &border, 
                &depth);
+#endif
 
   mClipRegion = new nsRegionXlib();
   mClipRegion->Init();
