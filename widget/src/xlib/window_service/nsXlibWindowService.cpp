@@ -19,13 +19,6 @@
 
 #include "nsXlibWindowService.h"
 
-//
-// NO!  This is evil.  It creates a link time dependency with libwidget_xlib.so.
-//
-// // yes, these are from the parent directory.
-// #include "nsWidget.h"
-// #include "nsAppShell.h"
-
 nsXlibWindowService::nsXlibWindowService()
 {
 }
@@ -38,25 +31,11 @@ NS_IMPL_ADDREF(nsXlibWindowService)
 NS_IMPL_RELEASE(nsXlibWindowService)
 NS_IMPL_QUERY_INTERFACE(nsXlibWindowService, nsCOMTypeInfo<nsIXlibWindowService>::GetIID())
 
-/* static */ nsXlibWindowCallback         nsXlibWindowService::gsWindowCreateCallback = nsnull;
-/* static */ nsXlibWindowCallback         nsXlibWindowService::gsWindowDestroyCallback = nsnull;
-/* static */ nsXlibEventDispatcher        nsXlibWindowService::gsEventDispatcher = nsnull;
-/* static */ nsXlibTimeToNextTimeoutFunc  nsXlibWindowService::gsTimeToNextTimeoutFunc = nsnull;
-/* static */ nsXlibProcessTimeoutsProc    nsXlibWindowService::gsProcessTimeoutsProc = nsnull;
-
-// NS_IMETHODIMP
-// nsXlibWindowService::SetCreateCallback(nsXlibWindowCallback *aFunc)
-// {
-//   nsWidget::SetXlibWindowCallback(aFunc);
-//   return NS_OK;
-// }
-
-// NS_IMETHODIMP
-// nsXlibWindowService::DispatchNativeXlibEvent(void *aNativeEvent)
-// {
-//   nsAppShell::DispatchXEvent((XEvent *)aNativeEvent);
-//   return NS_OK;
-// }
+nsXlibWindowCallback         nsXlibWindowService::gsWindowCreateCallback = nsnull;
+nsXlibWindowCallback         nsXlibWindowService::gsWindowDestroyCallback = nsnull;
+nsXlibEventDispatcher        nsXlibWindowService::gsEventDispatcher = nsnull;
+nsXlibTimeToNextTimeoutFunc  nsXlibWindowService::gsTimeToNextTimeoutFunc = nsnull;
+nsXlibProcessTimeoutsProc    nsXlibWindowService::gsProcessTimeoutsProc = nsnull;
 
 NS_IMETHODIMP
 nsXlibWindowService::SetWindowCreateCallback(nsXlibWindowCallback aCallback)

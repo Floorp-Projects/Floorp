@@ -42,19 +42,6 @@
 
 #define NS_XLIB_WINDOW_SERVICE_PROGID "component://netscape/widget/xlib/window_service"
 
-// /**
-//  * This is an interface for getting access to the construction
-//  * and destruction of native windows in xlib.
-//  * @created 20/Jul/1999
-//  * @author  Christopher Blizzard <blizzard@redhat.com>
-//  */
-
-// class nsXlibWindowCallback {
-//  public:
-//   virtual void WindowCreated  (PRUint32 aID) = 0;
-//   virtual void WindowDestroyed(PRUint32 aID) = 0;
-// };
-
 typedef void (*nsXlibWindowCallback)(PRUint32 aWindowID);
 
 typedef void * nsXlibNativeEvent;
@@ -69,28 +56,6 @@ class nsIXlibWindowService : public nsISupports
 {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_XLIB_WINDOW_SERVICE_IID);
-
-//   /**
-//    * Register your function for window creation and destruction.
-//    * This function will get called whenever a new native X window
-//    * is created. or destroyed.
-//    *
-//    * @param  [IN] the function that you would like to register
-//    * @return NS_OK if ok, NS_ERROR_FAILURE if you pass in 0
-//    */
-
-//   NS_IMETHOD SetCreateCallback(nsXlibWindowCallback *aFunc) = 0;
-
-//   /** 
-//    * This function will dispatch a native X event ( cast to a void *
-//    * here ) to the event handler on the inside of the widget
-//    * toolkit
-//    * @param [IN] a pointer to an XEvent, cast to a void *
-//    * @return NS_OK if ok, NS_ERROR_FAILURE if you pass in an
-//    * invalid window id
-//    */
-
-//   NS_IMETHOD DispatchNativeXlibEvent(void *aNativeEvent) = 0;
 
   NS_IMETHOD SetWindowCreateCallback(nsXlibWindowCallback aCallback) = 0;
   NS_IMETHOD SetWindowDestroyCallback(nsXlibWindowCallback aCallback) = 0;
