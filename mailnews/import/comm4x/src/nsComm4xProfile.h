@@ -58,7 +58,7 @@ public:
     nsComm4xProfile();
     virtual ~nsComm4xProfile();
     nsresult Get4xProfileInfo(const char *registryName);
-    nsresult GetPrefValue(nsILocalFile *filePath, const char * prefName, const char * prefEnd, char ** value);
+    nsresult GetPrefValue(nsILocalFile *filePath, const char * prefName, const char * prefEnd, PRUnichar ** value);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMM4XPROFILE

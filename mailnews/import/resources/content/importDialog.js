@@ -700,7 +700,9 @@ function ImportMail( module, success, error) {
             }
             if (!errorValue) {
               var profileDir = comm4xprofile.getMailDir(profileList[selected.value]);
-              mailInterface.SetData( "mailLocation", CreateNewFileSpecFromPath( profileDir));
+              var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+              localfile.initWithPath(profileDir);
+              mailInterface.SetData( "mailLocation", localfile);
             }
           } // profileList
         } // comm4xprofile
@@ -720,7 +722,7 @@ function ImportMail( module, success, error) {
             filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
             filePicker.show();
             if (filePicker.file && (filePicker.file.path.length > 0))
-              mailInterface.SetData( "mailLocation", CreateNewFileSpecFromPath( filePicker.file.path));
+              mailInterface.SetData( "mailLocation", filePicker.file);
             else
               return( false);
           } catch( ex) {
@@ -823,7 +825,7 @@ function ImportAddress( module, success, error) {
         filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
         filePicker.show();
         if (filePicker.file && (filePicker.file.path.length > 0))
-          file = filePicker.file.path;
+          file = filePicker.file;
         else
           file = null;
       } catch( ex) {
@@ -848,7 +850,7 @@ function ImportAddress( module, success, error) {
           return false;
 
         if (filePicker.file && (filePicker.file.path.length > 0))
-          file = filePicker.file.path;
+          file = filePicker.file;
         else
           file = null;
       } catch( ex) {
@@ -863,9 +865,7 @@ function ImportAddress( module, success, error) {
       return( false);
     }
 
-    file = CreateNewFileSpecFromPath( file);
-
-    addInterface.SetData( "addressLocation", file);
+    addInterface.SetData("addressLocation", file);
   }
 
   // no need to use the fieldmap for 4.x import since we are using separate dialog

@@ -54,6 +54,7 @@
 #include "nsNetCID.h"
 
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
@@ -125,7 +126,7 @@ public:
 private:
 	nsIImportAddressBooks *		m_pInterface;
 	nsISupportsArray *			m_pBooks;
-	nsIFileSpec *				m_pLocation;
+	nsCOMPtr <nsIFileSpec> m_pLocation;
 	nsIImportFieldMap *			m_pFieldMap;
 	PRBool						m_autoFind;
 	PRUnichar *					m_description;
@@ -194,7 +195,6 @@ nsImportGenericAddressBooks::nsImportGenericAddressBooks()
 	m_pDestinationUri = nsnull;
 	m_pFieldMap = nsnull;
 
-	m_pLocation = nsnull;
 	m_autoFind = PR_FALSE;
 	m_description = nsnull;
 	m_gotLocation = PR_FALSE;
@@ -217,7 +217,6 @@ nsImportGenericAddressBooks::~nsImportGenericAddressBooks()
 		nsCRT::free( m_description);
 
 	NS_IF_RELEASE( m_pFieldMap);
-	NS_IF_RELEASE( m_pLocation);
 	NS_IF_RELEASE( m_pInterface);
 	NS_IF_RELEASE( m_pBooks);
 	NS_IF_RELEASE( m_pSuccessLog);
@@ -245,8 +244,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 	if (!nsCRT::strcasecmp( dataId, "addressLocation")) {
 		if (!m_pLocation)
 			GetDefaultLocation();
-		*_retval = m_pLocation;
-		NS_IF_ADDREF( m_pLocation);
+		NS_IF_ADDREF(*_retval = m_pLocation);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "addressBooks")) {
@@ -341,11 +339,19 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "addressLocation")) {
-		NS_IF_RELEASE( m_pLocation);
-		if (item)
-			item->QueryInterface( NS_GET_IID(nsIFileSpec), (void **) &m_pLocation);
-		if (m_pInterface)
-			m_pInterface->SetSampleLocation( m_pLocation);
+		m_pLocation = nsnull;
+
+    if (item) {
+      nsresult rv;
+      nsCOMPtr <nsILocalFile> location = do_QueryInterface(item, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      rv = NS_NewFileSpecFromIFile(location, getter_AddRefs(m_pLocation));
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+
+    if (m_pInterface)
+			m_pInterface->SetSampleLocation(m_pLocation);
 	}
 
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {

@@ -139,7 +139,7 @@ private:
 	nsIMsgFolder *		m_pDestFolder;
 	PRBool				m_deleteDestFolder;
 	PRBool				m_createdFolder;
-	nsIFileSpec *		m_pSrcLocation;
+	nsCOMPtr <nsIFileSpec> m_pSrcLocation;
 	PRBool				m_gotLocation;
 	PRBool				m_found;
 	PRBool				m_userVerify;
@@ -196,7 +196,6 @@ nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric)
 
 nsImportGenericMail::nsImportGenericMail()
 {
-	m_pSrcLocation = nsnull;
 	m_found = PR_FALSE;
 	m_userVerify = PR_FALSE;
 	m_gotLocation = PR_FALSE;
@@ -226,7 +225,6 @@ nsImportGenericMail::~nsImportGenericMail()
 	}
 	
 	NS_IF_RELEASE( m_pDestFolder);
-	NS_IF_RELEASE( m_pSrcLocation);
 	NS_IF_RELEASE( m_pInterface);
 	NS_IF_RELEASE( m_pMailboxes);
 	NS_IF_RELEASE( m_pSuccessLog);
@@ -262,8 +260,7 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 	if (!nsCRT::strcasecmp( dataId, "mailLocation")) {
 		if (!m_pSrcLocation)
 			GetDefaultLocation();
-		*_retval = m_pSrcLocation;
-		NS_IF_ADDREF( m_pSrcLocation);
+		NS_IF_ADDREF(*_retval = m_pSrcLocation);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "mailDestination")) {
@@ -310,9 +307,15 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 	
 	if (!nsCRT::strcasecmp( dataId, "mailLocation")) {
 		NS_IF_RELEASE( m_pMailboxes);
-		NS_IF_RELEASE( m_pSrcLocation);
-		if (item)
-			item->QueryInterface( NS_GET_IID(nsIFileSpec), (void **) &m_pSrcLocation);
+    m_pSrcLocation = nsnull;
+    if (item) {
+      nsresult rv;
+      nsCOMPtr <nsILocalFile> location = do_QueryInterface(item, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      rv = NS_NewFileSpecFromIFile(location, getter_AddRefs(m_pSrcLocation));
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "mailDestination")) {
