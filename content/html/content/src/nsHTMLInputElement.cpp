@@ -1143,7 +1143,7 @@ nsHTMLInputElement::Select()
     // If the DOM event was not canceled (e.g. by a JS event handler
     // returning false)
     if (status == nsEventStatus_eIgnore) {
-      if (presContext) {
+      if (presContext && ShouldFocus(this)) {
         nsIEventStateManager *esm = presContext->EventStateManager();
         // XXX Fix for bug 135345 - ESM currently does not check to see if we
         // have focus before attempting to set focus again and may cause
