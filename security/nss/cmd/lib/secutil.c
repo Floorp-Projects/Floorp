@@ -229,13 +229,17 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     char prompt[255];
     secuPWData *pwdata = (secuPWData *)arg;
     secuPWData pwnull = { PW_NONE, 0 };
+    secuPWData pwxtrn = { PW_EXTERNAL, "external" };
     char *pw;
 
     if (pwdata == NULL)
 	pwdata = &pwnull;
 
+    if (PK11_ProtectedAuthenticationPath(slot)) {
+	pwdata = &pwxtrn;
+    }
     if (retry && pwdata->source != PW_NONE) {
-	PR_fprintf(PR_STDERR, "incorrect password entered at command line.\n");
+	PR_fprintf(PR_STDERR, "Incorrect password/PIN entered.\n");
     	return NULL;
     }
 
@@ -253,6 +257,12 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 	pwdata->data = PL_strdup(pw);
 	/* it's already been dup'ed */
 	return pw;
+    case PW_EXTERNAL:
+	sprintf(prompt, 
+	        "Press Enter, then enter PIN for \"%s\" on external device.\n",
+		PK11_GetTokenName(slot));
+	(void) SECU_GetPasswordString(NULL, prompt);
+    	/* Fall Through */
     case PW_PLAINTEXT:
 	return PL_strdup(pwdata->data);
     default:
