@@ -2010,7 +2010,8 @@ cookie_Save() {
 
   strm.write("# HTTP Cookie File\n", 19);
   strm.write("# http://www.netscape.com/newsref/std/cookie_spec.html\n", 55);
-  strm.write("# This is a generated file!  Do not edit.\n\n", 43);
+  strm.write("# This is a generated file!  Do not edit.\n", 42);
+  strm.write("# To delete cookies, use the Cookie Manager.\n\n", 46);
 
   /* format shall be:
    *
