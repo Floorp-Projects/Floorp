@@ -74,13 +74,12 @@ public:
   NS_IMETHOD Init(const char *charset, PRUint32 attr, PRUint32 entityVersion);
 
   NS_IMETHOD Convert(const PRUnichar *inString, char **_retval);
-  NS_IMETHOD Convert2(const PRUnichar *inString, PRUint32* outLen, char **_retval);
 
   NS_IMETHODIMP GetCharset(char * *aCharset);
 
 protected:
 
-  NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, PRUint32* outLen, char **outString);
+  NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, char **outString);
 
   NS_IMETHOD DoConversionFallBack(PRUint32 inUCS4, char *outString, PRInt32 bufferLength);
 
