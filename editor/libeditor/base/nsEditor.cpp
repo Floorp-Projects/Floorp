@@ -2211,7 +2211,8 @@ nsEditor::GetQueryCaretRect(nsQueryCaretRectEventReply* aReply)
   PRBool cursorIsCollapsed;
   rv = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
                                    &aReply->mCaretRect, &cursorIsCollapsed, nsnull);
-
+  if (NS_SUCCEEDED(rv))
+    aReply->mRectIsValid = PR_TRUE;
   return rv;
 }
 
