@@ -215,6 +215,46 @@ NS_METHOD nsAppShell::Spindown()
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// PushThreadEventQueue - begin processing events from a new queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on motif.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PushThreadEventQueue()
+{
+  nsresult rv;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PushThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue - stop processing on a previously pushed event queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on motif.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PopThreadEventQueue()
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PopThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
   //XXX:Implement this.

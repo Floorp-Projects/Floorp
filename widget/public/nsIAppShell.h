@@ -81,6 +81,16 @@ public:
   NS_IMETHOD Spindown() = 0;
 
  /**
+  * Push event queue onto current thread and begin processing events from it
+  */
+  NS_IMETHOD PushThreadEventQueue() = 0;
+
+ /**
+  * Pop event queue from current thread's stack
+  */
+  NS_IMETHOD PopThreadEventQueue() = 0;
+
+ /**
   * After event dispatch execute app specific code
   */
   

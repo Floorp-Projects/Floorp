@@ -63,8 +63,10 @@ class nsAppShell : public nsIAppShell
     virtual nsresult        Run();
     NS_IMETHOD              Spinup();
     NS_IMETHOD              Spindown();
+    NS_IMETHOD              PushThreadEventQueue();
+    NS_IMETHOD              PopThreadEventQueue();
     NS_IMETHOD              Exit();
-    NS_IMETHOD            	SetDispatchListener(nsDispatchListener* aDispatchListener);
+    NS_IMETHOD              SetDispatchListener(nsDispatchListener* aDispatchListener);
 
     virtual void* GetNativeData(PRUint32 aDataType);
 

@@ -37,7 +37,7 @@
 
 #define CHAR_BUF_SIZE 40
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #ifdef TOOLKIT_EXORCISM
@@ -369,6 +369,46 @@ nsresult nsAppShell::Run()
   }
 
 	NS_IF_RELEASE(EQueue);
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PushThreadEventQueue - begin processing events from a new queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on xlib.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PushThreadEventQueue()
+{
+  nsresult rv;
+
+  // push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PushThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
+  return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// PopThreadEventQueue - stop processing on a previously pushed event queue
+//   note this is the Windows implementation and may suffice, but
+//   this is untested on xlib.
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::PopThreadEventQueue()
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = eQueueService->PopThreadEventQueue();
+  else
+    NS_ERROR("Appshell unable to obtain eventqueue service.");
   return rv;
 }
 
