@@ -341,8 +341,7 @@ nsXPCWrappedNativeClass::HandlePossibleNameCaseError(JSContext* cx, jsid id)
 
             nsCOMPtr<nsIXPCException> e =
                 dont_AddRef(NS_STATIC_CAST(nsIXPCException*,
-                                           nsXPCException::NewException("", 
-                                                        NS_OK, nsnull, nsnull)));
+                    nsXPCException::NewException("", NS_OK, nsnull, nsnull)));
 
             nsCOMPtr<nsIJSStackFrameLocation> loc = nsnull;
             if(e)
