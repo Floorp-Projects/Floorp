@@ -95,7 +95,6 @@ nsConverterInputStream::Close()
 
 NS_IMETHODIMP
 nsConverterInputStream::Read(PRUnichar* aBuf,
-                             PRUint32 aOffset,
                              PRUint32 aCount,
                              PRUint32 *aReadCount)
 {
@@ -112,10 +111,53 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
   if (rv > aCount) {
     rv = aCount;
   }
-  memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
+  memcpy(aBuf, mUnicharData->GetBuffer() + mUnicharDataOffset,
          rv * sizeof(PRUnichar));
   mUnicharDataOffset += rv;
   *aReadCount = rv;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
+                                     void* aClosure,
+                                     PRUint32 aCount, PRUint32 *aReadCount)
+{
+  NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
+  PRUint32 bytesToWrite = mUnicharDataLength - mUnicharDataOffset;
+  nsresult rv;
+  if (0 == bytesToWrite) {
+    // Fill the unichar buffer
+    bytesToWrite = Fill(&rv);
+    if (bytesToWrite <= 0) {
+      *aReadCount = 0;
+      return rv;
+    }
+  }
+  
+  if (bytesToWrite > aCount)
+    bytesToWrite = aCount;
+  
+  PRUint32 bytesWritten;
+  PRUint32 totalBytesWritten = 0;
+
+  while (bytesToWrite) {
+    rv = aWriter(this, aClosure,
+                 mUnicharData->GetBuffer() + mUnicharDataOffset,
+                 totalBytesWritten, bytesToWrite, &bytesWritten);
+    if (NS_FAILED(rv)) {
+      // don't propagate errors to the caller
+      break;
+    }
+    
+    bytesToWrite -= bytesWritten;
+    totalBytesWritten += bytesWritten;
+    mUnicharDataOffset += bytesWritten;
+    
+  }
+
+  *aReadCount = totalBytesWritten;
+
   return NS_OK;
 }
 

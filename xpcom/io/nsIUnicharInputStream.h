@@ -41,6 +41,14 @@
 #include "nscore.h"
 
 class nsString;
+class nsIUnicharInputStream;
+
+typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
+                                              void *aClosure,
+                                              const PRUnichar *aFromSegment,
+                                              PRUint32 aToOffset,
+                                              PRUint32 aCount,
+                                              PRUint32 *aWriteCount);
 
 #define NS_IUNICHAR_INPUT_STREAM_IID \
 { 0x2d97fbf0, 0x93b5, 0x11d1,        \
@@ -49,15 +57,18 @@ class nsString;
 /** Abstract unicode character input stream
  *  @see nsIInputStream
  */
-class nsIUnicharInputStream : public nsISupports {
+class NS_NO_VTABLE nsIUnicharInputStream : public nsISupports {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICHAR_INPUT_STREAM_IID)
 
   NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRUint32 aOffset,
                   PRUint32 aCount,
                   PRUint32 *aReadCount) = 0;
   NS_IMETHOD Close() = 0;
+  NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
+                          void* aClosure,
+                          PRUint32 aCount,
+                          PRUint32 *aReadCount) = 0;
 };
 
 /**

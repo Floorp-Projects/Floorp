@@ -58,12 +58,14 @@ class nsConverterInputStream : nsIConverterInputStream {
  public:
     NS_DECL_ISUPPORTS
     NS_IMETHOD Read(PRUnichar* aBuf,
-                    PRUint32 aOffset,
                     PRUint32 aCount,
                     PRUint32 *aReadCount);
     NS_IMETHOD Close();
     NS_IMETHOD Init(nsIInputStream* aStream, const PRUnichar *aCharset,
                     PRInt32 aBufferSize, PRBool aRecoverFromErrors);
+    NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
+                            void* aClosure,
+                            PRUint32 aCount, PRUint32* aReadCount);
 
     nsConverterInputStream() :
         mLastErrorCode(NS_OK),
