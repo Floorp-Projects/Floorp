@@ -99,8 +99,6 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
 }
 
 
-static int xxxpaintborders=1;
-
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
@@ -148,7 +146,6 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           }
           else
           {
-            if (xxxpaintborders)
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                              aDirtyRect, rect, &mBorderEdges, skipSides);
           }

@@ -445,22 +445,27 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         aReflowState.tableFrame->SetBorderEdgeLength(NS_SIDE_RIGHT,
                                                      rowIndex,
                                                      kidRect.height);
-        nsIFrame *cellFrame=nsnull;
-        kidFrame->FirstChild(nsnull, cellFrame);
-        while (nsnull!=cellFrame)
+        PRInt32 colCount = aReflowState.tableFrame->GetColCount();
+        PRInt32 colIndex = 0;
+        nsIFrame *cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
+        while (colIndex<colCount)
         {
-          const nsStyleDisplay *cellDisplay;
-          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
+          if (nsnull!=cellFrame)
           {
-            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
-                                                                   rowIndex,
-                                                                   kidRect.height);
-            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_RIGHT,
-                                                                   rowIndex,
-                                                                   kidRect.height);
+            const nsStyleDisplay *cellDisplay;
+            cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
+            if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
+            {
+              ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
+                                                                     rowIndex,
+                                                                     kidRect.height);
+              ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_RIGHT,
+                                                                     rowIndex,
+                                                                     kidRect.height);
+            }
           }
-          cellFrame->GetNextSibling(cellFrame);
+          colIndex++;
+          cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
         }
       }
     }
