@@ -1059,6 +1059,7 @@ PR_IMPLEMENT(PRStatus) PR_InitializeNetAddr(
     PRStatus rv = PR_SUCCESS;
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
+	if (val != PR_IpAddrNull) memset(addr, 0, sizeof(addr->inet));
 	addr->inet.family = AF_INET;
 	addr->inet.port = htons(port);
 	switch (val)
@@ -1084,9 +1085,10 @@ PR_IMPLEMENT(PRStatus) PR_SetNetAddr(
     PRStatus rv = PR_SUCCESS;
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-    addr->raw.family = af;
     if (af == PR_AF_INET6)
     {
+        if (val != PR_IpAddrNull) memset(addr, 0, sizeof(addr->ipv6));
+        addr->ipv6.family = af;
         addr->ipv6.port = htons(port);
         addr->ipv6.flowinfo = 0;
         addr->ipv6.scope_id = 0;
@@ -1107,6 +1109,8 @@ PR_IMPLEMENT(PRStatus) PR_SetNetAddr(
     }
     else
     {
+        if (val != PR_IpAddrNull) memset(addr, 0, sizeof(addr->inet));
+        addr->inet.family = af;
         addr->inet.port = htons(port);
         switch (val)
         {
