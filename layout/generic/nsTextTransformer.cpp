@@ -320,6 +320,86 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
   return offset;
 }
 
+PRInt32
+nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
+                                         PRBool*  aWasTransformed)
+{
+  const nsTextFragment* frag = mFrag;
+  PRInt32 fragLen = frag->GetLength();
+  PRInt32 offset = mOffset;
+  PRInt32 prevBufferPos = mBufferPos;
+  PRBool breakAfterThis = PR_FALSE;
+  const unsigned char* cp = (const unsigned char*)frag->Get1b() + offset;
+  union {
+    unsigned char* bp1;
+    PRUnichar* bp2;
+  };
+  bp2 = mTransformBuf.GetBuffer();
+  if (mTransformedTextIsAscii) {
+    bp1 += mBufferPos;
+  } else {
+    bp2 += mBufferPos;
+  }
+
+  for (; offset < fragLen && !breakAfterThis; offset++) {
+    unsigned char ch = *cp++;
+    if (CH_NBSP == ch) {
+      ch = ' ';
+      *aWasTransformed = PR_TRUE;
+      if (offset == mOffset)
+        breakAfterThis = PR_TRUE;
+      else
+        break;
+    }
+    else if (XP_IS_SPACE(ch)) {
+      break;
+    }
+    else if (IS_DISCARDED(ch)) {
+      // Strip discarded characters from the transformed output
+      continue;
+    }
+    if (ch > MAX_UNIBYTE) {
+      // The text has a multibyte character so we can no longer leave the
+      // text as ascii text
+      mHasMultibyte = PR_TRUE;
+
+      if (mTransformedTextIsAscii) {
+        mTransformedTextIsAscii = PR_FALSE;
+        *aWasTransformed = PR_TRUE;
+
+        // Transform any existing ascii text to Unicode
+        if (mBufferPos > 0) {
+          ConvertTransformedTextToUnicode();
+          bp2 = mTransformBuf.GetBuffer() + mBufferPos;
+        }
+      }
+    }
+    if (mBufferPos >= mTransformBuf.mBufferLen) {
+      nsresult rv = mTransformBuf.GrowBy(128);
+      if (NS_FAILED(rv)) {
+        // If we run out of space then just truncate the text
+        break;
+      }
+      bp2 = mTransformBuf.GetBuffer();
+      if (mTransformedTextIsAscii) {
+        bp1 += mBufferPos;
+      } else {
+        bp2 += mBufferPos;
+      }
+    }
+    if (mTransformedTextIsAscii) {
+      *bp1++ = ch;
+    } else {
+      *bp2++ = PRUnichar(ch);
+    }
+    mBufferPos++;
+  }
+
+  *aWordLen = mBufferPos - prevBufferPos;
+  return offset;
+}
+
+
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
 nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
@@ -632,11 +712,31 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           wordLen = 1;
           isWhitespace = PR_TRUE;
         }
+        else if (CH_NBSP == firstChar && !aForLineBreak) {
+          wordLen = 1;
+          isWhitespace = PR_TRUE;
+          *aWasTransformed = PR_TRUE;
+
+          // Make sure we have enough room in the transform buffer
+          if (mBufferPos >= mTransformBuf.mBufferLen) {
+             mTransformBuf.GrowBy(128);
+          }
+
+          offset++;
+          if (mTransformedTextIsAscii) {
+            ((unsigned char*)mTransformBuf.mBuffer)[mBufferPos++] = ' ';
+          } else {
+            mTransformBuf.mBuffer[mBufferPos++] = PRUnichar(' ');
+          }
+        }
         else if (frag->Is2b()) {
           offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
-          offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
+          if (!aForLineBreak)
+            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed);
+          else
+            offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
         }
         break;
 
@@ -671,7 +771,10 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
         }
         else {
-          offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
+          if (!aForLineBreak)
+            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed);
+          else
+            offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
         }
         break;
     }
@@ -797,11 +900,11 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
 
   while (--offset >= 0) {
     PRUnichar ch = frag->CharAt(offset);
-    if (XP_IS_SPACE(ch)) {
-      break;
-    }
     if (CH_NBSP == ch) {
       ch = ' ';
+    }
+    if (XP_IS_SPACE(ch)) {
+      break;
     }
     else if (IS_DISCARDED(ch)) {
       continue;
@@ -1009,7 +1112,12 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           wordLen = 1;
           isWhitespace = PR_TRUE;
         }
-        else if (frag->Is2b()) {
+        else if (CH_NBSP == firstChar && !aForLineBreak) {
+          wordLen = 1;
+          isWhitespace = PR_TRUE;
+          mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = ' ';
+          offset--;
+        } else if (frag->Is2b()) {
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
         else {
