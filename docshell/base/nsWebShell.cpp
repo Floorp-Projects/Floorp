@@ -430,8 +430,8 @@ static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellServicesIID,   NS_IWEB_SHELL_SERVICES_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
@@ -1959,9 +1959,11 @@ nsWebShell::StopDocumentLoad(void)
 NS_IMETHODIMP
 nsWebShell::SetRendering(PRBool aRender)
 {
+  if (mContentViewer) {
+    mContentViewer->SetEnableRendering(aRender);
+  }
   return NS_OK;
 }
-
 
 //----------------------------------------------------------------------
 
@@ -2561,18 +2563,19 @@ done:
 }
 
 NS_IMETHODIMP
-nsWebShell::CancelRefreshURLTimers(void) {
-  PRInt32 index;
+nsWebShell::CancelRefreshURLTimers(void)
+{
+  PRInt32 i;
   nsITimer* timer;
 
   /* Right now all we can do is cancel all the timers for this webshell. */
   NS_LOCK_INSTANCE();
 
   /* Walk the list backwards to avoid copying the array as it shrinks.. */
-  for (index = mRefreshments.Count()-1; (0 <= index); index--) {
-    timer=(nsITimer*)mRefreshments.ElementAt(index);
+  for (i = mRefreshments.Count()-1; (0 <= i); i--) {
+    timer=(nsITimer*)mRefreshments.ElementAt(i);
     /* Remove the entry from the list before releasing the timer.*/
-    mRefreshments.RemoveElementAt(index);
+    mRefreshments.RemoveElementAt(i);
 
     if (timer) {
       timer->Cancel();
