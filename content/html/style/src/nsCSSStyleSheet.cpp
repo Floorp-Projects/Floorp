@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:tabstop=2:expandtab:shiftwidth=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -106,87 +107,6 @@
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
-
-// An |AtomKey| is to be used for storage in the hashtable, and a
-// |DependentAtomKey| should be used on the stack to avoid the performance
-// cost of refcounting an atom that one is assured to own for the lifetime
-// of the key.
-
-class AtomKey_base : public nsHashKey {
-public:
-  virtual PRUint32 HashCode(void) const;
-  virtual PRBool Equals(const nsHashKey *aKey) const;
-  nsIAtom*  mAtom;
-};
-
-class AtomKey : public AtomKey_base {
-public:
-  AtomKey(nsIAtom* aAtom);
-  AtomKey(const AtomKey_base& aKey);
-  virtual ~AtomKey();
-  virtual nsHashKey *Clone(void) const;
-};
-
-
-class DependentAtomKey : public AtomKey_base {
-public:
-  DependentAtomKey(nsIAtom* aAtom)
-    {
-      mAtom = aAtom;
-    }
-  DependentAtomKey(const DependentAtomKey& aKey);
-  virtual ~DependentAtomKey(void);
-  virtual nsHashKey *Clone(void) const;
-};
-
-PRUint32 AtomKey_base::HashCode(void) const
-{
-  return NS_PTR_TO_INT32(mAtom);
-}
-
-PRBool AtomKey_base::Equals(const nsHashKey* aKey) const
-{
-  return NS_STATIC_CAST(const AtomKey_base*, aKey)->mAtom == mAtom;
-}
-
-
-AtomKey::AtomKey(nsIAtom* aAtom)
-{
-  mAtom = aAtom;
-  NS_ADDREF(mAtom);
-}
-
-AtomKey::AtomKey(const AtomKey_base& aKey)
-{
-  mAtom = aKey.mAtom;
-  NS_ADDREF(mAtom);
-}
-
-AtomKey::~AtomKey()
-{
-  NS_RELEASE(mAtom);
-}
-
-nsHashKey* AtomKey::Clone(void) const
-{
-  return new AtomKey(*this);
-}
-
-
-DependentAtomKey::DependentAtomKey(const DependentAtomKey& aKey)
-{
-  NS_NOTREACHED("Should never clone to a dependent atom key.");
-  mAtom = aKey.mAtom;
-}
-
-DependentAtomKey::~DependentAtomKey()
-{
-}
-
-nsHashKey* DependentAtomKey::Clone(void) const
-{
-  return new AtomKey(*this); // return a non-dependent key
-}
 
 struct RuleValue {
   RuleValue(nsICSSStyleRule* aRule, PRInt32 aIndex, RuleValue *aNext)
@@ -710,6 +630,35 @@ void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 
 //--------------------------------
 
+// Attribute selectors hash table.
+struct AttributeSelectorEntry : public PLDHashEntryHdr {
+  nsIAtom *mAttribute;
+  nsVoidArray *mSelectors;
+};
+
+PR_STATIC_CALLBACK(void)
+AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*, hdr);
+  delete entry->mSelectors;
+  memset(entry, 0, table->entrySize);
+}
+
+static PLDHashTableOps AttributeSelectorOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  PL_DHashVoidPtrKeyStub,
+  PL_DHashMatchEntryStub,
+  PL_DHashMoveEntryStub,
+  AttributeSelectorClearEntry,
+  PL_DHashFinalizeStub,
+  NULL
+};
+
+
+//--------------------------------
+
 struct RuleCascadeData {
   RuleCascadeData(nsIAtom *aMedium, PRBool aQuirksMode)
     : mWeightedRules(nsnull),
@@ -719,19 +668,44 @@ struct RuleCascadeData {
       mNext(nsnull)
   {
     NS_NewISupportsArray(&mWeightedRules);
+    PL_DHashTableInit(&mAttributeSelectors, &AttributeSelectorOps, nsnull,
+                      sizeof(AttributeSelectorEntry), 16);
   }
 
   ~RuleCascadeData(void)
   {
     NS_IF_RELEASE(mWeightedRules);
+    PL_DHashTableFinish(&mAttributeSelectors);
   }
   nsISupportsArray* mWeightedRules;
   RuleHash          mRuleHash;
   nsVoidArray       mStateSelectors;
+  PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
+
+  // Looks up or creates the appropriate list in |mAttributeSelectors|.
+  // Returns null only on allocation failure.
+  nsVoidArray* AttributeListFor(nsIAtom* aAttribute);
 
   nsCOMPtr<nsIAtom> mMedium;
   RuleCascadeData*  mNext; // for a different medium
 };
+
+nsVoidArray*
+RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
+{
+  AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
+      PL_DHashTableOperate(&mAttributeSelectors, aAttribute, PL_DHASH_ADD));
+  if (!entry)
+    return nsnull;
+  if (!entry->mSelectors) {
+    if (!(entry->mSelectors = new nsVoidArray)) {
+      PL_DHashTableRawRemove(&mAttributeSelectors, entry);
+      return nsnull;
+    }
+    entry->mAttribute = aAttribute;
+  }
+  return entry->mSelectors;
+}
 
 // -------------------------------
 // CSS Style Rule processor
@@ -760,6 +734,10 @@ public:
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
                                     PRBool* aResult);
+
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        PRBool* aResult);
 
 protected:
   RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
@@ -795,7 +773,6 @@ public:
 
   nsCOMPtr<nsINameSpace> mNameSpace;
   PRInt32               mDefaultNameSpaceID;
-  nsHashtable           mRelevantAttributes;
   PRPackedBool          mComplete;
 };
 
@@ -854,15 +831,6 @@ public:
 
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
-
-
-  // If changing the given attribute cannot affect style context, aAffects
-  // will be PR_FALSE on return.
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects);
-
-  // Find attributes in selector for rule, for use with AttributeAffectsStyle
-  NS_IMETHOD CheckRuleForAttributes(nsICSSRule* aRule);
 
   // XXX do these belong here or are they generic?
   NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);
@@ -1473,7 +1441,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mOrderedRules(nsnull),
     mNameSpace(nsnull),
     mDefaultNameSpaceID(kNameSpaceID_None),
-    mRelevantAttributes(),
     mComplete(PR_FALSE)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
@@ -1494,24 +1461,12 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
-static PRBool PR_CALLBACK
-CopyRelevantAttributes(nsHashKey *aAttrKey, void *aAtom, void *aTable)
-{
-  nsHashtable *table = NS_STATIC_CAST(nsHashtable *, aTable);
-  AtomKey *key =  NS_STATIC_CAST(AtomKey *, aAttrKey);
-  table->Put(key, key->mAtom);
-  // we don't need to addref the atom here, because we're also copying the
-  // rules when we clone, and that will add a ref for us
-  return PR_TRUE;
-}
-
 CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
                                        nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(aCopy.mURL),
     mNameSpace(nsnull),
     mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID),
-    mRelevantAttributes(),
     mComplete(aCopy.mComplete)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
@@ -1527,8 +1482,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
   else {
     mOrderedRules = nsnull;
   }
-  aCopy.mRelevantAttributes.Enumerate(CopyRelevantAttributes,
-                                      &mRelevantAttributes);
   RebuildNameSpaces();
 }
 
@@ -2105,21 +2058,6 @@ CSSStyleSheetImpl::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
-                                         nsIContent *aContent,
-                                         PRBool &aAffects)
-{
-  DependentAtomKey key(aAttribute);
-  aAffects = !!mInner->mRelevantAttributes.Get(&key);
-  for (CSSStyleSheetImpl *child = mFirstChild;
-       child && !aAffects;
-       child = child->mNext) {
-    child->AttributeAffectsStyle(aAttribute, aContent, aAffects);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
@@ -2138,8 +2076,6 @@ CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
       if (nsICSSRule::NAMESPACE_RULE == type) {
         // no api to prepend a namespace (ugh), release old ones and re-create them all
         mInner->RebuildNameSpaces();
-      } else {
-        CheckRuleForAttributes(aRule);
       }
     }
   }
@@ -2181,75 +2117,11 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
             mInner->mNameSpace = newNameSpace;
           }
         }
-      } else {
-        CheckRuleForAttributes(aRule);
       }
         
     }
   }
   return NS_OK;
-}
-
-static PRBool
-CheckRuleForAttributesEnum(nsISupports *aRule, void *aData)
-{
-  nsICSSRule *rule = NS_STATIC_CAST(nsICSSRule *, aRule);
-  CSSStyleSheetImpl *sheet = NS_STATIC_CAST(CSSStyleSheetImpl *, aData);
-  return NS_SUCCEEDED(sheet->CheckRuleForAttributes(rule));
-}
-
-NS_IMETHODIMP
-CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
-{
-  PRInt32 ruleType = nsICSSRule::UNKNOWN_RULE;
-  aRule->GetType(ruleType);
-  switch (ruleType) {
-    case nsICSSRule::MEDIA_RULE: {
-      nsICSSMediaRule *mediaRule = (nsICSSMediaRule *)aRule;
-      return mediaRule->EnumerateRulesForwards(CheckRuleForAttributesEnum,
-                                               (void *)this);
-    }
-    case nsICSSRule::STYLE_RULE: {
-      nsICSSStyleRule *styleRule = NS_STATIC_CAST(nsICSSStyleRule *, aRule);
-      nsCSSSelector *iter;
-      for (iter = styleRule->FirstSelector(); iter; iter = iter->mNext) {
-        /* P.classname means we have to check the attribute "class" */
-        if (iter->mIDList) {
-          DependentAtomKey idKey(nsHTMLAtoms::id);
-          mInner->mRelevantAttributes.Put(&idKey, nsHTMLAtoms::id);
-        }
-        if (iter->mClassList) {
-          DependentAtomKey classKey(nsHTMLAtoms::kClass);
-          mInner->mRelevantAttributes.Put(&classKey, nsHTMLAtoms::kClass);
-        }
-        for (nsAttrSelector *sel = iter->mAttrList; sel; sel = sel->mNext) {
-          /* store it in this sheet's attributes-that-matter table */
-          /* XXX store tag name too, but handle collisions */
-#ifdef DEBUG_shaver_off
-          nsAutoString str;
-          sel->mAttr->ToString(str);
-          char * chars = ToNewCString(str);
-          fprintf(stderr, "[%s@%p]", chars, this);
-          nsMemory::Free(chars);
-#endif
-          DependentAtomKey key(sel->mAttr);
-          mInner->mRelevantAttributes.Put(&key, sel->mAttr);
-        }
-
-        // Search for the :lang() pseudo class.  If it is there add
-        // the lang attribute to the relevant attribute list.
-        for (nsAtomStringList* p = iter->mPseudoClassList; p; p = p->mNext) {
-          if (p->mAtom == nsCSSPseudoClasses::lang) {
-            DependentAtomKey langKey(nsHTMLAtoms::lang);
-            mInner->mRelevantAttributes.Put(&langKey, nsHTMLAtoms::lang);
-            break;
-          }
-        }
-      }
-    } /* fall-through */
-    default:
-      return NS_OK;
-  }
 }
 
 NS_IMETHODIMP
@@ -2843,9 +2715,6 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
         mInner->mNameSpace = newNameSpace;
       }
     }
-    else {
-      CheckRuleForAttributes(cssRule);
-    }
 
     // We don't notify immediately for @import rules, but rather when
     // the sheet the rule is importing is loaded
@@ -3048,7 +2917,6 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   DidDirty();
   for (counter = 0; counter < rulecount; counter++) {
     rule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
-    CheckRuleForAttributes(rule);
   
     if (mDocument) {
       result = mDocument->StyleRuleAdded(this, rule);
@@ -3516,6 +3384,7 @@ DashMatchCompare(const nsAString& aAttributeValue,
 static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
                               PRInt32 aStateMask, // states NOT to test
+                              nsIAtom* aAttribute, // attribute NOT to test
                               PRInt8 aNegationIndex) 
 
 {
@@ -3746,15 +3615,20 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   }
 
   // namespace/tag match
-  if (result && aSelector->mAttrList) { // test for attribute match
-    // if no attributes on the content, no match
-    if(!data.mHasAttributes) {
+
+  if (result && aSelector->mAttrList) {
+    // test for attribute match
+    if (!data.mHasAttributes && !aAttribute) {
+      // if no attributes on the content, no match
       result = localFalse;
     } else {
       result = localTrue;
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
-        if (!data.mContent->HasAttr(attr->mNameSpace, attr->mAttr)) {
+        if (attr->mAttr == aAttribute) {
+          result = PR_TRUE;
+        }
+        else if (!data.mContent->HasAttr(attr->mNameSpace, attr->mAttr)) {
           result = localFalse;
         }
         else if (attr->mFunction != NS_ATTR_FUNC_SET) {
@@ -3826,7 +3700,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       // case sensitivity: bug 93371
       PRBool isCaseSensitive = data.mCompatMode != eCompatibility_NavQuirks;
       nsAtomList* IDList = aSelector->mIDList;
-      if (nsnull == IDList) {
+      if (nsnull == IDList || aAttribute == nsHTMLAtoms::id) {
         result = PR_TRUE;
       }
       else if (nsnull != data.mContentID) {
@@ -3857,7 +3731,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         }
       }
       
-      if (result) {
+      if (result && aAttribute != nsHTMLAtoms::kClass) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
           if (localTrue == (!data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
@@ -3873,7 +3747,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // apply SelectorMatches to the negated selectors in the chain
   if (result && (nsnull != aSelector->mNegations)) {
     result = SelectorMatches(data, aSelector->mNegations, aStateMask,
-                             aNegationIndex+1);
+                             aAttribute, aNegationIndex+1);
   }
   return result;
 }
@@ -3948,7 +3822,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         NS_ASSERTION(!content, "content must be null");
         break;
       }
-      if (SelectorMatches(*newdata, selector, 0, 0)) {
+      if (SelectorMatches(*newdata, selector, 0, nsnull, 0)) {
         // to avoid greedy matching, we need to recurse if this is a
         // descendant combinator and the next combinator is not
         if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -3992,7 +3866,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
-  if (SelectorMatches(*data, selector, 0, 0)) {
+  if (SelectorMatches(*data, selector, 0, nsnull, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
       // for performance, require that every implementation of
@@ -4048,7 +3922,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
       if (PRUnichar('+') == selector->mOperator) {
         return; // not valid here, can't match
       }
-      if (SelectorMatches(*data, selector, 0, 0)) {
+      if (SelectorMatches(*data, selector, 0, nsnull, 0)) {
         selector = selector->mNext;
       }
       else {
@@ -4093,19 +3967,17 @@ CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
   return NS_OK;
 }
 
-static 
-PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
-{
-  StateRuleProcessorData* data = (StateRuleProcessorData*)aData;
 
-  nsCSSSelector* selector = (nsCSSSelector*)aSelector;
-  if (SelectorMatches(*data, selector, data->mStateMask, 0)) {
-    selector = selector->mNext;
-    if (SelectorMatchesTree(*data, selector)) {
-      return PR_FALSE;
-    }
-  }
-  return PR_TRUE;
+PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
+{
+  StateRuleProcessorData* data =
+      NS_STATIC_CAST(StateRuleProcessorData*, aData);
+  nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
+
+  // Return whether we want to halt the enumeration, which is the
+  // negation of whether we find a match (ignoring the event state mask).
+  return !( SelectorMatches(*data, selector, data->mStateMask, nsnull, 0) &&
+            SelectorMatchesTree(*data, selector->mNext) );
 }
 
 NS_IMETHODIMP
@@ -4131,6 +4003,46 @@ CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
   // |EnumerateForwards|.
   *aResult = cascade &&
              !cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData);
+
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
+{
+  AttributeRuleProcessorData* data =
+      NS_STATIC_CAST(AttributeRuleProcessorData*, aData);
+  nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
+
+  // Return whether we want to halt the enumeration, which is the
+  // negation of whether we find a match (ignoring the event state mask).
+  return !( SelectorMatches(*data, selector, 0, data->mAttribute, 0) &&
+            SelectorMatchesTree(*data, selector->mNext) );
+}
+
+NS_IMETHODIMP
+CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                             nsIAtom* aMedium,
+                                             PRBool* aResult)
+{
+  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
+                  "content must be element");
+
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
+
+  // We do the same thing for attributes that we do for state selectors
+  // (see HasStateDependentStyle), except that instead of one big list
+  // we have a hashtable with a per-attribute list.
+
+  *aResult = PR_FALSE;
+  if (cascade) {
+    AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
+        PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
+                             PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      *aResult =
+        !entry->mSelectors->EnumerateForwards(AttributeEnumFunc, aData);
+    }
+  }
 
   return NS_OK;
 }
@@ -4170,18 +4082,41 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
 }
 
 static PRBool
-BuildRuleHashAndStateSelectors(nsISupports* aRule, void* aCascade)
+AddRule(nsISupports* aRule, void* aCascade)
 {
   nsICSSStyleRule* rule = NS_STATIC_CAST(nsICSSStyleRule*, aRule);
   RuleCascadeData *cascade = NS_STATIC_CAST(RuleCascadeData*, aCascade);
 
+  // Build the rule hash.
   cascade->mRuleHash.PrependRule(rule);
 
-  nsVoidArray* array = &cascade->mStateSelectors;
+  nsVoidArray* stateArray = &cascade->mStateSelectors;
   for (nsCSSSelector* selector = rule->FirstSelector();
-           selector; selector = selector->mNext)
+           selector; selector = selector->mNext) {
+    // Build mStateSelectors.
     if (IsStateSelector(*selector))
+      stateArray->AppendElement(selector);
+
+    // Build mAttributeSelectors.
+    if (selector->mIDList) {
+      nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::id);
+      if (!array)
+        return PR_FALSE;
       array->AppendElement(selector);
+    }
+    if (selector->mClassList) {
+      nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::kClass);
+      if (!array)
+        return PR_FALSE;
+      array->AppendElement(selector);
+    }
+    for (nsAttrSelector *attr = selector->mAttrList; attr; attr = attr->mNext) {
+      nsVoidArray *array = cascade->AttributeListFor(attr->mAttr);
+      if (!array)
+        return PR_FALSE;
+      array->AppendElement(selector);
+    }
+  }
 
   return PR_TRUE;
 }
@@ -4328,14 +4263,16 @@ CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
     cascade = new RuleCascadeData(aMedium,
                                   eCompatibility_NavQuirks == quirkMode);
     if (cascade) {
-      *cascadep = cascade;
-
       CascadeEnumData data(aMedium);
       mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
       PutRulesInList(&data.mRuleArrays, cascade->mWeightedRules);
 
-      cascade->mWeightedRules->EnumerateBackwards(
-                                      BuildRuleHashAndStateSelectors, cascade);
+      if (!cascade->mWeightedRules->EnumerateBackwards(AddRule, cascade)) {
+        delete cascade;
+        cascade = nsnull;
+      }
+
+      *cascadep = cascade;
     }
   }
   return cascade;

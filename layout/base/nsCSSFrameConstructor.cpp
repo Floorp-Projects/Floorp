@@ -10731,7 +10731,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       shell->GetFrameManager(getter_AddRefs(frameManager));
 
       PRBool affects;
-      frameManager->AttributeAffectsStyle(aAttribute, aContent, affects);
+      frameManager->HasAttributeDependentStyle(aPresContext, aContent,
+                                               aAttribute, aModType, &affects);
       if (affects) {
 #ifdef DEBUG_shaver
         fputc('+', stderr);

@@ -208,6 +208,12 @@ public:
                                     PRInt32         aStateMask,
                                     PRBool*         aResult);
 
+  NS_IMETHOD HasAttributeDependentStyle(nsIPresContext* aPresContext,
+                                        nsIContent*     aContent,
+                                        nsIAtom*        aAtribute,
+                                        PRInt32         aModType,
+                                        PRBool*         aResult);
+
   NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
                                 nsIFrame*&      aFrameSubTree);
@@ -295,9 +301,6 @@ public:
 #ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
 #endif
-
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects);
 
 private:
   static nsrefcnt gInstances;
@@ -1501,20 +1504,20 @@ struct StatefulData : public StateRuleProcessorData {
                nsIContent* aContent, PRInt32 aStateMask)
     : StateRuleProcessorData(aPresContext, aContent, aStateMask),
       mMedium(aMedium),
-      mStateful(PR_FALSE)
+      mHasStyle(PR_FALSE)
   {}
   nsIAtom*        mMedium;
-  PRBool          mStateful;
+  PRBool          mHasStyle;
 }; 
 
 static PRBool SheetHasStatefulStyle(nsISupports* aProcessor, void *aData)
 {
   nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
   StatefulData* data = (StatefulData*)aData;
-  PRBool hasStateful;
-  processor->HasStateDependentStyle(data, data->mMedium, &hasStateful);
-  if (hasStateful) {
-    data->mStateful = PR_TRUE;
+  PRBool hasStyle;
+  processor->HasStateDependentStyle(data, data->mMedium, &hasStyle);
+  if (hasStyle) {
+    data->mHasStyle = PR_TRUE;
     // Stop iteration.  Note that StyleSetImpl::WalkRuleProcessors uses
     // this to stop its own iteration in some cases, but not all (the
     // style rule supplier case).  Since this optimization is only for
@@ -1539,12 +1542,67 @@ StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
        mUserRuleProcessors  ||
        mDocRuleProcessors   ||
        mOverrideRuleProcessors)) {  
-    nsIAtom* medium = nsnull;
-    aPresContext->GetMedium(&medium);
+    nsCOMPtr<nsIAtom> medium;
+    aPresContext->GetMedium(getter_AddRefs(medium));
     StatefulData data(aPresContext, medium, aContent, aStateMask);
     WalkRuleProcessors(SheetHasStatefulStyle, &data);
-    NS_IF_RELEASE(medium);
-    *aResult = data.mStateful;
+    *aResult = data.mHasStyle;
+  } else {
+    *aResult = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+struct AttributeData : public AttributeRuleProcessorData {
+  AttributeData(nsIPresContext* aPresContext, nsIAtom* aMedium,
+               nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
+    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
+      mMedium(aMedium),
+      mHasStyle(PR_FALSE)
+  {}
+  nsIAtom*        mMedium;
+  PRBool          mHasStyle;
+}; 
+
+static PRBool SheetHasAttributeStyle(nsISupports* aProcessor, void *aData)
+{
+  nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
+  AttributeData* data = (AttributeData*)aData;
+  PRBool hasStyle;
+  processor->HasAttributeDependentStyle(data, data->mMedium, &hasStyle);
+  if (hasStyle) {
+    data->mHasStyle = PR_TRUE;
+    // Stop iteration.  Note that StyleSetImpl::WalkRuleProcessors uses
+    // this to stop its own iteration in some cases, but not all (the
+    // style rule supplier case).  Since this optimization is only for
+    // the case where we have a lot more work to do, it's not worth the
+    // code needed to make the stopping perfect.
+    return PR_FALSE;
+  }
+  return PR_TRUE; // continue
+}
+
+// Test if style is dependent on content state
+NS_IMETHODIMP
+StyleSetImpl::HasAttributeDependentStyle(nsIPresContext* aPresContext,
+                                         nsIContent*     aContent,
+                                         nsIAtom*        aAttribute,
+                                         PRInt32         aModType,
+                                         PRBool*         aResult)
+{
+  GatherRuleProcessors();
+
+  if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
+      (mAgentRuleProcessors ||
+       mUserRuleProcessors  ||
+       mDocRuleProcessors   ||
+       mOverrideRuleProcessors)) {  
+    nsCOMPtr<nsIAtom> medium;
+    aPresContext->GetMedium(getter_AddRefs(medium));
+    AttributeData data(aPresContext, medium, aContent, aAttribute, aModType);
+    WalkRuleProcessors(SheetHasAttributeStyle, &data);
+    *aResult = data.mHasStyle;
   } else {
     *aResult = PR_FALSE;
   }
@@ -1911,54 +1969,4 @@ void StyleSetImpl::ResetUniqueStyleItems(void)
 {
   UNIQUE_STYLE_ITEMS(uniqueItems);
   uniqueItems->Clear();  
-}
-
-struct AttributeContentPair {
-  nsIAtom *attribute;
-  nsIContent *content;
-};
-
-static PRBool
-EnumAffectsStyle(nsISupports *aElement, void *aData)
-{
-  nsIStyleSheet *sheet = NS_STATIC_CAST(nsIStyleSheet *, aElement);
-  AttributeContentPair *pair = (AttributeContentPair *)aData;
-  PRBool affects;
-  nsresult res =
-      sheet->AttributeAffectsStyle(pair->attribute, pair->content, affects);
-  if (NS_FAILED(res) || affects)
-    return PR_FALSE;            // stop checking
-
-  return PR_TRUE;
-}
-
-NS_IMETHODIMP
-StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                    PRBool &aAffects)
-{
-  AttributeContentPair pair;
-  pair.attribute = aAttribute;
-  pair.content = aContent;
-
-  /* scoped sheets should be checked first, since - if present - they will contain
-     the bulk of the applicable rules for the content node. */
-  if (mStyleRuleSupplier)
-    mStyleRuleSupplier->AttributeAffectsStyle(EnumAffectsStyle, &pair, aContent, &aAffects);
-
-  if (!aAffects) {
-    /* check until we find a sheet that will be affected */
-    if ((mDocSheets && !mDocSheets->EnumerateForwards(EnumAffectsStyle, &pair)) ||
-        (mOverrideSheets && !mOverrideSheets->EnumerateForwards(EnumAffectsStyle,
-                                                                &pair)) ||
-        (mUserSheets && !mUserSheets->EnumerateForwards(EnumAffectsStyle,
-                                                                &pair)) ||
-        (mAgentSheets && !mAgentSheets->EnumerateForwards(EnumAffectsStyle,
-                                                                &pair))) {
-      aAffects = PR_TRUE;
-    } else {
-      aAffects = PR_FALSE;
-    }
-  }
-
-  return NS_OK;
 }

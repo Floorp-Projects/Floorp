@@ -646,6 +646,10 @@ public:
                                     nsIAtom* aMedium,
                                     PRBool* aResult);
 
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        PRBool* aResult);
+
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
   NS_IMETHOD Reset(nsIURI* aURL);
@@ -665,10 +669,6 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // If changing the given attribute cannot affect style context, aAffects
-  // will be PR_FALSE on return.
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects);
 private: 
   // These are not supported and are not implemented! 
   HTMLStyleSheetImpl(const HTMLStyleSheetImpl& aCopy); 
@@ -916,6 +916,43 @@ HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
              aData->mStyledContent->HasAttr(kNameSpaceID_None,
                                             nsHTMLAtoms::href);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                               nsIAtom* aMedium,
+                                               PRBool* aResult)
+{
+  // Result is true for |href| changes on HTML links if we have link rules.
+  nsIStyledContent *styledContent = aData->mStyledContent;
+  if (aData->mAttribute == nsHTMLAtoms::href &&
+      (mLinkRule || mVisitedRule || mActiveRule) &&
+      styledContent &&
+      styledContent->IsContentOfType(nsIContent::eHTML) &&
+      aData->mContentTag == nsHTMLAtoms::a) {
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Don't worry about the HTMLDocumentColorRule since it only applies
+  // to descendants of body, when we're already reresolving.
+
+  // Handle the content style rules.
+  if (styledContent) {
+    nsChangeHint hint = NS_STYLE_HINT_NONE;
+    styledContent->GetMappedAttributeImpact(aData->mAttribute,
+                                            aData->mModType, hint);
+    // This is the same test that nsGenericHTMLElement uses when calling
+    // nsHTMLAttributes::SetAttributeFor.
+    if ((hint & ~(nsChangeHint_AttrChange | nsChangeHint_Aural |
+                  nsChangeHint_Content)) != 0) {
+      *aResult = PR_TRUE;
+      return NS_OK;
+    }
+  }
+
+  *aResult = PR_FALSE;
   return NS_OK;
 }
 
@@ -1222,17 +1259,6 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 }
 #endif
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
-                                          nsIContent *aContent,
-                                          PRBool &aAffects)
-{
-  // XXX we should be checking to see if this is an href on an <A> being
-  // XXX tweaked, in which case we really want to restyle
-  aAffects = PR_FALSE;
-  return NS_OK;
-}
 
 // XXX For convenience and backwards compatibility
 NS_EXPORT nsresult

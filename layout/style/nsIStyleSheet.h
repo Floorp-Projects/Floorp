@@ -97,17 +97,9 @@ public:
   NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
                                    nsIStyleRuleProcessor* aPrevProcessor) = 0;
 
-  // XXX style rule enumerations
-
-  // If changing the given attribute cannot affect style context, aAffects
-  // will be PR_FALSE on return.
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects) = 0;
-
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 #endif
-
 };
 
 #endif /* nsIStyleSheet_h___ */

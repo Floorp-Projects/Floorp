@@ -181,16 +181,14 @@ public:
                                     nsIAtom* aMedium,
                                     PRBool* aResult);
 
-  // XXX style rule enumerations
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        PRBool* aResult);
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // If changing the given attribute cannot affect style context, aAffects
-  // will be PR_FALSE on return.
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects);
 private: 
   // These are not supported and are not implemented! 
   HTMLCSSStyleSheetImpl(const HTMLCSSStyleSheetImpl& aCopy); 
@@ -321,6 +319,16 @@ HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
   return NS_OK;
 }
 
+// Test if style is dependent on attribute
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                                  nsIAtom* aMedium,
+                                                  PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
 
 
 NS_IMETHODIMP 
@@ -446,16 +454,6 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 }
 #endif
-
-NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
-                                             nsIContent *aContent,
-                                             PRBool &aAffects)
-{
-  // XXX can attributes affect rules in these?
-  aAffects = PR_FALSE;
-  return NS_OK;
-}
 
 // XXX For backwards compatibility and convenience
 NS_EXPORT nsresult

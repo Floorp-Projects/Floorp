@@ -203,6 +203,13 @@ public:
                                      PRInt32         aStateMask,
                                      PRBool*         aResult) = 0;
 
+  // Test if style is dependent on the presence of an attribute.
+  NS_IMETHOD  HasAttributeDependentStyle(nsIPresContext* aPresContext,
+                                         nsIContent*     aContent,
+                                         nsIAtom*        aAttribute,
+                                         PRInt32         aModType,
+                                         PRBool*         aResult) = 0;
+
   // Create frames for the root content element and its child content
   NS_IMETHOD  ConstructRootFrame(nsIPresContext* aPresContext,
                                  nsIContent*     aDocElement,
@@ -316,11 +323,6 @@ public:
 #endif
 
   virtual void ResetUniqueStyleItems(void) = 0;
-
-  // If changing the given attribute cannot affect style context, aAffects
-  // will be PR_FALSE on return.
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects) = 0;
 };
 
 extern NS_EXPORT nsresult

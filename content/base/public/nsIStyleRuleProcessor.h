@@ -145,6 +145,21 @@ struct StateRuleProcessorData : public RuleProcessorData {
                             //  Constants defined in nsIEventStateManager.h .
 };
 
+struct AttributeRuleProcessorData : public RuleProcessorData {
+  AttributeRuleProcessorData(nsIPresContext* aPresContext,
+                         nsIContent* aContent,
+                         nsIAtom* aAttribute,
+                         PRInt32 aModType)
+    : RuleProcessorData(aPresContext, aContent, nsnull),
+      mAttribute(aAttribute),
+      mModType(aModType)
+  {
+    NS_PRECONDITION(aContent, "null pointer");
+  }
+  nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
+  PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
+};
+
 
 // IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
@@ -172,6 +187,10 @@ public:
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
                                     PRBool* aResult) = 0;
+  // Test if style is dependent on attribute
+  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
+                                        nsIAtom* aMedium,
+                                        PRBool* aResult) = 0;
 };
 
 #endif /* nsIStyleRuleProcessor_h___ */

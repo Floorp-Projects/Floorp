@@ -423,9 +423,6 @@ public:
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc,
                        RuleProcessorData* aData);
-  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc,
-                                   void* aData, nsIContent* aContent,
-                                   PRBool* aAffects);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
@@ -436,9 +433,6 @@ protected:
 
   void WalkRules(nsISupportsArrayEnumFunc aFunc, RuleProcessorData* aData,
                  nsIContent* aParent, nsIContent* aCurrContent);
-
-  void AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData,
-                             nsIContent* aParent, nsIContent* aCurrContent, PRBool* aAffects);
 
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
 
@@ -1383,47 +1377,6 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
         (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
     }
   }
-
-  return NS_OK;
-}
-
-void
-nsBindingManager::AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData,
-                                        nsIContent* aParent, nsIContent* aCurrContent, PRBool* aAffects)
-{    
-  nsCOMPtr<nsIXBLBinding> binding;
-  GetBinding(aCurrContent, getter_AddRefs(binding));
-  if (binding) {
-    binding->AttributeAffectsStyle(aFunc, aData, aAffects);
-  }
-
-  if (*aAffects)
-    return;
-
-  if (aParent != aCurrContent) {
-    nsCOMPtr<nsIContent> par;
-    GetEnclosingScope(aCurrContent, getter_AddRefs(par));
-    if (par)
-      AttributeAffectsStyle(aFunc, aData, aParent, par, aAffects);
-  }
-}
-
-
-NS_IMETHODIMP
-nsBindingManager::AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, 
-                                        nsIContent* aContent, PRBool* aAffects)
-{
-  *aAffects = PR_FALSE;
-  if (!aContent)
-    return NS_OK;
-
-  nsCOMPtr<nsIContent> parent;
-  GetOutermostStyleScope(aContent, getter_AddRefs(parent));
-
-  AttributeAffectsStyle(aFunc, aData, parent, aContent, aAffects);
-
-  if (*aAffects)
-    return NS_OK;
 
   return NS_OK;
 }

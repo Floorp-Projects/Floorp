@@ -20,11 +20,6 @@ class nsIStyleRuleSupplier : public nsISupports {
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc,
                        RuleProcessorData* aData)=0;
-
-  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc,
-                                   void* aData,
-                                   nsIContent* aContent,
-                                   PRBool* aAffects)=0;
 };
 
 #endif /* _nsIStyleRuleSupplier_h */
