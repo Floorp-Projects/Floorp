@@ -76,22 +76,15 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBro
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createContainerWindow
     (JNIEnv * env, jobject obj, jint parent, jint screenWidth, jint screenHeight) {
-    GtkWidget * window = (GtkWidget *) parent;
-    GtkWidget *mMozArea = NULL;
+	
+   GtkWidget * window = (GtkWidget *) parent;
 
-    mMozArea = gtk_mozarea_new();
-    gtk_container_add(GTK_CONTAINER(window), mMozArea);
-    gtk_widget_realize(GTK_WIDGET(mMozArea));
-    
-    // HACK: javaMake sure this window doesn't appear onscreen!!!!
-    gtk_widget_set_uposition(window, screenWidth + 20, screenHeight + 20);
-    gtk_widget_show(mMozArea);
-    
-    gtk_widget_show(window);
-    
-    //gtk_main();
-    printf ("In MotifBrowserControlCanvas.cpp -- mozArea stored\n\n");
-    return (jint) mMozArea;
+   gtk_widget_realize(GTK_WIDGET(window));
+   gtk_widget_set_uposition(window, screenWidth + 20, screenHeight + 20);
+   gtk_widget_show(window);
+
+   return (jint) window;
+
 }
 
 int getWinID(GtkWidget * gtkWidgetPtr) {

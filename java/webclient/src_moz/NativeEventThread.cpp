@@ -587,14 +587,12 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     printf ("Init the baseWindow\n");
     
 #ifdef XP_UNIX
-    GdkSuperWin * superwin;
-    GtkMozArea * mozarea;
-    mozarea = (GtkMozArea *) initContext->gtkWinPtr;
-    superwin = mozarea->superwin;
+    GtkWidget * bin;
+    bin = (GtkWidget *) initContext->gtkWinPtr;
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - before Init Call...\n", initContext));
     }
-    rv = initContext->baseWindow->InitWindow((nativeWindow) superwin, nsnull, initContext->x, initContext->y, initContext->w, initContext->h);
+    rv = initContext->baseWindow->InitWindow((nativeWindow) bin, nsnull, initContext->x, initContext->y, initContext->w, initContext->h);
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", initContext));
     }
