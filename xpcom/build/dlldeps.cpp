@@ -133,7 +133,6 @@ void XXXNeverCalled()
     nsTraceRefcnt::DumpStatistics();
     NS_NewEmptyEnumerator(NULL);
     nsArrayEnumerator(NULL);
-    NS_NewIntersectionEnumerator(NULL, NULL, NULL);
     NS_QuickSort(NULL, 0, 0, NULL, NULL);
     nsStatistics("dummy");
     nsString();

@@ -35,10 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
 
 %{C++
 #define NS_ENUMERATOR_FALSE 1
+extern "C" NS_COM nsresult
+NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
 %}
 /*
  * DO NOT USE THIS INTERFACE.  IT IS HORRIBLY BROKEN, USES NS_COMFALSE
@@ -80,33 +82,3 @@ interface nsIBidirectionalEnumerator : nsIEnumerator {
    */
   void prev();
 };
-
-%{C++
-#include "nsISimpleEnumerator.h"
-
-extern "C" NS_COM nsresult
-NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
-
-// Construct and return an implementation of a "conjoining enumerator." This
-// enumerator lets you string together two other enumerators into one sequence.
-// The result is an nsIBidirectionalEnumerator, but if either input is not
-// also bidirectional, the Last and Prev operations will fail.
-extern "C" NS_COM nsresult
-NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
-                           nsIBidirectionalEnumerator* *aInstancePtrResult);
-
-// Construct and return an implementation of a "union enumerator." This
-// enumerator will only return elements that are found in both constituent
-// enumerators.
-extern "C" NS_COM nsresult
-NS_NewUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
-                      nsIEnumerator* *aInstancePtrResult);
-
-// Construct and return an implementation of an "intersection enumerator." This
-// enumerator will return elements that are found in either constituent
-// enumerators, eliminating duplicates.
-extern "C" NS_COM nsresult
-NS_NewIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
-                             nsIEnumerator* *aInstancePtrResult);
-
-%}
