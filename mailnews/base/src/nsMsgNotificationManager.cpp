@@ -369,6 +369,7 @@ nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsAutoS
 	if(!(NS_SUCCEEDED(rv) && folderURI))
 		return rv;
 
+	newMailURI = "newmail:";
 	newMailURI += folderURI;
 	nsAllocator::Free(folderURI);
 	return NS_OK;
