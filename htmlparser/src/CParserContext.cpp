@@ -95,7 +95,6 @@ CParserContext::CParserContext(const CParserContext &aContext) :
   mMultipart=aContext.mMultipart;
   mContextType=aContext.mContextType;
   mCopyUnused;
-  mRefCount=2;
 }
 
 
@@ -108,14 +107,11 @@ CParserContext::~CParserContext(){
 
   MOZ_COUNT_DTOR(CParserContext);
 
-  mRefCount--;
-  if(0==mRefCount) {
-    if(mScanner)
-      delete mScanner;
+  if(mScanner)
+    delete mScanner;
 
-    if(mTransferBuffer)
-      delete [] mTransferBuffer;
-  }
+  if(mTransferBuffer)
+    delete [] mTransferBuffer;
 
   NS_IF_RELEASE(mDTD);
 
