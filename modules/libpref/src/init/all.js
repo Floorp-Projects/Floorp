@@ -77,6 +77,8 @@ pref("browser.toolbars.showbutton.search",  true);
 pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
 
+pref("browser.download.progressDnldDialog.keepAlive", false); // keep the dnload progress dialog up after dnload is complete
+
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator/locale/navigator.properties");
 pref("browser.search.opensidebarsearchpanel", true);
