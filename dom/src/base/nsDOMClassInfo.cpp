@@ -958,6 +958,30 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   return rv;
 }
 
+// static
+nsresult
+nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
+{
+  nsCOMPtr<nsIExceptionService> xs =
+    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+  if (!xs)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIExceptionManager> xm;
+  rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIException> exception;
+  rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
+  jsval jv;
+  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception, 
+                  NS_GET_IID(nsIException), &jv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  JS_SetPendingException(cx, jv);
+
+  return NS_OK;
+}
+
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoID aID) : mID(aID)
 {
   NS_INIT_REFCNT();
@@ -2943,7 +2967,7 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString nameStr;
   nameStr.AssignWithConversion(name);
 
-  const nsGlobalNameStruct *name_struct = NS_OK;
+  const nsGlobalNameStruct *name_struct = nsnull;
 
   nsresult rv = gNameSpaceManager->LookupName(nameStr, &name_struct);
 
@@ -2959,6 +2983,7 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   if (initializer) {
     rv = initializer->Initialize(cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
+      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_NOT_INITIALIZED);
       return JS_FALSE;
     }
   }
@@ -3110,7 +3135,11 @@ NativeConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   *rval = JSVAL_VOID;
 
-  return JS_TRUE;
+  // ignore return value, we return JS_FALSE anyway
+  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  NS_ASSERTION(0, "object instantiated without constructor");
+
+  return JS_FALSE;
 }
 
 // static
