@@ -443,7 +443,7 @@
            try {
              if (row.value >= b.view.rowCount) return;
            } catch (e) { return; }
-           
+            
 		   if (obj.value != "twisty") {
 		     var column = document.getElementById(col.value);
 		     var cycler = column.getAttribute('cycler') == 'true';
@@ -595,7 +595,7 @@
                      popupChild.setAttribute("colid", currCol.id);
                      popupChild.setAttribute("oncommand",
                                              "this.parentNode.parentNode.parentNode.toggleColumnState(this);");
-                     if (currCol.getAttribute("collapsed") != "true")
+                     if (currCol.getAttribute("hidden") != "true")
                        popupChild.setAttribute("checked", "true");
                      if (currCol.getAttribute("primary") == "true")
                        popupChild.setAttribute("disabled", "true");
@@ -619,12 +619,9 @@
              if (colNode) {
                var checkedState = aPopup.getAttribute("checked");
                if (checkedState == "true")
-                 colNode.removeAttribute("collapsed");
+                 colNode.removeAttribute("hidden");
                else
-                 colNode.setAttribute("collapsed", "true");
-
-               // now that columns have changed, we need to invalidate
-               colNode.parentNode.outlinerBoxObject.invalidate();
+                 colNode.setAttribute("hidden", "true");
              }
            ]]>
          </body>
