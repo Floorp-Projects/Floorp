@@ -97,17 +97,20 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 	{
 		// Delete the content view
 		CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
-		pButton->GetView()->DestroyWindow();
+		if (pButton)
+		{
+			pButton->GetView()->DestroyWindow();
 
-		// Delete the button
-		delete pButton;
+			// Delete the button
+			delete pButton;
 
-		// Remove our FE data
-		HT_SetViewFEData(theView, NULL);
+			// Remove our FE data
+			HT_SetViewFEData(theView, NULL);
+		}
 	}
 	else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && HT_TopNode(theView) == n)
 	{
-		// Top level node changed its name.  Need to change the button text, window title bar, and 
+		// Top level node changed its name/icon.  Need to change the button text, window title bar, and 
 		// embedded nav menu bar.
 	}
 	else if (whatHappened == HT_EVENT_NODE_EDIT && HT_TopNode(theView) == n)
@@ -382,7 +385,19 @@ CSelector::~CSelector()
 	
 	if (m_Pane != NULL)
 	{
-		m_Notification->data = NULL;
+		int count = HT_GetViewListCount(m_Pane);
+		for (int i = 0; i < count; i++)
+		{
+			HT_View view = HT_GetNthView(m_Pane, i);
+		
+			if (view && HT_GetViewFEData(view))
+			{
+				CSelectorButton* theButton = (CSelectorButton*)HT_GetViewFEData(view);
+				delete theButton;
+				HT_SetViewFEData(view, NULL);
+			}
+		}
+		
 		XP_UnregisterNavCenter(m_Pane);
 		HT_DeletePane(m_Pane);
 	}

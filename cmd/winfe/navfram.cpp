@@ -89,6 +89,8 @@ CNSNavFrame::~CNSNavFrame()
 	{
 		PREF_SetRectPref(gPrefFloatRect, (int16)m_rectFloat.left, (int16)m_rectFloat.top, (int16)m_rectFloat.right, (int16)m_rectFloat.bottom);
 	}
+
+	delete m_pNavMenu;
 }
 
 void CNSNavFrame::UpdateTitleBar(HT_View pView)
@@ -255,17 +257,9 @@ void CNSNavFrame::OnSize( UINT nType, int cx, int cy )
 			m_pSelector->InvalidateRect( &tempRect, TRUE);
 		}
 
-		if (m_dwOverDockStyle == DOCKSTYLE_FLOATING)
-		{
-			m_pNavMenu->ShowWindow(SW_HIDE);
-			m_nsContent->SetWindowPos(NULL, MIN_CATEGORY_WIDTH+2, top, cx-MIN_CATEGORY_WIDTH-2, cy - STARTY - top, 0);
-		}
-		else
-		{
-			m_pNavMenu->ShowWindow(SW_SHOW);
-			m_pNavMenu->SetWindowPos(NULL, MIN_CATEGORY_WIDTH+2, top, cx - MIN_CATEGORY_WIDTH, NAVBAR_HEIGHT, SWP_NOREPOSITION);
-			m_nsContent->SetWindowPos( NULL, MIN_CATEGORY_WIDTH+2, top+NAVBAR_HEIGHT, cx - MIN_CATEGORY_WIDTH - 2, cy - STARTY - top - NAVBAR_HEIGHT, 0);
-		}
+		m_pNavMenu->ShowWindow(SW_SHOW);
+		m_pNavMenu->SetWindowPos(NULL, MIN_CATEGORY_WIDTH+2, top, cx - MIN_CATEGORY_WIDTH, NAVBAR_HEIGHT, SWP_NOREPOSITION);
+		m_nsContent->SetWindowPos( NULL, MIN_CATEGORY_WIDTH+2, top+NAVBAR_HEIGHT, cx - MIN_CATEGORY_WIDTH - 2, cy - STARTY - top - NAVBAR_HEIGHT, 0);
 	}
 	else 
 	{  //dock horiz.
@@ -322,7 +316,7 @@ void CNSNavFrame::StartDrag(CPoint pt, BOOL mapDesktop)
 	m_rectDrag = m_rectFloat;
   
 	CNSGenFrame* pFrame = NULL;
-    CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser);
+    CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
     CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
     if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) 
 	{
@@ -435,7 +429,7 @@ void CNSNavFrame::CalcClientArea(RECT* lpRectClient, CNSGenFrame * pParentFrame)
 #endif
 	CNSGenFrame* pFrame = NULL;
 	if (pParentFrame == NULL) {
-        CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser);
+        CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
         CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
         if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) {
             pFrame = (CNSGenFrame *)pBaseWnd;
@@ -650,7 +644,7 @@ void CNSNavFrame::EndDrag(CPoint pt)             // drop
 		dwOverDockStyle == DOCKSTYLE_HORZTOP || dwOverDockStyle == DOCKSTYLE_HORZBOTTOM) 
 	{
         CNSGenFrame* pFrame = NULL;
-        CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser);
+        CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
         CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
         if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) 
 		{
@@ -767,7 +761,7 @@ short CNSNavFrame::CanDock(CPoint pt, BOOL mapDesktop)
 	short dockStyle = DOCKSTYLE_FLOATING;
 
     CNSGenFrame* pFrame = NULL;
-    CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser);
+    CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
     CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
     if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) {
         pFrame = (CNSGenFrame *)pBaseWnd;
