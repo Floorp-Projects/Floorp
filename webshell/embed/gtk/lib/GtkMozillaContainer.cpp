@@ -172,7 +172,7 @@ void
 GtkMozillaContainer::Reload(GtkMozillaReloadType type)
 {
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
-   webNav->Reload(nsIWebNavigation::loadNormal);
+   webNav->Reload(nsIWebNavigation::reloadNormal);
 }
 
 gint
