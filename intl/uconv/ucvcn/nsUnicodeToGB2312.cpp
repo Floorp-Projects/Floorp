@@ -43,8 +43,12 @@ nsUnicodeToGB2312::nsUnicodeToGB2312()
 
 nsresult nsUnicodeToGB2312::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToGB2312();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToGB2312();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------

@@ -75,8 +75,12 @@ nsUnicodeToISO2022JP::~nsUnicodeToISO2022JP()
 
 nsresult nsUnicodeToISO2022JP::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToISO2022JP();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToISO2022JP();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
@@ -124,6 +128,19 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
+NS_IMETHODIMP nsUnicodeToISO2022JP::FillInfo(PRUint32* aInfo)
+{
+  nsresult res;
+
+  if (mHelper == nsnull) {
+    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
+        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+    
+    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
+  }
+  return mHelper->FillInfo(aInfo, 4, (uMappingTable **) g_ufMappingTables);
+
+}
 NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
                                     const PRUnichar * aSrc, 
                                     PRInt32 * aSrcLength, 

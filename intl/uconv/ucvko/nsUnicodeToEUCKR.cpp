@@ -43,8 +43,12 @@ nsUnicodeToEUCKR::nsUnicodeToEUCKR()
 
 nsresult nsUnicodeToEUCKR::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToEUCKR();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToEUCKR();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------

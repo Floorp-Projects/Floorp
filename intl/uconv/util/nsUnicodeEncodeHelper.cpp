@@ -65,6 +65,9 @@ public:
   NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
 
   NS_IMETHOD DestroyCache(nsIMappingCache aCache);
+ 
+  NS_IMETHOD FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable);
+  NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable);
 };
 
 //----------------------------------------------------------------------
@@ -179,6 +182,18 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::CreateCache(nsMappingCacheType aType, nsIMa
 NS_IMETHODIMP nsUnicodeEncodeHelper::DestroyCache(nsIMappingCache aCache)
 {
    return nsMappingCache::DestroyCache(aCache);
+}
+
+NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, uMappingTable  * aMappingTable)
+{
+   uFillInfo((uTable*) aMappingTable, aInfo);
+   return NS_OK;
+}
+NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable)
+{
+   for (PRInt32 i=0; i<aTableCount; i++) 
+      uFillInfo((uTable*) aMappingTable[i], aInfo);
+   return NS_OK;
 }
 //----------------------------------------------------------------------
 // Class nsEncodeHelperFactory [implementation]
