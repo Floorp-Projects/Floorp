@@ -31,7 +31,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity
+class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity,
+                                  public nsIShutdownListener
 {
 public:
   nsMsgIdentity();
@@ -91,13 +92,18 @@ public:
   NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername);
   NS_IMETHOD SetSmtpUsername(char * aSmtpUsername);
 
+  // nsIShutdownListener
+  
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
 private:
   nsIMsgSignature* m_signature;
   nsIMsgVCard* m_vCard;
   char *m_identityKey;
   nsIPref *m_prefs;
-  
+
 protected:
+  nsresult getPrefService();
   char *getPrefName(const char *identityKey, const char *pref);
   char *getDefaultPrefName(const char *pref);
   nsresult getCharPref(const char *pref, char **);

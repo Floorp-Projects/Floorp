@@ -24,7 +24,31 @@
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_ISUPPORTS(nsMsgIdentity, nsCOMTypeInfo<nsIMsgIdentity>::GetIID());
+NS_IMPL_ADDREF(nsMsgIdentity)
+NS_IMPL_RELEASE(nsMsgIdentity)
+
+nsresult
+nsMsgIdentity::QueryInterface(const nsIID& iid, void **result)
+{
+  nsresult rv = NS_NOINTERFACE;
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+
+  void *res = nsnull;
+  if (iid.Equals(nsCOMTypeInfo<nsIMsgIdentity>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    res = NS_STATIC_CAST(nsIMsgIdentity*, this);
+  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
+    res = NS_STATIC_CAST(nsIShutdownListener*, this);
+
+  if (res) {
+    NS_ADDREF(this);
+    *result = res;
+    rv = NS_OK;
+  }
+
+  return rv;
+}
 
 
 nsMsgIdentity::nsMsgIdentity():
@@ -42,6 +66,29 @@ nsMsgIdentity::~nsMsgIdentity()
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                 m_prefs,
                                                 nsnull);
+}
+
+nsresult
+nsMsgIdentity::getPrefService()
+{
+  if (m_prefs) return NS_OK;
+  return nsServiceManager::GetService(kPrefServiceCID,
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      (nsISupports**)&m_prefs,
+                                      this);
+}
+
+
+/* called if the prefs service goes offline */
+NS_IMETHODIMP
+nsMsgIdentity::OnShutdown(const nsCID& aClass, nsISupports *service)
+{
+  if (aClass.Equals(kPrefServiceCID)) {
+    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+    m_prefs = nsnull;
+  }
+
+  return NS_OK;
 }
 
 /*
@@ -74,8 +121,11 @@ nsresult
 nsMsgIdentity::getBoolPref(const char *prefname,
                            PRBool *val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *fullPrefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  rv = m_prefs->GetBoolPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv))
@@ -88,8 +138,11 @@ nsresult
 nsMsgIdentity::getDefaultBoolPref(const char *prefname,
                                         PRBool *val) {
   
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *fullPrefName = getDefaultPrefName(prefname);
-  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  rv = m_prefs->GetBoolPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
@@ -103,8 +156,11 @@ nsresult
 nsMsgIdentity::setBoolPref(const char *prefname,
                            PRBool val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->SetBoolPref(prefName, val);
+  rv = m_prefs->SetBoolPref(prefName, val);
   PR_Free(prefName);
   return rv;
 }
@@ -113,8 +169,11 @@ nsresult
 nsMsgIdentity::getCharPref(const char *prefname,
                            char **val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *fullPrefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  rv = m_prefs->CopyCharPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv))
@@ -125,10 +184,13 @@ nsMsgIdentity::getCharPref(const char *prefname,
 
 nsresult
 nsMsgIdentity::getDefaultCharPref(const char *prefname,
-                                        char **val) {
+                                        char **val)
+{
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
   
   char *fullPrefName = getDefaultPrefName(prefname);
-  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  rv = m_prefs->CopyCharPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
@@ -142,8 +204,11 @@ nsresult
 nsMsgIdentity::setCharPref(const char *prefname,
                            char *val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->SetCharPref(prefName, val);
+  rv = m_prefs->SetCharPref(prefName, val);
   PR_Free(prefName);
   return rv;
 }
@@ -152,8 +217,11 @@ nsresult
 nsMsgIdentity::getIntPref(const char *prefname,
                                 PRInt32 *val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *fullPrefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  rv = m_prefs->GetIntPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv))
@@ -166,8 +234,11 @@ nsresult
 nsMsgIdentity::getDefaultIntPref(const char *prefname,
                                         PRInt32 *val) {
   
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *fullPrefName = getDefaultPrefName(prefname);
-  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  rv = m_prefs->GetIntPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
@@ -182,8 +253,11 @@ nsresult
 nsMsgIdentity::setIntPref(const char *prefname,
                                  PRInt32 val)
 {
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
   char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->SetIntPref(prefName, val);
+  rv = m_prefs->SetIntPref(prefName, val);
   PR_Free(prefName);
   return rv;
 }
@@ -191,13 +265,6 @@ nsMsgIdentity::setIntPref(const char *prefname,
 nsresult
 nsMsgIdentity::SetKey(char* identityKey)
 {
-  nsresult rv = NS_OK;
-  // in order to actually make use of the key, we need the prefs
-  if (!m_prefs)
-    rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs);
-  
   m_identityKey = PL_strdup(identityKey);
   return NS_OK;
 }
