@@ -105,7 +105,8 @@
 
 // v=1.1 retired on 23-Mar-99 (for metainfo one char column names)
 // v=1.2 retired on 20-Apr-99 (for ":c" suffix on table kind hex refs)
-#define morkWriter_kFileHeader "// <!-- <mdb:mork:z v=\"1.3\"/> -->"
+// v=1.3 retired on 20-Apr-99 (for 1CE:m instead of ill-formed 1CE:^6D)
+#define morkWriter_kFileHeader "// <!-- <mdb:mork:z v=\"1.4\"/> -->"
 
 class morkWriter : public morkNode { // row iterator
 
