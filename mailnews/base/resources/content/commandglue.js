@@ -306,5 +306,131 @@ function ToggleMessageRead(treeItem)
 	messenger.MarkMessageRead(tree.database, treeItem, unread);
 }
 
+function ThreadPaneSelectionChange()
+{
+	var doc = GetThreadPane().document;
+	
+	var selArray = doc.getElementsByAttribute('selected', 'true');
+	if ( selArray && (selArray.length == 1) )
+		LoadMessage(selArray[0]);
+	else
+		ClearMessagePane();
 
+}
+
+function ClearMessagePane()
+{
+	messenger.OpenURL("about:blank");	
+
+}
+
+function GoNextMessage()
+{
+	var doc = GetThreadPane().document;
+	
+	var selArray = doc.getElementsByAttribute('selected', 'true');
+	if ( selArray && (selArray.length == 1) )
+	{
+		var nextMessage = GetNextMessage(selArray[0]);
+		if(nextMessage)
+		{
+			var selectedVal = selArray[0].getAttribute('selected');
+			dump('selectedVal = ' + selectedVal);
+
+			selArray[0].removeAttribute('selected');
+			nextMessage.setAttribute('selected', 'true');
+		}
+	}
+}
+
+function GoNextUnreadMessage()
+{
+	var doc = GetThreadPane().document;
+	
+	var selArray = doc.getElementsByAttribute('selected', 'true');
+	if ( selArray && (selArray.length == 1) )
+	{
+		var nextMessage = GetNextUnreadMessage(selArray[0]);
+		if(nextMessage)
+		{
+			var selectedVal = selArray[0].getAttribute('selected');
+			dump('selectedVal = ' + selectedVal);
+
+			selArray[0].removeAttribute('selected');
+			nextMessage.setAttribute('selected', 'true');
+		}
+	}
+}
+function GetNextMessage(currentMessage)
+{
+	var nextMessage = currentMessage.nextSibling;
+	if(!nextMessage)
+	{
+		dump('We need to start from the top\n');
+		var parent = currentMessage.parentNode;
+		nextMessage = parent.firstChild;
+		if(nextMessage == currentMessage)
+			nextMessage = null;
+	}
+
+	if(nextMessage)
+	{
+		var id = nextMessage.getAttribute('id');
+		dump(id + '\n');
+	}
+	else
+		dump('No next message\n');
+	return nextMessage;
+
+}
+
+function GetNextUnreadMessage(currentMessage)
+{
+	var foundMessage = false;
+
+	
+	var nextMessage = currentMessage.nextSibling;
+	while(nextMessage)
+	{
+		var status = nextMessage.getAttribute('Status');
+		dump('status = ' + status);
+		dump('\n');
+		if(status == '' || status == 'New')
+			break;
+		nextMessage = nextMessage.nextSibling;
+	}
+
+	if(!nextMessage)
+	{
+		dump('We need to start from the top\n');
+		var parent = currentMessage.parentNode;
+		nextMessage = parent.firstChild;
+		while(nextMessage)
+		{
+			if(nextMessage == currentMessage)
+			{
+				nextMessage = null;
+				break;
+			}
+			var status = nextMessage.getAttribute('Status');
+			dump('status = ' + status);
+			dump('\n');
+			if(status == '' || status == 'New')
+				break;
+			nextMessage = nextMessage.nextSibling;
+		}
+
+	}
+
+
+	if(nextMessage)
+	{
+		var id = nextMessage.getAttribute('id');
+		dump(id + '\n');
+	}
+	else
+		dump('No next message\n');
+	return nextMessage;
+
+}
 

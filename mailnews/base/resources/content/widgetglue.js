@@ -338,8 +338,15 @@ function MsgViewPageSource() {}
 function MsgViewPageInfo() {}
 function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}
-function MsgNextMessage() {}
-function MsgNextUnreadMessage() {}
+function MsgNextMessage()
+{
+	GoNextMessage();
+}
+
+function MsgNextUnreadMessage()
+{
+	GoNextUnreadMessage();
+}
 function MsgNextFlaggedMessage() {}
 function MsgPreviousMessage() {}
 function MsgPreviousUnreadMessage() {}
