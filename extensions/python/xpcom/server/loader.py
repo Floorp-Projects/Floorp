@@ -136,8 +136,22 @@ class PythonComponentLoader:
             if os.path.splitext(entry.path)[1]==".py":
                 try:
                     self.autoRegisterComponent(when, entry)
+                # Handle some common user errors
+                except xpcom.COMException, details:
+                    from xpcom import nsError
+                    # If the interface name does not exist, suppress the traceback
+                    if details.errno==nsError.NS_ERROR_NO_INTERFACE:
+                        print "** Registration of '%s' failed\n %s" % (entry.leafName,details.message,)
+                    else:
+                        print "** Registration of '%s' failed!" % (entry.leafName,)
+                        traceback.print_exc()
+                except SyntaxError, details:
+                    # Syntax error in source file - no useful traceback here either.
+                    print "** Registration of '%s' failed!" % (entry.leafName,)
+                    traceback.print_exception(SyntaxError, details, None)
                 except:
-                    print "** Registration of '%s' failed!" % (entry.path,)
+                    # All other exceptions get the full traceback.
+                    print "** Registration of '%s' failed!" % (entry.leafName,)
                     traceback.print_exc()
 
     def autoRegisterComponent (self, when, componentFile):
