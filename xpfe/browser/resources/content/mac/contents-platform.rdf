@@ -12,6 +12,6 @@
         chrome:displayName="Mac Specific Resources"
         chrome:author="mozilla.org"
         chrome:name="navigator-platform"
-	chrome:localeVersion="1.2a">
+	chrome:localeVersion="1.2b">
   </RDF:Description>
 </RDF:RDF>
