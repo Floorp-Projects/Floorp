@@ -58,6 +58,11 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+#define GDK_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
+#define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
+extern GdkFont *default_font;
+nsresult GetSystemFontInfo(GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont);
+
 nscoord nsDeviceContextGTK::mDpi = 96;
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
@@ -270,7 +275,6 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
 {
   nsresult status = NS_OK;
   GtkStyle *style = gtk_style_new();  // get the default styles
-  GdkFont *theFont = style->font; // style default font
 
   switch (anID) {
     //---------
@@ -354,7 +358,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     case eSystemAttr_Font_Field:
     case eSystemAttr_Font_Tooltips:		// moz
     case eSystemAttr_Font_Widget:
-        status = NS_ERROR_FAILURE;
+        status = GetSystemFontInfo(style->font, anID, aInfo->mFont);
       break;
   } // switch
 
@@ -532,4 +536,90 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
   }
   
   return 0;
+}
+
+nsresult GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont)
+{
+  nsresult status = NS_OK;
+  GdkFont *theFont = iFont;
+
+  aFont->style       = NS_FONT_STYLE_NORMAL;
+  aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+  aFont->decorations = NS_FONT_DECORATION_NONE;
+  
+  // do we have the default_font defined by GTK/GDK then
+  // we use it, if not then we load helvetica, if not then
+  // we load fixed font else we error out.
+  if( !theFont )
+    theFont = default_font; // GTK default font
+  
+  if( !theFont )
+    theFont = ::gdk_font_load( GDK_DEFAULT_FONT1 );
+  
+  if( !theFont )
+    theFont = ::gdk_font_load( GDK_DEFAULT_FONT2 );
+  
+  if( !theFont )
+  {
+    status = NS_ERROR_FAILURE;
+  }
+  else
+  {
+    char *fontName = (char *)NULL;
+    GdkFontPrivate *fontPrivate;
+    XFontStruct *fontInfo;
+    unsigned long pr = 0;
+
+    // XXX I am not sure if I can use this as it is supposed to
+    // be private.
+    fontPrivate = (GdkFontPrivate*) theFont;
+    fontInfo = (XFontStruct *)GDK_FONT_XFONT( theFont );
+
+    ::XGetFontProperty( fontInfo, XA_FULL_NAME, &pr );
+    if( pr )
+    {
+      fontName = XGetAtomName( fontPrivate->xdisplay, pr );
+      aFont->name.AssignWithConversion( fontName );
+      ::XFree( fontName );
+    }
+  
+    pr = 0;
+    ::XGetFontProperty( fontInfo, XA_WEIGHT, &pr );
+    if ( pr > 10 )
+      aFont->weight = NS_FONT_WEIGHT_BOLD;
+    
+    pr = 0;
+    ::XGetFontProperty( fontInfo, XA_POINT_SIZE, &pr );
+    if( pr )
+    {
+      int fontSize = pr/10;
+      // Per rods@netscape.com, the default size of 12 is too large
+      // we need to bump it down two points.
+      if( anID == eSystemAttr_Font_Button ||
+          anID == eSystemAttr_Font_Field ||
+          anID == eSystemAttr_Font_List ||
+          anID == eSystemAttr_Font_Widget ||
+          anID == eSystemAttr_Font_Caption )
+        fontSize -= 2;
+      
+      // if we are below 1 then we have a problem we just make it 1
+      if( fontSize < 1 )
+        fontSize = 1;
+      
+      aFont->size = NSIntPointsToTwips( fontSize );
+    }
+
+    pr = 0;
+    ::XGetFontProperty( fontInfo, XA_ITALIC_ANGLE, &pr );
+    if( pr )
+      aFont->style = NS_FONT_STYLE_ITALIC;
+    
+    pr = 0;
+    ::XGetFontProperty( fontInfo, XA_UNDERLINE_THICKNESS, &pr );
+    if( pr )
+      aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+    
+    status = NS_OK;
+  }
+  return (status);
 }
