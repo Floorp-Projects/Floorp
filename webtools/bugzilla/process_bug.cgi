@@ -498,8 +498,12 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
+		SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
         ChangeStatus('REOPENED');
         ChangeResolution('');
+		if (FetchOneColumn() eq 'DUPLICATE') {
+			SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
+		}		
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -539,8 +543,8 @@ SWITCH: for ($::FORM{'knob'}) {
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
+		SendSQL("INSERT INTO duplicates VALUES ($num, $::FORM{'id'})");
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
-
         print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
         system("./processmail", $num, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$num\">Go To BUG# $num</A></TABLE>\n";

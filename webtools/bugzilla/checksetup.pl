@@ -835,9 +835,12 @@ $table{shadowlog} =
      ts timestamp,
      reflected tinyint not null,
      command mediumtext not null,
-
      index(reflected)';
 
+# GRM
+$table{duplicates} =
+    'dupe_of mediumint(9) not null,
+     dupe mediumint(9) not null primary key';
 
 
 ###########################################################################
@@ -1744,6 +1747,46 @@ if ( CountIndexes('keywords') != 3 ) {
     $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
 
 }    
+
+# 2000-07-15 Added duplicates table so Bugzilla tracks duplicates in a better 
+# way than it used to. This code searches the comments to populate the table
+# initially. It's executed if the table is empty; if it's empty because there
+# are no dupes (as opposed to having just created the table) it won't have
+# any effect anyway, so it doesn't matter.
+
+# This should give us the number of populated rows but seems to return "5"
+# all the time <shrug>
+$dbh->prepare("SELECT * FROM duplicates");
+$sth->execute();
+
+if ($sth->fetchrow_array() == 5)
+{
+	# populate table
+	print("Populating duplicates table...\n");
+	
+	$sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
+	        "regexp 'This bug has been marked as a duplicate of') AND (resolution = 'DUPLICATE') ORDER" .
+			" BY longdescs.bug_when");
+	$sth->execute();
+
+	my %dupes;
+	my $key;
+	
+	# Because of the way hashes work, this loop removes all but the last dupe
+	# resolution found for a given bug.
+	while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
+		$dupes{$dupe} = $dupe_of;
+	}
+
+	foreach $key (keys(%dupes))
+	{
+		$dupes{$key} =~ s/.*This bug has been marked as a duplicate of (\d{1,5}).*/$1/;
+		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
+		#										 BugItsADupeOf   Dupe
+	}
+	
+	$regenerateshadow = 1;
+}
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your

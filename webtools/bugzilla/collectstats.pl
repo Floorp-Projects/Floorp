@@ -20,9 +20,11 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
 #                 Harrison Page <harrison@netscape.com>
+#				  Gervase Markham <gerv@gerv.net>
 
 # Run me out of cron at midnight to collect Bugzilla statistics.
 
+use DB_File;
 use diagnostics;
 use strict;
 use vars @::legal_product,
@@ -42,6 +44,8 @@ foreach (@myproducts) {
     &check_data_dir ($dir);
     &collect_stats ($dir, $_);
 }
+
+&calculate_dupes();
 
 sub check_data_dir {
     my $dir = shift;
@@ -98,6 +102,86 @@ FIN
     } else {
         print "$0: $file, $!";
     }
+}
+
+sub calculate_dupes {
+    SendSQL("SELECT * FROM duplicates");
+
+    my %dupes;
+    my %count;
+    my @row;
+    my $key;
+    my $changed = 1;
+
+    my $today = &today;
+
+    # Save % count here in a date-named file
+    # so we can read it back in to do changed counters
+    # First, delete it if it exists, so we don't add to the contents of an old file
+    if (-e "data/mining/dupes$today.db")
+    {
+		system("rm -f data/mining/dupes$today.db");
+    }
+   
+    dbmopen(%count, "data/mining/dupes$today.db", 0644) || die "Can't open DBM dupes file: $!";
+
+    # Create a hash with key "a bug number", value "bug which that bug is a
+    # direct dupe of" - straight from the duplicates table.
+    while (@row = FetchSQLData()) 
+    {
+	    my $dupe_of = shift @row;
+	    my $dupe = shift @row;
+	    $dupes{$dupe} = $dupe_of;
+    }
+
+    # Total up the number of bugs which are dupes of a given bug
+    # count will then have key = "bug number", 
+    # value = "number of immediate dupes of that bug".
+    foreach $key (keys(%dupes)) 
+    {
+	    my $dupe_of = $dupes{$key};
+
+	    if (!defined($count{$dupe_of}))
+	    {
+		    $count{$dupe_of} = 0;
+	    }
+
+	    $count{$dupe_of}++;
+    }   
+
+    # Now we collapse the dupe tree by iterating over %count until
+    # there is no further change.
+    while ($changed == 1)
+    {
+	    $changed = 0;
+	    foreach $key (keys(%count)) 
+	    {
+		    # if this bug is actually itself a dupe, and has a count...
+		    if (defined($dupes{$key}) && $count{$key} > 0)
+		    {
+				# add that count onto the bug it is a dupe of,
+				# and zero the count; the check is to avoid
+				# loops
+				if ($count{$dupes{$key}} != 0)
+				{
+					$count{$dupes{$key}} += $count{$key};
+					$count{$key} = 0;
+					$changed = 1;
+				}
+	 	    }
+	    }
+    }
+
+    # Remove the values for which the count is zero
+    foreach $key (keys(%count))
+    {
+	    if ($count{$key} == 0)
+	    {
+			delete $count{$key};
+	    }
+    }
+   
+    dbmclose(%count);
 }
 
 sub today {

@@ -284,6 +284,50 @@ information about what Bugzilla is and what it can do, see
 <A HREF=\"http://www.mozilla.org/bugs/\"><B>bug pages</B></A>.");
 
 
+DefParam("mostfreqhtml",
+         "The HTML which appears at the top of the list of most-frequently-reported bugs. Use it to explain the page, set a maintainer etc.",
+         "l",
+         q{
+<br><p>
+
+<b>What are "most frequent bugs"?</b>
+
+<blockquote>The Most Frequent Bugs page lists the known open bugs which 
+are reported most frequently in recent builds of Mozilla. It is automatically
+generated from the Bugzilla database.
+This information is provided in order to assist in minimizing
+the amount of duplicate bugs entered into Bugzilla which in turn cuts down
+on development time.
+</blockquote>
+
+<b>How do I use this list?</b>
+
+<ul>
+<li>Review the most frequent bugs list.</li>
+<li>If problem is listed:</li>
+
+<ul>
+<li>Click on Bug # link to confirm that you have found the same bug and comment
+if you have additional information. Or move on with your testing
+of the product.</li>
+</ul>
+
+<li>If problem not listed:</li>
+
+<ul>
+<li>Go to the <a href="http://bugzilla.mozilla.org/query.cgi">Bugzilla Query/Search</a>
+page to try and locate a similar bug that has already been written.</li>
+<li>If you find your bug in Bugzilla, feel free to comment with any new or
+additional data you may have.</li>
+<li>If you cannot find your problem already documented in Bugzilla, go to the
+<a href="http://www.mozilla.org/qualtiy/help/bug-form.html">Bugzilla Helper</a> and post a new bug.</li>
+</ul>
+
+</ul>
+<br>
+});
+
+
 DefParam("mybugstemplate",
          "This is the URL to use to bring up a simple 'all of my bugs' list for a user.  %userid% will get replaced with the login name of a user.",
          "t",
