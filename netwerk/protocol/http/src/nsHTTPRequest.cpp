@@ -1190,7 +1190,12 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest()
 
     if (req)
     {
-        mTransport->SetNotificationCallbacks(req->mConnection);
+        // XXX bug 52492:  For some reason, mTransport is often null
+        // on some machines, but not on others.  Check for null to avoid
+        // topcrash, although we really shouldn't need this.
+        NS_ASSERTION(mTransport, "mTransport null in AdvanceToNextRequest");
+        if (mTransport)
+          mTransport->SetNotificationCallbacks(req->mConnection);
         NS_RELEASE(req);
     }
 
