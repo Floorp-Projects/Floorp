@@ -40,6 +40,7 @@
 #include "nsIMsgCompFields.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
+#include "nsArray.h"
 
 // String bundle for smime. Class static.
 nsCOMPtr<nsIStringBundle> nsMsgComposeSecure::mSMIMEBundle = nsnull;
@@ -612,7 +613,7 @@ nsresult nsMsgComposeSecure::MimeInitEncryption(PRBool aSign, nsIMsgSendReport *
 
   if (!mIsDraft) {
     PRUint32 numCerts;
-    mCerts->Count(&numCerts);
+    mCerts->GetLength(&numCerts);
     PR_ASSERT(numCerts > 0);
 	  if (numCerts == 0) return NS_ERROR_FAILURE;
   }
@@ -864,7 +865,7 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
   NS_ENSURE_SUCCESS(res,res);
 
-  res = NS_NewISupportsArray(getter_AddRefs(mCerts));
+  res = NS_NewArray(getter_AddRefs(mCerts));
   if (NS_FAILED(res)) {
     return res;
   }
@@ -964,14 +965,14 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
         already_added_self_cert = PR_TRUE;
       }
 
-      mCerts->AppendElement(cert);
+      mCerts->AppendElement(cert, PR_FALSE);
       // To understand this loop, especially the "+= strlen +1", look at the documentation
       // of ParseHeaderAddresses. Basically, it returns a list of zero terminated strings.
 		  mailbox += strlen(mailbox) + 1;
 	  }
     
     if (!already_added_self_cert) {
-      mCerts->AppendElement(mSelfEncryptionCert);
+      mCerts->AppendElement(mSelfEncryptionCert, PR_FALSE);
     }
 	}
 FAIL:

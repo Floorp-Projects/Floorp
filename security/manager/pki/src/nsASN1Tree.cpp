@@ -35,6 +35,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsArray.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, 
                                                  nsITreeView);
@@ -95,10 +96,10 @@ void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
     return;
   }
 
-  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsIMutableArray> asn1Objects;
   n->seq->GetASN1Objects(getter_AddRefs(asn1Objects));
   PRUint32 numObjects;
-  asn1Objects->Count(&numObjects);
+  asn1Objects->GetLength(&numObjects);
   
   if (!numObjects) {
     n->seq = nsnull;
@@ -123,8 +124,7 @@ void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
       prev->next = walk;
     }
   
-    isupports = dont_AddRef(asn1Objects->ElementAt(i));
-    walk->obj = do_QueryInterface(isupports);
+    walk->obj = do_QueryElementAt(asn1Objects, i);
 
     InitChildsRecursively(walk);
 

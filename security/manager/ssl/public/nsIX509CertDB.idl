@@ -35,7 +35,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+interface nsIArray;
 interface nsIX509Cert;
 interface nsILocalFile;
 interface nsIInterfaceRequestor;
@@ -189,13 +189,12 @@ interface nsIX509CertDB : nsISupports {
                         in nsILocalFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
-                        //[array, size_is(count)] in AString aCertNames);
   /*
    * getOCSPResponders
    *
    * Export a set of OCSP responders i.e. CA names and (optional) URLs.
    */
-  nsISupportsArray getOCSPResponders();
+  nsIArray getOCSPResponders();
 
   /*
    * Query about the status of OCSP

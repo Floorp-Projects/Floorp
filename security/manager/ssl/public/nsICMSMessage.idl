@@ -44,7 +44,7 @@
 [ptr] native UnsignedCharPtr(unsigned char);
 
 interface nsIX509Cert;
-interface nsISupportsArray;
+interface nsIArray;
 
 /**
  * nsICMSMessage
@@ -61,7 +61,7 @@ interface nsICMSMessage : nsISupports
   void getEncryptionCert(out nsIX509Cert ecert);
   void verifySignature();
   void verifyDetachedSignature(in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
-  void CreateEncrypted(in nsISupportsArray aRecipientCerts);
+  void CreateEncrypted(in nsIArray aRecipientCerts);
   void CreateSigned(in nsIX509Cert scert, in nsIX509Cert ecert, in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
 };
 

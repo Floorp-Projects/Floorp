@@ -31,6 +31,7 @@
 #include "nsIStringBundle.h"
 #include "nsIHash.h"
 #include "nsICMSMessage.h"
+#include "nsIArray.h"
 
 class nsIMsgCompFields;
 
@@ -91,7 +92,7 @@ private:
   nsCOMPtr<nsIX509Cert> mSelfSigningCert;
   nsXPIDLString mEncryptionCertName;
   nsCOMPtr<nsIX509Cert> mSelfEncryptionCert;
-  nsCOMPtr<nsISupportsArray> mCerts;
+  nsCOMPtr<nsIMutableArray> mCerts;
   nsCOMPtr<nsICMSMessage> mEncryptionCinfo;
   nsCOMPtr<nsICMSEncoder> mEncryptionContext;
   static nsCOMPtr<nsIStringBundle> mSMIMEBundle;

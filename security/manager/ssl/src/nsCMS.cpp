@@ -42,6 +42,7 @@
 #include "smime.h"
 #include "cms.h"
 #include "nsICMSMessageErrors.h"
+#include "nsArray.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -332,7 +333,7 @@ loser:
   return rv;
 }
 
-NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
+NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted\n"));
   NSSCMSContentInfo *cinfo;
@@ -348,7 +349,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
 
   // Check the recipient certificates //
   PRUint32 recipientCertCount;
-  aRecipientCerts->Count(&recipientCertCount);
+  aRecipientCerts->GetLength(&recipientCertCount);
   PR_ASSERT(recipientCertCount > 0);
 
   if ((tmpPoolp = PORT_NewArena(1024)) == nsnull) {

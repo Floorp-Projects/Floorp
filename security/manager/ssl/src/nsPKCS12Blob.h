@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.h,v 1.9 2002/09/23 20:17:14 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.h,v 1.10 2002/10/14 14:48:57 kaie%netscape.com Exp $
  */
 
 #ifndef _NS_PKCS12BLOB_H_
@@ -42,6 +42,7 @@
 #include "nsIPK11TokenDB.h"
 #include "nsNSSHelper.h"
 #include "nsIPK11Token.h"
+#include "nsIArray.h"
 
 #include "nss.h"
 
@@ -79,7 +80,7 @@ public:
 private:
 
   nsCOMPtr<nsIPK11Token>          mToken;
-  nsCOMPtr<nsISupportsArray>      mCertArray;
+  nsCOMPtr<nsIMutableArray>       mCertArray;
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
 
   // local helper functions

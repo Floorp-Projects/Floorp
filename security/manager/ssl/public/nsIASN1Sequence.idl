@@ -50,12 +50,12 @@
 // object.
 //
 
-interface nsISupportsArray;
+interface nsIMutableArray;
 #include "nsIASN1Object.idl"
 
 [scriptable, uuid(b6b957e6-1dd1-11b2-89d7-e30624f50b00)]
 interface nsIASN1Sequence : nsIASN1Object {
-  attribute nsISupportsArray ASN1Objects;
+  attribute nsIMutableArray ASN1Objects;
   attribute boolean processObjects;
   attribute boolean showObjects;
 };

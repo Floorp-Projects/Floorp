@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
-#include "nsISupportsArray.h"
+#include "nsArray.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -336,14 +336,14 @@ nsCRLManager::RescheduleCRLAutoUpdate(void)
 */
 
 NS_IMETHODIMP 
-nsCRLManager::GetCrls(nsISupportsArray ** aCrls)
+nsCRLManager::GetCrls(nsIArray ** aCrls)
 {
   SECStatus sec_rv;
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;
-  nsCOMPtr<nsISupportsArray> crlsArray;
+  nsCOMPtr<nsIMutableArray> crlsArray;
   nsresult rv;
-  rv = NS_NewISupportsArray(getter_AddRefs(crlsArray));
+  rv = NS_NewArray(getter_AddRefs(crlsArray));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -358,7 +358,7 @@ nsCRLManager::GetCrls(nsISupportsArray ** aCrls)
     for (node=head->first; node != nsnull; node = node->next) {
 
       nsCOMPtr<nsICRLInfo> entry = new nsCRLInfo((node->crl));
-      crlsArray->AppendElement(entry);
+      crlsArray->AppendElement(entry, PR_FALSE);
     }
     PORT_FreeArena(head->arena, PR_FALSE);
   }

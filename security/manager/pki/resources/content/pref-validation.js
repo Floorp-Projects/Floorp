@@ -38,8 +38,8 @@ function onLoad()
 
   var signersMenu = document.getElementById("signingCA");
   var signersURL = document.getElementById("serviceURL");
-  for (i=0; i<ocspResponders.Count(); i++) {
-    ocspEntry = ocspResponders.GetElementAt(i).QueryInterface(nsIOCSPResponder);
+  for (i=0; i<ocspResponders.length; i++) {
+    ocspEntry = ocspResponders.queryElementAt(i, nsIOCSPResponder);
     var menuItemNode = document.createElement("menuitem");
     menuItemNode.setAttribute("value", ocspEntry.responseSigner);
     menuItemNode.setAttribute("label", ocspEntry.responseSigner);
@@ -78,8 +78,8 @@ function changeURL()
   var i;
   var ocspEntry;
 
-  for (i=0; i < ocspResponders.Count(); i++) {
-    ocspEntry = ocspResponders.GetElementAt(i).QueryInterface(nsIOCSPResponder);
+  for (i=0; i < ocspResponders.length; i++) {
+    ocspEntry = ocspResponders.queryElementAt(i, nsIOCSPResponder);
     if (CA == ocspEntry.responseSigner) {
       signersURL.setAttribute("value", ocspEntry.serviceURL);
       break;

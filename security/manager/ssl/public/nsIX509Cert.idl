@@ -34,8 +34,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsISupportsArray.idl"
 
+interface nsIArray;
 interface nsIX509CertValidity;
 interface nsIASN1Object;
 
@@ -93,7 +93,7 @@ interface nsIX509Cert : nsISupports {
   /*
    * accessors for certs
    */
-  nsISupportsArray getChain();
+  nsIArray getChain();
 
   void getUsages(out unsigned long verified,
                  out unsigned long count, 
