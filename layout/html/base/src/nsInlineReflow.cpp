@@ -34,6 +34,9 @@
 #undef NOISY_VERTICAL_ALIGN
 #endif
 
+#define PLACED_LEFT  0x1
+#define PLACED_RIGHT 0x2
+
 // XXX handle DIR=right-to-left
 
 // XXX remove support for block reflow from this and move it into its
@@ -84,17 +87,12 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
   mCarriedOutTopMargin = 0;
   mCarriedOutBottomMargin = 0;
 
-  mIsBlock = PR_FALSE;
-  mIsFirstChild = PR_FALSE;
   mFrameData = nsnull;
   mFrameNum = 0;
   mMaxElementSize.width = 0;
   mMaxElementSize.height = 0;
   mUpdatedBand = PR_FALSE;
-  mPlacedLeftFloater = PR_FALSE;
-  mTreatFrameAsBlock = PR_FALSE;
-  mRunInFrame = nsnull;
-  mCompactMarginWidth = 0;
+  mPlacedFloaters = 0;
 }
 
 void
@@ -120,14 +118,14 @@ nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
     mBottomEdge = aY + aHeight;
   }
   mUpdatedBand = PR_TRUE;
-  mPlacedLeftFloater = aPlacedLeftFloater;
+  mPlacedFloaters |= (aPlacedLeftFloater ? PLACED_LEFT : PLACED_RIGHT);
 }
 
 void
 nsInlineReflow::UpdateFrames()
 {
   if (NS_STYLE_DIRECTION_LTR == mOuterReflowState.mDirection) {
-    if (mPlacedLeftFloater) {
+    if (PLACED_LEFT & mPlacedFloaters) {
       PerFrameData* pfd = mFrameDataBase;
       PerFrameData* end = pfd + mFrameNum;
       for (; pfd < end; pfd++) {
@@ -135,7 +133,7 @@ nsInlineReflow::UpdateFrames()
       }
     }
   }
-  else if (!mPlacedLeftFloater) {
+  else if (PLACED_RIGHT & mPlacedFloaters) {
     // XXX handle DIR=right-to-left
   }
 }
@@ -226,15 +224,13 @@ nsInlineReflow::SetFrame(nsIFrame* aFrame)
   mDisplay = nsnull;
   mSpacing = nsnull;
   mPosition = nsnull;
-  mTreatFrameAsBlock = TreatFrameAsBlockFrame();
 
   return NS_OK;
 }
 
-nsReflowStatus
-nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
+nsresult
+nsInlineReflow::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus)
 {
-  nsReflowStatus result;
   nsSize innerMaxElementSize;
   nsHTMLReflowMetrics metrics(mComputeMaxElementSize
                               ? &innerMaxElementSize
@@ -242,15 +238,8 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
 
   // Prepare for reflowing the frame
   nsresult rv = SetFrame(aFrame);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     return rv;
-  }
-
-  // Do a quick check and see if we are trying to place a block on a
-  // line that already has a placed frame on it.
-  PRInt32 placedFrames = mLineLayout.GetPlacedFrames();
-  if (mTreatFrameAsBlock && (placedFrames > 0)) {
-    return NS_INLINE_LINE_BREAK_BEFORE();
   }
 
   // Next figure out how much available space there is for the frame.
@@ -263,15 +252,16 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
   
   // Compute the available area to reflow the frame into.
   if (!ComputeAvailableSize()) {
-    return NS_INLINE_LINE_BREAK_BEFORE();
+    aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return NS_OK;
   }
 
   // Reflow the frame. If the frame must be placed somewhere else
   // then we return immediately.
-  if (ReflowFrame(metrics, result)) {
+  if (ReflowFrame(metrics, aReflowStatus)) {
     // See if we can place the frame. If we can't fit it, then we
     // return now.
-    if (CanPlaceFrame(metrics, result)) {
+    if (CanPlaceFrame(metrics, aReflowStatus)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -279,26 +269,16 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
     }
   }
 
-  return result;
+  return rv;
 }
 
-// XXX looks more like a method on PerFrameData?
 void
 nsInlineReflow::CalculateMargins()
 {
+  // Get the margins from the style system
   PerFrameData* pfd = mFrameData;
-  if (mTreatFrameAsBlock) {
-    const nsStyleSpacing* spacing = GetSpacing();
-    pfd->mMarginFlags = CalculateBlockMarginsFor(mPresContext, pfd->mFrame,
-                                                 &mOuterReflowState,
-                                                 spacing, pfd->mMargin);
-  }
-  else {
-    // Get the margins from the style system
-    nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
-                                        pfd->mMargin);
-    pfd->mMarginFlags = 0;
-  }
+  nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
+                                      pfd->mMargin);
 }
 
 PRUintn
@@ -369,6 +349,7 @@ nsInlineReflow::ApplyTopLeftMargins()
   pfd->mBounds.y = mTopEdge;
 
   // Compute left margin
+  nsIFrame* prevInFlow;
   const nsStyleDisplay* display = GetDisplay();
   switch (display->mFloats) {
   default:
@@ -382,16 +363,13 @@ nsInlineReflow::ApplyTopLeftMargins()
     break;
 
   case NS_STYLE_FLOAT_NONE:
-    if (!mTreatFrameAsBlock) {
-      // Only apply left-margin on the first-in flow for inline frames
-      nsIFrame* prevInFlow;
-      pfd->mFrame->GetPrevInFlow(prevInFlow);
-      if (nsnull != prevInFlow) {
-        // Zero this out so that when we compute the max-element-size
-        // of the frame we will properly avoid adding in the left
-        // margin.
-        pfd->mMargin.left = 0;
-      }
+    // Only apply left-margin on the first-in flow for inline frames
+    pfd->mFrame->GetPrevInFlow(prevInFlow);
+    if (nsnull != prevInFlow) {
+      // Zero this out so that when we compute the max-element-size
+      // of the frame we will properly avoid adding in the left
+      // margin.
+      pfd->mMargin.left = 0;
     }
     pfd->mBounds.x += pfd->mMargin.left;
     break;
@@ -465,11 +443,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, frame, mOuterReflowState,
                                 mFrameAvailSize);
-  if (!mTreatFrameAsBlock) {
-    reflowState.lineLayout = &mLineLayout;
-  }
-  reflowState.mRunInFrame = mRunInFrame;
-  reflowState.mCompactMarginWidth = mCompactMarginWidth;
+  reflowState.lineLayout = &mLineLayout;
   reflowState.reason = reason;
   mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
 
@@ -492,6 +466,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   nscoord ty = y - mOuterReflowState.mBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
 
+  frame->MoveTo(x, y);
   htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
   // XXX could return this in aStatus to save a few cycles
   // XXX could mandate that child sets up mCombinedArea too...
@@ -577,27 +552,16 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
       break;
 
     case NS_STYLE_FLOAT_NONE:
-      if (!mTreatFrameAsBlock) {
-        // Only apply right margin for the last-in-flow
-        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-          // Zero this out so that when we compute the
-          // max-element-size of the frame we will properly avoid
-          // adding in the right margin.
-          pfd->mMargin.right = 0;
-        }
+      // Only apply right margin for the last-in-flow
+      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+        // Zero this out so that when we compute the
+        // max-element-size of the frame we will properly avoid
+        // adding in the right margin.
+        pfd->mMargin.right = 0;
       }
       mRightMargin = pfd->mMargin.right;
       break;
     }
-  }
-
-  // If the frame is a block frame but the parent frame is not a block
-  // frame and the frame count is not zero then break before the block
-  // frame. This forces blocks that are children of inlines to be the
-  // one and only child of the inline frame.
-  if (mTreatFrameAsBlock && !mOuterIsBlock && (0 != mFrameNum)) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-    return PR_FALSE;
   }
 
   // If this is the first frame going into this inline reflow or it's
@@ -621,8 +585,6 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
   // See if the frame fits. If it doesn't then we fabricate up a
   // break-before status.
   if (pfd->mBounds.XMost() + mRightMargin > mRightEdge) {
-    // Retain the completion status of the frame that was reflowed in
-    // case the caller cares.
     aStatus = NS_INLINE_LINE_BREAK_BEFORE();
     return PR_FALSE;
   }
@@ -637,25 +599,6 @@ void
 nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
 {
   PerFrameData* pfd = mFrameData;
-
-  // Remember this for later...
-  if (mTreatFrameAsBlock) {
-    mIsBlock = PR_TRUE;
-
-    // Special handling for CSS2 section 10.3.3
-    if ((aMetrics.width < mFrameAvailSize.width) &&
-        (NS_UNCONSTRAINEDSIZE != mRightEdge)) {
-      // The block frame didn't use all of the available space. See if
-      // it has auto left/right margins. If it does, center it.
-      const nsStyleSpacing* spacing = GetSpacing();
-      if (nsnull != spacing) {
-        if ((eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) &&
-            (eStyleUnit_Auto == spacing->mMargin.GetRightUnit())) {
-          pfd->mBounds.x += (mRightEdge - aMetrics.width) / 2;
-        }
-      }
-    }
-  }
 
 //XXX disabled: css2 spec claims otherwise; the problem is we need to
 //handle continuations differently so that empty continuations disappear
@@ -683,7 +626,6 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
   // Save carried out information for caller
   mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
   mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
-  mCarriedOutMarginFlags = aMetrics.mCarriedOutMarginFlags;
 
   // Advance to next X coordinate
   mX = pfd->mBounds.XMost() + mRightMargin;
@@ -730,16 +672,6 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 {
   PerFrameData* pfd0 = mFrameDataBase;
   PerFrameData* end = pfd0 + mFrameNum;
-
-  // Short circuit 99% of this when this code has reflowed a single
-  // block frame.
-  if (mTreatFrameAsBlock) {
-    aLineBox = pfd0->mBounds;
-    aMaxAscent = pfd0->mAscent;
-    aMaxDescent = pfd0->mDescent;
-    pfd0->mFrame->SetRect(aLineBox);
-    return;
-  }
 
   // XXX I think that the line box should wrap around the children,
   // even if they have negative margins, right?
