@@ -29,17 +29,21 @@
 #include "nsImagePh.h"
 #include "nsDeviceContextPh.h"
 #include "nsRegionPh.h"
+#include "nsScriptableRegion.h"
 #include "nsBlender.h"
 #include "nsDeviceContextSpecPh.h"
 #include "nsDeviceContextSpecFactoryP.h"
-
+#include "nsIImageManager.h"
 #include "nsPhGfxLog.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
+static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
+
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -47,38 +51,28 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
 
-//static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
-//static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
 
 class nsGfxFactoryPh : public nsIFactory
 {   
   public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                                       void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+    // nsISupports methods
+    NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                                       const nsIID &aIID,   
-                                       void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsGfxFactoryPh(const nsCID &aClass);   
     ~nsGfxFactoryPh();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };   
 
 nsGfxFactoryPh::nsGfxFactoryPh(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 }   
 
@@ -118,6 +112,8 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
+  nsresult res;
+  
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
   }  
@@ -125,7 +121,8 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
   *aResult = NULL;  
   
   nsISupports *inst = nsnull;
-
+  PRBool already_addreffed = PR_FALSE;
+  
   if (mClassID.Equals(kCFontMetrics))
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsFontMetricsPh.\n"));
@@ -149,6 +146,15 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
     NS_NEWXPCOM(region, nsRegionPh);
     inst = (nsISupports *)region;
   }
+  else if (mClassID.Equals(kCScriptableRegion)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for kCScriptableRegion nsRegionPh.\n"));
+    nsCOMPtr<nsIRegion> rgn;
+    NS_NEWXPCOM(rgn, nsRegionPh);
+    if (rgn != nsnull) {
+      nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+      inst = scriptableRgn;
+    }
+  }
   else if (mClassID.Equals(kCBlender)) {
     inst = (nsISupports *)new nsBlender;
   }
@@ -164,6 +170,22 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
     NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryPh);
     inst = (nsISupports *)dcs;
   }
+  else if (mClassID.Equals(kImageManagerImpl)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for ImageManagerImpl.\n"));
+    nsCOMPtr<nsIImageManager> iManager;
+    res = NS_NewImageManager(getter_AddRefs(iManager));
+    already_addreffed = PR_TRUE;
+    if (NS_SUCCEEDED(res))
+    {
+      res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
+    }
+  }          
+  else if (mClassID.Equals(kCFontEnumerator)) {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for FontEnumerator.\n"));
+    nsFontEnumeratorPh* fe;
+    NS_NEWXPCOM(fe, nsFontEnumeratorPh);
+    inst = (nsISupports *)fe;
+  } 
 
   if (inst == NULL)
   {  
@@ -171,17 +193,12 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
-  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (already_addreffed == PR_FALSE)
+   NS_ADDREF(inst);
 
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsGfxFactoryPh::CreateInstance Did not get the right interface, Failed.\n"));
-    delete inst;  
-  }  
-//  else {
-//    inst->Release();
-//  }
-
+  res = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+  
   return res;  
 }  
 

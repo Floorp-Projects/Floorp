@@ -20,10 +20,19 @@
  * Contributor(s): 
  */
 
+#include "xp_core.h"
+#include "nsQuickSort.h"
 #include "nsFontMetricsPh.h"
 #include "nsPhGfxLog.h"
 
 #include <errno.h>
+
+static int gGotAllFontNames = 0;
+
+// XXX many of these statics need to be freed at shutdown time
+static PLHashTable* gFamilies = nsnull;
+
+static PLHashTable* gFamilyNames = nsnull;
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -349,4 +358,157 @@ nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle)
 
   aHandle = (nsFontHandle) &mFontHandle;
   return NS_OK;
+}
+
+
+
+// The Font Enumerator
+
+nsFontEnumeratorPh::nsFontEnumeratorPh()
+{
+  NS_INIT_REFCNT();
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::nsFontEnumeratorPh this=<%p>\n", this));
+}
+
+NS_IMPL_ISUPPORTS(nsFontEnumeratorPh,
+                  NS_GET_IID(nsIFontEnumerator));
+
+static int gInitializedFontEnumerator = 0;
+
+static int
+InitializeFontEnumerator(void)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::InitializeFontEnumerator\n"));
+
+  gInitializedFontEnumerator = 1;
+
+  if (!gGotAllFontNames) {
+    gGotAllFontNames = 1;
+    //GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+  }
+
+  return 1;
+}
+
+typedef struct EnumerateFamilyInfo
+{
+  PRUnichar** mArray;
+  int         mIndex;
+} EnumerateFamilyInfo;
+
+static PRIntn
+EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateFamily\n"));
+
+  EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
+  PRUnichar** array = info->mArray;
+  int j = info->mIndex;
+  PRUnichar* str = ((nsString*) he->key)->ToNewUnicode();
+  if (!str) {
+    for (j = j - 1; j >= 0; j--) {
+      nsAllocator::Free(array[j]);
+    }
+    info->mIndex = 0;
+    return HT_ENUMERATE_STOP;
+  }
+  array[j] = str;
+  info->mIndex++;
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static int
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::CompareFontNames\n"));
+
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+  // XXX add nsICollation stuff
+
+  return nsCRT::strcmp(str1, str2);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateAllFonts  this=<%p>\n", this));
+
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  EnumerateFamilyInfo info = { array, 0 };
+  PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
+  if (!info.mIndex) {
+    nsAllocator::Free(array);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
+
+  *aCount = gFamilies->nentries;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPh::EnumerateFonts(const char* aLangGroup,
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateFonts  this=<%p>\n", this));
+
+  if ((!aLangGroup) || (!aGeneric)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if ((!strcmp(aLangGroup, "x-unicode")) ||
+      (!strcmp(aLangGroup, "x-user-def"))) {
+    return EnumerateAllFonts(aCount, aResult);
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // XXX still need to implement aLangGroup and aGeneric
+  return EnumerateAllFonts(aCount, aResult);
 }
