@@ -27,6 +27,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "plevent.h"
 #include "prmem.h"
 #include "prnetdb.h"
@@ -103,6 +104,7 @@ extern "C" void ShowOSAlert(char* aMessage);
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
 #define HELP_SPACER_4   "\t\t\t\t"
+#define PREF_HOMEPAGE_OVERRIDE "browser.startup.homepage_override.1"
 
 #ifdef DEBUG
 #include "prlog.h"
@@ -397,7 +399,29 @@ nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width)
   rv = handler->GetHandlesArgs(&handlesArgs);
   if (handlesArgs) {
     nsXPIDLString defaultArgs;
+
+    /* GetDefaultArgs will always set the override pref to false but we don't want that
+       to happen yet (otherwise the setup page won't get displayed when a new
+       profile is used for the first time).  So we will fetch the override pref
+       before calling GetDefaultArgs and, if it is true, we will restore it to back
+       to true after calling GetDefaultArgs
+     */
+    PRBool override = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (prefs) {
+      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      if (NS_SUCCEEDED(rv)) {
+        prefBranch->GetBoolPref(PREF_HOMEPAGE_OVERRIDE, &override);
+      }
+    }
+
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+
+    if (override) {
+      prefBranch->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_TRUE);
+    }
+
     if (NS_FAILED(rv)) return rv;
     rv = OpenWindow(chromeUrlForTask, defaultArgs);
   }
