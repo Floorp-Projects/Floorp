@@ -76,6 +76,8 @@ ifeq ($(OS_ARCH),SunOS)
 			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
 			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
 			RELEASE_LIBS = $(SHARED_LIBRARY)
+			RELEASE_LIBS_DEST = $(RELEASE_LIB_DIR)/cpu/sparcv8plus
+			lib_subdir = cpu/sparcv8plus
 		endif
 		endif
 	endif
@@ -100,6 +102,13 @@ else
 $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(LD) -G -z text -z endfiltee -o $@ $(ULTRASPARC_ASOBJS)
 	$(INSTALL) -m 444 $@ $(dist_libdir)/cpu/sparcv8plus
+#
+# The -f $(ORIGIN)/... linker flag uses the real file, after symbolic links
+# are resolved, as the origin.  If NSDISTMODE is not "copy", libnspr4.so
+# will be installed as a symbolic link in $(dist_libdir), pointing to the
+# real libnspr4.so file in pr/src.  Therefore we need to install an
+# additional copy of libnspr_flt4.so in pr/src/cpu/sparcv8plus.
+#
 ifneq ($(NSDISTMODE),copy)
 	$(INSTALL) -m 444 $@ ../../cpu/sparcv8plus
 endif

@@ -169,6 +169,10 @@ ALL_TRASH		+= $(VMS_SYMVEC_FILE)
 endif
 endif
 
+ifndef RELEASE_LIBS_DEST
+RELEASE_LIBS_DEST	= $(RELEASE_LIB_DIR)
+endif
+
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
@@ -218,7 +222,7 @@ ifdef RELEASE_HEADERS
 	$(NSINSTALL) -t -m 0644 $(RELEASE_HEADERS) $(DESTDIR)$(includedir)/$(include_subdir)
 endif
 ifdef RELEASE_LIBS
-	$(NSINSTALL) -t -m 0755 $(RELEASE_LIBS) $(DESTDIR)$(libdir)
+	$(NSINSTALL) -t -m 0755 $(RELEASE_LIBS) $(DESTDIR)$(libdir)/$(lib_subdir)
 endif
 	+$(LOOP_OVER_DIRS)
 
@@ -247,13 +251,13 @@ ifdef RELEASE_LIBS
 	else \
 		true; \
 	fi
-	@if test ! -d $(RELEASE_LIB_DIR); then \
-		rm -rf $(RELEASE_LIB_DIR); \
-		$(NSINSTALL) -D $(RELEASE_LIB_DIR);\
+	@if test ! -d $(RELEASE_LIBS_DEST); then \
+		rm -rf $(RELEASE_LIBS_DEST); \
+		$(NSINSTALL) -D $(RELEASE_LIBS_DEST);\
 	else \
 		true; \
 	fi
-	cp $(RELEASE_LIBS) $(RELEASE_LIB_DIR)
+	cp $(RELEASE_LIBS) $(RELEASE_LIBS_DEST)
 endif
 ifdef RELEASE_HEADERS
 	@echo "Copying header files to release directory"
