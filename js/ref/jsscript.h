@@ -50,7 +50,6 @@ struct JSScript {
     jssrcnote    *notes;        /* line number and other decompiling data */
     JSTryNote    *trynotes;     /* exception table for this script */
     JSPrincipals *principals;   /* principals for this script */
-    void         *javaData;     /* XXX extra data used by jsjava.c */
     JSObject     *object;       /* optional Script-class object wrapper */
 };
 
