@@ -38,7 +38,7 @@ Contributor(s): ______________________________________. -->
   title="Embedding">
 
   <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javascript" src="chrome://embedding/browser/content/mini-nav.js"></script>
+  <script language="javascript" src="mini-nav.js"></script>
 
   <!-- Context menu -->
   <popupset>
