@@ -625,8 +625,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
         nsAutoCMonitor mon(pipe);
 
         *writeCount = 0;
-        if (NS_FAILED(pipe->mCondition)
-            && pipe->mCondition != NS_BASE_STREAM_CLOSED) {
+        if (NS_FAILED(pipe->mCondition)) {
             rv = pipe->mCondition;
             goto done;
         }
