@@ -77,7 +77,7 @@ namespace JavaScript {
 
 #if defined(XP_MAC)
         // copied from default template parameters in map.
-        typedef gc_allocator<pair<const String, JSValue> > gc_map_allocator;
+        typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
 #elif defined(XP_UNIX)
         // FIXME: in libg++, they assume the map's allocator is a byte allocator,
         // which is wrapped in a simple_allocator. this is crap.
