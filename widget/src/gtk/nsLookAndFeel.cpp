@@ -115,6 +115,36 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 	// FIXME we need to allow the entry to size itself based on the font
         aMetric = 20;
         break;
+    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
+        aMetric = 20;
+        break;
+    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
+        aMetric = 0;
+        break;
+    case eMetric_TextHorizontalInsideMinimumPadding:
+        aMetric = 6;
+        break;
+    case eMetric_TextVerticalInsidePadding:
+        aMetric = 10;
+        break;
+    case eMetric_TextShouldUseVerticalInsidePadding:
+        aMetric = 1;
+        break;
+    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
+        aMetric = 0;
+        break;
+    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
+        aMetric = 1;
+        break;
+    case eMetric_ListHorizontalInsideMinimumPadding:
+        aMetric = 7;
+        break;
+    case eMetric_ListShouldUseVerticalInsidePadding:
+        aMetric = 1;
+        break;
+    case eMetric_ListVerticalInsidePadding:
+        aMetric = 1;
+        break;
     default:
         aMetric = 0;
         res     = NS_ERROR_FAILURE;
@@ -125,4 +155,38 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     return res;
 }
 
+NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
+{
+  nsresult res = NS_OK;
+  switch (aID) {
+    case eMetricFloat_TextFieldVerticalInsidePadding:
+        aMetric = 10.0f;
+        break;
+    case eMetricFloat_TextFieldHorizontalInsidePadding:
+        aMetric = 10000.0f; // large number on purpose so minimum padding is used
+        break;
+    case eMetricFloat_TextAreaVerticalInsidePadding:
+        aMetric = 10.0f;    
+        break;
+    case eMetricFloat_TextAreaHorizontalInsidePadding:
+        aMetric = 10000.0f; // large number on purpose so minimum padding is used
+        break;
+    case eMetricFloat_ListVerticalInsidePadding:
+        aMetric = 1.0f;
+        break;
+    case eMetricFloat_ListHorizontalInsidePadding:
+        aMetric = 7.0f;
+        break;
+    case eMetricFloat_ButtonVerticalInsidePadding:
+        aMetric = 0.5f;
+        break;
+    case eMetricFloat_ButtonHorizontalInsidePadding:
+        aMetric = 0.5f;
+        break;
+    default:
+        aMetric = -1.0;
+        res = NS_ERROR_FAILURE;
+    }
+  return res;
+}
 

@@ -48,11 +48,35 @@ public:
     eMetric_WindowBorderWidth,
     eMetric_WindowBorderHeight,
     eMetric_Widget3DBorder,
-    eMetric_TextFieldHeight
+    eMetric_TextFieldHeight,
+    eMetric_TextVerticalInsidePadding,                    // needed only because of GTK
+    eMetric_TextShouldUseVerticalInsidePadding,           // needed only because of GTK
+    eMetric_TextHorizontalInsideMinimumPadding,  
+    eMetric_TextShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
+    eMetric_ButtonHorizontalInsidePaddingNavQuirks,  
+    eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks, 
+    
+    eMetric_ListShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
+    eMetric_ListHorizontalInsideMinimumPadding,         
+
+    eMetric_ListShouldUseVerticalInsidePadding,           // needed only because of GTK
+    eMetric_ListVerticalInsidePadding                     // needed only because of GTK
   } nsMetricID;
+
+  typedef enum {
+    eMetricFloat_TextFieldVerticalInsidePadding,
+    eMetricFloat_TextFieldHorizontalInsidePadding,
+    eMetricFloat_TextAreaVerticalInsidePadding,
+    eMetricFloat_TextAreaHorizontalInsidePadding,
+    eMetricFloat_ListVerticalInsidePadding,
+    eMetricFloat_ListHorizontalInsidePadding,
+    eMetricFloat_ButtonVerticalInsidePadding,
+    eMetricFloat_ButtonHorizontalInsidePadding
+  } nsMetricFloatID;
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
+  NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric) = 0;
 };
 
 #define nsLAF nsILookAndFeel
