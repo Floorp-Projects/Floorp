@@ -1024,6 +1024,9 @@ nsXULElement::SetAttribute(const nsAString& aName,
     const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
     if (!name) {
+        nsresult rv = nsContentUtils::CheckQName(aName, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
         NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1172,9 +1175,10 @@ nsXULElement::SetAttributeNS(const nsAString& aNamespaceURI,
                              const nsAString& aValue)
 {
     nsCOMPtr<nsINodeInfo> ni;
-    nsresult rv = NodeInfo()->NodeInfoManager()->GetNodeInfo(aQualifiedName,
-                                                             aNamespaceURI,
-                                                             getter_AddRefs(ni));
+    nsresult rv =
+        nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
+                                             NodeInfo()->NodeInfoManager(),
+                                             getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),

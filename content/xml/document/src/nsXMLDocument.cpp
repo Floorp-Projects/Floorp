@@ -92,13 +92,13 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIScriptGlobalObjectOwner.h"
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
 
 static const char kLoadAsData[] = "loadAsData";
 
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 
@@ -755,12 +755,6 @@ nsXMLDocument::InternalGetNumberOfStyleSheets() const
 
 // nsIDOMDocument interface
 NS_IMETHODIMP    
-nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
-{
-  return nsDocument::GetDoctype(aDocumentType); 
-}
- 
-NS_IMETHODIMP    
 nsXMLDocument::CreateCDATASection(const nsAString& aData,
                                   nsIDOMCDATASection** aReturn)
 {
@@ -800,12 +794,13 @@ nsXMLDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                            const nsAString& aData, 
                                            nsIDOMProcessingInstruction** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
+  nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content),
-                                               aTarget, aData);
+  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -813,24 +808,6 @@ nsXMLDocument::CreateProcessingInstruction(const nsAString& aTarget,
   return CallQueryInterface(content, aReturn);
 }
  
-NS_IMETHODIMP    
-nsXMLDocument::CreateElement(const nsAString& aTagName, 
-                              nsIDOMElement** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-  NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv;
-
-  rv = mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_None,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsDocument::CreateElement(nodeInfo, aReturn);
-}
-
 NS_IMETHODIMP    
 nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
@@ -900,52 +877,6 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return CallQueryInterface(newDoc, aReturn);
 }
  
-NS_IMETHODIMP
-nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
-                          PRBool aDeep,
-                          nsIDOMNode** aReturn)
-{
-  return nsDocument::ImportNode(aImportedNode, aDeep, aReturn);
-}
-
-NS_IMETHODIMP
-nsXMLDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
-                                 const nsAString& aQualifiedName,
-                                 nsIDOMAttr** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString value;
-  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
-  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY); 
-
-  return CallQueryInterface(attribute, aReturn);
-}
-
-NS_IMETHODIMP
-nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                               const nsAString& aQualifiedName,
-                               nsIDOMElement** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsDocument::CreateElement(nodeInfo, aReturn);
-}
-
 // Id attribute matching function used by nsXMLDocument and
 // nsHTMLDocument.
 nsIContent *

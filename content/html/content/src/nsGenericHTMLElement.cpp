@@ -348,6 +348,9 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (!name) {
+    nsresult rv = nsContentUtils::CheckQName(aName, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIAtom> nameAtom;
     if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
       nsAutoString lower;

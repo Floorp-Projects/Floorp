@@ -201,8 +201,9 @@ nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
-  return nsNodeInfoManager::GetNodeInfo(NS_ConvertUTF16toUTF8(aName),
-                                        aPrefix, aNamespaceID, aNodeInfo);
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+  return nsNodeInfoManager::GetNodeInfo(name, aPrefix, aNamespaceID,
+                                        aNodeInfo);
 }
 
 
@@ -240,25 +241,30 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   PRInt32 nsid = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
-    nsresult rv = nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(aNamespaceURI, nsid);
+    nsresult rv = nsContentUtils::GetNSManagerWeakRef()->
+      RegisterNameSpace(aNamespaceURI, nsid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsNodeInfoManager::GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
+  return GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
 }
 
 nsresult
-nsNodeInfoManager::GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
+nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+                               const nsAString& aNamespaceURI,
+                               nsINodeInfo** aNodeInfo)
 {
-  NS_ENSURE_ARG(!aName.IsEmpty());
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
 
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+  PRInt32 nsid = kNameSpaceID_None;
+  if (!aNamespaceURI.IsEmpty()) {
+    nsresult rv = nsContentUtils::GetNSManagerWeakRef()->
+      RegisterNameSpace(aNamespaceURI, nsid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  return GetNodeInfo(name, aPrefix, aNamespaceID, aNodeInfo);
+  return GetNodeInfo(nameAtom, aPrefix, nsid, aNodeInfo);
 }
-
 
 nsresult
 nsNodeInfoManager::GetDocumentPrincipal(nsIPrincipal** aPrincipal)

@@ -514,6 +514,11 @@ protected:
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
 
+  virtual PRInt32 GetDefaultNamespaceID() const
+  {
+    return kNameSpaceID_None;
+  };
+
   nsDocument();
   virtual ~nsDocument();
 
