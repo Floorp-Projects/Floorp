@@ -276,7 +276,7 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRInt32 aMaxBytes)
   const char *lastchar = aBuffer;
   
   PRInt32 bytes = 0;
-  while (*c && bytes <= aMaxBytes) {
+  while (*c && bytes < aMaxBytes) {
     lastchar = c;
     if (UTF8traits::isASCII(*c)) {
       c++;
