@@ -23,6 +23,7 @@
 #include "plstr.h"
 #include "nscore.h"
 #include "prtypes.h"
+#include "nsCppSharedAllocator.h"
 
 #define CR '\015'
 #define LF '\012'
@@ -201,7 +202,8 @@ public:
   static PRUnichar* strdup(const PRUnichar* str);
 
   static void free(PRUnichar* str) {
-    delete[] str;
+  	nsCppSharedAllocator<PRUnichar> shared_allocator;
+  	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
   }
 
   /// Compute a hashcode for a C string
