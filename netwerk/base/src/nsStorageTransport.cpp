@@ -409,7 +409,6 @@ nsStorageTransport::nsReadRequest::nsReadRequest()
     , mTransferOffset(0)
     , mTransferCount(MAX_COUNT)
     , mStatus(NS_OK)
-    , mCanceled(PR_FALSE)
     , mOnStartFired(PR_FALSE)
     , mWaitingForWrite(PR_FALSE)
 {
@@ -467,7 +466,7 @@ nsStorageTransport::nsReadRequest::Process()
 
     PRUint32 count = 0;
 
-    if (mCanceled) {
+    if (NS_FAILED(mStatus)) {
         // forcing the transfer count to zero indicates that we are done.
         mTransferCount = 0;
     }
@@ -547,7 +546,6 @@ nsStorageTransport::nsReadRequest::GetStatus(nsresult *aStatus)
 NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::Cancel(nsresult aStatus)
 {
-    mCanceled = PR_TRUE;
     mStatus = aStatus;
     return NS_OK;
 }
@@ -594,8 +592,15 @@ NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnStartRequest(nsIRequest *aRequest,
                                                   nsISupports *aContext)
 {
+    nsresult rv;
+
     NS_ASSERTION(mListener, "no listener");
-    return mListener->OnStartRequest(aRequest, aContext);
+    rv = mListener->OnStartRequest(aRequest, aContext);
+
+    if (NS_FAILED(rv)) {
+        Cancel(rv);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -603,10 +608,24 @@ nsStorageTransport::nsReadRequest::OnStopRequest(nsIRequest *aRequest,
                                                  nsISupports *aContext,
                                                  nsresult aStatus)
 {
-    NS_ASSERTION(mListener, "no listener");
-    (void) mListener->OnStopRequest(aRequest, aContext, aStatus);
-    // OnStopRequest completed, so listeners are no longer needed. 
+    // If the request was canceled, it is possible that the listener is null
+    // because OnStopRequest has already been called (from OnDataAvailable)
+    //
+    // If this is the case, them mStatus should be a failure code... and all
+    // is well.  Otherwise, something bad is going on...
+    //
+    if (!mListener) {
+        NS_ASSERTION(NS_FAILED(mStatus), "Null listener!!!");
+        return NS_OK;
+    }
+
+    // Clear mListener before calling OnStopRequest to prevent multiple, 
+    // re-enterent calls...
+    nsCOMPtr<nsIStreamListener> listener(mListener);
+
     mListener = 0;
+    (void) listener->OnStopRequest(aRequest, aContext, aStatus);
+    // OnStopRequest completed, so listeners are no longer needed. 
     mListenerContext = 0;
     mListenerProxy = 0;
     return NS_OK;
@@ -622,13 +641,26 @@ nsStorageTransport::nsReadRequest::OnDataAvailable(nsIRequest *aRequest,
     nsresult rv = NS_OK;
     PRUint32 priorOffset = mTransferOffset;
 
+    if (NS_FAILED(mStatus)) {
+        // When an error occurs, it is important that OnStopRequest(...) is
+        // called.  
+        //
+        // Once OnStopRequest() has been called, mListener should be nsnull.
+        if (mListener) {
+            OnStopRequest(aRequest, aContext, mStatus);
+            NS_ASSERTION(mListener == nsnull, "The Listener was not detached!");
+        }
+        return mStatus;
+    }
+
     rv = mListener->OnDataAvailable(aRequest, aContext, aInput, aOffset, aCount);
     NS_ASSERTION(rv != NS_BASE_STREAM_WOULD_BLOCK, "not implemented");
 
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) {
+        Cancel(rv);
+    }
     // avoid an infinite loop
-    if (priorOffset == mTransferOffset) {
+    else if (priorOffset == mTransferOffset) {
         NS_WARNING("nsIStreamListener::OnDataAvailable implementation did not "
                    "consume any data!");
         // end the read

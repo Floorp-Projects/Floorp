@@ -93,7 +93,6 @@ public: /* internal */
         nsCOMPtr<nsIStreamListener> mListenerProxy;
         nsCOMPtr<nsIStreamListener> mListener;
         nsCOMPtr<nsISupports>       mListenerContext;
-        PRPackedBool                mCanceled;
         PRPackedBool                mOnStartFired;
         PRPackedBool                mWaitingForWrite;
     };
