@@ -21,6 +21,7 @@
 
 #include "nsIFileSpec.h" 
 #include "nsFileSpec.h"
+#include "nsAgg.h"
 
 //========================================================================================
 class NS_COM nsFileSpecImpl
@@ -30,7 +31,7 @@ class NS_COM nsFileSpecImpl
 
  public: 
 
-	NS_DECL_ISUPPORTS
+	NS_DECL_AGGREGATED
 
 	NS_IMETHOD fromFileSpec(const nsIFileSpec *original);
 
@@ -161,7 +162,7 @@ class NS_COM nsFileSpecImpl
 			nsFileSpecImpl(const nsFileSpec& inSpec);
 			virtual ~nsFileSpecImpl();
 			static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
-
+      static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
 	//----------------------
 	// Data
 	//----------------------
@@ -169,6 +170,15 @@ class NS_COM nsFileSpecImpl
 		nsFileSpec							mFileSpec;
 		nsIInputStream*						mInputStream;
 		nsIOutputStream*					mOutputStream;
+
+    // These will go away
+    NS_IMETHOD chooseOutputFile(const char *windowTitle, const char *suggestedLeafName);
+ 
+    NS_IMETHOD chooseInputFile(const char *title,
+                               nsIFileSpec::StandardFilterMask standardFilterMask,
+                               const char *extraFilterTitle, const char *extraFilter);
+ 
+    NS_IMETHOD chooseDirectory(const char *title);
 
 }; // class nsFileSpecImpl
 

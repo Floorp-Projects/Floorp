@@ -16,9 +16,7 @@
  * Reserved.
  */
 
-#include "nsIFileSpec.h" // Always first, to ensure that it compiles alone.
-
-#include "nsFileSpec.h"
+#include "nsFileSpecImpl.h"
 #include "nsIFileStream.h"
 #include "nsFileStream.h"
 
@@ -38,166 +36,24 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 #else
 #define TEST_OUT_PTR(p)
 #endif
-//========================================================================================
-class nsFileSpecImpl
-//========================================================================================
-	: public nsIFileSpec
-{
-
- public: 
-
-	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD fromFileSpec(const nsIFileSpec *original);
-	NS_IMETHOD chooseOutputFile(const char *windowTitle, const char *suggestedLeafName);
-
-	NS_IMETHOD chooseInputFile(
-		const char *title,
-		nsIFileSpec::StandardFilterMask standardFilterMask,
-		const char *extraFilterTitle, const char *extraFilter);
-
-	NS_IMETHOD chooseDirectory(const char *title);
-
-	NS_IMETHOD GetURLString(char * *aURLString);
-	NS_IMETHOD SetURLString(char * aURLString);
-
-	/* attribute string UnixStyleFilePath; */
-	NS_IMETHOD GetUnixStyleFilePath(char * *aUnixStyleFilePath);
-	NS_IMETHOD SetUnixStyleFilePath(char * aUnixStyleFilePath);
-
-	/* attribute string PersistentDescriptorString; */
-	NS_IMETHOD GetPersistentDescriptorString(char * *aPersistentDescriptorString);
-	NS_IMETHOD SetPersistentDescriptorString(char * aPersistentDescriptorString);
-
-	/* attribute string NativePath; */
-	NS_IMETHOD GetNativePath(char * *aNativePath);
-	NS_IMETHOD SetNativePath(char * aNativePath);
-
-	/* readonly attribute string NSPRPath; */
-	NS_IMETHOD GetNSPRPath(char * *aNSPRPath);
-
-	/* readonly attribute nsresult Error; */
-	NS_IMETHOD error();
-
-	/* boolean isValid (); */
-	NS_IMETHOD isValid(PRBool *_retval);
-
-	/* boolean failed (); */
-	NS_IMETHOD failed(PRBool *_retval);
-
-	/* attribute string LeafName; */
-	NS_IMETHOD GetLeafName(char * *aLeafName);
-	NS_IMETHOD SetLeafName(char * aLeafName);
-
-	/* readonly attribute nsIFileSpec Parent; */
-	NS_IMETHOD GetParent(nsIFileSpec * *aParent);
-
-	/* nsIFileSpec makeUnique (); */
-	NS_IMETHOD makeUnique();
-
-	/* nsIFileSpec makeUniqueWithSuggestedName (in string suggestedName); */
-	NS_IMETHOD makeUniqueWithSuggestedName(const char* inSuggestedLeafName);
-
-	/* readonly attribute unsigned long ModDate; */
-	NS_IMETHOD GetModDate(PRUint32 *aModDate);
-
-	/* boolean modDateChanged (in unsigned long oldStamp); */
-	NS_IMETHOD modDateChanged(PRUint32 oldStamp, PRBool *_retval);
-
-	/* boolean isDirectory (); */
-	NS_IMETHOD isDirectory(PRBool *_retval);
-
-	/* boolean isFile (); */
-	NS_IMETHOD isFile(PRBool *_retval);
-
-	/* boolean exists (); */
-	NS_IMETHOD exists(PRBool *_retval);
-
-	/* readonly attribute unsigned long FileSize; */
-	NS_IMETHOD GetFileSize(PRUint32 *aFileSize);
-
-	/* readonly attribute unsigned long DiskSpaceAvailable; */
-	NS_IMETHOD GetDiskSpaceAvailable(PRUint32 *aDiskSpaceAvailable);
-
-	/* nsIFileSpec AppendRelativeUnixPath (in string relativePath); */
-	NS_IMETHOD AppendRelativeUnixPath(const char *relativePath);
-
-	/* void createDir (); */
-	NS_IMETHOD createDir();
-
-	/* void rename ([const] in string newLeafName); */
-	NS_IMETHOD rename(const char *newLeafName);
-
-	/* void copyToDir ([const] in nsIFileSpec newParentDir); */
-	NS_IMETHOD copyToDir(const nsIFileSpec *newParentDir);
-
-	/* void moveToDir ([const] in nsIFileSpec newParentDir); */
-	NS_IMETHOD moveToDir(const nsIFileSpec *newParentDir);
-
-	/* void execute ([const] in string args); */
-	NS_IMETHOD execute(const char *args);
-
-	/* void openStreamForReading (); */
-	NS_IMETHOD openStreamForReading();
-
-	/* void openStreamForWriting (); */
-	NS_IMETHOD openStreamForWriting();
-
-	/* void openStreamForReadingAndWriting (); */
-	NS_IMETHOD openStreamForReadingAndWriting();
-
-	/* void close (); */
-	NS_IMETHOD closeStream();
-
-	/* boolean isOpen (); */
-	NS_IMETHOD isStreamOpen(PRBool *_retval);
-
-	/* boolean eof (); */
-	NS_IMETHOD eof(PRBool *_retval);
-
-	NS_IMETHOD read(char** buffer, PRInt32 requestedCount, PRInt32 *_retval);
-
-	NS_IMETHOD readLine(char** line, PRInt32 bufferSize, PRBool *wasTruncated);
-					// Check eof() before each call.
-					// CAUTION: false result only indicates line was truncated
-					// to fit buffer, or an error occurred (OTHER THAN eof).
-
-
-	NS_IMETHOD write(const char* data, PRInt32 requestedCount, PRInt32 *_retval);
-
-	/* void flush (); */
-	NS_IMETHOD flush();
-
-	/* void seek (in long offset); */
-	NS_IMETHOD seek(PRInt32 offset);
-
-	/* long tell (); */
-	NS_IMETHOD tell(PRInt32 *_retval);
-
-	/* void endline (); */
-	NS_IMETHOD endline();
-
-	//----------------------
-	// Implementation
-	//----------------------
-
-			nsFileSpecImpl();
-			nsFileSpecImpl(const nsFileSpec& inSpec);
-			virtual ~nsFileSpecImpl();
-			static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
-
-	//----------------------
-	// Data
-	//----------------------
-	
-		nsFileSpec							mFileSpec;
-		nsIInputStream*						mInputStream;
-		nsIOutputStream*					mOutputStream;
-
-}; // class nsFileSpecImpl
 
 //static NS_DEFINE_IID(kIFileSpecIID, NS_IFILESPEC_IID);
-NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
+NS_IMPL_AGGREGATED(nsFileSpecImpl)
+
+NS_IMETHODIMP
+nsFileSpecImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (aInstancePtr == nsnull)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsIFileSpec::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = (nsIFileSpec*)this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
 
 //----------------------------------------------------------------------------------------
 nsFileSpecImpl::nsFileSpecImpl()
@@ -882,6 +738,26 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::GetCurrentSpec(nsIFileSpec * *aCurrentSpe
 	return nsFileSpecImpl::MakeInterface(mDirectoryIterator->Spec(), aCurrentSpec);
 }
 
+NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
+{
+  if (aIFileSpec == NULL)
+    return NS_ERROR_NULL_POINTER;
+
+	nsFileSpecImpl* it = new nsFileSpecImpl;
+  if (!it)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+  nsISupports* inner = outer ? it->GetInner() : it;
+  nsresult rv = inner->QueryInterface(aIID, aIFileSpec);
+  if (NS_FAILED(rv)) {
+    delete it;
+    return rv;
+  }
+  return rv;
+}
+
+// This function should go away. Object creation should be through the
+// Component Manager.
 //----------------------------------------------------------------------------------------
 nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
