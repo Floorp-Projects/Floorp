@@ -674,7 +674,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
               NS_RELEASE(blender);
               NS_RELEASE(dx);
 
-              rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+              rc.CopyOffScreenBits(surf, 0, 0, brect, NS_COPYBITS_XFORM_DEST_VALUES);
             }
 
             rc.DestroyDrawingSurface(surf);
