@@ -27,4 +27,6 @@ nsIDrawingSurface.h
 nsRepeater.h
 nsThemeConstants.h
 nsITheme.h
+nsPDECommon.h
+nsWatchTask.h
 
