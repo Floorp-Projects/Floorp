@@ -1346,6 +1346,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\shcutdlg.cpp   
 	$(DEPTH)\cmd\winfe\slavewnd.cpp 
 	$(DEPTH)\cmd\winfe\splash.cpp 
+	$(DEPTH)\cmd\winfe\spiwrap.c 
 	$(DEPTH)\cmd\winfe\srvritem.cpp   
 	$(DEPTH)\cmd\winfe\statbar.cpp 
 !ifndef MOZ_NGLAYOUT
