@@ -493,11 +493,13 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
-    mFocused = this;
+    if (mFocused != this) {
+      mFocused = this;
 
-    // Store up the selected index so when we lose focus we can see if it's
-    // really changed
-    mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
+      // Store up the selected index so when we lose focus we can see if it's
+      // really changed
+      mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
+    }
   } else {
     mFocused = nsnull;
     if (mDroppedDown) {
