@@ -1127,8 +1127,17 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
 
-  if (NS_FAILED(rv))
-    *_retval = PR_FALSE;
+  if (NS_FAILED(rv)) {
+    // now try it with a "/" appended?
+    rv = FindRow(kToken_URLColumn,
+                 PromiseFlatCString(nsDependentCString(aURL) +
+                                    nsDependentCString("/")).get(),
+                 getter_AddRefs(row));
+    if (NS_FAILED(rv))
+      *_retval = PR_FALSE;
+    else
+      *_retval = PR_TRUE;
+  }
   else
     *_retval = PR_TRUE;
 
@@ -2392,7 +2401,7 @@ nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
 nsresult
 nsGlobalHistory::CheckHostnameEntries()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   mdb_err err;
 
