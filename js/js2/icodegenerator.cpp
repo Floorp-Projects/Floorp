@@ -40,8 +40,7 @@
 #include "interpreter.h"
 
 #include <stdexcept>
-
-
+#include <stdio.h>
 
 namespace JavaScript {
 namespace ICG {
