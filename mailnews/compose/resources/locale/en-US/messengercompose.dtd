@@ -99,6 +99,7 @@
 
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 	<!ENTITY quoteOrigCmd.accesskey "Q">
+<!ENTITY editRewrapCmd.label "Rewrap">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 	<!ENTITY selectAddressCmd.key "">
 	<!ENTITY selectAddressCmd.accesskey "c">

@@ -296,7 +296,8 @@ END of Deprecated -->
     <menupopup>	
 		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
         <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>
+		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>	
+		<menuitem value="&editRewrapCmd.label;" oncommand="editorShell.Rewrap(false)"/>
 	    <menuseparator/>
 	    
 	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
