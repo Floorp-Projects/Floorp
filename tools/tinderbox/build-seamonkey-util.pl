@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.244 $ ';
+$::UtilsVersion = '$Revision: 1.245 $ ';
 
 package TinderUtils;
 
@@ -1843,7 +1843,7 @@ sub AliveTestReturnToken {
     if ($status) {
         $rv = extract_token_from_file($binary_log, $token, $delimiter);
         chomp($rv);
-        chop($rv) if ($^O eq 'cygwin'); # cygwin perl doesn't chomp dos-newlinesproperly so use chop.
+        chop($rv) if ($rv =~ /\r$/); # cygwin perl doesn't chomp dos-newlinesproperly so use chop.
         if ($rv) {
             print "AliveTestReturnToken: token value = $rv\n";
         }
@@ -2036,16 +2036,14 @@ sub CodesizeTest {
   my $diff_log  = "Codesize-" . $type . "-diff.log";
   my $test_log  = "$test_name.log";
   
-  my $args = "$new_log $old_log $diff_log";
-  
-  print_log "\$build_dir = $build_dir";
+  print_log "\$build_dir = $build_dir\n";
 
   # Clear the logs from the last run, so we can properly test for success.
   unlink("$build_dir/$new_log");
   unlink("$build_dir/$diff_log");
   unlink("$build_dir/$test_log");
   
-  my $bash_cmd = "bash $topsrcdir/tools/codesighs/";
+  my $bash_cmd = "$topsrcdir/tools/codesighs/";
   if ($Settings::OS =~ /^WIN/ && $Settings::Compiler ne "gcc") {
     $bash_cmd .= $type . "summary.win.bash";
   } else {
@@ -2053,13 +2051,15 @@ sub CodesizeTest {
     $bash_cmd .= $type . "summary.unix.bash";
   }
  
-  $bash_cmd .= " -o $objdir" if ($Settings::ObjDir ne "");
+  my $cmd = ["bash", $bash_cmd];
+  push(@{$cmd}, "-o", "$objdir") if ($Settings::ObjDir ne "");
+  push(@{$cmd}, $new_log, $old_log, $diff_log);
  
   my $test_result =
     FileBasedTest($test_name, 
                   "$build_dir", 
                   "$build_dir",  # run top of tree, not in dist.
-                  ["$bash_cmd $args"],
+                  $cmd,
                   $Settings::CodesizeTestTimeout,
                   "FAILED", # Fake out failure mode, test file instead.
                   0, 0);    # Timeout means failure.
