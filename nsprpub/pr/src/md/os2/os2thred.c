@@ -278,3 +278,19 @@ _PR_MD_RESUME_THREAD(PRThread *thread)
     }
 }
 
+
+PRThread*
+_MD_CURRENT_THREAD(void)
+{
+    PRThread *thread;
+
+    thread = _MD_GET_ATTACHED_THREAD();
+
+    if (NULL == thread) {
+        thread = _PRI_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL, 0);
+    }
+
+    PR_ASSERT(thread != NULL);
+    return thread;
+}
+
