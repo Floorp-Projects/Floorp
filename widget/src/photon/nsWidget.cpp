@@ -468,12 +468,6 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
 			// XXX: No suitable cursor, needs implementing
 			break;
 
-		case eCursor_count_up:
-		case eCursor_count_down:
-		case eCursor_count_up_down:
-			// XXX: No suitable cursor, needs implementing
-			break;
-
 		case eCursor_move:
 		  curs = Ph_CURSOR_MOVE;
 		  break;
@@ -512,27 +506,6 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
 		case eCursor_w_resize:
 		case eCursor_e_resize:
 		  curs = Ph_CURSOR_DRAG_HORIZONTAL;
-		  break;
-
-		// REVISIT - Photon does not have the following cursor types...
-		case eCursor_arrow_north:
-		case eCursor_arrow_north_plus:
-		  curs = Ph_CURSOR_DRAG_TOP;
-		  break;
-
-		case eCursor_arrow_south:
-		case eCursor_arrow_south_plus:
-		  curs = Ph_CURSOR_DRAG_BOTTOM;
-		  break;
-
-		case eCursor_arrow_east:
-		case eCursor_arrow_east_plus:
-		  curs = Ph_CURSOR_DRAG_RIGHT;
-		  break;
-
-		case eCursor_arrow_west:
-		case eCursor_arrow_west_plus:
-		  curs = Ph_CURSOR_DRAG_LEFT;
 		  break;
 
 		case eCursor_zoom_in:

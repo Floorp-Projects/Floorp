@@ -1723,38 +1723,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
     break;
 
-  case eCursor_arrow_north:
-    newPointer = gPtrArray[IDC_ARROWNORTH-IDC_BASE];
-    break;
-
-  case eCursor_arrow_north_plus:
-    newPointer = gPtrArray[IDC_ARROWNORTHPLUS-IDC_BASE];
-    break;
-
-  case eCursor_arrow_south:
-    newPointer = gPtrArray[IDC_ARROWSOUTH-IDC_BASE];
-    break;
-
-  case eCursor_arrow_south_plus:
-    newPointer = gPtrArray[IDC_ARROWSOUTHPLUS-IDC_BASE];
-    break;
-
-  case eCursor_arrow_east:
-    newPointer = gPtrArray[IDC_ARROWEAST-IDC_BASE];
-    break;
-
-  case eCursor_arrow_east_plus:
-    newPointer = gPtrArray[IDC_ARROWEASTPLUS-IDC_BASE];
-    break;
-
-  case eCursor_arrow_west:
-    newPointer = gPtrArray[IDC_ARROWWEST-IDC_BASE];
-    break;
-
-  case eCursor_arrow_west_plus:
-    newPointer = gPtrArray[IDC_ARROWWESTPLUS-IDC_BASE];
-    break;
-
   case eCursor_crosshair:
     newPointer = gPtrArray[IDC_CROSS-IDC_BASE];
     break;
@@ -1792,9 +1760,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     break;
 
   case eCursor_context_menu:
-  case eCursor_count_up:
-  case eCursor_count_down:
-  case eCursor_count_up_down:
     // XXX: No suitable cursor, needs implementing
     break;
 

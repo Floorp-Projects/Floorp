@@ -323,11 +323,6 @@
     case kThemeWatchCursor:
     case kThemeSpinningCursor:            
       return 8;
-    case kThemeCountingUpHandCursor:
-    case kThemeCountingDownHandCursor:            
-      return 6;
-    case kThemeCountingUpAndDownHandCursor:
-      return 11;
     default:
       return 1;
   }

@@ -760,9 +760,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_grab:                cursor = kThemeOpenHandCursor; break;
     case eCursor_grabbing:            cursor = kThemeClosedHandCursor; break;
     case eCursor_spinning:            cursor = kSpinCursorFirstFrame; break; // better than kThemeSpinningCursor
-    case eCursor_count_up:            cursor = kThemeCountingUpHandCursor; break;
-    case eCursor_count_down:          cursor = kThemeCountingDownHandCursor; break;
-    case eCursor_count_up_down:       cursor = kThemeCountingUpAndDownHandCursor; break;
     case eCursor_zoom_in:             cursor = 129; break;
     case eCursor_zoom_out:            cursor = 130; break;
     case eCursor_not_allowed:
@@ -771,19 +768,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_row_resize:          cursor = 133; break;
     case eCursor_vertical_text:       cursor = 134; break;   
     case eCursor_all_scroll:          cursor = kThemeOpenHandCursor; break;
-    //arrows
-    case eCursor_n_resize:            
-    case eCursor_arrow_north:         
-    case eCursor_arrow_north_plus:    cursor = OnPantherOrLater() ? PANTHER_RESIZE_UP_CURSOR : JAGUAR_RESIZE_UP_CURSOR; break;
-    case eCursor_arrow_south:
-    case eCursor_arrow_south_plus:        
+    case eCursor_n_resize:            cursor = OnPantherOrLater() ? PANTHER_RESIZE_UP_CURSOR : JAGUAR_RESIZE_UP_CURSOR; break;
     case eCursor_s_resize:            cursor = OnPantherOrLater() ? PANTHER_RESIZE_DOWN_CURSOR : JAGUAR_RESIZE_DOWN_CURSOR; break;
-    case eCursor_w_resize:  
-    case eCursor_arrow_west:
-    case eCursor_arrow_west_plus:     cursor = kThemeResizeLeftCursor; break; 
-    case eCursor_e_resize:
-    case eCursor_arrow_east:
-    case eCursor_arrow_east_plus:     cursor = kThemeResizeRightCursor; break;
+    case eCursor_w_resize:            cursor = kThemeResizeLeftCursor; break; 
+    case eCursor_e_resize:            cursor = kThemeResizeRightCursor; break;
     case eCursor_nw_resize:           cursor = 137; break;
     case eCursor_se_resize:           cursor = 138; break;
     case eCursor_ne_resize:           cursor = 139; break;

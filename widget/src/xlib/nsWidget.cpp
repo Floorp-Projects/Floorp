@@ -1396,22 +1396,6 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
     case eCursor_sw_resize:
       xcursor = XCreateFontCursor(mDisplay, XC_bottom_left_corner);
       break;
-    case eCursor_arrow_south:
-    case eCursor_arrow_south_plus:
-      xcursor = XCreateFontCursor(mDisplay, XC_bottom_side);
-      break;
-    case eCursor_arrow_north:
-    case eCursor_arrow_north_plus:
-      xcursor = XCreateFontCursor(mDisplay, XC_top_side);
-      break;
-    case eCursor_arrow_east:
-    case eCursor_arrow_east_plus:
-      xcursor = XCreateFontCursor(mDisplay, XC_right_side);
-      break;
-    case eCursor_arrow_west:
-    case eCursor_arrow_west_plus:
-      xcursor = XCreateFontCursor(mDisplay, XC_left_side);
-      break;
     case eCursor_crosshair:
       xcursor = XCreateFontCursor(mDisplay, XC_crosshair);
       break;
@@ -1441,13 +1425,6 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
       break;
     case eCursor_spinning:
       newType = XLIB_SPINNING;
-      break;
-    case eCursor_count_up:
-    case eCursor_count_down:
-    case eCursor_count_up_down:
-      // XXX: these -moz- cursors need to be implemented
-      // I simply have no idea how they should look like
-      xcursor = XCreateFontCursor(mDisplay, XC_left_ptr);
       break;
     case eCursor_zoom_in:
       newType = XLIB_ZOOM_IN;
