@@ -49,6 +49,7 @@
       <titledbutton value="&editVCard.label;"/>
       </html:td>
       </html:tr>    
+-->
       <html:tr class="checkboxrow">
       <html:td colspan="2">
         <html:input name="identity.attachSignature" type="checkbox"/>
@@ -56,7 +57,6 @@
         <html:input type="text" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
       </html:td>
       </html:tr>
--->
 <!--
       <html:select flex="100%">
          <html:option value="sig1">&sampleSig1.label;</html:option>
