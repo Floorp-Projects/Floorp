@@ -383,7 +383,7 @@
                style="min-width: 150px; width: 200px; max-width: 400px;"/>
     </vbox>    
     
-    <splitter id="sidebar-splitter" hidden="true"/>
+    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
     <vbox id="appcontent" flex="1">
       <tabbrowser id="content" disablehistory="true"
                   flex="1" contenttooltip="aHTMLTooltip"
