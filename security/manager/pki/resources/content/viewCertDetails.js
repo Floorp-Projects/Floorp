@@ -24,7 +24,7 @@
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-const nsPK11TokenDB = "thayes@netscape.com/pk11tokendb;1";
+const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 
 function AddCertChain(node, chain)
