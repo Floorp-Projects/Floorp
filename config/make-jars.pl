@@ -4,11 +4,9 @@
 
 sub JarIt
 {
-    my ($jarfile, $args, $objDir) = @_;
+    my ($jarfile, $args) = @_;
     print "+++ jaring $jarfile\n";
     flush;
-	chdir $objDir;
-	$jarfile = "../$jarfile";
     system "zip -u $jarfile $args\n";
 }
 
@@ -27,6 +25,7 @@ sub MkDirs
     }
     else {
         my $dir = $path;
+        if ($dir =~ "") { return 0; } 
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
         }
@@ -47,7 +46,7 @@ sub CopyFile
 
 sub EnsureFileInDir
 {
-    my ($destPath, $srcPath, $objDir) = @_;
+    my ($destPath, $srcPath) = @_;
 
     if (!-e $destPath) {
         my $dir = "";
@@ -67,8 +66,8 @@ sub EnsureFileInDir
         if (!-e $file) {
             die "error: file '$file' doesn't exist\n";
         }
-        MkDirs("$objDir/$dir");
-        CopyFile($file, "$objDir/$destPath");
+        MkDirs($dir);
+        CopyFile($file, $destPath);
         return 1;
     }
     return 0;
@@ -81,14 +80,6 @@ getopt("d:o:");
 my $destPath = ".";
 if (defined($opt_d)) {
     $destPath = $opt_d;
-}
-
-my $objDir;
-if (defined($opt_o)) {
-    $objDir = $opt_o;
-}
-else {
-    die "Need to supply the -o <objdir> option.";
 }
 
 while (<>) {
@@ -107,7 +98,7 @@ while (<>) {
                     $srcPath = substr($srcPath,1,-1);
                 }
 
-                EnsureFileInDir($dest, $srcPath, $objDir);
+                EnsureFileInDir($dest, $srcPath);
                 $args = "$args$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
@@ -116,7 +107,7 @@ while (<>) {
                 goto start;
             }
         }
-        JarIt($jarfile, $args, $objDir);
+        JarIt($jarfile, $args);
 
     } elsif (/^\s*\#.*$/) {
         # skip comments

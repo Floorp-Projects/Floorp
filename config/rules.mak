@@ -885,7 +885,7 @@ JAR_MANIFEST = jar.mn
 
 xinstall:: 
         @echo +++ make: packaging jars from $(JAR_MANIFEST)
-        $(PERL) $(DEPTH)\config\make-jars.pl -o $(OBJDIR) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
 !endif
 
