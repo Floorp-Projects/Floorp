@@ -452,6 +452,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                 // urls");
                 // ********** jefft ********* okay let's use ? search string
                 // for passing the raw command now.
+				rv = m_transport->Open(m_runningUrl);
                 const char *search = nsnull;
                 aURL->GetSearch(&search);
                 char *tmpBuffer = nsnull;
