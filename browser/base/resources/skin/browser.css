@@ -138,6 +138,18 @@
   -moz-image-region: rect(63px 138px 84px 115px) !important;
 }
 
+#search-button {
+  -moz-image-region: rect(0px 161px 21px 138px) !important;
+}
+  
+#search-button:hover {
+  -moz-image-region: rect(42px 161px 63px 138px) !important;
+}
+  
+#search-button:hover:active {
+  -moz-image-region: rect(63px 161px 84px 138px) !important;
+}
+
 /* ::::: small primary toolbar buttons ::::: */
 
 .toolbarbutton-1[toolbarmode="small"] {
@@ -326,4 +338,15 @@
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
+}
+
+#boxSidebar {
+  width: 162px;
+  min-height: 10px;
+  min-width: 30px;
+  max-width: 400px;
+}
+
+sidebarheader[type="box"] {
+  -moz-binding: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-box);
 }

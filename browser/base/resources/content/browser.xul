@@ -22,6 +22,8 @@ Contributor(s): ______________________________________. -->
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
@@ -707,6 +709,11 @@ Contributor(s): ______________________________________. -->
                        oncommand="BrowserHome();"/>
       </hbox>
       <toolbarseparator/>
+      <toolbarbutton id="search-button" class="toolbarbutton-1"
+                     label="&searchButton.label;" persist="hidden"
+                     oncommand="openPanel('chrome://communicator/content/search/search-panel.xul',
+                                          this.getAttribute('label'));"/>
+      <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
                      oncommand="BrowserPrint();"
@@ -907,15 +914,28 @@ Contributor(s): ______________________________________. -->
 
   </toolbox>
      
-  <!-- we only need to handle |ondragdrop| because everything else is
-        taken care of by the builtin behavior inside the tabbrowser -->
-  <vbox id="appcontent" flex="1"
-       ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+  <hbox flex="1">
+    <vbox id="boxSidebar" hidden="true" flex="1" persist="hidden width">
+       <sidebarheader id="sidebarhdrSidebar" class="sidebarheader-main"
+                      type="box" persist="label"
+                      collapse="after">
+         <toolbarbutton id="sidebar-close-button" oncommand="SidebarShowHide();"
+                        tooltiptext="close"/>
+       </sidebarheader>
+       <browser id="browserSidebar" flex="1" persist="src"/>
+    </vbox>
+    <splitter id="splitterSidebar" collapse="before" persist="state hidden"
+                                   class="chromeclass-extrachrome sidebar-splitter"
+                                   align="center" onmouseup="SidebarFinishClick();">
+      <grippy class="sidebar-splitter-grippy"
+              onclick="SidebarCleanUpExpandCollapse();"/>
+    </splitter>
     <tabbrowser id="content"
                 flex="1" contenttooltip="aHTMLTooltip"
                 contentcontextmenu="contentAreaContextMenu"
-                onclick="return contentAreaClick(event);"/>
-  </vbox>  
+                onclick="return contentAreaClick(event);"
+                ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"/>
+  </hbox>  
 
   <statusbar id="status-bar" class="chromeclass-status"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">

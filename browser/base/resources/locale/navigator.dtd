@@ -192,3 +192,5 @@
 <!ENTITY location.label "Location:">
 <!ENTITY location.accesskey "L">
 <!ENTITY openCmd2.commandkey "d">
+
+<!ENTITY searchButton.label "Search">
