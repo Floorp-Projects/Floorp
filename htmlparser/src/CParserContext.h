@@ -84,11 +84,11 @@ public:
     nsIDTD*              mDTD;
     nsIDTD*              mValidator;
     nsIRequestObserver*  mListener;
-
     char*                mTransferBuffer;
     void*                mKey;
     CParserContext*      mPrevContext;
     nsScanner*           mScanner;
+    
     nsAutoString         mMimeType;
     nsDTDMode            mDTDMode;
     

@@ -90,7 +90,7 @@ NS_NewXBLProtoImpl(nsIXBLPrototypeBinding* aBinding,
   nsXBLProtoImpl* impl = new nsXBLProtoImpl();
   if (!impl)
     return NS_ERROR_OUT_OF_MEMORY;
-  if (aClassName)
+  if (aClassName && !aClassName->IsEmpty())
     impl->mClassName.AssignWithConversion(*aClassName);
   else
     aBinding->GetBindingURI(impl->mClassName);

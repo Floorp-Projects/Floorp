@@ -22,10 +22,14 @@
 DEPTH=..\..
 
 MODULE  = htmlparser
+XPIDL_MODULE = htmlparser
 
-EXPORTS =                       \
+XPIDLSRCS = \
+	.\nsIExpatSink.idl \
+	$(NULL)
+
+EXPORTS =                     \
 	nsITokenizer.h              \
-	nsIExpatTokenizer.h         \
 	nsIContentSink.h            \
 	nsIHTMLContentSink.h        \
 	nsIHTMLFragmentContentSink.h\

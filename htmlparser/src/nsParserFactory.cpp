@@ -44,7 +44,6 @@
 #include "nsILoggingSink.h"
 #include "nsParser.h"
 #include "nsParserNode.h"
-#include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 
 #include "nsHTMLTags.h"
@@ -52,12 +51,12 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCParserNode,    NS_PARSER_NODE_IID);
 
-static NS_DEFINE_CID(kCParserCID        NS_PARSER_CID);
-static NS_DEFINE_IID(kCParserNode,      NS_PARSER_NODE_IID);
-static NS_DEFINE_IID(kLoggingSinkCID,   NS_LOGGING_SINK_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
-static NS_DEFINE_CID(kCNavDTDCID,		NS_CNAVDTD_CID);
+static NS_DEFINE_CID(kCParserCID      NS_PARSER_CID);
+static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
+static NS_DEFINE_CID(kExpatDriverCID, NS_EXPAT_DRIVER_CID);
+static NS_DEFINE_CID(kCNavDTDCID,		  NS_CNAVDTD_CID);
 
 class nsParserFactory : public nsIFactory
 {   
@@ -144,8 +143,8 @@ nsresult nsParserFactory::CreateInstance(nsISupports *aOuter,
     *aResult = cs;
     return rv;
   }
-  else if (mClassID.Equals(kWellFormedDTDCID)) {
-    nsresult rv = NS_NewWellFormed_DTD((nsIDTD**) &inst);
+  else if (mClassID.Equals(kExpatDriverCID)) {
+    nsresult rv = NS_NewExpatDriver((nsIDTD**) &inst);
     if (NS_FAILED(rv)) {
       return rv;
     }

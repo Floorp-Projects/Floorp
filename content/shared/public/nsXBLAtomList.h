@@ -96,6 +96,7 @@ XBL_ATOM(content, "content")
 XBL_ATOM(constructor, "constructor")
 XBL_ATOM(destructor, "destructor")
 XBL_ATOM(inheritstyle, "inheritstyle")
+XBL_ATOM(button, "button")
 
 
 

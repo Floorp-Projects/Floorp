@@ -232,12 +232,15 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
+  NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
+
+
+
+  // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(const nsParserError* aError);
-  NS_IMETHOD FlushPendingNotifications();
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
@@ -246,9 +249,6 @@ public:
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode);
-
-
-  // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD SetTitle(const nsString& aValue);
@@ -5229,14 +5229,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   }//if (parent)
 
   return rv;
-}
-
-NS_IMETHODIMP 
-HTMLContentSink::NotifyError(const nsParserError* aError)
-{
-  // Errors in HTML? Who would have thought!
-  // Why are you telling us, parser. Deal with it yourself.  
-  return NS_OK;
 }
 
 NS_IMETHODIMP

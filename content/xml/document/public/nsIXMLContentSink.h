@@ -78,52 +78,6 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_SINK_IID)
 
-  /**
-   * This method is called by the parser when it encounters
-   * the XML declaration for a document.
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode)=0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * character data - either regular CDATA or a marked CDATA
-   * section.
-   *
-   * XXX Could be removed in favor of nsIContentSink::AddLeaf
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddCharacterData(const nsIParserNode& aNode)=0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * an unparsed entity (i.e. NDATA)
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode)=0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * a notation.
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddNotation(const nsIParserNode& aNode)=0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * an entity reference. Note that the expectation is that
-   * the content sink itself will expand the entity reference
-   * in the content model.
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddEntityReference(const nsIParserNode& aNode)=0;
-
-
 };
 
 extern nsresult NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult,

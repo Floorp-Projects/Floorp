@@ -87,7 +87,6 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
@@ -661,12 +660,6 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
   }
   
   return result;
-}
-
-NS_IMETHODIMP 
-nsHTMLFragmentContentSink::NotifyError(const nsParserError* aError)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP 

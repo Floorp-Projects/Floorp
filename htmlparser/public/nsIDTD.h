@@ -89,6 +89,7 @@ public:
 
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDTD_IID)
 
+
     NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const = 0;
 
     /**
@@ -113,13 +114,6 @@ public:
                                             const nsString& aBuffer,
                                             PRInt32 aVersion) = 0;
 
-    /**
-     * Called by the parser just before the parsing process begins
-     * @update  gess5/18/98
-     * @param aFilename--string that contains name of file being parsed
-     * (if applicable)
-     * @return
-     */
     NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
                               nsIContentSink* aSink=0) = 0;
 
@@ -156,14 +150,12 @@ public:
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser) = 0;
 
     /**
-     *
-     * @update  gess 12/20/99
+     * 
+     * @update	gess 12/20/99
      * @param   ptr-ref to (out) tokenizer
      * @return  nsresult
      */
-    NS_IMETHOD GetTokenizer(nsITokenizer*& aTokenizer) = 0;
-
-    NS_IMETHOD_(nsTokenAllocator *) GetTokenAllocator(void) = 0;
+    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer) = 0;
 
     /**
      * If the parse process gets interrupted midway, this method is
@@ -171,7 +163,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillResumeParse(void) = 0;
+    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0) = 0;
 
     /**
      * If the parse process gets interrupted, this method is called by
@@ -179,7 +171,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillInterruptParse(void) = 0;
+    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0) = 0;
 
     /**
      * This method is called to determine whether or not a tag of one
@@ -226,16 +218,36 @@ public:
      */
     NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
                                  PRInt32* aIntTag) const = 0;
-
+   
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const = 0;
-
+    
     NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
                                       PRInt32* aUnicode) const = 0;
-
+    
     NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
                                        PRInt32 aParentID) const = 0;
+    
     NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
                                         PRInt32 aParentID) const = 0;
 };
 
+#define NS_DECL_NSIDTD \
+    NS_IMETHOD_(const nsIID&)  GetMostDerivedIID(void) const;\
+    NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);\
+    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext, const nsString& aBuffer, PRInt32 aVersion);\
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink=0);\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);\
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);\
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
+    NS_IMETHOD GetTokenizer(nsITokenizer*& aTokenizer);\
+    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0);\
+    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
+    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
+    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
+    NS_IMETHOD_(nsresult)  Terminate(nsIParser* aParser=nsnull);\
+    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag, PRInt32* aIntTag) const ;\
+    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\
+    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity, PRInt32* aUnicode) const ;\
+    NS_IMETHOD_(PRBool)  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;\
+    NS_IMETHOD_(PRBool)  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
 #endif /* nsIDTD_h___ */

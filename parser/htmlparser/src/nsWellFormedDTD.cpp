@@ -339,23 +339,6 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifyS
 }
 
 /**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-nsTokenAllocator* CWellFormedDTD::GetTokenAllocator(void){
-  nsITokenizer* theTokenizer=0;
-  
-  nsresult result=GetTokenizer(theTokenizer);
-
-  if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenAllocator();
-  }
-  return 0;
-}
-
-/**
  * Use this id you want to stop the building content model
  * --------------[ Sets DTD to STOP mode ]----------------
  * It's recommended to use this method in accordance with
@@ -417,10 +400,10 @@ nsresult CWellFormedDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillResumeParse(void){
+NS_IMETHODIMP CWellFormedDTD::WillResumeParse(nsIContentSink* aSink){
   nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillResume();
+  if(aSink) {
+    result = aSink->WillResume();
   }
   return result;
 }
@@ -431,12 +414,25 @@ NS_IMETHODIMP CWellFormedDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(void){
+NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(nsIContentSink* aSink){
   nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillInterrupt();
+  if(aSink) {
+    result = aSink->WillInterrupt();
   }
   return result;
+}
+
+
+PRBool  
+CWellFormedDTD::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const 
+{
+  return PR_FALSE;
+}
+
+PRBool  
+CWellFormedDTD::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const 
+{
+  return PR_FALSE;
 }
 
 /**

@@ -271,6 +271,71 @@ public:
    */
   NS_IMETHOD DidProcessAToken(void)=0;
 
+    /**
+   * This method is used to open a generic container in the sink.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode) = 0;
+
+  /**
+   *  This method gets called by the parser when a close
+   *  container tag has been consumed and needs to be closed.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD CloseContainer(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This gets called by the parser when you want to add
+   * a leaf node to the current container in the content
+   * model.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This gets called by the parser when you want to add
+   * a leaf node to the current container in the content
+   * model.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD AddComment(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This gets called by the parser when you want to add
+   * a leaf node to the current container in the content
+   * model.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This method is called by the parser when it encounters
+   * a document type declaration.
+   *
+   * XXX Should the parser also part the internal subset?
+   *
+   * @param  nsIParserNode reference to parser node interface
+   */
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)=0;
+
+  /**
+   * This gets called by the parser to notify observers of
+   * the tag
+   *
+   * @param aErrorResult the error code
+   */
+  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode)=0;
+
 };
 
 #ifdef NS_DEBUG

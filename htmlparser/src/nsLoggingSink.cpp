@@ -253,20 +253,6 @@ nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
 
 } 
 
-
-NS_IMETHODIMP 
-nsLoggingSink::NotifyError(const nsParserError* aError) {
-  nsresult theResult=NS_OK;
-
-  //then proxy the call to the real sink if you have one.
-  if(mSink) {
-    theResult=mSink->NotifyError(aError);
-  }
-  
-  return theResult;
-}
-
-
 /**
  *  This gets called by the parser when you want to add
  *  a PI node to the current container in the content

@@ -103,199 +103,6 @@ nsXBLContentSink::Init(nsIDocument* aDoc,
   return rv;
 }
 
-PRBool 
-nsXBLContentSink::OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName)
-{
-  PRBool ret = PR_TRUE;
-  if (aNameSpaceID == kNameSpaceID_XBL) {
-    if (aTagName == nsXBLAtoms::bindings) {
-      NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
-      if (!mDocInfo)
-        return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->PutXBLDocumentInfo(mDocInfo);
-
-      nsCOMPtr<nsIURI> url;
-      mDocument->GetDocumentURL(getter_AddRefs(url));
-      
-      PRBool isChrome = PR_FALSE;
-      PRBool isRes = PR_FALSE;
-
-      url->SchemeIs("chrome", &isChrome);
-      url->SchemeIs("resource", &isRes);
-      mIsChromeOrResource = isChrome || isRes;
-      
-      nsIXBLDocumentInfo* info = mDocInfo;
-      NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
-    }
-    else if (aTagName == nsXBLAtoms::binding)
-      mState = eXBL_InBinding;
-    else if (aTagName == nsXBLAtoms::handlers) {
-      mState = eXBL_InHandlers;
-      ret = PR_FALSE; // The XML content sink should not do anything with <handlers>.
-    }
-    else if (aTagName == nsXBLAtoms::handler) {
-      mSecondaryState = eXBL_InHandler;
-      ConstructHandler(aNode);
-      ret = PR_FALSE;
-    }
-    else if (aTagName == nsXBLAtoms::resources) {
-      mState = eXBL_InResources;
-      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
-    }
-    else if (mState == eXBL_InResources) {
-      if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)
-        ConstructResource(aNode, aTagName);
-      ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
-    }
-    else if (aTagName == nsXBLAtoms::implementation) {
-      mState = eXBL_InImplementation;
-      ConstructImplementation(aNode);
-      ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
-    }
-    else if (mState == eXBL_InImplementation) {
-      if (aTagName == nsXBLAtoms::constructor) {
-        mSecondaryState = eXBL_InConstructor;
-        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  getter_AddRefs(newHandler));
-        newHandler->SetEventName(nsXBLAtoms::constructor);
-        mBinding->SetConstructor(newHandler);
-      }
-      else if (aTagName == nsXBLAtoms::destructor) {
-        mSecondaryState = eXBL_InDestructor;
-        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  getter_AddRefs(newHandler));
-        newHandler->SetEventName(nsXBLAtoms::destructor);
-        mBinding->SetDestructor(newHandler);
-      }
-      else if (aTagName == nsXBLAtoms::field) {
-        mSecondaryState = eXBL_InField;
-        ConstructField(aNode);
-      }
-      else if (aTagName == nsXBLAtoms::property) {
-        mSecondaryState = eXBL_InProperty;
-        ConstructProperty(aNode);
-      }
-      else if (aTagName == nsXBLAtoms::getter)
-        mSecondaryState = eXBL_InGetter;
-      else if (aTagName == nsXBLAtoms::setter)
-        mSecondaryState = eXBL_InSetter;
-      else if (aTagName == nsXBLAtoms::method) {
-        mSecondaryState = eXBL_InMethod;
-        ConstructMethod(aNode);
-      }
-      else if (aTagName == nsXBLAtoms::parameter)
-        ConstructParameter(aNode);
-      else if (aTagName == nsXBLAtoms::body)
-        mSecondaryState = eXBL_InBody;
-
-      ret = PR_FALSE; // Ignore everything we encounter inside an <implementation> block.
-    }
-  }
-
-  return ret;
-}
-
-NS_IMETHODIMP
-nsXBLContentSink::OpenContainer(const nsIParserNode& aNode)
-{
-  nsresult rv = nsXMLContentSink::OpenContainer(aNode);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (mState == eXBL_InBinding && !mBinding)
-    ConstructBinding();
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  if (mState != eXBL_InDocument) {
-    nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
-
-    SplitXMLName(aNode.GetText(), getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(tagAtom));
-
-    PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-    if (nameSpaceID == kNameSpaceID_XBL) {
-      if (mState == eXBL_InHandlers) {
-        if (tagAtom == nsXBLAtoms::handlers) {
-          mState = eXBL_InBinding;
-          mHandler = nsnull;
-        }
-        else if (tagAtom == nsXBLAtoms::handler)
-          mSecondaryState = eXBL_None;
-        return NS_OK;
-      }
-      else if (mState == eXBL_InResources) {
-        if (tagAtom == nsXBLAtoms::resources)
-          mState = eXBL_InBinding;
-        return NS_OK;
-      }
-      else if (mState == eXBL_InImplementation) {
-        if (tagAtom == nsXBLAtoms::implementation)
-          mState = eXBL_InBinding;
-        else if (tagAtom == nsXBLAtoms::property) {
-          mSecondaryState = eXBL_None;
-          mProperty = nsnull;
-        }
-        else if (tagAtom == nsXBLAtoms::method) {
-          mSecondaryState = eXBL_None;
-          mMethod = nsnull;
-        }
-        else if (tagAtom == nsXBLAtoms::field) {
-          mSecondaryState = eXBL_None;
-          mField = nsnull;
-        }
-        else if (tagAtom == nsXBLAtoms::constructor ||
-                 tagAtom == nsXBLAtoms::destructor)
-          mSecondaryState = eXBL_None;
-        else if (tagAtom == nsXBLAtoms::getter ||
-                 tagAtom == nsXBLAtoms::setter)
-          mSecondaryState = eXBL_InProperty;
-        else if (tagAtom == nsXBLAtoms::parameter ||
-                 tagAtom == nsXBLAtoms::body)
-          mSecondaryState = eXBL_InMethod;
-        return NS_OK;
-      }
-
-      nsresult rv = nsXMLContentSink::CloseContainer(aNode);
-      if (NS_FAILED(rv))
-        return rv;
-
-      if (mState == eXBL_InImplementation && tagAtom == nsXBLAtoms::implementation)
-        mState = eXBL_InBinding;
-      else if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
-        mState = eXBL_InDocument;
-        mBinding->Initialize();
-        mBinding = nsnull; // Clear our current binding ref.
-      }
-
-      return NS_OK;
-    }
-  }
-
-  return nsXMLContentSink::CloseContainer(aNode);
-}
-
-NS_IMETHODIMP
-nsXBLContentSink::AddCDATASection(const nsIParserNode& aNode)
-{
-  if (mState == eXBL_InHandlers || mState == eXBL_InImplementation)
-    return AddText(aNode.GetText());
-  return nsXMLContentSink::AddCDATASection(aNode);
-}
-
 nsresult
 nsXBLContentSink::FlushText(PRBool aCreateTextNode,
                             PRBool* aDidFlush)
@@ -378,29 +185,579 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
   return nsXMLContentSink::FlushText(aCreateTextNode, aDidFlush);
 }
 
+NS_IMETHODIMP 
+nsXBLContentSink::HandleStartElement(const PRUnichar *aName, 
+                                     const PRUnichar **aAtts, 
+                                     const PRUint32 aAttsCount, 
+                                     const PRUint32 aIndex, 
+                                     const PRUint32 aLineNumber)
+{
+  nsresult rv = nsXMLContentSink::HandleStartElement(aName,aAtts,aAttsCount,aIndex,aLineNumber);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mState == eXBL_InBinding && !mBinding)
+    ConstructBinding();
+  
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
+{
+  FlushText();
+
+  if (mState != eXBL_InDocument) {
+    nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
+
+    SplitXMLName(nsDependentString(aName), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(tagAtom));
+
+    PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    if (nameSpaceID == kNameSpaceID_XBL) {
+      if (mState == eXBL_InHandlers) {
+        if (tagAtom == nsXBLAtoms::handlers) {
+          mState = eXBL_InBinding;
+          mHandler = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::handler)
+          mSecondaryState = eXBL_None;
+        return NS_OK;
+      }
+      else if (mState == eXBL_InResources) {
+        if (tagAtom == nsXBLAtoms::resources)
+          mState = eXBL_InBinding;
+        return NS_OK;
+      }
+      else if (mState == eXBL_InImplementation) {
+        if (tagAtom == nsXBLAtoms::implementation)
+          mState = eXBL_InBinding;
+        else if (tagAtom == nsXBLAtoms::property) {
+          mSecondaryState = eXBL_None;
+          mProperty = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::method) {
+          mSecondaryState = eXBL_None;
+          mMethod = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::field) {
+          mSecondaryState = eXBL_None;
+          mField = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::constructor ||
+                 tagAtom == nsXBLAtoms::destructor)
+          mSecondaryState = eXBL_None;
+        else if (tagAtom == nsXBLAtoms::getter ||
+                 tagAtom == nsXBLAtoms::setter)
+          mSecondaryState = eXBL_InProperty;
+        else if (tagAtom == nsXBLAtoms::parameter ||
+                 tagAtom == nsXBLAtoms::body)
+          mSecondaryState = eXBL_InMethod;
+        return NS_OK;
+      }
+
+      nsresult rv = nsXMLContentSink::HandleEndElement(aName);
+      if (NS_FAILED(rv))
+        return rv;
+
+      if (mState == eXBL_InImplementation && tagAtom == nsXBLAtoms::implementation)
+        mState = eXBL_InBinding;
+      else if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
+        mState = eXBL_InDocument;
+        mBinding->Initialize();
+        mBinding = nsnull; // Clear our current binding ref.
+      }
+
+      return NS_OK;
+    }
+  }
+
+  return nsXMLContentSink::HandleEndElement(aName);
+}
+
+NS_IMETHODIMP 
+nsXBLContentSink::HandleCDataSection(const PRUnichar *aData, 
+                                     PRUint32 aLength)
+{
+  if (mState == eXBL_InHandlers || mState == eXBL_InImplementation)
+    return AddText(aData, aLength);
+  return nsXMLContentSink::HandleCDataSection(aData, aLength);
+}
+
+PRBool 
+nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts, 
+                                  PRUint32 aAttsCount, 
+                                  PRInt32 aNameSpaceID, 
+                                  nsIAtom* aTagName)
+{
+  PRBool ret = PR_TRUE;
+  if (aNameSpaceID == kNameSpaceID_XBL) {
+    if (aTagName == nsXBLAtoms::bindings) {
+      NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
+      if (!mDocInfo)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->PutXBLDocumentInfo(mDocInfo);
+
+      nsCOMPtr<nsIURI> url;
+      mDocument->GetDocumentURL(getter_AddRefs(url));
+      
+      PRBool isChrome = PR_FALSE;
+      PRBool isRes = PR_FALSE;
+
+      url->SchemeIs("chrome", &isChrome);
+      url->SchemeIs("resource", &isRes);
+      mIsChromeOrResource = isChrome || isRes;
+      
+      nsIXBLDocumentInfo* info = mDocInfo;
+      NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
+    }
+    else if (aTagName == nsXBLAtoms::binding)
+      mState = eXBL_InBinding;
+    else if (aTagName == nsXBLAtoms::handlers) {
+      mState = eXBL_InHandlers;
+      ret = PR_FALSE; // The XML content sink should not do anything with <handlers>.
+    }
+    else if (aTagName == nsXBLAtoms::handler) {
+      mSecondaryState = eXBL_InHandler;
+      ConstructHandler(aAtts);
+      ret = PR_FALSE;
+    }
+    else if (aTagName == nsXBLAtoms::resources) {
+      mState = eXBL_InResources;
+      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
+    }
+    else if (mState == eXBL_InResources) {
+      if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)
+        ConstructResource(aAtts, aTagName);
+      ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
+    }
+    else if (aTagName == nsXBLAtoms::implementation) {
+      mState = eXBL_InImplementation;
+      ConstructImplementation(aAtts);
+      ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
+    }
+    else if (mState == eXBL_InImplementation) {
+      if (aTagName == nsXBLAtoms::constructor) {
+        mSecondaryState = eXBL_InConstructor;
+        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                  nsnull, nsnull, nsnull, nsnull, nsnull,
+                                  getter_AddRefs(newHandler));
+        newHandler->SetEventName(nsXBLAtoms::constructor);
+        mBinding->SetConstructor(newHandler);
+      }
+      else if (aTagName == nsXBLAtoms::destructor) {
+        mSecondaryState = eXBL_InDestructor;
+        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                  nsnull, nsnull, nsnull, nsnull, nsnull,
+                                  getter_AddRefs(newHandler));
+        newHandler->SetEventName(nsXBLAtoms::destructor);
+        mBinding->SetDestructor(newHandler);
+      }
+      else if (aTagName == nsXBLAtoms::field) {
+        mSecondaryState = eXBL_InField;
+        ConstructField(aAtts);
+      }
+      else if (aTagName == nsXBLAtoms::property) {
+        mSecondaryState = eXBL_InProperty;
+        ConstructProperty(aAtts);
+      }
+      else if (aTagName == nsXBLAtoms::getter)
+        mSecondaryState = eXBL_InGetter;
+      else if (aTagName == nsXBLAtoms::setter)
+        mSecondaryState = eXBL_InSetter;
+      else if (aTagName == nsXBLAtoms::method) {
+        mSecondaryState = eXBL_InMethod;
+        ConstructMethod(aAtts);
+      }
+      else if (aTagName == nsXBLAtoms::parameter)
+        ConstructParameter(aAtts);
+      else if (aTagName == nsXBLAtoms::body)
+        mSecondaryState = eXBL_InBody;
+
+      ret = PR_FALSE; // Ignore everything we encounter inside an <implementation> block.
+    }
+  }
+
+  return ret;
+}
+
+void 
+nsXBLContentSink::ConstructBinding()
+{
+  nsCOMPtr<nsIContent> binding = getter_AddRefs(GetCurrentContent());
+  nsAutoString id;
+  binding->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
+  nsCAutoString cid; cid.AssignWithConversion(id);
+
+  if (!cid.IsEmpty()) {
+    NS_NewXBLPrototypeBinding(cid, binding, mDocInfo, getter_AddRefs(mBinding));
+    mDocInfo->SetPrototypeBinding(cid, mBinding);
+    binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
+  }
+}
+
+
+void
+nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
+{
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  const PRUnichar* event      = nsnull;
+  const PRUnichar* modifiers  = nsnull;
+  const PRUnichar* button     = nsnull;
+  const PRUnichar* clickcount = nsnull;
+  const PRUnichar* keycode    = nsnull;
+  const PRUnichar* charcode   = nsnull;
+  const PRUnichar* phase      = nsnull;
+  const PRUnichar* command    = nsnull;
+  const PRUnichar* action     = nsnull;
+
+  for (; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::event)
+      event = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::modifiers)
+      modifiers = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::button)
+      button = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::clickcount)
+      clickcount = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::keycode)
+      keycode = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::key || nameAtom == nsXBLAtoms::charcode)
+      charcode = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::phase)
+      phase = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::command)
+      command = aAtts[1];
+    else if (nameAtom == nsXBLAtoms::action)
+      action = aAtts[1];
+    else {
+       // Nope, it's some irrelevant attribute. Ignore it and move on.
+     }
+  }
+
+  if (command && !mIsChromeOrResource)
+    // Make sure the XBL doc is chrome or resource if we have a command
+    // shorthand syntax.
+    return; // Don't even make this handler.
+
+  // All of our pointers are now filled in.  Construct our handler with all of these
+  // parameters.
+  nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+  NS_NewXBLPrototypeHandler(event? &nsDependentString(event):0, 
+                            phase? &nsDependentString(phase):0,
+                            action? &nsDependentString(action):0, 
+                            command? &nsDependentString(command):0, 
+                            keycode? &nsDependentString(keycode):0, 
+                            charcode? &nsDependentString(charcode):0, 
+                            modifiers? &nsDependentString(modifiers):0, 
+                            button? &nsDependentString(button):0, 
+                            clickcount? &nsDependentString(clickcount):0,
+                            getter_AddRefs(newHandler));
+  if (newHandler) {
+    // Add this handler to our chain of handlers.
+    if (mHandler)
+      mHandler->SetNextHandler(newHandler); // Already have a chain. Just append to the end.
+    else
+      mBinding->SetPrototypeHandlers(newHandler); // We're the first handler in the chain.
+
+    mHandler = newHandler; // Adjust our mHandler pointer to point to the new last handler in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructResource(const PRUnichar **aAtts,
+                                    nsIAtom* aResourceType)
+{
+  if (!mBinding)
+    return;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  for (; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+    const nsDependentString key(aAtts[0]);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("src"))) {
+      mBinding->AddResource(aResourceType, nsDependentString(aAtts[1]));
+      break;
+    }
+  }
+}
+
+void
+nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
+{
+  mImplementation = nsnull;
+  mImplMember = nsnull;
+      
+  if (!mBinding)
+    return;
+
+  const PRUnichar* name = nsnull;
+  
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  for (; *aAtts; aAtts +=2) {
+    // Get upper-cased key
+
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::name) {
+      name = aAtts[1];
+    }
+    else if (nameAtom == nsXBLAtoms::implements) {
+      mBinding->ConstructInterfaceTable(nsDependentString(aAtts[1]));
+    }
+  }
+
+  NS_NewXBLProtoImpl(mBinding, name? &nsDependentString(name):0, &mImplementation);
+}
+
+void
+nsXBLContentSink::ConstructField(const PRUnichar **aAtts)
+{
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  const PRUnichar* name     = nsnull;
+  const PRUnichar* readonly = nsnull;
+  
+  for (; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::name) {
+      name = aAtts[1];
+    }
+    else if (nameAtom == nsXBLAtoms::readonly) {
+      readonly = aAtts[1];
+    }
+  }
+
+  // All of our pointers are now filled in.  Construct our field with all of these
+  // parameters.
+  mField = new nsXBLProtoImplField(name? &nsDependentString(name):0, 
+                                   readonly? &nsDependentString(readonly):0);
+  if (mField) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mField); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mField); // We're the first member in the chain.
+
+    mImplMember = mField; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts)
+{
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  const PRUnichar* name     = nsnull;
+  const PRUnichar* readonly = nsnull;
+  const PRUnichar* onget    = nsnull;
+  const PRUnichar* onset    = nsnull;
+  
+  for (; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::name) {
+      name = aAtts[1];
+    }
+    else if (nameAtom == nsXBLAtoms::readonly) {
+      readonly = aAtts[1];
+    }
+    else if (nameAtom == nsXBLAtoms::onget) {
+      onget = aAtts[1];
+    }
+    else if (nameAtom == nsXBLAtoms::onset) {
+      onset = aAtts[1];
+    }
+  }
+
+  // All of our pointers are now filled in.  Construct our property with all of these
+  // parameters.
+  mProperty = new nsXBLProtoImplProperty(name? &nsDependentString(name):0, 
+                                         onget? &nsDependentString(onget):0, 
+                                         onset? &nsDependentString(onset):0, 
+                                         readonly? &nsDependentString(readonly):0);
+  if (mProperty) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mProperty); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mProperty); // We're the first member in the chain.
+
+    mImplMember = mProperty; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
+{
+  mMethod = nsnull;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  for(; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::name) {
+      mMethod = new nsXBLProtoImplMethod(nsDependentString(aAtts[1]));
+      break;
+    }
+  }
+
+  if (mMethod) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mMethod); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mMethod); // We're the first member in the chain.
+
+    mImplMember = mMethod; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructParameter(const PRUnichar **aAtts)
+{
+  if (!mMethod)
+    return;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  for (; *aAtts; aAtts += 2) {
+    // Get upper-cased key
+    SplitXMLName(nsDependentString(aAtts[0]), getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+      continue;
+    }
+
+    // Is this attribute one of the ones we care about?
+    if (nameAtom == nsXBLAtoms::name) {
+      mMethod->AddParameter(nsDependentString(aAtts[1]));
+      break;
+    }
+  }
+}
+
 nsresult
-nsXBLContentSink::AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement)
+nsXBLContentSink::CreateElement(const PRUnichar** aAtts, 
+                                PRUint32 aAttsCount, 
+                                PRInt32 aNameSpaceID, 
+                                nsINodeInfo* aNodeInfo, 
+                                nsIContent** aResult)
+{
+  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
+    nsXULPrototypeElement* prototype = new nsXULPrototypeElement(0);
+    if (!prototype)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    prototype->mNodeInfo = aNodeInfo;
+
+    // Reset the refcnt to 0.  Normally XUL prototype elements get a refcnt of 1
+    // to represent ownership by the XUL prototype document.  In our case we have
+    // no prototype document, and our initial ref count of 1 will come from being
+    // wrapped by a real XUL element in the Create call below.
+    prototype->mRefCnt = 0;
+
+    AddAttributesToXULPrototype(aAtts, aAttsCount, prototype);
+
+    // Following this function call, the prototype's ref count will be 1.
+    nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
+
+    if (NS_FAILED(rv)) return rv;
+    return NS_OK;
+  }
+  else
+    return nsXMLContentSink::CreateElement(aAtts, aAttsCount, aNameSpaceID, aNodeInfo, aResult);
+}
+
+nsresult 
+nsXBLContentSink::AddAttributes(const PRUnichar** aAtts,
+                                nsIContent* aContent,
+                                PRBool aIsHTML)
+{
+  if (aContent->IsContentOfType(nsIContent::eXUL))
+    return NS_OK; // Nothing to do, since the proto already has the attrs.
+  else 
+    return nsXMLContentSink::AddAttributes(aAtts, aContent, aIsHTML);
+}
+
+nsresult
+nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts, 
+                                              PRUint32 aAttsCount, 
+                                              nsXULPrototypeElement* aElement)
 {
   // Add tag attributes to the element
   nsresult rv;
-  PRInt32 count = aNode.GetAttributeCount();
 
   // Create storage for the attributes
   nsXULPrototypeAttribute* attrs = nsnull;
-  if (count > 0) {
-    attrs = new nsXULPrototypeAttribute[count];
+  if (aAttsCount > 0) {
+    attrs = new nsXULPrototypeAttribute[aAttsCount];
     if (!attrs)
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
   aElement->mAttributes    = attrs;
-  aElement->mNumAttributes = count;
+  aElement->mNumAttributes = aAttsCount;
 
   // Copy the attributes into the prototype
   nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
   
-  for (PRInt32 i = 0; i < count; i++) {
-    const nsAReadableString& key = aNode.GetKeyAt(i);
+  for (; *aAtts; aAtts += 2) {
+    const nsDependentString key(aAtts[0]);
 
     SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
                  getter_AddRefs(nameAtom));
@@ -425,8 +782,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULP
     mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
                                   *getter_AddRefs(attrs->mNodeInfo));
     
-    const nsAReadableString& valueStr = aNode.GetValueAt(i);
-    attrs->mValue.SetValue(valueStr);
+    attrs->mValue.SetValue(nsDependentString(aAtts[1]));
     ++attrs;
   }
 
@@ -467,337 +823,4 @@ nsXBLContentSink::AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULP
   }
 
   return NS_OK;
-}
-
-nsresult
-nsXBLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
-                                nsINodeInfo* aNodeInfo, nsIContent** aResult)
-{
-  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
-    nsXULPrototypeElement* prototype = new nsXULPrototypeElement(0);
-    if (!prototype)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    prototype->mNodeInfo = aNodeInfo;
-
-    // Reset the refcnt to 0.  Normally XUL prototype elements get a refcnt of 1
-    // to represent ownership by the XUL prototype document.  In our case we have
-    // no prototype document, and our initial ref count of 1 will come from being
-    // wrapped by a real XUL element in the Create call below.
-    prototype->mRefCnt = 0;
-
-    AddAttributesToXULPrototype(aNode, prototype);
-
-    // Following this function call, the prototype's ref count will be 1.
-    nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
-
-    if (NS_FAILED(rv)) return rv;
-    return NS_OK;
-  }
-  else
-    return nsXMLContentSink::CreateElement(aNode, aNameSpaceID, aNodeInfo, aResult);
-}
-
-nsresult 
-nsXBLContentSink::AddAttributes(const nsIParserNode& aNode,
-                                nsIContent* aContent,
-                                PRBool aIsHTML)
-{
-  if (aContent->IsContentOfType(nsIContent::eXUL))
-    return NS_OK; // Nothing to do, since the proto already has the attrs.
-  else 
-    return nsXMLContentSink::AddAttributes(aNode, aContent, aIsHTML);
-}
-
-void 
-nsXBLContentSink::ConstructBinding()
-{
-  nsCOMPtr<nsIContent> binding = getter_AddRefs(GetCurrentContent());
-  nsAutoString id;
-  binding->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-  nsCAutoString cid; cid.AssignWithConversion(id);
-
-  if (!cid.IsEmpty()) {
-    NS_NewXBLPrototypeBinding(cid, binding, mDocInfo, getter_AddRefs(mBinding));
-    mDocInfo->SetPrototypeBinding(cid, mBinding);
-    binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
-  }
-}
-
-void
-nsXBLContentSink::ConstructHandler(const nsIParserNode& aNode)
-{
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-
-  nsAReadableString* event      = nsnull;
-  nsAReadableString* modifiers  = nsnull;
-  nsAReadableString* button     = nsnull;
-  nsAReadableString* clickcount = nsnull;
-  nsAReadableString* keycode    = nsnull;
-  nsAReadableString* charcode   = nsnull;
-  nsAReadableString* phase      = nsnull;
-  nsAReadableString* command    = nsnull;
-  nsAReadableString* action     = nsnull;
-
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("event")))
-      event = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("modifiers")))
-      modifiers = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("button")))
-      button = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("clickcount")))
-      clickcount = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("keycode")))
-      keycode = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("key")) || key.Equals(NS_LITERAL_STRING("charcode")))
-      charcode = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("phase")))
-      phase = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("command")))
-      command = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("action")))
-      action = &(aNode.GetValueAt(i));
-    else
-      continue; // Nope, it's some irrelevant attribute. Ignore it and move on.
-  }
-
-  if (command && !mIsChromeOrResource)
-    // Make sure the XBL doc is chrome or resource if we have a command
-    // shorthand syntax.
-    return; // Don't even make this handler.
-
-  // All of our pointers are now filled in.  Construct our handler with all of these
-  // parameters.
-  nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-  NS_NewXBLPrototypeHandler(event, phase, action, command,
-                            keycode, charcode, modifiers, button, clickcount,
-                            getter_AddRefs(newHandler));
-  if (newHandler) {
-    // Add this handler to our chain of handlers.
-    if (mHandler)
-      mHandler->SetNextHandler(newHandler); // Already have a chain. Just append to the end.
-    else
-      mBinding->SetPrototypeHandlers(newHandler); // We're the first handler in the chain.
-
-    mHandler = newHandler; // Adjust our mHandler pointer to point to the new last handler in the chain.
-  }
-}
-
-void
-nsXBLContentSink::ConstructResource(const nsIParserNode& aNode, nsIAtom* aResourceType)
-{
-  if (!mBinding)
-    return;
-
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("src"))) {
-      mBinding->AddResource(aResourceType, aNode.GetValueAt(i));
-      break;
-    }
-  }
-}
-
-void
-nsXBLContentSink::ConstructImplementation(const nsIParserNode& aNode)
-{
-  mImplementation = nsnull;
-  mImplMember = nsnull;
-      
-  if (!mBinding)
-    return;
-
-  nsAReadableString* name       = nsnull;
-  
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("name")))
-      name = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("implements")))
-      mBinding->ConstructInterfaceTable(aNode.GetValueAt(i));
-  }
-
-  NS_NewXBLProtoImpl(mBinding, name, &mImplementation);
-}
-
-void
-nsXBLContentSink::ConstructField(const nsIParserNode& aNode)
-{
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-
-  nsAReadableString* name       = nsnull;
-  nsAReadableString* readonly   = nsnull;
-  
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("name")))
-      name = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("readonly")))
-      readonly = &(aNode.GetValueAt(i));
-  }
-
-  // All of our pointers are now filled in.  Construct our field with all of these
-  // parameters.
-  mField = new nsXBLProtoImplField(name, readonly);
-  if (mField) {
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mField); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mField); // We're the first member in the chain.
-
-    mImplMember = mField; // Adjust our pointer to point to the new last member in the chain.
-  }
-}
-
-void
-nsXBLContentSink::ConstructProperty(const nsIParserNode& aNode)
-{
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-
-  nsAReadableString* name       = nsnull;
-  nsAReadableString* readonly   = nsnull;
-  nsAReadableString* onget      = nsnull;
-  nsAReadableString* onset      = nsnull;
-  
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("name")))
-      name = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("readonly")))
-      readonly = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("onget")))
-      onget = &(aNode.GetValueAt(i));
-    else if (key.Equals(NS_LITERAL_STRING("onset")))
-      onset = &(aNode.GetValueAt(i));
-  }
-
-  // All of our pointers are now filled in.  Construct our property with all of these
-  // parameters.
-  mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
-  if (mProperty) {
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mProperty); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mProperty); // We're the first member in the chain.
-
-    mImplMember = mProperty; // Adjust our pointer to point to the new last member in the chain.
-  }
-}
-
-void
-nsXBLContentSink::ConstructMethod(const nsIParserNode& aNode)
-{
-  mMethod = nsnull;
-
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("name"))) {
-      mMethod = new nsXBLProtoImplMethod(aNode.GetValueAt(i));
-      break;
-    }
-  }
-
-  if (mMethod) {
-    // Add this member to our chain.
-    if (mImplMember)
-      mImplMember->SetNext(mMethod); // Already have a chain. Just append to the end.
-    else
-      mImplementation->SetMemberList(mMethod); // We're the first member in the chain.
-
-    mImplMember = mMethod; // Adjust our pointer to point to the new last member in the chain.
-  }
-}
-
-void
-nsXBLContentSink::ConstructParameter(const nsIParserNode& aNode)
-{
-  if (!mMethod)
-    return;
-
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
-      continue;
-
-    // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("name"))) {
-      mMethod->AddParameter(aNode.GetValueAt(i));
-      break;
-    }
-  }
 }

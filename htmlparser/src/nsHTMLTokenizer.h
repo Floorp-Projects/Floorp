@@ -70,26 +70,13 @@
 
 class nsHTMLTokenizer : public nsITokenizer {
 public:
-          nsHTMLTokenizer( PRInt32 aParseMode=eDTDMode_quirks,
-                           eParserDocType aDocType=eHTML3_Quirks,
-                           eParserCommands aCommand=eViewNormal);
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITOKENIZER
+  nsHTMLTokenizer(PRInt32 aParseMode=eDTDMode_quirks,
+                  eParserDocType aDocType=eHTML3_Quirks,
+                  eParserCommands aCommand=eViewNormal);
   virtual ~nsHTMLTokenizer();
-
-          NS_DECL_ISUPPORTS
-
-  virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);
-  virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);
-  virtual nsresult          DidTokenize(PRBool aIsFinalChunk);
-  virtual nsTokenAllocator*  GetTokenAllocator(void);
-
-  virtual CToken*           PushTokenFront(CToken* theToken);
-  virtual CToken*           PushToken(CToken* theToken);
-  virtual CToken*           PopToken(void);
-  virtual CToken*           PeekToken(void);
-  virtual CToken*           GetTokenAt(PRInt32 anIndex);
-  virtual PRInt32           GetCount(void);
-
-  virtual void              PrependTokens(nsDeque& aDeque);
 
 protected:
 

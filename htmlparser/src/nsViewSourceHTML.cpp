@@ -714,22 +714,6 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 }
 
 /**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-nsTokenAllocator* CViewSourceHTML::GetTokenAllocator(void){
-  nsITokenizer* theTokenizer=0;
-  nsresult result=GetTokenizer(theTokenizer);
-
-  if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenAllocator();
-  }
-  return 0;
-}
-
-/**
  * Use this id you want to stop the building content model
  * --------------[ Sets DTD to STOP mode ]----------------
  * It's recommended to use this method in accordance with
@@ -767,7 +751,7 @@ nsresult CViewSourceHTML::GetTokenizer(nsITokenizer*& aTokenizer) {
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillResumeParse(void){
+NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillResume();
@@ -781,7 +765,7 @@ NS_IMETHODIMP CViewSourceHTML::WillResumeParse(void){
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(void){
+NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillInterrupt();

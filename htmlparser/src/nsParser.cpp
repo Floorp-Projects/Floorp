@@ -49,7 +49,6 @@
 #include "nsScanner.h"
 #include "plstr.h"
 #include "nsIParserFilter.h"
-#include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" 
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
@@ -65,13 +64,14 @@
 #include "nsCOMPtr.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsExpatDriver.h"
 //#define rickgdebug 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
-static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_IID(kExpatDriverCID, NS_EXPAT_DRIVER_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
@@ -1159,7 +1159,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
     }
     if((theDTDIndex==gSharedObjects.mDTDDeque.GetSize()) && (!thePrimaryFound)) {
       if(!gSharedObjects.mHasXMLDTD) {
-        NS_NewWellFormed_DTD(&theDTD);  //do this to view XML files...
+        NS_NewExpatDriver(&theDTD); //do this to view XML files...
         gSharedObjects.mDTDDeque.Push(theDTD);
         gSharedObjects.mHasXMLDTD=PR_TRUE;
       }
@@ -1261,7 +1261,7 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
           theDTDClassID=&kNavDTDCID;
           break;
         case eXML:
-          theDTDClassID=&kWellFormedDTDCID;
+          theDTDClassID=&kExpatDriverCID;
           break;
         default:
           theDTDClassID=&kNavDTDCID;
@@ -1288,7 +1288,7 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
         aMimeType->EqualsWithConversion(kXHTMLApplicationContentType) ||
         aMimeType->EqualsWithConversion(kXULTextContentType) ||
         aMimeType->EqualsWithConversion(kRDFTextContentType)) {
-        theDTDClassID=&kWellFormedDTDCID;
+        theDTDClassID=&kExpatDriverCID;
       }
       else {
         theDTDClassID=&kNavDTDCID;
@@ -1836,7 +1836,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
             // as if it was read from the input stream. 
             // Adding UngetReadable() per vidur!!
             mParserContext->mScanner->UngetReadable(mUnusedInput);
-            mUnusedInput.Truncate(0);
+           mUnusedInput.Truncate(0);
           }
         }
 
@@ -1853,7 +1853,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
         SetCanInterrupt(PR_FALSE); 
 
         theIterationIsOk=PRBool((kEOF!=theTokenizerResult) && (result!=NS_ERROR_HTMLPARSER_INTERRUPTED));
-      
+
        // Make sure not to stop parsing too early. Therefore, before shutting down the 
         // parser, it's important to check whether the input buffer has been scanned to 
         // completion ( theTokenizerResult should be kEOF ). kEOF -> End of buffer.
@@ -1864,7 +1864,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
         if(NS_ERROR_HTMLPARSER_BLOCK==result) {
           //BLOCK == 2152596464
           if (mParserContext->mDTD) {
-            mParserContext->mDTD->WillInterruptParse();
+            mParserContext->mDTD->WillInterruptParse(mSink);
           }
           
           BlockParser();

@@ -58,8 +58,8 @@ endif
 CPPSRCS = \
 		nsDTDUtils.cpp      \
 		nsHTMLTokenizer.cpp \
-		nsExpatTokenizer.cpp\
 		nsElementTable.cpp  \
+		nsExpatDriver.cpp   \
 		CNavDTD.cpp         \
 		COtherDTD.cpp       \
 		nsHTMLEntities.cpp  \
@@ -72,7 +72,6 @@ CPPSRCS = \
 		nsParserNode.cpp    \
 		nsScanner.cpp       \
 		nsToken.cpp         \
-		nsWellFormedDTD.cpp \
 		nsViewSourceHTML.cpp\
 		nsParserMsgUtils.cpp\
 		$(NULL)

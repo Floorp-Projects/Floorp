@@ -285,6 +285,7 @@ typedef struct {
   const char *m_bufferPtr;
   /* past last character to be parsed */
   char *m_bufferEnd;
+
   /* allocated end of buffer */
   const char *m_bufferLim;
   long m_parseEndByteIndex;
@@ -345,6 +346,7 @@ typedef struct {
   int m_attsSize;
   int m_nSpecifiedAtts;
   int m_idAttIndex;
+  int m_blocked;
   ATTRIBUTE *m_atts;
   POSITION m_position;
   STRING_POOL m_tempPool;
@@ -357,6 +359,7 @@ typedef struct {
   enum XML_ParamEntityParsing m_paramEntityParsing;
   XML_Parser m_parentParser;
 #endif
+  const XML_Char* m_mismatch;
 } Parser;
 
 #define userData (((Parser *)parser)->m_userData)
@@ -426,12 +429,14 @@ typedef struct {
 #define attsSize (((Parser *)parser)->m_attsSize)
 #define nSpecifiedAtts (((Parser *)parser)->m_nSpecifiedAtts)
 #define idAttIndex (((Parser *)parser)->m_idAttIndex)
+#define blocked (((Parser *)parser)->m_blocked)
 #define tempPool (((Parser *)parser)->m_tempPool)
 #define temp2Pool (((Parser *)parser)->m_temp2Pool)
 #define groupConnector (((Parser *)parser)->m_groupConnector)
 #define groupSize (((Parser *)parser)->m_groupSize)
 #define hadExternalDoctype (((Parser *)parser)->m_hadExternalDoctype)
 #define namespaceSeparator (((Parser *)parser)->m_namespaceSeparator)
+#define mismatch (((Parser *)parser)->m_mismatch)
 #ifdef XML_DTD
 #define parentParser (((Parser *)parser)->m_parentParser)
 #define paramEntityParsing (((Parser *)parser)->m_paramEntityParsing)
@@ -526,6 +531,7 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   dataBufEnd = dataBuf + INIT_DATA_BUF_SIZE;
   XmlInitEncoding(&initEncoding, &encoding, 0);
   internalEncoding = XmlGetInternalEncoding();
+  blocked = 0;
   return parser;
 }
 
@@ -737,6 +743,22 @@ int XML_GetIdAttributeIndex(XML_Parser parser)
   return idAttIndex;
 }
 
+void XML_BlockParser(XML_Parser parser)
+{
+  blocked = 1;
+}
+
+void XML_UnblockParser(XML_Parser parser)
+{
+  blocked = 0;
+}
+
+const
+XML_Char* XML_GetMismatchedTag(XML_Parser parser)
+{
+  return mismatch;
+}
+
 void XML_SetElementHandler(XML_Parser parser,
 			   XML_StartElementHandler start,
 			   XML_EndElementHandler end)
@@ -866,6 +888,11 @@ int XML_SetParamEntityParsing(XML_Parser parser,
 
 int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 {
+  if (blocked) {
+    // First unblock parser
+    return 0;
+  }
+
   if (len == 0) {
     if (!isFinal)
       return 1;
@@ -893,7 +920,11 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     errorCode = processor(parser, s, parseEndPtr = s + len, &end);
     if (errorCode != XML_ERROR_NONE) {
       eventEndPtr = eventPtr;
-      processor = errorProcessor;
+      if (blocked) {
+        parseEndPtr = eventEndPtr;
+        parseEndByteIndex -= len - (eventPtr - s); // This is how much we've red thus far
+        XmlUpdatePosition(encoding, positionPtr, eventEndPtr, &position);
+      }
       return 0;
     }
     XmlUpdatePosition(encoding, positionPtr, end, &position);
@@ -1372,12 +1403,15 @@ doContent(XML_Parser parser,
 	    if (nextPtr)
 	      tag->rawName = tag->buf;
 	  }
-	  *toPtr = XML_T('\0');
+ 	  *toPtr = XML_T('\0');
 	  result = storeAtts(parser, enc, s, &(tag->name), &(tag->bindings));
 	  if (result)
 	    return result;
 	  startElementHandler(handlerArg, tag->name.str, (const XML_Char **)atts);
 	  poolClear(&tempPool);
+	  if (blocked) {
+	    return XML_ERROR_PARSER_BLOCKED;
+	  }
 	}
 	else {
 	  tag->name.str = 0;
@@ -1408,12 +1442,19 @@ doContent(XML_Parser parser,
 	if (result)
 	  return result;
 	poolFinish(&tempPool);
-	if (startElementHandler)
+	if (startElementHandler) {
 	  startElementHandler(handlerArg, name.str, (const XML_Char **)atts);
+	  if (blocked) {
+	    return XML_ERROR_PARSER_BLOCKED;
+	  }
+	}
 	if (endElementHandler) {
 	  if (startElementHandler)
 	    *eventPP = *eventEndPP;
 	  endElementHandler(handlerArg, name.str);
+	  if (blocked) {
+	    return XML_ERROR_PARSER_BLOCKED;
+    	  }
 	}
 	poolClear(&tempPool);
 	while (bindings) {
@@ -1446,6 +1487,7 @@ doContent(XML_Parser parser,
 	if (len != tag->rawNameLength
 	    || memcmp(tag->rawName, rawName, len) != 0) {
 	  *eventPP = rawName;
+	  mismatch = tag->name.str;
 	  return XML_ERROR_TAG_MISMATCH;
 	}
 	--tagLevel;
@@ -1457,6 +1499,9 @@ doContent(XML_Parser parser,
 	      ;
 	  }
 	  endElementHandler(handlerArg, tag->name.str);
+	  if (blocked) {
+	    return XML_ERROR_PARSER_BLOCKED;
+	  }
 	}
 	else if (defaultHandler)
 	  reportDefault(parser, enc, s, next);
@@ -2684,8 +2729,13 @@ doProlog(XML_Parser parser,
     case XML_ROLE_NONE:
       switch (tok) {
       case XML_TOK_PI:
-	if (!reportProcessingInstruction(parser, enc, s, next))
-	  return XML_ERROR_NO_MEMORY;
+        if (!reportProcessingInstruction(parser, enc, s, next)) {
+          if (blocked) {
+            eventPtr = next;
+            return XML_ERROR_PARSER_BLOCKED;
+          }
+          return XML_ERROR_NO_MEMORY;
+        }
 	break;
       case XML_TOK_COMMENT:
 	if (!reportComment(parser, enc, s, next))
@@ -3103,6 +3153,9 @@ reportProcessingInstruction(XML_Parser parser, const ENCODING *enc, const char *
   normalizeLines(data);
   processingInstructionHandler(handlerArg, target, data);
   poolClear(&tempPool);
+  if (blocked) { 
+    return 0;
+  }
   return 1;
 }
 

@@ -57,6 +57,7 @@ class nsICSSStyleSheet;
 #include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsSupportsArray.h"
+#include "nsIExpatSink.h"
 
 class nsIDocument;
 class nsIURI;
@@ -83,7 +84,8 @@ class nsXMLContentSink : public nsIXMLContentSink,
                          public nsIObserver,
                          public nsSupportsWeakReference,
                          public nsIScriptLoaderObserver,
-                         public nsICSSLoaderObserver
+                         public nsICSSLoaderObserver,
+                         public nsIExpatSink
 {
 public:
   nsXMLContentSink();
@@ -97,30 +99,16 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
+  NS_DECL_NSIEXPATSINK
+
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddCDATASection(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(const nsParserError* aError);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
-  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-
-  // nsIXMLContentSink
-  NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);  
-  NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
-  NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
-  NS_IMETHOD AddNotation(const nsIParserNode& aNode);
-  NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
@@ -133,15 +121,28 @@ public:
 protected:
   void StartLayout();
 
+  nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
+  nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent,PRBool aIsHTML);
+  nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
+  nsresult ProcessStartSCRIPTTag(PRUint32 aLineNo);
+  nsresult ProcessSTYLETag();
+  nsresult ProcessEndSCRIPTTag();
+
+  virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
+                                 PRUint32 aAttsCount, 
+                                 PRInt32 aNameSpaceID, 
+                                 nsIAtom* aTagName) { return PR_TRUE; }
+  virtual nsresult CreateElement(const PRUnichar** aAtts, 
+                                 PRUint32 aAttsCount, 
+                                 PRInt32 aNameSpaceID, 
+                                 nsINodeInfo* aNodeInfo, 
+                                 nsIContent** aResult);
+
   virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                              PRBool* aDidFlush=nsnull);
-  virtual nsresult AddAttributes(const nsIParserNode& aNode,
-                                 nsIContent* aContent,
-                                 PRBool aIsHTML);
+
   nsresult AddContentAsLeaf(nsIContent *aContent);
-  virtual nsresult CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
-                                 nsINodeInfo* aNodeInfo, nsIContent** aResult);
-  nsresult PushNameSpacesFrom(const nsIParserNode& aNode);
+
   static void SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
@@ -152,9 +153,6 @@ protected:
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
 
-  nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
-  nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
-  nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
   nsresult ProcessBASETag();
   nsresult ProcessMETATag();
@@ -173,55 +171,49 @@ protected:
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
   nsresult SetupTransformMediator();
 
-  nsresult AddText(const nsAReadableString& aString);
-
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 
   void ScrollToRef();
-
-  virtual PRBool OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName) { return PR_TRUE; };
-
+  
   static nsINameSpaceManager* gNameSpaceManager;
   static PRUint32 gRefCnt;
 
-  nsIDocument* mDocument;
-  nsIURI* mDocumentURL;
-  nsIURI* mDocumentBaseURL; // can be set via HTTP headers
-  nsIWebShell* mWebShell;
-  nsIParser* mParser;
+  nsIDocument*     mDocument;
+  nsIURI*          mDocumentURL;
+  nsIURI*          mDocumentBaseURL; // can be set via HTTP headers
+  nsIWebShell*     mWebShell;
+  nsIParser*       mParser;
+  nsIContent*      mRootElement;
+  nsIContent*      mDocElement;
+  nsAutoVoidArray* mNameSpaceStack;
+  PRUnichar*       mText;
+  nsICSSLoader*    mCSSLoader;  
 
-  nsIContent* mRootElement;
-  nsIContent* mDocElement;
+  nsSupportsArray mScriptElements;
   XMLContentSinkState mState;
 
-  nsCOMPtr<nsISupportsArray> mContentStack;
-  nsAutoVoidArray* mNameSpaceStack;
-
-  PRUnichar* mText;
-  PRInt32 mTextLength;
-  PRInt32 mTextSize;
-  PRPackedBool mConstrainSize;
-  PRPackedBool mInTitle;
-
-  PRPackedBool mNeedToBlockParser;
-  PRUint32 mScriptLineNo;
-  nsSupportsArray mScriptElements;
-
   nsString mStyleText;
-  nsString  mPreferredStyle;
-  PRInt32 mStyleSheetCount;
-  nsICSSLoader* mCSSLoader;
-  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
-  nsCOMPtr<nsITransformMediator> mXSLTransformMediator;
-
+  nsString mPreferredStyle;
   nsString mRef; // ScrollTo #ref
   nsString mTitleText; 
+  
+  PRInt32 mStyleSheetCount;
+  PRInt32 mTextLength;
+  PRInt32 mTextSize;
+  PRUint32 mScriptLineNo;
+  
+  PRPackedBool mConstrainSize;
+  PRPackedBool mInTitle;
+  PRPackedBool mNeedToBlockParser;
 
-  nsCOMPtr<nsIHTMLContent> mStyleElement;
-  nsCOMPtr<nsIHTMLContent> mBaseElement;
-  nsCOMPtr<nsIHTMLContent> mMetaElement;
-  nsCOMPtr<nsIHTMLContent> mLinkElement;
+  nsCOMPtr<nsISupportsArray>          mContentStack;
+  nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;
+  nsCOMPtr<nsITransformMediator>      mXSLTransformMediator;
+  nsCOMPtr<nsIHTMLContent>            mStyleElement;
+  nsCOMPtr<nsIHTMLContent>            mBaseElement;
+  nsCOMPtr<nsIHTMLContent>            mMetaElement;
+  nsCOMPtr<nsIHTMLContent>            mLinkElement;
 };
 
 #endif // nsXMLContentSink_h__
