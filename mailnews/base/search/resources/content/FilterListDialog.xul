@@ -16,20 +16,20 @@
     <!ENTITY filterHeader.label "Filters will be applied in the following order:">
 ]>
 
-
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:script language="JavaScript" src="FilterListDialog.js"/>
 <box align="vertical" style="width: 100%">
   <box align="horizontal" flex="100%">
     <box align="vertical" style="width:100%;" flex="100%" class="cleanborder">
     <html:div>&filterHeader.label;</html:div>
     <tree id="filterTree" flex="100%" style="width: 100%;">
-      <treecol id="numColumn"/>
-      <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-      <treecol id="activeColumn"/>
+      <treecol id="numColumn" style="width: 10%"/>
+      <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn" style="width: 80%"/>
+      <treecol id="activeColumn" style="width: 10%"/>
 
       <treehead>
         <treeitem>
@@ -80,9 +80,9 @@
     </tree>
     </box>
     <box align="vertical" class="padded">
-      <titledbutton class="push" value="&newButton.label;"/>
-      <titledbutton class="push" value="&editButton.label;"/>
-      <titledbutton class="push" value="&deleteButton.label;"/>
+      <titledbutton class="push" value="&newButton.label;" onclick="NewFilter();"/>
+      <titledbutton class="push" value="&editButton.label;" onclick="EditFilter();"/>
+      <titledbutton class="push" value="&deleteButton.label;" onclick="DeleteFilter();"/>
     </box>
   </box>
   <box align="horizontal" class="padded">
