@@ -236,7 +236,7 @@ nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
   : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
   NS_ADDREF(mContent);
-  mState = NS_FRAME_FIRST_REFLOW;
+  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
 }
 
 nsFrame::~nsFrame()
@@ -452,17 +452,22 @@ NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
   mRect.x = aX;
   mRect.y = aY;
 
-  // Let the view know
-  if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
-    // Position view relative to its parent, not relative to our
-    // parent frame (our parent frame may not have a view).
-    nsIView* parentWithView;
-    nsPoint origin;
-    GetOffsetFromView(origin, parentWithView);
-    nsIViewManager  *vm;
-    mView->GetViewManager(vm);
-    vm->MoveViewTo(mView, origin.x, origin.y);
-    NS_RELEASE(vm);
+  if (nsnull != mView) {
+    // If we should keep the view position and size in sync with the frame
+    // then position the view. Don't do this if we're in the middle of reflow.
+    // Instead wait until the DidReflow() notification
+    if (NS_FRAME_SYNC_FRAME_AND_VIEW == (mState & (NS_FRAME_IN_REFLOW |
+                                                   NS_FRAME_SYNC_FRAME_AND_VIEW))) {
+      // Position view relative to its parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      nsIViewManager  *vm;
+      mView->GetViewManager(vm);
+      vm->MoveViewTo(mView, origin.x, origin.y);
+      NS_RELEASE(vm);
+    }
   }
 
   return NS_OK;
@@ -474,12 +479,20 @@ NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   mRect.height = aHeight;
 
   // Let the view know
-  if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
-    nsIViewManager  *vm;
-    mView->GetViewManager(vm);
-    vm->ResizeView(mView, aWidth, aHeight);
-    NS_RELEASE(vm);
+  if (nsnull != mView) {
+    // If we should keep the view position and size in sync with the frame
+    // then resize the view. Don't do this if we're in the middle of reflow.
+    // Instead wait until the DidReflow() notification
+    if (NS_FRAME_SYNC_FRAME_AND_VIEW == (mState & (NS_FRAME_IN_REFLOW |
+                                                   NS_FRAME_SYNC_FRAME_AND_VIEW))) {
+      // Resize the view to be the same size as the frame
+      nsIViewManager  *vm;
+      mView->GetViewManager(vm);
+      vm->ResizeView(mView, aWidth, aHeight);
+      NS_RELEASE(vm);
+    }
   }
+
   return NS_OK;
 }
 
@@ -1116,7 +1129,8 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
 
-    if (nsnull != mView) {
+    // Size and position the view if requested
+    if ((nsnull != mView) && (NS_FRAME_SYNC_FRAME_AND_VIEW & mState)) {
       // Position and size view relative to its parent, not relative to our
       // parent frame (our parent frame may not have a view).
       nsIView* parentWithView;

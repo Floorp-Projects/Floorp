@@ -87,7 +87,13 @@
 
 //----------------------------------------------------------------------
 
-// Implementation of a simple frame with no children and that isn't splittable
+/**
+ * Implementation of a simple frame that's not splittable and has no
+ * child frames.
+ *
+ * Sets the NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW bit, so the default
+ * behavior is to keep the frame and view position and size in sync.
+ */
 class nsFrame : public nsIFrame, public nsIHTMLReflow
 {
 public:
@@ -178,16 +184,31 @@ public:
   NS_IMETHOD  VerifyTree() const;
 
   // nsIHTMLReflow
+  //@{
+  /**
+   * Sets the NS_FRAME_IN_REFLOW bit.
+   */
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
+
+  /**
+   * Returns a desired size of (0, 0) and a reflow status of NS_FRAME_COMPLETE
+   */
   NS_IMETHOD  Reflow(nsIPresContext&          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus);
+
+  /**
+   * Clears the NS_FRAME_IN_REFLOW and NS_FRAME_FIRST_REFLOW bits, and
+   * and if NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW is set positions and
+   * sizes the view
+   */
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,
                                nsHTMLReflowMetrics& aMetrics);
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
+  //@}
 
   // Selection Methods
   // XXX Doc me...
