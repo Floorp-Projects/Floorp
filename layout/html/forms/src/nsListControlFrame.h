@@ -150,6 +150,7 @@ public:
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
+  NS_IMETHOD OptionDisabled(nsIContent * aContent);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);

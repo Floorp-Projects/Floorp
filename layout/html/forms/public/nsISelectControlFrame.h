@@ -66,6 +66,12 @@ public:
    */
   NS_IMETHOD DoneAddingContent(PRBool aIsDone) = 0;
 
+  /**
+   * Notification that an option has been disabled
+   */
+
+  NS_IMETHOD OptionDisabled(nsIContent * aContent) = 0;
+
 };
 
 #endif

@@ -356,6 +356,11 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState, 
                               nsReflowStatus&          aStatus)
 {
+  nsFrameState state;
+  GetFrameState(&state);
+  state |= NS_FRAME_HAS_DIRTY_CHILDREN;
+  SetFrameState(state);
+
   DO_GLOBAL_REFLOW_COUNT("nsGfxListControlFrame", aReflowState.reason);
 
   REFLOW_COUNTER_REQUEST();
@@ -2561,6 +2566,16 @@ nsGfxListControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxListControlFrame::OptionDisabled(nsIContent * aContent)
+{
+  if (IsContentSelected(aContent)) {
+    PRInt32 inx = GetSelectedIndexFromContent(aContent);
+    SetOptionSelected(inx, PR_FALSE);
+  }
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // End nsISelectControlFrame
 //----------------------------------------------------------------------
@@ -3154,7 +3169,23 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         } else {
           nsIFrame * parentFrame;
           frame->GetParent(&parentFrame);
-          stateManager->GetEventTarget(&frame);
+#if 0
+          nsCOMPtr<nsIScrollableFrame> scrollable(do_QueryInterface(parentFrame));
+          if (scrollable) {
+            if (!IsClickingInCombobox(aMouseEvent)) {
+              return NS_OK;
+            }
+          }
+          nsIFrame * parentsParentFrame;
+          frame->GetParent(&parentsParentFrame);
+          nsCOMPtr<nsIScrollableFrame> parentScrollable(do_QueryInterface(parentsParentFrame));
+          if (parentScrollable) {
+            if (!IsClickingInCombobox(aMouseEvent)) {
+              return NS_OK;
+            }
+          }
+          //stateManager->GetEventTarget(&frame);
+#endif
           listFrame = do_QueryInterface(frame);
           if (listFrame) {
             if (!IsClickingInCombobox(aMouseEvent)) {
