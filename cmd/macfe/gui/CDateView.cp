@@ -441,7 +441,7 @@ void CDateView::ShowHideArrows(Boolean inShow) {
 	Filter for incoming data characters.
 ======================================================================================*/
 
-EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& theChar, SInt16 inModifiers) {
+EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& theChar, UInt16 inModifiers) {
 
 	EKeyStatus theKeyStatus = keyStatus_PassUp;
 	//Char16 theKey = inKeyEvent.message;

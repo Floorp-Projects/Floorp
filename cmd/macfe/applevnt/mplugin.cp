@@ -397,10 +397,10 @@ OSErr CPluginHandler::InitCodeResource(NPNetscapeFuncs* funcs, _np_handle* handl
 		
 	OSErr err = noErr;
 #ifdef DEBUG
-	EDebugAction oldThrow = gDebugThrow;
-	EDebugAction oldSignal = gDebugSignal;
-	gDebugThrow = debugAction_Nothing;
-	gDebugSignal = debugAction_Nothing;
+	EDebugAction oldThrow = UDebugging::gDebugThrow;
+	EDebugAction oldSignal = UDebugging::gDebugSignal;
+	UDebugging::gDebugThrow = debugAction_Nothing;
+	UDebugging::gDebugSignal = debugAction_Nothing;
 #endif
 	Try_	
 	{
@@ -474,8 +474,8 @@ OSErr CPluginHandler::InitCodeResource(NPNetscapeFuncs* funcs, _np_handle* handl
 	EndCatch_
 	CPrefs::UseApplicationResFile();	// Revert the resource chain
 #ifdef DEBUG
-	gDebugThrow = oldThrow;
-	gDebugSignal = oldSignal;
+	UDebugging::gDebugThrow = oldThrow;
+	UDebugging::gDebugSignal = oldSignal;
 #endif
 	return err;
 }

@@ -274,7 +274,7 @@ fInstance(NULL)
 	ICError	err;
 		
 	// Detect IC, if present
-	StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+	StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 	err = ::ICStart(&fInstance, emSignature);
 	//ThrowIfOSErr_(err);
 	if (!err)

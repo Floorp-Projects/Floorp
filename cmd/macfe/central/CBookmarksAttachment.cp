@@ -377,11 +377,11 @@ void CBookmarksAttachment::InstallMenus()
 					
 					if (menu)
 					{
-						StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+						StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 						currentMenuBar->InstallMenu(menu, hierMenu);
 					}
 				}
-				StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+				StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 				currentMenuBar->InstallMenu(sMenu, InstallMenu_AtEnd);
 #if 0
 // no more Guide menu. Leave this here in case mktg wants to replace it with something (pinkerton).			

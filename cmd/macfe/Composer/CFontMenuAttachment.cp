@@ -249,7 +249,7 @@ void CFontMenuAttachment::InstallMenus()
 		LMenuBar *currentMenuBar = LMenuBar::GetCurrentMenuBar();
 		if (currentMenuBar)
 		{
-			StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+			StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 			currentMenuBar->InstallMenu(sMenu, hierMenu);
 			
 			ResIDT resID;

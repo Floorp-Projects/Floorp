@@ -2325,7 +2325,7 @@ void CBrowserWindow::HandleGetURLEvent(const AppleEvent		&inAppleEvent,
 	char * winName = NULL;
 
 #ifdef DEBUG
-	StValueChanger<EDebugAction> changeDebugThrow(gDebugThrow, debugAction_Nothing);
+	StValueChanger<EDebugAction> changeDebugThrow(UDebugging::gDebugThrow, debugAction_Nothing);
 #endif
 	MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, url);
 
@@ -2447,20 +2447,15 @@ void CBrowserWindow::HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
 										AEDesc				&/*outResult*/,
 									    CBrowserWindow		*inBrowserWindow)
 {
-	// The use of "volatile" in  the following lines
-	//		(a) generated compiler warnings, because they are passed to routines that
-	//			are not declared with correspondingly volatile parameters.
-	//		(b) do not appear to need to be volatile in the sense given (If they were
-	//			declared as volatile char*, that would be another thing...
-	char * /*volatile*/ formData = NULL;	// Do not free this
-	char * /*volatile*/ formHeader = NULL;	// form headers (MIME type)
+	char * formData = NULL;		// Do not free this
+	char * formHeader = NULL;	// form headers (MIME type)
 	ProcessSerialNumber psn;
 	FSSpec fileSpec;
 	Boolean hasFileSpec = FALSE;
 	Boolean hasFormData = FALSE;
 	Boolean hasPSN = FALSE;
 	Boolean forceReload = FALSE;
-	OSErr volatile err;
+	OSErr err;
 	Size actualSize;
 	DescType realType;
 	

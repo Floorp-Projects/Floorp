@@ -108,7 +108,7 @@ void COffscreenCaption::Draw(RgnHandle inSuperDrawRgnH)
 			StColorPenState::Normalize();
 			
 			// Fail safe offscreen drawing
-			StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+			StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 			try
 				{			
 				LGWorld theOffWorld(theFrame, 0, useTempMem);

@@ -327,11 +327,11 @@ void CToolsAttachment::InstallMenus()
 				
 				if (menu)
 				{
-					StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+					StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 					currentMenuBar->InstallMenu(menu, hierMenu);
 				}
 			}
-			StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+			StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 			currentMenuBar->InstallMenu(sMenu, InstallMenu_AtEnd);
 		}
 	}
