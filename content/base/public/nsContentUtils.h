@@ -51,6 +51,7 @@ class nsIDocument;
 class nsIDocShell;
 class nsIScriptSecurityManager;
 class nsIThreadJSContextStack;
+class nsIParserService;
 
 
 class nsContentUtils
@@ -204,6 +205,8 @@ public:
   // element.
   static PRBool InProlog(nsIDOMNode *aNode);
 
+  static nsIParserService* GetParserServiceWeakRef();
+  
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -219,6 +222,9 @@ private:
   static nsIScriptSecurityManager *sSecurityManager;
 
   static nsIThreadJSContextStack *sThreadJSContextStack;
+
+  static nsIParserService *sParserService;
+
 };
 
 

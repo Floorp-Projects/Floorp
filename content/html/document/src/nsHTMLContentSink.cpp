@@ -125,7 +125,6 @@
 #include "nsIScriptGlobalObjectOwner.h"
 
 #include "nsIParserService.h"
-#include "nsParserCIID.h"
 #include "nsISelectElement.h"
 #include "nsITextAreaElement.h"
 
@@ -168,8 +167,6 @@ const PRBool kBlockByDefault = PR_FALSE;
 const PRBool kBlockByDefault = PR_TRUE;
 #endif
 
-
-static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 //----------------------------------------------------------------------
 
@@ -1070,11 +1067,9 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
 {
   nsresult rv = NS_OK;
 
-  // Cache this service! The XML content sink uses this method!
-
-  nsCOMPtr<nsIParserService> parserService =
-    do_GetService(kParserServiceCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  if (!parserService)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIAtom> name;
   rv = aNodeInfo->GetNameAtom(*getter_AddRefs(name));
@@ -2546,8 +2541,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mObservers = nsnull;
 
-  nsCOMPtr<nsIParserService> service(do_GetService(kParserServiceCID));
-
+  nsIParserService* service = nsContentUtils::GetParserServiceWeakRef();
   if (!service) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
