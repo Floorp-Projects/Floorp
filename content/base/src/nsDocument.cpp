@@ -568,7 +568,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
-  NS_INTERFACE_MAP_ENTRY(nsIDiskDocument)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
 NS_INTERFACE_MAP_END
@@ -3381,88 +3380,6 @@ nsDocument::CreateEvent(const nsAReadableString& aEventType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsDocument::SaveFile( nsIURI*           aLocation,
-                      PRBool            aReplaceExisting, // only used for local file locations
-                      PRBool            aSaveCopy,
-                      const PRUnichar*  aFileType,     // MIME type of file to save
-                      const PRUnichar*  aFileCharset,
-                      PRUint32          aSaveFlags,
-                      PRUint32          aWrapColumn)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-  NS_ENSURE_ARG_POINTER(aFileType);
-  NS_ENSURE_ARG_POINTER(aFileCharset);
-    
-  nsresult  rv = NS_OK;
-
-  nsCOMPtr<nsIOutputStream> outputStream;
-  nsCOMPtr<nsIFileURL> localFileLocation( do_QueryInterface(aLocation) );
-  if (localFileLocation)
-  {
-    nsCOMPtr<nsIFile>localFile;
-    rv = localFileLocation->GetFile(getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) return rv;
-
-    // if we're not replacing an existing file but the file
-    // exists, something is wrong
-    // note:  right now, we can only check if local files exist
-    //        remote files need to be checked asynchronously :-(
-    PRBool  fileExists;
-    rv = localFile->Exists(&fileExists);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!aReplaceExisting && fileExists)
-      return NS_ERROR_FAILURE;        // where are the file I/O errors?
-
-    nsCOMPtr<nsIFileOutputStream> fileOutputStream(do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fileOutputStream->Init(localFile, -1, -1);
-    if (NS_FAILED(rv)) return rv;
-
-    outputStream = do_QueryInterface(fileOutputStream);
-  }
-
-  // Get a document encoder instance
-  nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-  contractID.AppendWithConversion(aFileType);
-  
-  nsCOMPtr<nsIDocumentEncoder> encoder(do_CreateInstance(contractID.get(), &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  nsAutoString fileType(aFileType);   // sucky copy
-  rv = encoder->Init(this, fileType, aSaveFlags);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (aSaveFlags & nsIDocumentEncoder::OutputWrap)
-    encoder->SetWrapColumn(aWrapColumn);
-
-  nsAutoString charsetStr(aFileCharset);
-  if (charsetStr.IsEmpty())
-  {
-    rv = GetDocumentCharacterSet(charsetStr);
-    if(NS_FAILED(rv)) {
-       charsetStr.Assign(NS_LITERAL_STRING("ISO-8859-1")); 
-    }
-  }
-  encoder->SetCharset(charsetStr);
-
-  rv = encoder->EncodeToStream(outputStream);
-
-  if (NS_SUCCEEDED(rv))
-  {
-    // if everything went OK and we're not just saving off a copy,
-    // reset the modCount to mark the document as clean
-    if (!aSaveCopy)
-      ResetModificationCount();
-  }
-  
-  return rv;
-}
-
 NS_IMETHODIMP 
 nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
                                       PRBool aUpdateViews)
@@ -3524,33 +3441,6 @@ nsDocument::GetBindingManager(nsIBindingManager** aResult)
 {
   *aResult = mBindingManager;
   NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDocument::GetModificationCount(PRInt32 *outModCount)
-{
-  if (!outModCount)
-    return NS_ERROR_NULL_POINTER;
-    
- *outModCount = mModCount;
- return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDocument::ResetModificationCount()
-{
-  mModCount = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IncrementModificationCount(PRInt32 aNumMods)
-{
-  mModCount += aNumMods;
-  //NS_ASSERTION(mModCount >= 0, "Modification count went negative");
   return NS_OK;
 }
 

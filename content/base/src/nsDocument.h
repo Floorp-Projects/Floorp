@@ -51,7 +51,6 @@
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDiskDocument.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
@@ -231,7 +230,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentTraversal,
                    public nsIDOMDocumentXBL,
                    public nsIDOM3Node,
-                   public nsIDiskDocument,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
                    public nsIScriptObjectPrincipal
@@ -533,9 +531,6 @@ public:
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
-
-  // nsIDiskDocument inteface
-  NS_DECL_NSIDISKDOCUMENT
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsAReadableString& aType,
