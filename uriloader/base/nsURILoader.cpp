@@ -34,6 +34,10 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
+#include "nsWeakReference.h"
+
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
 
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -52,7 +56,8 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 // requests from the same caller. If you don't have a load cookie yet,
 // we will provide one for you.
 ///////////////////////////////////////////////////////////////////
-class nsLoadCookie : public nsIInterfaceRequestor
+class nsLoadCookie : public nsIInterfaceRequestor,
+                     public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -72,6 +77,7 @@ NS_IMPL_RELEASE(nsLoadCookie);
 NS_INTERFACE_MAP_BEGIN(nsLoadCookie)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 nsLoadCookie::nsLoadCookie()
@@ -480,6 +486,57 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel * aChannel,
   return OpenURIVia(aChannel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
 }
 
+NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget, 
+                                     nsISupports * aWindowContext,
+                                     nsISupports ** aRetargetedWindowContext)
+{
+  nsAutoString name(aWindowTarget);
+  nsCOMPtr<nsIDocShellTreeItem> windowCtxtAsTreeItem (do_GetInterface(aWindowContext));
+  nsCOMPtr<nsIDocShellTreeItem>  treeItem;
+  *aRetargetedWindowContext = nsnull;
+
+  if(!name.Length() || name.EqualsIgnoreCase("_self") || name.EqualsIgnoreCase("_blank"))
+  {
+     *aRetargetedWindowContext = aWindowContext;
+  }
+  else if(name.EqualsIgnoreCase("_parent"))
+  {
+      windowCtxtAsTreeItem->GetSameTypeParent(getter_AddRefs(treeItem));
+      if(!treeItem)
+        *aRetargetedWindowContext = aWindowContext;
+  }
+  else if(name.EqualsIgnoreCase("_top"))
+  {
+      windowCtxtAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(treeItem));
+      if(!treeItem)
+        *aRetargetedWindowContext = aWindowContext;
+  }
+  else if(name.EqualsIgnoreCase("_content"))
+  {
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    windowCtxtAsTreeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+    if (treeOwner)
+       treeOwner->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
+    else
+    {
+      NS_ERROR("Someone isn't setting up the tree owner.  You might like to try that."
+          "Things will.....you know, work.");
+    }
+  }
+  else
+  {
+    windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
+  }
+
+  nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
+  if (!*aRetargetedWindowContext)  
+    *aRetargetedWindowContext = treeItemCtxt;
+
+  NS_IF_ADDREF(*aRetargetedWindowContext);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel, 
                                       nsURILoadCommand aCommand,
                                       const char * aWindowTarget,
@@ -494,17 +551,20 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
 
   if (!aChannel) return NS_ERROR_NULL_POINTER;
 
+  nsCOMPtr<nsISupports> retargetedWindowContext;
+  NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(loader);
 
   nsCOMPtr<nsISupports> loadCookie;
-  SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
+  SetupLoadCookie(retargetedWindowContext, getter_AddRefs(loadCookie));
 
-  loader->Init(aWindowContext);    // Extra Info
+  loader->Init(retargetedWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(aChannel, aCommand, aWindowTarget, aWindowContext);
+  rv = loader->Open(aChannel, aCommand, aWindowTarget, retargetedWindowContext);
   NS_RELEASE(loader);
 
   return NS_OK;
@@ -573,7 +633,7 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
       if (newLoadCookie)
       {
         newLoadCookie->Init(loadCookie);
-        rv = cntListener->SetLoadCookie (NS_STATIC_CAST(nsISupports *, newLoadCookie));
+        rv = cntListener->SetLoadCookie (NS_STATIC_CAST(nsISupports *, (nsIInterfaceRequestor *) newLoadCookie));
         newLoadCookie->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(loadCookie)); 
       } // if we created a new cookie
     } // if we don't have  a load cookie already
@@ -633,36 +693,39 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
   
   // find a content handler that can and will handle the content
-  PRBool foundContentHandler = PR_FALSE;
-  if (listenerToUse)
-    foundContentHandler = ShouldHandleContent(listenerToUse, aContentType, 
-                                              aCommand, aWindowTarget, aContentTypeToUse);
-                                              
-
-  if (!foundContentHandler) // if it can't handle the content, scan through the list of registered listeners
+  if (!aWindowTarget || nsCRT::strcasecmp(aWindowTarget, "_blank"))
   {
-     PRInt32 i = 0;
-     // keep looping until we get a content listener back
-     for(i = 0; i < m_listeners->Count() && !foundContentHandler; i++)
-	   {
-	      //nsIURIContentListener's aren't refcounted.
-		    nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
-        if (listener)
-        {
-            foundContentHandler = ShouldHandleContent(listener, aContentType, 
-                                                      aCommand, aWindowTarget, aContentTypeToUse);
-            if (foundContentHandler)
-              listenerToUse = listener;
-        }
-    } // for loop
-  } // if we can't handle the content
+    PRBool foundContentHandler = PR_FALSE;
+    if (listenerToUse)
+      foundContentHandler = ShouldHandleContent(listenerToUse, aContentType, 
+                                                aCommand, aWindowTarget, aContentTypeToUse);
+                                            
+
+    if (!foundContentHandler) // if it can't handle the content, scan through the list of registered listeners
+    {
+       PRInt32 i = 0;
+       // keep looping until we get a content listener back
+       for(i = 0; i < m_listeners->Count() && !foundContentHandler; i++)
+	     {
+	        //nsIURIContentListener's aren't refcounted.
+		      nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
+          if (listener)
+          {
+              foundContentHandler = ShouldHandleContent(listener, aContentType, 
+                                                        aCommand, aWindowTarget, aContentTypeToUse);
+              if (foundContentHandler)
+                listenerToUse = listener;
+          }
+      } // for loop
+    } // if we can't handle the content
 
 
-  if (foundContentHandler && listenerToUse)
-  {
-    *aContentListenerToUse = listenerToUse;
-    NS_IF_ADDREF(*aContentListenerToUse);
-    return rv;
+    if (foundContentHandler && listenerToUse)
+    {
+      *aContentListenerToUse = listenerToUse;
+      NS_IF_ADDREF(*aContentListenerToUse);
+      return rv;
+    }
   }
 
   // no registered content listeners to handle this type!!! so go to the register 
