@@ -76,11 +76,11 @@ function setWindowName()
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var windowReference=document.getElementById('certDetails');
-  myName = self.name;
+  var myName = self.name;
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var cert;
 
-  certDetails = bundle.GetStringFromName('certDetails');
+  var certDetails = bundle.GetStringFromName('certDetails');
   if (myName != "_blank") {
     windowReference.setAttribute("title",certDetails+'"'+myName+'"');
     //  Get the token
