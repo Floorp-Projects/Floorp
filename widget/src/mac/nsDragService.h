@@ -58,6 +58,7 @@ public:
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
+  NS_IMETHOD SetDragAction ( PRUint32 anAction ) ;
 
   //nsIDragSessionMac
   NS_IMETHOD SetDragReference ( DragReference aDragRef ) ;  
