@@ -139,9 +139,9 @@ sub collect_stats {
 
         foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
             if( $product eq "-All-" ) {
-                SendSQL("select count(bug_status) from bugs where bug_status='$status'");
+                SendSQL("SELECT COUNT(bug_status) FROM bugs WHERE bug_status='$status'");
             } else {
-                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product_id=$product_id");
+                SendSQL("SELECT COUNT(bug_status) FROM bugs WHERE bug_status='$status' AND product_id=$product_id");
             }
 
             push @row, FetchOneColumn();
@@ -149,9 +149,9 @@ sub collect_stats {
 
         foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
             if( $product eq "-All-" ) {
-                SendSQL("select count(resolution) from bugs where resolution='$resolution'");
+                SendSQL("SELECT COUNT(resolution) FROM bugs WHERE resolution='$resolution'");
             } else {
-                SendSQL("select count(resolution) from bugs where resolution='$resolution' and product_id=$product_id");
+                SendSQL("SELECT COUNT(resolution) FROM bugs WHERE resolution='$resolution' AND product_id=$product_id");
             }
 
             push @row, FetchOneColumn();
