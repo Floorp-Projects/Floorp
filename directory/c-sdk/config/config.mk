@@ -70,13 +70,24 @@ NOMD_CFLAGS	= $(CC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
 NOMD_CCFLAGS	= $(CCC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
 		  $(XP_DEFINE) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 
+ifeq ($(OS_ARCH),Darwin)
+ifndef NSDISTMODE
+NSDISTMODE=absolute_symlink
+endif
+PWD := $(shell pwd)
+endif
+
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
 INSTALL		= $(NSINSTALL) -t
 else
 ifeq ($(NSDISTMODE),absolute_symlink)
 # install using absolute symbolic links
+ifeq ($(OS_ARCH),Darwin)
+INSTALL		= $(NSINSTALL) -L $(PWD)
+else
 INSTALL		= $(NSINSTALL) -L `$(NFSPWD)`
+endif
 else
 # install using relative symbolic links
 INSTALL		= $(NSINSTALL) -R
