@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   -                 Mike Potter <mikep@oeone.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+   
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<?xul-overlay href="chrome://penglobal/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
+
+<!-- CSS File with all styles specific to the dialog -->
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<window
+   id="calendar-new-eventwindow"
+   title="Internet Appliance Dialog - Calendar Alarm"
+   orient="vertical"
+   onload="onLoad()"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+   
+<!-- Javascript includes -->
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEventAlertDialog.js"/>
+
+<!-- Picker popups -->
+
+  <popupset>
+    <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="onDatePick( this )" label="">
+    </popup>
+    <popup  id="oe-time-picker-popup"  popupalign="topleft" oncommand="onTimePick( this )" label="">
+    </popup>
+  </popupset>
+
+<!-- The dialog -->
+    
+    <!-- dialog-box: from dialogOverlay.xul -->
+    
+    <vbox id="dialog-box">  
+   
+      <!-- standard-dialog-title: from dialogOverlay.xul -->
+      
+      <box id="standard-dialog-title">
+			<spring flex="1"/>
+			<image id="standar-dialog-title-icon"/>
+			<box id="standard-dialog-title-text-box">
+				<label id="standard-dialog-title-text" value="&event.title.alarm;"/>
+			</box>
+			<spring flex="1"/>
+		</box>
+               
+      <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
+        
+      <box id="standard-dialog-tips">
+         <html id="tip-new">&event.tip.alert;</html>
+      </box>
+        
+      <!-- standard-dialog-content: from dialogOverlay.xul  -->
+        
+      <vbox id="standard-dialog-content">
+         <box flex="1" id="event-message-box"/>
+			<box flex="1" id="event-message-time-box"/>
+			<!-- <spring flex="1"/> -->
+			<box id="alarm-dialog-content" collapsed="true">
+				<checkbox id="remind-again-checkbox"/>
+				<html>&event.alarm.checkbox.label;</html>
+				<textbox id="dialog-alarm-minutes" value="5" size="4" maxlength="2"/> 
+				<label for="dialog-alarm-minutes" value="Minutes"/>
+				
+			</box>
+			<box>
+				<spring flex="1"/>
+            <button id="dialog-btn-yes" label="Ok" default="true" oncommand="doOKButton();"/>
+			</box>
+      </vbox> 
+        
+      <!-- standard-dialog-content -->  
+        
+    </vbox> <!-- dialog-box -->
+
+</window>

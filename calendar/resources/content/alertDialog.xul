@@ -42,7 +42,7 @@
 <?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet href="chrome://calendar/skin/ca-event-dialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 
 
 <!-- DTD File with all strings specific to the calendar -->
@@ -64,7 +64,7 @@
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/ca-event-alert-dialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEventAlertDialog.js"/>
 
 <!-- Picker popups -->
 

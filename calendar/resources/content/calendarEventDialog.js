@@ -37,7 +37,7 @@
 
 
 
-/***** calendar/ca-event-dialog
+/***** calendar/calendarEventDialog.js
 * AUTHOR
 *   Garth Smedley
 * REQUIRED INCLUDES 
@@ -54,7 +54,7 @@
    args.onOk = <function>;          // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
     
-   calendar.openDialog("caNewEvent", "chrome://calendar/content/ca-event-dialog.xul", true, args );
+   calendar.openDialog("caNewEvent", "chrome://calendar/content/calendarEventDialog.xul", true, args );
 *
 *  Invoke this dialog to edit an existing event as follows:
 *
@@ -63,7 +63,7 @@
    args.onOk = <function>;                // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // javascript object containin the event to be editted
 
-   calendar.openDialog("caEditEvent", "chrome://calendar/content/ca-event-dialog.xul", true, args );
+   calendar.openDialog("caEditEvent", "chrome://calendar/content/calendarEventDialog.xul", true, args );
 
 * When the user clicks OK the onOk function will be called with a calendar event object.
 *
@@ -270,11 +270,10 @@ function onOKCommand()
    gEvent.alarm       = getFieldValue( "alarm-checkbox", "checked" );
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
-   debug( "!!!-->in ca-event-dialog.js, alarmUnits is "+gEvent.alarmUnits );
+   
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
       gEvent.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
-      debug( "!!!-->in ca-event-dialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
    }
    else
    {

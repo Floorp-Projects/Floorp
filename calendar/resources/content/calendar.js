@@ -476,7 +476,7 @@ function newEvent( startDate, allDay )
    
    // open the dialog non modally
             
-   openDialog( "chrome://calendar/content/ca-event-dialog.xul", "caNewEvent", "chrome,modal", args );
+   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
 }
 
 
@@ -509,7 +509,7 @@ function editEvent( calendarEvent )
 
    // open the dialog modally
    
-   openDialog("chrome://calendar/content/ca-event-dialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
    
 

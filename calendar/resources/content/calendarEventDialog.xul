@@ -43,7 +43,7 @@
 <?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet href="chrome://calendar/skin/ca-event-dialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 <?xml-stylesheet href="chrome://penglobal/skin/dialogOverlay.css" type="text/css"?>
 
 
@@ -73,7 +73,7 @@
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/ca-event-dialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialog.js"/>
 
 <!-- Data used in JS from dtd -->
 

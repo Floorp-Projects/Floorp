@@ -1,0 +1,316 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   -                 Mike Potter <mikep@oeone.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
+
+<!-- CSS File with all styles specific to the dialog -->
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+<?xml-stylesheet href="chrome://penglobal/skin/dialogOverlay.css" type="text/css"?>
+
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<window
+   id="calendar-new-eventwindow"
+   title="Internet Appliance Dialog - Calendar Event"
+   orient="vertical"
+   onload="loadCalendarEventDialog()"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   >
+    
+   
+<!-- Javascript DTD To Variable -->
+<script type="application/x-javascript">
+   var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
+</script>
+
+<!-- Javascript includes -->
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialog.js"/>
+
+<!-- Data used in JS from dtd -->
+
+<dataset>
+    <data id="data-event-title-new"             value="&event.title.new;" />
+    <data id="data-event-title-edit"            value="&event.title.edit;" />
+    <data id="neStartTimeErrorAlertMessage"     value="&newevent.starttimeerror.alertmessage;" />
+</dataset>
+
+
+<!-- Picker popups -->
+
+  <popupset>
+    <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="onDatePick( this )" value="">
+    </popup>
+    <popup  id="oe-time-picker-popup"  popupalign="topleft" oncommand="onTimePick( this )" value="">
+    </popup>
+  </popupset>
+
+<!-- The dialog -->
+    
+    <!-- dialog-box: from dialogOverlay.xul -->
+    
+    <vbox id="dialog-box" flex="1">  
+   
+      <!-- standard-dialog-title: from dialogOverlay.xul -->
+      
+      <box id="standard-dialog-title">
+         <image id="standard-dialog-title-icon" insertbefore="standard-dialog-title-text-box"/>
+         <spring flex="1" insertafter="standard-dialog-title-icon"/>
+         <box id="standard-dialog-title-text-box" valign="middle" autostretch="never">
+            <text id="standard-dialog-title-text"/>
+         </box>
+         <spring id="second-title-spring" flex="1" insertafter="standard-dialog-title-text-box"/>
+      </box>
+ 
+            
+        <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
+        
+        <box id="standard-dialog-tips">
+          <html id="tip-new"  collapsed ="true" >&event.tip.new;</html>
+          <html id="tip-edit" collapsed ="false">&event.tip.edit;</html>
+        </box>
+        
+        <!-- standard-dialog-content: from dialogOverlay.xul  -->
+        
+        <vbox id="standard-dialog-content"  flex="1">
+        
+            <!-- Form elements -->
+            
+            <grid autostretch="never" flex="1">
+            
+                <columns>
+                    <column />
+                    <column flex="1"/>
+                </columns>
+                
+                <rows>
+            
+                    <!-- Title -->    
+                    <row autostretch="never">
+                        <hbox class="field-label-box-class">
+                            <text for="title-field" value="&newevent.title.label;"/>
+                        </hbox>
+                        <textbox id="title-field"/>
+                    </row>
+        
+                    <!-- Location -->    
+                    <row autostretch="never">
+                        <hbox class="field-label-box-class" >
+                            <text for="location-field" value="&newevent.location.label;"/>
+                        </hbox>
+                        <textbox id="location-field"/>
+                    </row>
+            
+                    <!-- Category -->    
+                    <row autostretch="never">
+                        <hbox class="field-label-box-class" >
+                            <text for="category-field" value="&newevent.category.label;"/>
+                        </hbox>
+                        <menulist id="category-field" label="&newevent.choosecategory.label;" value="" >
+									<menupopup id="category-field-menupopup">
+										<menuitem label="&newevent.nocategory.label;" value=""/>
+									</menupopup>
+								</menulist>
+                    </row>
+            
+                    <!-- Date -->    
+                    <row autostretch="never" >
+                        <hbox class="field-label-box-class" >
+                            <text value="&newevent.date.label;"/>
+                        </hbox>
+                        <hbox  id="start-date-box" autostretch="never"  >
+                            <textbox id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
+                            <image class="four-state-image-button" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft" />
+                        </hbox>
+                    </row>
+                    
+            
+                    <!-- All Day -->    
+                    <row autostretch="never">
+                        <spring />
+                        <hbox>
+                          <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="true" oncommand="commandAllDay()"/>
+                        </hbox>
+                    </row>
+            
+                    
+                    <!-- Start -->    
+                    <row autostretch="never">
+                        <hbox class="field-label-box-class" >
+                            <text id="start-time-label" value="&newevent.start.label;"/>
+                        </hbox>
+                        <hbox id="start-event-time-box" autostretch="never" >
+                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                            <image class="four-state-image-button" id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                        </hbox>
+                    </row>
+                    
+                    
+                    <!-- End -->    
+                    <row autostretch="never">
+                        <hbox class="field-label-box-class" >
+                            <text id="end-time-label" value="&newevent.end.label;"/>
+                        </hbox>
+                        <hbox id="end-event-time-box"  autostretch="never" >
+                            <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                            <image class="four-state-image-button" id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" popupanchor="bottomleft"/>
+                        </hbox>
+                    </row>
+                    
+                    
+                    <!-- Description -->    
+                    <row flex="1">
+                        <hbox class="field-label-box-class" >
+                            <text for="description-field" value="&newevent.description.label;"/>
+                        </hbox>
+                        <textbox id="description-field" multiline="true" rows="3" cols="30" />
+                    </row>
+                    
+            
+                    <!-- Private -->    
+                    <row autostretch="never" >
+                        <spring />
+                        <hbox>
+                          <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
+                        </hbox>
+                    </row>
+            
+            
+                    <!-- Alarm -->    
+                    <row autostretch="never">
+                        <spring />
+                        <vbox>
+									<hbox  id="alarm-box"  autostretch="never">
+										 <checkbox id="alarm-checkbox"  label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
+										 <spring id="alarm-spacer" />
+										 <textbox id="alarm-length-field"  value="15" />
+										 <menulist  id="alarm-length-units" label="&alarm.units.minutes;" value="minutes" >
+											  <menupopup >
+													<menuitem label="&alarm.units.minutes;" value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   value="hours"/>
+													<menuitem label="&alarm.units.days;"    value="days"/>
+											  </menupopup>
+										 </menulist>
+										 
+										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+									</hbox>
+									<hbox  id="alarm-box-email">
+										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
+										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
+									</hbox>       
+                        </vbox>
+                    </row>
+             
+                    <!-- Invite -->    
+                    <row autostretch="never">
+                        <spring />
+                        <vbox>
+									<hbox id="invite-box">
+										 <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
+										 <spring id="invite-spacer" />
+										 <textbox id="invite-email-field" size="39" disabled="true"/>
+									</hbox>
+                        </vbox>
+                    </row>
+             
+                    <!-- Repeat -->    
+                    <!-- STARTING TO BE IMPLEMENTED	-->
+						  <row autostretch="never" collapsed="false">
+                        <spring />
+                        <vbox>
+                          <hbox id="repeat-box" autostretch="never">
+                            <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
+                            <textbox id="repeat-length-field" value="1"  />
+                                    
+                            <menulist  id="repeat-length-units" label="&repeat.units.days;" value="days" >
+                                <menupopup>
+                                    <menuitem label="&repeat.units.days;"   value="days" />
+                                    <menuitem label="&repeat.units.weeks;"  value="weeks" />
+                                    <menuitem label="&repeat.units.months;" value="months"  />
+                                    <menuitem label="&repeat.units.years;"  value="years" />
+                                </menupopup>
+                            </menulist>
+                          </hbox>
+                               
+                          
+                          <hbox>
+                            <spring id="radio-spacer" />
+                            <radiogroup id="repeat-until-group" orient="vertical">
+                              <hbox>
+                                <radio group="repeat-until-group" id="repeat-forever-radio" checked="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                              </hbox>    
+                              <hbox id="repeat-end-box" autostretch="never">
+                                  <radio group="repeat-until-group" id="repeat-until-radio" checked="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
+                                  <spring id="until-spacer"/>
+                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
+                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" popupanchor="bottomleft"/>
+                              </hbox>
+                            
+                            </radiogroup>
+                          </hbox>
+                         
+                        
+                        </vbox>
+                    </row> 
+						  <!-- Repeat -->   
+                
+                </rows>        
+            </grid>
+            
+         </vbox> <!-- standard-dialog-content -->
+    
+        
+         <!-- Bottom Box -->    
+        <box id="okCancelButtonsRight"/>        
+        
+    </vbox> <!-- dialog-box -->
+
+</window>
