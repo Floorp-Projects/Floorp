@@ -959,89 +959,108 @@ ShowNativePrintDialog(HWND              aHWnd,
   BOOL result = ::PrintDlg(&prntdlg);
 
   if (TRUE == result) {
-    if (aPrintSettings && prntdlg.hDevMode != NULL) {
-      // Transfer the settings from the native data to the PrintSettings
-      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-      SetPrintSettingsFromDevMode(aPrintSettings, devMode);
-      ::GlobalUnlock(prntdlg.hDevMode);
+    // check to make sure we don't have any NULL pointers
+    NS_ENSURE_TRUE(aPrintSettings && prntdlg.hDevMode, NS_ERROR_FAILURE);
+
+    if (prntdlg.hDevNames == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
     }
+    // Lock the deviceNames and check for NULL
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
-    if ( NULL != devnames ) {
+    if (devnames == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
 
-      char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
-      char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
+    char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
+    char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
 
-      // Check to see if the "Print To File" control is checked
-      // then take the name from devNames and set it in the PrintSettings
-      //
-      // NOTE:
-      // As per Microsoft SDK documentation the returned value offset from
-      // devnames->wOutputOffset is either "FILE:" or NULL
-      // if the "Print To File" checkbox is checked it MUST be "FILE:"
-      // We assert as an extra safety check.
-      if (prntdlg.Flags & PD_PRINTTOFILE) {
-        char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
-        NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
-        aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
-        aPrintSettings->SetPrintToFile(PR_TRUE);
-      } else {
-        // clear "print to file" info
-        aPrintSettings->SetPrintToFile(PR_FALSE);
-        aPrintSettings->SetToFileName(nsnull);
-      }
+    // Check to see if the "Print To File" control is checked
+    // then take the name from devNames and set it in the PrintSettings
+    //
+    // NOTE:
+    // As per Microsoft SDK documentation the returned value offset from
+    // devnames->wOutputOffset is either "FILE:" or NULL
+    // if the "Print To File" checkbox is checked it MUST be "FILE:"
+    // We assert as an extra safety check.
+    if (prntdlg.Flags & PD_PRINTTOFILE) {
+      char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
+      NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
+      aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
+      aPrintSettings->SetPrintToFile(PR_TRUE);
+    } else {
+      // clear "print to file" info
+      aPrintSettings->SetPrintToFile(PR_FALSE);
+      aPrintSettings->SetToFileName(nsnull);
+    }
 
-      nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
-      // Setup local Data members
-      psWin->SetDeviceName(device);
-      psWin->SetDriverName(driver);
+    nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
+    if (!psWin) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
+
+    // Setup local Data members
+    psWin->SetDeviceName(device);
+    psWin->SetDriverName(driver);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
-      printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
+    printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
 #endif
-      // fill the print options with the info from the dialog
-      if (aPrintSettings != nsnull) {
-        nsString printerName;
-        printerName.AssignWithConversion(device);
+    // fill the print options with the info from the dialog
+    nsString printerName;
+    printerName.AssignWithConversion(device);
 
-        aPrintSettings->SetPrinterName(printerName.get());
+    aPrintSettings->SetPrinterName(printerName.get());
 
-        if (prntdlg.Flags & PD_SELECTION) {
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
+    if (prntdlg.Flags & PD_SELECTION) {
+      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
 
-        } else if (prntdlg.Flags & PD_PAGENUMS) {
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-          aPrintSettings->SetStartPageRange(prntdlg.nFromPage);
-          aPrintSettings->SetEndPageRange(prntdlg.nToPage);
+    } else if (prntdlg.Flags & PD_PAGENUMS) {
+      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
+      aPrintSettings->SetStartPageRange(prntdlg.nFromPage);
+      aPrintSettings->SetEndPageRange(prntdlg.nToPage);
 
-        } else { // (prntdlg.Flags & PD_ALLPAGES)
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-        }
+    } else { // (prntdlg.Flags & PD_ALLPAGES)
+      aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
+    }
 
-        if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-          // make sure the dialog got extended
-          if (gDialogWasExtended) {
-            // check to see about the frame radio buttons
-            switch (gFrameSelectedRadioBtn) {
-              case rad4: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
-                break;
-              case rad5: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
-                break;
-              case rad6: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-                break;
-            } // switch
-          } else {
-            // if it didn't get extended then have it default to printing
-            // each frame separately
+    if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
+      // make sure the dialog got extended
+      if (gDialogWasExtended) {
+        // check to see about the frame radio buttons
+        switch (gFrameSelectedRadioBtn) {
+          case rad4: 
+            aPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+            break;
+          case rad5: 
+            aPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
+            break;
+          case rad6: 
             aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-          }
-        } else {
-          aPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
-        }
+            break;
+        } // switch
+      } else {
+        // if it didn't get extended then have it default to printing
+        // each frame separately
+        aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
       }
-      ::GlobalUnlock(prntdlg.hDevNames);
+    } else {
+      aPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
+    }
+    // Unlock DeviceNames
+    ::GlobalUnlock(prntdlg.hDevNames);
+
+    // Transfer the settings from the native data to the PrintSettings
+    LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
+    if (devMode == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
+    psWin->SetDevMode(devMode); // copies DevMode
+    SetPrintSettingsFromDevMode(aPrintSettings, devMode);
+    ::GlobalUnlock(prntdlg.hDevMode);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
@@ -1065,15 +1084,9 @@ ShowNativePrintDialog(HWND              aHWnd,
     }
 #endif
     
-      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-      psWin->SetDevMode(devMode);
-      SetPrintSettingsFromDevMode(aPrintSettings, devMode);
-      ::GlobalUnlock(prntdlg.hDevMode);
-
-    }
   } else {
     aPrintSettings->SetIsCancelled(PR_TRUE);
-    ::GlobalFree(hGlobalDevMode);
+    if (hGlobalDevMode) ::GlobalFree(hGlobalDevMode);
     return NS_ERROR_ABORT;
   }
 
@@ -1296,86 +1309,110 @@ ShowNativePrintDialogEx(HWND              aHWnd,
   HRESULT result = ::PrintDlgEx(&prntdlg);
 
   if (S_OK == result && (prntdlg.dwResultAction == PD_RESULT_PRINT)) {
-    if (aPrintSettings && prntdlg.hDevMode != NULL) {
-      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-      SetPrintSettingsFromDevMode(aPrintSettings, devMode);
-      ::GlobalUnlock(prntdlg.hDevMode);
+
+    // check to make sure we don't have any NULL pointers
+    NS_ENSURE_TRUE(aPrintSettings && prntdlg.hDevMode, NS_ERROR_FAILURE);
+
+    if (prntdlg.hDevNames == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
     }
+    // Lock the deviceNames and check for NULL
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
-    if ( NULL != devnames ) {
+    if (devnames == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
 
-      char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
-      char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
+    char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
+    char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
 
-      // Check to see if the "Print To File" control is checked
-      // then take the name from devNames and set it in the PrintSettings
-      //
-      // NOTE:
-      // As per Microsoft SDK documentation the returned value offset from
-      // devnames->wOutputOffset is either "FILE:" or NULL
-      // if the "Print To File" checkbox is checked it MUST be "FILE:"
-      // We assert as an extra safety check.
-      if (prntdlg.Flags & PD_PRINTTOFILE) {
-        char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
-        NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
-        aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
-        aPrintSettings->SetPrintToFile(PR_TRUE);
-      } else {
-        // clear "print to file" info
-        aPrintSettings->SetPrintToFile(PR_FALSE);
-        aPrintSettings->SetToFileName(nsnull);
-      }
+    // Check to see if the "Print To File" control is checked
+    // then take the name from devNames and set it in the PrintSettings
+    //
+    // NOTE:
+    // As per Microsoft SDK documentation the returned value offset from
+    // devnames->wOutputOffset is either "FILE:" or NULL
+    // if the "Print To File" checkbox is checked it MUST be "FILE:"
+    // We assert as an extra safety check.
+    if (prntdlg.Flags & PD_PRINTTOFILE) {
+      char* fileName = &(((char *)devnames)[devnames->wOutputOffset]);
+      NS_ASSERTION(strcmp(fileName, "FILE:") == 0, "FileName must be `FILE:`");
+      aPrintSettings->SetToFileName(NS_ConvertASCIItoUCS2(fileName).get());
+      aPrintSettings->SetPrintToFile(PR_TRUE);
+    } else {
+      // clear "print to file" info
+      aPrintSettings->SetPrintToFile(PR_FALSE);
+      aPrintSettings->SetToFileName(nsnull);
+    }
 
-      nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
-      // Setup local Data members
-      psWin->SetDeviceName(device);
-      psWin->SetDriverName(driver);
+    nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
+    if (!psWin) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
+
+    // Setup local Data members
+    psWin->SetDeviceName(device);
+    psWin->SetDriverName(driver);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
-      printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
+    printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
 #endif
-      ::GlobalUnlock(prntdlg.hDevNames);
+    ::GlobalUnlock(prntdlg.hDevNames);
 
-      // fill the print options with the info from the dialog
-      if (aPrintSettings != nsnull) {
+    // fill the print options with the info from the dialog
+    if (aPrintSettings != nsnull) {
 
-        if (prntdlg.Flags & PD_SELECTION) {
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
+      if (prntdlg.Flags & PD_SELECTION) {
+        aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
 
-        } else if (prntdlg.Flags & PD_PAGENUMS) {
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-          aPrintSettings->SetStartPageRange(pPageRanges->nFromPage);
-          aPrintSettings->SetEndPageRange(pPageRanges->nToPage);
+      } else if (prntdlg.Flags & PD_PAGENUMS) {
+        aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
+        aPrintSettings->SetStartPageRange(pPageRanges->nFromPage);
+        aPrintSettings->SetEndPageRange(pPageRanges->nToPage);
 
-        } else { // (prntdlg.Flags & PD_ALLPAGES)
-          aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-        }
-
-        if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-          // make sure the dialog got extended
-          if (gDialogWasExtended) {
-            // check to see about the frame radio buttons
-            switch (gFrameSelectedRadioBtn) {
-              case rad4: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
-                break;
-              case rad5: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
-                break;
-              case rad6: 
-                aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-                break;
-            } // switch
-          } else {
-            // if it didn't get extended then have it default to printing
-            // each frame separately
-            aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-          }
-        } else {
-          aPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
-        }
+      } else { // (prntdlg.Flags & PD_ALLPAGES)
+        aPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
       }
 
+      if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
+        // make sure the dialog got extended
+        if (gDialogWasExtended) {
+          // check to see about the frame radio buttons
+          switch (gFrameSelectedRadioBtn) {
+            case rad4: 
+              aPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+              break;
+            case rad5: 
+              aPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
+              break;
+            case rad6: 
+              aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
+              break;
+          } // switch
+        } else {
+          // if it didn't get extended then have it default to printing
+          // each frame separately
+          aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
+        }
+      } else {
+        aPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
+      }
+    }
+
+    // Unlock DeviceNames
+    ::GlobalUnlock(prntdlg.hDevNames);
+
+    // Transfer the settings from the native data to the PrintSettings
+    LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
+    if (devMode == NULL) {
+      ::GlobalFree(hGlobalDevMode);
+      return NS_ERROR_FAILURE;
+    }
+    psWin->SetDevMode(devMode); // copies DevMode
+    SetPrintSettingsFromDevMode(aPrintSettings, devMode);
+    ::GlobalUnlock(prntdlg.hDevMode);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
@@ -1399,12 +1436,6 @@ ShowNativePrintDialogEx(HWND              aHWnd,
     }
 #endif
     
-    LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-    psWin->SetDevMode(devMode);
-    SetPrintSettingsFromDevMode(aPrintSettings, devMode);
-    ::GlobalUnlock(prntdlg.hDevMode);
-
-    }
   } else {
     if (hGlobalDevMode) ::GlobalFree(hGlobalDevMode);
     return NS_ERROR_ABORT;
