@@ -56,7 +56,10 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
-//#define ENABLE_OUTLINE   // un-comment this to enable the outline properties (bug 9816)
+#define ENABLE_OUTLINE   // un-comment this to enable the outline properties (bug 9816)
+                         // XXX un-commenting for temporary fix for nsbeta3+ Bug 48973
+                         // so we can use "mozoutline
+
 //#define ENABLE_COUNTERS  // un-comment this to enable counters (bug 15174)
 
 MOZ_DECL_CTOR_COUNTER(SelectorList);

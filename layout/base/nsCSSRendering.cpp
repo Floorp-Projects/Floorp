@@ -1713,7 +1713,9 @@ nscoord width;
 
   // This if control whether the outline paints on the inside 
   // or outside of the frame
-#if 1 // outside
+  // XXX This is temporary fix for nsbeta3+ Bug 48973
+  // so we can use "mozoutline
+#if 0 // outside
   nsRect inside(aBorderArea);
   nsRect outside(inside);
   inside.Inflate(width, width);
@@ -1722,11 +1724,11 @@ nscoord width;
   clipRect.Inflate(width, width); // make clip extra big for now
 
 #else // inside
-  nsMargin insetMargin;
-  aBorderStyle.GetMargin(insetMargin);
+  nsMargin borderWidth;
+  aBorderStyle.GetBorder(borderWidth);
 
   nsRect outside(aBorderArea);
-  outside.Deflate(insetMargin);
+  outside.Deflate(borderWidth);
   nsRect inside(outside);
   inside.Deflate(width, width);
 
