@@ -1673,7 +1673,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 {
 	PRUint32 result;
 	char *p = (char *) yarn->mYarn_Buf;
-	PRInt32 numChars = min(8, yarn->mYarn_Fill);
+	PRInt32 numChars = MIN(8, yarn->mYarn_Fill);
 	PRInt32 i;
 	for (i=0, result = 0; i<numChars; i++, p++)
 	{
