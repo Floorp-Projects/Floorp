@@ -486,6 +486,7 @@ tier_50:
 	@$(EXIT_ON_ERROR) \
 	for d in $(tier_50_dirs); do \
 	    $(UPDATE_TITLE) \
+	    echo "_________ make -C $$d export"; \
 	    $(MAKE) -C $$d export; \
 	done ; \
 	for d in $(tier_50_dirs); do \
