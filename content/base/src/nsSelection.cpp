@@ -1531,16 +1531,17 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   }  
   nsPeekOffsetStruct pos;
   pos.SetData(mTracker, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
+  HINT tHint(mHint); //temporary variable so we dont set mHint until it is necessary
   switch (aKeycode){
     case nsIDOMKeyEvent::DOM_VK_RIGHT : 
         InvalidateDesiredX();
         pos.mDirection = eDirNext;
-        mHint = HINTLEFT;//stick to this line
+        tHint = HINTLEFT;//stick to this line
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
-        mHint = HINTRIGHT;//stick to opposite of movement
+        tHint = HINTRIGHT;//stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
@@ -1555,21 +1556,21 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
         pos.mAmount = eSelectBeginLine;
-        mHint = HINTRIGHT;//stick to opposite of movement
+        tHint = HINTRIGHT;//stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
-        mHint = HINTLEFT;//stick to this line
+        tHint = HINTLEFT;//stick to this line
         PostReason(nsISelectionListener::KEYPRESS_REASON);
      break;
   default :return NS_ERROR_FAILURE;
   }
-  pos.mPreferLeft = mHint;
+  pos.mPreferLeft = tHint;
   if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
-    mHint = (HINT)pos.mPreferLeft;
+    tHint = (HINT)pos.mPreferLeft;
 #ifdef IBMBIDI
     PRBool bidiEnabled = PR_FALSE;
     context->GetBidiEnabled(&bidiEnabled);
@@ -1583,7 +1584,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
       //       and |PeekOffset| is called recursively, pos.mResultFrame on exit is sometimes set to the original
       //       frame, not the frame that we ended up in, so I need this call to |GetFrameForNodeOffset|.
       //       I don't know if that could or should be changed or if it would break something else.
-      GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, mHint, &theFrame, &currentOffset);
+      GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, tHint, &theFrame, &currentOffset);
       theFrame->GetOffsets(frameStart, frameEnd);
 
       // the hint might have been reversed by an RTL frame, so make sure of it
@@ -1591,7 +1592,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
         pos.mPreferLeft = PR_TRUE;
       else if (nsIDOMKeyEvent::DOM_VK_END == aKeycode)
         pos.mPreferLeft = PR_FALSE;
-      mHint = (HINT)pos.mPreferLeft;
+      tHint = (HINT)pos.mPreferLeft;
       if (frameStart !=0 || frameEnd !=0) // Otherwise the frame is not a text frame, so nothing more to do
       {
         switch (aKeycode) {
@@ -1660,14 +1661,17 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 #ifdef IBMBIDI
         BidiLevelFromMove(context, shell, pos.mResultContent, pos.mContentOffset, aKeycode);
 #endif // IBMBIDI
-        mHint = (HINT)pos.mPreferLeft;
+        tHint = (HINT)pos.mPreferLeft;
         PostReason(nsISelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
         result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
       }
     }
   }
   if (NS_SUCCEEDED(result))
+  {
+    mHint = tHint; //save the hint parameter now for the next time
     result = mDomSelections[index]->ScrollIntoView();
+  }
 
   return result;
 }
