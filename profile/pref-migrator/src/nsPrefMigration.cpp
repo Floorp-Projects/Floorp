@@ -1112,19 +1112,20 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   // rename the bookmarks file, but only if we need to.
   rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
-
-#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x 
-  rv = RenameAndMove4xImapFilterFiles(profilePath);
-  if (NS_FAILED(rv)) return rv;
-#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
     
-   /* Create the new mail directory from the setting in prefs.js or a default */
+  /* Create the new mail directory from the setting in prefs.js or a default */
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if (NS_FAILED(rv)) return rv; 
   if (serverType == POP_4X_MAIL_TYPE) {
 	rv = RenameAndMove4xPopFilterFile(profilePath);
   	if (NS_FAILED(rv)) return rv; 
   }
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x 
+  else if (serverType == IMAP_4X_MAIL_TYPE) {
+  	rv = RenameAndMove4xImapFilterFiles(profilePath);
+	if (NS_FAILED(rv)) return rv;
+  }
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
 
   return rv;
 }
