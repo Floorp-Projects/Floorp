@@ -1,10 +1,11 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <title> nsIAccessible Interface Test Case </title>
-<!-- Descrpt: Test nsIAccessible Interface methods for HTML Table Node
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML Table Node
      Author: dsirnapalli@netscape.com
      Revs: 11.20.01 - Created
-     Last Run On:01.24.02.
+     Last Run On:02.21.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -31,7 +32,7 @@
 <script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
-<script type="text/javascript" src="accessibility.js"></script>
+<script type="text/javascript" src="accesslib.js"></script>
 
 <script type="text/javascript">
 
@@ -52,7 +53,6 @@ function getDomNodeTable()
 function executeTestCase()
 {
   var domNode = getDomNodeTable();
-
   if(domNode == null)
   {
     res = res + "Could not get the DOM Node";
@@ -62,7 +62,6 @@ function executeTestCase()
   { //else1
     accNode = getAccessibleNode(domNode);
     tempaccNode = accNode;
-
     if(accNode == "Exception")
     {
       res = res + "The Node you selected is not an Accessible Node";
@@ -74,136 +73,38 @@ function executeTestCase()
 	   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 	   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-	   accNode.accTakeFocus();
-       setTimeout("constructResults();", 2000);
+       var name = getName(accNode);
+       var role = getRole(accNode);
+       var state = getState(accNode);
+       var value = getValue(accNode);
+       var newvalue = value.toString();
+
+       var expectedName      = "Test Table";
+       var expectedRole      = "24";
+       var expectedState     = "0";
+       var expectedValue     = "NS_ERROR_NOT_IMPLEMENTED";
+
+       var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+       var row1 = new Array("Name->", expectedName, name);
+       var row2 = new Array("Role->", expectedRole, role);
+       var row3 = new Array("State->", expectedState, state);
+       var row4 = new Array("Value->", expectedValue, value);
+
+       row = new Array(row0, row1, row2, row3, row4);
+
+       if (name == expectedName)          row1[3] = "PASS"; else row1[3] = "FAIL";
+       if (role == expectedRole)          row2[3] = "PASS"; else row2[3] = "FAIL";
+       if (state == expectedState)        row3[3] = "PASS"; else row3[3] = "FAIL";
+       if (newvalue.match(expectedValue)) row4[3] = "PASS"; else row4[3] = "FAIL";
+
+       appendTableRes();
+       submitToCookie();
      }
      catch(e){
       alert("Exception**: " + e);
      }
     }//else2
   } //else1
-}
-
-function constructResults()
-{
- try{
-   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-   if(tempaccNode.accGetDOMNode() == accNode.accFocused.accGetDOMNode())
-   {
-     varaccFocused = true;
-   }
-   else
-   {
-     varaccFocused = false;
-   }
-
-   var name = getName(accNode);
-   var role = getRole(accNode);
-   var state = getState(accNode);
-   var value = getValue(accNode);
-   var newvalue = value.toString();
-
-// if (focused == true) focus = "Focused"; else focus = "Not Focused";
-   if (varaccFocused == true) tookfocus = "Focused"; else tookfocus = "Not Focused";
-
-   var expectedName      = "Test Table";
-   var expectedRole      = "24";
-   var expectedState     = "0";
-   var expectedValue     = "NS_ERROR_NOT_IMPLEMENTED";
-// var expectedFocus     = "Focused";
-   var expectedTookfocus = "Not Focused";
-
-   var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
-   var row1 = new Array("Name->", expectedName, name);
-   var row2 = new Array("Role->", expectedRole, role);
-   var row3 = new Array("State->", expectedState, state);
-   var row4 = new Array("Value->", expectedValue, value);
-// var row5 = new Array("accTakeFocus->", expectedFocus, focus);
-   var row6 = new Array("accFocused->", expectedTookfocus, tookfocus);
-
-   if (name == expectedName)           row1[3] = "PASS"; else row1[3] = "FAIL";
-   if (role == expectedRole)           row2[3] = "PASS"; else row2[3] = "FAIL";
-   if (state == expectedState)         row3[3] = "PASS"; else row3[3] = "FAIL";
-   if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
-                                       row4[3] = "PASS"; else row4[3] = "FAIL";
-// if (focus == "Focused")             row5[3] = "PASS"; else row5[3] = "FAIL";
-// if there is focus on table, that means its failed. Table is not focusable.
-   if (tookfocus == expectedTookfocus) row6[3] = "PASS"; else row6[3] = "FAIL";
-
-   res += "<table border cols=4 width='70%'>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-     res += "<td><b>" + row0[col] + "</b></td>";
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row1[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
-    else
-     res += "<td>" + row1[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row2[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
-    else
-     res += "<td>" + row2[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row3[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
-    else
-     res += "<td>" + row3[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row4[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
-    else
-     res += "<td>" + row4[col] + "</td>";
-   }
-   res += "</tr>";
-//   res += "<tr>";
-//   for(col=0; col<4; col++)
-//   {
-//    if(row5[col] == "FAIL")
-//     res += "<td bgcolor='#FF0000'>" + row5[col] + "</td>";
-//    else
-//     res += "<td>" + row5[col] + "</td>";
-//   }
-//   res += "</tr>";
-   res += "<tr>";
-   for(col=0; col<4; col++)
-   {
-    if(row6[col] == "FAIL")
-     res += "<td bgcolor='#FF0000'>" + row6[col] + "</td>";
-    else
-     res += "<td>" + row6[col] + "</td>";
-   }
-   res += "</tr>";
-   res += "</table>";
-
-   submitToCookie();
- }
- catch(e){
-  alert("Exception**: " + e);
- }
-}
-
-function submitToCookie()
-{
-  createCookie("nsIAccessibleTestTableNode", res, 14);
-  setTimeout("window.location.reload();", 2000);
 }
 
 </script>
@@ -219,9 +120,10 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 </form>
 
 <script type="text/javascript">
+cookieName = "nsIAccessibleTestTableNode";
+res = "<b><u> Results for HTML Table Node:</u></b><br><br>";
 
-var res = "<b><u> Results for HTML Table Node:</u></b><br><br>";
-if(readCookie("nsIAccessibleTestTableNode") == null)
+if(readCookie(cookieName) == null)
 {
   <!-- Test Table -->
   document.write('<center>');
@@ -246,8 +148,8 @@ if(readCookie("nsIAccessibleTestTableNode") == null)
 }
 else
 {
-  var cookieValue = readCookie("nsIAccessibleTestTableNode");
-  eraseCookie("nsIAccessibleTestTableNode");
+  var cookieValue = readCookie(cookieName);
+  eraseCookie(cookieName);
   displayResults(cookieValue);
 }
 
