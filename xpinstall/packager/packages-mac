@@ -337,11 +337,10 @@ viewer:chrome:chatzilla.jar
 viewer:Components:venkman-service.js
 viewer:chrome:venkman.jar
 
-[FullCircle]
-; Dummy FullCircle.xpi must be generated with the mozilla 
-; distribution so that it can be seamlessly replaced with a
-; legitimate one for milestone builds, without breaking the
-; installer nor having to rebuild it.
+[talkback]
+viewer:Components:QFA.shlb
+viewer:Components:QFA.xpt
+viewer:TalkBack:*
 
 [inspector]
 viewer:Components:inspector.shlb
