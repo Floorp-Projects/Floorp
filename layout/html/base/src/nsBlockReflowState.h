@@ -445,7 +445,7 @@ BulletFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
-NS_METHOD
+NS_IMETHODIMP
 BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
@@ -462,7 +462,7 @@ BulletFrame::ListTag(FILE* out) const
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 BulletFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
@@ -724,6 +724,31 @@ BulletFrame::GetListItemText(nsIPresContext& aCX,
 
 #define MIN_BULLET_SIZE 5               // from laytext.c
 
+static nsresult
+UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
+{
+  nsresult rv = NS_OK;
+  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+    // Now that the size is available, trigger a reflow of the bullet
+    // frame.
+    nsIPresShell* shell;
+    shell = aPresContext.GetShell();
+    if (nsnull != shell) {
+      nsIReflowCommand* cmd;
+      rv = NS_NewHTMLReflowCommand(&cmd, aFrame,
+                                   nsIReflowCommand::ContentChanged);
+      if (NS_OK == rv) {
+        shell->EnterReflowLock();
+        shell->AppendReflowCommand(cmd);
+        NS_RELEASE(cmd);
+        shell->ExitReflowLock();
+      }
+      NS_RELEASE(shell);
+    }
+  }
+  return rv;
+}
+
 void
 BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                             const nsReflowState& aReflowState,
@@ -735,7 +760,8 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
-    mImageLoader.GetDesiredSize(aCX, aReflowState, aMetrics);
+    mImageLoader.GetDesiredSize(aCX, aReflowState, this, UpdateBulletCB,
+                                aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {
       nsHTMLContainerFrame::CreateViewForFrame(*aCX, this, mStyleContext,
                                                PR_FALSE);
