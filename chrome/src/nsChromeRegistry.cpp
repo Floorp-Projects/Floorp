@@ -522,11 +522,12 @@ nsChromeRegistry::GetProviderAndPath(nsIURL* aChromeURL,
   return NS_OK;
 }
 
-static NS_NAMED_LITERAL_CSTRING(kSlash, "/");
 
 nsresult
 nsChromeRegistry::Canonify(nsIURL* aChromeURL)
 {
+  NS_NAMED_LITERAL_CSTRING(kSlash, "/");
+
   nsresult rv;
 
   nsCAutoString provider, path;
@@ -1482,13 +1483,15 @@ GetResourceName(nsIRDFResource* res, nsACString& result)
   result.Assign(Substring(providerURI, found + 1));
 }
 
-static NS_NAMED_LITERAL_CSTRING(kTab, "\t");
 
 void
 nsChromeRegistry::ProcessProvider(PRFileDesc *fd, nsIRDFService* aRDFs,
                                   nsIRDFDataSource* aDS, nsIRDFResource* aRoot,
                                   PRBool aIsLocale, const nsACString& aBaseURL)
 {
+  NS_NAMED_LITERAL_CSTRING(kSlash, "/");
+  NS_NAMED_LITERAL_CSTRING(kTab, "\t");
+
   nsresult rv;
 
   nsCOMPtr<nsIRDFResource> packagesarc;
@@ -1582,13 +1585,14 @@ GetLiteralText(nsIRDFLiteral* lit, nsACString& result)
   CopyUTF16toUTF8(value, result);
 }
 
-static NS_NAMED_LITERAL_CSTRING(kLinebreak, NS_LINEBREAK);
-
 void
 nsChromeRegistry::ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* aDS,
                                   nsIRDFResource* aRoot,
                                   const nsCSubstring& aType)
 {
+  NS_NAMED_LITERAL_CSTRING(kTab, "\t");
+  NS_NAMED_LITERAL_CSTRING(kLinebreak, NS_LINEBREAK);
+
   nsresult rv;
 
   nsCOMPtr<nsISimpleEnumerator> overlaids;
