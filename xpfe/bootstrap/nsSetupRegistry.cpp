@@ -39,14 +39,13 @@
 #include "rdf.h"
 #include "nsIWindowMediator.h"
 
-static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
-static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
-static NS_DEFINE_IID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
-static NS_DEFINE_IID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
-static NS_DEFINE_IID(kProfileCoreCID,      NS_PROFILECORE_CID); 
-static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
-static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
-static NS_DEFINE_IID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
+static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
+static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
+static NS_DEFINE_CID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
+static NS_DEFINE_CID(kProfileCoreCID,      NS_PROFILECORE_CID); 
+static NS_DEFINE_CID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
+static NS_DEFINE_CID(kRDFCoreCID,          NS_RDFCORE_CID);
+static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
 
 #ifdef XP_PC
 
@@ -75,13 +74,13 @@ static NS_DEFINE_IID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
 #endif // XP_PC
 
 // Class IDs
-static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_IID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
-static NS_DEFINE_IID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kFileLocatorCID,     NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
+static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 nsresult NS_AutoregisterComponents()
 {
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
