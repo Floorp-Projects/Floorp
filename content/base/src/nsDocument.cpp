@@ -2935,13 +2935,41 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     converter.AddEndTag("section_head");
     converter.AddStartTag("section_body");
 
-    nsIHTMLDocument* htmldoc=nsnull;
-    result=this->QueryInterface(kIHTMLDocumentIID,(void**)&htmldoc);
-    if(NS_SUCCEEDED(result)) {
-      nsAutoString docTypeStr;
-      htmldoc->GetDocTypeStr(docTypeStr);
-      if(docTypeStr.Length()>0) converter.AddMarkupDeclaration(docTypeStr);
-      NS_RELEASE(htmldoc);
+    nsCOMPtr<nsIDOMDocumentType> doctype;
+    GetDoctype(getter_AddRefs(doctype));
+    if(doctype) {
+      nsAutoString tmpStr, docTypeStr;
+
+      doctype->GetName(tmpStr);
+
+      if (tmpStr.Length()) {
+        docTypeStr.Append("DOCTYPE ");
+        docTypeStr.Append(tmpStr);
+
+        doctype->GetPublicId(tmpStr);
+        if (tmpStr.Length()) {
+          docTypeStr.Append(" PUBLIC \"");
+          docTypeStr.Append(tmpStr);
+          docTypeStr.Append('"');
+        }
+
+        doctype->GetSystemId(tmpStr);
+        if (tmpStr.Length()) {
+          docTypeStr.Append(" SYSTEM \"");
+          docTypeStr.Append(tmpStr);
+          docTypeStr.Append('"');
+        }
+
+        doctype->GetInternalSubset(tmpStr);
+        if (tmpStr.Length()) {
+          docTypeStr.Append(" [\n");
+          docTypeStr.Append(tmpStr);
+          docTypeStr.Append("\n]");
+        }
+      }
+
+      if (docTypeStr.Length())
+        converter.AddMarkupDeclaration(docTypeStr);
     }
 
     nsIDOMElement* root = nsnull;
