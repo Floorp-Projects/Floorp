@@ -114,7 +114,5 @@ treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"
 }
 
 treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-                                                                                                                                               
-  list-style-image: none !important;                                             
-                                                                                                                                               
+  visibility:hidden;
 }    

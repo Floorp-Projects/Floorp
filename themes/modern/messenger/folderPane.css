@@ -129,7 +129,5 @@ treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"]
 }
 
 treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-                                                                                                                                               
-  list-style-image: none !important;                                             
-                                                                                                                                               
+  visibility:hidden;
 }
