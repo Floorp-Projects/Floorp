@@ -561,12 +561,12 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     }
     else {
         // Done reading, so mark the read request as complete.
-        {
-            nsAutoLock lock(mLock);
-            mReadDone = PR_TRUE;
-            mReadRequest = 0;
-        }
+        nsAutoLock lock(mLock);
+        mReadDone = PR_TRUE;
+        mReadRequest = 0;
+    }
 
+    if (mReadDone && mWriteDone) {
         // break the cycle between the socket transport and this
         mSocketTransport->SetNotificationCallbacks(nsnull, 0);
         
