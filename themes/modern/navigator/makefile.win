@@ -29,7 +29,6 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
 
 install:: 
-	$(MAKE_INSTALL) NavSecurityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) alertl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
@@ -38,7 +37,6 @@ install::
 	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) messagel.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) mynetscape.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) n-box-persbar.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
@@ -49,4 +47,3 @@ install::
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

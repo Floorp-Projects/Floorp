@@ -19,8 +19,28 @@
  * Contributor(s): 
  */
 
-@import url(chrome://global/skin/global.css);
-
-window {
-    font-size: 12px;
+.error-icon-box {
+  background-color: #CCCCCC;
+  padding: 5px;
+  border-right: 1px solid #999999;
 }
+
+
+
+.treecell-error {
+  border-bottom: 1px solid #000000 !important;
+  padding: 0px;
+}
+
+.treecell-error[type="error"] {
+  list-style-image: url("chrome://global/skin/error-icon.gif") !important;
+}
+
+.treecell-error[type="warning"] {
+  list-style-image: url("chrome://global/skin/alert-icon.gif") !important;
+}
+
+.error-icon {
+  list-style-image: inherit !important;
+}
+

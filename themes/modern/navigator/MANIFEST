@@ -1,5 +1,4 @@
 #!dest navigator:skin
-NavSecurityOverlay.css
 alertl.gif
 back.gif
 broken.gif
@@ -8,7 +7,6 @@ forward.gif
 home.gif
 location-hover.gif
 location.gif
-lock.gif
 messagel.gif
 mynetscape.gif
 n-box-persbar.gif
@@ -18,5 +16,4 @@ questionl.gif
 reload.gif
 search.gif
 stop.gif
-unlock.gif
 pageInfo.css

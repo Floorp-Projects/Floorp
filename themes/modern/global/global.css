@@ -115,6 +115,11 @@
       padding             : 0px 1px 0px 1px;
     }
 
+  .statusbar-panel-icon
+    {
+      margin              : 0px 2px 0px 0px;
+    }
+
 /**
  * status-bar
  */

@@ -24,7 +24,6 @@ columnselect.gif
 columnselect-hover.gif
 commonDialog.css
 console.css
-dialogOverlay.css
 dir-closed.gif
 dir-open.gif
 error-icon.gif
@@ -106,7 +105,6 @@ taskbar-tab-hover.gif
 taskbar-tab-minimized.gif
 taskbar-tab-trans.gif
 taskbar-tab.gif
-tasksOverlay.css
 textfield.css
 toolbar-begincap.gif
 toolbar-dropdown-hover.gif

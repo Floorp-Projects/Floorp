@@ -1,3 +1,7 @@
+tabcontrol {
+  margin: 1px 5px 2px 5px;
+}
+
 /********** Tab widget *********/
 tab { 
   border-top: 1px solid white;

@@ -96,6 +96,16 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     width                 : 100px;
   }
+
+#statusbar-display
+  {
+    list-style-image      : url("chrome://communicator/skin/document.gif"):
+  }
+  
+#statusbar-display[error="true"]
+  {
+    list-style-image      : url("chrome://communicator/skin/document-error.gif");
+  }  
   
 #go-button  
   {

@@ -31,7 +31,6 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	NavSecurityOverlay.css \
 	alertl.gif \
 	back.gif \
 	broken.gif \
@@ -40,7 +39,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	home.gif \
 	location-hover.gif \
 	location.gif \
-	lock.gif \
 	messagel.gif \
 	mynetscape.gif \
 	n-box-persbar.gif \
@@ -50,7 +48,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	reload.gif \
 	search.gif \
 	stop.gif \
-	unlock.gif \
 	pageInfo.css \
     $(NULL)
 

@@ -30,6 +30,7 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 
 EXPORT_RESOURCE = \
 		$(srcdir)/brand.css \
+		$(srcdir)/securityOverlay.css \
 		$(srcdir)/box.css \
 		$(srcdir)/button.css \
 		$(srcdir)/communicator.css \
@@ -44,6 +45,12 @@ EXPORT_RESOURCE = \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \
 		$(srcdir)/online.gif \
 		$(srcdir)/offline.gif \
+		$(srcdir)/document.gif \
+		$(srcdir)/document-error.gif \
+		$(srcdir)/lock.gif \
+		$(srcdir)/unlock.gif \
+		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/dialogOverlay.css \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 

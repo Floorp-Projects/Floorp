@@ -78,3 +78,22 @@
       margin              : 0px !important;
       border              : none !important;
     }
+
+  .scrollfield
+    {
+      border              : none !important;
+      margin              : 0px;
+      margin-top          : 1px;      
+      padding             : 0px !important;
+      background          : inherit;
+    }    
+    
+  .scrollfield > .textfield-internal-box
+    {
+      border              : none !important;
+      margin              : 0px !important;
+      padding             : 0px !important;
+    }
+    
+    
+    
