@@ -3729,6 +3729,10 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
   childStyleContext = ResolveStyleContext(aPresContext, aParentFrame,
                                           aChildContent);
   const nsStyleDisplay* childDisplay = childStyleContext->GetStyleDisplay();
+  if (nsLayoutAtoms::tableColGroupFrame == aParentFrameType &&
+      NS_STYLE_DISPLAY_TABLE_COLUMN != childDisplay->mDisplay)
+      return rv; // construct only table columns below colgroups
+  
   switch (childDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_TABLE:
     {
@@ -8637,8 +8641,9 @@ nsCSSFrameConstructor::ContentAppended(nsPresContext* aPresContext,
   // If we didn't process children when we originally created the frame,
   // then don't do any processing now
   nsIAtom* frameType = parentFrame->GetType();
-  if (frameType == nsLayoutAtoms::objectFrame) {
-    // This handles APPLET, EMBED, and OBJECT
+  if (frameType == nsLayoutAtoms::objectFrame ||
+      frameType == nsLayoutAtoms::tableColFrame) {
+    // This handles APPLET, EMBED, OBJECT and COL
     return NS_OK;
   }
   // Deal with inner/outer tables, fieldsets
@@ -8707,6 +8712,13 @@ nsCSSFrameConstructor::ContentAppended(nsPresContext* aPresContext,
           frameItems.AddChild(tempItems.childList);
         }
       }
+    }
+    else if (nsLayoutAtoms::tableColGroupFrame == frameType) {
+      nsRefPtr<nsStyleContext> childStyleContext;
+      childStyleContext = ResolveStyleContext(aPresContext, parentFrame, childContent);
+      if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
+        continue; //don't create anything else than columns below a colgroup
+      ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
     }
     // Don't create child frames for iframes/frames, they should not
     // display any content that they contain.
@@ -9331,6 +9343,12 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
                               aIndexInContainer, aChild)
         : FindPreviousAnonymousSibling(shell, mDocument, aContainer, aChild);
     }
+  }
+  else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == parentDisplay->mDisplay) {
+      nsRefPtr<nsStyleContext> childStyleContext;
+      childStyleContext = ResolveStyleContext(aPresContext, parentFrame, aChild);
+      if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
+        return NS_OK; //don't create anything else than columns below a colgroup  
   }
 
   ConstructFrame(shell, aPresContext, state, aChild, parentFrame, frameItems);
