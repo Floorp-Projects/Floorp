@@ -100,6 +100,9 @@ Rights Reserved.
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
+  
+  <key id="key_delete" keycode="VK_DELETE" shift="false" control="false"
+        onkeypress="goDoCommand('button_delete')"/>
 </keyset>
 
         <menubar>
