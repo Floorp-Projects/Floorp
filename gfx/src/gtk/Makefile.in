@@ -60,6 +60,7 @@ CSRCS		= nsPrintdGTK.c
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
 		nsFontFreeType.cpp \
+		nsFreeType.cpp \
 		nsFT2FontNode.cpp \
 		nsFT2FontCatalog.cpp \
 		nsX11AlphaBlend.cpp \
@@ -88,9 +89,6 @@ CPPSRCS		+= \
 		$(X11SHARED_LCPPSRCS) \
 		nsFontMetricsGTK.cpp \
 		nsGdkUtils.cpp
-ifdef MOZ_ENABLE_FREETYPE2
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) -lgfxft2
-endif
 endif
 
 ifdef MOZ_ENABLE_XFT
@@ -189,7 +187,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		-I$(srcdir)/../shared \
-		-I$(srcdir)/../freetype \
 		-I$(srcdir)/../x11shared \
 		$(NULL)
 
