@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsMarkupDocument.h"
+#include "nsHTMLDocument.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
@@ -48,20 +48,26 @@
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
-class nsImageDocument : public nsMarkupDocument {
+class nsImageDocument : public nsHTMLDocument {
 public:
   nsImageDocument();
   virtual ~nsImageDocument();
 
-  NS_IMETHOD StartDocumentLoad(nsIURL* aUrl, 
+  NS_IMETHOD StartDocumentLoad(nsIURL* aURL, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener);
 
   nsresult CreateSyntheticDocument();
+
+  nsresult StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener);
+
   void StartLayout();
 
-  nsIHTMLStyleSheet* mAttrStyleSheet;
+  nsIImageRequest* mImageRequest;
+  nscolor mBlack;
 };
+
+//----------------------------------------------------------------------
 
 class ImageListener : public nsIStreamListener {
 public:
@@ -79,9 +85,8 @@ public:
                              PRInt32 aCount);
 
   nsImageDocument* mDocument;
+  nsIStreamListener* mNextStream;
 };
-
-//----------------------------------------------------------------------
 
 ImageListener::ImageListener(nsImageDocument* aDoc)
 {
@@ -93,6 +98,7 @@ ImageListener::ImageListener(nsImageDocument* aDoc)
 ImageListener::~ImageListener()
 {
   NS_RELEASE(mDocument);
+  NS_IF_RELEASE(mNextStream);
 }
 
 NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
@@ -100,50 +106,59 @@ NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
 NS_IMETHODIMP
 ImageListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-  return NS_OK;
+  mDocument->StartImageLoad(aURL, mNextStream);
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  return mNextStream->OnStartBinding(aURL, aContentType);
 }
 
 NS_IMETHODIMP
 ImageListener::OnProgress(nsIURL* aURL, PRInt32 aProgress,
                           PRInt32 aProgressMax)
 {
-  return NS_OK;
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  return mNextStream->OnProgress(aURL, aProgress, aProgressMax);
 }
 
 NS_IMETHODIMP
 ImageListener::OnStatus(nsIURL* aURL, const nsString &aMsg)
 {
-  return NS_OK;
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  return mNextStream->OnStatus(aURL, aMsg);
 }
 
 NS_IMETHODIMP
 ImageListener::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
                              const nsString& aMsg)
 {
-  mDocument->StartLayout();
-  mDocument->CreateSyntheticDocument();
-  return NS_OK;
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  return mNextStream->OnStopBinding(aURL, aStatus, aMsg);
 }
 
 NS_IMETHODIMP
 ImageListener::GetBindInfo(nsIURL* aURL)
 {
-  return NS_OK;
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  return mNextStream->GetBindInfo(aURL);
 }
 
 NS_IMETHODIMP
 ImageListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
                                PRInt32 aCount)
 {
-  for (;;) {
-    PRInt32 len;
-    char buf[1000];
-    nsresult rv = aStream->Read(buf, 0, sizeof(buf), &len);
-    if ((NS_OK != rv) || (0 == len)) {
-      break;
-    }
+  if (nsnull == mNextStream) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_OK;
+  return mNextStream->OnDataAvailable(aURL, aStream, aCount);
 }
 
 //----------------------------------------------------------------------
@@ -157,10 +172,13 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult)
 
 nsImageDocument::nsImageDocument()
 {
+  mImageRequest = nsnull;
+  mBlack = NS_RGB(0, 0, 0);
 }
 
 nsImageDocument::~nsImageDocument()
 {
+  NS_IF_RELEASE(mImageRequest);
 }
 
 NS_IMETHODIMP
@@ -172,16 +190,68 @@ nsImageDocument::StartDocumentLoad(nsIURL* aURL,
   mDocumentURL = aURL;
   NS_IF_ADDREF(aURL);
 
+  // Create style attribute style sheet
+  nsresult rv;
   nsIHTMLCSSStyleSheet* styleAttrSheet;
-  if (NS_OK == NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL)) {
-    AddStyleSheet(styleAttrSheet); // tell the world about our new style sheet
-    NS_RELEASE(styleAttrSheet);
+  rv = NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL);
+  if (NS_OK != rv) {
+    return rv;
   }
-  if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL)) {
-    AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+  AddStyleSheet(styleAttrSheet);
+  NS_RELEASE(styleAttrSheet);
+
+  // Create html attribute style sheet
+  rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  AddStyleSheet(mAttrStyleSheet);
+
+  // Create synthetic document
+  rv = CreateSyntheticDocument();
+  if (NS_OK != rv) {
+    return rv;
   }
 
   *aDocListener = new ImageListener(this);
+
+  return NS_OK;
+}
+
+nsresult
+nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
+{
+  nsresult rv = NS_OK;
+  aListener = nsnull;
+
+  // Tell image group to load the stream now. This will get the image
+  // hooked up to the open stream and return the underlying listener
+  // so that we can pass it back upwards.
+  nsIPresShell* shell = GetShellAt(0);
+  if (nsnull != shell) {
+    nsIPresContext* cx = nsnull;
+    cx = shell->GetPresContext();
+    if (nsnull != cx) {
+      nsIImageGroup* group = nsnull;
+      cx->GetImageGroup(group);
+      if (nsnull != group) {
+        const char* spec;
+        spec = aURL->GetSpec();
+        nscolor black = NS_RGB(0, 0, 0);
+        nsIStreamListener* listener = nsnull;
+        rv = group->GetImageFromStream(spec, nsnull, &mBlack,
+                                       0, 0, 0,
+                                       mImageRequest, listener);
+        aListener = listener;
+        NS_RELEASE(group);
+      }
+      NS_RELEASE(cx);
+    }
+    NS_RELEASE(shell);
+  }
+
+  // Finally, start the layout going
+  StartLayout();
 
   return NS_OK;
 }
@@ -228,7 +298,7 @@ nsImageDocument::CreateSyntheticDocument()
     return rv;
   }
   image->SetDocument(this);
-  // XXX?
+
   nsAutoString src;
   mDocumentURL->ToString(src);
   nsHTMLValue val(src);
@@ -243,8 +313,6 @@ nsImageDocument::CreateSyntheticDocument()
   NS_RELEASE(center);
   NS_RELEASE(body);
   NS_RELEASE(root);
-
-  StartLayout();
 
   return NS_OK;
 }
