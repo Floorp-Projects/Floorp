@@ -342,7 +342,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
 }
 
 
-// nsIBaseStream interface
+// nsIInputStream interface
 NS_IMETHODIMP mozXMLTermStream::Close(void)
 {
   nsresult result;
