@@ -21,7 +21,10 @@
 #include "nsGuiManagerFactory.h"
 #include "nsIEditor.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+
+static NS_DEFINE_CID(kComponentManagerCID,   NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
@@ -122,14 +125,41 @@ nsGuiManagerFactory::~nsGuiManagerFactory()
   nsComponentManager::UnregisterFactory(kIGuiManagerFactoryIID, (nsIFactory *)this); //we are out of ref counts anyway
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::RegisterComponent(kIGuiManagerFactoryIID,
-                                       NULL, NULL, path,
-                                       PR_TRUE, PR_TRUE);
+  nsresult rv;
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsComponentManager::RegisterComponent(kIGuiManagerFactoryIID,
+                                             NULL, NULL, path,
+                                             PR_TRUE, PR_TRUE);
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::UnregisterFactory(kIGuiManagerFactoryIID, path);
+  nsresult rv;
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsComponentManager::UnregisterFactory(kIGuiManagerFactoryIID, path);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
