@@ -96,6 +96,7 @@
 
 // DOM core includes
 #include "nsDOMError.h"
+#include "nsIDOMDOMException.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -254,6 +255,7 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
+#include "nsIDOMRangeException.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
@@ -772,6 +774,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(RangeException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2032,6 +2036,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(RangeException, nsIDOMRangeException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRangeException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

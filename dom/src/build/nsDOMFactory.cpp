@@ -47,8 +47,8 @@
 #include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
 #include "nsIExceptionService.h"
-
 #include "nsScriptNameSpaceManager.h"
+#include "nsDOMException.h"
 
 extern nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                                        nsIScriptContext **aContext);
@@ -63,6 +63,10 @@ extern nsresult NS_NewScriptGlobalObject(PRBool aIsChrome,
 extern nsresult NS_NewDOMException(nsresult aResult,
                                    nsIException* aDefaultException,
                                    nsIException** aException);
+
+extern nsresult NS_NewRangeException(nsresult aResult,
+                                     nsIException* aDefaultException,
+                                     nsIException** aException);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -121,6 +125,7 @@ nsDOMSOFactory::nsDOMSOFactory()
 
   if (xs) {
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_RANGE);
   }
 }
 
@@ -240,6 +245,9 @@ NS_IMETHODIMP
 nsDOMSOFactory::GetException(nsresult result, nsIException *aDefaultException,
                              nsIException **_retval)
 {
+  if (NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_RANGE) {
+    return NS_NewRangeException(result, aDefaultException, _retval);
+  }
   return NS_NewDOMException(result, aDefaultException, _retval);
 }
 
@@ -268,12 +276,18 @@ nsDOMSOFactory::RegisterDOMClassInfo(const char *aName,
 //////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException);
 
 static const nsModuleComponentInfo gDOMModuleInfo[] = {
   { "Script Object Factory",
     NS_DOM_SCRIPT_OBJECT_FACTORY_CID,
     nsnull,
     nsDOMSOFactoryConstructor
+  },
+  { "Base DOM Exception",
+    NS_BASE_DOM_EXCEPTION_CID,
+    nsnull,
+    nsBaseDOMExceptionConstructor
   }
 };
 

@@ -33,3 +33,4 @@ nsIScriptNameSpaceManager.h
 nsDOMError.h
 nsIJSEventListener.h
 nsIDOMClassInfo.h
+nsIBaseDOMException.h

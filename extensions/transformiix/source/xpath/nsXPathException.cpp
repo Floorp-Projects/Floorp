@@ -40,8 +40,59 @@
 #include "nsXPathException.h"
 #include "nsCRT.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIBaseDOMException.h"
 #include "nsString.h"
 #include "prprf.h"
+
+static const char* kInvalidExpressionErrName = "NS_ERROR_DOM_INVALID_EXPRESSION_ERR";
+static const char* kInvalidExpressionErrMessage = NS_ERROR_DOM_INVALID_EXPRESSION_MSG;
+static const char* kTypeErrName = "NS_ERROR_DOM_TYPE_ERR";
+static const char* kTypeErrMessage = NS_ERROR_DOM_TYPE_MSG;
+
+static void
+TXResultToNameAndMessage(nsresult aNSResult,
+                         const char** aName,
+                         const char** aMessage);
+
+void
+TXResultToNameAndMessage(nsresult aNSResult,
+                         const char** aName,
+                         const char** aMessage)
+{
+    if (aNSResult == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
+        *aName = kInvalidExpressionErrName;
+        *aMessage = kInvalidExpressionErrMessage;
+    }
+    else if (aNSResult == NS_ERROR_DOM_TYPE_ERR) {
+        *aName = kTypeErrName;
+        *aMessage = kTypeErrMessage;
+    }
+    else {
+        NS_WARNING("Huh, someone is throwing non-XPath DOM errors using the XPath DOM module!");
+        *aName = nsnull;
+        *aMessage = nsnull;
+    }
+
+    return;
+}
+
+
+IMPL_DOM_EXCEPTION_HEAD(nsXPathException, nsIDOMXPathException)
+  NS_DECL_NSIDOMXPATHEXCEPTION
+IMPL_DOM_EXCEPTION_TAIL(nsXPathException, nsIDOMXPathException, XPathException,
+                        NS_ERROR_MODULE_DOM_XPATH, TXResultToNameAndMessage)
+
+NS_IMETHODIMP
+nsXPathException::GetCode(PRUint16* aCode)
+{
+    NS_ENSURE_ARG_POINTER(aCode);
+    nsresult result;
+    mBase->GetResult(&result);
+    *aCode = NS_ERROR_GET_CODE(result);
+
+    return NS_OK;
+}
+
 
 NS_IMPL_ISUPPORTS1(nsXPathExceptionProvider, nsIExceptionProvider)
 
@@ -61,222 +112,8 @@ nsXPathExceptionProvider::GetException(nsresult aNSResult,
 {
     NS_ENSURE_ARG_POINTER(aException);
 
-    *aException = new nsXPathException(aNSResult, aDefaultException);
+    NS_NewXPathException(aNSResult, aDefaultException, aException);
     NS_ENSURE_TRUE(*aException, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_IF_ADDREF(*aException);
-
     return NS_OK;
 }
-
-NS_IMPL_ADDREF(nsXPathException)
-NS_IMPL_RELEASE(nsXPathException)
-NS_INTERFACE_MAP_BEGIN(nsXPathException)
-  NS_INTERFACE_MAP_ENTRY(nsIException)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathException)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathException)
-NS_INTERFACE_MAP_END
-
-nsXPathException::nsXPathException(nsresult aNSResult, nsIException* aInner)
-    : mResult(aNSResult),
-      mInner(aInner)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsXPathException::~nsXPathException()
-{
-}
-
-NS_IMETHODIMP
-nsXPathException::GetCode(PRUint16* aCode)
-{
-    NS_ENSURE_ARG_POINTER(aCode);
-
-    if (NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM_XPATH) {
-        *aCode = NS_ERROR_GET_CODE(mResult);
-    } else {
-        NS_WARNING("Non DOM nsresult passed to a DOM exception!");
-
-        *aCode = (PRUint32)mResult;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetMessage(char **aMessage)
-{
-    NS_ENSURE_ARG_POINTER(aMessage);
-
-    if (mResult == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
-        *aMessage = nsCRT::strdup(NS_ERROR_DOM_INVALID_EXPRESSION_MSG);
-    }
-    else if (mResult == NS_ERROR_DOM_TYPE_ERR) {
-        *aMessage = nsCRT::strdup(NS_ERROR_DOM_TYPE_MSG);
-    }
-    else {
-        *aMessage = nsnull;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetResult(PRUint32* aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = mResult;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetName(char **aName)
-{
-    NS_ENSURE_ARG_POINTER(aName);
-
-    if (mResult == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
-        *aName = nsCRT::strdup("NS_ERROR_DOM_INVALID_EXPRESSION_ERR");
-    }
-    else if (mResult == NS_ERROR_DOM_TYPE_ERR) {
-        *aName = nsCRT::strdup("NS_ERROR_DOM_TYPE_ERR");
-    }
-    else {
-        *aName = nsnull;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetFilename(char **aFilename)
-{
-    if (mInner) {
-        return mInner->GetFilename(aFilename);
-    }
-
-    NS_ENSURE_ARG_POINTER(aFilename);
-
-    *aFilename = nsnull;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetLineNumber(PRUint32 *aLineNumber)
-{
-    if (mInner) {
-        return mInner->GetLineNumber(aLineNumber);
-    }
-
-    NS_ENSURE_ARG_POINTER(aLineNumber);
-
-    *aLineNumber = 0;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetColumnNumber(PRUint32 *aColumnNumber)
-{
-    if (mInner) {
-        return mInner->GetColumnNumber(aColumnNumber);
-    }
-
-    NS_ENSURE_ARG_POINTER(aColumnNumber);
-
-    *aColumnNumber = 0;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetLocation(nsIStackFrame **aLocation)
-{
-    if (mInner) {
-        return mInner->GetLocation(aLocation);
-    }
-
-    NS_ENSURE_ARG_POINTER(aLocation);
-
-    *aLocation = nsnull;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetInner(nsIException **aInner)
-{
-    NS_ENSURE_ARG_POINTER(aInner);
-
-    *aInner = nsnull;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::GetData(nsISupports **aData)
-{
-    if (mInner) {
-        return mInner->GetData(aData);
-    }
-
-    NS_ENSURE_ARG_POINTER(aData);
-
-    *aData = nsnull;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathException::ToString(char **aReturn)
-{
-  *aReturn = nsnull;
-
-  static const char defaultMsg[] = "<no message>";
-  static const char defaultLocation[] = "<unknown>";
-  static const char defaultName[] = "<unknown>";
-  static const char format[] =
-    "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%x (%s)\"  location: \"%s\"]";
-
-  nsCAutoString location;
-
-  if (mInner) {
-    nsXPIDLCString filename;
-
-    mInner->GetFilename(getter_Copies(filename));
-
-    if (!filename.IsEmpty()) {
-      PRUint32 line_nr = 0;
-
-      mInner->GetLineNumber(&line_nr);
-
-      char *temp = PR_smprintf("%s Line: %d", filename.get(), line_nr);
-      if (temp) {
-        location.Assign(temp);
-        PR_smprintf_free(temp);
-      }
-    }
-  }
-
-  if (location.IsEmpty()) {
-    location = defaultLocation;
-  }
-
-  char* msg;
-  char* resultName;
-  PRUint16 code;
-
-  GetMessage(&msg);
-  GetName(&resultName);
-  GetCode(&code);
-
-  *aReturn = PR_smprintf(format, (msg ? msg : defaultMsg), code, mResult,
-                         (resultName ? resultName : defaultName), location.get());
-
-  return *aReturn ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-

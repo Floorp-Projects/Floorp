@@ -252,6 +252,8 @@ enum nsDOMClassInfoID {
   // RGBColor object used by getComputedStyle
   eDOMClassInfo_CSSRGBColor_id,
 
+  eDOMClassInfo_RangeException_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

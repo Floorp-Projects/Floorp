@@ -37,12 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMDOMException.h"
-#include "nsDOMError.h"
-#include "nsDOMClassInfo.h"
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsDOMClassInfo.h"
+#include "nsDOMError.h"
+#include "nsDOMException.h"
+#include "nsIDOMDOMException.h"
+#include "nsIDOMRangeException.h"
+#include "nsString.h"
 #include "prprf.h"
-
 
 #define DOM_MSG_DEF(val, message) {(val), #val, message},
 
@@ -58,15 +61,23 @@ static struct ResultStruct
 
 #undef DOM_MSG_DEF
 
+static void
+NSResultToNameAndMessage(nsresult aNSResult,
+                         const char** aName,
+                         const char** aMessage);
 
-static const ResultStruct *
-NSResultToResultStruct(nsresult aNSResult)
+void
+NSResultToNameAndMessage(nsresult aNSResult,
+                         const char** aName,
+                         const char** aMessage)
 {
   ResultStruct* result_struct = gDOMErrorMsgMap;
 
   while (result_struct->mName) {
     if (aNSResult == result_struct->mNSResult) {
-      return result_struct;
+      *aName = result_struct->mName;
+      *aMessage = result_struct->mMessage;
+      return;
     }
 
     ++result_struct;
@@ -74,92 +85,60 @@ NSResultToResultStruct(nsresult aNSResult)
 
   NS_WARNING("Huh, someone is throwing non-DOM errors using the DOM module!");
 
-  return nsnull;
+  return;
 }
 
-
-class nsDOMException : public nsIException,
-                       public nsIDOMDOMException
-{
-public:
-  nsDOMException(nsresult aNSResult, nsIException* aInner);
-  virtual ~nsDOMException();
-
-  NS_DECL_ISUPPORTS
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsDOMException, nsIDOMDOMException)
   NS_DECL_NSIDOMDOMEXCEPTION
-
-  // nsIException
-  NS_DECL_NSIEXCEPTION
-
-protected:
-  nsresult mResult;
-  nsCOMPtr<nsIException> mInner;
-};
-
-nsresult
-NS_NewDOMException(nsresult aNSResult, nsIException* aDefaultException,
-                   nsIException** aException)
-{
-  *aException = new nsDOMException(aNSResult, aDefaultException);
-  NS_ENSURE_TRUE(*aException, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*aException);
-
-  return NS_OK;
-}
-
-
-nsDOMException::nsDOMException(nsresult aNSResult, nsIException* aInner)
-  : mResult(aNSResult), mInner(aInner)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsDOMException::~nsDOMException()
-{
-}
-
-// XPConnect interface list for nsDOMException
-NS_CLASSINFO_MAP_BEGIN(DOMException)
-  NS_CLASSINFO_MAP_ENTRY(nsIException)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDOMException)
-NS_CLASSINFO_MAP_END
-
-
-// QueryInterface implementation for nsDOMException
-NS_INTERFACE_MAP_BEGIN(nsDOMException)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
-  NS_INTERFACE_MAP_ENTRY(nsIException)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMException)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMException)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsDOMException)
-NS_IMPL_RELEASE(nsDOMException)
-
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsDOMException, nsIDOMDOMException,
+                                 DOMException, NS_ERROR_MODULE_DOM,
+                                 NSResultToNameAndMessage)
 
 NS_IMETHODIMP
 nsDOMException::GetCode(PRUint32* aCode)
 {
-  if (NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM) {
-    *aCode = NS_ERROR_GET_CODE(mResult);
-  } else {
-    NS_WARNING("Non DOM nsresult passed to a DOM exception!");
-
-    *aCode = (PRUint32)mResult;
-  }
+  NS_ENSURE_ARG_POINTER(aCode);
+  nsresult result;
+  GetResult(&result);
+  *aCode = NS_ERROR_GET_CODE(result);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMException::GetMessage(char **aMessage)
-{
-  const ResultStruct *rs = NSResultToResultStruct(mResult);
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsRangeException, nsIDOMRangeException)
+  NS_DECL_NSIDOMRANGEEXCEPTION
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsRangeException, nsIDOMRangeException,
+                                 RangeException, NS_ERROR_MODULE_DOM_RANGE,
+                                 NSResultToNameAndMessage)
 
-  if (rs) {
-    *aMessage = nsCRT::strdup(rs->mMessage);
+NS_IMETHODIMP
+nsRangeException::GetCode(PRUint16* aCode)
+{
+  NS_ENSURE_ARG_POINTER(aCode);
+  nsresult result;
+  GetResult(&result);
+  *aCode = NS_ERROR_GET_CODE(result);
+
+  return NS_OK;
+}
+
+
+nsBaseDOMException::nsBaseDOMException()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsBaseDOMException::~nsBaseDOMException()
+{
+}
+
+NS_IMPL_ISUPPORTS2(nsBaseDOMException, nsIException, nsIBaseDOMException);
+
+NS_IMETHODIMP
+nsBaseDOMException::GetMessage(char **aMessage)
+{
+  if (mMessage) {
+    *aMessage = nsCRT::strdup(mMessage);
   } else {
     *aMessage = nsnull;
   }
@@ -168,7 +147,7 @@ nsDOMException::GetMessage(char **aMessage)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetResult(PRUint32* aResult)
+nsBaseDOMException::GetResult(PRUint32* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -178,14 +157,12 @@ nsDOMException::GetResult(PRUint32* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetName(char **aName)
+nsBaseDOMException::GetName(char **aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
 
-  const ResultStruct *rs = NSResultToResultStruct(mResult);
-
-  if (rs) {
-    *aName = nsCRT::strdup(rs->mName);
+  if (mName) {
+    *aName = nsCRT::strdup(mName);
   } else {
     *aName = nsnull;
   }
@@ -194,7 +171,7 @@ nsDOMException::GetName(char **aName)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetFilename(char **aFilename)
+nsBaseDOMException::GetFilename(char **aFilename)
 {
   if (mInner) {
     return mInner->GetFilename(aFilename);
@@ -208,7 +185,7 @@ nsDOMException::GetFilename(char **aFilename)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetLineNumber(PRUint32 *aLineNumber)
+nsBaseDOMException::GetLineNumber(PRUint32 *aLineNumber)
 {
   if (mInner) {
     return mInner->GetLineNumber(aLineNumber);
@@ -222,7 +199,7 @@ nsDOMException::GetLineNumber(PRUint32 *aLineNumber)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetColumnNumber(PRUint32 *aColumnNumber)
+nsBaseDOMException::GetColumnNumber(PRUint32 *aColumnNumber)
 {
   if (mInner) {
     return mInner->GetColumnNumber(aColumnNumber);
@@ -236,7 +213,7 @@ nsDOMException::GetColumnNumber(PRUint32 *aColumnNumber)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetLocation(nsIStackFrame **aLocation)
+nsBaseDOMException::GetLocation(nsIStackFrame **aLocation)
 {
   if (mInner) {
     return mInner->GetLocation(aLocation);
@@ -250,7 +227,7 @@ nsDOMException::GetLocation(nsIStackFrame **aLocation)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetInner(nsIException **aInner)
+nsBaseDOMException::GetInner(nsIException **aInner)
 {
   NS_ENSURE_ARG_POINTER(aInner);
 
@@ -260,7 +237,7 @@ nsDOMException::GetInner(nsIException **aInner)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetData(nsISupports **aData)
+nsBaseDOMException::GetData(nsISupports **aData)
 {
   if (mInner) {
     return mInner->GetData(aData);
@@ -274,11 +251,9 @@ nsDOMException::GetData(nsISupports **aData)
 }
 
 NS_IMETHODIMP
-nsDOMException::ToString(char **aReturn)
+nsBaseDOMException::ToString(char **aReturn)
 {
   *aReturn = nsnull;
-
-  const ResultStruct *rs = NSResultToResultStruct(mResult);
 
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
@@ -310,14 +285,24 @@ nsDOMException::ToString(char **aReturn)
     location = defaultLocation;
   }
 
-  const char* msg = rs ? rs->mMessage : defaultMsg;
-  const char* resultName = rs ? rs->mName : defaultName;
-  PRUint32 code;
-
-  GetCode(&code);
+  const char* msg = mMessage ? mMessage : defaultMsg;
+  const char* resultName = mName ? mName : defaultName;
+  PRUint32 code = NS_ERROR_GET_CODE(mResult);
 
   *aReturn = PR_smprintf(format, msg, code, mResult, resultName,
                          location.get());
 
   return *aReturn ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsBaseDOMException::Init(nsresult aNSResult, const char* aName,
+                         const char* aMessage,
+                         nsIException* aDefaultException)
+{
+  mResult = aNSResult;
+  mName = aName;
+  mMessage = aMessage;
+  mInner = aDefaultException;
+  return NS_OK;
 }
