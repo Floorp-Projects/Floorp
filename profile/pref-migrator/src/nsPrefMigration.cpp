@@ -101,11 +101,15 @@ NS_IMPL_RELEASE(nsPrefMigration)
  *
  *-------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult *aResult)
+nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, nsresult *aResult)
 {
 
-  char *oldMailPath, *oldNewsPath;
-  char *newMailPath, *newNewsPath;
+  char *oldMailPathStr, *oldNewsPathStr;
+  char *newMailPathStr, *newNewsPathStr;
+
+  nsFileSpec oldMailPath, oldNewsPath;
+  nsFileSpec newMailPath, newNewsPath;
+
   PRUint32 totalMailSize = 0, totalNewsSize = 0, totalProfileSize = 0, totalSize = 0,
            numberOfMailFiles = 0, numberOfNewsFiles = 0, numberOfProfileFiles = 0;
   PRInt32 oldDirLength = 0;
@@ -114,36 +118,38 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
   printf("*Entered Actual Migration routine*\n");
 #endif
 
-  if((newMailPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+
+  if((newMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(newMailPath);
-    *aResult = NS_ERROR_FAILURE;
+    PR_Free(newMailPathStr);
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
 
-  if((newNewsPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(newNewsPath);
-    *aResult = NS_ERROR_FAILURE;
+    PR_Free(newNewsPathStr);
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
 
-  if((oldMailPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(oldMailPath);
-    *aResult = NS_ERROR_FAILURE;
+    PR_Free(oldMailPathStr);
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
 
-  if((oldNewsPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(oldNewsPath);
-    *aResult = NS_ERROR_FAILURE;
+    PR_Free(oldNewsPathStr);
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
+
 
   /* Create the new profile tree for 5.x */
-  nsresult success = CreateNewUser5Tree(profilePath, newProfilePath);
+  nsresult success = CreateNewUser5Tree(oldProfilePathStr, newProfilePathStr);
   if (success != NS_OK)
   {
     *aResult = success;
@@ -151,31 +157,41 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
   }
 
   /* Create the new mail directory from the setting in prefs.js or a default */
-  if(GetDirFromPref(newProfilePath, "mail.directory", newMailPath, oldMailPath) != NS_OK)
+  if(GetDirFromPref(newProfilePathStr, "mail.directory", newMailPathStr, oldMailPathStr) == NS_OK)
   {
-    /* PREF_GetDefaultCharPref("mail.directory", oldMailPath, &oldDirLength); */
-    PL_strcpy(oldMailPath, profilePath);
-    PL_strcat(oldMailPath, "\\Mail\0");
-    PL_strcpy(newMailPath, newProfilePath);
-    PL_strcat(newMailPath, "\\Mail\0");
+    /* convert back to nsFileSpec */
+    oldMailPath = oldMailPathStr;
+    newMailPath = newMailPathStr;
+  }
+  else
+  {
+    /* use the default locations */
+    oldMailPath = oldProfilePathStr;
+    oldMailPath += "Mail";
+    newMailPath = newProfilePathStr;
+    newMailPath += "Mail";
   }
 
   /* Create the new news directory from the setting in prefs.js or a default */
-  if(GetDirFromPref(newProfilePath, "news.directory", newNewsPath, oldNewsPath) != NS_OK)
+  if(GetDirFromPref(newProfilePathStr, "news.directory", newNewsPathStr, oldNewsPathStr) == NS_OK)
   {
-    /* PREF_GetDefaultCharPref("news.directory", oldNewsPath, &oldDirLength); */
-    PL_strcpy(oldNewsPath, profilePath);
-    PL_strcat(oldNewsPath, "\\News\0");
-    PL_strcpy(newNewsPath, newProfilePath);
-    PL_strcat(newNewsPath, "\\News\0");
+    oldNewsPath = oldNewsPathStr;
+    newNewsPath = newNewsPathStr;
+  }
+  else
+  {
+    oldNewsPath = oldProfilePathStr;
+    oldNewsPath += "News";
+    newNewsPath = newProfilePathStr;
+    newNewsPath += "News";
   }
 
-  nsFileSpec inputPath(profilePath);
-  success = GetSizes(inputPath, PR_FALSE, &totalProfileSize);
-  inputPath = oldMailPath;
-  success = GetSizes(inputPath, PR_TRUE, &totalMailSize);
-  inputPath = oldNewsPath;
-  success = GetSizes(inputPath, PR_TRUE, &totalNewsSize);
+  nsFileSpec oldProfilePath(oldProfilePathStr); /* nsFileSpec version of the profile's 4.x root dir */
+  nsFileSpec newProfilePath(newProfilePathStr); /* Ditto for the profile's new 5.x root dir         */
+  
+  success = GetSizes(oldProfilePath, PR_FALSE, &totalProfileSize);
+  success = GetSizes(oldMailPath, PR_TRUE, &totalMailSize);
+  success = GetSizes(oldNewsPath, PR_TRUE, &totalNewsSize);
 
   if(CheckForSpace(newMailPath, totalMailSize) != NS_OK)
 	  return -1;  /* Need error code for not enough space */
@@ -186,27 +202,21 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
   PR_MkDir(newMailPath, PR_RDWR);
   PR_MkDir(newNewsPath, PR_RDWR);
 
-  nsFileSpec oldPath(profilePath);
-  nsFileSpec newPath(newProfilePath);
-  success = DoTheCopy(oldPath, newPath, PR_FALSE);
+
+  success = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
   
-  oldPath = oldMailPath;
-  newPath = newMailPath;
-  success = DoTheCopy(oldPath, newPath, PR_TRUE);
+  success = DoTheCopy(oldMailPath, newMailPath, PR_TRUE);
 
-  oldPath = oldNewsPath;
-  newPath = newNewsPath;
-  success = DoTheCopy(oldPath, newPath, PR_TRUE);
+  success = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
 
-//  success = DoTheCopy(profilePath, newProfilePath, profileFileArray);
-//  success = DoTheCopy(oldMailPath, newMailPath, mailFileArray);
-//  success = DoTheCopy(oldNewsPath, newNewsPath, newsFileArray);
+  
+  success = DoSpecialUpdates(newProfilePath);
 
-  //PR_Free(newProfilePath);
-  PR_Free(oldMailPath);
-  PR_Free(oldNewsPath);
-  PR_Free(newMailPath);
-  PR_Free(newNewsPath);
+
+  PR_Free(oldMailPathStr);
+  PR_Free(oldNewsPathStr);
+  PR_Free(newMailPathStr);
+  PR_Free(newNewsPathStr);
 
   return NS_OK;
 }
@@ -227,25 +237,29 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   if ((prefsFile = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
   {
     PR_Free(prefsFile);
-    return -1;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PL_strcpy(prefsFile, oldProfilePath);
-  PL_strcat(prefsFile, "\\prefs.js\0");
+  //PL_strcpy(prefsFile, oldProfilePath);
+  //PL_strcat(prefsFile, "\\prefs.js\0");
 
-  nsFileSpec oldPrefsFile(prefsFile);
+  nsFileSpec oldPrefsFile(oldProfilePath);
+  oldPrefsFile += "prefs.js";
+
   nsFileSpec newPrefsFile(newProfilePath);
       
   if (!newPrefsFile.Exists())
   {
-	newPrefsFile.CreateDirectory();
+	  newPrefsFile.CreateDirectory();
   }
 
   oldPrefsFile.Copy(newPrefsFile);
   newPrefsFile += "prefs.js";
   newPrefsFile.Rename("prefs50.js");
 
-  //PR_Free(users5Dir);
+  //const char* newPrefsFileStr = newPrefsFile.GetCString();
+  PREF_Init(newPrefsFile);
+
   PR_Free(prefsFile);
 
   return NS_OK;
@@ -272,28 +286,29 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
   if((prefs_jsPath = (char*) PR_MALLOC(PL_strlen(newProfilePath) + 32)) == NULL)
   {
     PR_Free(prefs_jsPath);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PL_strcpy(prefs_jsPath, newProfilePath);
-  PL_strcat(prefs_jsPath, "\\prefs.js\0");
+  //PL_strcpy(prefs_jsPath, newProfilePath);
+  //PL_strcat(prefs_jsPath, "\\prefs50.js\0");
 
-  if(PREF_Init(prefs_jsPath))
-  {
-    if(PREF_GetCharPref(pref, oldPath, &oldDirLength) != 0) /* found the pref */
+  //if(PREF_Init(prefs_jsPath))
+  //{
+    if(PREF_GetCharPref(pref, oldPath, &oldDirLength) == PREF_OK) /* found the pref */
     {
       PL_strcpy(newPath, oldPath);
       PL_strcat(newPath, "5");
       PREF_SetCharPref (pref, newPath); 
       PREF_SavePrefFile();
       PR_Free(prefs_jsPath);
-
       return NS_OK;
     }
-    PR_Free(prefs_jsPath);
-    return NS_ERROR_ABORT;
-  }
-  return NS_ERROR_FAILURE;   /* need error code for pref file not found */
+    else
+      return NS_ERROR_ABORT;
+  //}
+  
+  PR_Free(prefs_jsPath);
+  return NS_ERROR_ABORT;
 }
 
 
@@ -354,11 +369,11 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
  *
  *--------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::CheckForSpace(char* newProfilePath, PRFloat64 requiredSpace)
+nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpace)
 {
-  nsFileSpec drive(newProfilePath);
+//  nsFileSpec drive(newProfilePath);
 
-  if (drive.GetDiskSpaceAvailable() < requiredSpace)
+  if (newProfilePath.GetDiskSpaceAvailable() < requiredSpace)
     return NS_ERROR_FAILURE;
   return NS_OK;
 }
@@ -380,7 +395,6 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
   int i = 0;
   char* folderName;
   nsAutoString fileOrDirNameStr;
-  PRInt32 len;
  
   for (nsDirectoryIterator dir(oldPath); dir.Exists(); dir++)
   {
@@ -412,6 +426,21 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
   return NS_OK;
 }
 
+
+/*----------------------------------------------------------------------------
+ * DoSpecialUpdates updates is a routine that does some miscellaneous updates 
+ * like renaming certain files, etc.
+ *
+ *--------------------------------------------------------------------------*/
+nsresult
+nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
+{
+  nsFileSpec bookmarkFile = profilePath;
+  bookmarkFile += "bookmark.htm";
+  if (bookmarkFile.Exists())
+    bookmarkFile.Rename("bookmark.html");
+  return NS_OK;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
