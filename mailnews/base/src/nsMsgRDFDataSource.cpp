@@ -226,6 +226,14 @@ nsMsgRDFDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_ret
 }
 
 
+/* nsISimpleEnumerator GetAllCommands (in nsIRDFResource aSource); */
+NS_IMETHODIMP
+nsMsgRDFDataSource::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+    return NS_RDF_NO_VALUE;
+}
+
+
 /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 NS_IMETHODIMP
 nsMsgRDFDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval)

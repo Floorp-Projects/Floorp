@@ -442,6 +442,14 @@ NS_IMETHODIMP nsMessageViewDataSource::GetAllCommands(nsIRDFResource* source,
 	else
 		return NS_OK;
 }
+NS_IMETHODIMP nsMessageViewDataSource::GetAllCmds(nsIRDFResource* source,
+							nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+{
+	if(mDataSource)
+		return mDataSource->GetAllCmds(source, commands);
+	else
+		return NS_OK;
+}
 
 NS_IMETHODIMP nsMessageViewDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 							  nsIRDFResource*   aCommand,

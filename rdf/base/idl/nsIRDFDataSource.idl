@@ -187,5 +187,11 @@ interface nsIRDFDataSource : nsISupports
     void DoCommand(in nsISupportsArray aSources,
                    in nsIRDFResource   aCommand,
                    in nsISupportsArray aArguments);
+
+    /**
+     * Returns the set of all commands defined for a given source.
+     */
+    nsISimpleEnumerator GetAllCmds(in nsIRDFResource aSource);
+
 };
 

@@ -463,6 +463,14 @@ nsRDFDOMDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_ret
 }
 
 
+/* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
+NS_IMETHODIMP
+nsRDFDOMDataSource::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+    return NS_RDF_NO_VALUE;
+}
+
+
 /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 NS_IMETHODIMP
 nsRDFDOMDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval)

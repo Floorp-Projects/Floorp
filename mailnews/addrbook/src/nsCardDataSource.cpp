@@ -504,6 +504,14 @@ nsABCardDataSource::GetAllCommands(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
+nsABCardDataSource::GetAllCmds(nsIRDFResource* source,
+                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+{
+  NS_NOTYETIMPLEMENTED("sorry!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsABCardDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                         nsIRDFResource*   aCommand,
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,

@@ -531,6 +531,14 @@ nsABDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
+nsABDirectoryDataSource::GetAllCmds(nsIRDFResource* source,
+                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+{
+  NS_NOTYETIMPLEMENTED("sorry!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                         nsIRDFResource*   aCommand,
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -146,6 +146,8 @@ NS_NewRelatedLinksStreamListener(nsIRDFDataSource* aDataSource,
 	 return NS_OK;
 }
 
+
+
 RelatedLinksStreamListener::RelatedLinksStreamListener(nsIRDFDataSource *aDataSource)
 	 : mDataSource(dont_QueryInterface(aDataSource)),
 	   mLine(nsnull)
@@ -176,6 +178,7 @@ RelatedLinksStreamListener::~RelatedLinksStreamListener()
 }
 
 
+
 NS_METHOD
 RelatedLinksStreamListener::Init()
 {
@@ -201,6 +204,7 @@ RelatedLinksStreamListener::Init()
 }
 
 
+
 NS_METHOD
 RelatedLinksStreamListener::CreateAnonymousResource(const nsString& aPrefixURI,
 						     nsCOMPtr<nsIRDFResource>* aResult)
@@ -213,6 +217,8 @@ RelatedLinksStreamListener::CreateAnonymousResource(const nsString& aPrefixURI,
 
 	 return gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(*aResult));
 }
+
+
 
 // nsISupports interface
 NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
@@ -510,6 +516,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStre
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////
 // RelatedLinksHanlderImpl
 
@@ -594,6 +601,8 @@ public:
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
+	NS_IMETHOD	GetAllCmds(nsIRDFResource* source,
+				nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
 	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -612,7 +621,6 @@ nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Child;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Name;
 nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
-
 
 
 
@@ -646,6 +654,8 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl()
 	}
 }
 
+
+
 nsresult
 RelatedLinksHandlerImpl::Init()
 {
@@ -672,7 +682,6 @@ RelatedLinksHandlerImpl::Init()
 
 	return NS_OK;
 }
-
 
 
 
@@ -706,6 +715,7 @@ NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 	return rv;
 }
+
 
 
 // nsISupports interface
@@ -743,6 +753,7 @@ RelatedLinksHandlerImpl::QueryInterface(REFNSIID aIID, void** aResult)
 }
 
 
+
 // nsIRelatedLinksHandler interface
 
 NS_IMETHODIMP
@@ -752,15 +763,18 @@ RelatedLinksHandlerImpl::GetURL(char** aURL)
 	if (! aURL)
 		return NS_ERROR_NULL_POINTER;
 
-	if (mRelatedLinksURL) {
+	if (mRelatedLinksURL)
+	{
 		*aURL = nsXPIDLCString::Copy(mRelatedLinksURL);
 		return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 	}
-	else {
+	else
+	{
 		*aURL = nsnull;
 		return NS_OK;
 	}
 }
+
 
 
 NS_IMETHODIMP
@@ -825,6 +839,7 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 }
 
 
+
 // nsIRDFDataSource interface
 
 
@@ -880,8 +895,6 @@ RelatedLinksHandlerImpl::GetTarget(nsIRDFResource *aSource,
 
 
 
-
-
 NS_IMETHODIMP
 RelatedLinksHandlerImpl::GetTargets(nsIRDFResource* aSource,
 				    nsIRDFResource* aProperty,
@@ -912,6 +925,8 @@ RelatedLinksHandlerImpl::Unassert(nsIRDFResource *aSource,
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
+
+
 NS_IMETHODIMP
 RelatedLinksHandlerImpl::Change(nsIRDFResource* aSource,
 								nsIRDFResource* aProperty,
@@ -922,6 +937,7 @@ RelatedLinksHandlerImpl::Change(nsIRDFResource* aSource,
 }
 
 
+
 NS_IMETHODIMP
 RelatedLinksHandlerImpl::Move(nsIRDFResource* aOldSource,
 							  nsIRDFResource* aNewSource,
@@ -930,6 +946,7 @@ RelatedLinksHandlerImpl::Move(nsIRDFResource* aOldSource,
 {
 	return NS_RDF_ASSERTION_REJECTED;
 }
+
 
 
 NS_IMETHODIMP
@@ -996,6 +1013,15 @@ RelatedLinksHandlerImpl::GetAllCommands(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
+RelatedLinksHandlerImpl::GetAllCmds(nsIRDFResource* aSource,
+					nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands)
+{
+	return mInner->GetAllCmds(aSource, aCommands);
+}
+
+
+
+NS_IMETHODIMP
 RelatedLinksHandlerImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
@@ -1013,6 +1039,8 @@ RelatedLinksHandlerImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 {
 	return mInner->DoCommand(aSources, aCommand, aArguments);
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Component Exports
@@ -1095,5 +1123,3 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 
 	return NS_OK;
 }
-
-
