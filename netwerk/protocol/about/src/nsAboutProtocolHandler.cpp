@@ -27,6 +27,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIAboutModule.h"
+#include "nsString.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
