@@ -129,7 +129,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
                 }
               }
 
-              if (NS_FAILED(rv) || playDefaultSound) {
+              if ((NS_FAILED(rv) || playDefaultSound) && nsCRT::strlen(mDefaultSoundURL.get())) {
                 rv = soundURL->SetSpec(mDefaultSoundURL.get());
               }
             }
