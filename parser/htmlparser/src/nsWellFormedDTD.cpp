@@ -51,7 +51,6 @@
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
-#include "nsIXMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsExpatTokenizer.h"
 

@@ -31,11 +31,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  dom \
 		  pref \
-		  nkcache \
 		  intl \
-		  widget \
-		  raptor \
-		  content \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 

@@ -35,7 +35,6 @@
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "nsIHTMLContentSink.h"
-#include "nsIXMLContentSink.h"
 #include "nsDTDUtils.h"
 #include "nsParserNode.h"
 
