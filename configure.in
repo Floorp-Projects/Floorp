@@ -2510,6 +2510,28 @@ if test "$ac_cv_cpp_explicit" = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
+AC_CACHE_CHECK(for C++ \"typename\" keyword,
+               ac_cv_cpp_typename,
+               [AC_TRY_COMPILE(class param {
+                               public:
+                                   typedef unsigned long num_type;
+                               };
+
+                               template <class T> class tplt {
+                               public:
+                                   typedef typename T::num_type t_num_type;
+                                   t_num_type foo(typename T::num_type num) {
+                                       return num;
+                                   }
+                               };,
+                               tplt<param> A;
+                               A.foo(0);,
+                               ac_cv_cpp_typename=yes,
+                               ac_cv_cpp_typename=no)])
+if test "$ac_cv_cpp_typename" = yes ; then
+   AC_DEFINE(HAVE_CPP_TYPENAME)
+fi
+
 dnl Check for support of modern template specialization syntax
 dnl Test code and requirement from scc@netscape.com.
 dnl Autoconf cut-and-paste job by waterson@netscape.com
