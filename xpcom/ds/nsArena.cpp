@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsArena.h"
@@ -87,7 +88,7 @@ NS_COM nsresult NS_NewHeapArena(nsIArena** aInstancePtrResult,
 {
   nsresult rv;
   nsIArena* arena;
-  rv = ArenaImpl::Create(NULL, nsIArena::GetIID(), (void**)&arena);
+  rv = ArenaImpl::Create(NULL, NS_GET_IID(nsIArena), (void**)&arena);
   if (NS_FAILED(rv)) return rv;
     
   rv = arena->Init(aArenaBlockSize);

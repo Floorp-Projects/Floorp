@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -49,7 +50,7 @@ public:
         if (! result)
             return NS_ERROR_NULL_POINTER;
 
-        if (iid.Equals(nsISimpleEnumerator::GetIID()) ||
+        if (iid.Equals(NS_GET_IID(nsISimpleEnumerator)) ||
             iid.Equals(NS_GET_IID(nsISupports))) {
             *result = (nsISimpleEnumerator*) this;
             NS_ADDREF(this);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef __nsISupportsUtils_h
@@ -418,7 +419,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {               \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
@@ -542,7 +543,7 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                               \
 NS_IMETHODIMP Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)     \
 {                                                                           \
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;                          \
-  if (aIID.Equals(AdditionalInterface::GetIID())) {                         \
+  if (aIID.Equals(NS_GET_IID(AdditionalInterface))) {                       \
     *aInstancePtr = NS_STATIC_CAST(AdditionalInterface*, this);             \
     NS_ADDREF_THIS();                                                       \
     return NS_OK;                                                           \
@@ -649,7 +650,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
                                                                          \
   *aInstancePtr = NULL;                                                  \
                                                                          \
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);           \
   static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
   if (aIID.Equals(kClassIID)) {                                          \
@@ -657,7 +657,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(kISupportsIID)) {                                      \
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                            \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
@@ -869,7 +869,7 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryInterface(nsCOMTypeInfo<DestinationType>::GetIID(), (void**)aDestination);
+    return aSource->QueryInterface(NS_GET_IID(DestinationType), (void**)aDestination);
 }
 
 } // extern "C++"

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,9 +44,9 @@ nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-	 if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	 if (aIID.Equals(NS_GET_IID(nsISupports)))
 	     *aInstancePtr = GetInner();
-    else if (aIID.Equals(nsIAllocator::GetIID()))
+    else if (aIID.Equals(NS_GET_IID(nsIAllocator)))
         *aInstancePtr = NS_STATIC_CAST(nsIAllocator*, this);
 	 else { 
         *aInstancePtr = nsnull; 
@@ -187,7 +188,7 @@ nsIAllocator* nsAllocator::mAllocator = NULL;
 
 PRBool nsAllocator::FetchAllocator()
 {
-    nsAllocatorImpl::Create(NULL, nsIAllocator::GetIID(), (void**)&mAllocator);
+    nsAllocatorImpl::Create(NULL, NS_GET_IID(nsIAllocator), (void**)&mAllocator);
     NS_ASSERTION(mAllocator, "failed to get Allocator!");
     return (mAllocator ? PR_TRUE : PR_FALSE);
 }    

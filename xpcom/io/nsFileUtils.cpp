@@ -11,7 +11,7 @@ NS_NewFile(nsIFile** file)
 {
     return nsComponentManager::CreateInstance(NS_FILE_PROGID, 
                                               nsnull, 
-                                              nsCOMTypeInfo<nsIFile>::GetIID(), 
+                                              NS_GET_IID(nsIFile), 
                                               (void**)file);
 }
 
@@ -20,7 +20,7 @@ NS_NewDirectoryEnumerator(nsIFile* parent, PRBool resolveSymlinks, nsIDirectoryE
 {
     nsresult rv = nsComponentManager::CreateInstance(NS_DIRECTORY_ENUMERATOR_PROGID, 
                                          nsnull, 
-                                         nsCOMTypeInfo<nsIDirectoryEnumerator>::GetIID(), 
+                                         NS_GET_IID(nsIDirectoryEnumerator), 
                                          (void**)enumerator); 
         
     if (NS_SUCCEEDED(rv) && *enumerator)

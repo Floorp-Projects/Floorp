@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -77,7 +78,7 @@ NS_NewHashtableEnumerator (nsHashtable *aHash,
     if (!hte)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return hte->QueryInterface (nsCOMTypeInfo<nsIEnumerator>::GetIID(),
+    return hte->QueryInterface (NS_GET_IID(nsIEnumerator),
                                 (void **)retval);
 }
 

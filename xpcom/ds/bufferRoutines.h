@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /******************************************************************************************
@@ -514,11 +515,9 @@ public :
 };
 
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
-static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
 static nsICaseConversion * gCaseConv = 0; 
 
-NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, kIShutdownListenerIID);
+NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, NS_GET_IID(nsIShutdownListener));
 
 nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
     if (cid.Equals(kUnicharUtilCID)) {
@@ -538,7 +537,7 @@ public:
     mListener = new HandleCaseConversionShutdown3();
     if(mListener){
       mListener->AddRef();
-      nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
+      nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),(nsISupports**) &gCaseConv, mListener);
     }
   }
 protected:

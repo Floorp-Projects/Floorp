@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsByteBuffer.h"
@@ -142,7 +143,7 @@ NS_COM nsresult NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
 {
   nsresult rv;
   nsIByteBuffer* buf;
-  rv = ByteBufferImpl::Create(aOuter, nsIByteBuffer::GetIID(), (void**)&buf);
+  rv = ByteBufferImpl::Create(aOuter, NS_GET_IID(nsIByteBuffer), (void**)&buf);
   if (NS_FAILED(rv)) return rv;
     
   rv = buf->Init(aBufferSize);

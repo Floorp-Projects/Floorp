@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef nsIServiceManager_h___
@@ -301,7 +302,7 @@ do_GetService( const char* aProgID, nsISupports* aServiceManager, nsresult* erro
 // Now you can replace this:
 //  {
 //      nsIMyService* service;
-//      rv = nsServiceManager::GetService(kMyServiceCID, nsIMyService::GetIID(),
+//      rv = nsServiceManager::GetService(kMyServiceCID, NS_GET_IID(nsIMyService),
 //                                        &service);
 //      if (NS_FAILED(rv)) return rv;
 //      service->Doit(...);     // use my service

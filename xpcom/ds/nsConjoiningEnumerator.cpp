@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIEnumerator.h"
@@ -101,7 +102,7 @@ nsConjoiningEnumerator::Last(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
-  rv = mSecond->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
+  rv = mSecond->QueryInterface(NS_GET_IID(nsIBidirectionalEnumerator), (void**)&be);
   if (NS_FAILED(rv)) return rv;
   mCurrent = mSecond;
   rv = be->Last();
@@ -114,12 +115,12 @@ nsConjoiningEnumerator::Prev(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
-  rv = mCurrent->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
+  rv = mCurrent->QueryInterface(NS_GET_IID(nsIBidirectionalEnumerator), (void**)&be);
   if (NS_FAILED(rv)) return rv;
   rv = be->Prev();
   NS_RELEASE(be);
   if (NS_FAILED(rv) && mCurrent == mSecond) {
-    rv = mFirst->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
+    rv = mFirst->QueryInterface(NS_GET_IID(nsIBidirectionalEnumerator), (void**)&be);
     if (NS_FAILED(rv)) return rv;
     mCurrent = mFirst;
     rv = be->Last();

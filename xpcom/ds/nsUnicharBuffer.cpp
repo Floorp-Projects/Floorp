@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsUnicharBuffer.h"
@@ -148,7 +149,7 @@ NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
 {
   nsresult rv;
   nsIUnicharBuffer* buf;
-  rv = UnicharBufferImpl::Create(aOuter, nsIUnicharBuffer::GetIID(), 
+  rv = UnicharBufferImpl::Create(aOuter, NS_GET_IID(nsIUnicharBuffer), 
                                  (void**)&buf);
   if (NS_FAILED(rv)) return rv;
   rv = buf->Init(aBufferSize);
