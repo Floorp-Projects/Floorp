@@ -71,7 +71,7 @@ extern const char js_Error_str[];       /* trivial, from jsexn.h */
  */
 const char *js_type_str[] = {
     "undefined",
-    "object",
+    js_object_str,
     "function",
     "string",
     "number",
@@ -114,7 +114,9 @@ const char js_input_str[]           = "input";
 const char js_length_str[]          = "length";
 const char js_name_str[]            = "name";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
+const char js_object_str[]          = "object";
 const char js_parent_str[]          = "__parent__";
+const char js_private_str[]         = "private";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";
