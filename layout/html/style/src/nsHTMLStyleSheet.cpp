@@ -1035,6 +1035,9 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
     else if (nsHTMLAtoms::select == tag) {
       rv = NS_NewHTMLSelectFrame(aContent, aParentFrame, frame);
     }
+    else if (nsHTMLAtoms::iframe == tag) {
+      rv = NS_NewHTMLFrameOuterFrame(aContent, aParentFrame, frame);
+    }
     if (NS_OK != rv) {
       NS_RELEASE(styleContext);
       NS_IF_RELEASE(tag);
