@@ -23,6 +23,7 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 
 class nsInputStreamChannel : public nsIChannel
