@@ -122,7 +122,7 @@ nsUnicharStreamLoader::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIUnicharStreamLoader* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;

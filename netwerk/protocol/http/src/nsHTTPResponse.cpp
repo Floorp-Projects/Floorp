@@ -48,7 +48,7 @@ nsHTTPResponse::~nsHTTPResponse()
 
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPResponse, nsCOMTypeInfo<nsISupports>::GetIID())
+NS_IMPL_ISUPPORTS(nsHTTPResponse, NS_GET_IID(nsISupports))
 
 
 nsresult nsHTTPResponse::GetContentLength(PRInt32* o_Value)

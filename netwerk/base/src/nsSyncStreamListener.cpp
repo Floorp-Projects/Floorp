@@ -82,9 +82,9 @@ NS_IMETHODIMP
 nsSyncStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
+        aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;

@@ -38,7 +38,7 @@ PRBool FindMIMEType(nsHashKey *aKey, void *aData, void* closure) {
 
 
 // nsISupports methods
-NS_IMPL_ISUPPORTS(nsMIMEService, nsCOMTypeInfo<nsIMIMEService>::GetIID());
+NS_IMPL_ISUPPORTS(nsMIMEService, NS_GET_IID(nsIMIMEService));
 
 
 // nsMIMEService methods
@@ -226,7 +226,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     // first try to get a url out of the uri so we can skip post
     // filename stuff (i.e. query string)
     nsIURL *url = nsnull;
-    rv = aURI->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&url);
+    rv = aURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
     if (NS_SUCCEEDED(rv)) {
         rv = url->GetFileName(&cStrSpec);
         NS_RELEASE(url);

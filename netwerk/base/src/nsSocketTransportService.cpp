@@ -342,13 +342,13 @@ nsSocketTransportService::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsISocketTransportService>::GetIID()) ||
-    aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsISocketTransportService)) ||
+    aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISocketTransportService*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIRunnable))) {
     *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 

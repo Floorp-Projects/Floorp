@@ -137,9 +137,9 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
      if (aIID.Equals(NS_GET_IID(nsISupports)))
          *aInstancePtr = GetInner();
     else if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
-        aIID.Equals(nsCOMTypeInfo<nsILoadGroup>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
+        aIID.Equals(NS_GET_IID(nsILoadGroup)) ||
+        aIID.Equals(NS_GET_IID(nsIRequest)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) 
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
      else {
         *aInstancePtr = nsnull;

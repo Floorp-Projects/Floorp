@@ -36,7 +36,7 @@ nsHeaderEntry::~nsHeaderEntry()
 }
 
 
-NS_IMPL_ISUPPORTS(nsHeaderEntry, nsCOMTypeInfo<nsIHTTPHeader>::GetIID())
+NS_IMPL_ISUPPORTS(nsHeaderEntry, NS_GET_IID(nsIHTTPHeader))
 
 
 NS_IMETHODIMP
@@ -271,7 +271,7 @@ nsHTTPHeaderEnumerator::~nsHTTPHeaderEnumerator()
 // Implement nsISupports methods
 //
 NS_IMPL_ISUPPORTS(nsHTTPHeaderEnumerator, 
-                  nsCOMTypeInfo<nsISimpleEnumerator>::GetIID())
+                  NS_GET_IID(nsISimpleEnumerator))
 
 
 //

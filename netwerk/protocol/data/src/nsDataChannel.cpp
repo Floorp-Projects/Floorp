@@ -51,9 +51,9 @@ NS_IMPL_RELEASE(nsDataChannel);
 NS_IMETHODIMP
 nsDataChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsIDataChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
+    if (aIID.Equals(NS_GET_IID(nsIDataChannel)) ||
+        aIID.Equals(NS_GET_IID(nsIChannel)) ||
+        aIID.Equals(NS_GET_IID(nsISupports)) ) {
         *aInstancePtr = NS_STATIC_CAST(nsIDataChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;

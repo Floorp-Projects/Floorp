@@ -85,15 +85,15 @@ NS_IMPL_RELEASE(nsFTPChannel);
 NS_IMETHODIMP
 nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsIFTPChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
+    if (aIID.Equals(NS_GET_IID(nsIFTPChannel)) ||
+        aIID.Equals(NS_GET_IID(nsIChannel)) ||
+        aIID.Equals(NS_GET_IID(nsISupports)) ) {
         *aInstancePtr = NS_STATIC_CAST(nsIFTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
+        aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -118,7 +118,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     if (getter) {
         nsIProgressEventSink* eventSink = nsnull;
-        rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
+        rv = getter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
                                   (nsISupports**)&eventSink);
         if (NS_FAILED(rv)) {
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
@@ -479,7 +479,7 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnDataAvailable(channel = %x, context = %x, stream = %x, srcOffset = %d, length = %d)\n", channel, context, aIStream, aSourceOffset, aLength));
 
     nsIFTPContext *ftpCtxt = nsnull;
-    rv = context->QueryInterface(nsCOMTypeInfo<nsIFTPContext>::GetIID(), (void**)&ftpCtxt);
+    rv = context->QueryInterface(NS_GET_IID(nsIFTPContext), (void**)&ftpCtxt);
     if (NS_FAILED(rv)) return rv;
 
 

@@ -66,7 +66,7 @@ nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResu
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsSocketProviderService, nsCOMTypeInfo<nsISocketProviderService>::GetIID());
+NS_IMPL_ISUPPORTS(nsSocketProviderService, NS_GET_IID(nsISocketProviderService));
 
 ////////////////////////////////////////////////////////////////////////////////
 

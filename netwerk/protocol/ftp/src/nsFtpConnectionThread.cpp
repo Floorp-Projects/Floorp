@@ -89,8 +89,8 @@ NS_IMPL_RELEASE(nsFtpConnectionThread);
 NS_IMETHODIMP
 nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
+    if (aIID.Equals(NS_GET_IID(nsIRunnable)) ||
+        aIID.Equals(NS_GET_IID(nsISupports)) ) {
         *aInstancePtr = NS_STATIC_CAST(nsFtpConnectionThread*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -1237,14 +1237,14 @@ nsFtpConnectionThread::R_list() {
     rv = NS_NewCharInputStream(&stringStrmSup, listBuf);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
-    rv = stringStrmSup->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&stringStream);
+    rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&stringStream);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     nsFTPContext *dataCtxt = new nsFTPContext();
     if (!dataCtxt) return FTP_ERROR;
     dataCtxt->SetContentType("text/ftp-dirListing");
     nsISupports *ctxtSup = nsnull;
-    rv = dataCtxt->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&ctxtSup);
+    rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
     // tell the user that we've begun the transaction.
     nsFtpOnStartRequestEvent* startEvent =
@@ -1344,7 +1344,7 @@ nsFtpConnectionThread::R_retr() {
 
         dataCtxt->SetContentType(contentType);
         nsISupports *ctxtSup = nsnull;
-        rv = dataCtxt->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&ctxtSup);
+        rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
         // tell the user that we've begun the transaction.
         nsFtpOnStartRequestEvent* startEvent =
@@ -1363,7 +1363,7 @@ nsFtpConnectionThread::R_retr() {
         if (!event) return FTP_ERROR;
 
         nsIInputStream *inStream = nsnull;
-        rv = bufInStrm->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inStream);
+        rv = bufInStrm->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inStream);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         rv = event->Init(inStream, 0, mLength);
@@ -1479,7 +1479,7 @@ nsFtpConnectionThread::R_pasv() {
         if (!dataCtxt) return FTP_ERROR;
         dataCtxt->mCmdResponse = PR_FALSE;
         nsISupports *ctxtSup = nsnull;
-        rv = dataCtxt->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&ctxtSup);
+        rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
     } else {
         // get the output stream so we can write to the server
@@ -1631,7 +1631,7 @@ nsFtpConnectionThread::Run() {
     if (NS_FAILED(rv)) return rv;
 
     rv = nsServiceManager::GetService(kSocketTransportServiceCID,
-                                      nsCOMTypeInfo<nsISocketTransportService>::GetIID(), 
+                                      NS_GET_IID(nsISocketTransportService), 
                                       (nsISupports **)&mSTS);
     if(NS_FAILED(rv)) return rv;
 

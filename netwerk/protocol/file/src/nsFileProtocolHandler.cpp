@@ -59,7 +59,7 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
     NS_IF_RELEASE(mSuspended);
 }
 
-NS_IMPL_ISUPPORTS(nsFileProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
+NS_IMPL_ISUPPORTS(nsFileProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -132,7 +132,7 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else {
         rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
@@ -156,7 +156,7 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     nsresult rv;
     
     nsFileChannel* channel;
-    rv = nsFileChannel::Create(nsnull, nsCOMTypeInfo<nsIFileChannel>::GetIID(), (void**)&channel);
+    rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(this, verb, url, aGroup, eventSinkGetter);

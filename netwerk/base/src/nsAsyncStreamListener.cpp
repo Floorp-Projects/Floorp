@@ -176,7 +176,7 @@ nsAsyncStreamObserver::~nsAsyncStreamObserver()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsAsyncStreamObserver, 
-                             nsCOMTypeInfo<nsIStreamObserver>::GetIID());
+                             NS_GET_IID(nsIStreamObserver));
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAsyncStreamListener, 
                             nsAsyncStreamObserver, 

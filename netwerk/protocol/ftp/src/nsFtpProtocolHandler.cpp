@@ -53,7 +53,7 @@ nsFtpProtocolHandler::nsFtpProtocolHandler() {
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
 }
 
-NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
+NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -132,7 +132,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else {
         rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
@@ -166,7 +166,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     nsresult rv;
     
     nsFTPChannel* channel;
-    rv = nsFTPChannel::Create(nsnull, nsCOMTypeInfo<nsIFTPChannel>::GetIID(), (void**)&channel);
+    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(verb, url, aGroup, eventSinkGetter);

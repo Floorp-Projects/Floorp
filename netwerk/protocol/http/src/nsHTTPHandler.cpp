@@ -173,7 +173,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         if (pChannel) {
             NS_ADDREF(pChannel);
             pChannel->Init(aGroup);
-            rv = pChannel->QueryInterface(nsCOMTypeInfo<nsIChannel>::GetIID(), (void**)o_Instance);
+            rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), (void**)o_Instance);
             // add this instance to the active list of connections
             // TODO!
             NS_RELEASE(pChannel);
@@ -202,22 +202,22 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsCOMTypeInfo<nsIProtocolHandler>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIProtocolHandler))) {
         *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPProtocolHandler>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIHTTPProtocolHandler))) {
         *aInstancePtr = (void*) ((nsIHTTPProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIProxy>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIProxy))) {
         *aInstancePtr = (void*) ((nsIProxy*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = (void*) ((nsISupports*)(nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -258,7 +258,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else
     {
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(),
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);

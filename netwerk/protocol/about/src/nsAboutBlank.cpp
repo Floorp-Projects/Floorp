@@ -23,7 +23,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAboutBlank, nsCOMTypeInfo<nsIAboutModule>::GetIID());
+NS_IMPL_ISUPPORTS(nsAboutBlank, NS_GET_IID(nsIAboutModule));
 
 static const char kBlankPage[] = "<html><body></body></html>";
 

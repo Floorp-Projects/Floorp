@@ -21,7 +21,7 @@
 
 
 // nsISupports methods
-NS_IMPL_ISUPPORTS(nsMIMEInfoImpl, nsCOMTypeInfo<nsIMIMEInfo>::GetIID());
+NS_IMPL_ISUPPORTS(nsMIMEInfoImpl, NS_GET_IID(nsIMIMEInfo));
 
 // nsMIMEInfoImpl methods
 nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtensions, const char *aDescription) {

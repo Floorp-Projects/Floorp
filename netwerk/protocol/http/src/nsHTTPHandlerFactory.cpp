@@ -64,7 +64,7 @@ nsHTTPHandlerFactory::QueryInterface(const nsIID &aIID, void **aResult)
     // Always NULL result, in case of failure
     *aResult = nsnull;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
         AddRef();
         return NS_OK;

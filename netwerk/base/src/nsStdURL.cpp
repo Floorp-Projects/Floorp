@@ -124,11 +124,11 @@ nsStdURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
      if(!aInstancePtr)
          return NS_ERROR_INVALID_POINTER;
 
-     if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+     if (aIID.Equals(NS_GET_IID(nsISupports)))
          *aInstancePtr = GetInner();
     else if (aIID.Equals(kThisStdURLImplementationCID) ||   // used by Equals
-        aIID.Equals(nsCOMTypeInfo<nsIURL>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID()))
+        aIID.Equals(NS_GET_IID(nsIURL)) ||
+        aIID.Equals(NS_GET_IID(nsIURI)))
         *aInstancePtr = NS_STATIC_CAST(nsIURL*, this);
      else {
          *aInstancePtr = nsnull;

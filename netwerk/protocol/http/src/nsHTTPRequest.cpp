@@ -92,13 +92,13 @@ nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIRequest))) {
         *aInstancePtr = NS_STATIC_CAST(nsIRequest*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -410,7 +410,7 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
         {
             Build();
         }
-        mRequest->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)o_Stream);
+        mRequest->QueryInterface(NS_GET_IID(nsIInputStream), (void**)o_Stream);
         return NS_OK;
     }
     else

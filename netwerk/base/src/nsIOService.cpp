@@ -111,7 +111,7 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsIOService, nsCOMTypeInfo<nsIIOService>::GetIID());
+NS_IMPL_ISUPPORTS(nsIOService, NS_GET_IID(nsIIOService));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -389,7 +389,7 @@ nsIOService::NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
 {
     nsresult rv;
     nsILoadGroup* group;
-    rv = nsLoadGroup::Create(outer, nsCOMTypeInfo<nsILoadGroup>::GetIID(), 
+    rv = nsLoadGroup::Create(outer, NS_GET_IID(nsILoadGroup), 
                              (void**)&group);
     if (NS_FAILED(rv)) return rv;
 
@@ -409,7 +409,7 @@ nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
 {
     nsresult rv;
     nsInputStreamChannel* channel;
-    rv = nsInputStreamChannel::Create(nsnull, nsCOMTypeInfo<nsIChannel>::GetIID(),
+    rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                       (void**)&channel);
     if (NS_FAILED(rv)) return rv;
     rv = channel->Init(uri, contentType, inStr);

@@ -64,7 +64,7 @@ nsMIMEServiceFactory::QueryInterface(const nsIID &aIID, void **aResult)
     // Always NULL result, in case of failure
     *aResult = nsnull;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
         AddRef();
         return NS_OK;
@@ -98,7 +98,7 @@ nsMIMEServiceFactory::CreateInstance(nsISupports *aOuter,
     if (mClassID.Equals(kMIMEServiceCID)) {
         nsMIMEService *MIMEService = new nsMIMEService();
         if (!MIMEService) return NS_ERROR_OUT_OF_MEMORY;
-        MIMEService->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&inst);
+        MIMEService->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
     }
     else {
         return NS_ERROR_NO_INTERFACE;
