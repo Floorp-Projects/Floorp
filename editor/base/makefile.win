@@ -96,8 +96,10 @@ CPP_OBJS =					\
   .\$(OBJDIR)\DeleteTableColumnTxn.obj  \
   .\$(OBJDIR)\DeleteTableRowTxn.obj     \
   .\$(OBJDIR)\JoinTableCellsTxn.obj     \
-  .\$(OBJDIR)\nsInternetCiter.obj     \
-  .\$(OBJDIR)\nsAOLCiter.obj          \
+  .\$(OBJDIR)\nsInternetCiter.obj      \
+  .\$(OBJDIR)\nsAOLCiter.obj           \
+  .\$(OBJDIR)\nsEditorShell.cpp        \     
+  .\$(OBJDIR)\nsEditorShellFactory.cpp \
 	$(NULL)
 
 MODULE=editor 
