@@ -29,46 +29,6 @@
     list-style-image      : url("chrome://communicator/skin/online.gif");
   }
   
-  
-button.up, button.up:hover
-{
-	list-style-image      : url("chrome://global/skin/scroll-up.gif");
-	min-width			  : 0px;
-	border				  : 1px solid #000000;
-	border-bottom		  : 0px;
-}
-
-button.up:hover:active
-{
-	list-style-image      : url("chrome://global/skin/scroll-up-active.gif");
-	border				  : 1px solid #000000;
-	border-bottom		  : 0px;
-}
-
-button.up[disabled="true"], button.up[disabled="true"]:hover:active
-{
-	list-style-image      : url("chrome://global/skin/scroll-up-disabled.gif");
-}
-
-button.down, button.down:hover
-{
-	min-width: 0px;
-	list-style-image	  : url("chrome://global/skin/scroll-down.gif");
-	border				  : 1px solid #000000;
-	border-top			  : 0px;
-}
-
-button.down:hover:active
-{
-	list-style-image	  : url("chrome://global/skin/scroll-down-active.gif");
-	border				  : 1px solid #000000;
-	border-top			  : 0px;
-}
-
-button.down[disabled="true"], button.down[disabled="true"]:hover:active
-{
-	list-style-image	  : url("chrome://global/skin/scroll-down-disabled.gif");
-}
 
 /**
  * File icons (32x32 and 16x16)
