@@ -44,7 +44,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.36 $ $Date: 2005/01/20 02:25:47 $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.37 $ $Date: 2005/03/07 21:20:38 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -246,6 +246,12 @@ nssSlot_Destroy
 
 NSS_EXTERN NSSSlot *
 nssSlot_AddRef
+(
+  NSSSlot *slot
+);
+
+NSS_EXTERN void
+nssSlot_ResetDelay
 (
   NSSSlot *slot
 );
