@@ -138,12 +138,12 @@ function getAcctSetupFilename( object )
 
 function getBrowserVersionNumber()
 {
-	var theAgent = navigator.userAgent;
-	var x = theAgent.indexOf( "/" );
-	var theVersion = "unknown";
+	var agent = navigator.userAgent;
+	var x = agent.indexOf( "/" );
+	var version = "unknown";
 	if ( x >= 0 )
-		var theVersion = theAgent.substring( x + 1, theAgent.length );
-	return theVersion;
+		version = agent.substring( x + 1, agent.length );
+	return version;
 }
 
 function getBrowserMajorVersionNumber()
@@ -151,7 +151,7 @@ function getBrowserMajorVersionNumber()
 	var	version = getBrowserVersionNumber();
 	if ( version != "unknown" )
 	{
-		var x = theVersion.indexOf( "." );
+		var x = version.indexOf( "." );
 		if ( x > 0 )
 			version = version.substring( 0, x );	
 	}
