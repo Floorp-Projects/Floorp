@@ -56,11 +56,8 @@ protected:
     nsresult OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
             nsIAbDirectoryQueryResult** result);
 
-    nsresult QueryMatch (nsISupportsArray* properties,
-            nsIAbDirectoryQueryResult** result);
-    nsresult QueryComplete (nsIAbDirectoryQueryResult** result);
-    nsresult QueryStopped (nsIAbDirectoryQueryResult** result);
-    nsresult QueryError (nsIAbDirectoryQueryResult** result);
+    nsresult QueryResultStatus (nsISupportsArray* properties,
+            nsIAbDirectoryQueryResult** result, PRUint32 resultStatus);
 
 protected:
     friend class nsAbLDAPDirectoryQuery;
@@ -215,7 +212,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
         if (mSearchOperation)
             rv = mSearchOperation->Abandon ();
 
-        rv = QueryStopped (getter_AddRefs (queryResult));
+        rv = QueryResultStatus (nsnull, getter_AddRefs (queryResult), nsIAbDirectoryQueryResult::queryResultStopped);
     }
 
     if (queryResult)
@@ -372,9 +369,8 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
     if (!propertyValues)
         return NS_OK;
 
-    return QueryMatch (propertyValues, result);
+    return QueryResultStatus (propertyValues, result,nsIAbDirectoryQueryResult::queryResultMatch);
 }
-
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
         nsIAbDirectoryQueryResult** result)
 {
@@ -386,21 +382,20 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (errorCode == nsILDAPErrors::SUCCESS || errorCode == nsILDAPErrors::SIZELIMIT_EXCEEDED)
-        rv = QueryComplete (result);
+        rv = QueryResultStatus (nsnull, result,nsIAbDirectoryQueryResult::queryResultComplete);
     else
-        rv = QueryError (result);
+        rv = QueryResultStatus (nsnull, result, nsIAbDirectoryQueryResult::queryResultError);
 
     return rv;
 }
-
-nsresult nsAbQueryLDAPMessageListener::QueryMatch (nsISupportsArray* properties,
-        nsIAbDirectoryQueryResult** result)
+nsresult nsAbQueryLDAPMessageListener::QueryResultStatus (nsISupportsArray* properties,
+        nsIAbDirectoryQueryResult** result, PRUint32 resultStatus)
 {
     nsAbDirectoryQueryResult* _queryResult = new nsAbDirectoryQueryResult (
         mContextID,
         mQueryArguments,
-        nsIAbDirectoryQueryResult::queryResultMatch,
-        properties);
+        resultStatus,
+        (resultStatus == nsIAbDirectoryQueryResult::queryResultMatch) ? properties : 0);
 
     if (_queryResult == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -410,59 +405,6 @@ nsresult nsAbQueryLDAPMessageListener::QueryMatch (nsISupportsArray* properties,
 
     return NS_OK;
 }
-
-nsresult nsAbQueryLDAPMessageListener::QueryComplete (nsIAbDirectoryQueryResult** result)
-{
-    nsAbDirectoryQueryResult* _queryResult = new nsAbDirectoryQueryResult (
-        mContextID,
-        mQueryArguments,
-        nsIAbDirectoryQueryResult::queryResultComplete,
-        0);
-
-    if (_queryResult == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = _queryResult;
-    NS_IF_ADDREF(*result);
-
-    return NS_OK;
-}
-
-nsresult nsAbQueryLDAPMessageListener::QueryStopped (nsIAbDirectoryQueryResult** result)
-{
-    nsAbDirectoryQueryResult* _queryResult = new nsAbDirectoryQueryResult (
-        mContextID,
-        mQueryArguments,
-        nsIAbDirectoryQueryResult::queryResultStopped,
-        0);
-
-    if (_queryResult == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = _queryResult;
-    NS_IF_ADDREF(*result);
-
-    return NS_OK;
-}
-
-nsresult nsAbQueryLDAPMessageListener::QueryError (nsIAbDirectoryQueryResult** result)
-{
-    nsAbDirectoryQueryResult* _queryResult = new nsAbDirectoryQueryResult (
-        mContextID,
-        mQueryArguments,
-        nsIAbDirectoryQueryResult::queryResultError,
-        0);
-
-    if (_queryResult == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = _queryResult;
-    NS_IF_ADDREF(*result);
-
-    return NS_OK;
-}
-
-
 
 
 

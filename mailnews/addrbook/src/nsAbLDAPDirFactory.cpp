@@ -113,6 +113,9 @@ NS_IMETHODIMP nsAbLDAPDirFactory::CreateDirectory(
 /* void deleteDirectory (in nsIAbDirectory directory); */
 NS_IMETHODIMP nsAbLDAPDirFactory::DeleteDirectory(nsIAbDirectory *directory)
 {
+    // No actual deletion - as the LDAP Address Book is not physically
+    // created in the corresponding CreateDirectory() unlike the Personal
+    // Address Books. But we still need to return NS_OK from here.
     return NS_OK;
 }
 

@@ -30,6 +30,7 @@
 
 #include "nsILDAPMessage.h"
 #include "nsIAbCard.h"
+#include "nsHashtable.h"
 
 #include "ldap.h"
 
@@ -57,10 +58,14 @@ class MozillaLdapPropertyRelator
 public:
     static const MozillaLdapPropertyRelation* table;
     static const int tableSize;
+    static nsHashtable mLdapToMozilla ;
+    static nsHashtable mMozillaToLdap ;
+    static PRBool IsInitialized;
 
 public:
     static const MozillaLdapPropertyRelation* findMozillaPropertyFromLdap (const char* ldapProperty);
     static const MozillaLdapPropertyRelation* findLdapPropertyFromMozilla (const char* mozillaProperty);
+    static void Initialize(void);
 
     static nsresult createCardPropertyFromLDAPMessage (nsILDAPMessage* message,
             nsIAbCard* card,

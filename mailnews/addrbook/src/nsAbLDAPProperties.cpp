@@ -165,23 +165,40 @@ MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::table = mozillaLdapPropertyTable;
 const int MozillaLdapPropertyRelator::tableSize = sizeof (mozillaLdapPropertyTable) / sizeof (MozillaLdapPropertyRelation);
 
+PRBool MozillaLdapPropertyRelator::IsInitialized = PR_FALSE ;
+nsHashtable MozillaLdapPropertyRelator::mMozillaToLdap;
+nsHashtable MozillaLdapPropertyRelator::mLdapToMozilla;
+
+void MozillaLdapPropertyRelator::Initialize(void)
+{
+    if (IsInitialized) { return ; }
+
+    for (int i = tableSize - 1 ; i >= 0 ; -- i) {
+        nsCStringKey keyMozilla (table [i].mozillaProperty, -1, nsCStringKey::NEVER_OWN);
+        nsCStringKey keyLdap (table [i].ldapProperty, -1, nsCStringKey::NEVER_OWN);
+
+        mLdapToMozilla.Put(&keyLdap, NS_REINTERPRET_CAST(void *, NS_CONST_CAST(MozillaLdapPropertyRelation*, &table[i]))) ;
+        mMozillaToLdap.Put(&keyMozilla, NS_REINTERPRET_CAST(void *, NS_CONST_CAST(MozillaLdapPropertyRelation*, &table[i]))) ;
+    }
+    IsInitialized = PR_TRUE;
+}
 
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::findMozillaPropertyFromLdap (const char* ldapProperty)
 {
-    for (int i = 0; i < tableSize; i++)
-        if (nsCRT::strcasecmp (ldapProperty, table[i].ldapProperty) == 0)
-            return &table[i];
+    Initialize();
+    nsCStringKey key (ldapProperty) ;
 
-    return 0;
+    return NS_REINTERPRET_CAST(const MozillaLdapPropertyRelation *, mLdapToMozilla.Get(&key)) ;
+
 }
 
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::findLdapPropertyFromMozilla (const char* mozillaProperty)
 {
-    for (int i = 0; i < tableSize; i++)
-        if (nsCRT::strcasecmp (mozillaProperty, table[i].mozillaProperty) == 0)
-            return &table[i];
+    Initialize();
+    nsCStringKey key (mozillaProperty) ;
 
-    return 0;
+    return NS_REINTERPRET_CAST(const MozillaLdapPropertyRelation *, mMozillaToLdap.Get(&key)) ;
+
 }
 
 nsresult MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage (nsILDAPMessage* message,
