@@ -1760,33 +1760,34 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
     alphaStride = mAlphaRowBytes;
   }
 
+  PRInt32 y;
   // now composite the two images together
   switch (mAlphaDepth) {
   case 1:
-    for (int y=0; y<aDHeight; y++) {
+    for (y=0; y<aDHeight; y++) {
       PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
       PRUint8 *dstAlpha = dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes;
       PRUint8 *src = rgbPtr + y*rgbStride; 
       PRUint8 *alpha = alphaPtr + y*alphaStride;
       for (int x=0; x<aDWidth; x++, dst+=3, src+=3) {
-#define GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
-#define SET_BIT(rowptr, x) (rowptr[(x)>>3] |= (1<<(7-(x)&0x7)))
+#define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
+#define NS_SET_BIT(rowptr, x) (rowptr[(x)>>3] |= (1<<(7-(x)&0x7)))
 
         // if this pixel is opaque then copy into the destination image
-        if (GET_BIT(alpha, x)) {
+        if (NS_GET_BIT(alpha, x)) {
           dst[0] = src[0];
           dst[1] = src[1];
           dst[2] = src[2];
-          SET_BIT(dstAlpha, aDX+x);
+          NS_SET_BIT(dstAlpha, aDX+x);
         }
 
-#undef GET_BIT
-#undef SET_BIT
+#undef NS_GET_BIT
+#undef NS_SET_BIT
       }
     }
     break;
   case 8:
-    for (int y=0; y<aDHeight; y++) {
+    for (y=0; y<aDHeight; y++) {
       PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
       PRUint8 *dstAlpha = 
         dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes + aDX;
@@ -1805,7 +1806,7 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
     break;
   case 0:
   default:
-    for (int y=0; y<aDHeight; y++)
+    for (y=0; y<aDHeight; y++)
       memcpy(dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX, 
              rgbPtr + y*rgbStride,
              3*aDWidth);
