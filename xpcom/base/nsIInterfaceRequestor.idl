@@ -1,0 +1,48 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIInterfaceRequestor interface defines a generic interface for 
+ * requesting objects that a given object might implement.  This is very
+ * similar to QueryInterface found in nsISupports.  The main difference being
+ * that objects returned from this interface are not required to provide a way
+ * back to the object implementing this interface.  The semantics of QI() 
+ * dictate that given an interface A that you QI() on to get to interface B,
+ * you must be able to QI on B to get back to A.  This interface however 
+ * allows you to obtain an interface C from A that may or most likely will not
+ * have the ability to get back to A. 
+ */
+
+[scriptable, uuid(033A1470-8B2A-11d3-AF88-00A024FFC08C)]
+interface nsIInterfaceRequestor : nsISupports
+{
+	/*
+	Asks the object for a listener object supporting a particular interface.
+	This method is used to allow the listener to not adhere to the
+	QI rules.  By providing a a getInterface call the component can have
+	completely different objects for each distinct type of interface.
+	*/
+	void getInterface(in nsIIDRef uuid, 
+                      [iid_is(uuid),retval] out nsQIResult result);
+};
