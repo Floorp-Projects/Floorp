@@ -2236,7 +2236,7 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, nsMsgThread **pnewThr
 }
 
 
-nsMsgThread *nsMsgDatabase::GetThreadForReference(const char * msgID)
+nsMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID)
 {
 	nsMsgHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
 	nsMsgThread *thread = NULL;
@@ -2285,7 +2285,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		if (reference.Length() == 0)
 			break;
 
-		if ((thread = GetThreadForReference(reference.GetBuffer())) != NULL)
+		if ((thread = GetThreadForReference(reference)) != NULL)
 		{
 			thread->GetThreadKey(&threadId);
 			newHdr->SetThreadId(threadId);
@@ -2329,16 +2329,16 @@ nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBoo
 	return thread->AddChild(newHdr, threadInThread);
 }
 
-nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(const char *reference)
+nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)
 {
 	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	return nsnull;
 }
 
-nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(const char *msgID)
+nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 {
     nsIEnumerator* hdrs;
-	nsMsgHdr *pHeader = nsnull;
+	nsIMessage *pHeader = nsnull;
 
     nsresult rv = EnumerateMessages(&hdrs);
     if (NS_FAILED(rv)) 
@@ -2352,12 +2352,14 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(const char *msgID)
 
 		nsString messageId;
         (void)pHeader->GetMessageId(messageId);
-		if (!nsCRT::strcmp(messageId, msgID))
+		if (msgID.Equals(messageId, PR_FALSE))
 			break;
 		NS_RELEASE(pHeader);
 		pHeader = nsnull;
 	}
-	return pHeader;
+	nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, pHeader);      // closed system, cast ok
+
+	return msgHdr;
 }
 
 nsMsgThread *	nsMsgDatabase::GetThreadContainingMsgHdr(nsMsgHdr *msgHdr)

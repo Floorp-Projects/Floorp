@@ -252,6 +252,8 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultRefe
 	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
 	{
 		startNextRef = GetNextReference(startNextRef, resultReference);
+		if (refIndex == refNum)
+			break;
 	}
 
 	if (refIndex != refNum)

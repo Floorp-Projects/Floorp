@@ -225,12 +225,12 @@ protected:
 	// prefs stuff - in future, we might want to cache the prefs interface
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
 	// retrieval methods
-	nsMsgThread *	GetThreadForReference(const char * msgID);
+	nsMsgThread *	GetThreadForReference(nsString2 &msgID);
 	nsMsgThread *	GetThreadForSubject(const char * subject);
 	nsMsgThread *	GetThreadForMsgKey(nsMsgKey msgKey);
 	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
-	nsMsgHdr	*	GetMsgHdrForReference(const char *reference);
-	nsMsgHdr	*	GetMsgHdrForMessageID(const char *msgID);
+	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
+	nsMsgHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, nsMsgThread **newThread);
