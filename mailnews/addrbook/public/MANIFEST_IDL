@@ -3,4 +3,5 @@
 #
 
 nsIAbAddressCollecter.idl
+nsIAbUpgrader.idl
 
