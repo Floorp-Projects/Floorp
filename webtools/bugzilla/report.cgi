@@ -174,6 +174,12 @@ while (MoreSQLData()) {
     $col = "" if ($col eq $columns{''});
     $tbl = "" if ($tbl eq $columns{''});
     
+    # account for the fact that names may start with '_' or '.'.  Change this 
+    # so the template doesn't hide hash elements with those keys
+    $row =~ s/^([._])/ $1/;
+    $col =~ s/^([._])/ $1/;
+    $tbl =~ s/^([._])/ $1/;
+
     $data{$tbl}{$col}{$row}++;
     $names{"col"}{$col}++;
     $names{"row"}{$row}++;
