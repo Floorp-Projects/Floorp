@@ -83,8 +83,6 @@
 {
   nsIDOMHTMLOptionElement* optionElt = (nsIDOMHTMLOptionElement*) [aSender tag];
   optionElt->SetSelected(PR_TRUE);
-  [self autorelease]; // Free up ourselves.
-  [[aSender menu] autorelease]; // Free up the menu.
 
   // Fire a DOM event for the title change.
   nsCOMPtr<nsIDOMEvent> event;
@@ -130,8 +128,9 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     sel->GetMultiple(&multiple);
     if(size > 1 || multiple)
       return NS_OK;
-      
-    NSMenu* menu = [[NSMenu alloc] init]; // Retain the menu.
+    // the call to popUpContextMenu: is synchronous so we don't need to
+    // worry about retaining the menu for later.
+    NSMenu* menu = [[[NSMenu alloc] init] autorelease];
 
     // We'll set the disabled state as the options are created, so disable
     // auto-enabling via NSMenuValidation.
@@ -164,8 +163,8 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
       option->GetDisabled(&disabled);
       if (disabled)
         [menuItem setEnabled: NO];
-      CHOptionSelector* optSelector = [[CHOptionSelector alloc] initWithSelect: sel];
-      [menuItem setTarget: optSelector];
+      CHOptionSelector* optSelector = [[[CHOptionSelector alloc] initWithSelect: sel] autorelease];
+      [menuItem setTarget: optSelector];									// retains
       [menuItem setAction: @selector(selectOption:)];
     }
 
