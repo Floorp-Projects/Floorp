@@ -69,12 +69,12 @@ public:
 	nsCOMPtr<nsICommandParams> cmdParamObj;
 	// test methods
 public:
-	static nsICommandManager * GetCommandMgrObject(nsIWebBrowser *aWebBrowser);
-	static nsICommandManager * GetCommandMgrWithContractIDObject();
-	void IsCommandSupportedTest(const char *, int);
-	void IsCommandEnabledTest(const char *, int);
-	void GetCommandStateTest(const char *, int);
-	void DoCommandTest(const char *, const char *, int);
+	static nsICommandManager * GetCommandMgrObject(nsIWebBrowser *aWebBrowser, PRInt16);
+	static nsICommandManager * GetCommandMgrWithContractIDObject(PRInt16);
+	void IsCommandSupportedTest(const char *, PRInt16);
+	void IsCommandEnabledTest(const char *, PRInt16);
+	void GetCommandStateTest(const char *, PRInt16);
+	void DoCommandTest(const char *, const char *, PRInt16);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 // Operations
