@@ -208,7 +208,7 @@
       }
 
       function viewPopups() {
-        window.openDialog("chrome://communicator/content/popupManager.xul", "",
+        window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "",
                           "chrome,resizable=yes", "");
       }
 
