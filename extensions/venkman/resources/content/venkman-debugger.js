@@ -216,6 +216,7 @@ function unrealizeScript(script)
                 {
                     arrayRemoveAt(bpr.scriptRecords, j);
                     --scriptRec.bpcount;
+                    bpr.invalidate();
                 }
             }
         }
@@ -283,8 +284,6 @@ function setThrowMode (tmode)
 function debugTrap (frame, type, rv)
 {
     var tn = "";
-    var showFrame = true;
-    var sourceContext = 2;
     var retcode = jsdIExecutionHook.RETURN_CONTINUE;
 
     $ = new Array();
@@ -317,8 +316,6 @@ function debugTrap (frame, type, rv)
             if (console._stepPast == frame.script.fileName + frame.line)
                 return jsdIExecutionHook.RETURN_CONTINUE;
             delete console._stepPast;
-            showFrame = false;
-            sourceContext = 0;
             setStopState(false);
             break;
         default:
@@ -344,8 +341,6 @@ function debugTrap (frame, type, rv)
     console.stackView.stack.open();
     var frameRec = new FrameRecord(frame);
     console.stackView.stack.appendChild (frameRec);
-    frameRec.open();                /* open the node for this stack frame */
-    frameRec.childData[0].open();   /* and the "scope" child              */
     
     while ((frame = frame.callingFrame))
     {
@@ -353,16 +348,7 @@ function debugTrap (frame, type, rv)
         console.frames.push(frame);
     }
 
-    frame = console.frames[0];
-    
-    if (showFrame)
-        display (formatFrame(frame));
-    
-    if (sourceContext > -1)
-        displaySource (frame.script.fileName, frame.line, sourceContext);
-    
-    setCurrentFrameByIndex(0);
-    console.onDebugTrap()
+    setTimeout (console.onDebugTrap, 100, type);
     
     console.jsds.enterNestedEventLoop(); 
 
@@ -415,6 +401,8 @@ function setCurrentFrameByIndex (index)
     console.stopLine = cf.line;
     console.stopFile = cf.script.fileName;
     console.onFrameChanged (cf, console._currentFrameIndex);
+
+    return cf;
 }
 
 function clearCurrentFrame ()
