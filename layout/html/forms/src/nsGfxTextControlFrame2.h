@@ -42,8 +42,8 @@ class nsISupportsArray;
 class nsIHTMLContent;
 class nsIEditor;
 class nsISelectionController;
-class nsTextAreaSelectionImpl;
-class nsTextAreaKeyListener;
+class nsTextInputSelectionImpl;
+class nsTextInputListener;
 class nsIDOMCharacterData;
 
 
@@ -236,8 +236,8 @@ private:
 
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
-  nsTextAreaSelectionImpl *mTextSelImpl;
-  nsTextAreaKeyListener *mTextKeyListener;
+  nsTextInputSelectionImpl *mTextSelImpl;
+  nsTextInputListener *mTextListener;
 };
 
 #endif
