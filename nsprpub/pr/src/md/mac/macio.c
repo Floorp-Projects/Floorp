@@ -275,8 +275,10 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 			(void) PBReadAsync(&pbAsync);
 		else
 			(void) PBWriteAsync(&pbAsync);
-
-		WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
+		
+		/* See if the i/o call is still pending before we actually yield */
+		if (pbAsync.pb.ioParam.ioResult == 1)
+			WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
 	}
 	
 	err = me->md.osErrCode;
