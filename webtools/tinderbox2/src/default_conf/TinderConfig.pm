@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.34 $ 
-# $Date: 2002/05/03 00:10:18 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.35 $ 
+# $Date: 2002/05/03 02:05:11 $ 
+# $Author: mcafee%netscape.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -63,7 +63,7 @@ package TinderConfig;
 
 # The user/group ids which tinderbox will run as. Hopefully these
 # integers are out of the restricted range (bigger is safer, bigger
-# then 100 is ideal but bigger then 25 is recommended.).
+# then 100 is ideal but bigger than 25 is recommended.).
 
 $TINDERBOX_UID=3310;
 $TINDERBOX_GID=3310;
@@ -103,7 +103,7 @@ $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 $TINDERBOX_CGIBIN_DIR = "/opt/tbox/public_html/cgi-bin/";
 
 # The top level tinderbox index file. Change this if you wish to
-# provide your own index file for tinderboxs web pages.
+# provide your own index file for tinderboxes web pages.
 
 $GLOBAL_INDEX_FILE = "index.html";
 
@@ -165,8 +165,8 @@ $EMPTY_TABLE_CELL = "";
 	   'TinderDB::Time',
 	  );
 
-# What border should the status legends use?  new browers allow us to
-# frame the parts of the legend without putting a border arround the
+# What border should the status legends use?  new browsers allow us to
+# frame the parts of the legend without putting a border around the
 # individual cells.
 
 #$DB_LEGEND_BORDER = "border rules=none";
@@ -179,7 +179,7 @@ $DB_LEGEND_BORDER = "";
 
 $UNIFORM_ROW_SPACING = 0;
 
-# Spacing on html page (in minutes), this resticts the
+# Spacing on html page (in minutes), this restricts the
 # minimum time between builds (to this value plus 5 minutes).
 # I suggest 5 minutes.
 
@@ -276,12 +276,12 @@ $VC_NAME = "Guilty";
 
 $VC_BUGNUM_REGEXP = '(\d\d\d+)';
 
-# Pick one method for storting data, Data::Dumper is slow but text
+# Pick one method for storing data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, available
 # from CPAN, which is a much faster binary format.
 
 # If you are worried about security you should use Storable because
-# Dumper uses and Eval to load the new code it is concievable that the
+# Dumper uses and Eval to load the new code it is conceivable that the
 # code could be forced to perform unwanted actions.
 
 $PersistenceImpl = (

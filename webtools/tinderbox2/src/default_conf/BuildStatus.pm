@@ -1,9 +1,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.19 $ 
-# $Date: 2002/05/02 23:43:24 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.20 $ 
+# $Date: 2002/05/03 02:05:12 $ 
+# $Author: mcafee%netscape.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
 
@@ -59,17 +59,17 @@ package BuildStatus;
 # case we need to add more types later.
 
 # possible new types include: unit-test-failed,
-# perforance-test-failed, coverage-failed, lint-failed
+# performance-test-failed, coverage-failed, lint-failed
 
-# The Tinderbox code only hardcodes the values of: 'not_running',
+# The Tinderbox code only hard-codes the values of: 'not_running',
 # 'building' to determine if the build in question has completed and
-# 'success' to dertermine if the build finished all that it was
+# 'success' to determine if the build finished all that it was
 # intended to do.  The various gradations of failure are not tracked
-# inside tinerbox but are useful for project managment.
+# inside tinderbox but are useful for project management.
 
 
 # If new types are added, try and keep to a small set of colors or the
-# display will get confusing.  You may find it convienent to keep a
+# display will get confusing.  You may find it convenient to keep a
 # distinction between different kinds of warnings or different kinds
 # of tests but we suggest keeping all warnings and all tests get the
 # same color.
@@ -82,7 +82,7 @@ package BuildStatus;
 # build fails.  There could be a new web page where developers could
 # request notification (email, page) when the next build is done.
 # This would allow developers to not watch the tinderbox webpage so
-# intently but be informed when an interesting change has occured.
+# intently but be informed when an interesting change has occurred.
 
 # Please send us interesting uses for the handler.  We would like to
 # make examples available.
@@ -134,7 +134,7 @@ package BuildStatus;
                             'html_color' => '#ffaa00',
                             'hdml_char'=> '~',
                             'handler' => \&main::null,
-                            'description' => 'Build succeded but tests failed',
+                            'description' => 'Build succeeded but tests failed',
                             'order' => 3,
                            },
 
@@ -214,7 +214,7 @@ sub is_status_final {
     return 1;
 }
 
-# rerturn true if and only if the status is valid (known the the
+# return true if and only if the status is valid (known the the
 # library).
 
 sub is_status_valid {
