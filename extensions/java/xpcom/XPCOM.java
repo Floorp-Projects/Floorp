@@ -38,9 +38,17 @@
 package org.mozilla.xpcom;
 
 import java.lang.reflect.*;
+import java.io.*;
 
 
 public final class XPCOM {
+
+  public static native nsIServiceManager initXPCOM(File aMozBinDirectory, AppFileLocProvider aAppFileLocProvider);
+  public static native void shutdownXPCOM(nsIServiceManager aServMgr);
+  public static native nsIServiceManager getServiceManager();
+  public static native nsIComponentManager getComponentManager();
+  public static native nsIComponentRegistrar getComponentRegistrar();
+  public static native nsILocalFile newLocalFile(String aPath, boolean followLinks);
 
   // Calling functions used by Java stub classes
   public static native void CallXPCOMMethodVoid(Object thisObj, int fnNumber, Object[] params);
@@ -115,4 +123,6 @@ public final class XPCOM {
 
     return iid;
   }
+
 }
+
