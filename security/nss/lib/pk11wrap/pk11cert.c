@@ -851,8 +851,11 @@ pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
         goto loser;
     }
 
-    new_node->type =  *((CK_BBOOL *)fetchCrl[1].pValue)  ? 
-						SEC_KRL_TYPE : SEC_CRL_TYPE;
+    if (fetchCrl[1].pValue && *((CK_BBOOL *)fetchCrl[1].pValue))
+        new_node->type = SEC_KRL_TYPE;
+    else
+        new_node->type = SEC_CRL_TYPE;
+
     derCrl.type = 0;
     derCrl.data = (unsigned char *)fetchCrl[0].pValue;
     derCrl.len = fetchCrl[0].ulValueLen;
