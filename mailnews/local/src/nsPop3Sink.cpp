@@ -36,7 +36,7 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
-NS_IMPL_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
 nsPop3Sink::nsPop3Sink()
 {
