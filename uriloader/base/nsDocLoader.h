@@ -40,6 +40,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 
+struct nsChannelInfo;
 
 /****************************************************************************
  * nsDocLoaderImpl implementation...
@@ -82,7 +83,7 @@ protected:
     void DocLoaderIsEmpty(nsresult aStatus);
 
     void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                 nsIURI* aURL);
+                                 nsIChannel* aChannel);
 
     void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
                                nsIChannel *aDocChannel,
@@ -94,14 +95,28 @@ protected:
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                           nsIChannel* channel, nsresult aStatus);
 
+    void FireOnProgressChange(nsDocLoaderImpl* aLoadInitiator,
+                              nsIChannel* aChannel,
+                              PRInt32 aProgress,
+                              PRInt32 aProgressMax,
+                              PRInt32 aProgressDelta,
+                              PRInt32 aTotalProgress,
+                              PRInt32 aMaxTotalProgress);
+
+    void FireOnStateChange(nsIWebProgress *aProgress,
+                           nsIRequest* aChannel,
+                           PRInt32 aStateFlags,
+                           nsresult aStatus);
+
+    void doStartDocumentLoad();
+    void doStartURLLoad(nsIChannel *aChannel);
+    void doStopURLLoad(nsIChannel *aChannel, nsresult aStatus);
+    void doStopDocumentLoad(nsIChannel* aChannel, nsresult aStatus);
+
     // get web progress returns our web progress listener or if
     // we don't have one, it will look up the doc loader hierarchy
     // to see if one of our parent doc loaders has one.
     nsresult GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgres);
-    // if a child doc loader's progress changed, they'll call this method
-    // on their parent docloader. this is so the parent knows to trigger OnProgress
-    // on the progress listener
-    void ChildProgressChange(nsDocLoaderImpl * aDocLoader);
 
 protected:
 
@@ -113,6 +128,7 @@ protected:
   
     nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
+    nsVoidArray                mListenerList;
     nsISupports*               mContainer;             // [WEAK] it owns me!
 
     nsDocLoaderImpl*           mParent;                // [WEAK]
@@ -132,10 +148,23 @@ protected:
     // The following member variables are related to the new nsIWebProgress 
     // feedback interfaces that travis cooked up.
     nsCOMPtr<nsIWebProgressListener> mProgressListener;
-    PRInt32 mProgressStatusFlags;
+    PRInt32 mProgressStateFlags;
+
     PRInt32 mCurrentSelfProgress;
     PRInt32 mMaxSelfProgress;
-    
+
+    PRInt32 mCurrentTotalProgress;
+    PRInt32 mMaxTotalProgress;
+
+    nsVoidArray mChannelInfoList;
+
+private:
+    nsresult AddChannelInfo(nsIChannel *aChannel);
+    nsChannelInfo *GetChannelInfo(nsIChannel *aChannel);
+    nsresult ClearChannelInfoList(void);
+    void CalculateMaxProgress(PRInt32 *aMax);
+///    void DumpChannelInfo(void);
+
     // used to clear our internal progress state between loads...
     void ClearInternalProgress(); 
 };

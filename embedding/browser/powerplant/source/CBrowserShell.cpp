@@ -111,7 +111,7 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
   NS_ENSURE_TRUE(treeItem, NS_ERROR_FAILURE);
   mWebBrowserAsTreeItem = treeItem;
   
-  nsCOMPtr<nsIWebProgress> asProgress(do_QueryInterface(mWebBrowser));
+  nsCOMPtr<nsIWebProgress> asProgress(do_GetInterface(mWebBrowser));
   NS_ENSURE_TRUE(asProgress, NS_ERROR_FAILURE);
   mWebBrowserAsProgress = asProgress;
   

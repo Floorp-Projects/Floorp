@@ -968,7 +968,7 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
       nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
       nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
       nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
-      nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(aDocShell));
+      nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
       nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
       nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
       NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll &&

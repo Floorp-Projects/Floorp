@@ -45,6 +45,8 @@ nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull), mTimerSet(PR_
 
 {
 	NS_INIT_REFCNT();
+
+    mActiveDocuments = 0;
 }
 
 nsWebBrowserChrome::~nsWebBrowserChrome()
@@ -343,51 +345,84 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 // nsWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowserChrome::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+NS_IMETHODIMP
+nsWebBrowserChrome::OnProgressChange(nsIWebProgress* aProgress,
+                                      nsIRequest* aRequest,
+                                      PRInt32 aCurSelfProgress,
+                                      PRInt32 aMaxSelfProgress, 
+                                      PRInt32 aCurTotalProgress,
+                                      PRInt32 aMaxTotalProgress)
 {
+  mProgress = aCurTotalProgress;
+  mMaxProgress = aMaxTotalProgress;
+  if(mBrowserWindow->mStatus) {
+    nsAutoString buf;
+    PRUint32 size;
+
+    buf.AppendWithConversion("Loaded ");
+    buf.AppendInt(mCurrent);
+    buf.AppendWithConversion(" of ");
+    buf.AppendInt(mTotal);
+    buf.AppendWithConversion(" items.  (");
+    buf.AppendInt(mProgress);
+    buf.AppendWithConversion(" bytes of ");
+    buf.AppendInt(mMaxProgress);
+    buf.AppendWithConversion(" bytes)");
+
+    mBrowserWindow->mStatus->SetText(buf,size);
+  }
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
+NS_IMETHODIMP
+nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
+                                  nsIRequest* aRequest,
+                                  PRInt32 aProgressStateFlags,
+                                  nsresult aStatus)
 {
-   return NS_OK;
-} 
-
-NS_IMETHODIMP nsWebBrowserChrome::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   if(aProgressStatusFlags & nsIWebProgress::flag_net_start)
-      OnLoadStart(aChannel);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop)
-      OnLoadFinished(aChannel, aProgressStatusFlags);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_dns)
-      OnStatusDNS(aChannel);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_connecting)
-      OnStatusConnecting(aChannel);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_redirecting)
-      OnStatusRedirecting(aChannel);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_negotiating)
-      OnStatusNegotiating(aChannel);
-   else if(aProgressStatusFlags & nsIWebProgress::flag_net_transferring)
-      OnStatusTransferring(aChannel);
-
-   if(aProgressStatusFlags & nsIWebProgress::flag_win_start)
+  if (aProgressStateFlags & flag_start) {
+    if (aProgressStateFlags & flag_is_network) {
       OnWindowActivityStart();
-   else if(aProgressStatusFlags & nsIWebProgress::flag_win_stop)
+      OnLoadStart(aRequest);
+    }
+    if (aProgressStateFlags & flag_is_request) {
+      mTotal += 1;
+    }
+  }
+
+  if (aProgressStateFlags & flag_stop) {
+    if (aProgressStateFlags & flag_is_request) {
+      mCurrent += 1;
+
+      if(mBrowserWindow->mStatus) {
+        nsAutoString buf;
+        PRUint32 size;
+
+        buf.AppendWithConversion("Loaded ");
+        buf.AppendInt(mCurrent);
+        buf.AppendWithConversion(" of ");
+        buf.AppendInt(mTotal);
+        buf.AppendWithConversion(" items.  (");
+        buf.AppendInt(mProgress);
+        buf.AppendWithConversion(" bytes of ");
+        buf.AppendInt(mMaxProgress);
+        buf.AppendWithConversion(" bytes)");
+
+        mBrowserWindow->mStatus->SetText(buf,size);
+      }
+    }
+
+    if (aProgressStateFlags & flag_is_network) {
+      OnLoadFinished(aRequest, aProgressStateFlags);
       OnWindowActivityFinished();
+    }
+  }
 
-   return NS_OK;
-}
+  if (aProgressStateFlags & flag_transferring) {
+    OnStatusTransferring(aRequest);
+  }
 
-NS_IMETHODIMP nsWebBrowserChrome::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   //XXXTAB Implement
-   NS_ERROR("NotYetImplemented");
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
@@ -430,17 +465,20 @@ nsBrowserWindow* nsWebBrowserChrome::BrowserWindow()
 // nsWebBrowserChrome: Status Change Handling
 //*****************************************************************************   
 
-void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
+void nsWebBrowserChrome::OnLoadStart(nsIRequest* aRequest)
 {
-   mBrowserWindow->mLoadStartTime = PR_Now();
+mCurrent=mTotal=mProgress=mMaxProgress=0;
 
-   if(mBrowserWindow->mThrobber)
-      mBrowserWindow->mThrobber->Start();
+  mBrowserWindow->mLoadStartTime = PR_Now();
 
-   if (aChannel) {
+  if (aRequest) {
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIURI> uri;
 
-     nsCOMPtr<nsIURI> uri;
-     aChannel->GetURI(getter_AddRefs(uri));
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      channel->GetURI(getter_AddRefs(uri));
      
 #ifdef MOZ_PERF_METRICS
       if (PR_FALSE == mTimerSet) {
@@ -458,8 +496,7 @@ void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
       }
 #endif
 
-      if(mBrowserWindow->mStatus)
-        {
+      if(mBrowserWindow->mStatus) {
         nsXPIDLCString uriString;
 
         uri->GetSpec(getter_Copies(uriString));
@@ -468,15 +505,16 @@ void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
         url.AppendWithConversion(": start");
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(url,size);
-        }
-   } // if (aChannel)
+      }
+    }
+  } // if (aChannel)
 }
 
-void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel, 
-   PRInt32 aProgressStatusFlags)
+void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
+                                        PRInt32 aProgressStatusFlags)
 {
 #ifdef MOZ_PERF_METRICS
-  if ( (aProgressStatusFlags & nsIWebProgress::flag_win_stop) && mTimerSet ) {
+  if ( /*(aProgressStatusFlags & nsIWebProgress::flag_win_stop) && */mTimerSet ) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
     MOZ_TIMER_STOP(mTotalTime);
     MOZ_TIMER_LOG(("Total (Layout + Page Load) Time (webBrowserChrome=%p): ", this));
@@ -485,37 +523,40 @@ void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel,
   }
 #endif
 
-   nsXPIDLCString uriString;
-   if(aChannel)
-      {
-      nsCOMPtr<nsIURI> uri;
-      aChannel->GetURI(getter_AddRefs(uri));
+  nsXPIDLCString uriString;
+  if(aRequest) {
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIURI> uri;
+
+    channel = do_QueryInterface(channel, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      channel->GetURI(getter_AddRefs(uri));
 
       uri->GetSpec(getter_Copies(uriString));
-      }
-   
-   nsAutoString msg; msg.AssignWithConversion(uriString);
+    }
+  }  
+  nsAutoString msg; msg.AssignWithConversion(uriString);
 
-   PRTime endLoadTime = PR_Now();
-   if(mBrowserWindow->mShowLoadTimes)
-      {
-      printf("Loading ");
-      fputs(msg, stdout);
-      PRTime delta;
-      LL_SUB(delta, endLoadTime, mBrowserWindow->mLoadStartTime);
-      double usecs;
-      LL_L2D(usecs, delta);
-      printf(" took %g milliseconds\n", usecs / 1000.0);
-      }
-   if(mBrowserWindow->mThrobber)
-      mBrowserWindow->mThrobber->Stop();
-   if(mBrowserWindow->mStatus)
-      {
-      PRUint32 size;
+  PRTime endLoadTime = PR_Now();
+  if(mBrowserWindow->mShowLoadTimes)
+     {
+     printf("Loading ");
+     fputs(msg, stdout);
+     PRTime delta;
+     LL_SUB(delta, endLoadTime, mBrowserWindow->mLoadStartTime);
+     double usecs;
+     LL_L2D(usecs, delta);
+     printf(" took %g milliseconds\n", usecs / 1000.0);
+     }
 
-      msg.AppendWithConversion(" done.");
+  if(mBrowserWindow->mStatus)
+     {
+     PRUint32 size;
 
-      mBrowserWindow->mStatus->SetText(msg, size);
+     msg.AppendWithConversion(" done.");
+
+///      mBrowserWindow->mStatus->SetText(msg, size);
       }
 }
 
@@ -549,14 +590,20 @@ void nsWebBrowserChrome::OnStatusNegotiating(nsIChannel* aChannel)
 {
 }
 
-void nsWebBrowserChrome::OnStatusTransferring(nsIChannel* aChannel)
+void nsWebBrowserChrome::OnStatusTransferring(nsIRequest* aRequest)
 {
 }
 
 void nsWebBrowserChrome::OnWindowActivityStart()
 {
+   if(mBrowserWindow->mThrobber)
+      mBrowserWindow->mThrobber->Start();
+
 }
 
 void nsWebBrowserChrome::OnWindowActivityFinished()
 {
+   if(mBrowserWindow->mThrobber)
+      mBrowserWindow->mThrobber->Stop();
+
 }

@@ -53,7 +53,7 @@ enum {
   LOCATION,
   TITLE,
   PROGRESS,
-  NET_STATUS,
+  NET_STATE,
   NET_START,
   NET_STOP,
   NEW_WINDOW,
@@ -118,7 +118,7 @@ static void
 gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 curprogress, gint32 maxprogress);
 
 static void
-gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint flags);
+gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint flags, guint status);
 
 static nsresult
 gtk_moz_embed_handle_new_window(PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
@@ -257,13 +257,13 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, progress),
 		   gtk_marshal_NONE__INT_INT,
 		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_INT);
-  moz_embed_signals[NET_STATUS] =
-    gtk_signal_new("net_status",
+  moz_embed_signals[NET_STATE] =
+    gtk_signal_new("net_state",
 		   GTK_RUN_FIRST,
 		   object_class->type,
-		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_status),
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_state),
 		   gtk_marshal_NONE__INT,
-		   GTK_TYPE_NONE, 1, GTK_TYPE_INT);
+		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_UINT);
   moz_embed_signals[NET_START] =
     gtk_signal_new("net_start",
 		   GTK_RUN_FIRST,
@@ -352,7 +352,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 					       embed);
   embed_private->embed->SetProgressCallback((void (*)(void *, gint, gint))gtk_moz_embed_handle_progress,
 					    embed);
-  embed_private->embed->SetNetCallback((void (*)(void *, gint))gtk_moz_embed_handle_net,
+  embed_private->embed->SetNetCallback((void (*)(void *, gint, guint))gtk_moz_embed_handle_net,
 				       embed);
   embed_private->embed->SetNewBrowserCallback(gtk_moz_embed_handle_new_window, embed);
   embed_private->embed->SetVisibilityCallback(gtk_moz_embed_handle_visibility, embed);
@@ -850,17 +850,17 @@ gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 curprogress, gint32 max
 }
 
 static void
-gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags)
+gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags, guint32 status)
 {
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   // if we've got the start flag, emit the signal
-  if (flags & GTK_MOZ_EMBED_FLAG_WIN_START)
+  if ((flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) && (flags & GTK_MOZ_EMBED_FLAG_START))
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_START]);
   // for people who know what they are doing
-  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATUS], flags);
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATE], flags, status);
   // and for stop, too
-  if (flags & GTK_MOZ_EMBED_FLAG_WIN_STOP)
+  if ((flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) && (flags & GTK_MOZ_EMBED_FLAG_STOP))
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STOP]);
 
 }

@@ -23,82 +23,83 @@
 #include "nsISupports.idl"
 
 /**
- * The nsIWebProgressListener is the interface implemented by clients wishing to 
- * listen in on a progress object.
+ * The nsIWebProgressListener interface is implemented by clients wishing to 
+ * listen in on the progress associated with the loading of documents.
  */
 
+interface nsIRequest;
+interface nsIWebProgress;
 interface nsIChannel;
 interface nsIURI;
 
 [scriptable, uuid(570F39D1-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgressListener : nsISupports
 {
-	/*
-	Notification of that the progress has changed for the main object we are 
-	tracking progress for.
+  /**
+   * Progress state transition bits.
+   * These flags indicate the various states that documents and requests
+   * may transition through as they are being loaded.
+   */
+   const long flag_start          = 0x00000001;
+   const long flag_redirecting    = 0x00000002;
+   const long flag_transferring   = 0x00000004;
+   const long flag_negotiating    = 0x00000008;
+   const long flag_stop           = 0x00000010;
 
-	@param channel - The main channel that is loading that we are tracking
-		progress for.
+   /**
+    * Progress type bits.
+    * These flags indicate whether the transition is occuring on a document
+    * or an individual request within the document.
+    */
+   const long flag_is_request     = 0x00010000;
+   const long flag_is_document    = 0x00020000;
+   const long flag_is_network     = 0x00040000;
+   const long flag_is_window      = 0x00080000;
+  /**
+   * Notification indicating the state has changed for one of the requests
+   * associated with the document loaded.
+   *
+   * @param aWebProgress    The nsIWebProgress instance that fired the
+   *                        notification
+   *
+   * @param aRequest        The nsIRequest which has changed state.
+   *
+   * @param aStateFlags     Flags indicating the state change.
+   *
+   * @param aStatus         Status code for the state change.
+   */
+   void onStateChange(in nsIWebProgress aWebProgress,
+                      in nsIRequest aRequest,
+                      in long aStateFlags,
+                      in unsigned long aStatus);
 
-	@param curSelfProgress - The current position of progress.  This is
-		between 0 and maxSelfProgress.  This is the position of only this 
-		progress object.  It doesn not include the progress of all children.
-
-	@param maxSelfProgress - The maximum position that progress will go to.
-		This sets a relative position point for the current progress to relate
-		to.  This is the max position of only this progress object.  It does not
-		include the progress of all the children.
-
-	@param curTotalProgress - The current position of progress for this object
-		and all children added together.  This is between 0 and maxTotalProgress.
-		
-	@param maxTotalProgress - The maximum position that progress will go to for
-		the max of this progress object and all children.  This sets the relative
-		position point for the current progress to relate to.
-	*/
-	void onProgressChange(in nsIChannel channel, in long curSelfProgress, 
-		in long maxSelfProgress, in long curTotalProgress, 
-		in long maxTotalProgress);
-
-	/*
-	Notification that the progress has changed for a child of the main object
-	we are tracking progress for.
-
-	@param channel - The child channel that we are getting this progress change
-		for.
-
-	@param curChildProgress - The current position of progress.  This is
-		between 0 and maxSelfProgress.  This is the position of only this 
-		child progress object.
-
-	@param maxChildProgress - The maximum position that progress will go to.
-		This sets a relative position point for the current progress to relate
-		to.  This is the max position of only this child progress object.
-	*/
-	void onChildProgressChange(in nsIChannel channel, in long curChildProgress,
-		in long maxChildProgress);
-
-	/*
-	Notification that the progress status flags have changed for the main item
-	we are tracking progress for.
-
-	@param channel - The main channel that is loading that we are tracking
-		progress for.
-	@param progressStatusFlags - This is the current progressStatusFlags.  This
-		will be one or a combination of the progress status flags.
-	*/
-	void onStatusChange(in nsIChannel channel, in long progressStatusFlags);
-
-	/*
-	Notification that the progress status flags have changed for a child of the
-	main item we are tracking progress for..
-
-	@param channel - The child channel that this status change message is for.
-	@param progressStatusFlags - This is the current progressStatusFlags.  This
-		will be one or a combination of the progress status flags.
-	*/
-	void onChildStatusChange(in nsIChannel channel, in long progressStatusFlags);
-
+  /**
+   * Notification that the progress has changed for one of the requests being
+   * monitored.
+   *
+   * @param aWebProgress        The nsIWebProgress instance that fired the
+   *                            notification
+   *
+   * @param aRequest            The nsIRequest that has new progress.
+   *
+   * @param aCurSelfProgress    The current progress for aRequest.
+   *
+   * @param aMaxSelfProgress    The maximum progress for aRequest.  If this
+   *                            value is not known then -1 is passed.
+   *
+   * @param aCurTotalProgress   The current progress for all the requests
+   *                            being monitored.
+   *
+   * @param aMaxTotalProgress   The total progress for all the requests being
+   *                            monitored.  If this value is not known then
+   *                            -1 is passed.
+   */
+   void onProgressChange(in nsIWebProgress aWebProgress,
+                         in nsIRequest aRequest,
+                         in long aCurSelfProgress,
+                         in long aMaxSelfProgress,
+                         in long aCurTotalProgress,
+                         in long aMaxTotalProgress);
 	/*
 	Called when the window being watched changes the location that is currently.
 	This is not when a load is requested, but rather once it is verified that 

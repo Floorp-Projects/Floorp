@@ -80,7 +80,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 nsDocShell::nsDocShell() : 
   mContentListener(nsnull),
-  mWebProgressListener(nsnull),
   mInitInfo(nsnull), 
   mMarginWidth(0), 
   mMarginHeight(0),
@@ -133,7 +132,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
@@ -154,9 +152,6 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
-   else if(aIID.Equals(NS_GET_IID(nsIWebProgressListener)) &&
-      NS_SUCCEEDED(EnsureWebProgressListener()))
-      *aSink = mWebProgressListener;
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
       *aSink = mScriptGlobal;
@@ -179,15 +174,18 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
         else
             return NS_NOINTERFACE;
       }
-   else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)))
+   else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) ||
+            aIID.Equals(NS_GET_IID(nsIWebProgress)))
    {
      nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
      NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
      nsCOMPtr<nsIDocumentLoader> docLoader;
      NS_ENSURE_SUCCESS(uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIDocShell*, this),
       getter_AddRefs(docLoader)), NS_ERROR_FAILURE);  
-     if (docLoader)
-       return docLoader->QueryInterface(aIID, aSink);
+     if (docLoader) {
+       nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(docLoader));
+       return requestor->GetInterface(aIID, aSink);
+     }
      else
        return NS_ERROR_FAILURE;
    }
@@ -775,15 +773,25 @@ NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 
 NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
-   mTreeOwner = aTreeOwner; // Weak reference per API
    // Don't automatically set the progress based on the tree owner for frames
-   if(!IsFrame()) 
-      {
-      nsCOMPtr<nsIWebProgressListener> progressListener(do_QueryInterface(aTreeOwner));
-      mOwnerProgressListener = progressListener; // Weak reference per API
+  if (!IsFrame()) {
+    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mLoadCookie));
+    
+    if (webProgress) {
+      nsCOMPtr<nsIWebProgressListener> oldListener(do_QueryInterface(mTreeOwner));
+      nsCOMPtr<nsIWebProgressListener> newListener(do_QueryInterface(aTreeOwner));
+
+      if (oldListener) {
+        webProgress->RemoveProgressListener(oldListener);
       }
-   else
-      mOwnerProgressListener = nsnull;
+
+      if (newListener) {
+        webProgress->AddProgressListener(newListener);
+      }
+    }
+  }
+
+   mTreeOwner = aTreeOwner; // Weak reference per API
 
    PRInt32 i, n = mChildren.Count();
    for(i = 0; i < n; i++)
@@ -1188,96 +1196,6 @@ NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
    NS_IF_ADDREF(*aSessionHistory);
    return NS_OK;
 }
-
-//*****************************************************************************
-// nsDocShell::nsIWebProgress
-//*****************************************************************************
-
-NS_IMETHODIMP nsDocShell::AddProgressListener(nsIWebProgressListener* aListener)
-{
-   if(!mWebProgressListenerList)
-      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mWebProgressListenerList)),
-         NS_ERROR_FAILURE);
-
-   // Make sure it isn't already in the list...  This is bad!
-   NS_ENSURE_ARG(mWebProgressListenerList->IndexOf(aListener) == -1);
-
-   NS_ENSURE_SUCCESS(mWebProgressListenerList->AppendElement(aListener),
-      NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::RemoveProgressListener(nsIWebProgressListener* aListener)
-{
-   NS_ENSURE_STATE(mWebProgressListenerList);
-   NS_ENSURE_ARG(aListener);
-
-   NS_ENSURE_TRUE(mWebProgressListenerList->RemoveElement(aListener),
-      NS_ERROR_INVALID_ARG);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
-{
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	Current connection Status of the browser.  This will be one of the enumerated
-	connection progress steps.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetCurSelfProgress(PRInt32* curSelfProgress)
-{
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The current position of progress.  This is between 0 and maxSelfProgress.
-	This is the position of only this progress object.  It doesn not include
-	the progress of all children.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetMaxSelfProgress(PRInt32* maxSelfProgress)
-{
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The maximum position that progress will go to.  This sets a relative
-	position point for the current progress to relate to.  This is the max
-	position of only this progress object.  It does not include the progress of
-	all the children.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetCurTotalProgress(PRInt32* curTotalProgress)
-{
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The current position of progress for this object and all children added
-	together.  This is between 0 and maxTotalProgress.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShell::GetMaxTotalProgress(PRInt32* maxTotalProgress)
-{
-   //XXXTAB First Check
-   //XXX First Check
-	/*
-	The maximum position that progress will go to for the max of this progress
-	object and all children.  This sets the relative position point for the
-	current progress to relate to.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
 //*****************************************************************************
 // nsDocShell::nsIBaseWindow
 //*****************************************************************************   
@@ -1328,7 +1246,6 @@ NS_IMETHODIMP nsDocShell::Destroy()
    mParentWidget = nsnull;
    mPrefs = nsnull;
    mCurrentURI = nsnull;
-   mWebProgressListenerList = nsnull;
 
    if(mScriptGlobal)
       {
@@ -1357,12 +1274,6 @@ NS_IMETHODIMP nsDocShell::Destroy()
       {
       mContentListener->DocShell(nsnull);
       NS_RELEASE(mContentListener);
-      }
-
-   if(mWebProgressListener)
-      {
-      mWebProgressListener->DocShell(nsnull);
-      NS_RELEASE(mWebProgressListener);
       }
 
    return NS_OK;
@@ -2396,7 +2307,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
         }
     }
 
-    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
     // Cancel any timers that were set for this loader.
     CancelRefreshURITimers();
 
@@ -2759,12 +2670,6 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::StopCurrentLoads()
-{
-   StopLoad();
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 {
     NS_ASSERTION(aURI, "null uri arg");
@@ -2883,7 +2788,6 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
     NS_ASSERTION(aURI, "uri is null");
 
     UpdateCurrentGlobalHistory();
-
     PRBool updateHistory = PR_TRUE;
 
     // Determine if this type of load should update history   
@@ -3026,7 +2930,13 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 void nsDocShell::SetCurrentURI(nsIURI* aURI)
 {
    mCurrentURI = aURI; //This assignment addrefs
-   FireOnLocationChange(aURI);
+   
+   nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie));
+   
+   NS_ASSERTION(loader, "No document loader");
+   if (loader) {
+     loader->FireOnLocationChange(aURI);
+   }
 }
 
 void nsDocShell::SetReferrerURI(nsIURI* aURI)
@@ -3246,143 +3156,6 @@ NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
 NS_IMETHODIMP nsDocShell::UpdateCurrentGlobalHistory()
 {
    // XXX Add code here that needs to update the current history item
-   return NS_OK;
-}
-
-//*****************************************************************************
-// nsDocShell: WebProgressListener Firing
-//*****************************************************************************   
-
-NS_IMETHODIMP nsDocShell::EnsureWebProgressListener()
-{
-   if(mWebProgressListener)   
-      return NS_OK;
-
-   mWebProgressListener = new nsDSWebProgressListener();
-   NS_ENSURE_TRUE(mWebProgressListener, NS_ERROR_OUT_OF_MEMORY);
-
-   NS_ADDREF(mWebProgressListener);
-   mWebProgressListener->DocShell(this);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::FireOnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
-{
-   if(mOwnerProgressListener)
-      mOwnerProgressListener->OnProgressChange(aChannel, aCurSelfProgress, 
-         aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
-
-   if(!mWebProgressListenerList)
-      return NS_OK;
-
-   PRUint32 count = 0;
-   mWebProgressListenerList->Count(&count);
-   for(PRUint32 x = 0; x < count; x++)
-      {
-      nsCOMPtr<nsISupports> element;
-      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
-      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
-      if(!listener) 
-         continue;
-      listener->OnProgressChange(aChannel, aCurSelfProgress, aMaxSelfProgress,
-         aCurTotalProgress, aMaxTotalProgress);
-      }
-   return NS_OK;
-}
-      
-NS_IMETHODIMP nsDocShell::FireOnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
-{
-   if(mOwnerProgressListener)
-      mOwnerProgressListener->OnChildProgressChange(aChannel, aCurChildProgress, 
-         aMaxChildProgress);
-
-   if(!mWebProgressListenerList)
-      return NS_OK;
-
-   PRUint32 count = 0;
-   mWebProgressListenerList->Count(&count);
-   for(PRUint32 x = 0; x < count; x++)
-      {
-      nsCOMPtr<nsISupports> element;
-      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
-      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
-      if(!listener) 
-         continue;
-      listener->OnChildProgressChange(aChannel, aCurChildProgress, 
-         aMaxChildProgress);
-      }
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::FireOnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   if(mOwnerProgressListener)
-      mOwnerProgressListener->OnStatusChange(aChannel, aProgressStatusFlags); 
-
-   if(!mWebProgressListenerList)
-      return NS_OK;
-
-   PRUint32 count = 0;
-   mWebProgressListenerList->Count(&count);
-   for(PRUint32 x = 0; x < count; x++)
-      {
-      nsCOMPtr<nsISupports> element;
-      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
-      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
-      if(!listener) 
-         continue;
-      listener->OnStatusChange(aChannel, aProgressStatusFlags);
-      }
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::FireOnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   if(mOwnerProgressListener)
-      mOwnerProgressListener->OnStatusChange(aChannel, aProgressStatusFlags); 
-
-   if(!mWebProgressListenerList)
-      return NS_OK;
-
-   PRUint32 count = 0;
-   mWebProgressListenerList->Count(&count);
-   for(PRUint32 x = 0; x < count; x++)
-      {
-      nsCOMPtr<nsISupports> element;
-      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
-      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
-      if(!listener) 
-         continue;
-      listener->OnChildStatusChange(aChannel, aProgressStatusFlags);
-      }
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::FireOnLocationChange(nsIURI* aURI)
-{
-   if(mOwnerProgressListener)
-      mOwnerProgressListener->OnLocationChange(aURI);
-
-   if(!mWebProgressListenerList)
-      return NS_OK;
-
-   PRUint32 count = 0;
-   mWebProgressListenerList->Count(&count);
-   for(PRUint32 x = 0; x < count; x++)
-      {
-      nsCOMPtr<nsISupports> element;
-      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
-      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
-      if(!listener) 
-         continue;
-      listener->OnLocationChange(aURI);
-      }
    return NS_OK;
 }
 

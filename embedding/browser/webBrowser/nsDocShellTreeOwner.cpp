@@ -377,46 +377,38 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetTitle(const PRUnichar* aTitle)
 // nsDocShellTreeOwner::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellTreeOwner::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+NS_IMETHODIMP
+nsDocShellTreeOwner::OnProgressChange(nsIWebProgress* aProgress,
+                                      nsIRequest* aRequest,
+                                      PRInt32 aCurSelfProgress,
+                                      PRInt32 aMaxSelfProgress, 
+                                      PRInt32 aCurTotalProgress,
+                                      PRInt32 aMaxTotalProgress)
 {
    if(!mOwnerProgressListener)
       return NS_OK;
       
-   return mOwnerProgressListener->OnProgressChange(aChannel, 
-         aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
-         aMaxTotalProgress);
+   return mOwnerProgressListener->OnProgressChange(aProgress,
+                                                   aRequest,
+                                                   aCurSelfProgress,
+                                                   aMaxSelfProgress,
+                                                   aCurTotalProgress,
+                                                   aMaxTotalProgress);
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
-{
-   if(!mOwnerProgressListener)
-      return NS_OK;
-
-   return mOwnerProgressListener->OnChildProgressChange(aChannel, 
-         aCurChildProgress, aMaxChildProgress);
-} 
-
-NS_IMETHODIMP nsDocShellTreeOwner::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
+NS_IMETHODIMP
+nsDocShellTreeOwner::OnStateChange(nsIWebProgress* aProgress,
+                                   nsIRequest* aRequest,
+                                   PRInt32 aProgressStateFlags,
+                                   nsresult aStatus)
 {
    if(!mOwnerProgressListener)
       return NS_OK;
    
-   return mOwnerProgressListener->OnStatusChange(aChannel, 
-         aProgressStatusFlags);
-}
-
-NS_IMETHODIMP nsDocShellTreeOwner::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   if(!mOwnerProgressListener)
-      return NS_OK;
-
-   return mOwnerProgressListener->OnChildStatusChange(aChannel, 
-      aProgressStatusFlags);
+   return mOwnerProgressListener->OnStateChange(aProgress,
+                                                aRequest,
+                                                aProgressStateFlags,
+                                                aStatus);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIURI* aURI)

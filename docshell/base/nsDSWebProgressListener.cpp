@@ -19,6 +19,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  */
+#if 0 /* This file is now longer used... */
 
 // Local Includes
 #include "nsDocShell.h"
@@ -140,3 +141,5 @@ nsDocShell* nsDSWebProgressListener::DocShell()
 {
    return mDocShell;
 }
+
+#endif /* 0 */

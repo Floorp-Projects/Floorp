@@ -124,7 +124,7 @@ NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeed
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
 {
 
-  nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mMessageWindowDocShell));
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mMessageWindowDocShell));
   nsCOMPtr<nsIWebProgressListener> webProgressListener(do_QueryInterface(mStatusFeedback));
 
 	mStatusFeedback = aStatusFeedback;

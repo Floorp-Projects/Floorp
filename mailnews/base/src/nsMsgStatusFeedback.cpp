@@ -36,6 +36,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIChannel.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
@@ -85,9 +86,13 @@ NS_INTERFACE_MAP_END
 // nsMsgStatusFeedback::nsIWebProgressListener
 //////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+NS_IMETHODIMP
+nsMsgStatusFeedback::OnProgressChange(nsIWebProgress* aWebProgress,
+                                      nsIRequest* aRequest,
+                                      PRInt32 aCurSelfProgress,
+                                      PRInt32 aMaxSelfProgress, 
+                                      PRInt32 aCurTotalProgress,
+                                      PRInt32 aMaxTotalProgress)
 {
   PRInt32 percentage = 0;
   if (aMaxTotalProgress > 0)
@@ -100,43 +105,37 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnProgressChange(nsIChannel* aChannel,
    return NS_OK;
 }
       
-NS_IMETHODIMP nsMsgStatusFeedback::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgStatusFeedback::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
+NS_IMETHODIMP
+nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest,
+                                   PRInt32 aProgressStateFlags,
+                                   nsresult aStatus)
 {
   nsresult rv;
-  if (aProgressStatusFlags & nsIWebProgress::flag_net_start)
+  if (aProgressStateFlags & flag_is_network)
   {
-    m_lastPercent = 0;
-    StartMeteors();
-    nsXPIDLString loadingDocument;
-    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
-                                    getter_Copies(loadingDocument));
-    if (NS_SUCCEEDED(rv))
-      ShowStatusString(loadingDocument);
-  }
-  else if (aProgressStatusFlags & nsIWebProgress::flag_net_stop)
-  {
-    StopMeteors();
-    nsXPIDLString documentDone;
-    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
-                                    getter_Copies(documentDone));
-    if (NS_SUCCEEDED(rv))
-      ShowStatusString(documentDone);
+    if (aProgressStateFlags & flag_start)
+    {
+      m_lastPercent = 0;
+      StartMeteors();
+      nsXPIDLString loadingDocument;
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
+                                      getter_Copies(loadingDocument));
+      if (NS_SUCCEEDED(rv))
+        ShowStatusString(loadingDocument);
+    }
+    else if (aProgressStateFlags & flag_stop)
+    {
+      StopMeteors();
+      nsXPIDLString documentDone;
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
+                                      getter_Copies(documentDone));
+      if (NS_SUCCEEDED(rv))
+        ShowStatusString(documentDone);
+    }
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgStatusFeedback::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgStatusFeedback::OnLocationChange(nsIURI* aLocation)
@@ -336,7 +335,8 @@ nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
 NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
                                           PRUint32 aProgress, PRUint32 aProgressMax)
 {
-  return OnProgressChange(channel, aProgress, aProgressMax, 
+  // XXX: What should the nsIWebProgress be?
+  return OnProgressChange(nsnull, channel, aProgress, aProgressMax, 
                           aProgress /* current total progress */, aProgressMax /* max total progress */);
 }
 

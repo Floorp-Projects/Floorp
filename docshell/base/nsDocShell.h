@@ -45,7 +45,6 @@
 
 // Local Includes
 #include "nsDSURIContentListener.h"
-#include "nsDSWebProgressListener.h"
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -113,7 +112,6 @@ class nsDocShell : public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
                    public nsIWebNavigation,
-                   public nsIWebProgress,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
@@ -136,7 +134,6 @@ public:
    NS_DECL_NSIDOCSHELLTREEITEM
    NS_DECL_NSIDOCSHELLTREENODE
    NS_DECL_NSIWEBNAVIGATION
-   NS_DECL_NSIWEBPROGRESS
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
@@ -196,7 +193,6 @@ protected:
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
       nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
       nsIInputStream* aPostData);
-   NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
    virtual void OnNewURI(nsIURI *aURI, nsIChannel* aChannel, loadType aLoadType);
@@ -214,19 +210,6 @@ protected:
    NS_IMETHOD ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd);
    NS_IMETHOD AddToGlobalHistory(nsIURI* aURI);
    NS_IMETHOD UpdateCurrentGlobalHistory();
-
-   // WebProgressListener Management
-   NS_IMETHOD EnsureWebProgressListener();
-
-   NS_IMETHOD FireOnProgressChange(nsIChannel* aChannel, 
-      PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-      PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress);
-   NS_IMETHOD FireOnChildProgressChange(nsIChannel* aChannel,
-      PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress);
-   NS_IMETHOD FireOnStatusChange(nsIChannel* aChannel, PRInt32 aProgressStatusFlags);
-   NS_IMETHOD FireOnChildStatusChange(nsIChannel* aChannel, 
-      PRInt32 aProgressStatusFlags);
-   NS_IMETHOD FireOnLocationChange(nsIURI* aURI);
 
    // Helper Routines
    nsDocShellInitInfo* InitInfo();
@@ -257,7 +240,6 @@ protected:
    nsVoidArray                mChildren;
    nsCOMPtr<nsISupportsArray> mRefreshURIList;
    nsDSURIContentListener*    mContentListener;
-   nsDSWebProgressListener*   mWebProgressListener;
    nsDocShellInitInfo*        mInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
    nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
@@ -272,7 +254,6 @@ protected:
    nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISHistory>      mSessionHistory;
    nsCOMPtr<nsIGlobalHistory> mGlobalHistory;
-   nsCOMPtr<nsISupportsArray> mWebProgressListenerList;
    nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
@@ -294,7 +275,6 @@ protected:
    For that reasons don't use nsCOMPtr.*/
    nsIDocShellTreeItem*       mParent;  // Weak Reference
    nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
-   nsIWebProgressListener*    mOwnerProgressListener; // Weak Reference
    nsIChromeEventHandler*     mChromeEventHandler; //Weak Reference
 };
 

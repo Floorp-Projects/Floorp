@@ -62,6 +62,9 @@ catch (ex)
   var backButton	= null;
   var forwardButton = null;
 
+  var useRealProgressFlag = false;
+  var totalRequests = 0;
+  var finishedRequests = 0;
 ///////////////////////////// DOCUMENT SAVE ///////////////////////////////////
 
 // focused frame URL
@@ -255,8 +258,12 @@ nsXULBrowserWindow.prototype =
    if(!statusMeter)
      statusMeter = document.getElementById("statusbar-icon");
     var percentage = 0;
-    if (max > 0)
-    {
+
+    if (!useRealProgressFlag && (channel != null)) {
+      return;
+    }
+
+    if (max > 0) {
       percentage = (current * 100) / max ;
       if (statusMeter.getAttribute("mode") != "normal")     
         statusMeter.setAttribute("mode", "normal");
@@ -279,60 +286,70 @@ nsXULBrowserWindow.prototype =
 		if(!stopMenu)
 			stopMenu = document.getElementById("menuitem-stop");
 
-		if(status & Components.interfaces.nsIWebProgress.flag_net_start)
-			{
-			// Remember when loading commenced.
-    		startTime = (new Date()).getTime();
-         // Turn progress meter on.
-			statusMeter.setAttribute("mode","undetermined");
-			throbberElement.setAttribute("busy", true);
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_stop)
-			{
-			// Record page loading time.
-			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-			var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
-			dump( msg + "\n" );
-			defaultStatus = msg;
-			UpdateStatusField();
-			window.XULBrowserWindow.setDefaultStatus(msg);
-       // Turn progress meter off.
-       statusMeter.setAttribute("mode","normal");
-       statusMeter.value = 0;  // be sure to clear the progress bar
-       statusMeter.progresstext = "";
-			throbberElement.setAttribute("busy", false);
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_dns)
-			{
-			alert("XXX: Not yet Implemented (navigator.js dns network step.");
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_connecting)
-			{
-			alert("XXX: Not yet Implemented (navigator.js connecting network step.");
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_transferring)
-			{
-			alert("XXX: Not yet Implemented (navigator.js transferring network step.");
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_redirecting)
-			{
-			alert("XXX: Not yet Implemented (navigator.js redirecting network step.");
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_net_negotiating)
-			{
-			alert("XXX: Not yet Implemented (navigator.js negotiating network step.");
-			}
+    if (status & Components.interfaces.nsIWebProgressListener.flag_start) {
+      if(status & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+        // Remember when loading commenced.
+        startTime = (new Date()).getTime();
+        // Turn progress meter on.
+        statusMeter.setAttribute("mode","undetermined");
+        throbberElement.setAttribute("busy", true);
 
-		if(status & Components.interfaces.nsIWebProgress.flag_win_start)
-			{
-			stopButton.setAttribute("disabled", false);
-			stopMenu.setAttribute("disabled", false);
-			}
-		else if(status & Components.interfaces.nsIWebProgress.flag_win_stop)
-			{
-			stopButton.setAttribute("disabled", true);
-			stopMenu.setAttribute("disabled", true);
-			}
+        // XXX: These need to be based on window activity...    
+        stopButton.setAttribute("disabled", false);
+        stopMenu.setAttribute("disabled", false);
+
+        // Initialize the progress stuff...
+        statusMeter.setAttribute("mode","undetermined");
+        useRealProgressFlag = false;
+        totalRequests = 0;
+        finishedRequests = 0;
+      }
+      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+        totalRequests += 1;
+      }
+    }
+    else if (status & Components.interfaces.nsIWebProgressListener.flag_stop) {
+      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+        finishedRequests += 1;
+        if (!useRealProgressFlag) {
+          this.onProgress(null, finishedRequests, totalRequests);
+        }
+      }
+      if(status & Components.interfaces.nsIWebProgressListener.flag_is_network) {
+        // Record page loading time.
+        var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+        var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
+        dump( msg + "\n" );
+        defaultStatus = msg;
+        UpdateStatusField();
+        window.XULBrowserWindow.setDefaultStatus(msg);
+        // Turn progress meter off.
+        statusMeter.setAttribute("mode","normal");
+        statusMeter.value = 0;  // be sure to clear the progress bar
+        statusMeter.progresstext = "";
+        throbberElement.setAttribute("busy", false);
+
+        // XXX: These need to be based on window activity...
+        stopButton.setAttribute("disabled", true);
+        stopMenu.setAttribute("disabled", true);
+      }
+    }
+    else if (status & Components.interfaces.nsIWebProgressListener.flag_transferring) {
+      if (status & Components.interfaces.nsIWebProgressListener.flag_is_document) {
+        var ctype=channel.contentType;
+  
+        if (ctype != "text/html") {
+          useRealProgressFlag = true;
+        }
+        statusMeter.setAttribute("mode", "normal");
+      }
+      if (status & Components.interfaces.nsIWebProgressListener.flag_is_request) {
+        if (!useRealProgressFlag) {
+          this.onProgress(null, finishedRequests, totalRequests);
+        }
+      }
+    }
+
 		},
 	onLocationChange : function(location)
 		{

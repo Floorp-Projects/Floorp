@@ -402,6 +402,7 @@ nsWebShell::~nsWebShell()
     mDocLoader->Stop();
     mDocLoader->RemoveObserver((nsIDocumentLoaderObserver*)this);
     mDocLoader->SetContainer(nsnull);
+    mDocLoader->Destroy();
     NS_RELEASE(mDocLoader);
   }
   // Cancel any timers that were set for this loader.
@@ -1138,7 +1139,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       during this load handler. */
    nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
 
-   if(mScriptGlobal && !mEODForCurrentDocument)
+   if(mScriptGlobal && !mEODForCurrentDocument && NS_SUCCEEDED(aStatus))
       {
       if(mContentViewer)
          {

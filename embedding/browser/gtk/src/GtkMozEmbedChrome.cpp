@@ -621,7 +621,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetParentContentListener(nsIURIContentListener 
 
 // nsIWebProgressListener
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress,
+NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
+                                                  PRInt32 curSelfProgress,
 						  PRInt32 maxSelfProgress, PRInt32 curTotalProgress,
 						  PRInt32 maxTotalProgress)
 {
@@ -644,53 +645,33 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress,
-						       PRInt32 maxChildProgress)
+NS_IMETHODIMP GtkMozEmbedChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
+                                               PRInt32 aStateFlags, nsresult aStatus)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnChildProgressChange\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 aStatus)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStatusChange\n"));
-  if (aStatus & nsIWebProgress::flag_net_start)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_start\n"));
-  if (aStatus & nsIWebProgress::flag_net_dns)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_dns\n"));
-  if (aStatus & nsIWebProgress::flag_net_connecting)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_connecting\n"));
-  if (aStatus & nsIWebProgress::flag_net_redirecting)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_redirecting\n"));
-  if (aStatus & nsIWebProgress::flag_net_negotiating)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_negotiating\n"));
-  if (aStatus & nsIWebProgress::flag_net_transferring)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_transferring\n"));
-  if (aStatus & nsIWebProgress::flag_net_failedDNS)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedDNS\n"));
-  if (aStatus & nsIWebProgress::flag_net_failedConnect)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedConnect\n"));
-  if (aStatus & nsIWebProgress::flag_net_failedTransfer)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedTransfer\n"));
-  if (aStatus & nsIWebProgress::flag_net_failedTimeout)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedTimeout\n"));
-  if (aStatus & nsIWebProgress::flag_net_userCancelled)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_userCancelled\n"));
-  if (aStatus & nsIWebProgress::flag_win_start)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_win_start\n"));
-  if (aStatus & nsIWebProgress::flag_win_stop)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_win_stop\n"));
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStateChange\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_start)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_start\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_redirecting)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_redirecting\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_negotiating)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_negotiating\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_transferring)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_transferring\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_stop)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_stop\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_is_request)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_request\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_is_document)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_document\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_is_network)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_network\n"));
+  if (aStateFlags & nsIWebProgressListener::flag_is_window)
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_window\n"));
 
   // if we have a callback registered, call it
   if (mNetCB)
-    mNetCB(mNetCBData, aStatus);
+    mNetCB(mNetCBData, aStateFlags, aStatus);
   return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnChildStatusChange\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *aLocation)

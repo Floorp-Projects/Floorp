@@ -65,7 +65,7 @@ static void location_changed_cb  (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void title_changed_cb     (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void load_started_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void load_finished_cb     (GtkMozEmbed *embed, TestGtkBrowser *browser);
-static void net_status_change_cb (GtkMozEmbed *embed, gint flags, TestGtkBrowser *browser);
+static void net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowser *browser);
 static void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
 				  TestGtkBrowser *browser);
 static void link_message_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
@@ -229,8 +229,8 @@ new_gtk_browser(guint32 chromeMask)
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_stop",
 		     GTK_SIGNAL_FUNC(load_finished_cb), browser);
   // hook up to the change in network status
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_status",
-		     GTK_SIGNAL_FUNC(net_status_change_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state",
+		     GTK_SIGNAL_FUNC(net_state_change_cb), browser);
   // hookup to changes in progress
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress",
 		     GTK_SIGNAL_FUNC(progress_change_cb), browser);
@@ -397,30 +397,33 @@ load_finished_cb    (GtkMozEmbed *embed, TestGtkBrowser *browser)
 
 
 void
-net_status_change_cb (GtkMozEmbed *embed, gint flags, TestGtkBrowser *browser)
+net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowser *browser)
 {
-  //  g_print("net_status_change_cb %d\n", flags);
-  if (flags & GTK_MOZ_EMBED_FLAG_NET_DNS)
-    browser->statusMessage = "Looking up host...";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_CONNECTING)
-    browser->statusMessage = "Connecting to site...";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_REDIRECTING)
-    browser->statusMessage = "Connecting to site...";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_TRANSFERRING)
+  //  g_print("net_state_change_cb %d\n", flags);
+  if (flags & GTK_MOZ_EMBED_FLAG_IS_REQUEST) {
+    if (flags & GTK_MOZ_EMBED_FLAG_REDIRECTING)
+    browser->statusMessage = "Redirecting to site...";
+    else if (flags & GTK_MOZ_EMBED_FLAG_TRANSFERRING)
     browser->statusMessage = "Transferring data from site...";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDDNS)
-    browser->statusMessage = "Site not found.";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDCONNECT)
-    browser->statusMessage = "Failed to connect to site.";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDTRANSFER)
-    browser->statusMessage =  "Failed to transfer any data from site.";
-  else if (flags & GTK_MOZ_EMBED_FLAG_NET_USERCANCELLED)
-    browser->statusMessage = "User cancelled connecting to site.";
+    else if (flags & GTK_MOZ_EMBED_FLAG_NEGOTIATING)
+    browser->statusMessage = "Waiting for authorization...";
+  }
 
-  if (flags & GTK_MOZ_EMBED_FLAG_WIN_START)
-    browser->statusMessage = "Loading site...";
-  else if (flags & GTK_MOZ_EMBED_FLAG_WIN_STOP)
-    browser->statusMessage = "Done.";
+  if (status == GTK_MOZ_EMBED_STATUS_FAILED_DNS)
+    browser->statusMessage = "Site not found.";
+  else if (status == GTK_MOZ_EMBED_STATUS_FAILED_CONNECT)
+    browser->statusMessage = "Failed to connect to site.";
+  else if (status == GTK_MOZ_EMBED_STATUS_FAILED_TIMEOUT)
+    browser->statusMessage = "Failed due to connection timeout.";
+  else if (status == GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED)
+    browser->statusMessage = "User canceled connecting to site.";
+
+  if (flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) {
+    if (flags & GTK_MOZ_EMBED_FLAG_START)
+      browser->statusMessage = "Loading site...";
+    else if (flags & GTK_MOZ_EMBED_FLAG_STOP)
+      browser->statusMessage = "Done.";
+  }
 
   update_status_bar_text(browser);
   
