@@ -69,18 +69,7 @@
   </treehead>
 
   <treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" >
-
-	<treeitem ref="msgaccounts:/" open="true">
-		<treerow>
-		  <treecell/>
-		  <treecell>
-			<treeindentation/>
-			<html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;
-		  </treecell>
-		  <treecell/>
-		  <treecell/>
-		</treerow>
-	</treeitem>
+	<treeitem ref="msgaccounts:/" open="true"/>
   </treechildren>
 
 
