@@ -99,7 +99,7 @@ FILE *gErrFile = NULL;
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
-static int reportWarnings = 0;
+static JSBool reportWarnings = JS_TRUE;
 
 static void PR_CALLBACK
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
@@ -548,7 +548,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-s] [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-s] [-w] [-W] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -573,8 +573,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 JS_SetVersion(cx, JSVersion(atoi(argv[i+1])));
                 i++;
                 break;
+            case 'W':
+                reportWarnings = JS_FALSE;
+                break;
             case 'w':
-                reportWarnings++;
+                reportWarnings = JS_TRUE;
                 break;
             case 's':
                 JS_ToggleOptions(cx, JSOPTION_STRICT);
