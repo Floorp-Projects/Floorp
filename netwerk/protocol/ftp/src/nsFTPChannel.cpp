@@ -291,7 +291,7 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     }
     PRBool offline;
 
-    if (mCacheSession) {
+    if (mCacheSession && !mUploadStream) {
         mIOService->GetOffline(&offline);
 
         // Set the desired cache access mode accordingly...
@@ -328,6 +328,8 @@ nsFTPChannel::SetupState()
                                   mFTPEventSink, 
                                   mCacheEntry);
     if (NS_FAILED(rv)) return rv;
+
+    (void) mFTPState->SetWriteStream(mUploadStream);
 
     rv = mFTPState->Connect();
     if (NS_FAILED(rv)) return rv;
@@ -572,10 +574,6 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     
     mStatus = aStatus;
     
-    if (mObserver) {
-        (void) mObserver->OnStopRequest(this, mUserContext, aStatus);
-    }
-
     if (mListener) {
         (void) mListener->OnStopRequest(this, mUserContext, aStatus);
     }
@@ -595,6 +593,9 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
         mCacheEntry = 0;
     }
 
+    if (mUploadStream)
+        mUploadStream->Close();
+
     mIsPending = PR_FALSE;
     return rv;
 }
@@ -608,10 +609,6 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
             this, request));
    
     nsresult rv = NS_OK;
-    if (mObserver) {
-        rv = mObserver->OnStartRequest(this, mUserContext);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     if (mListener) {
         rv = mListener->OnStartRequest(this, mUserContext);
@@ -658,3 +655,19 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     }
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsFTPChannel::SetUploadStream(nsIInputStream *stream)
+{
+    mUploadStream = stream;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetUploadStream(nsIInputStream **stream)
+{
+    NS_IF_ADDREF(*stream = mUploadStream);
+    return NS_OK;
+}
+

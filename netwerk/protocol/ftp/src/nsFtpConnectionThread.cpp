@@ -86,6 +86,8 @@ public:
     NS_FORWARD_NSIFTPCHANNEL(mFTPChannel->)
     
     PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
+    void Uploading(PRBool value);
+
 
 protected:
 
@@ -95,9 +97,11 @@ protected:
     nsCOMPtr<nsIProgressEventSink>    mEventSink;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
 
-    nsresult DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt);
-    PRBool   mDelayedOnStartFired;
     PRUint32 mBytesTransfered;
+    PRPackedBool   mDelayedOnStartFired;
+    PRPackedBool   mUploading;
+    
+    nsresult DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt);
 };
 
 
@@ -119,8 +123,8 @@ DataRequestForwarder::DataRequestForwarder()
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder CREATED\n", this));
         
-    mDelayedOnStartFired = PR_FALSE;
     mBytesTransfered = 0;
+    mUploading = mDelayedOnStartFired = PR_FALSE;
     NS_INIT_ISUPPORTS();
 }
 
@@ -161,6 +165,11 @@ DataRequestForwarder::Init(nsIRequest *request)
     return NS_OK;
 }
 
+void 
+DataRequestForwarder::Uploading(PRBool value)
+{
+    mUploading = value;
+}
 
 nsresult 
 DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry, PRBool writing)
@@ -216,7 +225,14 @@ DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ct
 NS_IMETHODIMP 
 DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+    NS_ASSERTION(mListener, "No Listener Set.");
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStartRequest \n", this)); 
+    if (!mListener)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (mUploading)
+        return mListener->OnStartRequest(this, ctxt);     
+
     return NS_OK;
 }
 
@@ -234,10 +250,10 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
         if (sTrans)
             sTrans->SetReuseConnection(PR_FALSE);
     }
-    if (mListener)
-        return mListener->OnStopRequest(this, ctxt, statusCode);
-    
-    return NS_OK;
+    if (!mListener)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return mListener->OnStopRequest(this, ctxt, statusCode);
 }
 
 NS_IMETHODIMP
@@ -245,6 +261,8 @@ DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, ns
 { 
     nsresult rv;
     NS_ASSERTION(mListener, "No Listener Set.");
+    NS_ASSERTION(!mUploading, "Since we are uploading, we should never get a ODA");
+ 
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -277,8 +295,9 @@ DataRequestForwarder::OnProgress(nsIRequest *request, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
     if (!mEventSink)
         return NS_OK;
-    
-    return mEventSink->OnProgress(this, nsnull, mBytesTransfered, 0);
+    PRUint32 count = mUploading ? aProgress : mBytesTransfered;
+    PRUint32 max   = mUploading ? aProgressMax : 0;
+    return mEventSink->OnProgress(this, nsnull, count, max);
 }
 
 
@@ -304,8 +323,6 @@ nsFtpState::nsFtpState() {
     mSuspendCount = 0;
     mPort = 21;
 
-    mWriteCount = 0;
-    
     mReceivedControlData = PR_FALSE;
     mControlStatus = NS_OK;            
     mControlReadContinue = PR_FALSE;
@@ -830,8 +847,6 @@ nsFtpState::Process()
             if (FTP_ERROR == mState)
                 mInternalError = NS_ERROR_FAILURE;
 
-            //(DONE)
-            mNextState = FTP_COMPLETE;
             break;
             
 // PASV        
@@ -1284,30 +1299,38 @@ nsFtpState::R_rest() {
 nsresult
 nsFtpState::S_stor() {
     nsresult rv = NS_OK;
-    nsCAutoString retrStr("STOR ");
-    retrStr.Append(mPath);
-    retrStr.Append(CRLF);
+    nsCAutoString storStr("STOR ");
+    storStr.Append(mPath.get());
+    storStr.Append(CRLF);
 
-    rv = SendFTPCommand(retrStr);
+    rv = SendFTPCommand(storStr);
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
-    
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIRequestObserver> observer = do_QueryInterface(mChannel, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (!mWriteStream)
+        return NS_ERROR_FAILURE;
 
+    PRUint32 len;
+    mWriteStream->Available(&len);
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
-    return NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), mDPipe, mWriteStream,
-                                   0, mWriteCount, 0, observer, nsnull);
+    return NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), 
+                                   mDPipe, 
+                                   mWriteStream, 0, len, 0, mDRequestForwarder);
 }
 
 FTP_STATE
 nsFtpState::R_stor() {
-    if (mResponseCode/100 == 1) {
-        return FTP_READ_BUF;
+   if (mResponseCode/100 == 2) {
+        //(DONE)
+        mNextState = FTP_COMPLETE;
+        return FTP_COMPLETE;
     }
-    return FTP_ERROR;
+
+   if (mResponseCode/100 == 1) {
+        return FTP_READ_BUF;
+   }  
+ 
+   return FTP_ERROR;
 }
 
 
@@ -1465,6 +1488,11 @@ nsFtpState::R_pasv() {
         return FTP_ERROR;
     }
 
+    if (mAction == PUT) {
+        mDRequestForwarder->Uploading(PR_TRUE);
+        return FTP_S_STOR;
+    }
+   
     rv = mDPipe->AsyncRead(mDRequestForwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
     if (NS_FAILED(rv)){
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->AsyncRead failed (rv=%x)\n", this, rv));
@@ -1472,9 +1500,6 @@ nsFtpState::R_pasv() {
     }
 
 
-    if (mAction == PUT)         
-        return FTP_S_CWD;
-   
     return FTP_S_SIZE;
 
 }
@@ -1766,10 +1791,12 @@ nsFtpState::Connect()
     return rv;
 }
 nsresult
-nsFtpState::SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount) {
+nsFtpState::SetWriteStream(nsIInputStream* aInStream) {
+    if (!aInStream)
+        return NS_OK;
+
     mAction = PUT;
     mWriteStream = aInStream;
-    mWriteCount  = aWriteCount; // The is the amount of data to write.
     return NS_OK;
 }
 

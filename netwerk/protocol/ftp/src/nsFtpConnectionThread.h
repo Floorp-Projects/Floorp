@@ -101,7 +101,7 @@ public:
                   nsICacheEntryDescriptor* cacheEntry);
 
     // use this to provide a stream to be written to the server.
-    nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
+    nsresult SetWriteStream(nsIInputStream* aInStream);
 
     nsresult Connect();
 
@@ -192,7 +192,6 @@ private:
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
-    PRUint32               mWriteCount;    // The amount of data to write to the server.
     PRPackedBool           mFireCallbacks; // Fire the listener callback.
     PRPackedBool           mIPv6Checked;
     PRBool                 mGenerateHTMLContent;

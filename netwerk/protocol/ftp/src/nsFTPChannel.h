@@ -91,6 +91,8 @@ public:
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
+    
+    nsCOMPtr<nsIInputStream>        mUploadStream;
 
     // various callback interfaces
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
@@ -110,7 +112,6 @@ protected:
     nsCOMPtr<nsISupports>           mOwner;
 
     nsCOMPtr<nsIStreamListener>     mListener;
-    nsCOMPtr<nsIRequestObserver>    mObserver;
 
     nsFtpState*                     mFTPState;   
 
