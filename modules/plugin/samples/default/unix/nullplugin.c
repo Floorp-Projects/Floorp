@@ -358,6 +358,8 @@ createPixmap(PluginInstance *This)
            style = gtk_widget_get_style((GtkWidget *)gdk_window->user_data);
            nullPluginGdkPixmap = gdk_pixmap_create_from_xpm_d(gdk_window , &mask,
                                              &style->bg[GTK_STATE_NORMAL], npnul320_xpm);
+	   /* Pixmap is created on original X session but used by new session */
+	   XSync(GDK_DISPLAY(), False);
        }
     }
 }
