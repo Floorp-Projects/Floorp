@@ -32,3 +32,4 @@ extern nsresult NS_InitEmbedding(nsILocalFile *aPath);
 extern nsresult NS_TermEmbedding();
 
 #endif
+

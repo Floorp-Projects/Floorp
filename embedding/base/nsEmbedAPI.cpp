@@ -33,7 +33,7 @@ static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;
 static PRUint32           sInitCounter = 0;
 
-//#define HACK_AROUND_THREADING_ISSUES
+#define HACK_AROUND_THREADING_ISSUES
 //#define HACK_AROUND_NONREENTRANT_INITXPCOM
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
