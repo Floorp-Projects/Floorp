@@ -1728,7 +1728,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
 //  if (eWidgetRendering_Gfx == mode) {
    if (0) {
     nsIDOMHTMLSelectElement* select   = nsnull;
-    PRBool                   multiple = PR_FALSE;
     PRInt32                  size = 1;
     nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
     if (NS_OK == result) {
@@ -2588,29 +2587,10 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       }
       rv = ConstructTableFrame(aPresContext, aContent, geometricParent, aStyleContext,
                                aAbsoluteItems, newFrame, aFixedItems, tableCreator);
-      // Note: table construction function takes care of initializing the frame,
-      // processing children, and setting the initial child list
-      if (isAbsolutelyPositioned || isFixedPositioned) {
-        nsIFrame* placeholderFrame;
-
-        CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
-                                  aParentFrame, placeholderFrame);
-
-        // Add the positioned frame to its containing block's list of child frames
-        if (isAbsolutelyPositioned) {
-          aAbsoluteItems.AddChild(newFrame);
-        } else {
-          aFixedItems.AddChild(newFrame);
-        }
-
-        // Add the placeholder frame to the flow
-        aFrameItems.AddChild(placeholderFrame);
-      
-      } else {
-        // Add the table frame to the flow
-        aFrameItems.AddChild(newFrame);
-      }
-      return rv;
+      // Note: table construction function takes care of initializing
+      // the frame, processing children, and setting the initial child
+      // list
+      goto nearly_done;
     }
   
     // the next 5 cases are only relevant if the parent is not a table, ConstructTableFrame handles children
@@ -2703,6 +2683,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
   }
 
   // If the frame is absolutely positioned, then create a placeholder frame
+ nearly_done:
   if (isAbsolutelyPositioned || isFixedPositioned) {
     nsIFrame* placeholderFrame;
 
