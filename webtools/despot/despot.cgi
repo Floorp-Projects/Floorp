@@ -19,7 +19,22 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
+use strict;
 use diagnostics;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $F::state;
+    $zz = $F::description;
+    $zz = $F::id;
+    $zz = $F::newpassword2;
+    $zz = $F::files;
+    $zz = $F::partition;
+}
+
 
 use CGI::Carp qw(fatalsToBrowser);
 
@@ -27,20 +42,20 @@ use CGI qw(:standard :html3);
 
 require 'utils.pl';
 
-$POSTTYPE = "Post";
+$::POSTTYPE = "Post";
 
 $| = 1;
 
-$despot = param("_despot");
-if (!defined $despot) {
-    $despot = 0;
+$::despot = param("_despot");
+if (!defined $::despot) {
+    $::despot = 0;
 }
 
 print header();
 
-$bg = "white";
-$extra = "";
-if ($despot) {
+my $bg = "white";
+my $extra = "";
+if ($::despot) {
     $bg = "lightgreen";
     $extra = " (Wonder-twin powers -- activate!)";
 }
@@ -61,7 +76,7 @@ if (!param()) {
     print img({-align=>"right",-width=>72,-height=>84,-src=>"handcuff.gif"});
     print p("To manage mozilla users, or to change your mozilla.org " .
             "password, you must first log in.");
-    print start_form(-method=>$POSTTYPE);
+    print start_form(-method=>$::POSTTYPE);
     print table(Tr(th({-align=>"right"}, "Email address:"),
                    td(textfield(-name=>"loginname",
                                 -size=>20))),
@@ -85,12 +100,12 @@ import_names("F");              # Makes all form values available as F::.
 
 use Mysql;
 
-$db = Mysql->Connect("localhost", "mozusers", $F::loginname, "")
+$::db = Mysql->Connect("localhost", "mozusers", $F::loginname, "")
     || die "Can't connect to database server";
 
 
-$query = Query("select passwd,despot,neednewpassword,id from users where email = '$F::loginname'");
-@row = $query->fetchrow();
+my $query = Query("select passwd,despot,neednewpassword,id from users where email = '$F::loginname'");
+my @row = $query->fetchrow();
 if (!@row || !checkpassword($F::loginpassword, $row[0])) {
     if ($F::loginname !~ /@/) {
         Punt("You must type in your full e-mail address, including the '\@'.");
@@ -99,24 +114,26 @@ if (!@row || !checkpassword($F::loginpassword, $row[0])) {
     }
 }
 
-$candespot = 0;
+
+
+$::candespot = 0;
 if ($row[1] eq "Yes") {
-    $candespot = 1;
+    $::candespot = 1;
 } else {
-    $despot = 0;
+    $::despot = 0;
 }
 
-$neednewpassword = 0;
+$::neednewpassword = 0;
 if ($row[2] eq "Yes") {
-    $neednewpassword = 1;
+    $::neednewpassword = 1;
 }
 
-$loginid = $row[3];
+$::loginid = $row[3];
 
-$skiptrailer = 0;
+$::skiptrailer = 0;
 
 if (defined $F::command) {
-    $cmd = $F::command;
+    my $cmd = $F::command;
     param("command", "");
     eval "$cmd()";
     if ($@ ne "") {
@@ -127,7 +144,7 @@ if (defined $F::command) {
 }
 
 
-if (!$skiptrailer) {
+if (!$::skiptrailer) {
     print hr();
     print MyForm("MainMenu") . submit("Main menu") . end_form();
 }
@@ -144,7 +161,7 @@ if ($row[0]) {
                 a({href=>"mailto:terry\@mozilla.org"}, "terry") . ".");
     } else {
         while (<DOSYNC>) {
-            if ($despot) {
+            if ($::despot) {
                 s/\&/\&amp;/g;
                 s/</\&lt;/g;
                 s/>/\&gt;/g;
@@ -174,7 +191,7 @@ sub MainMenu() {
                    submit("Change your password") . end_form()));
     push(@list, li(MyForm("ListPartitions") .
                    submit("List all the partitions") .end_form()));
-#     my $query = Query("select partitionid,partitions.name,repositories.name,repositories.id from members,partitions,repositories where userid=$loginid and class != 'Member' and partitions.id=members.partitionid and repositories.id=partitions.repositoryid");
+#     my $query = Query("select partitionid,partitions.name,repositories.name,repositories.id from members,partitions,repositories where userid=$::loginid and class != 'Member' and partitions.id=members.partitionid and repositories.id=partitions.repositoryid");
 #     my @row;
 #     while (@row = $query->fetchrow()) {
 #         my ($partid,$partname,$repname,$repid) = (@row);
@@ -184,14 +201,14 @@ sub MainMenu() {
 #              li(MyForm("EditPartition") . submit($title) .
 #                 hidden(-name=>"partitionid") . end_form()));
 #     }
-    if ($candespot) {
-        param("_despot", !$despot);
-        my $str = $despot ? "Disable" : "Enable";
+    if ($::candespot) {
+        param("_despot", !$::despot);
+        my $str = $::despot ? "Disable" : "Enable";
         push(@list,
              li(MyForm("MainMenu") . submit("$str Despot Powers") .
                 end_form()));
-        param("_despot", $despot);
-        if ($despot) {
+        param("_despot", $::despot);
+        if ($::despot) {
             my @l2 = ();
             push(@l2,
                  li(MyForm("ListUsers") . submit("List all users") .
@@ -202,16 +219,16 @@ sub MainMenu() {
                     textfield(-name=>"email", -size=>50) . "</nobr>" .
                     end_form()));
             my $query = Query("select id,name from repositories order by id");
-            my @values = ();
+            my @vals = ();
             my %labels;
             while (my @row = $query->fetchrow()) {
                 my $v = $row[0];
-                push(@values, $v);
+                push(@vals, $v);
                 $labels{$v} = $row[1];
             }
             my $radio = popup_menu(-name=>"repid",
-                                   -values=>\@values,
-                                   -default=>$values[0],
+                                   "-values"=>\@vals,
+                                   -default=>$vals[0],
                                    -labels=>\%labels);
             push(@l2,
                  li(MyForm("AddPartition") . submit("Create or edit partition")
@@ -226,11 +243,11 @@ sub MainMenu() {
 
     print ul(\@list);
 
-    if ($neednewpassword) {
+    if ($::neednewpassword) {
         print "<font color=red>Your account has been frozen.  To make it usable, you must change your password.</font>";
     }
 
-    $skiptrailer = 1;
+    $::skiptrailer = 1;
 }
 
 
@@ -255,11 +272,10 @@ sub AddUser() {
         my $realname = "";
         my $plain = pickrandompassword();
         $p = cryptit($plain);
-        $feedback = "'" . tt($plain) . "'";
-        $mailwords = "of '$plain'";
-        $realname = "";
-        $p = $db->quote($p);
-        $realname = $db->quote($realname);
+        my $feedback = "'" . tt($plain) . "'";
+        my $mailwords = "of '$plain'";
+        $p = $::db->quote($p);
+        $realname = $::db->quote($realname);
         Query("insert into users (email,passwd,neednewpassword,realname) values ('$q',$p,'Yes',$realname)");
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
@@ -298,13 +314,13 @@ sub EditUser() {
         } elsif (/^enum/) {
             s/^enum\(//;
             s/\)$//;
-            @values = split(/,/);
+            my @values = split(/,/);
             my $opts = "";
             for (my $j=0 ; $j<@values ; $j++) {
                 $values[$j] =~ s/^\'//;
                 $values[$j] =~ s/\'$//;
             }
-            $line .= td(radio_group(-name=>$desc[0], -values=>\@values,
+            $line .= td(radio_group(-name=>$desc[0], "-values"=>\@values,
                                     -default=>$row[$i]));
         }
 
@@ -353,14 +369,14 @@ sub ChangeUser() {
     while (@row = $query->fetchrow()) {
         if (defined $row[0] && (param($row[0]) ne param("orig_$row[0]"))) {
             Query("insert into changes (email,field,oldvalue,newvalue,who) values (" .
-                  $db->quote($F::orig_email) . ",'$row[0]'," .
-                  $db->quote(param("orig_$row[0]")) . "," .
-                  $db->quote(param($row[0])) . ",'" .
+                  $::db->quote($F::orig_email) . ",'$row[0]'," .
+                  $::db->quote(param("orig_$row[0]")) . "," .
+                  $::db->quote(param($row[0])) . ",'" .
                 $F::loginname . "')");
         }
         push(@list, "$row[0] = '" . SqlQuote(param($row[0])) . "'");
     }
-    $qstr = "update users set " . join(",", @list) . " where email='" .
+    my $qstr = "update users set " . join(",", @list) . " where email='" .
         SqlQuote($F::orig_email) . "'";
     Query($qstr);
     print h1("OK, record for $F::email has been updated.");
@@ -373,8 +389,8 @@ sub GeneratePassword {
     my $email = $F::email;
     my $plain = pickrandompassword();
     my $p = cryptit($plain);
-    Query("update users set passwd = " . $db->quote($p) . ", neednewpassword='Yes' where email=" .
-          $db->quote($email));
+    Query("update users set passwd = " . $::db->quote($p) . ", neednewpassword='Yes' where email=" .
+          $::db->quote($email));
     print h1("OK, new password generated.");
     print "$email now has a new password of '" . tt($plain) . "'.  ";
     print "Please " .
@@ -501,7 +517,7 @@ sub ListSomething {
     print MyForm($listprocname);
     print submit("Redisplay with the following columns:") . br();
     print checkbox_group(-name=>"showcolumns",
-                         -values=>\@allcols,
+                         "-values"=>\@allcols,
                          -default=>\@cols,
                          -linebreak=>'true');
     print hidden(-name=>"sortorder", -default=>$sortorder, -override=>1);
@@ -531,7 +547,7 @@ sub ViewAccount {
         push(@list,Tr($line));
     }
     print table(@list);
-    $query = Query("select partitions.id,repositories.name,partitions.name,class from members,repositories,partitions where members.userid=$loginid and partitions.id=members.partitionid and repositories.id=partitions.repositoryid order by class");
+    $query = Query("select partitions.id,repositories.name,partitions.name,class from members,repositories,partitions where members.userid=$::loginid and partitions.id=members.partitionid and repositories.id=partitions.repositoryid order by class");
     while (@row = $query->fetchrow()) {
         my ($partid, $repname,$partname,$class) = (@row);
         param("partitionid", $partid);
@@ -539,7 +555,7 @@ sub ViewAccount {
             submit("$class of $partname ($repname)") . end_form();
     }
 
-    if ($despot) {
+    if ($::despot) {
         print MyForm("EditUser") . hidden("email", $F::loginname) .
             submit("Edit your account") .
                 "(Since you're a despot, you can do this)" .                
@@ -607,7 +623,7 @@ sub EditPartition() {
     push(@list,
          Tr(th(a({-href=>"help.html#state"},"State:")) .
             td(radio_group(-name=>'state',
-                           -values=>['Open', 'Restricted', 'Closed'],
+                           "-values"=>['Open', 'Restricted', 'Closed'],
                            -default=>$state,
                            -linebreak=>'false'))));
 
@@ -680,7 +696,7 @@ sub ChangePartition {
             if ($n eq "") {
                 next;
             }
-            $query = Query("select id,${F::repname}_group from users where email = " . $db->quote($n));
+            $query = Query("select id,${F::repname}_group from users where email = " . $::db->quote($n));
             if (!(@row = $query->fetchrow())) {
                 Punt("$n is not an email address in the database.");
             }
@@ -702,15 +718,15 @@ sub ChangePartition {
     # And now actually update things.
 
     $query = Query("select id from branches where name = " .
-                   $db->quote($F::branchname));
+                   $::db->quote($F::branchname));
     if (!(@row = $query->fetchrow())) {
         Query("insert into branches (name) values (" .
-              $db->quote($F::branchname) . ")");
+              $::db->quote($F::branchname) . ")");
         $query = Query("select LAST_INSERT_ID()");
         @row = $query->fetchrow();
     }
     my $branchid = $row[0];
-    Query("update partitions set description=" . $db->quote($F::description) . ", branchid=$branchid, state='$F::state' where id=$F::partitionid");
+    Query("update partitions set description=" . $::db->quote($F::description) . ", branchid=$branchid, state='$F::state' where id=$F::partitionid");
 
     Query("delete from files where partitionid=$F::partitionid");
     foreach my $f2 (@files) {
@@ -718,7 +734,7 @@ sub ChangePartition {
         if ($f2 eq "") {
             next;
         }
-        Query("insert into files (partitionid,pattern) values ($F::partitionid," . $db->quote($f2) . ")");
+        Query("insert into files (partitionid,pattern) values ($F::partitionid," . $::db->quote($f2) . ")");
     }
 
     Query("delete from members where partitionid=$F::partitionid");
@@ -789,7 +805,7 @@ sub CreateListRow {
 sub ChangePassword {
     print h1("Change your mozilla.org password.");
     $F::loginpassword = "";
-    print start_form($POSTTYPE);
+    print start_form($::POSTTYPE);
     print hidden("loginname", $F::loginname);
     print hidden(-name=>"command",
                  -default=>"SetNewPassword",
@@ -827,11 +843,11 @@ sub SetNewPassword {
         Punt("Your new password seems to be the same as your LDAP password that is used in the rest of Netscape.  Please pick a different password.");
     }
 
-    my $qpass = $db->quote($pass);
+    my $qpass = $::db->quote($pass);
     Query("update users set passwd = $qpass, neednewpassword = 'No' where email='$F::loginname'");
     print h1("Password has been updated.");
     Query("insert into syncneeded (needed) values (1)");
-    if ($despot) {
+    if ($::despot) {
         param("loginpassword", $F::newpassword1);
         print hr();
         MainMenu();
@@ -844,7 +860,7 @@ sub SetNewPassword {
 
 sub MyForm {
     my ($command) = @_;
-    my $result = start_form($POSTTYPE) . hidden("loginname", $F::loginname) .
+    my $result = start_form($::POSTTYPE) . hidden("loginname", $F::loginname) .
         hidden("_despot") .
         hidden("loginpassword", $F::loginpassword) .
             hidden(-name=>"command", -value=>$command, -override=>1);
@@ -860,7 +876,7 @@ sub Punt {
 
 
 sub EnsureDespot {
-    if (!$despot) {
+    if (!$::despot) {
         Punt("You're not a despot.  You can't do this.");
     }
 }
@@ -876,10 +892,10 @@ sub EnsureCanChangePartition {
 
 sub CanChangePartition {
     my ($id) = (@_);
-    if ($despot) {
+    if ($::despot) {
         return 1;
     }
-    my $query = Query("select class from members where userid=$loginid and partitionid=$id");
+    my $query = Query("select class from members where userid=$::loginid and partitionid=$id");
     my @row;
     if (@row = $query->fetchrow()) {
         if ($row[0] ne "Member") {
