@@ -41,15 +41,18 @@ static PRInt16 g0212ShiftTable[] =  {
         0, u2BytesGRPrefix8FCharset, 
         ShiftCell(0,0,0,0,0,0,0,0)
 };
-static PRInt16 *gShiftTables[4] =  {
+#define SIZE_OF_TABLES 5
+static PRInt16 *gShiftTables[SIZE_OF_TABLES] =  {
+    g0208ShiftTable,
     g0208ShiftTable,
     g0201ShiftTable,
     g0201ShiftTable,
     g0212ShiftTable
 };
 
-static PRUint16 *gMappingTables[4] = {
+static PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
     g_uf0208Mapping,
+    g_uf0208extMapping,
     g_uf0201Mapping,
     g_uf0201Mapping,
     g_uf0212Mapping
@@ -59,7 +62,7 @@ static PRUint16 *gMappingTables[4] = {
 // Class nsUnicodeToEUCJP [implementation]
 
 nsUnicodeToEUCJP::nsUnicodeToEUCJP() 
-: nsMultiTableEncoderSupport(4,
+: nsMultiTableEncoderSupport(SIZE_OF_TABLES,
                          (uShiftTable**) gShiftTables, 
                          (uMappingTable**) gMappingTables)
 {
