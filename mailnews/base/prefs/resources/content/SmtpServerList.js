@@ -59,7 +59,10 @@ function onSelectionChange(event)
 
 function onDelete(event)
 {
-    if (serverList.selectedItems.length <= 0) return;
+    var server = getSelectedServer();
+    if (!server) return;
+    smtpService.deleteSmtpServer(server);
+    refreshServerList();
 }
 
 function onAdd(event)
@@ -97,8 +100,18 @@ function updateButtons()
         setDefaultButton.setAttribute("disabled", "true");
     } else {
         editButton.removeAttribute("disabled");
-        deleteButton.removeAttribute("disabled");
-        setDefaultButton.removeAttribute("disabled");
+        
+        // can't delete default server
+        var server = getSelectedServer();
+        if (smtpService.defaultServer == server) {
+            dump("Selected default server!\n");
+            setDefaultButton.setAttribute("disabled", "true");
+            deleteButton.setAttribute("disabled", "true");
+        }
+        else {
+            setDefaultButton.removeAttribute("disabled");
+            deleteButton.removeAttribute("disabled");
+        }
     }
 
 }

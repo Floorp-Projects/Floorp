@@ -821,7 +821,7 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
 
     PRInt32 idx = 0;
     rv = mSmtpServers->GetIndexOf(aServer, &idx);
-    if (NS_FAILED(rv) || idx==0)
+    if (NS_FAILED(rv) || idx==-1)
         return NS_OK;
 
     nsXPIDLCString serverKey;
@@ -829,6 +829,11 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
     
     rv = mSmtpServers->DeleteElementAt(idx);
 
+    if (mDefaultSmtpServer.get() == aServer)
+        mDefaultSmtpServer = nsnull;
+    if (mSessionDefaultServer.get() == aServer)
+        mSessionDefaultServer = nsnull;
+    
     nsCAutoString newServerList;
     char *newStr;
     char *rest = mServerKeyList.ToNewCString();

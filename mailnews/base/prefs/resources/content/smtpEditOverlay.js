@@ -24,18 +24,32 @@
 // be real hacky with document.getElementById until document.controls works
 // with the new XUL widgets
 
+var gSmtpUsername;
+var gSmtpHostname;
+var gSmtpUseUsername;
+var gSmtpSavePassword;
+
+var gSavedUsername="";
+
 function initSmtpSettings(server) {
+
+    gSmtpUsername = document.getElementById("smtp.username");
+    gSmtpHostname = document.getElementById("smtp.hostname");
+    gSmtpUseUsername = document.getElementById("smtp.useUsername");
+    gSmtpSavePassword = document.getElementById("smtp.savePassword")
     
     if (server) {
-        document.getElementById("smtp.hostname").value = server.hostname;
-        document.getElementById("smtp.useUsername").checked =
-            server.alwaysUseUsername;
-        document.getElementById("smtp.username").value = server.username;
-        document.getElementById("smtp.savePassword").checked = server.savePassword;
+        gSmtpHostname.value = server.hostname;
+        gSmtpUsername.value = server.username;
+        gSmtpSavePassword.checked = server.savePassword;
         // radio groups not implemented
         //document.getElementById("smtp.trySSL").value = server.trySSL;
+        
+        if (server.username && server.username != "")
+            gSmtpUseUsername.checked = true;
     }
 
+    onUseUsername(gSmtpUseUsername, false);
     updateControls();
 }
 
@@ -43,29 +57,33 @@ function saveSmtpSettings(server)
 {
     if (!server) return;
 
-    server.hostname = document.getElementById("smtp.hostname").value;
+    server.hostname = gSmtpHostname.value;
     //    server.alwaysUseUsername = document.getElementById("smtp.alwaysUseUsername").checked;
-    server.username = document.getElementById("smtp.username").value;
-    //server.savePassword = document.getElementById("smtp.savePassword").checked;
+    server.username = gSmtpUsername.value;
+    //server.savePassword = gSmtpSavePassword.checked;
     
+}
+
+function onUseUsername(checkbox, dofocus)
+{
+    if (checkbox.checked) {
+        gSmtpUsername.removeAttribute("disabled");
+        gSmtpSavePassword.removeAttribute("disabled");
+        if (dofocus)
+            gSmtpUsername.focus();
+        if (gSavedUsername && gSavedUsername != "")
+            gSmtpUsername.value = gSavedUsername;
+    } else {
+        gSavedUsername = gSmtpUsername.value;
+        gSmtpUsername.value = "";
+        gSmtpUsername.setAttribute("disabled", "true");
+        gSmtpSavePassword.setAttribute("disabled", "true");
+    }        
 }
 
 function updateControls() {
 
     dump("Update controls..\n");
-    var alwaysUseUsername =
-        document.getElementById("smtp.useUsername").checked;
-
-    if (alwaysUseUsername) {
-        document.getElementById("smtp.username").removeAttribute("disabled");
-        document.getElementById("smtp.savePassword").removeAttribute("disabled");
-    }
-    
-    else {
-        document.getElementById("smtp.username").setAttribute("disabled", "true");
-        document.getElementById("smtp.savePassword").setAttribute("disabled", "true");
-    }
-
 
     var isSecure =
         document.getElementById("smtp.isSecure").checked;

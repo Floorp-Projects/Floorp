@@ -38,8 +38,8 @@
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
-      <checkbox wsm_persist="true" id="smtp.useUsername" value="&alwaysUseUsername.label;"
-                oncommand="updateControls();"/>
+      <checkbox id="smtp.useUsername" value="&alwaysUseUsername.label;"
+                oncommand="onUseUsername(event.target,true);"/>
       <box orient="vertical" style="margin-left: 2em">
         <box orient="horizontal">
           <text value="&userName.label;"/>
