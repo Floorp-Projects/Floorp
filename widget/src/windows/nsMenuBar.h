@@ -82,13 +82,10 @@ protected:
 
   nsVoidArray * mItems;
   
-  // Hold onto our content node representation
-  nsCOMPtr<nsIDOMElement> mDOMElement;
-  //nsCOMPtr<nsIDOMNode>    mDOMNode;
-
-
-  nsIWebShell * mWebShell;
-  nsIDOMNode  * mDOMNode;
+  nsIDOMNode    * mDOMNode;
+  nsIDOMElement * mDOMElement;
+  nsIWebShell   * mWebShell;
+  bool            mConstructed;
 };
 
 #endif // nsMenuBar_h__

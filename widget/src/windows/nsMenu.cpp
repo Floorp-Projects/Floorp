@@ -93,6 +93,7 @@ nsMenu::nsMenu() : nsIMenu()
   mDOMNode       = nsnull;
   mDOMElement    = nsnull;
   mWebShell      = nsnull;
+  mConstructed   = false;
 }
 
 //-------------------------------------------------------------------------
@@ -447,11 +448,15 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-#ifdef saari_debug
-  char* menuLabel = GetACPString(mLabel);
-  printf("Menu Selected %s\n", menuLabel);
-  delete[] menuLabel;
-#endif
+  if(!mConstructed) {
+    MenuConstruct(
+      aMenuEvent,
+      mParentWindow, 
+      mDOMNode,
+	  mWebShell);
+	mConstructed = true;
+  }
+
   if (nsnull != mListener) {
     NS_ASSERTION(false, "get debugger");
     mListener->MenuSelected(aMenuEvent);
@@ -462,10 +467,11 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  char* menuLabel = GetACPString(mLabel);
-  printf("Menu Deselected %s\n", menuLabel);
-  delete[] menuLabel;
+  //MenuDestruct(aMenuEvent);
+  //mConstructed = false;
+
   if (nsnull != mListener) {
+    NS_ASSERTION(false, "get debugger");
     mListener->MenuDeselected(aMenuEvent);
   }
   return nsEventStatus_eIgnore;
@@ -478,16 +484,12 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	void              * aWebShell)
 {
-  if(menuNode){
-
-    //menuNode = mDOMNode;
-
-	SetDOMNode((nsIDOMNode*)menuNode);
-
-  }
-  if(!aWebShell){
-    aWebShell = mWebShell;
-  }
+  //if(menuNode){
+//	SetDOMNode((nsIDOMNode*)menuNode);
+  //}
+  //if(!aWebShell){
+  //  aWebShell = mWebShell;
+  //}
 
    printf("nsMenu::MenuConstruct called \n");
    // Begin menuitem inner loop
@@ -580,27 +582,6 @@ void nsMenu::LoadMenuItem(
 
 	if(disabled == NS_STRING_TRUE )
 		::EnableMenuItem(mMenu, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
-    //menuDelegate->SetMenuItem(pnsMenuItem);
-    //nsIXULCommand * icmd;
-    //if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
-    //  mMenuDelegates.AppendElement(icmd);
-    //  nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
-
-    //  if (listener) 
-    //  {
-    //    pnsMenuItem->AddMenuListener(listener);
-        
-//#ifdef DEBUG_MENUSDEL
-//        printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
-//#endif
-//      } 
-//#ifdef DEBUG_MENUSDEL
-//      else 
-//      {
-//        printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
-//      }
-//#endif
-//    }
 
 	NS_RELEASE(pnsMenuItem);
     
@@ -638,9 +619,9 @@ void nsMenu::LoadSubMenu(
 	pParentMenu->AddItem(supports);
 	NS_RELEASE(supports);
 
-	NS_ASSERTION(mWebShell, "get debugger");
 	pnsMenu->SetWebShell(mWebShell);
 	pnsMenu->SetDOMNode(menuNode);
+	pnsMenu->SetDOMElement(menuElement);
 
     // Begin menuitem inner loop
 	unsigned short menuIndex = 0;

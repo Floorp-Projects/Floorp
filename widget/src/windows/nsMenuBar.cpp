@@ -79,6 +79,7 @@ NS_IMPL_RELEASE(nsMenuBar)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
+	// Dispatch the menu event
 	return nsEventStatus_eIgnore;
 }
 
@@ -89,21 +90,19 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   // Find which menu was selected and call MenuConstruct on it
   HMENU aNativeMenu = (HMENU) aMenuEvent.nativeMsg;
 
-  NS_ASSERTION(false, "get debugger");
-  for(int i = 0; i < mItems->Count(); i++) {
-	if((nsIMenu*)mItems->ElementAt(i)) {
-	  void * tmp;
-      ((nsIMenu*)mItems->ElementAt(i))->GetNativeData(&tmp);
-	  HMENU nativeMenu = (HMENU) tmp;
-	  if(nativeMenu == aNativeMenu) {
-		nsIMenuListener * menulistener = 0;
-		((nsIMenu*)mItems->ElementAt(i))->QueryInterface( kIMenuListenerIID, (void**) &menulistener);
-		if(menulistener) {
-		  menulistener->MenuConstruct(aMenuEvent, mParent, mDOMNode, mWebShell);
-		  NS_RELEASE(menulistener);
-		}
-	  }
+  if(aNativeMenu == mMenu) {
+    UINT      aSubMenuItemNum = (UINT)LOWORD(aMenuEvent.mCommand);
+    nsIMenu * menu;
+    GetMenuAt(aSubMenuItemNum, menu);
+
+    nsIMenuListener * listener = nsnull;
+    menu->QueryInterface(kIMenuListenerIID, (void**) listener);
+    if(listener) {
+      listener->MenuSelected(aMenuEvent);
+      NS_RELEASE(listener);
 	}
+  } else {
+    // The menu is being deselected
   }
 
   return nsEventStatus_eIgnore;
@@ -157,16 +156,16 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   pnsMenu->Create(supports, menuName);
                   NS_RELEASE(supports);
 
+				  // Set JavaScript execution parameters
 				  pnsMenu->SetDOMNode(menuNode);
 				  pnsMenu->SetDOMElement(menuElement);
+				  pnsMenu->SetWebShell((nsIWebShell*)aWebShell);
 
                   // Set nsMenu Name
                   pnsMenu->SetLabel(menuName); 
                   // Make nsMenu a child of nsMenuBar
                   pnsMenuBar->AddMenu(pnsMenu); 
-				  // Set the WebShell
-				  pnsMenu->SetWebShell((nsIWebShell*)aWebShell);
-                  
+
                   // Release the menu now that the menubar owns it
                   //NS_RELEASE(pnsMenu);
                 }
@@ -213,6 +212,8 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mItems    = new nsVoidArray();
   mWebShell = nsnull;
   mDOMNode  = nsnull;
+  mDOMElement = nsnull;
+  mConstructed = false;
 }
 
 //-------------------------------------------------------------------------
