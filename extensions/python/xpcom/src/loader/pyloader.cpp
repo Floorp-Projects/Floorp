@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -32,7 +32,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsXPIDLString.h"
- 
+#include "nsString.h"
+#include "stdlib.h"
+#include "stdarg.h"
+
 #include <nsFileStream.h> // For console logging.
 
 #ifdef HAVE_LONG_LONG
@@ -95,17 +98,18 @@ void AddStandardPaths()
 		LogError("The Python XPCOM loader could not locate the 'bin' directory\n");
 		return;
 	}
-	aFile->Append("python");
-	nsXPIDLCString pathBuf;
-	aFile->GetPath(getter_Copies(pathBuf));
+    nsCAutoString python(NS_LITERAL_CSTRING("python"));
+	aFile->Append(python);
+    nsCAutoString path_string;
+	aFile->GetPath(path_string);
 	PyObject *obPath = PySys_GetObject("path");
 	if (!obPath) {
 		LogError("The Python XPCOM loader could not get the Python sys.path variable\n");
 		return;
 	}
-    LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)pathBuf);
+    LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)path_string.get());
 //    DebugBreak();
-	PyObject *newStr = PyString_FromString(pathBuf);
+	PyObject *newStr = PyString_FromString(path_string.get());
 	PyList_Insert(obPath, 0, newStr);
 	Py_XDECREF(newStr);
 }
