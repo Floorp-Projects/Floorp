@@ -744,12 +744,16 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 
 		/* Now re-quote the names and addresses if necessary.
 		 */
+#ifdef BUG11892
+    // **** jefft - we don't want and shouldn't to requtoe the name, this
+    // violate the RFC822 spec
 		if (quote_names_p && names)
 		{
 			int L = name_out - name_start - 1;
 			L = msg_quote_phrase_or_addr(name_start, L, PR_FALSE);
 			name_out = name_start + L + 1;
 		}
+#endif 
 
 		if (quote_addrs_p && addresses)
 		{
