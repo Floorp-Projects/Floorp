@@ -127,6 +127,8 @@ public:
                               nsIFrame* aRoot,
                               nsIObjectFrame** outFrame);
 
+  void FixUpURLS(const nsString &name, nsString &value);
+
   nsIPresContext *mPresContext;  // weak ref
 protected:
   // nsISupports
