@@ -31,6 +31,9 @@ EXPORTS =                     \
         nsIServiceProvider.h  \
         nsRepository.h        \
         nsXPComFactory.h      \
+	nsComponentManager.h  \
+	nsNativeComponentLoader.h \
+	xcDll.h \
         $(NULL)			
 
 XPIDLSRCS =               \
