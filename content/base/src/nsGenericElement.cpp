@@ -1771,23 +1771,15 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
   }
 
-  // Find out if we're anonymous.
-  nsIContent* bindingParent = nsnull;
-  if (*aDOMEvent) {
-    (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
-    if (content)
-      bindingParent = content->GetBindingParent();
-  } else {
-    bindingParent = GetBindingParent();
-  }
-
-  if (bindingParent) {
-    // We're anonymous.  We may potentially need to retarget
-    // our event if our parent is in a different scope.
-    if (GetParent()) {
-      if (GetParent()->GetBindingParent() != bindingParent)
+  if (GetParent()) {
+    // Find out if we're anonymous.
+    if (*aDOMEvent) {
+      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+      nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
+      if (content && content->GetBindingParent() == GetParent())
         retarget = PR_TRUE;
+    } else if (GetBindingParent() == GetParent()) {
+      retarget = PR_TRUE;
     }
   }
 
@@ -1800,9 +1792,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
     }
   }
-  if (parent) {
-    retarget = PR_FALSE;
-  } else {
+  if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one,
     // whether it's null or not...
     parent = GetParent();
