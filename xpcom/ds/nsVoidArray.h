@@ -66,28 +66,30 @@ public:
     return mImpl ? (PRInt32(mImpl->mBits) & kArraySizeMask) : 0;
   }
 
+  void* FastElementAt(PRInt32 aIndex) const
+  {
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    return mImpl->mArray[aIndex];
+  }
+
+  // This both asserts and bounds-checks, because (1) we don't want
+  // people to write bad code, but (2) we don't want to change it to
+  // crashing for backwards compatibility.  See bug 96108.
   void* ElementAt(PRInt32 aIndex) const
   {
-    NS_ASSERTION(aIndex >= 0,"nsVoidArray::ElementAt(negative index) - note on bug 96108");
-    NS_ASSERTION(aIndex < Count(),"nsVoidArray::ElementAt(index past end array) - note on bug 96108");
-    // This will go away once all assertions are handled and we feel
-    // comfortable that there aren't any more out there.  Negative values
-    // are all handled I think.
-    if (aIndex >= Count())
-    {
-      return nsnull;
-    }
-    return mImpl ? mImpl->mArray[aIndex] : nsnull;
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    return SafeElementAt(aIndex);
   }
 
   // bounds-checked version
   void* SafeElementAt(PRInt32 aIndex) const
   {
-    if (aIndex < 0 || aIndex >= Count())
+    if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
     {
       return nsnull;
     }
-    return mImpl ? mImpl->mArray[aIndex] : nsnull;
+    // The bounds check ensures mImpl is non-null.
+    return mImpl->mArray[aIndex];
   }
 
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
