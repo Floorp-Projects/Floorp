@@ -194,6 +194,18 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
                     "nsXPCWrappedJS::mJSObj");
 }
 
+void 
+nsXPCWrappedJS::XPCContextBeingDestroyed()
+{
+    if(mJSObj)
+    {
+        XPCContext* xpcc;
+        if(mClass && NULL != (xpcc = mClass->GetXPCContext()))
+            JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
+        mJSObj = NULL;
+    }
+}        
+
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
@@ -208,7 +220,8 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
                 if(NULL != (map = xpcc->GetWrappedJSMap()))
                     map->Remove(this);
             }
-            JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
+            if(mJSObj)
+                JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
         }
         NS_RELEASE(mClass);
     }

@@ -633,6 +633,12 @@ nsXPCWrappedJSClass::NewOutObject()
     return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, NULL, NULL);
 }
 
+void 
+nsXPCWrappedJSClass::XPCContextBeingDestroyed()
+{
+    mXPCContext = NULL;
+}
+
 NS_IMETHODIMP
 nsXPCWrappedJSClass::DebugDump(int depth)
 {

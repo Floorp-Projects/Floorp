@@ -255,6 +255,14 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
     }
 }
 
+void 
+nsXPCWrappedNative::XPCContextBeingDestroyed()
+{
+    XPCContext* xpcc;
+    if(mJSObj && mClass && NULL != (xpcc = mClass->GetXPCContext()))
+        JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
+}        
+
 nsXPCWrappedNative::~nsXPCWrappedNative()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");

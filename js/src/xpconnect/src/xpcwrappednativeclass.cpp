@@ -206,6 +206,13 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
     return JS_TRUE;
 }
 
+void 
+nsXPCWrappedNativeClass::XPCContextBeingDestroyed()
+{
+    DestroyMemberDescriptors(); 
+    mXPCContext = NULL;
+}
+
 void
 nsXPCWrappedNativeClass::DestroyMemberDescriptors()
 {
@@ -217,6 +224,7 @@ nsXPCWrappedNativeClass::DestroyMemberDescriptors()
             if(mDescriptors[i].invokeFuncObj)
                 JS_RemoveRoot(cx, &mDescriptors[i].invokeFuncObj);
     delete [] mDescriptors;
+    mDescriptors = NULL;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -743,9 +751,9 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
         XPCNativeMemberDescriptor* descRW =
             NS_CONST_CAST(XPCNativeMemberDescriptor*,desc);
 
-        descRW->invokeFuncObj = JS_GetFunctionObject(fun);
-        JS_AddNamedRoot(cx, &descRW->invokeFuncObj, 
-                        "XPCNativeMemberDescriptor::invokeFuncObj");
+        if(NULL != (descRW->invokeFuncObj = JS_GetFunctionObject(fun)))
+            JS_AddNamedRoot(cx, &descRW->invokeFuncObj, 
+                            "XPCNativeMemberDescriptor::invokeFuncObj");
     }
     return desc->invokeFuncObj;
 }
