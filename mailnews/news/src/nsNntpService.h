@@ -42,6 +42,7 @@ class nsIUrlListener;
 
 class nsNntpService : public nsINntpService,
                       public nsIMsgMessageService,
+                      public nsIMsgMessageFetchPartService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo,
                       public nsICmdLineHandler,
@@ -56,6 +57,7 @@ public:
   NS_DECL_NSIMSGPROTOCOLINFO
   NS_DECL_NSICMDLINEHANDLER
   NS_DECL_NSICONTENTHANDLER
+  NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
   
   // nsNntpService
   nsNntpService();

@@ -36,6 +36,9 @@
 #include "nsMimeTypes.h"
 #include "prtime.h"
 
+// hack: include this to fix opening news attachments.
+#include "nsINntpUrl.h"
+
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsDateTimeFormatCID.h"
@@ -311,7 +314,15 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
 
     nsCOMPtr<nsIMsgMessageUrl> msgurl (do_QueryInterface(mURL, &rv));
     if (NS_SUCCEEDED(rv))
-      rv = msgurl->GetUri(getter_Copies(uriString));
+    {
+      // HACK: news urls require us to use the originalSpec. everyone else uses GetURI
+      // to get the RDF resource which describes the message.
+      nsCOMPtr<nsINntpUrl> nntpUrl (do_QueryInterface(mURL, &rv));
+      if (NS_SUCCEEDED(rv) && nntpUrl)
+        rv = msgurl->GetOriginalSpec(getter_Copies(uriString));
+      else
+        rv = msgurl->GetUri(getter_Copies(uriString));
+    }
 
     // we need to convert the attachment name from UTF-8 to unicode before
     // we emit it...

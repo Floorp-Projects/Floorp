@@ -170,6 +170,7 @@ public:
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
+  nsresult SetupPartExtractor(nsIStreamListener * aConsumer);
 	// over-rides from nsMsgProtocol
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);

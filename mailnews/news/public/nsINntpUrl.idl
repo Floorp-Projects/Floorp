@@ -47,11 +47,12 @@ interface nsINntpUrl : nsISupports {
   attribute boolean getOldMessages;
 
   const nsNewsAction ActionGetNewNews = 0;
-  const nsNewsAction ActionDisplayArticle = 1;
+  const nsNewsAction ActionFetchArticle = 1;
   const nsNewsAction ActionSaveMessageToDisk = 2;
   const nsNewsAction ActionCancelArticle = 3;
   const nsNewsAction ActionPostArticle = 4;
   const nsNewsAction ActionSearch = 5;
   const nsNewsAction ActionUpdateCounts = 6;
   const nsNewsAction ActionListGroups = 7;
+  const nsNewsAction ActionFetchPart = 8;
 };

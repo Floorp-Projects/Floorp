@@ -86,12 +86,13 @@ nsNntpService::~nsNntpService()
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
 NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
 
-NS_IMPL_QUERY_INTERFACE6(nsNntpService,
+NS_IMPL_QUERY_INTERFACE7(nsNntpService,
                          nsINntpService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo,
                          nsICmdLineHandler,
+                         nsIMsgMessageFetchPartService,
 						 nsIContentHandler)
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -225,8 +226,12 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   if (mPrintingOperation)
     uri.Append("?header=print");
 
+  nsNewsAction action = nsINntpUrl::ActionFetchArticle;
+  if (mOpenAttachmentOperation)
+    action = nsINntpUrl::ActionFetchPart;
+
   nsCOMPtr<nsIURI> url;
-  rv = ConstructNntpUrl(uri.get(), aUrlListener, aMsgWindow, aMessageURI, nsINntpUrl::ActionDisplayArticle, getter_AddRefs(url));
+  rv = ConstructNntpUrl(uri.get(), aUrlListener, aMsgWindow, aMessageURI, action, getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (NS_SUCCEEDED(rv))
@@ -269,21 +274,23 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
     // run the url in the webshell in order to display it. If it isn't a docshell then just
     // run the news url like we would any other news url. 
 	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-	  if (NS_SUCCEEDED(rv) && docShell) {
+	  if (NS_SUCCEEDED(rv) && docShell) 
+    {
 		nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
 		// DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
         // treat this load as if it were a user click event. Then the dispatching stuff will be much
         // happier.
-        if (mOpenAttachmentOperation) {
+      if (mOpenAttachmentOperation) 
+      {
 			docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
 			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
 		}
+	    
 	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
 	  }
-	  else {
+	  else 
 		rv = RunNewsUrl(url, aMsgWindow, aDisplayConsumer);
 	  }
-  }
 
   if (aURL) {
 	  *aURL = url;
@@ -315,7 +322,7 @@ nsNntpService::FetchMessage(nsIMsgFolder *folder, nsMsgKey key, nsIMsgWindow *aM
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIURI> url;
-  rv = ConstructNntpUrl((const char *)messageIdURL, aUrlListener, aMsgWindow, originalMessageUri.get(), nsINntpUrl::ActionDisplayArticle, getter_AddRefs(url));
+  rv = ConstructNntpUrl((const char *)messageIdURL, aUrlListener, aMsgWindow, originalMessageUri.get(), nsINntpUrl::ActionFetchArticle, getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = RunNewsUrl(url, aMsgWindow, aConsumer);
@@ -330,6 +337,18 @@ nsNntpService::FetchMessage(nsIMsgFolder *folder, nsMsgKey key, nsIMsgWindow *aM
   return rv;
 }
 
+NS_IMETHODIMP nsNntpService::FetchMimePart(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+{
+  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(aURI));
+  msgUrl->SetMsgWindow(aMsgWindow);
+
+  // set up the url listener
+	if (aUrlListener)
+		msgUrl->RegisterListener(aUrlListener);
+ 
+  return RunNewsUrl(msgUrl, aMsgWindow, aDisplayConsumer);
+}
+
 NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType, 
                                             const char *aFileName,
                                             const char *aUrl, 
@@ -338,19 +357,33 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
                                             nsIMsgWindow *aMsgWindow, 
                                             nsIUrlListener *aUrlListener)
 {
-  nsCAutoString partMsgUrl(aMessageUri);
-  
-  // try to extract the specific part number out from the url string
-  partMsgUrl += "?";
-  const char *part = PL_strstr(aUrl, "part=");
-  partMsgUrl += part;
-  partMsgUrl += "&type=";
-  partMsgUrl += aContentType;
-  mOpenAttachmentOperation = PR_TRUE;
-  nsresult rv = DisplayMessage(partMsgUrl, aDisplayConsumer,
-                      aMsgWindow, aUrlListener, nsnull, nsnull);
-  mOpenAttachmentOperation = PR_FALSE;
-  return rv;
+
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = NS_OK;
+  NewURI(aUrl, nsnull, getter_AddRefs(url));
+
+  if (NS_SUCCEEDED(rv) && url)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
+    msgUrl->SetMsgWindow(aMsgWindow);
+    msgUrl->SetFileName(aFileName);
+
+    // set up the url listener
+	  if (aUrlListener)
+	  	msgUrl->RegisterListener(aUrlListener);
+
+	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+	  if (NS_SUCCEEDED(rv) && docShell) 
+    {
+		  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+			docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+	    return docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+    }
+    else
+      return RunNewsUrl(url, aMsgWindow, aDisplayConsumer);
+	}
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow) 
@@ -375,7 +408,7 @@ NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   NS_ENSURE_SUCCESS(rv,rv);
 
   // this is only called by view message source
-  rv = ConstructNntpUrl(messageIdURL.get(), nsnull, aMsgWindow, aMessageURI, nsINntpUrl::ActionDisplayArticle, aURL);
+  rv = ConstructNntpUrl(messageIdURL.get(), nsnull, aMsgWindow, aMessageURI, nsINntpUrl::ActionFetchArticle, aURL);
   NS_ENSURE_SUCCESS(rv,rv);
   if (folder && *aURL)
   {
@@ -837,14 +870,12 @@ nsNntpService::ConstructNntpUrl(const char *urlString, nsIUrlListener *aUrlListe
   nsCOMPtr <nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = nntpUrl->SetNewsAction(action);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
   mailnewsurl->SetMsgWindow(aMsgWindow);
   nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(nntpUrl);
   msgUrl->SetUri(urlString);
   mailnewsurl->SetSpec(urlString);
+  nntpUrl->SetNewsAction(action);
   
   if (originalMessageUri) {
     // we'll use this later in nsNNTPProtocol::ParseURL()
@@ -1165,10 +1196,6 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     nsCOMPtr <nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID,&rv);
     NS_ENSURE_SUCCESS(rv,rv);
     if (!nntpUrl) return NS_ERROR_FAILURE;
-
-    // XXX is this always the case?
-	rv = nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
-    NS_ENSURE_SUCCESS(rv,rv);
 
 	nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
 

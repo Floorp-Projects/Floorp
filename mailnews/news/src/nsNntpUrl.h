@@ -36,6 +36,9 @@ public:
   NS_DECL_NSIMSGMESSAGEURL
   NS_DECL_NSIMSGI18NURL
 
+  // nsIURI over-ride...
+	NS_IMETHOD SetSpec(const char * aSpec);
+
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
   // nsNntpUrl
@@ -45,6 +48,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:  
+  virtual nsresult ParseUrl(const char * aSpec);
 	virtual const char * GetUserName() { return nsnull; }
   nsINNTPNewsgroupPost *m_newsgroupPost;
 	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.

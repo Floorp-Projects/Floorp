@@ -79,6 +79,26 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsNntpUrl::SetSpec(const char * aSpec)
+{
+	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+	if (NS_SUCCEEDED(rv))
+		ParseUrl(aSpec);
+	return rv;
+}
+
+nsresult nsNntpUrl::ParseUrl(const char * aSpec)
+{
+  char * partString = PL_strcasestr(aSpec, "?part=");
+  if (partString)
+    m_newsAction = nsINntpUrl::ActionFetchPart;
+  else
+    m_newsAction = nsINntpUrl::ActionFetchArticle;
+
+  // XXX to do: add more smart detection code for setting the action type based on the contents of the url
+  // string.
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsNntpUrl::SetGetOldMessages(PRBool aGetOldMessages)
 {
@@ -229,7 +249,7 @@ NS_IMETHODIMP nsNntpUrl::IsUrlType(PRUint32 type, PRBool *isType)
 	switch(type)
 	{
 		case nsIMsgMailNewsUrl::eDisplay:
-			*isType = (m_newsAction == nsINntpUrl::ActionDisplayArticle);
+			*isType = (m_newsAction == nsINntpUrl::ActionFetchArticle);
 			break;
 		default:
 			*isType = PR_FALSE;

@@ -87,6 +87,7 @@
 
 #include "nsINntpService.h"
 #include "nntpCore.h"
+#include "nsIStreamConverterService.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -152,6 +153,7 @@ char * NET_SACat (char **destination, const char *source);
 
 }
 
+static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -651,6 +653,10 @@ NS_IMETHODIMP nsNNTPProtocol::LoadNewsUrl(nsIURI * aURL, nsISupports * aConsumer
   // don't reuse an existing channel listener
   m_channelListener = nsnull;
   m_channelListener = do_QueryInterface(aConsumer);
+  nsCOMPtr<nsINntpUrl> newsUrl (do_QueryInterface(aURL));
+  newsUrl->GetNewsAction(&m_newsAction);
+
+  SetupPartExtractor(m_channelListener);
   return LoadUrl(aURL, aConsumer);
 }
 
@@ -742,6 +748,26 @@ nsNntpCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aC
     return mListener->OnDataAvailable(ourRequest, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
+nsresult nsNNTPProtocol::SetupPartExtractor(nsIStreamListener * aConsumer)
+{
+  if (m_newsAction == nsINntpUrl::ActionFetchPart)
+  {
+    nsCOMPtr<nsIStreamConverterService> converter = do_GetService(kIStreamConverterServiceCID);
+    if (converter && aConsumer)
+    {
+      nsCOMPtr<nsIStreamListener> newConsumer;
+      nsIChannel * channel;
+      QueryInterface(NS_GET_IID(nsIChannel), (void **) &channel);
+      converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
+           aConsumer, channel, getter_AddRefs(newConsumer));
+      if (newConsumer)
+        m_channelListener = newConsumer;
+      NS_IF_RELEASE(channel);
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
@@ -754,12 +780,14 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports
   m_runningURL->GetNewsAction(&m_newsAction);
   // first, check if this is a message load that should come from either
   // the memory cache or the local msg cache.
-  if (mailnewsUrl && m_newsAction == nsINntpUrl::ActionDisplayArticle)
+  if (mailnewsUrl && (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart))
   {
     nsCOMPtr<nsICachedNetData>  cacheEntry;
     PRUint32 contentLength = 0;
     PRBool partialFlag = PR_FALSE;
     PRBool msgIsInLocalCache;
+    
+    SetupPartExtractor(m_channelListener);
 
     mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
     if (msgIsInLocalCache)
@@ -878,6 +906,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   m_runningURL = do_QueryInterface(aURL, &rv);
   if (NS_FAILED(rv)) return rv;
   m_runningURL->GetNewsAction(&m_newsAction);
+
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
 
   m_connectionBusy = PR_TRUE;
@@ -5164,7 +5193,6 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				m_nextState = NEWS_FREE;
 				break;
             case NEWS_FREE:
-                m_connectionBusy = PR_FALSE;
                 mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
                 m_lastActiveTimeStamp = PR_Now(); // remmeber when we last used this connection.
                 return CleanupAfterRunningUrl();
@@ -5235,7 +5263,6 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   nsresult rv = NS_OK;
   PR_LOG(NNTP,PR_LOG_ALWAYS,("CleanupAfterRunningUrl()"));
 
-  m_connectionBusy = PR_FALSE;
   // send StopRequest notification after we've cleaned up the protocol
   // because it can synchronously causes a new url to get run in the
   // protocol - truly evil, but we're stuck at the moment.
@@ -5267,18 +5294,19 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   PR_FREEIF(m_cancelID);  
   m_cancelID = nsnull;
   
-  if (!m_connectionBusy)
-  {
-    mDisplayInputStream = nsnull;
-    mDisplayOutputStream = nsnull;
-    mProgressEventSink = nsnull;
-    SetOwner(nsnull);
+  mDisplayInputStream = nsnull;
+  mDisplayOutputStream = nsnull;
+  mProgressEventSink = nsnull;
+  SetOwner(nsnull);
 
-    m_channelContext = nsnull;
-    m_channelListener = nsnull;
-    m_loadGroup = nsnull;
-    mCallbacks = nsnull;
-  }
+  m_channelContext = nsnull;
+  m_channelListener = nsnull;
+  m_loadGroup = nsnull;
+  mCallbacks = nsnull;
+
+  // don't mark ourselves as not busy until we are done cleaning up the connection. it should be the
+  // last thing we do.
+  m_connectionBusy = PR_FALSE;
  
   return NS_OK;
 }
