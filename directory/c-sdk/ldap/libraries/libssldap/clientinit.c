@@ -60,6 +60,8 @@
 
 
 static PRStatus local_SSLPLCY_Install(void);
+static char *ldapssl_strdup ( const char * );
+static void ldapssl_free( void ** );
 
 /*
  * This little tricky guy keeps us from initializing twice 
@@ -150,13 +152,58 @@ static PRStatus local_SSLPLCY_Install(void)
 
 
 
-static void
-ldapssl_basic_init( void )
+static int
+ldapssl_basic_init( const char *certdbpath, const char *keydbpath )
 {
+	char *confDir = NULL, *certdbPrefix = NULL, *certdbName = NULL;
+	char *keyconfDir = NULL, *keydbPrefix = NULL, *keydbName = NULL;
+	char *certPath = NULL, *keyPath = NULL;
+	static char *secmodname =  "secmod.db";
+	int retcode = 0; 
+	SECStatus rc;
+
     /* PR_Init() must to be called before everything else... */
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
 
     PR_SetConcurrency( 4 );	/* work around for NSPR 3.x I/O hangs */
+
+	/* Get confDir, certdbPrefix and certdbName from certdbpath */
+	certPath = ldapssl_strdup( certdbpath );
+	confDir = ldapssl_strdup( certdbpath );
+	certdbPrefix = ldapssl_strdup( certdbpath );
+	certdbName = ldapssl_strdup( certdbpath );
+	if (certdbPrefix) {
+		*certdbPrefix = '\0';
+	}
+	splitpath(certPath, confDir, certdbPrefix, certdbName);
+
+	/* Get keyconfDir, keydbPrefix and keydbName from keydbpath */
+	keyPath = ldapssl_strdup( keydbpath );
+	keyconfDir = ldapssl_strdup( keydbpath );
+	keydbPrefix = ldapssl_strdup( keydbpath );
+	keydbName = ldapssl_strdup( keydbpath );
+	if (keydbPrefix) {
+		*keydbPrefix = '\0';
+	}
+	splitpath(keyPath, keyconfDir, keydbPrefix, keydbName);
+
+	/* Free the variables we no longer need */
+	ldapssl_free((void **)&certPath);
+	ldapssl_free((void **)&certdbName);
+	ldapssl_free((void **)&keyPath);
+	ldapssl_free((void **)&keydbName);
+	ldapssl_free((void **)&keyconfDir);
+
+	if ((rc = NSS_Initialize(confDir,certdbPrefix,keydbPrefix,
+			secmodname, NSS_INIT_READONLY)) != SECSuccess) {
+		retcode = -1;
+	}
+
+	ldapssl_free((void **)&certdbPrefix);
+	ldapssl_free((void **)&keydbPrefix);
+	ldapssl_free((void **)&confDir);
+
+	return (retcode);
 }
 
 
@@ -354,11 +401,7 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
 	return( 0 );
     }
 
-    ldapssl_basic_init();
-
-
-    /* Open the certificate database */
-    if ((rc = NSS_Init(certdbpath)) != SECSuccess) {
+    if ((rc = ldapssl_basic_init(certdbpath, keydbpath)) != 0) {
 	return (-1);
     }
 
@@ -439,9 +482,7 @@ ldapssl_advclientauth_init(
      *    LDAPDebug(LDAP_DEBUG_TRACE, "ldapssl_advclientauth_init\n",0 ,0 ,0);
      */
 
-    ldapssl_basic_init();
-
-    if ((rc = NSS_Init(certdbpath)) != SECSuccess) {
+    if ((rc = ldapssl_basic_init(certdbpath, keydbpath)) != 0) {
 	return (-1);
     }
 
@@ -477,10 +518,7 @@ LDAP_CALL
 ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
 {
 
-    char		*certdbName, *s, *keydbpath;
-    char		*certdbPrefix, *keydbPrefix;
-    char		*confDir, *keydbName;
-    static char         *secmodname =  "secmod.db";
+    char		*certdbpath, *keydbpath;
     int			rc;
     
     if ( inited ) {
@@ -498,37 +536,9 @@ ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
      */
 
 
-    ldapssl_basic_init();
-
-    pfns->pkcs_getcertpath( NULL, &s);
-    confDir = ldapssl_strdup( s );
-    certdbPrefix = ldapssl_strdup( s );
-    certdbName = ldapssl_strdup( s );
-    *certdbPrefix = 0;
-    splitpath(s, confDir, certdbPrefix, certdbName);
-
-    pfns->pkcs_getkeypath( NULL, &s);
-    keydbpath = ldapssl_strdup( s );
-    keydbPrefix = ldapssl_strdup( s );
-    keydbName = ldapssl_strdup( s );
-    *keydbPrefix = 0;
-    splitpath(s, keydbpath, keydbPrefix, keydbName);
-
-
-    /* verify confDir == keydbpath and adjust as necessary */
-    ldapssl_free((void **)&certdbName);
-    ldapssl_free((void **)&keydbName);
-    ldapssl_free((void **)&keydbpath);
-
-    if ((rc = NSS_Initialize(confDir,certdbPrefix,keydbPrefix,
-		secmodname, NSS_INIT_READONLY)) != SECSuccess) {
-	return (-1);
-    }
-
-    ldapssl_free((void **)&certdbPrefix);
-    ldapssl_free((void **)&keydbPrefix);
-    ldapssl_free((void **)&confDir);
-    
+    pfns->pkcs_getcertpath( NULL, &certdbpath);
+    pfns->pkcs_getkeypath( NULL, &keydbpath);
+    ldapssl_basic_init(certdbpath, keydbpath);
 
     /* this is odd */
     PK11_ConfigurePKCS11(NULL, NULL, tokDes, ptokDes, NULL, NULL, NULL, NULL, 0, 0 );
@@ -554,10 +564,6 @@ ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
 
     inited = 1;
 
-    if ( certdbName != NULL ) {
-	ldapssl_free((void **) &certdbName );
-    }
-    
     return ( ldapssl_set_strength( NULL, LDAPSSL_AUTH_CERT ));
 }
 
