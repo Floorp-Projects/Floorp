@@ -112,6 +112,7 @@ protected:
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
 	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
+	nsresult SerializeBookmarks(nsIURI* aURI);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 	nsresult GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType);
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);

@@ -25,6 +25,7 @@
  *   David Hyatt              <hyatt@netscape.com>
  *   Ben Goodger              <ben@netscape.com>
  *   Andreas Otte             <andreas.otte@debitel.net>
+ *   Jan Varga                <varga@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,67 +46,42 @@
  */
 
 #include "nsBookmarksService.h"
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsFileStream.h"
-#include "nsIComponentManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
-#include "nsIServiceManager.h"
+#include "nsIRDFXMLSerializer.h"
+#include "nsIRDFXMLSource.h"
 #include "nsRDFCID.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsVoidArray.h"
-#include "nsXPIDLString.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "prio.h"
-#include "prlog.h"
 #include "rdf.h"
-#include "prlong.h"
-#include "prtime.h"
 #include "nsEnumeratorUtils.h"
 #include "nsEscape.h"
-#include "nsIAtom.h"
-#include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsICmdLineHandler.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
-#include "nsIWebShell.h"
 #include "nsWidgetsCID.h"
-#include "nsIAppShell.h"
 
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
-#include "nsIIOService.h"
-#include "nsIChannel.h"
-#include "nsIHttpChannel.h"
-#include "nsICacheService.h"
-#include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
-
-#include "nsIInputStream.h"
-#include "nsIInputStream.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #include "nsIPref.h"
 
-// Interfaces Needed
-#include "nsIXULWindow.h"
-
 #ifdef XP_WIN
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
-#include "nsIFileURL.h"
 #endif
 
 nsIRDFResource		*kNC_IEFavoritesRoot;
@@ -4467,52 +4443,46 @@ nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
 nsresult
 nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
 {
-	// look for #URL which is the "file:///" URL to export
-	nsresult		rv;
-	nsCOMPtr<nsIRDFNode>	aNode;
-	if (NS_FAILED(rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(aNode))))
-		return(rv);
-	nsCOMPtr<nsIRDFLiteral>		pathLiteral = do_QueryInterface(aNode);
-	if (!pathLiteral)	return(NS_ERROR_NO_INTERFACE);
+    // look for #URL which is the "file:///" URL to export
+    nsCOMPtr<nsIRDFNode> node;
+    nsresult rv = getArgumentN(aArguments, kNC_URL, 0, getter_AddRefs(node));
+    if (NS_FAILED(rv)) return rv;
 
-	const PRUnichar		*pathUni = nsnull;
-	pathLiteral->GetValueConst(&pathUni);
-	if (!pathUni)	return(NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(node, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	// determine file type to export; default to HTML unless told otherwise
-	nsAutoString formatStr;
-	if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kRDF_type, 0, getter_AddRefs(aNode))))
-	{
-		nsCOMPtr<nsIRDFLiteral>		exportType = do_QueryInterface(aNode);
-		if (exportType)
-		{
-			const PRUnichar *exportUni = NULL;
-			exportType->GetValueConst(&exportUni);
-			if (exportUni)
-			{
-				formatStr = exportUni;
-			}
-		}
-	}
+    const PRUnichar* path = nsnull;
+    literal->GetValueConst(&path);
+    if (!path)
+        return NS_ERROR_FAILURE;
 
-	nsAutoString	fileName(pathUni);
-	nsFileURL		  fileURL(fileName);
-	if (formatStr.EqualsIgnoreCase("RDF"))
-	{
-		nsCOMPtr<nsIRDFRemoteDataSource> remoteDS = do_QueryInterface(mInner);
-		if (remoteDS)
-		{
-			remoteDS->FlushTo(fileURL.GetURLString());
-		}
-	}
-	else
-	{
-		nsFileSpec		fileSpec(fileURL);
+    // determine file type to export; default to HTML unless told otherwise
+    const PRUnichar* format = nsnull;
+    rv = getArgumentN(aArguments, kRDF_type, 0, getter_AddRefs(node));
+    if (NS_SUCCEEDED(rv)) {
+        literal = do_QueryInterface(node);
+        if (literal) {
+            literal->GetValueConst(&format);
+        }
+    }
 
-		// write 'em out
-		rv = WriteBookmarks(&fileSpec, mInner, kNC_BookmarksRoot);
-	}
-	return(rv);
+    nsAutoString fileName(path);
+    nsFileURL fileURL(fileName);
+    if (NS_LITERAL_STRING("RDF").Equals(format, nsCaseInsensitiveStringComparator())) {
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = NS_NewURI(getter_AddRefs(uri), fileURL.GetURLString());
+        if (NS_FAILED(rv)) return rv;
+
+        rv = SerializeBookmarks(uri);
+    }
+    else {
+        nsFileSpec fileSpec(fileURL);
+
+        // write 'em out
+        rv = WriteBookmarks(&fileSpec, mInner, kNC_BookmarksRoot);
+    }
+
+    return rv;
 }
 
 
@@ -4784,29 +4754,25 @@ nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
 nsresult
 nsBookmarksService::initDatasource()
 {
-  nsresult rv;
-  
-	// the profile manager might call Readbookmarks() in certain circumstances
-	// so we need to forget about any previous bookmarks
-  NS_IF_RELEASE(mInner);
+    // the profile manager might call Readbookmarks() in certain circumstances
+    // so we need to forget about any previous bookmarks
+    NS_IF_RELEASE(mInner);
 
-  // create an xml-ds instead of an in-memory ds to allow for RDF serialization out
-  nsCOMPtr<nsIRDFDataSource> temp;
-  temp = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", &rv);
-  if (NS_FAILED(rv)) return rv;
-  mInner = temp;
-  NS_ADDREF(mInner);
+    // don't change this to an xml-ds, it will cause serious perf problems
+    nsresult rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
+    if (NS_FAILED(rv)) return rv;
 
-	rv = mInner->AddObserver(this);
-	if (NS_FAILED(rv)) return rv;
+    rv = mInner->AddObserver(this);
+    if (NS_FAILED(rv)) return rv;
 
-	rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
-	if (NS_FAILED(rv)) return rv;
+    rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
+    if (NS_FAILED(rv)) return rv;
 
-	// Make sure bookmark's root has the correct type
-	rv = mInner->Assert(kNC_BookmarksRoot, kRDF_type, kNC_Folder, PR_TRUE);
-  return(rv);
+    // Make sure bookmark's root has the correct type
+    rv = mInner->Assert(kNC_BookmarksRoot, kRDF_type, kNC_Folder, PR_TRUE);
+
+    return rv;
 }
 
 nsresult
@@ -5132,6 +5098,7 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
 }
 
 
+
 nsresult
 nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm,
 			nsIRDFResource *parent, PRInt32 level, nsISupportsArray *parentArray)
@@ -5365,6 +5332,45 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 	return(rv);
 }
 
+
+
+nsresult
+nsBookmarksService::SerializeBookmarks(nsIURI* aURI)
+{
+    NS_ASSERTION(aURI, "null ptr");
+
+    nsresult rv;
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFile> file;
+    rv = fileURL->GetFile(getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+
+    // if file doesn't exist, create it
+    (void)file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
+
+    nsCOMPtr<nsIOutputStream> out;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIOutputStream> bufferedOut;
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFXMLSerializer> serializer =
+        do_CreateInstance("@mozilla.org/rdf/xml-serializer;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = serializer->Init(this);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFXMLSource> source = do_QueryInterface(serializer);
+    if (! source)
+        return NS_ERROR_FAILURE;
+
+    return source->Serialize(bufferedOut);
+}
 
 
 /*
