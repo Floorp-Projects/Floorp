@@ -646,16 +646,8 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
       // this does the AddRef of the return value
       rv = CallQueryInterface(NS_STATIC_CAST(nsIWebShellWindow*, window), aResult);
-#if 0
-      // If intrinsically sized, don't show until we have the size figured out
-      // (6 Dec 99: this is causing new windows opened from anchor links to
-      // be visible too early. All windows should (and appear to in testing)
-      // become visible in nsWebShellWindow::OnEndDocumentLoad. Timidly
-      // commenting out for now.)
-      if (aShowWindow && !intrinsicallySized)
-        window->Show(PR_TRUE);
-#endif
-
+      if (aParent)
+        aParent->AddChildWindow(*aResult);
     }
 
     if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
