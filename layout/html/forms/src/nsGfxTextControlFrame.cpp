@@ -44,6 +44,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIScrollbar.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsCSSRendering.h"
 #include "nsIDeviceContext.h"
@@ -95,6 +96,7 @@
 #include "nsLayoutAtoms.h"
 
 
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
@@ -2609,6 +2611,63 @@ nsGfxTextControlFrame::InstallEventListeners()
   return result;
 }
 
+nsresult
+nsGfxTextControlFrame::GetFirstFrameWithIID(nsIPresContext *aPresContext, const nsIID& aIID, nsIFrame *aRootFrame, void **
+aResultFrame)
+{
+  if (!aPresContext || !aRootFrame || !aResultFrame)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResultFrame = nsnull;
+
+  // Check if the root frame implements the specified interface.
+
+  nsresult result = aRootFrame->QueryInterface(aIID, aResultFrame);
+
+  // Check for any error that may have been thrown.
+  // Ignore NS_NOINTERFACE since we want to continue traversal.
+
+  if (NS_FAILED(result) && result != NS_NOINTERFACE)
+    return result;
+
+  // Check to see if we are done.
+
+  if (*aResultFrame)
+    return NS_OK;
+
+  // We aren't done, so traverse down the root frame's children,
+  // calling this method recursively.
+
+  nsIFrame *childFrame = nsnull;
+
+  result = aRootFrame->FirstChild(aPresContext, nsnull, &childFrame);
+
+  if (NS_FAILED(result))
+    return result;
+
+  while (childFrame)
+  {
+    result = GetFirstFrameWithIID(aPresContext, aIID, childFrame, aResultFrame);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (*aResultFrame)
+      return NS_OK;
+
+    result = childFrame->GetNextSibling(&childFrame);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  // No frame was found that implemented the specified
+  // interface. Return NULL and NS_OK since no error
+  // occured during our traversal.
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDocument *aDoc)
 {
@@ -2672,7 +2731,50 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   if (NS_FAILED(result)) { return result; }
   if (nsnull==sc) { return NS_ERROR_NULL_POINTER; }
   sc->RemapStyle(presContext);
-	// end HACK
+
+  if (IsSingleLineTextControl())
+  {
+    // We need to tweak the overflow property on the scrollframe to tell it
+    // that we want to hide the scrollbars! Note that this has to be done
+    // after the RemapStyle() above, otherwise our tweak will be blown away.
+
+    nsIScrollableFrame *scrollFrame = nsnull;
+
+    result = GetFirstFrameWithIID(presContext, NS_GET_IID(nsIScrollableFrame), frame, (void **)&scrollFrame);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (scrollFrame)
+    {
+      nsIFrame *sFrame = nsnull;
+
+      result = scrollFrame->QueryInterface(kIFrameIID, (void **)&sFrame);
+
+      if (NS_FAILED(result) && result != NS_NOINTERFACE)
+        return result;
+
+      if (sFrame)
+      {
+        nsCOMPtr<nsIStyleContext> scrollFrameStyleContext;
+
+        result = sFrame->GetStyleContext(getter_AddRefs(scrollFrameStyleContext));
+
+        if (NS_FAILED(result))
+          return result;
+
+        if (scrollFrameStyleContext)
+        {
+          nsStyleDisplay* display = (nsStyleDisplay*)scrollFrameStyleContext->GetMutableStyleData(eStyleStruct_Display);
+
+          if (display)
+            display->mOverflow = NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+        }
+      }
+    }
+  }
+
+  // end HACK
 
   // now that the style context is initialized, initialize the content
   nsAutoString value;

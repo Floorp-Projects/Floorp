@@ -615,6 +615,7 @@ public:
   void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
   void SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; } // not owner - do not addref!
+  nsresult GetFirstFrameWithIID(nsIPresContext *aPresContext, const nsIID& aIID, nsIFrame *aRootFrame, void **aResultFrame);
 
 protected:
   nsCOMPtr<nsIWebShell> mWebShell;
