@@ -446,7 +446,7 @@ inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCo
     if(aTag==*theTag) {
       return theTag-aTagSet;
     }
-    theTag++;
+    ++theTag;
   }
 
   return kNotFound;
@@ -622,7 +622,7 @@ inline PRInt32 LastOf(nsDTDContext& aContext,TagList& aTagList){
 inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
   int max = aContext.GetCount();
   int index;
-  for(index=aStartOffset;index<max;index++){
+  for(index=aStartOffset;index<max;++index){
     PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
     if(result) {
       return index;

@@ -209,7 +209,7 @@ PageGrabber::NextFile(const char* aExtension)
     struct stat sb;
     int s = stat(cname, &sb);
     if (s < 0) {
-      mFileNum++;
+      ++mFileNum;
       break;
     }
     else {

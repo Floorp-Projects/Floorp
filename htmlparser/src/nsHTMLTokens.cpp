@@ -1013,7 +1013,7 @@ static PRBool IsCommentEnd(
       return PR_TRUE;
     }
     if (*current == PRUnichar('-')) {
-      dashes++;
+      ++dashes;
     } else {
       dashes = 0;
     }
@@ -2028,9 +2028,9 @@ CEntityToken::ConsumeEntity(PRUnichar aChar,
 
       aString.Append(aChar);
       if(aChar==kRightBrace)
-        rightBraceCount++;
+        ++rightBraceCount;
       else if(aChar==kLeftBrace)
-        leftBraceCount++;
+        ++leftBraceCount;
     } while(leftBraceCount!=rightBraceCount);
   } //if
   else {

@@ -409,7 +409,7 @@ nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aValue,
   // <?xml version='a'?>
   // 0123456789012345678
   PRUint32 i = 17; // ?> can start at position 17 at the earliest
-  for (; i < aLength; i++) {
+  for (; i < aLength; ++i) {
     if (aValue[i] == '?')
       break;
   }
@@ -682,7 +682,7 @@ CreateSourceText(const PRInt32 aColNumber,
 
   aSourceString.Append(aSourceLine);
   aSourceString.Append(PRUnichar('\n'));
-  for (PRInt32 i = 0; i < errorPosition - 1; i++) {
+  for (PRInt32 i = 0; i < errorPosition - 1; ++i) {
     aSourceString.Append(PRUnichar('-'));
   }
   aSourceString.Append(PRUnichar('^'));  

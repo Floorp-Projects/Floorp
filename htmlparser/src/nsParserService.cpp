@@ -148,7 +148,7 @@ nsParserService::RegisterObserver(nsIElementObserver* aObserver,
     if(*aTags != eHTMLTag_userdefined && *aTags <= NS_HTML_TAG_MAX) {
       entry->AddObserver(aObserver,*aTags);
     }
-    aTags++;
+    ++aTags;
   }
 
   return result;
@@ -160,7 +160,7 @@ nsParserService::UnregisterObserver(nsIElementObserver* aObserver,
 {
   PRInt32 count = mEntries.GetSize();
 
-  for (PRInt32 i=0; i < count; i++) {
+  for (PRInt32 i=0; i < count; ++i) {
     nsObserverEntry* entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.ObjectAt(i));
     if (entry && entry->Matches(aTopic)) {
       entry->RemoveObserver(aObserver);

@@ -388,7 +388,7 @@ void expandMacros(char* aBuffer,CMacros& aMacroSet){
     while(aBuffer[++rPos]){
       if('$'==aBuffer[rPos]){
         temp[wPos]=0;
-        rPos++; //skip the $...        
+        ++rPos; //skip the $...        
         int theIndex=aBuffer[rPos]-'0';
         char* theMacro=aMacroSet.getMacro(theIndex);
         if(theMacro){

@@ -304,7 +304,7 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
   //last but not least, let's check the misplaced content list.
   //if we find it, then we have to push it all into the body before continuing...
   PRInt32 anIndex=0;
-  for(anIndex=0;anIndex<aCount;anIndex++){
+  for(anIndex=0;anIndex<aCount;++anIndex){
     CToken* theToken=(CToken*)aDeque.Pop();
     PushTokenFront(theToken);
   }
@@ -404,7 +404,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
               theRootTag=theTag;
             }
             theStack.Push(theToken);
-            theStackDepth++;
+            ++theStackDepth;
             break;
 
           case eToken_end: 
@@ -639,7 +639,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
           aToken->SetEmpty(isUsableAttr);
         }
         if(isUsableAttr) {
-          theAttrCount++;
+          ++theAttrCount;
           AddToken((CToken*&)theToken,result,&mTokenDeque,theAllocator);
         }
         else {

@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   nsVoidArray * gWorkList = new nsVoidArray();
   if(gWorkList) {
     int i;
-    for (i = 1; i < argc; i++) {
+    for (i = 1; i < argc; ++i) {
       nsString *tempString = new nsString;
       tempString->AssignWithConversion(argv[i]);
       gWorkList->AppendElement(tempString);

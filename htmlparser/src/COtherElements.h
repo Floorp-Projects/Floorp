@@ -104,7 +104,7 @@ inline PRBool ListContainsTag(eHTMLTags* aTagList,eHTMLTags aTag) {
       if(aTag==*theNextTag) {
         return PR_TRUE;
       }
-      theNextTag++;
+      ++theNextTag;
     }
   }
   return PR_FALSE;
@@ -2109,7 +2109,7 @@ void CElementTable::InitializeElements() {
 
   int max=sizeof(mElements)/sizeof(mElements[0]);
   int index=0;
-  for(index=0;index<max;index++){
+  for(index=0;index<max;++index){
     mElements[index]=&mDfltElements[index];
   }
 
@@ -2465,12 +2465,12 @@ void CElementTable::DebugDumpContainment(CElement* anElement){
 
   int count=0;
   int i=0;
-  for(i=0;i<NS_HTML_TAG_MAX;i++){
+  for(i=0;i<NS_HTML_TAG_MAX;++i){
     CElement* theChild=mElements[i];
     if(anElement->CanContain(theChild,0)){
       const PRUnichar *t = nsHTMLTags::GetStringValue(theChild->mTag);
       printf("%s ", NS_ConvertUCS2toUTF8(t).get());
-      count++;
+      ++count;
       if(18==count) {
         count=0;
         printf("\n%s",prefix);
@@ -2528,7 +2528,7 @@ void CElementTable::DebugDumpContainment(const char* aTitle){
   printf("==================================================\n");
   int i=0;
 
-  for(i=1;i<NS_HTML_TAG_MAX;i++){
+  for(i=1;i<NS_HTML_TAG_MAX;++i){
     DebugDumpContainment(mElements[i]);
     //DebugDumpGroups(mElements[i]);
   } //for

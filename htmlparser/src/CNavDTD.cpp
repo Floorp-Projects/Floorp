@@ -704,7 +704,7 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
       if(theTag==eHTMLTag_input) {
         // IE & Nav4x opens up a body for type=text - Bug 66985
         PRInt32 ac=aToken->GetAttributeCount();
-        for(PRInt32 i=0; i<ac; i++) {
+        for(PRInt32 i=0; i<ac; ++i) {
           CAttributeToken* attr=NS_STATIC_CAST(CAttributeToken*,aTokenizer->GetTokenAt(i));
           const nsAString& name=attr->GetKey();
           const nsAString& value=attr->GetValue();
@@ -1032,7 +1032,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
 
         if(theCount) {
           PRInt32 theIndex=0;
-          for(theIndex=0;theIndex<theCount;theIndex++){
+          for(theIndex=0;theIndex<theCount;++theIndex){
             const nsAString& theKey = aNode.GetKeyAt(theIndex);
             if(theKey.Equals(NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
               const nsAString& theName=aNode.GetValueAt(theIndex);
@@ -1894,7 +1894,7 @@ static void StripWSFollowingTag(eHTMLTags aChildTag,nsITokenizer* aTokenizer,nsT
     while(theToken) { 
       eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType()); 
       switch(theType) { 
-        case eToken_newline: aNewlineCount++; 
+        case eToken_newline: ++aNewlineCount; 
         case eToken_whitespace: 
           theToken=aTokenizer->PopToken();
           IF_FREE(theToken, aTokenAllocator);
@@ -2071,7 +2071,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           // considered as a leaf. However, in the sink FORM can either
           // be a container or a leaf. Therefore, we have to check
           // with the sink -- Ref: Bug 20087.
-          anIndex++;
+          ++anIndex;
         }
 
         STOP_TIMER()
@@ -2085,7 +2085,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         PRInt32 i=0;
         nsEntryStack* theChildStyleStack=0;
 
-        for(i=0; i<(theTagCount - theTopIndex); i++) {
+        for(i=0; i<(theTagCount - theTopIndex); ++i) {
           nsCParserNode* node=mBodyContext->Pop(theChildStyleStack);
           mTempContext->Push(node);
           IF_FREE(node, &mNodeAllocator); //release the popped node since push will addref for us.
@@ -2098,7 +2098,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
             theTag       = (eHTMLTags)theToken->GetTypeID();
             attrCount    = (gHTMLElements[theTag].mSkipTarget)? 0:theToken->GetAttributeCount();
             // Put back attributes, which once got popped out, into the tokenizer
-            for(PRInt32 j=0;j<attrCount; j++){
+            for(PRInt32 j=0;j<attrCount; ++j){
               CToken* theAttrToken = (CToken*)mMisplacedContent.PopFront();
               if(theAttrToken) {
                 mTokenizer->PushTokenFront(theAttrToken);
@@ -2128,7 +2128,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
      
         // Bad-contents were successfully processed. Now, itz time to get
         // back to the original body context state.
-        for(PRInt32 k=0; k<(theTagCount - theTopIndex); k++) {
+        for(PRInt32 k=0; k<(theTagCount - theTopIndex); ++k) {
           nsCParserNode* node=mTempContext->Pop(theChildStyleStack);
           mBodyContext->Push(node);
           IF_FREE(node, &mNodeAllocator);
@@ -2380,7 +2380,7 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 
   if(aCount<=theAvailTokenCount) {
     CToken* theToken=0;
     eHTMLTags theSkipTarget=gHTMLElements[aTag].mSkipTarget;
-    for(attr=0;attr<aCount;attr++){
+    for(attr=0;attr<aCount;++attr){
       if((eHTMLTag_unknown!=theSkipTarget) && mSkippedContent.GetSize())
         theToken=NS_STATIC_CAST(CToken*,mSkippedContent.PopFront());
       else 
@@ -2448,7 +2448,7 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
   
   PRInt32 i = 0;
   PRInt32 tagCount = mSkippedContent.GetSize();
-  for (i = 0; i< tagCount; i++){
+  for (i = 0; i< tagCount; ++i){
     CHTMLToken* theNextToken = (CHTMLToken*)mSkippedContent.PopFront();
       
     if (theNextToken) {
@@ -2932,14 +2932,14 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
       }
 
       mFlags &= ~NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
-      for(;theLevel<theCount;theLevel++){
+      for(;theLevel<theCount;++theLevel){
         nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
         if(theStack){
 
           PRInt32 sindex=0;
 
           nsTagEntry *theEntry=theStack->mEntries;
-          for(sindex=0;sindex<theStack->mCount;sindex++){            
+          for(sindex=0;sindex<theStack->mCount;++sindex){            
             nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
             if(1==theNode->mUseCount) {
               eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
@@ -2965,10 +2965,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
                 //if the node tag can't contain the child tag, then remove the child tag from the style stack
                 nsCParserNode* node=theStack->Remove(sindex,theNodeTag);
                 IF_FREE(node, &mNodeAllocator);
-                theEntry--; //back up by one
+                --theEntry; //back up by one
               }
             } //if
-            theEntry++;
+            ++theEntry;
           } //for
         } //if
       } //for
@@ -3269,7 +3269,7 @@ nsresult CNavDTD::OpenMap(const nsCParserNode *aNode){
 
   if(NS_OK==result) {
     mBodyContext->Push(aNode);
-    mOpenMapCount++;
+    ++mOpenMapCount;
   }
   return result;
 }

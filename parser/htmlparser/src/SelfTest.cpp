@@ -77,7 +77,7 @@ PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
       if(failpos>4225) {
         int x=failpos;
       }
-      failpos++;
+      ++failpos;
       char* p=strchr(" \t\r\n\b",ch1);
       if(!p)
         break;

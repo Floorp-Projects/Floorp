@@ -904,7 +904,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
     CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
 
     int attr=0;
-    for(attr=0;attr<attrCount;attr++){
+    for(attr=0;attr<attrCount;++attr){
       CToken* theToken=mTokenizer->PeekToken();
       if(theToken)  {
         eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
@@ -1047,7 +1047,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     
     case eToken_start:
       {
-        mTagCount++;
+        ++mTagCount;
 
         const nsAString& startValue = aToken->GetStringValue();
         result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),PR_TRUE);
@@ -1107,9 +1107,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_newline:
       {
         const nsAString& newlineValue = aToken->GetStringValue();
-        mLineNumber++; 
+        ++mLineNumber; 
         result=WriteTag(mText,newlineValue,0,PR_FALSE);
-        mTokenCount++;
+        ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK)
           StartNewPreBlock();
@@ -1120,7 +1120,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         const nsAString& wsValue = aToken->GetStringValue();
         result=WriteTag(mText,wsValue,0,PR_FALSE);
-        mTokenCount++;
+        ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK &&
             !wsValue.IsEmpty()) {
@@ -1135,7 +1135,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         const nsAString& str = aToken->GetStringValue();         
         result=WriteTag(mText,str,aToken->GetAttributeCount(),PR_TRUE);
-        mTokenCount++;
+        ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK && !str.IsEmpty()) {
           PRUnichar ch = str.Last();

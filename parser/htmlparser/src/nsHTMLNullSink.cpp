@@ -153,7 +153,7 @@ nsHTMLNullSink::~nsHTMLNullSink() {
 
 #ifdef VERBOSE_DEBUG
 static void DebugDump(const char* str1,const nsAString& str2,PRInt32 tabs) {
-  for(PRInt32 i=0;i<tabs;i++) {
+  for(PRInt32 i=0;i<tabs;++i) {
     PR_fprintf(PR_STDOUT, " "); //add some tabbing to debug output...
   }
 

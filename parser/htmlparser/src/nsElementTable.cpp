@@ -2313,7 +2313,7 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
   int i,j=0;
   int written;
   int linenum=5;
-  for(i=1;i<eHTMLTag_text;i++){
+  for(i=1;i<eHTMLTag_text;++i){
 
     const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << endl << endl << "Tag: <" << tag << ">" << endl;
@@ -2322,25 +2322,25 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
     written=0;
     char startChar=0;
     if(IsContainer((eHTMLTags)i)) {
-      for(j=1;j<eHTMLTag_text;j++){
+      for(j=1;j<eHTMLTag_text;++j){
         tag=nsHTMLTags::GetStringValue((eHTMLTags)j);
         if(tag) {
           if(!startChar)
             startChar=tag[0];
           if(12==written){
             out << endl << prefix;
-            linenum++;
+            ++linenum;
             written=0;
           }
           if(CanContain((eHTMLTags)i,(eHTMLTags)j)){
             if(tag[0]!=startChar){
               out << endl << prefix;
-              linenum++;
+              ++linenum;
               written=0;
               startChar=tag[0];
             }
             out<< tag << ", ";
-            written++;
+            ++written;
           }
 
         }//if
@@ -2348,7 +2348,7 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
     }
     else {
       out<<"(not container)" << endl;
-      linenum++;
+      ++linenum;
     }
   } //for
 #endif 
@@ -2374,7 +2374,7 @@ void nsHTMLElement::DebugDumpMembership(const char* aFilename){
 
   char* answer[]={".","Y"};
   char startChar=0;
-  for(i=1;i<eHTMLTag_text;i++){
+  for(i=1;i<eHTMLTag_text;++i){
     const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << tag; 
     int len=strlen(tag);
@@ -2433,7 +2433,7 @@ void nsHTMLElement::DebugDumpContainType(const char* aFilename){
 
   char* answer[]={".","Y"};
   char startChar=0;
-  for(i=1;i<eHTMLTag_text;i++){
+  for(i=1;i<eHTMLTag_text;++i){
     const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << tag; 
     int len=strlen(tag);

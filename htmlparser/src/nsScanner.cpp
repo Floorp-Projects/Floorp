@@ -356,7 +356,7 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
           srcLength = aLen;
         }
         else {
-          srcLength++;
+          ++srcLength;
         }
 
         aBuffer += srcLength;
@@ -480,7 +480,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
 
   if(NS_OK == result){
     aChar=*mCurrentPosition++;
-    mCountRemaining--;
+    --mCountRemaining;
   }
   return result;
 }
@@ -581,7 +581,7 @@ nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
   while (!done && current != mEndPosition) {
     switch(theChar) {
       case '\n':
-      case '\r': aNewlinesSkipped++;
+      case '\r': ++aNewlinesSkipped;
       case ' ' :
       case '\b':
       case '\t':
@@ -1048,7 +1048,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString,
   while(!done && current != end) {
     switch(theChar) {
       case '\n':
-      case '\r': aNewlinesSkipped++;
+      case '\r': ++aNewlinesSkipped;
       case ' ' :
       case '\b':
       case '\t':
@@ -1102,7 +1102,7 @@ nsresult nsScanner::ReadWhitespace(nsReadingIterator<PRUnichar>& aStart,
   while(!done && current != end) {
     switch(theChar) {
       case '\n':
-      case '\r': aNewlinesSkipped++;
+      case '\r': ++aNewlinesSkipped;
       case ' ' :
       case '\b':
       case '\t':

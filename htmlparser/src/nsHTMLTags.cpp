@@ -482,7 +482,7 @@ public:
 
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
-     for (int i = 0; i < NS_HTML_TAG_MAX; i++) {
+     for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
        tag = kTagUnicodeTable[i];
        id = nsHTMLTags::LookupTag(nsDependentString(tag));
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");

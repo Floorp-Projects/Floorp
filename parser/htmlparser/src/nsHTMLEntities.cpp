@@ -235,7 +235,7 @@ public:
      nsHTMLEntities::AddRefTable();
 
      // Make sure we can find everything we are supposed to
-     for (int i = 0; i < NS_HTML_ENTITY_COUNT; i++) {
+     for (int i = 0; i < NS_HTML_ENTITY_COUNT; ++i) {
        nsAutoString entity; entity.AssignWithConversion(gEntityArray[i].mStr);
 
        value = nsHTMLEntities::EntityToUnicode(entity);

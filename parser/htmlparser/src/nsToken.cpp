@@ -77,7 +77,7 @@ CToken::CToken(PRInt32 aTag) {
   mUseCount=1;
 
 #ifdef NS_DEBUG
-  TokenCount++;
+  ++TokenCount;
 #endif
 }
 
@@ -92,7 +92,7 @@ CToken::~CToken() {
 #ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_DTOR(CToken);
 #endif
-  DelTokenCount++;
+  ++DelTokenCount;
   mUseCount=0;
 }
 
@@ -124,7 +124,7 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
   PRUint32 i=0;
   PRUint32 theLen=GetStringValue().Length();
-  for(i=0;i<theLen;i++){
+  for(i=0;i<theLen;++i){
     anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
   }
   anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
