@@ -84,9 +84,6 @@ public:
 																		EventRecord&		aOSEvent,
 																		long						aMenuResult);
 
-
-		PRBool 									PointInWidget(Point aThePoint);
-
 protected:
 	PRBool							mWindowMadeHere;	// true if we created the window
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
