@@ -31,7 +31,6 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
-
 #include <stdlib.h>
 #include "nscore.h"
 #include "nsISupports.h"
@@ -90,6 +89,9 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 // Enable printing of critical errors on screen even for release builds
 #define PRINT_CRITICAL_ERROR_TO_SCREEN
+
+// Loader Types
+#define NS_LOADER_DATA_ALLOC_STEP 6
 
 // Common Key Names 
 const char xpcomKeyName[]="software/mozilla/XPCOM";
@@ -209,17 +211,15 @@ nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
 MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 
-nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
-                               const char *aLocation,
-                               const char *aType,
-                               nsIComponentLoader *aLoader)
-    : cid(aClass), location(aLocation), factory(nsnull), type(aType), loader(aLoader)
+nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, const char *aLocation,
+                               int aType)
+    : cid(aClass), location(aLocation), factory(nsnull), typeIndex(aType)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
-    : cid(aClass), loader(nsnull)
+    : cid(aClass), typeIndex(-1)
 
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
@@ -230,17 +230,14 @@ nsFactoryEntry::~nsFactoryEntry(void)
 {
     MOZ_COUNT_DTOR(nsFactoryEntry);
     factory = 0;
-    loader = 0;
 }
 
 nsresult
-nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation,
-                       const char *aType, nsIComponentLoader *aLoader)
+nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 {
     cid = aClass;
     location = aLocation;
-    type = aType;
-    loader = aLoader;
+    typeIndex = aType;
     return NS_OK;
 }
 
@@ -249,6 +246,7 @@ nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 {
     cid = aClass;
     factory = aFactory;
+    typeIndex = -1;
     return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,10 +255,10 @@ nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mFactories(NULL), mContractIDs(NULL), mLoaders(0), mMon(NULL), 
+    : mFactories(NULL), mContractIDs(NULL), mMon(NULL), 
       mRegistry(NULL), mPrePopulationDone(PR_FALSE),
       mNativeComponentLoader(0), mStaticComponentLoader(0),
-      mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED)
+      mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED), mLoaderData(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -319,27 +317,32 @@ nsresult nsComponentManagerImpl::Init(void)
         NS_ADDREF(mNativeComponentLoader);
     }
 
-    if (mStaticComponentLoader == nsnull) {
+    // Add predefined loaders
+    mLoaderData = (nsLoaderdata *) PR_Malloc(sizeof(nsLoaderdata) * NS_LOADER_DATA_ALLOC_STEP);
+    if (!mLoaderData)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mMaxNLoaderData = NS_LOADER_DATA_ALLOC_STEP;
+
+    mNLoaderData = NS_COMPONENT_TYPE_NATIVE;
+    mLoaderData[mNLoaderData].type = PL_strdup(nativeComponentType);
+    mLoaderData[mNLoaderData].loader = mNativeComponentLoader;
+    NS_ADDREF(mLoaderData[mNLoaderData].loader);
+    mNLoaderData++;
+
 #ifdef ENABLE_STATIC_COMPONENT_LOADER
+    mLoaderData[mNLoaderData].type = PL_strdup(staticComponentType);
+    mLoaderData[mNLoaderData].loader = mStaticComponentLoader;
+    NS_ADDREF(mLoaderData[mNLoaderData].loader);
+    mNLoaderData++;
+
+    if (mStaticComponentLoader == nsnull) {
         extern nsresult NS_NewStaticComponentLoader(nsIComponentLoader **);
         NS_NewStaticComponentLoader(&mStaticComponentLoader);
         if (!mStaticComponentLoader)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(mStaticComponentLoader);
-#endif
     }
-    
-    if (mLoaders == nsnull) {
-        mLoaders = new nsSupportsHashtable(16, /* Thread safe */ PR_TRUE);
-        if (mLoaders == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        nsCStringKey loaderKey(nativeComponentType);
-        mLoaders->Put(&loaderKey, mNativeComponentLoader);
-#ifdef ENABLE_STATIC_COMPONENT_LOADER
-        nsCStringKey staticKey(staticComponentType);
-        mLoaders->Put(&staticKey, mStaticComponentLoader);
 #endif
-    }
 
 #ifdef USE_REGISTRY
         NR_StartupRegistry();
@@ -389,9 +392,13 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // going to assign zero to 
     mComponentsDir = 0;
 
-    // Release all the component loaders
-    if (mLoaders)
-    delete mLoaders;
+    // Release all the component data - loaders and type strings
+    for(int i=0; i < mNLoaderData; i++) {
+        NS_IF_RELEASE(mLoaderData[i].loader);
+        PL_strfree((char *)mLoaderData[i].type);
+    }
+    PR_Free(mLoaderData);
+    mLoaderData = nsnull;
 
     // we have an extra reference on this one, which is probably a good thing
     NS_IF_RELEASE(mNativeComponentLoader);
@@ -506,13 +513,12 @@ nsComponentManagerImpl::PlatformInit(void)
                ("no native component loader available for init"));
     }
 
+#ifdef ENABLE_STATIC_COMPONENT_LOADER
     if (mStaticComponentLoader) {
-        /* now that we have the registry, Init the native loader */
+        /* now that we have the registry, Init the static loader */
         rv = mStaticComponentLoader->Init(this, mRegistry);
-    } else {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-               ("no native component loader available for init"));
     }
+#endif
 
     return rv;
 }
@@ -761,22 +767,22 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     rv = mRegistry->GetStringUTF8(cidKey, componentTypeValueName, 
                               getter_Copies(componentTypeStr));
     const char* componentType = componentTypeStr.get();
+    int type = -1;
 
     if (NS_FAILED(rv))
-    if (rv == NS_ERROR_REG_NOT_FOUND)
-        /* missing componentType, we assume application/x-moz-native */
-        componentType = nativeComponentType;
+        if (rv == NS_ERROR_REG_NOT_FOUND) {
+            /* missing componentType, we assume application/x-moz-native */
+            type = NS_COMPONENT_TYPE_NATIVE;
+        }
     else 
         return rv;              // XXX translate error code?
 
-    nsCOMPtr<nsIComponentLoader> loader;
+    if (type < 0) {
+        // Find the right loader type index
+        type = GetLoaderType(componentType);
+    }
 
-    rv = GetLoaderForType(componentType, getter_AddRefs(loader));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsFactoryEntry *res = new nsFactoryEntry(aCID, library, componentType,
-                                             loader);
+    nsFactoryEntry *res = new nsFactoryEntry(aCID, library, type);
     if (res == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -887,10 +893,8 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
             continue;
 
         nsFactoryEntry* entry = 
-            new nsFactoryEntry(aClass, library, componentType,
-                               nsCRT::strcmp(componentType,
-                                             nativeComponentType) ?
-                               0 : mNativeComponentLoader);
+            new nsFactoryEntry(aClass, library, GetLoaderType(componentType));
+
         if (!entry)
             continue;
 
@@ -1020,7 +1024,7 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("nsComponentManager: FAILED to load factory from %s (%s)\n",
-                (const char *)aEntry->location, (const char *)aEntry->type));
+                (const char *)aEntry->location, mLoaderData[aEntry->typeIndex].type));
         return rv;
     }
         
@@ -1682,19 +1686,21 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     }
 #endif
 
+    int typeIndex = GetLoaderType(aType);
+
     nsCOMPtr<nsIComponentLoader> loader;
-    rv = GetLoaderForType(aType, getter_AddRefs(loader));
+    rv = GetLoaderForType(typeIndex, getter_AddRefs(loader));
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tgetting loader for %s FAILED\n", aType));
         return rv;
     }
-
+    
     if (entry) {
-        entry->ReInit(aClass, aRegistryName, aType, loader);
+        entry->ReInit(aClass, aRegistryName, typeIndex);
     }
     else {
-        entry = new nsFactoryEntry(aClass, aRegistryName, aType, loader);
+        entry = new nsFactoryEntry(aClass, aRegistryName, typeIndex);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1732,28 +1738,31 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 }
 
 nsresult
-nsComponentManagerImpl::GetLoaderForType(const char *aType,
+nsComponentManagerImpl::GetLoaderForType(int aType,
                                          nsIComponentLoader **aLoader)
 {
-    nsCStringKey typeKey(aType);
     nsresult rv;
 
-    nsCOMPtr<nsIComponentLoader> loader;
-    loader = NS_STATIC_CAST(nsIComponentLoader *, mLoaders->Get(&typeKey));
-    if (loader) {
-        // nsSupportsHashtable does the AddRef
-        *aLoader = loader;
+    // Make sure we have a valid type
+    if (aType < 0 || aType >= mNLoaderData)
+        return NS_ERROR_INVALID_ARG;
+
+    *aLoader = mLoaderData[aType].loader;
+    if (*aLoader) {
+        NS_ADDREF(*aLoader);
         return NS_OK;
     }
 
-    loader = do_GetServiceFromCategory("component-loader", aType, &rv);
+    nsCOMPtr<nsIComponentLoader> loader;
+    loader = do_GetServiceFromCategory("component-loader", mLoaderData[aType].type, &rv);
     if (NS_FAILED(rv))
         return rv;
     
     rv = loader->Init(this, mRegistry);
 
     if (NS_SUCCEEDED(rv)) {
-        mLoaders->Put(&typeKey, loader);
+        mLoaderData[aType].loader = loader;
+        NS_ADDREF(mLoaderData[aType].loader);
         *aLoader = loader;
         NS_ADDREF(*aLoader);
     }
@@ -1918,29 +1927,6 @@ nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
     return UnregisterComponent(aClass, registryName);
 }
 
-struct CanUnload_closure {
-    int when;
-    nsresult status;   // this is a hack around Enumerate's void return
-    nsIComponentLoader *native;
-};
-
-static PRBool PR_CALLBACK
-CanUnload_enumerate(nsHashKey *key, void *aData, void *aClosure)
-{
-    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
-    struct CanUnload_closure *closure =
-    (struct CanUnload_closure *)aClosure;
-
-    if (loader == closure->native) {
-        return PR_TRUE;
-    }
-
-    closure->status = loader->UnloadAll(closure->when);
-    if (NS_FAILED(closure->status))
-    return PR_FALSE;
-    return PR_TRUE;
-}
-
 // XXX Need to pass in aWhen and servicemanager
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
@@ -1965,11 +1951,12 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
 
     // UnloadAll the loaders
     /* iterate over all known loaders and ask them to autoregister. */
-    struct CanUnload_closure closure;
-    closure.when = aWhen;
-    closure.status = NS_OK;
-    closure.native = mNativeComponentLoader;
-    mLoaders->Enumerate(CanUnload_enumerate, &closure);
+    // Skip mNativeComponentLoader
+    for (int i=NS_COMPONENT_TYPE_NATIVE + 1; i<mNLoaderData; i++) {
+        rv = mLoaderData[i].loader->UnloadAll(aWhen);
+        if (NS_FAILED(rv))
+            break;
+    }
 
     // UnloadAll the native loader
     rv = mNativeComponentLoader->UnloadAll(aWhen);
@@ -1996,46 +1983,6 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
  * registering new dlls, re-registration of modified dlls
  *
  */
-
-struct AutoReg_closure {
-    int when;
-    nsIFile *spec;
-    nsresult status;   // this is a hack around Enumerate's void return
-    nsIComponentLoader *native;
-    PRBool registered;
-};
-
-static PRBool PR_CALLBACK
-AutoRegister_enumerate(nsHashKey *key, void *aData, void *aClosure)
-{
-    nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
-    struct AutoReg_closure *closure =
-    (struct AutoReg_closure *)aClosure;
-
-    if (loader == closure->native)
-        return PR_TRUE;
-
-    PR_ASSERT(NS_SUCCEEDED(closure->status));
-
-    closure->status = loader->AutoRegisterComponents(closure->when,
-                                                     closure->spec);
-    return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
-}
-
-static PRBool PR_CALLBACK
-RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
-{
-    nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
-    struct AutoReg_closure *closure =
-    (struct AutoReg_closure *)aClosure;
-    PR_ASSERT(NS_SUCCEEDED(closure->status));
-    
-    PRBool registered;
-    closure->status = loader->RegisterDeferredComponents(closure->when,
-                                                         &registered);
-    closure->registered |= registered;
-    return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
-}
 
 nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
@@ -2142,32 +2089,35 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         nsXPIDLCString loaderType;
         if (NS_FAILED(supStr->GetData(getter_Copies(loaderType))))
             continue;
-
         
+        // We depend on the loader being created. Add the loader type and
+        // create the loader object too.
         nsCOMPtr<nsIComponentLoader> loader;
-        /* this will create it if we haven't already */
-        GetLoaderForType(loaderType, getter_AddRefs(loader));
+        GetLoaderForType(AddLoaderType(loaderType), getter_AddRefs(loader));
     }
 
     /* iterate over all known loaders and ask them to autoregister. */
     /* XXX convert when to nsIComponentLoader::(when) properly */
-    struct AutoReg_closure closure;
-    closure.when = when;
-    closure.spec = dir.get();
-    closure.status = NS_OK;
-    closure.native = mNativeComponentLoader; // prevent duplicate autoreg
-    
-    mLoaders->Enumerate(AutoRegister_enumerate, &closure);
-    rv = closure.status;
+    nsIFile *spec = dir.get();
+    for (int i = NS_COMPONENT_TYPE_NATIVE + 1; i < mNLoaderData; i++) {
+        rv = mLoaderData[i].loader->AutoRegisterComponents(when, spec);
+        if (NS_FAILED(rv))
+            break;
+    }
 
     if (NS_SUCCEEDED(rv))
     {
+        PRBool registered;
         do {
-            closure.registered = PR_FALSE;
-            mLoaders->Enumerate(RegisterDeferred_enumerate, &closure);
-        } while (NS_SUCCEEDED(closure.status) && closure.registered);
-        rv = closure.status;
-
+            registered = PR_FALSE;
+            for (int i = NS_COMPONENT_TYPE_NATIVE; i < mNLoaderData; i++) {
+                PRBool b = PR_FALSE;
+                rv = mLoaderData[i].loader->RegisterDeferredComponents(when, &b);
+                if (NS_FAILED(rv))
+                    break;
+                registered |= b;
+            }
+        } while (NS_SUCCEEDED(rv) && registered);
     }
 
   	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -2182,58 +2132,22 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     return rv;
 }
 
-static PRBool PR_CALLBACK
-AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
-{
-    PRBool didRegister;
-    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
-    struct AutoReg_closure *closure =
-    (struct AutoReg_closure *)aClosure;
-
-    closure->status = loader->AutoRegisterComponent(closure->when,
-                            closure->spec,
-                            &didRegister);
-    
-    if (NS_SUCCEEDED(closure->status) && didRegister)
-        return PR_FALSE; // Stop enumeration as we are done
-    return PR_TRUE;
-}
-
-static PRBool PR_CALLBACK
-AutoUnregisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
-{
-    PRBool didUnregister;
-    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
-    struct AutoReg_closure *closure =
-    (struct AutoReg_closure *)aClosure;
-
-    closure->status = loader->AutoUnregisterComponent(closure->when,
-                                                      closure->spec,
-                                                      &didUnregister);
-    if (NS_SUCCEEDED(closure->status) && didUnregister)
-        return PR_FALSE; // Stop enumeration as we are done
-    return PR_TRUE; // Let enumeration continue
-
-}
-
 nsresult
 nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
                                               nsIFile *component)
 {
-    struct AutoReg_closure closure;
-
-    /* XXX convert when to nsIComponentLoader::(when) properly */
-    closure.when = (PRInt32)when;
-    closure.spec = component;
-    closure.status = NS_OK;
-
+    nsresult rv = NS_OK;
     /*
      * Do we have to give the native loader first crack at it?
      * I vote ``no''.
      */
-    mLoaders->Enumerate(AutoRegisterComponent_enumerate, &closure);
-    return NS_FAILED(closure.status) 
-    ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
+    for (int i = 0; i < mNLoaderData; i++) {
+        PRBool didRegister;
+        rv = mLoaderData[i].loader->AutoRegisterComponent((int)when, component, &didRegister);
+        if (NS_SUCCEEDED(rv) && didRegister)
+            break;
+    }
+    return NS_FAILED(rv) ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
 
 }
 
@@ -2241,18 +2155,14 @@ nsresult
 nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 when,
                                                 nsIFile *component)
 {
-    struct AutoReg_closure closure;
-
-    /* XXX convert when to nsIComponentLoader::(when) properly */
-    closure.when = (PRInt32)when;
-    closure.spec = component;
-    closure.status = NS_OK;
-
-    mLoaders->Enumerate(AutoUnregisterComponent_enumerate, &closure);
-
-    return NS_FAILED(closure.status) 
-    ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
-
+    nsresult rv = NS_OK;
+    for (int i = 0; i < mNLoaderData; i++) {
+        PRBool didUnRegister;
+        rv = mLoaderData[i].loader->AutoUnregisterComponent(when, component, &didUnRegister);
+        if (NS_SUCCEEDED(rv) && didUnRegister)
+            break;
+    }
+    return NS_FAILED(rv) ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
 }
 
 nsresult
@@ -2380,6 +2290,59 @@ nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
         rv = QueryInterface(uuid, result);
     }
     return rv;
+}
+
+// Convert a loader type string into an index into the component data
+// array. Empty loader types are converted to NATIVE. Returns -1 if
+// loader type cannot be determined.
+int
+nsComponentManagerImpl::GetLoaderType(const char *typeStr)
+{
+    if (!typeStr || !*typeStr) {
+        // Empty type strings are NATIVE
+        return NS_COMPONENT_TYPE_NATIVE;
+    }
+
+    for (int i=NS_COMPONENT_TYPE_NATIVE; i<mNLoaderData; i++) {
+        if (!strcmp(typeStr, mLoaderData[i].type))
+            return i;
+    }
+    // Not found
+    return -1;
+}
+
+// Add a loader type if not already known. Return the typeIndex
+// if the loader type is either added or already there.
+int
+nsComponentManagerImpl::AddLoaderType(const char *typeStr)
+{
+    int typeIndex = GetLoaderType(typeStr);
+    if (typeIndex >= 0) {
+        return typeIndex;
+    }
+
+    // Add the loader type
+    if (mNLoaderData >= mMaxNLoaderData) {
+        NS_ASSERTION(mNLoaderData == mMaxNLoaderData,
+                     "Memory corruption. nsComponentManagerImpl::mLoaderData array overrun.");
+        // Need to increase our loader array
+        nsLoaderdata *new_mLoaderData = (nsLoaderdata *) PR_Realloc(mLoaderData, (mMaxNLoaderData + NS_LOADER_DATA_ALLOC_STEP) * sizeof(nsLoaderdata));
+        if (!new_mLoaderData)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mLoaderData = new_mLoaderData;
+        mMaxNLoaderData += NS_LOADER_DATA_ALLOC_STEP;
+    }
+
+    typeIndex = mNLoaderData;
+    mLoaderData[typeIndex].type = PL_strdup(typeStr);
+    if (!mLoaderData[typeIndex].type) {
+        // mmh! no memory. return failure.
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mLoaderData[typeIndex].loader = nsnull;
+    mNLoaderData++;
+
+    return typeIndex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
