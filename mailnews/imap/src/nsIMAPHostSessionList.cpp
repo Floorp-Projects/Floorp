@@ -593,7 +593,8 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(nsIImapIncomingServ
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = incomingServer->GetKey(&serverKey);
-	
+	if (NS_FAILED(rv)) return rv;
+
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(serverKey);
 	if (host)
