@@ -32,6 +32,7 @@ CPPSRCS =				\
 	nsContentIterator.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
+	nsDocumentViewer.cpp		\
 	nsDOMAttribute.cpp		\
 	nsDOMAttributeMap.cpp		\
 	nsFrameImageLoader.cpp		\
@@ -40,6 +41,7 @@ CPPSRCS =				\
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
 	nsNameSpaceManager.cpp		\
+	nsPluginViewer.cpp		\
 	nsPresContext.cpp		\
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
@@ -52,6 +54,7 @@ CPPSRCS =				\
 	nsXIFConverter.cpp		\
 	nsRangeList.cpp			\
 	nsLayoutAtoms.cpp		\
+	nsLayoutDebugger.cpp		\
 	nsCaret.cpp			\
 	nsRange.cpp			\
 	nsTextNode.cpp			\
@@ -70,6 +73,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsContentIterator.obj 	\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
+	.\$(OBJDIR)\nsDocumentViewer.obj	\
 	.\$(OBJDIR)\nsDOMAttribute.obj		\
 	.\$(OBJDIR)\nsDOMAttributeMap.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
@@ -78,18 +82,20 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
+	.\$(OBJDIR)\nsPluginViewer.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleContext.obj		\
-	.\$(OBJDIR)\nsStyleChangeList.obj		\
+	.\$(OBJDIR)\nsStyleChangeList.obj	\
 	.\$(OBJDIR)\nsStyleCoord.obj		\
 	.\$(OBJDIR)\nsStyleSet.obj		\
 	.\$(OBJDIR)\nsTextFragment.obj		\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	.\$(OBJDIR)\nsRangeList.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
+	.\$(OBJDIR)\nsLayoutDebugger.obj	\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextNode.obj		\
@@ -98,7 +104,7 @@ CPP_OBJS=					\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
     -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\style\src \
-    -I$(PUBLIC)\lwbrk
+    -I$(PUBLIC)\lwbrk -I$(PUBLIC)\plugin
 
 LCFLAGS = \
         $(LCFLAGS) \
