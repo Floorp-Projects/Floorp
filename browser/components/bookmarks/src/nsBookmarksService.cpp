@@ -1680,9 +1680,11 @@ nsBookmarksService::Init()
     // if the user has more than one profile: always include the profile name
     // otherwise, include the profile name only if it is not named 'default'
     // the profile "default" is not localizable and arises when there is no ns4.x install
-    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&rv));
-    nsXPIDLString        currentProfileName;
     nsresult             useProfile;
+    nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&useProfile));
+    if (NS_SUCCEEDED(useProfile))
+    {
+        nsXPIDLString        currentProfileName;
 
     useProfile = profileService->GetCurrentProfile(getter_Copies(currentProfileName));
     if (NS_SUCCEEDED(useProfile))
@@ -1699,6 +1701,7 @@ nsBookmarksService::Init()
                 ToLowerCase(currentProfileName);
                 if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
                     useProfile = NS_ERROR_FAILURE;
+                }
             }
         }
     }
@@ -2002,11 +2005,15 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
         if (NS_SUCCEEDED(rv = bmks->GetBookmarkToPing(getter_AddRefs(bookmark))) && (bookmark))
         {
             bmks->busyResource = bookmark;
-            const char      *url = nsnull;
-            bookmark->GetValueConst(&url);
+
+            nsAutoString url;
+            rv = bmks->GetURLFromResource(bookmark, url);
+            if (NS_FAILED(rv))
+                return;
 
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-            printf("nsBookmarksService::FireTimer - Pinging '%s'\n", url);
+            printf("nsBookmarksService::FireTimer - Pinging '%s'\n",
+                   NS_ConvertUCS2toUTF8(url).get());
 #endif
 
             nsCOMPtr<nsIURI>    uri;
@@ -2061,13 +2068,13 @@ NS_IMETHODIMP
 nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                     nsresult status)
 {
-    nsresult        rv;
+    nsresult rv;
 
-    const char      *uri = nsnull;
-    if (NS_SUCCEEDED(rv = busyResource->GetValueConst(&uri)) && (uri))
+    nsAutoString url;
+    if (NS_SUCCEEDED(rv = GetURLFromResource(busyResource, url)))
     {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-        printf("Finished polling '%s'\n", uri);
+        printf("Finished polling '%s'\n", NS_ConvertUCS2toUTF8(url).get());
 #endif
     }
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2095,7 +2102,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                 if (!eTagValue.IsEmpty())
                 {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-                    printf("eTag: '%s'\n", NS_LossyConvertASCIItoUCS2(eTagValue).get());
+                    printf("eTag: '%s'\n", NS_ConvertUCS2toUTF8(eTagValue).get());
 #endif
                     nsAutoString        eTagStr;
                     nsCOMPtr<nsIRDFNode>    currentETagNode;
@@ -2361,7 +2368,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                             }
                         }
                     }
-                    promptStr.AppendWithConversion(uri);
+                    promptStr.Append(url);
                     
                     nsAutoString    temp;
                     getLocaleString("WebPageAskDisplay", temp);
@@ -2407,20 +2414,20 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             nsCOMPtr<nsISupportsArray> suppArray;
             rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
             if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsISupportsCString> suppString(do_CreateInstance("@mozilla.org/supports-cstring;1", &rv));
+            nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
             if (!suppString) return rv;
-            rv = suppString->SetData(nsDependentCString(uri));
+            rv = suppString->SetData(url);
             if (NS_FAILED(rv)) return rv;
             suppArray->AppendElement(suppString);
     
             nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));    
             if (NS_FAILED(rv)) return rv;
    
-            nsXPIDLCString url;
-            rv = handler->GetChromeUrlForTask(getter_Copies(url));
+            nsXPIDLCString chromeUrl;
+            rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrl));
             if (NS_FAILED(rv)) return rv;
 
-            wwatch->OpenWindow(0, url, "_blank", "chrome,dialog=no,all", 
+            wwatch->OpenWindow(0, chromeUrl, "_blank", "chrome,dialog=no,all", 
                                suppArray, getter_AddRefs(newWindow));
                     }
                 }
@@ -2609,6 +2616,33 @@ nsBookmarksService::CreateFolderInContainer(const PRUnichar* aName,
     if (NS_SUCCEEDED(rv))
         rv = InsertResource(*aResult, aParentFolder, aIndex);
     return rv;
+}
+
+nsresult
+nsBookmarksService::GetURLFromResource(nsIRDFResource* aResource,
+                                       nsAString& aURL)
+{
+    NS_ENSURE_ARG(aResource);
+
+    nsCOMPtr<nsIRDFNode> urlNode;
+    nsresult rv = mInner->GetTarget(aResource, kNC_URL, PR_TRUE, getter_AddRefs(urlNode));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (urlNode) {
+        nsCOMPtr<nsIRDFLiteral> urlLiteral = do_QueryInterface(urlNode, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+
+        const PRUnichar* url = nsnull;
+        rv = urlLiteral->GetValueConst(&url);
+        if (NS_FAILED(rv))
+            return rv;
+
+        aURL.Assign(url);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3219,22 +3253,14 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcut
         return rv;
 
     if (source) {
-        nsCOMPtr<nsIRDFNode> urlNode;
-        rv = GetTarget(source, kNC_URL, PR_TRUE, getter_AddRefs(urlNode));
+        nsAutoString url;
+        rv = GetURLFromResource(source, url);
         if (NS_FAILED(rv))
            return rv;
 
-        if (urlNode) {
-            nsCOMPtr<nsIRDFLiteral> urlLiteral = do_QueryInterface(urlNode);
-            if (urlLiteral) {
-                const PRUnichar* value;
-                rv = urlLiteral->GetValueConst(&value);
-                if (NS_FAILED(rv))
-                    return rv;
-
-                *aShortcutURL = ToNewUTF8String(nsDependentString(value));
-                return NS_OK;
-            }
+        if (!url.IsEmpty()) {
+            *aShortcutURL = ToNewUTF8String(url);
+            return NS_OK;
         }
     }
 
@@ -3317,9 +3343,57 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         nsAutoString bookmarkName;
         currFile->GetLeafName(bookmarkName);
 
+        PRBool isSymlink = PR_FALSE;
         PRBool isDir = PR_FALSE;
+
+        currFile->IsSymlink(&isSymlink);
         currFile->IsDirectory(&isDir);
-        if (isDir)
+
+        if (isSymlink)
+        {
+            // It's a .lnk file.  Get the native path and check to see if it's
+            // a dir.  If so, create a bookmark for the dir.  If not, then
+            // simply do nothing and continue.
+
+            // Get the native path that the .lnk file is pointing to.
+            nsCAutoString path;
+            rv = currFile->GetNativeTarget(path);
+            if (NS_FAILED(rv)) 
+                continue;
+
+            nsCOMPtr<nsILocalFile> localFile;
+            rv = NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
+            if (NS_FAILED(rv)) 
+                continue;
+
+            // Check for dir here.  If path is not a dir, just continue with
+            // next import.
+            rv = localFile->IsDirectory(&isDir);
+            NS_ENSURE_SUCCESS(rv, rv);
+            if (!isDir)
+                continue;
+
+            nsCAutoString spec;
+            nsCOMPtr<nsIFile> filePath(localFile);
+            // Get the file url format (file:///...) of the native file path.
+            rv = NS_GetURLSpecFromFile(filePath, spec);
+            if (NS_FAILED(rv)) 
+                continue;
+
+            // Look for and strip out the .lnk extension.
+            NS_NAMED_LITERAL_STRING(lnkExt, ".lnk");
+            PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
+            if (StringEndsWith(bookmarkName, lnkExt,
+                  nsCaseInsensitiveStringComparator()))
+                bookmarkName.Truncate(lnkExtStart);
+
+            nsCOMPtr<nsIRDFResource> bookmark;
+            CreateBookmarkInContainer(bookmarkName.get(), spec.get(), nsnull,
+                nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
+            if (NS_FAILED(rv)) 
+                continue;
+        }
+        else if (isDir)
         {
             nsCOMPtr<nsIRDFResource> folder;
             rv = CreateFolderInContainer(bookmarkName.get(), aParentResource, -1, getter_AddRefs(folder));
@@ -3333,11 +3407,11 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         else
         {
             nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-
             nsCAutoString extension;
+
             url->GetFileExtension(extension);
-            ToLowerCase(extension);
-            if (!extension.Equals(NS_LITERAL_CSTRING("url"))) 
+            if (!extension.Equals(NS_LITERAL_CSTRING("url"),
+                                  nsCaseInsensitiveCStringComparator()))
                 continue;
 
             nsAutoString name(Substring(bookmarkName, 0, 
@@ -4871,14 +4945,14 @@ nsBookmarksService::LoadBookmarks()
 }
 
 static char kFileIntro[] = 
-    "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n"
-    "<!-- This is an automatically generated file.\n"
-    "     It will be read and overwritten.\n"
-    "     DO NOT EDIT! -->\n"
+    "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
+    "<!-- This is an automatically generated file." NS_LINEBREAK
+    "     It will be read and overwritten." NS_LINEBREAK
+    "     DO NOT EDIT! -->" NS_LINEBREAK
     // Note: we write bookmarks in UTF-8
-    "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n"
-    "<TITLE>Bookmarks</TITLE>\n"
-    "<H1>Bookmarks</H1>\n\n";
+    "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">" NS_LINEBREAK
+    "<TITLE>Bookmarks</TITLE>" NS_LINEBREAK
+    "<H1>Bookmarks</H1>" NS_LINEBREAK NS_LINEBREAK;
 
 nsresult
 nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
@@ -4970,20 +5044,20 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     return NS_OK;
 }
 
-static const char kBookmarkIntro[] = "<DL><p>\n";
+static const char kBookmarkIntro[] = "<DL><p>" NS_LINEBREAK;
 static const char kIndent[] = "    ";
 static const char kContainerIntro[] = "<DT><H3";
 static const char kSpace[] = " ";
 static const char kTrueEnd[] = "true\"";
 static const char kQuote[] = "\"";
 static const char kCloseAngle[] = ">";
-static const char kCloseH3[] = "</H3>\n";
+static const char kCloseH3[] = "</H3>" NS_LINEBREAK;
 static const char kHROpen[] = "<HR";
-static const char kAngleNL[] = ">\n";
+static const char kAngleNL[] = ">" NS_LINEBREAK;
 static const char kDTOpen[] = "<DT><A";
-static const char kAClose[] = "</A>\n";
-static const char kBookmarkClose[] = "</DL><p>\n";
-static const char kNL[] = "\n";
+static const char kAClose[] = "</A>" NS_LINEBREAK;
+static const char kBookmarkClose[] = "</DL><p>" NS_LINEBREAK;
+static const char kNL[] = NS_LINEBREAK;
 
 nsresult
 nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,

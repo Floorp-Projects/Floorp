@@ -177,6 +177,9 @@ protected:
 
     nsresult getLocaleString(const char *key, nsString &str);
 
+    nsresult
+    GetURLFromResource(nsIRDFResource* aResource, nsAString& aURL);
+
     nsresult LoadBookmarks();
     nsresult InitDataSource();
 
