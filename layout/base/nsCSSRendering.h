@@ -60,7 +60,15 @@ public:
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
                               const PRUint8 borderStyles[],
-                              const nscolor borderColors[],
+                              const nscolor borderColors[],    
+                              const nsRect& borderOutside,
+                              const nsRect& borderInside,
+                              PRIntn aSkipSides,
+                              nsRect* aGap);
+
+  static void DrawDashedSides(PRIntn startSide,
+                              nsIRenderingContext& aContext,
+                              const nsStyleSpacing& aSpacing,  
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
                               PRIntn aSkipSides,
@@ -78,15 +86,26 @@ protected:
                          PRIntn borderPart, float borderFrac,
                          nscoord twipsPerPixel);
 
+  //static void DrawSide(nsIRenderingContext& aContext,
+  //                     PRIntn whichSide,
+  //                     const PRUint8 borderStyles[],
+  //                    const nscolor borderColors[],
+  //                     const nsRect& borderOutside,     
+  //                     const nsRect& borderInside,
+  //                     PRBool printing,
+  //                     nscoord twipsPerPixel,
+  //                     nsRect* aGap = 0);
+  
   static void DrawSide(nsIRenderingContext& aContext,
                        PRIntn whichSide,
-                       const PRUint8 borderStyles[],
-                       const nscolor borderColors[],
+                       const PRUint8 borderStyle,
+                       const nscolor borderColor,
                        const nsRect& borderOutside,
                        const nsRect& borderInside,
                        PRBool printing,
                        nscoord twipsPerPixel,
                        nsRect* aGap = 0);
+
 
   static void DrawLine (nsIRenderingContext& aContext, 
                         nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,
