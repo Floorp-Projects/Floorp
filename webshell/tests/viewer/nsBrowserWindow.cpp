@@ -190,6 +190,13 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID
 
 #define FILE_PROTOCOL "file://"
 
+#ifdef USE_LOCAL_WIDGETS
+  extern nsresult NS_NewButton(nsIButton** aControl);
+  extern nsresult NS_NewLabel(nsILabel** aControl);
+  extern nsresult NS_NewTextWidget(nsITextWidget** aControl);
+  extern nsresult NS_NewCheckButton(nsICheckButton** aControl);
+#endif
+
 // prototypes
 #if 0
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
@@ -1388,9 +1395,14 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
               nscoord(NSIntPointsToTwips(TOOL_BAR_FONT_SIZE) * t2d * d2a));
   NS_RELEASE(dc);
 
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewButton(&mBack);
+#else
   // Create and place back button
   rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
                                           (void**)&mBack);
+#endif
+
   if (NS_OK != rv) {
     return rv;
   }
@@ -1407,9 +1419,14 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
 
   // Create and place forward button
-  r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
+  r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
+  
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewButton(&mForward);
+#else
   rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
                                           (void**)&mForward);
+#endif
   if (NS_OK != rv) {
     return rv;
   }
@@ -1428,8 +1445,14 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   r.SetRect(2*BUTTON_WIDTH, 0,
             aWidth - 2*BUTTON_WIDTH - THROBBER_WIDTH,
             BUTTON_HEIGHT);
+
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewTextWidget(&mLocation);
+#else
   rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                           (void**)&mLocation);
+#endif
+
   if (NS_OK != rv) {
     return rv;
   }
@@ -1482,8 +1505,14 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   NS_RELEASE(dc);
 
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);
+
+#ifdef USE_LOCAL_WIDGETS
+  rv = NS_NewTextWidget(&mStatus);
+#else
   rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                           (void**)&mStatus);
+#endif
+
   if (NS_OK != rv) {
     return rv;
   }

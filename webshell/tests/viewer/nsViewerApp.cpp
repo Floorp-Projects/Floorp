@@ -69,6 +69,14 @@
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"
 
+// new widget stuff
+#ifdef USE_LOCAL_WIDGETS
+  extern nsresult NS_NewButton(nsIButton** aControl);
+  extern nsresult NS_NewLabel(nsILabel** aControl);
+  extern nsresult NS_NewTextWidget(nsITextWidget** aControl);
+  extern nsresult NS_NewCheckButton(nsICheckButton** aControl);
+#endif
+
 // cookie
 #include "nsICookieService.h"
 
@@ -1017,7 +1025,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   // Create Update CheckButton
   rect.SetRect(x, y, 150, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewCheckButton(&mUpdateChkBtn);
+#else
   nsComponentManager::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mUpdateChkBtn);
+#endif
   NS_CreateCheckButton(mRobotDialog, mUpdateChkBtn,rect,HandleRobotEvent,&font);
   mUpdateChkBtn->SetLabel("Update Display (Visual)");
   mUpdateChkBtn->SetState(PR_TRUE);
@@ -1026,7 +1038,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create Label
   w = 115;
   rect.SetRect(x, y+3, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewLabel(&label);
+#else
   nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+#endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
   label->SetLabel("Verfication Directory:");
@@ -1035,7 +1051,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create TextField
   nsIWidget* widget = nsnull;
   rect.SetRect(x, y, 225, txtHeight);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewTextWidget(&mVerDirTxt);
+#else
   nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mVerDirTxt);
+#endif
   NS_CreateTextWidget(mRobotDialog,mVerDirTxt,rect,HandleRobotEvent,&font);
   if (mVerDirTxt && NS_OK == mVerDirTxt->QueryInterface(kIWidgetIID,(void**)&widget))
   {
@@ -1051,7 +1071,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   x = 5;
   w = 55;
   rect.SetRect(x, y+4, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewLabel(&label);
+#else
   nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+#endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
   label->SetLabel("Stop after:");
@@ -1059,7 +1083,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   // Create TextField
   rect.SetRect(x, y, 75, txtHeight);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewTextWidget(&mStopAfterTxt);
+#else
   nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mStopAfterTxt);
+#endif
   NS_CreateTextWidget(mRobotDialog,mStopAfterTxt,rect,HandleRobotEvent,&font);
   if (mStopAfterTxt && NS_OK == mStopAfterTxt->QueryInterface(kIWidgetIID,(void**)&widget))
   {
@@ -1071,7 +1099,11 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   w = 75;
   rect.SetRect(x, y+4, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewLabel(&label);
+#else
   nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+#endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Left);
   label->SetLabel("(page loads)");
@@ -1083,14 +1115,22 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nscoord xx = (dialogWidth - (2*w)) / 3;
   // Create Find Start Button
   rect.SetRect(xx, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewButton(&mStartBtn);
+#else
   nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mStartBtn);
+#endif
   NS_CreateButton(mRobotDialog,mStartBtn,rect,HandleRobotEvent,&font);
   mStartBtn->SetLabel("Start");
   
   xx += w + xx;
   // Create Cancel Button
   rect.SetRect(xx, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+  NS_NewButton(&mCancelBtn);
+#else
   nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
+#endif
   NS_CreateButton(mRobotDialog,mCancelBtn,rect,HandleRobotEvent,&font);
   mCancelBtn->SetLabel("Cancel");
   
@@ -1392,7 +1432,11 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     // Create Label
     w = 50;
     rect.SetRect(x, y+3, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewLabel(&label);
+#else
     nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+#endif
     NS_CreateLabel(mSiteDialog,label,rect,HandleSiteEvent,&font);
     label->SetAlignment(eAlign_Right);
     label->SetLabel("Site:");
@@ -1400,7 +1444,11 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
     w = 250;
     rect.SetRect(x, y+3, w, 24);  
-    nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mSiteLabel);
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewLabel(&mSiteLabel);
+#else
+   nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mSiteLabel);
+#endif
     NS_CreateLabel(mSiteDialog,mSiteLabel,rect,HandleSiteEvent,&font);
     mSiteLabel->SetAlignment(eAlign_Left);
     mSiteLabel->SetLabel("");
@@ -1411,21 +1459,33 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     x = spacing;
     // Create Previous Button
     rect.SetRect(x, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewButton(&mSitePrevBtn);
+#else
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSitePrevBtn);
+#endif
     NS_CreateButton(mSiteDialog,mSitePrevBtn,rect,HandleSiteEvent,&font);
     mSitePrevBtn->SetLabel("<< Previous");
     x += spacing + w;
 
     // Create Next Button
     rect.SetRect(x, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewButton(&mSiteNextBtn);
+#else
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteNextBtn);
+#endif
     NS_CreateButton(mSiteDialog,mSiteNextBtn,rect,HandleSiteEvent,&font);
     mSiteNextBtn->SetLabel("Next >>");
     x += spacing + w;
   
     // Create Cancel Button
     rect.SetRect(x, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewButton(&mSiteCancelBtn);
+#else
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteCancelBtn);
+#endif
     NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
     mSiteCancelBtn->SetLabel("Cancel");
   }
