@@ -703,8 +703,10 @@ Contributor(s):
     </menubar>
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
-             fullscreentoolbar="true" context="toolbar-context-menu">
-        <toolbarpalette defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,print-button,throbber-box">
+             fullscreentoolbar="true" 
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,print-button,throbber-box"
+             context="toolbar-context-menu">
+        <toolbarpalette>
           <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                          label="&backCmd.label;"
                          oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
