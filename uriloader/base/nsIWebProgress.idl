@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,62 +45,111 @@ interface nsIWebProgressListener;
 
 /**
  * The nsIWebProgress interface is used to look at the progress of document
- * loading in a particular DOM Window.
+ * loading in a particular DOM window.
  *
  * @status UNDER_REVIEW
  */
-
 [scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgress : nsISupports
 {
+  /**
+   * The following flags may be combined to form the aNotifyMask parameter for
+   * the addProgressListener method.  They limit the set of events that are
+   * delivered to an nsIWebProgressListener instance.
+   */ 
+
+  /**
+   * These flags indicate the state transistions to observe, corresponding
+   * to nsIWebProgressListener::onStateChange.
+   *
+   * NOTIFY_STATE_REQUEST
+   *   Only receive the onStateChange event if the aStateFlags parameter
+   *   includes nsIWebProgressListener::STATE_IS_REQUEST.
+   *   
+   * NOTIFY_STATE_DOCUMENT
+   *   Only receive the onStateChange event if the aStateFlags parameter
+   *   includes nsIWebProgressListener::STATE_IS_DOCUMENT.
+   *
+   * NOTIFY_STATE_NETWORK
+   *   Only receive the onStateChange event if the aStateFlags parameter
+   *   includes nsIWebProgressListener::STATE_IS_NETWORK.
+   *
+   * NOTIFY_STATE_WINDOW
+   *   Only receive the onStateChange event if the aStateFlags parameter
+   *   includes nsIWebProgressListener::STATE_IS_WINDOW.
+   *
+   * NOTIFY_STATE_ALL
+   *   Receive all onStateChange events.
+   */
   const unsigned long NOTIFY_STATE_REQUEST  = 0x00000001;
   const unsigned long NOTIFY_STATE_DOCUMENT = 0x00000002;
   const unsigned long NOTIFY_STATE_NETWORK  = 0x00000004;
   const unsigned long NOTIFY_STATE_WINDOW   = 0x00000008;
   const unsigned long NOTIFY_STATE_ALL      = 0x0000000f;
 
+  /**
+   * These flags indicate the other events to observe, corresponding to the
+   * other four methods defined on nsIWebProgressListener.
+   *
+   * NOTIFY_PROGRESS
+   *   Receive onProgressChange events.
+   *
+   * NOTIFY_STATUS
+   *   Receive onStatusChange events.
+   *
+   * NOTIFY_SECURITY
+   *   Receive onSecurityChange events.
+   *
+   * NOTIFY_LOCATION
+   *   Receive onLocationChange events.
+   */
   const unsigned long NOTIFY_PROGRESS       = 0x00000010;
   const unsigned long NOTIFY_STATUS         = 0x00000020;
   const unsigned long NOTIFY_SECURITY       = 0x00000040;
   const unsigned long NOTIFY_LOCATION       = 0x00000080;
 
+  /**
+   * This flag enables all notifications.
+   */
   const unsigned long NOTIFY_ALL            = 0x000000ff;
 
   /**
-   * Registers a listener to be notified of Progress Events
+   * Registers a listener to receive web progress events.
    *
-   * @param listener - The listener interface to be called when a progress
-   *                   event occurs.
+   * @param aListener
+   *        The listener interface to be called when a progress event occurs.
+   *        This object must also implement nsISupportsWeakReference.
+   * @param aNotifyMask
+   *        The types of notifications to receive.
    *
-   * @param aNotifyMask - The types of notifications to receive.
-   *
-   * @return  NS_OK - Listener was registered successfully.
-   *          NS_INVALID_ARG - The listener passed in was either nsnull, 
-   *                            or was already registered with this progress
-   *                            interface.
+   * @throw NS_ERROR_INVALID_ARG
+   *        Indicates that aListener was either null or that it does not
+   *        support weak references.
+   * @throw NS_ERROR_FAILURE
+   *        Indicates that aListener was already registered.
    */
-  void addProgressListener(in nsIWebProgressListener listener,
+  void addProgressListener(in nsIWebProgressListener aListener,
                            in unsigned long aNotifyMask);
 
   /**
-   * Removes a previously registered listener of Progress Events
+   * Removes a previously registered listener of progress events.
    *
-   * @param listener - The listener interface previously registered with 
-   *                   AddListener().
+   * @param aListener
+   *        The listener interface previously registered with a call to
+   *        addProgressListener.
    *
-   * @return  NS_OK - Listener was successfully unregistered.
-   *          NS_ERROR_INVALID_ARG - The listener was not previously
-   *                                 registered listener.
+   * @throw NS_ERROR_FAILURE
+   *        Indicates that aListener was not registered.
    */
-  void removeProgressListener(in nsIWebProgressListener listener);
+  void removeProgressListener(in nsIWebProgressListener aListener);
 
   /**
-   * The DOM Window associated with the WebProgress instance.
+   * The nsIDOMWindow associated with this nsIWebProgress instance.
    */
   readonly attribute nsIDOMWindow DOMWindow;
   
   /**
-   * The IsLoadingDocument associated with the WebProgress instance
+   * Indicates whether or not a document is currently being loaded.
    */
   readonly attribute PRBool isLoadingDocument;
 };
