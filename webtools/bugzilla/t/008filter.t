@@ -73,8 +73,10 @@ foreach my $path (@Support::Templates::include_paths) {
           foreach my $file (keys %safe) {
             my $orig_file = $file;
             $file =~ s|/|\\|g;
-            $safe{$file} = $safe{$orig_file};
-            delete $safe{$orig_file};
+            if ($file ne $orig_file) {
+              $safe{$file} = $safe{$orig_file};
+              delete $safe{$orig_file};
+            }
           }
         }
     }
