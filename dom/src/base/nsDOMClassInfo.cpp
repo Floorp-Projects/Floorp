@@ -380,7 +380,8 @@ static const char kDOMStringBundleURL[] =
 
 #define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
   (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
-   nsIXPCScriptable::WANT_SETPROPERTY)
+   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
+   nsIXPCScriptable::WANT_CALL)
 
 #define DOCUMENT_SCRIPTABLE_FLAGS                                             \
   (NODE_SCRIPTABLE_FLAGS |                                                    \
@@ -6895,7 +6896,6 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPluginInstance> pi;
-
   rv = GetPluginInstance(wrapper, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -7035,6 +7035,40 @@ nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   }
 
   return nsElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsHTMLExternalObjSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
+                          PRBool *_retval)
+{
+  nsCOMPtr<nsIPluginInstance> pi;
+  nsresult rv = GetPluginInstance(wrapper, getter_AddRefs(pi));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!pi) {
+    // No plugin around for this object.
+
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  JSObject *pi_obj = nsnull;
+  JSObject *pi_proto = nsnull;
+
+  rv = GetPluginJSObject(cx, obj, pi, &pi_obj, &pi_proto);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!pi) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // XPConnect passes us the XPConnect wrapper JSObject as obj, and
+  // not the 'this' parameter that the JS engine passes in. Pass in
+  // the real this parameter from JS (argv[-1]) here.
+  *_retval = ::JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(argv[-1]),
+                                    OBJECT_TO_JSVAL(pi_obj), argc, argv, vp);
+
+  return NS_OK;
 }
 
 
