@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "jsapi.h"
 
 
 #define NS_IDOMHISTORY_IID \
@@ -45,7 +46,7 @@ public:
 
   NS_IMETHOD    Forward()=0;
 
-  NS_IMETHOD    Go(PRInt32 aIndex)=0;
+  NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 };
 
 
@@ -56,7 +57,7 @@ public:
   NS_IMETHOD    GetNext(nsString& aNext);  \
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
-  NS_IMETHOD    Go(PRInt32 aIndex);  \
+  NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);  \
 
 
 
@@ -67,7 +68,7 @@ public:
   NS_IMETHOD    GetNext(nsString& aNext) { return _to GetNext(aNext); } \
   NS_IMETHOD    Back() { return _to Back(); }  \
   NS_IMETHOD    Forward() { return _to Forward(); }  \
-  NS_IMETHOD    Go(PRInt32 aIndex) { return _to Go(aIndex); }  \
+  NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Go(cx, argv, argc); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);
