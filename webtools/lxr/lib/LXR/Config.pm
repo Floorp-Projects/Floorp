@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.4 1999/03/10 22:58:55 endico%mozilla.org Exp $
+# $Id: Config.pm,v 1.5 2002/08/16 01:31:20 myk%mozilla.org Exp $
 
 package LXR::Config;
 
@@ -28,9 +28,10 @@ sub treeify {
     #found. If the file contains multiple definitions of sourceroot then
     #each definition is a tree,directory pair.
 
+    #remove the extra space that i stupidly added when parsing lxr.conf
+    $self->{'sourceroot'} =~ s/^\s+//;;
+
     if ($self->{'sourceroot'} =~ /\S\s+\S/) {
-        #remove the extra space that i stupidly added when parsing lxr.conf
-        $self->{'sourceroot'} =~ s/^\s+//;;
         $self->{'oldroot'} = $self->{'sourceroot'};
 
         #since there's whitespace within the root directory definition
