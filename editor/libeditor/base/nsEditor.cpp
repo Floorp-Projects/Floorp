@@ -55,6 +55,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIStyleSet.h"
+#include "nsStyleSheetTxns.h"
 #include "nsIDocumentObserver.h"
 
 
@@ -137,6 +138,8 @@ static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kIMETextTxnIID,		IME_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIMECommitTxnIID,		IME_COMMIT_TXN_IID);
+static NS_DEFINE_IID(kAddStyleSheetTxnIID,		 ADD_STYLESHEET_TXN_IID);
+static NS_DEFINE_IID(kRemoveStyleSheetTxnIID,	 REMOVE_STYLESHEET_TXN_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
@@ -1329,31 +1332,72 @@ NS_IMETHODIMP nsEditor::InsertAsQuotation(const nsString& aQuotedText)
   return InsertText(aQuotedText);
 }
 
-extern "C" void
-ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)
+NS_IMETHODIMP
+nsEditor::AddStyleSheet(nsICSSStyleSheet* aSheet)
 {
-  nsresult rv;
+	AddStyleSheetTxn*  aTxn;
+	nsresult rv = CreateTxnForAddStyleSheet(aSheet, &aTxn);
+	if (NS_SUCCEEDED(rv) && aTxn)
+	{
+	  rv = Do(aTxn);
+	  if (NS_SUCCEEDED(rv))
+	  {
+	    mLastStyleSheet = do_QueryInterface(aSheet);		// save it so we can remove before applying the next one
+	  }
+	}
+	
+	return rv;
+}
 
-  nsIPresShell *presShell = (nsIPresShell *)aData;
 
-  if (presShell) {
-    nsCOMPtr<nsIStyleSet> styleSet;
+NS_IMETHODIMP
+nsEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
+{
+	RemoveStyleSheetTxn*  aTxn;
+	nsresult rv = CreateTxnForRemoveStyleSheet(aSheet, &aTxn);
+	if (NS_SUCCEEDED(rv) && aTxn)
+	{
+	  rv = Do(aTxn);
+	  if (NS_SUCCEEDED(rv))
+	  {
+	    mLastStyleSheet = nsnull;				// forget it
+	  }
+	}
+	
+	return rv;
+}
 
-    rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
+NS_IMETHODIMP
+nsEditor::ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet)
+{
+  nsresult  rv = NS_OK;
+  
+  BeginTransaction();
 
-    if (NS_SUCCEEDED(rv) && styleSet) {
-      styleSet->AppendOverrideStyleSheet(aSheet);
-
-      nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
-      nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(aSheet);
-      nsCOMPtr<nsIDocument> document;
-
-      rv = presShell->GetDocument(getter_AddRefs(document));
-
-      if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
-        rv = observer->StyleSheetAdded(document, styleSheet);
-    }
+  if (mLastStyleSheet)
+  {
+    rv = RemoveStyleSheet(mLastStyleSheet);
   }
+
+  rv = AddStyleSheet(aNewSheet);
+  
+  EndTransaction();
+
+  return rv;
+}
+
+/* static */
+void nsEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)
+{
+  nsresult rv = NS_OK;
+
+  nsEditor *editor = NS_STATIC_CAST(nsEditor*, aData);
+  if (editor)
+  {
+    rv = editor->ReplaceStyleSheet(aSheet);
+  }
+  
+  // we lose the return value here. Set a flag in the editor?
 }
 
 NS_IMETHODIMP nsEditor::ApplyStyleSheet(const nsString& aURL)
@@ -1396,14 +1440,14 @@ NS_IMETHODIMP nsEditor::ApplyStyleSheet(const nsString& aURL)
               PRBool complete;
 
               rv = cssLoader->LoadAgentSheet(uaURL, cssStyleSheet, complete,
-                                             ApplyStyleSheetToPresShellDocument,
-                                             mPresShell);
+                                             nsEditor::ApplyStyleSheetToPresShellDocument,
+                                             this);
 
               if (NS_SUCCEEDED(rv)) {
                 if (complete) {
                   if (cssStyleSheet) {
-                    ApplyStyleSheetToPresShellDocument(cssStyleSheet,
-                                                       mPresShell);
+                    nsEditor::ApplyStyleSheetToPresShellDocument(cssStyleSheet,
+                                                       this);
                   }
                   else
                     rv = NS_ERROR_NULL_POINTER;
@@ -3652,6 +3696,37 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 	}
 	return result;
 }
+
+
+NS_IMETHODIMP 
+nsEditor::CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
+{
+  nsresult rv = TransactionFactory::GetNewTransaction(kAddStyleSheetTxnIID, (EditTxn **)aTxn);
+  if (NS_FAILED(rv))
+    return rv;
+    
+  if (! *aTxn)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return (*aTxn)->Init(this, aSheet);
+}
+
+
+
+NS_IMETHODIMP 
+nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
+{
+  nsresult rv = TransactionFactory::GetNewTransaction(kRemoveStyleSheetTxnIID, (EditTxn **)aTxn);
+  if (NS_FAILED(rv))
+    return rv;
+    
+  if (! *aTxn)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return (*aTxn)->Init(this, aSheet);
+}
+
+
 
 NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToInsert,nsIDOMTextRangeList* aTextRangeList)
 {

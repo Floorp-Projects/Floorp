@@ -58,6 +58,9 @@ class nsIStringBundleService;
 class nsIStringBundle;
 class nsILocale;
 class IMETextTxn;
+class nsICSSStyleSheet;
+class AddStyleSheetTxn;
+class RemoveStyleSheetTxn;
 
 #ifdef ENABLE_JS_EDITOR_LOG
 class nsJSEditorLog;
@@ -81,6 +84,7 @@ private:
   PRUint32        mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
+  nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
 
   //
   // data necessary to build IME transactions
@@ -230,6 +234,8 @@ public:
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
 
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
+  NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
 
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
 
@@ -242,6 +248,9 @@ public:
 
 /*END nsIEditor interfaces*/
 
+  /* StyleSheet load callback */
+  static void ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData);
+  
 
 /*BEGIN private methods used by the implementations of the above functions*/
 protected:
@@ -288,6 +297,17 @@ protected:
 								 nsIDOMTextRangeList* aTextRangeList,
                                  IMETextTxn ** aTxn);
 
+  /** create a transaction for adding a style sheet
+    */
+  NS_IMETHOD CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn);
+
+  /** create a transaction for removing a style sheet
+    */
+  NS_IMETHOD CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn);
+
+  /* remove the old style sheet, and apply the supplied one */
+  NS_IMETHOD ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet);
+  
   /** insert aStringToInsert as the first text in the document
     */
   NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);

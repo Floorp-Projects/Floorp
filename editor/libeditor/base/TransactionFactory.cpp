@@ -39,9 +39,10 @@
 #include "DeleteTableColumnTxn.h"
 #include "DeleteTableRowTxn.h"
 #include "JoinTableCellsTxn.h"
+#include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
-
 #include "IMECommitTxn.h"
+
 static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kPlaceholderTxnIID,    PLACEHOLDER_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
@@ -63,8 +64,10 @@ static NS_DEFINE_IID(kDeleteTableCellTxnIID,   DELETE_CELL_TXN_IID);
 static NS_DEFINE_IID(kDeleteTableColumnTxnIID, DELETE_COLUMN_TXN_IID);
 static NS_DEFINE_IID(kDeleteTableRowTxnIID,    DELETE_ROW_TXN_IID);
 static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
-static NS_DEFINE_IID(kIMETextTxnIID,			IME_TEXT_TXN_IID);
-static NS_DEFINE_IID(kIMECommitTxnIID,			IME_COMMIT_TXN_IID);
+static NS_DEFINE_IID(kIMETextTxnIID,			     IME_TEXT_TXN_IID);
+static NS_DEFINE_IID(kIMECommitTxnIID,			   IME_COMMIT_TXN_IID);
+static NS_DEFINE_IID(kAddStyleSheetTxnIID,		 ADD_STYLESHEET_TXN_IID);
+static NS_DEFINE_IID(kRemoveStyleSheetTxnIID,	 REMOVE_STYLESHEET_TXN_IID);
 
 TransactionFactory::TransactionFactory()
 {
@@ -105,6 +108,10 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new IMETextTxn();
   else if (aTxnType.Equals(kIMECommitTxnIID))
     *aResult = new IMECommitTxn();
+  else if (aTxnType.Equals(kAddStyleSheetTxnIID))
+    *aResult = new AddStyleSheetTxn();
+  else if (aTxnType.Equals(kRemoveStyleSheetTxnIID))
+    *aResult = new RemoveStyleSheetTxn();
   else if (aTxnType.Equals(kPlaceholderTxnIID))
     *aResult = new PlaceholderTxn();
   else
