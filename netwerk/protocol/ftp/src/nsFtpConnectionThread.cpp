@@ -60,7 +60,7 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
-#include "nsIObserverService.h"
+#include "nsIPasswordManager.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 #include "nsIPref.h"
@@ -985,10 +985,10 @@ nsFtpState::S_user() {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
-            nsXPIDLCString host;
-            rv = mURL->GetHost(getter_Copies(host));
+            nsXPIDLCString prePath;
+            rv = mURL->GetPrePath(getter_Copies(prePath));
             if (NS_FAILED(rv)) return rv;
-            nsAutoString hostU; hostU.AppendWithConversion(host);
+            nsAutoString prePathU; prePathU.AppendWithConversion(prePath);
 
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -998,14 +998,13 @@ nsFtpState::S_user() {
             if (NS_FAILED(rv)) return rv;
             
             nsXPIDLString formatedString;
-            const PRUnichar *formatStrings[1] = { hostU.get()};
+            const PRUnichar *formatStrings[1] = { prePathU.get()};
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
                                               formatStrings, 1,
                                               getter_Copies(formatedString));                   
-
             rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
                                                           formatedString,
-                                                          NS_ConvertASCIItoUCS2(host).get(),
+                                                          NS_ConvertASCIItoUCS2(prePath).get(),
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, 
                                                           &passwd, 
@@ -1077,16 +1076,16 @@ nsFtpState::S_pass() {
             passwordStr.Append("mozilla@example.com");
         }
     } else {
-        if (!mPassword.Length() || mRetryPass) {
+        if (mPassword.IsEmpty() || mRetryPass) {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
 
             PRUnichar *passwd = nsnull;
             PRBool retval;
             
-            nsXPIDLCString host;
-            rv = mURL->GetHost(getter_Copies(host));
+            nsXPIDLCString prePath;
+            rv = mURL->GetPrePath(getter_Copies(prePath));
             if (NS_FAILED(rv)) return rv;
-            nsAutoString hostU; hostU.AppendWithConversion(host);
+            nsAutoString prePathU; prePathU.AppendWithConversion(prePath);
             
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -1095,17 +1094,15 @@ nsFtpState::S_pass() {
             rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
 
             nsXPIDLString formatedString;
-            const PRUnichar *formatStrings[2] = { mUsername.get(), hostU.get() };
+            const PRUnichar *formatStrings[2] = { mUsername.get(), prePathU.get() };
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterPasswordFor").get(),
                                               formatStrings, 2,
                                               getter_Copies(formatedString)); 
 
-            nsXPIDLCString prePath;
-            rv = mURL->GetPrePath(getter_Copies(prePath));
             if (NS_FAILED(rv)) return rv;
             rv = mAuthPrompter->PromptPassword(nsnull,
                                                formatedString,
-                                               NS_ConvertASCIItoUCS2(prePath).get(), 
+                                               prePathU.get(), 
                                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                &passwd, &retval);
 
@@ -1134,23 +1131,30 @@ nsFtpState::R_pass() {
         // note: the password was successful, and it's stored in mPassword
         mRetryPass = PR_FALSE;
         return FTP_S_USER;
-    } else if (mResponseCode == 530) {
-        // user limit reached
-        return FTP_ERROR;
-    } else {
-        // XXX turns out that a failed login will _never_ trigger this
-        // code, because a failed login is a 530. Oops. And even when
-        // this code _is_ triggered, it doesn't work very well. See
-        // bug 113515 for more detail.
+    } else if (mResponseCode/100 == 5 || mResponseCode==421) {
+        // There is no difference between a too-many-users error,
+        // a wrong-password error, or any other sort of error
+        // So we need to tell wallet to forget the password if we had one,
+        // and error out. That will then show the error message, and the
+        // user can retry if they want to
 
-        // kick back out to S_pass() and ask the user again.
-        nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-        if (os)
-            os->NotifyObservers(mURL, "login-failed", nsnull);
+        if (!mPassword.IsEmpty()) {
+            nsCOMPtr<nsIPasswordManager> pm = do_GetService("@mozilla.org/passwordmanager;1");
+            if (pm) {
+                nsXPIDLCString prePath;
+                nsresult rv = mURL->GetPrePath(getter_Copies(prePath));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
+                if (NS_SUCCEEDED(rv)) {
+                    pm->RemoveUser(prePath.get(), nsnull);
+                }
+            }
+        }
 
         mRetryPass = PR_TRUE;
-        return FTP_S_PASS;
+        return FTP_ERROR;
     }
+    // unexpected response code
+    return FTP_ERROR;
 }
 
 nsresult
