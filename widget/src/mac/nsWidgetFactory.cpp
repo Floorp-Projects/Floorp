@@ -261,10 +261,12 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef MACSTATIC
+#ifdef WIDGET_STATIC
 extern "C" NS_WIDGET nsresult NSGetFactory_WIDGET_DLL(const nsCID &aClass, nsIFactory **aFactory)
-#else
+#elif defined(WIDGET_SHARED)
+#pragma export on
 extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+#pragma export off
 #endif
 {
     if (nsnull == aFactory) {
