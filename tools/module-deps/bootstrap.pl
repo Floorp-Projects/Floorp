@@ -132,7 +132,7 @@ sub FindMakefiles
       
 	  $_ =~ s/.in//;  # Strip off the ".in"
 
-      $File::Find::dir =~ s/mozilla\///;  # Strip off mozilla/
+      $File::Find::dir =~ s/^mozilla\///;  # Strip off mozilla/
       
 	  #$_ =~ s/mozilla//;
 	  push(@foundMakefiles, "$File::Find::dir/$_");
