@@ -1,14 +1,10 @@
 This is the home for XPCOM modules that implement LDAP functionality.
 
 WARNING: This code is not quite ready for prime time, and has only
-been built on Linux.  You probably don't want to build it yet unless
-you're planning to hack on the code.  Once asynchronicity and a bunch
-of build glue gets added, then perhaps it will be reasonable to add
-this code to the general SeaMonkeyAll checkout and builds.  Hopefully
-these chores won't take too long to do (I've already started work on
-making the code async); the first four or five items in TODO.txt are
-the important ones.  I'm checking it into CVS at this stage primarily
-to allow fellow hackers to lend a hand.
+been built on Linux.  Once a bunch of build glue gets added, then
+perhaps it will be reasonable to add this code to the general
+SeaMonkeyAll checkout and builds.  Hopefully this won't take long; the
+first four or five items in TODO.txt are the important ones.
 
 What's Here
 -----------
