@@ -312,7 +312,7 @@ sub GenerateSQL {
         if (defined $value) {
             $value = trim($value);
             if ($value ne "") {
-                push(@wherepart, "actcheck.newvalue = " .
+                push(@wherepart, "actcheck.added = " .
                      SqlQuote($value))
             }
         }
@@ -558,7 +558,7 @@ sub GenerateSQL {
              push(@supptables, "fielddefs $ftable");
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              push(@wherepart, "$table.fieldid = $ftable.fieldid");
-             $term = "($ftable.name = '$f' AND $table.newvalue = $q)";
+             $term = "($ftable.name = '$f' AND $table.added = $q)";
          },
          ",changedby" => sub {
              my $table = "act_$chartid";
