@@ -568,7 +568,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (handler) 
       handler->OnLinkClick(mContent, eLinkVerb_Replace, absURLSpec.GetUnicode(), target.GetUnicode(), postData);
     NS_IF_RELEASE(postData);
-    NS_RELEASE(handler);
+    NS_IF_RELEASE(handler);
 
 DebugPrint("url", absURLSpec);
 DebugPrint("data", data);
