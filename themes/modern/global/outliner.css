@@ -76,6 +76,16 @@ outlinerbody:-moz-outliner-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
+/* ::::: lines connecting cells ::::: */
+
+outlinerbody:-moz-outliner-line {
+  border: 1px dotted #808080;
+}
+
+outlinerbody:-moz-outliner-line(selected, focus) {
+  border: 1px dotted #FFFFFF;
+}
+
 /* ::::: outliner columns ::::: */
 
 outlinercol { 
@@ -87,12 +97,40 @@ outlinercol {
   color: #000000;
 }
 
-outlinerbody:-moz-outliner-line {
-  border: 1px dotted #808080;
+/* ::::: column drag and drop styles ::::: */
+
+outlinercol[dragging="true"] {
+  border: 1px solid #000000;
+  background-color: #90A1B3;
+  color: #FFFFFF;
 }
 
-outlinerbody:-moz-outliner-line(selected, focus) {
-  border: 1px dotted #FFFFFF;
+outlinercol[dragging="true"] > .outlinercol-box {
+  border: 1px solid transparent;
+}
+
+outlinercol[insertafter="true"] {
+  border-right: 1px solid #000000;
+}
+
+outlinercol[insertafter="true"] > .outlinercol-box {
+  border-right: 1px solid #666666;
+}
+
+outlinercol[insertbefore="true"] {
+  border-left: 1px solid #000000;
+}
+
+outlinercol[insertbefore="true"] > .outlinercol-box {
+  border-left: 1px solid #666666;
+}
+
+outlinerbody:-moz-outliner-column(insertbefore) {
+  border-left: 1px solid #AAAAAA;
+}
+
+outlinerbody:-moz-outliner-column(insertafter) {
+  border-right: 1px solid #AAAAAA;
 }
 
 /* ..... internal box ..... */

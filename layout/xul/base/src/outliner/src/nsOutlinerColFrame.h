@@ -40,6 +40,12 @@ public:
                                          PRBool aIsRoot = PR_FALSE,
                                          nsIBoxLayout* aLayoutManager = nsnull);
 
+  NS_IMETHODIMP Init(nsIPresContext*  aPresContext,
+                     nsIContent*      aContent,
+                     nsIFrame*        aParent,
+                     nsIStyleContext* aContext,
+                     nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events
                               nsFramePaintLayer aWhichLayer,
@@ -59,5 +65,9 @@ protected:
 
 protected:
   // Members.
+  
+  void EnsureOutliner();
+  void InvalidateColumnCache(nsIPresContext* aPresContext);
+  
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
 }; // class nsOutlinerColFrame

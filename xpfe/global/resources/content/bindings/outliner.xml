@@ -15,7 +15,7 @@
     <content orient="vertical">
       <xul:hbox class="outliner-columns">
         <children includes="outlinercol|splitter"/>
-        <xul:outlinercol class="outliner-columnpicker" fixed="true"/>
+        <xul:outlinercol class="outliner-columnpicker" fixed="true" ordinal="2147483647"/>
       </xul:hbox>
       <xul:outlinerrows class="outliner-rows" flex="1">
         <children/>
@@ -38,6 +38,114 @@
       <property name="singleSelection"
                 onget="return this.getAttribute('seltype') == 'single'"
                 readonly="true"/>
+
+      <property name="enableColumnDrag"
+                onget="return this.getAttribute('enableColumnDrag') == 'true';"
+                onset="this.setAttribute('enableColumnDrag', val); return val == 'true';"/>
+
+      <property name="firstOrdinalColumn">
+        <getter><![CDATA[
+          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var cols = this.getElementsByTagNameNS(xulns, "outlinercol");
+          var parent = cols[0].boxObject.parentBox;
+          return parent.boxObject.firstChild;
+        ]]></getter>
+      </property>
+      
+      <property name="_columnsDirty">true</property>
+
+      <method name="_ensureColumnOrder">
+        <body><![CDATA[
+          if (this._columnsDirty) {
+            // update the ordinal position of each column to assure that it is
+            // an odd number and 2 positions above it's next sibling
+            var col = this.firstOrdinalColumn;
+            var cols = [];
+            while (col) {
+              if (col.localName == "outlinercol" && col.parentNode == this)
+                cols[cols.length] = col;
+              col = col.boxObject.nextSibling;
+            }
+            for (var i = 0; i < cols.length; ++i)
+              cols[i].setAttribute("ordinal", (i*2)+1);
+              
+            // update the ordinal positions of splitters to even numbers, so that 
+            // they are in between columns
+            var splitters = this.getElementsByTagName("splitter");
+            for (var i = 0; i < splitters.length; ++i)
+              splitters[i].setAttribute("ordinal", (i+1)*2);
+            
+            this._columnsDirty = false;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_reorderColumn">
+        <parameter name="aColMove"/>
+        <parameter name="aColBefore"/>
+        <parameter name="aBefore"/>
+        <body><![CDATA[
+          var cols = [];
+          if (aColBefore.ordinal < aColMove.ordinal) {
+            var col = aColBefore;
+            while (col) {
+              if (col.localName == "outlinercol")
+                cols.push(col);
+              col = col.boxObject.nextSibling;
+              if (col == aColMove)  
+                break;
+            }
+
+            aColMove.ordinal = aColBefore.ordinal;
+
+            for (var i = 0; i < cols.length; ++i)
+              cols[i].ordinal += 2;
+          } else {
+            var col = aColMove.boxObject.nextSibling;
+            while (col) {
+              if (col.localName == "outlinercol")
+                cols.push(col);
+              col = col.boxObject.nextSibling;
+              if (col == aColBefore && aBefore)
+                break;
+            }
+
+            aColMove.ordinal = aBefore ? aColBefore.ordinal-2 : aColBefore.ordinal;
+
+            for (var i = 0; i < cols.length; ++i)
+              cols[i].ordinal -= 2;
+          }
+        ]]></body>
+      </method>
+      
+      <method name="_getColumnAtX">
+        <parameter name="aX"/>
+        <parameter name="aThresh"/>
+        <parameter name="aPos"/>
+        <body><![CDATA[
+          if (aPos) aPos.value = "before";
+
+          var col = this.firstOrdinalColumn;
+          var lastCol = null;
+          var currentX = this.boxObject.x;
+          while (col) {
+            if (col.localName == "outlinercol" && col.parentNode == this) {
+              var cw = col.boxObject.width;
+              if (cw > 0) {
+                currentX += cw;
+                if (currentX - (cw*aThresh) > aX)
+                  return col;
+              }
+              lastCol = col;
+            }
+            col = col.boxObject.nextSibling;
+          }
+
+          if (aPos) aPos.value = "after";
+          return lastCol;
+        ]]></body>
+      </method>
+
     </implementation>
     
     <handlers>
@@ -540,7 +648,145 @@
     </handlers>
   </binding>
 
-  <binding id="outlinercol" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+  <binding id="outlinercol-base" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+    <implementation>
+      <property name="ordinal">
+        <getter><![CDATA[
+          var val = this.getAttribute("ordinal");
+          return val == "" ? 1 : (val == "0" ? 0 : parseInt(val));
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("ordinal", val);
+        ]]></setter>
+      </property>
+      
+      <property name="_previousVisibleColumn">
+        <getter><![CDATA[
+          var sib = this.boxObject.previousSibling;
+          while (sib) {
+            if (sib.localName == "outlinercol" && sib.boxObject.width > 0 && sib.parentNode == this.parentNode)
+              return sib;
+            sib = sib.boxObject.previousSibling;
+          }
+          return null;
+        ]]></getter>
+      </property>
+
+      <method name="onDragMouseMove">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var col = document.outlinercolDragging;
+          if (!col) return;
+
+          if (col.mDragGesturing) {
+            if (Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
+                Math.abs(aEvent.clientY - col.mStartDragY) < 5) {
+              return;
+            } else {
+              col.mDragGesturing = false;
+              col.setAttribute("dragging", "true");
+            }
+          }
+                    
+          var pos = {};
+          var targetCol = col.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
+          
+          if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
+            return;
+            
+          if (col.mTargetCol) {
+            // remove previous insertbefore/after attributes
+            col.mTargetCol.removeAttribute("insertbefore");
+            col.mTargetCol.removeAttribute("insertafter");
+            var sib = col.mTargetCol.boxObject.previousSibling;
+            var sib = col.mTargetCol._previousVisibleColumn;
+            if (sib)
+              sib.removeAttribute("insertafter");
+            col.mTargetCol = null;
+            col.mTargetDir = null;
+          }
+          
+          if (targetCol) {
+            // set insertbefore/after attributes
+            if (pos.value == "after") {
+              targetCol.setAttribute("insertafter", "true");
+            } else {
+              targetCol.setAttribute("insertbefore", "true");
+              var sib = targetCol._previousVisibleColumn;
+              if (sib)
+                sib.setAttribute("insertafter", "true");
+            }
+            col.mTargetCol = targetCol;
+            col.mTargetDir = pos.value;
+          }
+          
+          // XXX should really just invalidate columns
+          // XXX need to implement nsIOutlinerBoxObject::invalidateColumn(in long column)
+          var bx = col.parentNode.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+          bx.invalidate();
+        ]]></body>        
+      </method>
+
+      <method name="onDragMouseUp">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var col = document.outlinercolDragging;
+          if (!col) return;
+          col.removeAttribute("dragging", "true");
+          
+          if (col.mTargetCol) {
+            // remove insertbefore/after attributes
+            var before = col.mTargetCol.hasAttribute("insertbefore");
+            col.mTargetCol.removeAttribute(before ? "insertbefore" : "insertafter");
+            if (before) {
+              var sib = col.mTargetCol.boxObject.previousSibling;
+              var sib = col.mTargetCol._previousVisibleColumn;
+              if (sib)
+                sib.removeAttribute("insertafter");
+            }
+                        
+            // move the column
+            if (col != col.mTargetCol)
+              col.parentNode._reorderColumn(col, col.mTargetCol, before);
+          
+            // repaint to remove lines
+            var bx = col.parentNode.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+            bx.invalidate();
+
+            col.mTargetCol = null;
+          }
+          
+          document.outlinercolDragging = null;
+        ]]></body>        
+      </method>
+
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown" button="0"><![CDATA[
+        if (this.parentNode.enableColumnDrag) {
+          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var cols = this.parentNode.getElementsByTagNameNS(xulns, "outlinercol");
+          
+          // only start column drag operation if there are at least 2 visible columns
+          var visible = 0;
+          for (var i = 0; i < cols.length; ++i)
+            if (cols[i].boxObject.width > 0) ++visible;
+            
+          if (visible > 1) {
+            window.addEventListener("mousemove", this.onDragMouseMove, false);
+            window.addEventListener("mouseup", this.onDragMouseUp, false);
+            document.outlinercolDragging = this;
+            this.mDragGesturing = true;
+            this.mStartDragX = event.clientX;
+            this.mStartDragY = event.clientY;
+          }
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="outlinercol" extends="chrome://global/content/bindings/outliner.xml#outlinercol-base">
     <content>
       <xul:hbox class="outlinercol-box" flex="1" align="center">
         <xul:image class="outliner-image" inherits="src"/>
@@ -553,7 +799,7 @@
     </handlers>
   </binding>
 
-  <binding id="outlinercol-image" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+  <binding id="outlinercol-image" extends="chrome://global/content/bindings/outliner.xml#outlinercol-base">
     <content>
       <xul:hbox class="outlinercol-image-box" flex="1" align="center">
         <xul:image class="outlinercol-icon" inherits="src"/>

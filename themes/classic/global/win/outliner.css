@@ -113,6 +113,42 @@ outlinercol:hover:active > .outlinercol-image-box {
   padding: 1px 1px 0px 2px;
 }
 
+/* column drag and drop styles */
+
+outlinercol[dragging="true"] {
+  border: 1px solid ThreeDDarkShadow;
+  background-color: ThreeDShadow;
+  color: ThreeDHighlight;
+}
+
+outlinercol[dragging="true"] > .outlinercol-box {
+  border: 1px solid transparent;
+}
+
+outlinercol[insertafter="true"] {
+  border-right: 1px solid ThreeDDarkShadow;
+}
+
+outlinercol[insertafter="true"] > .outlinercol-box {
+  border-right: 1px solid ThreeDShadow;
+}
+
+outlinercol[insertbefore="true"] {
+  border-left: 1px solid ThreeDDarkShadow;
+}
+
+outlinercol[insertbefore="true"] > .outlinercol-box {
+  border-left: 1px solid ThreeDShadow;
+}
+
+outlinerbody:-moz-outliner-column(insertbefore) {
+  border-left: 1px solid ThreeDShadow;
+}
+
+outlinerbody:-moz-outliner-column(insertafter) {
+  border-right: 1px solid ThreeDShadow;
+}
+
 /* outliner header with sort direction indicators */
 
 .outlinercol-sortdirection {
