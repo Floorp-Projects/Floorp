@@ -628,6 +628,18 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     }
     return 0;
 
+  case eHTMLTag_applet:
+    rv = NS_NewHTMLApplet(&container, atom);
+    break;
+
+  case eHTMLTag_object:
+    rv = NS_NewHTMLEmbed(&container, atom);
+    break;
+
+  case eHTMLTag_embed:
+    rv = NS_NewHTMLObject(&container, atom);
+    break;
+
   case eHTMLTag_table:
     rv = NS_NewTablePart(&container, atom);
     mInMonolithicContainer++;
