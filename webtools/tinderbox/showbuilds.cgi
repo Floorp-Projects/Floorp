@@ -161,6 +161,9 @@ sub print_page_head {
   # Get the message of the day only on the first pageful
   do "$tree/mod.pl" if $nowdate eq $maxdate;
 
+  # Get the warnings summary
+  do "$tree/warn.pl" if $nowdate eq $maxdate;
+
   use POSIX qw(strftime);
   # Print time in format, "HH:MM timezone"
   my $now = strftime("%H:%M %Z", localtime);
@@ -170,7 +173,8 @@ sub print_page_head {
 
   &print_javascript;
 
-  print "$message_of_day\n";
+  print "$message_of_day\n";  # from $tree/mod.pl
+  print "$warning_summary\n"; # from $tree/warn.pl
   
   # Quote and Lengend
   #
