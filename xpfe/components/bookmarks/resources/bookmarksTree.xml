@@ -368,9 +368,7 @@
       <method name="createTreeContextMenu">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var selection = this._selection;
-          var target    = this._target;
-          BookmarksCommand.createContextMenu(aEvent, selection);
+          BookmarksCommand.createContextMenu(aEvent, this._selection);
           this.onCommandUpdate();
         ]]></body>
       </method>
@@ -500,9 +498,9 @@
         isCommandEnabled: function (aCommand)
         {
           // warning: this is not the called function in BookmarksController.onCommandUpdate
-          var selection = this.mOuter._selection;
-          var target    = this.mOuter._target;
-          return BookmarksController.isCommandEnabled(aCommand, selection, target)
+          return BookmarksController.isCommandEnabled(aCommand,
+                                                      this.mOuter._selection,
+                                                      this.mOuter._target);
         },
 
         doCommand: function (aCommand)
@@ -560,9 +558,7 @@
 
       <method name="onCommandUpdate">
         <body><![CDATA[
-          var selection = this._selection;
-          var target    = this._target;
-          BookmarksController.onCommandUpdate(selection, target);
+          BookmarksController.onCommandUpdate(this._selection, this._target);
         ]]></body>
       </method>
 
