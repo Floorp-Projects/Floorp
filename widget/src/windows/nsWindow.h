@@ -251,6 +251,8 @@ protected:
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
 
+  PRBool  mIsInMouseCapture;
+
 #if 1
 	BOOL		mHaveDBCSLeadByte;
 	unsigned char mDBCSLeadByte;

@@ -104,6 +104,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHitMenu            = nsnull;
     mHitSubMenus        = new nsVoidArray();
     mVScrollbar         = nsnull;
+    mIsInMouseCapture   = PR_FALSE;
 
 	mIMEProperty		= 0;
 	mIMEIsComposing		= PR_FALSE;
@@ -174,6 +175,7 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
   } else {
     ReleaseCapture();
   }
+  mIsInMouseCapture = aCapture;
   return NS_OK;
 }
 
@@ -2321,11 +2323,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                     listener->MenuItemSelected(event);
                     NS_RELEASE(listener);
 
-					menu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener);
-					if(listener){
-					  //listener->MenuDestruct(event);
-					  NS_RELEASE(listener);
-					}
+					          menu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener);
+					          if(listener){
+					            //listener->MenuDestruct(event);
+					            NS_RELEASE(listener);
+					          }
                   }
                   NS_RELEASE(menuItem);
                 }
@@ -3258,9 +3260,31 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
     if (aEventType == NS_MOUSE_MOVE) {
 
-      MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-      MouseTrailer::SetMouseTrailerWindow(this);
-      mouseTrailer->CreateTimer();
+      // if we are not in mouse cpature mode (mouse down and hold)
+      // then use "this" window
+      // if we are in mouse capture, then all events are being directed
+      // back to the nsWindow doing the capture. So therefore, the detection
+      // of whether we are in a new nsWindow is wrong. Meaning this MOUSE_MOVE
+      // event hold the captured windows pointer not the one the mouse is over.
+      //
+      // So we use "WindowFromPoint" to find what window we are over and 
+      // set that window into the mouse trailer timer.
+      if (!mIsInMouseCapture) {
+        MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+        MouseTrailer::SetMouseTrailerWindow(this);
+        mouseTrailer->CreateTimer();
+      } else {
+        POINT mp;
+        DWORD pos = ::GetMessagePos();
+        mp.x = LOWORD(pos);
+        mp.y = HIWORD(pos);
+        nsWindow * someWindow = (nsWindow*)::GetWindowLong(::WindowFromPoint(mp), GWL_USERDATA);
+        if (nsnull != someWindow)  {
+          MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+          MouseTrailer::SetMouseTrailerWindow(someWindow);
+          mouseTrailer->CreateTimer();
+        }
+      }
 
       nsRect rect;
       GetBounds(rect);
@@ -3412,13 +3436,13 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        SetCapture(mWnd);
+        CaptureMouse(PR_TRUE);
       break;
 
     case NS_MOUSE_LEFT_BUTTON_UP:
     case NS_MOUSE_MIDDLE_BUTTON_UP:
     case NS_MOUSE_RIGHT_BUTTON_UP:
-        ReleaseCapture(); 
+        CaptureMouse(PR_FALSE);
       break;
 
     default:
