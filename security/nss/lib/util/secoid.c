@@ -219,6 +219,7 @@ CONST_OID pkcs9CounterSignature[]              = { PKCS9, 0x06 };
 CONST_OID pkcs9ChallengePassword[]             = { PKCS9, 0x07 };
 CONST_OID pkcs9UnstructuredAddress[]           = { PKCS9, 0x08 };
 CONST_OID pkcs9ExtendedCertificateAttributes[] = { PKCS9, 0x09 };
+CONST_OID pkcs9ExtensionRequest[]              = { PKCS9, 14 };
 CONST_OID pkcs9SMIMECapabilities[]             = { PKCS9, 15 };
 CONST_OID pkcs9FriendlyName[]                  = { PKCS9, 20 };
 CONST_OID pkcs9LocalKeyID[]                    = { PKCS9, 21 };
@@ -1430,6 +1431,9 @@ const static SECOidData oids[] = {
     /* More PKIX OIDs */
     OD( pkixCAIssuers, SEC_OID_PKIX_CA_ISSUERS,
         "PKIX CA issuers access method", 
+        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( pkcs9ExtensionRequest, SEC_OID_PKCS9_EXTENSION_REQUEST,
+    	"PKCS #9 Extension Request",
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 };
 
