@@ -38,18 +38,6 @@ public:
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
 
-  NS_IMETHOD PaintDebug(nsIBox* aBox, 
-                        nsIPresContext* aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect,
-                        nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD DisplayDebugInfoFor(nsIBox* aBox, 
-                                 nsIPresContext* aPresContext,
-                                 nsPoint&        aPoint,
-                                 PRInt32&        aCursor);
-
-
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
@@ -57,6 +45,7 @@ public:
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
 
+  virtual void GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent);
   virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
   virtual void AddInset(nsIBox* aBox, nsSize& aSize);
   virtual void AddMargin(nsIBox* aChild, nsSize& aSize);

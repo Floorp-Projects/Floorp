@@ -75,11 +75,11 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    GetIndexInParent(mContent, index);
 
    // get the tab control
-   nsIContent* tabcontrol = nsnull;
+   nsCOMPtr<nsIContent> tabcontrol;
    GetTabControl(mContent, tabcontrol);
 
    // get the tab panel
-   nsIContent* tabpanel = nsnull;
+   nsCOMPtr<nsIContent> tabpanel;
    GetChildWithTag(nsXULAtoms::tabpanel, tabcontrol, tabpanel);
 
    if (!tabpanel) {
@@ -97,12 +97,12 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    if (oldIndex != index)
    {
       // get the tab box
-      nsIContent* parent;
-      mContent->GetParent(parent);
+      nsCOMPtr<nsIContent> parent;
+      mContent->GetParent(*getter_AddRefs(parent));
 
       // get child
-      nsIContent* child;
-      parent->ChildAt(oldIndex, child);
+      nsCOMPtr<nsIContent> child;
+      parent->ChildAt(oldIndex, *getter_AddRefs(child));
 
       // set the old tab to be unselected
       child->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::selected, "false", PR_TRUE);
@@ -120,15 +120,15 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 nsresult
-nsTabFrame::GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpanel)
+nsTabFrame::GetChildWithTag(nsIAtom* atom, nsCOMPtr<nsIContent> start, nsCOMPtr<nsIContent>& tabpanel)
 {
   // recursively search our children
   PRInt32 count = 0;
   start->ChildCount(count); 
   for (PRInt32 i = 0; i < count; i++)
   {
-     nsIContent* child = nsnull;
-     start->ChildAt(i,child);
+     nsCOMPtr<nsIContent> child;
+     start->ChildAt(i,*getter_AddRefs(child));
 
      // see if it is the child
      nsCOMPtr<nsIAtom> tag;
@@ -140,7 +140,7 @@ nsTabFrame::GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpa
      }
 
      // recursive search the child
-     nsIContent* found = nsnull;
+     nsCOMPtr<nsIContent> found;
      GetChildWithTag(atom, child, found);
      if (found != nsnull) {
        tabpanel = found;
@@ -153,11 +153,11 @@ nsTabFrame::GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpa
 }
 
 nsresult
-nsTabFrame::GetTabControl(nsIContent* content, nsIContent*& tabcontrol)
+nsTabFrame::GetTabControl(nsCOMPtr<nsIContent> content, nsCOMPtr<nsIContent>& tabcontrol)
 {
    while(nsnull != content)
    {
-      content->GetParent(content);
+      content->GetParent(*getter_AddRefs(content));
 
       if (content) {
         nsCOMPtr<nsIAtom> atom;
@@ -173,10 +173,10 @@ nsTabFrame::GetTabControl(nsIContent* content, nsIContent*& tabcontrol)
 }
 
 nsresult
-nsTabFrame::GetIndexInParent(nsIContent* content, PRInt32& index)
+nsTabFrame::GetIndexInParent(nsCOMPtr<nsIContent> content, PRInt32& index)
 {
-   nsIContent* parent;
-   content->GetParent(parent);
+   nsCOMPtr<nsIContent> parent;
+   content->GetParent(*getter_AddRefs(parent));
    return parent->IndexOf(content, index);
 }
 

@@ -502,6 +502,12 @@ public:
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;
 
+  /**
+   * Sync your widget size and position with the view
+   */
+  NS_IMETHOD SynchWidgetSizePosition() = 0;
+
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
@@ -559,5 +565,9 @@ private:
 #define NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX          0x0020
 // indicatest hat the view is a floating view.
 #define NS_VIEW_PUBLIC_FLAG_FLOATING             0x0040
+// set if our widget resized. 
+#define NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED       0x0080
+// set if our widget moved. 
+#define NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED         0x0100
 
 #endif

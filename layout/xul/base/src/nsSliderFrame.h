@@ -189,7 +189,7 @@ protected:
 private:
 
   nsIBox* GetScrollbar();
-  nsIContent* GetContentOf(nsIBox* aBox);
+  void GetContentOf(nsIBox* aBox, nsIContent** aContent);
 
   void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
   void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);

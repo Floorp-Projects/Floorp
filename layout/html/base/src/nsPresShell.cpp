@@ -1106,6 +1106,7 @@ PresShell::AllocateFrame(size_t aSize, void** aResult)
 NS_IMETHODIMP
 PresShell::EnterReflowLock()
 {
+  mViewManager->CacheWidgetChanges(PR_TRUE);
   ++mReflowLockCount;
   return NS_OK;
 }
@@ -1131,6 +1132,7 @@ PresShell::ExitReflowLock(PRBool aTryToReflow)
     }
   }
   mReflowLockCount = newReflowLockCount;
+  mViewManager->CacheWidgetChanges(PR_FALSE);
   return NS_OK;
 }
 
@@ -1553,6 +1555,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  mViewManager->CacheWidgetChanges(PR_TRUE);
+
   StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
   EnterReflowLock();
 
@@ -1639,6 +1643,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 #endif
   
+  mViewManager->CacheWidgetChanges(PR_FALSE);
+
   return NS_OK; //XXX this needs to be real. MMP
 }
 

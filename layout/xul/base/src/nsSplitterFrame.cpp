@@ -81,12 +81,7 @@ public:
     mOuter = aSplitter;
     mPressed = PR_FALSE;
   }
-  
-  virtual ~nsSplitterFrameInner()
-  {
-    delete[] mChildInfosBefore;
-    delete[] mChildInfosAfter;
-  }
+  virtual ~nsSplitterFrameInner();
 
   // mouse listener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
@@ -173,6 +168,12 @@ nsSplitterFrameInner::GetResizeBefore()
       return Farthest;
     else
       return Closest;
+}
+
+nsSplitterFrameInner::~nsSplitterFrameInner() 
+{
+  delete[] mChildInfosBefore;
+  delete[] mChildInfosAfter;
 }
 
 nsSplitterFrameInner::ResizeType
@@ -775,8 +776,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
-    nsIAtom* atom;
-    content->GetTag(atom);
+    nsCOMPtr<nsIAtom> atom;
+    content->GetTag(*getter_AddRefs(atom));
 
     // skip over any splitters
     if (atom != nsXULAtoms::splitter) { 
@@ -893,7 +894,7 @@ nsSplitterFrameInner::Reverse(nsSplitterInfo*& aChildInfos, PRInt32 aCount)
     for (int i=0; i < aCount; i++)
        infos[i] = aChildInfos[aCount - 1 - i];
 
-    delete aChildInfos;
+    delete[] aChildInfos;
     aChildInfos = infos;
 }
 
@@ -1086,7 +1087,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
         nsMargin margin(0,0,0,0);
         childBox->GetMargin(margin);
 
-        nsIAtom* attribute;
+        nsCOMPtr<nsIAtom> attribute;
 
         if (aIsHorizontal) {
 	        pref -= (margin.left + margin.right);

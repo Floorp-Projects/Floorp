@@ -113,6 +113,9 @@ public:
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore);
 
+ NS_IMETHOD SynchWidgetSizePosition();
+
+
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
 

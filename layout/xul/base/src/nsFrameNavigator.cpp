@@ -32,8 +32,8 @@
 #include "nsIContent.h"
 #include "nsIBox.h"
 
-nsIAtom*
-nsFrameNavigator::GetTag(nsIBox* aBox)
+void
+nsFrameNavigator::GetTag(nsIBox* aBox, nsCOMPtr<nsIAtom>& aAtom)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);
@@ -41,12 +41,11 @@ nsFrameNavigator::GetTag(nsIBox* aBox)
    nsCOMPtr<nsIContent> content;
    frame->GetContent(getter_AddRefs(content));
    if (content) {
-     nsIAtom* atom = nsnull;
-     content->GetTag(atom);
-     return atom; 
+     content->GetTag(*getter_AddRefs(aAtom));
+     return; 
    }
 
-   return nsnull;
+   return;
 }
 
 nsIBox*

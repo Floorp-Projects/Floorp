@@ -31,6 +31,8 @@
 #define nsGrippyFrame_h___
 
 #include "nsIFrame.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 class nsIBox;
 
 class nsFrameNavigator 
@@ -41,7 +43,7 @@ public:
   static nsIBox* GetChildAt(nsIPresContext* aPresContext, nsIBox* parent, PRInt32 index);
   static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* child);
   static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIBox* aFrame);
-  static nsIAtom* GetTag(nsIBox* frame);
+  static void GetTag(nsIBox* frame, nsCOMPtr<nsIAtom>& aAtom);
 
 }; 
 

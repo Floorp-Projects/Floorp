@@ -42,6 +42,10 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 //#define NO_DOUBLE_BUFFER
 
+// if defined widget changes like moves and resizes are defered until and done
+// all in one pass.
+//#define CACHE_WIDGET_CHANGES
+
 // display list flags
 #define VIEW_RENDERED		0x00000001
 #define PUSH_CLIP			0x00000002
@@ -127,6 +131,7 @@ nsViewManager2::nsViewManager2()
 	// assumed to be cleared here.
   mX = 0;
   mY = 0;
+  mCachingWidgetChanges = 0;
 }
 
 nsViewManager2::~nsViewManager2()
@@ -2600,6 +2605,59 @@ PRBool nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect)
 #endif
 
   return overlaps;
+}
+
+
+NS_IMETHODIMP
+nsViewManager2::IsCachingWidgetChanges(PRBool* aCaching)
+{
+#ifdef CACHE_WIDGET_CHANGES
+  *aCaching = (mCachingWidgetChanges > 0);
+#else
+  *aCaching = PR_FALSE;
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewManager2::CacheWidgetChanges(PRBool aCache)
+{
+
+#ifdef CACHE_WIDGET_CHANGES
+  if (aCache == PR_TRUE)
+    mCachingWidgetChanges++;
+  else
+    mCachingWidgetChanges--;
+
+  NS_ASSERTION(mCachingWidgetChanges >= 0, "One too many decrements");
+
+  // if we turned it off. Then move and size all the widgets.
+  if (mCachingWidgetChanges == 0)
+    ProcessWidgetChanges(mRootView);
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsViewManager2::ProcessWidgetChanges(nsIView* aView)
+{
+  nsresult rv = aView->SynchWidgetSizePosition();
+  if (NS_FAILED(rv))
+      return rv;
+
+	nsIView *child;
+	aView->GetChild(0, child);
+	while (nsnull != child) {
+		rv = ProcessWidgetChanges(child);
+    if (NS_FAILED(rv))
+      return rv;
+
+		child->GetNextSibling(child);
+	}
+
+  return NS_OK;
 }
 
 

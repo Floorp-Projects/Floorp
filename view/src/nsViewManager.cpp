@@ -2988,5 +2988,18 @@ PRBool nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect)
   return overlaps;
 }
 
+NS_IMETHODIMP
+nsViewManager::IsCachingWidgetChanges(PRBool* aCaching)
+{
+  *aCaching = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewManager::CacheWidgetChanges(PRBool aCache)
+{  
+  return NS_OK;
+}
+
 
 

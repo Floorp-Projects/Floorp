@@ -166,7 +166,8 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
       // bounds check it.
 
       nsIBox* scrollbarBox = GetScrollbar();
-      nsIContent* scrollbar = GetContentOf(scrollbarBox);
+      nsCOMPtr<nsIContent> scrollbar;
+      GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
       PRInt32 current = GetCurrentPosition(scrollbar);      
       PRInt32 max = GetMaxPosition(scrollbar);
       if (current < 0 || current > max)
@@ -260,7 +261,8 @@ nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
 
   // get the scrollbar
   nsIBox* scrollbarBox = GetScrollbar();
-  nsIContent* scrollbar = GetContentOf(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
   PRBool isHorizontal = IsHorizontal();
 
   // get the thumb should be our only child
@@ -375,7 +377,8 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
                                       nsEventStatus* aEventStatus)
 {
   nsIBox* scrollbarBox = GetScrollbar();
-  nsIContent* scrollbar = GetContentOf(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
   PRBool isHorizontal = IsHorizontal();
 
   if (isDraggingThumb(aPresContext))
@@ -492,14 +495,13 @@ nsSliderFrame::GetScrollbar()
    return ibox;
 }
 
-nsIContent*
-nsSliderFrame::GetContentOf(nsIBox* aBox)
+void
+nsSliderFrame::GetContentOf(nsIBox* aBox, nsIContent** aContent)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);
    nsIContent* content = nsnull;
-   frame->GetContent(&content);
-   return content;
+   frame->GetContent(aContent);
 }
 
 void
@@ -509,7 +511,8 @@ nsSliderFrame::PageUpDown(nsIFrame* aThumbFrame, nscoord change)
   // asking it for the current position and the page increment. If we are not in a scrollbar we will
   // get the values from our own node.
   nsIBox* scrollbarBox = GetScrollbar();
-  nsIContent* scrollbar = GetContentOf(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
   
   if (mScrollbarListener)
     mScrollbarListener->PagedUpDown(); // Let the listener decide our increment.
@@ -524,7 +527,8 @@ nsresult
 nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 {
   nsIBox* scrollbarBox = GetScrollbar();
-  nsIContent* scrollbar = GetContentOf(scrollbarBox);
+  nsCOMPtr<nsIContent> scrollbar;
+  GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
 
   PRBool isHorizontal = IsHorizontal();
 

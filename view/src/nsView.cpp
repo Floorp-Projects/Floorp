@@ -849,6 +849,16 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
 
   if (nsnull != mWindow)
   {
+    // see if we are caching our widget changes. Yes? 
+    // mark us as changed. Later we will actually move the 
+    // widget.
+    PRBool caching = PR_FALSE;
+    mViewManager->IsCachingWidgetChanges(&caching);
+    if (caching) {
+      mVFlags |= NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+      return NS_OK;
+    }
+
     nsIDeviceContext  *dx;
     float             scale;
     nsIWidget         *pwidget = nsnull;
@@ -863,6 +873,43 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
     
     mWindow->Move(NSTwipsToIntPixels((x + parx), scale),
                   NSTwipsToIntPixels((y + pary), scale));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
+{
+  if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED || mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
+  {
+    nsIDeviceContext  *dx;
+    float             t2p;
+
+
+    mViewManager->GetDeviceContext(dx);
+    dx->GetAppUnitsToDevUnits(t2p);
+    NS_RELEASE(dx);
+
+    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
+    {
+      mWindow->Resize(NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
+                      PR_TRUE);
+      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+    } 
+
+    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) 
+    {
+      nscoord parx = 0, pary = 0;
+      nsIWidget         *pwidget = nsnull;
+
+      GetOffsetFromWidget(&parx, &pary, pwidget);
+      NS_IF_RELEASE(pwidget);
+
+      mWindow->Move(NSTwipsToIntPixels(mBounds.x + parx, t2p),
+                    NSTwipsToIntPixels(mBounds.y + pary, t2p));
+
+      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+    }        
   }
 
   return NS_OK;
@@ -919,6 +966,13 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
 
   if (nsnull != mWindow)
   {
+    PRBool caching = PR_FALSE;
+    mViewManager->IsCachingWidgetChanges(&caching);
+    if (caching) {
+      mVFlags |= NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+      return NS_OK;
+    }
+
     nsIDeviceContext  *dx;
     float             t2p;
   
