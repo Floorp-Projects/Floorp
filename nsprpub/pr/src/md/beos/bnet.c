@@ -588,7 +588,7 @@ retry:
             return rv;
         }
 #else /* BONE_VERSION */
-        if(!fd->secret->nonblocking && (err == EINPROGRESS)) {
+        if(!fd->secret->nonblocking && (err == EINTR)) {
 
             rv = socket_io_wait(osfd, WRITE_FD, timeout);
             if (rv == -1) {
