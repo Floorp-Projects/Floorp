@@ -118,9 +118,9 @@ Attributes=SELECTED|INVISIBLE
 Description Short=Quality Feedback Agent
 ; *** LOCALIZE ME BABY ***
 Description Long=Tool for reporting software crashes to Mozilla
-Archive=FullCircle.xpi
-Install Size=<#FullCircle_actualSize>
-Archive Size=<#FullCircle_archiveSize>
+Archive=talkback.xpi
+Install Size=<#talkback_actualSize>
+Archive Size=<#talkback_archiveSize>
 Attributes=SELECTED
 
 [Component8]
