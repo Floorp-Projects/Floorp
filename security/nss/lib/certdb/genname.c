@@ -605,6 +605,7 @@ cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
     CERTNameConstraint   *next = NULL;
     int                  i = 0;
 
+    PORT_Assert(arena);
     while (subTree[i] != NULL) {
 	current = cert_DecodeNameConstraint(arena, subTree[i]);
 	if (current == NULL) {
@@ -621,14 +622,6 @@ cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
     first->l.prev = &(current->l);
     return first;
 loser:
-    if (first) {
-	current = first;
-	do {
-	    next = cert_get_next_name_constraint(current);
-	    PORT_Free(current);
-	    current = next;
-	}while (current != first);
-    }
     return NULL;
 }
 
@@ -842,7 +835,7 @@ CERT_AddNameConstraint(CERTNameConstraint *list,
 
 
 SECStatus
-CERT_GetNameConstriantByType (CERTNameConstraint *constraints,
+CERT_GetNameConstraintByType (CERTNameConstraint *constraints,
 			      CERTGeneralNameType type, 
 			      CERTNameConstraint **returnList,
 			      PRArenaPool *arena)
@@ -1268,7 +1261,7 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
     }
     do {
  	if (constraints->excluded != NULL) {
- 	    rv = CERT_GetNameConstriantByType(constraints->excluded, currentName->type, 
+ 	    rv = CERT_GetNameConstraintByType(constraints->excluded, currentName->type, 
  					      &matchingConstraints, arena);
  	    if (rv != SECSuccess) {
  		goto loser;
@@ -1282,7 +1275,7 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
  	    }
  	}
  	if (constraints->permited != NULL) {
- 	    rv = CERT_GetNameConstriantByType(constraints->permited, currentName->type, 
+ 	    rv = CERT_GetNameConstraintByType(constraints->permited, currentName->type, 
  					      &matchingConstraints, arena);
             if (rv != SECSuccess) {
 		goto loser;
