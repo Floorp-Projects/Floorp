@@ -243,6 +243,9 @@ sub DistMozilla()
 			{
 				InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",	":mozilla:dist:ldap:");
 			}
+
+		#PRIVACY
+		InstallFromManifest(":mozilla:privacy:public:MANIFEST", ":mozilla:dist:privacy:");
 			
 		#SCHEDULER
 		InstallFromManifest(":mozilla:modules:schedulr:public:MANIFEST",				":mozilla:dist:schedulr:");
