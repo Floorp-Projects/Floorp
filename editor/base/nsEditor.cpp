@@ -610,9 +610,11 @@ nsEditor::EndPlaceHolderTransaction()
       {
         plcTxn->EndPlaceHolderBatch();
       }
-      else  // but if we did make one it should be around
+      else  
       {
-        NS_WARN_IF_FALSE(PR_FALSE, "should this ever happen?");
+        // in the future we will check to make sure undo is off here,
+        // since that is the only known case where the placeholdertxn would disappear on us.
+        // For now just removing the assert.
       }
     }
   }
