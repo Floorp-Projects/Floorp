@@ -33,34 +33,31 @@
 #endif
 
 /* Platform-specific headers for socket functionality */
-#if defined(__unix) || defined(__unix__) || defined(macintosh) || defined(_AIX)
+#if defined(__unix) || defined(__unix__) || defined(macintosh) || \
+    defined(_AIX) || defined(__OS2__)
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#elif defined(_WINDOWS)
+#endif
+
+#if defined(_WINDOWS)
 #define read(_socket, _buf, _len) \
         recv(_socket, (char *) _buf, _len, 0);
 #define write(_socket, _buf, _len) \
         send(_socket, (char *) _buf, _len, 0);
 #include <winsock2.h>
-#elif defined(__OS2__)
- #define BSD_SELECT
- #ifdef XP_OS2_EMX
-  #include <unistd.h>
- #else
-  #include <types.h>
-  #define read(_socket, _buf, _len) \
-          recv(_socket, (char *) _buf, _len, 0);
-  #define write(_socket, _buf, _len) \
-          send(_socket, (char *) _buf, _len, 0);
-  #define close(_socket) \
-          soclose(_socket);
- #endif
- #include <sys/socket.h>
- #include <sys/select.h>
- #include <netinet/in.h>
- #include <netdb.h>
+#endif
+
+#if defined(__OS2__)
+#define read(_socket, _buf, _len) \
+        recv(_socket, (char *) _buf, _len, 0);
+#define write(_socket, _buf, _len) \
+        send(_socket, (char *) _buf, _len, 0);
+#define close(_socket) \
+        soclose(_socket);
+#define select(_socket, _readfd, _writefd, _exceptfd, _timeout) \
+        bsdselect(_socket, _readfd, _writefd, _exceptfd, _timeout);
 #endif
 
 #include "nsSocket.h"
