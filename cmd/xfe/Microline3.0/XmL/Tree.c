@@ -106,6 +106,14 @@ static XtResource resources[] =
 		XtOffset(XmLTreeWidget, tree.rowLevel),
 		XmRImmediate, (XtPointer)0,
 		},
+
+        /* XmNignorePixmaps.  Causes the tree to NOT render any pixmaps */
+		{
+		XmNignorePixmaps, XmCIgnorePixmaps,
+		XmRBoolean, sizeof(Boolean),
+		XtOffset(XmLTreeWidget, tree.ignorePixmaps),
+		XmRImmediate, (XtPointer) False,
+		},
 	};
 
 XmLTreeClassRec xmlTreeClassRec =
@@ -422,6 +430,10 @@ _CellAction(XmLGridCell cell,
 	/*	XRectangle *rect, cRect;*/
 	int ret, h, isTreeCell;
 
+
+	Dimension default_icon_width = 16;
+	Dimension default_icon_height = 16;
+
 	t = (XmLTreeWidget)w;
 	if (cbs->rowType == XmCONTENT &&
 		cbs->columnType == XmCONTENT &&
@@ -432,6 +444,14 @@ _CellAction(XmLGridCell cell,
 	sc = (XmLGridWidgetClass)xmlTreeWidgetClass->core_class.superclass;
 	cellActionProc = sc->grid_class.cellActionProc;
 	ret = 0;
+
+	/* Check for ignore pixmaps */
+	if (t->tree.ignorePixmaps)
+	{
+		default_icon_width = 0;
+		default_icon_height = 0;
+	}
+
 	switch (cbs->reason)
 		{
 		case XmCR_CELL_DRAW:
@@ -448,7 +468,9 @@ _CellAction(XmLGridCell cell,
 				if (cellValues->type != XmICON_CELL)
 					return 0;
 				icon = (XmLGridCellIcon *)cell->cell.value;
-				h = 4 + 16 + cellValues->topMargin + cellValues->bottomMargin;
+
+				h = 4 + default_icon_height + cellValues->topMargin + cellValues->bottomMargin;
+
 				if (icon && icon->pix.pixmap == XmUNSPECIFIED_PIXMAP &&
 					ret < h)
 					ret = h;
@@ -473,12 +495,12 @@ _CellAction(XmLGridCell cell,
 					row->tree.stringWidthValid = True;
 					}
 				ret = 4 + cellValues->leftMargin + t->tree.levelSpacing * 2 *
-					row->tree.level + XmLICON_SPACING + row->tree.stringWidth +
+					row->tree.level + t->grid.iconSpacing + row->tree.stringWidth +
 					cellValues->rightMargin;
 				if (!icon)
-					ret += 16;
+ 					ret += default_icon_width;
 				else if (icon->pix.pixmap == XmUNSPECIFIED_PIXMAP)
-					ret += 16;
+ 					ret += default_icon_width;
 				else
 					ret += icon->pix.width;
 				if (!row->grid.height)
@@ -560,6 +582,8 @@ DrawIconCell(XmLGridCell cell,
 		switch (thisLine[i])
 			{
 			case 'O':
+              if (!t->tree.ignorePixmaps)
+              {
 				rect.x = x1;
 				rect.y = cellRect->y;
 				rect.width = cellRect->width;
@@ -593,8 +617,10 @@ DrawIconCell(XmLGridCell cell,
 					pixWidth = 16;
 					pixHeight = 16;
 					}
+				
 				XmLPixmapDraw(w, pixmap, pixmask, pixWidth, pixHeight,
-					XmALIGNMENT_BOTTOM_LEFT, ds->gc, &rect, clipRect);
+							  XmALIGNMENT_BOTTOM_LEFT, ds->gc, &rect, clipRect);
+              } /* !t->tree.ignorePixmaps */
 				break;
 			case 'I':
 				DrawConnectingLine(dpy, win, ds->gc, clipRect, oddFlag,
@@ -658,7 +684,7 @@ DrawIconCell(XmLGridCell cell,
 		}
 
 	/* draw select background and highlight */
-	i = rowp->tree.level * xoff2 + pixWidth + XmLICON_SPACING;
+	i = rowp->tree.level * xoff2 + pixWidth + t->grid.iconSpacing;
 	rect.x = cellRect->x + i;
 	rect.y = cellRect->y;
 	rect.height = cellRect->height;

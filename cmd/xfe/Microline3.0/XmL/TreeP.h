@@ -78,6 +78,9 @@ typedef struct _XmLTreePart
 	/* row resources */
 	int rowLevel;
 	Boolean rowExpands, rowIsExpanded;
+
+    /* Causes the tree to NOT render any pixmaps */
+	Boolean ignorePixmaps;
 	} XmLTreePart;
 
 typedef struct _XmLTreeRec
