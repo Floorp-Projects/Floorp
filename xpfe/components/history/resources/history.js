@@ -153,7 +153,7 @@ function historyOnSelect()
     gLastDomain = "";
     var match;
     var currentIndex = gHistoryTree.currentIndex;
-    var rowIsContainer = gHistoryGrouping != "none" && currentIndex >= 0 && isContainer(gHistoryTree, currentIndex);
+    var rowIsContainer = currentIndex < 0 || (gHistoryGrouping != "none" && isContainer(gHistoryTree, currentIndex));
     var url = rowIsContainer ? "" : gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
 
     if (url) {
