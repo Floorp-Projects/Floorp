@@ -107,7 +107,13 @@
   #undef NSCAP_FEATURE_TEST_DONTQUERY_CASES
 #endif
 
-#if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES) || !defined(NS_DEBUG)
+#if defined(__GNUC__) && __GNUC__ >= 3
+  // Without this, we violate the C++ standard's aliasing rules.  See
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=212082
+  #define NSCAP_FEATURE_DEBUG_PTR_TYPES
+#endif
+
+#if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
   #undef NSCAP_FEATURE_DEBUG_PTR_TYPES
 #endif
 
