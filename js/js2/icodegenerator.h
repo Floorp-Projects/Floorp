@@ -31,50 +31,54 @@ namespace JavaScript {
 
     typedef uint32 Register;
 
+    typedef std::vector<Register> RegisterList;
+
     enum ICodeOp {
-                        //      Operand1                Operand2                Operand3
+                        //      Operand1                    Operand2                    Operand3
         NOP,
 
-        MOVE_TO,        // Destination Register     Source Register          
+        MOVE_TO,        // Destination Register         Source Register          
 
-        LOAD_VAR,       // Destination Register     index of frame slot      
-        SAVE_VAR,       // index of frame slot      Source Register
+        LOAD_VAR,       // Destination Register         index of frame slot      
+        SAVE_VAR,       // index of frame slot          Source Register
 
-        LOAD_IMMEDIATE, // Destination Register     immediate (double)       
+        LOAD_IMMEDIATE, // Destination Register         immediate (double)       
 
-        LOAD_NAME,      // Destination Register     StringAtom &             
-        SAVE_NAME,      // StringAtom &             Source Register
+        LOAD_NAME,      // Destination Register         StringAtom &             
+        SAVE_NAME,      // StringAtom &                 Source Register
 
         NEW_OBJECT,     // Destination Register
 
-        GET_PROP,       // Destination Register     StringAtom &                Base Register               
-        SET_PROP,       // StringAtom &             Base Register               Source Register
+        GET_PROP,       // Destination Register         StringAtom &                Base Register               
+        SET_PROP,       // StringAtom &                 Base Register               Source Register
 
-        ADD,            // Destination Register     Source Register 1           Source Register 2           
+        ADD,            // Destination Register         Source Register 1           Source Register 2           
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
         
         // maintain contiguity                     
-        COMPARE_LT,     // Destination Register     Source Register 1           Source Register 2           
+        COMPARE_LT,     // Destination Register         Source Register 1           Source Register 2           
         COMPARE_LE,
         COMPARE_EQ,
         COMPARE_NE,
         COMPARE_GE,
         COMPARE_GT,
 
-        NOT,            // Destination Register     Source Register          
+        NOT,            // Destination Register         Source Register          
 
         BRANCH,         // Target label
 
-        BRANCH_LT,      // Target label             Condition Register
+        BRANCH_LT,      // Target label                 Condition Register
         BRANCH_LE,
         BRANCH_EQ,
         BRANCH_NE,
         BRANCH_GE,
         BRANCH_GT,
         
-        RETURN          // Source Register
+        RETURN,         // Source Register
+
+        CALL,           // Destination Register         Target Register             Arguments
     };
 
     class Instruction {
@@ -185,6 +189,12 @@ namespace JavaScript {
             : Instruction_2<uint32, Register>(op, offset, condition) { }
     };
 
+    class Call : public Instruction_3<Register, Register, RegisterList> {
+    public:
+        Call(Register result, Register target, RegisterList args)
+            : Instruction_3<Register, Register, RegisterList>(CALL, result, target, args) { }
+    
+    };
 
     /****************************************************************/
 
@@ -206,6 +216,16 @@ namespace JavaScript {
         Label *continueLabel;
     };
 
+    class ICodeModule {
+    public:
+        ICodeModule(InstructionStream *iCode, uint32 maxRegister, uint32 maxVariable)
+            : its_iCode(iCode), itsMaxRegister(maxRegister), itsMaxVariable(maxVariable) { }
+
+        InstructionStream *its_iCode;
+        uint32  itsMaxRegister;
+        uint32  itsMaxVariable;
+    };
+
     /****************************************************************/
         
     // An ICodeGenerator provides the interface between the parser and the interpreter.
@@ -220,15 +240,21 @@ namespace JavaScript {
 
         std::vector<ICodeState *> stitcher;
 
+        void markMaxRegister()      { if (topRegister > maxRegister) maxRegister = topRegister; }
+        void markMaxVariable(uint32 variableIndex)      
+                                    { if (variableIndex > maxVariable) maxVariable = variableIndex; }
+
         Register topRegister;
         Register getRegister()      { return topRegister++; }
-        void resetTopRegister()     { topRegister = stitcher.empty() ? 0 : stitcher.back()->registerBase; }
+        void resetTopRegister()     { markMaxRegister(); topRegister = stitcher.empty() ? 0 : stitcher.back()->registerBase; }
 
         ICodeOp getBranchOp()       { ASSERT(!iCode->empty()); return iCode->back()->getBranchOp(); }
 
-      public:
-        Label *getLabel();
-      private:
+        uint32  maxRegister;
+        uint32  maxVariable;
+
+
+        
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
 
@@ -236,11 +262,12 @@ namespace JavaScript {
         void branchConditional(Label *label, Register condition);
     
       public:
-        ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
+        ICodeGenerator() : topRegister(0), maxRegister(0), maxVariable(0) { iCode = new InstructionStream(); }
+        virtual ~ICodeGenerator()   { if (iCode) delete iCode; }
 
         void mergeStream(InstructionStream *sideStream);
         
-        InstructionStream *complete();
+        ICodeModule *complete();
 
         std::ostream &print(std::ostream &s);
 
@@ -264,6 +291,8 @@ namespace JavaScript {
 
         Register getRegisterBase()                          { return topRegister; }
         InstructionStream *get_iCode()                      { return iCode; }
+
+        Label *getLabel();
 
 
     // Rather than have the ICG client maniplate labels and branches, it
