@@ -35,7 +35,7 @@
   <!-- List elements to manage for prefs -->
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
+    var _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
         "warnEnteringSecure", "warnEnteringWeak", 
         "warnInsecurePost", "warnInsecurePostFromSecure",
         "warnSecureRedirect", "warnSecureRedirectToInsecure",
@@ -111,10 +111,10 @@ Set Netscape to show a warning and ask permission before:
     <html>Decide how Netscape selects a security certificate to 
 	present to web sites that require one:</html>
     <!-- Prefs -->
-    <radiogroup id="certSelection" pref="true" preftype="int" 
-	prefstring="pip.security.default_personal_cert" prefattribute="value">
-    <radio group="certSelection" label="Select Automatically" value="0"/>
-    <radio group="certSelection" label="Select Manually" value="1"/>
+    <radiogroup id="certSelection" pref="true" preftype="string" 
+	prefstring="security.default_personal_cert" prefattribute="value">
+    <radio group="certSelection" label="Select Automatically" value="Select Automatically"/>
+    <radio group="certSelection" label="Select Manually" value="Select Manually"/>
     </radiogroup>
   </titledbox>
 
