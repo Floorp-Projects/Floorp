@@ -478,6 +478,12 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
                   NS_STREAM_CONVERTER_SEGMENT_SIZE,
                   NS_STREAM_CONVERTER_BUFFER_SIZE);
 
+    if (NS_SUCCEEDED(rv))
+    {
+        mInputStream->SetNonBlocking(PR_TRUE);
+        mOutputStream->SetNonBlocking(PR_TRUE);
+    }
+
 	// initialize our emitter
 	if (NS_SUCCEEDED(rv) && mEmitter)
 	{
