@@ -814,24 +814,36 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   return PR_TRUE; // don't stop
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsWin.h
+ *	@update 05/28/99 dwc
+ */
 void
 nsFontMetricsWin::RealizeFont()
 {
-  HWND win = NULL;
-  HDC dc = NULL;
+HWND  win = NULL;
+HDC   dc = NULL;
+HDC   dc1 = NULL;
 
-  if (NULL != mDeviceContext->mDC)
+  
+  if (NULL != mDeviceContext->mDC){
+    // XXX - DC If we are printing, we need to get the printer HDC and a screen HDC
+    // The screen HDC is because there seems to be a bug or requirment that the 
+    // GetFontData() method call have a screen HDC, some printers HDC's return nothing
+    // thats will give us bad font data, and break us.  
     dc = mDeviceContext->mDC;
-  else
-  {
+    win = (HWND)mDeviceContext->mWidget;
+    dc1 = ::GetDC(win);
+  } else {
     // Find font metrics and character widths
     win = (HWND)mDeviceContext->mWidget;
     dc = ::GetDC(win);
+    dc1 = dc;
   }
 
   mFont->EnumerateFamilies(FontEnumCallback, this); 
 
-  nsFontWin* font = FindFont(dc, 'a');
+  nsFontWin* font = FindFont(dc1, 'a');
   if (!font) {
     return;
   }
@@ -881,8 +893,11 @@ nsFontMetricsWin::RealizeFont()
 
   ::SelectObject(dc, oldfont);
 
-  if (NULL == mDeviceContext->mDC)
+  if (NULL == mDeviceContext->mDC){
     ::ReleaseDC(win, dc);
+  } else {
+    ::ReleaseDC(win,dc1);
+  }
 }
 
 NS_IMETHODIMP
