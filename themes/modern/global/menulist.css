@@ -179,7 +179,7 @@ menulist[focused="true"] {
   -moz-border-right-colors: #5D616E #99A9BA;
   -moz-border-bottom-colors: #5D616E #99A9BA;
   -moz-border-left-colors: #CED5DD #A6B3C0;
-  -moz-border-radius: none;
+  -moz-border-radius: 0;
   padding: 1px;
   min-height: 0px;
   background-color: #A6B3C0;
