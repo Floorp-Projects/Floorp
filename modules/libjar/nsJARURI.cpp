@@ -37,6 +37,8 @@ nsJARURI::nsJARURI()
  
 nsJARURI::~nsJARURI()
 {
+    if (mJAREntry)
+        nsMemory::Free(mJAREntry);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARURI, nsIJARURI, nsIURI)
