@@ -123,6 +123,14 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 				::SizeControl(mControl, ctlRect.width, ctlRect.height);
 
 			mLastBounds = mBounds;
+
+			// Erase the widget rect (which can be larger than the control rect).
+			// Note: this should paint the backgrount with the right color but
+			// it doesn't work right now, see bug #5685 for more info.
+			nsRect bounds = mBounds;
+			bounds.x = bounds. y = 0;
+			nsRectToMacRect(bounds, macRect);
+			::EraseRect(&macRect);
 		}
 
 		// update value
@@ -149,18 +157,13 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 
 		::SetControlVisibility(mControl, isVisible, false);
 
-		// Erase the widget rect (which can be larger than the control rect).
-		// Note: this should paint the backgrount with the right color but
-		// it doesn't work right now, see bug #5685 for more info.
+		// Draw the control
+		::DrawOneControl(mControl);
+
 		Rect macRect;
 		nsRect bounds = mBounds;
 		bounds.x = bounds. y = 0;
 		nsRectToMacRect(bounds, macRect);
-		::EraseRect(&macRect);
-
-		// Draw the control
-		::DrawOneControl(mControl);
-
 #if TARGET_CARBON
 		::ValidWindowRect(mWindowPtr, &macRect);
 #else
