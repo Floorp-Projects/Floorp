@@ -215,6 +215,7 @@ protected: // Data Members
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
 
   nscoord mRowGroupHeight; // The height of the row group.
+  nscoord mRowGroupWidth; // The width of the row group.
 
   PRInt32 mCurrentIndex; // Our current scrolled index.
   PRInt32 mRowCount; // The current number of visible rows.

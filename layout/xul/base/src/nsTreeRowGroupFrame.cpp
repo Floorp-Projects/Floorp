@@ -986,6 +986,15 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext*      aPresContext,
 
   nsresult rv = NS_OK;
   mRowGroupHeight = aReflowState.availSize.height;
+  mRowGroupWidth = aReflowState.availSize.width;
+
+  // Lose the width of the scrollbar if we've got one.
+  if (mScrollbar) {
+    nsRect rect;
+    mScrollbar->GetRect(rect);
+    aReflowState.availSize.width -= rect.width;
+  }
+
   return rv;
 }
 
@@ -997,9 +1006,10 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
                                            nsReflowReason       aReason)
 {
   nsresult rv = NS_OK;
-
-  mRowCount = 0;
-  ComputeTotalRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
+  
+  PRInt32 count = 0;
+  ComputeTotalRowCount(count, mContent); // XXX This sucks! Needs to be cheap!
+  
   // Our page size is the # of rows instantiated.
   PRInt32 pageRowCount;
   GetRowCount(pageRowCount);
@@ -1011,7 +1021,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
     nsCOMPtr<nsIContent> scrollbarContent;
     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
     
-    if (mRowCount <= pageRowCount) {
+    if (count < pageRowCount) {
       // first set the position to 0 so that all visible content
       // scrolls into view
       value.Append(0);
@@ -1040,20 +1050,31 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
       mScrollbarList.DestroyFrames(aPresContext);
       mScrollbar = nsnull;
+
+      // Dirty the tree for another reflow.
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+  
+      MarkTreeAsDirty(aPresContext, (nsTreeFrame*)tableFrame);
     }
   }
 
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       (mIsFull || mScrollbar)) {
+
+    PRBool createdScrollbar = PR_FALSE;
+
     // Ensure the scrollbar has been created.
-    if (!mScrollbar)
+    if (!mScrollbar) {
       CreateScrollbar(aPresContext);
+      createdScrollbar = PR_TRUE;
+    }
 
     // Set the maxpos of the scrollbar.
     nsCOMPtr<nsIContent> scrollbarContent;
     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
 
-    PRInt32 rowCount = mRowCount-1;
+    PRInt32 rowCount = count-1;
     if (rowCount < 0)
       rowCount = 0;
 
@@ -1100,17 +1121,30 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
 
     nscoord xpos = 0;
 
-    // Lose the width of the scrollbar as far as the rows are concerned.
     if (aReflowState.availSize.width != NS_UNCONSTRAINEDSIZE) {
-      xpos = aReflowState.availSize.width - desiredSize.width;
-      /*aReflowState.availSize.width -= desiredSize.width;
-      if (aReflowState.availSize.width < 0)
-        aReflowState.availSize.width = 0;*/ 
+      xpos = aReflowState.availSize.width;
+
+      if (mRowGroupWidth == aReflowState.availSize.width) {
+        // Never had a scrollbar before.  Move it over.
+        xpos -= desiredSize.width;
+      }
     }
 
     // Place the child
     FinishReflowChild(mScrollbar, aPresContext, desiredSize, xpos, 0, 0);
+
+    if (createdScrollbar) {
+      // Let another reflow happen.
+      // Dirty the tree for another reflow.
+      nsTableFrame* tableFrame;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+  
+      MarkTreeAsDirty(aPresContext, (nsTreeFrame*)tableFrame);
+    }
   }
+
+  mRowCount = count;
+  
   return rv;
 }
 
