@@ -38,6 +38,10 @@
 #include "nsIPrefMigration.h"
 #include "nsVoidArray.h"
 
+#define RETRY      1
+#define CREATE_NEW 2
+#define CANCEL     3
+
 //Interfaces Needed
 #include "nsIXULWindow.h"
 
@@ -104,9 +108,6 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult GetSizes(nsFileSpec inputPath,
                         PRBool readSubdirs,
                         PRUint32* sizeTotal);
-
-      nsresult GetDriveName(nsFileSpec inputPath,
-                            char** driveName);
 
       nsresult CheckForSpace(nsFileSpec newProfilePath, 
                              PRFloat64 requiredSpace);

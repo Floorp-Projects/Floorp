@@ -50,6 +50,7 @@ interface nsIPrefMigration: nsISupports
    **/
 
   void WindowCloseCallback();  
+  void ShowSpaceDialog(out PRInt32 choice);  
 };
 
 [scriptable, uuid(88fabfa4-1dd2-11b2-94a1-902f0abd94b1)]
