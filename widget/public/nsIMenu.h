@@ -68,7 +68,19 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD SetLabel(const nsString &aText) = 0;
 
-   /**
+	/**
+    * Get the Menu Access Key
+    *
+    */
+	NS_IMETHOD GetAccessKey(nsString &aText) = 0;
+   
+	/**
+    * Set the Menu Access Key
+    *
+    */
+	NS_IMETHOD SetAccessKey(const nsString &aText) = 0;
+
+	/**
     * Adds a Menu Item
     *
     */
