@@ -94,11 +94,11 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=".\genfiles\x86-win32.nad.burg.cpp"
+SOURCE=".\genfiles\x86.nad.burg.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE=".\genfiles\x86-win32.nad.burg.h"
+SOURCE=".\genfiles\x86.nad.burg.h"
 # End Source File
 # End Group
 # Begin Group "ppc generated files"
@@ -758,20 +758,20 @@ SOURCE=..\..\..\Utilities\Disassemblers\x86\XDisAsm.h
 # End Group
 # Begin Source File
 
-SOURCE="..\..\..\Compiler\CodeGenerator\md\x86\x86-win32.nad"
+SOURCE="..\..\..\Compiler\CodeGenerator\md\x86\x86.nad"
 
 !IF  "$(CFG)" == "electricalfire - Win32 Release"
 
 # Begin Custom Build - Perly Nads
-InputPath=..\..\..\Compiler\CodeGenerator\md\x86\x86-win32.nad
-InputName=x86-win32
+InputPath=..\..\..\Compiler\CodeGenerator\md\x86\x86.nad
+InputName=x86
 
 BuildCmds= \
 	$(NSTOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                            ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                   genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                     genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
-                                                                                                 genfiles\$(InputName).nad.burg.cpp
+                                                                                 ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                        genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                          genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
+                                                                                                      genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -789,15 +789,15 @@ BuildCmds= \
 !ELSEIF  "$(CFG)" == "electricalfire - Win32 Debug"
 
 # Begin Custom Build - Perly Nads
-InputPath=..\..\..\Compiler\CodeGenerator\md\x86\x86-win32.nad
-InputName=x86-win32
+InputPath=..\..\..\Compiler\CodeGenerator\md\x86\x86.nad
+InputName=x86
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                            ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                   genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                     genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
-                                                                                                 genfiles\$(InputName).nad.burg.cpp
+                                                                                 ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                        genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                          genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
+                                                                                                      genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -819,6 +819,22 @@ SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86ArgumentList.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Arith64.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Cpu.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Emitter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Emitter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Float.cpp
 # End Source File
 # Begin Source File
@@ -828,6 +844,14 @@ SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Formatter.cpp
 # Begin Source File
 
 SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Formatter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Instruction.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Instruction.h
 # End Source File
 # Begin Source File
 
@@ -845,26 +869,6 @@ SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86StdCall.cpp
 
 SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32_Support.cpp
 # SUBTRACT CPP /O<none>
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32Cpu.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32Emitter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32Emitter.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32Instruction.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Compiler\CodeGenerator\md\x86\x86Win32Instruction.h
 # End Source File
 # End Group
 # Begin Group "generic"
@@ -1079,8 +1083,8 @@ InputName=PrimitiveOperations
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl -I"..\..\..\Tools\PrimitiveOperations"\
-                                             ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
-                                             genfiles\$(InputName).h genfiles\$(InputName).cpp
+                                                  ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
+                                                  genfiles\$(InputName).h genfiles\$(InputName).cpp
 
 "genfiles\$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
