@@ -175,6 +175,8 @@ var toolbarDNDObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
     var newButtonId = aXferData.data;
+    if (gCurrentDragOverItem.firstChild.id == newButtonId)
+      return;
     var toolbar = document.getElementById("cloneToolbar");
     var item = null;
     if (gDraggingFromPalette) {
