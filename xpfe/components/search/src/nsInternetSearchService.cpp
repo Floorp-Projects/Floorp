@@ -2758,12 +2758,39 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 
 	struct	encodings	encodingList[] =
 	{
-		{	"2336",	"EUC-JP"	},	// Japanese
-		{	"2352", "GB2312"	},	// Simplified Chinese
-		{	"2368", "EUC-KR"	},	// Korean
-		{	"2561", "Shift_JIS"	},	// Japanese
-		{	"2562", "KOI8-R"	},	// Russian
-		{	"2563", "Big5"		},	// Traditional Chinese
+		{	"0", "x-mac-roman"	},
+		{	"6", "x-mac-greek"	},
+		{	"35", "x-mac-turkish"	},
+		{	"513", "ISO-8859-1"	},
+		{	"514", "ISO-8859-2"	},
+		{	"517", "ISO-8859-5"	},
+		{	"518", "ISO-8859-6"	},
+		{	"519", "ISO-8859-7"	},
+		{	"520", "ISO-8859-8"	},
+		{	"521", "ISO-8859-9"	},
+		{	"1049", "IBM864"	},
+		{	"1280", "windows-1252"	},
+		{	"1281", "windows-1250"	},
+		{	"1282", "windows-1251"	},
+		{	"1283", "windows-1253"	},
+		{	"1284", "windows-1254"	},
+		{	"1285", "windows-1255"	},
+		{	"1286", "windows-1256"	},
+		{	"1536", "us-ascii"	},
+		{	"1584", "GB2312"	},
+		{	"1585", "x-gbk"	},
+		{	"1600", "EUC-KR"	},
+		{	"2080", "ISO-2022-JP"	},
+		{	"2096", "ISO-2022-CN"	},
+		{	"2112", "ISO-2022-KR"	},
+		{	"2336", "EUC-JP"	},
+		{	"2352", "GB2312"	},
+		{	"2353", "x-euc-tw"	},
+		{	"2368", "EUC-KR"	},
+		{	"2561", "Shift_JIS"	},
+		{	"2562", "KOI8-R"	},
+		{	"2563", "Big5"	},
+		{	"2565", "HZ-GB-2312"	},
 
 		{	nsnull, nsnull		}
 	};
