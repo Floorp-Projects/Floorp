@@ -18,3 +18,4 @@ nsIObserverList.h
 nsIObserver.h
 nsEscape.h
 nsStdFileStream.h
+nsQuickSort.h
