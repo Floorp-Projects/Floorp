@@ -2819,6 +2819,9 @@ FILE * nsPostScriptObj::GetPrintFile()
   return(mPrintContext->prSetup->out);
 }
 
+const char* kNativeFontPrefix  = "print.postscript.nativefont.";
+const char* kUnicodeFontPrefix = "print.postscript.unicodefont.";
+
 /* make <langgroup>_ls define for each LangGroup here */
 static void PrefEnumCallback(const char *aName, void *aClosure)
 {
@@ -2827,10 +2830,13 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
   nsAutoString lang; lang.AssignWithConversion(aName);
 
-  if (strstr(aName, "print.postscript.nativefont.")) {
-    lang.Cut(0, 19);
-  } else if (strstr(aName, "print.postscript.unicodefont.")) {
-    lang.Cut(0, 20);
+
+  if (strstr(aName, kNativeFontPrefix)) {
+    NS_ASSERTION(strlen(kNativeFontPrefix) == 28, "Wrong hard-coded size.");
+    lang.Cut(0, 28);
+  } else if (strstr(aName, kUnicodeFontPrefix)) {
+    NS_ASSERTION(strlen(kNativeFontPrefix) == 29, "Wrong hard-coded size.");
+    lang.Cut(0, 29);
   }
   nsStringKey key(lang);
 
@@ -2852,7 +2858,7 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   //
   // Try to get the info from the user's prefs file
   //
-  nsCAutoString namepsnativefont("print.postscript.nativefont.");
+  nsCAutoString namepsnativefont(kNativeFontPrefix);
   namepsnativefont.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsnativefont.get(), getter_Copies(psnativefont));
 
@@ -2904,7 +2910,7 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   }
 
   /* check UCS fonts */
-  nsCAutoString namepsunicodefont("print.postscript.unicodefont.");
+  nsCAutoString namepsunicodefont(kUnicodeFontPrefix);
   namepsunicodefont.AppendWithConversion(lang);
   if (use_prefsfile) {
     gPrefs->CopyCharPref(namepsunicodefont.get(), getter_Copies(psunicodefont));
@@ -2983,9 +2989,9 @@ nsPostScriptObj::initlanggroup()
 {
 
   /* check langgroup of preference */
-  gPrefs->EnumerateChildren("print.postscript.nativefont.",
+  gPrefs->EnumerateChildren(kNativeFontPrefix,
 	    PrefEnumCallback, (void *) this);
 
-  gPrefs->EnumerateChildren("print.postscript.unicodefont.",
+  gPrefs->EnumerateChildren(kUnicodeFontPrefix,
 	    PrefEnumCallback, (void *) this);
 }
