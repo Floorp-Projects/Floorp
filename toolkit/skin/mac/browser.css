@@ -4,7 +4,7 @@
 .tabbrowser-tabs {
   padding-top: 0px;
   border: none;
-  text-align: center !important;
+  text-align: center;
 }
 
 tab:not([selected="true"]) > .tab-image-middle > .tab-icon {

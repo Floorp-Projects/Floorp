@@ -48,11 +48,9 @@ tab:hover:active > .tab-image-right {
 tabs {
   padding			: 0px;
   margin-bottom: -2px;
-  text-align: center !important;
 }
 
 tabbox {
-	text-align: center !important;
 }
 
 .tabs-left {
