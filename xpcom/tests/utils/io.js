@@ -578,7 +578,7 @@ leaf  : function (path) {
     return null;
   }
 
-  fileInst = new FilePath(path);
+  var fileInst = new FilePath(path);
 
   return fileInst.leafName;
 
