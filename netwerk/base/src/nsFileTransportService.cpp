@@ -175,14 +175,14 @@ nsFileTransportService::DispatchRequest(nsIRunnable* runnable)
 nsresult 
 nsFileTransportService::AddSuspendedTransport(nsITransport* trans)
 {
-    mSuspendedTransportList.AppendElement(NS_STATIC_CAST(nsISupports*, trans));
+    NS_STATIC_CAST(nsISupportsArray*, &mSuspendedTransportList)->AppendElement(trans);
     return NS_OK;
 }
 
 nsresult 
 nsFileTransportService::RemoveSuspendedTransport(nsITransport* trans)
 {
-    mSuspendedTransportList.RemoveElement(NS_STATIC_CAST(nsISupports*, trans));
+    NS_STATIC_CAST(nsISupportsArray*, &mSuspendedTransportList)->RemoveElement(trans);
     return NS_OK;
 }
 
