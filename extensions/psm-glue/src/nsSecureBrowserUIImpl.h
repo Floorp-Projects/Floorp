@@ -39,6 +39,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
+#include "nsISecurityEventSink.h"
 
 #define NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME "Mozilla Secure Browser Doc Observer"
 
@@ -61,7 +62,7 @@ public:
     
     static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-	NS_DECL_ISUPPORTS    
+  	NS_DECL_ISUPPORTS    
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSSECUREBROWSERUI
 
@@ -91,12 +92,12 @@ protected:
 
     void GetBundleString(const nsString& name, nsString &outString);
     
-    nsresult CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldURI);
-    nsresult CheckMixedContext(nsIURI* nextURI);
+    nsresult CheckProtocolContextSwitch( nsISecurityEventSink* sink, nsIRequest* request, nsIURI* newURI, nsIURI* oldURI);
+    nsresult CheckMixedContext( nsISecurityEventSink* sink, nsIRequest* request, nsIURI* nextURI);
     nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
     nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
     nsresult IsURLfromPSM(nsIURI* aURL, PRBool *value);
-    nsresult SetBrokenLockIcon(PRBool removeValue = PR_FALSE);
+    nsresult SetBrokenLockIcon(nsISecurityEventSink* sink,  nsIRequest* request, PRBool removeValue = PR_FALSE);
 };
 
 

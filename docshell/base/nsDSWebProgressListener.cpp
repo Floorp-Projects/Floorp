@@ -124,6 +124,15 @@ NS_IMETHODIMP nsDSWebProgressListener::OnLocationChange(nsIURI* aLocation)
    return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDSWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                          nsIRequest *aRequest, 
+                                          PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 //*****************************************************************************
 // nsDSWebProgressListener: Helpers
 //*****************************************************************************   

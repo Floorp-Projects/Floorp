@@ -32,6 +32,14 @@ interface nsIPrompt : nsISupports
                in wstring text);
 
     /**
+     * Puts up an alert dialog with an OK button.
+     */
+    void alertCheck(in wstring dialogTitle,
+                    in wstring text,
+                    in wstring checkMsg,
+                    out boolean checkValue);
+
+    /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */

@@ -154,6 +154,16 @@ nsMsgStatusFeedback::OnStatusChange(nsIWebProgress* aWebProgress,
     return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsMsgStatusFeedback::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                    nsIRequest *aRequest, 
+                                    PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {

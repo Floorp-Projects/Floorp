@@ -55,6 +55,18 @@ interface nsIWebProgressListener : nsISupports
    const unsigned long STATE_IS_DOCUMENT    = 0x00020000;
    const unsigned long STATE_IS_NETWORK     = 0x00040000;
    const unsigned long STATE_IS_WINDOW      = 0x00080000;
+  
+   /**
+    * Security state bits
+    */
+   const unsigned long STATE_IS_INSECURE     = 0x00000000;
+   const unsigned long STATE_IS_BROKEN       = 0x00000001;
+   const unsigned long STATE_IS_SECURE       = 0x00000002;
+
+   const unsigned long STATE_SECURE_HIGH     = 0x00000000;
+   const unsigned long STATE_SECURE_MED      = 0x00010000;
+   const unsigned long STATE_SECURE_LOW      = 0x00020000;
+
 
   /**
    * Notification indicating the state has changed for one of the requests
@@ -123,4 +135,21 @@ interface nsIWebProgressListener : nsISupports
                         in nsIRequest aRequest,
                         in nsresult aStatus,
                         in wstring aMessage);
+
+
+    /**
+     * Notification called for security progress.  
+     * This method will be called on security transitions (eg HTTP -> HTTPS, 
+     * HTTPS -> HTTP, FOO -> https) and after document load completion.  
+     * It might also be called if an error occurs during network loading.
+     *
+     * These notification will only occur if a security package is installed.
+     */
+
+
+    void onSecurityChange(in nsIWebProgress aWebProgress,
+                          in nsIRequest aRequest,
+                          in long state);
 };
+
+

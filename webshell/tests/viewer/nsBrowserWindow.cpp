@@ -2204,6 +2204,19 @@ nsBrowserWindow::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::AlertCheck(const PRUnichar *dialogTitle, 
+                            const PRUnichar *text, 
+                            const PRUnichar *checkMsg, 
+                            PRBool *checkValue)
+{
+  nsCAutoString str; str.AssignWithConversion(text);
+  printf("%cBrowser Window AlertCheck: %s\n", '\007', str.GetBuffer());
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsBrowserWindow::Confirm(const PRUnichar *dialogTitle, 
                          const PRUnichar *text,
                          PRBool *result)

@@ -431,6 +431,15 @@ nsSingleSignOnPrompt::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 }
 
 NS_IMETHODIMP
+nsSingleSignOnPrompt::AlertCheck(const PRUnichar *dialogTitle, 
+                              const PRUnichar *text, 
+                              const PRUnichar *checkMsg, 
+                              PRBool *checkValue)
+{
+  return mPrompt->AlertCheck(dialogTitle, text, checkMsg, checkValue);
+}
+
+NS_IMETHODIMP
 nsSingleSignOnPrompt::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
   return mPrompt->Confirm(dialogTitle, text, _retval);

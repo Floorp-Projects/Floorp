@@ -31,7 +31,7 @@
 #include "nsIChannel.h"
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
-
+#include "nsIWebBrowserSetup.h"
 #include "WebBrowserChrome.h"
 
 nsVoidArray WebBrowserChrome::sBrowserList;
@@ -129,7 +129,7 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
     mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
-    dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
     
     mBaseWindow = do_QueryInterface(mWebBrowser);
@@ -143,6 +143,10 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
                              0, 0, 450, 450);
     mBaseWindow->Create();
     
+    // Configure what the web browser can and cannot do
+    nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_FALSE);
+
     NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
     return NS_OK;
 }
@@ -234,6 +238,17 @@ WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
 {
     return NS_OK;
 }
+
+
+
+NS_IMETHODIMP 
+WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                    nsIRequest *aRequest, 
+                                    PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //*****************************************************************************
 // WebBrowserChrome::nsIBaseWindow

@@ -426,3 +426,13 @@ nsURLFetcher::OnStatusChange(nsIWebProgress* aWebProgress,
     return NS_OK;
 }
 
+
+
+NS_IMETHODIMP 
+nsURLFetcher::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                               nsIRequest *aRequest, 
+                               PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

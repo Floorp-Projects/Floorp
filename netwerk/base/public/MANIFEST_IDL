@@ -21,3 +21,9 @@ nsIURI.idl
 nsIURL.idl
 nsIURLParser.idl
 nsIWebFilters.idl
+nsISecurityEventSink.idl
+
+
+
+
+

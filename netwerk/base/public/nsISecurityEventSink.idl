@@ -29,9 +29,10 @@ interface nsISecurityEventSink : nsISupports
 
     /**
       * Fired when a security change occurs due to page transitions,
-      * or end document load. This interface will only be called if
-      * a security package is installed (eg Netscape Personal Security
-      * Manager).  State flags are in nsIWebProgressListener.idl
+      * or end document load. This interface should be called by
+      * a security package (eg Netscape Personal Security Manager)
+      * to notify nwIWebProgressListeners that security state has 
+      * changed. State flags are in nsIWebProgressListener.idl
       */
 
     void onSecurityChange(in nsISupports i_Context, in long state);

@@ -1805,6 +1805,18 @@ GtkMozEmbedContentProgress::OnStatusChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+
+
+
+NS_IMETHODIMP 
+GtkMozEmbedContentProgress::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                             nsIRequest *aRequest, 
+                                             PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 GtkMozEmbedChromeProgress::GtkMozEmbedChromeProgress(void)
 {
   NS_INIT_REFCNT();
@@ -1868,6 +1880,15 @@ GtkMozEmbedChromeProgress::OnStatusChange(nsIWebProgress *aWebProgress,
 					   const PRUnichar *aMessage)
 {
   return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+GtkMozEmbedChromeProgress::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                            nsIRequest *aRequest, 
+                                            PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 GtkMozEmbedChromeEventListener::GtkMozEmbedChromeEventListener(void)
