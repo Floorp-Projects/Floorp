@@ -651,7 +651,8 @@ nsMsgAccountManagerDataSource::HasAssertion(nsIRDFResource *aSource,
   //   try to convert the resource to a folder, and then only
   //   answer if it's a server.. any failure falls through to the default case
   //
-  else {
+  // short-circuit on property, so objects like filters, etc, don't get queried
+  else if (aProperty == kNC_IsDefaultServer) {
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = getServerForFolderNode(aSource, getter_AddRefs(server));
     if (NS_SUCCEEDED(rv) && server)
