@@ -31,6 +31,7 @@ extern "C" {
 #include "nsStreamConverter.h"
 #include "nsIMimeEmitter.h"
 #include "nsIURI.h"
+#include "mozITXTToHTMLConv.h"
 
 // SHERRY - Need to get these out of here eventually
 
