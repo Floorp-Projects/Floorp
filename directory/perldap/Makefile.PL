@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.10 1998/08/13 22:37:02 leif Exp $
+# $Id: Makefile.PL,v 1.11 1998/08/13 22:41:10 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -34,7 +34,7 @@ $ldapsdk_loc = $ENV{"LDAPSDKDIR"}; # Full Path to C SDK Top-Level
 $ldapsdk_ver = $ENV{"LDAPSDKVER"}; # 11 or 30
 $ldapsdk_ssl = $ENV{"LDAPSDKSSL"}; # Y to include SSL
 
-print "\nPerlDAP - Perl 5 Module for LDAP\n";
+print "\nPerLDAP - Perl 5 Module for LDAP\n";
 print     "================================\n";
 
 if (!$include_ldap)
