@@ -1773,7 +1773,7 @@ nsBookmarksService::Init()
         if (mPersonalToolbarName.IsEmpty())
         {
             // rjc note: always try to get the string bundle (see above) before trying this
-            rv = mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarks_root").get(), 
+            rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DefaultPersonalToolbarFolder").get(), 
                                             getter_Copies(mPersonalToolbarName));
             if (NS_FAILED(rv) || mPersonalToolbarName.IsEmpty()) {
               // no preference, so fallback to a well-known name
@@ -3008,6 +3008,139 @@ nsBookmarksService::GetURLFromResource(nsIRDFResource* aResource,
     }
 
     return NS_OK;
+}
+
+nsresult
+nsBookmarksService::CopyResource(nsIRDFResource* aOldResource,
+                                 nsIRDFResource* aNewResource)
+{
+    // Make all arcs coming out of aOldResource also come out of
+    // aNewResource. Wallop any previous values.
+    nsCOMPtr<nsISimpleEnumerator> arcsOut;
+    nsresult rv = mInner->ArcLabelsOut(aOldResource, getter_AddRefs(arcsOut));
+    if (NS_FAILED(rv))
+        return rv;
+
+    while (1) {
+        PRBool hasMoreArcsOut;
+        rv = arcsOut->HasMoreElements(&hasMoreArcsOut);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!hasMoreArcsOut)
+            break;
+
+        nsCOMPtr<nsISupports> supports;
+        rv = arcsOut->GetNext(getter_AddRefs(supports));
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(supports);
+        if (!property)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIRDFNode> oldvalue;
+        rv = mInner->GetTarget(aNewResource, property, PR_TRUE,
+                               getter_AddRefs(oldvalue));
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsIRDFNode> newvalue;
+        rv = mInner->GetTarget(aOldResource, property, PR_TRUE,
+                               getter_AddRefs(newvalue));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (oldvalue) {
+            if (newvalue) {
+                 rv = mInner->Change(aNewResource, property, oldvalue, newvalue);
+            }
+            else {
+                 rv = mInner->Unassert(aNewResource, property, oldvalue);
+            }
+        }
+        else if (newvalue) {
+            rv = mInner->Assert(aNewResource, property, newvalue, PR_TRUE);
+        }
+
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    // Make all arcs pointing to aOldResource now point to aNewResource.
+    nsCOMPtr<nsISimpleEnumerator> arcsIn;
+    rv = mInner->ArcLabelsIn(aOldResource, getter_AddRefs(arcsIn));
+    if (NS_FAILED(rv))
+        return rv;
+                                                                                
+    while (1) {
+        PRBool hasMoreArcsIn;
+        rv = arcsIn->HasMoreElements(&hasMoreArcsIn);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!hasMoreArcsIn)
+            break;
+
+        nsCOMPtr<nsISupports> supports;
+        rv = arcsIn->GetNext(getter_AddRefs(supports));
+        if (NS_FAILED(rv))
+            return rv;
+                                                                                
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(supports);
+        if (!property)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsISimpleEnumerator> sources;
+        rv = GetSources(property, aOldResource, PR_TRUE,
+                        getter_AddRefs(sources));
+        if (NS_FAILED(rv))
+            return rv;
+
+        while (1) {
+            PRBool hasMoreSrcs;
+            rv = sources->HasMoreElements(&hasMoreSrcs);
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (!hasMoreSrcs)
+                break;
+
+            nsCOMPtr<nsISupports> supports;
+            rv = sources->GetNext(getter_AddRefs(supports));
+            if (NS_FAILED(rv))
+                return rv;
+
+            nsCOMPtr<nsIRDFResource> source = do_QueryInterface(supports);
+            if (!source)
+                return NS_ERROR_UNEXPECTED;
+
+            rv = mInner->Change(source, property, aOldResource, aNewResource);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsBookmarksService::SetNewPersonalToolbarFolder(nsIRDFResource* aFolder)
+{
+    nsCOMPtr<nsIRDFResource> tempResource;
+    nsresult rv = gRDF->GetAnonymousResource(getter_AddRefs(tempResource));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = CopyResource(kNC_PersonalToolbarFolder, tempResource);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = CopyResource(aFolder, kNC_PersonalToolbarFolder);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return CopyResource(tempResource, aFolder);
 }
 
 NS_IMETHODIMP
@@ -4557,44 +4690,30 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
             continue;
     }
 
-    // if not setting a new Personal Toolbar Folder, just assert new type, and then done
-
-    if (objType != kNC_PersonalToolbarFolder)
-    {
-        if (NS_SUCCEEDED(rv = mInner->Assert(newSource, kNC_FolderType, objType, PR_TRUE)))
-        { }
+    // If not setting a new Personal Toolbar Folder, just assert new type, and
+    // then done.
+    if (objType != kNC_PersonalToolbarFolder) {
+        rv = mInner->Assert(newSource, kNC_FolderType, objType, PR_TRUE);
 
         mDirty = PR_TRUE;
         return rv;
     }
 
-    // else if setting a new Personal Toolbar Folder, we need to work some magic!
-
-    nsCOMPtr<nsIRDFResource>    newAnonURL;
-    if (NS_FAILED(rv = gRDF->GetAnonymousResource(getter_AddRefs(newAnonURL))))
-        return rv;
-    // Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
-    rv = Change(kNC_PersonalToolbarFolder, kNC_URL, kNC_PersonalToolbarFolder, newAnonURL);
-
-
-    // change newSource's URL to be kURINC_PersonalToolbarFolder
-    const char  *newSourceURI = nsnull;
-    if (NS_FAILED(rv = newSource->GetValueConst( &newSourceURI )))  return rv;
-    nsCOMPtr<nsIRDFLiteral>     newSourceLiteral;
-    if (NS_FAILED(rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2(newSourceURI).get(),
-            getter_AddRefs(newSourceLiteral)))) return rv;
-
-    // Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
-    if (NS_FAILED(rv = Change(newSource, kNC_URL, newSourceLiteral, kNC_PersonalToolbarFolder)))
+    // If setting a new Personal Toolbar Folder, we need to work some magic!
+    BeginUpdateBatch();
+    rv = SetNewPersonalToolbarFolder(newSource);
+    EndUpdateBatch();
+    if (NS_FAILED(rv))
         return rv;
 
-    if (NS_FAILED(rv = mInner->Assert(kNC_PersonalToolbarFolder, kNC_FolderType, objType, PR_TRUE)))
+    rv = mInner->Assert(kNC_PersonalToolbarFolder, kNC_FolderType, objType, PR_TRUE);
+    if (NS_FAILED(rv))
         return rv;
 
     mDirty = PR_TRUE;
     Flush();
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult

@@ -854,7 +854,8 @@ var BookmarksController = {
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
         return false;
-      return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
+      return item0 != "NC:PersonalToolbarFolder" &&
+             item0 != "NC:BookmarksRoot" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
       if (length != 1)
         return false;
