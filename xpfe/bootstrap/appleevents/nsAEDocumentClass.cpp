@@ -159,8 +159,8 @@ void AEDocumentClass::GetDocumentFromApp(		DescType			desiredClass,		// cDocumen
 					err = ProcessFormRange((AEDesc *)keyData, &startObject, &stopObject);
 					if (err == noErr)
 					{
-						AETokenDesc	startTokenDesc(&startObject);
-						AETokenDesc	stopTokenDesc(&startObject);
+						ConstAETokenDesc	startTokenDesc(&startObject);
+						ConstAETokenDesc	stopTokenDesc(&startObject);
 						
 						DescType startType = startTokenDesc.GetDispatchClass();
 						DescType stopType  = stopTokenDesc.GetDispatchClass();
@@ -309,7 +309,7 @@ pascal OSErr AEDocumentClass::DocumentAccessor(		DescType			desiredClass,		// cD
 ----------------------------------------------------------------------------*/
 void AEDocumentClass::ProcessFormRelativePostition(const AEDesc* anchorToken, const AEDesc *keyData, DocumentReference *document)
 {
-	AETokenDesc		tokenDesc(anchorToken);
+	ConstAETokenDesc		tokenDesc(anchorToken);
 	OSErr			err = noErr;
 	DescType 			positionEnum;
 	DocumentReference	anchorDocument;
@@ -445,7 +445,7 @@ void AEDocumentClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredType
 	OSErr			err				= noErr;
 	Boolean			usePropertyCode	= false;	
 	DocumentReference	document 			= nil;
-	AETokenDesc		tokenDesc(token);
+	ConstAETokenDesc		tokenDesc(token);
 	DescType			aType			= cDocument;
 	Str63 			documentName;
 	Boolean 			isModified;
@@ -507,7 +507,7 @@ void AEDocumentClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 	Boolean				usePropertyCode;
 	DescType				propertyCode;
 	DocumentReference 		document = nil;
-	AETokenDesc			tokenDesc(token);
+	ConstAETokenDesc			tokenDesc(token);
 	StAEDesc 				propertyRecord;
 
 	usePropertyCode = tokenDesc.UsePropertyCode();
@@ -614,7 +614,7 @@ DocumentReference AEDocumentClass::GetPreviousDocument(DocumentReference docRef)
 ----------------------------------------------------------------------------*/
 DocumentReference AEDocumentClass::GetDocumentReferenceFromToken(const AEDesc *token)
 {
-	AETokenDesc	tokenDesc(token);
+	ConstAETokenDesc	tokenDesc(token);
 	long			docID = tokenDesc.GetDocumentID();
 	
 	return GetDocumentByID(docID);

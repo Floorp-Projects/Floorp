@@ -33,18 +33,21 @@ class AEGetURLSuiteHandler
 {
 public:
 	enum {
-		kSuiteSignature		= 'GURL',
-		kGetURLEvent		= 'GURL'
+		kSuiteSignature			= 'GURL',
+		kGetURLEvent			= 'GURL',
+		
+		kInsideWindowParameter	= 'HWIN',
+		kReferrerParameter		= 'refe'		
 	};
 	
 						AEGetURLSuiteHandler();
 						~AEGetURLSuiteHandler();
 
-	void					HandleGetURLSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
+	void				HandleGetURLSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
 
 protected:
 
-	void					HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply);
+	void				HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply);
 	
 };
 

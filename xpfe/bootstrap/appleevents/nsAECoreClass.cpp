@@ -309,7 +309,7 @@ void AECoreClass::HandleCoreSuiteEvent(const AppleEvent *appleEvent, AppleEvent 
 			err = AEListUtils::GetFirstNonListToken((AEDesc *)&token, &tempToken);
 			if (err == noErr && tempToken.descriptorType != typeNull)
 			{
-				AETokenDesc	tokenDesc(&tempToken);
+				ConstAETokenDesc	tokenDesc(&tempToken);
 				dispatchClass = tokenDesc.GetDispatchClass();
 			}
 			else
@@ -325,7 +325,7 @@ void AECoreClass::HandleCoreSuiteEvent(const AppleEvent *appleEvent, AppleEvent 
 	}
 	else
 	{
-		AETokenDesc	tokenDesc(&token);
+		ConstAETokenDesc	tokenDesc(&token);
 		dispatchClass = tokenDesc.GetDispatchClass();
 	}
 	
@@ -421,7 +421,7 @@ void AECoreClass::PropertyTokenFromList(			DescType			desiredClass,
 			 								AEDesc*			resultToken)
 {
 	DescType		handlerClass;
-	AETokenDesc	containerDesc(containerToken);
+	ConstAETokenDesc	containerDesc(containerToken);
 	
 	switch (containerClass)
 	{
@@ -958,7 +958,7 @@ void AECoreClass::ExtractData(const AEDesc *source, AEDesc *data)
 	
 	if (temp.descriptorType == typeProperty)
 	{
-		AETokenDesc	tokenDesc(&temp);
+		ConstAETokenDesc	tokenDesc(&temp);
 		dispatchClass = tokenDesc.GetDispatchClass();
 	}
 	else

@@ -119,6 +119,16 @@ Size AEGetDescDataSize(const AEDesc *theAEDesc)
 	return dataSize;
 }
 
+/*----------------------------------------------------------------------------
+	AEReplaceDescData 
+	
+	Replace the data in the descriptor
+----------------------------------------------------------------------------*/
+OSErr AEReplaceDescData(DescType typeCode, const void *dataPtr, Size dataSize, AEDesc* theAEDesc)
+{
+	AEDisposeDesc(theAEDesc);
+	return AECreateDesc(typeCode, dataPtr, dataSize, theAEDesc);
+}
 
 #endif //TARGET_CARBON
 

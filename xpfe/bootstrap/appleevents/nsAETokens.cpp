@@ -25,28 +25,35 @@
 
 #include "nsAETokens.h"
 
-AETokenDesc::AETokenDesc(const AEDesc* token)
-    : mTokenValid(false)
+// ---------------------------------------------------------------------------
+ConstAETokenDesc::ConstAETokenDesc(const AEDesc* token)
 {
-    mTokenValid = (AEGetDescDataSize(token) == sizeof(CoreTokenRecord));
-    if (mTokenValid)
-        AEGetDescData(token, &mTokenData, sizeof(CoreTokenRecord));
+	mTokenWasNull = (token->descriptorType == typeNull);
+	
+	if (!mTokenWasNull)
+	{
+		if (::AEGetDescDataSize(token) != sizeof(CoreTokenRecord))
+			ThrowOSErr(paramErr);			// invalid token
+
+		ThrowIfOSErr(::AEGetDescData(token, &mTokenRecord, sizeof(CoreTokenRecord)));
+	}
 }
 
-AETokenDesc::~AETokenDesc() {}
 
 // ---------------------------------------------------------------------------
 
-DescType AETokenDesc::GetDispatchClass() const
+DescType ConstAETokenDesc::GetDispatchClass() const
 {
-	return (mTokenValid ? mTokenData.dispatchClass : typeNull);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.dispatchClass;
 }
 
 // ---------------------------------------------------------------------------
 
-DescType AETokenDesc::GetObjectClass() const
+DescType ConstAETokenDesc::GetObjectClass() const
 {
-	return (mTokenValid ? mTokenData.objectClass : typeNull);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.objectClass;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,38 +61,43 @@ DescType AETokenDesc::GetObjectClass() const
 // so we emulate it here by seeing if the propertyCode field is typeNull,
 // which is interpreted to mean that this is NOT a property token
 
-Boolean AETokenDesc::UsePropertyCode() const
+Boolean ConstAETokenDesc::UsePropertyCode() const
 {
-	return (mTokenValid ? mTokenData.propertyCode != typeNull : false);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return (mTokenRecord.propertyCode != typeNull);
 }
 
 // ---------------------------------------------------------------------------
 
-DescType AETokenDesc::GetPropertyCode() const
+DescType ConstAETokenDesc::GetPropertyCode() const
 {
-	return (mTokenValid ? mTokenData.propertyCode : typeNull);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.propertyCode;
 }
 
 // ---------------------------------------------------------------------------
 
-long AETokenDesc::GetDocumentID() const
+long ConstAETokenDesc::GetDocumentID() const
 {
-	return (mTokenValid ? mTokenData.documentID : typeNull);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.documentID;
 }
 
 // ---------------------------------------------------------------------------
 
-WindowPtr AETokenDesc::GetWindowPtr() const
+WindowPtr ConstAETokenDesc::GetWindowPtr() const
 {
-	return (mTokenValid ? mTokenData.window : nil);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.window;
 }
 
 
 // ---------------------------------------------------------------------------
 
-TAEListIndex AETokenDesc::GetElementNumber() const
+TAEListIndex ConstAETokenDesc::GetElementNumber() const
 {
-	return (mTokenValid ? mTokenData.elementNumber : 0);
+	ThrowErrIfTrue(mTokenWasNull, paramErr);
+	return mTokenRecord.elementNumber;
 }
 
 
@@ -93,33 +105,55 @@ TAEListIndex AETokenDesc::GetElementNumber() const
 #pragma mark -
 
 // ---------------------------------------------------------------------------
+AETokenDesc::AETokenDesc(AEDesc* token)
+:	ConstAETokenDesc(token)
+,	mTokenDesc(token)
+{
+	if (mTokenWasNull)			// we cannot wrap a null token
+		ThrowOSErr(paramErr);
+}
+
+// ---------------------------------------------------------------------------
+AETokenDesc::~AETokenDesc()
+{
+	UpdateDesc();		// update the AEDesc that we wrap
+}
+
+// ---------------------------------------------------------------------------
 
 void AETokenDesc::SetPropertyCode(DescType propertyCode)
 {
-	mTokenData.propertyCode = propertyCode;
+	mTokenRecord.propertyCode = propertyCode;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetDispatchClass(DescType dispatchClass)
 {
-	mTokenData.dispatchClass = dispatchClass;
+	mTokenRecord.dispatchClass = dispatchClass;
 }
 
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetObjectClass(DescType objectClass)
 {
-	mTokenData.objectClass = objectClass;
+	mTokenRecord.objectClass = objectClass;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetElementNumber(TAEListIndex number)
 {
-	mTokenData.elementNumber = number;
+	mTokenRecord.elementNumber = number;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetWindow(WindowPtr wind)
 {
-	mTokenData.window = wind;
+	mTokenRecord.window = wind;
+}
+
+// ---------------------------------------------------------------------------
+void AETokenDesc::UpdateDesc()
+{
+	OSErr	err = ::AEReplaceDescData(mTokenDesc->descriptorType, &mTokenRecord, sizeof(CoreTokenRecord), mTokenDesc);
+	ThrowIfOSErr(err);
 }

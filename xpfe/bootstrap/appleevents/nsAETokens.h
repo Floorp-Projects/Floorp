@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -57,14 +57,16 @@ struct CoreTokenRecord
 typedef struct CoreTokenRecord CoreTokenRecord, *CoreTokenPtr, **CoreTokenHandle;
 
 
-// AETokenDesc
-// A utility class designed to give easy access to the contents of the token
 
-class AETokenDesc
+// ConstAETokenDesc
+// This is a read-only wrapper for an AEDesc* that can be used
+// to read the contents of the token record.
+
+class ConstAETokenDesc
 {
 public:
-						AETokenDesc(const AEDesc* token);
-						~AETokenDesc();
+						ConstAETokenDesc(const AEDesc* token);
+
 
 	DescType			GetDispatchClass() const;
 	DescType 			GetObjectClass() const;
@@ -74,16 +76,39 @@ public:
 	long				GetDocumentID() const;
 	WindowPtr			GetWindowPtr() const;
 	TAEListIndex		GetElementNumber() const;
+
+protected:
+
+	CoreTokenRecord     mTokenRecord;
+	Boolean				mTokenWasNull;		// true if we were passed an empty AEDesc
+};
+
+
+
+// AETokenDesc
+// A read-write wrapper for an AEDesc*. Use this if you want to
+// update the contents of the AEDesc's data handle
+
+class AETokenDesc : public ConstAETokenDesc
+{
+public:
+						AETokenDesc(AEDesc* token);
+						~AETokenDesc();
 	
 	void				SetDispatchClass(DescType dispatchClass);
 	void				SetObjectClass(DescType objectClass);
 	void				SetPropertyCode(DescType propertyCode);
 	void				SetElementNumber(TAEListIndex number);
 	void				SetWindow(WindowPtr wind);
+
+	void				UpdateDesc();			// update the AEDesc wrapped by this class
+
+	CoreTokenRecord&	GetTokenRecord()	{ return mTokenRecord; }
 	
 protected:
-	CoreTokenRecord     mTokenData;
-	Boolean             mTokenValid;
+	
+	AEDesc*				mTokenDesc;
+	
 };
 
 #endif /* __AETOKENS__ */
