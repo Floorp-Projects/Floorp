@@ -73,15 +73,10 @@ class nsDll
 {
 private:
     nsCOMPtr<nsIFile> m_dllSpec; 
-    char *m_registryLocation;
-    
     PRLibrary  *m_instance;	// Load instance
-	nsDllStatus m_status;	// holds current status
     nsIModule  *m_moduleObject;
 
     PRBool      m_markForUnload;
-
-
     void Init(nsIFile *dllSpec);
 
 #ifdef SHOULD_IMPLEMENT_BREAKAFTERLOAD
@@ -90,11 +85,8 @@ private:
 
 public:
  
-	nsDll(nsIFile *dllSpec, const char *registryLocation);
+	nsDll(nsIFile *dllSpec);
 	~nsDll(void);
-
-	// Status checking on operations completed
-	nsDllStatus GetStatus(void) { return (m_status); }
 
 	// Dll Loading
 	PRBool Load(void);
@@ -114,11 +106,7 @@ public:
 	
     PRBool HasChanged(void);
 
-    // WARNING: DONT FREE string returned.
-    const char *GetDisplayPath(void);
-
-    // WARNING: DONT FREE string returned.
-    const char *GetRegistryLocation(void) { return m_registryLocation; }
+    void GetDisplayPath(nsACString& string);
 
 	PRLibrary *GetInstance(void) { return (m_instance); }
 
