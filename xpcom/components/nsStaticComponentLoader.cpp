@@ -29,7 +29,7 @@ public:
     NS_DECL_NSICOMPONENTLOADER
 
     nsStaticComponentLoader() : 
-        mInfo(0), mAutoRegistered(PR_FALSE) {
+        mInfo(0), mCount(0), mAutoRegistered(PR_FALSE) {
 		NS_INIT_REFCNT(); 
 	}
 
@@ -56,9 +56,14 @@ nsresult
 nsStaticComponentLoader::GetModuleInfo()
 {
     if (!mInfo) {
-        NS_PRECONDITION(NSGetStaticModuleInfo, "NSGetStaticModuleInfo must initialized");
         if (! NSGetStaticModuleInfo)
-            return NS_ERROR_NOT_INITIALIZED;
+        {
+            // apparently we're a static build with no static modules
+            // to register. Suspicious, but might be as intended in certain
+            // shared uses (such as by the stand-alone install engine)
+            NS_WARNING("NSGetStaticModuleInfo not initialized -- is this right?");
+            return NS_OK;
+        }
 
         nsStaticModuleInfo *info;
         nsresult rv;
