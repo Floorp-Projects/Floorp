@@ -24,7 +24,6 @@
 #include <algorithm>
 
 #include "CPersonalToolbarTable.h"
-#include "CPersonalToolbarManager.h"
 #include "uapp.h"
 #include "LTableMultiGeometry.h"
 #include "CURLDragHelper.h"
@@ -32,21 +31,63 @@
 #include "CIconTextDragTask.h"
 #include "resgui.h"
 #include "URDFUtilities.h"
-
+#include "prefapi.h"
 #include "miconutils.h"
 #include "UMemoryMgr.h"
+
 
 static const RGBColor blue = { 0, 0, 0xFFFF };
 static const RGBColor black = { 0, 0, 0 };
 static const RGBColor bgColor = { 0xDDDD, 0xDDDD, 0xDDDD };
 
+
 DragSendDataUPP CPersonalToolbarTable::sSendDataUPP;
+
+const char* CPersonalToolbarTable::kMaxButtonCharsPref = "browser.personal_toolbar_button.max_chars";
+const char* CPersonalToolbarTable::kMinButtonCharsPref = "browser.personal_toolbar_button.min_chars";
+
+// init to something wacky so we can tell if they have been initialized already and avoid doing
+// it again with every new toolbar
+Uint32 CPersonalToolbarTable :: mMaxToolbarButtonChars = LArray::index_Last;
+Uint32 CPersonalToolbarTable :: mMinToolbarButtonChars = LArray::index_Last;
+
+
 
 
 CPersonalToolbarTable :: CPersonalToolbarTable ( LStream* inStream )
 	: LSmallIconTable(inStream), LDragAndDrop ( GetMacPort(), this ),
-		mDropCol(LArray::index_Bad), mHiliteCol(LArray::index_Bad), mDropOn(false)
+		mDropCol(LArray::index_Bad), mHiliteCol(LArray::index_Bad), mDropOn(false), mButtonList(NULL),
+		mIsInitialized(false)
 {
+	// setup our window into the RDF world and register this class as the one to be notified
+	// when the personal toolbar changes.
+	HT_Notification notifyStruct = CreateNotificationStruct();
+	HT_Pane toolbarPane = HT_NewPersonalToolbarPane(notifyStruct);
+	if ( !toolbarPane )
+		throw SomethingBadInHTException();
+	mToolbarView = HT_GetSelectedView ( toolbarPane );
+	if ( !mToolbarView )
+		throw SomethingBadInHTException();
+	mToolbarRoot = HT_TopNode ( mToolbarView );
+	if ( !mToolbarRoot )
+		throw SomethingBadInHTException();
+	HT_SetOpenState ( mToolbarRoot, PR_TRUE );	// ensure container is open so we can see its contents
+
+	// read in the maximum size we're allowing for personal toolbar items. If not
+	// found in prefs, use our own. Only do this if the static members have not yet
+	// been initialized to prevent doing it with each new toolbar.
+	if ( mMaxToolbarButtonChars == LArray::index_Last ) {
+		int32 maxToolbarButtonChars, minToolbarButtonChars;
+		if ( PREF_GetIntPref(kMaxButtonCharsPref, &maxToolbarButtonChars ) == PREF_ERROR )
+			mMaxToolbarButtonChars = kMaxPersonalToolbarChars;
+		else
+			mMaxToolbarButtonChars = maxToolbarButtonChars;
+		if ( PREF_GetIntPref(kMinButtonCharsPref, &minToolbarButtonChars ) == PREF_ERROR )
+			mMinToolbarButtonChars = kMinPersonalToolbarChars;
+		else
+			mMinToolbarButtonChars = minToolbarButtonChars;
+	}
+	
 	// LSmallIconTable wants to use a LTableSingleGeometry, but since we want the toolbar
 	// to have variable column widths, replace it with a multiGeometry implementation
 	if ( mTableGeometry ) {
@@ -57,47 +98,227 @@ CPersonalToolbarTable :: CPersonalToolbarTable ( LStream* inStream )
 } // constructor
 
 
+//
+// Destructor
+//
+// Get rid of the button list. Since it is a list of objects, not pointers, we can just
+// let the vector destructor handle everything.
+//
 CPersonalToolbarTable :: ~CPersonalToolbarTable ( )
 {
-	CFrontApp::GetPersonalToolbarManager()->RemoveListener(this);
-		
-	//ее dispose drag routine descriptor
-	
+	delete mButtonList;
+
 } // destructor
 
 
 //
 // FinishCreateSelf
 //
+// Makes sure there is one row to put stuff in and creates a drag send proc.
+//
 void
 CPersonalToolbarTable :: FinishCreateSelf ( )
 {
 	InsertRows ( 1, 1, NULL, 0, false );
-	CFrontApp::GetPersonalToolbarManager()->RegisterNewToolbar(this);
-
+	InitializeButtonInfo();
+	
 	if ( !sSendDataUPP) {
 		sSendDataUPP = NewDragSendDataProc(LDropArea::HandleDragSendData);
 		ThrowIfNil_(sSendDataUPP);
 	}
 
+	mIsInitialized = true;
+	
 } // FinishCreateSelf
+
+
+//
+// InitializeButtonInfo
+//
+// Create our list of information for each bookmark that belongs in the toolbar. This
+// involves iterating over the RDF data in the folder pre-selected to be the personal
+// toolbar folder, compiling some info about it, and adding to an internal list. 
+//
+// Why build into an internal list when HT already has it? The assumption is that users
+// will be resizing windows more often than adding things to the personal toolbar. By
+// keeping a list around, when the user resizes, we don't have to go back to HT for all
+// this information but can keep it in our local list. Better still, this also allows us to have the
+// routines that fill in the toolbar not rely directly on and will allow us to more easily
+// rework the underlying toolbar infrastructure in the future.
+//
+void 
+CPersonalToolbarTable :: InitializeButtonInfo ( )
+{
+	delete mButtonList;
+	mButtonList = new ButtonList( HT_GetItemListCount(GetHTView()) );
+	ButtonListIterator currButton = mButtonList->begin();
+	
+	HT_Cursor cursor = HT_NewCursor( mToolbarRoot );
+	if ( cursor ) {
+		HT_Resource currNode = HT_GetNextItem(cursor);
+		while ( currNode ) {
+			CUserButtonInfo info ( HT_GetNodeName(currNode), HT_GetNodeURL(currNode),
+										0, 0, HT_IsContainer(currNode), currNode);
+			*currButton = info;
+			currNode = HT_GetNextItem(cursor);
+			currButton++;
+			
+		} // for each top-level node
+	}
+	
+} // InitializeButtonInfo
+
+
+//
+// HandleNotification
+//
+// Called when the user makes a change to the personal toolbar folder from some other
+// place (like the bookmarks view). Reset our internal list and tell our listeners
+// that things are now different.
+//
+void
+CPersonalToolbarTable  :: HandleNotification(
+	HT_Notification	/*notifyStruct*/,
+	HT_Resource		node,
+	HT_Event		event)
+{
+	switch (event)
+	{
+		case HT_EVENT_NODE_ADDED:
+		case HT_EVENT_VIEW_REFRESH:			// catches deletes
+		case HT_EVENT_NODE_VPROP_CHANGED:
+		{
+			// only update toolbar if the this view is the one that changed
+			if ( HT_GetView(node) == GetHTView() )						
+				ToolbarChanged();
+			break;
+		}		
+	}
+}
+
+
+//
+// ToolbarChanged
+//
+// The user has just made some change to the toolbar, such as manipulating items in the nav center
+// or changing the personal toolbar folder. Since these changes could be quite extensive, we
+// just clear out the whole thing and start afresh. Tell all the toolbars that they have to
+// clear themselves and grab the new information. Changes to the toolbar directly, such as by
+// drag and drop, are handled elsewhere.
+//
+void
+CPersonalToolbarTable :: ToolbarChanged ( )
+{
+	if ( mCols )
+		RemoveCols ( mCols, 1, false ); 
+	InitializeButtonInfo();				// out with the old...
+	FillInToolbar();					// ...in with the new
+
+} // ToolbarHeaderChanged
+
+
+//
+// RemoveButton
+//
+// The user has explicitly removed a button from the toolbar in one of the windows (probably
+// by dragging it to the trash). Let HT get rid of it.
+//
+void 
+CPersonalToolbarTable :: RemoveButton ( Uint32 inIndex )
+{
+	// remove it from HT
+	HT_Resource deadNode = HT_GetNthItem ( GetHTView(), URDFUtilities::PPRowToHTRow(inIndex) );
+	HT_RemoveChild ( mToolbarRoot, deadNode );
+
+	// no need to refresh because we will get an HT view update event and
+	// refresh at that time. The deleted node will also be removed from the list as it is
+	// rebuilt.
+	
+} // RemoveButton
+
+
+//
+// AddButton
+//
+// Given a pre-created HT item, add it to the personal toolbar folder before the
+// given id and tell all the toolbars to update. This is called when the user
+// drops an item from another RDF source on a personal toolbar
+//
+void 
+CPersonalToolbarTable :: AddButton ( HT_Resource inBookmark, Uint32 inIndex )
+{
+	// Add this to RDF.
+	if ( mButtonList->size() ) {
+		// If we get back a null resource then we must be trying to drop after
+		// the last element, or there just plain aren't any in the toolbar. Re-fetch the last element
+		// (using the correct index) and add the new bookmark AFTER instead of before or just add
+		// it to the parent for the case of an empty toolbar
+		PRBool before = PR_TRUE;
+		HT_Resource dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
+		if ( ! dropOn ) {
+			dropOn = (*mButtonList)[URDFUtilities::PPRowToHTRow(inIndex) - 1].GetHTResource();
+			before = PR_FALSE;
+		}
+		HT_DropHTRAtPos ( dropOn, inBookmark, before );
+	} // if items in toolbar
+	else
+		HT_DropHTROn ( mToolbarRoot, inBookmark );
+		
+	// no need to tell toolbars to refresh because we will get an HT node added event and
+	// refresh at that time.
+	
+} // Addbutton
+
+
+//
+// AddButton
+//
+// Given just a URL, add it to the personal toolbar folder before the
+// given id and tell all the toolbars to update. This is called when the user
+// drops an item from another RDF source on a personal toolbar
+//
+void 
+CPersonalToolbarTable :: AddButton ( const string & inURL, const string & inTitle, Uint32 inIndex )
+{
+	// Add this to RDF.
+	if ( mButtonList->size() ) {
+		// If we get back a null resource then we must be trying to drop after
+		// the last element, or there just plain aren't any in the toolbar. Re-fetch the last element
+		// (using the correct index) and add the new bookmark AFTER instead of before or just add
+		// it to the parent for the case of an empty toolbar
+		PRBool before = PR_TRUE;
+		HT_Resource dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
+		if ( ! dropOn ) {
+			dropOn = (*mButtonList)[URDFUtilities::PPRowToHTRow(inIndex) - 1].GetHTResource();
+			before = PR_FALSE;
+		}
+		HT_DropURLAndTitleAtPos ( dropOn, const_cast<char*>(inURL.c_str()), 
+									const_cast<char*>(inTitle.c_str()), before );
+	} // if items in toolbar
+	else
+		HT_DropURLAndTitleOn ( mToolbarRoot, const_cast<char*>(inURL.c_str()), 
+									const_cast<char*>(inTitle.c_str()) );  
+		
+	// no need to tell toolbars to refresh because we will get an HT node added event and
+	// refresh at that time.
+	
+} // Addbutton
 
 
 //
 // FillInToolbar
 //
-// Add rows to the table based on the bookmark information in the manager object. This will try to give each
-// column as much space as possible on the fly. Don't make any assumptions about the incoming
-// text mode...be paranoid!
+// Add rows to the table and try to give each column as much space as possible on the fly. 
+// Don't make any assumptions about the incoming text mode...be paranoid!
 //
 void 
 CPersonalToolbarTable :: FillInToolbar ( )
 {
 	const Uint32 kPadRight = 15;
 	const Uint32 kBMIconWidth = 28;
-	const Uint32 kButtonCount = CFrontApp::GetPersonalToolbarManager()->GetButtons().GetCount();
-	const Uint32 kMaxLength = CFrontApp::GetPersonalToolbarManager()->GetMaxToolbarButtonChars();
-	const Uint32 kMinLength = CFrontApp::GetPersonalToolbarManager()->GetMinToolbarButtonChars();
+	const Uint32 kButtonCount = mButtonList->size();
+	const Uint32 kMaxLength = GetMaxToolbarButtonChars();
+	const Uint32 kMinLength = GetMinToolbarButtonChars();
 
 	StTextState saved;
 	UTextTraits::SetPortTextTraits(kTextTraitsID);
@@ -106,21 +327,23 @@ CPersonalToolbarTable :: FillInToolbar ( )
 	// create an array that holds the # of characters currently in each column. Initialize this with
 	// the min column size (specified in prefs), or less if the title has less chars.
 	//
-	Uint16* widthArray = new Uint16[kButtonCount];
+	vector<Uint16> widthArray(kButtonCount);
+	vector<Uint16>::iterator widthArrayIter = widthArray.begin();
 	Uint16 totalWidth = 0;
-	CUserButtonInfo* curr;
-	Uint32 widthArrayIter = 0;
-	LArrayIterator it ( CFrontApp::GetPersonalToolbarManager()->GetButtons() );
-	while ( it.Next(&curr) ) {
+	for ( ButtonListConstIterator it = mButtonList->begin(); it != mButtonList->end(); it++ ) {
 		
-		Uint16 numChars = min ( kMinLength, curr->GetName().length() );
-		widthArray[widthArrayIter] = numChars;
-		totalWidth += ::TextWidth(curr->GetName().c_str(), 0, numChars) + kBMIconWidth;		// extend the total...
+		Uint16 numChars = min ( kMinLength, it->GetName().length() );
+		*widthArrayIter = numChars;
+		totalWidth += ::TextWidth(it->GetName().c_str(), 0, numChars) + kBMIconWidth;		// extend the total...
 		widthArrayIter++;
 		
 	} // initialize each item
 	
-	InsertCols ( kButtonCount, 0, NULL, 0, false );
+	
+	if ( mCols > kButtonCount )
+		RemoveRows ( mCols - kButtonCount, 0, false );
+	else
+		InsertCols ( kButtonCount - mCols, 0, NULL, 0, false );
 	
 	// compute how much room we have left to divvy out after divvying out the minimum above. Leave
 	// a few pixels on the right empty...
@@ -132,17 +355,15 @@ CPersonalToolbarTable :: FillInToolbar ( )
 	while ( emptySpace > 0 ) {
 
 		bool updated = false;
-		Uint32 i = 0;
-		LArrayIterator it2 ( CFrontApp::GetPersonalToolbarManager()->GetButtons() );
-		while ( it2.Next(&curr) ) {
-			if ( emptySpace && widthArray[i] < curr->GetName().length() && widthArray[i] < kMaxLength ) {
+		widthArrayIter = widthArray.begin();
+		for ( ButtonListConstIterator it = mButtonList->begin(); it != mButtonList->end(); it++, widthArrayIter++ ) {
+			if ( emptySpace && *widthArrayIter < it->GetName().length() && *widthArrayIter < kMaxLength ) {
 				// subtract off the single character we're adding to the column
-				char addedChar = curr->GetName()[widthArray[i]];
+				char addedChar = it->GetName()[*widthArrayIter];
 				emptySpace -= ::TextWidth(&addedChar, 0, 1);
-				widthArray[i]++;
+				(*widthArrayIter)++;
 				updated = true;			// we found something to add, allow us to continue
 			}
-			i++;
 		} // for each column
 
 		// prevent infinite looping if no column can be expanded and we still have extra room remaining
@@ -155,11 +376,10 @@ CPersonalToolbarTable :: FillInToolbar ( )
 	// assign the widths to the columns and set the data in the columns.
 	//
 	STableCell where (1, 1);
-	widthArrayIter = 0;
-	LArrayIterator it3 ( CFrontApp::GetPersonalToolbarManager()->GetButtons() );
-	while ( it3.Next(&curr) ) {
+	widthArrayIter = widthArray.begin();
+	for ( ButtonListConstIterator it = mButtonList->begin(); it != mButtonList->end(); it++ ) {
 
-		string bmText = curr->GetName();
+		const string & bmText = it->GetName();
 		Uint32 textLength = bmText.length();
 
 		//
@@ -167,10 +387,10 @@ CPersonalToolbarTable :: FillInToolbar ( )
 		// the width of the string. If the name is longer than the max, chop it.
 		//
 		SIconTableRec data;
-		Uint16 dispLength = widthArray[widthArrayIter];
+		Uint16 dispLength = *widthArrayIter;
 		::BlockMove ( bmText.c_str(), &data.name[1], dispLength + 1 );
 		data.name[0] = dispLength <= kMaxLength ? dispLength : kMaxLength;	
-		data.iconID = curr->IsFolder() ? kFOLDER_ICON : kBOOKMARK_ICON;
+		data.iconID = it->IsFolder() ? kFOLDER_ICON : kBOOKMARK_ICON;
 		SetCellData ( where, &data, sizeof(SIconTableRec) );
 		Uint32 pixelWidth = ::TextWidth(bmText.c_str(), 0, dispLength)+ kBMIconWidth;
 		mTableGeometry->SetColWidth (  pixelWidth, where.col, where.col );
@@ -181,8 +401,6 @@ CPersonalToolbarTable :: FillInToolbar ( )
 	} // for each bookmark in the folder
 
 	Refresh();
-	
-	delete[] widthArray;
 	
 } // FillInToolbar
 
@@ -328,11 +546,9 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 			// create the drag task
 			Rect bounds;
 			GetLocalCellRect ( inCell, bounds );
-			CUserButtonInfo* data = GetButtonInfo ( inCell.col );
-			string finalCaption = CURLDragHelper::MakeIconTextValid ( data->GetName().c_str() );
-			HT_Resource node = HT_GetNthItem(CFrontApp::GetPersonalToolbarManager()->GetHTView(), 
-												URDFUtilities::PPRowToHTRow(inCell.col));
-			CIconTextSuite suite ( this, bounds, kBOOKMARK_ICON, finalCaption, node );
+			const CUserButtonInfo & data = GetInfoForPPColumn(inCell.col);
+			string finalCaption = CURLDragHelper::MakeIconTextValid ( data.GetName().c_str() );
+			CIconTextSuite suite ( this, bounds, kBOOKMARK_ICON, finalCaption, data.GetHTResource() );
 			CIconTextDragTask theTask(inMouseDown.macEvent, &suite, bounds);
 			
 			// setup our special data transfer proc called upon drag completion
@@ -343,24 +559,22 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 			
 			// remove the url if it went into the trash
 			if ( theTask.DropLocationIsFinderTrash() )
-				CFrontApp::GetPersonalToolbarManager()->RemoveButton ( inCell.col );
+				RemoveButton ( inCell.col );
 			
 		} // if d&d allowed
 		
 	} // if drag
 	else {
 	
-		CUserButtonInfo* data = GetButtonInfo ( inCell.col );
+		const CUserButtonInfo & data = GetInfoForPPColumn(inCell.col);
 		
 		// code for context menu here, if appropriate....
 		
-		if ( data->IsFolder() ) {
+		if ( data.IsFolder() ) {
 			SysBeep(1);
 		}
-		else {
-			CUserButtonInfo* clicked = GetButtonInfo ( inCell.col );
-			CFrontApp::DoGetURL( clicked->GetURL().c_str());
-		}
+		else
+			CFrontApp::DoGetURL( data.GetURL().c_str() );
 		
 	} // else just a click
 	
@@ -444,28 +658,6 @@ CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLoca
 
 
 //
-// ListenToMessage
-//
-// Handle broadcasts from the manager object, such as the personal toolbar folder being
-// changed or bookmarks being added/deleted/moved.
-//
-void
-CPersonalToolbarTable :: ListenToMessage ( MessageT inMessage, void* /*ioPtr*/ )
-{
-	switch ( inMessage ) {
-	
-		case CPersonalToolbarManager::k_PTToolbarChanged:
-			if ( mCols )
-				RemoveCols ( mCols, 1, false ); 				// out with the old...
-			FillInToolbar();
-			break;
-				
-	} // case of which message
-	
-} // ListenToMessage
-
-
-//
 // DoDragSendData
 //
 // When the drag started, the ClickCell() routine cached which cell was the start of the drag in
@@ -476,9 +668,9 @@ void
 CPersonalToolbarTable :: DoDragSendData( FlavorType inFlavor, ItemReference inItemRef,
 											DragReference inDragRef)
 {
-	CUserButtonInfo* dragged = GetButtonInfo ( mDraggedCell.col );
-	CURLDragHelper::DoDragSendData ( dragged->GetURL().c_str(), 
-										const_cast<char*>(dragged->GetName().c_str()),
+	const CUserButtonInfo & dragged = GetInfoForPPColumn ( mDraggedCell.col );
+	CURLDragHelper::DoDragSendData ( dragged.GetURL().c_str(), 
+										const_cast<char*>(dragged.GetName().c_str()),
 										inFlavor, inItemRef, inDragRef );
 
 } // DoDragSendData
@@ -527,9 +719,9 @@ CPersonalToolbarTable :: InsideDropArea ( DragReference inDragRef )
 	GetLocalCellRect ( STableCell(1, colMouseIsOver), localRect );
 	TableIndexT newDropCol;
 	bool newDropOn = false;
-	CUserButtonInfo* info = GetButtonInfo(colMouseIsOver);
-	if ( info ) {
-		if ( info->IsFolder() ) {
+	if ( colMouseIsOver <= mCols ) {
+		const CUserButtonInfo & info = GetInfoForPPColumn(colMouseIsOver);
+		if ( info.IsFolder() ) {
 			Rect leftSide, rightSide;
 			ComputeFolderDropAreas ( localRect, leftSide, rightSide );
 			if ( ::PtInRect(mouseLoc, &leftSide) )
@@ -657,7 +849,7 @@ CPersonalToolbarTable :: ComputeFolderDropAreas ( const Rect & inLocalCellRect, 
 void
 CPersonalToolbarTable :: DrawDividingLine( TableIndexT inCol )
 {
-	Uint32 numItems = CFrontApp::GetPersonalToolbarManager()->GetButtons().GetCount();
+	Uint32 numItems = mButtonList->size();
 	if ( !numItems )			// don't draw anything if toolbar empty
 		return;
 	
@@ -743,7 +935,7 @@ CPersonalToolbarTable :: HandleDropOfHTResource ( HT_Resource inDropNode )
 		SysBeep(1);		//еее implement
 	}
 	else
-		CFrontApp::GetPersonalToolbarManager()->AddButton ( inDropNode, mDropCol );	
+		AddButton ( inDropNode, mDropCol );	
 
 } // HandleDropOfHTResource
 
@@ -761,7 +953,7 @@ CPersonalToolbarTable :: HandleDropOfPageProxy ( const char* inURL, const char* 
 		SysBeep(1);		//еее implement
 	}
 	else
-		CFrontApp::GetPersonalToolbarManager()->AddButton ( inURL, inTitle, mDropCol );
+		AddButton ( inURL, inTitle, mDropCol );
 
 } // HandleDropOfPageProxy
 
@@ -793,21 +985,6 @@ CPersonalToolbarTable :: HandleDropOfText ( const char* inTextData )
 } // HandleDropOfText
 
 
-//
-// GetButtonInfo
-//
-// fetch cell data given a column #.
-//
-CUserButtonInfo* 
-CPersonalToolbarTable :: GetButtonInfo ( Uint32 inColumn ) 
-{
-	CUserButtonInfo* temp = nil;
-	CFrontApp::GetPersonalToolbarManager()->GetButtons().FetchItemAt (inColumn, &temp );
-
-	return temp;
-
-} // GetButtonInfo
-
 void
 CPersonalToolbarTable :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
 														StringPtr outTip )
@@ -820,9 +997,9 @@ CPersonalToolbarTable :: FindTooltipForMouseLocation ( const EventRecord& inMacE
 	
 	STableCell hitCell;
 	if ( GetCellHitBy(where, hitCell) && hitCell.col <= mCols ) {
-		CUserButtonInfo* bkmk = GetButtonInfo(hitCell.col);
-		outTip[0] = bkmk->GetName().length();
-		strcpy ( (char*) &outTip[1], bkmk->GetName().c_str() );
+		const CUserButtonInfo & bkmk = GetInfoForPPColumn(hitCell.col);
+		outTip[0] = bkmk.GetName().length();
+		strcpy ( (char*) &outTip[1], bkmk.GetName().c_str() );
 	}
 	else
 		::GetIndString ( outTip, 10506, 12);		// supply a helpful message...
@@ -835,7 +1012,12 @@ CPersonalToolbarTable :: ResizeFrameBy ( Int16 inWidth, Int16 inHeight, Boolean 
 {
 	LSmallIconTable::ResizeFrameBy(inWidth, inHeight, inRefresh);
 	
-	ListenToMessage ( CPersonalToolbarManager::k_PTToolbarChanged, nil );
+	// don't call ToolbarChanged() because that will reload from HT. Nothing has really
+	// changed except for the width of the toolbar. Checking if we've gone through
+	// FinishCreateSelf() will cut down on the number of times we recompute the toolbar
+	// as the window is being created.
+	if ( mIsInitialized )
+		FillInToolbar();
 	 
 } // ResizeFrameTo
 
@@ -890,3 +1072,45 @@ CPersonalToolbarTable :: RedrawCellWithTextClipping ( const STableCell & inCell 
 	DrawCell(inCell, localRect);
 
 } // RedrawCellWithTextClipping
+
+
+//
+// GetInfoForPPColumn
+//
+// Given a column in a powerplant table, this returns a reference to the appropriate CUserButtonInfo
+// class for that column. 
+inline const CUserButtonInfo & 
+CPersonalToolbarTable :: GetInfoForPPColumn ( const TableIndexT & inCol ) const
+{
+	// recall PP is 1-based and HT (and vectors) are 0 based, so do the conversion first
+	return (*mButtonList)[URDFUtilities::PPRowToHTRow(inCol)];
+
+} // GetInfoForPPColumn
+
+
+#pragma mark -
+
+///////////////////////////////////////////////////////////////////////////////////
+//									Class CUserButtonInfo
+///////////////////////////////////////////////////////////////////////////////////
+
+CUserButtonInfo::CUserButtonInfo( const string & pName, const string & pURL, Uint32 nBitmapID,
+									 Uint32 nBitmapIndex, bool bIsFolder, HT_Resource inRes )
+	: mName(pName), mURL(pURL), mBitmapID(nBitmapID), mBitmapIndex(nBitmapIndex), 
+		mIsResourceID(true), mIsFolder(bIsFolder), mResource(inRes)
+{
+}
+
+
+CUserButtonInfo :: CUserButtonInfo ( )
+	: mBitmapID(0), mBitmapIndex(0), mIsResourceID(false), mIsFolder(false), mResource(NULL)
+{
+
+}
+
+
+CUserButtonInfo::~CUserButtonInfo()
+{
+	// string destructor takes care of everything...
+}
+

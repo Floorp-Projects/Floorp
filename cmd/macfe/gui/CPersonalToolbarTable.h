@@ -22,62 +22,108 @@
 
 #pragma once
 
+#include <vector>
+
 #include <LSmallIconTable.h>
 #include "ntypes.h"
 #include "CDynamicTooltips.h"
 #include "CURLDragHelper.h"
+#include "CRDFNotificationHandler.h"
 
 
-class CPersonalToolbarManager;
-class CUserButtonInfo;
+//
+// CUserButtonInfo
+//
+class CUserButtonInfo 
+{
+public:
+
+	CUserButtonInfo( const string & pName, const string & pURL, Uint32 nBitmapID, Uint32 nBitmapIndex, 
+						bool bIsFolder, HT_Resource inRes );
+	CUserButtonInfo ( ) ;
+	~CUserButtonInfo();
+
+	const string & GetName(void) const 				{ return mName; }
+	const string & GetURL(void) const 				{ return mURL; }
+	HT_Resource GetHTResource() const				{ return mResource; }
+	
+	bool IsResourceID(void) const 					{ return mIsResourceID; }
+	Uint32 GetBitmapID(void) const 					{ return mBitmapID; }
+	Uint32 GetBitmapIndex(void) const 				{ return mBitmapIndex; }
+	bool IsFolder(void) const 						{ return mIsFolder;}
+
+private:
+	string mName;
+	string mURL;
+	bool	mIsResourceID;
+	Uint32	mBitmapID;
+	Uint32	mBitmapIndex;
+	string	mBitmapFile;
+	bool	mIsFolder;
+	HT_Resource mResource;
+
+}; // CUserButtonInfo
 
 
-class CPersonalToolbarTable : public LSmallIconTable, public LListener, public LDragAndDrop,
-								public CDynamicTooltipMixin, public CHTAwareURLDragMixin
+class CPersonalToolbarTable : public LSmallIconTable, public LDragAndDrop,
+								public CDynamicTooltipMixin, public CHTAwareURLDragMixin,
+								public CRDFNotificationHandler
 {
 	public:
 	
 		enum { class_ID = 'PerT', kTextTraitsID = 130 };
 		enum { kBOOKMARK_ICON = 15313, kFOLDER_ICON = -3999 };
-
+		enum { kMinPersonalToolbarChars = 15, kMaxPersonalToolbarChars = 30 };
+		
 		CPersonalToolbarTable ( LStream* inStream ) ;
 		virtual ~CPersonalToolbarTable ( ) ;
 
-		// for handling mouse tracking
+			// calculate tooltip to display url text for the item mouse is over
+		virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
+													StringPtr outTip );
+
+	protected:
+	
+		class SomethingBadInHTException { } ;
+
+		typedef vector<CUserButtonInfo>		ButtonList;
+		typedef ButtonList::iterator		ButtonListIterator;
+		typedef ButtonList::const_iterator	ButtonListConstIterator;
+		
+		virtual void FillInToolbar ( ) ;
+		void InitializeButtonInfo ( ) ;
+		void ToolbarChanged ( ) ;
+
+			//--- utilities
+		Uint32 GetMaxToolbarButtonChars() const { return mMaxToolbarButtonChars; }
+		Uint32 GetMinToolbarButtonChars() const { return mMinToolbarButtonChars; }
+		void SetMaxToolbarButtonChars(Uint32 inNewMax) { mMaxToolbarButtonChars = inNewMax; }
+		void SetMinToolbarButtonChars(Uint32 inNewMin) { mMinToolbarButtonChars = inNewMin; }
+		HT_View GetHTView ( ) const { return mToolbarView; }
+		const CUserButtonInfo & GetInfoForPPColumn ( const TableIndexT & inCol ) const;
+
+		void AddButton ( HT_Resource inBookmark, Uint32 inIndex) ;
+		void AddButton ( const string & inURL, const string & inTitle, Uint32 inIndex ) ;
+		void RemoveButton ( Uint32 inIndex );
+
+		void HandleNotification( HT_Notification notifyStruct, HT_Resource node, HT_Event event);
+
+			// for handling mouse tracking
 		virtual void MouseLeave ( ) ;
 		virtual void MouseWithin ( Point inPortPt, const EventRecord& ) ;
 		virtual void Click ( SMouseDownEvent &inMouseDown ) ;
 
-		virtual void FillInToolbar ( ) ;
-		
-		virtual void ListenToMessage ( MessageT inMessage, void* ioPtr ) ;
-		
-		// send data when a drop occurs
-		void DoDragSendData( FlavorType inFlavor, ItemReference inItemRef, DragReference inDragRef) ;
-		void ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
-								ItemReference inItemRef, Rect &inItemBounds ) ;
-
-		// calculate tooltip to display url text for the item mouse is over
-		virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
-													StringPtr outTip );
-													
-		virtual void ResizeFrameBy ( Int16 inWidth, Int16 inHeight, Boolean inRefresh );
-
-	protected:
-	
 		virtual void ClickCell(const STableCell	&inCell, const SMouseDownEvent &inMouseDown);
 		virtual Boolean ClickSelect( const STableCell &inCell, const SMouseDownEvent &inMouseDown);
 		virtual void FinishCreateSelf ( ) ;
 		virtual void DrawCell ( const STableCell &inCell, const Rect &inLocalRect ) ;
 		virtual void RedrawCellWithHilite ( const STableCell inCell, bool inHiliteOn ) ;
+		virtual void ResizeFrameBy ( Int16 inWidth, Int16 inHeight, Boolean inRefresh );
 
-		// override to do nothing
+			// override to do nothing
 		virtual void HiliteSelection ( Boolean /*inActively*/, Boolean /*inHilite*/) { } ;
 		
-		// fetch cell data given a column #
-		CUserButtonInfo* GetButtonInfo ( Uint32 inColumn ) ;
-		
-		// drag and drop overrides for drop feedback, etc
+			// drag and drop overrides for drop feedback, etc
 		void HiliteDropArea ( DragReference inDragRef );
 		Boolean ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef ) ;
 		void InsideDropArea ( DragReference inDragRef ) ;
@@ -93,10 +139,14 @@ class CPersonalToolbarTable : public LSmallIconTable, public LListener, public L
 												Rect & oRightSide ) ;
 		virtual void ComputeFolderDropAreas ( const Rect & inLocalCellRect, Rect & oLeftSide, 
 												Rect & oRightSide ) ;
-
 		virtual Rect ComputeTextRect ( const SIconTableRec & inText, const Rect & inLocalRect ) ;
 		virtual void RedrawCellWithTextClipping ( const STableCell & inCell ) ;
 
+			// send data when a drop occurs
+		void DoDragSendData( FlavorType inFlavor, ItemReference inItemRef, DragReference inDragRef) ;
+		void ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+								ItemReference inItemRef, Rect &inItemBounds ) ;
+	
 			// these are valid only during a D&D and are used for hiliting and determining
 			// the drop location
 		STableCell	mDraggedCell;
@@ -105,6 +155,17 @@ class CPersonalToolbarTable : public LSmallIconTable, public LListener, public L
 		Rect		mTextHiliteRect;	// cached rect drawn behind selected folder title
 		TableIndexT mHiliteCol;			// which column is mouse hovering over?
 
+		HT_View		mToolbarView;
+		HT_Resource	mToolbarRoot;
+
+		ButtonList*	mButtonList;		// list of buttons pulled from HT
+		bool		mIsInitialized;		// is this class ready for prime time?
+		
 		static DragSendDataUPP sSendDataUPP;
+
+		static Uint32 mMaxToolbarButtonChars;
+		static Uint32 mMinToolbarButtonChars;
+		static const char* kMaxButtonCharsPref;
+		static const char* kMinButtonCharsPref;
 
 }; // CPersonalToolbarTable
