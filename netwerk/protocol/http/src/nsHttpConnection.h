@@ -136,24 +136,39 @@ private:
 // nsHttpConnectionInfo - holds the properties of a connection
 //-----------------------------------------------------------------------------
 
-class nsHttpConnectionInfo : public nsISupports
+class nsHttpConnectionInfo
 {
 public:
-    NS_DECL_ISUPPORTS
-
     nsHttpConnectionInfo(const char *host, PRInt32 port,
                          nsIProxyInfo* proxyInfo,
                          PRBool usingSSL=PR_FALSE)
-        : mProxyInfo(proxyInfo)
+        : mRef(0)
+        , mProxyInfo(proxyInfo)
         , mUsingSSL(usingSSL) 
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
-        NS_INIT_ISUPPORTS();
-
         mUsingHttpProxy = (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http"));
 
         SetOriginServer(host, port);
+    }
+    
+   ~nsHttpConnectionInfo()
+    {
+        LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
+    }
+
+    nsrefcnt AddRef()
+    {
+        return PR_AtomicIncrement((PRInt32 *) &mRef);
+    }
+
+    nsrefcnt Release()
+    {
+        nsrefcnt n = PR_AtomicDecrement((PRInt32 *) &mRef);
+        if (n == 0)
+            delete this;
+        return n;
     }
 
     nsresult SetOriginServer(const char* host, PRInt32 port)
@@ -163,11 +178,6 @@ public:
         mPort = port == -1 ? DefaultPort() : port;
         
         return NS_OK;
-    }
-    
-    virtual ~nsHttpConnectionInfo()
-    {
-        LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
     }
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
@@ -200,20 +210,21 @@ public:
 
     }
 
-    const char *Host()      { return mHost; }
-    PRInt32     Port()      { return mPort; }
-    nsIProxyInfo *ProxyInfo() { return mProxyInfo; }
-    PRBool      UsingHttpProxy() { return mUsingHttpProxy; }
-    PRBool      UsingSSL()  { return mUsingSSL; }
+    const char   *Host()           { return mHost; }
+    PRInt32       Port()           { return mPort; }
+    nsIProxyInfo *ProxyInfo()      { return mProxyInfo; }
+    PRBool        UsingHttpProxy() { return mUsingHttpProxy; }
+    PRBool        UsingSSL()       { return mUsingSSL; }
 
-    PRInt32     DefaultPort() { return mUsingSSL ? 443 : 80; }
+    PRInt32       DefaultPort()    { return mUsingSSL ? 443 : 80; }
             
 private:
-    nsXPIDLCString     mHost;
-    PRInt32            mPort;
+    nsrefcnt               mRef;
+    nsXPIDLCString         mHost;
+    PRInt32                mPort;
     nsCOMPtr<nsIProxyInfo> mProxyInfo;
-    PRPackedBool       mUsingHttpProxy;
-    PRPackedBool       mUsingSSL;
+    PRPackedBool           mUsingHttpProxy;
+    PRPackedBool           mUsingSSL;
 };
 
 #endif // nsHttpConnection_h__

@@ -730,9 +730,3 @@ nsHttpConnection::OnProgress(nsIRequest *req, nsISupports *ctx,
     // we'll generate these ourselves from OnDataAvailable.
     return NS_OK;
 }
-
-//-----------------------------------------------------------------------------
-// nsHttpConnectionInfo::nsISupports
-//-----------------------------------------------------------------------------
-
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsHttpConnectionInfo)
