@@ -44,6 +44,12 @@ public:
                                               void *arg);
      
 protected:
+  enum {
+    JSSTUBGEN_PRIMARY,
+    JSSTUBGEN_NONPRIMARY,
+    JSSTUBGEN_DEFAULT
+  };
+
      void     GenerateIncludes(IdlSpecification &aSpec);
      void     GenerateIIDDefinitions(IdlSpecification &aSpec);
      void     GenerateDefPtrs(IdlSpecification &aSpec);
@@ -62,8 +68,8 @@ protected:
 
      void     GeneratePropGetter(ofstream *file,
                                  IdlInterface &aInterface,
-                                 IdlAttribute &aAttribute,
-                                 PRBool aIsPrimary);
+                                 IdlVariable &aAttribute,
+                                 PRInt32 aType);
      void     GeneratePropSetter(ofstream *file,
                                  IdlInterface &aInterface,
                                  IdlAttribute &aAttribute,

@@ -97,6 +97,15 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       }
     }
   }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->GetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
+    }
+  }
 
   return PR_TRUE;
 }
@@ -157,6 +166,15 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           return rval;
         }
       }
+    }
+  }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->SetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
     }
   }
 

@@ -38,9 +38,9 @@ function htmlString(node, indent)
             var countAttrs = attributes.length
             var index = 0
             while(index < countAttrs) {
-                att = attributes.item(index)
+                att = attributes[index]
                 if (null != att) {
-                    html += att.toString()
+                    html += att.name + "=" + att.value;
                 }
                 index++
             }
@@ -56,7 +56,7 @@ function htmlString(node, indent)
             var length = children.length
             var count = 0;
             while(count < length) {
-                child = children.item(count)
+                child = children[count]
                 html += htmlString(child, indent)
                 count++
             }

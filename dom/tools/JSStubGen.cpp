@@ -231,7 +231,7 @@ static const char *kPropFuncBeginStr = "\n"
 "  if (JSVAL_IS_INT(id)) {\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
-static const char *kPropFuncEndStr = 
+static const char *kPropFuncDefaultStr = 
 "      default:\n"
 "      {\n"
 "        nsIJSScriptObject *object;\n"
@@ -243,7 +243,23 @@ static const char *kPropFuncEndStr =
 "        }\n"
 "      }\n"
 "    }\n"
-"  }\n"
+"  }\n";
+
+static const char *kPropFuncDefaultItemStr = 
+"      default:\n"
+"      {\n"
+"        %s prop;\n"
+"        if (NS_OK == a->Item(JSVAL_TO_INT(id), %sprop)) {\n"
+"%s"
+"        }\n"
+"        else {\n"
+"          return JS_FALSE;\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n";
+
+static const char *kPropFuncEndStr = 
 "  else {\n"
 "    nsIJSScriptObject *object;\n"
 "    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
@@ -261,7 +277,10 @@ static const char *kPropFuncEndStr =
      sprintf(buffer, kPropFuncBeginStr, className, op, op, className, className, className)
 
 #define JSGEN_GENERATE_PROPFUNCEND(buffer, op)   \
-     sprintf(buffer, kPropFuncEndStr, op, op)
+     sprintf(buffer, kPropFuncEndStr, op)
+
+#define JSGEN_GENERATE_PROPFUNCDEFAULT(buffer, op)   \
+     sprintf(buffer, kPropFuncDefaultStr, op)
 
 static const char *kPropCaseBeginStr = 
 "      case %s_%s:\n"
@@ -311,20 +330,46 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       *file << buf;
 
       if (aIsGetter) {
-        GeneratePropGetter(file, *iface, *attr, iface == primary_iface);
+        GeneratePropGetter(file, *iface, *attr, 
+            iface == primary_iface ? JSSTUBGEN_PRIMARY : JSSTUBGEN_NONPRIMARY);
       }
       else {
         GeneratePropSetter(file, *iface, *attr, iface == primary_iface);
       }
 
       sprintf(buf, kPropCaseEndStr);
-      *file << buf;
-   
+      *file << buf;   
     }    
   }
   
   if (!any) {
     *file << kNoAttrStr;
+  }
+
+  if (aIsGetter) {
+    int m, mcount = primary_iface->FunctionCount();
+    IdlFunction *item_func = NULL;
+    for (m = 0; m < mcount; m++) {
+      IdlFunction *func = primary_iface->GetFunctionAt(m);
+      
+      if (strcmp(func->GetName(), "item") == 0) {
+        item_func = func;
+        break;
+      }
+    }
+    
+    if (NULL != item_func) {
+      IdlVariable *rval = item_func->GetReturnValue();
+      GeneratePropGetter(file, *primary_iface, *rval, JSSTUBGEN_DEFAULT);
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
+      *file << buf;
+    }
+  }
+  else {
+    JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
+    *file << buf;
   }
 
   JSGEN_GENERATE_PROPFUNCEND(buf, aIsGetter ? "Get" : "Set");
@@ -392,8 +437,8 @@ static const char *kBoolGetCaseStr =
 void
 JSStubGen::GeneratePropGetter(ofstream *file,
                               IdlInterface &aInterface,
-                              IdlAttribute &aAttribute,
-                              PRBool aIsPrimary)
+                              IdlVariable &aAttribute,
+                              PRInt32 aType)
 {
   char buf[1024];
   char attr_type[128];
@@ -401,7 +446,9 @@ JSStubGen::GeneratePropGetter(ofstream *file,
   const char *case_str;
 
   GetVariableTypeForLocal(attr_type, aAttribute);
-  GetCapitalizedName(attr_name, aAttribute);
+  if (JSSTUBGEN_DEFAULT != aType) {
+    GetCapitalizedName(attr_name, aAttribute);
+  }
 
   switch (aAttribute.GetType()) {
     case TYPE_BOOLEAN:
@@ -427,17 +474,22 @@ JSStubGen::GeneratePropGetter(ofstream *file,
       break;
   }
 
-  if (aIsPrimary) {
+  if (JSSTUBGEN_PRIMARY == aType) {
     sprintf(buf, kGetCaseStr, attr_type, attr_name,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
   }
-  else {
+  else if (JSSTUBGEN_NONPRIMARY == aType) {
     sprintf(buf, kGetCaseNonPrimaryStr, attr_type,
             aInterface.GetName(), aInterface.GetName(),
             attr_name, 
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str, aInterface.GetName());
+  }
+  else {
+    sprintf(buf, kPropFuncDefaultItemStr, attr_type,
+            aAttribute.GetType() == TYPE_STRING ? "" : "&",
+            case_str);
   }
 
   *file << buf;
