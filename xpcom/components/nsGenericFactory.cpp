@@ -40,7 +40,7 @@
 // DO NOT COPY THIS CODE INTO YOUR SOURCE!  USE NS_IMPL_NSGETMODULE()
 
 #include "nsGenericFactory.h"
-#include "nsCRT.h"
+#include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
@@ -221,7 +221,7 @@ nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount
       mModuleName(moduleName),
       mComponentCount(componentCount),
       mComponents(components),
-      mFactories(32, PR_FALSE),
+      mFactoriesNotToBeRegistered(nsnull),
       mCtor(ctor),
       mDtor(dtor)
 {
@@ -235,9 +235,24 @@ nsGenericModule::~nsGenericModule()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsGenericModule, nsIModule)
 
+nsresult 
+nsGenericModule::AddFactoryNode(nsIGenericFactory* fact)
+{
+    if (!fact)
+        return NS_ERROR_FAILURE;
+
+    FactoryNode *node = new FactoryNode(fact, mFactoriesNotToBeRegistered);
+    if (!node)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    mFactoriesNotToBeRegistered = node;
+    return NS_OK;
+}
+
+
 // Perform our one-time intialization for this module
 nsresult
-nsGenericModule::Initialize()
+nsGenericModule::Initialize(nsIComponentManager *compMgr)
 {
     if (mInitialized) {
         return NS_OK;
@@ -248,6 +263,11 @@ nsGenericModule::Initialize()
         if (NS_FAILED(rv))
             return rv;
     }
+
+    nsresult rv;
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compMgr, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     // Eagerly populate factory/class object hash for entries
     // without constructors. If we didn't, the class object would
@@ -263,9 +283,18 @@ nsGenericModule::Initialize()
             nsCOMPtr<nsIGenericFactory> fact;
             nsresult rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
             if (NS_FAILED(rv)) return rv;
-            
-            nsIDKey key(desc->mCID);
-            (void)mFactories.Put(&key, fact);
+
+            // if we don't have a mConstructor, then we should not populate
+            // the component manager.
+            if (!desc->mConstructor) {
+                rv = AddFactoryNode(fact);
+            } else {
+                rv = registrar->RegisterFactory(desc->mCID, 
+                                                desc->mDescription,
+                                                desc->mContractID, 
+                                                fact);
+            }
+            if (NS_FAILED(rv)) return rv;
         }
         desc++;
     }
@@ -278,8 +307,14 @@ nsGenericModule::Initialize()
 void
 nsGenericModule::Shutdown()
 {
-    // Release the factory objects
-    mFactories.Reset();
+    // Free cached factories that were not registered.
+    FactoryNode* node;
+    while (mFactoriesNotToBeRegistered)
+    {
+        node = mFactoriesNotToBeRegistered->mNext;
+        delete mFactoriesNotToBeRegistered;
+        mFactoriesNotToBeRegistered = node;
+    }
 
     if (mInitialized) {
         mInitialized = PR_FALSE;
@@ -306,7 +341,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
 
     // Do one-time-only initialization if necessary
     if (!mInitialized) {
-        rv = Initialize();
+        rv = Initialize(aCompMgr);
         if (NS_FAILED(rv)) {
             // Initialization failed! yikes!
             return rv;
@@ -315,32 +350,24 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
 
     // Choose the appropriate factory, based on the desired instance
     // class type (aClass).
-    nsIDKey key(aClass);
-    nsCOMPtr<nsIGenericFactory> fact = getter_AddRefs(NS_REINTERPRET_CAST(nsIGenericFactory *, mFactories.Get(&key)));
-    if (fact == nsnull) {
-        const nsModuleComponentInfo* desc = mComponents;
-        for (PRUint32 i = 0; i < mComponentCount; i++) {
-            if (desc->mCID.Equals(aClass)) {
-                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
-                if (NS_FAILED(rv)) return rv;
-
-                (void)mFactories.Put(&key, fact);
-                goto found;
-            }
-            desc++;
+    const nsModuleComponentInfo* desc = mComponents;
+    for (PRUint32 i = 0; i < mComponentCount; i++) {
+        if (desc->mCID.Equals(aClass)) {
+            nsCOMPtr<nsIGenericFactory> fact;
+            rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
+            if (NS_FAILED(rv)) return rv;
+            return fact->QueryInterface(aIID, r_classObj);
         }
-        // not found in descriptions
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
-        nsCRT::free(cs);
-#endif
-        // XXX put in stop-gap so that we don't search for this one again
-        return NS_ERROR_FACTORY_NOT_REGISTERED;
+        desc++;
     }
-  found:    
-    rv = fact->QueryInterface(aIID, r_classObj);
-    return rv;
+    // not found in descriptions
+#ifdef DEBUG
+    char* cs = aClass.ToString();
+    printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
+    // leak until we resolve the nsID Allocator. 
+    // nsCRT::free(cs);
+#endif        // XXX put in stop-gap so that we don't search for this one again
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
 NS_IMETHODIMP

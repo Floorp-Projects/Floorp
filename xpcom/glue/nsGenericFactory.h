@@ -38,6 +38,7 @@
 #ifndef nsGenericFactory_h___
 #define nsGenericFactory_h___
 
+#include "nsCOMPtr.h"
 #include "nsIGenericFactory.h"
 #include "nsIClassInfo.h"
 
@@ -71,33 +72,53 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsIModule.h"
-#include "nsHashtable.h"
+#include "plhash.h"
 
 class nsGenericModule : public nsIModule
 {
 public:
-    nsGenericModule(const char* moduleName, PRUint32 componentCount,
+    nsGenericModule(const char* moduleName, 
+                    PRUint32 componentCount,
                     const nsModuleComponentInfo* components,
                     nsModuleConstructorProc ctor,
                     nsModuleDestructorProc dtor);
+
     virtual ~nsGenericModule();
 
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIMODULE
 
+    struct FactoryNode
+    {
+        FactoryNode(nsIGenericFactory* fact, FactoryNode* next) 
+        { 
+            mFactory = fact; 
+            mNext    = next;
+        }
+        ~FactoryNode(){}
+
+        nsCOMPtr<nsIGenericFactory> mFactory;
+        FactoryNode* mNext;
+    };
+
+
+
+
 protected:
-    nsresult Initialize();
+    nsresult Initialize(nsIComponentManager* compMgr);
 
     void Shutdown();
+    nsresult AddFactoryNode(nsIGenericFactory* fact);
 
-    PRBool                      mInitialized;
-    const char*                 mModuleName;
-    PRUint32                    mComponentCount;
-    const nsModuleComponentInfo*      mComponents;
-    nsSupportsHashtable         mFactories;
-    nsModuleConstructorProc     mCtor;
-    nsModuleDestructorProc      mDtor;
+    PRBool                       mInitialized;
+    const char*                  mModuleName;
+    PRUint32                     mComponentCount;
+    const nsModuleComponentInfo* mComponents;
+    FactoryNode*                 mFactoriesNotToBeRegistered;
+    nsModuleConstructorProc      mCtor;
+    nsModuleDestructorProc       mDtor;
 };
 
 #endif /* nsGenericFactory_h___ */
+
