@@ -29,13 +29,13 @@
 #include "nsIMessage.h"
 #include "nsIMsgThread.h"
 #include "nsCOMPtr.h"
-#include "nsIMsgWindowData.h"
+#include "nsIMsgWindow.h"
 
 /**
  * The mail data source.
  */
 class nsMessageViewDataSource : public nsIRDFCompositeDataSource, public nsIMessageView,
-								public nsIRDFObserver, public nsIMsgWindowData
+								public nsIRDFObserver, public nsIMsgWindow
 {
 private:
 	nsCOMPtr<nsISupportsArray> mObservers;
@@ -49,7 +49,7 @@ public:
   NS_DECL_NSIRDFCOMPOSITEDATASOURCE
   NS_DECL_NSIRDFOBSERVER
   NS_DECL_NSIMESSAGEVIEW
-  NS_DECL_NSIMSGWINDOWDATA
+  NS_DECL_NSIMSGWINDOW
 	nsMessageViewDataSource(void);
 	virtual ~nsMessageViewDataSource (void);
   virtual nsresult Init();

@@ -83,9 +83,9 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
 		*result = NS_STATIC_CAST(nsIMessageView*, this);
 		NS_ADDREF_THIS();
 	}
-	else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindowData>::GetIID()))
+	else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindow>::GetIID()))
 	{
-		*result = NS_STATIC_CAST(nsIMsgWindowData*, this);
+		*result = NS_STATIC_CAST(nsIMsgWindow*, this);
 		NS_ADDREF_THIS();
 	}
 
