@@ -53,6 +53,10 @@ struct JSContext;
 interface nsIAppShellService : nsISupports
 {
 
+  const PRUint32 eConsiderQuit = 1; // attempt to quit if all windows are closed
+  const PRUint32 eAttemptQuit = 2;  // try to close all windows, then quit if successful
+  const PRUint32 eForceQuit = 3;    // quit, damnit
+
   /**
    * Required initialization routine.
    * @param aCmdLineService is stored and passed to appshell components as
@@ -84,9 +88,9 @@ interface nsIAppShellService : nsISupports
   void run();
 
   /**
-   * Exit the event loop
+   * Exit the event loop, shut down the app
    */
-  void quit();
+  void quit(in PRUint32 aFerocity);
 
   /**
    * Create a window.
@@ -163,7 +167,9 @@ interface nsIAppShellService : nsISupports
   void registerTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
-   * Remove a window from the application's window registry.
+   * Remove a window from the application's window registry. Note that
+   * this method won't automatically attempt to quit the app when
+   * the last window is unregistered. For that, see Quit().
    * @param aWindow you see the pattern
    */
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
