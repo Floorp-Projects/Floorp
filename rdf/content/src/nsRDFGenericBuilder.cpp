@@ -1883,6 +1883,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // add the entire subtree in a single whack.
                 rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
+
+                if (isResourceElement) {
+                    rv = CreateContainerContents(realKid, aChild, PR_FALSE);
+                    if (NS_FAILED(rv)) return rv;
+                }
             }
             else {
                 // Otherwise, just mark the XUL element as requiring
