@@ -410,7 +410,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   GtkWidget *menubar;
   void *voidData;
-
+  g_print("blah\n");
   aMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
 

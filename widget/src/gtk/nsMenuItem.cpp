@@ -44,7 +44,7 @@ NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
-  mMenu        = nsnull;
+  mMenuItem    = nsnull;
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
@@ -78,17 +78,12 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-//  GtkWidget *parentMenuHandle = GetNativeParent();
-  mMenu = gtk_menu_item_new_with_label(nameStr);
-  gtk_widget_show(mMenu);
-/*
-  XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
-                                          parentMenuHandle,
-                                          NULL);
-  XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
-                (nsIMenuItem *)this);
-*/
-  gtk_signal_connect (GTK_OBJECT (mMenu), "activate", GTK_SIGNAL_FUNC(nsGtkWidget_Menu_Callback) , this);
+  mMenuItem = gtk_menu_item_new_with_label(nameStr);
+  gtk_widget_show(mMenuItem);
+ 
+  gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
+                      GTK_SIGNAL_FUNC(nsGtkWidget_Menu_Callback),
+		      this);
   delete[] nameStr;
 }
 
@@ -227,7 +222,7 @@ NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 {
-  aData = (void *)mMenu;
+  aData = (void *)mMenuItem;
   return NS_OK;
 }
 

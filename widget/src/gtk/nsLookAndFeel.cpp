@@ -117,23 +117,23 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 	  aMetric = req.height;
 	}
         break;
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-        aMetric = 10;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-        aMetric = 8;
-        break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
     case eMetric_TextVerticalInsidePadding:
         aMetric = 0;
         break;
     case eMetric_TextShouldUseVerticalInsidePadding:
         aMetric = 0;
         break;
+    case eMetric_TextHorizontalInsideMinimumPadding:
+        aMetric = 3;
+        break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
+        aMetric = 0;
+        break;
+    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
+        aMetric = 10;
+        break;
+    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
+        aMetric = 8;
         break;
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
         aMetric = 0;
