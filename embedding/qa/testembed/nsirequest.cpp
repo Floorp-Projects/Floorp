@@ -81,24 +81,26 @@ CNsIRequest::~CNsIRequest()
 //  setLoadGroup & getLoadGroup tests respectively.
 
 Element ReqTable[] = {
-	{"http://www.netscape.com", 1, 1, 0, 0, 0, 1, 1},
-	{"http://www.yahoo.com",    0, 0, 1, 1, 0, 0, 0},
-	{"http://www.cisco.com",    0, 0, 0, 0, 1, 0, 0},
-	{"http://www.sun.com",      0, 0, 0, 0, 0, 1, 1},
-	{"http://www.intel.com",    1, 1, 1, 0, 0, 0, 0},
-	{"http://www.aol.com",      0, 1, 0, 0, 0, 1, 1},
-	{"https://www.yahoo.com",   1, 1, 1, 1, 0, 1, 1},
-	{"file://C|/Program Files", 1, 1, 1, 1, 0, 1, 1},
-	{"ftp://ftp.netscape.com",  1, 1, 1, 1, 0, 1, 1},
-	{"ftp://ftp.mozilla.org",   0, 0, 0, 0, 1, 0, 0},
+	{"http://www.netscape.com/", 1, 1, 0, 0, 0, 1, 1},
+	{"http://www.yahoo.com/",    0, 0, 1, 1, 0, 0, 0},
+	{"http://www.cisco.com/",    0, 0, 0, 0, 1, 0, 0},
+	{"http://www.sun.com/",      0, 0, 0, 0, 0, 1, 1},
+	{"http://www.intel.com/",    1, 1, 1, 0, 0, 0, 0},
+	{"http://www.aol.com/",      0, 1, 0, 0, 0, 1, 1},
+	{"https://www.yahoo.com/",   1, 1, 1, 1, 0, 1, 1},
+	{"data:text/plain;charset=iso-8859-7,%be%fg%be",
+								1, 1, 1, 1, 0, 1, 1},
+	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
+	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
+	{"ftp://ftp.mozilla.org/",   0, 0, 0, 0, 1, 0, 0},
 }; 
 
 void CNsIRequest::OnStartTests(UINT nMenuID)
 {
 	if (nMenuID == ID_INTERFACES_NSIREQUEST_RUNALLTESTS)
-		RunAllTests(8);
+		RunAllTests(9);
 	else
-		RunIndividualTests(nMenuID, 8);
+		RunIndividualTests(nMenuID, 9);
 }
  
 void CNsIRequest::RunIndividualTests(UINT nMenuID, int reqTotal)
@@ -216,12 +218,12 @@ void CNsIRequest::RunAllTests(int reqTotal)
 
 nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 {
-	nsCAutoString theSpec;
+	nsCAutoString theSpec, retURI;
 	nsCOMPtr<nsIURI> theURI;
 	nsCOMPtr<nsIChannel> theChannel;
 
 	theSpec = ReqTable[i].theUrl;
-	FormatAndPrintOutput("the uri spec = ", theSpec, 2);
+	FormatAndPrintOutput("the input uri = ", theSpec, 2);
 
 	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
 
@@ -230,8 +232,15 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   QAOutput("We didn't get the URI. Test failed.", 1);
 	   return NULL;
 	}
-	else
+	else {
+	   retURI = GetTheUri(theURI, 1);
+	   // simple string compare to see if input & output URLs match
+	   if (strcmp(ReqTable[i].theUrl, retURI.get()) == 0)
+		  QAOutput("The URIs MATCH. Compare test passed.", 1);
+	   else
+		  QAOutput("The URIs didn't MATCH. Compare test failed.", 1);
 	   RvTestResult(rv, "NS_NewURI", 1);
+	}
 
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
 	if (!theChannel)
