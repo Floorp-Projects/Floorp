@@ -38,6 +38,7 @@ CreateElementTxn::CreateElementTxn(nsEditor *aEditor,
   NS_ADDREF(mParent);
   mOffsetInParent = aOffsetInParent;
   mNewNode = nsnull;
+  mRefNode = nsnull;
 }
 
 CreateElementTxn::~CreateElementTxn()
