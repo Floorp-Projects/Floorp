@@ -403,6 +403,7 @@ public:
    */
 
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
+  void AssignWithConversion( const nsString& aString )          { AssignWithConversion(aString.GetUnicode(), aString.Length()); }
   void AssignWithConversion(PRUnichar);
 
 #ifndef NEW_STRING_APIS
