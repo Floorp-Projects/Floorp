@@ -734,9 +734,9 @@ endif
 ifdef USE_AUTOCONF
 ALL_TRASH := $(filter-out $(OBJDIR), $(ALL_TRASH))
 endif
--include $(DEPENDENCIES)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+-include $(DEPENDENCIES)
 # Can't use sed because of its 4000-char line length limit, so resort to perl
 .DEFAULT:
 	@$(PERL) -e '                                                         \
