@@ -124,16 +124,16 @@
           </tabs>
           <tabpanels flex="1">
             <hbox id="help-toc">
-              <outliner id="help-toc-outliner" flex="1">
+              <outliner id="help-toc-outliner" flex="1" >
                 <outlinerbody datasources="chrome://help/locale/help-toc.rdf"
-                              flex="1" ref="urn:root"                              
+                              flex="1" ref="urn:root" flags="dont-build-content"    
                               containment="http://home.netscape.com/NC-rdf#subheadings"
                               onselect="selectItem();">
            
                   <template>
                     <rule>
                       <conditions>
-                        <outlinerrow uri="?uri"/>
+                        <outlineritem uri="?uri"/>
                         <triple subject="?uri"
                                 predicate="http://home.netscape.com/NC-rdf#subheadings"
                                 object="?subheadings" />
@@ -145,15 +145,19 @@
                                  object="?name" />
                       </bindings>
                       <action>
-                        <outlinerrow uri="?subheading">
-                          <outlinercell ref="Column" label="?name"/>
-                        </outlinerrow>
+                        <outlinerchildren>
+                          <outlineritem uri="?subheading">
+                            <outlinerrow>
+                              <outlinercell ref="Column" label="?name"/>
+                            </outlinerrow>
+                          </outlineritem>
+                       </outlinerchildren>
                       </action>
                     </rule>
                   </template>
                 </outlinerbody>
                 <outlinercols>
-                  <outlinercol flex="1" id="Column" primary="true" />
+                  <outlinercol flex="1" id="Column" primary="true"/>
                 </outlinercols>
               </outliner>
             </hbox>
