@@ -4957,6 +4957,9 @@ PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
     if (newPrivKey) {
         SECKEY_DestroyPrivateKey(newPrivKey);
     }
+    if (param_free) {
+	SECITEM_FreeItem(param_free,PR_TRUE);
+    }
 
     if (crv != CKR_OK) {
         PORT_SetError( PK11_MapError(crv) );
