@@ -43,7 +43,6 @@ class nsDiskCacheStreamIO : public nsIStreamIO {
 
 // we're implementing nsIStreamIO to leverage the AsyncRead on the FileTransport thread
 
-
 public:
              nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
     virtual ~nsDiskCacheStreamIO();
@@ -73,6 +72,9 @@ public:
                 }
 
 private:
+
+    // GCC 2.95.2 requires this to be defined, although we never call it.
+    nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
 
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
