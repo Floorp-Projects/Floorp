@@ -640,6 +640,7 @@ case "$target" in
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
        if test -n "$USE_N32"; then
+	   ASFLAGS="$ASFLAGS -n32"
 	   CFLAGS="$CFLAGS -n32"
 	   CXXFLAGS="$CXXFLAGS -n32"
 	   LDFLAGS="$LDFLAGS -n32"
