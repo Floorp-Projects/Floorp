@@ -65,6 +65,7 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
 - (void)refreshDownloadInfo;
 - (void)moveProgressBarToCurrentView;
 - (void)updateButtons;
+- (void)launchFileIfAppropriate;
 
 @end
 
@@ -306,12 +307,29 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
 
 - (void)downloadDidEnd
 {
-  mDownloadDone = YES;
-  mDownloadTime = -[mStartTime timeIntervalSinceNow];
-  [mProgressBar stopAnimation:self];
-  
-  [mExpandedCancelButton setEnabled:NO];
-  [self refreshDownloadInfo];
+  if (!mDownloadDone)		// some error conditions can cause this to get called twice
+  {
+    mDownloadDone = YES;
+    mDownloadTime = -[mStartTime timeIntervalSinceNow];
+    [mProgressBar stopAnimation:self];
+    
+    [mExpandedCancelButton setEnabled:NO];
+
+    // get the Finder to update
+    [[NSWorkspace sharedWorkspace] noteFileSystemChanged:mDestPath];
+
+    [self refreshDownloadInfo];
+    [self launchFileIfAppropriate];
+  }
+}
+
+- (void)launchFileIfAppropriate
+{
+  if (!mIsFileSave && !mUserCancelled && !mDownloadingError)
+  {
+    if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.download.autoDispatch" withSuccess:NULL])
+      [[NSWorkspace sharedWorkspace] openFile:mDestPath withApplication:nil andDeactivate:NO];
+  }
 }
 
 // this handles lots of things.

@@ -59,12 +59,9 @@ nsDownloadListener::nsDownloadListener()
 
 nsDownloadListener::~nsDownloadListener()
 {
-  // if we go away before the timer fires, cancel it
-  if (mEndRefreshTimer)
-    mEndRefreshTimer->Cancel();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener)
 
 #pragma mark -
 
@@ -198,16 +195,6 @@ nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress,
                                       PRInt32 aCurTotalProgress, 
                                       PRInt32 aMaxTotalProgress)
 {
-  if (mUserCanceled && !mSentCancel)
-  {
-    if (mHelperAppLauncher)
-      mHelperAppLauncher->Cancel();
-    else if (aRequest)
-      aRequest->Cancel(NS_BINDING_ABORTED);
-      
-    mSentCancel = PR_TRUE;
-  }
-  
   [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
   return NS_OK;
 }
@@ -228,6 +215,10 @@ nsDownloadListener::OnStatusChange(nsIWebProgress *aWebProgress,
                nsresult aStatus, 
                const PRUnichar *aMessage)
 {
+  // aMessage contains an error string, but it's so crappy that we don't want to use it.
+  if (NS_FAILED(aStatus))
+    DownloadDone(aStatus);
+  
   return NS_OK;
 }
 
@@ -258,28 +249,6 @@ nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     DownloadDone(aStatus);
   }
   return NS_OK; 
-}
-
-#pragma mark -
-
-// nsITimerCallback implementation
-NS_IMETHODIMP nsDownloadListener::Notify(nsITimer *timer)
-{
-  // resset the destination, since uniquifying the filename may have
-  // changed it
-  nsAutoString pathStr;
-  mDestination->GetPath(pathStr);
-  NSString* destPath = [NSString stringWith_nsAString:pathStr];
-  [mDownloadDisplay setDestinationPath:destPath];
-
-  // update the Finder immediately.
-  if ( NS_SUCCEEDED(mDownloadStatus) )
-    [[NSWorkspace sharedWorkspace] noteFileSystemChanged:destPath];
-
-  // cancelling should give us a failure status
-  [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(mDownloadStatus) && !mUserCanceled)];
-  mEndRefreshTimer = NULL;
-  return NS_OK;
 }
 
 #pragma mark -
@@ -337,15 +306,20 @@ nsDownloadListener::CancelDownload()
 {
   mUserCanceled = PR_TRUE;
 
-  if (mWebPersist && !mSentCancel)
+  if (!mSentCancel)
   {
-    mWebPersist->CancelSave();
+    if (mWebPersist)
+      mWebPersist->CancelSave();
+    else if (mHelperAppLauncher)
+      mHelperAppLauncher->Cancel();
+
     mSentCancel = PR_TRUE;
   }
-  
-  // delete any files we've created...
-  
-  // DownloadDone will get called (eventually)
+    
+  // when we cancel the download, we don't get any more notifications
+  // from the backend (unlike for other transfer errors. So we have
+  // to call DownloadDone ourselves.
+  DownloadDone(NS_BINDING_ABORTED);
 }
 
 void
@@ -361,21 +335,16 @@ nsDownloadListener::DownloadDone(nsresult aStatus)
   mHelperAppLauncher = nsnull;
   mDownloadStatus = aStatus;
   
-  // hack alert!
-  // Our destination file gets uniquified after the OnStop notification is sent
-  // (in nsExternalAppHandler::ExecuteDesiredAction), so we never get a chance
-  // to figure out the final filename. To work around this, set a timer to fire
-  // in the near future, from which we'll send the done callback.
-  mEndRefreshTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (mEndRefreshTimer)
+  if (NS_FAILED(aStatus))
   {
-    nsresult rv = mEndRefreshTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
-    if (NS_FAILED(rv))
-      mEndRefreshTimer = NULL;
+    // delete the file we created in CHBrowserService::Show
+    mDestination->Remove(PR_FALSE);
+    mDestination = nsnull;
   }
   
-  if (!mEndRefreshTimer)			// timer creation or init failed, so just do it now
-    [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(aStatus) && !mUserCanceled)];
+  // XXX propagate the error, so that the UI can show strings for
+  // disk full etc.
+  [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(aStatus) && !mUserCanceled)];
 }
 
 //

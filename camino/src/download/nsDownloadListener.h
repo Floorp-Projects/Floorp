@@ -59,8 +59,7 @@
 
 class nsDownloadListener :  public CHDownloader,
                             public nsIDownload,
-                            public nsIWebProgressListener,
-                            public nsITimerCallback
+                            public nsIWebProgressListener
 {
 public:
             nsDownloadListener();
@@ -70,9 +69,6 @@ public:
     NS_DECL_NSIDOWNLOAD
     NS_DECL_NSIWEBPROGRESSLISTENER
     
-    // nsITimerCallback
-    NS_IMETHOD Notify(nsITimer *timer);
-  
 public:
 
     void InitDialog();
@@ -91,7 +87,6 @@ private:
     
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
     nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
-    nsCOMPtr<nsITimer>              mEndRefreshTimer;   // Timer used to update the status to done
     nsresult                        mDownloadStatus;		// status from last nofication
     PRInt64                         mStartTime;         // When the download started
     PRPackedBool                    mBypassCache;       // Whether we should bypass the cache or not.

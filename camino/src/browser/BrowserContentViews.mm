@@ -150,7 +150,7 @@
   // match the size to avoid taking the hit of resizing it when it's
   // not visible.
   [mCurrentContentView setFrame:browserRect];
-  NSLog(@"resizing to %f %f", browserRect.size.width, browserRect.size.height);
+  // NSLog(@"resizing to %f %f", browserRect.size.width, browserRect.size.height);
 }
 
 

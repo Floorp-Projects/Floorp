@@ -47,8 +47,12 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
 #include "nsEmbedAPI.h"
+#include "nsIURI.h"
 #include "nsIDownload.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIExternalHelperAppService.h"
+#include "nsIMIMEInfo.h"
 #include "nsIPref.h"
 
 NSString* TermEmbeddingNotificationName = @"TermEmbedding";
@@ -63,7 +67,6 @@ PRBool CHBrowserService::sCanTerminate = PR_FALSE;
 // CHBrowserService implementation
 CHBrowserService::CHBrowserService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CHBrowserService::~CHBrowserService()
@@ -227,21 +230,43 @@ CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
   
   // See if pref enabled to allow automatic download
   nsCOMPtr<nsIPref> prefService (do_GetService(NS_PREF_CONTRACTID));
-  if (prefService) {
+  if (prefService)
     prefService->GetBoolPref("browser.download.autoDownload", &autoDownload);
-  }
   
-  if (autoDownload) {
-    // Pref is enabled so just save the file to disk in download folder
-    // If browser.download.autoDownload is set to true helper app will be called by uriloader
-    // XXX fix me. When we add UI to enable this pref it needs to be clear it carries
-    // a security risk
-    return inLauncher->LaunchWithApplication(nsnull, PR_FALSE);
-  }
-  else {
-    // Pref not enabled so do it old way - prompt to save file to disk
-    return inLauncher->SaveToDisk(nsnull, PR_FALSE);
-  }
+  nsCOMPtr<nsIFile> downloadFile;
+  if (autoDownload)
+  {
+    NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(downloadFile));
+    
+    nsXPIDLString leafName;
+    inLauncher->GetSuggestedFileName(getter_Copies(leafName));
+    if (leafName.IsEmpty())
+    {
+      nsCOMPtr<nsIURI> sourceURI;
+      inLauncher->GetSource(getter_AddRefs(sourceURI));
+      if (sourceURI)
+      {
+        // we know this doesn't have a leaf name, because nsExternalAppHandler::SetUpTempFile would have
+        // got it already.
+        nsCAutoString hostName;
+        sourceURI->GetHost(hostName);
+        leafName = NS_ConvertUTF8toUCS2(hostName);
+        leafName.Append(NS_LITERAL_STRING(" download"));
+      }
+      else
+      {
+        leafName.Assign(NS_LITERAL_STRING("Camino download"));
+      }
+    }
+
+    downloadFile->Append(leafName);
+    // this will make an empty file, that persists until the download is done, "holding"
+    // a file system location for the final file. Note that if you change this, be
+    // sure to fix nsDownloadListener::DownloadDone not to delete some random file.
+    downloadFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+  }  
+  
+  return inLauncher->SaveToDisk(downloadFile, PR_FALSE);
 }
 
 NS_IMETHODIMP
