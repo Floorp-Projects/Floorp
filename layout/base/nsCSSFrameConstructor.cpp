@@ -3395,6 +3395,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
+    if (binding) {
+      nsCOMPtr<nsIBindingManager> bm;
+      mDocument->GetBindingManager(getter_AddRefs(bm));
+      if (bm)
+        bm->AddToAttachedQueue(binding);
+    }
+
     if (resolveStyle) {
       nsCOMPtr<nsIAtom> tag;
       aDocElement->GetTag(*getter_AddRefs(tag));
@@ -5181,7 +5188,21 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
       content->SetParent(aParent);
       content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
-      content->SetBindingParent(content);
+
+#ifdef INCLUDE_XUL
+      // Only cut XUL scrollbars off if they're not in a XUL document.  This allows
+      // scrollbars to be styled from XUL (although not from XML or HTML).
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::scrollbar) {
+        nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
+        if (xulDoc)
+          content->SetBindingParent(aParent);
+        else content->SetBindingParent(content);
+      }
+      else
+#endif
+        content->SetBindingParent(content);
     
       nsIFrame * newFrame = nsnull;
       nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
