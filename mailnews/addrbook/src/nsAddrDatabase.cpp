@@ -30,7 +30,6 @@
 #include "prprf.h"
 
 #include "nsIServiceManager.h"
-#include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
 #include "nsICollation.h"
@@ -44,33 +43,11 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
 const PRInt32 kAddressBookDBVersion = 1;
 
-enum nsAddrDBCommitType {
-  kSmallCommit,
-  kLargeCommit,
-  kSessionCommit,
-  kCompressCommit
-};
-
-typedef enum 
-{
-	AB_NotifyInserted,
-	AB_NotifyDeleted,
-	AB_NotifyPropertyChanged,
-
-	AB_NotifyAll,		   /* contents of the have totally changed. Listener must totally
-							  forget anything they knew about the object. */
-	/* pane notifications (i.e. not tied to a particular entry */
-	AB_NotifyScramble,     /* same contents, but the view indices have all changed 
-						      i.e the object was sorted on a different attribute */
-	AB_NotifyLDAPTotalContentChanged,
-	AB_NotifyNewTopIndex,
-	AB_NotifyStartSearching,
-	AB_NotifyStopSearching
-
-} AB_NOTIFY_CODE;
+const char *kAnonymousTableKind = "ns:addrbk:db:table:kind:anonymous";
+const char *kAnonymousRowScope = "ns:addrbk:db:row:scope:anonymous:all";
+const char *kAnonymousColumn = "Anonymous";
 
 const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
-const char *kBuddyTableKind = "ns:addrbk:db:table:kind:buddy";
 const char *kHistoryTableKind = "ns:addrbk:db:table:kind:history";
 const char *kMailListTableKind = "ns:addrbk:db:table:kind:maillist";
 const char *kCategoryTableKind = "ns:addrbk:db:table:kind:category";
@@ -120,19 +97,20 @@ const char *kAddressCharSetColumn = "AddrCharSet";
 
 struct mdbOid gAddressBookTableOID;
 struct mdbOid gMailListTableOID;
-struct mdbOid gBuddyListTableOID;
 struct mdbOid gCategoryTableOID;
+struct mdbOid gAnonymousTableOID;
 
 nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
-      m_mdbPabTable(nsnull), m_dbName(""),
-      m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
-      m_pabTableKind(0),
-      m_buddyTableKind(0),
-      m_historyTableKind(0),
-      m_mailListTableKind(0),
-      m_cardRowScopeToken(0),
-      m_categoryTableKind(0),
+      m_mdbPabTable(nsnull), m_mdbRow(nsnull),
+	  m_dbName(""), m_mdbTokensInitialized(PR_FALSE), 
+	  m_ChangeListeners(nsnull), m_mdbAnonymousTable(nsnull), 
+	  m_AnonymousTableKind(0), m_AnonymousRowScopeToken(0),
+	  m_AnonymousColumnToken(0), m_pAnonymousAttributes(nsnull), 
+	  m_pAnonymousValues(nsnull),
+      m_PabTableKind(0), m_HistoryTableKind(0),
+      m_MailListTableKind(0), m_CategoryTableKind(0),
+      m_CardRowScopeToken(0),
       m_FirstNameColumnToken(0),
       m_LastNameColumnToken(0),
       m_DisplayNameColumnToken(0),
@@ -246,7 +224,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBL
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator)
+NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
 {
     if (m_ChangeListeners == nsnull)
 		return NS_OK;
@@ -255,7 +233,7 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, PRUint32 en
 		nsIAddrDBListener *changeListener = 
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
 
-		nsresult rv = changeListener->OnCardEntryChange(abCode, entryID, instigator); 
+		nsresult rv = changeListener->OnCardEntryChange(abCode, card, instigator); 
         if (NS_FAILED(rv)) return rv;
 	}
     return NS_OK;
@@ -622,13 +600,12 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 				{
 					ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
 					if (ret != 0)
-					{// mork isn't really doing NS erorrs yet.
+					{ 
 						outDone = PR_TRUE;
 						break;
 					}
 				}
 				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
-//				m_mdbEnv->ClearErrors(); // ### temporary...
 				if (NS_SUCCEEDED(ret) && outDone)
 				{
 					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
@@ -740,16 +717,31 @@ nsresult nsAddrDatabase::InitNewDB()
 	nsresult err = NS_OK;
 
 	err = InitMDBInfo();
-	if (err == NS_OK)
+	if (NS_SUCCEEDED(err))
 	{
-		nsIMdbStore *store = GetStore();
-		// create the unique table for the dbFolderInfo.
-		mdb_err mdberr;
-
-        mdberr = (nsresult) store->NewTable(GetEnv(), m_cardRowScopeToken, 
-			m_pabTableKind, PR_FALSE, &gAddressBookTableOID, &m_mdbPabTable);
+		err = InitPabTable();
 	}
 	return err;
+}
+
+nsresult nsAddrDatabase::InitPabTable()
+{
+	nsIMdbStore *store = GetStore();
+
+    mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_CardRowScopeToken, 
+		m_PabTableKind, PR_FALSE, &gAddressBookTableOID, &m_mdbPabTable);
+
+	return mdberr;
+}
+
+nsresult nsAddrDatabase::InitAnonymousTable()
+{
+	nsIMdbStore *store = GetStore();
+
+    mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_AnonymousRowScopeToken, 
+		m_AnonymousTableKind, PR_FALSE, &gAnonymousTableOID, &m_mdbAnonymousTable);
+
+	return mdberr;
 }
 
 nsresult nsAddrDatabase::InitExistingDB()
@@ -760,7 +752,29 @@ nsresult nsAddrDatabase::InitExistingDB()
 	if (err == NS_OK)
 	{
 		err = GetStore()->GetTable(GetEnv(), &gAddressBookTableOID, &m_mdbPabTable);
+		err = GetStore()->GetTable(GetEnv(), &gAnonymousTableOID, &m_mdbAnonymousTable);
+		if (m_mdbAnonymousTable)
+			GetAnonymousAttributesFromDB();
+	}
+	return err;
+}
 
+#ifdef GetCard
+nsresult nsAddrDatabase::GetCardRow()
+{
+	if (m_mdbPabTable)
+	{
+		nsCOMPtr <nsIMdbTableRowCursor> rowCursor;
+		rowPos = -1;
+		ret= m_mdbPabTable->GetTableRowCursor(GetEnv(), rowPos, getter_addrefs(rowCursor));
+		if (ret == NS_OK)
+		{
+			ret = rowCursor->NextRow(GetEnv(), &m_mdbRow, rowPos);
+			if (ret == NS_OK && m_mdbRow)
+			{
+				LoadMemberVariables();
+			}
+		}
 		nsIMdbRow* cardRow;
 		nsIMdbTableRowCursor* rowCursor;
 		mdb_pos rowPos;
@@ -782,26 +796,6 @@ nsresult nsAddrDatabase::InitExistingDB()
 			}
 		} while (cardRow);
 	}
-	return err;
-}
-
-#ifdef GetCard
-nsresult nsAddrDatabase::GetCardRow()
-{
-	if (m_mdbPabTable)
-	{
-		nsCOMPtr <nsIMdbTableRowCursor> rowCursor;
-		rowPos = -1;
-		ret= m_mdbPabTable->GetTableRowCursor(GetEnv(), rowPos, getter_addrefs(rowCursor));
-		if (ret == NS_OK)
-		{
-			ret = rowCursor->NextRow(GetEnv(), &m_mdbRow, rowPos);
-			if (ret == NS_OK && m_mdbRow)
-			{
-				LoadMemberVariables();
-			}
-		}
-	}
 	return ret;
 }
 #endif
@@ -814,7 +808,18 @@ nsresult nsAddrDatabase::InitMDBInfo()
 	if (!m_mdbTokensInitialized && GetStore())
 	{
 		m_mdbTokensInitialized = PR_TRUE;
-		err	= GetStore()->StringToToken(GetEnv(), kCardRowScope, &m_cardRowScopeToken); 
+		err	= GetStore()->StringToToken(GetEnv(), kAnonymousRowScope, &m_AnonymousRowScopeToken); 
+		if (NS_SUCCEEDED(err))
+		{ 
+			GetStore()->StringToToken(GetEnv(),  kAnonymousColumn, &m_AnonymousColumnToken);
+			err = GetStore()->StringToToken(GetEnv(), kAnonymousTableKind, &m_AnonymousTableKind); 
+			if (NS_SUCCEEDED(err))
+			{
+				gAnonymousTableOID.mOid_Scope = m_AnonymousTableKind;
+				gAnonymousTableOID.mOid_Id = 1;
+			}
+		}
+		err	= GetStore()->StringToToken(GetEnv(), kCardRowScope, &m_CardRowScopeToken); 
 		if (NS_SUCCEEDED(err))
 		{
 			GetStore()->StringToToken(GetEnv(),  kFirstNameColumn, &m_FirstNameColumnToken);
@@ -855,22 +860,11 @@ nsresult nsAddrDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kNotesColumn, &m_NotesColumnToken);
 
 			GetStore()->StringToToken(GetEnv(),  kAddressCharSetColumn, &m_AddressCharSetColumnToken);
-			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_pabTableKind); 
+			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_PabTableKind); 
 			if (NS_SUCCEEDED(err))
 			{
-				GetStore()->StringToToken(GetEnv(), kBuddyTableKind, &m_buddyTableKind); 
-				GetStore()->StringToToken(GetEnv(), kMailListTableKind, &m_mailListTableKind); 
-				GetStore()->StringToToken(GetEnv(), kCategoryTableKind, &m_categoryTableKind); 
-				// The rows have 4 mOids.  Maillist , buddylist and category tables
-				// have the same oids as maillist , buddylist and category rows
-				gAddressBookTableOID.mOid_Scope = m_cardRowScopeToken;
+				gAddressBookTableOID.mOid_Scope = m_CardRowScopeToken;
 				gAddressBookTableOID.mOid_Id = 1;
-				gMailListTableOID.mOid_Scope = m_mailListTableKind;
-				gMailListTableOID.mOid_Id = 1;
-				gBuddyListTableOID.mOid_Scope = m_buddyTableKind;
-				gBuddyListTableOID.mOid_Id = 1;
-				gCategoryTableOID.mOid_Scope = m_categoryTableKind;
-				gCategoryTableOID.mOid_Id = 1;
 			}
 		}
 	}
@@ -878,6 +872,209 @@ nsresult nsAddrDatabase::InitMDBInfo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow)
+{
+	nsresult	err = NS_OK;
+
+	if (!card && !cardRow )
+		return NS_ERROR_NULL_POINTER;
+
+	mdbOid rowOid, tableOid;
+	m_mdbPabTable->GetOid(GetEnv(), &tableOid);
+	cardRow->GetOid(GetEnv(), &rowOid);
+
+	card->SetDbTableID(tableOid.mOid_Id);
+	card->SetDbRowID(rowOid.mOid_Id);
+
+	// add the row to the singleton table.
+	if (NS_SUCCEEDED(err) && cardRow)
+	{
+		char* pStr = nsnull;
+		card->GetFirstName(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_FirstNameColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetLastName(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_LastNameColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetDisplayName(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_DisplayNameColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetNickName(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_NickNameColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetPrimaryEmail(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_PriEmailColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetSecondEmail(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_2ndEmailColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkPhone(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkPhoneColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomePhone(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_HomePhoneColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetFaxNumber(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_FaxColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetPagerNumber(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_PagerColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCellularNumber(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_CellularColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeAddress(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeAddressColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeAddress2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeAddress2ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeCity(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeCityColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeState(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeStateColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeZipCode(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeZipCodeColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetHomeCountry(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeCountryColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkAddress(&pStr);  
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkAddressColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkAddress2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkAddress2ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkCity(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkCityColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkState(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkStateColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkZipCode(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkZipCodeColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWorkCountry(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkCountryColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetJobTitle(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_JobTitleColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetDepartment(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_DepartmentColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCompany(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_CompanyColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWebPage1(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WebPage1ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetWebPage2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WebPage2ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetBirthYear(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthYearColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetBirthMonth(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthMonthColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetBirthDay(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthDayColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCustom1(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom1ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCustom2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom2ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCustom3(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom3ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetCustom4(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom4ColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		card->GetNotes(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_NotesColumnToken, pStr);
+		PR_FREEIF(pStr);
+
+		AddAnonymousAttributesToDB(card, cardRow);
+	}
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify /* = FALSE */)
 {
@@ -887,160 +1084,11 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	if (!newCard || !m_mdbPabTable)
 		return NS_ERROR_NULL_POINTER;
 
-	err  = GetStore()->NewRow(GetEnv(), m_cardRowScopeToken, &cardRow);
+	err  = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &cardRow);
 
-	mdbOid rowOid;
-	cardRow->GetOid(GetEnv(), &rowOid);
-
-	// add the row to the singleton table.
 	if (NS_SUCCEEDED(err) && cardRow)
 	{
-		char* pStr = nsnull;
-		newCard->GetFirstName(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_FirstNameColumnToken, pStr);
-
-		newCard->GetLastName(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_LastNameColumnToken, pStr);
-
-		newCard->GetDisplayName(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_DisplayNameColumnToken, pStr);
-
-		newCard->GetNickName(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_NickNameColumnToken, pStr);
-
-		newCard->GetPrimaryEmail(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_PriEmailColumnToken, pStr);
-
-		newCard->GetSecondEmail(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_2ndEmailColumnToken, pStr);
-
-		newCard->GetWorkPhone(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkPhoneColumnToken, pStr);
-
-		newCard->GetHomePhone(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_HomePhoneColumnToken, pStr);
-
-		newCard->GetFaxNumber(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_FaxColumnToken, pStr);
-
-		newCard->GetPagerNumber(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_PagerColumnToken, pStr);
-
-		newCard->GetCellularNumber(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_CellularColumnToken, pStr);
-
-		newCard->GetHomeAddress(&pStr);
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeAddressColumnToken, pStr);
-
-		newCard->GetHomeAddress2(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeAddress2ColumnToken, pStr);
-
-		newCard->GetHomeCity(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeCityColumnToken, pStr);
-
-		newCard->GetHomeState(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeStateColumnToken, pStr);
-
-		newCard->GetHomeZipCode(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeZipCodeColumnToken, pStr);
-
-		newCard->GetHomeCountry(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_HomeCountryColumnToken, pStr);
-
-		newCard->GetWorkAddress(&pStr);  
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkAddressColumnToken, pStr);
-
-		newCard->GetWorkAddress2(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkAddress2ColumnToken, pStr);
-
-		newCard->GetWorkCity(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkCityColumnToken, pStr);
-
-		newCard->GetWorkState(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkStateColumnToken, pStr);
-
-		newCard->GetWorkZipCode(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkZipCodeColumnToken, pStr);
-
-		newCard->GetWorkCountry(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WorkCountryColumnToken, pStr);
-
-		newCard->GetJobTitle(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_JobTitleColumnToken, pStr);
-
-		newCard->GetDepartment(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_DepartmentColumnToken, pStr);
-
-		newCard->GetCompany(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_CompanyColumnToken, pStr);
-
-		newCard->GetWebPage1(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WebPage1ColumnToken, pStr);
-
-		newCard->GetWebPage2(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_WebPage2ColumnToken, pStr);
-
-		newCard->GetBirthYear(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_BirthYearColumnToken, pStr);
-
-		newCard->GetBirthMonth(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_BirthMonthColumnToken, pStr);
-
-		newCard->GetBirthDay(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_BirthDayColumnToken, pStr);
-
-		newCard->GetCustom1(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_Custom1ColumnToken, pStr);
-
-		newCard->GetCustom2(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_Custom2ColumnToken, pStr);
-
-		newCard->GetCustom3(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_Custom3ColumnToken, pStr);
-
-		newCard->GetCustom4(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_Custom4ColumnToken, pStr);
-
-		newCard->GetNotes(&pStr); 
-		if (pStr)
-			AddCardColumn(cardRow, m_NotesColumnToken, pStr);
-
-
+		AddAttributeColumnsToRow(newCard, cardRow);
 		err = m_mdbPabTable->AddRow(GetEnv(), cardRow);
 	}
 	if (NS_FAILED(err)) return err;
@@ -1048,8 +1096,110 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	//  do notification
 	if (notify)
 	{
-		NotifyCardEntryChange(AB_NotifyInserted, 0, NULL);
+		NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
 	}
+	return err;
+}
+
+nsresult nsAddrDatabase::AddAnonymousAttributesToDB(nsIAbCard *newCard, nsIMdbRow *cardRow)
+{
+	nsresult err = NS_OK;
+	PRUint32 count, i;
+		 
+	nsVoidArray *pAttrArray = nsnull;
+	err = newCard->GetAnonymousAttrubutesList(&pAttrArray);
+	nsVoidArray *pValueArray = nsnull;
+	err = newCard->GetAnonymousValuesList(&pValueArray);
+	if (pAttrArray && pValueArray)
+	{
+		if (!m_mdbAnonymousTable)
+			err = InitAnonymousTable();
+		if (NS_SUCCEEDED(err) && m_mdbAnonymousTable)
+		{
+			count = pAttrArray->Count();
+			for (i = 0; i < count; i++)
+			{
+				char* pAttrStr = (char*)pAttrArray->ElementAt(i);
+				nsIMdbRow	*attributeRow;
+				err  = GetStore()->NewRow(GetEnv(), m_AnonymousRowScopeToken, &attributeRow);			
+				if (NS_SUCCEEDED(err) && attributeRow)
+				{
+					AddCardColumn(attributeRow, m_AnonymousColumnToken, pAttrStr);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), attributeRow);
+				}
+ 
+				mdb_token anonymousColumnToken;
+				GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+
+				char* pValueStr = (char*)pValueArray->ElementAt(i);
+				AddCardColumn(cardRow, anonymousColumnToken, pValueStr);
+			}
+		}
+	}
+
+	return err;
+}
+
+NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
+{
+	nsresult err = NS_OK;
+
+	if (!card || !m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	// get the right row
+	nsIMdbRow* pCardRow = nsnull;
+	mdbOid rowOid;
+	rowOid.mOid_Scope = m_CardRowScopeToken;
+	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
+	if (pCardRow)
+	{
+		err = m_mdbPabTable->CutRow(GetEnv(), pCardRow);
+
+		if (notify) 
+			NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::EditCard(nsIAbCard *card, PRBool notify)
+{
+	if (!card || !m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+
+	nsIMdbRow* pCardRow = nsnull;
+	mdbOid rowOid;
+	rowOid.mOid_Scope = m_CardRowScopeToken;
+	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
+	if (pCardRow)
+		err = AddAttributeColumnsToRow(card, pCardRow);
+	if (NS_FAILED(err)) return err;
+
+	if (notify) 
+		NotifyCardEntryChange(AB_NotifyPropertyChanged, card, NULL);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::ContainsCard(nsIAbCard *card, PRBool *hasCard)
+{
+	if (!card || !m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	mdb_bool hasOid;
+	mdbOid rowOid;
+
+	rowOid.mOid_Scope = m_CardRowScopeToken;
+	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
+	err = m_mdbPabTable->HasOid(GetEnv(), &rowOid, &hasOid);
+	if (NS_SUCCEEDED(err))
+		*hasCard = hasOid;
+
 	return err;
 }
 
@@ -1063,12 +1213,11 @@ mdb_err nsAddrDatabase::AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, c
 	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
 	yarn.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 	mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
-	PR_FREEIF(str);
 
 	return err;
 }
 
-nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString &str)
+nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str)
 {
 	nsresult	err = NS_OK;
 	nsIMdbCell	*cardCell;
@@ -1085,6 +1234,42 @@ nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken,
 		}
 	}
 	return err;
+}
+
+nsresult nsAddrDatabase::GetAnonymousAttributesFromDB()
+{
+	if (m_mdbAnonymousTable)
+	{
+		nsIMdbRow* cardRow;
+		nsIMdbTableRowCursor* rowCursor;
+		mdb_pos rowPos;
+
+		m_mdbAnonymousTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+		do 
+		{
+			mdb_err err = rowCursor->NextRow(GetEnv(), &cardRow, &rowPos);
+
+			if (NS_SUCCEEDED(err) && cardRow)
+			{
+				nsAutoString attrString;
+
+				GetStringColumn(cardRow, m_AnonymousColumnToken, attrString);
+				if (attrString.Length())
+				{
+					if (!m_pAnonymousAttributes)
+					{
+						m_pAnonymousAttributes = new nsVoidArray();
+						m_pAnonymousValues = new nsVoidArray();
+					}
+					char* tempCString = attrString.ToNewCString();
+					char *attributeStr = PL_strdup(tempCString);
+					m_pAnonymousAttributes->AppendElement(attributeStr);
+					delete [] tempCString;
+				}
+			}
+		} while (cardRow);
+	}
+	return NS_OK;
 }
 
 nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
@@ -1384,6 +1569,27 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 		delete [] tempCString;
 	}
 
+	if (m_pAnonymousAttributes && m_pAnonymousValues)
+	{
+		PRUint32 count,i;
+		count = m_pAnonymousAttributes->Count();
+		for (i = 0; i < count; i++)
+		{
+			char* pAttrStr = (char*)m_pAnonymousAttributes->ElementAt(i);
+
+			mdb_token anonymousColumnToken;
+			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+			GetStringColumn(cardRow, anonymousColumnToken, tempString);
+			if (tempString.Length())
+			{
+				tempCString = tempString.ToNewCString();
+				char* pValue = PL_strdup(tempCString);
+				m_pAnonymousValues->AppendElement(pValue);
+				delete [] tempCString;
+			}
+		}
+	}
+
 	return err;
 }
 
@@ -1460,6 +1666,9 @@ NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
 	{
         nsresult rv;
         rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
+		if (mResultCard)
+		{
+		}
         *aItem = mResultCard;
 		NS_IF_ADDREF(*aItem);
         return NS_OK;
@@ -1485,26 +1694,23 @@ NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnume
     return NS_OK;
 }
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 {
-    nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv) || !rdfService) return rv;
-
-	char* cardURI = nsnull;
-    nsCOMPtr<nsIRDFResource> resource;
+    nsresult rv = NS_OK; 
 
 	mdbOid outOid;
 	mdb_id rowID=0;
-	mdb_id tableID = 1; /* check: temperarily set to 1 for now */
+
+	mdb_id tableID = 0;
+	m_dbDirectory->GetDirPosition((PRUint32*)&tableID); 
 	if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
         rowID = outOid.mOid_Id;
   
 	if(NS_SUCCEEDED(rv))
 	{
-		cardURI = PR_smprintf("abcard://Pab%d/Card%d", tableID, rowID);
+		char* cardURI = nsnull;
+
+		cardURI = PR_smprintf("abcard://Pab%ld/Card%ld", tableID, rowID);
 		nsCOMPtr<nsIAbCard> personCard;
 		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
 		if (personCard)
@@ -1515,9 +1721,10 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 		}
 		*result = personCard;
 		NS_IF_ADDREF(*result);
+
+		if (cardURI)
+			PR_smprintf_free(cardURI);
 	}
-	if(cardURI)
-		PR_smprintf_free(cardURI);
 
 	return rv;
 }

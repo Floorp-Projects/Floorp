@@ -25,7 +25,8 @@
 #include "nsIAddrDatabase.h"
 
 
-#define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewAbCARD"
+#define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
+#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 
 class nsAddressBook : public nsIAddressBook
 {
@@ -40,6 +41,7 @@ public:
 //	NS_IMETHOD NewCard(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 //						nsIAbCard *card);
 	NS_IMETHOD NewCard();
+	NS_IMETHOD DeleteCards(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
 
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 

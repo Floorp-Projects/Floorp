@@ -27,7 +27,7 @@
 
 #include "nsIAbBase.h"  
 #include "nsAbCardProperty.h"  
-#include "nsRDFResource.h"
+#include "nsAbRDFResource.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
@@ -38,7 +38,7 @@
   * Address Book Directory
   */ 
 
-class nsABCard: public nsRDFResource, public nsAbCardProperty
+class nsABCard: public nsAbRDFResource, public nsAbCardProperty
 {
 public: 
 
@@ -73,7 +73,7 @@ public:
 
   // nsIAbBase methods:
 /*  
-  NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }
+  NS_IMETHOD GetURI(char* *name) { return nsAbRDFResource::GetValue(name); }
   NS_IMETHOD GetName(char **name);
   NS_IMETHOD SetName(char *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
@@ -84,12 +84,6 @@ public:
   NS_IMETHOD RemoveAddrBookListener(nsIAbListener * listener);
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-
-
-  // nsIAddrDBListener methods:
-  NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-  NS_IMETHOD OnCardEntryChange(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator);
-  NS_IMETHOD OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator);
 */
 
 //  NS_IMETHOD GetPrettiestName(char ** name);
@@ -97,23 +91,20 @@ public:
 //  NS_IMETHOD OnCloseDirectory();
 //  NS_IMETHOD Delete();
 
-  NS_IMETHODIMP ContainsChildNamed(const char *name, PRBool* containsChild);
-  NS_IMETHODIMP FindParentOf(nsIAbCard * aDirectory, nsIAbCard ** aParent);
-  NS_IMETHODIMP IsParentOf(nsIAbCard *child, PRBool deep, PRBool *isParent);
+	NS_IMETHODIMP ContainsChildNamed(const char *name, PRBool* containsChild);
+	NS_IMETHODIMP FindParentOf(nsIAbCard * aDirectory, nsIAbCard ** aParent);
+	NS_IMETHODIMP IsParentOf(nsIAbCard *child, PRBool deep, PRBool *isParent);
 
-//  NS_IMETHOD CreateSubDirectory(const char *dirName);
-
-//  NS_IMETHOD Rename(const char *name);
-
-//  NS_IMETHOD GetDepth(PRUint32 *depth);
-//  NS_IMETHOD SetDepth(PRUint32 depth);
+	// nsIAddrDBListener methods:
+	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 
 #ifdef HAVE_DB
   NS_IMETHOD GetTotalPersonsInDB(PRUint32 *totalPersons) const;					// How many messages in database.
 #endif
 	
 protected:
-//	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+
+	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
 //	nsresult NotifyItemAdded(nsISupports *item);
 //	nsresult NotifyItemDeleted(nsISupports *item);
 

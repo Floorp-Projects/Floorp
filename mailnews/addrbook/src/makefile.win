@@ -33,6 +33,7 @@ EXPORTS=								\
 			nsAddressBook.h				\
 			nsAbCardProperty.h				\
 			nsAbRDFResource.h			\
+			nsAddrBookSession.h			\
 			$(NULL)
 
 ################################################################################
@@ -50,6 +51,7 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAddressBook.obj				\
     .\$(OBJDIR)\nsAbCardProperty.obj				\
     .\$(OBJDIR)\nsAbRDFResource.obj				\
+    .\$(OBJDIR)\nsAddrBookSession.obj				\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -17,6 +17,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIAbCard.idl"
 
 interface nsIAddrDBListener;
 
@@ -29,7 +30,7 @@ interface nsIAddrDBAnnouncer : nsISupports {
 	void NotifyCardAttribChange(in unsigned long abCode, 
 								in nsIAddrDBListener instigator);
 	void NotifyCardEntryChange (in unsigned long abCode, 
-								in unsigned long entryID, 
+								in nsIAbCard card, 
 								in nsIAddrDBListener instigator);
 
 	void NotifyAnnouncerGoingAway();

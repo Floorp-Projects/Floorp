@@ -22,6 +22,8 @@
 #include "nsIAbCard.idl"
 
 %{C++
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULElement.h"
 %}
 
@@ -31,5 +33,6 @@ interface nsIAddressBook : nsISupports {
 	void NewCard();
 /*	void NewCard(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in nsIAbCard card);*/
+    void DeleteCards(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
 };
 

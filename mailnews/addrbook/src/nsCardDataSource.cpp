@@ -16,19 +16,19 @@
  * Reserved.
  */
 
-#include "msgCore.h"    // precompiled header...
-
 #include "nsCardDataSource.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
-
-#include "nsIMsgDatabase.h"
+#include "nsIAddrBookSession.h"
 
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIServiceManager.h"
+#include "prprf.h"	 
+#include "prlog.h"	 
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -44,13 +44,10 @@ typedef struct _nsAbRDFNotification {
 
 
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
-
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+
+nsIRDFResource* nsABCardDataSource::kNC_CardChild;
 
 nsIRDFResource* nsABCardDataSource::kNC_DisplayName;
 nsIRDFResource* nsABCardDataSource::kNC_PrimaryEmail;
@@ -64,6 +61,7 @@ nsIRDFResource* nsABCardDataSource::kNC_NewCard;
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, CardChild);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, DisplayName);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PrimaryEmail);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, WorkPhone);
@@ -160,6 +158,7 @@ nsABCardDataSource::~nsABCardDataSource (void)
 
   nsrefcnt refcnt;
 
+  NS_RELEASE2(kNC_CardChild, refcnt);
   NS_RELEASE2(kNC_DisplayName, refcnt);
   NS_RELEASE2(kNC_PrimaryEmail, refcnt);
   NS_RELEASE2(kNC_City, refcnt);
@@ -183,10 +182,15 @@ nsresult nsABCardDataSource::Init()
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
   if (NS_FAILED(rv)) return rv;
 
+  NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+  if (NS_SUCCEEDED(rv))
+    abSession->AddAddressBookListener(this);
+
   mRDFService->RegisterDataSource(this, PR_FALSE);
 
   if (! kNC_DisplayName) {
    
+    mRDFService->GetResource(kURINC_CardChild, &kNC_CardChild);
     mRDFService->GetResource(kURINC_DisplayName, &kNC_DisplayName);
     mRDFService->GetResource(kURINC_PrimaryEmail, &kNC_PrimaryEmail);
     mRDFService->GetResource(kURINC_City,		&kNC_City);
@@ -352,8 +356,13 @@ NS_IMETHODIMP nsABCardDataSource::HasAssertion(nsIRDFResource* source,
                             PRBool tv,
                             PRBool* hasAssertion)
 {
-  *hasAssertion = PR_FALSE;
-  return NS_OK;
+	nsresult rv;
+	nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
+	if(NS_SUCCEEDED(rv))
+		return DoCardHasAssertion(card, property, target, tv, hasAssertion);
+	else
+		*hasAssertion = PR_FALSE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsABCardDataSource::AddObserver(nsIRDFObserver* n)
@@ -532,26 +541,26 @@ nsABCardDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsIRDFResource*   aCommand,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-  nsresult rv = NS_OK;
+	nsresult rv = NS_OK;
 
-  // XXX need to handle batching of command applied to all sources
+	// XXX need to handle batching of command applied to all sources
 
-  PRUint32 i, cnt;
-  rv = aSources->Count(&cnt);
-  for (i = 0; i < cnt; i++) {
+	PRUint32 i, cnt;
+	rv = aSources->Count(&cnt);
+	for (i = 0; i < cnt; i++) 
+	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
-    nsCOMPtr<nsIAbCard> card = do_QueryInterface(supports, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      if ((aCommand == kNC_Delete)) {
-		rv = DoDeleteFromCard(card, aArguments);
-      }
-	  else if((aCommand == kNC_NewCard)) {
-		rv = DoNewCard(card, aArguments);
-	  }
-
-    }
-  }
-  return rv;
+		nsCOMPtr<nsIAbCard> card = do_QueryInterface(supports, &rv);
+		if (NS_SUCCEEDED(rv)) 
+		{
+			if ((aCommand == kNC_Delete))  
+				rv = DoDeleteFromCard(card, aArguments);
+			else if((aCommand == kNC_NewCard)) 
+				rv = DoNewCard(card, aArguments);
+		}
+	}
+	//for the moment return NS_OK, because failure stops entire DoCommand process.
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsABCardDataSource::OnItemAdded(nsIAbBase *parentDirectory, nsISupports *item)
@@ -603,7 +612,7 @@ NS_IMETHODIMP nsABCardDataSource::OnItemPropertyChanged(nsISupports *item, const
 														   const char *oldValue, const char *newValue)
 
 {
-	/*
+	
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item, &rv));
 
@@ -611,11 +620,17 @@ NS_IMETHODIMP nsABCardDataSource::OnItemPropertyChanged(nsISupports *item, const
 	{
 		if(PL_strcmp("DisplayName", property) == 0)
 		{
-			NotifyPropertyChanged(resource, kNC_DirName, oldValue, newValue);
+			NotifyPropertyChanged(resource, kNC_DisplayName, oldValue, newValue);
 		}
-	}*/
-
-
+		if(PL_strcmp("PrimaryEmail", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_PrimaryEmail, oldValue, newValue);
+		}
+		if(PL_strcmp("WorkPhone", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_WorkPhone, oldValue, newValue);
+		}
+	}
 	return NS_OK;
 }
 
@@ -623,14 +638,18 @@ nsresult nsABCardDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
 													  const char *oldValue, const char *newValue)
 {
-	nsCOMPtr<nsIRDFNode> oldValueNode;
 	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsString oldValueStr = oldValue;
 	nsString newValueStr = newValue;
-	createNode(oldValueStr, getter_AddRefs(oldValueNode));
 	createNode(newValueStr, getter_AddRefs(newValueNode));
-	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
 	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
+
+	if (oldValue)
+	{
+		nsCOMPtr<nsIRDFNode> oldValueNode;
+		nsString oldValueStr = oldValue;
+		createNode(oldValueStr, getter_AddRefs(oldValueNode));
+		NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
+	}
 	return NS_OK;
 }
 
@@ -683,3 +702,15 @@ nsresult nsABCardDataSource::DoNewCard(nsIAbCard *card, nsISupportsArray *argume
 	}
 	return rv;
 }
+
+nsresult nsABCardDataSource::DoCardHasAssertion(nsIAbCard *card, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion)
+{
+	*hasAssertion = PR_TRUE;
+
+	return NS_OK;
+
+}
+
+
+

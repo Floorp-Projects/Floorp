@@ -18,7 +18,6 @@
 
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "msgCore.h"  
 #include "nsAbBaseCID.h"
 #include "pratom.h"
 #include "nsIComponentManager.h"
@@ -36,6 +35,7 @@
 #include "nsAbCard.h"
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
+#include "nsAddrBookSession.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -46,6 +46,7 @@ static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID); 
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -218,6 +219,19 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 			delete abCardProperty;
 		return rv;
 	} 
+	else if (mClassID.Equals(kAddrBookSessionCID)) 
+	{
+		nsresult rv;
+		nsAddrBookSession * abSession = new nsAddrBookSession();
+		if (abSession)
+			rv = abSession->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && abSession)
+			delete abSession;
+		return rv;
+	}  
 	return NS_NOINTERFACE;  
 }  
 
@@ -312,7 +326,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
 	if (NS_FAILED(rv)) finalResult = rv;
 	
+	rv = compMgr->RegisterComponent(kAddrBookSessionCID,
+								  "Address Book Session",
+								  "component://netscape/addressbook/services/session",
+								  path, PR_TRUE, PR_TRUE);
 
+	if (NS_FAILED(rv)) finalResult = rv;
 	return finalResult;
 }
 
@@ -344,6 +363,12 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) finalResult = rv;
 	
 	rv = compMgr->UnregisterComponent(kAddressBookDB, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->UnregisterComponent(kAbCardPropertyCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->UnregisterComponent(kAddrBookSessionCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	return finalResult;

@@ -28,13 +28,16 @@
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
+#include "nsAddrDatabase.h"
+#include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsABCard::nsABCard(void)
-  : nsRDFResource(), mListeners(nsnull),
+  : nsAbRDFResource(), mListeners(nsnull),
     mInitialized(PR_FALSE), 
     mCsid(0), mDepth(0), mPrefFlags(0)
 {
@@ -74,9 +77,6 @@ nsABCard::~nsABCard(void)
 			mSubDirectories->RemoveElementAt(i);
 	}
 
-	if(mDatabase)
-		mDatabase->RemoveListener(this);
-
 	if (mListeners) 
 	{
 		PRInt32 i;
@@ -86,56 +86,56 @@ nsABCard::~nsABCard(void)
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsABCard, nsRDFResource, nsIAbCard)
+NS_IMPL_ISUPPORTS_INHERITED(nsABCard, nsAbRDFResource, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
-
-typedef PRBool
-(*nsArrayFilter)(nsISupports* element, void* data);
-
-#if 0
-static nsresult
-nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
-           nsISupportsArray* *result)
-{
-  nsCOMPtr<nsISupportsArray> f;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(f));
-  if (NS_FAILED(rv)) return rv;
-  PRUint32 i, count;
-  rv = array->Count(&count);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
-    if (filter(element, data)) {
-      rv = f->AppendElement(element);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-  *result = f;
-  return NS_OK;
-}
-#endif 
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-NS_IMETHODIMP nsABCard::OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsABCard::OnCardEntryChange
-(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator)
+(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
 {
-  return NS_OK;
+	if (abCode == AB_NotifyPropertyChanged && card)
+	{
+		PRUint32 tableID;
+		PRUint32 rowID;
+
+		card->GetDbTableID(&tableID);
+		card->GetDbRowID(&rowID);
+		if (m_dbTableID == tableID && m_dbRowID == rowID)
+		{
+			char* pNewStr = nsnull;
+			card->GetDisplayName(&pNewStr);
+			if (pNewStr)
+				NotifyPropertyChanged("DisplayName", nsnull, pNewStr);
+			PR_FREEIF(pNewStr);
+
+			card->GetPrimaryEmail(&pNewStr);
+			if (pNewStr)
+				NotifyPropertyChanged("PrimaryEmail", nsnull, pNewStr);
+			PR_FREEIF(pNewStr);
+
+			card->GetWorkPhone(&pNewStr);
+			if (pNewStr)
+				NotifyPropertyChanged("WorkPhone", nsnull, pNewStr);
+			PR_FREEIF(pNewStr);
+		}
+	}
+	return NS_OK;
 }
 
-NS_IMETHODIMP nsABCard::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator)
+nsresult nsABCard::NotifyPropertyChanged(char *property, char* oldValue, char* newValue)
 {
-  return NS_OK;
+	nsCOMPtr<nsISupports> supports;
+	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	{
+		//Notify listeners who listen to every folder
+		nsresult rv;
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->NotifyItemPropertyChanged(supports, property, oldValue, newValue);
+	}
+
+	return NS_OK;
 }
-*/
+
 
 nsresult nsABCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 {
@@ -268,8 +268,3 @@ NS_IMETHODIMP nsABCard::IsParentOf(nsIAbCard *child, PRBool deep, PRBool *isPare
 	return rv;
 }
 
-
-#ifdef HAVE_DB
-NS_IMETHOD GetTotalPersonsInDB(PRUint32 *totalPersons) const;					// How many messages in database.
-#endif
-	

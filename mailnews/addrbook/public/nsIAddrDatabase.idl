@@ -44,6 +44,9 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void Commit(in unsigned long commitType);
 	void ForceClosed();
 
-	void CreateNewCardAndAddToDB(in nsIAbCard newCard, in boolean benotify);
+	void CreateNewCardAndAddToDB(in nsIAbCard newCard, in boolean beNotify);
 	void EnumerateCards(in nsIAbDirectory directory, out nsIEnumerator result);
+	void DeleteCard(in nsIAbCard card, in boolean beNotify);
+	void EditCard(in nsIAbCard card, in boolean beNotify);
+	void ContainsCard(in nsIAbCard card, out boolean hasCard);
 };

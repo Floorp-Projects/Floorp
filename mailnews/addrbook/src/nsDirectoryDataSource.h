@@ -160,6 +160,11 @@ protected:
 
   nsresult DoNewDirectory(nsIAbDirectory *directory,
 							  nsISupportsArray *arguments);
+  nsresult DoDirectoryAssert(nsIAbDirectory *directory, 
+					nsIRDFResource *property, nsIRDFNode *target);
+  nsresult DoDirectoryHasAssertion(nsIAbDirectory *directory, 
+							 nsIRDFResource *property, nsIRDFNode *target,
+							 PRBool tv, PRBool *hasAssertion);
 
   static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
   static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);

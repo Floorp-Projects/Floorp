@@ -31,7 +31,7 @@
 <!ENTITY cutCmd.label ".Cut">  
 <!ENTITY copyCmd.label ".Copy">  
 <!ENTITY pasteCmd.label ".Paste">  
-<!ENTITY deleteCmd.label ".Delete">  
+<!ENTITY deleteCmd.label "Delete Card">  
 <!ENTITY selectAllCmd.label ".Select All">  
 <!ENTITY selectMenu.label ".Search for..."> 
 <!ENTITY findAgainCmd.label ".Find Again">  

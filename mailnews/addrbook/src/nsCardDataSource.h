@@ -22,6 +22,7 @@
 #include "nsIAbListener.h"
 #include "nsIAbCard.h"
 #include "nsISupportsArray.h"
+#include "nsString.h"
 
 
 /**
@@ -146,12 +147,14 @@ protected:
 	nsresult DoDeleteFromCard(nsIAbCard *directory,
 							  nsISupportsArray *arguments);
 
-	nsresult DoNewCard(nsIAbCard *directory,
-							  nsISupportsArray *arguments);
+	nsresult DoNewCard(nsIAbCard *directory, nsISupportsArray *arguments);
+	nsresult DoCardHasAssertion(nsIAbCard *card, nsIRDFResource *property, 
+								nsIRDFNode *target, PRBool tv, PRBool *hasAssertion);
 
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 
+	static nsIRDFResource* kNC_CardChild;
 	static nsIRDFResource* kNC_DisplayName;
 	static nsIRDFResource* kNC_PrimaryEmail;
 	static nsIRDFResource* kNC_WorkPhone;

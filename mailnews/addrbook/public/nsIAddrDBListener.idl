@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsISupports.idl"
+#include "nsIAbCard.idl"
 
 interface nsIAddrDBAnnouncer;
 
@@ -25,7 +26,7 @@ interface nsIAddrDBListener : nsISupports {
 	void OnCardAttribChange(in unsigned long abCode, 
 							in nsIAddrDBListener instigator);
 	void OnCardEntryChange (in unsigned long abCode, 
-							in unsigned long entryID, 
+							in nsIAbCard card, 
 							in nsIAddrDBListener instigator);
     void OnAnnouncerGoingAway(in nsIAddrDBAnnouncer instigator);
 };

@@ -27,6 +27,7 @@
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
+#include "prprf.h"	 
 #include "rdf.h"
 
 #include "nsAddrDatabase.h"
@@ -126,6 +127,10 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 	m_dbTableID = 0;
 	m_dbRowID = 0;
+
+	m_pAnonymousAttributes = nsnull;
+	m_pAnonymousValues = nsnull;
+
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
@@ -170,6 +175,43 @@ nsAbCardProperty::~nsAbCardProperty(void)
 	PR_FREEIF(m_pCustom4);
 	PR_FREEIF(m_pNote);
 
+	RemoveAnonymousAttrubutesList();
+
+	RemoveAnonymousValuesList();
+
+}
+nsresult nsAbCardProperty::RemoveAnonymousAttrubutesList()
+{
+	if (m_pAnonymousAttributes)
+	{
+		PRUint32 count = m_pAnonymousAttributes->Count();
+		for (int i = count - 1; i >= 0; i--)
+		{
+			char* pStr = (char*)m_pAnonymousAttributes->ElementAt(i);
+			PR_FREEIF(pStr);
+			m_pAnonymousAttributes->RemoveElementAt(i);
+		}
+		delete m_pAnonymousAttributes;
+		m_pAnonymousAttributes = nsnull;
+	}
+	return NS_OK;
+}
+
+nsresult nsAbCardProperty::RemoveAnonymousValuesList()
+{
+	if (m_pAnonymousValues)
+	{
+		PRUint32 count = m_pAnonymousValues->Count();
+		for (int i = count - 1; i >= 0; i--)
+		{
+			char* pStr = (char*)m_pAnonymousValues->ElementAt(i);
+			PR_FREEIF(pStr);
+			m_pAnonymousValues->RemoveElementAt(i);
+		}
+		delete m_pAnonymousValues;
+		m_pAnonymousValues = nsnull;
+	}
+	return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsAbCardProperty)
@@ -198,7 +240,7 @@ NS_IMETHODIMP nsAbCardProperty::OnCardAttribChange(PRUint32 abCode, nsIAddrDBLis
 }
 
 NS_IMETHODIMP nsAbCardProperty::OnCardEntryChange
-(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator)
+(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
 {
   return NS_OK;
 }
@@ -345,80 +387,173 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, char **value)
 
 NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const char *value)
 {
+	if (!attrname && !value)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
 	nsAutoString cardValue(value);
 	char* valueStr = cardValue.ToNewCString();
 
     if (!PL_strcmp(attrname, kFirstNameColumn))
-		SetFirstName(valueStr);
+		rv = SetFirstName(valueStr);
     else if (!PL_strcmp(attrname, kLastNameColumn))
-		SetLastName(valueStr);
+		rv = SetLastName(valueStr);
     else if (!PL_strcmp(attrname, kDisplayNameColumn))
-		SetDisplayName(valueStr);
+		rv = SetDisplayName(valueStr);
     else if (!PL_strcmp(attrname, kNicknameColumn))
-		SetNickName(valueStr);
+		rv = SetNickName(valueStr);
     else if (!PL_strcmp(attrname, kPriEmailColumn))
-		SetPrimaryEmail(valueStr);
+		rv = SetPrimaryEmail(valueStr);
     else if (!PL_strcmp(attrname, k2ndEmailColumn))
-		SetSecondEmail(valueStr);
+		rv = SetSecondEmail(valueStr);
     else if (!PL_strcmp(attrname, kWorkPhoneColumn))
-		SetWorkPhone(valueStr);
+		rv = SetWorkPhone(valueStr);
     else if (!PL_strcmp(attrname, kHomePhoneColumn))
-		SetHomePhone(valueStr);
+		rv = SetHomePhone(valueStr);
     else if (!PL_strcmp(attrname, kFaxColumn))
-		SetFaxNumber(valueStr);
+		rv = SetFaxNumber(valueStr);
     else if (!PL_strcmp(attrname, kPagerColumn))
-		SetPagerNumber(valueStr);
+		rv = SetPagerNumber(valueStr);
     else if (!PL_strcmp(attrname, kCellularColumn))
-		SetCellularNumber(valueStr);
+		rv = SetCellularNumber(valueStr);
     else if (!PL_strcmp(attrname, kHomeAddressColumn))
-		SetHomeAddress(valueStr);
+		rv = SetHomeAddress(valueStr);
     else if (!PL_strcmp(attrname, kHomeAddress2Column))
-		SetHomeAddress2(valueStr);
+		rv = SetHomeAddress2(valueStr);
     else if (!PL_strcmp(attrname, kHomeCityColumn))
-		SetHomeCity(valueStr);
+		rv = SetHomeCity(valueStr);
     else if (!PL_strcmp(attrname, kHomeStateColumn))
-		SetHomeState(valueStr);
+		rv = SetHomeState(valueStr);
     else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
-		SetHomeZipCode(valueStr);
+		rv = SetHomeZipCode(valueStr);
     else if (!PL_strcmp(attrname, kHomeCountryColumn))
-		SetHomeCountry(valueStr);
+		rv = SetHomeCountry(valueStr);
     else if (!PL_strcmp(attrname, kWorkAddressColumn))
-		SetWorkAddress(valueStr);
+		rv = SetWorkAddress(valueStr);
     else if (!PL_strcmp(attrname, kWorkAddress2Column))
-		SetWorkAddress2(valueStr);
+		rv = SetWorkAddress2(valueStr);
     else if (!PL_strcmp(attrname, kWorkCityColumn))
-		SetWorkCity(valueStr);
+		rv = SetWorkCity(valueStr);
     else if (!PL_strcmp(attrname, kWorkStateColumn))
-		SetWorkState(valueStr);
+		rv = SetWorkState(valueStr);
     else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
-		SetWorkZipCode(valueStr);
+		rv = SetWorkZipCode(valueStr);
     else if (!PL_strcmp(attrname, kWorkCountryColumn))
-		SetWorkCountry(valueStr);
+		rv = SetWorkCountry(valueStr);
     else if (!PL_strcmp(attrname, kWebPage1Column))
-		SetWebPage1(valueStr);
+		rv = SetWebPage1(valueStr);
     else if (!PL_strcmp(attrname, kWebPage2Column))
-		SetWebPage2(valueStr);
+		rv = SetWebPage2(valueStr);
     else if (!PL_strcmp(attrname, kBirthYearColumn))
-		SetBirthYear(valueStr);
+		rv = SetBirthYear(valueStr);
     else if (!PL_strcmp(attrname, kBirthMonthColumn))
-		SetBirthMonth(valueStr);
+		rv = SetBirthMonth(valueStr);
     else if (!PL_strcmp(attrname, kBirthDayColumn))
-		SetBirthDay(valueStr);
+		rv = SetBirthDay(valueStr);
     else if (!PL_strcmp(attrname, kCustom1Column))
-		SetCustom1(valueStr);
+		rv = SetCustom1(valueStr);
     else if (!PL_strcmp(attrname, kCustom2Column))
-		SetCustom2(valueStr);
+		rv = SetCustom2(valueStr);
     else if (!PL_strcmp(attrname, kCustom3Column))
-		SetCustom3(valueStr);
+		rv = SetCustom3(valueStr);
     else if (!PL_strcmp(attrname, kCustom4Column))
-		SetCustom4(valueStr);
+		rv = SetCustom4(valueStr);
     else if (!PL_strcmp(attrname, kNotesColumn))
-		SetNotes(valueStr);
-	/* else handle pass down attribute */
+		rv = SetNotes(valueStr);
+	else
+		rv = SetAnonymousAttribute(attrname, value);
 
 	delete[] valueStr;
 
+	return rv;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousAttrubutesList(nsVoidArray **attrlist)
+{
+	if (attrlist && m_pAnonymousAttributes)
+	{
+		*attrlist = m_pAnonymousAttributes;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousValuesList(nsVoidArray **valuelist)
+{
+	if (valuelist && m_pAnonymousValues)
+	{
+		*valuelist = m_pAnonymousValues;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttrubutesList(nsVoidArray *pAttrlist)
+{
+	if (m_pAnonymousAttributes)
+		RemoveAnonymousAttrubutesList();
+	m_pAnonymousAttributes = pAttrlist;
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousValuesList(nsVoidArray *pValuelist)
+{
+	if (m_pAnonymousValues)
+		RemoveAnonymousValuesList();
+	m_pAnonymousValues = pValuelist;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttribute(const char *attrname, const char *value)
+{
+	nsresult rv = NS_OK;
+
+	if (!m_pAnonymousAttributes && !m_pAnonymousValues)
+	{
+		m_pAnonymousAttributes = new nsVoidArray();
+		m_pAnonymousValues = new nsVoidArray();
+	}
+	if (m_pAnonymousAttributes && m_pAnonymousValues)
+	{
+		char* pAttribute = nsnull;
+		char* pValue = nsnull;
+		pAttribute = PL_strdup(attrname);
+		pValue = PL_strdup(value);
+		if (pAttribute && pValue)
+		{
+			m_pAnonymousAttributes->AppendElement(pAttribute);
+			m_pAnonymousValues->AppendElement(pValue);
+		}
+		else
+		{
+			PR_FREEIF(pAttribute);
+			PR_FREEIF(pValue);
+			rv = NS_ERROR_NULL_POINTER;
+		}
+	}
+	else
+	{ 
+		rv = NS_ERROR_FAILURE;
+	}
+
+	return rv;
+}	
+
+/* caller need to PR_smprintf_free *uri */
+NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
+{
+	char* cardURI = nsnull;
+	if (uri && m_dbTableID != 0 && m_dbRowID != 0)
+		cardURI = PR_smprintf("abcard://Pab%ld/Card%ld", m_dbTableID, m_dbRowID);
+	if (cardURI)
+	{
+		*uri = cardURI;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase()
@@ -459,3 +594,163 @@ NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase()
 	return NS_OK;
 
 }
+
+NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase()
+{
+	// find out which database, which directory to add
+	// get RDF directory selected node
+	nsresult openAddrDB = NS_OK;
+	if (!mDatabase)
+	{
+		nsresult rv = NS_ERROR_FAILURE;
+
+		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+		if (NS_FAILED(rv))
+			return rv;
+
+		nsIFileSpec* userdir;
+		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
+		if (NS_FAILED(rv))
+			return rv;
+		
+		nsFileSpec dbPath;
+		userdir->GetFileSpec(&dbPath);
+		dbPath += "abook.mab";
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDB, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			openAddrDB = addrDBFactory->Open(&dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+
+		if (mDatabase)
+		{
+			mDatabase->EditCard(this, PR_TRUE);
+			mDatabase->Close(PR_TRUE);
+			mDatabase = null_nsCOMPtr();
+		}
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
+{
+	char *str = nsnull;
+	srcCard->GetFirstName(&str);
+	SetFirstName(str);
+	PR_FREEIF(str);
+
+	srcCard->GetLastName(&str);
+	SetLastName(str);
+	PR_FREEIF(str);
+	srcCard->GetDisplayName(&str);
+	SetDisplayName(str);
+	PR_FREEIF(str);
+	srcCard->GetNickName(&str);
+	SetNickName(str);
+	PR_FREEIF(str);
+	srcCard->GetPrimaryEmail(&str);
+	SetPrimaryEmail(str);
+	PR_FREEIF(str);
+	srcCard->GetSecondEmail(&str);
+	SetSecondEmail(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkPhone(&str);
+	SetWorkPhone(str);
+	PR_FREEIF(str);
+	srcCard->GetHomePhone(&str);
+	SetHomePhone(str);
+	PR_FREEIF(str);
+	srcCard->GetFaxNumber(&str);
+	SetFaxNumber(str);
+	PR_FREEIF(str);
+	srcCard->GetPagerNumber(&str);
+	SetPagerNumber(str);
+	PR_FREEIF(str);
+	srcCard->GetCellularNumber(&str);
+	SetCellularNumber(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeAddress(&str);
+	SetHomeAddress(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeAddress2(&str);
+	SetHomeAddress2(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeCity(&str);
+	SetHomeCity(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeState(&str);
+	SetHomeState(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeZipCode(&str);
+	SetHomeZipCode(str);
+	PR_FREEIF(str);
+	srcCard->GetHomeCountry(&str);
+	SetHomeCountry(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkAddress(&str);
+	SetWorkAddress(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkAddress2(&str);
+	SetWorkAddress2(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkCity(&str);
+	SetWorkCity(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkState(&str);
+	SetWorkState(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkZipCode(&str);
+	SetWorkZipCode(str);
+	PR_FREEIF(str);
+	srcCard->GetWorkCountry(&str);
+	SetWorkCountry(str);
+	PR_FREEIF(str);
+	srcCard->GetJobTitle(&str);
+	SetJobTitle(str);
+	PR_FREEIF(str);
+	srcCard->GetDepartment(&str);
+	SetDepartment(str);
+	PR_FREEIF(str);
+	srcCard->GetCompany(&str);
+	SetCompany(str);
+	PR_FREEIF(str);
+	srcCard->GetWebPage1(&str);
+	SetWebPage1(str);
+	PR_FREEIF(str);
+	srcCard->GetWebPage2(&str);
+	SetWebPage2(str);
+	PR_FREEIF(str);
+	srcCard->GetBirthYear(&str);
+	SetBirthYear(str);
+	PR_FREEIF(str);
+	srcCard->GetBirthMonth(&str);
+	SetBirthMonth(str);
+	PR_FREEIF(str);
+	srcCard->GetBirthDay(&str);
+	SetBirthDay(str);
+	PR_FREEIF(str);
+	srcCard->GetCustom1(&str);
+	SetCustom1(str);
+	PR_FREEIF(str);
+	srcCard->GetCustom2(&str);
+	SetCustom2(str);
+	PR_FREEIF(str);
+	srcCard->GetCustom3(&str);
+	SetCustom3(str);
+	PR_FREEIF(str);
+	srcCard->GetCustom4(&str);
+	SetCustom4(str);
+	PR_FREEIF(str);
+	srcCard->GetNotes(&str);
+	SetNotes(str);
+	PR_FREEIF(str);
+
+	PRUint32 tableID, rowID;
+	srcCard->GetDbTableID(&tableID);
+	SetDbTableID(tableID);
+	srcCard->GetDbRowID(&rowID);
+	SetDbRowID(rowID);
+
+	return NS_OK;
+}
+

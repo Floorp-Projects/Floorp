@@ -18,6 +18,12 @@
  
 #include "nsIAbBase.idl"
 
+[ptr] native nsVoidArray(nsVoidArray);
+
+%{C++
+#include "nsVoidArray.h"
+%}
+
 [scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
 interface nsIAbCard : nsIAbBase {
 
@@ -66,5 +72,13 @@ interface nsIAbCard : nsIAbBase {
 
 	void GetCardValue(in string attrname, out string value);
 	void SetCardValue(in string attrname, in string value);
+	void GetAnonymousAttrubutesList(out nsVoidArray attrlist);
+	void GetAnonymousValuesList(out nsVoidArray valuelist);
+	void SetAnonymousAttrubutesList(in nsVoidArray attrlist);
+	void SetAnonymousValuesList(in nsVoidArray valuelist);
+	void SetAnonymousAttribute(in string attrname, in string value);
+	void GetCardURI(out string uri);
 	void AddCardToDatabase();
+	void EditCardToDatabase();
+	void CopyCard(in nsIAbCard srcCard);
 };

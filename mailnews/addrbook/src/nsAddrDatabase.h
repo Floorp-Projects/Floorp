@@ -27,6 +27,31 @@
 #include "nsIAddrDBListener.h"
 #include "nsISupportsArray.h"
 
+typedef enum 
+{
+	AB_NotifyInserted,
+	AB_NotifyDeleted,
+	AB_NotifyPropertyChanged,
+
+	AB_NotifyAll,		   /* contents of the have totally changed. Listener must totally
+							  forget anything they knew about the object. */
+	/* pane notifications (i.e. not tied to a particular entry */
+	AB_NotifyScramble,     /* same contents, but the view indices have all changed 
+						      i.e the object was sorted on a different attribute */
+	AB_NotifyLDAPTotalContentChanged,
+	AB_NotifyNewTopIndex,
+	AB_NotifyStartSearching,
+	AB_NotifyStopSearching
+
+} AB_NOTIFY_CODE;
+
+enum nsAddrDBCommitType {
+  kSmallCommit,
+  kLargeCommit,
+  kSessionCommit,
+  kCompressCommit
+};
+
 class nsAddrDatabase : public nsIAddrDatabase 
 {
 public:
@@ -38,7 +63,7 @@ public:
 	NS_IMETHOD AddListener(nsIAddrDBListener *listener);
 	NS_IMETHOD RemoveListener(nsIAddrDBListener *listener);
 	NS_IMETHOD NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-	NS_IMETHOD NotifyCardEntryChange(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator);
+	NS_IMETHOD NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 	NS_IMETHOD NotifyAnnouncerGoingAway();
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -53,8 +78,11 @@ public:
 	NS_IMETHOD Commit(PRUint32 commitType);
 	NS_IMETHOD ForceClosed();
 
-	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool benotify);
+	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
+	NS_IMETHOD DeleteCard(nsIAbCard *newCard, PRBool notify);
+	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
+	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -68,6 +96,7 @@ public:
 	PRUint32		GetCurVersion();
 	nsIMdbTableRowCursor *GetTableRowCursor();
 	nsIMdbTable		*GetPabTable() {return m_mdbPabTable;}
+	nsIMdbTable		*GetAnonymousTable() {return m_mdbAnonymousTable;}
 
 	static nsAddrDatabase*	FindInCache(nsFileSpec *dbName);
 
@@ -106,9 +135,11 @@ protected:
 
 
 	mdb_err AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
-	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString &str);
+	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
 	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
-
+	nsresult AddAnonymousAttributesToDB(nsIAbCard *newCard, nsIMdbRow *cardRow);
+	nsresult GetAnonymousAttributesFromDB();
+	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -117,6 +148,8 @@ protected:
 	nsresult			InitExistingDB();
 	nsresult			InitNewDB();
 	nsresult			InitMDBInfo();
+	nsresult			InitPabTable();
+	nsresult			InitAnonymousTable();
 
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
@@ -126,12 +159,19 @@ protected:
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray/*<nsIAddrDBListener>*/ *m_ChangeListeners;
 
-	mdb_kind			m_pabTableKind;
-	mdb_kind			m_buddyTableKind;
-	mdb_kind			m_historyTableKind;
-	mdb_kind			m_mailListTableKind;
-	mdb_scope			m_cardRowScopeToken;
-	mdb_kind			m_categoryTableKind;
+	nsIMdbTable		    *m_mdbAnonymousTable;
+	mdb_kind			m_AnonymousTableKind;
+	mdb_scope			m_AnonymousRowScopeToken;
+	mdb_token			m_AnonymousColumnToken;
+	nsVoidArray*		m_pAnonymousAttributes;
+	nsVoidArray*		m_pAnonymousValues;
+
+	mdb_kind			m_PabTableKind;
+ 	mdb_kind			m_HistoryTableKind;
+	mdb_kind			m_MailListTableKind;
+	mdb_kind			m_CategoryTableKind;
+
+	mdb_scope			m_CardRowScopeToken;
 
 	mdb_token			m_FirstNameColumnToken;
 	mdb_token			m_LastNameColumnToken;

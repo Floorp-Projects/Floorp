@@ -18,12 +18,6 @@
  
 #include "nsICollection.idl"
 
-%{ C++
-#include "nsIAbListener.h"
-%}  
-
-interface nsIAbListener;
-
 [scriptable, uuid(013DD009-F73B-11d2-A2DA-001083003D0C)]
 interface nsIAbBase : nsICollection {
 
@@ -34,9 +28,6 @@ interface nsIAbBase : nsICollection {
     attribute nsIAbBase parent;
 
     nsIEnumerator GetChildNodes();
-
-	void AddAddrBookListener(in nsIAbListener listener);
-	void RemoveAddrBookListener(in nsIAbListener listener);
 
     void AddUnique(in nsISupports element);
     void ReplaceElement(in nsISupports element, in nsISupports newElement);

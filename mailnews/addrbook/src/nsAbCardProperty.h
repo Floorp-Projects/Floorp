@@ -27,7 +27,6 @@
 
 #include "nsIAbBase.h"  
 #include "nsIAbCard.h"  
-#include "nsRDFResource.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
@@ -49,7 +48,7 @@ public:
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator);
+	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator);
 
 	// nsICollection methods:
@@ -85,8 +84,6 @@ public:
 	NS_IMETHOD GetParent(nsIAbBase* *parent) { return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD SetParent(nsIAbBase *parent) { return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD GetChildNodes(nsIEnumerator* *result) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD AddAddrBookListener(nsIAbListener * listener) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD RemoveAddrBookListener(nsIAbListener * listener) { return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD AddUnique(nsISupports* element) { return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement) { return NS_ERROR_NOT_IMPLEMENTED; }
 
@@ -176,12 +173,23 @@ public:
 
 	NS_IMETHOD GetCardValue(const char *attrname, char **value);
 	NS_IMETHOD SetCardValue(const char *attrname, const char *value);
+	NS_IMETHOD GetAnonymousAttrubutesList(nsVoidArray **attrlist);
+	NS_IMETHOD GetAnonymousValuesList(nsVoidArray **valuelist);
+	NS_IMETHOD SetAnonymousAttrubutesList(nsVoidArray *pAttrlist);
+	NS_IMETHOD SetAnonymousValuesList(nsVoidArray *pValuelist);
+	NS_IMETHOD SetAnonymousAttribute(const char *attrname, const char *value);
+	NS_IMETHOD GetCardURI(char **uri);
 	NS_IMETHOD AddCardToDatabase();
+	NS_IMETHOD EditCardToDatabase();
+	NS_IMETHOD CopyCard(nsIAbCard* srcCard);
+
 
 protected:
 
 	nsresult GetAttributeName(char **aName, char* pValue);
 	nsresult SetAttributeName(char *aName, char** arrtibute);
+	nsresult RemoveAnonymousAttrubutesList();
+	nsresult RemoveAnonymousValuesList();
 
 	char* m_pFirstName;
 	char* m_pLastName;
@@ -226,6 +234,9 @@ protected:
 	PRUint32 m_dbRowID;
 
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
+	nsVoidArray* m_pAnonymousAttributes;
+	nsVoidArray* m_pAnonymousValues;
+
 };
 
 #endif

@@ -48,6 +48,7 @@ function EditCardOKButton()
 	SetCardValues(top.card, frames["browser.editcard"].document);
 	
 	// Need to commit changes here Candice.
+	top.card.EditCardToDatabase();
 	
 	top.window.close();
 }
