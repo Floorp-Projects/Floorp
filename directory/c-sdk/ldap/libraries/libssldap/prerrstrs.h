@@ -27,15 +27,12 @@
 
 /*
  ****************************************************************************
- * The code below this point was provided by Nelson Bolyard <nelsonb> of the
- *	Netscape Certificate Server team on 27-March-1998.
- *	Taken from the file ns/security/cmd/lib/NSPRerrs.h on NSS_1_BRANCH.
- *	Last updated from there: 24-July-1998 by Mark Smith <mcs>
- *
- * All of the Directory Server specific changes are enclosed inside
- *	#ifdef NS_DIRECTORY.
+ * On 21-June-2002, the code below this point was copied from the file
+ * mozilla/security/nss/cmd/lib/NSPRerrs.h (tag NSS_3_4_2_RTM).
+ * One addition was made: PR_OPERATION_ABORTED_ERROR.
  ****************************************************************************
  */
+
 /* General NSPR 2.0 errors */
 /* Caller must #include "prerror.h" */
 
@@ -123,6 +120,7 @@ ER2( PR_NO_MORE_FILES_ERROR, 	"No more entries in the directory." )
 ER2( PR_END_OF_FILE_ERROR, 	"Encountered end of file." )
 ER2( PR_FILE_SEEK_ERROR, 	"Seek error." )
 ER2( PR_FILE_IS_BUSY_ERROR, 	"The file is busy." )
+ER2( PR_OPERATION_ABORTED_ERROR,  "The I/O operation was aborted" )
 ER2( PR_IN_PROGRESS_ERROR,
 "Operation is still in progress (probably a non-blocking connect)." )
 ER2( PR_ALREADY_INITIATED_ERROR,
@@ -136,4 +134,21 @@ ER2( PR_GROUP_EMPTY_ERROR, 	"The wait group is empty." )
 ER2( PR_INVALID_STATE_ERROR, 	"Object state improper for request." )
 #endif
 
+#ifdef PR_NETWORK_DOWN_ERROR
+ER2( PR_NETWORK_DOWN_ERROR,	"Network is down." )
+#endif
+
+#ifdef PR_SOCKET_SHUTDOWN_ERROR
+ER2( PR_SOCKET_SHUTDOWN_ERROR,	"The socket was previously shut down." )
+#endif
+
+#ifdef PR_CONNECT_ABORTED_ERROR
+ER2( PR_CONNECT_ABORTED_ERROR,	"TCP Connection aborted." )
+#endif
+
+#ifdef PR_HOST_UNREACHABLE_ERROR
+ER2( PR_HOST_UNREACHABLE_ERROR,	"Host is unreachable." )
+#endif
+
+/* always last */
 ER2( PR_MAX_ERROR, 		"Placeholder for the end of the list" )

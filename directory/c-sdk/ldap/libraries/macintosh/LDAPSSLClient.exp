@@ -11,6 +11,8 @@ ldapssl_pkcs_init
 ldapssl_err2string
 ldapssl_serverauth_init
 ldapssl_set_strength
+ldapssl_set_option
+ldapssl_get_option
 #  the last Windows ordinal number that has been reserved for SSL is 469.
 
 #  Windows ordinals 1100-1150 are reserved for privately/non-published

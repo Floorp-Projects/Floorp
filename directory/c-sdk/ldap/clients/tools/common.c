@@ -489,7 +489,7 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    else
 		passwd = strdup( optarg );
 	    break;
-	    case 'j':       /* bind password from file */
+	case 'j':       /* bind password from file */
 	    isj = 1;
 	    if ((password_fp = fopen( optarg, "r" )) == NULL ) {
 		fprintf(stderr, "%s: Unable to open '%s' file\n",
@@ -1106,7 +1106,8 @@ ldaptool_print_lderror( LDAP *ld, char *msg, int check4ssl )
     ldap_perror( ld, msg );
     if ( secure && check4ssl != LDAPTOOL_CHECK4SSL_NEVER ) {
 	if ( check4ssl == LDAPTOOL_CHECK4SSL_ALWAYS
-		|| ( lderr == LDAP_SERVER_DOWN )) {
+		|| ( lderr == LDAP_SERVER_DOWN )
+		|| ( lderr == LDAP_CONNECT_ERROR )) {
 	    int		sslerr = PORT_GetError();
 
 	    fprintf( stderr, "\tSSL error %d (%s)\n", sslerr,

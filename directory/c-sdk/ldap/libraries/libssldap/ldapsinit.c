@@ -57,6 +57,13 @@
 #include <pk11func.h>
 
 /*
+ * Macro that determines how many SSL options we support. As of June, 2002
+ * NSS supports 14 options numbered 1-14 (see nss/ssl.h).  We allow some
+ * room for expansion.
+ */
+#define LDAPSSL_MAX_SSL_OPTION		20
+
+/*
  * Data structure to hold the standard NSPR I/O function pointers set by
  * libprldap.   We save them in our session data structure so we can call
  * them from our own I/O functions (we add functionality to support SSL
@@ -76,6 +83,8 @@ typedef struct ldapssl_std_functions {
 typedef struct ldapssl_session_info {
     int			lssei_using_pcks_fns;
     int			lssei_ssl_strength;
+    PRBool		lssei_ssl_option_value[LDAPSSL_MAX_SSL_OPTION+1];
+    PRBool		lssei_ssl_option_isset[LDAPSSL_MAX_SSL_OPTION+1];
     char		*lssei_certnickname;
     char        	*lssei_keypasswd;
     LDAPSSLStdFunctions	lssei_std_functions;
@@ -108,6 +117,8 @@ void set_using_pkcs_functions( int val )
 /*
  * Utility functions:
  */
+static int set_ssl_options( PRFileDesc *sslfd, PRBool *optval,
+	PRBool *optisset );
 static void ldapssl_free_session_info( LDAPSSLSessionInfo **ssipp );
 static void ldapssl_free_socket_info( LDAPSSLSocketInfo **soipp );
 
@@ -136,7 +147,20 @@ static char *get_keypassword( PK11SlotInfo *slot, PRBool retry,
 /*
  * Static variables.
  */
+/* SSL strength setting for new LDAPS sessions */
 static int default_ssl_strength = LDAPSSL_AUTH_CERT;
+
+/*
+ * Arrays to track global defaults for SSL options. These are used for
+ * new LDAPS sessions. For each option, we track both the option value
+ * and a Boolean that indicates whether the value has been set using
+ * the ldapssl_set_option() call. If an option has not been set, we
+ * don't make any NSS calls to set it; that way, the default NSS option
+ * values are used. Similar arrays are included in the LDAPSSLSessionInfo
+ * structure so options can be set on a per-LDAP session basis as well.
+ */
+static PRBool default_ssl_option_value[LDAPSSL_MAX_SSL_OPTION+1] = {0};
+static PRBool default_ssl_option_isset[LDAPSSL_MAX_SSL_OPTION+1] = {0};
 
 
 /*
@@ -160,7 +184,7 @@ ldapssl_init( const char *defhost, int defport, int defsecure )
 
     if ( ldapssl_install_routines( ld ) < 0 || ldap_set_option( ld,
 		LDAP_OPT_SSL, defsecure ? LDAP_OPT_ON : LDAP_OPT_OFF ) != 0 ) {
-	PR_SetError( PR_UNKNOWN_ERROR, EINVAL );  /* XXXmcs: just a guess! */
+	PR_SetError( PR_GetError(), EINVAL );  /* XXXmcs: just a guess! */
 	ldap_unbind( ld );
 	return( NULL );
     }
@@ -277,6 +301,15 @@ do_ldapssl_connect(const char *hostlist, int defport, int timeout,
     }
 
     /*
+     * Set any SSL options that were modified by a previous call to
+     * the ldapssl_set_option() function. 
+     */
+    if ( set_ssl_options( sslfd, sseip->lssei_ssl_option_value,
+		sseip->lssei_ssl_option_isset ) < 0 ) {
+	goto close_socket_and_exit_with_error;
+    }
+
+    /*
      * Let the standard NSPR to LDAP layer know about the new socket and
      * our own socket-specific data.
      */
@@ -302,7 +335,7 @@ do_ldapssl_connect(const char *hostlist, int defport, int timeout,
     return( intfd );	/* success */
 
 close_socket_and_exit_with_error:
-    if ( NULL != sslfd ) {
+    if ( NULL != sslfd && sslfd != soi.soinfo_prfd ) {
 	PR_Close( sslfd );
     }
     if ( NULL != ssoip ) {
@@ -392,6 +425,10 @@ ldapssl_install_routines( LDAP *ld )
      *		lssei_certdbh
      */
     ssip->lssei_ssl_strength = default_ssl_strength;
+    memcpy( ssip->lssei_ssl_option_value, default_ssl_option_value,
+		sizeof(ssip->lssei_ssl_option_value));
+    memcpy( ssip->lssei_ssl_option_isset, default_ssl_option_isset,
+		sizeof(ssip->lssei_ssl_option_isset));
     ssip->lssei_using_pcks_fns = using_pkcs_functions;
     ssip->lssei_certdbh = CERT_GetDefaultCertDB();
 
@@ -406,7 +443,7 @@ ldapssl_install_routines( LDAP *ld )
 	return( -1 );
     }
 
-    /* override socket, connect, and ioctl */
+    /* override socket, connect, and disposehandle */
     ssip->lssei_std_functions.lssf_connect_fn = iofns.lextiof_connect;
     iofns.lextiof_connect = ldapssl_connect;
     ssip->lssei_std_functions.lssf_close_fn = iofns.lextiof_close;
@@ -539,6 +576,181 @@ ldapssl_set_strength( LDAP *ld, int sslstrength )
     }
 
     return( rc );
+}
+
+
+/*
+ * Set SSL options for an existing SSL-enabled LDAP session handle.
+ * If ld is NULL, the default options used for all future LDAP SSL sessions
+ * are the ones affected. The option values are specific to the underlying
+ * SSL provider; see ssl.h within the Network Security Services (NSS)
+ * distribution for the options supported by NSS (the default SSL provider).
+ *
+ * This function should be called before any LDAP connections are created.
+ *
+ * Returns: 0 if all goes well.
+ */
+int
+LDAP_CALL
+ldapssl_set_option( LDAP *ld, int option, int on )
+{
+    int		rc = 0;	/* assume success */
+
+    if ( option < 0 || option > LDAPSSL_MAX_SSL_OPTION ) {
+	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+	rc = -1; 
+    } else {
+	if ( NULL == ld ) {
+	    /* set default options for new LDAP sessions */
+	    default_ssl_option_value[option] = on;
+	    default_ssl_option_isset[option] = PR_TRUE;
+	} else {
+	    /* set session options */
+	    PRLDAPSessionInfo	sei;
+	    LDAPSSLSessionInfo	*sseip;
+
+	    memset( &sei, 0, sizeof( sei ));
+	    sei.seinfo_size = PRLDAP_SESSIONINFO_SIZE;
+	    if ( prldap_get_session_info( ld, NULL, &sei ) == LDAP_SUCCESS ) {
+		sseip = (LDAPSSLSessionInfo *)sei.seinfo_appdata;
+		sseip->lssei_ssl_option_value[option] = on;
+		sseip->lssei_ssl_option_isset[option] = PR_TRUE;
+	    } else {
+		rc = -1;
+	    }
+	}
+    }
+
+    return( rc );
+}
+
+
+/*
+ * Retrieve SSL options for an existing SSL-enabled LDAP session handle.
+ * If ld is NULL, the default options to be used for all future LDAP SSL
+ * sessions are retrieved. The option values are specific to the underlying
+ * SSL provider; see ssl.h within the Network Security Services (NSS)
+ * distribution for the options supported by NSS (the default SSL provider).
+ *
+ * Returns: 0 if all goes well.
+ */
+int
+LDAP_CALL
+ldapssl_get_option( LDAP *ld, int option, int *onp )
+{
+    int		rc = 0;	/* assume success */
+
+    if ( option < 0 || option > LDAPSSL_MAX_SSL_OPTION || onp == NULL ) {
+	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+	rc = -1; 
+    } else {
+	int		rv, set_rv = 0;
+
+	if ( NULL == ld ) {
+	     /* return default options for new LDAP sessions */
+	    if ( default_ssl_option_isset[option] ) {
+		rv = default_ssl_option_value[option];
+		set_rv = 1;
+	    }
+	} else {
+	    /* return session options */
+	    PRLDAPSessionInfo	sei;
+	    LDAPSSLSessionInfo	*sseip;
+
+	    memset( &sei, 0, sizeof( sei ));
+	    sei.seinfo_size = PRLDAP_SESSIONINFO_SIZE;
+	    if ( prldap_get_session_info( ld, NULL, &sei )
+			== LDAP_SUCCESS ) {
+		sseip = (LDAPSSLSessionInfo *)sei.seinfo_appdata;
+		if ( sseip->lssei_ssl_option_isset[option] ) {
+		    rv = sseip->lssei_ssl_option_value[option];
+		    set_rv = 1;
+		}
+	    } else {
+		rc = -1;
+	    }
+	}
+
+	if ( !set_rv ) {
+	    PRBool	pron = PR_FALSE;
+	    if ( rc == 0 && SSL_OptionGetDefault( (PRInt32)option, &pron )
+			!= SECSuccess ) {
+		rc = -1;
+	    }
+	    rv = pron;
+	}
+
+	*onp = rv;	/* always return a value */
+    }
+
+    return( rc );
+}
+
+#ifdef LDAPSSL_DEBUG
+struct optitem {
+	PRInt32		om_option;
+	const char	*om_string;
+} optmap[] = {
+	{ SSL_SECURITY,			"SSL_SECURITY" },
+	{ SSL_SOCKS, 			"SSL_SOCKS" },
+	{ SSL_REQUEST_CERTIFICATE, 	"SSL_REQUEST_CERTIFICATE" },
+	{ SSL_HANDSHAKE_AS_CLIENT, 	"SSL_HANDSHAKE_AS_CLIENT" },
+	{ SSL_HANDSHAKE_AS_SERVER, 	"SSL_HANDSHAKE_AS_SERVER" },
+	{ SSL_ENABLE_SSL2, 		"SSL_ENABLE_SSL2" },
+	{ SSL_ENABLE_SSL3, 		"SSL_ENABLE_SSL3" },
+	{ SSL_NO_CACHE, 		"SSL_NO_CACHE" },
+	{ SSL_REQUIRE_CERTIFICATE, 	"SSL_REQUIRE_CERTIFICATE" },
+	{ SSL_ENABLE_FDX, 		"SSL_ENABLE_FDX" },
+	{ SSL_V2_COMPATIBLE_HELLO, 	"SSL_V2_COMPATIBLE_HELLO" },
+	{ SSL_ENABLE_TLS, 		"SSL_ENABLE_TLS" },
+	{ SSL_ROLLBACK_DETECTION, 	"SSL_ROLLBACK_DETECTION" },
+	{ -1, NULL },
+};
+	
+static const char *
+sslopt2string( PRInt32 option )
+{
+    int		i;
+    const	char *s = "unknown";
+
+    for ( i = 0; optmap[i].om_option != -1; ++i ) {
+	if ( optmap[i].om_option == option ) {
+	    s = optmap[i].om_string;
+	    break;
+	}
+    }
+	
+    return( s );
+}
+#endif /* LDAPSSL_DEBUG */
+
+static int
+set_ssl_options( PRFileDesc *sslfd, PRBool *optval, PRBool *optisset )
+{
+    SECStatus	secrc = SECSuccess;
+    PRInt32	option;
+
+    for ( option = 0;
+		( secrc == SECSuccess ) && ( option < LDAPSSL_MAX_SSL_OPTION );
+		++option ) {
+	if ( optisset[ option ] ) {
+#ifdef LDAPSSL_DEBUG
+	    fprintf( stderr,
+		    "set_ssl_options: setting option %d - %s to %d (%s)\n",
+		    option, sslopt2string(option), optval[ option ],
+		    optval[ option ] ? "ON" : "OFF" );
+#endif /* LDAPSSL_DEBUG */
+	
+	    secrc = SSL_OptionSet( sslfd, option, optval[ option ] );
+	}
+    }
+
+    if ( secrc == SECSuccess ) {
+	return( 0 );
+    }
+
+    PR_SetError( PR_GetError(), EINVAL );	/* set OS error only */
+    return( -1 );
 }
 
 
