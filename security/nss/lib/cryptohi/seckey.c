@@ -227,7 +227,7 @@ SECKEY_KEASetParams(KEAParams * params, SECKEYPublicKey * pubKey) {
 	/* the key has no KEA parameters */
 	return SECFailure;
     }
-
+    return SECSuccess;
 }
 
 

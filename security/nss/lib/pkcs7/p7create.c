@@ -34,7 +34,7 @@
 /*
  * PKCS7 creation.
  *
- * $Id: p7create.c,v 1.1 2000/03/31 19:16:04 relyea%netscape.com Exp $
+ * $Id: p7create.c,v 1.2 2001/01/07 07:56:33 nelsonb%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -47,6 +47,7 @@
 #include "pk11func.h"
 #include "prtime.h"
 #include "secerr.h"
+#include "secder.h"
 
 static SECStatus
 sec_pkcs7_init_content_info (SEC_PKCS7ContentInfo *cinfo, PRArenaPool *poolp,
