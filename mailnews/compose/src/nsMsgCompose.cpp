@@ -508,6 +508,8 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
     if (!aPrefix.IsEmpty())
     {
+      if (!aHTMLEditor)
+        aPrefix.Append(NS_LITERAL_STRING("\n"));
       textEditor->InsertText(aPrefix);
       m_editor->EndOfDocument();
     }
@@ -1939,7 +1941,6 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
         else
           mCitePrefix.Append(citePrefixAuthor);
         mCitePrefix.Append(replyHeaderColon);
-        mCitePrefix.Append(NS_LITERAL_STRING("\n"));
       }
     }
 
@@ -2356,6 +2357,8 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
   {
     if (!mCitePrefix.IsEmpty())
     {
+      if (!aHTMLEditor)
+        mCitePrefix.Append(NS_LITERAL_STRING("\n"));
       nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(aEditor));
       if (textEditor)
         textEditor->InsertText(mCitePrefix);
