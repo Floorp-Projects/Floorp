@@ -25,7 +25,7 @@
   (defparameter *jw*
     (generate-world
      "J"
-     '((grammar code-grammar :lr-1 :program)
+     '((grammar code-grammar :lalr-1 :program)
        
        
        (%section "Expressions")
@@ -39,6 +39,8 @@
        (production :identifier (override) identifier-override)
        ;(production :identifier (field) identifier-field)
        (production :identifier (method) identifier-method)
+       (production :identifier (getter) identifier-getter)
+       (production :identifier (setter) identifier-setter)
        (production :identifier (constructor) identifier-constructor)
        
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
@@ -55,7 +57,6 @@
        (production :simple-expression (null) simple-expression-null)
        (production :simple-expression (true) simple-expression-true)
        (production :simple-expression (false) simple-expression-false)
-       (production :simple-expression (*) simple-expression-any-type)
        (production :simple-expression ($number) simple-expression-number)
        (production :simple-expression ($string) simple-expression-string)
        (production :simple-expression (:qualified-identifier) simple-expression-qualified-identifier)
@@ -273,6 +274,7 @@
        (production (:code-statement :omega) (:do-statement (:semicolon :omega)) code-statement-do-statement)
        (production (:code-statement :omega) ((:while-statement :omega)) code-statement-while-statement)
        (production (:code-statement :omega) ((:for-statement :omega)) code-statement-for-statement)
+       (production (:code-statement :omega) ((:with-statement :omega)) code-statement-with-statement)
        (production (:code-statement :omega) (:continue-statement (:semicolon :omega)) code-statement-continue-statement)
        (production (:code-statement :omega) (:break-statement (:semicolon :omega)) code-statement-break-statement)
        (production (:code-statement :omega) (:return-statement (:semicolon :omega)) code-statement-return-statement)
@@ -358,10 +360,14 @@
        
        (production :for-initializer () for-initializer-empty)
        (production :for-initializer ((:expression normal no-in)) for-initializer-expression)
-       (production :for-initializer (:variable-declaration-kind (:variable-declaration-list no-in)) for-initializer-variable-declaration)
+       (production :for-initializer (:variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
        
        (production :for-in-binding ((:postfix-expression normal)) for-in-binding-expression)
-       (production :for-in-binding (:variable-declaration-kind (:variable-declaration no-in)) for-in-binding-variable-declaration)
+       (production :for-in-binding (:variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
+       
+       
+       (%subsection "With Statement")
+       (production (:with-statement :omega) (with :parenthesized-expression (:code-statement :omega)) with-statement-with)
        
        
        (%subsection "Continue and Break Statements")
@@ -474,15 +480,15 @@
        
        
        (%subsection "Variable Definition")
-       (production :variable-definition (:variable-declaration-kind (:variable-declaration-list allow-in)) variable-definition-declaration)
+       (production :variable-definition (:variable-definition-kind (:variable-binding-list allow-in)) variable-definition-definition)
        
-       (production :variable-declaration-kind (var) variable-declaration-kind-var)
-       (production :variable-declaration-kind (const) variable-declaration-kind-const)
+       (production :variable-definition-kind (var) variable-definition-kind-var)
+       (production :variable-definition-kind (const) variable-definition-kind-const)
        
-       (production (:variable-declaration-list :beta) ((:variable-declaration :beta)) variable-declaration-list-one)
-       (production (:variable-declaration-list :beta) ((:variable-declaration-list :beta) \, (:variable-declaration :beta)) variable-declaration-list-more)
+       (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one)
+       (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more)
        
-       (production (:variable-declaration :beta) ((:typed-identifier :beta) (:variable-initializer :beta)) variable-declaration-initializer)
+       (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initializer :beta)) variable-binding-initializer)
        
        (production (:typed-identifier :beta) (:identifier) typed-identifier-identifier)
        (production (:typed-identifier :beta) ((:type-expression normal :beta) :identifier) typed-identifier-type-and-identifier)
@@ -493,6 +499,8 @@
        
        (%subsection "Function Definition")
        (production :function-definition (:named-function) function-definition-named-function)
+       (production :function-definition (getter :named-function) function-definition-getter-function)
+       (production :function-definition (setter :named-function) function-definition-setter-function)
        
        (production :anonymous-function (function :function-signature (:block block)) anonymous-function-signature-and-body)
        
@@ -503,12 +511,26 @@
        (production :parameter-signature (\( :parameters \)) parameter-signature-parameters)
        
        (production :parameters () parameters-none)
-       (production :parameters (\.\.\. :identifier) parameters-rest)
-       (production :parameters (:parameters-prefix) parameters-some)
-       (production :parameters (:parameters-prefix \, \.\.\. :identifier) parameters-some-and-rest)
+       (production :parameters (:rest-parameter) parameters-rest)
+       (production :parameters (:required-parameters) parameters-required-parameters)
+       (production :parameters (:optional-parameters) parameters-optional-parameters)
+       (production :parameters (:required-parameters \, :rest-parameter) parameters-required-and-rest)
+       (production :parameters (:optional-parameters \, :rest-parameter) parameters-optional-and-rest)
        
-       (production :parameters-prefix ((:typed-identifier allow-in)) parameters-prefix-one)
-       (production :parameters-prefix (:parameters-prefix \, (:typed-identifier allow-in)) parameters-prefix-more)
+       (production :required-parameters (:required-parameter) required-parameters-one)
+       (production :required-parameters (:required-parameters \, :required-parameter) required-parameters-more)
+       
+       (production :optional-parameters (:optional-parameter) optional-parameters-one)
+       (production :optional-parameters (:required-parameters \, :optional-parameter) optional-parameters-required-more)
+       (production :optional-parameters (:optional-parameters \, :optional-parameter) optional-parameters-optional-more)
+       
+       (production :required-parameter ((:typed-identifier allow-in)) required-parameter-typed-identifier)
+       
+       (production :optional-parameter ((:typed-identifier allow-in) =) optional-parameter-default)
+       (production :optional-parameter ((:typed-identifier allow-in) = (:assignment-expression normal allow-in)) optional-parameter-assignment-expression)
+       
+       (production :rest-parameter (\.\.\.) rest-parameter-none)
+       (production :rest-parameter (\.\.\. :identifier) rest-parameter-identifier)
        
        (production :result-signature () result-signature-none)
        (production :result-signature ((:type-expression initial allow-in)) result-signature-type-expression)
@@ -519,7 +541,7 @@
        (production (:member-definition :omega_3) ((:method-definition :omega_3)) member-definition-method-definition)
        (production (:member-definition :omega_3) (:constructor-definition) member-definition-constructor-definition)
        
-       (production :field-definition (field (:variable-declaration-list allow-in)) field-definition-declaration)
+       (production :field-definition (field (:variable-binding-list allow-in)) field-definition-variable-binding-list)
        
        (production (:method-definition :omega_3) (:concrete-method-definition) method-definition-concrete-method-definition)
        (production (:method-definition :omega_3) ((:abstract-method-definition :omega_3)) method-definition-abstract-method-definition)
@@ -528,12 +550,19 @@
        
        (production (:abstract-method-definition :omega_3) (:method-prefix :identifier :function-signature (:semicolon :omega_3)) abstract-method-definition-signature)
        
-       (production :method-prefix (method) method-prefix-method)
-       (production :method-prefix (override method) method-prefix-override-method)
-       (production :method-prefix (final method) method-prefix-final-method)
-       (production :method-prefix (final override method) method-prefix-final-override-method)
+       (production :method-prefix (:method-kind) method-prefix-method)
+       (production :method-prefix (override :method-kind) method-prefix-override-method)
+       (production :method-prefix (final :method-kind) method-prefix-final-method)
+       (production :method-prefix (final override :method-kind) method-prefix-final-override-method)
        
-       (production :constructor-definition (constructor :identifier :parameter-signature (:block block)) constructor-definition-signature-and-body)
+       (production :method-kind (method) method-kind-method)
+       (production :method-kind (getter method) method-kind-getter-method)
+       (production :method-kind (setter method) method-kind-setter-method)
+       
+       (production :constructor-definition (constructor :constructor-name :parameter-signature (:block block)) constructor-definition-signature-and-body)
+       
+       (production :constructor-name (new) constructor-name-new)
+       (production :constructor-name (:identifier) constructor-name-identifier)
        
        
        (%section "Class Definition")
