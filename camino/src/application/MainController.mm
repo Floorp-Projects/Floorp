@@ -664,7 +664,7 @@ const int kReuseWindowOnAE = 2;
   }
   else {
     // explicity open the home page to work around "load home page in new window" pref
-    [self openBrowserWindowWithURL:(mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:NO]) andReferrer:nil behind:nil];
+    [self openBrowserWindowWithURL:(mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:NO]) andReferrer:nil behind:nil allowPopups:NO];
   }
 }
 
