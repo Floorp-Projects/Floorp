@@ -1310,12 +1310,7 @@ case "$target" in
     DLL_SUFFIX=".so.1.0"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
-    DSO_LDOPTS='-shared -h $@'
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
-    fi
+    DSO_LDOPTS='-shared -fPIC'
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
     fi
@@ -2220,9 +2215,8 @@ then
 			AC_DEFINE(_THREAD_SAFE)
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
 			if test "$ac_cv_have_dash_pthread" = "yes"; then
-				_PTHREAD_LDFLAGS=""
-			else
-				_PTHREAD_LDFLAGS="-lc_r"
+                _PTHREAD_LDFLAGS="-pthread"
+                LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 			fi
 			;;
 
