@@ -992,11 +992,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 
   nsCAutoString path;
   smartKeywords->GetNativePath(path);
-  char* pathCopy = ToNewCString(path);
-  if (!pathCopy)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsINIParser* parser = new nsINIParser(pathCopy);
+  nsINIParser* parser = new nsINIParser(path.get());
   if (!parser)
     return NS_ERROR_OUT_OF_MEMORY;
 
