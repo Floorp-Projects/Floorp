@@ -487,6 +487,15 @@ $InstallSizeArchive$:xpcom.xpi
 ;                            will be ignored.  If the .xpi file is not to be
 ;                            installed, then this attribute is ignored.
 ;
+;   SUPERSEDE     - Component is to be shown as disabled and unselected
+;                   if a file exists.
+;                   Use SupersedeType=File Exists to specify the type of comparison
+;                   Use SupersedeFileX=File Name to specify the file
+;                   Use SupersedeMinVersionX=a.b.c.d (optional) to specify the 
+;                   minimum version of the file.  If the version of the existing file
+;                   is greater than or equal to the SupersedeMinVersion the component
+;                   will be superseded.
+;
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
