@@ -59,7 +59,6 @@
   IBOutlet NSTextField* mFolderKeywordField;
   IBOutlet NSTextField* mFolderDescField;
   IBOutlet NSTextField* mLastVisitField;
-  IBOutlet NSTextField* mStatusField;
   IBOutlet NSTextField* mNumberVisitsField;
 
   IBOutlet NSButton*    mTabgroupCheckbox;

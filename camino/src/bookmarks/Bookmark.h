@@ -21,6 +21,7 @@
 *
 * Contributor(s):
 *    David Haas <haasd@cae.wisc.edu>
+*    Josh Aas <joshmoz@gmail.com>
 *
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -41,28 +42,21 @@
 
 //Status Flags
 #define kBookmarkOKStatus 0
-#define kBookmarkBrokenLinkStatus 1
-#define kBookmarkMovedLinkStatus 2
-#define kBookmarkServerErrorStatus 3
-#define kBookmarkNeverCheckStatus 5
 #define kBookmarkSpacerStatus 9
 
-@interface Bookmark : BookmarkItem  //DBME
+@interface Bookmark : BookmarkItem
 {
-  NSString* mURL; //DBMu
-  NSDate* mLastVisit; //DBMv
+  NSString* mURL;
+  NSDate* mLastVisit;
   NSNumber* mStatus;
   NSNumber* mNumberOfVisits;
 }
 
--(NSString *) url; 
--(NSDate *) lastVisit; 
+-(NSString *) url;
+-(NSDate *) lastVisit;
 -(unsigned) numberOfVisits;
 -(unsigned)  status;
--(BOOL) isMoved;
--(BOOL) isCheckable;
 -(BOOL) isSeparator;
--(BOOL) isSick;     //DHIs
 
 -(void) setUrl:(NSString *)aURL; 
 -(void) setLastVisit:(NSDate *)aLastVisit;
@@ -70,10 +64,4 @@
 -(void) setIsSeparator:(BOOL)aSeparatorFlag;
 -(void) setNumberOfVisits:(unsigned)aNumber;
 
-
-// functions aiding in checking for updates
--(NSURL *)urlAsURL;
--(void) checkForUpdate;
-
 @end
-

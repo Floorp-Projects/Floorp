@@ -53,8 +53,6 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsNetError.h"
 #import "CHBrowserView.h"
-#import "BookmarksClient.h"
-#import "Bookmark.h"
 #include "CHBrowserListener.h"
 
 
@@ -535,27 +533,6 @@ CHBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequ
         [obj onLoadingStarted];
     }
     else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
-      // we need to pass along errors like this so our bookmarks know
-      // if they're still OK
-      NSNumber *errNum = nil;
-      if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
-           aStatus == NS_ERROR_CONNECTION_REFUSED ||
-           aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-           aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED))
-        errNum = [NSNumber numberWithUnsignedInt:kBookmarkServerErrorStatus]; 
-      else if (( aStatus == NS_ERROR_MALFORMED_URI ||
-                 aStatus == NS_ERROR_UNKNOWN_PROTOCOL))
-        errNum = [NSNumber numberWithUnsignedInt:kBookmarkBrokenLinkStatus];
-      else if ((aStatus == NS_BINDING_REDIRECTED))
-        errNum = [NSNumber numberWithUnsignedInt:kBookmarkMovedLinkStatus];
-      if (errNum) {
-        nsCAutoString  uriString;
-        aRequest->GetName(uriString);
-        NSString *fixedURL = [NSString stringWithUTF8String:uriString.get()];
-        NSDictionary *userInfo = [NSDictionary dictionaryWithObject:errNum forKey:URLLoadSuccessKey];
-        NSNotification *note = [NSNotification notificationWithName:URLLoadNotification object:fixedURL userInfo:userInfo];
-        [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
-      }
       while ((obj = [enumerator nextObject])) {
         [obj onLoadingCompleted:(NS_SUCCEEDED(aStatus))];
       }

@@ -61,9 +61,7 @@
 - (void)setupSmartCollections;
 - (void)delayedStartupItems;
 - (void)writeBookmarks:(NSNotification *)note;
-- (void)checkForUpdates:(NSTimer *)aTimer;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
-- (Bookmark *)findABookmarkToCheckInFolder:(BookmarkFolder *)aFolder;
 @end
 
 @implementation BookmarkManager
@@ -179,12 +177,9 @@ static unsigned gFirstUserCollection = 0;
 -(void) dealloc
 {
   [mTop10Container release];
-  [mBrokenBookmarkContainer release];
   [mRendezvousContainer release];
   [mAddressBookContainer release];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  if (mUpdateTimer)
-    [mUpdateTimer invalidate]; //we don't retain this, so don't release it.
   [mUndoManager release];
   [mRootBookmarks release];
   [mPathToBookmarkFile release];
@@ -196,18 +191,11 @@ static unsigned gFirstUserCollection = 0;
   [super dealloc];
 }
 
-//
-// -delayedStartupItems
-//
 // Perform additional setup items on the main thread.
-//
 - (void)delayedStartupItems
 {
   [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
   
-  // check update status of 1 bookmark every 2 minutes if autoupdate is enabled.
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.bookmarks.autoupdate" withSuccess:NULL])
-    mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBetweenBookmarkChecks target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
   [mSmartFolderManager postStartupInitialization:self];
   [[self toolbarFolder] refreshIcon];
 
@@ -234,7 +222,7 @@ static unsigned gFirstUserCollection = 0;
 }
 
 //
-// smart collections, as of now, are Rendezvous, Address Book, Top 10 List, Broken Bookmarks,
+// smart collections, as of now, are Rendezvous, Address Book, Top 10 List.
 // We also have history, but that just points to the real history stuff.
 - (void)setupSmartCollections
 {
@@ -255,26 +243,15 @@ static unsigned gFirstUserCollection = 0;
   [mTop10Container setIsSmartFolder:YES];
   [mRootBookmarks insertChild:mTop10Container atIndex:(collectionIndex++) isMove:NO];
   
-  // add broken bookmarks if auto-checking is enabled
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.bookmarks.autoupdate" withSuccess:NULL]) {
-    mBrokenBookmarkContainer = [[BookmarkFolder alloc] init];
-    [mBrokenBookmarkContainer setTitle:NSLocalizedString(@"Broken Bookmarks",@"Broken Bookmarks")];
-    [mBrokenBookmarkContainer setIsSmartFolder:YES];
-    [mRootBookmarks insertChild:mBrokenBookmarkContainer atIndex:(collectionIndex++) isMove:NO];
-  }
-  
-  // add rendezvous and address book in 10.2+
-  if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_1) {
-    mRendezvousContainer = [[BookmarkFolder alloc] init];
-    [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous",@"Rendezvous")];
-    [mRendezvousContainer setIsSmartFolder:YES];
-    [mRootBookmarks insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
+  mRendezvousContainer = [[BookmarkFolder alloc] init];
+  [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous",@"Rendezvous")];
+  [mRendezvousContainer setIsSmartFolder:YES];
+  [mRootBookmarks insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
     
-    mAddressBookContainer = [[BookmarkFolder alloc] init];
-    [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book",@"Address Book")];
-    [mAddressBookContainer setIsSmartFolder:YES];
-    [mRootBookmarks insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
-  }
+  mAddressBookContainer = [[BookmarkFolder alloc] init];
+  [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book",@"Address Book")];
+  [mAddressBookContainer setIsSmartFolder:YES];
+  [mRootBookmarks insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
       
   gFirstUserCollection = collectionIndex;
   
@@ -286,7 +263,6 @@ static unsigned gFirstUserCollection = 0;
   [[self toolbarFolder] setIcon:[NSImage imageNamed:@"bookmarktoolbar_icon"]];
   [[self rendezvousFolder] setIcon:[NSImage imageNamed:@"rendezvous_icon"]];
   [[self addressBookFolder] setIcon:[NSImage imageNamed:@"addressbook_icon"]];
-  [[self brokenLinkFolder] setIcon:[NSImage imageNamed:@"brokenbookmark_icon"]];
 }
 
 //
@@ -326,11 +302,6 @@ static unsigned gFirstUserCollection = 0;
 -(BookmarkFolder *)top10Folder
 {
   return mTop10Container;
-}
-
--(BookmarkFolder *) brokenLinkFolder
-{
-  return mBrokenBookmarkContainer;
 }
 
 -(BookmarkFolder *) toolbarFolder
@@ -406,34 +377,6 @@ static unsigned gFirstUserCollection = 0;
       [matchingArray addObject:aThingy];
   }
   return matchingArray;
-}
-
-//
-// every couple of minutes, this gets called
-// it finds the first bookmark we haven't been to in 24 hours
-// and makes sure it's still there
-//
-- (void)checkForUpdates:(NSTimer *)aTimer
-{
-  Bookmark *bm = [self findABookmarkToCheckInFolder:[self rootBookmarks]];
-  if (bm)
-    [bm checkForUpdate];
-}
-
--(Bookmark *)findABookmarkToCheckInFolder:(BookmarkFolder *)aFolder
-{
-  NSEnumerator *enumerator = [[aFolder childArray] objectEnumerator];
-  id aKid;
-  Bookmark *foundBookmark = nil;
-  while ((!foundBookmark) && (aKid = [enumerator nextObject])) {
-    if ([aKid isKindOfClass:[Bookmark class]]) {
-      if (([(Bookmark *)aKid isCheckable]) &&
-          (-[[(Bookmark *)aKid lastVisit] timeIntervalSinceNow] > kTimeBeforeRecheckingBookmark))
-          foundBookmark = aKid;
-    } else if ([aKid isKindOfClass:[BookmarkFolder class]])
-      foundBookmark = [self findABookmarkToCheckInFolder:aKid];
-  }
-  return foundBookmark;
 }
 
 //

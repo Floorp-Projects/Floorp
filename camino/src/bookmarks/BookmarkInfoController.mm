@@ -212,9 +212,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 -(void)updateUI:(BookmarkItem *)aBookmark
 {
   if (aBookmark) {
-    //
     // setup for bookmarks
-    //
     NSBox *newView;
     if ([aBookmark isKindOfClass:[Bookmark class]]) {
       newView = mBookmarkView;
@@ -224,29 +222,6 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
       [mBookmarkLocationField setStringValue: [(Bookmark *)aBookmark url]];
       [mNumberVisitsField setIntValue:[(Bookmark *)aBookmark numberOfVisits]];
       [mLastVisitField setStringValue: [[(Bookmark *)aBookmark lastVisit] descriptionWithCalendarFormat:[[mLastVisitField formatter] dateFormat] timeZone:[NSTimeZone localTimeZone] locale:nil]];
-      NSString *statusString = nil;
-      unsigned status = [(Bookmark *)aBookmark status];
-      switch (status) {
-        case (kBookmarkOKStatus):
-        case (kBookmarkSpacerStatus):
-          statusString = NSLocalizedString(@"OK",@"OK");
-          break;
-        case (kBookmarkBrokenLinkStatus):
-          statusString = NSLocalizedString(@"Link Broken",@"Link Broken");
-          break;
-        case (kBookmarkMovedLinkStatus):
-          statusString = NSLocalizedString(@"Link has Moved",@"Link has Moved");
-          break;
-        case (kBookmarkServerErrorStatus):
-          statusString = NSLocalizedString(@"Server Unreachable",@"Server Unreachable");
-          break;
-        case (kBookmarkNeverCheckStatus):
-          statusString = NSLocalizedString(@"Uncheckable",@"Uncheckable");
-          break;
-        default:
-          statusString = [NSString string];
-      }
-      [mStatusField setStringValue:statusString];
       // if its parent is a smart folder or it's a menu separator,
       // we turn off all the fields.  if it isn't, then we turn them all on
       id parent = [aBookmark parent];
@@ -266,9 +241,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
         [mBookmarkLocationField setEditable:NO];
       }
     }
-    //
     // Folders
-    //
     else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
       newView = mFolderView;
       if ([(BookmarkFolder *)aBookmark isGroup]) {
@@ -280,9 +253,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
       [mFolderNameField setStringValue: [aBookmark title]];
       [mFolderKeywordField setStringValue: [aBookmark keyword]];
       [mFolderDescField setStringValue: [aBookmark description]];
-      //
       // we can't just unselect dock menu - we have to pick a new one
-      //
       if ([(BookmarkFolder *)aBookmark isDockMenu]) {
         [mDockMenuCheckbox setState:NSOnState];
         [mDockMenuCheckbox setEnabled:NO];

@@ -53,21 +53,15 @@ enum {
   kHistoryContainerIndex = 2,
 };
 
-// check 1 bookmark every 2 minutes, but only if we haven't been there in a day
-#define kTimeBeforeRecheckingBookmark 86400.0
-#define kTimeBetweenBookmarkChecks 120  
-
 @interface BookmarkManager : NSObject <BookmarksClient> {
   BookmarkFolder *mRootBookmarks;	// root bookmark object
   KindaSmartFolderManager *mSmartFolderManager; //brains behind 4 smart folders
-  NSUndoManager    *mUndoManager;// handles deletes, adds of bookmarks
+  NSUndoManager *mUndoManager; // handles deletes, adds of bookmarks
   BookmarkImportDlgController *mImportDlgController;
   NSString *mPathToBookmarkFile; //exactly what it looks like
-  NSTimer *mUpdateTimer; //we don't actually retain this
   
   // smart folders
   BookmarkFolder *mTop10Container;
-  BookmarkFolder *mBrokenBookmarkContainer;
   BookmarkFolder *mRendezvousContainer;
   BookmarkFolder *mAddressBookContainer;
 }
@@ -84,7 +78,6 @@ enum {
 -(BookmarkFolder *) bookmarkMenuFolder;
 -(BookmarkFolder *) dockMenuFolder;
 -(BookmarkFolder *) top10Folder;
--(BookmarkFolder *) brokenLinkFolder;
 -(BookmarkFolder *) rendezvousFolder;
 -(BookmarkFolder *) addressBookFolder;
 -(BookmarkFolder *) historyFolder;

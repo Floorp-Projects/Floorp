@@ -49,7 +49,6 @@
 @interface KindaSmartFolderManager (Private) <NetworkServicesClient, BookmarksClient> 
 -(void)addBookmark:(Bookmark *)aBookmark toSmartFolder:(BookmarkFolder *)aFolder;
 -(void)removeBookmark:(Bookmark *)aBookmark fromSmartFolder:(BookmarkFolder *)aFolder;
--(void)setupBrokenBookmarks;
 -(void)checkForNewTop10:(Bookmark *)aBookmark;
 -(void)setupAddressBook;
 -(void)rebuildTop10List;
@@ -61,7 +60,6 @@
 {
   if ((self = [super init])) {
     // retain all our smart folders, just to be safe
-    mBrokenBookmarkFolder = [[manager brokenLinkFolder] retain];
     mTop10Folder = [[manager top10Folder] retain];
     mAddressBookFolder = [[manager addressBookFolder] retain];
     mRendezvousFolder = [[manager rendezvousFolder] retain];
@@ -78,7 +76,6 @@
 -(void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [mBrokenBookmarkFolder release];
   [mTop10Folder release];
   [mAddressBookFolder release];
   [mRendezvousFolder release];
@@ -96,26 +93,12 @@
   }
   if (mAddressBookFolder)
     [self setupAddressBook];
-  if (mBrokenBookmarkFolder)
-    [self setupBrokenBookmarks];
   // get top 10 list started
   NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
   unsigned i, j = [bookmarkArray count];
   for (i=0; i < j; i++) {
     Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
     [self checkForNewTop10:aBookmark];
-  }
-}
-
--(void) setupBrokenBookmarks
-{
-  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
-  NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
-  unsigned i, j = [bookmarkArray count];
-  for (i=0; i < j; i++) {
-    Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
-    if ([aBookmark isSick])
-      [self addBookmark:aBookmark toSmartFolder:mBrokenBookmarkFolder];
   }
 }
 
@@ -289,13 +272,12 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 }
 
 //
-// need to tell top 10 list, broken items
+// need to tell top 10 list
 //
 - (void)bookmarkRemoved:(NSNotification *)note
 {
   BookmarkItem *anItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
   if (![anItem parent] && [anItem isKindOfClass:[Bookmark class]]) {
-    [self removeBookmark:anItem fromSmartFolder:mBrokenBookmarkFolder];
     [self removeBookmark:anItem fromSmartFolder:mTop10Folder];
   }
 }
@@ -305,12 +287,6 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   BookmarkItem *anItem = [note object];
   if ([anItem isKindOfClass:[Bookmark class]]) {
     [self checkForNewTop10:anItem];
-    // see what the status is
-    if ([(Bookmark *)anItem isSick])
-      [self addBookmark:anItem toSmartFolder:mBrokenBookmarkFolder];
-    else {
-      [self removeBookmark:anItem fromSmartFolder:mBrokenBookmarkFolder];
-    }
   }
 }
 

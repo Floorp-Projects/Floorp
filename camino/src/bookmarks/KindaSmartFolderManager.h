@@ -46,7 +46,6 @@
 @class BookmarkManager;
 
 @interface KindaSmartFolderManager : NSObject {
-  BookmarkFolder* mBrokenBookmarkFolder;
   BookmarkFolder* mUpdatedBookmarkFolder;
   BookmarkFolder* mTop10Folder;
   BookmarkFolder* mAddressBookFolder;

@@ -23,7 +23,6 @@
                 mFolderView = NSBox; 
                 mLastVisitField = NSTextField; 
                 mNumberVisitsField = NSTextField; 
-                mStatusField = NSTextField; 
                 mTabView = NSTabView; 
                 mTabgroupCheckbox = NSButton; 
             }; 
