@@ -129,6 +129,9 @@ pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.disabledForDomains", "");
 pref("browser.goBrowsing.enabled", true);
 
+//Internet Search
+pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.properties");
+
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
 pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite");
