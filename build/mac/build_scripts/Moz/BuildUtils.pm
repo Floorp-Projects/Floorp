@@ -311,6 +311,7 @@ sub DelayFor($)
     WaitNextEvent();
   }
 
+  print "\n";
   STDOUT->autoflush(0);
 }
 
