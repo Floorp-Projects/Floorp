@@ -18,7 +18,6 @@
 
 #include "nsBaseDragService.h"
 #include "nsITransferable.h"
-#include "nsDataObj.h"
 
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
