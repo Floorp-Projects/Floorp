@@ -22,37 +22,36 @@ CHROME_CONTENT_DIR  = content\default
 CHROME_SKIN_DIR     = skin\default
 
 CHROME_CONTENT = \
-	customize.js \
-	customize.xul \
-	dummy-flash.rdf \
-	flash-registry.rdf \
-	flash.js \
-	flash.xul \
-	sidebar-browser.rdf \
-	sidebar-browser.xul \
-	sidebar-registry.rdf \
-	sidebar.js \
-	$(NULL)
+        .\customize.js \
+        .\customize.xul \
+        .\dummy-flash.rdf \
+        .\flash-registry.rdf \
+        .\flash.js \
+        .\flash.xul \
+        .\sidebar-browser.rdf \
+        .\sidebar-browser.xul \
+        .\sidebar-registry.rdf \
+        .\sidebar.js \
+        $(NULL)
 
 CHROME_SKIN = \
-	customize.css \
-	flash.css \
-	sidebar.css \
-	flames.gif \
-	list-down-dis.gif \
-	list-down.gif \
-	list-up-dis.gif \
-	list-up.gif \
-	online.gif \
-	$(NULL)
+        .\customize.css \
+        .\flash.css \
+        .\sidebar.css \
+        .\flames.gif \
+        .\list-down-dis.gif \
+        .\list-down.gif \
+        .\list-up-dis.gif \
+        .\list-up.gif \
+        $(NULL)
 
 CHROME_L10N = \
-	.\locale\en-US\customize.dtd \
-	.\locale\en-US\flash.dtd \
-	.\locale\en-US\sidebar-browser-rdf.dtd \
-	.\locale\en-US\sidebar-browser.dtd \
-	.\locale\en-US\sidebar-registry-rdf.dtd \
-	$(NULL)
+        .\locale\en-US\customize.dtd \
+        .\locale\en-US\flash.dtd \
+        .\locale\en-US\sidebar-browser-rdf.dtd \
+        .\locale\en-US\sidebar-browser.dtd \
+        .\locale\en-US\sidebar-registry-rdf.dtd \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
