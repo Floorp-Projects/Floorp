@@ -286,6 +286,11 @@ public:
          * Return the current row index of the iterator
          */
         PRInt32 GetRowIndex() const { return mRowIndex; }
+
+        /**
+         * Pop the iterator up a level.
+         */
+        iterator& Pop() { --mTop; return *this; }
     };
 
     /**

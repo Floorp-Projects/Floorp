@@ -179,6 +179,7 @@ protected:
      */
     nsresult
     OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
+                  PRInt32 aIndex,
                   nsIRDFResource* aContainer,
                   PRInt32* aDelta);
 
@@ -1583,7 +1584,7 @@ nsXULTreeBuilder::OpenContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRInt32 count;
-    OpenSubtreeOf(container, aContainer, &count);
+    OpenSubtreeOf(container, aIndex, aContainer, &count);
 
     // Notify the box object
     if (mBoxObject) {
@@ -1599,6 +1600,7 @@ nsXULTreeBuilder::OpenContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
 
 nsresult
 nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
+                                    PRInt32 aIndex,
                                     nsIRDFResource* aContainer,
                                     PRInt32* aDelta)
 {
@@ -1656,6 +1658,35 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
                ("xultemplate[%p] %smatch=%p", this, space.get(), match));
 #endif
 
+        Value val;
+        match->GetAssignmentFor(mConflictSet,
+                                match->mRule->GetMemberVariable(),
+                                &val);
+
+        // Don't allow cyclic graphs to get our knickers in a knot.
+        PRBool cyclic = PR_FALSE;
+
+        if (aIndex >= 0) {
+            for (nsTreeRows::iterator iter = mRows[aIndex]; iter.GetDepth() > 0; iter.Pop()) {
+                nsTemplateMatch* parentMatch = iter->mMatch;
+
+                Value parentVal;
+                parentMatch->GetAssignmentFor(mConflictSet,
+                                              parentMatch->mRule->GetMemberVariable(),
+                                              &parentVal);
+
+                if (val == parentVal) {
+                    cyclic = PR_TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (cyclic) {
+            NS_WARNING("outliner cannot handle cyclic graphs");
+            continue;
+        }
+
         // Remember that this match applied to this row
         mRows.InsertRowAt(match, aSubtree, count);
 
@@ -1664,11 +1695,6 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
 
         // If this is open, then remember it so we can recursively add
         // *its* rows to the tree.
-        Value val;
-        match->GetAssignmentFor(mConflictSet,
-                                match->mRule->GetMemberVariable(),
-                                &val);
-
         PRBool isOpen = PR_FALSE;
         IsContainerOpen(VALUE_TO_IRDFRESOURCE(val), &isOpen);
         if (isOpen)
@@ -1678,8 +1704,8 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
     }
 
     // Now recursively deal with any open sub-containers that just got
-    // inserted
-    for (PRInt32 i = 0; i < open.Count(); ++i) {
+    // inserted. We need to do this back-to-front to avoid skewing offsets.
+    for (PRInt32 i = open.Count() - 1; i >= 0; --i) {
         PRInt32 index = NS_PTR_TO_INT32(open[i]);
 
         nsTreeRows::Subtree* child =
@@ -1689,9 +1715,9 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
 
         Value val;
         match->GetAssignmentFor(mConflictSet, match->mRule->GetMemberVariable(), &val);
-        
+
         PRInt32 delta;
-        OpenSubtreeOf(child, VALUE_TO_IRDFRESOURCE(val), &delta);
+        OpenSubtreeOf(child, aIndex + index, VALUE_TO_IRDFRESOURCE(val), &delta);
         count += delta;
     }
 
