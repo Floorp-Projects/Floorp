@@ -760,7 +760,7 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
 {
-  PRInt32 res;
+  PRInt32 res = -1;
   char  *convertedString = NULL;
   PRInt32 convertedStringLen = 0;
   if (encoder && decoder)
