@@ -14,8 +14,8 @@
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/08/02 20:04:23 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/08/17 01:30:15 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Dumper.pm,v $ 
 # $Name:  $ 
@@ -41,10 +41,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
