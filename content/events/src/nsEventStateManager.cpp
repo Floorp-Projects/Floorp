@@ -56,6 +56,8 @@
 #include "prefapi.h"
 #include "nsISessionHistory.h"
 
+#include "nsXULAtoms.h"
+
 #undef DEBUG_scroll     // define to see ugly mousewheel messages
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -1799,6 +1801,15 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
           nextObject->GetTabIndex(&tabIndex);
           NS_RELEASE(nextObject);
         }
+        disabled = PR_FALSE;
+      }
+      else if (nsXULAtoms::titledbutton == tag.get()) {
+        nsAutoString value;
+        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
+        if (value != "true")
+          disabled = PR_FALSE;
+      }
+      else if (nsXULAtoms::tree == tag.get()) {
         disabled = PR_FALSE;
       }
 
