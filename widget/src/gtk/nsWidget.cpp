@@ -73,6 +73,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
   ::gtk_widget_destroy(mWidget);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

@@ -120,7 +120,7 @@ class nsWidget : public nsBaseWidget
     virtual void InitCallbacks(char * aName = nsnull);
     void CreateGC();
 
-    NS_IMETHOD CreateNative(GtkWidget *parentWindow) {};
+    NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
 
     nsresult StandardWindowCreate(nsIWidget *aParent,
                       const nsRect &aRect,
