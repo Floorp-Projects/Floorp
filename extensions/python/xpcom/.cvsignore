@@ -1,2 +1,4 @@
 *.pyc
 *.pyo
+*.idb
+*.pdb
