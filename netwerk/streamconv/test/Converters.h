@@ -1,6 +1,7 @@
 #include "nsIStreamConverter.h"
 #include "nsString.h"
 #include "nsIFactory.h"
+#include "nsCOMPtr.h"
 
 /* This file defines stream converter components, and their accompanying factory class.
  * These converters implement the nsIStreamConverter interface and support both
@@ -36,24 +37,9 @@ public:
                                 nsIStreamListener *aListener, nsISupports *ctxt);
 
     // member data
-    nsIStreamListener *mListener;
+    nsCOMPtr<nsIStreamListener> mListener;
     nsString fromType;
     nsString toType;
-};
-
-//////////////////////////////////////////////////
-// TestConverter1
-#define NS_TESTCONVERTER1_CID                             \
-{ /* 2BA20BB0-5598-11d3-9E63-0010A4053FD0 */         \
-    0x2ba20bb0,                                      \
-    0x5598,                                          \
-    0x11d3,                                          \
-    {0x9e, 0x63, 0x00, 0x10, 0xa4, 0x5, 0x3f, 0xd0} \
-}
-static NS_DEFINE_CID(kTestConverter1CID, NS_TESTCONVERTER1_CID);
-
-// Derrives solely from TestConverter.
-class TestConverter1 : public TestConverter {
 };
 
 //////////////////////////////////////////////////
