@@ -228,7 +228,6 @@ bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
 bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
-bin/components/transformiix.xpt
 bin/components/libtransformiix.so
 bin/components/libfileview.so
 bin/components/filepicker.xpt

@@ -258,7 +258,6 @@ bin/components/nsKillAll.js
 bin/components/nsProgressDialog.js
 bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
-bin/components/transformiix.xpt
 ;bin/components/transformiix.dll
 bin/components/t8iix.dll
 ;bin/ISimpleDOMNodeMarshal.dll

@@ -205,7 +205,6 @@ viewer:Components:xmlschema.xpt
 viewer:Components:nsHelperAppDlg.js
 viewer:Components:nsProgressDialog.js
 viewer:Components:nsDownloadProgressListener.js
-viewer:Components:transformiix.xpt
 viewer:Components:transformiix.shlb
 viewer:Components:nsCloseAllWindows.js
 
