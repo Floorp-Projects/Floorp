@@ -191,7 +191,6 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
 
   // create the native menu item
 
-
   if(mIsSeparator) {
     mMenuItem = gtk_menu_item_new();
   } else {
@@ -202,9 +201,9 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
   
   gtk_widget_show(mMenuItem);
  
-  gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
-                      GTK_SIGNAL_FUNC(menu_item_activate_handler),
-                      this);
+  gtk_signal_connect(GTK_OBJECT(mMenuItem), "activate",
+                     GTK_SIGNAL_FUNC(menu_item_activate_handler),
+                     this);
 
   return NS_OK;
 }
