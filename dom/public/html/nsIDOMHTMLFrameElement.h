@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
+class nsIDOMDocument;
 
 #define NS_IDOMHTMLFRAMEELEMENT_IID \
  { 0xa6cf90b9, 0x15b3, 0x11d2, \
@@ -61,6 +62,9 @@ public:
 
   NS_IMETHOD    GetSrc(nsString& aSrc)=0;
   NS_IMETHOD    SetSrc(const nsString& aSrc)=0;
+
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument)=0;
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument)=0;
 };
 
 
@@ -81,6 +85,8 @@ public:
   NS_IMETHOD    SetScrolling(const nsString& aScrolling);  \
   NS_IMETHOD    GetSrc(nsString& aSrc);  \
   NS_IMETHOD    SetSrc(const nsString& aSrc);  \
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument);  \
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument);  \
 
 
 
@@ -101,6 +107,8 @@ public:
   NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return _to SetScrolling(aScrolling); } \
   NS_IMETHOD    GetSrc(nsString& aSrc) { return _to GetSrc(aSrc); } \
   NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to SetSrc(aSrc); } \
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument) { return _to GetContentDocument(aContentDocument); } \
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument) { return _to SetContentDocument(aContentDocument); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLFrameElementClass(nsIScriptContext *aContext, void **aPrototype);

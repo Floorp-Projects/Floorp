@@ -34,12 +34,14 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMHTMLIFrameElement.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
 //
@@ -55,7 +57,8 @@ enum HTMLIFrameElement_slots {
   HTMLIFRAMEELEMENT_NAME = -7,
   HTMLIFRAMEELEMENT_SCROLLING = -8,
   HTMLIFRAMEELEMENT_SRC = -9,
-  HTMLIFRAMEELEMENT_WIDTH = -10
+  HTMLIFRAMEELEMENT_WIDTH = -10,
+  HTMLIFRAMEELEMENT_CONTENTDOCUMENT = -11
 };
 
 /***********************************************************************/
@@ -194,6 +197,19 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetWidth(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case HTMLIFRAMEELEMENT_CONTENTDOCUMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIFRAMEELEMENT_CONTENTDOCUMENT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocument* prop;
+          rv = a->GetContentDocument(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -351,6 +367,22 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLIFRAMEELEMENT_CONTENTDOCUMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIFRAMEELEMENT_CONTENTDOCUMENT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocument* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIDocumentIID, "Document",
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+          }
+      
+          rv = a->SetContentDocument(prop);
+          NS_IF_RELEASE(prop);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -430,6 +462,7 @@ static JSPropertySpec HTMLIFrameElementProperties[] =
   {"scrolling",    HTMLIFRAMEELEMENT_SCROLLING,    JSPROP_ENUMERATE},
   {"src",    HTMLIFRAMEELEMENT_SRC,    JSPROP_ENUMERATE},
   {"width",    HTMLIFRAMEELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {"contentDocument",    HTMLIFRAMEELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
   {0}
 };
 

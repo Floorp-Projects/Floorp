@@ -12,4 +12,6 @@
             attribute  DOMString            scrolling;
             attribute  DOMString            src;
             attribute  DOMString            width;
+  // Introduced in DOM Level 2:
+            attribute  Document             contentDocument;
  };

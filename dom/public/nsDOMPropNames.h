@@ -366,6 +366,7 @@
     "htmlformelement.reset", \
     "htmlformelement.submit", \
     "htmlformelement.target", \
+    "htmlframeelement.contentdocument", \
     "htmlframeelement.frameborder", \
     "htmlframeelement.longdesc", \
     "htmlframeelement.marginheight", \
@@ -384,6 +385,7 @@
     "htmlhrelement.width", \
     "htmlhtmlelement.version", \
     "htmliframeelement.align", \
+    "htmliframeelement.contentdocument", \
     "htmliframeelement.frameborder", \
     "htmliframeelement.height", \
     "htmliframeelement.longdesc", \
