@@ -46,7 +46,6 @@
 #include "nsCRT.h"
 #include "nsEscape.h"
 #include "nsMsgMessageFlags.h"
-#include "nsMimeAddress.h"
 #include "comi18n.h"
 #include "nsMailHeaders.h"
 #include "msgCore.h"

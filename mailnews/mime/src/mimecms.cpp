@@ -52,6 +52,7 @@
 #include "nsIMsgSMIMEHeaderSink.h"
 #include "nsCOMPtr.h"
 #include "nsIX509Cert.h"
+#include "nsIMsgHeaderParser.h"
 
 
 #define MIME_SUPERCLASS mimeEncryptedClass
@@ -191,7 +192,17 @@ PRBool MimeEncryptedCMS_encrypted_p (MimeObject *obj)
 
 // extern MimeMessageClass mimeMessageClass;			/* gag */
 
-extern int ParseRFC822Addresses (const char *line, char **names, char **addresses);
+static void ParseRFC822Addresses (const char *line, nsXPIDLCString &names, nsXPIDLCString &addresses)
+{
+  PRUint32 numAddresses;
+  nsresult res;
+  nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
+
+  if (NS_SUCCEEDED(res))
+  {
+    pHeader->ParseHeaderAddresses(nsnull, line, getter_Copies(names), getter_Copies(addresses), &numAddresses);
+  }
+}
 
 extern char *IMAP_CreateReloadAllPartsUrl(const char *url);
 
@@ -258,7 +269,7 @@ PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_FROM, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		ParseRFC822Addresses(s, getter_Copies(from_name), getter_Copies(from_addr));
+		ParseRFC822Addresses(s, from_name, from_addr);
 		PR_FREEIF(s);
 	  }
 
@@ -266,7 +277,7 @@ PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_SENDER, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		ParseRFC822Addresses(s, getter_Copies(sender_name), getter_Copies(sender_addr));
+		ParseRFC822Addresses(s, sender_name, sender_addr);
 		PR_FREEIF(s);
 	  }
   }

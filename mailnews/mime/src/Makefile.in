@@ -92,7 +92,6 @@ endif
 CPPSRCS		= \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
-		nsMimeAddress.cpp \
 		mimecont.cpp \
 		mimeebod.cpp \
 		mimeenc.cpp \
