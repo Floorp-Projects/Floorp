@@ -229,8 +229,6 @@ function AddAttachmentToMenu(name, oncommand)
     var item = document.createElement('menuitem'); 
     if ( item ) 
     { 
-      // popup.removeAttribute('menugenerated');
-
       popup.appendChild(item);
       item.setAttribute('value', name); 
       item.setAttribute('oncommand', oncommand); 
