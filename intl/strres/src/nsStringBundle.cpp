@@ -23,7 +23,7 @@
 #define NS_IMPL_IDS
 #include "nsID.h"
 #include "nsFileSpec.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIPersistentProperties.h"
 #include "nsIStringBundle.h"
 #include "nscore.h"
@@ -71,8 +71,8 @@ protected:
   nsresult GetStringFromName(const nsString& aName, nsString& aResult);
 
   nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
-  nsresult OpenInputStream(nsString2& aURLStr, nsIInputStream*& in);
-  nsresult GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country);
+  nsresult OpenInputStream(nsString& aURLStr, nsIInputStream*& in);
+  nsresult GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country);
  };
 
 nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
@@ -200,7 +200,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
   nsresult ret = NS_OK;
 
   /* locale binding */
-  nsString2  strFile2;
+  nsString  strFile2;
 
 #if 1
    /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
@@ -216,9 +216,9 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
     /* find the place to concatenate locale name 
      */
     PRInt32   count = 0;
-    nsString2 strFile(aURLSpec);
+    nsString strFile(aURLSpec);
     PRInt32   mylen = strFile.Length();
-    nsString2 fileLeft;
+    nsString fileLeft;
  
     /* assume the name always ends with this
      */
@@ -237,7 +237,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 
     /* insert it
      */   
-    nsString2 fileRight;
+    nsString fileRight;
     if (dot > 0) {
       count = strFile.Right(fileRight, mylen-dot);
       strFile2 += fileRight;
@@ -265,7 +265,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 }
 
 nsresult
-nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in) 
+nsStringBundle::OpenInputStream(nsString& aURLStr, nsIInputStream*& in) 
 {
 #ifdef DEBUG_tao
   {
@@ -285,7 +285,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
 }
 
 nsresult 
-nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country)
+nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country)
 {
   if (!aLocale) {
     return NS_ERROR_FAILURE;
@@ -549,7 +549,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
 #ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
   {
-    nsString2 aURLStr(aURLSpec);
+    nsString aURLStr(aURLSpec);
     char *s = aURLStr.ToNewCString();
     printf("\n** nsStringBundleService::CreateBundle: %s\n", s?s:"null");
     delete s;
@@ -603,7 +603,7 @@ nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aL
 #ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::CreateXPCBundle ++\n");
   {
-    nsString2 aURLStr(aURLSpec);
+    nsString aURLStr(aURLSpec);
     char *s = aURLStr.ToNewCString();
     printf("\n** nsStringBundleService::XPCCreateBundle: %s\n", s?s:"null");
     delete s;
