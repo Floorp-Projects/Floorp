@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.43 2002/11/05 00:25:19 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.44 2002/11/16 03:19:48 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -4549,7 +4549,7 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
     ca_list.nnames = nnames;
     ca_list.names  = (SECItem*)PORT_ArenaAlloc(arena, nnames * sizeof(SECItem));
-    if (ca_list.names == NULL)
+    if (nnames > 0 && ca_list.names == NULL)
         goto no_mem;
 
     for(i = 0, node = (dnameNode*)ca_list.head;

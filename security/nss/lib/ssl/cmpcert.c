@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: cmpcert.c,v 1.1 2000/03/31 19:31:24 relyea%netscape.com Exp $
+ * $Id: cmpcert.c,v 1.2 2002/11/16 03:19:47 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -64,7 +64,10 @@ NSS_CmpCertChainWCANames(CERTCertificate *cert, CERTDistNames *caNames)
   SECStatus         rv;
   SECItem           issuerName;
   SECItem           compatIssuerName;
-  
+
+  if (!cert || !caNames || !caNames->nnames || !caNames->names ||
+      !caNames->names->data)
+    return SECFailure;
   depth=0;
   curcert = CERT_DupCertificate(cert);
   
