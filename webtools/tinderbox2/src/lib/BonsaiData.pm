@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/05/08 17:42:59 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/05/09 18:16:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -67,7 +67,7 @@ sub load_bonsai_libs {
   
   $LIBS_LOADED = 1;
   
-  $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};;
+  $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};
 
   $BONSAI_DIR = ($TinderConfig::BONSAI_DIR ||
                  "/home/httpd/cgi-bin/bonsai");
@@ -261,6 +261,8 @@ sub get_checkin_data {
         ($cvs_module = 'all');
 
     # Set global variables to pass data to query_checkins.
+
+    $::CVS_ROOT = $TreeData::VC_TREE{$bonsai_tree}{'root'};
 
     $::query_module = $cvs_module;
     $::query_branch = $cvs_branch;
