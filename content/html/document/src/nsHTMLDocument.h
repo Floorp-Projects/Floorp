@@ -26,6 +26,7 @@
 #include "plhash.h"
 
 class nsIHTMLStyleSheet;
+class nsIHTMLCSSStyleSheet;
 class nsContentList;
 class nsIContentViewerContainer;
 class nsIParser;
@@ -63,6 +64,9 @@ public:
   // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
+
+  NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
+  NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
   // nsIDOMDocument interface
   NS_IMETHOD    GetMasterDoc(nsIDOMDocument **aDocument)
@@ -150,7 +154,9 @@ protected:
   static PRBool MatchLinks(nsIContent *aContent);
   static PRBool MatchAnchors(nsIContent *aContent);
 
-  nsIHTMLStyleSheet* mAttrStyleSheet;
+  nsIHTMLStyleSheet*    mAttrStyleSheet;
+  nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
+  nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
   nsVoidArray mTempForms;  // XXX Temporary
 
