@@ -240,11 +240,23 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     break;
 
   case eReflowReason_Incremental:
-#ifdef NS_DEBUG
-    // We should never be the target of the reflow command
+    // See whether we're the target of the reflow command
     aReflowState.reflowCommand->GetTarget(targetFrame);
-    NS_ASSERTION(targetFrame != this, "bad reflow command target-frame");
-#endif
+    if (this == targetFrame) {
+      nsIReflowCommand::ReflowType  type;
+
+      // The only type of reflow command we expect to get is a style
+      // change reflow command
+      aReflowState.reflowCommand->GetType(type);
+      NS_ASSERTION(nsIReflowCommand::StyleChanged == type, "unexpected reflow type");
+
+      // Make a copy of the reflow state (with a different reflow reason) and
+      // then recurse
+      nsHTMLReflowState reflowState(aReflowState);
+      reflowState.reason = eReflowReason_StyleChange;
+      reflowState.reflowCommand = nsnull;
+      return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+    }
 
     // Get the next frame in the reflow chain, and verify that it's our
     // child frame
