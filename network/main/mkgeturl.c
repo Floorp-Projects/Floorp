@@ -4330,7 +4330,9 @@ net_HTMLPanelLoad(ActiveEntry *ce)
 {
 	if(ce->URL_s)
 		StrAllocCopy(ce->URL_s->charset, INTL_ResourceCharSet());
+#ifndef MODULAR_NETLIB
 	XP_HandleHTMLPanel(ce->URL_s);
+#endif
 	return -1;
 }
 
@@ -4339,7 +4341,9 @@ net_HTMLDialogLoad(ActiveEntry *ce)
 {
 	if(ce->URL_s)
 		StrAllocCopy(ce->URL_s->charset, INTL_ResourceCharSet());
+#ifndef MODULAR_NETLIB
 	XP_HandleHTMLDialog(ce->URL_s);
+#endif
 	return -1;
 }
 
