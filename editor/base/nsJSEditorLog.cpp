@@ -158,9 +158,9 @@ nsJSEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
     return NS_OK;
 
   PrintSelection();
-  Write("window.editorShell.SetParagraphFormat(\"");
+  Write("window.editorShell.paragraphFormat = \"");
   PrintUnicode(aParagraphFormat);
-  Write("\");\n");
+  Write("\";\n");
 
   Flush();
 
