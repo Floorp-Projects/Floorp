@@ -928,10 +928,17 @@ extern JS_PUBLIC_API(void)
 JS_ReportError(JSContext *cx, const char *format, ...);
 
 /*
- * As above, but use an errorNumber for the format string
+ * Use an errorNumber to retrieve the format string, args are char *
  */
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...);
+
+/*
+ * Use an errorNumber to retrieve the format string, args are jschar *
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
 		     void *userRef, const uintN errorNumber, ...);
 
 /*
@@ -955,8 +962,8 @@ struct JSErrorReport {
     const jschar    *uctokenptr;    /* unicode (original) token pointer */
     uintN	    flags;          /* error/warning, etc. */
     uintN           errorNumber;    /* the error number, e.g. see jsmsg.def */
-    JSString        *ucmessage;     /* the (default) error message */
-    JSString        **messageArgs;  /* arguments for the error message */
+    const jschar    *ucmessage;     /* the (default) error message */
+    const jschar    **messageArgs;  /* arguments for the error message */
 };
 
 /*

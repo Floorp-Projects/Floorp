@@ -2211,8 +2211,20 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 {
+
+    JSPrinter *jp;
+    JSString *str;
+
     CHECK_REQUEST(cx);
-    return JS_DecompileScript(cx, fun->script, JS_GetFunctionName(fun), indent);
+    jp = js_NewPrinter(cx, JS_GetFunctionName(fun), indent);
+    if (!jp)
+	return NULL;
+    if (js_DecompileFunctionBody(jp, fun, JS_TRUE))
+	str = js_GetPrinterOutput(jp);
+    else
+	str = NULL;
+    js_DestroyPrinter(jp);
+    return str;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2504,10 +2516,23 @@ JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
 {
     va_list ap;
 
+     CHECK_REQUEST(cx);
+   va_start(ap, errorNumber);
+    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
+			   errorNumber, JS_TRUE, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...)
+{
+    va_list ap;
+
     CHECK_REQUEST(cx);
     va_start(ap, errorNumber);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
-			   errorNumber, ap);
+			   errorNumber, JS_FALSE, ap);
     va_end(ap);
 }
 
