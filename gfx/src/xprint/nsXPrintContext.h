@@ -28,8 +28,6 @@
 #include <X11/extensions/Print.h>
 #include "xp_core.h"
 #include "xp_file.h"
-#include "ntypes.h"
-#include "net.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsString.h"

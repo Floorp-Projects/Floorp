@@ -278,9 +278,13 @@ printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSe
     mPrintSetup->eol = "";			    // For text translation, line terminator 
     mPrintSetup->bullet = "+";                 // What char to use for bullets 
 
+#ifdef NOTYET
     URL_Struct_* url = new URL_Struct_;
     memset(url, 0, sizeof(URL_Struct_));
     mPrintSetup->url = url;                    // url of doc being translated 
+#else
+    mPrintSetup->url = nsnull;
+#endif
     mPrintSetup->completion = NULL;            // Called when translation finished 
     mPrintSetup->carg = NULL;                  // Data saved for completion routine 
     mPrintSetup->status = 0;                   // Status of URL on completion 

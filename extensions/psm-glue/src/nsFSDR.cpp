@@ -45,7 +45,7 @@
 #include "nsFileLocations.h"
 #include "prmem.h"
 #include "prprf.h"  
-#include "ntypes.h"
+#include "xp_core.h"
 #include "nsIPref.h"
 
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);

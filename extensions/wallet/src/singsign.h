@@ -29,7 +29,7 @@
 #ifndef _SINGSIGN_H
 #define _SINGSIGN_H
 
-#include "ntypes.h"
+#include "xp_core.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"

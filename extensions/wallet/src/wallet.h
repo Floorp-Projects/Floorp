@@ -29,7 +29,7 @@
 #ifndef _WALLET_H
 #define _WALLET_H
 
-#include "ntypes.h"
+#include "xp_core.h"
 #include "nsIPresShell.h"
 #include "nsString.h"
 #include "nsFileSpec.h"

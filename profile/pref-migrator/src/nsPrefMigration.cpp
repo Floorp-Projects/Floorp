@@ -79,8 +79,6 @@
 
 /* Network */
 
-#include "net.h"
-
 #include "nsPrefMigration.h"
 #include "nsPrefMigrationFactory.h"
 
