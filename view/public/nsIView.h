@@ -144,9 +144,14 @@ public:
   /**
    * Called to query the z-index of a view.
    * The z-index is relative to all siblings of the view.
-   * @result current z depth
+   * @param aAuto  PR_TRUE if the view is zindex:auto
+   * @param aZIndex explicit z-index value. 
+   * @param aTopMost used when this view is zindex:auto
+   *        PR_TRUE if the view is topmost when compared
+   *        with another z-index:auto view
+   *        
    */
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex) const = 0;
+  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const = 0;
 
   /**
    * Get whether the view "floats" above all other views,
