@@ -58,6 +58,7 @@ NS_XULATOM(property);
 NS_XULATOM(resource);
 NS_XULATOM(rule);
 NS_XULATOM(subject);
+NS_XULATOM(tag);
 NS_XULATOM(textnode);
 NS_XULATOM(tree);
 NS_XULATOM(treechildren);

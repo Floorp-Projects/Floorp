@@ -2606,21 +2606,23 @@ protected:
     static nsString    kFalseStr;
 
 
-    class ContentIdTestNode : public TestNode
+    class ContentTestNode : public TestNode
     {
     public:
-        ContentIdTestNode(InnerNode* aParent,
-                          ConflictSet& aConflictSet,
-                          nsIXULDocument* aDocument,
-                          nsIContent* aRoot,
-                          PRInt32 aContentVariable,
-                          PRInt32 aIdVariable)
+        ContentTestNode(InnerNode* aParent,
+                        ConflictSet& aConflictSet,
+                        nsIXULDocument* aDocument,
+                        nsIContent* aRoot,
+                        PRInt32 aContentVariable,
+                        PRInt32 aIdVariable,
+                        nsIAtom* aTag)
             : TestNode(aParent),
               mConflictSet(aConflictSet),
               mDocument(aDocument),
               mRoot(aRoot),
               mContentVariable(aContentVariable),
-              mIdVariable(aIdVariable) {}
+              mIdVariable(aIdVariable),
+              mTag(aTag) {}
 
         virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
 
@@ -2636,12 +2638,12 @@ protected:
 
             Element(nsIContent* aContent)
                 : mContent(aContent) {
-                MOZ_COUNT_CTOR(ContentIdTestNode::Element); }
+                MOZ_COUNT_CTOR(ContentTestNode::Element); }
 
-            virtual ~Element() { MOZ_COUNT_DTOR(ContentIdTestNode::Element); }
+            virtual ~Element() { MOZ_COUNT_DTOR(ContentTestNode::Element); }
 
             virtual const char* Type() const {
-                return "nsXULTemplateBuilder::ContentIdTestNode::Element"; }
+                return "nsXULTemplateBuilder::ContentTestNode::Element"; }
 
             virtual PLHashNumber Hash() const {
                 return PLHashNumber(mContent.get()) >> 2; }
@@ -2667,9 +2669,10 @@ protected:
         nsCOMPtr<nsIContent> mRoot;
         PRInt32 mContentVariable;
         PRInt32 mIdVariable;
+        nsCOMPtr<nsIAtom> mTag;
     };
 
-    friend class ContentIdTestNode;
+    friend class ContentTestNode;
 };
 
 //----------------------------------------------------------------------
@@ -4214,7 +4217,7 @@ nsXULTemplateBuilder::CloseContainer(nsIContent* aElement)
         // Remove any instantiations involving this element from the
         // conflict set.
         MatchSet firings, retractions;
-        mConflictSet.Remove(ContentIdTestNode::Element(aElement), firings, retractions);
+        mConflictSet.Remove(ContentTestNode::Element(aElement), firings, retractions);
     }
 
     return NS_OK;
@@ -4257,7 +4260,7 @@ nsXULTemplateBuilder::RebuildContainer(nsIContent* aElement)
     // Remove any instantiations involving this element from the
     // conflict set.
     MatchSet firings, retractions;
-    mConflictSet.Remove(ContentIdTestNode::Element(aElement), firings, retractions);
+    mConflictSet.Remove(ContentTestNode::Element(aElement), firings, retractions);
 
     // Forces the XUL element to remember that it needs to
     // re-generate its children next time around.
@@ -6260,7 +6263,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
 //----------------------------------------------------------------------
 
 nsresult
-nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+nsXULTemplateBuilder::ContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
 {
     nsresult rv;
 
@@ -6278,10 +6281,28 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
 
         if (hasContentBinding && hasIdBinding) {
             // both are bound, consistency check
-            nsCOMPtr<nsIRDFResource> resource;
-            gXULUtils->GetElementRefResource(VALUE_TO_ICONTENT(contentValue), getter_AddRefs(resource));
+            PRBool consistent = PR_TRUE;
+
+            nsIContent* content = VALUE_TO_ICONTENT(contentValue);
+
+            if (mTag) {
+                // If we're supposed to be checking the tag, do it now.
+                nsCOMPtr<nsIAtom> tag;
+                content->GetTag(*getter_AddRefs(tag));
+
+                if (tag != mTag)
+                    consistent = PR_FALSE;
+            }
+
+            if (consistent) {
+                nsCOMPtr<nsIRDFResource> resource;
+                gXULUtils->GetElementRefResource(content, getter_AddRefs(resource));
             
-            if (resource.get() == VALUE_TO_IRDFRESOURCE(idValue)) {
+                if (resource.get() != VALUE_TO_IRDFRESOURCE(idValue))
+                    consistent = PR_FALSE;
+            }
+
+            if (consistent) {
                 Element* element = new (mConflictSet.GetPool())
                     Element(VALUE_TO_ICONTENT(contentValue));
 
@@ -6296,23 +6317,38 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
         }
         else if (hasContentBinding) {
             // the content node is bound, get its id
-            nsCOMPtr<nsIRDFResource> resource;
-            gXULUtils->GetElementRefResource(VALUE_TO_ICONTENT(contentValue), getter_AddRefs(resource));
-            if (NS_FAILED(rv)) return rv;
+            PRBool consistent = PR_TRUE;
 
-            if (resource) {
-                Instantiation newinst = *inst;
-                newinst.AddAssignment(mIdVariable, Value(resource.get()));
+            nsIContent* content = VALUE_TO_ICONTENT(contentValue);
 
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_ICONTENT(contentValue));
+            if (mTag) {
+                // If we're supposed to be checking the tag, do it now.
+                nsCOMPtr<nsIAtom> tag;
+                content->GetTag(*getter_AddRefs(tag));
 
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
+                if (tag != mTag)
+                    consistent = PR_FALSE;
+            }
 
-                newinst.AddSupportingElement(element);
+            if (consistent) {
+                nsCOMPtr<nsIRDFResource> resource;
+                gXULUtils->GetElementRefResource(content, getter_AddRefs(resource));
+                if (NS_FAILED(rv)) return rv;
 
-                aInstantiations.Insert(inst, newinst);
+                if (resource) {
+                    Instantiation newinst = *inst;
+                    newinst.AddAssignment(mIdVariable, Value(resource.get()));
+
+                    Element* element = new (mConflictSet.GetPool())
+                        Element(VALUE_TO_ICONTENT(contentValue));
+
+                    if (! element)
+                        return NS_ERROR_OUT_OF_MEMORY;
+
+                    newinst.AddSupportingElement(element);
+
+                    aInstantiations.Insert(inst, newinst);
+                }
             }
 
             aInstantiations.Erase(inst--);
@@ -6336,6 +6372,16 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
                 NS_IF_RELEASE(isupports);
 
                 if (IsElementContainedBy(content, mRoot)) {
+                    if (mTag) {
+                        // If we've got a tag, check it to ensure
+                        // we're consistent.
+                        nsCOMPtr<nsIAtom> tag;
+                        content->GetTag(*getter_AddRefs(tag));
+
+                        if (tag != mTag)
+                            continue;
+                    }
+
                     Instantiation newinst = *inst;
                     newinst.AddAssignment(mContentVariable, Value(content.get()));
 
@@ -6358,7 +6404,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
 }
 
 nsresult
-nsXULTemplateBuilder::ContentIdTestNode::GetAncestorVariables(VariableSet& aVariables) const
+nsXULTemplateBuilder::ContentTestNode::GetAncestorVariables(VariableSet& aVariables) const
 {
     nsresult rv;
 
@@ -6455,13 +6501,14 @@ nsXULTemplateBuilder::InitializeRuleNetwork(InnerNode** aChildNode)
     if (! xuldoc)
         return NS_ERROR_UNEXPECTED;
 
-    ContentIdTestNode* idnode =
-        new ContentIdTestNode(mRules.GetRoot(),
-                              mConflictSet,
-                              xuldoc,
-                              mRoot,
-                              mContentVar,
-                              mContainerVar);
+    ContentTestNode* idnode =
+        new ContentTestNode(mRules.GetRoot(),
+                            mConflictSet,
+                            xuldoc,
+                            mRoot,
+                            mContentVar,
+                            mContainerVar,
+                            nsnull);
 
     if (! idnode)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -7246,14 +7293,12 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
 {
     // Compile a <content> condition, which currently must be of the form:
     //
-    //  <content uri="?var" />
+    //  <content uri="?var" tag="?tag" />
     //
-    // XXXwaterson I'm currently too lame to get the full blown
-    // <content> syntax working. Right now, exactly one <content>
-    // condition is required per rule. It creates a ContentIdTestNode,
-    // binding the content variable to the global content variable
-    // that's used during match propogation. The 'uri' attribute must
-    // be set.
+    // XXXwaterson Right now, exactly one <content> condition is
+    // required per rule. It creates a ContentTestNode, binding the
+    // content variable to the global content variable that's used
+    // during match propogation. The 'uri' attribute must be set.
 
     // uri
     nsAutoString uri;
@@ -7283,16 +7328,27 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
         aRule->AddSymbol(uri, urivar);
     }
 
+    // tag
+    nsCOMPtr<nsIAtom> tag;
+
+    nsAutoString tagstr;
+    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
+
+    if (tagstr.Length()) {
+        tag = dont_AddRef(NS_NewAtom(tagstr));
+    }
+
     // XXXwaterson By binding the content to the global mContentVar,
     // we're essentially saying that each rule *must* have exactly one
     // <content id="?x"/> condition.
     TestNode* testnode = 
-        new ContentIdTestNode(aParentNode,
-                              mConflictSet,
-                              mDocument,
-                              mRoot,
-                              mContentVar, // XXX see above
-                              urivar);
+        new ContentTestNode(aParentNode,
+                            mConflictSet,
+                            mDocument,
+                            mRoot,
+                            mContentVar, // XXX see above
+                            urivar,
+                            tag);
 
     if (! testnode)
         return NS_ERROR_OUT_OF_MEMORY;
