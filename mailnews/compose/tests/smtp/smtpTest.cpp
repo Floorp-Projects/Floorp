@@ -40,6 +40,7 @@
 
 #include "nsISmtpService.h"
 #include "nsISmtpUrl.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nsIUrlListener.h"
 
 #include "nsINetService.h"
