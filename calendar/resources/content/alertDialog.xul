@@ -68,6 +68,7 @@
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEventAlertDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 
 <!-- Picker popups -->
@@ -93,10 +94,12 @@
             </columns>
             <rows id="event-container-rows"/>
                <row class="ca-event-alert-row" name="sample-row" collapsed="true">
+                  <!-- NOTE: ALL ITEMS USE name INSTEAD OF id BECAUSE THE BOX IS DUPLICATED FOR EACH EVENT -->
                   <vbox align="start" pack="center">
-                     <button name="AcknowledgeButton" label="Acknowledge" wrap="none" class="alarm-acknowledge-button-class"/>
+                     <button name="AcknowledgeButton" label="&calendar.alarm.acknowledge.label;" wrap="none" class="alarm-acknowledge-button-class"/>
+                     <button name="EditEvent"         label="&calendar.alarm.editevent.label;"   wrap="none" class="alarm-acknowledge-button-class"/>
                      <box>
-                        <button name="SnoozeButton"   label="Snooze"      wrap="none" class="alarm-acknowledge-button-class"/>
+                        <button name="SnoozeButton"   label="&calendar.alarm.snooze.label;"      wrap="none" class="alarm-acknowledge-button-class"/>
                         <textbox name="alarm-length-field" class="alarm-length-field-class"/>
                                
                         <menulist name="alarm-length-units" flex="1" labelnumber="labelplural" wrap="none">
@@ -126,7 +129,7 @@
          <label id="too-many-alarms-description" value="" collapsed="true"/>
          <box>
 				<spacer flex="1"/>
-            <button id="dialog-btn-yes" label="Acknowledge All Alarms" default="true" oncommand="doOKButton();"/>
+            <button id="dialog-btn-yes" label="&calendar.alarm.acknowledgeall.label;" default="true" oncommand="doOKButton();"/>
 			</box>
       </vbox> 
         

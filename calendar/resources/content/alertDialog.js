@@ -67,35 +67,39 @@ function buildEventBoxes()
 {
    //remove all the old event boxes.
    var EventContainer = document.getElementById( "event-container-rows" );
-   var NumberOfChildElements = EventContainer.childNodes.length;
-   for( i = 0; i < NumberOfChildElements; i++ )   
+   if( EventContainer )
    {
-      EventContainer.removeChild( EventContainer.lastChild );
-   }
+      var NumberOfChildElements = EventContainer.childNodes.length;
+      for( i = 0; i < NumberOfChildElements; i++ )   
+      {
+         EventContainer.removeChild( EventContainer.lastChild );
+      }
+      
+      //start at length - 10 or 0 if that is < 0
    
-   //start at length - 10 or 0 if that is < 0
-
-   var Start = gAllEvents.length - 10;
-   if( Start < 0 )
-      Start = 0;
-
-   //build all event boxes again.
-   for( var i = Start; i < gAllEvents.length; i++ )
-   {
-      createAlarmBox( gAllEvents[i] );   
-   }
+      var Start = gAllEvents.length - 10;
+      if( Start < 0 )
+         Start = 0;
    
-   //reset the text
-   if( gAllEvents.length > 10 )
-   {
-      var TooManyDesc = document.getElementById( "too-many-alarms-description" );
-      TooManyDesc.removeAttribute( "collapsed" );         
-      TooManyDesc.setAttribute( "value", "You have "+ (gAllEvents.length )+" total alarms. We've shown you the last 10. Click Acknowledge All to clear them all." );
-   }
-   else
-   {
-      var TooManyDesc = document.getElementById( "too-many-alarms-description" );
-      TooManyDesc.setAttribute( "collapsed", "true" );
+      //build all event boxes again.
+      for( var i = Start; i < gAllEvents.length; i++ )
+      {
+         createAlarmBox( gAllEvents[i] );   
+      }
+      
+      //reset the text
+      if( gAllEvents.length > 10 )
+      {
+         var TooManyDesc = document.getElementById( "too-many-alarms-description" );
+         TooManyDesc.removeAttribute( "collapsed" );         
+         TooManyDesc.setAttribute( "value", "You have "+ (gAllEvents.length )+" total alarms. We've shown you the last 10. Click Acknowledge All to clear them all." );
+      }
+      else
+      {
+         var TooManyDesc = document.getElementById( "too-many-alarms-description" );
+         TooManyDesc.setAttribute( "collapsed", "true" );
+      }
+
    }
    sizeToContent();
 }
@@ -126,6 +130,10 @@ function createAlarmBox( Event )
    OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0].event = Event;
    
    OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0].setAttribute( "onclick", "acknowledgeAlarm( this.event );removeAlarmBox( this.event );" ); 
+   
+   OuterBox.getElementsByAttribute( "name", "EditEvent" )[0].event = Event;
+   
+   OuterBox.getElementsByAttribute( "name", "EditEvent" )[0].setAttribute( "onclick", "launchEditEvent( this.event );" ); 
    
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "AcknowledgeButton" )[0] );
    
@@ -246,6 +254,25 @@ function acknowledgeAlarm( Event )
 
    buildEventBoxes();
 }
+
+function launchEditEvent( Event )
+{
+   // set up a bunch of args to pass to the dialog
+   
+   var args = new Object();
+   args.mode = "edit";
+   args.onOk = modifyEventDialogResponse;           
+   args.calendarEvent = Event;
+
+   // open the dialog modally
+   opener.openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+}
+
+function modifyEventDialogResponse( calendarEvent )
+{
+   gICalLib.modifyEvent( calendarEvent );
+}
+
 
 function snoozeAlarm( Event )
 {
