@@ -200,7 +200,7 @@ struct nsHTMLElement {
   const TagList*  GetEndRootTags(void) const {return mEndRootNodes;}
   const TagList*  GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   const TagList*  GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
-  eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const;
+  eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex,nsDTDMode aMode) const;
 
   const TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
   const TagList*        GetSpecialParents(void) const {return mSpecialParents;}
@@ -210,7 +210,7 @@ struct nsHTMLElement {
   PRBool          CanContainType(PRInt32 aType) const;
   
   eHTMLTags       GetTag(void) const {return mTagID;}
-  PRBool          CanContain(eHTMLTags aChild) const;
+  PRBool          CanContain(eHTMLTags aChild,nsDTDMode aMode) const;
   PRBool          CanExclude(eHTMLTags aChild) const;
   PRBool          CanOmitStartTag(eHTMLTags aChild) const;
   PRBool          CanOmitEndTag(void) const;
@@ -224,7 +224,7 @@ struct nsHTMLElement {
 
   PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext); //default version
 
-  static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
+  static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsResidualStyleTag(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
