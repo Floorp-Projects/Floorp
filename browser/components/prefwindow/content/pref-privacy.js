@@ -190,14 +190,21 @@ var PrivacyPanel = {
       var dlMgr = Components.classes["@mozilla.org/download-manager;1"].getService(Components.interfaces.nsIDownloadManager);
       var downloads = PrivacyPanel.getDownloads();
 
+      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+      var state = rdfs.GetResource("http://home.netscape.com/NC-rdf#DownloadState");
+      var ds = dlMgr.datasource;
+      
       dlMgr.startBatchUpdate();  
       while (downloads.hasMoreElements()) {
         var download = downloads.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        dlMgr.removeDownload(download.Value);
+        try {
+          dlMgr.removeDownload(download.Value);
+        }
+        catch (e) {
+        }
       }
       dlMgr.endBatchUpdate();  
       
-      var ds = dlMgr.datasource;
       var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
       if (rds)
         rds.Flush();
