@@ -52,6 +52,7 @@
 #include "nsIComponentManager.h"
 
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsINameSpaceManager.h"
@@ -300,11 +301,11 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
 
   mEditor = 0;  // editor must be destroyed before the webshell!
-  if (mWebShell) 
-  {
-    mWebShell->Destroy();    
-    NS_RELEASE(mWebShell);
-  }
+   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+   if(webShellWin)
+      webShellWin->Destroy();
+   mWebShell = nsnull; // This is where it was released before.  Not sure if
+                        // there is ordering depending on it.
   if (mDocObserver)
   {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDoc);
@@ -578,7 +579,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     // initialize the subdoc, if it hasn't already been constructed
     // if the size is not 0 and there is a src, create the web shell
   
-    if (nsnull == mWebShell) 
+    if (!mWebShell) 
     {
       nsSize  size;
       GetSize(size);
@@ -608,11 +609,13 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
       }
 
       rv = CreateWebShell(mFramePresContext, size);
-      if (NS_FAILED(rv)) { return rv; }
-      NS_ASSERTION(mWebShell, "null web shell after attempt to create.");
-      if (!mWebShell) return NS_ERROR_NULL_POINTER;
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
       if (gNoisy) { printf("%p webshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
-      mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+      nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+      NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
+      webShellWin->SetPositionAndSize(subBounds.x, subBounds.y, 
+         subBounds.width, subBounds.height, PR_FALSE);
     }
     mCreatingViewer=PR_TRUE;
 
@@ -1104,14 +1107,8 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
 {
   nsresult rv;
 
-  NS_ENSURE_SUCCESS(
-    nsComponentManager::CreateInstance(kWebShellCID, nsnull, nsIWebShell::GetIID(),
-                                       (void**)&mWebShell),
-    NS_ERROR_FAILURE);
-  if (!mWebShell) {
-    NS_ASSERTION(0, "could not create web widget");
-    return NS_ERROR_NULL_POINTER;
-  }
+  mWebShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
 
   // pass along marginwidth and marginheight so sub document can use it
   mWebShell->SetMarginWidth(0);
@@ -1120,20 +1117,16 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   /* our parent must be a webshell.  we need to get our prefs from our parent */
   nsCOMPtr<nsISupports> container;
   aPresContext->GetContainer(getter_AddRefs(container));
-  NS_ASSERTION(container, "bad container");
-  if (!container) return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(container, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIWebShell> outerShell = do_QueryInterface(container);
-  NS_ASSERTION(outerShell, "parent must be a webshell");
-  if (!outerShell) return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(outerShell, NS_ERROR_UNEXPECTED);
 
-  nsIPref* outerPrefs = nsnull;  // connect the prefs
-  outerShell->GetPrefs(outerPrefs);
-  NS_ASSERTION(outerPrefs, "no prefs");
-  if (!outerPrefs) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIPref> outerPrefs;  //connect the prefs
+  outerShell->GetPrefs(*getter_AddRefs(outerPrefs));
+  NS_ENSURE_TRUE(outerPrefs, NS_ERROR_UNEXPECTED);
 
   mWebShell->SetPrefs(outerPrefs);
-  NS_RELEASE(outerPrefs);
 
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
@@ -1199,7 +1192,9 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
     docLoader->AddObserver(mTempObserver);
   }
 #endif
-  mWebShell->Show();
+  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+  NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
+  webShellWin->SetVisibility(PR_TRUE);
   return NS_OK;
 }
 
@@ -1818,7 +1813,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         }
       }
     }
-    if (mWebShell) 
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    if (webShellWin) 
     {
       if (mDisplayFrame) 
       {
@@ -1826,7 +1822,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
         mDisplayFrame = nsnull;
       }
       if (gNoisy) { printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height); }
-      mWebShell->SetBounds(subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
+      webShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
+         subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
 
 #ifdef NOISY
       printf("webshell set to (%d, %d, %d %d)\n", 

@@ -547,7 +547,7 @@ protected:
                           nsFramePaintLayer    aWhichLayer);
 
 protected:
-  nsIWebShell* mWebShell;
+  nsCOMPtr<nsIWebShell> mWebShell;
   PRBool mCreatingViewer;
   EnderTempObserver* mTempObserver;
   nsEnderDocumentObserver *mDocObserver;
