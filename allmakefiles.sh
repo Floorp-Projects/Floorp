@@ -847,6 +847,10 @@ extensions/typeaheadfind/src/Makefile
 extensions/typeaheadfind/Makefile
 "
 
+if [ "$MOZ_USE_OFFICIAL_BRANDING" ]; then
+    MAKEFILES_firefox_branding="other-licenses/branding/firefox/Makefile"
+fi
+
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
@@ -1422,6 +1426,9 @@ if test -n "$MOZ_CALENDAR"; then
 fi
 
 if test -n "$MOZ_PHOENIX"; then
+    if test -n "$MOZ_USE_OFFICIAL_BRANDING"; then
+        add_makefiles "$MAKEFILES_firefox_branding"
+    fi
     add_makefiles "$MAKEFILES_phoenix"
 fi
 
