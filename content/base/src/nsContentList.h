@@ -69,6 +69,8 @@ public:
   NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex);
   NS_IMETHOD Reset();
 
+  static void Shutdown();
+
 protected:
   nsAutoVoidArray mElements;
 };
