@@ -335,14 +335,14 @@ main()
 		{
 			cout << endl << "### Test 17: basic parameter behavior?" << endl;
 			COM_auto_ptr<IFoo> foop;
-			CreateIFoo( func_AddRefs_t<IFoo>(foop) );
+			CreateIFoo( (void **)(IFoo **)func_AddRefs_t<IFoo>(foop) );
 		}
 
 
 		{
 			cout << endl << "### Test 18: basic parameter behavior, using the short form?" << endl;
 			COM_auto_ptr<IFoo> foop;
-			CreateIFoo( func_AddRefs(foop) );
+			CreateIFoo( (void **)(IFoo **)func_AddRefs(foop) );
 		}
 
 
