@@ -126,7 +126,7 @@ NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
   
   // update the content model
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  domElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2(mIsChecked ? "true" : "false"));
+  domElement->SetAttribute(NS_LITERAL_STRING("checked"), mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"));
 
   // uncheck others if we're a radiomenu
   if ( mMenuType == eRadio && aIsEnabled )
@@ -259,7 +259,7 @@ nsEventStatus nsMenuItem::CheckRebuild(PRBool & aNeedsRebuild)
 }
 
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuItem::SetRebuild(PRBool & aNeedsRebuild)
+nsEventStatus nsMenuItem::SetRebuild(PRBool aNeedsRebuild)
 {
   //mNeedsRebuild = aNeedsRebuild; 
   return nsEventStatus_eIgnore;
@@ -346,7 +346,7 @@ nsMenuItem :: UncheckRadioSiblings(nsIDOMElement* inCheckedElement)
   nsCOMPtr<nsIDOMNode> checkedNode = do_QueryInterface(inCheckedElement);
 
   nsAutoString myGroupName;
-  inCheckedElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), myGroupName);
+  inCheckedElement->GetAttribute(NS_LITERAL_STRING("name"), myGroupName);
   
   nsCOMPtr<nsIDOMNode> parent;
   checkedNode->GetParentNode(getter_AddRefs(parent));
@@ -363,9 +363,9 @@ nsMenuItem :: UncheckRadioSiblings(nsIDOMElement* inCheckedElement)
       
       // if the current sibling is in the same group, clear it
       nsAutoString currGroupName;
-      currElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), currGroupName);
+      currElement->GetAttribute(NS_LITERAL_STRING("name"), currGroupName);
       if ( currGroupName == myGroupName )
-        currElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
+        currElement->SetAttribute(NS_LITERAL_STRING("checked"), NS_LITERAL_STRING("false"));
     }
     
     // advance to the next node
@@ -397,8 +397,8 @@ nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, n
   {
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
     nsAutoString checked;
-    domElement->GetAttribute(NS_ConvertASCIItoUCS2("checked"), checked);
-    if (checked.EqualsWithConversion("true")) 
+    domElement->GetAttribute(NS_LITERAL_STRING("checked"), checked);
+    if (checked == NS_LITERAL_STRING("true")) 
       UncheckRadioSiblings(domElement);
      
     nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
