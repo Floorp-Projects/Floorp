@@ -90,6 +90,7 @@ components\imglib2.dll
 ; see http://www.mozilla.org/projects/ui/accessibility/vendors-win.html
 components\accessibility.dll              
 components\accessibility.xpt                 
+components\accessibility-msaa.xpt
 
 ; caps (JavaScript security)
 components\caps.dll                     

@@ -75,7 +75,6 @@ bin/mozturbo.exe
 bin/regxpcom.exe
 bin/xpicleanup.exe
 bin/res/cmessage.txt
-;bin/components/accessibility.dll
 bin/components/access.dll
 bin/components/accessibility.xpt
 ;bin/components/AcctIdl.dll
@@ -263,8 +262,7 @@ bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
 ;bin/components/transformiix.dll
 bin/components/t8iix.dll
-;bin/ISimpleDOMNodeMarshal.dll
-;bin/ISimpleDOMDocumentMarshal.dll
+;bin/AccessibleMarshal.dll
 ;bin/components/nsSetDefaultBrowser.js
 bin/components/typeaheadfind.xpt
 bin/components/typahead.dll

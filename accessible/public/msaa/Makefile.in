@@ -39,17 +39,72 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+LIBRARY_NAME	= AccessibleMarshal
 MODULE    = accessibility
-XPIDL_MODULE= accessibility
-GRE_MODULE      = 1
+XPIDL_MODULE = accessibility-msaa
+GRE_MODULE   = 1
+DEFFILE = $(srcdir)/AccessibleMarshal.def
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS=ISimpleDOMNode ISimpleDOMDocument
 
 XPIDLSRCS = \
       nsIAccessibleWin32Object.idl \
       $(NULL)
+
+DEFINES		+= -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
+
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+
+FORCE_SHARED_LIB = 1
+
+SRCS_IN_OBJDIR	= 1
+
+CSRCS	= \
+	AccessibleMarshal.c \
+	ISimpleDOMNode_p.c \
+	ISimpleDOMNode_i.c \
+	ISimpleDOMDocument_p.c \
+	ISimpleDOMDocument_i.c \
+	$(NULL)
+
+MIDL_GENERATED_FILES = \
+	ISimpleDOMNode.h \
+	ISimpleDOMNode_p.c \
+	ISimpleDOMNode_i.c \
+	ISimpleDOMDocument.h \
+	ISimpleDOMDocument_p.c \
+	ISimpleDOMDocument_i.c \
+	$(NULL)
+
+SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
+
+OS_LIBS = \
+	kernel32.lib \
+	rpcndr.lib \
+	rpcns4.lib \
+	rpcrt4.lib \
+	oleaut32.lib \
+	$(NULL)
+
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: ISimpleDOMNode.idl ISimpleDOMDocument.idl
+	"$(MIDL)" $(srcdir)/ISimpleDOMNode.idl
+	"$(MIDL)" $(srcdir)/ISimpleDOMDocument.idl
+	touch $@
+
+EXPORTS = \
+	ISimpleDOMNode.h \
+	ISimpleDOMNode_i.c \
+	ISimpleDOMDocument.h \
+	ISimpleDOMDocument_i.c \
+	$(NULL)
+
+export:: done_gen
+
+# This marshall dll is also registered in the installer
+register::
+	regsvr32 /s $(DIST)/bin/$(SHARED_LIBRARY)
 
 include $(topsrcdir)/config/rules.mk
 
