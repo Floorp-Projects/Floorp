@@ -32,6 +32,8 @@
 #include "nsIXPBaseWindow.h"
 #include "nsPrintSetupDialog.h"
 #include "nsFindDialog.h"
+#include "nsTableInspectorDialog.h"
+#include "nsImageInspectorDialog.h"
 
 class nsILabel;
 class nsICheckButton;
@@ -150,6 +152,8 @@ public:
   void ShowPrintPreview(PRInt32 aID);
   void DoPrint(void);
   void DoPrintSetup(void);
+  void DoTableInspector(void);
+  void DoImageInspector(void);
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
@@ -218,7 +222,12 @@ public:
   nsILabel       * mLabel;
 
   nsIXPBaseWindow * mXPDialog;
+  nsIXPBaseWindow * mTableInspectorDialog;
+  nsIXPBaseWindow * mImageInspectorDialog;
   PrintSetupInfo    mPrintSetupInfo;
+
+  nsTableInspectorDialog * mTableInspector;
+  nsImageInspectorDialog * mImageInspector;
 
   //for creating more instances
   nsIAppShell* mAppShell;
@@ -232,6 +241,8 @@ public:
   static nsBrowserWindow* FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich);
 
 protected:
+  nsIDOMDocument* GetDOMDocument(nsIWebShell *aWebShell);
+
   nsBrowserWindow();
   virtual ~nsBrowserWindow();
 };

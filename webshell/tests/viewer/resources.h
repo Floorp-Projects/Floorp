@@ -57,14 +57,16 @@
 #define VIEWER_TOGGLE_SELECTION     40036
 #define VIEWER_NAV_QUIRKS_MODE      40037
 #define VIEWER_STANDARD_MODE        40038
+#define VIEWER_TABLE_INSPECTOR      40039
+#define VIEWER_IMAGE_INSPECTOR      40040
 
 // Note: must be in ascending sequential order
-#define VIEWER_ONE_COLUMN       40040
-#define VIEWER_TWO_COLUMN       40041
-#define VIEWER_THREE_COLUMN     40042
+#define VIEWER_ONE_COLUMN       40050
+#define VIEWER_TWO_COLUMN       40051
+#define VIEWER_THREE_COLUMN     40052
 
-#define VIEWER_PRINT            40050
-#define VIEWER_PRINT_SETUP      40051
+#define VIEWER_PRINT            40060
+#define VIEWER_PRINT_SETUP      40061
 
 #define JS_CONSOLE              40100
 #define EDITOR_MODE             40120

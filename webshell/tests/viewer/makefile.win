@@ -38,6 +38,8 @@ MISCDEP=                        \
 OBJS =                                      \
 	.\$(OBJDIR)\nsBaseDialog.obj     \
 	.\$(OBJDIR)\nsFindDialog.obj     \
+	.\$(OBJDIR)\nsImageInspectorDialog.obj     \
+	.\$(OBJDIR)\nsTableInspectorDialog.obj     \
 	.\$(OBJDIR)\nsPrintSetupDialog.obj     \
 	.\$(OBJDIR)\nsXPBaseWindow.obj     \
 	.\$(OBJDIR)\nsBrowserWindow.obj     \
@@ -110,6 +112,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 	$(MAKE_INSTALL) resources\find.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) resources\printsetup.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) resources\image_props.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test0.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test1.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test2.html $(DIST)\bin\res\samples

@@ -63,6 +63,8 @@ CPPSRCS = \
 	nsBaseDialog.cpp        \
 	nsFindDialog.cpp        \
 	nsXPBaseWindow.cpp      \
+	nsTableInspectorDialog.cpp  \
+	nsImageInspectorDialog.cpp  \
 	nsPrintSetupDialog.cpp  \
 	nsBrowserWindow.cpp     \
 	nsEditorMode.cpp        \
@@ -167,6 +169,7 @@ install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
 	$(INSTALL) $(srcdir)/resources/find.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/resources/printsetup.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/resources/image_props.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test0.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test1.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test2.html $(DIST)/bin/res/samples
