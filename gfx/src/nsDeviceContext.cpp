@@ -715,16 +715,24 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 
   for (PRInt32 cnt = 0; cnt < n; cnt++)
   {
-    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
+    nsIFontMetrics* metrics = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[cnt]);
 
     const nsFont* font;
-    aMetrics->GetFont(font);
-    nsCOMPtr<nsIAtom> langGroup;
-    aMetrics->GetLangGroup(getter_AddRefs(langGroup));
-    if (aFont.Equals(*font) && (aLangGroup == langGroup.get()))
-    {
-      NS_ADDREF(aMetrics);
-      return NS_OK;
+    metrics->GetFont(font);
+    if (aFont.Equals(*font)) {
+      nsCOMPtr<nsIAtom> langGroup;
+      metrics->GetLangGroup(getter_AddRefs(langGroup));
+      if (aLangGroup == langGroup.get()) {
+        if (cnt != 0) {
+          // promote it to the front of the cache
+          for (PRInt32 i = cnt; i > 0; --i)
+            mFontMetrics.ReplaceElementAt(mFontMetrics[i - 1], i);
+
+          mFontMetrics.ReplaceElementAt(metrics, 0);
+        }
+        NS_ADDREF(aMetrics = metrics);
+        return NS_OK;
+      }
     }
   }
 
