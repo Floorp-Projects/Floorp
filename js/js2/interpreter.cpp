@@ -216,7 +216,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
             delete icm;
         }
     } catch (Exception &e) {
-        throw new JSException(&e.fullMessage());
+        throw new JSException(e.fullMessage());
     }
     return result;
 }
@@ -742,7 +742,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         const char16 *c = argName->data();
                                         const char16 *end;
                                         double d = stringToDouble(c, c + argName->size(), end);
-                                        uint32 index = -1;
+                                        int index = -1;
 
                                         if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
                                             if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)

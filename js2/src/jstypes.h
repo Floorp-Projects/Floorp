@@ -473,7 +473,7 @@ namespace JSTypes {
 
     class JSException : public gc_base {
     public:
-        JSException(String *mess) : value(JSValue(new JSString(mess))) { }
+        JSException(String mess) : value(JSValue(new JSString(mess))) { }
         JSException(char *mess) : value(JSValue(new JSString(mess))) { }
         JSException(JSValue v) : value(v) { }
         JSValue value;
