@@ -123,6 +123,7 @@ EnumSystemFiles(void (*func)(const char *))
                         sizeof(ULONG)) == NO_ERROR)
     {
       bootLetter[0] = sysInfo + 'A' -1;
+      bootLetter[1] = '\0';
       strcpy(sysDir, bootLetter);
       strcpy(sysDir+1, ":\\OS2\\");
 
@@ -173,7 +174,7 @@ ReadFiles(const char *file)
 }
 
 static void
-ReadSystemFiles()
+ReadSystemFiles(void)
 {
     // first count the number of files
     dwNumFiles = 0;
