@@ -1,5 +1,4 @@
-<?xml version="1.0"?> 
-
+<?xml version="1.0"?>
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -113,7 +112,6 @@
   <command id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
   <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')"/>
   <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
-  <command id="cmd_quit" oncommand="goQuitApplication()"/>
 
   <!-- Edit Menu -->
   <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
@@ -134,8 +132,6 @@
   <command id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
   
   <!-- Options Menu -->
-  <command id="cmd_selectAddress" oncommand="toggleAddressPicker();"/>
-  <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
   <command id="cmd_insert"/>
 </commandset>
@@ -149,6 +145,11 @@
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
+  #ifdef XP_MACOSX
+    <key id="key_newMessage" key="&newMessage.key;" modifiers="accel,shift"/>
+  #else
+    <key id="key_newMessage" key="&newMessage.key;" modifiers="accel"/>
+  #endif
   <key id="key_close" key="&closeCmd.key;" modifiers="accel"/>
   <key id="key_save" key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
   <key id="key_send" keycode="&sendCmd.keycode;" observes="cmd_sendWithCheck" modifiers="accel"/>
@@ -230,6 +231,8 @@
             <menupopup id="menu_NewPopup">
               <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
               <menuseparator/>
+              <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;"
+                        oncommand="window.openDialog('chrome://messenger/content/addressbook/abNewCardDialog.xul', '', 'chrome,resizable=no,titlebar,modal');"/>
             </menupopup>
           </menu>
           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
@@ -253,7 +256,7 @@
           <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
           <menuseparator id="menu_FileQuitSeparator"/>
-          <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
+          <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" oncommand="goQuitApplication();"/>
         </menupopup>
       </menu>
       
@@ -304,7 +307,7 @@
                     
             </menupopup>
           </menu>
-          <menuitem id="menu_AddressSidebar" type="checkbox" checked="false" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" command="cmd_selectAddress"/>
+          <menuitem id="menu_AddressSidebar" type="checkbox" checked="false" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" oncommand="toggleAddressPicker();"/>
           <menuseparator/>
           <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
             <template>
@@ -340,7 +343,7 @@
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
-          <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
+          <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" oncommand="OutputFormatMenuSelect(event.target)">
             <menupopup>
               <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="format_auto" checked="true"/>
               <menuitem type="radio" name="output_format" label="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="format_plain"/>
@@ -418,7 +421,8 @@
             <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" oncommand="toAddressBook();" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
             <menuseparator/>
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
-            <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;" oncommand="goDoCommand('cmd_preferences')"/>
+            <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
+                      oncommand="goPreferences('mailnews', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
          </menupopup>
       </menu>
       
@@ -450,7 +454,7 @@
     <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
                tooltiptext="&addressButton.tooltip;" 
-               command="cmd_selectAddress"/>
+               oncommand="toggleAddressPicker();"/>
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
                tooltiptext="&attachButton.tooltip;" 

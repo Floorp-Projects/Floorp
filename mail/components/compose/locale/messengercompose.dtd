@@ -7,7 +7,10 @@
 <!ENTITY newMenu.label "New">
 <!ENTITY newMenu.accesskey "N">
 <!ENTITY newMessage.label "Message">
+<!ENTITY newMessage.key "M">
 <!ENTITY newMessage.accesskey "M">
+<!ENTITY newCard.label "Address Book Card...">
+<!ENTITY newCard.accesskey "c">
 <!ENTITY attachFileCmd.label "Attach File...">
 <!ENTITY attachFileCmd.accesskey "F">
 <!ENTITY attachPageCmd.label "Attach Web Page...">

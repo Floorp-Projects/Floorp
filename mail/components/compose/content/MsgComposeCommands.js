@@ -376,7 +376,6 @@ var defaultController =
       case "cmd_delete":
       case "cmd_selectAll":
       case "cmd_account":
-      case "cmd_preferences":
 
       //View Menu
       case "cmd_showComposeToolbar":
@@ -424,8 +423,6 @@ var defaultController =
       case "cmd_selectAll":
         return MessageHasAttachments();
       case "cmd_account":
-      case "cmd_preferences":
-        return true;
 
       //View Menu
       case "cmd_showComposeToolbar":
@@ -481,7 +478,6 @@ var defaultController =
       case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
       case "cmd_selectAll"          : if (MessageHasAttachments()) SelectAllAttachments();                     break;
       case "cmd_account"            : MsgAccountManager(null); break;
-      case "cmd_preferences"        : DoCommandPreferences(); break;
 
       //View Menu
       case "cmd_showComposeToolbar" : goToggleToolbar('composeToolbar', 'menu_showComposeToolbar'); break;
@@ -500,6 +496,25 @@ var defaultController =
   {
 //    dump("DefaultController:onEvent\n");
   }
+}
+
+function goOpenNewMessage()
+{
+  // if there is a MsgNewMessage function in scope
+  // and we should use it, so that we choose the proper
+  // identity, based on the selected message or folder
+  // if not, bring up the compose window to the default identity
+  if ("MsgNewMessage" in window) {
+    MsgNewMessage(null);
+    return;
+   }
+
+   var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
+   msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+   msgComposeService.OpenComposeWindow(null, null,
+                                       Components.interfaces.nsIMsgCompType.New,
+                                       Components.interfaces.nsIMsgCompFormat.Default,
+                                       null, null);
 }
 
 function QuoteSelectedMessage()
@@ -1009,11 +1024,6 @@ function DoCommandPrint()
   try {
     NSPrint();
   } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
-}
-
-function DoCommandPreferences()
-{
-  goPreferences('mailnews', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');
 }
 
 function ToggleWindowLock()
