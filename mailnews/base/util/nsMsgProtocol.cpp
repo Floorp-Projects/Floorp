@@ -154,10 +154,11 @@ nsresult nsMsgProtocol::GetFileFromURL(nsIURI * aURL, nsIFile **aResult)
 {
   NS_ENSURE_ARG_POINTER(aURL);
   NS_ENSURE_ARG_POINTER(aResult);
-	// extract the file path from the uri...
-	nsXPIDLCString filePath;
-	aURL->GetPath(getter_Copies(filePath));
-	char * urlSpec = PR_smprintf("file://%s", (const char *) filePath);
+  // extract the file path from the uri...
+  nsXPIDLCString filePath;
+  aURL->GetPath(getter_Copies(filePath));
+  nsCAutoString urlSpec("file://%s");
+  urlSpec.Append(filePath.get());
   nsresult rv;
 
 // dougt - there should be an easier way!
