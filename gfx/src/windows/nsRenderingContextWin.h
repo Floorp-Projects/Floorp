@@ -111,6 +111,9 @@ public:
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
+  NS_IMETHOD SetPenMode(nsPenMode aPenMode);
+  NS_IMETHOD GetPenMode(nsPenMode &aPenMode);
+
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
    *	@update 05/01/00 dwc

@@ -431,6 +431,11 @@ struct nsStyleOutline: public nsStyleStruct {
     mOutlineStyle |= (BORDER_COLOR_DEFINED | BORDER_COLOR_SPECIAL);
   }
 
+  PRBool  GetOutlineInvert(void) const
+  {
+    return(mOutlineStyle & BORDER_COLOR_SPECIAL);
+  }
+
 protected:
   PRPackedBool  mHasCachedOutline;
   nscoord       mCachedOutlineWidth;
