@@ -19,6 +19,7 @@ browser.jar:
         content/browser/pageInfo.css                  (content/pageInfo.css)
         content/browser/web-panels.js                 (content/web-panels.js)
         content/browser/web-panels.xul                (content/web-panels.xul)
+	content/browser/web-panels.xml                (content/web-panels.xml)
 
 classic.jar:
         skin/classic/browser/aboutDialog.css          (skin/aboutDialog.css)
@@ -40,7 +41,9 @@ classic.jar:
         skin/classic/browser/Toolbar.png              (skin/Toolbar.png)
         skin/classic/browser/lock-insecure.gif        (skin/lock-insecure.gif)
         skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
-        
+	skin/classic/browser/web-panels-drop-page.css         (skin/web-panels-drop-page.css)
+        skin/classic/browser/web-panels-bg.png        (skin/web-panels-bg.png)
+
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)
 *       locale/en-US/browser/browser.dtd              (locale/browser.dtd)
