@@ -1145,9 +1145,9 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
          token != (char *) 0;
          token = nsCRT::strtok(p, ",", &p))
     {
-        while (*token == ' ' || *token == '\x9') token++;
+        token = net_FindCharNotInSet(token, HTTP_LWS);
         char* trim;
-        trim = PL_strpbrk(token, "; \x9");
+        trim = net_FindCharInSet(token, ";" HTTP_LWS);
         if (trim != (char*)0)  // remove "; q=..." if present
             *trim = '\0';
 
@@ -1243,9 +1243,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
     for (token = nsCRT::strtok(o_Accept, ",", &p);
          token != (char *) 0;
          token = nsCRT::strtok(p, ",", &p)) {
-        while (*token == ' ' || *token == '\x9') token++;
+        token = net_FindCharNotInSet(token, HTTP_LWS);
         char* trim;
-        trim = PL_strpbrk(token, "; \x9");
+        trim = net_FindCharInSet(token, ";" HTTP_LWS);
         if (trim != (char*)0)  // remove "; q=..." if present
             *trim = '\0';
 

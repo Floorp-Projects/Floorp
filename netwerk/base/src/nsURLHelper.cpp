@@ -544,3 +544,59 @@ net_ToLowerCase(char *str)
     for (; *str; ++str)
         ToLower(*str);
 }
+
+char *
+net_FindCharInSet(const char *iter, const char *stop, const char *set)
+{
+    for (; iter != stop && *iter; ++iter) {
+        for (const char *s = set; *s; ++s) {
+            if (*iter == *s)
+                return (char *) iter;
+        }
+    }
+    return (char *) iter;
+}
+
+char *
+net_RFindCharInSet(const char *stop, const char *iter, const char *set)
+{
+    --iter;
+    --stop;
+    for (; iter != stop; --iter) {
+        for (const char *s = set; *s; ++s) {
+            if (*iter == *s)
+                return (char *) iter;
+        }
+    }
+    return (char *) iter;
+}
+
+char *
+net_FindCharNotInSet(const char *iter, const char *stop, const char *set)
+{
+repeat:
+    for (const char *s = set; *s; ++s) {
+        if (*iter == *s) {
+            if (++iter == stop)
+                break;
+            goto repeat;
+        }
+    }
+    return (char *) iter;
+}
+
+char *
+net_RFindCharNotInSet(const char *stop, const char *iter, const char *set)
+{
+    --iter;
+    --stop;
+repeat:
+    for (const char *s = set; *s; ++s) {
+        if (*iter == *s) {
+            if (--iter == stop)
+                break;
+            goto repeat;
+        }
+    }
+    return (char *) iter;
+}

@@ -109,8 +109,61 @@ inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
     return net_IsValidScheme(scheme.get(), scheme.Length());
 }
 
-/* convert to lower case (XXX this needs to be factored out) */
+/*****************************************************************************
+ * generic string routines follow (XXX move to someplace more generic).
+ */
+
+/* convert to lower case */
 void net_ToLowerCase(char* str, PRUint32 length);
 void net_ToLowerCase(char* str);
+
+/**
+ * returns pointer to first character of |str| in the given set.  if not found,
+ * then |end| is returned.  stops prematurely if a null byte is encountered,
+ * and returns the address of the null byte.
+ */
+char *net_FindCharInSet(const char *str, const char *end, const char *set);
+
+/**
+ * returns pointer to first character of |str| NOT in the given set.  if all
+ * characters are in the given set, then |end| is returned.  if '\0' is not
+ * included in |set|, then stops prematurely if a null byte is encountered,
+ * and returns the address of the null byte.
+ */
+char *net_FindCharNotInSet(const char *str, const char *end, const char *set);
+
+/**
+ * returns pointer to last character of |str| in the given set.  if not found,
+ * then |str - 1| is returned.
+ */
+char *net_RFindCharInSet(const char *str, const char *end, const char *set);
+
+/**
+ * returns pointer to last character of |str| NOT in the given set.  if all
+ * characters are in the given set, then |str - 1| is returned.
+ */
+char *net_RFindCharNotInSet(const char *str, const char *end, const char *set);
+
+/* inline versions */
+
+/* remember the 64-bit platforms ;-) */
+#define NET_MAX_ADDRESS (((char*)0)-1)
+
+inline char *net_FindCharInSet(const char *str, const char *set)
+{
+    return net_FindCharInSet(str, NET_MAX_ADDRESS, set);
+}
+inline char *net_FindCharNotInSet(const char *str, const char *set)
+{
+    return net_FindCharNotInSet(str, NET_MAX_ADDRESS, set);
+}
+inline char *net_RFindCharInSet(const char *str, const char *set)
+{
+    return net_RFindCharInSet(str, str + strlen(str), set);
+}
+inline char *net_RFindCharNotInSet(const char *str, const char *set)
+{
+    return net_RFindCharNotInSet(str, str + strlen(str), set);
+}
 
 #endif // !nsURLHelper_h__

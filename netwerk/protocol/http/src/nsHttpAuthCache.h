@@ -128,9 +128,9 @@ private:
                     const char *challenge,
                     const nsHttpAuthIdentity &ident,
                     nsISupports *metadata)
-        : mRealm(nsnull)
-        , mRoot(nsnull)
+        : mRoot(nsnull)
         , mTail(nsnull)
+        , mRealm(nsnull)
     {
         Set(path, realm, creds, challenge, ident, metadata);
     }

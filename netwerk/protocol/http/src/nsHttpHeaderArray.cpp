@@ -126,48 +126,57 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
 void
 nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
 {
-    char *p = PL_strchr(line, ':'), *p2;
+    //
+    // Augmented BNF (from section 4.2 of RFC 2616 w/ modifications):
+    //
+    //   message-header = field-name field-sep [ field-value ]
+    //   field-name     = token
+    //   field-sep      = LWS ( ":" | "=" | SP | HT )
+    //   field-value    = *( field-content | LWS )
+    //   field-content  = <the OCTETs making up the field-value
+    //                     and consisting of either *TEXT or combinations
+    //                     of token, separators, and quoted-string>
+    //
+    // Here, we allow a greater set of possible header value separators
+    // for compatibility with the vast number of broken web servers (mostly
+    // lame CGI scripts).  NN4 and IE are similarly tolerant.
+    //
+    //
+    // Examples:
+    //  
+    //   Header: Value
+    //   Header :Value
+    //   Header Value
+    //   Header=Value
+    //
 
-    // the header is malformed... but, there are malformed headers in the
-    // world.  search for ' ' and '\t' to simulate 4.x/IE behavior.
-    if (!p) {
-        p = PL_strchr(line, ' ');
-        if (!p) {
-            p = PL_strchr(line, '\t');
-            if (!p) {
-                // some broken cgi scripts even use '=' as a delimiter!!
-                p = PL_strchr(line, '=');
-            }
-        }
-    }
+    char *p = (char *) strchr(line, ':');
+    if (!p)
+        p = net_FindCharInSet(line, " \t=");
 
     if (p) {
         // ignore whitespace between header name and colon
-        p2 = p;
-        while (--p2 >= line && ((*p2 == ' ') || (*p2 == '\t')))
-            ;
-        *++p2= 0; // overwrite first char after header name
+        char *p2 = net_FindCharInSet(line, p, HTTP_LWS);
+        *p2 = 0; // null terminate header name
 
         nsHttpAtom atom = nsHttp::ResolveAtom(line);
         if (atom) {
             // skip over whitespace
-            do {
-                ++p;
-            } while ((*p == ' ') || (*p == '\t'));
+            p = net_FindCharNotInSet(++p, HTTP_LWS);
 
             // trim trailing whitespace - bug 86608
-            p2 = p + PL_strlen(p);
-            do {
-                --p2;
-            } while (p2 >= p && ((*p2 == ' ') || (*p2 == '\t')));
-            *++p2 = 0;
+            p2 = net_RFindCharNotInSet(p, HTTP_LWS);
+            *++p2 = 0; // null terminate header value; if all chars
+                       // starting at |p| consisted of LWS, then p2
+                       // would have pointed at |p-1|, so the prefix
+                       // increment is always valid.
 
             // assign return values
             if (hdr) *hdr = atom;
             if (val) *val = p;
 
             // assign response header
-            SetHeader(atom, nsDependentCString(p), PR_TRUE);
+            SetHeader(atom, nsDependentCString(p, p2 - p), PR_TRUE);
         }
         else
             LOG(("unknown header; skipping\n"));

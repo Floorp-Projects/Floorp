@@ -300,8 +300,6 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
 PRBool
 nsHttpResponseHead::MustValidate()
 {
-    const char *val;
-
     LOG(("nsHttpResponseHead::MustValidate ??\n"));
 
     // The no-cache response header indicates that we must validate this
@@ -552,63 +550,91 @@ nsHttpResponseHead::ParseVersion(const char *str)
         mVersion = NS_HTTP_VERSION_1_0;
 }
 
-// This code is duplicated in nsMultiMixedConv.cpp.  If you change it
-// here, change it there, too!
-
 void
 nsHttpResponseHead::ParseContentType(char *type)
 {
     LOG(("nsHttpResponseHead::ParseContentType [type=%s]\n", type));
 
-    // don't bother with an empty content-type header - bug 83465
-    if (!*type)
-        return;
+    //
+    // Augmented BNF (from RFC 2616 section 3.7):
+    //
+    //   header-value = media-type *( LWS "," LWS media-type )
+    //   media-type   = type "/" subtype *( LWS ";" LWS parameter )
+    //   type         = token
+    //   subtype      = token
+    //   parameter    = attribute "=" value
+    //   attribute    = token
+    //   value        = token | quoted-string
+    //   
+    //
+    // Examples:
+    //
+    //   text/html
+    //   text/html, text/html
+    //   text/html,text/html; charset=ISO-8859-1
+    //   text/html;charset=ISO-8859-1, text/html
+    //   application/octet-stream
+    //
 
-    // a response could have multiple content type headers... 
-    // we'll honor the last one. But for charset, we will only 
-    // honor the last one that comes with charset. 
-    mContentType.Truncate();
-
-    // we don't care about comments (although they are invalid here)
-    char *p = (char *) strchr(type, '(');
-    if (p)
-        *p = 0;
-
-    // check if the content-type has additional fields...
-    if ((p = (char *) strchr(type, ';')) != nsnull) {
-        char *p2, *p3;
-        // is there a charset field?
-        if ((p2 = PL_strcasestr(p, "charset=")) != nsnull) {
-            p2 += 8;
-
-            // check end of charset parameter
-            if ((p3 = (char *) strchr(p2, ';')) == nsnull)
-                p3 = p2 + strlen(p2);
-
-            // trim any trailing whitespace
-            do {
-                --p3;
-            } while ((*p3 == ' ') || (*p3 == '\t'));
-            *++p3 = 0; // overwrite first char after the charset field
-
-            mContentCharset = p2;
+    // iterate over media-types
+    char *nextType;
+    do {
+        nextType = (char *) strchr(type, ',');
+        if (nextType) {
+            *nextType = '\0';
+            ++nextType;
         }
-    }
-    else
-        p = type + strlen(type);
+        // type points at this media-type; locate first parameter if any
+        char *charset = "";
+        char *param = (char *) strchr(type, ';');
+        if (param) {
+            *param = '\0';
+            ++param;
 
-    // trim any trailing whitespace
-    while (--p >= type && ((*p == ' ') || (*p == '\t')))
-        ;
-    *++p = 0; // overwrite first char after the media type
+            // iterate over parameters
+            char *nextParam;
+            do {
+                nextParam = (char *) strchr(param, ';');
+                if (nextParam) {
+                    *nextParam = '\0';
+                    ++nextParam;
+                }
+                // param points at this parameter
 
-    // force the content-type to lowercase
-    while (--p >= type)
-        *p = nsCRT::ToLower(*p);
+                param = net_FindCharNotInSet(param, HTTP_LWS);
+                if (PL_strncasecmp(param, "charset=", 8) == 0)
+                    charset = param + 8;
 
-    // If the server sent "*/*", it is meaningless, so do not store it.
-    if (PL_strcmp(type, "*/*"))
-        mContentType = type;
+            } while ((param = nextParam) != nsnull);
+        }
+
+        // trim LWS leading and trailing whitespace from type and charset.
+        // charset cannot have leading whitespace.  we include '(' in the
+        // trailing trim set to catch media-type comments, which are not
+        // at all standard, but may occur in rare cases.
+
+        type = net_FindCharNotInSet(type, HTTP_LWS);
+
+        char *typeEnd    = net_FindCharInSet(type,    HTTP_LWS "(");
+        char *charsetEnd = net_FindCharInSet(charset, HTTP_LWS "(");
+
+        // force content-type to be lowercase
+        net_ToLowerCase(type, typeEnd - type);
+
+        // if the server sent "*/*", it is meaningless, so do not store it.
+        // also, if type is the same as mContentType, then just update the
+        // charset.  however, if charset is empty and mContentType hasn't
+        // changed, then don't wipe-out an existing mContentCharset.
+
+        if (*type && strcmp(type, "*/*") != 0) {
+            PRBool eq = mContentType.Equals(Substring(type, typeEnd));
+            if (!eq)
+                mContentType.Assign(type, typeEnd - type);
+            if (!eq || *charset)
+                mContentCharset.Assign(charset, charsetEnd - charset);
+        }
+
+    } while ((type = nextType) != nsnull);
 }
 
 void
