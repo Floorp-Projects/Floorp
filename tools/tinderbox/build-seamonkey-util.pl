@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.248 $ ';
+$::UtilsVersion = '$Revision: 1.249 $ ';
 
 package TinderUtils;
 
@@ -371,6 +371,7 @@ sub SetupPath {
 
     if ($Settings::OS eq 'BSD_OS') {
         $ENV{PATH}        = "/usr/contrib/bin:/usr/contrib/gnome/bin:/usr/bin:$ENV{PATH}";
+        $ENV{LD_LIBRARY_PATH} = "/usr/contrib/lib:/usr/contrib/gnome/lib:$ENV{LD_LIBRARY_PATH}";
         #$Settings::ConfigureArgs .= '--disable-shared';
         #$Settings::ConfigureEnvArgs ||= 'CC=shlicc2 CXX=shlicc2';
         #$Settings::Compiler ||= 'shlicc2';
