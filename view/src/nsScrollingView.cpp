@@ -950,17 +950,17 @@ NS_IMETHODIMP nsScrollingView::SetWidget(nsIWidget *aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
+NS_IMETHODIMP nsScrollingView::SetZIndex(PRBool aAuto, PRInt32 aZIndex)
 {
-	nsView::SetZIndex(aAuto, aZIndex, aTopMost);
+	nsView::SetZIndex(aAuto, aZIndex);
 	
 	// inform all views that the z-index has changed.
   // XXX why are we doing this? they're all a child of this view, so they
   // shouldn't need to be re-z-indexed.
-	if (mClipView) mViewManager->SetViewZIndex(mClipView, aAuto, aZIndex, aTopMost);
-	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aAuto, aZIndex, aTopMost);
-	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aAuto, aZIndex, aTopMost);
-	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aAuto, aZIndex, aTopMost);
+	if (mClipView) mViewManager->SetViewZIndex(mClipView, aAuto, aZIndex);
+	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aAuto, aZIndex);
+	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aAuto, aZIndex);
+	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aAuto, aZIndex);
 
 	return NS_OK;
 }

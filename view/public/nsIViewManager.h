@@ -288,13 +288,9 @@ public:
    * which means that the z-indicies of the view's children are
    * relative to the view's siblings.
    * @param aView view to change z depth of
-   * @param aZindex explicit z depth
-   * @param aTopMost used when this view is z-index:auto to compare against 
-   *        other z-index:auto views.
-   *        PR_TRUE if the view should be topmost when compared with 
-   *        other z-index:auto views.
+   * @param zindex new z depth
    */
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZindex, PRBool aTopMost = PR_FALSE) = 0;
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZindex) = 0;
 
   /**
    * Set whether the view "floats" above all other views,

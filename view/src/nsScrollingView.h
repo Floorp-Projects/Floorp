@@ -68,7 +68,7 @@ public:
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
-  NS_IMETHOD  SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost);
+  NS_IMETHOD  SetZIndex(PRBool aAuto, PRInt32 aZIndex);
 
   //nsIScrollableView interface
   NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull);
