@@ -1267,25 +1267,12 @@ public class NativeDate extends IdScriptable {
 
         int result = YearFromTime(LocalTime(date));
 
-        /*
-         * During the great date rewrite of 1.3, we tried to track the
-         * evolving ECMA standard, which then had a definition of
-         * getYear which always subtracted 1900.  Which we
-         * implemented, not realizing that it was incompatible with
-         * the old behavior...  now, rather than thrash the behavior
-         * yet again, we've decided to leave it with the - 1900
-         * behavior and point people to the getFullYear method.  But
-         * we try to protect existing scripts that have specified a
-         * version...
-         */
-        int version = cx.getLanguageVersion();
-        if (version == Context.VERSION_1_0 ||
-            version == Context.VERSION_1_1 ||
-            version == Context.VERSION_1_2)
-        {
-            if (result >= 1900 && result < 2000)
+        if (cx.hasFeature(Context.FEATURE_NON_ECMA_GET_YEAR)) {
+            if (result >= 1900 && result < 2000) {
                 result -= 1900;
-        } else {
+            }
+        } 
+        else {
             result -= 1900;
         }
         return result;

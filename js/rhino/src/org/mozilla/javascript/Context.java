@@ -1553,6 +1553,41 @@ public class Context {
             debuggableEngine = new DebuggableEngineImpl(this);
         return debuggableEngine;
     }
+    
+    
+    /**
+     * if hasFeature(FEATURE_NON_ECMA_GET_YEAR) returns true,
+     * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000
+     * in deviation with Ecma B.2.4
+     */
+    public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
+    
+    /**
+     * Controls certain aspects of script semantics. 
+     * Should be overwritten to alter default behavior.
+     * @param featureIndex feature index to check
+     * @return true if the <code>featureIndex</code> feature is turned on
+     * @see #FEATURE_NON_ECMA_GET_YEAR
+     */
+    public boolean hasFeature(int featureIndex) {
+        if (featureIndex == FEATURE_NON_ECMA_GET_YEAR) {
+           /*
+            * During the great date rewrite of 1.3, we tried to track the
+            * evolving ECMA standard, which then had a definition of
+            * getYear which always subtracted 1900.  Which we
+            * implemented, not realizing that it was incompatible with
+            * the old behavior...  now, rather than thrash the behavior
+            * yet again, we've decided to leave it with the - 1900
+            * behavior and point people to the getFullYear method.  But
+            * we try to protect existing scripts that have specified a
+            * version...
+            */
+            return (version == Context.VERSION_1_0 
+                    || version == Context.VERSION_1_1
+                    || version == Context.VERSION_1_2);
+        }
+        throw new RuntimeException("Bad feature index: " + featureIndex);
+    }
 
     /********** end of API **********/
     
