@@ -53,6 +53,7 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
 
+#include "MoreFilesExtras.h"
 #include "nsIInternetConfigService.h"
 
 #endif /* XP_MAC */
@@ -605,7 +606,16 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     if (! icGaveNeededInfo)
     {
       // If InternetConfig cannot help us, then just try our best...
-      sendResourceFork = PR_FALSE;
+      long dataSize = 0;
+      long resSize = 0;
+	
+	    // first check if we have a resource fork
+      if (::FSpGetFileSize(&fsSpec, &dataSize, &resSize) == noErr)
+        sendResourceFork = (resSize > 0);
+
+      // then, if we have a resource fork, check the filename extension, maybe we don't need the resource fork!
+      if (sendResourceFork)
+      {
       nsAutoString urlStr; urlStr.AssignWithConversion(url_string);
       char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
       if (ext && *ext)
@@ -624,6 +634,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
            PL_strcasecmp(ext, "JS");
       }
       PR_FREEIF(ext);
+    }
     }
 
 		// Only use appledouble if we aren't uuencoding.
