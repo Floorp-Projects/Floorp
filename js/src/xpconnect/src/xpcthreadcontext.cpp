@@ -209,7 +209,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPCThreadJSContextStackImpl,
                               nsIJSContextStack,
                               nsISupportsWeakReference)
 
-static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
+nsXPCThreadJSContextStackImpl*
+nsXPCThreadJSContextStackImpl::gXPCThreadJSContextStack = nsnull;
 
 nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 {
@@ -344,8 +345,6 @@ nsXPCThreadJSContextStackImpl::SetSafeJSContext(JSContext * aSafeJSContext)
 }
 
 /***************************************************************************/
-
-static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
 
 PRUintn           XPCPerThreadData::gTLSIndex = BAD_TLS_INDEX;
 PRLock*           XPCPerThreadData::gLock     = nsnull;

@@ -426,6 +426,8 @@ public:
     // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
     static nsXPConnect* GetSingleton();
 
+    // Called by module code in dll startup
+    static void InitStatics() { gSelf = nsnull; gOnceAliveNowDead = JS_FALSE; }
     // Called by module code on dll shutdown.
     static void ReleaseXPConnectSingleton();
 
@@ -1041,6 +1043,8 @@ public:
 
     void SetComponents(nsXPCComponents* aComponents);
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal);
+
+    static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
 
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
@@ -2447,6 +2451,8 @@ public:
     nsXPCException();
     virtual ~nsXPCException();
 
+    static void InitStatics() { sEverMadeOneFromFactory = JS_FALSE; }
+
 protected:
     void Reset();
 private:
@@ -2459,6 +2465,8 @@ private:
     int             mLineNumber;
     nsIException*   mInner;
     PRBool          mInitialized;
+
+    static JSBool sEverMadeOneFromFactory;
 };
 
 /***************************************************************************/
@@ -2594,6 +2602,8 @@ private:
 /**************************************************************/
 // All of our thread local storage.
 
+#define BAD_TLS_INDEX ((PRUint32) -1)
+
 class XPCPerThreadData
 {
 public:
@@ -2687,6 +2697,9 @@ public:
     void MarkAutoRootsBeforeJSFinalize(JSContext* cx);
     void MarkAutoRootsAfterJSFinalize();
 
+    static void InitStatics()
+        { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
+
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32  IncrementWrappedNativeThreadsafetyReportDepth()
         {return ++mWrappedNativeThreadsafetyReportDepth;}
@@ -2740,6 +2753,7 @@ public:
     // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
     static nsXPCThreadJSContextStackImpl* GetSingleton();
 
+    static void InitStatics() { gXPCThreadJSContextStack = nsnull; }
     static void FreeSingleton();
 
     nsXPCThreadJSContextStackImpl();
@@ -2749,6 +2763,8 @@ private:
     XPCJSContextStack* GetStackForCurrentThread()
         {XPCPerThreadData* data = XPCPerThreadData::GetData();
          return data ? data->GetJSContextStack() : nsnull;}
+
+    static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack;
 };
 
 /***************************************************************************/
@@ -2772,8 +2788,11 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
 
     nsJSRuntimeServiceImpl();
     virtual ~nsJSRuntimeServiceImpl();
+
+    static void InitStatics() { gJSRuntimeService = nsnull; }
  protected:
     JSRuntime *mRuntime;
+    static nsJSRuntimeServiceImpl* gJSRuntimeService;
 };
 
 /***************************************************************************/
