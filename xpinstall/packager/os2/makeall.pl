@@ -88,10 +88,14 @@ $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameGenericRes   = "nsinstall.res";
 $seiFileNameSpecific  = "mozilla-os2-installer.exe";
 $seiFileNameSpecificRes  = "mozilla-os2-installer.res";
+$seiFileNameSpecificRC  = "mozilla-os2-installer.rc";
 $seiStubRootName = "mozilla-os2-stub-installer";
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
 $seiFileNameSpecificStubRes  = "$seiStubRootName.res";
+$seiFileNameSpecificStubRC  = "$seiStubRootName.rc";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
+$seuFileNameSpecificRes  = "MozillaUninstall.res";
+$seuFileNameSpecificRC  = "MozillaUninstall.rc";
 $seuzFileNameSpecific = "mozillauninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
@@ -182,10 +186,10 @@ if(MakeXpiFile())
 {
   exit(1);
 }
-#if(MakeUninstall())
-#{
-#  exit(1);
-#}
+if(MakeUninstall())
+{
+  exit(1);
+}
 if(MakeConfigFile())
 {
   exit(1);
@@ -259,7 +263,7 @@ if(system("cp $inDistPath\\$seiFileNameGenericRes $inDistPath\\$seiFileNameSpeci
 
 $size = (-s "$inDistPath\\$seiFileNameSpecificStubRes");
 truncate("$inDistPath\\$seiFileNameSpecificStubRes", "$size-1");
-open(OUTPUTFILE, ">$inDistPath\\temp.rc");
+open(OUTPUTFILE, ">$inDistPath\\$seiFileNameSpecificStubRC");
 print OUTPUTFILE "#include <os2.h>\n";
 print OUTPUTFILE "STRINGTABLE DISCARDABLE\n";
 print OUTPUTFILE "BEGIN\n";
@@ -278,12 +282,11 @@ foreach $entry ( @stubFiles )
   $currentResourceID++;
 }
 close(OUTPUTFILE);
-system("rc -r $inDistPath\\temp.rc");
+system("rc -r $inDistPath\\$seiFileNameSpecificStubRC $inDistPath\\temp.res");
 system("cat $inDistPath\\$seiFileNameSpecificStubRes $inDistPath\\temp.res > $inDistPath\\new.res");
 unlink("$inDistPath\\$seiFileNameSpecificStubRes");
 rename("$inDistPath\\new.res", "$inDistPath\\$seiFileNameSpecificStubRes");
 unlink("$inDistPath\\temp.res");
-#unlink("$inDistPath\\temp.rc");
 system("rc $inDistPath\\$seiFileNameSpecificStubRes $inDistPath\\$seiFileNameSpecificStub");
 
 # copy the lean installer to stub\ dir
@@ -389,7 +392,7 @@ if(system("cp $inDistPath\\$seiFileNameGenericRes $inDistPath\\$seiFileNameSpeci
 
 $size = (-s "$inDistPath\\$seiFileNameSpecificRes");
 truncate("$inDistPath\\$seiFileNameSpecificRes", "$size-1");
-open(OUTPUTFILE, ">$inDistPath\\temp.rc");
+open(OUTPUTFILE, ">$inDistPath\\$seiFileNameSpecificRC");
 print OUTPUTFILE "#include <os2.h>\n";
 print OUTPUTFILE "STRINGTABLE DISCARDABLE\n";
 print OUTPUTFILE "BEGIN\n";
@@ -419,12 +422,11 @@ foreach $entry ( @xpiFiles )
   $currentResourceID++;
 }
 close(OUTPUTFILE);
-system("rc -r $inDistPath\\temp.rc");
+system("rc -r $inDistPath\\$seiFileNameSpecificRC $inDistPath\\temp.res");
 system("cat $inDistPath\\$seiFileNameSpecificRes $inDistPath\\temp.res > $inDistPath\\new.res");
 unlink("$inDistPath\\$seiFileNameSpecificRes");
 rename("$inDistPath\\new.res", "$inDistPath\\$seiFileNameSpecificRes");
 unlink("$inDistPath\\temp.res");
-#unlink("$inDistPath\\temp.rc");
 system("rc $inDistPath\\$seiFileNameSpecificRes $inDistPath\\$seiFileNameSpecific");
 
 if(system("cp $inDistPath\\$seiFileNameSpecific $inDistPath\\sea"))
@@ -534,27 +536,27 @@ sub MakeUninstall
   }
 
   # Copy the uninstall files to the dist uninstall directory.
-  if(system("copy uninstall.ini $inDistPath"))
+  if(system("cp uninstall.ini $inDistPath"))
   {
     print "\n Error: copy uninstall.ini $inDistPath\n";
     return(1);
   }
-  if(system("copy uninstall.ini $inDistPath\\uninstall"))
+  if(system("cp uninstall.ini $inDistPath\\uninstall"))
   {
     print "\n Error: copy uninstall.ini $inDistPath\\uninstall\n";
     return(1);
   }
-  if(system("copy defaults_info.ini $inDistPath"))
+  if(system("cp defaults_info.ini $inDistPath"))
   {
     print "\n Error: copy defaults_info.ini $inDistPath\n";
     return(1);
   }
-  if(system("copy defaults_info.ini $inDistPath\\uninstall"))
+  if(system("cp defaults_info.ini $inDistPath\\uninstall"))
   {
     print "\n Error: copy defaults_info.ini $inDistPath\\uninstall\n";
     return(1);
   }
-  if(system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall"))
+  if(system("cp $inDistPath\\uninstall.exe $inDistPath\\uninstall"))
   {
     print "\n Error: copy $inDistPath\\uninstall.exe $inDistPath\\uninstall\n";
     return(1);
@@ -562,16 +564,46 @@ sub MakeUninstall
 
   # build the self-extracting .exe (uninstaller) file.
   print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
-  if(system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific"))
+  if(system("cp $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific"))
   {
     print "\n Error: copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific\n";
     return(1);
   }
-  if(system("$inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*"))
+
+  if(system("cp $inDistPath\\$seiFileNameGenericRes $inDistPath\\$seuFileNameSpecificRes"))
   {
-    print "\n Error: $inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*\n";
-    return(1);
+    die "\n Error: copy $inDistPath\\$seiFileNameGenericRes $inDistPath\\$seuFileNameSpecificRes\n";
   }
+
+  @stubFiles = <$inDistPath/uninstall/*.*>;
+
+  $size = (-s "$inDistPath\\$seuFileNameSpecificRes");
+  truncate("$inDistPath\\$seuFileNameSpecificRes", "$size-1");
+  open(OUTPUTFILE, ">$inDistPath\\$seuFileNameSpecificRC");
+  print OUTPUTFILE "#include <os2.h>\n";
+  print OUTPUTFILE "STRINGTABLE DISCARDABLE\n";
+  print OUTPUTFILE "BEGIN\n";
+  $currentResourceID = 10000+1;
+  foreach $entry ( @stubFiles ) 
+  {
+    $filename = basename($entry);
+    print OUTPUTFILE "$currentResourceID \"$filename\"\n";
+    $currentResourceID++;
+  }
+  print OUTPUTFILE "END\n";
+  $currentResourceID = 10000+1;
+  foreach $entry ( @stubFiles ) 
+  {
+    print OUTPUTFILE "RESOURCE RT_RCDATA $currentResourceID \"$entry\"\n";
+    $currentResourceID++;
+  }
+  close(OUTPUTFILE);
+  system("rc -r $inDistPath\\$seuFileNameSpecificRC $inDistPath\\temp.res");
+  system("cat $inDistPath\\$seuFileNameSpecificRes $inDistPath\\temp.res > $inDistPath\\new.res");
+  unlink("$inDistPath\\$seuFileNameSpecificRes");
+  rename("$inDistPath\\new.res", "$inDistPath\\$seuFileNameSpecificStubRes");
+  unlink("$inDistPath\\temp.res");
+  system("rc $inDistPath\\$seuFileNameSpecificRes $inDistPath\\$seuFileNameSpecific");
 
   MakeExeZip($inDistPath, $seuFileNameSpecific, $seuzFileNameSpecific);
   unlink <$inDistPath\\$seuFileNameSpecific>;
