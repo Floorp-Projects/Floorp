@@ -88,7 +88,7 @@ tabpanels {
 
 /* :SIGH: override the tree selection from tree.css, wish there was a better way */
 
-.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow
+.unifinder-tree-class > listitem[selected="true"] 
 {
    background-color     : white;
    color                : black;
@@ -98,22 +98,22 @@ tabpanels {
    border-bottom        : none;
 }
 
-.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell 
+.unifinder-tree-class > listitem[selected="true"] > listcell
 {
    border                  : none;
 }
 
-.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell > .unifinder-treecell-box-class
+.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
 {
    background-color        : #d5e3f2; 
 }
 
 .unifinder-treecell-box-class
 {
-   padding        : 2px;
-   padding-left   : 4px;
-   font-family    : Arial, Helvetica;
-   -moz-box-align           : start;
+   padding              : 2px;
+   padding-left         : 4px;
+   font-family          : Arial, Helvetica;
+   -moz-box-align       : start;
 }
 
 /*--------------------------------------------------------------------

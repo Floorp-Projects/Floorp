@@ -51,9 +51,11 @@ function unifinderInit( CalendarWindow )
       {
          var CategoriesTree = document.getElementById( "unifinder-categories-tree" );
 
-         var SearchTree = document.getElementById( "unifinder-search-tree" );
+         var SearchTree = document.getElementById( "unifinder-search-results-tree" );
 
          CategoriesTree.clearSelection();
+
+         SearchTree.clearSelection();
          
          if( EventSelectionArray.length > 0 )
          {
@@ -61,7 +63,7 @@ function unifinderInit( CalendarWindow )
             {
                CategoriesTree.addItemToSelection( document.getElementById( "unifinder-treeitem-"+EventSelectionArray[i].id ) );
    
-               CategoriesTree.addItemToSelection( document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id ) );
+               SearchTree.addItemToSelection( document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id ) );
             }
          }
       }
@@ -212,7 +214,7 @@ function unifinderRefesh()
 
 function refreshCategoriesTree( eventTable )
 {
-   refreshEventTree( eventTable, "unifinder-categories-tree-children" );
+   refreshEventTree( eventTable, "unifinder-categories-tree" );
 }
 
 
@@ -224,7 +226,7 @@ function refreshSearchTree( SearchEventTable )
 {
    gSearchEventTable = SearchEventTable;
 
-   refreshSearchEventTree( gSearchEventTable, "unifinder-search-results-tree-children" );
+   refreshEventTree( gSearchEventTable, "unifinder-search-results-tree", false );
 }
 
 
@@ -370,146 +372,16 @@ function unifinderSearchKeyPress( searchTextItem, event )
 }
 
 /**
-*  Redraw the unifinder tree, either search or categories
-*/
-
-function refreshSearchEventTree( eventArray, childrenName )
-{
-   // get the old tree children item and remove it
-   
-   var oldTreeChildren = document.getElementById( childrenName );
-   var parent = oldTreeChildren.parentNode;
-   
-   oldTreeChildren.parentNode.removeChild( oldTreeChildren );
-   
-   // make a new treechildren item
-   
-   var treeChildren = document.createElement( "treechildren" );
-   treeChildren.setAttribute( "id" , childrenName );
-   treeChildren.setAttribute( "flex" , "1" );
-   
-   // add: tree item, row, cell, box and text items for every event
-   for( var index = 0; index < eventArray.length; ++index )
-   {
-      var calendarEvent = eventArray[ index ];
-      
-      // make the items
-      
-      var treeItem = document.createElement( "treeitem" );
-      treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
-      treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(" + calendarEvent.id + ")" );
-      treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
-      treeItem.setAttribute( "flex", "1" );
-
-      var treeRow = document.createElement( "treerow" );
-      treeRow.setAttribute( "flex", "1" );
-
-      var treeCell = document.createElement( "treecell" );
-      treeCell.setAttribute( "flex" , "1" );
-      treeCell.setAttribute( "crop", "right" );
-
-      var treeCellBox = document.createElement( "vbox" );
-      treeCellBox.setAttribute( "class" , "unifinder-treecell-box-class" );
-      treeCellBox.setAttribute( "flex" , "1" );
-      treeCellBox.setAttribute( "id", "search-unifinder-treecell-box" );
-      treeCellBox.setAttribute( "crop", "right" );
-
-      var text1 = document.createElement( "label" );
-      text1.setAttribute( "class", "calendar-unifinder-event-text" );
-      text1.setAttribute( "crop", "right" );
-      var text2 = document.createElement( "label" );
-      text1.setAttribute( "class", "calendar-unifinder-event-text" );
-      text1.setAttribute( "crop", "right" );
-
-      // set up the display and behaviour of the tree items
-      // set the text of the two text items
-      
-      text1.setAttribute( "value" , calendarEvent.title );
-      
-      var eventStartDate = new Date( calendarEvent.start.getTime() );
-      var eventEndDate = new Date( calendarEvent.end.getTime() );
-      var startDate = formatUnifinderEventDate( eventStartDate );
-      var startTime = formatUnifinderEventTime( eventStartDate );
-      var endTime  = formatUnifinderEventTime( eventEndDate );
-      
-      if( calendarEvent.allDay )
-      {
-         text2.setAttribute( "value" , "All day on " + startDate + "" );
-      }
-      else
-      {
-         text2.setAttribute( "value" , startDate + " " + startTime + " - " +  endTime );
-      }
-      
-      // add the items
-      
-      treeChildren.appendChild( treeItem );
-      treeItem.appendChild( treeRow );
-      treeRow.appendChild( treeCell );
-      treeCell.appendChild( treeCellBox );
-      if ( calendarEvent.title ) 
-      {
-         treeCellBox.appendChild( text1 );
-      }
-      treeCellBox.appendChild( text2 );
-   }
-   
-   // add the treeChildren item to the tree
-   
-   parent.appendChild( treeChildren );
-}
-
-
-
-/**
 *  Redraw the categories unifinder tree
 */
 
-function refreshEventTree( eventArray, childrenName )
+function refreshEventTree( eventArray, childrenName, Categories )
 {
    // get the old tree children item and remove it
    
    var oldTreeChildren = document.getElementById( childrenName );
-   var parent = oldTreeChildren.parentNode;
-   
-   oldTreeChildren.parentNode.removeChild( oldTreeChildren );
-   
-   //add the categories to the tree first.
-   // make a new treechildren item
-
-   var catTreeChildren = document.createElement( "treechildren" );
-   catTreeChildren.setAttribute( "id", childrenName );
-   catTreeChildren.setAttribute( "flex", "1" );
-   /* WE HAVE NO CATEGORIES RIGHT NOW
-   Categories = gCategoryManager.getAllCategories();
-
-   for ( i in Categories ) 
-   {
-      var ThisCategory = Categories[i];
-
-      var catTreeItem = document.createElement( "treeitem" );
-      catTreeItem.setAttribute( "container", "true" );
-      catTreeItem.setAttribute( "onclick", "selectCategoryInUnifinder()" );
-      catTreeItem.categoryobject = ThisCategory;
-      //catTreeItem.setAttribute( "id", "catitem"+Categories[i].id );
-      
-      var catTreeRow = document.createElement( "treerow" );
-      
-      var catTreeCell = document.createElement( "treecell" );
-      catTreeCell.setAttribute( "class", "treecell-indent" );
-      catTreeCell.setAttribute( "label", ThisCategory.name );
-      
-      thisCatChildren = document.createElement( "treechildren" );
-      thisCatChildren.setAttribute( "id", "catchild"+ThisCategory.id );
-      
-      catTreeRow.appendChild( catTreeCell );
-      catTreeItem.appendChild( catTreeRow );
-      catTreeItem.appendChild( thisCatChildren );
-      catTreeChildren.appendChild( catTreeItem );
-   }
-   
-   */
-   parent.appendChild( catTreeChildren );
+   while( oldTreeChildren.hasChildNodes() )
+      oldTreeChildren.removeChild( oldTreeChildren.lastChild );
 
    // add: tree item, row, cell, box and text items for every event
    for( var index = 0; index < eventArray.length; ++index )
@@ -518,15 +390,17 @@ function refreshEventTree( eventArray, childrenName )
       
       // make the items
       
-      var treeItem = document.createElement( "treeitem" );
-      treeItem.setAttribute( "id", "unifinder-treeitem-"+calendarEvent.id );
+      var treeItem = document.createElement( "listitem" );
+      
+      if( Categories != false )
+         treeItem.setAttribute( "id", "unifinder-treeitem-"+calendarEvent.id );
+      else
+         treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
+
       treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(" + calendarEvent.id + ")" );
       treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
       
-      var treeRow = document.createElement( "treerow" );
-      treeRow.setAttribute( "flex", "1" );
-      
-      var treeCell = document.createElement( "treecell" );
+      var treeCell = document.createElement( "listcell" );
       treeCell.setAttribute( "flex" , "1" );
       treeCell.setAttribute( "crop", "right" );
       
@@ -544,10 +418,6 @@ function refreshEventTree( eventArray, childrenName )
 
       var treeCellHBox = document.createElement( "hbox" );
       
-      /* 
-      ** HACK! 
-      ** There is a mysterious child of the HBox, with a flex of one, so set the flex on the HBox really high to hide the child. 
-      */
       treeCellHBox.setAttribute( "flex" , "1" );
       treeCellHBox.setAttribute( "class", "unifinder-treecell-box-class" );
       treeCellHBox.setAttribute( "crop", "right" );
@@ -558,11 +428,9 @@ function refreshEventTree( eventArray, childrenName )
       treeCellVBox.setAttribute( "flex", "1" );
 
       var text1 = document.createElement( "label" );
-      //text1.setAttribute( "class", "calendar-unifinder-event-text" );
       text1.setAttribute( "crop", "right" );
       
       var text2 = document.createElement( "label" );
-      //text2.setAttribute( "class", "calendar-unifinder-event-text" );
       text2.setAttribute( "crop", "right" );
 
       // set up the display and behaviour of the tree items
@@ -586,21 +454,6 @@ function refreshEventTree( eventArray, childrenName )
       }
       
       
-      //find the parent category treeitem.
-      var treeChild = document.getElementById( "catchild"+calendarEvent.category );
-
-      if ( treeChild ) 
-      {
-         treeChild.appendChild( treeItem );
-         //treeCell.setAttribute( "class", "calendar-unifinder-event-indent" );
-      }
-      //otherwise append it to the root node.
-      else 
-      {
-         catTreeChildren.appendChild( treeItem );
-      }
-      
-      
       // add the items
       if ( calendarEvent.title ) 
       {
@@ -612,9 +465,9 @@ function refreshEventTree( eventArray, childrenName )
       treeCellHBox.appendChild( treeCellVBox );
       
       treeCell.appendChild( treeCellHBox );
-      
-      treeRow.appendChild( treeCell );
-      
-      treeItem.appendChild( treeRow );
+
+      treeItem.appendChild( treeCell );
+
+      oldTreeChildren.appendChild( treeItem );
    }  
 }
