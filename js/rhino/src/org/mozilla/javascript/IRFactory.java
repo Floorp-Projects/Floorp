@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -771,7 +772,93 @@ public class IRFactory {
             // OPT: could optimize to GETPROP iff string can't be a number
             nodeType = Token.GETELEM;
             break;
+
+          case Token.ADD:
+            // numerical addition and string concatenation
+            if (left.type == Token.STRING) {
+                String s2;
+                if (right.type == Token.STRING) {
+                    s2 = right.getString();
+                } else if (right.type == Token.NUMBER) {
+                    s2 = ScriptRuntime.numberToString(right.getDouble(), 10);
+                } else {
+                    break;
+                }
+                String s1 = left.getString();
+                return  Node.newString(s1.concat(s2));
+            } else if (left.type == Token.NUMBER) {
+                if (right.type == Token.NUMBER) {
+                    double x = left.getDouble() + right.getDouble();
+                    return Node.newNumber(x);
+                } else if (right.type == Token.STRING) {
+                    String s1, s2;
+                    s1 = ScriptRuntime.numberToString(left.getDouble(), 10);
+                    s2 = right.getString();
+                    return  Node.newString(s1.concat(s2));
+                }
+            }
+            // can't do anything if we don't know  both types - since
+            // 0 + object is supposed to call toString on the object and do
+            // string concantenation rather than addition
+            break;
+
+          case Token.SUB:
+            // numerical subtraction
+            if (left.type == Token.NUMBER) {
+                double ld = left.getDouble();
+                if (right.type == Token.NUMBER) {
+                    //both numbers
+                    return Node.newNumber(ld - right.getDouble());
+                } else if (ld == 0.0) {
+                    // first 0: 0-x -> -x
+                    return new Node(Token.NEG, right);
+                }
+            } else if (right.type == Token.NUMBER) {
+                if (right.getDouble() == 0.0) {
+                    //second 0: x - 0 -> +x
+                    // can not make simply x because x - 0 must be number
+                    return new Node(Token.POS, left);
+                }
+            }
+            break;
+
+          case Token.MUL:
+            // numerical multiplication
+            if (left.type == Token.NUMBER) {
+                double ld = left.getDouble();
+                if (right.type == Token.NUMBER) {
+                    //both numbers
+                    return Node.newNumber(ld * right.getDouble());
+                } else if (ld == 1.0) {
+                    // first 1: 1 *  x -> +x
+                    return new Node(Token.POS, right);
+                }
+            } else if (right.type == Token.NUMBER) {
+                if (right.getDouble() == 1.0) {
+                    //second 1: x * 1 -> +x
+                    // can not make simply x because x - 0 must be number
+                    return new Node(Token.POS, left);
+                }
+            }
+            // can't do x*0: Infinity * 0 gives NaN, not 0
+            break;
+
+          case Token.DIV:
+            // number division
+            if (right.type == Token.NUMBER) {
+                double rd = right.getDouble();
+                if (left.type == Token.NUMBER) {
+                    // both constants -- just divide, trust Java to handle x/0
+                    return Node.newNumber(left.getDouble() / rd);
+                } else if (rd == 1.0) {
+                    // second 1: x/1 -> +x
+                    // not simply x to force number convertion
+                    return new Node(Token.POS, left);
+                }
+            }
+            break;
         }
+
         return new Node(nodeType, left, right);
     }
 
