@@ -824,7 +824,8 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
     aFont->EnumerateFamilies(StretchyFontEnumCallback, &context);
   }
   // To stay on the safe side, always append the default tables
-  for (PRInt32 i = 0; i < Count(); i++) {
+  PRInt32 count = Count();
+  for (PRInt32 i = 0; i < count; i++) {
     nsGlyphTable* glyphTable = ElementAt(i);
     PRInt32 index = aGlyphTableList->IndexOf(glyphTable);
     if ((kNotFound == index) && glyphTable->Has(aChar)) {
@@ -1495,15 +1496,16 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     nsGlyphCode chdata[4];
     nsBoundingMetrics bmdata[4];
     nscoord computedSize, sizedata[4];
+    nsGlyphCode glue = glyphTable->GlueOf(this);
     for (i = 0; i < 4; i++) {
       switch (i) {
         case 0: ch = glyphTable->TopOf(this);    break;
         case 1: ch = glyphTable->MiddleOf(this); break;
         case 2: ch = glyphTable->BottomOf(this); break;
-        case 3: ch = glyphTable->GlueOf(this);   break;
+        case 3: ch = glue;                       break;
       }
       // empty slots are filled with the glue if it is not null
-      if (!ch) ch = glyphTable->GlueOf(this);
+      if (!ch) ch = glue;
       if (!ch) { // glue is null, set bounding metrics to 0
         bm.Clear();
       }
@@ -1810,15 +1812,16 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   nsBoundingMetrics bm, bmdata[4];
   nscoord stride, offset[3], start[3], end[3];
   nscoord width = aRect.width;
+  nsGlyphCode glue = aGlyphTable->GlueOf(aChar);
   for (i = 0; i < 4; i++) {
     switch (i) {
       case 0: ch = aGlyphTable->TopOf(aChar);    break;
       case 1: ch = aGlyphTable->MiddleOf(aChar); break;
       case 2: ch = aGlyphTable->BottomOf(aChar); break;
-      case 3: ch = aGlyphTable->GlueOf(aChar);   break;
+      case 3: ch = glue;                         break;
     }
     // empty slots are filled with the glue if it is not null
-    if (!ch) ch = aGlyphTable->GlueOf(aChar);
+    if (!ch) ch = glue;
     if (!ch) {
       bm.Clear();  // glue is null, set bounding metrics to 0
     }
@@ -1886,8 +1889,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
 
   ///////////////
   // fill the gap between top and middle, and between middle and bottom.
-  ch = chdata[3]; // glue
-  if (!ch) { // null glue : draw a rule
+  if (!glue) { // null glue : draw a rule
     // figure out the dimensions of the rule to be drawn :
     // set lbearing to rightmost lbearing among the two current successive parts.
     // set rbearing to leftmost rbearing among the two current successive parts.
@@ -1938,6 +1940,9 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawRect(clipRect);
 #endif
+      PRBool clipState;
+      aRenderingContext.PushState();
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
       bm = bmdata[i];
       while (dy + aFontAscent + bm.descent < start[i+1]) {
         if (2 > count) {
@@ -1948,10 +1953,11 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         count++;
         dy += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               ch, dx, dy, &clipRect);
+                               glue, dx, dy);
         // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
+      aRenderingContext.PopState(clipState);
 #ifdef SHOW_BORDERS
       // last glyph that may cross past its boundary and collide with the next
       nscoord height = bm.ascent + bm.descent;
@@ -1988,15 +1994,16 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   nsBoundingMetrics bm, bmdata[4];
   nscoord stride, offset[3], start[3], end[3];
   dy = aRect.y - aFontAscent;
+  nsGlyphCode glue = aGlyphTable->GlueOf(aChar);
   for (i = 0; i < 4; i++) {
     switch (i) {
       case 0: ch = aGlyphTable->LeftOf(aChar);   break;
       case 1: ch = aGlyphTable->MiddleOf(aChar); break;
       case 2: ch = aGlyphTable->RightOf(aChar);  break;
-      case 3: ch = aGlyphTable->GlueOf(aChar);   break;
+      case 3: ch = glue;                         break;
     }
     // empty slots are filled with the glue if it is not null
-    if (!ch) ch = aGlyphTable->GlueOf(aChar);
+    if (!ch) ch = glue;
     if (!ch) {
       bm.Clear();  // glue is null, set bounding metrics to 0
     }
@@ -2064,8 +2071,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
 
   ////////////////
   // fill the gap between left and middle, and between middle and right.
-  ch = chdata[3];
-  if (!ch) { // null glue : draw a rule
+  if (!glue) { // null glue : draw a rule
     // figure out the dimensions of the rule to be drawn :
     // set ascent to lowest ascent among the two current successive parts.
     // set descent to highest descent among the two current successive parts.
@@ -2115,6 +2121,9 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
       aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawRect(clipRect);
 #endif
+      PRBool clipState;
+      aRenderingContext.PushState();
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
       bm = bmdata[i];
       while (dx + bm.rightBearing < start[i+1]) {
         if (2 > count) {
@@ -2125,10 +2134,11 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         count++;
         dx += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               ch, dx, dy, &clipRect);
+                               glue, dx, dy);
         // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
+      aRenderingContext.PopState(clipState);
 #ifdef SHOW_BORDERS
       // last glyph that may cross past its boundary and collide with the next
       nscoord width = bm.rightBearing - bm.leftBearing;
