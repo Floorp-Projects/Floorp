@@ -234,8 +234,15 @@ XfeXmFontListCopy(Widget w,XmFontList font_list,unsigned char font_type)
     return new_font_list;
 }
 /*----------------------------------------------------------------------*/
+/*																		*/
+/* This function is useful when effecient access to a widget's 			*/
+/* XmNfontList is needed.  It avoids the GetValues() and				*/
+/* XmStringCopy() overhead.  Of course, the result should be 			*/
+/* considered read only.												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
 /* extern */ XmFontList
-XfeXmFontListAccess(Widget w)
+XfeFastAccessFontList(Widget w)
 {
 	XmFontList	font_list = NULL;
 
@@ -258,68 +265,17 @@ XfeXmFontListAccess(Widget w)
 	{
 		font_list = ((XfeLabelWidget) w) -> xfe_label . font_list;
 	}
+#ifdef DEBUG_ramiro
+	else
+	{
+		assert( 0 );
+	}
+#endif
 
 	return font_list;
 }
 /*----------------------------------------------------------------------*/
 
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XmString																*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-/* extern */ XmString
-XfeXmStringCopy(Widget w,XmString xm_string,String fallback)
-{
-    XmString new_xm_string;
-    
-    /* Make sure the string is setup properly */
-    if (!xm_string)
-    {
-		/* If no xmstring is given, create using the fallback cstring */
-		new_xm_string = XmStringCreateLocalized(fallback);
-    }
-    else
-    {
-		/* Otherwise make a carbon copy - no check done to verify xmstring */
-		new_xm_string = XmStringCopy(xm_string);
-    }
-    
-    return new_xm_string;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ String
-XfeXmStringGetPSZ(XmString xm_string,char * tag)
-{
-	String		psz_string = NULL;
-
-	if (xm_string)
-	{
-		XmStringGetLtoR(xm_string,tag,&psz_string);
-	}	
-	
-	return psz_string;
-}
-/*----------------------------------------------------------------------*/
-/*extern*/ void
-XfeSetXmStringPSZ(Widget w,String name,char * tag,char * value)
-{
-	XmString xm_string;
-
-	assert( w != NULL );
-	assert( name != NULL );
-
-	xm_string = XmStringCreateLtoR(value,tag);
-
-	XtVaSetValues(w,name,xm_string,NULL);
-
-	if (xm_string)
-	{
-		XmStringFree(xm_string);
-	}
-}
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -549,6 +505,14 @@ XfeEventGetXY(XEvent * event,int * x_out,int * y_out)
 
 			result = True;
 		}
+#ifdef DEBUG_ramiro
+		else
+        {
+          printf("Unknown event type '%d'\n",event->type);
+
+          assert( 0 );
+        }
+#endif
 	}
 
 	if (x_out)
@@ -596,6 +560,14 @@ XfeEventGetRootXY(XEvent * event,int * x_out,int * y_out)
 
 			result = True;
 		}
+#ifdef DEBUG_ramiro
+		else
+        {
+          printf("Unknown event type '%d'\n",event->type);
+
+          assert( 0 );
+        }
+#endif
 	}
 
 	if (x_out)
@@ -616,6 +588,10 @@ XfeEventGetModifiers(XEvent * event)
 {
 	if (event)
 	{
+		/*
+		 * There probably a better way to do this using unions.
+		 * But, I want to limit which events are checked.
+		 */
 		if (event->type == ButtonPress || event->type == ButtonRelease)
 		{
 			return event->xbutton.state;
@@ -628,6 +604,18 @@ XfeEventGetModifiers(XEvent * event)
 		{
 			return event->xkey.state;
 		}
+		else if (event->type == EnterNotify || event->type == LeaveNotify)
+		{
+			return event->xcrossing.state;
+		}
+#ifdef DEBUG_ramiro
+        else
+        {
+          printf("Unknown event type '%d'\n",event->type);
+
+          assert( 0 );
+        }
+#endif
 	}
 
 	return 0;

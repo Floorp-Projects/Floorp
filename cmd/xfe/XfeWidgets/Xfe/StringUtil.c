@@ -23,9 +23,109 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #include <Xfe/XfeP.h>
 
+#include <Xm/LabelP.h>
+#include <Xm/LabelGP.h>
+#include <Xfe/LabelP.h>
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* This function is useful when effecient access to a widget's 			*/
+/* XmNlabelString is needed.  It avoids the GetValues() and 			*/
+/* XmStringCopy() overhead.  Of course, the result should be 			*/
+/* considered read only.												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ XmString
+XfeFastAccessLabelString(Widget w)
+{
+	XmString	label_string = NULL;
+
+	assert( _XfeIsAlive(w) );
+
+	if (!_XfeIsAlive(w))
+	{
+		return NULL;
+	}
+
+	if (XfeIsLabel(w))
+	{
+		label_string = ((XfeLabelWidget) w) -> xfe_label . label_string;
+	}
+#ifdef DEBUG_ramiro
+	else
+	{
+		assert( 0 );
+	}
+#endif
+
+	return label_string;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XmString utils														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ XmString
+XfeXmStringCopy(Widget w,XmString xm_string,String fallback)
+{
+    XmString new_xm_string;
+    
+    /* Make sure the string is setup properly */
+    if (!xm_string)
+    {
+		/* If no xmstring is given, create using the fallback cstring */
+		new_xm_string = XmStringCreateLocalized(fallback);
+    }
+    else
+    {
+		/* Otherwise make a carbon copy - no check done to verify xmstring */
+		new_xm_string = XmStringCopy(xm_string);
+    }
+    
+    return new_xm_string;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ String
+XfeXmStringGetPSZ(XmString xm_string,char * tag)
+{
+	String		psz_string = NULL;
+
+	if (xm_string)
+	{
+		XmStringGetLtoR(xm_string,tag,&psz_string);
+	}	
+	
+	return psz_string;
+}
+/*----------------------------------------------------------------------*/
+/*extern*/ void
+XfeSetXmStringPSZ(Widget w,String name,char * tag,char * value)
+{
+	XmString xm_string;
+
+	assert( w != NULL );
+	assert( name != NULL );
+
+	xm_string = XmStringCreateLtoR(value,tag);
+
+	XtVaSetValues(w,name,xm_string,NULL);
+
+	if (xm_string)
+	{
+		XmStringFree(xm_string);
+	}
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XmStringTable utils													*/
+/*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ XmString *
 XfeXmStringTableCopy(XmString * items,Cardinal num_items)
@@ -35,3 +135,4 @@ XfeXmStringTableCopy(XmString * items,Cardinal num_items)
 	return copy;
 }
 /*----------------------------------------------------------------------*/
+

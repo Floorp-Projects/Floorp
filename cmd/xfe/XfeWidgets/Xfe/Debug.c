@@ -172,5 +172,20 @@ XfeDebugRepTypeIndexToValue(String rep_type,Cardinal i)
 	return result;
 }
 /*----------------------------------------------------------------------*/
+/* extern */ String
+XfeDebugGetWidgetString(Widget w,String name)
+{
+	XmString xmstr = NULL;
+
+	XtVaGetValues(w,name,&xmstr,NULL);
+
+	if (xmstr)
+	{
+		return XfeDebugXmStringToStaticPSZ(xmstr);
+	}
+
+	return NULL;
+}
+/*----------------------------------------------------------------------*/
 
 #endif											/* endif DEBUG			*/

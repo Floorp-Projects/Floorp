@@ -276,31 +276,8 @@ XfeXmFontListCopy			(Widget			w,
 							 unsigned char	font_type);
 /*----------------------------------------------------------------------*/
 /* extern */ XmFontList
-XfeXmFontListAccess			(Widget			w);
+XfeFastAccessFontList		(Widget			w);
 /*----------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XmString																*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern XmString
-XfeXmStringCopy				(Widget			w,
-							 XmString		xm_string,
-							 String			fallback);
-/*----------------------------------------------------------------------*/
-extern String
-XfeXmStringGetPSZ			(XmString		xm_string,
-							 char *			tag);
-/*----------------------------------------------------------------------*/
-extern void
-XfeSetXmStringPSZ			(Widget			w,
-							 String			name,
-							 char *			tag,
-							 char *			value);
-/*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
