@@ -358,7 +358,7 @@ protected:
 
 	nsresult ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag, const nsString &aLine,
 			       const nsCOMPtr<nsIRDFContainer> &aContainer,
-			       nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode);
+			       nsIRDFResource *nodeType, nsCOMPtr<nsIRDFResource> &bookmarkNode);
 
 	nsresult ParseBookmarkSeparator(const nsString &aLine,
 					const nsCOMPtr<nsIRDFContainer> &aContainer);
@@ -384,7 +384,7 @@ public:
 	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource, const nsString &defaultPersonalToolbarName);
 	nsresult DecodeBuffer(nsString &line, char *buf, PRUint32 aLength);
 	nsresult ProcessLine(nsIRDFContainer *aContainer, nsIRDFResource *nodeType,
-			nsIRDFResource **bookmarkNode, nsString &line,
+			nsCOMPtr<nsIRDFResource> &bookmarkNode, const nsString &line,
 			nsString &description, PRBool &inDescription, PRBool &isActiveFlag);
 	nsresult Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType);
 
@@ -655,13 +655,11 @@ BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
 
 nsresult
 BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType,
-			nsIRDFResource **bookmarkNode, nsString &line,
+			nsCOMPtr<nsIRDFResource> &bookmarkNode, const nsString &line,
 			nsString &description, PRBool &inDescription, PRBool &isActiveFlag)
 {
 	nsresult	rv = NS_OK;
 	PRInt32		offset;
-
-	if (*bookmarkNode)	*bookmarkNode = nsnull;
 
 	if (inDescription == PR_TRUE)
 	{
@@ -678,12 +676,12 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 
 		Unescape(description);
 
-		if (*bookmarkNode)
+		if (bookmarkNode)
 		{
 			nsCOMPtr<nsIRDFLiteral>	descLiteral;
 			if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
 			{
-				rv = mDataSource->Assert(*bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
+				rv = mDataSource->Assert(bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
 			}
 		}
 
@@ -705,7 +703,8 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 		// XXX Ignore <H1> so that bookmarks root _is_ <H1>
 		if (line.CharAt(offset + 2) != PRUnichar('1'))
 		{
-			rv = ParseBookmarkInfo(gBookmarkHeaderFieldTable, PR_FALSE, line, container, nodeType, nsnull);
+		    nsCOMPtr<nsIRDFResource>    dummy;
+			rv = ParseBookmarkInfo(gBookmarkHeaderFieldTable, PR_FALSE, line, container, nodeType, dummy);
 		}
 	}
 	else if ((offset = line.Find(kSeparator, PR_TRUE)) >= 0)
@@ -728,8 +727,8 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 	else if ((offset = line.Find(kOpenDD, PR_TRUE)) >= 0)
 	{
 		inDescription = PR_TRUE;
-		line.Cut(0, offset+sizeof(kOpenDD)-1);
 		description = line;
+		description.Cut(0, offset+sizeof(kOpenDD)-1);
 	}
 	else
 	{
@@ -791,7 +790,7 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 			line.Truncate();
 			DecodeBuffer(line, linePtr, aLength);
 
-			rv = ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+			rv = ProcessLine(container, nodeType, bookmarkNode,
 				line, description, inDescriptionFlag, isActiveFlag);
 			if (NS_FAILED(rv))	break;
 		}
@@ -830,7 +829,7 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 			}
 			if (NS_SUCCEEDED(rv))
 			{
-				rv = ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+				rv = ProcessLine(container, nodeType, bookmarkNode,
 					line, description, inDescriptionFlag, isActiveFlag);
 			}
 		}
@@ -1010,16 +1009,13 @@ BookmarkParser::gBookmarkHeaderFieldTable[] =
 nsresult
 BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                 const nsString &aLine, const nsCOMPtr<nsIRDFContainer> &aContainer,
-				nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode)
+				nsIRDFResource *nodeType, nsCOMPtr<nsIRDFResource> &bookmarkNode)
 {
 	NS_PRECONDITION(aContainer != nsnull, "null ptr");
 	if (! aContainer)
 		return NS_ERROR_NULL_POINTER;
 
-    if (bookmarkNode != nsnull)
-    {
-        *bookmarkNode = nsnull;
-    }
+    bookmarkNode = nsnull;
 
     PRInt32     lineLen = aLine.Length();
 
@@ -1102,11 +1098,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
         const char  *bookmarkURI = nsnull;
         bookmark->GetValueConst(&bookmarkURI);
 
-    	if (bookmarkNode)
-    	{
-    		*bookmarkNode = bookmark;
-    		NS_ADDREF(*bookmarkNode);
-    	}
+		bookmarkNode = bookmark;
 
         // assert appropriate node type
         PRBool		isIEFavoriteRoot = PR_FALSE;
