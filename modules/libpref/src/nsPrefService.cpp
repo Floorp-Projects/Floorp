@@ -524,6 +524,9 @@ JSBool pref_InitInitialObjects()
 #endif
 #ifdef XP_MAC
       , "macprefs.js"
+#if defined (TARGET_CARBON)
+      , "macxprefs.js"
+#endif
 #elif defined(XP_WIN)
       , "winpref.js"
 #elif defined(XP_UNIX)
