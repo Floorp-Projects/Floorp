@@ -38,9 +38,6 @@ struct RowReflowState;
 class nsTableRowFrame : public nsHTMLContainerFrame
 {
 public:
-  /** Initialization of frame as a row */
-  void InitRowData(PRInt32 aRowIndex);
-
   /** Initialization of data */
   NS_IMETHOD InitChildren(PRInt32 aRowIndex=-1);
 
@@ -243,13 +240,6 @@ private:
                                   // is NOT the same as having nsIFrame::Init() called.)
 
 };
-
-
-inline void nsTableRowFrame::InitRowData(PRInt32 aRowIndex)
-{
-  NS_ASSERTION(0<=aRowIndex, "bad param row index");
-  mRowIndex = aRowIndex;
-}
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const
 {
