@@ -1478,6 +1478,9 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsISelectionController))) {
     nsISelectionController* tmp = this;
     *aInstancePtr = (void*) tmp;
+  } else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
+    nsISelectionController* tmp = this;
+    *aInstancePtr = (void*) tmp;
   } else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
     nsISupportsWeakReference* tmp = this;
     *aInstancePtr = (void*) tmp;
