@@ -954,7 +954,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
           } //if
         }
       }
-#ifdef DEBUG
+#ifdef NS_DEBUG
       else if(theKey.EqualsIgnoreCase("NAME")) {
         const nsString& theValue1=aNode.GetValueAt(0);
         if(theValue1.EqualsIgnoreCase("\"CRC\"")) {
