@@ -1386,6 +1386,12 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
     // notify observers
     for (PRInt32 i = (PRInt32)mNumObservers - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+
+        // XXX this should never happen, but it does, and we can't figure out why.
+        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        if (! obs)
+          continue;
+
         obs->OnAssert(this, aSource, aProperty, aTarget);
         NS_RELEASE(obs);
         // XXX ignore return value?
@@ -1533,6 +1539,12 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+
+        // XXX this should never happen, but it does, and we can't figure out why.
+        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        if (! obs)
+          continue;
+
         obs->OnUnassert(this, aSource, aProperty, aTarget);
         NS_RELEASE(obs);
         // XXX ignore return value?
@@ -1582,6 +1594,12 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+
+        // XXX this should never happen, but it does, and we can't figure out why.
+        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        if (! obs)
+          continue;
+
         obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
         NS_RELEASE(obs);
         // XXX ignore return value?
@@ -1631,6 +1649,12 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
     // Notify the world
     for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+
+        // XXX this should never happen, but it does, and we can't figure out why.
+        NS_ASSERTION(obs != nsnull, "observer array corrupted!");
+        if (! obs)
+          continue;
+
         obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
         NS_RELEASE(obs);
         // XXX ignore return value?
