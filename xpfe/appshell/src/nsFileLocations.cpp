@@ -171,6 +171,7 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
     cwd += ".mozilla";
     if (!cwd.Exists())
         cwd.CreateDir();
+
 #elif defined(XP_PC)
     // set its directory an aunt of the executable.
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -180,6 +181,12 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
     parent.GetParent(cwd); // "program files\Netscape\"
 
     cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+#elif defined(XP_BEOS)
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
+    cwd += "mozilla";
     if (!cwd.Exists())
         cwd.CreateDir();
 
@@ -279,7 +286,7 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this = nsSpecialFileSpec(App_PrefsDirectory30);
             #ifdef XP_MAC
                 *this += "Netscape Preferences";
-            #elif defined(XP_UNIX)
+            #elif defined(XP_UNIX) || defined(XP_BEOS)
                 *this += "preferences.js";
             #else
                 *this += "prefs.js";
@@ -291,7 +298,7 @@ void nsSpecialFileSpec::operator = (Type aType)
                 *this = nsSpecialFileSpec(App_PrefsDirectory40);
             #ifdef XP_MAC
                 *this += "Netscape Preferences";
-            #elif defined(XP_UNIX)
+            #elif defined(XP_UNIX) || defined(XP_BEOS)
                 *this += "preferences.js";
             #else
                 *this += "prefs.js";
