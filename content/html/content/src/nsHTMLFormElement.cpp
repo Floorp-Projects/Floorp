@@ -497,11 +497,13 @@ nsHTMLFormElement::Submit()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    if (InNavQuirksMode(mDocument)) {
-      // QUIRKS MODE: submit without calling event handlers. (bug 144534,
-      // original code added in bug 76694)
+    // If we are in quirks mode or someone called form.submit()
+    // from inside the onSubmit handler, just submit synchronously.
+    // (bug 144534, 76694, 155453)
+    if (InNavQuirksMode(mDocument) || mGeneratingSubmit) {
       rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
     } else {
+      // Send the submit event to submit the form.
       // Calling HandleDOMEvent() directly so that submit() will work even if
       // the frame does not exist.  This does not have an effect right now, but
       // If PresShell::HandleEventWithTarget() ever starts to work for elements
