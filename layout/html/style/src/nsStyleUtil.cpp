@@ -176,7 +176,7 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 #define sFontSizeTableMin  9 
 #define sFontSizeTableMax 16 
 
-#if 1
+#if 0
   static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
   {
       { 9,    9,     9,     9,    11,    14,    18,    27},
