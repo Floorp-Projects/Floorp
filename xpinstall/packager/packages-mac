@@ -114,8 +114,6 @@ viewer:Components:related.xpt
 viewer:Components:res.shlb 
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
-viewer:Components:sidebar.shlb 
-viewer:Components:sidebar.xpt 
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
