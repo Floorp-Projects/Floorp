@@ -765,7 +765,7 @@ WindowData* nsViewer::CreateTopLevel(const char* title,
   NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
   nsRect rect(100, 100, aWidth, aHeight);
 
-  window->Create((nsIWidget*)NULL, rect, HandleEvent, nsnull);
+  window->Create((nsIWidget*)NULL, rect, HandleEvent, nsnull, nsnull, (nsWidgetInitData *)gAppShell->GetNativeData(NS_NATIVE_SHELL));
   window->SetTitle(title);
   wd->windowWidget = window; 
   gWindows->AppendElement(wd);
@@ -961,9 +961,18 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
 
   // Create an application shell
-  NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
-  gAppShell->Create(&argc, argv);
-  gAppShell->SetDispatchListener(this);
+  nsresult res;
+  res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
+  if (NS_OK==res)
+  {
+    gAppShell->Create(&argc, argv);
+    gAppShell->SetDispatchListener(this);
+  }
+  else
+  {
+    fprintf(stderr, "Couldn't create an instance of AppShell\n");
+    return(nsnull);
+  }
   
     // Create a top level window for the WebWidget
   WindowData* wd = CreateTopLevel("Raptor HTML Viewer", 620, 400);
