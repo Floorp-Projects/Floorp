@@ -159,12 +159,15 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     if (mColorMap != nsnull) 
     {
       mColorMap->NumColors = mNumPaletteColors;
-      mColorMap->Index = new PRUint8[3 * mNumPaletteColors];
+      mColorMap->Index = nsnull;
+      if (mColorMap->NumColors > 0) {
+        mColorMap->Index = new PRUint8[3 * mColorMap->NumColors];
 
-      // XXX Note: I added this because purify claims that we make a
-      // copy of the memory (which we do!). I'm not sure if this
-      // matters or not, but this shutup purify.
-      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPaletteColors));
+        // XXX Note: I added this because purify claims that we make a
+        // copy of the memory (which we do!). I'm not sure if this
+        // matters or not, but this shutup purify.
+        memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mColorMap->NumColors));
+      }
 		}
   }
 
@@ -916,8 +919,7 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	// Should be an ISupports, so we can release
   if (mColorMap != nsnull)
   {
-    if (mColorMap->Index != nsnull)
-      delete [] mColorMap->Index;
+    delete [] mColorMap->Index;
     delete mColorMap;
   }
 
