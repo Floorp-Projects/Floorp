@@ -34,10 +34,6 @@ FRAMESET {
   overflow: hidden;
 }
 
-:BULLET {
-  display: inline;
-}
-
 // Blocks
 
 P {
@@ -363,6 +359,11 @@ UL LI, OL LI, MENU LI, DIR LI {
   list-style-position: outside;
   margin-left: -20px;
   padding-left: 20px;
+}
+:BULLET {
+  display: inline;
+  // Make this be 1/2 the "UL LI { padding-left:}" value above!
+  margin-right: 10px;
 }
 UL UL, UL OL, OL UL, OL OL  {
   margin-top: 0;
