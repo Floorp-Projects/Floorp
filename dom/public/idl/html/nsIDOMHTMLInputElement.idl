@@ -55,7 +55,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute long                  maxLength;
            attribute DOMString             name;
            attribute boolean               readOnly;
-           attribute DOMString             size;
+           attribute unsigned long         size;
            attribute DOMString             src;
            attribute long                  tabIndex;
            attribute DOMString             type;

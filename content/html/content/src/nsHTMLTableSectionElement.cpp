@@ -47,6 +47,7 @@
 #include "nsIPresContext.h"
 #include "GenericElementCollection.h"
 #include "nsRuleNode.h"
+#include "nsDOMError.h"
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
@@ -191,9 +192,7 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
 
-  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);
-
-  return NS_OK;
+  return CallQueryInterface(mRows, aValue);
 }
 
 
@@ -203,44 +202,48 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
 {
   *aValue = nsnull;
 
+  if (aIndex < -1) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   GetRows(getter_AddRefs(rows));
 
   PRUint32 rowCount;
   rows->GetLength(&rowCount);
 
-  PRBool doInsert = (aIndex < PRInt32(rowCount));
+  if (aIndex > (PRInt32)rowCount) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  PRBool doInsert = (aIndex < PRInt32(rowCount)) && (aIndex != -1);
 
   // create the row
-  nsCOMPtr<nsIHTMLContent> rowContent;
   nsCOMPtr<nsINodeInfo> nodeInfo;
-
   mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
 
+  nsCOMPtr<nsIHTMLContent> rowContent;
   nsresult rv = NS_NewHTMLTableRowElement(getter_AddRefs(rowContent),
                                           nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv) && rowContent) {
-    nsCOMPtr<nsIDOMNode> rowNode(do_QueryInterface(rowContent));
+  nsCOMPtr<nsIDOMNode> rowNode(do_QueryInterface(rowContent));
+  NS_ASSERTION(rowNode, "Should implement nsIDOMNode!");
 
-    if (NS_SUCCEEDED(rv) && rowNode) {
-      nsCOMPtr<nsIDOMNode> retChild;
+  nsCOMPtr<nsIDOMNode> retChild;
 
-      if (doInsert) {
-        PRInt32 refIndex = PR_MAX(aIndex, 0);   
-        nsCOMPtr<nsIDOMNode> refRow;
-        rows->Item(refIndex, getter_AddRefs(refRow));
-        rv = InsertBefore(rowNode, refRow, getter_AddRefs(retChild));
-      } else {
-        rv = AppendChild(rowNode, getter_AddRefs(retChild));
-      }
+  if (doInsert) {
+    nsCOMPtr<nsIDOMNode> refRow;
+    rows->Item(aIndex, getter_AddRefs(refRow));
 
-      if (retChild) {
-        retChild->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
-                                 (void **)aValue);
-      }
-    }
-  } 
+    rv = InsertBefore(rowNode, refRow, getter_AddRefs(retChild));
+  } else {
+    rv = AppendChild(rowNode, getter_AddRefs(retChild));
+  }
+
+  if (retChild) {
+    CallQueryInterface(retChild, aValue);
+  }
 
   return NS_OK;
 }
@@ -248,21 +251,39 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
 NS_IMETHODIMP
 nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
 {
-  nsCOMPtr<nsIDOMHTMLCollection> rows;
-
-  GetRows(getter_AddRefs(rows));
-
-  nsCOMPtr<nsIDOMNode> row;
-
-  rows->Item(aValue, getter_AddRefs(row));
-
-  if (row) {
-    nsCOMPtr<nsIDOMNode> retChild;
-
-    RemoveChild(row, getter_AddRefs(retChild));
+  if (aValue < -1) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIDOMHTMLCollection> rows;
+  GetRows(getter_AddRefs(rows));
+
+  nsresult rv;
+  PRUint32 refIndex;
+  if (aValue == -1) {
+    rv = rows->GetLength(&refIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (refIndex == 0) {
+      return NS_OK;
+    }
+
+    --refIndex;
+  }
+  else {
+    refIndex = (PRUint32)aValue;
+  }
+
+  nsCOMPtr<nsIDOMNode> row;
+  rv = rows->Item(aValue, getter_AddRefs(row));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!row) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsCOMPtr<nsIDOMNode> retChild;
+  return RemoveChild(row, getter_AddRefs(retChild));
 }
 
 NS_IMETHODIMP

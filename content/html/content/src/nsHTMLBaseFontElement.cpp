@@ -153,8 +153,59 @@ nsHTMLBaseFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Face, face)
-NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
 
+NS_IMETHODIMP
+nsHTMLBaseFontElement::GetSize(PRInt32 *aSize)
+{
+  *aSize = 3;
+
+  nsHTMLValue value;
+  if (NS_CONTENT_ATTR_HAS_VALUE !=
+      GetHTMLAttribute(nsHTMLAtoms::size, value)) {
+    return NS_OK;
+  }
+
+  if (value.GetUnit() == eHTMLUnit_Integer) {
+    *aSize = value.GetIntValue();
+
+    return NS_OK;
+  }
+
+  if (value.GetUnit() != eHTMLUnit_String) {
+    return NS_OK;
+  }
+
+  nsAutoString stringValue;
+  value.GetStringValue(stringValue);
+  if (stringValue.IsEmpty()) {
+    return NS_OK;
+  }
+
+  PRInt32 ec;
+  PRInt32 intValue;
+  intValue = stringValue.ToInteger(&ec);
+  if (ec != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (stringValue[0] == PRUnichar('+') ||
+      stringValue[0] == PRUnichar('-')) {
+    *aSize += intValue;
+  }
+  else {
+    *aSize = intValue;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBaseFontElement::SetSize(PRInt32 aSize)
+{
+  nsHTMLValue value(aSize, eHTMLUnit_Integer);
+
+  return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,

@@ -139,8 +139,7 @@ nsTableCellCollection::Item(PRUint32     aIndex,
       if ((nsHTMLAtoms::td == childTag.get()) ||
           (nsHTMLAtoms::th == childTag.get())) {
         if (aIndex == theIndex) {
-          child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
-
+          CallQueryInterface(child, aReturn);
           NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
 
           break;
@@ -202,29 +201,26 @@ protected:
 #ifdef XXX_debugging
 static
 void DebugList(nsIDOMHTMLTableElement* aTable) {
-  nsIHTMLContent* content = nsnull;
-  nsresult result = aTable->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&content);
-  if (NS_SUCCEEDED(result) && (nsnull != content)) {
-    nsIDocument* doc = nsnull;
-    result = content->GetDocument(doc);
-    if (NS_SUCCEEDED(result) && (nsnull != doc)) {
-      nsIContent* root = nsnull;
-      doc->GetRootContent(&root);
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aTable);
+  if (content) {
+    nsCOMPtr<nsIDocument> doc;
+    result = content->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIContent> root;
+      doc->GetRootContent(getter_AddRefs(root));
       if (root) {
         root->List();
       }
       nsCOMPtr<nsIPresShell> shell;
       doc->GetShellAt(0, getter_AddRefs(shell));
-      if (nsnull != shell) {
+      if (shell) {
         nsIFrame* rootFrame;
         shell->GetRootFrame(rootFrame);
-        if (nsnull != rootFrame) {
+        if (rootFrame) {
           rootFrame->List(stdout, 0);
         }
       }
-      NS_RELEASE(doc);
     }
-    NS_RELEASE(content);
   }
 }
 #endif 
@@ -314,45 +310,36 @@ nsHTMLTableRowElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 nsresult
 nsHTMLTableRowElement::GetSection(nsIDOMHTMLTableSectionElement** aSection)
 {
+  NS_ENSURE_ARG_POINTER(aSection);
   *aSection = nsnull;
-  if (nsnull == aSection) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIDOMNode> sectionNode;
+  nsresult rv = GetParentNode(getter_AddRefs(sectionNode));
+  if (NS_SUCCEEDED(rv) && sectionNode) {
+    rv = CallQueryInterface(sectionNode, aSection);
   }
-  nsIDOMNode *sectionNode = nsnull;
-  nsresult result = GetParentNode(&sectionNode);
-  if (NS_SUCCEEDED(result) && (nsnull != sectionNode)) {
-    result = sectionNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableSectionElement), (void**)aSection);
-    NS_RELEASE(sectionNode);
-  }
-  return result;
+
+  return rv;
 }
 
 // protected method
 nsresult
 nsHTMLTableRowElement::GetTable(nsIDOMHTMLTableElement** aTable)
 {
+  NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nsnull;
 
-  if (!aTable) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsCOMPtr<nsIDOMNode> sectionNode;
+  nsresult rv = GetParentNode(getter_AddRefs(sectionNode));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult result = GetParentNode(getter_AddRefs(sectionNode));
-
-  if (NS_SUCCEEDED(result) && sectionNode) {
-    nsCOMPtr<nsIDOMNode> tableNode;
-
-    result = sectionNode->GetParentNode(getter_AddRefs(tableNode));
-
-    if (NS_SUCCEEDED(result) && tableNode) {
-      result = tableNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableElement),
-                                         (void**)aTable);
-    }
+  nsCOMPtr<nsIDOMNode> tableNode;
+  rv = sectionNode->GetParentNode(getter_AddRefs(tableNode));
+  if (NS_SUCCEEDED(rv) && sectionNode) {
+    rv = CallQueryInterface(tableNode, aTable);
   }
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -432,9 +419,7 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
     NS_ADDREF(mCells); // this table's reference, released in the destructor
   }
 
-  mCells->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);
-
-  return NS_OK;
+  return CallQueryInterface(mCells, aValue);
 }
 
 NS_IMETHODIMP
@@ -442,53 +427,48 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
 
-  if (aIndex < 0)
+  if (aIndex < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
   
   nsCOMPtr<nsIDOMHTMLCollection> cells;
-
   GetCells(getter_AddRefs(cells));
 
   PRUint32 cellCount;
   cells->GetLength(&cellCount);
 
-  if (aIndex > PRInt32(cellCount))
+  if (aIndex > PRInt32(cellCount)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
 
-  PRBool doInsert = (aIndex < PRInt32(cellCount));
+  PRBool doInsert = (aIndex < PRInt32(cellCount)) && (aIndex != -1);
 
   // create the cell
-  nsCOMPtr<nsIHTMLContent> cellContent;
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfo->NameChanged(nsHTMLAtoms::td, *getter_AddRefs(nodeInfo));
 
+  nsCOMPtr<nsIHTMLContent> cellContent;
   nsresult rv = NS_NewHTMLTableCellElement(getter_AddRefs(cellContent),
                                            nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv) && cellContent) {
-    nsCOMPtr<nsIDOMNode> cellNode(do_QueryInterface(cellContent));
+  nsCOMPtr<nsIDOMNode> cellNode(do_QueryInterface(cellContent));
+  NS_ASSERTION(cellNode, "Should implement nsIDOMNode!");
 
-    if (NS_SUCCEEDED(rv) && cellNode) {
-      nsCOMPtr<nsIDOMNode> retChild;
+  nsCOMPtr<nsIDOMNode> retChild;
 
-      if (doInsert) {
-        PRInt32 refIndex = PR_MAX(aIndex, 0);   
-        nsCOMPtr<nsIDOMNode> refCell;
+  if (doInsert) {
+    nsCOMPtr<nsIDOMNode> refCell;
+    cells->Item(aIndex, getter_AddRefs(refCell));
 
-        cells->Item(refIndex, getter_AddRefs(refCell));
+    rv = InsertBefore(cellNode, refCell, getter_AddRefs(retChild));
+  } else {
+    rv = AppendChild(cellNode, getter_AddRefs(retChild));
+  }
 
-        rv = InsertBefore(cellNode, refCell, getter_AddRefs(retChild));
-      } else {
-        rv = AppendChild(cellNode, getter_AddRefs(retChild));
-      }
-
-      if (retChild) {
-        retChild->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
-                                 (void **)aValue);
-      }
-    }
-  }  
+  if (retChild) {
+    CallQueryInterface(retChild, aValue);
+  }
 
   return NS_OK;
 }
@@ -497,16 +477,31 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
 {
-  if (aValue < 0)
+  if (aValue < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  
-  nsCOMPtr<nsIDOMHTMLCollection> cells;
+  }
 
+  nsCOMPtr<nsIDOMHTMLCollection> cells;
   GetCells(getter_AddRefs(cells));
 
-  nsCOMPtr<nsIDOMNode> cell;
+  nsresult rv;
+  PRUint32 refIndex;
+  if (aValue == -1) {
+    rv = cells->GetLength(&refIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = cells->Item(aValue, getter_AddRefs(cell));
+    if (refIndex == 0) {
+      return NS_OK;
+    }
+
+    --refIndex;
+  }
+  else {
+    refIndex = (PRUint32)aValue;
+  }
+
+  nsCOMPtr<nsIDOMNode> cell;
+  rv = cells->Item(refIndex, getter_AddRefs(cell));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!cell) {
@@ -514,10 +509,7 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
   }
 
   nsCOMPtr<nsIDOMNode> retChild;
-
-  RemoveChild(cell, getter_AddRefs(retChild));
-
-  return NS_OK;
+  return RemoveChild(cell, getter_AddRefs(retChild));
 }
 
 NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, Align, align, "left")

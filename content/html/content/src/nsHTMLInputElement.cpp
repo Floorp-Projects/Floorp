@@ -504,19 +504,37 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       SetCheckedChanged(PR_FALSE);
     }
   }
-  //
-  // If we are changing type from File/Text/Passwd to other input types
-  // we need save the mValue into value attribute
-  //
-  if (aName == nsHTMLAtoms::type && mValue &&
-      mType != NS_FORM_INPUT_TEXT &&
-      mType != NS_FORM_INPUT_PASSWORD &&
-      mType != NS_FORM_INPUT_FILE) {
-    SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
-            NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
-    if (mValue) {
-      nsMemory::Free(mValue);
-      mValue = nsnull;
+
+  if (aName == nsHTMLAtoms::type) {
+    // If we are changing type from File/Text/Passwd to other input types
+    // we need save the mValue into value attribute
+    if (mValue &&
+        mType != NS_FORM_INPUT_TEXT &&
+        mType != NS_FORM_INPUT_PASSWORD &&
+        mType != NS_FORM_INPUT_FILE) {
+      SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+              NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
+      if (mValue) {
+        nsMemory::Free(mValue);
+        mValue = nsnull;
+      }
+    }
+
+    // If the type of the input has changed we might need to change the type
+    // of the size attribute.
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        GetHTMLAttribute(nsHTMLAtoms::size, value)) {
+      if (value.GetUnit() == eHTMLUnit_Pixel &&
+          (mType == NS_FORM_INPUT_TEXT ||
+           mType == NS_FORM_INPUT_PASSWORD)) {
+        nsHTMLValue newValue(value.GetPixelValue(), eHTMLUnit_Integer);
+        SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
+      }
+      else if (value.GetUnit() == eHTMLUnit_Integer) {
+        nsHTMLValue newValue(value.GetIntValue(), eHTMLUnit_Pixel);
+        SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
+      }
     }
   }
 }
@@ -580,11 +598,42 @@ NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetSize(PRUint32* aValue)
+{
+  nsHTMLValue value;
+  *aValue = -1;
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      GetHTMLAttribute(nsHTMLAtoms::size, value)) {
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      *aValue = value.GetIntValue();
+    }
+    else if (value.GetUnit() == eHTMLUnit_Pixel) {
+      *aValue = value.GetPixelValue();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetSize(PRUint32 aValue)
+{
+  nsHTMLUnit unit = eHTMLUnit_Pixel;
+
+  if (mType == NS_FORM_INPUT_TEXT ||
+      mType == NS_FORM_INPUT_PASSWORD) {
+    unit = eHTMLUnit_Integer;
+  }
+
+  nsHTMLValue value(aValue, unit);
+  return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsAString& aValue)
@@ -1855,8 +1904,16 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
+    if (mType == NS_FORM_INPUT_TEXT ||
+        mType == NS_FORM_INPUT_PASSWORD) {
+      if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+        return NS_CONTENT_ATTR_HAS_VALUE;
+      }
+    }
+    else {
+      if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+        return NS_CONTENT_ATTR_HAS_VALUE;
+      }
     }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -2030,19 +2087,15 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
   {
     if (!mControllers)
     {
-      NS_ENSURE_SUCCESS (
-        nsComponentManager::CreateInstance(kXULControllersCID,
-                                           nsnull,
-                                           NS_GET_IID(nsIControllers),
-                                           getter_AddRefs(mControllers)),
-        NS_ERROR_FAILURE);
-      if (!mControllers) { return NS_ERROR_NULL_POINTER; }
-
       nsresult rv;
+      mControllers = do_CreateInstance(kXULControllersCID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       nsCOMPtr<nsIController>
         controller(do_CreateInstance("@mozilla.org/editor/editorcontroller;1",
                                      &rv));
-      if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
+
       mControllers->AppendController(controller);
     }
   }
