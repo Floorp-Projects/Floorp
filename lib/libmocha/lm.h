@@ -215,6 +215,7 @@ extern JSObject         *lm_DefineScreen(MochaDecoder *decoder,
 extern JSObject         *lm_DefineHardware(MochaDecoder *decoder,
                                          JSObject *parent);
 #endif
+extern JSObject         *lm_DefineEnvironment(MochaDecoder *decoder);
 extern JSBool           lm_DefinePluginClasses(MochaDecoder *decoder);
 extern JSBool           lm_DefineBarClasses(MochaDecoder *decoder);
 extern JSBool           lm_ResolveBar(JSContext *cx, MochaDecoder *decoder,
