@@ -21,10 +21,126 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-#include "nsMsgHeaderParser.h"	 
+#include "nsMsgHeaderParser.h"
+#include "nsISimpleEnumerator.h"	 
 #include "comi18n.h"
 #include "prmem.h"
 
+class nsMsgHeaderParserResult : public nsIMsgHeaderParserResult, public nsISimpleEnumerator
+{
+public:
+  nsMsgHeaderParserResult();
+  nsresult Init(char * aNames, char * aAddresses, PRUint32 numAddresses);
+  virtual ~nsMsgHeaderParserResult();
+  
+  NS_DECL_NSIMSGHEADERPARSERRESULT
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR
+
+protected:
+  PRUint32 mNumTotalAddresses;
+  PRUint32 mCurrentPositionInList;
+
+  // list of names and addresses. each name / address is separated by a null byte
+  // per the description in nsIMsgHeaderParser::ParseHeader
+  char * mStartofNames;
+  char * mStartofAddresses;
+
+  // char * ptrs into the null separated strings
+  char * mCurrentName;
+  char * mCurrentAddress;
+
+  PRBool mFirstPass;
+};
+
+NS_IMPL_ISUPPORTS2(nsMsgHeaderParserResult, nsIMsgHeaderParserResult, nsISimpleEnumerator);
+
+nsMsgHeaderParserResult::nsMsgHeaderParserResult()
+{
+  NS_INIT_ISUPPORTS();
+  mNumTotalAddresses = 0;
+  mCurrentPositionInList = 0;
+  mStartofNames = nsnull;
+  mStartofAddresses = nsnull;
+  mCurrentName = nsnull;
+  mCurrentAddress = nsnull;
+  mFirstPass = PR_TRUE;
+}
+
+nsMsgHeaderParserResult::~nsMsgHeaderParserResult()
+{
+  // the header parser is not up to date and still uses PL_strdup for the strings it gives us
+  // so we need to use PR_FREE...
+  PR_FREEIF(mStartofNames);
+  PR_FREEIF(mStartofAddresses);
+}
+
+nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint32 numAddresses)
+{
+  nsresult rv = NS_OK;
+  mNumTotalAddresses = numAddresses;
+  mStartofNames = aNames; // we take ownership
+  mCurrentName = mStartofNames;
+  mStartofAddresses = aAddresses;
+  mCurrentAddress = mStartofAddresses;
+  
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(char **address, char **name)
+{
+  nsresult rv = NS_OK;
+  if (address)
+    *address = nsCRT::strdup(mCurrentAddress);
+  if (name)
+    *name = nsCRT::strdup(mCurrentName);
+
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgHeaderParserResult::GetCurrentResultNumber(PRUint32 *aCurrentResultNumber)
+{
+  *aCurrentResultNumber = mCurrentPositionInList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHeaderParserResult::GetTotalNumberOfResults(PRUint32 *aTotalNumberOfResults)
+{
+  *aTotalNumberOfResults = mNumTotalAddresses;
+  return NS_OK;
+}
+
+// simple enumerator supports
+NS_IMETHODIMP nsMsgHeaderParserResult::HasMoreElements(PRBool * aHasMoreElements)
+{
+  if (mCurrentPositionInList < mNumTotalAddresses)
+    *aHasMoreElements = PR_TRUE;
+  else
+    *aHasMoreElements = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHeaderParserResult::GetNext(nsISupports ** aNextResultPair)
+{
+  nsresult rv = NS_OK;
+  if (aNextResultPair)
+  {
+    rv = QueryInterface(NS_GET_IID(nsISupports), (void **) aNextResultPair);
+  }
+  // don't increment the ptrs the first time through...
+  if (!mFirstPass) 
+  {
+    mCurrentName += nsCRT::strlen(mCurrentName) + 1;
+    mCurrentAddress += nsCRT::strlen(mCurrentAddress) + 1;
+  }
+  else
+    mFirstPass = PR_FALSE;
+
+  mCurrentPositionInList++;
+
+  return rv;
+}
 
 /*
  * Macros used throughout the RFC-822 parsing code.
@@ -100,6 +216,31 @@ MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
 		}
 	}
 	return m_USAsciiToUtf8CharsetConverter;
+}
+
+NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const char *charset, const char *line, 
+                                                            nsISimpleEnumerator **aResultEnumerator)
+{
+  char * names = nsnull;
+  char * addresses = nsnull;
+  PRUint32 numAddresses = 0;
+  nsresult rv = NS_OK;
+
+  rv = ParseHeaderAddresses(charset, line, &names, &addresses, &numAddresses);
+  if (NS_SUCCEEDED(rv))
+  {
+    // now shove the results into an enumerator.......i know i should be using the component manager for this...=(
+    nsMsgHeaderParserResult * parserResult = new nsMsgHeaderParserResult();
+    if (parserResult)
+    {
+      rv = parserResult->Init(names, addresses, numAddresses); // ownership of all strings is now passed here...
+      parserResult->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **) aResultEnumerator);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
 }
 
 nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
