@@ -53,10 +53,10 @@ ifndef RELEASE_TREE
 			ifdef USE_SHIPS
 				RELEASE_TREE = $(NTBUILD_SHIP)
 			else
-				RELEASE_TREE = //iridium/components
+				RELEASE_TREE = //hs-sca15c/mccrel2
 			endif
 		else
-			RELEASE_TREE = //iridium/components
+			RELEASE_TREE = //hs-sca15c/mccrel2
 		endif
 		endif
 	
@@ -65,10 +65,10 @@ ifndef RELEASE_TREE
 			ifdef USE_SHIPS
 				RELEASE_TREE = $(NTBUILD_SHIP)
 			else
-				RELEASE_TREE = //iridium/components
+				RELEASE_TREE = //hs-sca15c/mccrel2
 			endif
 		else
-			RELEASE_TREE = //iridium/components
+			RELEASE_TREE = //hs-sca15c/mccrel2
 		endif
 	endif
 	ifeq ($(OS_TARGET), WIN16)
@@ -76,10 +76,10 @@ ifndef RELEASE_TREE
 		ifdef USE_SHIPS
 			RELEASE_TREE = $(NTBUILD_SHIP)
 		else
-			RELEASE_TREE = //iridium/components
+			RELEASE_TREE = //hs-sca15c/mccrel2
 		endif
 	else
-		RELEASE_TREE = //iridium/components
+		RELEASE_TREE = //hs-sca15c/mccrel2
 	endif
 	endif
 endif
