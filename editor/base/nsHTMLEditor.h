@@ -143,9 +143,9 @@ public:
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
   NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
   NS_IMETHOD PasteAsQuotation();
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode **aNodeInserted);
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation);
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
 
@@ -471,7 +471,8 @@ protected:
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation();
-  NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText);
+  NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText,
+                                        nsIDOMNode **aNodeInserted);
 
   TypeInState *GetTypeInState(); 
 

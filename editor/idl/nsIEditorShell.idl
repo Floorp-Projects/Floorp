@@ -141,8 +141,9 @@ interface nsIEditorShell : nsISupports
   void PasteAsQuotation();
   void PasteAsCitedQuotation(in wstring cite);
   
-  void InsertAsQuotation(in wstring quotedText);
-  void InsertAsCitedQuotation(in wstring quotedText, in wstring cite);
+  void InsertAsQuotation(in wstring quotedText, out nsIDOMNode nodeInserted);
+  void InsertAsCitedQuotation(in wstring quotedText, in wstring cite,
+                              out nsIDOMNode nodeInserted);
   
   void SelectAll();
   void DeleteSelection(in PRInt32 action);

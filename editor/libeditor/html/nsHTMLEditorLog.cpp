@@ -405,7 +405,8 @@ nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText)
+nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText,
+                                   nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -418,11 +419,12 @@ nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText)
     Flush();
   }
 
-  return nsHTMLEditor::InsertAsQuotation(aQuotedText);
+  return nsHTMLEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText)
+nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText,
+                                            nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -435,11 +437,13 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText)
     Flush();
   }
 
-  return nsHTMLEditor::InsertAsPlaintextQuotation(aQuotedText);
+  return nsHTMLEditor::InsertAsPlaintextQuotation(aQuotedText, aNodeInserted);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation)
+nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                        const nsString& aCitation,
+                                        nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -454,7 +458,8 @@ nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText, const nsStr
     Flush();
   }
 
-  return nsHTMLEditor::InsertAsCitedQuotation(aQuotedText, aCitation);
+  return nsHTMLEditor::InsertAsCitedQuotation(aQuotedText, aCitation,
+                                              aNodeInserted);
 }
 
 NS_IMETHODIMP
