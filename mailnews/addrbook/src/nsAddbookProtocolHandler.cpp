@@ -425,7 +425,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   else
     rv = BuildAllHTML(aDatabase, directory, workBuffer);
 
-  *outBuf = workBuffer.ToNewCString();
+  *outBuf = workBuffer.ToNewUTF8String();
 
 EarlyExit:
   // Database is open...make sure to close it
