@@ -646,7 +646,7 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
 }
 
 PRBool 
-nsHTMLDocument::TryWeakDocTypeDefault(PRInt32& aCharsetSource, 
+nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource, 
                                       nsAString& aCharset)
 {
   if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
@@ -693,7 +693,7 @@ nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
 }
 
 PRBool 
-nsHTMLDocument::TryUserDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
+nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
                                        PRInt32& aCharsetSource, 
                                        nsAString& aCharset)
 {
@@ -954,17 +954,27 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
              TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
       // Use the cache's charset.
     }
-    else if (TryWeakDocTypeDefault(charsetSource, charset)) {
-      // Use the weak doc type default charset
+    else if (TryDefaultCharset(muCV, charsetSource, charset)) {
+      // Use the default charset.
+      // previous document charset might be inherited as default charset.
     }
     else {
-      // Use the user's default charset.
-      TryUserDefaultCharset(muCV, charsetSource, charset);
+      // Use the weak doc type default charset
+      UseWeakDocTypeDefault(charsetSource, charset);
     }
   }
   
-  if(kCharsetFromAutoDetection > charsetSource)
-    StartAutodetection(docShell, charset, aCommand);
+  if(kCharsetFromAutoDetection > charsetSource) {
+    nsCAutoString methodStr;
+    if (httpChannel) {
+      rv = httpChannel->GetRequestMethod(methodStr);
+      if (NS_FAILED(rv) || !methodStr.Equals(NS_LITERAL_CSTRING("POST"))) {
+        StartAutodetection(docShell, charset, aCommand);
+      }
+    }
+    else
+      StartAutodetection(docShell, charset, aCommand);
+  }
 #endif
 
 //ahmed
