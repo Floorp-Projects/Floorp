@@ -2039,62 +2039,63 @@ nsStandardURL::SetFileName(const nsACString &input)
         }
     }
     else {
-	    nsresult rv;
-	    URLSegment basename, extension;
+        nsresult rv;
+        URLSegment basename, extension;
 
-	    // let the parser locate the basename and extension
-	    rv = mParser->ParseFileName(filename, -1,
-	                                &basename.mPos, &basename.mLen,
-	                                &extension.mPos, &extension.mLen);
-	    if (NS_FAILED(rv)) return rv;
+        // let the parser locate the basename and extension
+        rv = mParser->ParseFileName(filename, -1,
+                                    &basename.mPos, &basename.mLen,
+                                    &extension.mPos, &extension.mLen);
+        if (NS_FAILED(rv)) return rv;
 
-	    if (basename.mLen < 0) {
-	        // remove existing filename
-	        if (mBasename.mLen >= 0) {
-	            PRUint32 len = mBasename.mLen;
-	            if (mExtension.mLen >= 0)
-	                len += (mExtension.mLen + 1);
-	            mSpec.Cut(mBasename.mPos, len);
-	            shift = -PRInt32(len);
-	            mBasename.mLen = 0;
-	            mExtension.mLen = -1;
-	        }
-	    }
-	    else {
-	        nsCAutoString newFilename;
+        if (basename.mLen < 0) {
+            // remove existing filename
+            if (mBasename.mLen >= 0) {
+                PRUint32 len = mBasename.mLen;
+                if (mExtension.mLen >= 0)
+                    len += (mExtension.mLen + 1);
+                mSpec.Cut(mBasename.mPos, len);
+                shift = -PRInt32(len);
+                mBasename.mLen = 0;
+                mExtension.mLen = -1;
+            }
+        }
+        else {
+            nsCAutoString newFilename;
             GET_SEGMENT_ENCODER(encoder);
             basename.mLen = encoder.EncodeSegmentCount(filename, basename,
                                                        esc_FileBaseName |
                                                        esc_AlwaysCopy,
                                                        newFilename);
-	        if (extension.mLen >= 0) {
-	            newFilename.Append('.');
+            if (extension.mLen >= 0) {
+                newFilename.Append('.');
                 extension.mLen = encoder.EncodeSegmentCount(filename, extension,
-                                                            esc_FileExtension|esc_AlwaysCopy,
+                                                            esc_FileExtension |
+                                                            esc_AlwaysCopy,
                                                             newFilename);
-	        }
+            }
 
-	        if (mBasename.mLen < 0) {
-	            // insert new filename
-	            mBasename.mPos = mDirectory.mPos + mDirectory.mLen;
-	            mSpec.Insert(newFilename, mBasename.mPos);
-	            shift = newFilename.Length();
-	        }
-	        else {
-	            // replace existing filename
-	            PRUint32 oldLen = PRUint32(mBasename.mLen);
-	            if (mExtension.mLen >= 0)
-	                oldLen += (mExtension.mLen + 1);
-	            mSpec.Replace(mBasename.mPos, oldLen, newFilename);
-	            shift = newFilename.Length() - oldLen;
-	        }
-	        
-	        mBasename.mLen = basename.mLen;
-	        mExtension.mLen = extension.mLen;
-	        if (mExtension.mLen >= 0)
-	            mExtension.mPos = mBasename.mPos + mBasename.mLen + 1;
-	    }
-	}
+            if (mBasename.mLen < 0) {
+                // insert new filename
+                mBasename.mPos = mDirectory.mPos + mDirectory.mLen;
+                mSpec.Insert(newFilename, mBasename.mPos);
+                shift = newFilename.Length();
+            }
+            else {
+                // replace existing filename
+                PRUint32 oldLen = PRUint32(mBasename.mLen);
+                if (mExtension.mLen >= 0)
+                    oldLen += (mExtension.mLen + 1);
+                mSpec.Replace(mBasename.mPos, oldLen, newFilename);
+                shift = newFilename.Length() - oldLen;
+            }
+            
+            mBasename.mLen = basename.mLen;
+            mExtension.mLen = extension.mLen;
+            if (mExtension.mLen >= 0)
+                mExtension.mPos = mBasename.mPos + mBasename.mLen + 1;
+        }
+    }
     if (shift) {
         ShiftFromParam(shift);
         mFilepath.mLen += shift;
