@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.9 2001/08/24 18:34:33 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.10 2001/11/02 00:10:55 ddrinan%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1631,6 +1631,10 @@ sec_asn1d_next_in_group (sec_asn1d_state *state)
      * Now we do the next one.
      */
     sec_asn1d_scrub_state (child);
+
+    /* Initialize child state from the template */
+    sec_asn1d_init_state_based_on_template(child);
+
     state->top->current = child;
 }
 
