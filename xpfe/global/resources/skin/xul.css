@@ -1076,11 +1076,12 @@ grippy:hover {
    background-color: rgb(220, 210, 210);
 }
 
-box[align="vertical"] splitter[collapse="after"] grippy {
-   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+
+window splitter grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
-box splitter[collapse="after"] grippy {
+window splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
@@ -1092,13 +1093,21 @@ window[align="vertical"] splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
 
-window splitter grippy {
+box splitter grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
-window splitter[collapse="after"] grippy {
+box splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
+
+box[align="vertical"] splitter grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
+}
+
+box[align="vertical"] splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+
 
 titledbutton.twisty
 {

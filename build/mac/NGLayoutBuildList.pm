@@ -1160,6 +1160,7 @@ sub MakeResourceAliases()
 
         _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",  "$addressbook_chrome_dir:locale:en-US:", 0);
         _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
     }
 	
