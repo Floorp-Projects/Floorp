@@ -120,6 +120,8 @@ protected:
                                       nsIRDFNode **target);
   nsresult createFolderIsServerNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
+  nsresult createFolderIsSecureNode(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
   nsresult createFolderCanSubscribeNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
   nsresult createFolderCanFileMessagesNode(nsIMsgFolder *folder,
@@ -188,6 +190,7 @@ protected:
   static nsIRDFResource* kNC_SpecialFolder;
   static nsIRDFResource* kNC_ServerType;
   static nsIRDFResource* kNC_IsServer;
+  static nsIRDFResource* kNC_IsSecure;
   static nsIRDFResource* kNC_CanSubscribe;
   static nsIRDFResource* kNC_CanFileMessages;
   static nsIRDFResource* kNC_CanCreateSubfolders;

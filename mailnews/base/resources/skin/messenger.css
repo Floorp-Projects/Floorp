@@ -187,14 +187,21 @@ iframe {
     list-style-image: url("chrome://messenger/skin/folder-server-open.gif");
 }
 
+.folderMenuItem[IsServer="true"][ServerType="imap"][IsSecure="true"] > .menu-left {
+    list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
+}
+
 .folderMenuItem[IsServer="true"][ServerType="imap"] > .menu-left {
     list-style-image: url("chrome://messenger/skin/server-remote.gif");
 }
 
-
 /* News folders */
 .folderMenuItem[ServerType="nntp"] > .menu-left {
     list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
+}
+
+.folderMenuItem[IsServer="true"][ServerType="nntp"][IsSecure="true"] > .menu-left {
+    list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
 }
 
 .folderMenuItem[IsServer="true"][ServerType="nntp"] > .menu-left {

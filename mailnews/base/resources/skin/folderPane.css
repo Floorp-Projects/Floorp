@@ -111,6 +111,11 @@ treeitem[ServerType="imap"][open="true"] > treerow > treecell > .tree-icon
     list-style-image: url("chrome://messenger/skin/folder-server-open.gif");
 }
 
+treeitem[IsServer="true"][ServerType="imap"][IsSecure="true"] > treerow > treecell > .tree-icon
+{
+    list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
+}
+
 treeitem[IsServer="true"][ServerType="imap"] > treerow > treecell > .tree-icon
 {
     list-style-image: url("chrome://messenger/skin/server-remote.gif");
@@ -123,10 +128,16 @@ treeitem[ServerType="nntp"] > treerow > treecell > .tree-icon
     list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
 }
 
+treeitem[IsServer="true"][ServerType="nntp"][IsSecure="true"] > treerow > treecell > .tree-icon
+{
+    list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
+}
+
 treeitem[IsServer="true"][ServerType="nntp"] > treerow > treecell > .tree-icon
 {
     list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
+
 
 /*All Servers*/
 treeitem[IsServer="true"] > treerow > treecell
