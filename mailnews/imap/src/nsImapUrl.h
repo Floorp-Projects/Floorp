@@ -89,6 +89,7 @@ protected:
 	PRBool					m_idsAreUids;
 	PRBool					m_mimePartSelectorDetected;
 	PRBool					m_allowContentChange;	// if PR_FALSE, we can't use Mime parts on demand
+  PRBool          m_fetchPartsOnDemand; // if PR_TRUE, we should fetch leave parts on server.
 	nsImapContentModifiedType	m_contentModified;
 	PRInt32					m_discoveryDepth;
 

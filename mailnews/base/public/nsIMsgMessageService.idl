@@ -100,6 +100,8 @@ interface nsIMsgMessageService : nsISupports {
     
 	void GetUrlForUri(in string aMessageURI, out nsIURI aURL);
 
+	// tells if the message service can download mime parts directly, like IMAP
+	readonly attribute boolean canFetchMimeParts;
      /////////////////////////////////////////////////////////////////////
      //  DisplayMessageForPrinting: When you want a message displayed in a
      //  format that is suitable for printing....

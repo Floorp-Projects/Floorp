@@ -56,6 +56,7 @@ nsImapUrl::nsImapUrl()
 	m_idsAreUids = PR_FALSE;
 	m_mimePartSelectorDetected = PR_FALSE;
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
+  m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
 	m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
@@ -856,6 +857,21 @@ NS_IMETHODIMP nsImapUrl::GetContentModified(nsImapContentModifiedType *contentMo
 	*contentModified = m_contentModified;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsImapUrl::SetFetchPartsOnDemand(PRBool fetchPartsOnDemand)
+{
+	m_fetchPartsOnDemand = fetchPartsOnDemand;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetFetchPartsOnDemand(PRBool *fetchPartsOnDemand)
+{
+	if (!fetchPartsOnDemand) return NS_ERROR_NULL_POINTER;
+
+	*fetchPartsOnDemand = m_fetchPartsOnDemand;
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsImapUrl::SetMimePartSelectorDetected(PRBool mimePartSelectorDetected)
 {

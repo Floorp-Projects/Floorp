@@ -3006,7 +3006,7 @@ void nsImapMailFolder::SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKey
 
 
 NS_IMETHODIMP
-nsImapMailFolder::GetMessageSizeFromDB(const char *id, const char *folderName, PRBool idIsUid, PRUint32 *size)
+nsImapMailFolder::GetMessageSizeFromDB(const char *id, PRBool idIsUid, PRUint32 *size)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (id && mDatabase)

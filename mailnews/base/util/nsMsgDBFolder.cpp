@@ -323,7 +323,7 @@ nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, ns
 	if (!fileSpec || !cacheElement)
 		return NS_ERROR_NULL_POINTER;
 	nsCOMPtr <nsIMsgFolderCache> folderCache;
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	PRBool exists;
 	NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
 #endif
@@ -779,7 +779,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 		nsCOMPtr <nsIFileSpec> dbPath;
 
 		rv = GetFolderCacheKey(getter_AddRefs(dbPath));
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 		PRBool exists;
 		NS_ASSERTION(NS_SUCCEEDED(dbPath->Exists(&exists)) && exists, "file spec we're adding to cache should exist");
 #endif

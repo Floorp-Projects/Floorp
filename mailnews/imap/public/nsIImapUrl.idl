@@ -85,6 +85,7 @@ interface nsIImapUrl : nsISupports
   attribute boolean allowContentChange;
   attribute boolean mimePartSelectorDetected;
   attribute nsImapContentModifiedType contentModified;
+  attribute boolean fetchPartsOnDemand;	// set to true if we're fetching a msg for display and want to not download parts
   attribute nsISupports copyState;
   attribute nsIFileSpec msgFileSpec;
   attribute nsIImapMockChannel mockChannel;

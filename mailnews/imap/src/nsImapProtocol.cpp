@@ -20,7 +20,6 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#define DOING_MPOD
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
 // as does this
@@ -91,8 +90,6 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #define IMAP_DB_HEADERS "Priority X-Priority References Newsgroups"
 static const PRInt32 kImapSleepTime = 1000000;
 static PRInt32 gPromoteNoopToCheckCount = 0;
-static PRInt32 gMIMEOnDemandThreshold = 15000;
-static PRBool gMIMEOnDemand = PR_FALSE;
 
 // **** helper class for downloading line ****
 TLineDownloadCache::TLineDownloadCache()
@@ -178,8 +175,6 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefs->GetIntPref("mail.imap.chunk_size", &gChunkSize);
     prefs->GetIntPref("mail.imap.min_chunk_size_threshold", &gChunkThreshold);
     prefs->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
-	prefs->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
-	prefs->GetIntPref("mail.imap.mime_parts_on_demand_threshold", &gMIMEOnDemandThreshold);
   }
   gInitialized = PR_TRUE;
   return rv;
@@ -1681,7 +1676,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 // We actually want a specific MIME part of the message.
                 // The Body Shell will generate it, even though we haven't downloaded it yet.
 
-  #ifdef DOING_MPOD
                 IMAP_ContentModifiedType modType = GetShowAttachmentsInline() ? 
                   IMAP_CONTENT_MODIFIED_VIEW_INLINE :
                   IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
@@ -1708,7 +1702,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   foundShell->Generate(imappart);
                   GetServerStateParser().UseCachedShell(NULL);
                 }
-  #endif // DOING_MPOD
               }
               else
               {
@@ -1726,18 +1719,18 @@ void nsImapProtocol::ProcessSelectedStateURL()
               // or if we are required to get the whole thing.  Some instances where we are allowed
               // to do it by parts:  when viewing a message, or its source
               // Some times when we're NOT allowed:  when forwarding a message, saving it, moving it, etc.
-  #ifdef DOING_MPOD
               // need to set a flag in the url, I guess, equiv to allow_content_changed.
               PRBool allowedToBreakApart = PR_TRUE; // (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : PR_FALSE;
               PRBool mimePartSelectorDetected;
+              PRBool urlOKToFetchByParts = PR_FALSE;
               m_runningUrl->GetMimePartSelectorDetected(&mimePartSelectorDetected);
+              m_runningUrl->GetFetchPartsOnDemand(&urlOKToFetchByParts);
 
-              if (gMIMEOnDemand &&
+              if (urlOKToFetchByParts &&
                 allowedToBreakApart && 
                 !GetShouldFetchAllParts() &&
                 GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
-                (messageSize > (uint32) gMIMEOnDemandThreshold) &&
-                !mimePartSelectorDetected)  // if a ?part=, don't do BS.
+                  !mimePartSelectorDetected)  // if a ?part=, don't do BS.
               {
                 // OK, we're doing bodystructure
 
@@ -1748,6 +1741,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   IMAP_CONTENT_MODIFIED_VIEW_INLINE :
                   IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
 
+                nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
+                if (mailurl)
+                  mailurl->SetAddToMemoryCache(PR_FALSE);
                 SetContentModified(modType);  // This will be looked at by the cache
                 if (bMessageIdsAreUids)
                 {
@@ -1768,7 +1764,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   Bodystructure(messageIdString, bMessageIdsAreUids);
               }
               else
-  #endif // DOING_MPOD
               {
                 // Not doing bodystructure.  Fetch the whole thing, and try to do
                 // it in chunks.
@@ -3327,7 +3322,7 @@ PRUint32 nsImapProtocol::GetMessageSize(const char * messageId,
     if (id && folderName)
     {
       if (m_imapMessageSink)
-          m_imapMessageSink->GetMessageSizeFromDB(id, folderName, idsAreUids, &size);
+          m_imapMessageSink->GetMessageSizeFromDB(id, idsAreUids, &size);
     }
     PR_FREEIF(id);
     PR_FREEIF(folderName);

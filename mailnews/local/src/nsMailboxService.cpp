@@ -196,6 +196,15 @@ NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **a
   return rv;
 }
 
+/* readonly attribute canFetchMimeParts; */
+NS_IMETHODIMP nsMailboxService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
+{
+  if (!canFetchMimeParts) return NS_ERROR_NULL_POINTER;
+  *canFetchMimeParts = PR_FALSE;
+  return NS_OK;
+}
+
+
 nsresult nsMailboxService::DisplayMessageNumber(const char *url,
                                                 PRUint32 aMessageNumber,
                                                 nsISupports * aDisplayConsumer,

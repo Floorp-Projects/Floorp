@@ -64,6 +64,10 @@ static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
 
+static PRBool gInitialized = PR_FALSE;
+static PRInt32 gMIMEOnDemandThreshold = 15000;
+static PRBool gMIMEOnDemand = PR_FALSE;
+
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
 NS_IMPL_QUERY_INTERFACE4(nsImapService,
@@ -74,8 +78,19 @@ NS_IMPL_QUERY_INTERFACE4(nsImapService,
 
 nsImapService::nsImapService()
 {
-    NS_INIT_REFCNT();
-    mPrintingOperation = PR_FALSE;
+  NS_INIT_REFCNT();
+  mPrintingOperation = PR_FALSE;
+  if (!gInitialized)
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+    {
+	    prefs->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
+	    prefs->GetIntPref("mail.imap.mime_parts_on_demand_threshold", &gMIMEOnDemandThreshold);
+    }
+    gInitialized = PR_TRUE;
+  }
 }
 
 nsImapService::~nsImapService()
@@ -273,6 +288,14 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   return rv;
 }
 
+/* readonly attribute canFetchMimeParts; */
+NS_IMETHODIMP nsImapService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
+{
+  if (!canFetchMimeParts) return NS_ERROR_NULL_POINTER;
+  *canFetchMimeParts = PR_TRUE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
                                             nsIMsgWindow * aMsgWindow,
@@ -293,11 +316,32 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       nsCAutoString urlSpec;
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
       rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_FAILED(rv)) 
+        return rv;
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+
+      PRUint32 messageSize;
+
+      if (imapMessageSink)
+        imapMessageSink->GetMessageSizeFromDB(msgKey, PR_TRUE, &messageSize);
+
       msgurl->SetMsgWindow(aMsgWindow);
+
+      if (!gMIMEOnDemand || (messageSize < (uint32) gMIMEOnDemandThreshold))
+//                allowedToBreakApart && 
+//              !GetShouldFetchAllParts() &&
+//            GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
+      {
+        imapUrl->SetFetchPartsOnDemand(PR_FALSE);
+        // for now, lets try not adding these 
+        msgurl->SetAddToMemoryCache(PR_TRUE);
+      }
+      else
+      {
       // whenever we are displaying a message, we want to add it to the memory cache..
-      msgurl->SetAddToMemoryCache(PR_TRUE);
+        imapUrl->SetFetchPartsOnDemand(PR_TRUE);
+        msgurl->SetAddToMemoryCache(PR_FALSE);
+      }
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                         aURL, aDisplayConsumer, msgKey, PR_TRUE);
     }

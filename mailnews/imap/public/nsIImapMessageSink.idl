@@ -48,6 +48,6 @@ interface nsIImapMessageSink : nsISupports {
 
     void NotifyMessageDeleted(in string onlineFolderName,in boolean deleteAllMsgs,in string msgIdString);
 
-    void GetMessageSizeFromDB(in string id, in string folderName, in boolean idIsUid, out unsigned long size);
+    void GetMessageSizeFromDB(in string id, in boolean idIsUid, out unsigned long size);
 
 };
