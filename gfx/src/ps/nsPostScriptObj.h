@@ -287,13 +287,6 @@ public:
    *  @param aWidth - Width of the ellipse
    *  @param aHeight - Height of the ellipse
    */
-  void ellipse(nscoord aWidth, nscoord aHeight);
-  /** ---------------------------------------------------
-   *  create an elliptical path
-   *	@update 2/1/99 dwc
-   *  @param aWidth - Width of the ellipse
-   *  @param aHeight - Height of the ellipse
-   */
   void arc(nscoord aWidth, nscoord aHeight,float aStartAngle,float aEndAngle);
   /** ---------------------------------------------------
    *  create a retangular path. The current point is at
@@ -385,6 +378,12 @@ public:
    *	@update 2/1/99 dwc
    */
   void annotate_page( const char*, int, int, int);
+  /** ---------------------------------------------------
+   *  Output postscript to scale the current coordinate system
+   *	@param aX   X scale factor
+   *	@param aY   Y scale factor
+   */
+  void scale(float aX, float aY);
   /** ---------------------------------------------------
    *  translate the current coordinate system
    *	@update 9/30/2003
