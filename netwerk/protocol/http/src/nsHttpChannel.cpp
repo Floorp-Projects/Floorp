@@ -2445,7 +2445,7 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
+nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
 {
     static const char *const invalidReferrerSchemes[] = {
         "chrome",
@@ -2464,6 +2464,35 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
 
     if (nsHttpHandler::get()->ReferrerLevel() < referrerType)
         return NS_OK;
+
+    nsCOMPtr<nsIURI> referrer = referrerIn;
+
+    // Strip off "wyciwyg://123/" from wyciwyg referrers.
+    if (referrer) {
+        PRBool isWyciwyg = PR_FALSE;
+        referrer->SchemeIs("wyciwyg", &isWyciwyg);
+
+        if (isWyciwyg) {
+            nsCAutoString path;
+            nsresult rv = referrer->GetPath(path);
+            if (NS_FAILED(rv)) return rv;
+
+            PRUint32 pathLength = path.Length();
+            if (pathLength <= 2) return NS_ERROR_FAILURE;
+
+            // Path is of the form "//123/http://foo/bar", with a variable number of digits.
+            // To figure out where the "real" URL starts, search path for a '/', starting at 
+            // the third character.
+            PRUint32 slashIndex = path.FindChar('/', 2);
+            if (slashIndex == -1) return NS_ERROR_FAILURE;
+
+            // Replace |referrer| with a URI without wyciwyg://123/.
+            nsCAutoString newReferrer;
+            path.Right(newReferrer, pathLength - slashIndex - 1);
+            rv = NS_NewURI(getter_AddRefs(referrer), newReferrer.get());
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
 
     // don't remember this referrer if it's on our black list....
     if (referrer) {
