@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -130,7 +130,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl);
-    
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
 #ifdef MOZ_TIMELINE
@@ -138,13 +138,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
 #endif
 
 static NS_METHOD
-nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer, 
-                                       const nsIID& aIID, 
+nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
+                                       const nsIID& aIID,
                                        void* *aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
-    
+
     nsCOMPtr<nsIInterfaceInfoManager> iim(dont_AddRef(XPTI_GetInterfaceInfoManager()));
     if (!iim) {
         return NS_ERROR_FAILURE;
@@ -183,7 +183,7 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
     rv = NS_NewGenericFactory(&fact, info);
     if (NS_FAILED(rv)) return rv;
 
-    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // what I want to do here is QI for a Component Registration Manager.  Since this
     // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
     nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compMgr, &rv);
     if (obsoleteManager)
@@ -286,7 +286,7 @@ static nsModuleComponentInfo components[] = {
 
 const int components_length = sizeof(components) / sizeof(components[0]);
 
-// gMemory will be freed during shutdown. 
+// gMemory will be freed during shutdown.
 static nsIMemory* gMemory = nsnull;
 nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
 {
@@ -294,21 +294,21 @@ nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
     if (!gMemory)
     {
         rv = nsMemoryImpl::Create(nsnull,
-                                  NS_GET_IID(nsIMemory), 
+                                  NS_GET_IID(nsIMemory),
                                   (void**)&gMemory);
     }
     NS_IF_ADDREF(*result = gMemory);
     return rv;
 }
 
-nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result, 
+nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
 {
     return NS_InitXPCOM2(result, binDirectory, nsnull);
 }
 
 
-nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result, 
+nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
@@ -316,7 +316,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::Startup();
-#endif 
+#endif
 
     // Establish the main thread here.
     rv = nsIThread::SetMainThread();
@@ -331,29 +331,29 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     StartupSpecialSystemDirectory();
 
     // Start the directory service so that the component manager init can use it.
-    rv = nsDirectoryService::Create(nsnull, 
-                                    NS_GET_IID(nsIProperties), 
+    rv = nsDirectoryService::Create(nsnull,
+                                    NS_GET_IID(nsIProperties),
                                     (void**)&gDirectoryService);
     if (NS_FAILED(rv))
         return rv;
-   
+
     nsCOMPtr<nsIDirectoryService> dirService = do_QueryInterface(gDirectoryService, &rv);
     if (NS_FAILED(rv))
         return rv;
     rv = dirService->Init();
     if (NS_FAILED(rv))
         return rv;
-    
+
     // Create the Component/Service Manager
     nsComponentManagerImpl *compMgr = NULL;
-   
+
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         compMgr = new nsComponentManagerImpl();
         if (compMgr == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
-        
+
         PRBool value;
         if (binDirectory)
         {
@@ -367,42 +367,41 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             binDirectory->GetPath(&path);
             nsFileSpec spec(path);
             nsMemory::Free(path);
-            
+
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
-            
+
         }
         if (appFileLocationProvider) {
             rv = dirService->RegisterProvider(appFileLocationProvider);
             if (NS_FAILED(rv)) return rv;
         }
-        
+
         rv = compMgr->Init();
         if (NS_FAILED(rv))
         {
             NS_RELEASE(compMgr);
             return rv;
         }
-        
-        nsIServiceManager *serviceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
+
         nsComponentManagerImpl::gComponentManager = compMgr;
-        
+
         if (result) {
-        	NS_ADDREF(*result = serviceManager);
+            nsIServiceManager *serviceManager =
+                NS_STATIC_CAST(nsIServiceManager*, compMgr);
+
+            NS_ADDREF(*result = serviceManager);
         }
     }
 
-    nsIServiceManager *serviceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
-
-    
     nsCOMPtr<nsIMemory> memory;
     NS_GetMemoryManager(getter_AddRefs(memory));
     // dougt - these calls will be moved into a new interface when nsIComponentManager is frozen.
     rv = compMgr->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
-    
+
     rv = compMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
-    
+
 #ifdef GC_LEAK_DETECTOR
   rv = NS_InitLeakDetector();
     if (NS_FAILED(rv)) return rv;
@@ -467,16 +466,16 @@ static void CallExitRoutines()
     gExitRoutines.Clear();
 }
 
-nsresult NS_COM 
+nsresult NS_COM
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
-    // priority are not used right now.  It will need to be implemented as more 
+    // priority are not used right now.  It will need to be implemented as more
     // classes are moved into the glue library --dougt
     PRBool okay = gExitRoutines.AppendElement((void*)exitRoutine);
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult NS_COM 
+nsresult NS_COM
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
     PRBool okay = gExitRoutines.RemoveElement((void*)exitRoutine);
@@ -509,7 +508,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     {
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
-        nsCOMPtr<nsIObserverService> observerService = 
+        nsCOMPtr<nsIObserverService> observerService =
                  do_GetService("@mozilla.org/observer-service;1", &rv);
         if (NS_SUCCEEDED(rv))
         {
@@ -517,8 +516,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             rv = NS_GetServiceManager(getter_AddRefs(mgr));
             if (NS_SUCCEEDED(rv))
             {
-                (void) observerService->NotifyObservers(mgr, 
-                                                        NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                (void) observerService->NotifyObservers(mgr,
+                                                        NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                                         nsnull);
             }
         }
@@ -527,9 +526,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // grab the event queue so that we can process events one last time before exiting
     nsCOMPtr <nsIEventQueue> currentQ;
     {
-        nsCOMPtr<nsIEventQueueService> eventQService = 
+        nsCOMPtr<nsIEventQueueService> eventQService =
                  do_GetService(kEventQueueServiceCID, &rv);
-        
+
         if (eventQService) {
             eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentQ));
         }
@@ -585,11 +584,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
     ShutdownSpecialSystemDirectory();
-    
+
     EmptyEnumeratorImpl::Shutdown();
     nsMemoryImpl::Shutdown();
     NS_IF_RELEASE(gMemory);
-    
+
     nsThread::Shutdown();
     NS_PurgeAtomTable();
 
