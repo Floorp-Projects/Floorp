@@ -18,7 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -36,6 +37,7 @@
  * Generate CPU-specific bit-size and similar #defines.
  */
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef CROSS_COMPILE
 #include <prtypes.h>
@@ -207,7 +209,13 @@ int main(int argc, char **argv)
         int big_endian = 0, little_endian = 0, ntests = 0;
 
         if (sizeof(short) == 2) {
-            union {
+            /* force |volatile| here to get rid of any compiler optimisations 
+             * (var in register etc.) which may be appiled to |auto| vars - 
+             * even those in |union|s...
+             * (|static| is used to get the same functionality for compilers 
+             * which do not honor |volatile|...).
+             */
+            volatile static union {
                 short i;
                 char c[2];
             } u;
@@ -219,7 +227,8 @@ int main(int argc, char **argv)
         }
 
         if (sizeof(int) == 4) {
-            union {
+            /* force |volatile| here ... */
+            volatile static union {
                 int i;
                 char c[4];
             } u;
@@ -233,7 +242,8 @@ int main(int argc, char **argv)
         }
 
         if (sizeof(long) == 8) {
-            union {
+            /* force |volatile| here ... */
+            volatile static union {
                 long i;
                 char c[8];
             } u;
@@ -263,8 +273,10 @@ int main(int argc, char **argv)
             printf("#define IS_LITTLE_ENDIAN 1\n");
             printf("#undef  IS_BIG_ENDIAN\n\n");
         } else {
-            fprintf(stderr, "%s: unknown byte order!\n", argv[0]);
-            return 1;
+            fprintf(stderr, "%s: unknown byte order"
+                    "(big_endian=%d, little_endian=%d, ntests=%d)!\n", 
+                    argv[0], big_endian, little_endian, ntests);
+            return EXIT_FAILURE;
         }
     }
 
@@ -344,5 +356,6 @@ int main(int argc, char **argv)
 
     printf("#endif /* js_cpucfg___ */\n");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
+
