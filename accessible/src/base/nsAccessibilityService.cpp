@@ -314,6 +314,8 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   else {
     *aRootAcc = new nsRootAccessibleWrap(rootNode, weakShell);
   }
+  if (!*aRootAcc)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
   privateAccessNode->Init();

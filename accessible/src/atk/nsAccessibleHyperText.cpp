@@ -505,6 +505,9 @@ nsresult nsAccessibleHyperText::GetBounds(nsIWeakReference *aWeakShell, PRInt32 
   for (index = 0; index < count; index++) {
     nsHTMLTextAccessible *accText = new nsHTMLTextAccessible(
         (nsIDOMNode *)mTextChildren->ElementAt(index), aWeakShell);
+    if (!accText)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     nsRect frameRect;
     accText->GetBounds(&frameRect.x, &frameRect.y, &frameRect.width, &frameRect.height);
     unionRectTwips.UnionRect(unionRectTwips, frameRect);

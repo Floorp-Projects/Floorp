@@ -406,6 +406,9 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
   }
   else {
     newNode = new nsAccessNodeWrap(node, mWeakShell);
+    if (!newNode)
+      return NULL;
+
     newNode->Init();
     iNode = NS_STATIC_CAST(ISimpleDOMNode*, newNode);
     iNode->AddRef();
