@@ -31,7 +31,9 @@
 # Initial version courtesy Mike Ang.
 # Next version by Mike McCabe
 
-SHELL = /bin/sh
+# Don't include SHELL define (per GNU manual recommendation) because it
+# breaks WinNT (with GNU make) builds.
+# SHELL = /bin/sh
 
 # Some things we might want to tweek.
 
@@ -66,6 +68,13 @@ UNZIP = unzip
 
 # Shouldn't need to change anything below here.
 
+# For Windows NT builds (under GNU make).
+ifeq ($(OS_TARGET), WINNT)
+CLASSPATHSEP = '\\;'
+else
+CLASSPATHSEP = :
+endif
+
 # Make compatibility - use these instead of gmake 'export VARIABLE'
 EXPORTS = CLASSDIR=$(CLASSDIR) JAVAC=$(JAVAC) JFLAGS=$(JFLAGS) SHELL=$(SHELL) \
 	PACKAGE_PATH=$(PACKAGE_PATH) PACKAGE_NAME=$(PACKAGE_NAME)
@@ -83,6 +92,9 @@ helpmessage : FORCE
 	@echo '\tzip-source - make a distribution .zip file, with source'
 	@echo '\ttar - make a distribution .tar.gz file'
 	@echo '\ttar-source - make a distribution .tar.gz, with source'
+	@echo
+	@echo 'Define OS_TARGET to "WINNT" to build on Windows NT with GNU make.'
+	@echo
 
 all : jars examples
 
@@ -102,10 +114,10 @@ fast_$(JS_JAR) :
 		CLASSPATH=. \
 		fast
 
-$(JSTOOLS_JAR) : $(JS_JAR) $(JSDEBUG_JAR) FORCE
+$(JSTOOLS_JAR) : $(JS_JAR) FORCE
 	$(MAKE) -f $(JSTOOLS_DIR)/Makefile JAR=$(@) $(EXPORTS) \
 		PATH_PREFIX=$(JSTOOLS_DIR) \
-		CLASSPATH=./$(JS_JAR):./$(JSDEBUG_JAR):.
+		CLASSPATH=./$(JS_JAR)$(CLASSPATHSEP).
 
 examples : $(JS_JAR) FORCE
 	$(MAKE) -f examples/Makefile $(EXPORTS) \
