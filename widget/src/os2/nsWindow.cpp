@@ -1808,7 +1808,11 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
             event.isShift = PR_FALSE;
             event.keyCode = 0;
          }
-         else if (usVKey != VK_SPACE)
+         else if (usVKey == VK_SPACE)
+         {
+            event.isShift = PR_FALSE;
+         }
+         else  // Real virtual key 
          {
             event.charCode = 0;
          }
