@@ -73,6 +73,8 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 printf( "ForceDataToClipboard()\n" );
   nsresult res = NS_ERROR_FAILURE;
 
+// REVISIT - Need to fix this
+#if 0
   // make sure we have a good transferable
   if( mTransferable )
   {
@@ -124,6 +126,7 @@ printf( "ForceDataToClipboard()\n" );
     printf( "  ok.\n" );
   else
     printf( "  failed.\n" );
+#endif
 
   return res;
 }
@@ -136,6 +139,8 @@ printf( "SetNativeClipboardData()\n" );
 
   nsresult res = NS_ERROR_FAILURE;
 
+// REVISIT - Need to fix this
+#if 0
   // make sure we have a good transferable
   if( mTransferable )
   {
@@ -185,7 +190,7 @@ printf( "SetNativeClipboardData()\n" );
     printf( "  ok.\n" );
   else
     printf( "  failed.\n" );
-
+#endif
   return res;
 }
 
@@ -197,6 +202,8 @@ printf( "GetNativeClipboardData()\n" );
 
   nsresult res = NS_ERROR_FAILURE;
 
+// REVISIT - Need to fix this
+#if 0
   if( aTransferable )
   {
     nsVoidArray * dfList;
@@ -240,6 +247,7 @@ printf( "GetNativeClipboardData()\n" );
     printf( "  ok.\n" );
   else
     printf( "  failed.\n" );
+#endif
 
   return res;
 }
