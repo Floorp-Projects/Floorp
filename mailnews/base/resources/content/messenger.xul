@@ -41,7 +41,7 @@ Rights Reserved.
 		align="vertical"
         width="750"
         height="500"
-        persist="width height x y"
+        persist="width height screenX screenY"
 		windowtype="mail:3pane">
 
 
