@@ -159,7 +159,7 @@ END_COM_MAP()
 
     HRESULT Init(PluginInstanceData *pData)
     {
-	NS_PRECONDITION(pData != nsnull, "null ptr");
+	    NS_PRECONDITION(pData != nsnull, "null ptr");
 
         mData = pData;
 
@@ -1075,7 +1075,8 @@ END_COM_MAP()
     virtual /* [nonbrowsable][hidden][id][propget] */ HRESULT STDMETHODCALLTYPE get_Script( 
         /* [out][retval] */ IDispatch **p)
     {
-        return E_NOTIMPL;
+        *p = NULL;
+        return S_OK;
     }
 
 // IHTMLDocument2
@@ -1871,7 +1872,26 @@ END_COM_MAP()
 		if (!*szName) return E_INVALIDARG;
 
 		*ppmk = NULL;
-		HRESULT hr = CreateURLMoniker(NULL, szName, ppmk);
+
+        // Get the BASE url
+        CComPtr<IMoniker> baseURLMoniker;
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDOMDocument));
+        if (doc)
+        {
+            nsCOMPtr<nsIURI> baseURI;
+            doc->GetBaseURL(*getter_AddRefs(baseURI));
+            nsCAutoString spec;
+            if (baseURI &&
+                NS_SUCCEEDED(baseURI->GetSpec(spec)))
+            {
+                USES_CONVERSION;
+                if (FAILED(CreateURLMoniker(NULL, T2CW(spec.get()), &baseURLMoniker)))
+                    return E_UNEXPECTED;
+            }
+        }
+
+        // Make the moniker
+		HRESULT hr = CreateURLMoniker(baseURLMoniker, szName, ppmk);
 		if (SUCCEEDED(hr) && !*ppmk)
 			hr = E_FAIL;
 		return hr;

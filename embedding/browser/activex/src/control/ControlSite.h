@@ -50,7 +50,6 @@
     COM_INTERFACE_ENTRY(IOleInPlaceSite) \
     COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSite, IOleInPlaceSiteWindowless) \
     COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless) \
-    COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless) \
     COM_INTERFACE_ENTRY(IOleControlSite) \
     COM_INTERFACE_ENTRY(IDispatch) \
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx) \
@@ -60,6 +59,10 @@
     COM_INTERFACE_ENTRY(IServiceProvider) \
     COM_INTERFACE_ENTRY(IBindStatusCallback) \
     COM_INTERFACE_ENTRY(IWindowForBindingUI)
+
+// Temoporarily removed by bug 200680. Stops controls misbehaving and calling
+// windowless methods when they shouldn't.
+//     COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless) \
 
 
 // Class that defines the control's security policy with regards to
