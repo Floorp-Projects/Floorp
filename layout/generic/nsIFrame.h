@@ -388,16 +388,6 @@ public:
                         nsDidReflowStatus aStatus) = 0;
 
   /**
-   * Post-processing reflow method invoked when justification is enabled.
-   * This is always called after Reflow()
-   *
-   * @param aAvailableSpace The amount of available space that the frame
-   *         should distribute internally.
-   */
-  NS_IMETHOD  JustifyReflow(nsIPresContext* aPresContext,
-                            nscoord         aAvailableSpace) = 0;
-
-  /**
    * This call is invoked when content is appended to the content tree.
    *
    * This frame is the frame that maps the content object that has appended

@@ -1077,12 +1077,6 @@ NS_METHOD nsFrame::Reflow(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::JustifyReflow(nsIPresContext* aPresContext,
-                                 nscoord         aAvailableSpace)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,
                                    nsIContent*     aContainer)
