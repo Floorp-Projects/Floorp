@@ -3478,39 +3478,12 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIPageSequenceFrame* pageSequence = nsnull;
-
-  // The page sequence frame is the child of the rootFrame
-  nsIFrame *rootFrame = FrameManager()->GetRootFrame();
-  nsIFrame* child = rootFrame->GetFirstChild(nsnull);
-
-  if (nsnull != child) {
-
-      // but the child could be wrapped in a scrollframe so lets check
-      nsIScrollableFrame* scrollable = nsnull;
-      nsresult rv = child->QueryInterface(NS_GET_IID(nsIScrollableFrame),
-                                          (void **)&scrollable);
-      if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
-          // if it is then get the scrolled frame
-          child = scrollable->GetScrolledFrame();
-      } else {
-        if (mPresContext->Type() == nsPresContext::eContext_PrintPreview) {
-          child = child->GetFirstChild(nsnull);
-        }
-      }
-
-      // make sure the child is a pageSequence
-      rv = child->QueryInterface(NS_GET_IID(nsIPageSequenceFrame),
-                                 (void**)&pageSequence);
-      NS_ASSERTION(NS_SUCCEEDED(rv),"Error: Could not find pageSequence!");
-
-      *aResult = pageSequence;
-      return NS_OK;
-  }
-
   *aResult = nsnull;
-
-  return NS_ERROR_FAILURE;
+  nsIFrame* frame = mFrameConstructor->GetPageSequenceFrame();
+  if (frame) {
+    CallQueryInterface(frame, aResult);
+  }
+  return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
