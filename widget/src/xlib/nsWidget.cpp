@@ -18,48 +18,22 @@
 
 #include "nsWidget.h"
 
-Display         *gDisplay;
-Screen          *gScreen;
-int              gScreenNum;
-int              gDepth;
-Visual          *gVisual;
-XVisualInfo     *gVisualInfo;
-
-PRUint32  gRedZeroMask;     //red color mask in zero position
-PRUint32  gGreenZeroMask;   //green color mask in zero position
-PRUint32  gBlueZeroMask;    //blue color mask in zero position
-PRUint32  gAlphaZeroMask;   //alpha data mask in zero position
-PRUint32  gRedMask;         //red color mask
-PRUint32  gGreenMask;       //green color mask
-PRUint32  gBlueMask;        //blue color mask
-PRUint32  gAlphaMask;       //alpha data mask
-PRUint8   gRedCount;        //number of red color bits
-PRUint8   gGreenCount;      //number of green color bits
-PRUint8   gBlueCount;       //number of blue color bits
-PRUint8   gAlphaCount;      //number of alpha data bits
-PRUint8   gRedShift;        //number to shift value into red position
-PRUint8   gGreenShift;      //number to shift value into green position
-PRUint8   gBlueShift;       //number to shift value into blue position
-PRUint8   gAlphaShift;      //number to shift value into alpha position
-
-extern "C"
-unsigned long
-xlib_rgb_xpixel_from_rgb (unsigned int rgb);
-
 nsWidget::nsWidget() : nsBaseWidget()
 {
   mPreferredWidth = 0;
   mPreferredHeight = 0;
-  mWindow = 0;
+  mBaseWindow = 0;
   bg_rgb = NS_RGB(192,192,192);
   bg_pixel = xlib_rgb_xpixel_from_rgb(bg_rgb);
   mGC = 0;
+  parentWidget = nsnull;
+  name = "unnamed";
 }
 
 nsWidget::~nsWidget()
 {
   XFreeGC(gDisplay, mGC);
-  XDestroyWindow(gDisplay, mWindow);
+  XDestroyWindow(gDisplay, mBaseWindow);
 }
 
 NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
@@ -70,7 +44,8 @@ NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
                                nsIToolkit *aToolkit,
                                nsWidgetInitData *aInitData)
 {
-  return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
+  parentWidget = aParent;
+  return(StandardWidgetCreate(aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
                               nsnull));
 }
@@ -83,13 +58,13 @@ NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
                                nsIToolkit *aToolkit,
                                nsWidgetInitData *aInitData)
 {
-  return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
+  return(StandardWidgetCreate(nsnull, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
                               aParent));
 }
 
 nsresult
-nsWidget::StandardWindowCreate(nsIWidget *aParent,
+nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                const nsRect &aRect,
                                EVENT_CALLBACK aHandleEventFunction,
                                nsIDeviceContext *aContext,
@@ -99,15 +74,11 @@ nsWidget::StandardWindowCreate(nsIWidget *aParent,
                                nsNativeWidget aNativeParent)
 {
 
-  XSetWindowAttributes attr;
-  unsigned long        attr_mask;
   Window parent;
-  int width;
-  int height;
-  
+
   // set up the BaseWidget parts.
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
-                 aAppShell, aToolkit, aInitData);
+             aAppShell, aToolkit, aInitData);
   // check to see if the parent is there...
   if (nsnull != aParent) {
     parent = ((aParent) ? (Window)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
@@ -120,50 +91,12 @@ nsWidget::StandardWindowCreate(nsIWidget *aParent,
   }
   // set the bounds
   mBounds = aRect;
-  // on a window resize, we don't want to window contents to
-  // be discarded...
-  attr.bit_gravity = NorthWestGravity;
-  // make sure that we listen for events
-  attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
-  // set the default background color to that awful gray
-  attr.background_pixel = bg_pixel;
-  // here's what's in the struct
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel;
-
-  printf("Creating XWindow: x %d y %d w %d h %d\n",
-         aRect.x, aRect.y, aRect.width, aRect.height);
-  if (aRect.width == 0) {
-    printf("*** Fixing width...\n");
-    width = 1;
-  }
-  else {
-    width = aRect.width;
-  }
-  if (aRect.height == 0) {
-    printf("*** Fixing height...\n");
-    height = 1;
-  }
-  else {
-    height = aRect.height;
-  }
-  
-  mWindow = XCreateWindow(gDisplay,
-                          parent,
-                          aRect.x, aRect.y,
-                          width, height,
-                          0, // border width
-                          gDepth,
-                          InputOutput,    // class
-                          CopyFromParent, // visual
-                          attr_mask,
-                          &attr);
-  // map this window and flush the connection.  we want to see this
-  // thing now.
-  XMapWindow(gDisplay,
-             mWindow);
-  XSync(gDisplay, False);
+  // call the native create function
+  CreateNative(parent, mBounds);
   // set up the GC for this window.
-  mGC = XCreateGC(gDisplay, mWindow, 0, NULL);
+  if (!mBaseWindow)
+    printf("*** warning: this is about to fail...\n");
+  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
   XSync(gDisplay, False);
   return NS_OK;
 }
@@ -234,7 +167,7 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
   switch (aDataType) {
   case NS_NATIVE_WIDGET:
   case NS_NATIVE_WINDOW:
-    return (void *)mWindow;
+    return (void *)mBaseWindow;
     break;
   case NS_NATIVE_DISPLAY:
     return (void *)gDisplay;
@@ -326,7 +259,7 @@ NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
                   NS_GET_B(aColor));
   bg_pixel = xlib_rgb_xpixel_from_rgb(bg_rgb);
   // set the window attrib
-  XSetWindowBackground(gDisplay, mWindow, bg_pixel);
+  XSetWindowBackground(gDisplay, mBaseWindow, bg_pixel);
   return NS_OK;
 }
 
@@ -355,4 +288,59 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 nsIWidget *nsWidget::GetParent(void)
 {
   return nsnull;
+}
+
+void nsWidget::CreateNative(Window aParent, nsRect aRect)
+{
+  XSetWindowAttributes attr;
+  unsigned long        attr_mask;
+  int width;
+  int height;
+
+  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", name);
+  if (!strcmp(name, "unnamed")) {
+    printf("What freaking widget is this, anyway?\n");
+  }
+  // on a window resize, we don't want to window contents to
+  // be discarded...
+  attr.bit_gravity = NorthWestGravity;
+  // make sure that we listen for events
+  attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
+  // set the default background color to that awful gray
+  attr.background_pixel = bg_pixel;
+  // here's what's in the struct
+  attr_mask = CWBitGravity | CWEventMask | CWBackPixel;
+  
+  printf("Creating XWindow: x %d y %d w %d h %d\n",
+         aRect.x, aRect.y, aRect.width, aRect.height);
+  if (aRect.width == 0) {
+    printf("*** Fixing width...\n");
+    width = 1;
+  }
+  else {
+    width = aRect.width;
+  }
+  if (aRect.height == 0) {
+    printf("*** Fixing height...\n");
+    height = 1;
+  }
+  else {
+    height = aRect.height;
+  }
+  
+  mBaseWindow = XCreateWindow(gDisplay,
+                              aParent,
+                              aRect.x, aRect.y,
+                              width, height,
+                              0, // border width
+                              gDepth,
+                              InputOutput,    // class
+                              CopyFromParent, // visual
+                              attr_mask,
+                              &attr);
+  // map this window and flush the connection.  we want to see this
+  // thing now.
+  XMapWindow(gDisplay,
+             mBaseWindow);
+  XSync(gDisplay, False);
 }
