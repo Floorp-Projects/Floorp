@@ -1235,7 +1235,7 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
   }
 #endif
   NS_ADDREF(aReflowCommand);
-  return mReflowCommands.AppendElement(aReflowCommand);
+  return (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
 NS_IMETHODIMP
