@@ -1087,7 +1087,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     if (readDisplay && (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
       // set the cell's border from the table
       aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-      if ((value.GetUnit() == eHTMLUnit_Pixel) ||
+      if (((value.GetUnit() == eHTMLUnit_Pixel) && (value.GetPixelValue() > 0)) ||
           (value.GetUnit() == eHTMLUnit_Empty)) {
         float p2t;
         aPresContext->GetPixelsToTwips(&p2t);
