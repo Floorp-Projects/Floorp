@@ -135,15 +135,8 @@ class nsCookieService : public nsICookieService
     PRPackedBool                  mCookieIconVisible;
 
     // cached prefs
-#ifdef MOZ_PHOENIX
-    // unfortunately, we require this #ifdef for now, since Phoenix uses different
-    // (more optimized) prefs to Mozilla.
-    // the following variables are Phoenix hacks to reduce ifdefs in the code.
-    PRPackedBool                  mCookiesEnabled_temp,       // These two prefs are collapsed
-                                  mCookiesForDomainOnly_temp; // into mCookiesPermissions.
-#endif
-    PRPackedBool                  mCookiesStrictDomains;      // Optional pref to apply stricter domain checks
-    PRUint8                       mCookiesPermissions;        // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
+    PRPackedBool                  mCookiesStrictDomains; // Optional pref to apply stricter domain checks
+    PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
 
     /* mCookiesP3PString (below) consists of 8 characters having the following interpretation:
      *   [0]: behavior for first-party cookies when site has no privacy policy

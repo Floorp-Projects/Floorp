@@ -6047,10 +6047,13 @@ NavigatorImpl::GetPlugins(nsIDOMPluginArray **aPlugins)
   return NS_OK;
 }
 
+// values for the network.cookie.cookieBehavior pref are documented in
+// nsCookieService.cpp.
+#define COOKIE_BEHAVIOR_REJECT 2
+
 NS_IMETHODIMP
 NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
 {
-  nsresult rv = NS_OK;
   *aCookieEnabled = PR_FALSE;
 
   nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
@@ -6059,25 +6062,12 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
     NS_ENSURE_STATE(prefBranch);
   }
 
-#ifdef MOZ_PHOENIX
-  PRBool cookiesEnabled;
-  rv = prefBranch->GetBoolPref("network.cookie.enable", &cookiesEnabled);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  *aCookieEnabled = cookiesEnabled;
-#else
   PRInt32 cookieBehaviorPref;
-  rv = prefBranch->GetIntPref("network.cookie.cookieBehavior",
-                              &cookieBehaviorPref);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  const PRInt32 DONT_USE = 2;
-  *aCookieEnabled = (cookieBehaviorPref != DONT_USE);
-#endif
+  nsresult rv = prefBranch->GetIntPref("network.cookie.cookieBehavior",
+                                       &cookieBehaviorPref);
+  if (NS_SUCCEEDED(rv)) {
+    *aCookieEnabled = cookieBehaviorPref != COOKIE_BEHAVIOR_REJECT;
+  }
 
   return rv;
 }

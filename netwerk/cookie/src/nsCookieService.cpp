@@ -112,14 +112,9 @@ static const PRUint32 BEHAVIOR_REJECT        = 2;
 static const PRUint32 BEHAVIOR_P3P           = 3;
 
 // pref string constants
-#ifdef MOZ_PHOENIX
-static const char kCookiesEnabled[] = "network.cookie.enable";
-static const char kCookiesForDomainOnly[] = "network.cookie.enableForOriginatingWebsiteOnly";
-#else
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesP3PString_Default[] = "drdraaaa";
-#endif
 static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
 // struct for temporarily storing cookie attributes during header parsing
@@ -386,28 +381,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
     NS_LossyConvertUCS2toASCII pref(aData);
     PRInt32 tempPrefValue;
 
-#ifdef MOZ_PHOENIX
-    PRBool computePermissions = PR_FALSE;
-
-    if (pref.Equals(kCookiesEnabled)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesEnabled_temp = tempPrefValue;
-      // set flag so we know to update the enumerated permissions
-      computePermissions = PR_TRUE;
-
-    } else if (pref.Equals(kCookiesForDomainOnly)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesForDomainOnly_temp = tempPrefValue;
-      // set flag so we know to update the enumerated permissions
-      computePermissions = PR_TRUE;
-
-#else
     if (pref.Equals(kCookiesPermissions)) {
       rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
       if (NS_FAILED(rv) || tempPrefValue < 0 || tempPrefValue > 3) {
@@ -415,7 +388,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
       }
       mCookiesPermissions = tempPrefValue;
 
-    // P3P prefs
     } else if (pref.Equals(kCookiesP3PString)) {
       rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
       // check for a malformed string
@@ -424,8 +396,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
         mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
       }
 
-#endif
-    // common prefs between Phoenix & Mozilla
     } else if (pref.Equals(kCookiesStrictDomains)) {
       rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
       if (NS_FAILED(rv)) {
@@ -433,24 +403,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
       }
       mCookiesStrictDomains = tempPrefValue;
     }
-
-#ifdef MOZ_PHOENIX
-    // collapse two boolean prefs into enumerated permissions
-    // note: BEHAVIOR_P3P is not used in Phoenix, so we won't reach any P3P code.
-    if (computePermissions) {
-      if (mCookiesEnabled_temp) {
-        // check if user wants cookies only for site domain
-        if (mCookiesForDomainOnly_temp) {
-          mCookiesPermissions = BEHAVIOR_REJECTFOREIGN;
-        } else {
-          mCookiesPermissions = BEHAVIOR_ACCEPT;
-        }
-      } else {
-        mCookiesPermissions = BEHAVIOR_REJECT;
-      }
-    }
-#endif
-
   }
 
   return NS_OK;
@@ -762,13 +714,8 @@ nsCookieService::InitPrefObservers()
 
     // add observers
     if (NS_SUCCEEDED(rv)) {
-#ifdef MOZ_PHOENIX
-      prefInternal->AddObserver(kCookiesEnabled, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesForDomainOnly, this, PR_TRUE);
-#else
       prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
-#endif
       prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
     }
 
@@ -780,10 +727,8 @@ nsCookieService::InitPrefObservers()
 
   } else {
     // only called if getting the prefbranch failed.
-#ifndef MOZ_PHOENIX
+    mCookiesPermissions = BEHAVIOR_ACCEPT;
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
-#endif
-    mCookiesPermissions = BEHAVIOR_REJECT;
     mCookiesStrictDomains = PR_FALSE;
   }
 }
@@ -792,37 +737,8 @@ nsresult
 nsCookieService::ReadPrefs()
 {
   nsresult rv, rv2 = NS_OK;
-
   PRInt32 tempPrefValue;
-#ifdef MOZ_PHOENIX
-  rv = mPrefBranch->GetBoolPref(kCookiesEnabled, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    rv2 = rv;
-  }
-  mCookiesEnabled_temp = tempPrefValue;
 
-  rv = mPrefBranch->GetBoolPref(kCookiesForDomainOnly, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    rv2 = rv;
-  }
-  mCookiesForDomainOnly_temp = tempPrefValue;
-
-  // collapse two boolean prefs into enumerated permissions
-  // note: BEHAVIOR_P3P is not used in Phoenix
-  if (mCookiesEnabled_temp) {
-    // check if user wants cookies only for site domain
-    if (mCookiesForDomainOnly_temp) {
-      mCookiesPermissions = BEHAVIOR_REJECTFOREIGN;
-    } else {
-      mCookiesPermissions = BEHAVIOR_ACCEPT;
-    }
-  } else {
-    mCookiesPermissions = BEHAVIOR_REJECT;
-  }
-
-#else
   rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
   if (NS_FAILED(rv)) {
     tempPrefValue = BEHAVIOR_REJECT;
@@ -830,7 +746,6 @@ nsCookieService::ReadPrefs()
   }
   mCookiesPermissions = tempPrefValue;
 
-  // P3P prefs
   rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
   // check for a malformed string
   if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
@@ -838,9 +753,6 @@ nsCookieService::ReadPrefs()
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
     rv2 = rv;
   }
-
-#endif
-  // common prefs between Phoenix & Mozilla
 
   rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
   if (NS_FAILED(rv)) {
