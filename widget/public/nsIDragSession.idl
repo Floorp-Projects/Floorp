@@ -49,7 +49,7 @@ interface nsIDragSession : nsISupports
     * Sets the current width and height if the drag target area. 
     * It will contain the current size of the Frame that the drag is currently in
     */  
-  attribute nsSize targetSize;
+  [noscript] attribute nsSize targetSize;
  
   /**
     * Get the number items that were dropped
