@@ -205,7 +205,7 @@ function doEnabling()
 function chooseFoldersToSearch()
 {
   var dialog = window.openDialog("chrome://messenger/content/virtualFolderListDialog.xul", "",
-                                 "chrome,titlebar,modal,centerscreen",
+                                 "chrome,titlebar,modal,centerscreen,resizable",
                                  {preselectedURI:window.arguments[0].preselectedURI,
                                   searchFolderURIs:gSearchFolderURIs,
                                   okCallback:onFolderListDialogCallback}); 
