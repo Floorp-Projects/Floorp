@@ -42,7 +42,6 @@ XPIDLSRCS	= \
 		nsITooltipListener.idl		\
 		nsIWebBrowserPersist.idl		\
 		nsIWebBrowserFocus.idl		\
-		nsIWebBrowserFind.idl       \
 		nsIWebBrowserPrint.idl       \
 		$(NULL)
 
@@ -52,7 +51,6 @@ CPPSRCS		= \
 		nsCommandHandler.cpp		\
 		nsWebBrowserPersist.cpp		\
 		nsDOMWalker.cpp			\
-		nsWebBrowserFind.cpp    \
 		nsNonPersistAuthPrompt.cpp  \
 		$(NULL)
 

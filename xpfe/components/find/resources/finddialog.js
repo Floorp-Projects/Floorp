@@ -26,9 +26,8 @@
  *                 Stuart Parmenter <pavlov@netscape.com>
  */
 
-var finder; // Find component.
-var data;   // Search context (passed as argument).
-var dialog; // Quick access to document/form elements.
+var dialog;     // Quick access to document/form elements.
+var gFindInst;   // nsIWebBrowserFind that we're going to use
 
 function initDialogObject()
 {
@@ -52,30 +51,33 @@ function initDialogObject()
 
 function fillDialog()
 {
+  // get the find service, which stores global find state
+  var findService = Components.classes["@mozilla.org/find/find_service;1"]
+                         .getService(Components.interfaces.nsIFindService);
+  
   // Set initial dialog field contents.
-  dialog.findKey.value = data.searchString;
-
-  dialog.caseSensitive.checked   = data.caseSensitive;
-  dialog.wrap.checked            = data.wrapSearch;
-  dialog.searchBackwards.checked = data.searchBackwards;
+  dialog.findKey.value           = findService.searchString;
+  dialog.caseSensitive.checked   = findService.matchCase;
+  dialog.wrap.checked            = findService.wrapFind;
+  dialog.searchBackwards.checked = findService.findBackwards;
 }
 
-function loadData()
+function saveFindData()
 {
+  // get the find service, which stores global find state
+  var findService = Components.classes["@mozilla.org/find/find_service;1"]
+                         .getService(Components.interfaces.nsIFindService);
+
   // Set data attributes per user input.
-  data.searchString    = dialog.findKey.value;
-  data.caseSensitive   = dialog.caseSensitive.checked;
-  data.wrapSearch      = dialog.wrap.checked;
-  data.searchBackwards = dialog.searchBackwards.checked;
+  findService.searchString  = dialog.findKey.value;
+  findService.matchCase     = dialog.caseSensitive.checked;
+  findService.wrapFind      = dialog.wrap.checked;
+  findService.findBackwards = dialog.searchBackwards.checked;
 }
 
 function onLoad()
 {
   initDialogObject();
-
-  // Get find component.
-  finder = Components.classes["@mozilla.org/appshell/component/find;1"].getService();
-  finder = finder.QueryInterface(Components.interfaces.nsIFindComponent);
 
   // Change "OK" to "Find".
   dialog.find.label = document.getElementById("fBLT").getAttribute("label");
@@ -83,14 +85,10 @@ function onLoad()
   // Setup the dialogOverlay.xul button handlers.
   doSetOKCancel(onOK, onCancel);
 
-  // Save search context.
-  data = window.arguments[0];
-
-  // Tell search context about this dialog.
-  data.findDialog = window;
+  // get the find instance
+  gFindInst = window.arguments[0];
 
   fillDialog();
-
   doEnabling();
 
   if (dialog.findKey.value)
@@ -99,19 +97,27 @@ function onLoad()
     dialog.findKey.focus();
 }
 
-function onUnload() {
-  // Disconnect context from this dialog.
-  data.findDialog = null;
+function onUnload()
+{
+    window.opener.findDialog = 0;
 }
 
 function onOK()
 {
-  // Transfer dialog contents to data elements.
-  loadData();
+  // Transfer dialog contents to the find service.
+  saveFindData();
 
+  // set up the find instance
+  gFindInst.searchString  = dialog.findKey.value;
+  gFindInst.matchCase     = dialog.caseSensitive.checked;
+  gFindInst.wrapFind      = dialog.wrap.checked;
+  gFindInst.findBackwards = dialog.searchBackwards.checked;
+  
   // Search.
-  var result = finder.findNext(data);
-  if (!result) {
+  var result = gFindInst.findNext();
+
+  if (!result)
+  {
     if (!dialog.bundle)
       dialog.bundle = document.getElementById("findBundle");
     window.alert(dialog.bundle.getString("notFoundWarning"));

@@ -16,8 +16,9 @@
  * Communications, Inc.  Portions created by Netscape are
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
- * Author:
+ * Contributors:
  *   Conrad Carlen <ccarlen@netscape.com>
+ *   Simon Fraser  <sfraser@netscape.com>
  */
 
 #ifndef nsWebBrowserFindImpl_h__

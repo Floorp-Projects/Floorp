@@ -28,5 +28,4 @@ nsIWebBrowserSetup.idl
 nsIEmbeddingSiteWindow.idl
 nsIWebBrowserPersist.idl
 nsIWebBrowserFocus.idl
-nsIWebBrowserFind.idl
 nsIWebBrowserPrint.idl

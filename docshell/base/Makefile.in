@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsDocShell.cpp		\
 		nsWebShell.cpp		\
 		nsDocShellLoadInfo.cpp		\
+		nsDocShellEnumerator.cpp  \
 		nsDSURIContentListener.cpp		\
 		nsDefaultURIFixup.cpp		\
 #		nsDSWebProgressListener.cpp		\

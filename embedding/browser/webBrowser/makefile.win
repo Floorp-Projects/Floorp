@@ -34,7 +34,6 @@ XPIDLSRCS=                        \
     .\nsIWebBrowserPersist.idl     \
     .\nsIEmbeddingSiteWindow.idl   \
     .\nsIWebBrowserFocus.idl       \
-    .\nsIWebBrowserFind.idl        \
     .\nsIWebBrowserPrint.idl        \
     $(NULL)
 
@@ -46,7 +45,6 @@ CPP_OBJS=                            \
     .\$(OBJDIR)\nsCommandHandler.obj        \
     .\$(OBJDIR)\nsWebBrowserPersist.obj     \
     .\$(OBJDIR)\nsDOMWalker.obj             \
-    .\$(OBJDIR)\nsWebBrowserFind.obj        \
     .\$(OBJDIR)\nsNonPersistAuthPrompt.obj  \
     $(NULL)
 

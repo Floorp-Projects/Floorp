@@ -82,8 +82,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
     
     void ReinitializeContentVariables();
-
-    nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
     
     PRBool              mIsClosed;
     static PRBool       sCmdLineURLUsed;

@@ -543,7 +543,7 @@ var nsFindCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.Find();
+    window.editorShell.Replace();
   }
 };
 

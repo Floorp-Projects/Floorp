@@ -24,6 +24,21 @@
 #include "nsCOMPtr.h"
 #include "nsIFindAndReplace.h"
 
+
+/*
+
+    Warning: this code is soon to become obsolete. The Find code has moved
+    into mozilla/embedding/components/find, and is now shared between
+    embedding apps and mozilla.
+    
+    This code remains because editor needs its find and replace functionality,
+    for now.
+    
+    Simon Fraser sfraser@netscape.com
+
+*/
+
+
 class nsITextServicesDocument;
 
 // {4AA267A0-F81D-11d2-8067-00600811A9C3}

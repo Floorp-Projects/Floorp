@@ -45,7 +45,8 @@ XPIDLSRCS=						\
 
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShell.obj			\
-        .\$(OBJDIR)\nsWebShell.obj          \
+		.\$(OBJDIR)\nsWebShell.obj          \
+		.\$(OBJDIR)\nsDocShellEnumerator.obj \
 		.\$(OBJDIR)\nsDocShellLoadInfo.obj	\
 		.\$(OBJDIR)\nsDSURIContentListener.obj	\
     .\$(OBJDIR)\nsDefaultURIFixup.obj \

@@ -45,6 +45,7 @@ interface nsIDocumentLoaderObserver;
 interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
+interface nsISimpleEnumerator;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -158,7 +159,19 @@ interface nsIDocShell : nsISupports
     */
     attribute boolean allowSubframes;
 
+	/*
+	Get an enumerator over this docShell and its children.
+	
+	@param aItemType     - Only include docShells of this type, or if typeAll, include
+	                       all child shells. Uses types from nsIDocShellTreeItem.
+	@param aDirection	 - Whether to enumerate forwards or backwards.
+	*/
+    
+    const long ENUMERATE_FORWARDS  = 0;
+    const long ENUMERATE_BACKWARDS = 1;
 
+    nsISimpleEnumerator getDocShellEnumerator(in long aItemType, in long aDirection);
+    
 	/*
 	The type of application that created this window
 	*/
