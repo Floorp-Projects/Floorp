@@ -290,11 +290,6 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
 
   if (NS_FAILED(rv)) return rv;
   
-  nsXPIDLCString property_arc;
-  rv = property->GetValue(getter_Copies(property_arc));
-
-  if (NS_FAILED(rv)) return rv;
-
 #ifdef DEBUG_amds
   printf("GetTargets(%s with arc %s...)\n",
          (const char*)source_value,
@@ -303,8 +298,8 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   
   if (PL_strcmp(source_value, "msgaccounts:/")==0) {
 
-    if (PL_strcmp(property_arc, NC_RDF_CHILD)==0 ||
-        PL_strcmp(property_arc, NC_RDF_SETTINGS)==0) {
+    if (property == kNC_Child ||
+        property == kNC_Settings) {
       
       nsCOMPtr<nsISupportsArray> servers;
       rv = mAccountManager->GetAllServers(getter_AddRefs(servers));
@@ -329,7 +324,7 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
 
     if (NS_SUCCEEDED(rv)) {
       // all the Settings - main, server, copies, advanced, etc
-      if (PL_strcmp(property_arc, NC_RDF_SETTINGS)==0) {
+      if (property == kNC_Settings) {
         
         nsIRDFResource* res;
         rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &res);
