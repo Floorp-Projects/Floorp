@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsMutationEvent_h__
+#define nsMutationEvent_h__
+
 #include "nsGUIEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIAtom.h"
@@ -101,3 +104,5 @@ struct nsMutationEvent : public nsEvent
 #define NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT       0x10
 #define NS_EVENT_BITS_MUTATION_ATTRMODIFIED                   0x20
 #define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED          0x40
+
+#endif // nsMutationEvent_h__
