@@ -395,8 +395,9 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   internalDownload->SetSource(aSource);
 
   // the persistent descriptor of the target is the unique identifier we use
-  nsXPIDLCString persistentDescriptor;
-  aTarget->GetPersistentDescriptor(getter_Copies(persistentDescriptor));
+  char* persistentDescriptor;
+  aTarget->GetPersistentDescriptor(&persistentDescriptor);
+  if (!persistentDescriptor) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIRDFResource> downloadRes;
   gRDFService->GetResource(persistentDescriptor, getter_AddRefs(downloadRes));
@@ -468,9 +469,9 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   // Assert download state information (NOTSTARTED, since it's just now being added)
   nsCOMPtr<nsIRDFInt> intLiteral;
   gRDFService->GetIntLiteral(NOTSTARTED, getter_AddRefs(intLiteral));
-  mDataSource->GetTarget(downloadRes, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(node));
+  mDataSource->GetTarget(downloadRes, gNC_DownloadState, PR_TRUE, getter_AddRefs(node));
   if (node)
-    rv = mDataSource->Change(downloadRes, gNC_ProgressPercent, node, intLiteral);
+    rv = mDataSource->Change(downloadRes, gNC_DownloadState, node, intLiteral);
   else
     rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
   if (NS_FAILED(rv)) {
