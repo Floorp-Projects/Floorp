@@ -25,6 +25,7 @@ DIRS=            \
 	build    \
 	protocol \
 	util     \
+    mime     \
 	test     \
 	$(NULL)
 
