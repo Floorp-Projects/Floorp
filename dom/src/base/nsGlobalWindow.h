@@ -51,6 +51,7 @@ class nsIPresContext;
 class nsIDOMEvent;
 class nsIBrowserWindow;
 class nsIModalWindowSupport;
+class nsIScrollableView;
 
 #include "jsapi.h"
 
@@ -157,6 +158,8 @@ public:
   NS_IMETHOD    SizeToContent();
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll);
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);
+  NS_IMETHOD    GetScrollX(PRInt32* aScrollX);
+  NS_IMETHOD    GetScrollY(PRInt32* aScrollY);
 
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);
@@ -241,6 +244,8 @@ protected:
                   char *aFeatures, PRBool aNewWindow, PRBool aDialog);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
   nsresult      GetModalWindowSupport(nsIModalWindowSupport **msw);
+  nsresult      GetScrollInfo(nsIScrollableView** aScrollableView,
+                              float* aP2T, float* aT2P);
 
   static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 

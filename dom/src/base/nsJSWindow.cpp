@@ -102,7 +102,9 @@ enum Window_slots {
   WINDOW_SCREENX = -27,
   WINDOW_SCREENY = -28,
   WINDOW_PAGEXOFFSET = -29,
-  WINDOW_PAGEYOFFSET = -30
+  WINDOW_PAGEYOFFSET = -30,
+  WINDOW_SCROLLX = -31,
+  WINDOW_SCROLLY = -32
 };
 
 /***********************************************************************/
@@ -676,6 +678,42 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsresult result = NS_OK;
         result = a->GetPageYOffset(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case WINDOW_SCROLLX:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollx", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetScrollX(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case WINDOW_SCROLLY:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "window.scrolly", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetScrollY(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -2657,6 +2695,8 @@ static JSPropertySpec WindowProperties[] =
   {"screenY",    WINDOW_SCREENY,    JSPROP_ENUMERATE},
   {"pageXOffset",    WINDOW_PAGEXOFFSET,    JSPROP_ENUMERATE},
   {"pageYOffset",    WINDOW_PAGEYOFFSET,    JSPROP_ENUMERATE},
+  {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"scrollY",    WINDOW_SCROLLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

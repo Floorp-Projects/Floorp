@@ -115,6 +115,10 @@ public:
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset)=0;
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset)=0;
 
+  NS_IMETHOD    GetScrollX(PRInt32* aScrollX)=0;
+
+  NS_IMETHOD    GetScrollY(PRInt32* aScrollY)=0;
+
   NS_IMETHOD    Dump(const nsString& aStr)=0;
 
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc)=0;
@@ -222,6 +226,8 @@ public:
   NS_IMETHOD    SetPageXOffset(PRInt32 aPageXOffset);  \
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset);  \
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset);  \
+  NS_IMETHOD    GetScrollX(PRInt32* aScrollX);  \
+  NS_IMETHOD    GetScrollY(PRInt32* aScrollY);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn);  \
@@ -299,6 +305,8 @@ public:
   NS_IMETHOD    SetPageXOffset(PRInt32 aPageXOffset) { return _to SetPageXOffset(aPageXOffset); } \
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset) { return _to GetPageYOffset(aPageYOffset); } \
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset) { return _to SetPageYOffset(aPageYOffset); } \
+  NS_IMETHOD    GetScrollX(PRInt32* aScrollX) { return _to GetScrollX(aScrollX); } \
+  NS_IMETHOD    GetScrollY(PRInt32* aScrollY) { return _to GetScrollY(aScrollY); } \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to Dump(aStr); }  \
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Alert(cx, argv, argc); }  \
   NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn) { return _to Confirm(cx, argv, argc, aReturn); }  \
