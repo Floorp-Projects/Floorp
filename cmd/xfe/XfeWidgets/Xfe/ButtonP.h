@@ -110,7 +110,7 @@ typedef struct _XfeButtonPart
     Boolean				fill_on_enter;			/* Fill on enter ?		*/
     Pixel				raise_foreground;		/* Raise foreground		*/
     Pixel				raise_background;		/* Raise background		*/
-	Dimension			accent_border_thickness;	/* Raise border thickness*/
+	Dimension			accent_border_thickness;/* Accent border thickness*/
     Boolean				raise_on_enter;			/* Raise on enter ?		*/
     Boolean				raised;					/* Raised ?				*/
     Boolean				determinate;			/* Determinate ?		*/
