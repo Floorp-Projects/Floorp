@@ -21,9 +21,13 @@
  */
 
 #include "msgCore.h"
+
+#include "nsXPIDLString.h"
+
 #include "nsIWebProgress.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+
 #include "nsMsgStatusFeedback.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentViewer.h"
@@ -35,6 +39,11 @@
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+nsrefcnt nsMsgStatusFeedback::gInstanceCount = 0;
+nsCOMPtr<nsIStringBundle> nsMsgStatusFeedback::mBundle;
+
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_meteorsSpinning(PR_FALSE),
   m_lastPercent(0),
@@ -43,10 +52,24 @@ nsMsgStatusFeedback::nsMsgStatusFeedback() :
 {
 	NS_INIT_REFCNT();
 	LL_I2L(m_lastProgressTime, 0);
+
+    if (gInstanceCount++ == 0) {
+      nsresult rv;
+      nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(kStringBundleServiceCID, &rv);
+
+      if (NS_SUCCEEDED(rv))
+        bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                    nsnull,
+                                    getter_AddRefs(mBundle));
+    }
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
+  if (gInstanceCount-- == 0) {
+    mBundle = nsnull;
+  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback);
@@ -86,16 +109,25 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnChildProgressChange(nsIChannel* aChannel,
 NS_IMETHODIMP nsMsgStatusFeedback::OnStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
+  nsresult rv;
   if (aProgressStatusFlags & nsIWebProgress::flag_net_start)
   {
     m_lastPercent = 0;
     StartMeteors();
-    ShowStatusString(NS_ConvertASCIItoUCS2("Loading Document...").GetUnicode());
+    nsXPIDLString loadingDocument;
+    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
+                                    getter_Copies(loadingDocument));
+    if (NS_SUCCEEDED(rv))
+      ShowStatusString(loadingDocument);
   }
-  if (aProgressStatusFlags & nsIWebProgress::flag_net_stop)
+  else if (aProgressStatusFlags & nsIWebProgress::flag_net_stop)
   {
     StopMeteors();
-    ShowStatusString(NS_ConvertASCIItoUCS2("Document: Done").GetUnicode());
+    nsXPIDLString documentDone;
+    rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
+                                    getter_Copies(documentDone));
+    if (NS_SUCCEEDED(rv))
+      ShowStatusString(documentDone);
   }
 
   return NS_OK;

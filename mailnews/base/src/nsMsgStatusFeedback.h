@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIProgressEventSink.h"
+#include "nsIStringBundle.h"
 
 class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
                             public nsIProgressEventSink,
@@ -69,6 +70,9 @@ protected:
   // the JS status feedback implementation object...eventually this object
   // will replace this very C++ class you are looking at.
   nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+
+  static nsrefcnt gInstanceCount;
+  static nsCOMPtr<nsIStringBundle> mBundle;
 };
 
 #endif // _nsMsgStatusFeedback_h
