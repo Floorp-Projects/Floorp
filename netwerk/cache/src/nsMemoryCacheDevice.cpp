@@ -80,8 +80,7 @@ nsMemoryCacheDevice::ActivateEntryIfFound(nsCacheEntry * entry)
 
     nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
     if (!ourEntry) {
-        *entry = nsnull;
-        return NS_ERROR_CACHE_KEY_NOT_FOUND;
+         return NS_ERROR_CACHE_KEY_NOT_FOUND;
     }
 
     //** need entry->UpdateFrom(ourEntry);
