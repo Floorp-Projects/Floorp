@@ -722,8 +722,11 @@ nsresult nsRepository::Initialize(void)
 #endif
 	
 	// Initiate autoreg
+#ifndef XP_MAC
+	// this is seriously broken on Mac right now; this is a temporary workaround
 	AutoRegister(NS_Startup, NULL);
-	
+#endif
+
 	return NS_OK;
 }
 
