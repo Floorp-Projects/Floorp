@@ -101,6 +101,8 @@ endif
 
 DEFINES += -DMOZ_ACTIVEX_CONTROL_SUPPORT
 
+LOCAL_INCLUDES += -I.
+
 libs:: MozillaControl.html
 	$(INSTALL) $^ $(DIST)/bin/res
 
