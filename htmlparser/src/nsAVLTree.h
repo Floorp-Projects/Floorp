@@ -54,17 +54,17 @@ struct nsAVLNode;
  * @param anObject2 is the second object to be compared
  * @return -1,0,1 if object1 is less, equal, greater than object2
  */
-class NS_COM nsAVLNodeComparitor {
+class nsAVLNodeComparitor {
 public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2)=0;
 }; 
 
-class NS_COM nsAVLNodeFunctor {
+class nsAVLNodeFunctor {
 public:
   virtual void* operator()(void* anItem)=0;
 };
 
-class NS_COM nsAVLTree {
+class nsAVLTree {
 public:
               nsAVLTree(nsAVLNodeComparitor& aComparitor, nsAVLNodeFunctor* aDeallocator);
               ~nsAVLTree(void);

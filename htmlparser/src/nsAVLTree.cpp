@@ -40,7 +40,7 @@
 
 enum eLean      {eLeft,eNeutral,eRight};
 
-struct NS_COM nsAVLNode {
+struct nsAVLNode {
 public:
 
   nsAVLNode(void* aValue) {
