@@ -30,7 +30,7 @@ MODULE		= accessibility
 LIBRARY_NAME	= accessibility
 SHORT_LIBNAME	= access
 IS_COMPONENT	= 1
-REQUIRES	= xpcom rdf necko layout
+REQUIRES	= xpcom string dom
 
 CPPSRCS		= nsAccessibilityFactory.cpp
 
