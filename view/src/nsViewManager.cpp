@@ -1110,8 +1110,8 @@ static void PopState(nsIRenderingContext **aRCs, PRInt32 aRCCount) {
   }
 }
 
-static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
-                                             nsIView* aRootView) {
+void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
+                                                     nsIView* aRootView) {
     // We accumulate the bounds of widgets obscuring aRootView's widget into mOpaqueRgn.
     // In OptimizeDisplayList, display list elements which lie behind obscuring native
     // widgets are dropped.
@@ -1127,7 +1127,7 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
     if (aRgn) {
       aRgn->SetTo(0, 0, 0, 0);
       nsCOMPtr<nsIWidget> widget;
-      aRootView->GetWidget(*getter_AddRefs(widget));
+      GetWidgetForView(aRootView, getter_AddRefs(widget));
       if (widget) {
         nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
         if (children) {
@@ -1682,7 +1682,12 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
     PRBool noCropping = bounds == aDamagedRect;
     
     PRBool hasWidget = PR_FALSE;
-    aView->HasWidget(&hasWidget);
+    if (mRootView == aView) {
+      hasWidget = PR_TRUE;
+    } else {
+      aView->HasWidget(&hasWidget);
+    }
+
     PRUint32 flags = 0;
     aView->GetViewFlags(&flags);
     PRBool isBlittable = (flags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT) == 0;
@@ -1718,7 +1723,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
 		        ViewToWidget(aView, widgetView, bounds);
 
                 nsCOMPtr<nsIWidget> widget;
-                widgetView->GetWidget(*getter_AddRefs(widget));
+                GetWidgetForView(widgetView, getter_AddRefs(widget));
                 widget->Invalidate(bounds, PR_FALSE);
 			}
         }
