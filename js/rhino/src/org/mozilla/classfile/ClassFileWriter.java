@@ -276,47 +276,33 @@ public class ClassFileWriter {
         byte codeAttribute[] = new byte[attrLength];
         int index = 0;
         int codeAttrIndex = itsConstantPool.addUtf8("Code");
-        codeAttribute[index++] = (byte)(codeAttrIndex >> 8);
-        codeAttribute[index++] = (byte)codeAttrIndex;
+        index = putInt16(codeAttrIndex, codeAttribute, index);
         attrLength -= 6;                 // discount the attribute header
-        codeAttribute[index++] = (byte)(attrLength >> 24);
-        codeAttribute[index++] = (byte)(attrLength >> 16);
-        codeAttribute[index++] = (byte)(attrLength >> 8);
-        codeAttribute[index++] = (byte)attrLength;
-        codeAttribute[index++] = (byte)(itsMaxStack >> 8);
-        codeAttribute[index++] = (byte)itsMaxStack;
-        codeAttribute[index++] = (byte)(itsMaxLocals >> 8);
-        codeAttribute[index++] = (byte)itsMaxLocals;
-        codeAttribute[index++] = (byte)(itsCodeBufferTop >> 24);
-        codeAttribute[index++] = (byte)(itsCodeBufferTop >> 16);
-        codeAttribute[index++] = (byte)(itsCodeBufferTop >> 8);
-        codeAttribute[index++] = (byte)itsCodeBufferTop;
+        index = putInt32(attrLength, codeAttribute, index);
+        index = putInt16(itsMaxStack, codeAttribute, index);
+        index = putInt16(itsMaxLocals, codeAttribute, index);
+        index = putInt32(itsCodeBufferTop, codeAttribute, index);
         System.arraycopy(itsCodeBuffer, 0, codeAttribute, index,
                          itsCodeBufferTop);
         index += itsCodeBufferTop;
 
 
         if (itsExceptionTableTop > 0) {
-            codeAttribute[index++] = (byte)(itsExceptionTableTop >> 8);
-            codeAttribute[index++] = (byte)(itsExceptionTableTop);
+            index = putInt16(itsExceptionTableTop, codeAttribute, index);
             for (int i = 0; i < itsExceptionTableTop; i++) {
                 short startPC = itsExceptionTable[i].getStartPC(itsLabels);
-                codeAttribute[index++] = (byte)(startPC >> 8);
-                codeAttribute[index++] = (byte)(startPC);
                 short endPC = itsExceptionTable[i].getEndPC(itsLabels);
-                codeAttribute[index++] = (byte)(endPC >> 8);
-                codeAttribute[index++] = (byte)(endPC);
                 short handlerPC = itsExceptionTable[i].getHandlerPC(itsLabels);
-                codeAttribute[index++] = (byte)(handlerPC >> 8);
-                codeAttribute[index++] = (byte)(handlerPC);
                 short catchType = itsExceptionTable[i].getCatchType();
-                codeAttribute[index++] = (byte)(catchType >> 8);
-                codeAttribute[index++] = (byte)(catchType);
+                index = putInt16(startPC, codeAttribute, index);
+                index = putInt16(endPC, codeAttribute, index);
+                index = putInt16(handlerPC, codeAttribute, index);
+                index = putInt16(catchType, codeAttribute, index);
             }
         }
         else {
-            codeAttribute[index++] = (byte)(0);     // exception table length
-            codeAttribute[index++] = (byte)(0);
+            // write 0 as exception table length
+            index = putInt16(0, codeAttribute, index);
         }
 
         int attributeCount = 0;
@@ -324,70 +310,46 @@ public class ClassFileWriter {
             attributeCount++;
         if (vars != null)
             attributeCount++;
-        codeAttribute[index++] = (byte)(0);     // (hibyte) attribute count...
-        codeAttribute[index++] = (byte)(attributeCount); // (lobyte) attribute count
+        index = putInt16(attributeCount, codeAttribute, index);
 
         if (itsLineNumberTable != null) {
             int lineNumberTableAttrIndex
                     = itsConstantPool.addUtf8("LineNumberTable");
-            codeAttribute[index++] = (byte)(lineNumberTableAttrIndex >> 8);
-            codeAttribute[index++] = (byte)lineNumberTableAttrIndex;
+            index = putInt16(lineNumberTableAttrIndex, codeAttribute, index);
             int tableAttrLength = 2 + (itsLineNumberTableTop * 4);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 24);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 16);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 8);
-            codeAttribute[index++] = (byte)tableAttrLength;
-            codeAttribute[index++] = (byte)(itsLineNumberTableTop >> 8);
-            codeAttribute[index++] = (byte)itsLineNumberTableTop;
+            index = putInt32(tableAttrLength, codeAttribute, index);
+            index = putInt16(itsLineNumberTableTop, codeAttribute, index);
             for (int i = 0; i < itsLineNumberTableTop; i++) {
-                codeAttribute[index++] = (byte)(itsLineNumberTable[i] >> 24);
-                codeAttribute[index++] = (byte)(itsLineNumberTable[i] >> 16);
-                codeAttribute[index++] = (byte)(itsLineNumberTable[i] >> 8);
-                codeAttribute[index++] = (byte)itsLineNumberTable[i];
+                index = putInt32(itsLineNumberTable[i], codeAttribute, index);
             }
         }
 
         if (vars != null) {
             int variableTableAttrIndex
                     = itsConstantPool.addUtf8("LocalVariableTable");
-            codeAttribute[index++] = (byte)(variableTableAttrIndex >> 8);
-            codeAttribute[index++] = (byte)variableTableAttrIndex;
+            index = putInt16(variableTableAttrIndex, codeAttribute, index);
             int varCount = vars.length;
             int tableAttrLength = 2 + (varCount * 10);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 24);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 16);
-            codeAttribute[index++] = (byte)(tableAttrLength >> 8);
-            codeAttribute[index++] = (byte)tableAttrLength;
-            codeAttribute[index++] = (byte)(varCount >> 8);
-            codeAttribute[index++] = (byte)varCount;
+            index = putInt32(tableAttrLength, codeAttribute, index);
+            index = putInt16(varCount, codeAttribute, index);
             for (int i = 0; i < varCount; i++) {
                 JavaVariable lvar = vars[i];
 
-                // start pc
                 int startPc = lvar.getStartPC();
-                codeAttribute[index++] = (byte)(startPc >> 8);
-                codeAttribute[index++] = (byte)startPc;
+                index = putInt16(startPc, codeAttribute, index);
 
-                // length
                 int length = itsCodeBufferTop - startPc;
-                codeAttribute[index++] = (byte)(length >> 8);
-                codeAttribute[index++] = (byte)length;
+                index = putInt16(length, codeAttribute, index);
 
-                // name index
                 int nameIndex = itsConstantPool.addUtf8(lvar.getName());
-                codeAttribute[index++] = (byte)(nameIndex >> 8);
-                codeAttribute[index++] = (byte)nameIndex;
+                index = putInt16(nameIndex, codeAttribute, index);
 
-                // descriptor index
                 String descriptor = lvar.getTypeDescriptor();
                 int descriptorIndex = itsConstantPool.addUtf8(descriptor);
-                codeAttribute[index++] = (byte)(descriptorIndex >> 8);
-                codeAttribute[index++] = (byte)descriptorIndex;
+                index = putInt16(descriptorIndex, codeAttribute, index);
 
-                // index
                 int jreg = lvar.getJRegister();
-                codeAttribute[index++] = (byte)(jreg >> 8);
-                codeAttribute[index++] = (byte)jreg;
+                index = putInt16(jreg, codeAttribute, index);
             }
         }
 
@@ -467,8 +429,7 @@ public class ClassFileWriter {
                     addToCodeBuffer(theOpCode);
                     if ((theOperand & 0x80000000) != 0x80000000) {
                             // hard displacement
-                        addToCodeBuffer((byte)(theOperand >> 8));
-                        addToCodeBuffer((byte)theOperand);
+                        addToCodeInt16(theOperand);
                     }
                     else {  // a label
                         int theLabel = theOperand & 0x7FFFFFFF;
@@ -479,14 +440,12 @@ public class ClassFileWriter {
                                                " from " + branchPC);
                         }
                         if (targetPC != -1) {
-                            short offset = (short)(targetPC - branchPC);
-                            addToCodeBuffer((byte)(offset >> 8));
-                            addToCodeBuffer((byte)offset);
+                            int offset = targetPC - branchPC;
+                            addToCodeInt16(offset);
                         }
                         else {
                             itsLabels.addLabelFixup(theLabel, branchPC + 1);
-                            addToCodeBuffer((byte)0);
-                            addToCodeBuffer((byte)0);
+                            addToCodeInt16(0);
                         }
                     }
                 }
@@ -503,8 +462,7 @@ public class ClassFileWriter {
                 if ((short)theOperand != theOperand)
                     throw new IllegalArgumentException("out of range short");
                 addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)(theOperand >> 8));
-                addToCodeBuffer((byte)theOperand);
+                   addToCodeInt16(theOperand);
                 break;
 
             case ByteCode.NEWARRAY :
@@ -519,8 +477,7 @@ public class ClassFileWriter {
                 if (!(0 <= theOperand && theOperand < 65536))
                     throw new IllegalArgumentException("out of range field");
                 addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)(theOperand >> 8));
-                addToCodeBuffer((byte)theOperand);
+                addToCodeInt16(theOperand);
                 break;
 
             case ByteCode.LDC :
@@ -528,17 +485,17 @@ public class ClassFileWriter {
             case ByteCode.LDC2_W :
                 if (!(0 <= theOperand && theOperand < 65536))
                     throw new IllegalArgumentException("out of range index");
-                if ((theOperand >= 256)
-                            || (theOpCode == ByteCode.LDC_W)
-                            || (theOpCode == ByteCode.LDC2_W)) {
-                    if (theOpCode == ByteCode.LDC)
+                if (theOperand >= 256
+                    || theOpCode == ByteCode.LDC_W
+                    || theOpCode == ByteCode.LDC2_W)
+                {
+                    if (theOpCode == ByteCode.LDC) {
                         addToCodeBuffer(ByteCode.LDC_W);
-                    else
+                    } else {
                         addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)(theOperand >> 8));
-                    addToCodeBuffer((byte)theOperand);
-                }
-                else {
+                    }
+                    addToCodeInt16(theOperand);
+                } else {
                     addToCodeBuffer(theOpCode);
                     addToCodeBuffer((byte)theOperand);
                 }
@@ -560,8 +517,7 @@ public class ClassFileWriter {
                 if (theOperand >= 256) {
                     addToCodeBuffer(ByteCode.WIDE);
                     addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)(theOperand >> 8));
-                    addToCodeBuffer((byte)theOperand);
+                    addToCodeInt16(theOperand);
                 }
                 else {
                     addToCodeBuffer(theOpCode);
@@ -663,10 +619,8 @@ public class ClassFileWriter {
             if (theOperand1 > 255 || theOperand2 < -128 || theOperand2 > 127) {
                 addToCodeBuffer(ByteCode.WIDE);
                 addToCodeBuffer(ByteCode.IINC);
-                addToCodeBuffer((byte)(theOperand1 >> 8));
-                addToCodeBuffer((byte)theOperand1);
-                addToCodeBuffer((byte)(theOperand2 >> 8));
-                addToCodeBuffer((byte)theOperand2);
+                addToCodeInt16(theOperand1);
+                addToCodeInt16(theOperand2);
             }
             else {
                 addToCodeBuffer(ByteCode.WIDE);
@@ -682,8 +636,7 @@ public class ClassFileWriter {
                 throw new IllegalArgumentException("out of range dimensions");
 
             addToCodeBuffer(ByteCode.MULTIANEWARRAY);
-            addToCodeBuffer((byte)(theOperand1 >> 8));
-            addToCodeBuffer((byte)theOperand1);
+            addToCodeInt16(theOperand1);
             addToCodeBuffer((byte)theOperand2);
         }
         else {
@@ -713,8 +666,7 @@ public class ClassFileWriter {
             case ByteCode.INSTANCEOF : {
                 short classIndex = itsConstantPool.addClass(className);
                 addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)(classIndex >> 8));
-                addToCodeBuffer((byte)classIndex);
+                addToCodeInt16(classIndex);
             }
             break;
 
@@ -740,8 +692,8 @@ public class ClassFileWriter {
         }
         int newStack = itsStackTop + ByteCode.stackChange(theOpCode);
         char fieldTypeChar = fieldType.charAt(0);
-        int fieldSize = ((fieldTypeChar == 'J')
-                                || (fieldTypeChar == 'D')) ? 2 : 1;
+        int fieldSize = (fieldTypeChar == 'J' || fieldTypeChar == 'D')
+                        ? 2 : 1;
         switch (theOpCode) {
             case ByteCode.GETFIELD :
             case ByteCode.GETSTATIC :
@@ -759,8 +711,7 @@ public class ClassFileWriter {
         short fieldRefIndex = itsConstantPool.addFieldRef(className,
                                              fieldName, fieldType);
         addToCodeBuffer(theOpCode);
-        addToCodeBuffer((byte)(fieldRefIndex >> 8));
-        addToCodeBuffer((byte)fieldRefIndex);
+        addToCodeInt16(fieldRefIndex);
 
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
@@ -800,8 +751,7 @@ public class ClassFileWriter {
                                     = itsConstantPool.addInterfaceMethodRef(
                                                className, methodName,
                                                parametersType+returnType);
-                        addToCodeBuffer((byte)(ifMethodRefIndex >> 8));
-                        addToCodeBuffer((byte)ifMethodRefIndex);
+                        addToCodeInt16(ifMethodRefIndex);
                         addToCodeBuffer((byte)((parameterInfo >> 16) + 1));
                         addToCodeBuffer((byte)0);
                     }
@@ -809,8 +759,7 @@ public class ClassFileWriter {
                         short methodRefIndex = itsConstantPool.addMethodRef(
                                                className, methodName,
                                                parametersType+returnType);
-                        addToCodeBuffer((byte)(methodRefIndex >> 8));
-                        addToCodeBuffer((byte)methodRefIndex);
+                        addToCodeInt16(methodRefIndex);
                     }
                 }
                 break;
@@ -888,6 +837,20 @@ public class ClassFileWriter {
         itsCodeBufferTop = N + 1;
     }
 
+    private void addToCodeInt16(int value) {
+        if (itsCurrentMethod == null)
+            throw new IllegalArgumentException("No method to add to");
+        int N = itsCodeBufferTop;
+        if (N + 2 > itsCodeBuffer.length) {
+            int newSize = itsCodeBuffer.length * 2;
+            if (N + 2 > newSize) { newSize = N + 2; }
+            byte[] tmp = new byte[newSize];
+            System.arraycopy(itsCodeBuffer, 0, tmp, 0, N);
+            itsCodeBuffer = tmp;
+        }
+        itsCodeBufferTop = putInt16(value, itsCodeBuffer, N);
+    }
+
     public void addExceptionHandler(int startLabel, int endLabel,
                                     int handlerLabel, String catchClassName)
     {
@@ -948,38 +911,8 @@ public class ClassFileWriter {
     public void write(OutputStream oStream)
         throws IOException
     {
-        DataOutputStream out = new DataOutputStream(oStream);
-
-        short sourceFileAttributeNameIndex = 0;
-        if (itsSourceFileNameIndex != 0)
-            sourceFileAttributeNameIndex
-                        = itsConstantPool.addUtf8("SourceFile");
-
-        out.writeLong(FileHeaderConstant);
-        itsConstantPool.write(out);
-        out.writeShort(itsFlags);
-        out.writeShort(itsThisClassIndex);
-        out.writeShort(itsSuperClassIndex);
-        out.writeShort(itsInterfaces.size());
-        for (int i = 0; i < itsInterfaces.size(); i++) {
-            out.writeShort(((Short)(itsInterfaces.get(i))).shortValue());
-        }
-        out.writeShort(itsFields.size());
-        for (int i = 0; i < itsFields.size(); i++) {
-            ((ClassFileField)(itsFields.get(i))).write(out);
-        }
-        out.writeShort(itsMethods.size());
-        for (int i = 0; i < itsMethods.size(); i++) {
-            ((ClassFileMethod)(itsMethods.get(i))).write(out);
-        }
-        if (itsSourceFileNameIndex != 0) {
-            out.writeShort(1);      // attributes count
-            out.writeShort(sourceFileAttributeNameIndex);
-            out.writeInt(2);
-            out.writeShort(itsSourceFileNameIndex);
-        }
-        else
-            out.writeShort(0);      // no attributes
+        byte[] array = toByteArray();
+        oStream.write(array);
     }
 
     private int getWriteSize()
@@ -1025,20 +958,51 @@ public class ClassFileWriter {
      */
     public byte[] toByteArray()
     {
-        int size = getWriteSize();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(size);
-        try {
-            write(bos);
+        int dataSize = getWriteSize();
+        byte[] data = new byte[dataSize];
+        int offset = 0;
+
+        short sourceFileAttributeNameIndex = 0;
+        if (itsSourceFileNameIndex != 0) {
+            sourceFileAttributeNameIndex = itsConstantPool.addUtf8(
+                                               "SourceFile");
         }
-        catch (IOException ioe) {
-            throw new RuntimeException(); // Unexpected
+
+        offset = putInt64(FileHeaderConstant, data, offset);
+        offset = itsConstantPool.write(data, offset);
+        offset = putInt16(itsFlags, data, offset);
+        offset = putInt16(itsThisClassIndex, data, offset);
+        offset = putInt16(itsSuperClassIndex, data, offset);
+        offset = putInt16(itsInterfaces.size(), data, offset);
+        for (int i = 0; i < itsInterfaces.size(); i++) {
+            int interfaceIndex = ((Short)(itsInterfaces.get(i))).shortValue();
+            offset = putInt16(interfaceIndex, data, offset);
         }
-        byte[] classBytes = bos.toByteArray();
-        if (classBytes.length != size) {
+        offset = putInt16(itsFields.size(), data, offset);
+        for (int i = 0; i < itsFields.size(); i++) {
+            ClassFileField field = (ClassFileField)itsFields.get(i);
+            offset = field.write(data, offset);
+        }
+        offset = putInt16(itsMethods.size(), data, offset);
+        for (int i = 0; i < itsMethods.size(); i++) {
+            ClassFileMethod method = (ClassFileMethod)itsMethods.get(i);
+            offset = method.write(data, offset);
+        }
+        if (itsSourceFileNameIndex != 0) {
+            offset = putInt16(1, data, offset); // attributes count
+            offset = putInt16(sourceFileAttributeNameIndex, data, offset);
+            offset = putInt32(2, data, offset);
+            offset = putInt16(itsSourceFileNameIndex, data, offset);
+        } else {
+            offset = putInt16(0, data, offset); // no attributes
+        }
+
+        if (offset != dataSize) {
             // Check getWriteSize is consistent with write!
             throw new RuntimeException();
         }
-        return classBytes;
+
+        return data;
     }
 
     /*
@@ -1124,6 +1088,28 @@ public class ClassFileWriter {
         }
         throw new IllegalArgumentException(
             "Bad parameter signature: "+pString);
+    }
+
+    static int putInt16(int value, byte[] array, int offset)
+    {
+        array[offset + 0] = (byte)(value >>> 8);
+        array[offset + 1] = (byte)value;
+        return offset + 2;
+    }
+
+    static int putInt32(int value, byte[] array, int offset)
+    {
+        array[offset + 0] = (byte)(value >>> 24);
+        array[offset + 1] = (byte)(value >>> 16);
+        array[offset + 2] = (byte)(value >>> 8);
+        array[offset + 3] = (byte)value;
+        return offset + 4;
+    }
+
+    static int putInt64(long value, byte[] array, int offset)
+    {
+        offset = putInt32((int)(value >>> 32), array, offset);
+        return putInt32((int)value, array, offset);
     }
 
     private static void badStack(int value) {
@@ -1241,20 +1227,22 @@ final class ClassFileField
         itsAttr = cvAttr;
     }
 
-    void write(DataOutputStream out) throws IOException
+    int write(byte[] data, int offset)
     {
-        out.writeShort(itsFlags);
-        out.writeShort(itsNameIndex);
-        out.writeShort(itsTypeIndex);
-        if (itsAttr == null)
-            out.writeShort(0);              // no attributes
-        else {
-            out.writeShort(1);
-            out.writeShort(itsAttr[0]);
-            out.writeShort(itsAttr[1]);
-            out.writeShort(itsAttr[2]);
-            out.writeShort(itsAttr[3]);
+        offset = ClassFileWriter.putInt16(itsFlags, data, offset);
+        offset = ClassFileWriter.putInt16(itsNameIndex, data, offset);
+        offset = ClassFileWriter.putInt16(itsTypeIndex, data, offset);
+        if (itsAttr == null) {
+            // no attributes
+            offset = ClassFileWriter.putInt16(0, data, offset);
+        } else {
+            offset = ClassFileWriter.putInt16(1, data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr[0], data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr[1], data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr[2], data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr[3], data, offset);
         }
+        return offset;
     }
 
     int getWriteSize()
@@ -1289,13 +1277,17 @@ final class ClassFileMethod
         itsCodeAttribute = codeAttribute;
     }
 
-    void write(DataOutputStream out) throws IOException
+    int write(byte[] data, int offset)
     {
-        out.writeShort(itsFlags);
-        out.writeShort(itsNameIndex);
-        out.writeShort(itsTypeIndex);
-        out.writeShort(1);              // Code attribute only
-        out.write(itsCodeAttribute, 0, itsCodeAttribute.length);
+        offset = ClassFileWriter.putInt16(itsFlags, data, offset);
+        offset = ClassFileWriter.putInt16(itsNameIndex, data, offset);
+        offset = ClassFileWriter.putInt16(itsTypeIndex, data, offset);
+        // Code attribute only
+        offset = ClassFileWriter.putInt16(1, data, offset);
+        System.arraycopy(itsCodeAttribute, 0, data, offset,
+                         itsCodeAttribute.length);
+        offset += itsCodeAttribute.length;
+        return offset;
     }
 
     int getWriteSize()
@@ -1334,10 +1326,12 @@ final class ConstantPool
         CONSTANT_NameAndType = 12,
         CONSTANT_Utf8 = 1;
 
-    void write(DataOutputStream out) throws IOException
+    int write(byte[] data, int offset)
     {
-        out.writeShort((short)(itsTopIndex));
-        out.write(itsPool, 0, itsTop);
+        offset = ClassFileWriter.putInt16((short)itsTopIndex, data, offset);
+        System.arraycopy(itsPool, 0, data, offset, itsTop);
+        offset += itsTop;
+        return offset;
     }
 
     int getWriteSize()
@@ -1349,10 +1343,7 @@ final class ConstantPool
     {
         ensure(5);
         itsPool[itsTop++] = CONSTANT_Integer;
-        itsPool[itsTop++] = (byte)(k >> 24);
-        itsPool[itsTop++] = (byte)(k >> 16);
-        itsPool[itsTop++] = (byte)(k >> 8);
-        itsPool[itsTop++] = (byte)k;
+        itsTop = ClassFileWriter.putInt32(k, itsPool, itsTop);
         return (short)(itsTopIndex++);
     }
 
@@ -1360,14 +1351,7 @@ final class ConstantPool
     {
         ensure(9);
         itsPool[itsTop++] = CONSTANT_Long;
-        itsPool[itsTop++] = (byte)(k >> 56);
-        itsPool[itsTop++] = (byte)(k >> 48);
-        itsPool[itsTop++] = (byte)(k >> 40);
-        itsPool[itsTop++] = (byte)(k >> 32);
-        itsPool[itsTop++] = (byte)(k >> 24);
-        itsPool[itsTop++] = (byte)(k >> 16);
-        itsPool[itsTop++] = (byte)(k >> 8);
-        itsPool[itsTop++] = (byte)k;
+        itsTop = ClassFileWriter.putInt64(k, itsPool, itsTop);
         short index = (short)(itsTopIndex);
         itsTopIndex += 2;
         return index;
@@ -1378,10 +1362,7 @@ final class ConstantPool
         ensure(5);
         itsPool[itsTop++] = CONSTANT_Float;
         int bits = Float.floatToIntBits(k);
-        itsPool[itsTop++] = (byte)(bits >> 24);
-        itsPool[itsTop++] = (byte)(bits >> 16);
-        itsPool[itsTop++] = (byte)(bits >> 8);
-        itsPool[itsTop++] = (byte)bits;
+        itsTop = ClassFileWriter.putInt32(bits, itsPool, itsTop);
         return (short)(itsTopIndex++);
     }
 
@@ -1390,14 +1371,7 @@ final class ConstantPool
         ensure(9);
         itsPool[itsTop++] = CONSTANT_Double;
         long bits = Double.doubleToLongBits(k);
-        itsPool[itsTop++] = (byte)(bits >> 56);
-        itsPool[itsTop++] = (byte)(bits >> 48);
-        itsPool[itsTop++] = (byte)(bits >> 40);
-        itsPool[itsTop++] = (byte)(bits >> 32);
-        itsPool[itsTop++] = (byte)(bits >> 24);
-        itsPool[itsTop++] = (byte)(bits >> 16);
-        itsPool[itsTop++] = (byte)(bits >> 8);
-        itsPool[itsTop++] = (byte)bits;
+        itsTop = ClassFileWriter.putInt64(bits, itsPool, itsTop);
         short index = (short)(itsTopIndex);
         itsTopIndex += 2;
         return index;
@@ -1411,8 +1385,7 @@ final class ConstantPool
             theIndex = itsTopIndex++;
             ensure(3);
             itsPool[itsTop++] = CONSTANT_String;
-            itsPool[itsTop++] = (byte)(utf8Index >> 8);
-            itsPool[itsTop++] = (byte)utf8Index;
+            itsTop = ClassFileWriter.putInt16(utf8Index, itsPool, itsTop);
             itsStringConstHash.put(utf8Index, theIndex);
         }
         return (short)theIndex;
@@ -1506,10 +1479,8 @@ final class ConstantPool
         short typeIndex = addUtf8(type);
         ensure(5);
         itsPool[itsTop++] = CONSTANT_NameAndType;
-        itsPool[itsTop++] = (byte)(nameIndex >> 8);
-        itsPool[itsTop++] = (byte)(nameIndex);
-        itsPool[itsTop++] = (byte)(typeIndex >> 8);
-        itsPool[itsTop++] = (byte)(typeIndex);
+        itsTop = ClassFileWriter.putInt16(nameIndex, itsPool, itsTop);
+        itsTop = ClassFileWriter.putInt16(typeIndex, itsPool, itsTop);
         return (short)(itsTopIndex++);
     }
 
@@ -1529,8 +1500,7 @@ final class ConstantPool
                 int utf8Index = addUtf8(slashed);
                 ensure(3);
                 itsPool[itsTop++] = CONSTANT_Class;
-                itsPool[itsTop++] = (byte)(utf8Index >> 8);
-                itsPool[itsTop++] = (byte)(utf8Index);
+                itsTop = ClassFileWriter.putInt16(utf8Index, itsPool, itsTop);
                 theIndex = itsTopIndex++;
                 itsClassHash.put(slashed, theIndex);
                 if (className != slashed) {
@@ -1552,10 +1522,8 @@ final class ConstantPool
             short classIndex = addClass(className);
             ensure(5);
             itsPool[itsTop++] = CONSTANT_Fieldref;
-            itsPool[itsTop++] = (byte)(classIndex >> 8);
-            itsPool[itsTop++] = (byte)(classIndex);
-            itsPool[itsTop++] = (byte)(ntIndex >> 8);
-            itsPool[itsTop++] = (byte)(ntIndex);
+            itsTop = ClassFileWriter.putInt16(classIndex, itsPool, itsTop);
+            itsTop = ClassFileWriter.putInt16(ntIndex, itsPool, itsTop);
             theIndex = itsTopIndex++;
             itsFieldRefHash.put(ref, theIndex);
         }
@@ -1574,10 +1542,8 @@ final class ConstantPool
             short classIndex = addClass(className);
             ensure(5);
             itsPool[itsTop++] = CONSTANT_Methodref;
-            itsPool[itsTop++] = (byte)(classIndex >> 8);
-            itsPool[itsTop++] = (byte)(classIndex);
-            itsPool[itsTop++] = (byte)(ntIndex >> 8);
-            itsPool[itsTop++] = (byte)(ntIndex);
+            itsTop = ClassFileWriter.putInt16(classIndex, itsPool, itsTop);
+            itsTop = ClassFileWriter.putInt16(ntIndex, itsPool, itsTop);
             theIndex = itsTopIndex++;
             itsMethodRefHash.put(ref, theIndex);
         }
@@ -1591,10 +1557,8 @@ final class ConstantPool
         short classIndex = addClass(className);
         ensure(5);
         itsPool[itsTop++] = CONSTANT_InterfaceMethodref;
-        itsPool[itsTop++] = (byte)(classIndex >> 8);
-        itsPool[itsTop++] = (byte)(classIndex);
-        itsPool[itsTop++] = (byte)(ntIndex >> 8);
-        itsPool[itsTop++] = (byte)(ntIndex);
+        itsTop = ClassFileWriter.putInt16(classIndex, itsPool, itsTop);
+        itsTop = ClassFileWriter.putInt16(ntIndex, itsPool, itsTop);
         return (short)(itsTopIndex++);
     }
 
