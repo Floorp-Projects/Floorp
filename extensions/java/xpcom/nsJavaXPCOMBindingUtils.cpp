@@ -41,7 +41,12 @@
 #include "jni.h"
 #include "nsIInterfaceInfoManager.h"
 #include "pldhash.h"
+#include "nsILocalFile.h"
 
+
+#ifdef DEBUG
+extern PRBool gEmbeddingInitialized;
+#endif
 
 /* Java JNI globals */
 jclass classClass = nsnull;
@@ -247,195 +252,201 @@ GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject)
 PRBool
 InitializeJavaGlobals(JNIEnv *env)
 {
-  jclass clazz;
-  if (!(clazz = env->FindClass("java/lang/Class")) ||
-      !(classClass = (jclass) env->NewGlobalRef(clazz)))
+  static PRBool initialized = PR_FALSE;
+  if (!initialized)
   {
+    jclass clazz;
+    if (!(clazz = env->FindClass("java/lang/Class")) ||
+        !(classClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("java/lang/Object")) ||
+        !(objectClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("java/lang/Boolean")) ||
+        !(booleanClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[Z")) ||
+        !(booleanArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("java/lang/Character")) ||
+        !(charClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[C")) ||
+        !(charArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Byte")) ||
+        !(byteClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[B")) ||
+        !(byteArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Short")) ||
+        !(shortClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[[S")) ||
+        !(shortArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Integer")) ||
+        !(intClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[I")) ||
+        !(intArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Long")) ||
+        !(longClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[J")))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Float")) ||
+        !(floatClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[F")) ||
+        !(floatArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+    if (!(clazz = env->FindClass("java/lang/Double")) ||
+        !(doubleClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[D")) ||
+        !(doubleArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("java/lang/String")) ||
+        !(stringClass = (jclass) env->NewGlobalRef(clazz)) ||
+        !(clazz = env->FindClass("[Ljava/lang/String;")) ||
+        !(stringArrayClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("org/mozilla/xpcom/nsISupports")) ||
+        !(nsISupportsClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(clazz = env->FindClass("java/lang/Exception")) ||
+        !(exceptionClass = (jclass) env->NewGlobalRef(clazz)))
+    {
+        return PR_FALSE;
+    }
+  
+    if (!(hashCodeMID = env->GetMethodID(objectClass, "hashCode","()I"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(booleanInitMID = env->GetMethodID(booleanClass,"<init>","(Z)V"))) {
+        return PR_FALSE;
+    }
+    if (!(booleanValueMID = env->GetMethodID(booleanClass,"booleanValue","()Z"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(charInitMID = env->GetMethodID(charClass,"<init>","(C)V"))) {
+        return PR_FALSE;
+    }
+    if (!(charValueMID = env->GetMethodID(charClass,"charValue","()C"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(byteInitMID = env->GetMethodID(byteClass,"<init>","(B)V"))) {
+        return PR_FALSE;
+    }
+    if (!(byteValueMID = env->GetMethodID(byteClass,"byteValue","()B"))) {
+        return PR_FALSE;
+    }
+    if (!(shortInitMID = env->GetMethodID(shortClass,"<init>","(S)V"))) {
+        return PR_FALSE;
+    }
+    if (!(shortValueMID = env->GetMethodID(shortClass,"shortValue","()S"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(intInitMID = env->GetMethodID(intClass,"<init>","(I)V"))) {
+        return PR_FALSE;
+    }
+    if (!(intValueMID = env->GetMethodID(intClass,"intValue","()I"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(longInitMID = env->GetMethodID(longClass,"<init>","(J)V"))) {
+        return PR_FALSE;
+    }
+    if (!(longValueMID = env->GetMethodID(longClass,"longValue","()J"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(floatInitMID = env->GetMethodID(floatClass,"<init>","(F)V"))) {
+        return PR_FALSE;
+    }
+    if (!(floatValueMID = env->GetMethodID(floatClass,"floatValue","()F"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(doubleInitMID = env->GetMethodID(doubleClass,"<init>","(D)V"))) {
+        return PR_FALSE;
+    }
+    if (!(doubleValueMID = env->GetMethodID(doubleClass,"doubleValue","()D"))) {
+        return PR_FALSE;
+    }
+  
+    if (!(getNameMID = env->GetMethodID(classClass, "getName","()Ljava/lang/String;"))) {
+        return PR_FALSE;
+    }
+  
+    static PLDHashTableOps java_to_xpcom_hash_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      PL_DHashClearEntryStub,
+      PL_DHashFinalizeStub,
+      InitJAVAtoXPCOMBindingEntry
+    };
+  
+    gJAVAtoXPCOMBindings = PL_NewDHashTable(&java_to_xpcom_hash_ops, nsnull,
+                                            sizeof(JavaXPCOMBindingEntry), 16);
+    if (!gJAVAtoXPCOMBindings) {
       return PR_FALSE;
-  }
+    }
+  
+    static PLDHashTableOps xpcom_to_java_hash_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      PL_DHashClearEntryStub,
+      PL_DHashFinalizeStub,
+      InitXPCOMtoJAVABindingEntry
+    };
+  
+    gXPCOMtoJAVABindings = PL_NewDHashTable(&xpcom_to_java_hash_ops, nsnull,
+                                            sizeof(JavaXPCOMBindingEntry), 16);
+    if (!gXPCOMtoJAVABindings) {
+      return PR_FALSE;
+    }
 
-  if (!(clazz = env->FindClass("java/lang/Object")) ||
-      !(objectClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(clazz = env->FindClass("java/lang/Boolean")) ||
-      !(booleanClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[Z")) ||
-      !(booleanArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(clazz = env->FindClass("java/lang/Character")) ||
-      !(charClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[C")) ||
-      !(charArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Byte")) ||
-      !(byteClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[B")) ||
-      !(byteArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Short")) ||
-      !(shortClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[[S")) ||
-      !(shortArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Integer")) ||
-      !(intClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[I")) ||
-      !(intArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Long")) ||
-      !(longClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[J")))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Float")) ||
-      !(floatClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[F")) ||
-      !(floatArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-  if (!(clazz = env->FindClass("java/lang/Double")) ||
-      !(doubleClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[D")) ||
-      !(doubleArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(clazz = env->FindClass("java/lang/String")) ||
-      !(stringClass = (jclass) env->NewGlobalRef(clazz)) ||
-      !(clazz = env->FindClass("[Ljava/lang/String;")) ||
-      !(stringArrayClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(clazz = env->FindClass("org/mozilla/xpcom/nsISupports")) ||
-      !(nsISupportsClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(clazz = env->FindClass("java/lang/Exception")) ||
-      !(exceptionClass = (jclass) env->NewGlobalRef(clazz)))
-  {
-      return PR_FALSE;
-  }
-
-  if (!(hashCodeMID = env->GetMethodID(objectClass, "hashCode","()I"))) {
-      return PR_FALSE;
-  }
-
-  if (!(booleanInitMID = env->GetMethodID(booleanClass,"<init>","(Z)V"))) {
-      return PR_FALSE;
-  }
-  if (!(booleanValueMID = env->GetMethodID(booleanClass,"booleanValue","()Z"))) {
-      return PR_FALSE;
-  }
-
-  if (!(charInitMID = env->GetMethodID(charClass,"<init>","(C)V"))) {
-      return PR_FALSE;
-  }
-  if (!(charValueMID = env->GetMethodID(charClass,"charValue","()C"))) {
-      return PR_FALSE;
-  }
-
-  if (!(byteInitMID = env->GetMethodID(byteClass,"<init>","(B)V"))) {
-      return PR_FALSE;
-  }
-  if (!(byteValueMID = env->GetMethodID(byteClass,"byteValue","()B"))) {
-      return PR_FALSE;
-  }
-  if (!(shortInitMID = env->GetMethodID(shortClass,"<init>","(S)V"))) {
-      return PR_FALSE;
-  }
-  if (!(shortValueMID = env->GetMethodID(shortClass,"shortValue","()S"))) {
-      return PR_FALSE;
-  }
-
-  if (!(intInitMID = env->GetMethodID(intClass,"<init>","(I)V"))) {
-      return PR_FALSE;
-  }
-  if (!(intValueMID = env->GetMethodID(intClass,"intValue","()I"))) {
-      return PR_FALSE;
-  }
-
-  if (!(longInitMID = env->GetMethodID(longClass,"<init>","(J)V"))) {
-      return PR_FALSE;
-  }
-  if (!(longValueMID = env->GetMethodID(longClass,"longValue","()J"))) {
-      return PR_FALSE;
-  }
-
-  if (!(floatInitMID = env->GetMethodID(floatClass,"<init>","(F)V"))) {
-      return PR_FALSE;
-  }
-  if (!(floatValueMID = env->GetMethodID(floatClass,"floatValue","()F"))) {
-      return PR_FALSE;
-  }
-
-  if (!(doubleInitMID = env->GetMethodID(doubleClass,"<init>","(D)V"))) {
-      return PR_FALSE;
-  }
-  if (!(doubleValueMID = env->GetMethodID(doubleClass,"doubleValue","()D"))) {
-      return PR_FALSE;
-  }
-
-  if (!(getNameMID = env->GetMethodID(classClass, "getName","()Ljava/lang/String;"))) {
-      return PR_FALSE;
-  }
-
-  static PLDHashTableOps java_to_xpcom_hash_ops =
-  {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    PL_DHashVoidPtrKeyStub,
-    PL_DHashMatchEntryStub,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
-    InitJAVAtoXPCOMBindingEntry
-  };
-
-  gJAVAtoXPCOMBindings = PL_NewDHashTable(&java_to_xpcom_hash_ops, nsnull,
-                                          sizeof(JavaXPCOMBindingEntry), 16);
-  if (!gJAVAtoXPCOMBindings) {
-    return PR_FALSE;
-  }
-
-  static PLDHashTableOps xpcom_to_java_hash_ops =
-  {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    PL_DHashVoidPtrKeyStub,
-    PL_DHashMatchEntryStub,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
-    InitXPCOMtoJAVABindingEntry
-  };
-
-  gXPCOMtoJAVABindings = PL_NewDHashTable(&xpcom_to_java_hash_ops, nsnull,
-                                          sizeof(JavaXPCOMBindingEntry), 16);
-  if (!gXPCOMtoJAVABindings) {
-    return PR_FALSE;
+    initialized = PR_TRUE;
   }
 
   return PR_TRUE;
@@ -454,22 +465,48 @@ FreeJavaGlobals(JNIEnv* env)
 /**********************************************************
  *    JavaXPCOMInstance
  *********************************************************/
+nsIInterfaceInfo*
+JavaXPCOMInstance::InterfaceInfo()
+{
+  // We lazily create the interfaceInfo for nsILocalFile.
+  if (!mIInfo) {
+    NS_ASSERTION(gEmbeddingInitialized, "Trying to create interface info, but XPCOM not inited");
+
+    // Get interface info for class
+    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+    NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+    if (iim) {
+      iim->GetInfoForIID(&NS_GET_IID(nsILocalFile), getter_AddRefs(mIInfo));
+    }
+  }
+
+  NS_ASSERTION(mIInfo, "No interfaceInfo for JavaXPCOMInstance");
+  return mIInfo;
+}
+
 JavaXPCOMInstance*
 CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID)
 {
   JavaXPCOMInstance* inst = nsnull;
 
-  // Get interface info for class
-  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-  NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-  if (iim) {
-    nsCOMPtr<nsIInterfaceInfo> info;
-    iim->GetInfoForIID(aIID, getter_AddRefs(info));
+  // We can't call XPTI_GetInterfaceInfoManager() before NS_InitEmbedding(),
+  // so for NS_NewLocalFile (which can be called before NS_InitEmbedding), we
+  // pass in a null aIID, and create the interface info lazily later.
+  if (!aIID) {
+    inst = new JavaXPCOMInstance(aXPCOMObject, nsnull);
+  } else {
+    // Get interface info for class
+    nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+    NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
+    if (iim) {
+      nsCOMPtr<nsIInterfaceInfo> info;
+      iim->GetInfoForIID(aIID, getter_AddRefs(info));
 
-    // Wrap XPCOM object
-    inst = new JavaXPCOMInstance(aXPCOMObject, info);
-    NS_ADDREF(aXPCOMObject);
+      // Wrap XPCOM object
+      inst = new JavaXPCOMInstance(aXPCOMObject, info);
+    }
   }
+  NS_ADDREF(aXPCOMObject);
 
   return inst;
 }

@@ -40,7 +40,7 @@ package org.mozilla.xpcom;
 public final class GeckoEmbed {
 
   // XPCOM Utility functions
-  public static native void NS_InitEmbedding(String aMozBinDirectory, int aAppFileLocProvider);
+  public static native void NS_InitEmbedding(nsILocalFile aMozBinDirectory, nsISupports aAppFileLocProvider);
   public static native void NS_TermEmbedding();
   public static native nsILocalFile NS_NewLocalFile(String aPath, boolean followLinks);
   public static native nsIComponentManager NS_GetComponentManager();
