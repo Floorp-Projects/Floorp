@@ -86,120 +86,116 @@ Contributor(s): ______________________________________. -->
     var contextMenu = null;
 </html:script>
 <popupset>
-    <!-- This is the skeleton context menu.  It is populated and emptied
-         dynamically, from the template (see below) via the oncreate/ondestroy
-         handlers.
+    <!-- This is the context menu for the content-area of the navigator
+         window.  It contains each and every possible menu choice.  The
+         appropriate items are hidden/shown upon display, based on what
+         the user has clicked-on.
     -->
     <popup id="context"
         oncreate="contextMenu = new nsContextMenu( this );"
-        ondestroy="contextMenu.onDestroy(); contextMenu = null;"/>
+        ondestroy="contextMenu.onDestroy(); contextMenu = null;">
 
-    <!-- This is the context menu template used to populate the actual
-         content menu on demand.  It holds everything and is whittled down
-         based on the specific content element that is "context menu-ed."
-    -->
-    <popup id="context-template">
         <!-- Open ==================================== -->
-        <menuitem id="template-openlink"
+        <menuitem id="context-openlink"
                   value="&openLinkCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.openLink();"/>
-        <menuitem id="template-editlink"
+        <menuitem id="context-editlink"
                   value="&editLinkCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.editLink();"/>
-        <menuitem id="template-openframe"
+        <menuitem id="context-openframe"
                   value="&openFrameCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.openFrame();"/>
         <menuseparator id="context-sep-open"/>
         <!-- Navigation ============================== -->
-        <menuitem id="template-back"
+        <menuitem id="context-back"
                   value="&goBackCmd.label;"
                   accesskey="&goBackCmd.accesskey;"
                   oncommand="BrowserBack()"/>
-        <menuitem id="template-forward"
+        <menuitem id="context-forward"
                   value="&goForwardCmd.label;"
                   accesskey="&goForwardCmd.accesskey;"
                   oncommand="BrowserForward()"/>
-        <menuitem id="template-reload"
+        <menuitem id="context-reload"
                   value="&reloadCmd.label;"
                   accesskey=""
                   oncommand="BrowserReallyReload(0);"/>
-        <menuitem id="template-stop"
+        <menuitem id="context-stop"
                   value="&stopCmd.label;"
                   accesskey=""
                   oncommand="BrowserStop();"/>
         <menuseparator/>
         <!-- View ==================================== -->
-        <menuitem id="template-viewsource"
+        <menuitem id="context-viewsource"
                   value="&viewPageSourceCmd.label;"
                   accesskey=""
                   oncommand="BrowserViewSource();"/>
-        <menuitem id="template-viewframesource"
+        <menuitem id="context-viewframesource"
                   value="&viewFrameSourceCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.viewFrameSource();"/>
-        <menuitem id="template-viewinfo"
+        <menuitem id="context-viewinfo"
                   value="&viewPageInfoCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.viewInfo();"/>
-        <menuitem id="template-viewframeinfo"
+        <menuitem id="context-viewframeinfo"
                   value="&viewFrameInfoCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.viewFrameInfo();"/>
-        <menuitem id="template-viewimage"
+        <menuitem id="context-viewimage"
                   value="&viewImageCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.viewImage();"/>
         <menuseparator/>
         <!-- Misc ==================================== -->
-		<menuitem id="template-bookmarkpage"
+		<menuitem id="context-bookmarkpage"
                   value="&bookmarkPageCmd.label;"
                   accesskey="&bookmarkPageCmd.accesskey;"
                   oncommand="BrowserAddBookmark( window.content.location.href,
                                                  window.content.document.title )"/>
-        <menuitem id="template-sendpage"
+        <menuitem id="context-sendpage"
                   value="&sendPageCmd.label;"
                   accesskey="&sendPageCmd.accesskey;"
                   oncommand="BrowserSendPage();"/>
         <menuseparator/>
         <!-- Save ==================================== -->
-        <menuitem id="template-savepage"
+        <menuitem id="context-savepage"
                   value="&savePageCmd.label;"
                   accesskey="&savePageCmd.accesskey;"
                   oncommand="contextMenu.savePage();"/>
-        <menuitem id="template-saveframe"
+        <menuitem id="context-saveframe"
                   value="&saveFrameCmd.label;"
                   accesskey="&saveFrameCmd.accesskey;"
                   oncommand="contextMenu.saveFrame();"/>
-        <menuitem id="template-savelink"
+        <menuitem id="context-savelink"
                   value="&saveLinkCmd.label;"
                   accesskey="&saveLinkCmd.accesskey;"
                   oncommand="contextMenu.saveLink();"/>
-        <menuitem id="template-saveimage"
+        <menuitem id="context-saveimage"
                   value="&saveImageCmd.label;"
                   accesskey="&saveImageCmd.accesskey;"
                   oncommand="contextMenu.saveImage();"/>
-        <menuitem id="template-savebgimage"
+        <menuitem id="context-savebgimage"
                   value="&saveBGImageCmd.label;"
                   accesskey="&saveBGImageCmd.accesskey;"
                   oncommand="contextMenu.saveBGImage();"/>
         <menuseparator/>
         <!-- Clipboard =============================== -->
-        <menuitem id="template-selectall"
+        <menuitem id="context-selectall"
                   value="&selectAllCmd.label;"
                   accesskey="&selectAllCmd.accesskey;"
                   oncommand="BrowserSelectAll();"/>
-        <menuitem id="template-copy"
+        <menuitem id="context-copy"
                   value="&copyCmd.label;"
                   accesskey="&copyCmd.accesskey;"
                   oncommand="BrowserCopy();"/>
-        <menuitem id="template-copylink"
+        <menuitem id="context-copylink"
                   value="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
                   oncommand="contextMenu.copyLink();"/>
-        <menuitem id="template-copyimage"
+        <menuitem id="context-copyimage"
                   value="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
                   oncommand="contextMenu.copyImage();"/>
