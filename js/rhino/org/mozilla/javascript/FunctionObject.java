@@ -793,9 +793,23 @@ public class FunctionObject extends NativeFunction {
             
             try {
                 byte[] bytes = bos.toByteArray();
-                classLoader.defineClass(className, bytes);
-                Class clazz = classLoader.loadClass(className, true);
-                result = (Invoker)clazz.newInstance();
+                
+                Context cx = Context.getCurrentContext();
+                SecuritySupport ss = cx == null ? null : cx.getSecuritySupport();
+                Class c;
+                if (ss != null) {
+                    // This will be compiled using the security domain of the
+                    // first class making a call. Then the result will be cached
+                    // and used by subsequent calls (which may not necessarily
+                    // be from the same security domain). Since Rhino generates
+                    // the code, this shouldn't be a security hole.
+                    Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
+                    c = ss.defineClass(className, bytes, securityDomain);
+                } else {
+                    classLoader.defineClass(className, bytes);
+                    c = classLoader.loadClass(className, true);
+                }
+                result = (Invoker)c.newInstance();
                 
                 if (false) {
                     System.out.println("Generated method delegate for: " + method.getName() 
