@@ -85,6 +85,15 @@ var gTimeDifference = 3600000;  //when editing an event, we change the end time 
 
 var gMode = ''; //what mode are we in? new or edit...
 
+const kRepeatDay_0 = 1; //Sunday
+const kRepeatDay_1 = 2; //Monday
+const kRepeatDay_2 = 4; //Tuesday
+const kRepeatDay_3 = 8; //Wednesday
+const kRepeatDay_4 = 16;//Thursday
+const kRepeatDay_5 = 32;//Friday
+const kRepeatDay_6 = 64;//Saturday
+
+
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
 */
@@ -158,17 +167,21 @@ function loadCalendarEventDialog()
    }
 
    // fill in fields from the event
+   var startDate = new Date( gEvent.start.getTime() );
+   var endDate = new Date( gEvent.end.getTime() );
+   setDateFieldValue( "start-date-text", startDate );
+   setTimeFieldValue( "start-time-text", startDate );
+   setTimeFieldValue( "end-time-text", endDate );
+   gTimeDifference = gEvent.end.getTime() - gEvent.start.getTime(); //the time difference in ms
    
-   setDateFieldValue( "start-date-text", gEvent.start );
-   setTimeFieldValue( "start-time-text", gEvent.start );
-   setTimeFieldValue( "end-time-text", gEvent.end );
-   gTimeDifference = gEvent.end - gEvent.start; //the time difference in ms
-   
-   if ( gEvent.repeatForever ) 
+   if ( gEvent.recurForever ) 
    {
-      gEvent.recurEnd = new Date();
+      var today = new Date();
+      gEvent.recurEnd.setTime( today );
    }
-   setDateFieldValue( "repeat-end-date-text", gEvent.recurEnd );
+   var recurEndDate = new Date( gEvent.recurEnd.getTime() );
+   
+   setDateFieldValue( "repeat-end-date-text", recurEndDate );
 
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
@@ -181,6 +194,7 @@ function loadCalendarEventDialog()
    
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
+   setFieldValue( "alarm-length-units", gEvent.alarmUnits, "data" );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits, "value" );  
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {
@@ -202,11 +216,11 @@ function loadCalendarEventDialog()
       setFieldValue( "invite-checkbox", false, "checked" );
    }
    
-   setFieldValue( "repeat-checkbox", gEvent.repeat, "checked");
+   setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
-   setFieldValue( "repeat-length-units", gEvent.repeatUnits, "value" ); 
-   setFieldValue( "repeat-forever-radio", (gEvent.repeatForever != undefined && gEvent.repeatForever != false), "selected" );
-   setFieldValue( "repeat-until-radio", (gEvent.repeatForever == undefined || gEvent.repeatForever == false), "selected" );
+   setFieldValue( "repeat-length-units", gEvent.recurUnits, "value" );  
+   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "checked" );
+   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "checked" );
    
    // update enabling and disabling
    
@@ -214,11 +228,19 @@ function loadCalendarEventDialog()
    updateStartEndItemEnabled();
    updateAlarmItemEnabled();
    updateInviteItemEnabled();
+      
+   /*
+   ** set the advanced weekly repeating stuff
+   */
+   setAdvancedWeekRepeat();
+   
+   setFieldValue( "advanced-repeat-dayofmonth", ( gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined ), "checked" );
+   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 ), "checked" );
    
    // set up OK, Cancel
    
    doSetOKCancel( onOKCommand, 0 );
-
+   
    // start focus on title
    
    var firstFocus = document.getElementById( "title-field" );
@@ -241,18 +263,25 @@ function onOKCommand()
    gEvent.category    = getFieldValue( "category-field" );
    
    gEvent.allDay      = getFieldValue( "all-day-event-checkbox", "checked" );
-   gEvent.start       = getDateTimeFieldValue( "start-date-text" );
+   var startDate = getDateTimeFieldValue( "start-date-text" );
+   gEvent.start.year = startDate.getYear()+1900;
+   gEvent.start.month = startDate.getMonth();
+   gEvent.start.day = startDate.getDate();
    
-   var startTime      = getDateTimeFieldValue( "start-time-text" );
-   gEvent.start.setHours( startTime.getHours() );
-   gEvent.start.setMinutes( startTime.getMinutes() );
+   var startTime = getDateTimeFieldValue( "start-time-text" );
+   gEvent.start.hour = startTime.getHours();
+   gEvent.start.minute = startTime.getMinutes();
+   
    gEvent.start.setSeconds( 0 );
    
-   gEvent.end         = getDateTimeFieldValue( "end-time-text" );
    //do this because the end date is always the same as the start date.
-   gEvent.end.setDate( gEvent.start.getDate() );
-   gEvent.end.setMonth( gEvent.start.getMonth() );
-   gEvent.end.setYear( gEvent.start.getFullYear() );
+   gEvent.end.year = gEvent.start.year;
+   gEvent.end.month = gEvent.start.month;
+   gEvent.end.day = gEvent.start.day;
+
+   var endTime = getDateTimeFieldValue( "end-time-text" );
+   gEvent.end.hour = endTime.getHours();
+   gEvent.end.minute = endTime.getMinutes();
    
    gEvent.privateEvent = getFieldValue( "private-checkbox", "checked" );
    
@@ -267,32 +296,56 @@ function onOKCommand()
    gEvent.alarm       = getFieldValue( "alarm-checkbox", "checked" );
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
-   
+
+   debug( "!!!-->in ca-event-dialog.js, alarmUnits is "+gEvent.alarmUnits );
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
       gEvent.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
+      debug( "!!!-->in ca-event-dialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
    }
    else
    {
       gEvent.alarmEmailAddress = "";
    }
-   gEvent.repeat         = getFieldValue( "repeat-checkbox", "checked" );
-   gEvent.repeatUnits    = getFieldValue( "repeat-length-units", "value"  );  
-   gEvent.repeatForever  = getFieldValue( "repeat-forever-radio", "selected" );
+   gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
+   gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value"  );  
+   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "checked" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
    if( gEvent.recurInterval == 0 )
-      gEvent.repeat = false;
+      gEvent.recur = false;
 
-   gEvent.recurEnd       = getDateTimeFieldValue( "repeat-end-date-text" );
+   var recurEndDate = getDateTimeFieldValue( "repeat-end-date-text" );
    
-   gEvent.recurEnd = new Date( gEvent.recurEnd.getFullYear(), gEvent.recurEnd.getMonth(), gEvent.recurEnd.getDate(), gEvent.start.getHours(), gEvent.start.getMinutes() );
+   gEvent.recurEnd.setTime( recurEndDate );
+   gEvent.recurEnd.hour = gEvent.start.hour;
+   gEvent.recurEnd.minute = gEvent.start.minute;
 
+   if( gEvent.recurUnits == "weeks" && gEvent.recur == true )
+   {
+      /*
+      ** advanced weekly repeating, choosing the days to repeat
+      */
+      gEvent.recurWeekdays = getAdvancedWeekRepeat();
+   }
+   else if( gEvent.recurUnits == "months" && gEvent.recur == true )
+   {
+      /*
+      ** advanced month repeating, either every day or every date
+      */
+      if( getFieldValue( "advanced-repeat-dayofweek", "checked" ) == true )
+      {
+         gEvent.recurWeekNumber = getWeekNumberOfMonth();
+      }
+      else
+         gEvent.recurWeekNumber = 0;
+   
+   }
+   
    // :TODO: REALLY only do this if the alarm or start settings change.?
-   gEvent.alarmWentOff = false;
-   
    //if the end time is later than the start time... alert the user using text from the dtd.
-   if ( gEvent.end < gEvent.start && !gEvent.allDay ) 
+
+   if ( gEvent.end.getTime() < gEvent.start.getTime() && !gEvent.allDay ) 
    {
       alert( neStartTimeErrorAlertMessage );
       return( false );
@@ -344,7 +397,7 @@ function onDatePick( datepopup )
    
    datepopup.dateField.editDate = datepopup.value;
 
-   //change the end date of repeating events to today, if the new date is after today.
+   //change the end date of recurring events to today, if the new date is after today.
 
    var Now = new Date();
 
@@ -353,6 +406,9 @@ function onDatePick( datepopup )
       document.getElementById( "repeat-end-date-text" ).value = formatDate( datepopup.value );
    }
 
+   updateAdvancedWeekRepeat();
+      
+   updateAdvancedRepeatDayOfMonth();
 }
 
 
@@ -591,37 +647,113 @@ function updateRepeatItemEnabled()
 {
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
-   var repeatField = document.getElementById( "repeat-length-field" );
-   var repeatMenu = document.getElementById( "repeat-length-units" );
-   var repeatGroup = document.getElementById( "repeat-until-group" );
-   var repeatForever = document.getElementById( "repeat-forever-radio" );
-   var repeatUntil = document.getElementById( "repeat-until-radio" );
+   var repeatDisableList = document.getElementsByAttribute( "disable-controller", "repeat" );
    
    if( repeatCheckBox.checked )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
-      
-      repeatField.removeAttribute( "disabled" );
-      repeatMenu.removeAttribute( "disabled" );
-      repeatGroup.removeAttribute( "disabled" );
-      repeatForever.removeAttribute( "disabled" );
-      repeatUntil.removeAttribute( "disabled" );
+      for( var i = 0; i < repeatDisableList.length; ++i )
+      {
+         repeatDisableList[i].removeAttribute( "disabled" );
+      }
    }
    else
    {
-      repeatField.setAttribute( "disabled", "true" );
-      repeatMenu.setAttribute( "disabled", "true" );
-      repeatGroup.setAttribute( "disabled", "true" );
-      repeatForever.setAttribute( "disabled", "true" );
-      repeatUntil.setAttribute( "disabled", "true" );
+      for( var j = 0; j < repeatDisableList.length; ++j )
+      {
+         repeatDisableList[j].setAttribute( "disabled", "true" );
+      }
    }
+   
+   // udpate plural/singular
+   
+   updateRepeatPlural();
+   
+   updateAlarmPlural();
    
    // update until items whenever repeat changes
    
    updateUntilItemEnabled();
+   
+   // extra interface depending on units
+   
+   updateRepeatUnitExtensions();
 }
 
+/**
+*   Update plural singular menu items
+*/
+
+function updateRepeatPlural()
+{
+    updateMenuPlural( "repeat-length-field", "repeat-length-units" );
+}
+
+/**
+*   Update plural singular menu items
+*/
+
+function updateAlarmPlural()
+{
+    updateMenuPlural( "alarm-length-field", "alarm-length-units" );
+}
+
+
+/**
+*   Update plural singular menu items
+*/
+
+function updateMenuPlural( lengthFieldId, menuId )
+{
+    var field = document.getElementById( lengthFieldId );
+    var menu = document.getElementById( menuId );
+   
+    // figure out whether we should use singular or plural 
+    
+    var length = field.value;
+    
+    var newLabelNumber; 
+    
+    if( Number( length ) > 1  )
+    {
+        newLabelNumber = "labelplural"
+    }
+    else
+    {
+        newLabelNumber = "labelsingular"
+    }
+    
+    // see what we currently show and change it if required
+    
+    var oldLabelNumber = menu.getAttribute( "labelnumber" );
+    
+    if( newLabelNumber != oldLabelNumber )
+    {
+        // remember what we are showing now
+        
+        menu.setAttribute( "labelnumber", newLabelNumber );
+        
+        // update the menu items
+        
+        var items = menu.getElementsByTagName( "menuitem" );
+        
+        for( var i = 0; i < items.length; ++i )
+        {
+            var menuItem = items[i];
+            var newLabel = menuItem.getAttribute( newLabelNumber );
+            menuItem.label = newLabel;
+            menuItem.setAttribute( "label", newLabel );
+            
+        }
+        
+        // force the menu selection to redraw
+        
+        var saveSelectedIndex = menu.selectedIndex;
+        menu.selectedIndex = -1;
+        menu.selectedIndex = saveSelectedIndex;
+    }
+}
 
 /**
 *   Enable/Disable Until items
@@ -635,7 +767,7 @@ function updateUntilItemEnabled()
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
   
-   if( repeatCheckBox.checked && repeatUntilRadio.selected  )
+   if( repeatCheckBox.checked && repeatUntilRadio.checked  )
    {
       repeatEndText.removeAttribute( "disabled"  );
       repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
@@ -652,31 +784,44 @@ function updateUntilItemEnabled()
 }
 
 
-/*
-** Just a silly idea I had to update the repeat menu items so they always show the right word
-*/
-/*
-function updateRepeatLength()
+function updateRepeatUnitExtensions( )
 {
-   RepeatLengthTextBox = document.getElementById( "repeat-length-field" );
+   var repeatMenu = document.getElementById( "repeat-length-units" );
+   var weekExtensions = document.getElementById( "repeat-extenstions-week" );
+   var monthExtensions = document.getElementById( "repeat-extenstions-month" );
 
-   if( RepeatLengthTextBox.value == "1" )
+   //FIX ME! WHEN THE WINDOW LOADS, THIS DOESN'T EXIST
+   if( repeatMenu.selectedItem )
    {
-      document.getElementById( "repeat-days-menu-item" ).setAttribute( "label", "Day" );
-      document.getElementById( "repeat-weeks-menu-item" ).setAttribute( "label", "Week" );
-      document.getElementById( "repeat-months-menu-item" ).setAttribute( "label", "Month" );
-      document.getElementById( "repeat-years-menu-item" ).setAttribute( "label", "Year" );
+      switch( repeatMenu.selectedItem.value )
+       {
+           case "days":
+               weekExtensions.setAttribute( "collapsed", "true" );
+               monthExtensions.setAttribute( "collapsed", "true" );
+           break;
+           
+           case "weeks":
+               weekExtensions.setAttribute( "collapsed", "false" );
+               monthExtensions.setAttribute( "collapsed", "true" );
+               updateAdvancedWeekRepeat();
+           break;
+           
+           case "months":
+               weekExtensions.setAttribute( "collapsed", "true" );
+               monthExtensions.setAttribute( "collapsed", "false" );
+               updateAdvancedRepeatDayOfMonth();
+           break;
+           
+           case "years":
+               weekExtensions.setAttribute( "collapsed", "true" );
+               monthExtensions.setAttribute( "collapsed", "true" );
+           break;
+       
+       }
    }
-   else
-   {
-      document.getElementById( "repeat-days-menu-item" ).setAttribute( "label", "Days" );
-      document.getElementById( "repeat-weeks-menu-item" ).setAttribute( "label", "Weeks" );
-      document.getElementById( "repeat-months-menu-item" ).setAttribute( "label", "Months" );
-      document.getElementById( "repeat-years-menu-item" ).setAttribute( "label", "Years" );
-
-   }
+   
 }
-*/
+
 
 
 /**
@@ -730,6 +875,205 @@ function updateStartEndItemEnabled()
 }
 
 
+
+
+/**
+*   Handle key down in repeat field
+*/
+
+function repeatLengthKeyDown( repeatField )
+{
+    updateRepeatPlural();
+}
+
+/**
+*   Handle key down in alarm field
+*/
+
+function alarmLengthKeyDown( repeatField )
+{
+    updateAlarmPlural();
+}
+
+
+function repeatUnitCommand( repeatMenu )
+{
+    updateRepeatUnitExtensions();
+}
+
+
+/*
+** Functions for advanced repeating elements
+*/
+
+function setAdvancedWeekRepeat()
+{
+   var checked = false;
+
+   if( gEvent.recurWeekdays > 0 )
+   {
+      for( i = 0; i < 6; i++ )
+      {
+         dump( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) );
+   
+         checked = ( ( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) ) == eval( gEvent.recurWeekdays ) );
+         
+         dump( "checked is "+checked );
+   
+         setFieldValue( "advanced-repeat-week-"+i, checked, "checked" );
+      }
+   }
+   
+}
+
+/*
+** Functions for advanced repeating elements
+*/
+
+function getAdvancedWeekRepeat()
+{
+   var Total = 0;
+
+   for( i = 0; i < 7; i++ )
+   {
+      if( getFieldValue( "advanced-repeat-week-"+i, "checked" ) == true )
+      {
+         Total += eval( "kRepeatDay_"+i );
+      }
+   }
+   return( Total );
+}
+
+/*
+** function to set the menu items text
+*/
+function updateAdvancedWeekRepeat()
+{
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var dayNumber = startTime.getDay();
+
+   //uncheck them all
+   for( i = 0; i < 7; i++ )
+   {
+      document.getElementById( "advanced-repeat-week-"+i ).setAttribute( "checked", "false" );
+
+      document.getElementById( "advanced-repeat-week-"+i ).removeAttribute( "disabled" );
+   }
+
+
+   document.getElementById( "advanced-repeat-week-"+dayNumber ).setAttribute( "checked", "true" );
+
+   document.getElementById( "advanced-repeat-week-"+dayNumber ).setAttribute( "disabled", "true" );
+}
+
+/*
+** function to set the menu items text
+*/
+function updateAdvancedRepeatDayOfMonth()
+{
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var dayNumber = startTime.getDate();
+
+   var dayExtension = getDayExtension( dayNumber );
+
+   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
+
+   document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( getWeekNumberOfMonth() )+" "+getDayOfWeek( dayNumber )+" of the month" );
+}
+
+function getDayExtension( dayNumber )
+{
+   switch( dayNumber )
+   {
+      case 1:
+      case 21:
+      case 31:
+         return( "st" );
+      case 2:
+      case 22:
+         return( "nd" );
+      case 3:
+      case 23:
+         return( "rd" );
+      default:
+         return( "th" );
+   }
+}
+
+function getDayOfWeek( )
+{
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var dayNumber = startTime.getDay();
+
+   var dateStringBundle = srGetStrBundle("chrome://penglobal/locale/dateFormat.properties");
+
+   //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
+   var oneBasedDayNumber = parseInt( dayNumber ) + 1;
+   
+   return( dateStringBundle.GetStringFromName( "day."+oneBasedDayNumber+".name" ) );
+   
+}
+
+function getWeekNumberOfMonth()
+{
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var dayNumber = startTime.getDay();
+   
+   var thisMonth = startTime.getMonth();
+   
+   var monthToCompare = startTime.getMonth();
+
+   var weekNumber = 0;
+
+   while( monthToCompare == thisMonth )
+   {
+      startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
+
+      monthToCompare = startTime.getMonth();
+      
+      weekNumber++;
+   }
+   
+   if( weekNumber > 3 )
+   {
+      nextWeek = new Date( getDateTimeFieldValue( "start-date-text" ).getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
+
+      if( nextWeek.getMonth() != thisMonth )
+      {
+         //its the last week of the month
+         weekNumber = 5;
+      }
+   }
+
+   return( weekNumber );
+}
+
+
+function getWeekNumberText( weekNumber )
+{
+   switch( weekNumber )
+   {
+   case 1:
+      return( "First" );
+   case 2:
+      return( "Second" );
+   case 3:
+      return( "Third" );
+   case 4:
+      return( "Fourth" );
+   case 5:
+      return( "Last" );
+   }
+
+}
 
 
 /**

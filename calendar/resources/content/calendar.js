@@ -126,11 +126,7 @@ function calendarInit()
 {
 	// get the calendar event data source
    // global calendar
-   var dirServiceProvider = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIDirectoryServiceProvider);   
-   var persistent = new Object();
-   var homeDir = dirServiceProvider.getFile("Home", persistent);
-
-   gEventSource = new CalendarEventDataSource( null, homeDir.unicodePath );
+   gEventSource = new CalendarEventDataSource(  );
    
    // get the Ical Library
    gICalLib = gEventSource.getICalLib();

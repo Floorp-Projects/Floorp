@@ -35,46 +35,68 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 
 <!-- CSS File with all styles specific to the unifinder -->
-<?xml-stylesheet href="chrome://calendar/skin/unifinder/unifinder.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://calendar/skin/unifinder/unifinder.css" ?>
 
 <!-- DTD File with all strings specific to the unifinder -->
 <!DOCTYPE window 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://global/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd2;
+	<!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
-
 
 <overlay
    id="unifinder-overlay"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
    
+<!-- Javascript includes -->
+
+
+
+   <unifinder id="calendar-unifinder-overlay">
    
-    
-    <vbox id="unifinder-categories-box"  >
-        <vbox id="unifinder-categories-content-box" flex="1"  >
-            
-            <tree id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1" >
-                <treechildren id="unifinder-categories-tree-children" flex="1"/>
-            </tree>
-        
-        </vbox>
-    </vbox>
+        <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
+        <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
+ 
+        <box flex="1">
+            <tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
+                <tabs  class="unifinder-tab" orient="horizontal" >
+                    <tab label="&calendar.main.tab.label;" />
+                    <tab label="&unifinder.tab.search.label;" />
+                </tabs>
+                
+                <spacer class="unifinder-tabs-spacer" />
+                
+                <tabpanels  flex="1">
+                    <vbox id="unifinder-categories-box"  >
+                       <vbox id="unifinder-categories-content-box" flex="1"  >
+                           
+                           <tree id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1" >
+                               <treechildren id="unifinder-categories-tree-children" flex="1"/>
+                           </tree>
+                       
+                       </vbox>
+                   </vbox>
             
                     
-    <tree id="unifinder-search-results-tree" class="unifinder-tree-class" flex="1">
-        <treechildren id="unifinder-search-results-tree-children" flex="1"/>
-    </tree>
+    
+                    <vbox  flex="1"  >
+                        <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
+                        <tree id="unifinder-search-results-tree" class="unifinder-tree-class"   >
+                           <treecols>
+                                 <treecol flex="1" />
+                             </treecols>
+                             <treechildren id="unifinder-search-results-tree-children" flex="1"/>
+                         </tree>
 
-    <splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
-           class="chromeclass-extrachrome sidebar-splitter">
-       <grippy class="sidebar-splitter-grippy"/>
-    </splitter>
+    
+                    </vbox>
+                </tabpanels>
+            </tabbox>
+        </box>
+   </unifinder>     
 
-  
   </overlay>
-

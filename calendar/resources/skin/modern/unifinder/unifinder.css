@@ -300,7 +300,7 @@ tabpanels {
 
 .unifinder-remove-button > .unifinder-button-image
   {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/remove_up.png");
+    list-style-image        : url("chrome://calendar/skin/unifinder/remove_up.png");
   }
   
 .unifinder-remove-button[disabled="true"] > .unifinder-button-image,
@@ -326,7 +326,7 @@ tabpanels {
 
 .unifinder-new-category-button  > .unifinder-button-image
   {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/newcategory_up.png");
+    list-style-image        : url("chrome://calendar/skin/unifinder/newcategory_up.png");
   }
 .unifinder-new-category-button[disabled="true"] > .unifinder-button-image,
 .unifinder-new-category-button[disabled="true"]:hover > .unifinder-button-image,

@@ -227,16 +227,18 @@
 									<hbox  id="alarm-box">
 										 <checkbox id="alarm-checkbox"  label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
 										 <spacer id="alarm-spacer" />
-										 <textbox id="alarm-length-field"  value="15" />
-										 <menulist  id="alarm-length-units" label="&alarm.units.minutes;" value="minutes" >
+										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )" value="15" />
+                               
+                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural"  label="&alarm.units.minutes;" value="minutes" >
 											  <menupopup >
-													<menuitem label="&alarm.units.minutes;" value="minutes"/>
-													<menuitem label="&alarm.units.hours;"   value="hours"/>
-													<menuitem label="&alarm.units.days;"    value="days"/>
+													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours"/>
+													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
 											  </menupopup>
 										 </menulist>
 										 
 										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+                               
 									</hbox>
 									<hbox id="alarm-box-email" collapsed="true">
 										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
@@ -263,31 +265,57 @@
                         <vbox>
                           <hbox id="repeat-box">
                             <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
-                            <textbox id="repeat-length-field" onmousedownX="updateRepeatLength()" value="1"  />
+                            <textbox id="repeat-length-field" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                                     
-                            <menulist  id="repeat-length-units" label="&repeat.units.days;" value="days" >
+                            <menulist crop="never" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat" label="&repeat.units.days;" value="days" >
                                 <menupopup>
-                                    <menuitem id="repeat-days-menu-item" label="&repeat.units.day;"   value="days" />
-                                    <menuitem id="repeat-weeks-menu-item" label="&repeat.units.week;"  value="weeks" />
-                                    <menuitem id="repeat-months-menu-item" label="&repeat.units.month;" value="months"  />
-                                    <menuitem id="repeat-years-menu-item" label="&repeat.units.year;"  value="years" />
+                                    <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   value="days" />
+                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"   value="weeks" />
+                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;"   value="months"  />
+                                    <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"   value="years" />
                                 </menupopup>
                             </menulist>
                           </hbox>
                                
                           
+                          <hbox id="repeat-extenstions-week" diabled="true" collapsed="true">
+                            <spacer class="repeat-left-spacer" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Tue" id="advanced-repeat-week-2" value="2" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Wed" id="advanced-repeat-week-3" value="3" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Thu" id="advanced-repeat-week-4" value="4" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Fri" id="advanced-repeat-week-5" value="5" checked="false" />
+                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Sat" id="advanced-repeat-week-6" value="6" checked="false" />
+                          </hbox>
+                               
+                          
+                          <hbox id="repeat-extenstions-month" diabled="true" collapsed="true">
+                              <spacer class="repeat-left-spacer" />
+                              <vbox>
+                                 <radiogroup id="advanced-repeat-month" disable-controller="repeat">
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" checked="true" />
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month" checked="false" />
+                                 </radiogroup>
+                              </vbox>
+                          </hbox>
+                               
+                          <spacer height="10" />
+                            
                           <hbox>
-                            <spacer id="radio-spacer" />
-                            <radiogroup id="repeat-until-group" orient="vertical">
-                              <hbox>
-                                <radio group="repeat-until-group" id="repeat-forever-radio" checked="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                              </hbox>    
+                            <spacer class="repeat-left-spacer" />
+                            <radiogroup id="repeat-until-group" disable-controller="repeat">
                               <hbox id="repeat-end-box">
-                                  <radio group="repeat-until-group" id="repeat-until-radio" checked="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
+                                  <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" checked="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
                                   <spacer id="until-spacer"/>
-                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                  <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                               </hbox>
+                              
+                              <hbox>
+                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" checked="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                              </hbox>    
+                              
                             
                             </radiogroup>
                           </hbox>

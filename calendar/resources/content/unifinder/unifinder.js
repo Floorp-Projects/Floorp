@@ -44,7 +44,6 @@
 
 function unifinderInit()
 {
-
 }
 
 
@@ -82,10 +81,7 @@ var unifinderEventDataSourceObserver =
 {
    onLoad   : function()
    {
-        if( !gICalLib.batchMode )
-        {
-            unifinderRefesh();
-        }
+      unifinderRefesh();
    },
    
    onStartBatch   : function()
@@ -94,34 +90,25 @@ var unifinderEventDataSourceObserver =
     
    onEndBatch   : function()
    {
-        unifinderRefesh();
+      unifinderRefesh();
    },
     
    onAddItem : function( calendarEvent )
    {
-        if( !gICalLib.batchMode )
-        {
-            if( calendarEvent )
-            {
-                unifinderRefesh();
-            }
-        }
+      if( calendarEvent )
+      {
+         unifinderRefesh();
+      }
    },
 
    onModifyItem : function( calendarEvent, originalEvent )
    {
-        if( !gICalLib.batchMode )
-        {
-            unifinderRefesh();
-        }
+      unifinderRefesh();
    },
 
    onDeleteItem : function( calendarEvent )
    {
-        if( !gICalLib.batchMode )
-        {
-            unifinderRefesh();
-        }
+      unifinderRefesh();
    },
 
    onAlarm : function( calendarEvent )
