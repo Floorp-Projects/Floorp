@@ -489,8 +489,6 @@ pref("font.language.group",                 "chrome://navigator/locale/navigator
 // -- folders (Mac: these are binary aliases.)
 pref("security.directory",              "");
 
-pref("spellchecker.dictionary", "");
-
 pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
