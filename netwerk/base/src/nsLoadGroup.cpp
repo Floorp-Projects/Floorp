@@ -167,20 +167,13 @@ NS_IMETHODIMP
 nsLoadGroup::GetName(PRUnichar* *result)
 {
     // XXX is this the right "name" for a load group?
-    *result = nsnull;
-    
-    if (mDefaultLoadRequest) {
-        nsXPIDLString nameStr;
-        nsresult rv = mDefaultLoadRequest->GetName(getter_Copies(nameStr));
-        if (NS_SUCCEEDED(rv)) {
-            nsString name;
-            name.Assign(nameStr);
-            *result = ToNewUnicode(name);
-            return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-        }
+
+    if (!mDefaultLoadRequest) {
+        *result = nsnull;
+        return NS_OK;
     }
     
-    return NS_OK;
+    return mDefaultLoadRequest->GetName(result);
 }
 
 NS_IMETHODIMP
