@@ -31,11 +31,9 @@ REQUIRES	= xpcom \
 		  appshell \
 		  layout \
 		  chrome \
-		  rdf \
 		  xpinstall \
 		  xpicleanup \
 		  uriloader \
-		  editor \
 		  view \
 		  windowwatcher \
 		  embed_base \
