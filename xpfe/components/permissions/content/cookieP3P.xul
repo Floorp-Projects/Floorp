@@ -179,6 +179,7 @@
           <menulist flex="1" id="menulist_0">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -186,6 +187,7 @@
           <menulist flex="1" id="menulist_1">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -196,6 +198,7 @@
           <menulist flex="1" id="menulist_2">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -203,6 +206,7 @@
           <menulist flex="1" id="menulist_3">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -213,6 +217,7 @@
           <menulist flex="1" id="menulist_4">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -220,6 +225,7 @@
           <menulist flex="1" id="menulist_5">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -230,6 +236,7 @@
           <menulist flex="1" id="menulist_6">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
@@ -237,6 +244,7 @@
           <menulist flex="1" id="menulist_7">
             <menupopup>
               <menuitem value="a" label="&accept.label;"/>
+              <menuitem value="f" label="&flag.label;"/>
               <menuitem value="d" label="&downgrade.label;"/>
               <menuitem value="r" label="&reject.label;"/>
             </menupopup>
