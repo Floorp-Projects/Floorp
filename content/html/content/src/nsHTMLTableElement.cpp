@@ -90,7 +90,7 @@ public:
 protected:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
 
-  nsCOMPtr<nsIContentList> mTBodies;
+  nsRefPtr<nsContentList> mTBodies;
   TableRowsCollection *mRows;
 };
 
@@ -495,7 +495,8 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
     NS_ENSURE_TRUE(mTBodies, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(mTBodies, aValue);
+  NS_ADDREF(*aValue = mTBodies);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

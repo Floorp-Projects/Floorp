@@ -122,6 +122,8 @@ public:
   virtual PRBool GetIsFrameset() { return mIsFrameset; }
   virtual void SetIsFrameset(PRBool aFrameset) { mIsFrameset = aFrameset; }
 
+  virtual NS_HIDDEN_(nsContentList*) GetForms();
+ 
   virtual void ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
   virtual void ContentInserted(nsIContent* aContainer,
@@ -191,7 +193,7 @@ public:
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
-  virtual already_AddRefed<nsIDOMNodeList> GetFormControlElements();
+  virtual already_AddRefed<nsContentList> GetFormControlElements();
   virtual void AddedForm();
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
@@ -270,7 +272,7 @@ protected:
   nsCOMPtr<nsIDOMHTMLCollection> mEmbeds;
   nsCOMPtr<nsIDOMHTMLCollection> mLinks;
   nsCOMPtr<nsIDOMHTMLCollection> mAnchors;
-  nsCOMPtr<nsIDOMHTMLCollection> mForms;
+  nsRefPtr<nsContentList> mForms;
 
   nsCOMPtr<nsIParser> mParser;
 

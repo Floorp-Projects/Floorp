@@ -591,7 +591,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIContentList> list =
+    nsContentList *list = 
         new nsContentList(GetDocument(),
                           nsXULDocument::MatchAttribute,
                           aValue,
@@ -601,7 +601,8 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                           kNameSpaceID_None);
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    return CallQueryInterface(list, aReturn);
+    NS_ADDREF(*aReturn = list);
+    return NS_OK;
 }
 
 

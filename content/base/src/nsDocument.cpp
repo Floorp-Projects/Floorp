@@ -2448,12 +2448,13 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIContentList> list;
-  NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown, nsnull,
-                    getter_AddRefs(list));
+  nsContentList *list = NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown,
+                                          nsnull).get();
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-  return CallQueryInterface(list, aReturn);
+  // transfer ref to aReturn
+  *aReturn = list;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2463,7 +2464,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 {
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-  nsCOMPtr<nsIContentList> list;
+  nsContentList *list = nsnull;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
@@ -2471,8 +2472,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
-      NS_GetContentList(this, nsnull, kNameSpaceID_None, nsnull,
-                        getter_AddRefs(list));
+      list = NS_GetContentList(this, nsnull, kNameSpaceID_None, nsnull).get();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -2481,12 +2481,13 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_GetContentList(this, nameAtom, nameSpaceId, nsnull,
-                      getter_AddRefs(list));
+    list = NS_GetContentList(this, nameAtom, nameSpaceId, nsnull).get();
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(list, aReturn);
+  // transfer ref to aReturn
+  *aReturn = list;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

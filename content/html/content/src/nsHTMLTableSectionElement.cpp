@@ -78,7 +78,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
-  nsCOMPtr<nsIContentList> mRows;
+  nsRefPtr<nsContentList> mRows;
 };
 
 
@@ -134,7 +134,8 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
     NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(mRows, aValue);
+  NS_ADDREF(*aValue = mRows);
+  return NS_OK;
 }
 
 

@@ -78,7 +78,7 @@
 #include "nsIParserService.h"
 #include "nsIServiceManager.h"
 #include "nsIAttribute.h"
-#include "nsIContentList.h"
+#include "nsContentList.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
@@ -1425,16 +1425,12 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   if (htmlDocument) {
     // Flush our content model so it'll be up to date
     aContent->GetCurrentDoc()->FlushPendingNotifications(Flush_Content);
-    nsCOMPtr<nsIDOMHTMLDocument> domHtmlDocument(do_QueryInterface(htmlDocument));
-    nsCOMPtr<nsIDOMHTMLCollection> forms;
-    domHtmlDocument->GetForms(getter_AddRefs(forms));
-    nsCOMPtr<nsIContentList> htmlForms(do_QueryInterface(forms));
 
-    nsCOMPtr<nsIDOMNodeList> formControls =
+    nsContentList *htmlForms = htmlDocument->GetForms();
+    nsRefPtr<nsContentList> htmlFormControls =
       htmlDocument->GetFormControlElements();
-    NS_ENSURE_TRUE(formControls, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIContentList> htmlFormControls(do_QueryInterface(formControls));
+    NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
 
     // If we have a form control and can calculate form information, use
     // that as the key - it is more reliable than contentID.

@@ -39,6 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsCompatibility.h"
+#include "nsContentList.h"
 
 class nsIImageMap;
 class nsString;
@@ -52,9 +53,8 @@ class nsICSSLoader;
 class nsIContent;
 class nsIDOMHTMLBodyElement;
 
-/* 30dc35c0-75b5-4e96-a828-54470ce86726 */
 #define NS_IHTMLDOCUMENT_IID \
-{0x30dc35c0, 0x75b5, 0x4e96, {0xa8, 0x28, 0x54, 0x47, 0x0c, 0xe8, 0x67, 0x26}}
+{0x0c548e6b, 0xf3b4, 0x489b, {0xb7, 0xda, 0xac, 0xdb, 0x2c, 0x89, 0xab, 0xc0}}
 
 
 /**
@@ -90,7 +90,7 @@ public:
    * This method returns null if we run out of memory. Callers should
    * check for null.
    */
-  virtual already_AddRefed<nsIDOMNodeList> GetFormControlElements() = 0;
+  virtual already_AddRefed<nsContentList> GetFormControlElements() = 0;
   
   /**
    * Called when form->SetDocument() is called so that document knows
@@ -114,6 +114,11 @@ public:
 
   virtual PRBool GetIsFrameset() = 0;
   virtual void SetIsFrameset(PRBool aFrameset) = 0;
+
+  /**
+   * Get the list of form elements in the document.
+   */
+  virtual nsContentList* GetForms() = 0;
 };
 
 #endif /* nsIHTMLDocument_h___ */
