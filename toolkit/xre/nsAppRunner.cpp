@@ -1223,10 +1223,6 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
     }
   }
 
-  #ifdef MOZ_WIDGET_GTK
-  gtk_init(&argc, &argv);
-  #endif
-
   ShowOSAlert( messageToShow );
 }
 
@@ -1793,6 +1789,14 @@ int xre_main(int argc, char* argv[], const nsXREAppData& aAppData)
 #if defined(XP_MACOSX)
   InitializeMacOSXApp(argc, argv);
 #endif
+
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+  // Initialize GTK+1/2 here for splash
+#if defined(MOZ_WIDGET_GTK)
+  gtk_set_locale();
+#endif
+  gtk_init(&arc, &argv);
+#endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
 
 #ifdef _BUILD_STATIC_BIN
   // Initialize XPCOM's module info table
