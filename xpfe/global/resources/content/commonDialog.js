@@ -130,7 +130,8 @@ function commonDialogOnLoad()
 			break;
 	}
 	
-
+	// set the pressed button to cancel to handle the case where the close box is pressed
+	param.SetInt(0, 1 );
 	// Move to the right location
 	moveToAlertPosition();
 }
