@@ -7,11 +7,13 @@ function AbNewCard()
 }
 
 
-function AbEditCard()
+function AbEditCard(card)
 {
 	var dialog = window.openDialog("chrome://addressbook/content/editcardDialog.xul",
 								   "abEditCard",
-								   "chrome");
+								   "chrome",
+								   {card:card});
+	
 	return dialog;
 }
 

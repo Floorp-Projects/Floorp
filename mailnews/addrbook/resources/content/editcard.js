@@ -1,3 +1,21 @@
+var card;
+
+function OnLoadEditCard()
+{
+	// look in arguments[0] for card
+	if (window.arguments && window.arguments[0])
+	{
+		if ( window.arguments[0].card )
+		{
+			// keep card in global for later
+			top.card = window.arguments[0].card;
+			
+			GetCardValues(top.card, frames["browser.editcard"].document)
+		}
+	}
+}
+
+
 function NewCardOKButton()
 {
 	var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
@@ -17,6 +35,11 @@ function NewCardOKButton()
 
 function EditCardOKButton()
 {
+	SetCardValues(top.card, frames["browser.editcard"].document);
+	
+	// Need to commit changes here Candice.
+	
+	top.window.close();
 }
 
 

@@ -44,6 +44,23 @@ function SelectAddressCancelButton()
 	top.window.close();
 }
 
+function SelectAddressEditButton()
+{
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+
+	var resultsDoc = frames["browser.selAddrResultPane"].document;
+	var selArray = resultsDoc.getElementsByAttribute('selected', 'true');
+
+	if ( selArray && selArray.length == 1 )
+	{
+		var uri = selArray[0].getAttribute('id');
+		var card = rdf.GetResource(uri);
+		card = card.QueryInterface(Components.interfaces.nsIAbCard);
+		AbEditCard(card);
+	}
+}
+
 function AddSelectedAddressesIntoBucket(prefix)
 {
 	var item, uri, rdf, cardResource, card, address;
