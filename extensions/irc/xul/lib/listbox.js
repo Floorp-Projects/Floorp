@@ -27,7 +27,7 @@
 function CListBox ()
 {
 
-    this.listContainer = document.createElement ("html:span");
+    this.listContainer = document.createElement ("html:div");
     this.listContainer.setAttribute ("class", "list");
 
 }
@@ -51,6 +51,7 @@ function lbox_chandler (e)
     var lm = this.listManager;
     
     e.target = this;
+
     if (lm && typeof lm.onClick == "function")
         lm.onClick ({realTarget: this, event: e});
     
@@ -58,32 +59,64 @@ function lbox_chandler (e)
 
 CListBox.prototype.onClick =
 function lbox_chandler (e)
-{
+{ 
 
-    dd ("onclick: \n" + dumpObjectTree (e, 1));
+    /* Check for the button number first */
+    /* FIXME: are there constants for this stuff? */
+    if (e.event.which == 3)
+    {
+        return;
+    }
+
+    /* 
+     * If the ctrlKey is _not_ set, unselect all currently 
+     * selected items 
+     */    
+
+    if (!e.event.ctrlKey) 
+    {
+        this.enumerateElements(this._unselectCallback, e.realTarget);
+    }
+
+    /* Check to see whether the item is currently selected */
+    var isSelected = e.realTarget.getAttribute("selected");
+
+    /* toggle the value */
+    if ("true" == isSelected)
+        e.realTarget.setAttribute("selected", "false");    
+    else
+        e.realTarget.setAttribute("selected", "true");
     
+}
+
+CListBox.prototype._unselectCallback =
+function (element, ndx, realTarget)
+{
+    if (element != realTarget)
+            element.setAttribute("selected", "false");    
 }
 
 CListBox.prototype.add =
 function lbox_add (stuff, tag)
 {
-    var option = document.createElement ("html:a");
+    /* NOTE: JG using a div here makes the item span the full 
+       length and looks better when selected */
+    
+    var option = document.createElement ("html:div");
     option.setAttribute ("class", "list-option");
-
     option.appendChild (stuff);
-    option.appendChild (document.createElement("html:br"));
     option.onclick = this.clickHandler;
     option.listManager = this;
     option.tag = tag;
     this.listContainer.appendChild (option);
     
-    return true;
-    
+    return true;    
 }
 
 CListBox.prototype.prepend =
 function lbox_prepend (stuff, oldstuff, tag)
 {
+    
     if (!this.listContainer.firstChild)
         return this.add (stuff, tag);
 
@@ -91,11 +124,10 @@ function lbox_prepend (stuff, oldstuff, tag)
     if (!nextOption)
         return false;
     
-    var option = document.createElement ("html:a");
+    var option = document.createElement ("html:div");
     option.setAttribute ("class", "list-option");
 
     option.appendChild (stuff);
-    option.appendChild (document.createElement("html:br"));
     option.onclick = this.clickHandler;
     option.listManager = this;
     option.tag = tag;
@@ -136,15 +168,42 @@ function lbox_remove (stuff)
 }
 
 CListBox.prototype.enumerateElements =
-function lbox_enum (callback)
+/* NOTE: JG: added data param so arbitrary data can be passed. */
+function lbox_enum (callback, data)
 {
     var i = 0;
     var current = this.listContainer.firstChild;
     
     while (current)
     {
-        callback (current, i++);
+        callback (current, i++, data);
         current = current.nextSibling;
     }
     
 }
+
+/**
+ * Using enumerateElements, this is used just to fill an array
+ * with selected nick names.
+ * @returns an array of selected nicknames
+ */
+CListBox.prototype.getSelectedItems =
+function lbox_getselecteditems () 
+{
+    var ary = [];
+
+    this.enumerateElements(this.selectedItemCallback, ary);
+
+    return ary;
+}
+
+/**
+ * used to build the array of values returned by getSelectedItems.
+ */
+CListBox.prototype.selectedItemCallback =
+function (item, idx, data) 
+{
+    return item;
+}
+
+

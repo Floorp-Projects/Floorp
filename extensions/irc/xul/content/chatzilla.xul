@@ -48,6 +48,20 @@
 <html:script src="chrome://chatzilla/content/static.js"/>
 <html:script src="chrome://chatzilla/content/handlers.js"/>
 
+<!-- This is to test the popups in the 'quickList' channel name list -->
+
+<popupset>
+	<popup id="userlistPopup" onclick="onUserListPopupClick(event)">
+		<menuitem value="Op" code="/op" />
+		<menuitem value="Deop" code="/deop" />
+		<menuitem value="Voice" code="/voice" />
+		<menuitem value="Devoice" code="/devoice" />	
+		<menuitem value="Kick" code="/kick" />
+<!--		<menuitem value="Kick With Reason" code="/kick" /> -->	
+		<menuitem value="Whois" code="/whois" />
+	</popup>
+</popupset>
+
 <toolbox>
   <menubar>
     <menu value="Options">
@@ -98,9 +112,9 @@
 </toolbox>
 
 <box id="outer-box" align="vertical" flex="1">
-  <box id="inner-box" align="horizontal" flex="1">
-    <html:div id="quickList" class="quick-list" flex="0" width-hidden="150px">
-    </html:div>
+  <box id="inner-box" align="horizontal" flex="1">	
+    <box id="quickList" class="quick-list" align="vertical"
+	flex="0" width-hidden="150px" context="userlistPopup" />
     <splitter id="main-splitter" align="vertical" collapse="before"/>
     <box align="vertical" flex="1">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"

@@ -170,6 +170,13 @@ toolbar {
 
 }
 
+/* JG: Selection colors, in accord with standard mozilla chrome colors */
+.list-option[selected="true"] {
+        background: rgb(51,102,153);
+        font-weight: bold;
+        color: white;
+} 
+
 /* text in the quicklist */
 .option-text {
     font-weight: bold;

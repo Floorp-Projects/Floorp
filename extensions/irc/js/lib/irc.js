@@ -387,6 +387,18 @@ function serv_actto (target, msg)
     this.messageTo ("PRIVMSG", target, msg, "ACTION");
 
 }
+/**
+ * Abstracts the whois command.
+ *
+ * @param target        intended user(s).
+ */
+CIRCServer.prototype.whois = 
+function serv_whois (target) 
+{
+
+    this.sendData ("WHOIS " + target + "\n");
+
+}
 
 CIRCServer.prototype.onDisconnect = 
 function serv_disconnect(e)
@@ -1017,9 +1029,9 @@ CIRCServer.prototype.onPart =
 function serv_part (e)
 {
 
-    e.channel = new CIRCChannel (this, e.params[1]);
+    e.channel = new CIRCChannel (this, e.params[1]);    
     e.user = new CIRCChanUser (e.channel, e.user.nick);
-    delete e.channel.users[e.user.nick];
+    e.channel.removeUser(e.user.nick);
     e.destObject = e.channel;
     e.set = "channel";
 
@@ -1303,6 +1315,22 @@ function chan_adduser (nick, isOp, isVoice)
     
 }
 
+CIRCChannel.prototype.getUser =
+function chan_getuser (nick) 
+{
+    
+    nick = nick.toLowerCase(); // assumes valid param!
+    var cuser = this.users[nick];
+    return cuser; // caller expected to check for undefinededness    
+
+}
+
+CIRCChannel.prototype.removeUser =
+function chan_removeuser (nick)
+{
+    delete this.users[nick.toLowerCase()]; // see ya
+}
+
 CIRCChannel.prototype.getUsersLength = 
 function chan_userslen ()
 {
@@ -1370,6 +1398,20 @@ function chan_part ()
     this.parent.sendData ("PART " + this.name + "\n");
     return true;
     
+}
+
+/**
+ * Invites a user to a channel.
+ *
+ * @param nick  the user name to invite.
+ */
+CIRCChannel.prototype.invite =
+function chan_inviteuser (nick)
+{
+
+    this.parent.sendData("INVITE " + nick + " " + this.name + "\n");
+    return true;
+
 }
 
 /*
@@ -1625,6 +1667,14 @@ function usr_act (msg)
     this.parent.actTo (this.nick, msg);
     
 }
+
+CIRCUser.prototype.whois =
+function usr_whois ()
+{
+
+    this.parent.whois (this.nick);
+}   
+
     
 /*
  * channel user
@@ -1654,6 +1704,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     this.say = cusr_say;
     this.notice = cusr_notice;
     this.act = cusr_act;
+    this.whois = cusr_whois;
     this.parent = parent;
     this.isOp = (typeof isOp != "undefined") ? isOp : false;
     this.isVoice = (typeof isVoice != "undefined") ? isVoice : false;
@@ -1770,4 +1821,11 @@ function cusr_act (msg)
 
     this.__proto__.act (msg);
     
+}
+
+function cusr_whois ()
+{
+
+    this.__proto__.whois ();
+
 }

@@ -53,7 +53,7 @@ function addCommands(commandObject)
     add ("me", "onInputMe",
          "<action>",
          "Performs an 'action' on the current channel.");
-
+    
     add ("msg", "onInputMsg",
          "<user> <msg>",
          "Sends a private message <msg> to the user <user>.");
@@ -113,4 +113,69 @@ function addCommands(commandObject)
          "<new-topic>.  If <new-topic> is *not* specified, the current topic " +
          "will be displayed");
 
+    /* JG: commands below jan 24 2000, update mar 15 */
+    
+    add ("away", "onInputAway",
+         "[<reason>]",
+         "If <reason> is spcecified, sets you away with that message. " +
+         "Used without <reason>, you are marked back as no longer being away.");
+    
+    add ("op", "onInputOp",
+         "<nick>",
+          "Gives operator status to <nick> on current channel. Requires " +
+         "operator status.");
+    
+    add ("deop", "onInputDeop",
+         "<nick>",
+         "Removes operator status from <nick> on current channel. " +
+         "Requires operator status.");
+    
+    add ("voice", "onInputVoice",
+         "<nick>",
+         "Gives voice status to <nick> on current channel. " +
+         "Requires operator status.");   
+     
+    add ("devoice", "onInputDevoice",
+         "<nick>",
+         "Removes voice status from <nick> on current channel. " +
+         "Requires operator status.");         
+    
+    add ("echo", "onInputEcho",
+         "<text>",
+         "Displays <text> in the current view, but does not send it to " +
+         "the server.");
+
+    /* FIXME: JG: not implemented yet */
+    /*
+      add ("filter", "onInputFilter",
+      "<regex>",
+      "Shows only messages matching <regex> on current channel. When used " $
+      "with no parameter, the contents are restored.");
+    */  
+    
+    add ("invite", "onInputInvite",
+         "<nick> [<channel>]",
+         "Invites <nick> to <channel> or current channel if not " +
+         "supplied. Requires operator status if +i is set.");
+    
+    add ("kick", "onInputKick",
+         "[<channel>] <nick>",
+         "Kicks <nick> from <channel> or current channel if not " +
+         "supplied. Requires operator status.");    
+    
+    /* NOT implemented yet 
+    add ("server", "onInputServer",
+         "<server> [<port>]",
+         "Connects you to <server> using port 6667 if <port> is not" +
+         " specified.");
+    */
+    
+    /* NOT implemented yet
+    add ("quit", "onInputExit",
+         "[<message>]",
+         "Terminates the connection with the server associated with the" +
+         " current view, overriding the default quit message with" +
+         " message if specified.");
+    */
 }
+

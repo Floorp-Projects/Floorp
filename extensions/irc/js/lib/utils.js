@@ -426,3 +426,41 @@ function getInterfaces (cls)
     return rv;
     
 }
+
+/**
+ * Calls a named function for each element in an array, sending
+ * the same parameter each call.
+ *
+ * @param ary           an array of objects
+ * @param func_name     string name of function to call.
+ * @param data          data object to pass to each object.
+ */      
+function mapObjFunc(ary, func_name, data)
+{
+    /* 
+     * WARNING: Caller assumes resonsibility to verify ary
+     * and func_name
+     */
+
+    for (var i in ary)
+        ary[i][func_name](data);
+}
+
+/**
+ * Passes each element of an array to a given function object.
+ *
+ * @param func  a function object.
+ * @param ary   an array of values.
+ */
+function map(func, ary) {
+
+    /*
+     * WARNING: Caller assumnes responsibility to verify
+     * func and ary.
+     */
+
+    for (var i in ary)
+        func(ary[i]);
+
+}
+

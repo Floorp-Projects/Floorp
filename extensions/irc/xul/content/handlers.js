@@ -29,8 +29,11 @@ function onLoad()
     
     initHost(client);
     readIRCPrefs();
-    setOutputStyle (client.DEFAULT_STYLE);
-    initStatic();
+    setOutputStyle (client.DEFAULT_STYLE); 
+    /* 
+       Called in a callback once the document loads due to a current bug
+    */
+    //initStatic(); 
     mainStep();
     
 }
@@ -52,12 +55,35 @@ function onNotImplemented()
 /* toolbaritem click */
 function onTBIClick (id)
 {
+
     var tbi = document.getElementById (id);
     var view = client.viewsArray[tbi.getAttribute("viewKey")];
 
     setCurrentObject (view.source);
     
 }
+
+/* popup click in user list */
+function onUserListPopupClick (e)
+{
+
+    var code = e.target.getAttribute("code");
+
+    var ary = code.substr(1, code.length).match (/(\S+)? ?(.*)/);
+    
+    var command = ary[1];
+
+    var ev = new CEvent ("client", "input-command", client,
+                         "onInputCommand");
+    ev.command = command;
+    ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";    
+    ev.target = client.currentObject;
+
+    getObjectDetails (ev.target, ev);
+
+    client.eventPump.addEvent (ev);
+}
+
 
 function onToggleTraceHook()
 {
@@ -290,6 +316,7 @@ function onInputCompleteLine(e)
     }
     
 }
+
 
 client.onInputCommand = 
 function cli_icommand (e)
@@ -647,12 +674,12 @@ function cli_izoom (e)
         return false;
     }
     
-    var nick = e.inputData.toLowerCase();
-    var cuser = e.channel.users[nick];
+    var cuser = e.channel.getUser(e.inputData);
     
     if (!cuser)
     {
-        client.currentObject.display ("User '" + e.inputData + "' not found.");
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
         return false;
     }
     
@@ -662,31 +689,43 @@ function cli_izoom (e)
     
 }    
 
-client.onInputWhoIs =
-function cli_whois (e)
+/**
+ * Performs a whois on a user.
+ */
+client.onInputWhoIs = 
+function cli_whois (e) 
 {
-
-    if (!e.inputData)
-        return false;
-
     if (!e.network || !e.network.isConnected())
     {
-        if (!e.network)
-            client.currentObject.display ("No network selected.", "ERROR");
-        else
-            client.currentObject.display ("Network '" + e.network.name +
-                                          " is not connected.", "ERROR");        
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use whois", "ERROR");
         return false;
     }
-    
-    var nick = e.inputData.match(/\S+/);
-    
-    e.server.sendData ("whois " + nick + "\n");
 
-    return true;
+    if (!e.inputData)
+    {
+        var nicksAry = e.channel.getSelectedUsers();
+ 
+        if (nicksAry)
+        {
+            dd ("Sending [" + nicksAry.length + "] nicks the whois call\n");
+            mapObjFunc(nicksAry, "whois", null);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    // Otherwise, there is no guarantee that the username
+    // is currently a user
+    var nick = e.inputData.match( /\S+/ );
+
+    e.server.whois (nick);
     
+    return true;
 }
-        
+
 client.onInputTopic =
 function cli_itopic (e)
 {
@@ -718,6 +757,326 @@ function cli_itopic (e)
 
     return true;
     
+}
+
+client.onInputAway =
+function cli_iaway (e)
+{ 
+    if (!e.network || !e.network.isConnected())
+    {
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use away.", "ERROR");
+        return false;
+    }
+    else if (!e.inputData) 
+    {
+        e.server.sendData ("AWAY\n");
+    }
+    else
+    {
+        e.server.sendData ("AWAY " + e.inputData + "\n");
+    }
+
+    return true;
+}    
+
+/**
+ * Removes operator status from a user.
+ */
+client.onInputDeop = 
+function cli_ideop (e) 
+{
+    /* NOTE: See the next function for a well commented explanation
+       of the general form of these Multiple-Target type functions */
+
+    if (!e.channel)
+    {
+        client.currentObject.display ("You must be on a channel to use " +
+                                      "to use deop.", "ERROR");
+        return false;
+    }    
+    
+    if (!e.inputData)
+    {
+        var nicksAry = e.channel.getSelectedUsers();
+
+ 
+        if (nicksAry)
+        {
+            mapObjFunc(nicksAry, "setOp", false);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    var cuser = e.channel.getUser(e.inputData);
+    
+    if (!cuser)
+    {
+        /* use e.inputData so the case is retained */
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
+        return false;
+    }
+    
+    cuser.setOp(false);
+
+    return true;
+}
+
+
+/**
+ * Gives operator status to a channel user.
+ */
+client.onInputOp = 
+function cli_iop (e) 
+{
+    if (!e.channel)
+    {
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use op.", "ERROR");
+        return false;
+    }
+    
+    
+    if (!e.inputData)
+    {
+        /* Since no param is passed, check for selection */
+        var nicksAry = e.channel.getSelectedUsers();
+
+        /* If a valid array of user objects, then call the mapObjFunc */
+        if (nicksAry)
+        {
+            /* See test3-utils.js: this simply
+               applies the setOp function to every item
+               in nicksAry with the parameter of "true" 
+               each time 
+            */
+            mapObjFunc(nicksAry, "setOp", true);
+            return true;
+        }
+        else
+        {
+            /* If no input and no selection, return false
+               to display the usage */
+            return false;
+        }
+    }
+
+    /* We do have inputData, so use that, rather than any
+       other option */
+
+    var cuser = e.channel.getUser(e.inputData);
+    
+    if (!cuser)
+    {
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
+        return false;
+    }
+    
+    cuser.setOp(true);
+
+    return true;   
+    
+}
+
+/**
+ * Gives voice status to a user.
+ */
+client.onInputVoice = 
+function cli_ivoice (e) 
+{
+    if (!e.channel)
+    {
+        client.currentObject.display ("You must be on a channel " +
+                                      "to use voice.", "ERROR");
+        return false;
+    }    
+    
+    if (!e.inputData)
+    {
+        var nicksAry = e.channel.getSelectedUsers();
+
+        if (nicksAry)
+        {
+            mapObjFunc(nicksAry, "setVoice", true);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    var cuser = e.channel.getUser(e.inputData);
+    
+    if (!cuser)
+    {
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
+        return false;
+    }
+    
+    cuser.setVoice(true);
+
+    return true;
+}
+
+/**
+ * Removes voice status from a user.
+ */
+client.onInputDevoice = 
+function cli_devoice (e) 
+{
+    if (!e.channel)
+    {
+        client.currentObject.display ("You must be on a channel " +
+                                      "to use devoice.", "ERROR");
+        return false;
+    }    
+    
+    if (!e.inputData)
+    {
+        var nicksAry = e.channel.getSelectedUsers();
+
+        if (nicksAry)
+        {
+            mapObjFunc(nicksAry, "setVoice", false);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    var cuser = e.channel.getUser(e.inputData);
+    
+    if (!cuser)
+    {
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
+        return false;
+    }
+    
+    cuser.setVoice(false);
+
+    return true;
+}
+
+/**
+ * Displays input to the current view, but doesn't send it to the server.
+ */
+client.onInputEcho =
+function cli_iecho (e)
+{
+    if (!e.inputData)
+    {
+        return false;
+    }
+    else 
+    {
+        client.currentObject.display (e.inputData, "ECHO");
+        
+        return true;
+    }
+}
+
+client.onInputInvite =
+function cli_iinvite (e) 
+{
+
+    if (!e.network || !e.network.isConnected())
+    {
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use invite.", "ERROR");
+        return false;
+    }     
+    else if (!e.channel)
+    {
+        client.currentObject.display 
+        ("You must be in a channel to use invite", "ERROR");
+        return false;
+    }    
+    
+    if (!e.inputData) {
+        return false;
+    }
+    else 
+    {
+        var ary = e.inputData.split( /\s+/ );
+        
+        if (ary.length == 1)
+        {
+            e.channel.invite (ary[0]);
+        }
+        else
+        {
+            var chan = e.server.channels[ary[1].toLowerCase()];
+
+            if (chan == undefined) 
+            {
+                client.currentObject.display ("You must be on " + ary[1] + 
+                                              " to use invite.", "ERROR");
+                return false;
+            }            
+
+            chan.invite (ary[0]);
+        }   
+        
+        return true;
+    }
+}
+
+
+client.onInputKick =
+function cli_ikick (e) 
+{
+    if (!e.channel)
+    {
+        client.currentObject.display ("You must be on a channel to use " +
+                                      "kick.", "ERROR");
+        return false;
+    }    
+    
+    if (!e.inputData)
+    {
+        var nicksAry = e.channel.getSelectedUsers();
+
+        if (nicksAry)
+        {
+            mapObjFunc(nicksAry, "kick", "");
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    var ary = e.inputData.match ( /(\S+)? ?(.*)/ );
+
+    var cuser = e.channel.getUser(ary[1]);
+    
+    if (!cuser)
+    {    
+        client.currentObject.display ("User '" + e.inputData + "' not found.",
+                                      "ERROR");
+        return false;
+    }
+
+    if (ary.length > 2)
+    {               
+        cuser.kick(ary[2]);
+    }
+    else     
+    cuser.kick();    
+            
+    return true;
 }
 
 /* 'private' function, should only be used from inside */
@@ -1021,7 +1380,7 @@ function my_ckick (e)
                       e.reason + ")", "KICK", enforcerNick);
     }
     
-    this.list.listContainer.removeChild (e.user.getDecoratedNick());
+    this.list.remove (e.lamer.getDecoratedNick());
 
     updateChannel (e.channel);
     
@@ -1110,3 +1469,4 @@ function my_notice (e)
     this.display (e.meat, "NOTICE");
     
 }
+

@@ -84,9 +84,11 @@ function initStatic()
     
     obj = document.getElementById("input");
     obj.onkeyup = onInputKeyUp;
-    
+
         //obj = document.getElementById("tb[*client*]");
     client.quickList = new CListBox(document.getElementById("quickList"));
+    client.quickList.selectedItemCallback = quicklistCallback;
+
     var saveDir = client.PRINT_DIRECTION;
     client.PRINT_DIRECTION = 1;
     client.display ("Welcome to ChatZilla...\n" +
@@ -242,6 +244,17 @@ function mainStep()
     
 }
 
+function quicklistCallback (element, ndx, ary) 
+{   
+    /* Check whether the selected attribute == true */
+    if (element.getAttribute("selected") == "true")
+    {
+        /* extract the nick data from the element */
+        /* Hmmm, nice walk ... */
+        ary.push(element.childNodes[0].childNodes[2].childNodes[0].nodeValue);
+    }    
+}
+
 function getObjectDetails (obj, rv)
 {
     if (!rv)
@@ -296,6 +309,8 @@ function setOutputStyle (styleSheet)
 {
     var oc = top.frames[0].document;
 
+    top.frames[0].setClientOutput = setClientOutput;
+
     oc.close();
     oc.open();
     oc.write ("<html><head>");
@@ -315,10 +330,19 @@ function setOutputStyle (styleSheet)
                  "TYPE='text/css' MEDIA='screen'>");
 
     oc.write ("</head>" +
-              "<body><div id='output' class='output-window'></div></body>" +
+              "<body onload='setClientOutput(document)'>" + 
+	      "<div id='output' class='output-window'></div></body>" +
               "</html>");
     client.output = oc.getElementById ("output");
     
+}
+
+function setClientOutput(doc) 
+{
+    client.output = doc.getElementById("output");
+    /* continue processing now: */
+    initStatic();
+
 }
 
 function updateNetwork(obj)
@@ -650,8 +674,9 @@ function getTBForObject (source, create)
     {
         var views = document.getElementById ("views-tbar");
         var tbi = document.createElement ("toolbaritem");
-        tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
-    
+        //tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
+	tbi.addEventListener("click", onTBIClickTempHandler, false);
+
         tb = document.createElement ("titledbutton");
         tb.setAttribute ("class", "activity-button");
         tb.setAttribute ("id", id);
@@ -667,6 +692,21 @@ function getTBForObject (source, create)
 
     return tb;
     
+}
+
+/*
+ * This is used since setAttribute is funked up right now.
+ */
+function onTBIClickTempHandler (e)
+{ 
+  
+    var tbid = "tb[" + e.target.value + "]";
+
+    var tbi = document.getElementById (tbid);
+    var view = client.viewsArray[tbi.getAttribute("viewKey")];
+   
+    setCurrentObject (view.source);
+
 }
 
 function deleteToolbutton (tb)
@@ -712,7 +752,7 @@ function filterOutput (msg, msgtype)
     
     return msg;
     
-}            
+}
     
 client.sayToCurrentTarget =
 function cli_say(msg)
@@ -963,6 +1003,32 @@ function user_display(message, msgtype, sourceNick)
         this.parent.display (message, msgtype, this.nick);
     }
 
+}
+
+/**
+ * Retrieves the selected nicks from the associated
+ * gui list object. This simply calls list.getSelectedNicks
+ * and then promotes each string into an actual instance
+ * of CIRCChanUser.
+ */
+CIRCChannel.prototype.getSelectedUsers =
+function my_getselectedusers () 
+{
+    /* retrieve raw text list from list object first */
+    var ary = this.list.getSelectedItems();
+
+    if (ary  && ary.length > 0)
+    {
+        for (var i in ary)
+        {
+            /* promote each string to chan user object */
+            ary[i] = this.getUser(ary[i]);
+        }
+    }
+    /* USAGE NOTE: If the return value is non-null, the caller
+       can assume the array is valid, and NOT 
+       need to check the length */
+    return ary.length > 0 ? ary : null;
 }
 
 CIRCChannel.prototype.display =
