@@ -34,7 +34,7 @@
                 <input type="text" id="width" size="4" maxlength="4"/>
               </td>
               <td>
-                <xul:titledbutton class="push popup" id="pixelOrPercentButton" value="pixels" align="left" popup="PixelOrPercentMenu" />
+                <xul:titledbutton class="popup PixelOrPercent" id="pixelOrPercentButton" value="percent" align="left" popup="PixelOrPercentMenu" />
               </td>
             </tr>
           </table>

@@ -3,15 +3,6 @@ box#outer-box {
   height: 100%;
 }
 
-select#paraFormat {
-}
-
-select#fontFace {
-}
-
-select#fontSize {
-}
-
 select.combobox {
   font-family: Sans-Serif;
   font-size: 8pt;
