@@ -37,7 +37,10 @@ function EditorStartup()
   } else {
     dump("EditorAppCore has already been created! Why?\n");
   }
-  EditorSetup(editorName, appCore)
+  EditorSetup(editorName, appCore);
+  
+  // Set focus to the edit window
+  window.focus();
 }
 
 function EditorSetup(p_editorName, p_appCore)
