@@ -135,8 +135,13 @@ ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
 	double x, y;
 #endif
 {
-	double z,ax,z_h,z_l,p_h,p_l;
-	double y1,t1,t2,r,s,t,u,v,w;
+#ifdef GCC_OPT_BUG
+        volatile double y1,t1,p_h,t,z,ax;
+#else
+        double y1,t1,p_h,t,z,ax;
+#endif
+	double z_h,z_l,p_l;
+	double t2,r,s,u,v,w;
 	int i,j,k,yisint,n;
 	int hx,hy,ix,iy;
 	unsigned lx,ly;
@@ -236,7 +241,12 @@ ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
 	    __LO(t1) = 0;
 	    t2 = v-(t1-u);
 	} else {
-	    double s2,s_h,s_l,t_h,t_l;
+#ifdef GCC_OPT_BUG
+	    volatile double s_h,t_h;
+#else
+	    double s_h,t_h;
+#endif
+	    double s2,s_l,t_l;
 	    n = 0;
 	/* take care subnormal number */
 	    if(ix<0x00100000)
@@ -296,6 +306,7 @@ ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
 	z = p_l+p_h;
 	j = __HI(z);
 	i = __LO(z);
+
 	if (j>=0x40900000) {				/* z >= 1024 */
 	    if(((j-0x40900000)|i)!=0)			/* if z > 1024 */
 		return s*really_big*really_big;			/* overflow */

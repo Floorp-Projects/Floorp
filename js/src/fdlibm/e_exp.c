@@ -139,8 +139,13 @@ P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
 	double x;
 #endif
 {
+#ifdef GCC_OPT_BUG
+        volatile int xsb;
+#else
+        int xsb;
+#endif
 	double y,hi,lo,c,t;
-	int k,xsb;
+	int k;
 	unsigned hx;
 
 	hx  = __HI(x);	/* high word of x */
