@@ -1,6 +1,6 @@
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-var msgCompose = null;		
+var msgCompose = null;
 
 function GetArgs()
 {
@@ -26,7 +26,7 @@ function GetArgs()
 
 function ComposeStartup()
 {
-	dump("Compose: StartUp\n");
+	dump("Compose: ComposeStartup\n");
 
 	// Get arguments
 	var args = GetArgs();
@@ -39,10 +39,6 @@ function ComposeStartup()
 		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format);
 		if (msgCompose)
 		{
-			// Generate a unique number, do we have a better way?
-			var date = new Date();
-			sessionID = date.getTime() + Math.random();
-			
 			//Creating a Editor Shell
   			var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
   			editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
@@ -57,8 +53,8 @@ function ComposeStartup()
 			window.editorShell.Init();
 			dump("Created editorShell\n");
 
-			dump("initalizing the editor app core\n");
 			SetupToolbarElements(); //defined into EditorCommands.js
+			contentWindow = window.frames[0]; //Patch to make EditorCommands.js happy...
 
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
@@ -89,8 +85,7 @@ function ComposeStartup()
 			
 			//Now we are ready to load all the fields (to, cc, subject, body, etc...)
 			msgCompose.LoadFields();
-//			document.getElementById("msgTo").focus();
-// If I call focus, Apprunner will crash later when closing this windows!
+			document.getElementById("msgTo").focus();
 		}
 	}
 }
