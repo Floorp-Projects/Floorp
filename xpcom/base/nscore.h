@@ -203,11 +203,7 @@
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
-  #ifdef HAVE_CPP_2BYTE_WCHAR_T
-    typedef wchar_t PRUnichar;
-  #else
-    typedef PRUint16 PRUnichar;
-  #endif
+  typedef PRUint16 PRUnichar;
 #endif
 
   /*
