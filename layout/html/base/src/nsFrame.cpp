@@ -1406,18 +1406,22 @@ NS_IMETHODIMP nsFrame::GetView(nsIPresContext* aPresContext, nsIView** aView) co
   // Initialize OUT parameter
   *aView = nsnull;
 
-  // Check for a property on the frame
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  // Check the frame state bit and see if the frame has a view
+  if (mState & NS_FRAME_HAS_VIEW) {
+    // Check for a property on the frame
+    nsCOMPtr<nsIPresShell>     presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
   
-    if (frameManager) {
-      void* value;
-      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value);
-      *aView = (nsIView*)value;
+    if (presShell) {
+      nsCOMPtr<nsIFrameManager>  frameManager;
+      presShell->GetFrameManager(getter_AddRefs(frameManager));
+    
+      if (frameManager) {
+        void* value;
+        frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value);
+        *aView = (nsIView*)value;
+        NS_ASSERTION(value != 0, "frame state bit was set but frame has no view");
+      }
     }
   }
 
@@ -1442,6 +1446,9 @@ NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
                                        aView, nsnull);
       }
     }
+
+    // Set the frame state bit that says the frame has a view
+    mState |= NS_FRAME_HAS_VIEW;
   }
 
   return NS_OK;
