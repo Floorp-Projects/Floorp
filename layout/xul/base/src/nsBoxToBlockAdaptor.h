@@ -40,7 +40,6 @@
 
 #include "nsIBoxToBlockAdaptor.h"
 #include "nsBox.h"
-class nsSpaceManager;
 
 class nsBoxToBlockAdaptor : public nsBox, public nsIBoxToBlockAdaptor {
 
@@ -116,7 +115,6 @@ private:
   nscoord mAscent;
   nscoord mCachedMaxElementHeight;
 
-  nsSpaceManager* mSpaceManager;
   nsSize mLastSize;
   nsSize mOverflow;
   nsIPresShell* mPresShell;
