@@ -35,7 +35,7 @@
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
-#include "nsIExternalDocumentLoadObserver.h"
+#include "nsIExternalDocLoadObs.h"
 #include "nsVoidArray.h"
 #include "nsIHttpURL.h"
 #include "nsILoadAttribs.h"
