@@ -41,6 +41,12 @@ PR_STATIC_CALLBACK(void) info_callback(png_structp png_ptr, png_infop info_ptr);
 PR_STATIC_CALLBACK(void) row_callback(png_structp png_ptr, png_bytep new_row,
                                       png_uint_32 row_num, int pass);
 PR_STATIC_CALLBACK(void) end_callback(png_structp png_ptr, png_infop info_ptr);
+PR_STATIC_CALLBACK(void) error_callback(png_structp png_ptr, png_const_charp error_msg);
+PR_STATIC_CALLBACK(void) warning_callback(png_structp png_ptr, png_const_charp warning_msg);
+
+#ifdef PR_LOGGING
+PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
+#endif
 
 NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
@@ -78,8 +84,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   /* Always decode to 24 bit pixdepth */
 
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING, 
-                                NULL, NULL, 
-                                NULL);
+                                NULL, error_callback, warning_callback);
   if (!mPNG) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -497,3 +502,17 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
   decoder->mFrame->SetMutable(PR_FALSE);
 }
 
+
+void
+error_callback(png_structp png_ptr, png_const_charp error_msg)
+{
+  PR_LOG(gPNGLog, PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
+  longjmp(png_ptr->jmpbuf, 1);
+}
+
+
+void
+warning_callback(png_structp png_ptr, png_const_charp warning_msg)
+{
+  PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
+}
