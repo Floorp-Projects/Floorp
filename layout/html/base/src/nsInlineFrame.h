@@ -120,8 +120,6 @@ public:
 
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
 
-  static nsIID kInlineFrameCID;
-
   // Take all of the frames away from this frame. The caller is
   // presumed to keep them alive.
   void StealAllFrames() {

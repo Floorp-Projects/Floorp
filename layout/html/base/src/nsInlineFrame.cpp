@@ -58,10 +58,8 @@
 #undef NOISY_PUSHING
 #endif
 
-nsIID nsInlineFrame::kInlineFrameCID = NS_INLINE_FRAME_CID;
 
-
-
+NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
 
 //////////////////////////////////////////////////////////////////////
