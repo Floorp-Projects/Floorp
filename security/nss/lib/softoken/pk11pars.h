@@ -229,7 +229,6 @@ static SECStatus
 pk11_argParseModuleSpec(char *modulespec, char **lib, char **mod, 
 					char **parameters, char **nss)
 {
-    char ch;
     int next;
     modulespec = pk11_argStrip(modulespec);
 
@@ -358,7 +357,7 @@ pk11_argDecodeNumber(char *num)
 	num++;
 	if ((*num == 'x') || (*num == 'X')) {
 	    radix = 16;
-	    *num++;
+	    num++;
 	}
     }
 
@@ -482,7 +481,7 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     if ((slotParams == NULL) || (*slotParams == 0))  return NULL;
 
     /* first count the number of slots */
-    for (slotIndex = slotParams; *slotIndex; 
+    for (slotIndex = pk11_argStrip(slotParams); *slotIndex; 
 		slotIndex = pk11_argStrip(pk11_argSkipParameter(slotIndex))) {
 	count++;
     }
@@ -491,13 +490,15 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     if (arena) {
 	slotInfo = (PK11PreSlotInfo *) 
 			PORT_ArenaAlloc(arena,count*sizeof(PK11PreSlotInfo));
+	PORT_Memset(slotInfo,0,count*sizeof(PK11PreSlotInfo));
     } else {
 	slotInfo = (PK11PreSlotInfo *) 
 			PORT_ZAlloc(count*sizeof(PK11PreSlotInfo));
     }
     if (slotInfo == NULL) return NULL;
 
-    for (slotIndex = slotParams, i = 0; *slotIndex && i < count ; i++) {
+    for (slotIndex = pk11_argStrip(slotParams), i = 0; 
+					*slotIndex && i < count ; ) {
 	char *name;
 	name = pk11_argGetName(slotIndex,&next);
 	slotIndex += next;
@@ -507,13 +508,14 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
 	    slotIndex += next;
 	    if (args) {
 		pk11_argDecodeSingleSlotInfo(name,args,&slotInfo[i]);
+		i++;
 		PORT_Free(args);
 	    }
 	}
 	if (name) PORT_Free(name);
 	slotIndex = pk11_argStrip(slotIndex);
     }
-    *retCount = count;
+    *retCount = i;
     return slotInfo;
 }
 
@@ -590,7 +592,7 @@ pk11_freePair(char *pair)
 }
 
 #define MAX_FLAG_SIZE  sizeof("internal")+sizeof("FIPS")+sizeof("moduleDB")+\
-				sizeof("moduleDBOnly")+sizeof(isCritical)
+				sizeof("moduleDBOnly")+sizeof("critical")
 static char *
 pk11_mkNSSFlags(PRBool internal, PRBool isFIPS,
 		PRBool isModuleDB, PRBool isModuleDBOnly, PRBool isCritical)
@@ -627,10 +629,9 @@ pk11_mkNSSFlags(PRBool internal, PRBool isFIPS,
 }
 
 static char *
-pk11_makeCipherFlags(unsigned long ssl0, unsigned long ssl1)
+pk11_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 {
     char *cipher = NULL;
-    char *ret = NULL;
     int i;
 
     for (i=0; i < sizeof(ssl0)*8; i++) {
@@ -669,10 +670,9 @@ pk11_makeCipherFlags(unsigned long ssl0, unsigned long ssl1)
 }
 
 static char *
-pk11_makeSlotFlags(unsigned long defaultFlags)
+pk11_mkSlotFlags(unsigned long defaultFlags)
 {
     char *flags=NULL;
-    char *ret=NULL;
     int i,j;
 
     for (i=0; i < sizeof(defaultFlags)*8; i++) {
@@ -704,7 +704,7 @@ pk11_makeSlotFlags(unsigned long defaultFlags)
 #define PK11_MAX_ROOT_FLAG_SIZE  sizeof("hasRootCerts")+sizeof("hasRootTrust")
 
 static char *
-pk11_makeRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
+pk11_mkRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
 {
     char *flags= (char *)PORT_ZAlloc(PK11_MAX_ROOT_FLAG_SIZE);
     PRBool first = PR_TRUE;
@@ -740,8 +740,8 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
 	askpw = "any";
 	break;
     }
-    flags = pk11_makeSlotFlags(defaultFlags);
-    rootFlags = pk11_makeRootFlags(hasRootCerts,hasRootTrust);
+    flags = pk11_mkSlotFlags(defaultFlags);
+    rootFlags = pk11_mkRootFlags(hasRootCerts,hasRootTrust);
     flagPair=pk11_formatPair("slotFlags",flags,'\'');
     rootFlagsPair=pk11_formatPair("rootFlags",rootFlags,'\'');
     if (flags) PR_smprintf_free(flags);
@@ -790,7 +790,7 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
     nssFlags = pk11_mkNSSFlags(internal,isFIPS,isModuleDB,isModuleDBOnly,
 							isCritical); 
 	/* for now only the internal module is critical */
-    ciphers = pk11_makeCipherFlags(ssl0, ssl1);
+    ciphers = pk11_mkCipherFlags(ssl0, ssl1);
 
     trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,0);
     cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,0);

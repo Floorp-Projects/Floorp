@@ -32,7 +32,7 @@
  *
  * keydbt.h - private data structures for the private key library
  *
- * $Id: keydbt.h,v 1.2 2001/01/07 08:13:10 nelsonb%netscape.com Exp $
+ * $Id: keydbt.h,v 1.3 2001/09/20 21:05:49 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYDBT_H_
@@ -67,33 +67,22 @@ typedef struct SECKEYKeyDBHandleStr SECKEYKeyDBHandle;
 /*
 ** Typedef for callback to get a password "key".
 */
-typedef SECItem * (* SECKEYGetPasswordKey)(void *arg,
+typedef SECItem * (* SECKEYLowGetPasswordKey)(void *arg,
 					   SECKEYKeyDBHandle *handle);
 
+extern const SEC_ASN1Template SECKEY_LowPQGParamsTemplate[];
+extern const SEC_ASN1Template SECKEY_LowRSAPrivateKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_LowDSAPrivateKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_LowDSAPrivateKeyExportTemplate[];
+extern const SEC_ASN1Template SECKEY_LowDHPrivateKeyTemplate[];
+extern const SEC_ASN1Template SECKEY_LowDHPrivateKeyExportTemplate[];
+
 extern const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[];
-extern const SEC_ASN1Template SECKEY_RSAPublicKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_RSAPrivateKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_DSAPublicKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_DSAPrivateKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_DSAPrivateKeyExportTemplate[];
-extern const SEC_ASN1Template SECKEY_DHPrivateKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_DHPrivateKeyExportTemplate[];
-extern const SEC_ASN1Template SECKEY_PrivateKeyInfoTemplate[];
-extern const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_DHParamKeyTemplate[];
-extern const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[];
-extern const SEC_ASN1Template SECKEY_PointerToPrivateKeyInfoTemplate[];
-extern const SEC_ASN1Template SECKEY_PQGParamsTemplate[];
 extern const SEC_ASN1Template SECKEY_AttributeTemplate[];
 
 /* These functions simply return the address of the above-declared templates.
 ** This is necessary for Windows DLLs.  Sigh.
 */
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PrivateKeyInfoTemplate;
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
 extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate;
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_DSAPublicKeyTemplate;
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_RSAPublicKeyTemplate;
 
 #endif /* _KEYDBT_H_ */

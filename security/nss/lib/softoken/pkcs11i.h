@@ -372,6 +372,18 @@ typedef struct pk11_parametersStr {
     PRBool pwRequired;
 } pk11_parameters;
 
+/* machine dependent path stuff used by dbinit.c and pk11db.c */
+#ifdef macintosh
+#define PATH_SEPARATOR ":"
+#define SECMOD_DB "Security Modules"
+#define CERT_DB_FMT "%sCertificates%s"
+#define KEY_DB_FMT "%sKey Database%s"
+#else
+#define PATH_SEPARATOR "/"
+#define SECMOD_DB "secmod.db"
+#define CERT_DB_FMT "%scert%s.db"
+#define KEY_DB_FMT "%skey%s.db"
+#endif
 
 SEC_BEGIN_PROTOS
 
@@ -448,9 +460,30 @@ extern PRBool pk11_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type);
 extern CK_RV secmod_parseParameters(char *param, pk11_parameters *parsed);
 extern void secmod_freeParams(pk11_parameters *params);
 extern char *secmod_getSecmodName(char *params, PRBool *rw);
-extern char ** SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw);
-extern SECStatus SECMOD_DeletePermDB(char *dbname,char *args, PRBool rw);
-extern SECStatus SECMOD_AddPermDB(char *dbname, char *module, PRBool rw);
+extern char ** secmod_ReadPermDB(char *dbname, char *params, PRBool rw);
+extern SECStatus secmod_DeletePermDB(char *dbname,char *args, PRBool rw);
+extern SECStatus secmod_AddPermDB(char *dbname, char *module, PRBool rw);
+/*
+ * OK there are now lots of options here, lets go through them all:
+ *
+ * configdir - base directory where all the cert, key, and module datbases live.
+ * certPrefix - prefix added to the beginning of the cert database example: "
+ *                      "https-server1-"
+ * keyPrefix - prefix added to the beginning of the key database example: "
+ *                      "https-server1-"
+ * secmodName - name of the security module database (usually "secmod.db").
+ * readOnly - Boolean: true if the databases are to be openned read only.
+ * nocertdb - Don't open the cert DB and key DB's, just initialize the
+ *                      Volatile certdb.
+ * nomoddb - Don't open the security module DB, just initialize the
+ *                      PKCS #11 module.
+ * forceOpen - Continue to force initializations even if the databases cannot
+ *                      be opened.
+ */
+CK_RV pk11_DBInit(const char *configdir, const char *certPrefix,
+	 const char *keyPrefix, const char *secmodName, PRBool readOnly, 
+			PRBool noCertDB, PRBool noModDB, PRBool forceOpen);
+
 
 SEC_END_PROTOS
 
