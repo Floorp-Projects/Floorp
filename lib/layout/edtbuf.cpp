@@ -10241,8 +10241,9 @@ void CEditBuffer::ReadMimeFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
                         t_part = t_decoder.getPart(i);
                         if (t_part)
                         {
-                            EDT_AddURLToSafeList(m_pEmbeddedData, 
-                                t_part->getUrlFileName());
+                            EDT_AddTmpFileURLToSafeList(m_pEmbeddedData, 
+                                             t_part->getUrlFileName(),
+                                             t_part->getFileName());
                         }
                     }
                 }

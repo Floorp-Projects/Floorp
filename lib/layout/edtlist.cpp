@@ -408,24 +408,36 @@ class SafeListElement : public LListElement
 {
 public:
   void *m_pID;
+  char *m_pTmpFilePath;
   int32 m_iRefCount;
 
-  SafeListElement(void *id, const char *url_str) : LListElement()
+  SafeListElement(void *id, const char *url_str, const char *path=0)
+                 : LListElement(), m_pTmpFilePath(0)
   {
     if (url_str)
-      m_pData  = (void *)XP_STRDUP(url_str);
+      m_pData = (void *)XP_STRDUP(url_str);
+
+    if (path)
+      m_pTmpFilePath = XP_STRDUP(path);
 
     m_pID       = id;
     m_iRefCount = 1;
   }
 
-  ~SafeListElement()
+  virtual ~SafeListElement()
   {
+    if (m_pTmpFilePath)
+    {
+      XP_FileRemove(m_pTmpFilePath, xpFileToPost);
+      XP_FREE(m_pTmpFilePath);
+    }
+
     if (m_pData)
       XP_FREE(m_pData);
 
-    m_pData = 0;
-    m_pID   = 0;
+    m_pData        = 0;
+    m_pID          = 0;
+    m_pTmpFilePath = 0;
   }
 
   XP_Bool match(void *id, const char *url_str)
@@ -442,6 +454,7 @@ public:
     fprintf(stdout, "this:         0x%.8x\n", this);
     fprintf(stdout, "    id:       0x%.8x\n", m_pID);
     fprintf(stdout, "    url_str:  %s\n", (char *)m_pData);
+    fprintf(stdout, "    path:     %s\n", m_pTmpFilePath ? m_pTmpFilePath : "0");
     fprintf(stdout, "    count:    %d\n", m_iRefCount);
     fprintf(stdout, "    prev:     0x%.8x\n", getPrev());
     fprintf(stdout, "    next:     0x%.8x\n", getNext());
@@ -472,7 +485,7 @@ public:
     return 0;
   }
 
-  int32 insert(void *id, const char *url_str)
+  int32 insert(void *id, const char *url_str, const char *path = 0)
   {
     SafeListElement *ele = find(id, url_str);
 
@@ -482,7 +495,7 @@ public:
       return 0;
     }
 
-    ele = new SafeListElement(id, url_str);
+    ele = new SafeListElement(id, url_str, path);
 
     if (!ele)
       return -1;
@@ -570,7 +583,7 @@ EDT_URLOnSafeList( void *id, const char *url_str )
 }
 
 extern "C" int32
-EDT_AddURLToSafeList( void *id, const char *url_str )
+EDT_AddTmpFileURLToSafeList( void *id, const char *url_str, const char *path )
 {
   int32 status = 0;
 
@@ -581,13 +594,19 @@ EDT_AddURLToSafeList( void *id, const char *url_str )
       return -1;
   }
 
-  status = app_safe_list->insert(id, url_str);
+  status = app_safe_list->insert(id, url_str, path);
 
 #ifdef DEBUG_SAFE_LIST
   app_safe_list->print();
 #endif /* DEBUG_SAFE_LIST */
 
   return status;
+}
+
+extern "C" int32
+EDT_AddURLToSafeList( void *id, const char *url_str )
+{
+  return EDT_AddTmpFileURLToSafeList(id, url_str, 0);
 }
 
 extern "C" int32

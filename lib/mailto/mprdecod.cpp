@@ -154,9 +154,9 @@ SimpleMultipartRelatedMimeDecoder::SimpleMultipartRelatedMimeDecoder(const char 
 
 SimpleMultipartRelatedMimeDecoder::~SimpleMultipartRelatedMimeDecoder()
 {
-    clear_all();
     if (m_pHeaderFileName)
         XP_FileRemove(m_pHeaderFileName,xpFileToPost);
+    clear_all();
 }
 
 
