@@ -3743,7 +3743,9 @@ function OpenBrowserWindow()
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
-  var url = handler.chromeUrlForTask;
+  // XXXBLAKE For now...
+  // var url = handler.chromeUrlForTask;
+  var url = "chrome://browser/content";
   var wintype = document.firstChild.getAttribute('windowtype');
 
   // if and only if the current window is a browser window and it has a document with a character
