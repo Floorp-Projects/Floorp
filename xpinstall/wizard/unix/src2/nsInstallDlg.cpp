@@ -876,6 +876,8 @@ nsInstallDlg::ShowCompleteDlg()
                       okButton);
     gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
                        GTK_SIGNAL_FUNC(CompleteOK), completeDlg);
+    GTK_WIDGET_SET_FLAGS (okButton, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(okButton);
     gtk_widget_show_all(completeDlg);
 
     while (!bComplete)
