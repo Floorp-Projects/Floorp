@@ -198,7 +198,8 @@ viewer:Components:wallet.xpt
 viewer:Components:WalletViewers.shlb 
 viewer:Components:webshell.xpt
 viewer:Components:embeddingbrowser.xpt
-viewer:Components:widget.xpt 
+viewer:Components:widget.xpt
+viewer:Components:windowds.xpt
 viewer:Components:xfer.shlb 
 viewer:Components:xpcom.xpt 
 viewer:Components:XPConnect.shlb 

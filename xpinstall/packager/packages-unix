@@ -207,6 +207,7 @@ bin/components/walleteditor.xpt
 bin/components/walletpreview.xpt
 bin/components/webshell_idls.xpt
 bin/components/widget.xpt
+bin/components/windowds.xpt
 bin/components/xpcom_base.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
