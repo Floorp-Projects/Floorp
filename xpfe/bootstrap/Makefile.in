@@ -35,7 +35,7 @@ else
 PROGRAM		= mozilla-bin
 endif
 
-ifndef NO_STATIC_LIB
+ifdef BUILD_STATIC_LIBS
 EXTRA_DSO_LDOPTS = -L$(DEPTH)/dist/lib/components
 EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
 else
@@ -55,7 +55,7 @@ XP_LIBS		= \
 		$(EXTRA_DSO_LIBS) \
 		$(NULL)
 
-ifdef NO_STATIC_LIB
+ifndef BUILD_STATIC_LIBS
 XP_LIBS		+= \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
