@@ -66,11 +66,15 @@ public:
   , mURI(inURI)
   {
     [mLoadListener retain];
+    [mTarget retain];
+    [mUserData retain];
   }
   
   virtual ~StreamLoaderContext()
   {
     [mLoadListener release];
+    [mTarget release];
+    [mUserData release];
   }
   
   NS_DECL_ISUPPORTS
@@ -80,9 +84,11 @@ public:
 
 protected:
 
+  // we have to retain all of these so that by the time the necko request completes, the target
+  // to which we send the notification (|mTarget|) and its "parameters" (|mUserData|) are still around.
   id<RemoteLoadListener>	mLoadListener; // retained
-  id                      mTarget;       // not retained
-  id                      mUserData;     // not retained
+  id                      mTarget;       // retained
+  id                      mUserData;     // retained
   nsString                mURI;
   
 };
