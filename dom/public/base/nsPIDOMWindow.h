@@ -93,6 +93,8 @@ public:
   NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement) = 0;
 
   NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult) = 0;
+
+  NS_IMETHOD SetOpenerScriptURL(nsIURI* aURI) = 0;
 };
 
 #endif // nsPIDOMWindow_h__

@@ -390,10 +390,19 @@ GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::SetOpenerScriptURL(nsIURI* aURI)
+{
+  mOpenerScriptURL = aURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
                                  PRBool aRemoveEventListeners,
                                  PRBool aClearScopeHint)
 {
+  nsresult rv;
+
   if (!aDocument) {
     if (mDocument) {
       // Cache the old principal now that the document is being removed.
@@ -451,7 +460,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       GetPrivateRoot(getter_AddRefs(internal));
 
       if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
-        nsresult rv;
         nsCOMPtr<nsIXBLService> xblService =
                  do_GetService("@mozilla.org/xbl;1", &rv);
         if (xblService) {
@@ -511,20 +519,32 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         isContentWindow = itemType != nsIDocShellTreeItem::typeChrome;
       }
 
+      PRBool isAboutBlank = PR_FALSE;
       nsCAutoString url;
+      docURL->GetSpec(url);
+      isAboutBlank = url.Equals(NS_LITERAL_CSTRING("about:blank"));
 
-      if (!(isContentWindow && aClearScopeHint)) {
-        docURL->GetSpec(url);
+      PRBool isSameOrigin = PR_FALSE;
+      if (isAboutBlank && mOpenerScriptURL) {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+        if (webNav) {
+          nsCOMPtr<nsIURI> newDocURL;
+          webNav->GetCurrentURI(getter_AddRefs(newDocURL));
+          if (newDocURL && sSecMan) {
+            isSameOrigin =
+              NS_SUCCEEDED(sSecMan->CheckSameOriginURI(mOpenerScriptURL,
+                                                       newDocURL));
+          }
+        }
       }
 
-      // The "isContentWindow && aClearScopeHint" part of the if check
-      // below must be the reverse of the above if check, and vise
-      // versa...
-
-      if ((isContentWindow && aClearScopeHint) ||
-          !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
-        // aClearScopeHint is true, or the current document is *not*
-        // about:blank, clear timeouts and clear the scope.
+      if (!isAboutBlank ||
+         (isContentWindow && aClearScopeHint && !isSameOrigin))
+      {
+        // the current document is *not* about:blank,
+        // or aClearScopeHint is true and the new document
+        // has a different origin than the calling script.
+        // clear timeouts and clear the scope
         ClearAllTimeouts();
 
         if (mContext && mJSObject) {
@@ -1387,6 +1407,11 @@ GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 NS_IMETHODIMP
 GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
 {
+  // check if we were called from a privileged chrome script.
+  // If not, opener is settable only to null.
+  if (aOpener && !IsCallerChrome()) {
+    return NS_OK;
+  }
   mOpener = aOpener;
 
   return NS_OK;
@@ -4547,8 +4572,24 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
                                 aExtraArgument, getter_AddRefs(domReturn));
       }
 
-      if (domReturn)
+      if (domReturn) {
         CallQueryInterface(domReturn, aReturn);
+
+        // Save the prinicpal of the calling script
+        // We need it to decide whether to clear the scope in SetNewDocument
+        NS_ASSERTION(sSecMan, "No Security Manager Found!");
+        if (sSecMan) {
+          nsCOMPtr<nsIPrincipal> principal;
+          sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
+          nsCOMPtr<nsICodebasePrincipal> codebasePrin(do_QueryInterface(principal));
+          if (codebasePrin) {
+            nsCOMPtr<nsIURI> subjectURI;
+            codebasePrin->GetURI(getter_AddRefs(subjectURI));
+            nsCOMPtr<nsPIDOMWindow> domReturnPrivate(do_QueryInterface(domReturn));
+            domReturnPrivate->SetOpenerScriptURL(subjectURI);
+          }
+        }
+      }
     }
   }
 
