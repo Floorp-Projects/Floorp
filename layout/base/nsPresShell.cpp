@@ -3896,7 +3896,7 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
   if (NS_SUCCEEDED(rv) && dx) {
     if (nsnull != widget) {
-      rv = dx->CreateRenderingContext(NS_STATIC_CAST(nsIWidget *, widget), result);
+      rv = dx->CreateRenderingContext(widget.get(), result);
     }
     else {
       rv = dx->CreateRenderingContext(result);
