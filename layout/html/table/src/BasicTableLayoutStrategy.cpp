@@ -1921,7 +1921,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
           break;
       }
 
-      /* set the column width, knowing that the table fits in the available space */
+      /* set the column width, knowing that the table is constrained */
       if (0==specifiedProportionColumnWidth || 0.0==specifiedPercentageColWidth)
       { // col width is specified to be the minimum
         mTableFrame->SetColumnWidth(colIndex, minColWidth);
@@ -1940,7 +1940,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
       }
       else if (PR_TRUE==isAutoWidth)
       { // column's width is determined by its content, done in post-processing
-        mTableFrame->SetColumnWidth(colIndex, 0); // set to 0 width for now
+        mTableFrame->SetColumnWidth(colIndex, minColWidth); // reserve the column's min width
         atLeastOneAutoWidthColumn = PR_TRUE;
       }
       else if (-1!=specifiedProportionColumnWidth)
@@ -2016,7 +2016,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
   // first, assign autoWidth columns a width
   if (PR_TRUE==atLeastOneAutoWidthColumn)
   { // proportionately distribute the remaining space to autowidth columns
-    DistributeRemainingSpace(aMaxWidth, tableWidth, aTableIsAutoWidth);
+    // "0" for the last param tells DistributeRemainingSpace that this is the top (non-recursive) call
+    PRInt32 topRecursiveControl=0;
+    DistributeRemainingSpace(aMaxWidth, tableWidth, aTableIsAutoWidth, topRecursiveControl);
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
@@ -2090,12 +2092,20 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
   return result;
 }
 
+static const PRInt32 kRecursionLimit=10;  // backwards compatible with Nav4
+
 // take the remaining space in the table and distribute it proportionately 
 // to the auto-width cells in the table (based on desired width)
 void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecifiedWidth,
-                                                        nscoord  aComputedTableWidth, 
-                                                        PRBool   aTableIsAutoWidth)
+                                                        nscoord &aComputedTableWidth, 
+                                                        PRBool   aTableIsAutoWidth,
+                                                        PRInt32 &aRecursionControl)
 {
+  aRecursionControl++;
+  if (kRecursionLimit<=aRecursionControl) // only allow kRecursionLimit iterations, as per Nav4. See laytable.c
+    return;
+  nscoord sumOfMinWidths = 0;   // sum of min widths of each auto column
+  nscoord aStartingComputedTableWidth = aComputedTableWidth;  // remember this so we can see if we're making any progress
   if (PR_TRUE==gsDebug) 
     printf ("DistributeRemainingSpace: fixed width %d > computed table width %d\n",
             aTableSpecifiedWidth, aComputedTableWidth);
@@ -2105,6 +2115,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
   mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
   if (0!=numAutoColumns)
   {
+    PRInt32 numColumnsToBeResized=0;
     // there's at least one auto-width column, so give it (them) the extra space
     // proportionately distributed extra space, based on the column's desired size
     nscoord totalEffectiveWidthOfAutoColumns = 0;
@@ -2112,12 +2123,18 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
     PRInt32 i;
     for (i = 0; i<numAutoColumns; i++)
     {
+      PRInt32 colIndex = autoColumns[i];
       nsTableColFrame *colFrame = mTableFrame->GetColFrame(autoColumns[i]);
+      nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
       nscoord maxEffectiveColWidth = colFrame->GetEffectiveMaxColWidth();
-      if (0!=maxEffectiveColWidth)
-        totalEffectiveWidthOfAutoColumns += maxEffectiveColWidth;
-      else
-        totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
+      if ((PR_FALSE==aTableIsAutoWidth)||(startingColWidth<maxEffectiveColWidth))
+      {
+        numColumnsToBeResized++;
+        if (0!=maxEffectiveColWidth)
+          totalEffectiveWidthOfAutoColumns += maxEffectiveColWidth;
+        else
+          totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
+      }
     }
     // availWidth is the difference between the total available width and the 
     // amount of space already assigned, assuming auto col widths were assigned 0.
@@ -2132,46 +2149,52 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
     {
       PRInt32 colIndex = autoColumns[i];
       nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
+      nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
+      nscoord maxEffectiveColWidth = colFrame->GetEffectiveMaxColWidth();
       // if we actually have room to distribute, do it here
-      // otherwise, the auto columns will remain 0-width until expanded to their minimum in EnsureCellMinWidths
+      // otherwise, the auto columns already are set to their minimum
       if (0<availWidth)
       {
-        float percent;
-        if (0!=aTableSpecifiedWidth)
-          percent = ((float)(colFrame->GetEffectiveMaxColWidth()))/((float)totalEffectiveWidthOfAutoColumns);
-        else
-          percent = ((float)1)/((float)numAutoColumns);
-        nscoord colWidth = (nscoord)(availWidth*percent);
-        // in an auto width table, the column cannot be wider than its max width
-        if (PR_TRUE==aTableIsAutoWidth)
-        { // since the table shrinks to the content width, don't be wider than the content max width
-          colWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth()); // XXX can this legally be 0?
+        if ((PR_FALSE==aTableIsAutoWidth)||(startingColWidth<maxEffectiveColWidth))
+        {
+          float percent;
+          if (0!=aTableSpecifiedWidth)
+            percent = ((float)maxEffectiveColWidth)/((float)totalEffectiveWidthOfAutoColumns);
+          else
+            percent = ((float)1)/((float)numColumnsToBeResized);
+          nscoord colWidth =  startingColWidth + (nscoord)(availWidth*percent);
+          if (PR_TRUE==gsDebug)
+            printf("  colWidth = %d from startingColWidth %d plus %d percent of availWidth %d\n",
+                  colWidth, startingColWidth, (nscoord)((float)100*percent), availWidth);
+          // in an auto width table, the column cannot be wider than its max width
+          if (PR_TRUE==aTableIsAutoWidth)
+          { // since the table shrinks to the content width, don't be wider than the content max width
+            nscoord newColWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth());
+            aComputedTableWidth += newColWidth-colWidth;
+            colWidth = newColWidth;
+          }
+          else
+            aComputedTableWidth += colWidth - startingColWidth;
+          if (gsDebug==PR_TRUE) 
+            printf("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
+                   colIndex, colFrame->GetEffectiveMaxColWidth(), colWidth);
+          mTableFrame->SetColumnWidth(colIndex, colWidth);
         }
-        if (gsDebug==PR_TRUE) 
-          printf("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
-                 colIndex, colFrame->GetEffectiveMaxColWidth(), colWidth);
-        mTableFrame->SetColumnWidth(colIndex, colWidth);
       }
     }
 
-    if (PR_TRUE==gsDebug)
-    {
-      nscoord tableWidth=0;
-      printf("before EnsureCellMinWidth: ");
-      for (PRInt32 i=0; i<mNumCols; i++) 
+    if (aComputedTableWidth!=aStartingComputedTableWidth)
+    {  // othewise we made no progress and shouldn't continue
+      if (aComputedTableWidth<aTableSpecifiedWidth)
       {
-        tableWidth += mTableFrame->GetColumnWidth(i);
-        printf(" %d ", mTableFrame->GetColumnWidth(i));
+        DistributeRemainingSpace(aTableSpecifiedWidth, aComputedTableWidth, aTableIsAutoWidth, aRecursionControl);
       }
-      printf ("\n  computed table width is %d\n",tableWidth);
     }
-
-    EnsureCellMinWidths(PR_FALSE);
   }
   if (PR_TRUE==gsDebug)
   {
     nscoord tableWidth=0;
-    printf("after EnsureCellMinWidth: ");
+    printf("at end of DistributeRemainingSpace: ");
     for (PRInt32 i=0; i<mNumCols; i++) 
     {
       tableWidth += mTableFrame->GetColumnWidth(i);
@@ -2179,84 +2202,6 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
     }
     printf ("\n  computed table width is %d\n",tableWidth);
   }
-}
-
-void BasicTableLayoutStrategy::EnsureCellMinWidths(PRBool aShrinkFixedWidthCells)
-{
-  PRBool atLeastOne = PR_TRUE;
-  PRBool *colsToRemoveFrom = new PRBool[mNumCols];
-  for (PRInt32 i=0; i<mNumCols; i++)
-    colsToRemoveFrom[i] = PR_TRUE;
-
-  if (PR_FALSE==aShrinkFixedWidthCells)
-  {
-    PRInt32 numFixedColumns=0;
-    PRInt32 *fixedColumns=nsnull;
-    mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
-    for (PRInt32 i=0; i<numFixedColumns; i++)
-      colsToRemoveFrom[fixedColumns[i]]=PR_FALSE;
-  }
-
-  while (PR_TRUE==atLeastOne)
-  {
-    atLeastOne=PR_FALSE;
-    PRInt32 colIndex;
-    nscoord addedWidth = 0;
-    // first, bump up cells that are below their min to their min width
-    for (colIndex=0; colIndex<mNumCols; colIndex++)
-    {
-      nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-      nscoord minColWidth = colFrame->GetMinColWidth();
-      nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
-      if (colWidth<minColWidth)
-      {
-        addedWidth += (minColWidth-colWidth);
-        mTableFrame->SetColumnWidth(colIndex, minColWidth);
-        atLeastOne=PR_TRUE;
-      }
-    }
-    // second, remove the added space from cells that can afford to slim down
-    //QQQ boy is this slow!  there has to be a faster way that is still guaranteed to be accurate...
-
-    while ((addedWidth>0))
-    { // while we still have some extra space, and last time we were able to take some off...
-      PRInt32 startingAddedWidth = addedWidth;
-      for (colIndex=0; colIndex<mNumCols; colIndex++)
-      {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-        nscoord minColWidth = colFrame->GetMinColWidth();
-        nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
-        if ((colWidth>minColWidth) && (PR_TRUE==colsToRemoveFrom[colIndex]))
-        {
-          mTableFrame->SetColumnWidth(colIndex, colWidth-1);
-          addedWidth--;
-          if (0==addedWidth)
-          { // we're run out of extra space
-            break;  // for (colIndex=0; colIndex<mNumCols; colIndex++)
-          }
-        }
-      }
-      if (startingAddedWidth==addedWidth)
-      { // we we unable to find any columns to remove space from
-        PRBool okToContinue=PR_FALSE;
-        for (PRInt32 i=0; i<mNumCols; i++)
-        {
-          if (PR_FALSE==colsToRemoveFrom[i])
-          {
-            colsToRemoveFrom[i] = PR_TRUE;
-            okToContinue=PR_TRUE;
-          }
-        }
-        if (PR_FALSE==okToContinue)
-          break; // while ((addedWidth>0))
-      }
-    }
-    if (0<addedWidth)
-    { // all our cells are at their min width, so no use doing anything else
-      break; // while (PR_TRUE==atLeastOne)
-    }
-  }
-  delete [] colsToRemoveFrom;
 }
 
 
