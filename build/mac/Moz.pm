@@ -29,7 +29,7 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias MakeDirectoryPath StopForErrors DontStopForErrors InstallFromManifest);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib);
 
 	use Cwd;
@@ -224,6 +224,15 @@ sub build_project($$$)
 
 		log_message_with_time("### Building \"$project_path\"");
 
+			# Check that the given project exists
+		if (! -e $project_path)
+			{
+				print ERROR_LOG "### Build failed.\n";
+				die "### Can't find project file \"$project_path\".\n";
+			}
+		
+		print "Building \"$project_path\"\n";
+		
 		$had_errors =
 MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
 	tell (load script file "$CodeWarriorLib") to BuildProject("$project_path", "$project_name", "$target_name", "$recent_errors_file", $clean_build)
@@ -279,7 +288,7 @@ sub MakeAlias($$)
 				$new_file .= $1;
 			}
 
-		my $message = "Can't create a Finder alias (at \"$new_file\") for \"$old_file\";";
+		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\";";
 		# die "$message symlink doesn't work on directories.\n" if -d $old_file;
 		die "$message because \"$old_file\" doesn't exit.\n" unless -e $old_file;
 
@@ -288,6 +297,18 @@ sub MakeAlias($$)
 		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
 	}
 
+
+sub MakeDirectoryPath($)
+	{
+		my ($dir_path) = @_;
+		
+		# should check for trailing : here if necessary, do error checking and test if target already exists
+		
+		mkpath($dir_path);
+	
+	}
+	
+	
 =pod
 
 C<InstallFromManifest()>
@@ -305,6 +326,8 @@ sub InstallFromManifest($;$)
 
 		chop($dest_dir) if $dest_dir =~ m/:$/;
 
+		print "Doing manifest on \"$manifest_file\"\n";
+		
 		my $read = maniread(full_path_to($manifest_file));
 		foreach $file (keys %$read)
 			{

@@ -4,7 +4,7 @@ package			BuildList;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildMozilla DistMozilla);
+@EXPORT			= qw(BuildMozilla DistMozilla PrepareDist);
 
 =head1 NAME
 
@@ -34,7 +34,7 @@ Reserved.
 =cut
 
 		use Moz;
-
+		
 sub BuildMozilla()
 	{
 		# chdir(":::"); # assuming this script is in "...:mozilla:build:mac:", change dir to just inside "mozilla"
@@ -43,97 +43,90 @@ sub BuildMozilla()
 		if ( $main::DEBUG )
 			{
 				$D = "Debug";
-				$dist_dir = ":dist:client_debug:";
+				$dist_dir = ":mozilla:dist:client_debug:";
 			}
 		else
 			{
 				$D = "";
-				$dist_dir = ":dist:client:";
+				$dist_dir = ":mozilla:dist:client:";
 			}
-
-			#
-			# Make the project that copies headers. The target is called "Stubs" so that
-			# the AppleScript does a 'remove binaries' on the target first to guarantee
-			# that it builds.
-			#
-		
-		BuildProjectClean(":build:mac:MakeDist.mcp", "Stubs") unless $main::use_DistMozilla;
 		
 			#
 			# Build the appropriate target of each project
 			#
 
-		BuildProjectClean(":lib:mac:NSStdLib:NSStdLib.mcp",										"Stubs");
-		BuildProjectClean(":lib:mac:NSRuntime:NSRuntime.mcp",									"Stubs");
-		BuildProjectClean(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",			"Stubs");
-		BuildProjectClean(":cmd:macfe:projects:client:NavigatorStubs.mcp",		"Stubs");
+		BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",										"Stubs");
+		BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",									"Stubs");
+		BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",			"Stubs");
+		BuildProjectClean(":mozilla:cmd:macfe:projects:client:NavigatorStubs.mcp",		"Stubs");
 		
-		BuildProject(":lib:mac:NSRuntime:NSRuntime.mcp",											"NSRuntime$D.shlb");
-		MakeAlias(":lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",											"NSRuntime$D.shlb");
+		MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
 		
-		BuildProject(":cmd:macfe:restext:StringLib.mcp",											"Strings$D.shlb");
-		MakeAlias(":cmd:macfe:restext:Strings$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:cmd:macfe:restext:StringLib.mcp",											"Strings$D.shlb");
+		MakeAlias(":mozilla:cmd:macfe:restext:Strings$D.shlb", "$dist_dir");
 		
-		BuildProject(":lib:mac:MoreFiles:build:MoreFilesPPC.mcp",							"MoreFiles$D.shlb");
-		MakeAlias(":lib:mac:MoreFiles:build:MoreFiles$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",							"MoreFiles$D.shlb");
+		MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb", "$dist_dir");
 		
-		BuildProject(":nsprpub:macbuild:NSPR20PPC.mcp",												"NSPR20$D.shlb");
-		MakeAlias(":nsprpub:macbuild:NSPR20$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",												"NSPR20$D.shlb");
+		MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", "$dist_dir");
 		
-		BuildProject(":dbm:macbuild:DBMPPC.mcp",															"DBM$D.shlb");
-		MakeAlias(":dbm:macbuild:DBM$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:dbm:macbuild:DBMPPC.mcp",															"DBM$D.shlb");
+		MakeAlias(":mozilla:dbm:macbuild:DBM$D.shlb", "$dist_dir");
 		
-		BuildProject(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",					"MemAllocator$D.shlb");
-		MakeAlias(":lib:mac:MacMemoryAllocator:MemAllocator$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",					"MemAllocator$D.shlb");
+		MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb", "$dist_dir");
 		
-		BuildProject(":lib:mac:NSStdLib:NSStdLib.mcp",												"NSStdLib$D.shlb");
-		MakeAlias(":lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",												"NSStdLib$D.shlb");
+		MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
 		
-		BuildProject(":modules:security:freenav:macbuild:NoSecurity.mcp",			"NoSecurity$D.shlb");
-		MakeAlias(":modules:security:freenav:macbuild:NoSecurity$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",													"xpcom$D.shlb");
+		MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
 		
-		BuildProject(":xpcom:macbuild:xpcomPPC.mcp",													"xpcom$D.shlb");
-		MakeAlias(":xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",										"PowerPlant$D.shlb");		
+		MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb", "$dist_dir");
 		
-		BuildProject(":lib:mac:PowerPlant:PowerPlant.mcp",										"PowerPlant$D.shlb");		
-		MakeAlias(":lib:mac:PowerPlant:PowerPlant$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",												"zlib$D.shlb");
+		MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb", "$dist_dir");
 		
-		BuildProject(":modules:zlib:macbuild:zlib.mcp",												"zlib$D.shlb");
-		MakeAlias(":modules:zlib:macbuild:zlib$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",																"JPEG$D.shlb");
+		MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
 		
-		BuildProject(":jpeg:macbuild:JPEG.mcp",																"JPEG$D.shlb");
-		MakeAlias(":jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:sun-java:stubs:macbuild:JavaStubs.mcp",								"JavaRuntime$D.shlb");
+		MakeAlias(":mozilla:sun-java:stubs:macbuild:JavaRuntime$D.shlb", "$dist_dir");	
 		
-		BuildProject(":sun-java:stubs:macbuild:JavaStubs.mcp",								"JavaRuntime$D.shlb");
-		MakeAlias(":sun-java:stubs:macbuild:JavaRuntime$D.shlb", "$dist_dir");	
+		BuildProject(":mozilla:js:jsj:macbuild:JSJ_PPC.mcp", 													"JSJ$D.o");
 		
-		BuildProject(":js:jsj:macbuild:JSJ_PPC.mcp", 													"JSJ$D.o");
+		BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",												"JavaScript$D.shlb");
+		MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb", "$dist_dir");
 		
-		BuildProject(":js:macbuild:JavaScriptPPC.mcp",												"JavaScript$D.shlb");
-		MakeAlias(":js:macbuild:JavaScript$D.shlb", "$dist_dir");
-		
-		BuildProject(":nav-java:stubs:macbuild:NavJavaStubs.mcp",							"NavJava$D.shlb");
-		MakeAlias(":nav-java:stubs:macbuild:NavJava$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:nav-java:stubs:macbuild:NavJavaStubs.mcp",							"NavJava$D.shlb");
+		MakeAlias(":mozilla:nav-java:stubs:macbuild:NavJava$D.shlb", "$dist_dir");
 
-		BuildProject(":modules:rdf:macbuild:RDF.mcp", 												"RDF$D.shlb");
-		MakeAlias(":modules:rdf:macbuild:RDF$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:modules:rdf:macbuild:RDF.mcp", 												"RDF$D.shlb");
+		MakeAlias(":mozilla:modules:rdf:macbuild:RDF$D.shlb", "$dist_dir");
 	
-		BuildProject(":modules:xml:macbuild:XML.mcp",													"XML$D.shlb");
-		MakeAlias(":modules:xml:macbuild:XML$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:modules:xml:macbuild:XML.mcp",													"XML$D.shlb");
+		MakeAlias(":mozilla:modules:xml:macbuild:XML$D.shlb", "$dist_dir");
 		
-		BuildProject(":modules:libfont:macbuild:FontBroker.mcp",							"FontBroker$D.o");
-				
-		BuildProject(":modules:schedulr:macbuild:Schedulr.mcp",								"Scheduler$D.shlb");
-		MakeAlias(":modules:schedulr:macbuild:Scheduler$D.shlb", "$dist_dir");
+		BuildProject(":mozilla:modules:schedulr:macbuild:Schedulr.mcp",								"Scheduler$D.shlb");
+		MakeAlias(":mozilla:modules:schedulr:macbuild:Scheduler$D.shlb", "$dist_dir");
+			
+		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",										"CustomLib$D.shlb");
+		MakeAlias(":mozilla:build:mac:CustomLib:CustomLib$D.shlb", "$dist_dir");
 		
-		BuildProject(":network:macbuild:network.mcp",													"Network$D.o");
+		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+		BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",							"FontBroker$D.o");
+		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",										"LibMocha$D.o");	
+		BuildProject(":mozilla:network:macbuild:network.mcp",													"Network$D.o");
 		
 		if ( $main::MOZ_LITE == 0 )
 			{
-				BuildProject(":cmd:macfe:Composer:build:Composer.mcp",						"Composer$D.o");
+				BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",						"Composer$D.o");
 				
 				# Build the appropriate resources target
-				BuildProject(":cmd:macfe:projects:client:Client.mcp", 						"Moz_Resources");
+				BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 						"Moz_Resources");
 			}
 		else
 			{
@@ -141,140 +134,160 @@ sub BuildMozilla()
 				BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",				"Composer$D.o");
 				
 				# Build the appropriate resources target
-				BuildProject(":cmd:macfe:projects:client:Client.mcp", 						"Nav_Resources");
+				BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 						"Nav_Resources");
 			}
 		
-		BuildProject(":cmd:macfe:projects:client:Client.mcp", 								"Client$D");
+		BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 								"Client$D");
 	}
 
+
+sub PrepareDist()
+	{
+		MakeDirectoryPath(":mozilla:dist:");
+		MakeDirectoryPath(":mozilla:dist:client:");
+		MakeDirectoryPath(":mozilla:dist:client_debug:");
+		MakeDirectoryPath(":mozilla:dist:client_stubs:");
+	}
 
 
 sub DistMozilla()
 	{
 		#INCLUDE
-		InstallFromManifest(":config:mac:export.mac",			":dist:config:");
-		InstallFromManifest(":include:export.mac",				":dist:include:");
-		InstallFromManifest(":cmd:macfe:pch:export.mac",	":dist:include:");
+		InstallFromManifest(":mozilla:config:mac:export.mac",													":mozilla:dist:config:");
+		InstallFromManifest(":mozilla:include:export.mac",														":mozilla:dist:include:");
+		InstallFromManifest(":mozilla:cmd:macfe:pch:export.mac",											":mozilla:dist:include:");
 
 		#MAC_COMMON
-		InstallFromManifest(":build:mac:export.mac",													":dist:mac:common:");
-		InstallFromManifest(":lib:mac:NSStdLib:include:export.mac",						":dist:mac:common:");
-		InstallFromManifest(":lib:mac:MacMemoryAllocator:include:export.mac",	":dist:mac:common:");
-		InstallFromManifest(":lib:mac:Misc:export.mac",												":dist:mac:common:");
-		InstallFromManifest(":lib:mac:MoreFiles:export.mac",									":dist:mac:common:morefiles:");
-		InstallFromManifest(":cmd:macfe:MANIFEST",														":dist:mac:macfe:");
+		InstallFromManifest(":mozilla:build:mac:export.mac",													":mozilla:dist:mac:common:");
+		InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:export.mac",						":mozilla:dist:mac:common:");
+		InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:export.mac",	":mozilla:dist:mac:common:");
+		InstallFromManifest(":mozilla:lib:mac:Misc:export.mac",												":mozilla:dist:mac:common:");
+		InstallFromManifest(":mozilla:lib:mac:MoreFiles:export.mac",									":mozilla:dist:mac:common:morefiles:");
+		InstallFromManifest(":mozilla:cmd:macfe:MANIFEST",														":mozilla:dist:mac:macfe:");
 
 		#NSPR
-		InstallFromManifest(":nsprpub:pr:include:MANIFEST",					":dist:nspr:");
-		InstallFromManifest(":nsprpub:pr:src:md:mac:export.mac",		":dist:nspr:mac:");
-		InstallFromManifest(":nsprpub:lib:ds:export.mac",						":dist:nspr:");
-		InstallFromManifest(":nsprpub:lib:libc:include:export.mac",	":dist:nspr:");
-		InstallFromManifest(":nsprpub:lib:msgc:include:export.mac",	":dist:nspr:");
+		InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",										":mozilla:dist:nspr:");
+		InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:export.mac",							":mozilla:dist:nspr:mac:");
+		InstallFromManifest(":mozilla:nsprpub:lib:ds:export.mac",											":mozilla:dist:nspr:");
+		InstallFromManifest(":mozilla:nsprpub:lib:libc:include:export.mac",						":mozilla:dist:nspr:");
+		InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:export.mac",						":mozilla:dist:nspr:");
 		
 		#DBM
-		InstallFromManifest(":dbm:include:export.mac",	":dist:dbm:");
+		InstallFromManifest(":mozilla:dbm:include:export.mac",												":mozilla:dist:dbm:");
 		
 		#LIBIMAGE
-		InstallFromManifest(":modules:libimg:png:export.mac",			":dist:libimg:");
-		InstallFromManifest(":modules:libimg:src:export.mac",			":dist:libimg:");
-		InstallFromManifest(":modules:libimg:public:export.mac",	":dist:libimg:");
+		InstallFromManifest(":mozilla:modules:libimg:png:export.mac",									":mozilla:dist:libimg:");
+		InstallFromManifest(":mozilla:modules:libimg:src:export.mac",									":mozilla:dist:libimg:");
+		InstallFromManifest(":mozilla:modules:libimg:public:export.mac",							":mozilla:dist:libimg:");
 		
 		#SECURITY_freenav
-		InstallFromManifest(":modules:security:freenav:export.mac",	":dist:security:");
+		InstallFromManifest(":mozilla:modules:security:freenav:export.mac",		":mozilla:dist:security:");
 		
 		#XPCOM
-		InstallFromManifest(":xpcom:src:export.mac",		":dist:xpcom:");
+		InstallFromManifest(":mozilla:xpcom:src:export.mac",									":mozilla:dist:xpcom:");
 		
 		#ZLIB
-		InstallFromManifest(":modules:zlib:src:export.mac",	":dist:zlib:");
-		
+		InstallFromManifest(":mozilla:modules:zlib:src:export.mac",						":mozilla:dist:zlib:");
+				
 		#JPEG
-		InstallFromManifest(":jpeg:export.mac",	":dist:jpeg:");
+		InstallFromManifest(":mozilla:jpeg:export.mac",												":mozilla:dist:jpeg:");
 		
 		#JSJ
-		InstallFromManifest(":js:jsj:export.mac",	":dist:jsj:");
+		InstallFromManifest(":mozilla:js:jsj:export.mac",											":mozilla:dist:jsj:");
 		
 		#JSDEBUG
-		InstallFromManifest(":js:jsd:export.mac",	":dist:jsdebug:");
+		InstallFromManifest(":mozilla:js:jsd:export.mac",											":mozilla:dist:jsdebug:");
 		
 		#JS
-		InstallFromManifest(":js:src:export.mac",	":dist:js:");
+		InstallFromManifest(":mozilla:js:src:export.mac",											":mozilla:dist:js:");
 		
 		#RDF
-		InstallFromManifest(":modules:rdf:include:export.mac",	":dist:rdf:");
+		InstallFromManifest(":mozilla:modules:rdf:include:export.mac",				":mozilla:dist:rdf:");
 		
 		#XML
-		InstallFromManifest(":modules:xml:glue:export.mac",						":dist:xml:");
-		InstallFromManifest(":modules:xml:expat:xmlparse:export.mac",	":dist:xml:");
+		InstallFromManifest(":mozilla:modules:xml:glue:export.mac",						":mozilla:dist:xml:");
+		InstallFromManifest(":mozilla:modules:xml:expat:xmlparse:export.mac",	":mozilla:dist:xml:");
 		
 		#LIBFONT
-		InstallFromManifest(":modules:libfont:MANIFEST",				":dist:libfont:");
-		InstallFromManifest(":modules:libfont:src:export.mac",	":dist:libfont:");
+		InstallFromManifest(":mozilla:modules:libfont:MANIFEST",							":mozilla:dist:libfont:");
+		InstallFromManifest(":mozilla:modules:libfont:src:export.mac",				":mozilla:dist:libfont:");
 		
+		#LDAP
+		if ( $main::MOZ_LDAP )
+			{
+				InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST", ":mozilla:dist:ldap:");
+			}
+			
 		#SCHEDULER
-		InstallFromManifest(":modules:schedulr:public:export.mac",	":dist:schedulr:");
+		InstallFromManifest(":mozilla:modules:schedulr:public:export.mac",	":mozilla:dist:schedulr:");
 		
 		#NETWORK
-		InstallFromManifest(":network:cache:export.mac",						":dist:network:");
-		InstallFromManifest(":network:client:export.mac",						":dist:network:");
-		InstallFromManifest(":network:cnvts:export.mac",						":dist:network:");
-		InstallFromManifest(":network:cstream:export.mac",					":dist:network:");
-		InstallFromManifest(":network:main:export.mac",							":dist:network:");
-		InstallFromManifest(":network:protocol:about:export.mac",		":dist:network:");
-		InstallFromManifest(":network:protocol:certld:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:dataurl:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:file:export.mac",		":dist:network:");
-		InstallFromManifest(":network:protocol:ftp:export.mac",			":dist:network:");
-		InstallFromManifest(":network:protocol:gopher:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:http:export.mac",		":dist:network:");
-		InstallFromManifest(":network:protocol:js:export.mac",			":dist:network:");
-		InstallFromManifest(":network:protocol:mailbox:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:marimba:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:nntp:export.mac",		":dist:network:");
-		InstallFromManifest(":network:protocol:pop3:export.mac",		":dist:network:");
-		InstallFromManifest(":network:protocol:remote:export.mac",	":dist:network:");
-		InstallFromManifest(":network:protocol:smtp:export.mac",		":dist:network:");
+		InstallFromManifest(":mozilla:network:cache:export.mac",						":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:client:export.mac",						":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:cnvts:export.mac",						":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:cstream:export.mac",					":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:main:export.mac",							":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:about:export.mac",		":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:certld:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:dataurl:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:file:export.mac",		":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:ftp:export.mac",			":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:gopher:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:http:export.mac",		":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:js:export.mac",			":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:mailbox:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:marimba:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:nntp:export.mac",		":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:pop3:export.mac",		":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:remote:export.mac",	":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:smtp:export.mac",		":mozilla:dist:network:");
 		
 		#HTML_DIALOGS
-		InstallFromManifest(":lib:htmldlgs:export.mac",	":dist:htmldlgs:");
+		InstallFromManifest(":mozilla:lib:htmldlgs:export.mac",							":mozilla:dist:htmldlgs:");
 		
 		#LAYOUT
-		InstallFromManifest(":lib:layout:export.mac",	":dist:layout:");
+		InstallFromManifest(":mozilla:lib:layout:export.mac",								":mozilla:dist:layout:");
 		
 		#LAYERS
-		InstallFromManifest(":lib:liblayer:include:export.mac",	":dist:layers:");
+		InstallFromManifest(":mozilla:lib:liblayer:include:export.mac",			":mozilla:dist:layers:");
 		
 		#PARSE
-		InstallFromManifest(":lib:libparse:export.mac",	":dist:libparse:");
+		InstallFromManifest(":mozilla:lib:libparse:export.mac",							":mozilla:dist:libparse:");
 		
 		#STYLE
-		InstallFromManifest(":lib:libstyle:export.mac",	":dist:libstyle:");
+		InstallFromManifest(":mozilla:lib:libstyle:MANIFEST",								":mozilla:dist:libstyle:");
+		
+		#PLUGIN
+		InstallFromManifest(":mozilla:lib:plugin:MANIFEST",									":mozilla:dist:plugin:");
 		
 		#LIBHOOK
-		InstallFromManifest(":modules:libhook:public:export.mac",	":dist:libhook:");
+		InstallFromManifest(":mozilla:modules:libhook:public:export.mac",		":mozilla:dist:libhook:");
 		
 		#LIBPREF
-		InstallFromManifest(":modules:libpref:public:export.mac",	":dist:libpref:");
+		InstallFromManifest(":mozilla:modules:libpref:public:export.mac",		":mozilla:dist:libpref:");
 		
 		#LIBREG
-		InstallFromManifest(":modules:libreg:include:export.mac",	":dist:libreg:");
+		InstallFromManifest(":mozilla:modules:libreg:include:export.mac",		":mozilla:dist:libreg:");
 		
 		#LIBUTIL
-		InstallFromManifest(":modules:libutil:public:export.mac",	":dist:libutil:");
+		InstallFromManifest(":mozilla:modules:libutil:public:export.mac",		":mozilla:dist:libutil:");
 		
 		#PROGRESS
-		InstallFromManifest(":modules:progress:public:export.mac",	":dist:progress:");
+		InstallFromManifest(":mozilla:modules:progress:public:export.mac",	":mozilla:dist:progress:");
 		
 		#SOFTUPDATE
-		InstallFromManifest(":modules:softupdt:include:export.mac",	":dist:softupdate:");
+		InstallFromManifest(":mozilla:modules:softupdt:include:export.mac",	":mozilla:dist:softupdate:");
 		
+		#EDTPLUG
+		InstallFromManifest(":mozilla:modules:edtplug:include:MANIFEST", 		":mozilla:dist:edtplug:");
+
 		#NAV_JAVA
-		InstallFromManifest(":nav-java:stubs:macjri:export.mac",	":dist:nav-java:macjri:");
-		InstallFromManifest(":nav-java:stubs:include:export.mac",	":dist:nav-java:");
+		InstallFromManifest(":mozilla:nav-java:stubs:include:export.mac",		":mozilla:dist:nav-java:");
+		InstallFromManifest(":mozilla:nav-java:stubs:macjri:export.mac",		":mozilla:dist:nav-java:");
 		
 		#SUN_JAVA
-		InstallFromManifest(":sun-java:stubs:include:export.mac",	":dist:sun-java:include:");
-		InstallFromManifest(":sun-java:stubs:macjri:export.mac",	":dist:sun-java:macjri:");
+		InstallFromManifest(":mozilla:sun-java:stubs:include:export.mac",		":mozilla:dist:sun-java:");
+		InstallFromManifest(":mozilla:sun-java:stubs:macjri:export.mac",		":mozilla:dist:sun-java:");
 	}
 
 1;

@@ -26,6 +26,13 @@ $MOZ_LITE = 0;		# build moz medium. This will come from a config file at some st
 Moz::OpenErrorLog(":::Mozilla.BuildLog");
 Moz::StopForErrors();
 
-chdir(":::");
+chdir("::::");
 
+# Make the dist directory, and essential sub-directories
+PrepareDist();
+
+# Popuplate the dist directory
+DistMozilla();
+
+# Now build the projects
 BuildMozilla();
