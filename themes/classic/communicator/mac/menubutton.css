@@ -98,7 +98,7 @@
       color                 : blue;
     }
 
-  .menubutton-dual-toolbar[disabled="true"] > .menubutton-dual-ex-button:hover
+  .menubutton-dual.toolbar[disabled="true"] > .menubutton-dual-ex-button:hover
     {
       border                : 1px solid transparent;
       color                 : graytext;
