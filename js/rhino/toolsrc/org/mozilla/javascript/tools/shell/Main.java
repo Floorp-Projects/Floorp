@@ -19,6 +19,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Patrick Beard
+ * Norris Boyd
+ * Kurt Westerfield
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
