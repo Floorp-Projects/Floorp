@@ -375,20 +375,15 @@ searchterm {
 
 /* ..... status bar adjustments ..... */
 
-statusbar, #status-bar {
-  border-top: none !important;
-  border-left: 1px solid #414B75;
-}
-
+statusbar, 
+#status-bar,
 .statusbar-internal-box-1 {
-  border-top: none !important;
-  border-left: 1px solid #000000;
+  border-top: none;
 }
 
 #subscribeWindow > statusbar,
 #subscribeWindow > statusbar > .statusbar-internal-box-1 {
   border-left: none;
-  background-color: transparent;
 }
 
 /* ..... splitter adjustments ..... */
@@ -399,6 +394,7 @@ statusbar, #status-bar {
 
 #sidebar-splitter > .splitter-internal-box {
   border-right: none;
+  border-bottom: none;
 }
 
 #threadpane-splitter,
@@ -455,14 +451,14 @@ statusbar, #status-bar {
 #folderTree {
   border-top: none;
   border-right: none;
-  border-bottom: 1px solid #CACFDD;
+  border-bottom: 1px solid #EBF4FF;
   border-left: none;
 }
 
 #threadOutliner {
   border-top: none;
   border-right: none;
-  border-bottom: 1px solid #CACFDD;
+  border-bottom: 1px solid #EBF4FF;
   border-left: 1px solid #A5ABB0;
   min-width: 1px;
 }
@@ -479,7 +475,7 @@ statusbar, #status-bar {
 #folderTree > .tree-container-treerows,
 #threadOutliner > outlinerrows {
   border-right: none;
-  border-bottom: 1px solid #7B969C;
+  border-bottom: 1px solid #C7D0D9;
   border-left: 1px solid #000000;
 }
 
@@ -497,7 +493,7 @@ statusbar, #status-bar {
 
 #messagepanebox {
   border-top: 1px solid #A5ABB0;
-  border-bottom: 1px solid #D4DDF8;
+  border-bottom: 1px solid #EBF4FF;
   border-left: 1px solid #A5ABB0;
 }
 
@@ -508,7 +504,9 @@ statusbar, #status-bar {
 }
 
 #messagepane {
-  border: 1px solid #FFFFFF;
+  border-top: 1px solid #FFFFFF;
+  border-right: 1px solid #FFFFFF;
+  border-bottom: 1px solid #C7D0D9;
   border-left: 1px solid #000000;
 }
 
@@ -519,12 +517,12 @@ statusbar, #status-bar {
 /* ..... account central adjustments ..... */
 
 #accountCentralBox {
-  border-bottom: 1px solid #D4DDF8;
+  border-bottom: 1px solid #EBF4FF;
   border-left: 1px solid #A5ABB0;
 }
 
 [name="accountCentralPane"] {
-  border-bottom: 1px solid #A8B1CC;
+  border-bottom: 1px solid #C7D0D9;
   border-left: 1px solid #000000;
 }
 

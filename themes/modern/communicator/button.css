@@ -30,7 +30,7 @@
 /* ::::: standard toolbar buttons ::::: */
  
 .button-toolbar {
-  -moz-binding: url("chrome://global/content/xulBindings.xml#buttonleft");
+  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
   -moz-user-focus: ignore;
   margin: 0px;
   border: 1px solid transparent;
@@ -66,22 +66,11 @@
   border: none;
 }
     
-.button-toolbar:hover {
-  border-top: 1px solid #D5E0E8;
-  border-right: 1px solid #A4AFBB;
-  border-bottom: 1px solid #A4AFBB;
-  border-left: 1px solid #D5E0E8;
-}
-  
 .button-toolbar:hover:active,
 .button-toolbar[open="true"],
 .button-toolbar[toggled="true"], 
 .button-toolbar[toggled="true"]:hover,
 .button-toolbar[toggled="true"]:hover:active {
-  border-top: 1px solid #7681A2;
-  border-right: 1px solid #D5DAE5;
-  border-bottom: 1px solid #D5DAE5;
-  border-left: 1px solid #7681A2;
   color: inherit;
 }
 
@@ -96,7 +85,6 @@
 .button-toolbar[disabled="true"],
 .button-toolbar[disabled="true"]:hover,
 .button-toolbar[disabled="true"]:hover:active {
-  border: none;
   color: #999999;
 }
 
@@ -136,7 +124,7 @@
 /* ::::: the largest type of toolbar buttons ::::: */
 
 .button-toolbar-1 {
-  -moz-binding: url("chrome://global/content/xulBindings.xml#buttontop");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolbar-2");
   -moz-user-focus: ignore;
   margin: 3px 2px 0px 2px;
   border: none;
@@ -168,14 +156,13 @@
   margin: 0px;
   border: none;
   min-width: 0px;
+  color: #323642;
   font: message-box;
   font-size: smaller;
 }
-    
-.button-toolbar-2,
-.button-toolbar-2:hover,
+
 .button-toolbar-2:hover:active {
-  color: #323642;
+  color: #FFFFFF;
 }
     
 .button-toolbar-2 > .button-internal-box > .button-icon-box {
@@ -193,7 +180,7 @@
    ::::: */
 
 .button-toolbar-3 {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#button");
   -moz-user-focus: ignore !important;
   margin: 0px;
   border: none;
@@ -202,7 +189,7 @@
 /* ::::: button styles for taskbar, sidebar headers, etc. ::::: */
 
 .button-toolbar-4 {
-  -moz-binding: url("chrome://global/content/xulBindings.xml#buttonleft");
+  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
   -moz-user-focus: ignore !important;
   margin: 0px;
   border: 0px;
@@ -226,7 +213,7 @@
 /* :::::::::: menubutton variation :::::::::: */
   
 menubutton.button-toolbar-4 {
-  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-right") !important;
+  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right") !important;
   margin: 0px 6px;
   min-width: 0px;
 }

@@ -32,7 +32,6 @@
    ::::: */
 
 menubutton {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#menubutton-single");
   margin: 3px 5px 3px 5px;
 }
 

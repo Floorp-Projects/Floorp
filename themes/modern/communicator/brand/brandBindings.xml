@@ -4,13 +4,13 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="throbber" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="throbber" extends="chrome://global/content/bindings/general.xml#basetext">
   	<content>
       <xul:image class="throbber-icon" inherits="src" autostretch="never"/>
     </content>
   </binding>
 
-  <binding id="throbber-fancy" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="throbber-fancy" extends="chrome://global/content/bindings/general.xml#basetext">
   	<content>
       <xul:vbox class="throbber-internal-box" flex="1">
        	<xul:spring class="throbber-groove-top"/>

@@ -46,15 +46,15 @@ outlinerbody:-moz-outliner-row {
 }
 
 outlinerbody:-moz-outliner-row(selected) {
-  background-color: #D9E3E7;
+  background-color: #E5F2FF;
 }
 
 outlinerbody:-moz-outliner-row(selected, focus) {
-  background-color: #9499AC;
+  background-color: #B8DBFF;
 }
 
 outlinerbody:-moz-outliner-row(current, focus) {
-  border-color: #787C8A;
+  border-color: #A5C4E4;
 }
 
 /* ::::: outliner cells ::::: */
@@ -71,10 +71,6 @@ outlinerbody:-moz-outliner-cell-text {
 
 outlinerbody:-moz-outliner-cell-text(selected) {
   color: #000000;
-}
-
-outlinerbody:-moz-outliner-cell-text(selected, focus) {
-  color: #FFFFFF;
 }
 
 /* ::::: outliner columns ::::: */

@@ -120,4 +120,15 @@ textbox.plain > .textarea-internal-box {
   margin: 0px !important;
   padding: 0px !important;
 }
+
+/* ::::: inline-edit textbox ::::: */
     
+.textbox-inline-edit {
+  margin: 0px !important;
+  border: 1px solid #000000 !important;
+}
+
+.textbox-inline-edit > .textbox-internal-box {
+  border: none !important;
+  padding: 1px !important;
+}

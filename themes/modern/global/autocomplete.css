@@ -80,6 +80,10 @@ textbox[type="autocomplete"] {
   padding: 0px !important;
 }
 
+.autocomplete-outlinerbody:-moz-outliner-cell-text {
+  padding-left: 8px;
+}
+
 .autocomplete-outlinerbody:-moz-outliner-row(menuactive) {
   background-color: #486380;
 }

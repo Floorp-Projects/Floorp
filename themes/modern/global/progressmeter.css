@@ -30,7 +30,6 @@
 /* ::::: progressmeter ::::: */
 
 progressmeter {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#progressmeter");
   margin: 0px 4px;
   padding: 2px 0px;
   min-width: 128px;
@@ -52,10 +51,10 @@ progressmeter {
 
 .progressmeter-progressbar[mode="undetermined"] {
   background: url("chrome://global/skin/progressmeter/progress-busy.gif") repeat-x;
+  visibility: visible !important;
 }
 
 .progress-bar[mode="undetermined"],
 .progress-remainder[mode="undetermined"] {
   visibility: hidden;
 }
-

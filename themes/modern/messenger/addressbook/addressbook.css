@@ -236,17 +236,12 @@ tree {
 
 /* ..... status bar border ..... */
 
+statusbar, #status-bar {
+  border-top: 1px solid #CED6DD !important;
+}
+
 .statusbar-internal-box-1 {
-  padding: 0px;
-}
-
-.statusbar-internal-box-2 {
-  border-top: 1px solid #A8B1CC !important;
-}
-
-.statusbar-internal-box-3 {
-  border-top: 1px solid #D4DDF8 !important;
-  padding: 1px 2px 1px 2px;
+  border-top: 1px solid #EBF4FF !important;
 }
 
 /* ::::: Card Edit dialog ::::: */

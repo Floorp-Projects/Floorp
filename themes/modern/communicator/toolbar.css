@@ -82,12 +82,12 @@
 } 
 
 .toolbar-primary-grippy > .toolbargrippy-top {
-  height: 32px;
+  height: 34px;
   background: url("chrome://communicator/skin/toolbar/prtb-grip-top.gif") no-repeat top;
 }
 
 .toolbar-primary-grippy > .toolbargrippy-btm {
-  height: 11px;
+  height: 9px;
   background: url("chrome://communicator/skin/toolbar/prtb-grip-btm.gif") no-repeat bottom;
 }
   

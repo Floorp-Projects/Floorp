@@ -32,15 +32,15 @@
 tree {
   border: none;
   border-spacing: 0px;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
 }
 
 tree.inset {
   margin: 2px 4px;
-  border-top: 1px solid #BEC3D3;
-  border-right: 1px solid #F8FAFE;
-  border-bottom: 1px solid #F8FAFE;
-  border-left: 1px solid #BEC3D3;
+  border-top: 1px solid #BEC3D3 !important;
+  border-right: 1px solid #F8FAFE !important;
+  border-bottom: 1px solid #F8FAFE !important;
+  border-left: 1px solid #BEC3D3 !important;
 }
 
 tree.inset > .tree-container-treerows {
@@ -61,18 +61,18 @@ treerow {
 }
 
 treeitem[selected="true"] > treerow {
-  background-color: #D9E3E7;
+  background-color: #E5F2FF;
   color: #000000;
 }
 
 tree:focus > treechildren treeitem[selected="true"] > treerow,
 treeitem[dd-dropon="true"] > treerow {
-  background-color: #9499AC;
-  color: #FFFFFF;
+  background-color: #B8DBFF;
+  color: #000000;
 }
 
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow {
-  border-color: #787C8A;
+  border-color: #A5C4E4;
 }
 
 treehead > treeitem > treerow,
@@ -91,8 +91,8 @@ treecell {
 } 
  
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
-  border-top-color: #787C8A;
-  border-bottom-color: #787C8A;
+  border-top-color: #A5C4E4;
+  border-bottom-color: #A5C4E4;
 }
 
 /* ::::: iconic treecell ::::: */
@@ -200,16 +200,6 @@ treerow[mode="inline-edit"] > .treecell-editable {
 
 .inline-edit-cell-box[mode="edit"] {
   margin-left: 0px;
-}
-
-.textbox-inline-edit {
-  margin: 0px !important;
-  border: 1px solid #000000 !important;
-}
-
-.textbox-inline-edit > .textbox-internal-box {
-  border: none !important;
-  padding: 1px !important;
 }
 
 /* ::::: twisty ::::: */

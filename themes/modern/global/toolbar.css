@@ -44,27 +44,44 @@ toolbar {
 }
 
 toolbar > .toolbar-holder {
-  border-top: 1px solid #DEE7EE;
-  border-right: 1px solid #95A0AD;
-  border-bottom: 1px solid #95A0AD;
-  border-left: 1px solid #DEE7EE;
+  border-top: 1px solid #CED6DD;
+  border-right: 1px solid #86929E;
+  border-bottom: 1px solid #86929E;
+  border-left: 1px solid #CFD7DE;
+}
+
+/* ::::: menubar ::::: */
+
+menubar {
+  cursor: default;
+  min-width: 1px; /* DON'T DELETE!
+    Removes disappearance of scrollbars in content pane when window
+    is made smaller. Talk to evaughan@netscape.com for details. */
+  background-color: #DDE3EB;
+  color: #22262F;
 }
   
+menubar > .toolbar-holder {
+  border-top: 1px solid #EBF4FF;
+  border-right: 1px solid #B9BFC7;
+  border-bottom: 1px solid #B9BFC7;
+  border-left: 1px solid #EEF4FC;
+}  
+
 /* ::::: toolbargrippy ::::: */
  
 toolbargrippy {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy");
   width: 12px;
   background-image: url("chrome://global/skin/toolbar/tbgrip-mid.gif");
 }
 
 .toolbargrippy-top {
-  height: 4px;
+  height: 1px;
   background-image: url("chrome://global/skin/toolbar/tbgrip-top.gif");
 }
 
 .toolbargrippy-btm {
-  height: 15px;
+  height: 9px;
   background-image: url("chrome://global/skin/toolbar/tbgrip-btm.gif");
 }
   
@@ -80,16 +97,42 @@ toolbargrippy:hover:active > .toolbargrippy-btm {
   background-image: url("chrome://global/skin/toolbar/tbgrip-btm-act.gif");
 }
 
+/* ::::: menubar grippy ::::: */
+
+menubar > toolbargrippy { 
+  background-image: url("chrome://global/skin/menu/mbgrip-mid.gif");
+} 
+
+menubar > toolbargrippy > .toolbargrippy-top {
+  height: 2px;
+  background-image: url("chrome://global/skin/menu/mbgrip-top.gif");
+}
+
+menubar > toolbargrippy > .toolbargrippy-btm {
+  height: 9px;
+  background-image: url("chrome://global/skin/menu/mbgrip-btm.gif");
+}
+  
+menubar > toolbargrippy:hover:active {
+  background-image: url("chrome://global/skin/menu/mbgrip-mid-act.gif");
+}
+
+menubar > toolbargrippy:hover:active > .toolbargrippy-top {
+  background-image: url("chrome://global/skin/menu/mbgrip-top-act.gif");
+}
+
+menubar > toolbargrippy:hover:active > .toolbargrippy-btm {
+  background-image: url("chrome://global/skin/menu/mbgrip-btm-act.gif");
+}
+
 /* ::::: collapsed tray and grippies ::::: */
   
 .collapsed-tray-holder {
   background-color: #C7D0D9;
   height: 11px;
-  border-bottom: 1px solid #000000;
 }
 
 toolbargrippy[tbgrippy-collapsed="true"] {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy-collapsed");
   background-image: none;
   width: 200px;
 }
@@ -99,49 +142,26 @@ toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left {
   width: 12px;
 }
 
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-context {
-  background-color: #C7D0D9;
-  border: 1px outset #C7D0D9;
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-right {
+  background-color: #B5C0CC;
+  border: 1px outset #B5C0CC;
 }
 
 toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left {
   background-image: url("chrome://global/skin/toolbar/tbgrip-clps-act.gif");
 }
 
-toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-context {
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-right {
   border-style: inset;
 }
 
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator { 
-  margin: 2px 0.2em 2px 0.2em;
-  width: 3px;
-  background: url("chrome://global/skin/toolbar/tb-separator.gif") no-repeat 50% 50%;
+  margin: 0px 0.2em;
+  border-right: 1px solid #E2E7EB;
+  border-left: 1px solid #95A0AD;
+  width: 0px;
 }
 
-/* ::::: miscellaneous ::::: */
-
-.toolbar-focustarget {
-  -moz-user-focus: ignore !important;
-}
-
-/* ::::: special looks for widgets in toolbars ::::: */
-
-tree.toolbar.inset,
-textbox.toolbar {
-/*  border-top: 1px solid #536B86;
-  border-right: 1px solid #94A6B9;
-  border-bottom: 1px solid #94A6B9;
-  border-left: 1px solid #536B86;*/
-}
-
-tree.toolbar.inset > .tree-container-treerows,
-textbox.toolbar > .textbox-internal-box {
-/*  border-color: #364556;*/
-}
-
-textbox.toolbar[focused="true"] {
-/*  border: 1px solid #2D3B49;*/
-}
 

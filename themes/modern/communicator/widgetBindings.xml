@@ -4,7 +4,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    
-  <binding id="button-toolbar-2" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="button-toolbar-2" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
   	  <xul:box class="button-internal-box" orient="vertical" flex="1">
         <xul:box class="button-icon-box" autostretch="never">
@@ -18,7 +18,8 @@
     </content>
   </binding>
 
-  <binding id="menubutton-dual-1">
+  <binding id="menubutton-dual-1"
+           extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
@@ -31,7 +32,8 @@
     </content>
   </binding>
 
-  <binding id="menubutton-dual-2">
+  <binding id="menubutton-dual-2"
+           extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
       <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-2 top" allowevents="true" 
@@ -44,7 +46,8 @@
     </content>
   </binding>
   
-  <binding id="menubutton-toolbar-single" extends="chrome://global/content/menulistBindings.xml#menubutton-single-left">
+  <binding id="menubutton-toolbar-single"
+           extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
       <xul:box class="menubutton-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-icon" inherits="src,disabled"/>
@@ -55,7 +58,8 @@
     </content>
   </binding>
   
-  <binding id="menubutton-toolbar-single-ile" extends="chrome://global/content/xulBindings.xml#inline-edit-base" display="xul:menu">
+  <binding id="menubutton-toolbar-single-ile" display="xul:menu"
+           extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
       <xul:hbox class="menubutton-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-single-icon" inherits="src,disabled"/>

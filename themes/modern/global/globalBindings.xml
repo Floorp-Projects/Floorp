@@ -7,7 +7,7 @@
 
   <!-- :::/ toolbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="toolbargrippy" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
+  <binding id="toolbargrippy" extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
     <content orient="vertical">
       <xul:box class="toolbargrippy-top"/>
       <xul:spring class="toolbargrippy-mid" flex="1"/>
@@ -15,7 +15,7 @@
     </content>
   </binding>
 
-  <binding id="toolbargrippy-collapsed" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
+  <binding id="toolbargrippy-collapsed" extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
     <content>
       <xul:box class="toolbargrippy-collapsed-left"/>
       <xul:box class="toolbargrippy-collapsed-right" flex="1"/>
@@ -24,7 +24,7 @@
 
   <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="nine-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
         <xul:spring class="button-left-top" inherits="default,disabled"/>
@@ -41,7 +41,7 @@
 
         <xul:box class="button-text-box" autostretch="never">
          <xul:image class="button-icon-mid" inherits="src"/>
-         <xul:text class="button-text-mid" inherits="default,disabled,value=label,crop,accesskey"/>
+         <xul:text class="button-text-mid" inherits="default,value=label,crop,accesskey"/>
        </xul:box>
      </xul:stack>
       
@@ -54,7 +54,7 @@
     </content>
   </binding>
 
-  <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
+  <binding id="menulist" extends="chrome://global/content/bindings/menulist.xml#menulist">
   	<content>
       <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
         <xul:spring class="menulist-left-top" inherits="disabled"/>
@@ -71,7 +71,7 @@
 
         <xul:box class="menulist-text-box" autostretch="never">
          <xul:image class="menulist-icon-mid" inherits="src"/>
-         <xul:text class="menulist-text-mid" inherits="disabled,value=label,crop,accesskey"/>
+         <xul:text class="menulist-text-mid" inherits="value=label,crop,accesskey"/>
        </xul:box>
      </xul:stack>
       
@@ -91,7 +91,7 @@
     </content>
   </binding>
   
-  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist-editable">
+  <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist-editable">
   	<content>
       <xul:box flex="1" class="menulist-editable-box">
         <xul:image class="menu-icon" inherits="src"/>
@@ -104,7 +104,7 @@
     </content>
   </binding>
 
-  <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
+  <binding id="menulist-compact" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content flex="1">
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
@@ -124,7 +124,8 @@
     </content>
   </binding>
 
-  <binding id="progressmeter" extends="chrome://global/content/xulBindings.xml#progressmeter">
+  <binding id="progressmeter"
+           extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
     <content autostretch="never">
       <xul:progressbar class="progressmeter-progressbar" inherits="value,mode,statusbar" flex="1">
         <xul:box class="progress-bar" inherits="mode"/>
@@ -133,7 +134,8 @@
     </content>
   </binding>
   
-  <binding id="splitter" extends="xul:splitter">
+  <binding id="splitter"
+           extends="chrome://global/content/bindings/splitter.xml#splitter">
     <content autostretch="always">
       <xul:box class="splitter-internal-box" flex="1" autostretch="never">
         <children/>
@@ -141,7 +143,8 @@
   	</content>
   </binding>
 
-  <binding id="treecell-header">
+  <binding id="treecell-header"
+           extends="chrome://global/content/bindings/tree.xml#treecell-header">
     <content>
       <xul:box class="treecell-header-box" flex="1" autostretch="never" valign="middle">
         <xul:image class="tree-header-image" inherits="src"/>
@@ -151,7 +154,7 @@
     </content>
   </binding>
   
-  <binding id="statusbar" extends="chrome://global/content/xulBindings.xml#statusbar">
+  <binding id="statusbar">
     <content>
       <xul:box class="statusbar-internal-box-1" flex="1">
         <xul:box class="statusbar-internal-box-2" flex="1">
@@ -165,7 +168,7 @@
  
   <!-- :::/ scrollbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="scrollbar" extends="chrome://global/content/scrollbarBindings.xml#scrollbar">
+  <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar">
     <content>
       <xul:scrollbarbutton type="decrement" inherits="sborient=align">
         <xul:image inherits="src"/>
@@ -179,7 +182,8 @@
     </content>
   </binding>
 
-  <binding id="thumb-vertical" extends="xul:button">
+  <binding id="thumb-vertical"
+           extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <content orient="vertical">
       <xul:spring class="thumb-vert-spring-top"/>
       <xul:box flex="1" class="thumb-vert-box-middle" orient="vertical">
@@ -191,7 +195,8 @@
     </content>
   </binding>
 
-  <binding id="thumb-horizontal" extends="xul:button">
+  <binding id="thumb-horizontal"
+           extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <content>
       <xul:spring class="thumb-horz-spring-left"/>
       <xul:box flex="1" class="thumb-horz-box-middle">
@@ -205,7 +210,7 @@
 
   <!-- :::/ tab control \ ::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
+  <binding id="tab" extends="chrome://global/content/bindings/tabcontrol.xml#tab">
     <content orient="horizontal">
       <xul:box class="tab-image-left" orient="vertical">
         <xul:spring class="tab-image-left-top" inherits="selected"/>
@@ -228,7 +233,7 @@
     </content>
   </binding>
   
-  <binding id="tabs" extends="chrome://global/content/tabBindings.xml#tabs">
+  <binding id="tabs" extends="chrome://global/content/bindings/tabcontrol.xml#tabs">
     <content>
       <xul:spring class="tabs-left-cap"/>
   	  <xul:spring class="tabs-left"/>

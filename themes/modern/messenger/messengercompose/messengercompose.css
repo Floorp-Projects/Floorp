@@ -165,6 +165,10 @@
 
 /* ::::: addressing widget ::::: */
 
+#MsgHeadersToolbar {
+  background: #B1BDC9;
+}
+
 #addressingWidgetTree {
   -moz-user-focus: none;
   width: 0px;
@@ -216,21 +220,11 @@
 /* ::::: status bar border tweaks ::::: */
 
 statusbar, #status-bar {
-  border-left: none;
+  border-top: 1px solid #CED6DD !important;
 }
 
 .statusbar-internal-box-1 {
-  border-left: none;
-  padding: 0px;
-}
-
-.statusbar-internal-box-2 {
-  border-top: 1px solid #A8B1CC !important;
-}
-
-.statusbar-internal-box-3 {
-  border-top: 1px solid #D4DDF8 !important;
-  padding: 1px 2px 1px 2px;
+  border-top: 1px solid #EBF4FF !important;
 }
 
 /* ::::: askSendFormat dialog ::::: */
@@ -274,6 +268,3 @@ spring.spacer {
 .label {
   color: #000000;
 }
-
-
-

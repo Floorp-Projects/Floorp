@@ -28,24 +28,81 @@
 /* all localizable skin settings shall live here */
 @import url("chrome://global/locale/intl.css");
 
-@import url("chrome://global/skin/box.css");
 @import url("chrome://global/skin/formatting.css");
+/*
+@import url("chrome://global/content/bindings/outliner.css");
+@import url("chrome://global/content/bindings/popup.css");
+@import url("chrome://global/content/bindings/scrollbar.css");
+@import url("chrome://global/content/bindings/tree.css");
+
 @import url("chrome://global/skin/button.css");
 @import url("chrome://global/skin/checkbox.css");
-@import url("chrome://global/skin/radio.css");
-@import url("chrome://global/skin/splitter.css");
+@import url("chrome://global/skin/colorpicker.css");
 @import url("chrome://global/skin/menu.css");
 @import url("chrome://global/skin/menubutton.css");
 @import url("chrome://global/skin/menulist.css");
-@import url("chrome://global/skin/progressmeter.css");
-@import url("chrome://global/skin/textfield.css");
-@import url("chrome://global/skin/tabcontrol.css");
-@import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/outliner.css");
+@import url("chrome://global/skin/popup.css");
+@import url("chrome://global/skin/progressmeter.css");
+@import url("chrome://global/skin/radio.css");
+@import url("chrome://global/skin/scrollbox.css");
+@import url("chrome://global/skin/splitter.css");
+@import url("chrome://global/skin/tabcontrol.css");
+@import url("chrome://global/skin/textbox.css");
+@import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/tree.css");
-@import url("chrome://global/skin/colorpicker.css");
-
+*/
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: bindings ::::: */
+
+button {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#button");
+}
+
+button.plain {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
+}
+
+menubutton {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menubutton-single");
+}
+
+menulist {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist");
+}
+
+menulist[editable="true"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-editable") !important;
+}
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-compact");
+}
+
+toolbargrippy {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy-collapsed");
+}
+
+progressmeter {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#progressmeter");
+}
+
+tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs");
+}
+
+tab {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tab");
+}
+
+splitter {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#splitter");
+}
 
 /* ::::: XUL <box> debugging ::::: */
 
@@ -104,13 +161,23 @@ window.dialog {
   width:32px;height:32px;
 }
 
+/* ::::: iframe ::::: */
+
+iframe {
+  border: none;
+  width: 100px;
+  height: 100px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
 /* ::::: status bar ::::: */
 
 #status-bar {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#statusbar");
   -moz-user-focus: ignore;
   margin: 0px;
-  border-top: 1px solid #C7D0D9;
+  border-top: 1px solid #CED6DD;
   padding: 0px;
   min-width: 1px; /* DON'T DELETE!
     Removes disappearance of scrollbars in content pane when window
@@ -122,7 +189,7 @@ window.dialog {
 }
 
 .statusbar-internal-box-1 {
-  border-top: 1px solid #FFFFFF;
+  border-top: 1px solid #EBF4FF;
   padding: 1px 2px 1px 2px;
 }
   
@@ -134,13 +201,13 @@ statusbarpanel {
   margin: 0px 2px 0px 0px;
 }
 
-/* ::::: iframe ::::: */
+/* ::::: miscellaneous ::::: */
 
-iframe {
-  border: none;
-  width: 100px;
-  height: 100px;
-  min-width: 10px;
-  min-height: 10px;
+.tooltip-label {
+  margin: 0px;
+}
+
+.toolbar-focustarget {
+  -moz-user-focus: ignore !important;
 }
 

@@ -110,7 +110,7 @@ menubutton.button-toolbar-2.bottom {
 }
 
 .button-toolbar-2 + .menubutton-dual-dropmarker-box {
-  margin: 10px 0px 0px 31px;
+  margin: 26px 5px 15px 31px;
 }
 
 /* ..... dropmarker ..... */
@@ -143,7 +143,7 @@ menubutton.button-toolbar-2.bottom {
 /* ::::: button-toolbar-4 menubuttons ::::: */
 
 menubutton.button-toolbar-4 {
-  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right");
   margin: 0px 6px;
 }
 
@@ -163,7 +163,7 @@ menubutton.button-toolbar-4 {
 /* ::::: dual toolbar menubuttons ::::: */
 
 .menubutton-dual.button-toolbar-3 {
-  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");  
+  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-ex");  
   margin: 2px;
   color: #FFFFFF;
   font-family: message-box;

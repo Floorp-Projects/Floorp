@@ -38,7 +38,7 @@
   padding-bottom: 10px;
   border-top: 1px solid #94AACE;
   border-bottom: 1px solid #000000;
-  background-color: #5B7693;
+  background-color: #90A1B3;
   color: #ffffff;
 }  
   
@@ -57,7 +57,7 @@
   -moz-binding: url("chrome://communicator/skin/dialog/dialogBindings.xml#smallheader");
   margin: 0px 5px 5px 5px;
   border: 1px inset #C7D0D9;
-  background-color: #C7D0D9;
+  background-color: #90A1B3;
   color: #000000;
 }
 

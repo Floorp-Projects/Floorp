@@ -30,7 +30,6 @@
 /* ::::: tabs ::::: */
 
 tabs {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs");
   padding: 0px;
 }
 
@@ -63,7 +62,6 @@ tabpanels {
 /* ::::: tab ::::: */
 
 tab { 
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tab");
   margin: 0px;
   padding: 0px;
   color: #ffffff;
@@ -350,24 +348,5 @@ tab:hover:active[selected="true"] > box >  .tab-image-right-btm {
 .tabs-bottom > .tabs-right-cap,
 .tabs-bottom > .tabs-left-cap {
   background: none;
-}
-
-/* ::::: special looks for widgets in tabpanelss ::::: */
-
-tree.tabpanels,
-textbox.tabpanels {
-  border-top: 1px solid #ACB9B9;
-  border-right: 1px solid #ECF0F0;
-  border-bottom: 1px solid #ECF0F0;
-  border-left: 1px solid #ACB9B9;
-}
-
-tree.tabpanels > .tree-container-treerows,
-textbox.tabpanels > .textbox-internal-box {
-  border: 1px solid #6E7676;
-}
-
-textbox.tabpanels[focused="true"] {
-  border: 1px solid #909090;
 }
 

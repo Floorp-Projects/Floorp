@@ -69,7 +69,7 @@ radio > .internal-box > .checkmark-box {
 radio[label] > .internal-box > html,
 radio.iconic > .internal-box > .icon {
   margin: 0px 0px 0px 0px;
-  padding: 2px 2px 2px 0px;
+  padding: 0px 2px 0px 0px;
 }
 
 radio.iconic > .internal-box > html {

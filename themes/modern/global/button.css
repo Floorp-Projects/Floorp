@@ -35,15 +35,14 @@
    :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 
 button {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
   -moz-user-focus: normal;
   margin: 3px;
   border: 2px solid transparent;
   min-width: 5em;
-  color: #ffffff;
+  color: #000000;
   font: menu;
 }
-  
+
 .button-text-box {
   padding: 3px 2px 3px 2px;
   text-align: center;
@@ -87,7 +86,7 @@ button[default]:focus {
 }
 
 .button-box-mid {
-  background-color: #63656A;
+  background-color: #A7B5C2;
 }
   
 .button-mid-top {
@@ -118,10 +117,10 @@ button[default]:focus {
   height: 8px;
 }
   
-  /* .......... active state .......... */
+/* .......... active state .......... */
 
 button:hover:active {
-  color: #D0D0D0;
+  color: #FFFFFF;
 }
   
 button:hover:active > .button-box-left > .button-left-top {
@@ -137,7 +136,7 @@ button:hover:active > .button-box-left > .button-left-btm {
 }
 
 button:hover:active > .button-stack > .button-box-mid {
-  background-color: #43454A;
+  background-color: #90A1B3;
 }
   
 button:hover:active > .button-stack > .button-box-mid > .button-mid-top {
@@ -163,12 +162,11 @@ button:hover:active > .button-box-right > .button-right-btm {
   background-image: url("chrome://global/skin/button/btn-act-rit-btm.gif");
 }
 
-  /* .......... disabled state .......... */
+/* .......... disabled state .......... */
 
-button[disabled="true"] > .button-stack > .button-text-box > .button-text-mid, 
-button[disabled="true"]:hover > .button-stack > .button-text-box > .button-text-mid, 
-button[disabled="true"]:hover:active > .button-stack > .button-text-box > .button-text-mid {
-  color: #A1A4B1;
+button[disabled="true"],
+button[disabled="true"]:hover:active {
+  color: #8C99AB;
 }
 
 button:hover:active > .button-box-left > .button-left-top[disabled="true"],
@@ -188,7 +186,7 @@ button:hover:active > .button-box-left > .button-left-btm[disabled="true"],
 
 button:hover:active > .button-stack > .button-box-mid[disabled="true"],
 .button-box-mid[disabled="true"] {
-  background-color: #7C7F89;
+  background-color: #B7BFCB;
 }
   
 button:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"],
@@ -332,7 +330,7 @@ button[default="true"][disabled="true"] {
 
 :hover:active > .button-stack > .button-box-mid[disabled="true"][default="true"],
 .button-box-mid[disabled="true"][default="true"] {
-  background-color: #7C7F89;
+  background-color: #B7BFCB;
 }
 
 :hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
@@ -369,10 +367,6 @@ button[default="true"][disabled="true"] {
 }
 
 /* ::::: plain buttons ::::: */
-
-button.plain {
-  -moz-binding: url("chrome://global/content/xulBindings.xml#buttonleft");
-}
 
 button.plain,
 button.plain:hover,

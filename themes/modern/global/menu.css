@@ -27,69 +27,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: menubar ::::: */
-
-menubar {
-  cursor: default;
-  min-width: 1px; /* DON'T DELETE!
-    Removes disappearance of scrollbars in content pane when window
-    is made smaller. Talk to evaughan@netscape.com for details. */
-  background-color: #DDE3EB;
-  color: #22262F;
-}
-  
-menubar > .toolbar-holder {
-  border-top: 1px solid #EBF4FF;
-  border-right: 1px solid #B9BFC7;
-  border-bottom: 1px solid #B9BFC7;
-  border-left: 1px solid #EEF4FC;
-}  
-
-/* ::::: menubar grippy ::::: */
-
-menubar > toolbargrippy { 
-  background-image: url("chrome://global/skin/menu/mbgrip-mid.gif");
-} 
-
-menubar > toolbargrippy > .toolbargrippy-top {
-  height: 2px;
-  background-image: url("chrome://global/skin/menu/mbgrip-top.gif");
-}
-
-menubar > toolbargrippy > .toolbargrippy-btm {
-  height: 9px;
-  background-image: url("chrome://global/skin/menu/mbgrip-btm.gif");
-}
-  
-menubar > toolbargrippy:hover:active {
-  background-image: url("chrome://global/skin/menu/mbgrip-mid-act.gif");
-}
-
-menubar > toolbargrippy:hover:active > .toolbargrippy-top {
-  background-image: url("chrome://global/skin/menu/mbgrip-top-act.gif");
-}
-
-menubar > toolbargrippy:hover:active > .toolbargrippy-btm {
-  background-image: url("chrome://global/skin/menu/mbgrip-btm-act.gif");
-}
-
-/* ::::: popup/menupopup ::::: */
-
-menupopup,
-popup {
-  cursor: default;
-  border: 1px solid #7F8893;
-  background-color: #DDE3EB;
-  color: #22262F;
-}
-
-.popup-internal-box {
-  border-top: 1px solid #EEF4FC;
-  border-right: 1px solid #B9BFC7;
-  border-bottom: 1px solid #B9BFC7;
-  border-left: 1px solid #EEF4FC;
-}
-
 /* ::::: menu/menuitem ::::: */
 
 menu, 
@@ -213,12 +150,23 @@ popup > menuitem[menuactive="true"] {
   color: #ffffff;
 }
 
-/* ::::: menuseparator ::::: */
+/* ::::: menu/menuitems in menulist popups ::::: */
 
-menuseparator {
-  margin: 2px 3px;
-  border-top: 1px solid #A5ABC0;
-  border-bottom: 1px solid #EEF1F7;
+.menulist-menupopup > menuitem,
+menulist > menupopup > menuitem {
+  padding-right: 12px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+    
+/* ..... selected state ..... */
+
+menulist > menupopup > menuitem[selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+}
+  
+menulist > menupopup > menuitem[menuactive="true"][selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
 }
 
 /* ::::: checkbox menuitem ::::: */
@@ -249,52 +197,18 @@ menuitem[checked="true"][type="radio"][menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
 }
 
-/* ::::: tooltip ::::: */
+/* ::::: menuseparator ::::: */
 
-.tooltip {
-  border: 1px solid #000000;
-  padding: 2px 3px 2px 3px;
-  background-color: #FFFFE7;
-  color: #000000;
-}
-
-.tooltip > .popup-internal-box {
-  border: none;
-}
-
-.tooltip-label {
-  margin: 0px;
-}
-
-/* ::::: auto-repeat button ::::: */
- 
-autorepeatbutton {
-  margin: 1px 2px 2px 1px;
-  border: 1px solid transparent;
-  padding: 3px;
-  height: 1em;  
-  text-align: center;
-  vertical-align: middle;
-}
-
-autorepeatbutton:hover {
-  margin: 1px;
-  border: 1px inset #A5B2C2;
-  padding: 4px 3px 3px 4px;
-  background-color: #A5B2C2;
-}
-
-.autorepeatbutton-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif")
-}
-
-.autorepeatbutton-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif")
+menuseparator {
+  margin: 2px 3px;
+  border-top: 1px solid #A5ABC0;
+  border-bottom: 1px solid #EEF1F7;
 }
 
 /* ::::: autocomplete ::::: */
 
 .autocomplete-history-popup > menuitem {
   max-width: none !important;
+  font: message-box;
 }
 

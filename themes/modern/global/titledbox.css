@@ -1,0 +1,50 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== titledbox.css ==================================================
+  == Styles used by the XUL titledbox and related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: titledbox ::::: */
+
+titledbox {
+  border: 2px groove #C7D0D9;
+  padding: 5px;
+  margin: 5px;
+}
+
+.titledbox-body {
+  padding: inherit;
+}
+
+label {
+  margin: 0px 6px 2px 6px;
+  padding: 0px 3px 0px 3px;
+  background-color: #C7D0D9; 
+}
+
+tabpanel label {
+  background-color: #BBBBBB;
+}

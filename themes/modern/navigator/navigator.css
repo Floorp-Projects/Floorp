@@ -219,7 +219,7 @@
 
 #nav-bar-inner {
   -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#nav-bar-inner");
-  margin: 7px 0px 0px 5px;
+  margin: 6px 0px 0px 5px;
   min-width: 0px;
 }
 
@@ -408,3 +408,19 @@
 .autocomplete-search-engine-img {
   margin-right: 4px;
 }
+
+.autocomplete-history-button {
+  margin: 0px 3px 0px 0px;
+  list-style-image: url("chrome://navigator/skin/toolbar/ubhist-arrow.gif");
+}
+
+.autocomplete-history-button[open="true"] {
+  list-style-image: url("chrome://navigator/skin/toolbar/ubhist-arrow-act.gif");
+}
+
+/* ::::: sidebar splitter ::::: */
+
+#sidebar-splitter > .splitter-internal-box {
+  border-bottom: none;
+}
+

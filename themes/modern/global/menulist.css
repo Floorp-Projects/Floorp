@@ -34,12 +34,11 @@
    ::::: */
 
 menulist {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#nine-slice-menulist");
   margin: 3px;
   border: 2px solid transparent;
   padding: 0px;
   min-height: 19px;
-  color: #ffffff;
+  color: #000000;
   font: message-box;
 }
 
@@ -88,7 +87,7 @@ menulist:focus {
 }
 
 .menulist-box-mid {
-  background-color: #63656A;
+  background-color: #A6B2BF;
 }
   
 .menulist-mid-top {
@@ -104,7 +103,7 @@ menulist:focus {
 }
 
 .menulist-box-right {
-  width: 21px;
+  width: 20px;
 }
   
 .menulist-right-top {
@@ -130,7 +129,7 @@ menulist:focus {
   
 menulist:hover:active, 
 menulist[open="true"] {
-  color: #D0D0D0;
+  color: #FFFFFF;
 }
   
 menulist:hover:active > .menulist-box-left > .menulist-left-top,
@@ -150,7 +149,7 @@ menulist[open="true"] > .menulist-box-left > .menulist-left-btm {
 
 menulist:hover:active > .menulist-stack > .menulist-box-mid,
 menulist[open="true"] > .menulist-stack > .menulist-box-mid {
-  background-color: #43454A;
+  background-color: #91A2B4;
 }
   
 menulist:hover:active > .menulist-stack > .menulist-box-mid 
@@ -221,16 +220,15 @@ menulist:hover:active > .menulist-box-left
   background-image: url("chrome://global/skin/menulist/mlist-dis-lft-btm.gif");
 }
 
-menulist:hover:active > .menulist-stack > .menulist-text-box
-    > .menulist-text-mid[disabled="true"],
-.menulist-text-mid[disabled="true"] {
-  color: #A1A4B1;
+menulist[disabled="true"],
+menulist:hover:active[disabled="true"] {
+  color: #8C99AB;
 }
 
 menulist:hover:active > .menulist-stack 
     > .menulist-box-mid[disabled="true"],
 .menulist-box-mid[disabled="true"] {
-  background-color: #7B7F8E;
+  background-color: #B7BFCB;
 }
 
 menulist:hover:active > .menulist-stack > .menulist-box-mid 
@@ -269,45 +267,10 @@ menulist:hover:active > .menulist-box-right > stack > box
   list-style-image: url("chrome://global/skin/menulist/mlist-dis-arrow.gif");
 }
 
-/* ::::: menulist popup and contents :::::: */
-
-menulist > menupopup,
-.menulist-menupopup {
-  border: 1px solid black;
-  padding: 0px;
-  min-width: 0px;
-  font: message-box;
-}
-    
-.menulist-menupopup > .popup-internal-box,
-menulist > menupopup > .popup-internal-box {
-  border: none;
-}
-  
-/* ..... menu/menuitem ..... */
-
-.menulist-menupopup > menuitem,
-menulist > menupopup > menuitem {
-  padding-right: 12px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-    
-/* ..... menuitem selected state ..... */
-
-menulist > menupopup > menuitem[selected="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
-}
-  
-menulist > menupopup > menuitem[menuactive="true"][selected="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
-}
-  
 /* ::::: editable menulists ::::: */
 
 menulist[editable="true"] {
   -moz-user-focus: normal;
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-editable") !important;
   border-top: 1px solid #BEC3D3;
   border-right: 1px solid #F8FAFE;
   border-bottom: 1px solid #F8FAFE;
@@ -348,13 +311,12 @@ menulist[editable="true"]:focus > .menulist-editable-box {
 /* ::::: compact menulists ::::: */
 
 .menulist-compact {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-compact");
   -moz-user-focus: ignore;
   margin: 0px;
   border: 1px outset #000000;
   min-width: 0px;
   min-height: 0px;
-  background-color: #63656A;
+  background-color: #A6B2BF;
 }
 
 .menulist-compact-text {
@@ -362,10 +324,7 @@ menulist[editable="true"]:focus > .menulist-editable-box {
 }  
     
 .menulist-compact-internal-box {
-  border-top: 1px solid #BDBEBD;
-  border-right: 1px solid #424142;
-  border-bottom: 1px solid #424142;
-  border-left: 1px solid #BDBEBD;
+  border: 1px outset #A6B2BF;
   padding: 1px;
 }
 
@@ -376,6 +335,6 @@ menulist[editable="true"]:focus > .menulist-editable-box {
       
 .menulist-compact:hover:active > .menulist-compact-internal-box,
 .menulist-compact[open="true"] > .menulist-compact-internal-box {
-  border: 1px solid #404040;
-  background-color: #505050;
+  border: 1px solid #788797;
+  background-color: #91A2B4;
 }

@@ -149,6 +149,7 @@ thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
+  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
   cursor: default;
   -moz-user-focus: ignore;
   -moz-user-select: none;
