@@ -88,7 +88,6 @@
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsIDirectoryListing.h"
-#include "nsIDOMHTMLIFrameElement.h"
 
 // Pull in various NS_ERROR_* definitions
 #include "nsIDNSService.h"
@@ -4212,9 +4211,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
         // Was the wyciwyg document loaded on this docshell?
-        // if the wyciwyg content is added to a iframe, we don't
-        // want it to get into session history.
-        if (!IsIFrame() && wcwgChannel && !mLSHE && (mItemType == typeContent) && aProgress == webProgress.get()) {
+        if (wcwgChannel && !mLSHE && (mItemType == typeContent) && aProgress == webProgress.get()) {
             nsCOMPtr<nsIURI> uri;
             wcwgChannel->GetURI(getter_AddRefs(uri));
         
@@ -5901,14 +5898,13 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         if (!rootSH)
             shAvailable = PR_FALSE;
     }  // rootSH
-     
+
+
     // Determine if this type of load should update history.
-    // Loads to iframes also don't get into session history. 
     if (aLoadType == LOAD_BYPASS_HISTORY ||
          aLoadType & LOAD_CMD_HISTORY ||
          aLoadType == LOAD_RELOAD_NORMAL ||
-         aLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
-         IsIFrame())         
+         aLoadType == LOAD_RELOAD_CHARSET_CHANGE)         
         updateHistory = PR_FALSE;
 
     // Check if the url to be loaded is the same as the one already loaded. 
@@ -6816,20 +6812,6 @@ nsDocShell::IsFrame()
             return PR_TRUE;
     }
 
-    return PR_FALSE;
-}
-
-PRBool
-nsDocShell::IsIFrame()
-{
-    nsCOMPtr<nsIDOMElement> frame_element;    
-    nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor *, this)));
-    if (win_private) {
-        win_private->GetFrameElementInternal(getter_AddRefs(frame_element));
-        nsCOMPtr<nsIDOMHTMLIFrameElement>  iframe(do_QueryInterface(frame_element));
-        if (iframe)
-            return PR_TRUE;
-    }
     return PR_FALSE;
 }
 
