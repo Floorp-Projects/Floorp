@@ -239,7 +239,11 @@ class nsWSRunObject
       WSPoint(nsITextContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };    
-    
+
+    enum AreaRestriction
+    {
+      eAnywhere, eOutsideUserSelectAll
+    };    
     
     // protected methods ---------------------------------------------------------
     // tons of utility methods.  
@@ -272,12 +276,14 @@ class nsWSRunObject
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
     nsresult DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset, 
-                         nsIDOMNode *aEndNode, PRInt32 aEndOffset);
+                         nsIDOMNode *aEndNode, PRInt32 aEndOffset,
+                         AreaRestriction aAR = eAnywhere);
     nsresult GetCharAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult GetCharBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoint);
     nsresult GetCharAfter(WSPoint &aPoint, WSPoint *outPoint);
     nsresult GetCharBefore(WSPoint &aPoint, WSPoint *outPoint);
-    nsresult ConvertToNBSP(WSPoint aPoint);
+    nsresult ConvertToNBSP(WSPoint aPoint,
+                           AreaRestriction aAR = eAnywhere);
     nsresult GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset,
                                 nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset,
                                 nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
