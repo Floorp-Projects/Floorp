@@ -83,13 +83,11 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-EXTRA_DSO_LIBS	=  mfcEmbedComponents
-
-DEFINES		+= -DXPCOM_GLUE 
+EXTRA_DSO_LIBS	= embed_base_s gkgfx mfcEmbedComponents
 
 LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
-		$(XPCOM_GLUE_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

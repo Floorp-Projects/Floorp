@@ -22,10 +22,6 @@
  * Contributor(s):
  */
 
-#ifdef XPCOM_GLUE
-#include "nsXPCOMGlue.h"    
-#endif
-
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIAppStartupNotifier.h"
@@ -87,11 +83,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     if (!sXPCOMInitializedFlag)
 #endif
     {
-
-#ifdef XPCOM_GLUE
-        // TODO: Need to be smarter about where exactly the xpcom library is.
-        XPCOMGlueStartup(nsnull); 
-#endif
         // Initialise XPCOM
         NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
                 
@@ -185,8 +176,5 @@ nsresult NS_TermEmbedding()
     NS_ShutdownXPCOM(sServiceManager);
 #endif
 
-#ifdef XPCOM_GLUE
-    XPCOMGlueShutdown(); 
-#endif
     return NS_OK;
 }
