@@ -5,7 +5,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  			onConstruction="StartUp()">
+  			onconstruction="MsgStartUp()">
   <html:style>
 	  #toolbar {
         position: fixed;
@@ -69,113 +69,261 @@
 </html:style>
 
 
-<html:script>
-function StartUp()
-{
-	dump("StartUp: MsgAppCore\n");
-   var appCore = XPAppCoresManager.Find("MsgAppCore");
-   if (appCore == null) {
-	 dump("StartUp: Creating AppCore\n");
-     appCore = new MsgAppCore();
-   }
-   dump("AppCore probably found\n");
-   if (appCore != null) {
-	  dump("Initializing AppCore and setting Window\n");
-      appCore.Init("MsgAppCore");
-      appCore.SetWindow(window);
-   }
-}
-
-function OpenURL(url)
-{
-	dump("\n\nOpenURL from XUL\n\n\n");
-	var appCore = new MsgAppCore();
-	if (appCore != null) {
-	  dump("Initializing AppCore and setting Window\n");
-      appCore.Init("MsgAppCore");
-      appCore.SetWindow(window);
-	  appCore.OpenURL(url);
-   }
-}
-
-function NewMessage()
-{
-	dump("\n\nnewMsg from XUL\n\n\n");
-	var appCore = new ComposeAppCore();
-	if (appCore != null) {
-		dump("Initializing ComposeAppCore and creating a new Message\n");
-		appCore.Init("ComposeAppCore");
-		appCore.NewMessage("resource:/res/samples/compose.xul");
-	}
-}
-
-</html:script>
+<html:script src="widgetglue.js"></html:script>
+<html:script src="commandglue.js"></html:script>
+<html:script src="shareglue.js"></html:script>
 
   <menubar>
     <menu name="File">
-      <menuitem name="New Message" onclick="NewMessage();"/>
+      <menu name="New">
+        <menuitem name="Navigator Window" onClick="NewBrowserWindow();"/>
+        <menuitem name="Message" onClick="MsgNewMessage();"/>
+        <menuitem name="Blank Page" onClick="NewBlankPage();"/>
+        <separator/>
+        <menuitem name="Page from Template" onClick="TemplatePage();"/>
+        <menuitem name="Page from Wizard" onClick="WizardPage();"/>
+      </menu>
+      <menuitem name="New Folder..." onClick="MsgNewFolder();"/>
+      <menuitem name="Open Attachment" onClick="MsgOpenAttachment();"/>
+      <menu name="Save As">
+        <menuitem name="File" onClick="MsgSaveAsFile();"/>
+        <menuitem name="Template" onClick="MsgSaveAsTemplate();"/>
+      </menu>
       <separator/>
-      <menuitem name="Get New Message" onclick="GetMessage();"/>
-      <menuitem name="Subscribe" onclick="Subscribe();"/>
+      <menuitem name="Get New Message" onClick="MsgGetMessage();"/>
+      <menuitem name="Send Unsent Messages" onClick="MsgSendUnsentMsg();"/>
+      <menuitem name="Update Message Count" onClick="MsgUpdateMsgCount();"/>
+      <menuitem name="Subscribe" onClick="MsgSubscribe();"/>
       <separator/>
-      <menuitem name="Rename Folder.." onclick="RenameFolder();"/>
-      <menuitem name="Empty Trash" onclick="EmptyTrash();"/>
+      <menuitem name="Rename Folder.." onClick="MsgRenameFolder();"/>
+      <menuitem name="Empty Trash" onClick="MsgEmptyTrash();"/>
+      <menuitem name="Compact Folders" onClick="MsgCompactFolders();"/>
       <separator/>
-      <menuitem name="Print" onclick="Print();"/>
+      <menuitem name="Import..." onClick="MsgImport();"/>
       <separator/>
-      <menuitem name="Close" onclick="Close();"/>
-      <menuitem name="Exit" onclick="Exit();"/>
+      <menu name="Offline">
+        <menuitem name="Work Offline" onClick="MsgWorkOffline();"/>
+        <menuitem name="Synchronize" onClick="MsgSynchronize();"/>
+        <menuitem name="Get Selected Messages" onClick="MsgGetSelectedMsg();"/>
+        <menuitem name="Get Flagged Messages" onClick="MsgGetFlaggedMsg();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Page Setup..." onClick="PageSetup();"/>
+      <menuitem name="Print Preview" onClick="PrintPreview();"/>
+      <menuitem name="Print" onClick="Print();"/>
+      <separator/>
+      <menuitem name="Close" onClick="Close();"/>
+      <menuitem name="Exit" onClick="Exit();"/>
     </menu>
     <menu name="Edit">
-      <menuitem name="Delete Message" onclick="DeleteMessage();"/>
+      <menuitem name="Undo" onClick="MsgEditUndo();"/>
+      <menuitem name="Redo" onClick="MsgEditRedo();"/>
+      <separator/>
+      <menuitem name="Cut" onClick="MsgEditCut();"/>
+      <menuitem name="Copy" onClick="MsgEditCopy();"/>
+      <menuitem name="Paste" onClick="MsgEditPaste();"/>
+      <menuitem name="Delete Message" onClick="MsgDeleteMessage();"/>
+      <menu name="Select">
+      <menuitem name="All" onClick="MsgSelectAll();"/>
+      <menuitem name="Thread" onClick="MsgSelectThread();"/>
+      <menuitem name="Flagged Messages" onClick="MsgSelectFlaggedMsg();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Find..." onClick="MsgFind();"/>
+      <menuitem name="Find Again" onClick="MsgFindAgain();"/>
+      <separator/>
+      <menuitem name="Search Messages" onClick="MsgSearchMessages();"/>
+      <separator/>
+      <menuitem name="Message Filters..." onClick="MsgFilters();"/>
+      <menuitem name="Folder Properties" onClick="MsgFolderProperties();"/>
+      <separator/>
+      <menuitem name="Preferences" onClick="MsgPreferences();"/>
     </menu>
     <menu name="View">
-      <menuitem name="View Attachments Inline" onclick="ViewAttachInline();"/>
-      <menuitem name="Wrap Long Lines" onclick="WrapLongLines();"/>
+      <menu name="Show">
+      <menuitem name="Message Toolbar" onClick="MsgShowMsgToolbar();"/>
+      <menuitem name="Location Toolbar" onClick="MsgShowLocationbar();"/>
+      <menuitem name="Message" onClick="MsgShowMessage();"/>
+      <menuitem name="Folders" onClick="MsgShowFolders();"/>
+      </menu>
       <separator/>
-      <menuitem name="Page Source" onclick="ViewPageSource();"/>
-      <menuitem name="Page Info" onclick="ViewPageInfo();"/>
+      <menu name="Sort">
+        <menuitem name="by Date" onClick="MsgSortByDate();"/>
+        <menuitem name="by Flag" onClick="MsgSortByFlag();"/>
+        <menuitem name="by Priority" onClick="MsgSortByPriority();"/>
+        <menuitem name="by Sender" onClick="MsgSortBySender();"/>
+        <menuitem name="by Size" onClick="MsgSortBySize();"/>
+        <menuitem name="by Status" onClick="MsgSortByStatus();"/>
+        <menuitem name="by Subject" onClick="MsgSortBySubject();"/>
+        <menuitem name="by Thread" onClick="MsgSortByThread();"/>
+        <menuitem name="by Unread" onClick="MsgSortByUnread();"/>
+        <menuitem name="by Order Received" onClick="MsgSortByOrderReceived();"/>
+        <separator/>
+        <menuitem name="Ascending" onClick="MsgSortAscending();"/>
+        <menuitem name="Descending" onClick="MsgSortDescending();"/>
+      </menu>
+      <menu name="Messages">
+        <menuitem name="All" onClick="MsgViewAllMsgs();"/>
+        <menuitem name="Unread" onClick="MsgViewUnreadMsg();"/>
+        <menuitem name="Threads with Unread" onClick="MsgViewThreadsUnread();"/>
+        <menuitem name="Watched Threads with Unread" onClick="MsgViewWatchedThreadsUnread();"/>
+        <separator/>
+        <menuitem name="Ignore Thread" onClick="MsgViewIgnoreThread();"/>
+      </menu>
+      <menu name="Headers">
+        <menuitem name="All" onClick="MsgViewAllHeaders();"/>
+        <menuitem name="Normal" onClick="MsgViewNormalHeaders();"/>
+        <menuitem name="Brief" onClick="MsgViewBriefHeaders();"/>
+      </menu>
+      <separator/>
+      <menuitem name="View Attachments Inline" onClick="MsgViewAttachInline();"/>
+      <menuitem name="Wrap Long Lines" onClick="MsgWrapLongLines();"/>
+      <separator/>
+      <menuitem name="Increase Font" onClick="MsgIncreaseFont();"/>
+      <menuitem name="Decrease Font" onClick="MsgDecreaseFont();"/>
+      <separator/>
+      <menuitem name="Reload" onClick="MsgReload();"/>
+      <menuitem name="Show Images" onClick="MsgShowImages();"/>
+      <menuitem name="Refresh" onClick="MsgRefresh();"/>
+      <menuitem name="Stop" onClick="MsgStop();"/>
+      <separator/>
+      <menuitem name="Page Source" onClick="MsgViewPageSource();"/>
+      <menuitem name="Page Info" onClick="MsgViewPageInfo();"/>
+      <separator/>
+      <menu name="Character Set">
+        <menuitem name="Western (ISO-8859-1)" onClick="CharacterSet();"/>
+      </menu>
     </menu>
     <menu name="Go">
-      <menuitem name="Next Message" onclick="NextMessage();"/>
-      <menuitem name="Next Unread Message" onclick="NextUnreadMessage();"/>
+      <menuitem name="First Unread Message" onClick="MsgFirstUnreadMessage();"/>
+      <menuitem name="First Flagged Message" onClick="MsgFirstFlaggedMessage();"/>
+      <separator/>
+      <menu name="Next">
+        <menuitem name="Message" onClick="MsgNextMessage();"/>
+        <menuitem name="Unread Message" onClick="MsgNextUnreadMessage();"/>
+        <menuitem name="Flagged Message" onClick="MsgNextFlaggedMessage();"/>
+      </menu>
+      <menu name="Previous">
+        <menuitem name="Message" onClick="MsgPreviousMessage();"/>
+        <menuitem name="Unread Message" onClick="MsgPreviousUnreadMessage();"/>
+        <menuitem name="Flagged Message" onClick="MsgPreviousFlaggedMessage();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Back" onClick="MsgGoBack();"/>
+      <menuitem name="Forward" onClick="MsgGoForward();"/>
     </menu>
     <menu name="Message">
-      <menuitem name="New Message" onclick="NewMessage();"/>
-      <menuitem name="Reply" onclick="ReplyMessage();"/>
-      <menuitem name="Forward" onclick="ForwardMessage();"/>
+      <menuitem name="New Message" onClick="MsgNewMessage();"/>
+      <menuitem name="Reply" onClick="MsgReplyMessage();"/>
+      <menuitem name="Reply to All" onClick="MsgReplyToAllMessage();"/>
+      <menuitem name="Forward" onClick="MsgForwardMessage();"/>
+      <menu name="Forward As">
+        <menuitem name="Inline" onClick="MsgForwardAsInline();"/>
+        <menuitem name="Quoted" onClick="MsgForwardAsQuoted();"/>
+        <menuitem name="Attachment" onClick="MsgForwardAsAttachment();"/>
+      </menu>
+      <menuitem name="Edit Message as New" onClick="MsgEditMessageAsNew();"/>
+      <separator/>
+      <menu name="Move Message">
+        <menuitem name="Folder" onClick="MsgMoveMessage();"/>
+      </menu>
+      <menu name="Copy Message">
+        <menuitem name="Folder" onClick="MsgCopyMessage();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Add Sender to Address Book" onClick="MsgAddSenderToAddressBook();"/>
+      <menuitem name="Add All to Address Book" onClick="MsgAddAllToAddressBook();"/>
+      <separator/>
+      <menu name="Mark">
+        <menuitem name="As Read" onClick="MsgMarkMsgAsRead();"/>
+        <menuitem name="Thread As Read" onClick="MsgMarkThreadAsRead();"/>
+        <menuitem name="by Date..." onClick="MsgMarkByDate();"/>
+        <menuitem name="All Read" onClick="MsgMarkAllRead();"/>
+        <separator/>
+        <menuitem name="Flag" onClick="MsgMarkAsFlagged();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Ignore Thread" onClick="MsgIgnoreThread();"/>
+      <menuitem name="Watch Thread" onClick="MsgWatchThread();"/>
+    </menu>
+    <menu name="Communicator">
+      <menuitem name="Navigatoe" onClick="NavigatorWindow();"/>
+      <menuitem name="Messenger" onClick="MessengerWindow();"/>
+      <menuitem name="Composer" onClick="ComposerWindow();"/>
+      <menuitem name="AOL Instant Messenger Service" onClick="AIMService();"/>
+      <separator/>
+      <menu name="Bookmarks">
+        <menuitem name="Add Bookmark" onClick="AddBookmark();"/>
+        <menuitem name="File Bookmark" onClick="FileBookmark();"/>
+        <menuitem name="Edit Bookmark" onClick="EditBookmark();"/>
+      </menu>
+      <menuitem name="Newsgroups" onClick="Newsgroups();"/>
+      <menuitem name="Address Book" onClick="AddressBook();"/>
+      <separator/>
+      <menu name="Tools">
+        <menuitem name="History" onClick="History();"/>
+        <menuitem name="Security Info" onClick="SecurityInfo();"/>
+        <menuitem name="Message Center" onClick="MessengerCenter();"/>
+        <menuitem name="Import Utility" onClick="Import();"/>
+        <menuitem name="Java Console" onClick="JavaConsole();"/>
+      </menu>
+      <menu name="Server Tools">
+        <menuitem name="Page Service" onClick="PageService();"/>
+        <menuitem name="Mail Account" onClick="MailAccount();"/>
+        <menuitem name="Mailing List" onClick="MaillingList();"/>
+        <menuitem name="Folder Permissions" onClick="FolderPermission();"/>
+        <menuitem name="Manage Newsgroups" onClick="ManageNewsgroup();"/>
+      </menu>
+      <separator/>
+      <menuitem name="Window" onClick="WindowList();"/>
      </menu>
+    <menu name="Help">
+      <menuitem name="Help Content" onClick="Help();"/>
+      <menuitem name="Reference Library" onClick="Help();"/>
+      <menuitem name="Release Notes" onClick="Help();"/>
+      <menuitem name="Produce Information and Support" onClick="Help();"/>
+      <separator/>
+      <menuitem name="Software Updates" onClick="Help();"/>
+      <menuitem name="Register Now" onClick="Help();"/>
+      <menuitem name="Member Services" onClick="Help();"/>
+      <separator/>
+      <menuitem name="International Users" onClick="Help();"/>
+      <menuitem name="Security" onClick="Help();"/>
+      <menuitem name="NetWatch" onClick="Help();"/>
+      <separator/>
+      <menuitem name="About Plug-ins" onClick="About();"/>
+      <menuitem name="About Font Displayers" onClick="About();"/>
+      <menuitem name="About Communicator..." onClick="About();"/>
+    </menu>
     <menu name="Demo">
-      <menuitem name="News Message 1" onclick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
-      <menuitem name="News Message 2" onclick="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
+      <menuitem name="News Message 1" onClick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
+      <menuitem name="News Message 2" onClick="MsgLoadNewsMessage('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
     </menu>
   </menubar>
 
 <html:div html:id="header">
-	<toolbox>
     <toolbar>
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="GetMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onclick="NewMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onclick="ReplyMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="ForwardMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="DeleteMessage()">
+	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
 	  </titledbutton>
 
 	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="window.frames[0].home()"/>
 
     </toolbar>
-	</toolbox>
 </html:div>
 
 <html:div id="thread">
