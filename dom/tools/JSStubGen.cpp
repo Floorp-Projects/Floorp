@@ -294,7 +294,19 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
 
       sprintf(buf, kPropSlotStr, iface_name, attr_name, ++prop_counter);
       *file << buf;
-      if (a != acount-1) {
+
+      int a2, add_nl = 0;
+      for (a2 = a + 1; a2 < acount; a2++) {
+        IdlAttribute *attr2 = iface->GetAttributeAt(a2);
+
+        if (!(attr2->GetIsNoScript() || attr2->GetReplaceable())) {
+          add_nl = 1;
+
+          break;
+        }
+      }
+
+      if (a != acount-1 && add_nl) {
         *file << ",\n";
       }
     }

@@ -120,32 +120,31 @@ enum Window_slots {
   WINDOWINTERNAL_SCREENY = -28,
   WINDOWINTERNAL_PAGEXOFFSET = -29,
   WINDOWINTERNAL_PAGEYOFFSET = -30,
-  WINDOWINTERNAL_LENGTH = -31,
-  WINDOWEVENTOWNER_ONMOUSEDOWN = -32,
-  WINDOWEVENTOWNER_ONMOUSEUP = -33,
-  WINDOWEVENTOWNER_ONCLICK = -34,
-  WINDOWEVENTOWNER_ONMOUSEOVER = -35,
-  WINDOWEVENTOWNER_ONMOUSEOUT = -36,
-  WINDOWEVENTOWNER_ONKEYDOWN = -37,
-  WINDOWEVENTOWNER_ONKEYUP = -38,
-  WINDOWEVENTOWNER_ONKEYPRESS = -39,
-  WINDOWEVENTOWNER_ONMOUSEMOVE = -40,
-  WINDOWEVENTOWNER_ONFOCUS = -41,
-  WINDOWEVENTOWNER_ONBLUR = -42,
-  WINDOWEVENTOWNER_ONSUBMIT = -43,
-  WINDOWEVENTOWNER_ONRESET = -44,
-  WINDOWEVENTOWNER_ONCHANGE = -45,
-  WINDOWEVENTOWNER_ONSELECT = -46,
-  WINDOWEVENTOWNER_ONLOAD = -47,
-  WINDOWEVENTOWNER_ONUNLOAD = -48,
-  WINDOWEVENTOWNER_ONCLOSE = -49,
-  WINDOWEVENTOWNER_ONABORT = -50,
-  WINDOWEVENTOWNER_ONERROR = -51,
-  WINDOWEVENTOWNER_ONPAINT = -52,
-  WINDOWEVENTOWNER_ONDRAGDROP = -53,
-  WINDOWEVENTOWNER_ONRESIZE = -54,
-  WINDOWEVENTOWNER_ONSCROLL = -55,
-  ABSTRACTVIEW_DOCUMENT = -56
+  WINDOWEVENTOWNER_ONMOUSEDOWN = -31,
+  WINDOWEVENTOWNER_ONMOUSEUP = -32,
+  WINDOWEVENTOWNER_ONCLICK = -33,
+  WINDOWEVENTOWNER_ONMOUSEOVER = -34,
+  WINDOWEVENTOWNER_ONMOUSEOUT = -35,
+  WINDOWEVENTOWNER_ONKEYDOWN = -36,
+  WINDOWEVENTOWNER_ONKEYUP = -37,
+  WINDOWEVENTOWNER_ONKEYPRESS = -38,
+  WINDOWEVENTOWNER_ONMOUSEMOVE = -39,
+  WINDOWEVENTOWNER_ONFOCUS = -40,
+  WINDOWEVENTOWNER_ONBLUR = -41,
+  WINDOWEVENTOWNER_ONSUBMIT = -42,
+  WINDOWEVENTOWNER_ONRESET = -43,
+  WINDOWEVENTOWNER_ONCHANGE = -44,
+  WINDOWEVENTOWNER_ONSELECT = -45,
+  WINDOWEVENTOWNER_ONLOAD = -46,
+  WINDOWEVENTOWNER_ONUNLOAD = -47,
+  WINDOWEVENTOWNER_ONCLOSE = -48,
+  WINDOWEVENTOWNER_ONABORT = -49,
+  WINDOWEVENTOWNER_ONERROR = -50,
+  WINDOWEVENTOWNER_ONPAINT = -51,
+  WINDOWEVENTOWNER_ONDRAGDROP = -52,
+  WINDOWEVENTOWNER_ONRESIZE = -53,
+  WINDOWEVENTOWNER_ONSCROLL = -54,
+  ABSTRACTVIEW_DOCUMENT = -55
 };
 
 /***********************************************************************/
@@ -689,25 +688,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsIDOMWindowInternal* b;
           if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
             rv = b->GetPageYOffset(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case WINDOWINTERNAL_LENGTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LENGTH, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRUint32 prop;
-          nsIDOMWindowInternal* b;
-          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
-            rv = b->GetLength(&prop);
             if(NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
             }
@@ -2592,6 +2572,73 @@ WindowInternalcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *v
   return PR_TRUE;
 }
 
+/***********************************************************************/
+//
+// length Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternallengthGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LENGTH, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          PRUint32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetLength(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// length Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternallengthSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LENGTH, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "length", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
 
 //
 // Window class properties
@@ -2628,7 +2675,6 @@ static JSPropertySpec WindowProperties[] =
   {"screenY",    WINDOWINTERNAL_SCREENY,    JSPROP_ENUMERATE},
   {"pageXOffset",    WINDOWINTERNAL_PAGEXOFFSET,    JSPROP_ENUMERATE},
   {"pageYOffset",    WINDOWINTERNAL_PAGEYOFFSET,    JSPROP_ENUMERATE},
-  {"length",    WINDOWINTERNAL_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"onmousedown",    WINDOWEVENTOWNER_ONMOUSEDOWN,    JSPROP_ENUMERATE},
   {"onmouseup",    WINDOWEVENTOWNER_ONMOUSEUP,    JSPROP_ENUMERATE},
   {"onclick",    WINDOWEVENTOWNER_ONCLICK,    JSPROP_ENUMERATE},
@@ -2672,6 +2718,7 @@ static JSPropertySpec WindowReplaceableProperties[] =
   {"locationbar",    0,    JSPROP_ENUMERATE, WindowInternallocationbarGetter, WindowInternallocationbarSetter},
   {"personalbar",    0,    JSPROP_ENUMERATE, WindowInternalpersonalbarGetter, WindowInternalpersonalbarSetter},
   {"controllers",    0,    JSPROP_ENUMERATE, WindowInternalcontrollersGetter, WindowInternalcontrollersSetter},
+  {"length",    0,    JSPROP_ENUMERATE, WindowInternallengthGetter, WindowInternallengthSetter},
   {0}
 };
 
