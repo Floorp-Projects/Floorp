@@ -35,11 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-
-// need it globally, but can only set it in startup()
-var data;
-
 function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
   document.getElementById("allowScripts").disabled = state;
@@ -64,44 +59,7 @@ function javascriptEnabledChange(){
   }
 }
 
-function getPrefValueForCheckbox(prefName){
-  var prefValue = false;
-
-  try {
-    prefValue = pref.GetBoolPref(prefName);
-  }
-  catch(e) {}
-
-  // the prefs are stored in terms of disabling,
-  // but we want our value in terms of enabling.
-  // so let's invert the prefValue.
-  return !prefValue;
-}
-
 function Startup(){
-
-  data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
-
-  //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
-  if (!("scriptData" in data)){
-    var changedList = ["allowWindowMoveResizeChanged",
-                       "allowWindowStatusChangeChanged",
-                       "allowWindowFlipChanged",
-                       "allowImageSrcChangeChanged",
-                       "allowHideStatusBarChanged"];
-
-    data.scriptData = [];
-    for(var run = 0; run < changedList.length; run++ ){
-      data.scriptData[ changedList[run] ] = [];
-      data.scriptData[ changedList[run] ].value = false;
-    }
-
-    document.getElementById("allowWindowMoveResize").checked =  getPrefValueForCheckbox("dom.disable_window_move_resize");
-    document.getElementById("allowWindowFlip").checked = getPrefValueForCheckbox("dom.disable_window_flip");
-    document.getElementById("allowWindowStatusChange").checked = getPrefValueForCheckbox("dom.disable_window_status_change");
-    document.getElementById("allowImageSrcChange").checked = getPrefValueForCheckbox("dom.disable_image_src_set");
-    document.getElementById("allowHideStatusBar").checked = getPrefValueForCheckbox("dom.disable_window_open_feature.status");
-
     //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
     var pluginGroup = document.getElementById("pluginPreferences")
     var children = pluginGroup.childNodes;
@@ -110,57 +68,4 @@ function Startup(){
   }
 
   javascriptEnabledChange();
-
-  document.getElementById("AllowList").addEventListener("CheckboxStateChange", onCheckboxCheck, false);
-
-  parent.hPrefWindow.registerOKCallbackFunc(doOnOk);
-}
-
-function doOnOk(){
-
-  //If a user makes a change to this panel, goes to another panel, and returns to this panel to 
-  //make another change, then we cannot use data[elementName].  This is because data[elementName] 
-  //contains the original xul change and we would loose the new change. Thus we track all changes
-  //by using getElementById.
-
-  //The nested functions are needed because doOnOk cannot access anything outside of its scope
-  //when it is called 
-  function getCheckboxValue(name){
-    if ("onCheckboxCheck" in window)
-      return document.getElementById(name).checked;
-
-    return data[name].checked;
-  }
-
-  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
-
-  if (data.scriptData["allowWindowMoveResizeChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_window_move_resize",
-      !getCheckboxValue('allowWindowMoveResize'));
-  }
-
-  if (data.scriptData["allowWindowStatusChangeChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_window_status_change",
-      !getCheckboxValue("allowWindowStatusChange"));
-  }
-
-  if (data.scriptData["allowWindowFlipChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_window_flip",
-      !getCheckboxValue("allowWindowFlip"));
-  }
-
-  if (data.scriptData["allowImageSrcChangeChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_image_src_set",
-      !getCheckboxValue("allowImageSrcChange"));
-  }
-
-  if (data.scriptData["allowHideStatusBarChanged"].value) {
-    parent.hPrefWindow.setPref("bool", "dom.disable_window_open_feature.status",
-      !getCheckboxValue("allowHideStatusBar"));
-  }
-}
-
-function onCheckboxCheck(event)
-{
-  data.scriptData[event.target.id+"Changed"].value = !data.scriptData[event.target.id+"Changed"].value;
 }

@@ -68,11 +68,16 @@
     <label id="allowScripts" value="&allowScripts.label;"/>
 
     <listbox id="AllowList" flex="1">
-      <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
-      <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
-      <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"/>          
-      <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
-      <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
+      <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"
+                prefinverse="true" prefstring="dom.disable_window_move_resize"/>
+      <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"
+                prefinverse="true" prefstring="dom.disable_window_flip"/>
+      <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"
+                prefinverse="true" prefstring="dom.disable_window_open_feature.status"/>
+      <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"
+                prefinverse="true" prefstring="dom.disable_window_status_change"/>
+      <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"
+                prefinverse="true" prefstring="dom.disable_image_src_set"/>
     </listbox>
   </groupbox>
 
