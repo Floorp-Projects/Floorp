@@ -27,15 +27,15 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsINetService methods:
-    NS_IMETHOD GetProtocolHandler(nsIUrl* url, nsIProtocolHandler* *result);
+    NS_IMETHOD GetProtocolHandler(nsIURL* url, nsIProtocolHandler* *result);
     NS_IMETHOD NewConnectionGroup(nsIConnectionGroup* *result);
-    NS_IMETHOD NewURL(nsIUrl* *result, 
+    NS_IMETHOD NewURL(nsIURL* *result, 
                       const char* aSpec,
-                      const nsIUrl* aBaseURL,
-                      nsISupports* aContainer);
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink,
+                      const nsIURL* aBaseURL = 0,
+                      nsISupports* aContainer = 0);
+    NS_IMETHOD Open(nsIURL* url, nsISupports* eventSink,
                     nsIConnectionGroup* aGroup,
-                    nsIProtocolConnection* *result);
+                    nsIProtocolInstance* *result);
     NS_IMETHOD HasActiveConnections();
 
     // nsNetService methods:
