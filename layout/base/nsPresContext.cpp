@@ -1357,6 +1357,19 @@ NS_IMETHODIMP
 nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
 {
   aLoadFlags = nsIRequest::LOAD_NORMAL;
+
+  nsCOMPtr<nsIDocument> doc;
+  (void) mShell->GetDocument(getter_AddRefs(doc));
+
+  if (doc) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    (void) doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+    if (loadGroup) {
+      loadGroup->GetLoadFlags(&aLoadFlags);
+    }
+  }
+
   return NS_OK;
 }
 

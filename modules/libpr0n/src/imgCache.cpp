@@ -202,7 +202,7 @@ SecondsFromPRTime(PRTime prTime)
 }
 
 
-PRBool imgCache::Get(nsIURI *aKey, PRBool aDoomIfExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
+PRBool imgCache::Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
 {
   LOG_STATIC_FUNC(gImgLog, "imgCache::Get");
 
@@ -222,12 +222,13 @@ PRBool imgCache::Get(nsIURI *aKey, PRBool aDoomIfExpired, imgRequest **aRequest,
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
 
-  if (aDoomIfExpired) {
+  if (aHasExpired) {
     PRUint32 expirationTime;
-    entry->GetExpirationTime(&expirationTime);
-    if (expirationTime <= SecondsFromPRTime(PR_Now())) {
-      entry->Doom();
-      return PR_FALSE;
+    rv = entry->GetExpirationTime(&expirationTime);
+    if (NS_FAILED(rv) || (expirationTime <= SecondsFromPRTime(PR_Now()))) {
+      *aHasExpired = PR_TRUE;
+    } else {
+      *aHasExpired = PR_FALSE;
     }
   }
 

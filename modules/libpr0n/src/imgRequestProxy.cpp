@@ -43,6 +43,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(imgRequestProxy, imgIRequest, nsIRequest)
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
+  mIsInLoadGroup(PR_FALSE),
   mCanceled(PR_FALSE),
   mLock(nsnull)
 {
@@ -102,6 +103,11 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   mContext = cx;
 
   if (aLoadGroup) {
+    //
+    // XXX: This does not deal with the situation where cached content
+    //      is being revalidated.  In this case, the request needs to
+    //      be added in case the cache entry is doomed.
+    //
     PRUint32 imageStatus = mOwner->GetImageStatus();
     if (!(imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) &&
         !(imageStatus & imgIRequest::STATUS_ERROR)) {

@@ -40,6 +40,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIComponentManager.h"
 #include "nsIProxyObjectManager.h"
@@ -48,6 +49,7 @@
 #include "nsAutoLock.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "plstr.h" // PL_strcasestr(...)
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
@@ -531,6 +533,8 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
+  nsresult rv;
+
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
@@ -578,8 +582,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
   /* get the expires info */
-  if (mCacheEntry && chan) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(chan));
+  if (mCacheEntry) {
+    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
     if (cacheChannel) {
       nsCOMPtr<nsISupports> cacheToken;
       cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
@@ -593,6 +597,37 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
           /* set the expiration time on our entry */
           mCacheEntry->SetExpirationTime(expiration);
         }
+      }
+    }
+    //
+    // Determine whether the cache entry must be revalidated when it expires.
+    // If so, then the cache entry must *not* be used during HISTORY loads if
+    // it has expired.
+    //
+    // Currently, only HTTP specifies this information...
+    //
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+    if (httpChannel) {
+      PRBool bMustRevalidate = PR_FALSE;
+
+      rv = httpChannel->IsNoStoreResponse(&bMustRevalidate);
+
+      if (!bMustRevalidate) {
+        rv = httpChannel->IsNoCacheResponse(&bMustRevalidate);
+      }
+
+      if (!bMustRevalidate) {
+        nsCAutoString cacheHeader;
+
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                            cacheHeader);
+        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
+          bMustRevalidate = PR_TRUE;
+        }
+      }
+
+      if (bMustRevalidate) {
+        mCacheEntry->SetMetaDataElement("MustValidateIfExpired", "true");
       }
     }
   }
