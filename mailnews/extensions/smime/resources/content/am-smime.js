@@ -27,6 +27,8 @@ var gHiddenEncryptionPolicy = null;
 var gEncryptionChoices = null;
 var gSignCertName  = null;
 var gSignMessages  = null;
+var gEncryptAlways = null;
+var gNeverEncrypt = null;
 
 function onInit() 
 {
@@ -36,6 +38,8 @@ function onInit()
   gEncryptionChoices = document.getElementById("encryptionChoices");
   gSignCertName       = document.getElementById("identity.signing_cert_name");
   gSignMessages       = document.getElementById("identity.sign_mail");
+  gEncryptAlways      = document.getElementById("encrypt_mail_always");
+  gNeverEncrypt       = document.getElementById("encrypt_mail_never");
 
   gEncryptionCertName.value = gIdentity.getUnicharAttribute("encryption_cert_name");
 
@@ -59,6 +63,7 @@ function onInit()
   if (!gEncryptionCertName.value)
   {
     gEncryptAlways.setAttribute("disabled", true);
+    gNeverEncrypt.setAttribute("disabled", true);
   }
 
   // we currently don't support encrypt if possible so keep it disabled for now...
@@ -82,6 +87,11 @@ function onSave()
   // find out which radio for the encryption radio group is selected and set that on our hidden encryptionChoice pref....
   var newValue = gEncryptionChoices.selectedItem.value;
   gHiddenEncryptionPolicy.setAttribute('value', newValue);
+  gIdentity.setIntAttribute("encryptionpolicy", newValue);
+  gIdentity.setUnicharAttribute("encryption_cert_name", gEncryptionCertName.value);
+
+  gIdentity.setBoolAttribute("sign_mail", gSignMessages.checked);
+  gIdentity.setUnicharAttribute("signing_cert_name", gSignCertName.value);
 }
 
 function onLockPreference()
@@ -144,6 +154,7 @@ function smimeSelectCert(smime_cert)
 
       if (smime_cert == "identity.encryption_cert_name") {
         gEncryptAlways.removeAttribute("disabled");
+        gNeverEncrypt.removeAttribute("disabled");
       } else {
         gSignMessages.removeAttribute("disabled");
       }

@@ -3,7 +3,7 @@
 <!ENTITY encryptionChoiceLabel.label "Use encryption when sending messages:">
 <!ENTITY neverEncrypt.label "Never">
 <!ENTITY ifPossibleEncryptMessage.label "If possible (messages are sent without encryption if not all recipients have a certificate)">
-<!ENTITY alwaysEncryptMessage.label "Always (disable send unless all recipients have a certificate">
+<!ENTITY alwaysEncryptMessage.label "Always (disable send unless all recipients have a certificate)">
 <!ENTITY encryptionCert.message "Use the following personal certificate:">
 <!ENTITY encryptionCert.notselected "No certificate set">
 <!ENTITY certificate.button "Select...">
