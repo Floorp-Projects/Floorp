@@ -58,7 +58,7 @@ Rights Reserved.
        rdf:containment="http://home.netscape.com/NC-rdf#child">
           <template>
           <rule>
-            <treechildren>
+            <treechildren flex="1">
             <treeitem uri="..." open="true"
                    Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
                   <treerow >
@@ -73,8 +73,10 @@ Rights Reserved.
           </rule>
           </template>
 
-      <treecol style="width: 85%" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-      <treecol style="width: 15%" id="activeColumn"/>
+      <treecolgroup>
+        <treecol style="width: 0px" flex="85" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
+        <treecol style="width: 0px" flex="15" id="activeColumn"/>
+      </treecolgroup>
 
       <treehead>
         <treerow>
