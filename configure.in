@@ -260,6 +260,7 @@ case "$target" in
     fi
     MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
     MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
+    AS='$(CC)'
     ;;
 
 *-bsdi*)
