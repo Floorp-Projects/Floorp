@@ -1,0 +1,908 @@
+global PPCPROJECTFAILED
+global CVSSESSIONFILE
+global CVSSESSIONNAME
+global BUILDLIST
+global BUILDNAME
+global FOLDERTIME
+global SOURCEPATH
+global CHECKOUTTIME
+global TINDERBOXTREE
+global MACHINEADMIN
+global CLOBBERBUILD
+global STARTUPDISK
+global BINARYPATH
+property CONFIGFILENAME : "Tinderbox Config"
+
+-------------------------
+on CreateLogFile(logFilePath)
+	-- creates a "build log" file
+	-------------------------
+	global logFileID
+	set logFileID to 0
+	try
+		set logFileID to open for access file logFilePath with write permission
+		--set the type of alias logFilePath to "CWIE"
+	on error errMsg2 number errNum
+		if (errNum is not -49) then
+			-- nothing to do about such errors
+			error errMsg2 & " error = " & errNum
+		end if
+	end try
+end CreateLogFile
+
+-------------------------
+on CloseLogFile()
+	-- close log file
+	-------------------------
+	global logFileID
+	if logFileID is not 0 then close access logFileID
+end CloseLogFile
+
+-------------------------
+on logMessage(m)
+	-- logs a message to the log file
+	-------------------------
+	global logFileID
+	try
+		if logFileID is not 0 then write (m as string) & (ASCII character 13) to logFileID
+		--display dialog m
+	on error
+		-- hmmm??
+	end try
+end logMessage
+
+-------------------------
+on trim(q)
+	-- strip leading and trailing white space.
+	-------------------------
+	set realLast to length of q
+	repeat
+		if realLast is 0 then exit repeat
+		set c to character realLast of q
+		if c is not space and c is not tab then exit repeat
+		set realLast to realLast - 1
+	end repeat
+	if (realLast is 0) then return ""
+	set realFirst to 1
+	repeat
+		if realFirst > realLast then exit repeat
+		set c to character realFirst of q
+		if c is not space and c is not tab then exit repeat
+		set realFirst to realFirst + 1
+	end repeat
+	if (realFirst > realLast) then return ""
+	return text realFirst through realLast of q
+end trim
+
+-------------------------
+on Token(aString, tokenRequested)
+	-- Return the string up to the first space.  Input must be trimmed.
+	-------------------------
+	set tokenFirst to 0 -- offset of first char of current token
+	set tokenCount to 0 -- which token we are examining
+	set tokenScan to 0 -- offset of next character being examined
+	set stringLength to length of aString
+	if (tokenRequested = 0) then return ""
+	repeat
+		set tokenFirst to tokenFirst + 1
+		set tokenCount to tokenCount + 1
+		-- check for inital whitespace
+		repeat
+			set c to character tokenFirst of aString
+			if c is not space and c is not tab then exit repeat
+			set tokenFirst to tokenFirst + 1
+		end repeat
+		-- check for inital quote
+		set isQuotedString to false
+		if c is "\"" then
+			set isQuotedString to true
+			set tokenFirst to tokenFirst + 1
+		end if
+		-- scan for the next white space or the end of string
+		set tokenScan to tokenFirst - 1
+		repeat
+			set tokenScan to tokenScan + 1
+			if tokenScan > stringLength then exit repeat
+			set c to character tokenScan of aString
+			if (isQuotedString) then
+				if c is "\"" then exit repeat
+			else
+				if c is space or c is tab then exit repeat -- whitespace
+			end if
+		end repeat
+		-- Got a token
+		if (tokenCount = tokenRequested) then
+			return trim(text tokenFirst through (tokenScan - 1) of aString)
+		end if
+		if (tokenScan > stringLength) then return ""
+		set tokenFirst to tokenScan
+	end repeat
+end Token
+
+-------------------------
+on monthNumber(dateObj)
+	-------------------------
+	set monthList to {January, February, March, April, May, Â
+		June, July, August, September, October, November, December}
+	set m to month of dateObj
+	repeat with i from 1 to number of items of monthList
+		if m = item i of monthList then
+			return i
+		end if
+	end repeat
+end monthNumber
+
+-------------------------
+on ExtractTimeString(d)
+	-- given a date object, extract hh.mm
+	-------------------------
+	set tstring to ""
+	set t to (time of d as integer)
+	set m to (t div 60 as integer)
+	set h to m div 60
+	set m to (m - h * 60)
+	if (h < 10) then set tstring to tstring & "0"
+	set tstring to tstring & h
+	if (m < 10) then set tstring to tstring & "0"
+	set tstring to tstring & m
+	return tstring
+end ExtractTimeString
+
+-------------------------
+on ExtractDateString(d)
+	-- given a date object, extract yy/mm/dd
+	-------------------------
+	set dstring to (year of d) & "."
+	set m to monthNumber(d)
+	if (m < 10) then set dstring to dstring & "0"
+	set dstring to dstring & m & "."
+	set d to (day of d)
+	if (d < 10) then set dstring to dstring & "0"
+	set dstring to dstring & d
+	return dstring
+end ExtractDateString
+
+-------------------------
+on GetCVSTimeStamp(d)
+	-- turns AppleScript date object into a text CVS type time stamp
+	-- suitable for passing into MacCVS
+	-------------------------
+	set dstring to ""
+	set m to monthNumber(d)
+	if (m < 10) then set dstring to "0"
+	set dstring to m & "/"
+	set dayNum to (day of d)
+	if (dayNum < 10) then set dstring to dstring & "0"
+	set dstring to dstring & dayNum & "/"
+	set theYear to ((year of d) as string)
+	set dstring to dstring & {characters 3 thru 4 of theYear}
+	
+	set tstring to ""
+	set t to (time of d as integer)
+	set m to (t div 60 as integer)
+	set h to m div 60
+	set m to (m - h * 60)
+	if (h < 10) then set tstring to tstring & "0"
+	set tstring to tstring & h & ":"
+	if (m < 10) then set tstring to tstring & "0"
+	set tstring to tstring & m & ":"
+	set s to (t mod 60)
+	if (s < 10) then set tstring to tstring & 0
+	set tstring to tstring & s
+	
+	set theresult to ((dstring & " " & tstring & " PST") as string)
+	return theresult
+end GetCVSTimeStamp
+
+-------------------------
+on GetTimeStamp()
+	-- returns a numeric string given for a date object
+	-------------------------
+	set d to current date
+	set dstring to ExtractDateString(d) & "." & ExtractTimeString(d)
+	set dstring to dstring as string
+	return dstring
+end GetTimeStamp
+
+-------------------------
+-- given a full path, return the name of the last object
+on GetCVSSessionName(path)
+	-- given a mac style path, return the string name of the
+	-- last object in a path
+	-------------------------
+	set going to true
+	set i to the length of path
+	
+	repeat while going is true
+		set theChar to character i of path
+		if theChar is ":" then
+			set going to false
+		end if
+		set i to i - 1
+	end repeat
+	set sessionName to (characters {i + 2} thru length of path)
+	return sessionName as string
+end GetCVSSessionName
+
+-------------------------
+on doOnePPCProject(projpath, targetName)
+	-- process one PPC project, given path to project and the target
+	-- if target is "" build frontmost target (the default)
+	-------------------------
+	global gDoAliases
+	set noError to false
+	with timeout of 3600 seconds (* one hour*)
+		
+		try
+			tell application "CodeWarrior IDE 3.2"
+				open {projpath}
+			end tell
+		on error errMsg number errNum
+			logMessage("Error  : Can't open project " & projpath)
+			set PPCPROJECTFAILED to true
+			error
+		end try
+		
+		if targetName is not "" then
+			tell application "CodeWarrior IDE 3.2"
+				Set Current Target (targetName as string)
+			end tell
+		end if
+		
+		try
+			tell application "CodeWarrior IDE 3.2"
+				set myErrors to Make Project
+			end tell
+		on error number errNum
+			if errNum < 0 then
+				set noError to true
+			end if
+		end try
+		if noError is false then
+			tell application "CodeWarrior IDE 3.2"
+				set theProjectName to my GetProjectName(projpath)
+				Save Error Window As {STARTUPDISK & ":" & FOLDERTIME & ":" & theProjectName & ".txt"}
+			end tell
+			set PPCPROJECTFAILED to true
+		end if
+		tell application "CodeWarrior IDE 3.2"
+			Close Project
+		end tell
+	end timeout
+	return (noError)
+end doOnePPCProject
+
+
+-------------------------
+on ReadLn(fileRefNum)
+	-- strip empty lines and strip terminal comments
+	-------------------------
+	try
+		repeat
+			set q to read fileRefNum before return
+			if q is not "" then
+				set hashOffset to offset of "#" in q
+				if (hashOffset is 0) then set hashOffset to offset of "//" in q
+				if (hashOffset > 1) then
+					set q to text 1 thru (hashOffset - 1) of q
+				end if
+				if hashOffset is not 1 and q is not "" then
+					-- strip trailing white space.
+					set q to trim(q)
+					if q is not "" then return q
+				end if
+			end if
+		end repeat
+	on error errString number errNum
+		if errNum is -39 then -- no more lines (eof)
+			return ""
+		end if
+		ErrorMessage(errString)
+		error errString
+		return errString
+	end try
+end ReadLn
+
+on ProcessList(theListFile)
+	try
+		with timeout of 14400 seconds -- four hours
+			tell application "MacPerl"
+				Do Script {theListFile as alias}
+			end tell
+		end timeout
+	on error
+	end try
+	
+end ProcessList
+
+(* Initialize script.  Read Config file. Get source directory *)
+on Initialize()
+	
+	try
+		-- find the config file at the same level as this applescript
+		-- if you're running this in script debugger, uncomment lines below
+		set oldDelimiters to AppleScript's text item delimiters
+		set myPath to (path to me) as text
+		set AppleScript's text item delimiters to {":"}
+		set pl to (every text item of myPath)
+		set configPath to (items 1 thru ((count of pl) - 1) of pl) as string
+		set configPath to configPath & ":" & CONFIGFILENAME
+		set AppleScript's text item delimiters to oldDelimiters
+		
+		set f to 0
+		
+		-- DEBUG		
+		-- uncomment this for debugging		
+		-- set configPath to "Forge:Tinderbox:cm:client:mac:contbuild:Tinderbox Config"
+		set f to open for access {configPath as alias}
+		
+		set MACHINEADMIN to ReadLn(f)
+		set TINDERBOXTREE to ReadLn(f)
+		set BUILDNAME to ReadLn(f)
+		
+		set clobberstring to ReadLn(f)
+		if clobberstring is "Clobber" then
+			set CLOBBERBUILD to true
+		else
+			set CLOBBERBUILD to false
+		end if
+		
+		set CVSSESSIONFILE to ReadLn(f)
+		set BUILDLIST to ReadLn(f)
+		set BINARYPATH to ReadLn(f)
+		
+		if f is not 0 then
+			close access f
+		end if
+	on error
+		display dialog "Failed to read config file!"
+	end try
+	
+	set CHECKOUTTIME to GetCVSTimeStamp(current date)
+	
+	set SOURCEPATH to getLocalCVSRoot(CVSSESSIONFILE)
+	
+	tell application "Finder"
+		set STARTUPDISK to name of startup disk
+	end tell
+	
+	createLogDirectory(STARTUPDISK & ":")
+	CreateLogFile(STARTUPDISK & ":" & FOLDERTIME & ":" & "Tinderbox Script Log")
+	
+	logMessage("Machine Administrator: " & MACHINEADMIN)
+	logMessage("Building to Tinderbox Tree: " & TINDERBOXTREE)
+	logMessage("Building: " & BUILDNAME)
+	
+	if (CLOBBERBUILD) then
+		logMessage("Building Clobber")
+	else
+		logMessage("Building Depend")
+	end if
+	logMessage("CVS Session file at: " & CVSSESSIONFILE)
+	logMessage("BuildList at: " & BUILDLIST)
+	logMessage("Binary file at: " & BINARYPATH)
+	return true
+	
+end Initialize
+
+-- given a full path, return the name of the last object
+on GetProjectName(path)
+	set going to true
+	set i to the length of path
+	repeat while going is true
+		set theChar to character i of path
+		if theChar is ":" then
+			set going to false
+		end if
+		set i to i - 1
+	end repeat
+	return (characters {i + 2} thru length of path)
+end GetProjectName
+
+
+on notifyHook(result)
+	if result is true then
+		tell application "Eudora Pro 3.1"
+			activate
+			set newMsg to make new message at end of mailbox "Out" of mail folder ""
+			set field "Subject:" of newMsg to "Mac Continous Build FAILED"
+			set body of newMsg to "
+The last Mac Continous Build Failed at: " & " " & {CHECKOUTTIME as text} & "
+Since you are on the hook, you might be responsible for the breakage. 
+
+Please check the logs at: http://warp/tinderbox/showbuilds.cgi?tree=" & TINDERBOXTREE & "
+
+to see if you busted the build."
+			set field "To:" of newMsg to "bonsai-hook"
+			activate
+			queue message newMsg
+			connect with sending without checking
+		end tell
+	end if
+end notifyHook
+
+on notifyTinderBoxStart()
+	try
+		tell application "Eudora Pro 3.1"
+			activate
+			set newMsg to make new message at end of mailbox "Out" of mail folder ""
+			set body of newMsg to "
+		
+tinderbox: tree: " & TINDERBOXTREE & "
+tinderbox: builddate: " & CHECKOUTTIME & "
+tinderbox: status: building
+tinderbox: build: " & BUILDNAME & " 
+tinderbox: errorparser: mac
+"
+			set field "To:" of newMsg to "tinderbox-daemon@warp"
+			activate
+			queue message newMsg
+			connect with sending without checking
+			quit
+		end tell
+	on error
+		CloseLogFile()
+		display dialog "MAIL SERVER ERROR: CAN'T SEND COMPLETION E-MAIL. SCRIPT HALTED"
+		error number -128
+	end try
+	
+end notifyTinderBoxStart
+
+on notifyTinderBox(result)
+	try
+		if result is true then
+			
+			tell application "Finder"
+				set thelist to (every file of folder (STARTUPDISK & ":" & FOLDERTIME & ":"))
+			end tell
+			
+			set numFiles to count of thelist
+			set i to 1
+			set aliasList to {}
+			
+			repeat numFiles times
+				set aliasList to aliasList & (item i of thelist as alias)
+				set i to i + 1
+			end repeat
+			
+			tell application "Eudora Pro 3.1"
+				activate
+				set newMsg to make new message at end of mailbox "Out" of mail folder ""
+				attach to newMsg documents aliasList
+				set field "Subject:" of newMsg to "Mac Continous Build FAILED"
+				set body of newMsg to "
+
+tinderbox: tree: " & TINDERBOXTREE & "
+tinderbox: builddate: " & CHECKOUTTIME & "
+tinderbox: status: busted
+tinderbox: build: " & BUILDNAME & " 
+tinderbox: errorparser: mac
+"
+				set field "To:" of newMsg to "tinderbox-daemon@warp"
+				activate
+				queue message newMsg
+				connect with sending without checking
+				quit
+			end tell
+		end if
+		
+		if result is false then
+			
+			tell application "Finder"
+				set thelist to (every file of folder (STARTUPDISK & ":" & FOLDERTIME & ":"))
+			end tell
+			
+			set numFiles to count of thelist
+			set i to 1
+			set aliasList to {}
+			
+			repeat numFiles times
+				set aliasList to aliasList & (item i of thelist as alias)
+				set i to i + 1
+			end repeat
+			
+			tell application "Eudora Pro 3.1"
+				activate
+				set newMsg to make new message at end of mailbox "Out" of mail folder ""
+				set field "Subject:" of newMsg to "Mac Continous Build SUCCEEDED"
+				set body of newMsg to "
+
+tinderbox: tree: " & TINDERBOXTREE & "
+tinderbox: builddate: " & CHECKOUTTIME & "
+tinderbox: status: success
+tinderbox: build: " & BUILDNAME & " 
+tinderbox: errorparser: mac
+"
+				set field "To:" of newMsg to "tinderbox-daemon@warp"
+				activate
+				queue message newMsg
+				connect with sending without checking
+				quit
+			end tell
+		end if
+	on error
+		CloseLogFile()
+		display dialog "MAIL SERVER ERROR: CAN'T SEND COMPLETION E-MAIL. SCRIPT HALTED"
+		error number -128
+	end try
+	
+end notifyTinderBox
+
+on PageAdmin(pageMesg)
+	tell application "Eudora Pro 3.1"
+		activate
+		set newMsg to make new message at end of mailbox "Out" of mail folder ""
+		set field "To:" of newMsg to MACHINEADMIN
+		set field "Subject:" of newMsg to TINDERBOXTREE & " " & BUILDNAME & " Continous Build failed"
+		if pageMesg is not "" then
+			set body of newMsg to pageMesg
+		end if
+		activate
+		queue message newMsg
+		connect with sending without checking
+		quit
+	end tell
+end PageAdmin
+
+-- remove all directories from the local root, removing the old tree
+on removeOldTree()
+	
+	try
+		tell application "Finder"
+			open folder (SOURCEPATH as string)
+			select every item of item of container window of folder (SOURCEPATH as string)
+			delete selection
+			close container window of folder (SOURCEPATH as string)
+			empty trash
+		end tell
+	on error
+		CloseLogFile()
+		set PPCPROJECTFAILED to true
+		logMessage("Error  : Couldn't delete the old tree.")
+		PageAdmin("Couldn't nuke old tree!")
+		display dialog ("Couldn't nuke old tree! SCRIPT HALTED")
+		error number -128
+	end try
+	
+end removeOldTree
+
+-- remove the 'dist' directory from the local root
+on removeOldDist() --¥
+	
+	try
+		tell application "Finder"
+			set distPath to SOURCEPATH & ":mozilla:dist"
+			open folder (distPath as string)
+			select every item of item of container window of folder (distPath as string)
+			delete selection
+			close container window of folder (distPath as string)
+			empty trash
+		end tell
+	on error
+		CloseLogFile()
+		set PPCPROJECTFAILED to true
+		logMessage("Error  : Couldn't delete the old 'dist' directory.")
+		PageAdmin("Couldn't nuke old 'dist' directory!")
+		display dialog ("Couldn't nuke old 'dist' directory! SCRIPT HALTED")
+		error number -128
+	end try
+	
+end removeOldDist
+
+on checkoutModule(cvsmodule, cvsRevision)
+	
+	try
+		with timeout of 1800 seconds (* 30 minutes *)
+			if cvsRevision is "" then
+				tell application "MacCVS Pro 2.1b2r1 PPC"
+					tell session CVSSESSIONNAME
+						activate
+						checkout module cvsmodule
+					end tell
+				end tell
+			else
+				tell application "MacCVS Pro 2.1b2r1 PPC"
+					tell session CVSSESSIONNAME
+						activate
+						checkout module cvsmodule revision cvsRevision
+					end tell
+				end tell
+			end if
+		end timeout
+		if cvsRevision is "" then
+			logMessage("Check-out of " & cvsmodule & "successful!")
+		else
+			logMessage("Check-out of " & cvsmodule & "at revision: " & cvsRevision & "  successful!")
+		end if
+	on error errMsg number errNum
+		if cvsRevision is "" then
+			set PPCPROJECTFAILED to true
+			logMessage("Error  : Can't check out module: " & cvsmodule & " revision: Tip")
+			logMessage("Error  : " & errMsg)
+			error "Can't check out module"
+		else
+			set PPCPROJECTFAILED to true
+			logMessage("Error  : Can't check out module: " & cvsmodule & " revision: " & cvsRevision)
+			logMessage("Error  : " & errMsg)
+			error "Can't check out module"
+		end if
+	end try
+	
+end checkoutModule
+
+on checkOutTree(pathToCVSSession)
+	
+	try
+		set oldDelimiters to AppleScript's text item delimiters
+		set myPath to (path to me) as text
+		set AppleScript's text item delimiters to {":"}
+		set pl to (every text item of myPath)
+		set configPath to (items 1 thru ((count of pl) - 1) of pl) as string
+		set configPath to configPath & ":" & CONFIGFILENAME
+		set AppleScript's text item delimiters to oldDelimiters
+		
+		set f to 0
+		
+		-- set configPath to "Forge:Tinderbox:cm:client:mac:contbuild:Tinderbox Config"
+		set f to open for access {configPath as alias}
+		(* read past the cruft of the config file *)
+		ReadLn(f)
+		ReadLn(f)
+		ReadLn(f)
+		ReadLn(f)
+		ReadLn(f)
+		ReadLn(f)
+		ReadLn(f)
+	on error
+		CloseLogFile()
+		set PPCPROJECTFAILED to true
+		logMessage("Couldn't check-out the tree: couldn't read modules" & return)
+		logMessage(errMsg)
+		PageAdmin("Couldn't check-out the tree: couldn't read modules")
+		display dialog "Couldn't read modules from config file: SCRIPT HALTED"
+		error number -128
+	end try
+	
+	-- open the session	
+	tell application "MacCVS Pro 2.1b2r1 PPC"
+		activate
+		open {pathToCVSSession as alias}
+	end tell
+	
+	try
+		repeat
+			set cvsmodule to ReadLn(f)
+			if cvsmodule is "" then exit repeat
+			if cvsmodule = "CVS Session" then
+				switchCVSSession(f)
+			else
+				set revision to Token(cvsmodule, 2)
+				set cvsmodule to Token(cvsmodule, 1)
+				checkoutModule(cvsmodule, revision)
+			end if
+		end repeat
+		logMessage("### Checked-out all required modules")
+	on error
+		--¥tell application "MacCVS Pro 2.1b2r1 PPC"
+		--¥quit
+		--¥end tell
+		-- toss something up to run()
+		error
+	end try
+	
+	--¥tell application "MacCVS Pro 2.1b2r1 PPC"
+	--¥quit
+	--¥end tell
+	
+end checkOutTree
+
+on switchCVSSession(f)
+	
+	tell application "MacCVS Pro 2.1b2r1 PPC"
+		close session CVSSESSIONNAME
+	end tell
+	
+	set newSessionPath to ReadLn(f)
+	set newSessionName to GetCVSSessionName(newSessionPath)
+	
+	set CVSSESSIONNAME to newSessionName
+	
+	tell application "MacCVS Pro 2.1b2r1 PPC"
+		activate
+		open {newSessionPath as alias}
+	end tell
+	
+end switchCVSSession
+
+on getLocalCVSRoot(pathToCVSSession)
+	
+	set CVSSESSIONNAME to GetCVSSessionName(pathToCVSSession)
+	try
+		tell application "MacCVS Pro 2.1b2r1 PPC"
+			open {pathToCVSSession as alias}
+			tell session CVSSESSIONNAME
+				set theLocalRoot to local root
+			end tell
+			--¥quit
+		end tell
+		set pathLength to {(get the length of (theLocalRoot as text)) as text}
+		return (characters 1 thru {pathLength - 1} of (theLocalRoot as text))
+	on error
+		display dialog "Error  : CVS Session path wrong, or doesn't have a local root. SCRIPT HALTED!"
+		error number -128
+	end try
+	
+end getLocalCVSRoot
+
+on createLogDirectory(destFolder)
+	
+	tell application "Finder"
+		set FOLDERTIME to my GetTimeStamp()
+		make new folder at folder (destFolder)
+		set the name of the result to FOLDERTIME
+	end tell
+	
+end createLogDirectory
+
+on mozillaLives(filePath)
+	
+	try
+		tell application "Finder"
+			set fileTest to file filePath
+			set creatorType to get the creator type of fileTest
+			set fileTest to application file filePath
+			set partitionSize to get the partition size of fileTest
+			if (creatorType is "????" and partitionSize > 0) then
+				return false
+			else
+				return true
+			end if
+		end tell
+	on error
+		return true
+	end try
+	
+end mozillaLives
+
+on copyFile(srcPath, destFolder)
+	
+	try
+		tell application "Finder"
+			copy file (srcPath as alias) to folder (destFolder as alias)
+			-- set the name of the result to destName
+		end tell
+	on error msgErr
+		logMessage("Error: Could not copy - " & srcPath & msgErr)
+	end try
+	
+end copyFile
+
+on getDriveName(path)
+	
+	set going to true
+	set i to 1
+	
+	repeat while going is true
+		set theChar to character i of path
+		if theChar is ":" then
+			set going to false
+		end if
+		set i to i + 1
+	end repeat
+	set driveName to (characters 1 thru {i - 1} of path)
+	return driveName as string
+	
+end getDriveName
+
+on trashItem(filePath)
+	
+	try
+		tell application "Finder"
+			select item (filePath as string)
+			delete selection
+			empty trash
+		end tell
+	on error
+		logMessage("Error  : Couldn't delete the old binary.")
+		PageAdmin("Couldn't nuke old binary!")
+		display dialog "Couldn't nuke old binary: SCRIPT HALTED"
+		error number -128
+	end try
+	
+end trashItem
+
+on run
+	
+	-- if we are executing first time, skip time delay check	
+	set firstRun to true
+	
+	--¥repeat
+	
+	-- if we're cycling around, make sure we don't cycle faster than 10 minutes		
+	if firstRun is false then
+		if endTime - startTime is less than 600 then
+			repeat while endTime - startTime is less than 600
+				set endTime to current date
+			end repeat
+		end if
+	end if
+	
+	set firstRun to false
+	
+	set startTime to current date
+	
+	-- 2 hour timeout		
+	with timeout of 7200 seconds
+		
+		set PPCPROJECTFAILED to false
+		
+		-- read config file and create log directories			
+		Initialize()
+		
+		notifyTinderBoxStart()
+		
+		if (CLOBBERBUILD) then
+			removeOldTree()
+		else
+			removeOldDist() --¥
+		end if
+		
+		(*
+			else
+				trashItem("")
+			end
+			*)
+		
+		try
+			checkOutTree(CVSSESSIONFILE)
+		on error
+			PageAdmin("Can't check out tree!")
+		end try
+		
+		if PPCPROJECTFAILED is false then
+			set SOURCEPATH to getLocalCVSRoot(CVSSESSIONFILE)
+			set SOURCEPATH to SOURCEPATH as string
+			
+			ProcessList(SOURCEPATH & BUILDLIST)
+			
+			tell application "CodeWarrior IDE 3.2"
+				quit
+			end tell
+			
+			tell application "MacCVS Pro 2.1b2r1 PPC"
+				quit
+			end tell
+			
+			tell application "ToolServer"
+				quit
+			end tell
+			
+		end if
+		
+		-- set builddrive to getDriveName(SOURCEPATH)
+		
+		copyFile(SOURCEPATH & ":Mozilla.BuildLog", STARTUPDISK & ":" & FOLDERTIME & ":")
+		set PPCPROJECTFAILED to mozillaLives(SOURCEPATH & BINARYPATH)
+		
+		CloseLogFile()
+		
+		try
+			notifyTinderBox(PPCPROJECTFAILED)
+		on error
+			PageAdmin("Couldn't send Tinderbox completion message!")
+		end try
+		
+		tell application "Finder"
+			select folder FOLDERTIME of startup disk
+			delete selection
+			--¥empty trash
+			restart --¥
+		end tell
+		
+	end timeout
+	
+	set endTime to current date
+	
+	--¥end repeat
+	
+end run
