@@ -679,6 +679,11 @@ nsSocketTransport::OnConnectionFailed(PRBool tryNextAddress)
 
         mService->AddToWorkQ(this);
     }
+    else
+    {
+        if (tryNextAddress)
+            mNetAddress = nsnull;
+    }
 
     LOG(("nsSocketTransport Leaving OnConnectionFailed() tryAgain = %d",tryAgain));
     return tryAgain;
