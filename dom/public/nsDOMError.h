@@ -25,6 +25,9 @@
 
 #include "nsError.h"
 
+// XXX If you add a new error code, also add an error string to
+// dom/base/src/domerr.msg
+
 /* DOM error codes from http://www.w3.org/TR/REC-DOM-Level-1/ */
 
 #define NS_ERROR_DOM_INDEX_SIZE_ERR              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,1)
