@@ -39,7 +39,8 @@
 
 class nsIPICS : public nsISupports {
 public:
-    
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPICS_IID)
+
   NS_IMETHOD ProcessPICSLabel(char *label) = 0;
   NS_IMETHOD GetWebShell(PRUint32 key, nsIWebShellServices*& aResult) = 0;
   NS_IMETHOD SetNotified(nsIWebShellServices* aResult, nsIURI* aURL, PRBool notified) = 0;
@@ -48,7 +49,8 @@ public:
 extern NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS);
 
 /* ProgID prefixes for PICS DLL registration. */
-#define NS_PICS_PROGID                           "component:||netscape|extensions|pics"
+#define NS_PICS_PROGID "component://netscape/pics"
+#define NS_PICS_CLASSNAME "PICS Service"
 
 
 #endif /* nsIPICS_h__ */
