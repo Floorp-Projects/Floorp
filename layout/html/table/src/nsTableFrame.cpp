@@ -1075,6 +1075,12 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    if (this == target) {
+      NS_NOTYETIMPLEMENTED("unexpected reflow command");
+    }
+
     // XXX Deal with the case where the reflow command is targeted at us
     nsIFrame* kidFrame;
     aReflowState.reflowCommand->GetNext(kidFrame);
