@@ -8,6 +8,7 @@ Contributors:
   David Tenser <david.tenser@comhem.se> (original author)
   R.J. Keller <rlk@trfenv.com>
   Sean Umphlet <nosebleed@umphlet.com> (minor bugfixes)
+  Jeff Walden <jwalden+code@mit.edu>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -18,11 +19,17 @@ Contributors:
 
 <body>
 
-<h1>&brandShortName; Keyboard Shortcuts</h1>
+<h1>&brandFullName; Keyboard Shortcuts</h1>
 
 <p>This is a list of the most common keyboard shortcuts in &brandFullName;
   compared with the shortcuts to equivalent actions in Internet Explorer and
-  Opera.</p>
+  Opera.  <span class="unix">If you have enabled Emacs-style text editing
+  shortcuts in GNOME, they will also work in &brandShortName;.  When an Emacs
+  text editing shortcut conflicts with the default shortcuts (as occurs with
+  <kbd>Ctrl</kbd>+<kbd>K</kbd>), the Emacs shortcut will take preference if
+  focus is inside a textbox (which would include the location bar and search
+  bar).  In such cases you should use the alternate keyboard shortcut
+  if one is listed below.</span></p>
 
 <table border="1" width="100%">
   <thead>
@@ -134,7 +141,8 @@ Contributors:
     </tr>
     <tr>
       <td>Downloads</td>
-      <td><kbd>Ctrl</kbd>+<kbd>J</kbd></td>
+      <td><span class="noUnix"><kbd>Ctrl</kbd>+<kbd>J</kbd></span>
+        <span class="unix"><kbd>Ctrl</kbd>+<kbd>Y</kbd></span></td>
       <td>&nbsp;</td>
       <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd><br/>
         <kbd>Ctrl</kbd>+<kbd>5</kbd></td>
@@ -194,12 +202,6 @@ Contributors:
       <td><kbd>Ctrl</kbd>+<kbd>H</kbd></td>
       <td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd><br/>
         <kbd>Ctrl</kbd>+<kbd>4</kbd></td>
-    </tr>
-    <tr class="unix">
-      <td>Remove End of Line</td>
-      <td><kbd>Ctrl</kbd>+<kbd>K</kbd></td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
     </tr>
     <tr>
       <td>Home</td>
@@ -313,8 +315,8 @@ Contributors:
     </tr>
     <tr>
       <td>Redo</td>
-      <td><kbd>Ctrl</kbd>+<kbd>Y</kbd><br/>
-        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
+      <td><span class="win"><kbd>Ctrl</kbd>+<kbd>Y</kbd></span>
+        <span class="noWin"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></span></td>
       <td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td>
       <td><kbd>Ctrl</kbd>+<kbd>Y</kbd><br/>
         <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
@@ -349,7 +351,7 @@ Contributors:
     </tr>
     <tr>
       <td>Select All</td>
-      <td><kbd class="noUnix">Ctrl</kbd><kbd class="unix">Alt</kbd>+<kbd>A</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
       <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
       <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
     </tr>
@@ -391,15 +393,16 @@ Contributors:
     </tr>
     <tr>
       <td>Web Search</td>
-      <td><kbd>Ctrl</kbd>+<kbd class="noUnix">E</kbd><kbd
-        class="unix">J</kbd></td>
+      <td><kbd>Ctrl</kbd>+<kbd>K</kbd>
+        <span class="win"><br/><kbd>Ctrl</kbd>+<kbd>E</kbd></span>
+        <span class="unix"><br/><kbd>Ctrl</kbd>+<kbd>J</kbd></span></td>
       <td>&nbsp;</td>
       <td><kbd>Shift</kbd>+<kbd>F8</kbd></td>
     </tr>
   </tbody>
 </table>
 
-<div class="contentsBox"><em>10 July 2004</em></div>
+<div class="contentsBox"><em>18 September 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
