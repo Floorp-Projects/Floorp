@@ -260,7 +260,8 @@ typedef enum XP_FileType {
 #endif
     xpLIClientDB,
 	xpLIPrefs,
-	xpJSConfig                  /* Javascript 'jsc' config cache file */
+	xpJSConfig,                  /* Javascript 'jsc' config cache file */
+	xpSecurityModule	     /* security loadable module */
 } XP_FileType;
 
 
