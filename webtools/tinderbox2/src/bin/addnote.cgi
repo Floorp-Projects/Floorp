@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.20 $ 
-# $Date: 2002/05/10 21:49:33 $ 
+# $Revision: 1.21 $ 
+# $Date: 2003/06/18 16:11:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -53,7 +53,7 @@ use Persistence;
 use HTMLPopUp;
 use Utils;
 use TinderDB;
-
+use TinderHeader;
 
 
 # turn a time string of the form "04/26 15:48" into a time().
