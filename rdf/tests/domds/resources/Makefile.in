@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../../..
+DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -25,20 +25,24 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=rdfdomds
 LIBRARY_NAME=rdfdomds
 IS_COMPONENT=1
-DIRS = resources
 
-XPIDLSRCS = nsIDOMDataSource.idl
+SAMPLES_DIR = $(DIST)/bin/res/samples/rdf
 
-CPPSRCS = \
-	nsRDFDOMDataSource.cpp	\
-	nsRDFDOMDataSourceFactory.cpp	\
+RESOURCE_SAMPLES = \
+	DOMDataSourceViewer.xul	\
+	DOMDataSourceViewer.css	\
+	DOMDataSourceViewer.js	\
+	DOMTree.xul				\
 	$(NULL)
 
-EXTRA_DSO_LDOPTS 	+=	\
-	$(NSPR_LIBS)	\
-	-L$(DIST)/bin	\
-	-lxpcom			\
-	$(NULL)
+EXPORT_RESOURCE_SAMPLES := $(addprefix $(srcdir)/,$(RESOURCE_SAMPLES))
+CLOBBER_RESOURCE_SAMPLES := $(addprefix $(SAMPLES_DIR)/, $(RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
+
+clobber::
+	$(RM) $(CLOBBER_RESOURCE_SAMPLES)
 
 include $(topsrcdir)/config/config.mk
 
