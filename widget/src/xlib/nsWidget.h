@@ -141,7 +141,6 @@ protected:
 
 extern Display         *gDisplay;
 extern Screen          *gScreen;
-extern int              gScreenNum;
 extern int              gDepth;
 extern Visual          *gVisual;
 extern XVisualInfo     *gVisualInfo;
