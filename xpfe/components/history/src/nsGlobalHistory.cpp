@@ -1752,6 +1752,10 @@ nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
   mdbOid oid = { kToken_HistoryRowScope, 1 };
   err = mStore->GetTable(mEnv, &oid, &mTable);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+  if (!mTable) {
+    NS_WARNING("Your history file is somehow corrupt.. deleting it.");
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -1780,6 +1784,7 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   // Create the one and only table in the history db
   err = mStore->NewTable(mEnv, kToken_HistoryRowScope, kToken_HistoryKind, PR_TRUE, nsnull, &mTable);
   if (err != 0) return NS_ERROR_FAILURE;
+  if (!mTable) return NS_ERROR_FAILURE;
 
   // Force a commit now to get it written out.
   nsMdbPtr<nsIMdbThumb> thumb(mEnv);
@@ -1841,8 +1846,8 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
   nsresult	err = NS_OK;
   nsMdbPtr<nsIMdbThumb> thumb(mEnv);
 
-  if (!mStore)
-    return NS_ERROR_NULL_POINTER;
+  if (!mStore || !mTable)
+    return NS_ERROR_NOT_INITIALIZED;
 
   if (commitType == kLargeCommit || commitType == kSessionCommit)
   {
