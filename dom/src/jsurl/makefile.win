@@ -15,6 +15,11 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+LIBRARY_NAME=jsurl 
+MODULE=jsurl
+DEPTH=..\..\..
+include <$(DEPTH)/config/config.mak>
+
 IGNORE_MANIFEST=1
 #
 
@@ -53,9 +58,6 @@ CPPSRCS = \
 !endif
 	$(NULL)
 
-LIBRARY_NAME=jsurl 
-MODULE=jsurl
-DEPTH=..\..\..
 
 LOCAL_INCLUDES=-I. -I$(PUBLIC)/zlib  -I$(PUBLIC)/parse
 INCLUDES = $(LOCAL_INCLUDES)

@@ -16,6 +16,7 @@
 # Reserved.
 
 DEPTH=..\..
+include <$(DEPTH)/config/config.mak>
 MODULE=rdf 
 
 MAKE_OBJ_TYPE=DLL
