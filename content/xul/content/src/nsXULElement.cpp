@@ -88,6 +88,8 @@
 #include "nsXPIDLString.h"
 #include "nsXULAttributes.h"
 #include "nsXULControllers.h"
+#include "nsXULIFrameElement.h"
+#include "nsXULBrowserElement.h"
 #include "nsXULEditorElement.h"
 #include "nsXULTreeElement.h"
 #include "nsXULPopupElement.h"
@@ -278,6 +280,8 @@ nsIAtom*             nsXULElement::kTreeChildrenAtom;
 nsIAtom*             nsXULElement::kTreeColAtom;
 nsIAtom*             nsXULElement::kTreeItemAtom;
 nsIAtom*             nsXULElement::kTreeRowAtom;
+nsIAtom*             nsXULElement::kIFrameAtom;
+nsIAtom*             nsXULElement::kBrowserAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
 nsIAtom*             nsXULElement::kNullAtom;
@@ -340,6 +344,8 @@ nsXULElement::Init()
         kTreeColAtom        = NS_NewAtom("treecol");
         kTreeItemAtom       = NS_NewAtom("treeitem");
         kTreeRowAtom        = NS_NewAtom("treerow");
+        kIFrameAtom         = NS_NewAtom("iframe");
+        kBrowserAtom        = NS_NewAtom("browser");
         kEditorAtom         = NS_NewAtom("editor");
         kWindowAtom         = NS_NewAtom("window");
         kNullAtom           = NS_NewAtom("");
@@ -412,6 +418,8 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kTreeColAtom);
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
+        NS_IF_RELEASE(kIFrameAtom);
+        NS_IF_RELEASE(kBrowserAtom);
         NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWindowAtom);
         NS_IF_RELEASE(kNullAtom);
@@ -610,6 +618,34 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
             if (NS_FAILED(rv)) return rv;
 
             if ((mSlots->mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kIFrameAtom)) {
+        // We delegate XULIFrameElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULIFrameElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kBrowserAtom)) {
+        // We delegate XULBrowserElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULBrowserElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1640,6 +1676,14 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         if (Tag() == kTreeAtom) {
             fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
+        }
+        else if (Tag() == kIFrameAtom) {
+            fn = NS_NewScriptXULIFrameElement;
+            rootname = "nsXULIFrameElement::mScriptObject";
+        }
+        else if (Tag() == kBrowserAtom) {
+            fn = NS_NewScriptXULBrowserElement;
+            rootname = "nsXULBrowserElement::mScriptObject";
         }
         else if (Tag() == kEditorAtom) {
             fn = NS_NewScriptXULEditorElement;

@@ -347,6 +347,8 @@ protected:
     static nsIAtom*             kTreeColAtom;
     static nsIAtom*             kTreeItemAtom;
     static nsIAtom*             kTreeRowAtom;
+    static nsIAtom*             kIFrameAtom;
+    static nsIAtom*             kBrowserAtom;
     static nsIAtom*             kEditorAtom;
     static nsIAtom*             kWindowAtom;
     
