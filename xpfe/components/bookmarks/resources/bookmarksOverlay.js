@@ -650,7 +650,7 @@ BookmarksUIElement.prototype = {
   {
     openDialog("chrome://communicator/content/bookmarks/findBookmark.xul",
                "FindBookmarksWindow",
-               "centerscreen,chrome,dependent");
+               "dialog=no,centerscreen,resizable=no,chrome,dependent");
   },
 
   getLocaleString: function (aStringKey)

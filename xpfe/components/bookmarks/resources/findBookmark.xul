@@ -22,8 +22,11 @@
  
   Contributor(s): 
     Ben Goodger <ben@netscape.com> (Original Author)
-
 -->
+
+<!--
+    "Find Bookmarks" window
+  -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
@@ -72,3 +75,4 @@
   <box id="okCancelButtonsRight"/>
 
 </window>
+
