@@ -158,9 +158,9 @@ nsresult nsAbOutlookCard::Init(const char *aUri)
     nsCAutoString entry ;
     nsCAutoString stub ;
 
-    mAbWinType = getAbWinType(kOutlookCardScheme, mURI, stub, entry) ;
+    mAbWinType = getAbWinType(kOutlookCardScheme, mURI.get(), stub, entry) ;
     if (mAbWinType == nsAbWinType_Unknown) {
-        PRINTF(("Huge problem URI=%s.\n", mURI)) ;
+        PRINTF(("Huge problem URI=%s.\n", mURI.get())) ;
         return NS_ERROR_INVALID_ARG ;
     }
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
