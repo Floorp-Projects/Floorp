@@ -1163,7 +1163,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     nsProfileLock localLock;
     nsCOMPtr<nsILocalFile> localProfileDir(do_QueryInterface(profileDir, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = localLock.Lock(localProfileDir);
+    rv = localLock.Lock(localProfileDir, nsnull);
     if (NS_FAILED(rv))
     {
         NS_ERROR("Could not get profile directory lock.");
