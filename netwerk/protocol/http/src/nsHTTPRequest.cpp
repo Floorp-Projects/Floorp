@@ -26,7 +26,7 @@
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
 #include "nsString.h"
-#include "nsComPtr.h"
+#include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponseListener.h"
