@@ -31,6 +31,8 @@
 #include "nsIEventListener.h"
 #include "nsString.h"
 
+#include "nsIMenuBar.h"
+
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))

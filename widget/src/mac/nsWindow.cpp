@@ -79,6 +79,7 @@ nsWindow::~nsWindow()
 	}
 			
 	NS_IF_RELEASE(mTempRenderingContext);
+    NS_IF_RELEASE(mMenuListener);
 }
 
 
@@ -336,13 +337,16 @@ NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 //
 // Set the widget's MenuBar.
 // Must be called after Create.
-//
-// @param aTitle string displayed as the title of the widget
+// Releases a previously set nsIMenuBar
+// AddRefs the passed in nsIMenuBar
+// @param aMenuBar a pointer to an nsIMenuBar interface on an object
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
-	mMenuBar = aMenuBar;
+  NS_IF_RELEASE(mMenuBar);
+  NS_IF_ADDREF(aMenuBar);
+  mMenuBar = aMenuBar;
   return NS_OK;
 }
 
@@ -888,8 +892,10 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
   
-  if (nsnull != mMenuListener)
-  	aStatus = mMenuListener->MenuSelected(*event);
+  if (nsnull != mMenuListener){
+    if(NS_MENU_EVENT == event->eventStructType)
+  	  //aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
+  }
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
 
