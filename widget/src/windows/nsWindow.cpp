@@ -377,6 +377,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mLastPoint.x   = 0;
     mLastPoint.y   = 0;
     mWidth = mHeight = 0;
+    mClientData = NULL;
 }
 
 
@@ -613,6 +614,23 @@ void nsWindow::Create(nsNativeWidget aParent,
     SubclassWindow(TRUE);
 }
 
+//-------------------------------------------------------------------------
+//
+// Accessor functions to get/set the client data
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
+{
+  aClientData = mClientData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
+{
+  mClientData = aClientData;
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //

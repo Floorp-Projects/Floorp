@@ -68,6 +68,8 @@ public:
                                    nsIAppShell *aAppShell = nsnull,
                                    nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD              GetClientData(void*& aClientData);
+    NS_IMETHOD              SetClientData(void* aClientData);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -191,6 +193,7 @@ protected:
   PRBool      mShown;
   PRBool      mVisible;
   PRBool      mDisplayed;
+  void*       mClientData;
 
   // Resize event management
   nsRect mResizeRect;
@@ -254,6 +257,8 @@ public: \
                                      nsIAppShell *aAppShell, \
                                      nsIToolkit *aToolkit = nsnull, \
                                      nsWidgetInitData *aInitData = nsnull); \
+    NS_IMETHOD              GetClientData(void*& aClientData); \
+    NS_IMETHOD              SetClientData(void* aClientData); \
     virtual void            Destroy(); \
     virtual nsIWidget*      GetParent(void); \
     virtual nsIEnumerator*  GetChildren(); \
@@ -346,6 +351,14 @@ public: \
                  nsWidgetInitData *aInitData) \
     { \
         GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
+    } \
+    NS_IMETHODIMP _classname::_aggname::GetClientData(void*& aClientData) \
+    { \
+        return GET_OUTER()->GetClientData(aClientData); \
+    } \
+    NS_IMETHODIMP _classname::_aggname::SetClientData(void* aClientData) \
+    { \
+        return GET_OUTER()->SetClientData(aClientData); \
     } \
     void _classname::_aggname::Destroy() \
     { \
