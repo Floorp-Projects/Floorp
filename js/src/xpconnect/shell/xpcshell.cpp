@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "jsapi.h"
+#include "jsprf.h"
 #include "xpclog.h"
 #include "nscore.h"
 #include "nsIAllocator.h"
@@ -69,7 +70,7 @@ static nsIXPConnect* GetXPConnect()
                         (nsISupports**) &result, NULL)))
         return result;
     return NULL;
-}        
+}
 
 /***************************************************************************/
 
@@ -79,8 +80,67 @@ FILE *gErrFile = NULL;
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
+    int i, j, k, n;
+    char *prefix = NULL, *tmp;
+
+    if (!report) {
+        fprintf(gErrFile, "%s\n", message);
+        return;
+    }
+
+    if (report->filename)
+        prefix = JS_smprintf("%s:", report->filename);
+    if (report->lineno) {
+        tmp = prefix;
+        prefix = JS_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
+        JS_free(cx, tmp);
+    }
+    if (JSREPORT_IS_WARNING(report->flags)) {
+        tmp = prefix;
+        prefix = JS_smprintf("%swarning: ", tmp ? tmp : "");
+        JS_free(cx, tmp);
+    }
+
+    /* embedded newlines -- argh! */
+    while ((tmp = strchr(message, '\n')) != 0) {
+        tmp++;
+        if (prefix) fputs(prefix, gErrFile);
+        fwrite(message, 1, tmp - message, gErrFile);
+        message = tmp;
+    }
+    /* If there were no filename or lineno, the prefix might be empty */
+    if (prefix)
+        fputs(prefix, gErrFile);
+    fputs(message, gErrFile);
+
+    if (!report->linebuf) {
+        fputc('\n', gErrFile);
+        goto out;
+    }
+
+    fprintf(gErrFile, ":\n%s%s\n%s", prefix, report->linebuf, prefix);
+    n = report->tokenptr - report->linebuf;
+    for (i = j = 0; i < n; i++) {
+        if (report->linebuf[i] == '\t') {
+            for (k = (j + 8) & ~7; j < k; j++) {
+                fputc('.', gErrFile);
+            }
+            continue;
+        }
+        fputc('.', gErrFile);
+        j++;
+    }
+    fputs("^\n", gErrFile);
+ out:
+    JS_free(cx, prefix);
+}
+/*
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
     printf("%s\n", message);
 }
+*/
 
 static JSBool
 Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -160,7 +220,7 @@ static JSBool
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     int32 depth = 2;
-        
+
     if (argc > 0) {
         if (!JS_ValueToInt32(cx, argv[0], &depth))
             return JS_FALSE;
@@ -185,31 +245,31 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     preBytes = rt->gcBytes;
 #ifdef GC_MARK_DEBUG
     if (argc && JSVAL_IS_STRING(argv[0])) {
-	char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-	FILE *file = fopen(name, "w");
-	if (!file) {
-	    fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
-	    return JS_FALSE;
-	}
-	js_DumpGCHeap = file;
+        char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+        FILE *file = fopen(name, "w");
+        if (!file) {
+            fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
+            return JS_FALSE;
+        }
+        js_DumpGCHeap = file;
     } else {
-	js_DumpGCHeap = stdout;
+        js_DumpGCHeap = stdout;
     }
 #endif
     js_ForceGC(cx);
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap != stdout)
-	fclose(js_DumpGCHeap);
+        fclose(js_DumpGCHeap);
     js_DumpGCHeap = NULL;
 #endif
     fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-	   (unsigned long)preBytes, (unsigned long)rt->gcBytes,
+           (unsigned long)preBytes, (unsigned long)rt->gcBytes,
 #ifdef XP_UNIX
-	   (unsigned long)sbrk(0)
+           (unsigned long)sbrk(0)
 #else
-	   0
+           0
 #endif
-	   );
+           );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
@@ -260,9 +320,9 @@ static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-	    return &jsShell_ErrorFormatString[errorNumber];
-	else
-	    return NULL;
+            return &jsShell_ErrorFormatString[errorNumber];
+        else
+            return NULL;
 }
 
 #ifdef EDITLINE
@@ -296,7 +356,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
         if (fgets(line, 256, fh) == NULL)
             return JS_FALSE;
         strcpy(bufp, line);
-    }        
+    }
     return JS_TRUE;
 }
 
@@ -314,34 +374,34 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     FILE *fh;
 
     if (filename != NULL && strcmp(filename, "-") != 0) {
-	fh = fopen(filename, "r");
-	if (!fh) {
-	    JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-			    JSSMSG_CANT_OPEN,
-			    filename, strerror(errno));
-	    return;
-	}
+        fh = fopen(filename, "r");
+        if (!fh) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                            JSSMSG_CANT_OPEN,
+                            filename, strerror(errno));
+            return;
+        }
     } else {
         fh = stdin;
     }
-    
+
     if (!isatty(fileno(fh))) {
-	/*
+        /*
          * It's not interactive - just execute it.
          *
          * Support the UNIX #! shell hack; gobble the first line if it starts
-	 * with '#'.  TODO - this isn't quite compatible with sharp variables,
-	 * as a legal js program (using sharp variables) might start with '#'.
-	 * But that would require multi-character lookahead.
-	 */
-	int ch = fgetc(fh);
-	if (ch == '#') {
-	    while((ch = fgetc(fh)) != EOF) {
-		if(ch == '\n' || ch == '\r')
-		    break;
-	    }
-	}
-	ungetc(ch, fh);
+         * with '#'.  TODO - this isn't quite compatible with sharp variables,
+         * as a legal js program (using sharp variables) might start with '#'.
+         * But that would require multi-character lookahead.
+         */
+        int ch = fgetc(fh);
+        if (ch == '#') {
+            while((ch = fgetc(fh)) != EOF) {
+                if(ch == '\n' || ch == '\r')
+                    break;
+            }
+        }
+        ungetc(ch, fh);
         script = JS_CompileFileHandle(cx, obj, filename, fh);
         if (script)
             (void)JS_ExecuteScript(cx, obj, script, &result);
@@ -382,19 +442,19 @@ Process(JSContext *cx, JSObject *obj, char *filename)
                                   startline);
         if (script) {
             JSErrorReporter older;
-            
+
             ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS_ValueToString(). */
                 older = JS_SetErrorReporter(cx, NULL);
                 str = JS_ValueToString(cx, result);
                 JS_SetErrorReporter(cx, older);
-                
+
                 if (str)
                     fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                 else
                     ok = JS_FALSE;
-            }     
+            }
 #if 0
 #if JS_HAS_ERROR_EXCEPTIONS
             /*
@@ -402,7 +462,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
              * been set.
              */
             JS_ASSERT(ok || JS_IsExceptionPending(cx));
-            
+
             /*
              * Also that any time an exception has been set, we've
              * returned failure.
@@ -464,7 +524,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 filename = NULL;
                 /* XXX: js -f foo.js should interpret foo.js and then
                  * drop into interactive mode, but that breaks test
-                 * harness. Just execute foo.js for now. 
+                 * harness. Just execute foo.js for now.
                  */
                 isInteractive = JS_FALSE;
                 i++;
@@ -530,6 +590,7 @@ main(int argc, char **argv)
         return 1;
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
+/*    JS_SetVersion(jscontext, JSVERSION_1_4); */
 
     nsIXPConnect* xpc = GetXPConnect();
     if(!xpc)
