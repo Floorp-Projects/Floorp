@@ -137,7 +137,6 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
         if (pos == formatLen) {
             pos = 0;
             prefix.append(format->mMinusSign);
-            value = value * -1;
         }
         else
             pos++;
@@ -169,16 +168,6 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
                 else if (c == format->mPerMille) {
                     if (multiplier == 1)
                         multiplier = 1000;
-                    else {
-                        String err(INVALID_PARAM_VALUE);
-                        toString(err);
-                        aCs->recieveError(err);
-                        return new StringResult(err);
-                    }
-                }
-                else if (c == format->mMinusSign) {
-                    if (Double::isNeg(value))
-                        value=-1 * value;
                     else {
                         String err(INVALID_PARAM_VALUE);
                         toString(err);
