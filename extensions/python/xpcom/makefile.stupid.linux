@@ -1,5 +1,20 @@
-# Copyright (c) 2000-2001 ActiveState Tool Corporation.
-# See the file LICENSE.txt for licensing information.
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+# the specific language governing rights and limitations under the License.
+#
+# The Original Code is the Python XPCOM language bindings.
+#
+# The Initial Developer of the Original Code is ActiveState Tool Corp.
+# Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
+# ActiveState Tool Corp.  All Rights Reserved.
+#
+# Contributor(s): Trent Mick <TrentM@ActiveState.com> (original author)
+#                 Mark Hammond <MarkH@ActiveState.com>
+#
 
 # Dumb makefile to build PyXPCOM on linux
 #
@@ -23,15 +38,14 @@
 #    MOZ_SRC, INSTALLDIR, and PYTHON_SRC
 # =========== START OF SECTION FOR COMMON EDITS =====================
 
-# We expect a "mozilla" directory under this
-MOZ_SRC=/home/skip/src
-
 # this will have an "xpcom" subdir on install
 INSTALLDIR=/usr/local/ActivePython-2.0/lib/python2.0/site-packages
 
 PYTHON_SRC=/usr/local/ActivePython-2.0
 
 # =========== START OF SECTION FOR COMMON EDITS =====================
+# We expect a "mozilla" directory under this
+MOZ_SRC=../../../../..
 
 MOZCOMPONENTSDIR=$(MOZ_SRC)/mozilla/dist/bin/components
 MOZINCLUDES=-I$(MOZ_SRC)/mozilla/dist/include
