@@ -1693,7 +1693,8 @@ nsXULElement::SetParent(nsIContent* aParent)
 PRBool
 nsXULElement::IsNativeAnonymous() const
 {
-    return PR_FALSE;
+    // XXX Workaround to prevent code from discovering scrollbars - bug 251197
+    return NodeInfo()->Equals(nsXULAtoms::scrollbar);
 }
 
 void
