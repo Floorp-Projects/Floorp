@@ -296,6 +296,32 @@ struct nsHTMLReflowMetrics {
     maxElementSize->width += aBorderPadding.left + aBorderPadding.right;
     maxElementSize->height += aBorderPadding.top + aBorderPadding.bottom;
   }
+
+  nsHTMLReflowMetrics& operator=(const nsHTMLReflowMetrics& aOther)
+  {
+    if (maxElementSize && aOther.maxElementSize) {
+      maxElementSize->width = aOther.maxElementSize->width;
+      maxElementSize->height = aOther.maxElementSize->height;
+    }
+    mMaximumWidth = aOther.mMaximumWidth;
+    mFlags = aOther.mFlags;
+    mCarriedOutBottomMargin = aOther.mCarriedOutBottomMargin;
+    mOverflowArea.x = aOther.mOverflowArea.x;
+    mOverflowArea.y = aOther.mOverflowArea.y;
+    mOverflowArea.width = aOther.mOverflowArea.width;
+    mOverflowArea.height = aOther.mOverflowArea.height;
+    mNothingChanged = aOther.mNothingChanged;
+#ifdef MOZ_MATHML
+    mBoundingMetrics = aOther.mBoundingMetrics;
+#endif
+
+    width = aOther.width;
+    height = aOther.height;
+    ascent = aOther.ascent;
+    descent = aOther.descent;
+    return *this;
+  }
+
 };
 
 // Carried out margin flags
