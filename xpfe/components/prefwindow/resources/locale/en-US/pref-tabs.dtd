@@ -5,6 +5,5 @@
 <!ENTITY openTabs.label "Open tabs instead of windows for">
 <!ENTITY middleClick.label "Middle-click or control-click of links in a Web page">
 <!ENTITY windowOpen.label "Windows opened by the Web page">
-<!ENTITY bookmarks.label "Middle-click or control-click of bookmarks and personal toolbar items">
 <!ENTITY urlbar.label "Control+Enter in the URL bar">
 

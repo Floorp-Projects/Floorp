@@ -31,7 +31,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "windowOpen", "bookmarkClick", "urlBar"];
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "windowOpen", "urlBar"];
   ]]>
   </script>
   
@@ -54,10 +54,6 @@
       <checkbox id="windowOpen"
                 label="&windowOpen.label;" 
                 prefstring="browser.tabs.opentabfor.windowopen"/>
-
-      <checkbox id="bookmarkClick"
-                label="&bookmarks.label;" 
-                prefstring="browser.tabs.opentabfor.bookmarks"/>
 
       <checkbox id="urlBar"
                 label="&urlbar.label;" 
