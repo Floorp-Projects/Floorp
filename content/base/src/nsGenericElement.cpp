@@ -1276,12 +1276,12 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
         else {
           nsIEventListenerManager *manager;
           if (NS_OK == GetListenerManager(&manager)) {
-            nsIScriptObjectOwner* owner;
+            nsIScriptObjectOwner* cowner;
             if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
-                                                  (void**) &owner)) {
-              ret = manager->AddScriptEventListener(context, owner,
+                                                  (void**) &cowner)) {
+              ret = manager->AddScriptEventListener(context, cowner,
                                                     aAttribute, aValue, aIID);
-              NS_RELEASE(owner);
+              NS_RELEASE(cowner);
             }
             NS_RELEASE(manager);
           }

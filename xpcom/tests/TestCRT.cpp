@@ -78,12 +78,12 @@ static Test tests[] = {
   { "bar", "foo", 3 },
   { "bar", "fo", 3 },
 };
-#define NUM_TESTS (sizeof(tests) / sizeof(tests[0]))
+#define NUM_TESTS int((sizeof(tests) / sizeof(tests[0])))
 
 int main()
 {
   Test* tp = tests;
-  for (PRIntn i = 0; i < NUM_TESTS; i++, tp++) {
+  for (int i = 0; i < NUM_TESTS; i++, tp++) {
     Check(tp->s1, tp->s2, tp->n);
   }
 

@@ -118,10 +118,10 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
   if (0 != aLength) {
     // See if we need to store the data in ucs2 or not
     PRBool need2 = PR_FALSE;
-    const PRUnichar* cp = aBuffer;
-    const PRUnichar* end = aBuffer + aLength;
-    while (cp < end) {
-      PRUnichar ch = *cp++;
+    const PRUnichar* ucp = aBuffer;
+    const PRUnichar* uend = aBuffer + aLength;
+    while (ucp < uend) {
+      PRUnichar ch = *ucp++;
       if (ch >> 8) {
         need2 = PR_TRUE;
         break;
