@@ -7,5 +7,5 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_MAILBIFF               ICON    DISCARDABLE     "newmail.ico"
+IDI_MAILBIFF  ICON  "newmail.ico"
 /////////////////////////////////////////////////////////////////////////////
