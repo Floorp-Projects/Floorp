@@ -50,6 +50,7 @@ FILES=\
 		navStartPreg.xul				\
 		navFinishPreg.xul				\
 		preg.html						\
+		pmDelete.xul					\
         $(NULL)
 
 
