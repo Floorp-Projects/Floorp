@@ -39,7 +39,7 @@ REQUIRES	= xpcom \
 		  view \
 		  windowwatcher \
 		  embed_base \
-		  embedcomponents \
+		  appstartup \
 		  mpfilelocprovider \
 		  mozbrwsr \
 		  appcomps \

@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  wallet \
 		  appcomps \
 		  gfx \
-		  raptor \
 		  content \
 		  history \
 		  $(NULL)

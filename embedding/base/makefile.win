@@ -27,16 +27,15 @@ REQUIRES	= xpcom \
 		  view \
 		  dom \
 		  necko \
-		  rdf \
 		  appshell \
 		  uriloader \
 		  layout \
 		  editor \
 		  intl \
 		  chrome \
-		  embedcomponents \
 		  timer \
 		  gfx \
+		  appstartup \
 		  $(NULL)
 
 EXPORTS =                  \

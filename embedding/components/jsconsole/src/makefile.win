@@ -20,8 +20,8 @@
 
 DEPTH=..\..\..\..
 
-MODULE=embedcomponents
-REQUIRES	= jsconsole \
+MODULE=jsconsole
+REQUIRES	= \
 		  xpcom \
 		  string \
 		  dom \
