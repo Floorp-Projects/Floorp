@@ -57,9 +57,6 @@ static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID);
 //static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kXMLTextContentType = "text/xml";
-static const char* kRDFTextContentType = "text/rdf";
-static const char* kXULTextContentType = "text/xul";
 static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
@@ -187,7 +184,7 @@ PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRIn
   if(!aCommand.Equals(kViewSourceCommand)) {
     result=(aContentType.Equals(kXMLTextContentType) ||
             aContentType.Equals(kRDFTextContentType) ||
-			aContentType.Equals(kXULTextContentType));
+			      aContentType.Equals(kXULTextContentType));
   }
   return result;
 }
@@ -203,8 +200,15 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kXMLTextContentType) ||
      PR_TRUE==aType.Equals(kRDFTextContentType) ||
-	 PR_TRUE==aType.Equals(kXULTextContentType))
+     PR_TRUE==aType.Equals(kXULTextContentType)) {
     result=eValidDetect;
+  }
+  else {
+    if(-1<aBuffer.Find("<?xml ")) {
+      aType = kXMLTextContentType;
+      result=eValidDetect;
+    }
+  }
   return result;
 }
 

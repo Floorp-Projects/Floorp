@@ -57,8 +57,6 @@ static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID);
 //static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kHTMLTextContentType = "text/html";
-static const char* kXMLTextContentType = "text/xml";
 static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
@@ -230,9 +228,13 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=(aContentType.Equals(kHTMLTextContentType) && (aCommand.Equals(kViewSourceCommand)));
-  if(!result) {
-    result=(aContentType.Equals(kXMLTextContentType) && (aCommand.Equals(kViewSourceCommand)));
+  PRBool result=PR_FALSE;
+  if(aCommand.Equals(kViewSourceCommand)) {
+    result=(aContentType.Equals(kXMLTextContentType) ||
+            aContentType.Equals(kRDFTextContentType) ||
+            aContentType.Equals(kHTMLTextContentType) ||
+            aContentType.Equals(kPlainTextContentType) ||
+			      aContentType.Equals(kXULTextContentType));
   }
   return result;
 }
@@ -240,24 +242,15 @@ PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRI
 
 /**
  * This is called to ask the DTD if it recognizes either the aType or data in the buffer.
+ * We intentionally say NO to autodetect types so that XML and HTML dtds can do the right thing.
+ * If either of those DTD's say YES, then we'll agree and render either.
+ *
  * @update  gess7/7/98
  * @param 
  * @return  detect result
  */
 eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
-  if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
-    result=eValidDetect;
-  else if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
-    result=eValidDetect;
-  else {
-    //otherwise, look into the buffer to see if you recognize anything...
-    if(BufferContainsHTML(aBuffer)){
-      result=eValidDetect;
-      if(0==aType.Length())
-        aType=kHTMLTextContentType;
-    }
-  }
   return result;
 }
 

@@ -52,7 +52,6 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 //static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kHTMLTextContentType = "text/html";
 static char* kVerificationDir = "c:/temp";
 static const char* kViewSourceCommand= "view-source";
  
@@ -130,12 +129,13 @@ public:
   the DTD.  Uses a factory pattern
  ***************************************************************/
 class CTagHandlerRegister {
-
-
 public:
+  
   CTagHandlerRegister() : mDeallocator(), mTagHandlerDeque(mDeallocator) {
   }
 
+  ~CTagHandlerRegister() {
+  }
 
   void RegisterTagHandler(nsITagHandler *aTagHandler){
     mTagHandlerDeque.Push(aTagHandler);
@@ -162,7 +162,7 @@ public:
   Note:  This can also be attached to some object so it can be refcounted 
   and destroyed if you want this to go away when not imbedded.
  ************************************************************************/
-CTagHandlerRegister gTagHandlerRegister;
+//CTagHandlerRegister gTagHandlerRegister;
 
 
 /************************************************************************
@@ -357,6 +357,11 @@ CNavDTD::CNavDTD() : nsIDTD(){
   mMapContext=0;
   mTokenizer=0;
 
+#ifndef NS_DEBUG
+  mComputedCRC32=0;
+  mExpectedCRC32=0;
+#endif
+
 //  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 }
 
@@ -435,7 +440,9 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
 PRBool CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=PR_FALSE;
   if(!aCommand.Equals(kViewSourceCommand)) {
-    result=aContentType.Equals(kHTMLTextContentType);
+    if(PR_TRUE==aContentType.Equals(kHTMLTextContentType) || PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+      result=PR_TRUE;
+    }
   }
   return result;
 }
@@ -448,8 +455,11 @@ PRBool CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVe
  */
 eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
-  if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
+
+  if(PR_TRUE==aType.Equals(kHTMLTextContentType) ||
+    PR_TRUE==aType.Equals(kPlainTextContentType)) {
     result=eValidDetect;
+  }
   else {
     //otherwise, look into the buffer to see if you recognize anything...
     if(BufferContainsHTML(aBuffer)){
@@ -479,6 +489,12 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParse
     if((aNotifySink) && (mSink)) {
       result = mSink->WillBuildModel();
     }
+
+#ifdef NS_DEBUG
+    mComputedCRC32=0;
+    mExpectedCRC32=0;
+#endif
+
   }
   return result;
 }
@@ -544,6 +560,15 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       result = mSink->DidBuildModel(1);
 
+#ifdef DEBUG
+      if(mComputedCRC32!=mExpectedCRC32) {
+        if(mExpectedCRC32!=0) {
+          printf("Expected CRC: %u,",mExpectedCRC32);
+        }
+        printf("Computed CRC: %u.\n",mComputedCRC32);
+      }
+#endif
+
       if(mDTDDebug) {
         mDTDDebug->DumpVectorRecord();
       }
@@ -559,7 +584,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
  *  moved over to the delegate. Ah, so much to do...
  *  
  *  @update  gess 5/21/98
- *  @param   aType
  *  @param   aToken 
  *  @param   aParser 
  *  @return  
@@ -899,6 +923,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
  * It's a generic hook to let us do pre processing.
  * @param   aToken contains the tag in question
  * @param   aChildTag is the tag itself.
+ * @param   aNode is the node (tag) with associated attributes.
  * @return  TRUE if tag processing should continue; FALSE if the tag has been handled.
  */
 nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode){
@@ -909,6 +934,44 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   if(gHTMLElements[aTag].mSkipTarget) {
     result=CollectSkippedContent(aNode,theAttrCount);
   }
+
+  //**********************************************************
+  //XXX Hack until I get the node observer API in place...
+
+  if(eHTMLTag_meta==aTag) {
+    PRInt32 theCount=aNode.GetAttributeCount();
+    if(1<theCount){
+ 
+        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+      const nsString& theKey=aNode.GetKeyAt(0);
+      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) {
+        const nsString& theKey2=aNode.GetKeyAt(1);
+        if(theKey2.EqualsIgnoreCase("CONTENT")) {
+          nsScanner* theScanner=mParser->GetScanner();
+          if(theScanner) {
+            const nsString& theValue=aNode.GetValueAt(1);
+            theScanner->SetDocumentCharset(theValue);
+          } //if
+        }
+      }
+#ifdef DEBUG
+      else if(theKey.EqualsIgnoreCase("NAME")) {
+        const nsString& theValue1=aNode.GetValueAt(0);
+        if(theValue1.EqualsIgnoreCase("\"CRC\"")) {
+          const nsString& theKey2=aNode.GetKeyAt(1);
+          if(theKey2.EqualsIgnoreCase("CONTENT")) {
+            const nsString& theValue2=aNode.GetValueAt(1);
+            PRInt32 err=0;
+            mExpectedCRC32=theValue2.ToInteger(&err);          
+          } //if
+        } //if
+      } //else
+    } //if
+  }//if
+#endif
+
+  //XXX Hack until I get the node observer API in place...
+  //**********************************************************
 
   if(NS_OK==result) {
     result=!gHTMLElements[aTag].HasSpecialProperty(kDiscardTag);
@@ -972,7 +1035,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
               // ahead and close the tag out anyway, since its
               // contents will be consumed.
               if (NS_SUCCEEDED(result)) {
-                nsresult rv = CloseHead(attrNode);
+                nsresult rv=CloseHead(attrNode);
                 // XXX Only send along a failure. If the close 
                 // succeeded we still may need to indicate that the
                 // parser has blocked (i.e. return the result of
@@ -2192,6 +2255,7 @@ nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
 }
 
 
+
 /**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
@@ -2206,6 +2270,12 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
+
+#ifdef  NS_DEBUG
+#define K_OPENOP 100
+  CRCStruct theStruct(nodeType,K_OPENOP);
+  mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
+#endif
 
   switch(nodeType) {
 
@@ -2288,8 +2358,12 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
   nsresult   result=NS_OK;
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
-  //XXX Hack! We know this is wrong, but it works
-  //for the general case until we get it right.
+#ifdef  NS_DEBUG
+#define K_CLOSEOP 200
+  CRCStruct theStruct(nodeType,K_CLOSEOP);
+  mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
+#endif
+
   switch(nodeType) {
 
     case eHTMLTag_html:

@@ -269,7 +269,7 @@ class nsScanner {
       /**
        *  Change the charset and the Unicode Decoder
        */      
-      nsresult SetDocumentCharset(nsString& aCharset);
+      nsresult SetDocumentCharset(const nsString& aCharset);
 
   protected:
 

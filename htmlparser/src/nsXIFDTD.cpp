@@ -42,7 +42,6 @@ static NS_DEFINE_IID(kClassIID,     NS_XIF_DTD_IID);
 
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kXIFTextContentType = "text/xif";
 static const char* kXIFDocHeader= "<!DOCTYPE xif>";
 
 static nsAutoString gEmpty;

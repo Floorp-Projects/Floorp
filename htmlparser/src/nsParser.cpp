@@ -92,12 +92,11 @@ class CSharedParserObjects {
 public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
-    /*
-      NS_NewWellFormed_DTD(&theDTD);
-      RegisterDTD(theDTD);
-    */
 
     nsIDTD* theDTD;
+
+    NS_NewWellFormed_DTD(&theDTD);
+    RegisterDTD(theDTD);
 
     NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
     mDTDDeque.Push(theDTD);
@@ -608,7 +607,7 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   CParserContext* pc=new CParserContext(new nsScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
-    pc->mSourceType="text/html";
+    pc->mSourceType=kHTMLTextContentType;
     pc->mStreamListenerState=eOnStart;  
     pc->mMultipart=PR_FALSE;
     pc->mContextType=CParserContext::eCTStream;
@@ -628,10 +627,10 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  *
  * @update	gess5/11/98
  * @param   aSourceBuffer contains a string-full of real content
- * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
+ * @param   aContentType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall){
+nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall){
  
 #ifdef _rickgdebug
   {
@@ -659,10 +658,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,
         PushContext(*pc);
         pc->mStreamListenerState=eOnStart;  
         pc->mContextType=CParserContext::eCTString;
-        if(PR_TRUE==anHTMLString)
-          pc->mSourceType="text/html";
-        else
-          pc->mSourceType="text/xml";           // XXX rick is a fish
+        pc->mSourceType=aContentType; 
       } 
       else {
         NS_RELEASE(me);
@@ -702,29 +698,30 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
-    if (mParserContext->mDTD) {
-	  mParserContext->mDTD->WillResumeParse();
-	  if(NS_OK==result) {
-	   
-	    result=Tokenize();
-	    result=BuildModel();
+    if(mParserContext->mDTD) {
+      mParserContext->mDTD->WillResumeParse();
+      if(NS_OK==result) {
+     
+        result=Tokenize();
+        result=BuildModel();
 
         if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
         }
         else {
           mParserContext->mDTD->WillInterruptParse();
-          // If we're told to block the parser, we disable
-          // all further parsing (and cache any data coming
-          // in) until the parser is enabled.
-	      PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
-	      if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-	        EnableParser(PR_FALSE);
-	        result=NS_OK;
-	      }
-	    }//if
-	  }//if
+        // If we're told to block the parser, we disable
+        // all further parsing (and cache any data coming
+        // in) until the parser is enabled.
+          PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+          if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+            EnableParser(PR_FALSE);
+            result=NS_OK;
+          }
+        }//if
+      }//if
     }//if
+    else result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
   }//if
   return result;
 }

@@ -31,7 +31,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIDOMComment.h"
+#include "nsIDOMComment.h" 
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
@@ -1283,7 +1283,7 @@ nsHTMLDocument::Close()
     nsAutoString emptyStr("</HTML>");
     mWriteLevel++;
     result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
-                            PR_TRUE, PR_FALSE, PR_TRUE);
+                            "text/html", PR_FALSE, PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;
   }
@@ -1325,7 +1325,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 
     mWriteLevel++;
     result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
-                            PR_TRUE, PR_FALSE, 
+                            "text/html", PR_FALSE, 
                             (!mIsWriting || (mWriteLevel > 1)));
     mWriteLevel--;
     if (NS_OK != result) {

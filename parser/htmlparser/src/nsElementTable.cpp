@@ -218,6 +218,7 @@ CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
 CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gOLAutoClose(3,0,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul);
+CTagList  gDivAutoClose(1,0,eHTMLTag_p);
 
 static eHTMLTags gHxList[]={eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6};
 CTagList  gHxAutoClose(sizeof(gHxList)/sizeof(eHTMLTag_unknown),gHxList);
@@ -322,14 +323,14 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_big,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          (kFontStyle|kPreformatted), (kFlow|kSelf), kNone,	
+    /*parent,incl,exclgroups*/          kFontStyle, (kFlow|kSelf), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_blink,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          (kFontStyle|kPreformatted), (kFlow|kSelf), kNone,	
+    /*parent,incl,exclgroups*/          kFontStyle, (kFlow|kSelf), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
@@ -433,7 +434,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_div,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,
+    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
@@ -505,42 +506,42 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_h1,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h2,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h3,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h4,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h5,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h6,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kBlock, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
@@ -589,7 +590,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_img,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
+    /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
@@ -764,7 +765,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_p,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kInline, kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown},
 
