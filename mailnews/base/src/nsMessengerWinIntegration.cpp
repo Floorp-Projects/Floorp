@@ -339,6 +339,12 @@ NOTIFYICONDATAW nsMessengerWinIntegration::mWideBiffIconData = { sizeof(NOTIFYIC
                                                     0,
                                                     0 };
 
+#ifdef MOZ_THUNDERBIRD
+#define MAIL_DLL_NAME "mail.dll"
+#else
+#define MAIL_DLL_NAME "msgbase.dll"
+#endif
+
 void nsMessengerWinIntegration::InitializeBiffStatusIcon()
 {
   // initialize our biff status bar icon 
@@ -348,13 +354,13 @@ void nsMessengerWinIntegration::InitializeBiffStatusIcon()
   if (mUseWideCharBiffIcon)
   {
     mWideBiffIconData.hWnd = (HWND) msgWindow;
-    mWideBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( "msgbase.dll" ), MAKEINTRESOURCE(IDI_MAILBIFF) );
+    mWideBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
     mWideBiffIconData.szTip[0] = 0;
   }
   else
   {
     mAsciiBiffIconData.hWnd = (HWND) msgWindow;
-    mAsciiBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( "msgbase.dll" ), MAKEINTRESOURCE(IDI_MAILBIFF) );
+    mAsciiBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( MAIL_DLL_NAME ), MAKEINTRESOURCE(IDI_MAILBIFF) );
     mAsciiBiffIconData.szTip[0] = 0;
   }
 
