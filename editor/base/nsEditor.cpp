@@ -629,7 +629,7 @@ nsEditor::GetDocumentCharacterSet(PRUnichar** characterSet)
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> presShell;
-  nsString  character_set;
+  nsAutoString  character_set;
 
   if (characterSet==nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -654,7 +654,7 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> presShell;
-  nsString character_set = characterSet;
+  nsAutoString character_set = characterSet;
 
   if (characterSet==nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -1409,10 +1409,10 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
       nsCOMPtr<nsIDOMAttr> sourceAttribute = do_QueryInterface(attrNode);
       if (sourceAttribute)
       {
-        nsString sourceAttrName;
+        nsAutoString sourceAttrName;
         if (NS_SUCCEEDED(sourceAttribute->GetName(sourceAttrName)))
         {
-          nsString sourceAttrValue;
+          nsAutoString sourceAttrValue;
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
               sourceAttrValue != "")
           {
@@ -1962,7 +1962,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
         if (leftNodeAsText && rightNodeAsText)
         {
           // fix right node
-          nsString leftText;
+          nsAutoString leftText;
           rightNodeAsText->SubstringData(0, aOffset, leftText);
           rightNodeAsText->DeleteData(0, aOffset);
           // fix left node
@@ -2025,8 +2025,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     nsCOMPtr<nsIDOMCharacterData> joinNodeAsText( do_QueryInterface(aNodeToJoin) );
     if (keepNodeAsText && joinNodeAsText)
     {
-      nsString rightText;
-      nsString leftText;
+      nsAutoString rightText;
+      nsAutoString leftText;
       if (aNodeToKeepIsFirst)
       {
         keepNodeAsText->GetData(leftText);
@@ -2772,8 +2772,8 @@ nsEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
   if (!mDTD) return PR_TRUE;
   
   PRInt32 childTagEnum, parentTagEnum;
-  nsString parentStringTag;
-  nsString non_const_aTag(aTag);
+  nsAutoString parentStringTag;
+  nsAutoString non_const_aTag(aTag);
   nsresult res = mDTD->StringTagToIntTag(non_const_aTag,&childTagEnum);
   if (NS_FAILED(res)) return PR_FALSE;
 
@@ -3622,7 +3622,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
   if (!aResult) return NS_ERROR_NULL_POINTER;
   *aResult = PR_FALSE;
   
-  nsString tempString;
+  nsAutoString tempString;
   PRUint32 strLength;
   nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aParentNode);
   if (textNode)
@@ -3846,8 +3846,21 @@ nsresult nsEditor::BeginUpdateViewBatch()
 nsresult nsEditor::EndUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
+  
+  nsCOMPtr<nsIPresShell>	presShell;
+  nsresult  rv = GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv))
+    return rv;
+    
+  StCaretHider caretHider(presShell);
+    	
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->EndBatchChanges();
+  }
 
-  if (nsnull!=mViewManager)
+  if (mViewManager)
   {
     mUpdateCount--;
     if (0==mUpdateCount)
@@ -3860,12 +3873,6 @@ nsresult nsEditor::EndUpdateViewBatch()
 #endif
     }
   }  
-
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->EndBatchChanges();
-  }
 
   return NS_OK;
 }
