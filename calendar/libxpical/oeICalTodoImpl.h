@@ -67,6 +67,7 @@ public:
   NS_IMETHOD Clone(oeIICalTodo **_retval);
   bool matchId( const char *id );
   NS_IMETHODIMP SetParent( oeIICal *parent );
+  oeICalEventImpl *GetBaseEvent();
 private:
     int m_percent;
     oeDateTimeImpl *m_completed;

@@ -953,6 +953,14 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
 #endif
     icalset *stream;
     icalcomponent *vcalendar;
+    nsresult rv;
+
+    //This might be a TODO object. If so then call the appropriate function.
+    nsCOMPtr<oeIICalTodo> icaltodo;
+    rv = icalevent->QueryInterface(NS_GET_IID(oeIICalTodo), (void **)&icaltodo);
+    if( NS_SUCCEEDED( rv ) ) {
+        return ModifyTodo( icaltodo, retid );
+    }
 
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -982,7 +990,6 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
                 icalfileset_remove_component( stream, fetchedvcal );
                 icalcomponent_free( fetchedvcal );
             }
-            nsresult rv;
             if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &oldevent ))) {
                 nsMemory::Free( *retid );
                 *retid = nsnull;
@@ -1045,7 +1052,6 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     for( unsigned int i=0; i<observercount; i++ ) {
         nsCOMPtr<oeIICalObserver>observer;
         m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
-        nsresult rv;
         rv = observer->OnModifyItem( icalevent, oldevent );
         #ifdef ICAL_DEBUG
         if( NS_FAILED( rv ) ) {
@@ -1825,6 +1831,79 @@ void oeICalImpl::SetupAlarmManager() {
         tmplistptr = tmplistptr->next;
     }
 
+    TodoList *tmptodolistptr = &m_todolist;
+    while( tmptodolistptr ) {
+        oeIICalTodo *todo = tmptodolistptr->todo;
+        if( todo ) {
+            oeICalEventImpl *event = ((oeICalTodoImpl *)todo)->GetBaseEvent();
+            icaltimetype begin=icaltime_null_time();
+            begin.year = 1970; begin.month=1; begin.day=1;
+            icaltimetype alarmtime = begin;
+            do {
+                alarmtime = event->GetNextAlarmTime( alarmtime );
+                if( icaltime_is_null_time( alarmtime ) )
+                    break;
+                if( icaltime_compare( alarmtime, now ) <= 0 ) {
+                    #ifdef ICAL_DEBUG
+                    printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
+                    #endif
+                    
+                    nsresult rv;
+                    if( processmissed == -1 ) {
+                        nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+                        if ( NS_SUCCEEDED(rv) && prefBranch ) {
+                            rv = prefBranch->GetBoolPref("calendar.alarms.showmissed", &processmissed);
+                        } else {
+                            processmissed = true; //if anything goes wrong just consider the default setting
+                        }
+                    }
+
+                    if( !processmissed ) {
+                        time_t timediff = icaltime_as_timet( now ) - icaltime_as_timet( alarmtime );
+                        if( timediff > 30 ) //if alarmtime is older than 30 seconds it won't be processed.
+                            continue;
+                    }
+
+                    UpdateCalendarIcon( true );
+
+                    oeIICalEventDisplay* eventDisplay;
+                    rv = NS_NewICalEventDisplay( todo, &eventDisplay );
+                    #ifdef ICAL_DEBUG
+                    if( NS_FAILED( rv ) ) {
+                        printf( "oeICalImpl::SetupAlarmManager() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+                    }
+                    #endif
+                    icaltimetype eventtime = event->CalculateEventTime( alarmtime );
+                    eventDisplay->SetDisplayDate( ConvertToPrtime( eventtime ) );
+                    PRUint32 observercount;
+                    //Here we should be using the todo observer list but nothing implements 
+                    //alarm handling for todos yet so we'll just use the one for events
+                    m_observerlist->Count( &observercount ); 
+                    for( unsigned int i=0; i<observercount; i++ ) {
+                        nsCOMPtr<oeIICalObserver>observer;
+                        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
+                        rv = observer->OnAlarm( eventDisplay );
+                        #ifdef ICAL_DEBUG
+                        if( NS_FAILED( rv ) ) {
+                            printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
+                        }
+                        #endif
+                    }
+                    NS_RELEASE( eventDisplay );
+                }
+                else {
+                    if( icaltime_is_null_time( nextalarm ) )
+                        nextalarm = alarmtime;
+                    else if( icaltime_compare( nextalarm, alarmtime ) > 0 )
+                        nextalarm = alarmtime;
+                    break;
+                }
+            } while ( 1 );
+        }
+        tmptodolistptr = tmptodolistptr->next;
+    }
+
+
     lastcheck = now;
 
     if( m_alarmtimer  ) {
@@ -1925,7 +2004,7 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
         #endif
     }
 
-//    SetupAlarmManager();
+    SetupAlarmManager();
     return NS_OK;
 }
 
@@ -1940,14 +2019,14 @@ oeICalImpl::DeleteTodo( const char *id )
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::DeleteEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        printf( "oeICalImpl::DeleteTodo() failed: Cannot open stream: %s!\n", serveraddr );
         #endif
         return NS_OK;
     }
     
     if( id == nsnull ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::DeleteEvent() - Invalid Id.\n" );
+        printf( "oeICalImpl::DeleteTodo() - Invalid Id.\n" );
         #endif
         icalfileset_free(stream);
         return NS_OK;
@@ -1958,7 +2037,7 @@ oeICalImpl::DeleteTodo( const char *id )
     if( !fetchedvcal ) {
         icalfileset_free(stream);
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::DeleteEvent() - WARNING Event not found.\n" );
+        printf( "oeICalImpl::DeleteTodo() - WARNING Event not found.\n" );
         #endif
         return NS_OK;
     }
@@ -1967,7 +2046,7 @@ oeICalImpl::DeleteTodo( const char *id )
     if( !fetchedvevent ) {
         icalfileset_free(stream);
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::DeleteEvent() - WARNING Event not found.\n" );
+        printf( "oeICalImpl::DeleteTodo() - WARNING Event not found.\n" );
         #endif
         return NS_OK;
     }
@@ -1982,7 +2061,7 @@ oeICalImpl::DeleteTodo( const char *id )
     icalfileset_mark( stream ); //Make sure stream is marked as dirty
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::DeleteEvent() : WARNING icalfileset_commit() unsuccessful\n" );
+	    printf( "oeICalImpl::DeleteTodo() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
@@ -2008,7 +2087,7 @@ oeICalImpl::DeleteTodo( const char *id )
 
     icalevent->Release();
 
-//    SetupAlarmManager();
+    SetupAlarmManager();
 	return NS_OK;
 }
 
@@ -2020,7 +2099,7 @@ NS_IMETHODIMP oeICalImpl::FetchTodo( const char *id, oeIICalTodo **ev)
 
     if( id == nsnull ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::FetchEvent() - Invalid Id.\n" );
+        printf( "oeICalImpl::FetchTodo() - Invalid Id.\n" );
         #endif
         *ev = nsnull;
         return NS_OK;
@@ -2037,7 +2116,7 @@ NS_IMETHODIMP oeICalImpl::FetchTodo( const char *id, oeIICalTodo **ev)
 NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
 {
 #ifdef ICAL_DEBUG
-    printf( "oeICalImpl::ModifyEvent()\n" );
+    printf( "oeICalImpl::ModifyTodo()\n" );
 #endif
     icalset *stream;
     icalcomponent *vcalendar;
@@ -2045,7 +2124,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::ModifyEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        printf( "oeICalImpl::ModifyTodo() failed: Cannot open stream: %s!\n", serveraddr );
         #endif
         return NS_OK;
     }
@@ -2053,7 +2132,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     icalevent->GetId( retid );
     if( *retid == nsnull ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::ModifyEvent() - Invalid Id.\n" );
+        printf( "oeICalImpl::ModifyTodo() - Invalid Id.\n" );
         #endif
         icalfileset_free(stream);
         return NS_OK;
@@ -2081,7 +2160,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
             icalcomponent_free( fetchedvevent );
         } else {
             #ifdef ICAL_DEBUG
-            printf( "oeICalImpl::ModifyEvent() - WARNING Event not found.\n" );
+            printf( "oeICalImpl::ModifyTodo() - WARNING Event not found.\n" );
             #endif
             nsMemory::Free( *retid );
             *retid = nsnull;
@@ -2090,7 +2169,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
         }
     } else {
         #ifdef ICAL_DEBUG
-        printf( "oeICalImpl::ModifyEvent() - WARNING Event not found.\n" );
+        printf( "oeICalImpl::ModifyTodo() - WARNING Event not found.\n" );
         #endif
         nsMemory::Free( *retid );
         *retid = nsnull;
@@ -2103,7 +2182,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
+	    printf( "oeICalImpl::ModifyTodo() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
@@ -2124,7 +2203,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
 
     oldevent->Release();
 
-//    SetupAlarmManager();
+    SetupAlarmManager();
     return NS_OK;
 }
 
@@ -2259,6 +2338,11 @@ oeICalFilter::~oeICalFilter()
 {
     if( m_completed )
         m_completed->Release();
+}
+
+NS_IMETHODIMP oeICalFilter::GetType(Componenttype *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP oeICalFilter::GetId(char **aRetVal)

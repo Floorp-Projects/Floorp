@@ -58,6 +58,7 @@ interface nsISimpleEnumerator;
 
 typedef long eventMethodProperty;
 typedef long eventStatusProperty;
+typedef long Componenttype;
 
 interface oeIICal;
 
@@ -95,10 +96,14 @@ interface oeIICalEvent : nsISupports
     const eventStatusProperty ICAL_STATUS_FINAL = 10036;
     const eventStatusProperty ICAL_STATUS_NONE = 10037;
 
+    const Componenttype XPICAL_VEVENT_COMPONENT = 4;
+    const Componenttype XPICAL_VTODO_COMPONENT = 5;
+
     readonly attribute oeIDateTime start;
     readonly attribute oeIDateTime end;
     readonly attribute oeIDateTime stamp;
     readonly attribute oeIICal parent;
+    readonly attribute Componenttype type;
     attribute string id;
     attribute AUTF8String title;
     attribute AUTF8String description;
@@ -194,7 +199,7 @@ interface oeIICalTodoObserver : nsISupports
     void onAddItem( in oeIICalTodo e);
     void onModifyItem( in oeIICalTodo e, in oeIICalTodo olde );
     void onDeleteItem( in oeIICalTodo e);
-    void onAlarm( in oeIICalTodo e);
+    void onAlarm( in oeIICalEventDisplay e);
     void onError( in short severity, in unsigned long errorid, in string errorstring );
 };
 

@@ -272,7 +272,10 @@ function launchEditEvent( Event )
 
    // open the dialog modally
    window.setCursor( "wait" );
-   opener.openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+    if( Event.type == Event.XPICAL_VEVENT_COMPONENT )
+        opener.openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+    else
+        opener.openDialog("chrome://calendar/content/toDoDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 function modifyEventDialogResponse( calendarEvent )

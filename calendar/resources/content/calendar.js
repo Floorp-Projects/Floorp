@@ -596,33 +596,35 @@ function newEventCommand( event )
 
 function newToDoCommand()
 {
-   var calendarToDo = createToDo();
+    var calendarToDo = createToDo();
 
-   var dueDate = gCalendarWindow.currentView.getNewEventDate();
+    var startDate = gCalendarWindow.currentView.getNewEventDate();
    
+    var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
    
-   var Minutes = Math.ceil( dueDate.getMinutes() / 5 ) * 5 ;
-   
-   dueDate = new Date( dueDate.getFullYear(),
-                       dueDate.getMonth(),
-                       dueDate.getDate(),
-                       dueDate.getHours(),
+    startDate = new Date( startDate.getFullYear(),
+                       startDate.getMonth(),
+                       startDate.getDate(),
+                       startDate.getHours(),
                        Minutes,
                        0);
+
+    calendarToDo.start.setTime( startDate );
    
+    var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
 
-   calendarToDo.due.setTime( dueDate );
+    var dueDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
 
-   calendarToDo.start.setTime( dueDate );
-   
-   var args = new Object();
-   args.mode = "new";
-   args.onOk =  self.addToDoDialogResponse;
-   args.calendarToDo = calendarToDo;
+    calendarToDo.due.setTime( dueDateTime );
 
-   window.setCursor( "wait" );
-   // open the dialog modally
-   openDialog("chrome://calendar/content/toDoDialog.xul", "caEditEvent", "chrome,modal", args );
+    var args = new Object();
+    args.mode = "new";
+    args.onOk =  self.addToDoDialogResponse;
+    args.calendarEvent = calendarToDo;
+
+    window.setCursor( "wait" );
+    // open the dialog modally
+    openDialog("chrome://calendar/content/toDoDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 
@@ -774,7 +776,7 @@ function editToDo( calendarToDo )
    var args = new Object();
    args.mode = "edit";
    args.onOk = self.modifyToDoDialogResponse;           
-   args.calendarToDo = calendarToDo;
+   args.calendarEvent = calendarToDo;
    
    window.setCursor( "wait" );
    // open the dialog modally

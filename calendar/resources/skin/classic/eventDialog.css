@@ -156,6 +156,11 @@
    max-width               : 10em;
 }
 
+#due-time-text
+{
+   max-width               : 10em;
+}
+
 #repeat-end-date-text
 {
    max-width               : 10em;

@@ -1053,6 +1053,11 @@ oeICalContainerFilter::~oeICalContainerFilter()
     NS_RELEASE( m_completed );
 }
 
+NS_IMETHODIMP oeICalContainerFilter::GetType(Componenttype *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalContainerFilter::GetId(char **aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

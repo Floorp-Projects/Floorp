@@ -102,7 +102,7 @@
                   <!-- NOTE: ALL ITEMS USE name INSTEAD OF id BECAUSE THE BOX IS DUPLICATED FOR EACH EVENT -->
                   <vbox align="start" pack="center">
                      <button name="AcknowledgeButton" label="&calendar.alarm.acknowledge.label;" wrap="none" class="alarm-acknowledge-button-class"/>
-                     <button name="EditEvent"         label="&calendar.alarm.editevent.label;"   wrap="none" class="alarm-acknowledge-button-class"/>
+                     <button name="EditEvent"         label="&calendar.edit.button.label;"   wrap="none" class="alarm-acknowledge-button-class"/>
                      <box align="center" pack="center" flex="1">
                         <button name="SnoozeButton"   label="&calendar.alarm.snooze.label;"      wrap="none" class="alarm-acknowledge-button-class"/>
                         <textbox name="alarm-length-field" class="alarm-length-field-class"/>

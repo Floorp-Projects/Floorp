@@ -259,6 +259,7 @@ oeICalEventImpl::oeICalEventImpl()
         m_stamp->m_datetime.second = ext.tm_sec;
         m_stamp->m_datetime.is_utc = true;
     }
+    m_type = ICAL_VEVENT_COMPONENT;
     m_id = nsnull;
     m_title.SetIsVoid(true);
     m_description.SetIsVoid(true);
@@ -345,6 +346,23 @@ NS_IMETHODIMP oeICalEventImpl::GetParent( oeIICal **calendar )
     *calendar = m_calendar;
     NS_ADDREF( *calendar );
     return NS_OK;
+}
+
+/* readonly attribute Componenttype type; */
+NS_IMETHODIMP oeICalEventImpl::GetType(Componenttype *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetType() = " );
+#endif
+    *aRetVal= m_type;
+#ifdef ICAL_DEBUG_ALL
+    printf( "\"%d\"\n", *aRetVal );
+#endif
+    return NS_OK;
+}
+
+void oeICalEventImpl::SetType(Componenttype aNewVal) {
+    m_type = aNewVal;
 }
 
 /* attribute string Id; */
@@ -2708,6 +2726,9 @@ oeICalEventDisplayImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(NS_GET_IID(oeIICalEvent))) {
+        return mEvent->QueryInterface( aIID, aInstancePtr );
+    }
+    if (aIID.Equals(NS_GET_IID(oeIICalTodo))) {
         return mEvent->QueryInterface( aIID, aInstancePtr );
     }
     return NS_NOINTERFACE;

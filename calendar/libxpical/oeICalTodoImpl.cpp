@@ -54,7 +54,7 @@
 #define RECUR_YEARLY 5
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(oeICalTodoImpl, oeIICalTodo)
+NS_IMPL_ISUPPORTS2(oeICalTodoImpl, oeIICalTodo, oeIICalEvent)
 
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
@@ -82,6 +82,8 @@ oeICalTodoImpl::oeICalTodoImpl()
 
     mEvent = new oeICalEventImpl();
     NS_ADDREF( mEvent );
+
+    mEvent->SetType( XPICAL_VTODO_COMPONENT );
 
     /* member initializers and constructor code */
     nsresult rv;
@@ -315,7 +317,6 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     //prodid
     prop = icalproperty_new_prodid( ICALEVENT_PRODID );
     icalcomponent_add_property( newcalendar, prop );
-
     icalcomponent *vtodo = icalcomponent_new_vtodo();
     icalcomponent *vevent = icalcomponent_get_first_component( basevcal, ICAL_VEVENT_COMPONENT );
     for( prop = icalcomponent_get_first_property( vevent, ICAL_ANY_PROPERTY );
@@ -324,19 +325,24 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
         icalproperty *newprop;
         icalproperty_kind propkind = icalproperty_isa( prop );
         if( propkind == ICAL_X_PROPERTY ) {
-            //do nothing
-/*            newprop = icalproperty_new_x( icalproperty_get_value_as_string( prop ) );
+            newprop = icalproperty_new_x( icalproperty_get_value_as_string( prop ) );
+            icalproperty_set_x_name( newprop, icalproperty_get_x_name( prop ));
             icalparameter *oldpar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            icalparameter *newpar = icalparameter_new_clone( oldpar );
-            icalproperty_add_parameter( newprop, newpar );*/
-            continue;
-        } else if( propkind == ICAL_DTEND_PROPERTY || propkind == ICAL_RRULE_PROPERTY) {
+            icalparameter *newpar = icalparameter_new_member( icalparameter_get_member( oldpar ) );
+            icalproperty_add_parameter( newprop, newpar );
+        } else if( propkind == ICAL_DTEND_PROPERTY ) {
             //do nothing
             continue;
         } else {
             newprop = icalproperty_new_clone( prop );
         }
         icalcomponent_add_property( vtodo, newprop );
+    }
+    icalcomponent *nestedcomp;
+    for( nestedcomp = icalcomponent_get_first_component( vevent, ICAL_ANY_COMPONENT );
+         nestedcomp != 0 ;
+         nestedcomp = icalcomponent_get_next_component( vevent, ICAL_ANY_COMPONENT ) ) {
+        icalcomponent_add_component( vtodo, icalcomponent_new_clone(nestedcomp) );
     }
     icalcomponent_free( basevcal );
     //percent
@@ -379,6 +385,10 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     icalcomponent_add_component( newcalendar, vtodo );
 
     return newcalendar;
+}
+
+oeICalEventImpl *oeICalTodoImpl::GetBaseEvent() {
+    return mEvent;
 }
 
 /* End of implementation class template. */
