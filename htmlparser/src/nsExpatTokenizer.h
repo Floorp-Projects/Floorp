@@ -84,6 +84,7 @@ protected:
     static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
     static void HandleEndElement(void *userData, const XML_Char *name);
     static void HandleCharacterData(void *userData, const XML_Char *s, int len);
+    static void HandleComment(void *userData, const XML_Char *name);
     static void HandleProcessingInstruction(void *userData, 
       const XML_Char *target, 
       const XML_Char *data);
