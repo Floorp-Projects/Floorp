@@ -53,7 +53,7 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
 	-lcmt \
 	-lprotocol \
-	-lmozjs \
+	$(MOZ_JS_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
