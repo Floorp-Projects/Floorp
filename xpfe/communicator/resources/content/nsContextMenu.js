@@ -250,7 +250,7 @@ nsContextMenu.prototype = {
                if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  // Convert src attribute to absolute URL.
-                 this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
+                 this.imageURL = this.makeURLAbsolute( this.target.baseURI,
                                                        this.target.src );
                } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
                  this.onTextInput = this.isTargetATextBox(this.target);
@@ -260,7 +260,7 @@ nsContextMenu.prototype = {
             } else if ( this.target.getAttribute( "background" ) ) {
                this.onImage = true;
                // Convert background attribute to absolute URL.
-               this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
+               this.imageURL = this.makeURLAbsolute( this.target.baseURI,
                                                      this.target.getAttribute( "background" ) );
             } else if ( "HTTPIndex" in _content &&
                         _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
@@ -304,7 +304,7 @@ nsContextMenu.prototype = {
                         this.onImage = true;
                         var url = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
                         // Convert attribute to absolute URL.
-                        this.imageURL = this.makeURLAbsolute( this.target.ownerDocument, url );
+                        this.imageURL = this.makeURLAbsolute( this.target.baseURI, url );
                     }
                 } catch ( exception ) {
                 }
@@ -527,11 +527,11 @@ nsContextMenu.prototype = {
         if (this.link.href) {
           return this.link.href;
         }
-        // XXX TODO Relative URLs, XML Base
         var href = this.link.getAttributeNS("http://www.w3.org/1999/xlink","href");
         if (href == "") {
           throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
         }
+        href = this.makeURLAbsolute(this.link.baseURI,href);
         return href;
     },
     // Get text of link (if possible).
@@ -647,22 +647,15 @@ nsContextMenu.prototype = {
         // Extract url from data= attribute.
         var data = objElem.getAttribute( "data" );
         // Make it absolute.
-        return this.makeURLAbsolute( objElem.ownerDocument, data );
+        return this.makeURLAbsolute( objElem.baseURI, data );
     },
     // Convert relative URL to absolute, using document's <base>.
-    makeURLAbsolute : function ( doc, url ) {
+    makeURLAbsolute : function ( base, url ) {
         // Construct nsIURL.
         var baseURL = this.createInstance( "@mozilla.org/network/standard-url;1", "nsIURL" );
-        // Initialize from document url.
-        baseURL.spec = doc.location.href;
-        // Look for <base> tag.
-        var baseTags = doc.getElementsByTagName( "BASE" );
-        if ( baseTags && baseTags.length ) {
-            // Reset base URL using href attribute of <base> tag.
-            var href = baseTags[ baseTags.length - 1 ].getAttribute( "href" );
-            baseURL.spec = baseURL.resolve( href );
-        }
-        // Finally, convert argument url using base.
+        // Initialize from base url.
+        baseURL.spec = base;
+        // Resolve
         var result = baseURL.resolve( url );
         return result;
     },
