@@ -44,6 +44,7 @@
 #include "edt.h"
 #endif /* EDITOR */
 #include "mozilla.h"
+#include "timing.h"
 
 CAbstractCX::CAbstractCX()  {
 //	Purpose:    Constructor for the abstract base class.
@@ -673,8 +674,14 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
         			StartAnimation();
 					if ( m_cxType == IconCX)
         				iRetval = NET_GetURL(pUrl, iFormatOut, GetContext(), Icon_GetUrlExitRoutine);
-					else
+					else {
+                        TIMING_MESSAGE(("begin-document,%08x,%08x,%s",
+                                        GetContext(), pUrl, pUrl->address));
+
+                        TIMING_STARTCLOCK_OBJECT("fe:doc-xfer", pUrl);
+                        TIMING_STARTCLOCK_OBJECT("fe:doc-load", GetContext());
         				iRetval = NET_GetURL(pUrl, iFormatOut, GetContext(), CFE_GetUrlExitRoutine);
+                    }
         			FE_UpdateStopState(GetContext());
 
         			winfeInProcessNet = iOldInProcessNet;

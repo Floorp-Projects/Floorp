@@ -34,6 +34,7 @@
 extern "C" {
 #include "httpurl.h"
 }
+#include "timing.h"
 
 #ifdef DEBUG_WHITEBOX
 #include "qa.h"
@@ -79,6 +80,7 @@ void CFE_Alert(MWContext *pContext, const char *pMessage)	{
 }
 
 void CFE_AllConnectionsComplete(MWContext *pContext)	{
+    TIMING_STOPCLOCK_OBJECT("fe:doc-load", pContext, pContext, "ok");
 
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -1174,6 +1176,7 @@ void CFE_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
 
 	//	Report any error.
 	if(iStatus < 0 && pUrl->error_msg != NULL)	{
+        TIMING_STOPCLOCK_OBJECT("fe:doc-xfer", pUrl, pContext, "error");
 		FE_Alert(pContext, pUrl->error_msg);
 	}
 
@@ -1181,8 +1184,11 @@ void CFE_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
 	// out from under us while we were displaying the modal dialog box (and in
 	// a sub-dispatch message loop)
 	if (!XP_IsContextInList(pContext)) {
+        TIMING_STOPCLOCK_OBJECT("fe:doc-xfer", pUrl, pContext, "destroyed");
 		return;
 	}
+
+    TIMING_STOPCLOCK_OBJECT("fe:doc-xfer", pUrl, pContext, "ok");
 
 #ifdef EDITOR
     // Do stuff specific to the editor
