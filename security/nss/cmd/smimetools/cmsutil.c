@@ -37,7 +37,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.50 2004/05/13 01:29:15 wchang0222%aol.com Exp $
+ * $Id: cmsutil.c,v 1.51 2004/10/07 04:02:13 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -1545,7 +1545,6 @@ main(int argc, char **argv)
 	PLArenaPool *arena = PORT_NewArena(1024);
 	NSSCMSEncoderContext *ecx;
 	SECItem output = { 0, 0, 0 };
-	secuPWData pwdata = { PW_NONE, 0 };
 
 	if (!arena) {
 	    fprintf(stderr, "%s: out of memory.\n", progName);
