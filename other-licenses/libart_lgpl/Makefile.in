@@ -1,0 +1,737 @@
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = .
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AMTAR = @AMTAR@
+AS = @AS@
+AWK = @AWK@
+CC = @CC@
+CPP = @CPP@
+DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBART_INCLUDEDIR = @LIBART_INCLUDEDIR@
+LIBART_LIBDIR = @LIBART_LIBDIR@
+LIBART_LIBS = @LIBART_LIBS@
+LIBART_MAJOR_VERSION = @LIBART_MAJOR_VERSION@
+LIBART_MICRO_VERSION = @LIBART_MICRO_VERSION@
+LIBART_MINOR_VERSION = @LIBART_MINOR_VERSION@
+LIBART_VERSION = @LIBART_VERSION@
+LIBART_VERSION_INFO = @LIBART_VERSION_INFO@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+MAINT = @MAINT@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+STRIP = @STRIP@
+VERSION = @VERSION@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+
+noinst_PROGRAMS = testart testuta gen_art_config
+
+bin_SCRIPTS = \
+	libart2-config
+
+
+BUILT_SOURCES = art_config.h
+
+EXTRA_DIST = \
+	libart-config.in	\
+	libart-2.0.pc.in
+
+
+lib_LTLIBRARIES = libart_lgpl_2.la
+
+libart_lgpl_2_la_SOURCES = \
+	art_affine.c \
+	art_alphagamma.c \
+	art_bpath.c \
+	art_gray_svp.c \
+	art_misc.c \
+	art_pixbuf.c \
+	art_rect.c \
+	art_rect_svp.c \
+	art_rect_uta.c \
+	art_render.c \
+	art_render_gradient.c \
+	art_render_svp.c \
+	art_rgb.c \
+	art_rgb_affine.c \
+	art_rgb_affine_private.c \
+	art_rgb_affine_private.h \
+	art_rgb_bitmap_affine.c \
+	art_rgb_pixbuf_affine.c \
+	art_rgb_rgba_affine.c \
+	art_rgb_a_affine.c \
+	art_rgba.c \
+	art_rgb_svp.c \
+	art_svp.c \
+	art_svp_intersect.c \
+	art_svp_ops.c \
+	art_svp_point.c \
+	art_svp_render_aa.c \
+	art_svp_vpath.c \
+	art_svp_vpath_stroke.c \
+	art_svp_wind.c \
+	art_uta.c \
+	art_uta_ops.c \
+	art_uta_rect.c \
+	art_uta_vpath.c \
+	art_uta_svp.c \
+	art_vpath.c \
+	art_vpath_bpath.c \
+	art_vpath_dash.c \
+	art_vpath_svp.c	\
+	libart-features.c
+
+
+libart_lgpl_2_la_LDFLAGS = -version-info @LIBART_VERSION_INFO@
+
+libart_lgplincdir = $(includedir)/libart-2.0/libart_lgpl
+libart_lgplinc_HEADERS = \
+	art_affine.h \
+	art_alphagamma.h \
+	art_bpath.h \
+	art_config.h \
+	art_filterlevel.h \
+	art_gray_svp.h \
+	art_misc.h \
+	art_pathcode.h \
+	art_pixbuf.h \
+	art_point.h \
+	art_rect.h \
+	art_rect_svp.h \
+	art_rect_uta.h \
+	art_render.h \
+	art_render_gradient.h \
+	art_render_svp.h \
+	art_rgb.h \
+	art_rgb_affine.h \
+	art_rgb_bitmap_affine.h \
+	art_rgb_pixbuf_affine.h \
+	art_rgb_rgba_affine.h \
+	art_rgb_a_affine.h \
+	art_rgb_svp.h \
+	art_rgba.h \
+	art_svp.h \
+	art_svp_intersect.h \
+	art_svp_ops.h \
+	art_svp_point.h \
+	art_svp_render_aa.h \
+	art_svp_vpath.h \
+	art_svp_vpath_stroke.h \
+	art_svp_wind.h \
+	art_uta.h \
+	art_uta_ops.h \
+	art_uta_rect.h \
+	art_uta_vpath.h \
+	art_uta_svp.h \
+	art_vpath.h \
+	art_vpath_bpath.h \
+	art_vpath_dash.h \
+	art_vpath_svp.h	\
+	libart.h	\
+	libart-features.h
+
+
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -DLIBART_COMPILATION
+
+DEPS = $(top_builddir)/libart_lgpl_2.la
+LDADDS = $(top_builddir)/libart_lgpl_2.la
+
+testart_SOURCES = testart.c
+testart_LDFLAGS = 
+testart_DEPENDENCIES = $(DEPS)
+testart_LDADD = $(LDADDS) -lm
+
+testuta_SOURCES = testuta.c
+testuta_LDFLAGS = 
+testuta_DEPENDENCIES = $(DEPS)
+testuta_LDADD = $(LDADDS) -lm
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libart-2.0.pc
+subdir = .
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = config.h
+CONFIG_CLEAN_FILES = libart-features.h libart-config libart-2.0.pc
+LTLIBRARIES = $(lib_LTLIBRARIES)
+
+libart_lgpl_2_la_LIBADD =
+am_libart_lgpl_2_la_OBJECTS = art_affine.lo art_alphagamma.lo \
+	art_bpath.lo art_gray_svp.lo art_misc.lo art_pixbuf.lo \
+	art_rect.lo art_rect_svp.lo art_rect_uta.lo art_render.lo \
+	art_render_gradient.lo art_render_svp.lo art_rgb.lo \
+	art_rgb_affine.lo art_rgb_affine_private.lo \
+	art_rgb_bitmap_affine.lo art_rgb_pixbuf_affine.lo \
+	art_rgb_rgba_affine.lo art_rgb_a_affine.lo art_rgba.lo \
+	art_rgb_svp.lo art_svp.lo art_svp_intersect.lo art_svp_ops.lo \
+	art_svp_point.lo art_svp_render_aa.lo art_svp_vpath.lo \
+	art_svp_vpath_stroke.lo art_svp_wind.lo art_uta.lo \
+	art_uta_ops.lo art_uta_rect.lo art_uta_vpath.lo art_uta_svp.lo \
+	art_vpath.lo art_vpath_bpath.lo art_vpath_dash.lo \
+	art_vpath_svp.lo libart-features.lo
+libart_lgpl_2_la_OBJECTS = $(am_libart_lgpl_2_la_OBJECTS)
+noinst_PROGRAMS = testart$(EXEEXT) testuta$(EXEEXT) \
+	gen_art_config$(EXEEXT)
+PROGRAMS = $(noinst_PROGRAMS)
+
+gen_art_config_SOURCES = gen_art_config.c
+gen_art_config_OBJECTS = gen_art_config.$(OBJEXT)
+gen_art_config_LDADD = $(LDADD)
+gen_art_config_DEPENDENCIES =
+gen_art_config_LDFLAGS =
+am_testart_OBJECTS = testart.$(OBJEXT)
+testart_OBJECTS = $(am_testart_OBJECTS)
+am_testuta_OBJECTS = testuta.$(OBJEXT)
+testuta_OBJECTS = $(am_testuta_OBJECTS)
+SCRIPTS = $(bin_SCRIPTS)
+
+
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/art_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_alphagamma.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_bpath.Plo $(DEPDIR)/art_gray_svp.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_misc.Plo $(DEPDIR)/art_pixbuf.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rect.Plo $(DEPDIR)/art_rect_svp.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rect_uta.Plo $(DEPDIR)/art_render.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_render_gradient.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_render_svp.Plo $(DEPDIR)/art_rgb.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_a_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_affine_private.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_bitmap_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_pixbuf_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_rgba_affine.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_rgb_svp.Plo $(DEPDIR)/art_rgba.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_intersect.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_ops.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_point.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_render_aa.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_vpath.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_vpath_stroke.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_svp_wind.Plo $(DEPDIR)/art_uta.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_uta_ops.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_uta_rect.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_uta_svp.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_uta_vpath.Plo $(DEPDIR)/art_vpath.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_vpath_bpath.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_vpath_dash.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/art_vpath_svp.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/gen_art_config.Po \
+@AMDEP_TRUE@	$(DEPDIR)/libart-features.Plo $(DEPDIR)/testart.Po \
+@AMDEP_TRUE@	$(DEPDIR)/testuta.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
+	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = $(libart_lgpl_2_la_SOURCES) gen_art_config.c \
+	$(testart_SOURCES) $(testuta_SOURCES)
+DATA = $(pkgconfig_DATA)
+
+HEADERS = $(libart_lgplinc_HEADERS)
+
+DIST_COMMON = README $(libart_lgplinc_HEADERS) ./stamp-h.in AUTHORS \
+	COPYING ChangeLog INSTALL Makefile.am Makefile.in NEWS \
+	acconfig.h aclocal.m4 config.guess config.h.in config.sub \
+	configure configure.in depcomp install-sh libart-2.0.pc.in \
+	libart-config.in libart-features.h.in ltmain.sh missing \
+	mkinstalldirs
+SOURCES = $(libart_lgpl_2_la_SOURCES) gen_art_config.c $(testart_SOURCES) $(testuta_SOURCES)
+
+all: $(BUILT_SOURCES) config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-am
+
+.SUFFIXES:
+.SUFFIXES: .c .lo .o .obj
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --gnu  Makefile
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$@ $(SHELL) ./config.status
+
+$(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
+	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	@rm -f stamp-h stamp-hT
+	@echo timestamp > stamp-hT 2> /dev/null
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@mv stamp-hT stamp-h
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/./stamp-h.in; \
+		$(MAKE) $(srcdir)/./stamp-h.in; \
+	else :; fi
+$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/acconfig.h
+	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
+	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+
+distclean-hdr:
+	-rm -f config.h
+libart-features.h: $(top_builddir)/config.status libart-features.h.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
+libart-config: $(top_builddir)/config.status libart-config.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
+libart-2.0.pc: $(top_builddir)/config.status libart-2.0.pc.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
+	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+libart_lgpl_2.la: $(libart_lgpl_2_la_OBJECTS) $(libart_lgpl_2_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libart_lgpl_2_la_LDFLAGS) $(libart_lgpl_2_la_OBJECTS) $(libart_lgpl_2_la_LIBADD) $(LIBS)
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+gen_art_config$(EXEEXT): $(gen_art_config_OBJECTS) $(gen_art_config_DEPENDENCIES) 
+	@rm -f gen_art_config$(EXEEXT)
+	$(LINK) $(gen_art_config_LDFLAGS) $(gen_art_config_OBJECTS) $(gen_art_config_LDADD) $(LIBS)
+testart$(EXEEXT): $(testart_OBJECTS) $(testart_DEPENDENCIES) 
+	@rm -f testart$(EXEEXT)
+	$(LINK) $(testart_LDFLAGS) $(testart_OBJECTS) $(testart_LDADD) $(LIBS)
+testuta$(EXEEXT): $(testuta_OBJECTS) $(testuta_DEPENDENCIES) 
+	@rm -f testuta$(EXEEXT)
+	$(LINK) $(testuta_LDFLAGS) $(testuta_OBJECTS) $(testuta_LDADD) $(LIBS)
+install-binSCRIPTS: $(bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  f="`echo $$p|sed '$(transform)'`"; \
+	  if test -f $$p; then \
+	    echo " $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/$$f"; \
+	    $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/$$f; \
+	  elif test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/$$f"; \
+	    $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/$$f; \
+	  else :; fi; \
+	done
+
+uninstall-binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  f="`echo $$p|sed '$(transform)'`"; \
+	  echo " rm -f $(DESTDIR)$(bindir)/$$f"; \
+	  rm -f $(DESTDIR)$(bindir)/$$f; \
+	done
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_alphagamma.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_bpath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_gray_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_misc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_pixbuf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rect_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rect_uta.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_render.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_render_gradient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_render_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_a_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_affine_private.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_bitmap_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_pixbuf_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_rgba_affine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgb_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_rgba.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_intersect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_ops.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_point.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_render_aa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_vpath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_vpath_stroke.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_svp_wind.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_uta.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_uta_ops.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_uta_rect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_uta_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_uta_vpath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_vpath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_vpath_bpath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_vpath_dash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/art_vpath_svp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/gen_art_config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libart-features.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/testart.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/testuta.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+
+.c.lo:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+install-pkgconfigDATA: $(pkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(pkgconfigdir)
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(pkgconfigdir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(pkgconfigdir)/$$f; \
+	done
+
+uninstall-pkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(pkgconfigdir)/$$f"; \
+	  rm -f $(DESTDIR)$(pkgconfigdir)/$$f; \
+	done
+install-libart_lgplincHEADERS: $(libart_lgplinc_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libart_lgplincdir)
+	@list='$(libart_lgplinc_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libart_lgplincdir)/$$f"; \
+	  $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libart_lgplincdir)/$$f; \
+	done
+
+uninstall-libart_lgplincHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libart_lgplinc_HEADERS)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libart_lgplincdir)/$$f"; \
+	  rm -f $(DESTDIR)$(libart_lgplincdir)/$$f; \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = .
+# Avoid unsightly `./'.
+distdir = $(PACKAGE)-$(VERSION)
+
+GZIP_ENV = --best
+
+distdir: $(DISTFILES)
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+	mkdir $(distdir)
+	$(mkinstalldirs) $(distdir)/.
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
+	|| chmod -R a+r $(distdir)
+dist: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
+	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	chmod a-w $(distdir)
+	dc_install_base=`CDPATH=: && cd $(distdir)/=inst && pwd` \
+	  && cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	  && (test `find $$dc_install_base -type f -print | wc -l` -le 1 \
+	     || (echo "Error: files left after uninstall" 1>&2; \
+	         exit 1) ) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist \
+	  && $(MAKE) $(AM_MAKEFLAGS) distclean \
+	  && rm -f $(distdir).tar.gz \
+	  && (test `find . -type f -print | wc -l` -eq 0 \
+	     || (echo "Error: files left after distclean" 1>&2; \
+	         exit 1) )
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	@echo "$(distdir).tar.gz is ready for distribution" | \
+	  sed 'h;s/./=/g;p;x;p;x'
+check-am: all-am
+check: check-am
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
+		$(HEADERS) config.h
+
+installdirs:
+	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(bindir) $(DESTDIR)$(pkgconfigdir) $(DESTDIR)$(libart_lgplincdir)
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
+clean: clean-am
+
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstPROGRAMS mostlyclean-am
+
+dist-all: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+distclean: distclean-am
+	-rm -f config.status config.cache config.log
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-tags
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am: install-libart_lgplincHEADERS install-pkgconfigDATA
+
+install-exec-am: install-binSCRIPTS install-libLTLIBRARIES
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
+
+uninstall-am: uninstall-binSCRIPTS uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-libart_lgplincHEADERS \
+	uninstall-pkgconfigDATA
+
+.PHONY: GTAGS all all-am check check-am clean clean-generic \
+	clean-libLTLIBRARIES clean-libtool clean-noinstPROGRAMS dist \
+	dist-all distcheck distclean distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-tags distdir dvi dvi-am info info-am install \
+	install-am install-binSCRIPTS install-data install-data-am \
+	install-exec install-exec-am install-info install-info-am \
+	install-libLTLIBRARIES install-libart_lgplincHEADERS \
+	install-man install-pkgconfigDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool tags uninstall \
+	uninstall-am uninstall-binSCRIPTS uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-libart_lgplincHEADERS \
+	uninstall-pkgconfigDATA
+
+
+art_config.h:	gen_art_config
+	./gen_art_config > art_config.h
+
+tests:	testart testuta
+
+libart2-config: libart-config
+	cp -f libart-config libart2-config
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

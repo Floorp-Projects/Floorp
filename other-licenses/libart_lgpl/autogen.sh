@@ -54,7 +54,7 @@ do
   (cd $dir; \
   aclocalinclude="$ACLOCAL_FLAGS"; \
   aclocal $aclocalinclude; \
-  autoheader; automake --add-missing --gnu $am_opt; autoconf)
+  autoheader; automake --add-missing --copy $am_opt; autoconf)
 done
 
 $srcdir/configure "$@"
