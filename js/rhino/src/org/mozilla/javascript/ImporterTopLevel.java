@@ -49,7 +49,7 @@ import java.util.Vector;
  * <p>
  * This class can be used to create a top-level scope using the following code: 
  * <pre>
- *  Scriptable scope = cx.initStandardObjects(new ImporterTopLevel());
+ *  Scriptable scope = new ImporterTopLevel(cx);
  * </pre>
  * Then JavaScript code will have access to the following methods:
  * <ul>
@@ -72,7 +72,19 @@ import java.util.Vector;
  */
 public class ImporterTopLevel extends ScriptableObject {
     
+    /**
+     * @deprecated
+     */
     public ImporterTopLevel() {
+        init();
+    }
+
+    public ImporterTopLevel(Context cx) {
+        cx.initStandardObjects(this);
+        init();
+    }
+    
+    private void init() {
         String[] names = { "importClass", "importPackage" };
 
         try {
@@ -82,7 +94,7 @@ public class ImporterTopLevel extends ScriptableObject {
             throw new Error();  // should never happen
         }
     }
-    
+
     public String getClassName() { 
         return "global";
     }

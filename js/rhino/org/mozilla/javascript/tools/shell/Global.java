@@ -50,34 +50,32 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
  *
  * @author Norris Boyd
  */
-public class Global {
+public class Global extends ImporterTopLevel {
 
-    public static Global initTopLevelScope(Context cx, ScriptableObject scope) 
+    public Global(Context cx) 
     {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
+        super(cx);
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync" };
         try {
-            scope.defineFunctionProperties(names, Global.class,
+            defineFunctionProperties(names, Global.class,
                                            ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
             throw new Error();  // shouldn't occur.
         }
-        Global result = new Global();
-        scope.defineProperty(privateName, result, ScriptableObject.DONTENUM);
+        defineProperty(privateName, this, ScriptableObject.DONTENUM);
         
         // Set up "environment" in the global scope to provide access to the
         // System environment variables.
-        Environment.defineClass(scope);
-        Environment environment = new Environment(scope);
-        scope.defineProperty("environment", environment,
-                             ScriptableObject.DONTENUM);
+        Environment.defineClass(this);
+        Environment environment = new Environment(this);
+        defineProperty("environment", environment,
+                       ScriptableObject.DONTENUM);
         
-        result.history = (NativeArray) cx.newArray(scope, 0);
-        scope.defineProperty("history", result.history,
-                             ScriptableObject.DONTENUM);
-        return result;
+        history = (NativeArray) cx.newArray(this, 0);
+        defineProperty("history", history, ScriptableObject.DONTENUM);
     }
     
     /**

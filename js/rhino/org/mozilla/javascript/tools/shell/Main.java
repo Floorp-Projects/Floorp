@@ -74,11 +74,8 @@ public class Main {
     public static int exec(String args[]) {
         Context cx = Context.enter();
         // Create the top-level scope object.
-        scope = new ImporterTopLevel();
-        cx.initStandardObjects(scope);
-        globalState = Global.initTopLevelScope(cx, scope);
-
-        errorReporter = new ToolErrorReporter(false, globalState.getErr());
+        global = new Global(cx);
+        errorReporter = new ToolErrorReporter(false, global.getErr());
         cx.setErrorReporter(errorReporter);
 
         args = processOptions(cx, args);
@@ -91,8 +88,8 @@ public class Main {
             array = new Object[length];
             System.arraycopy(args, 1, array, 0, length);
         }
-        Scriptable argsObj = cx.newArray(scope, array);
-        scope.defineProperty("arguments", argsObj,
+        Scriptable argsObj = cx.newArray(global, array);
+        global.defineProperty("arguments", argsObj,
                              ScriptableObject.DONTENUM);
         
         if (processStdin)
@@ -138,7 +135,7 @@ public class Main {
                 if (++i == args.length)
                     usage(arg);
                 Reader reader = new StringReader(args[i]);
-                evaluateReader(cx, scope, reader, "<command>", 1);
+                evaluateReader(cx, global, reader, "<command>", 1);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -180,14 +177,14 @@ public class Main {
             cx.setOptimizationLevel(-1);
             
             BufferedReader in = new BufferedReader
-                (new InputStreamReader(globalState.getIn()));
+                (new InputStreamReader(global.getIn()));
             int lineno = 1;
             boolean hitEOF = false;
             while (!hitEOF) {
                 int startline = lineno;
                 if (filename == null)
-                    globalState.getErr().print("js> ");
-                globalState.getErr().flush();
+                    global.getErr().print("js> ");
+                global.getErr().flush();
                 String source = "";
                     
                 // Collect lines of source to compile.
@@ -197,7 +194,7 @@ public class Main {
                         newline = in.readLine();
                     }
                     catch (IOException ioe) {
-                        globalState.getErr().println(ioe.toString());
+                        global.getErr().println(ioe.toString());
                         break;
                     }
                     if (newline == null) {
@@ -210,11 +207,11 @@ public class Main {
                         break;
                 }
                 Reader reader = new StringReader(source);
-                Object result = evaluateReader(cx, scope, reader, 
+                Object result = evaluateReader(cx, global, reader, 
                                                "<stdin>", startline);
                 if (result != cx.getUndefinedValue()) {
                     try {
-                        globalState.getErr().println(cx.toString(result));
+                        global.getErr().println(cx.toString(result));
                     } catch (EcmaError ee) {
                         String msg = ToolErrorReporter.getMessage(
                             "msg.uncaughtJSException", ee.toString());
@@ -229,11 +226,11 @@ public class Main {
                         }
                     }
                 }
-                NativeArray h = globalState.history;
+                NativeArray h = global.history;
                 h.put((int)h.jsGet_length(), h, source);
             }
-            globalState.getErr().println();
-        } else processFile(cx, scope, filename);
+            global.getErr().println();
+        } else processFile(cx, global, filename);
         System.gc();
     }
     
@@ -271,7 +268,7 @@ public class Main {
                 exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
             } catch (IOException ioe) {
-                globalState.getErr().println(ioe.toString());
+                global.getErr().println(ioe.toString());
             }
             
             // Here we evalute the entire contents of the file as
@@ -289,7 +286,7 @@ public class Main {
             result = cx.evaluateReader(scope, in, sourceName, lineno, null);
         }
         catch (WrappedException we) {
-            globalState.getErr().println(we.getWrappedException().toString());
+            global.getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
         }
         catch (EcmaError ee) {
@@ -320,54 +317,53 @@ public class Main {
                 jse.getMessage()));
         }
         catch (IOException ioe) {
-            globalState.getErr().println(ioe.toString());
+            global.getErr().println(ioe.toString());
         }
         finally {
             try {
                 in.close();
             }
             catch (IOException ioe) {
-                globalState.getErr().println(ioe.toString());
+                global.getErr().println(ioe.toString());
             }
         }
         return result;
     }
 
     private static void p(String s) {
-        globalState.getOut().println(s);
+        global.getOut().println(s);
     }
     
     public static ScriptableObject getScope() {
-        return scope;
+        return global;
     }
-    
+
     public static InputStream getIn() {
-        return Global.getInstance(scope).getIn();
+        return Global.getInstance(global).getIn();
     }
     
     public static void setIn(InputStream in) {
-        Global.getInstance(scope).setIn(in);
+        Global.getInstance(global).setIn(in);
     }
 
     public static PrintStream getOut() {
-        return Global.getInstance(scope).getOut();
+        return Global.getInstance(global).getOut();
     }
     
     public static void setOut(PrintStream out) {
-        Global.getInstance(scope).setOut(out);
+        Global.getInstance(global).setOut(out);
     }
 
     public static PrintStream getErr() { 
-        return Global.getInstance(scope).getErr();
+        return Global.getInstance(global).getErr();
     }
 
     public static void setErr(PrintStream err) {
-        Global.getInstance(scope).setErr(err);
+        Global.getInstance(global).setErr(err);
     }
-     
+
     static protected ToolErrorReporter errorReporter;
-    static protected ScriptableObject scope;
-    static protected Global globalState;
+    static protected Global global;
     static protected int exitCode = 0;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;

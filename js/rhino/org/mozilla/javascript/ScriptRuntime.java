@@ -1794,9 +1794,7 @@ public class ScriptRuntime {
         throws JavaScriptException
     {
         Context cx = Context.enter();
-        ScriptableObject global = new ImporterTopLevel();
-        cx.initStandardObjects(global);
-        Global.initTopLevelScope(cx, global);        
+        ScriptableObject global = new Global(cx);
 
         // get the command line arguments and define "arguments" 
         // array in the top-level object
@@ -1870,9 +1868,7 @@ public class ScriptRuntime {
 
     public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
-        ScriptableObject global = new ImporterTopLevel();
-        cx.initStandardObjects(global);
-        Global.initTopLevelScope(cx, global);        
+        ScriptableObject global = new Global(cx);
         try {
             script.exec(cx, global);
         } catch (JavaScriptException e) {
