@@ -35,6 +35,8 @@ nsXPCWrappedNative::AddRef(void)
     else if(2 == mRefCnt)
         JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
 
+//    XPC_LOG_DEBUG(("+++ AddRef  of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
+
     return mRefCnt;
 }
 
@@ -48,16 +50,24 @@ nsXPCWrappedNative::Release(void)
     {
         if(mRoot == this)
         {
+//            XPC_LOG_DEBUG(("--- Delete of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
             NS_DELETEXPCOM(this);   // cascaded delete
         }
         else
         {
-            NS_RELEASE(mRoot);
+//            XPC_LOG_DEBUG(("--- Release of root %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
+            mRoot->Release();
         }
         return 0;
     }
     if(1 == mRefCnt)
+    {
+//        XPC_LOG_DEBUG(("--- Removing root of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
         JS_RemoveRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
+    }
+
+//    XPC_LOG_DEBUG(("--- Release of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
+
     return mRefCnt;
 }
 
@@ -367,7 +377,7 @@ nsXPCWrappedNative::DebugDump(int depth)
         XPC_LOG_ALWAYS(("interface name is %s", GetClass()->GetInterfaceName()));
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
-        free(iid);
+        delete iid;
         XPC_LOG_ALWAYS(("JSObject @ %x", mJSObj));
         XPC_LOG_ALWAYS(("nsXPCWrappedNativeClass @ %x", mClass));
         if(GetDynamicScriptable())

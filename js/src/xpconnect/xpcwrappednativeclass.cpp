@@ -1203,7 +1203,7 @@ nsXPCWrappedNativeClass::DebugDump(int depth)
         XPC_LOG_ALWAYS(("interface name is %s", GetInterfaceName()));
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
-        free(iid);
+        delete iid;
         XPC_LOG_ALWAYS(("InterfaceInfo @ %x", mInfo));
         if(depth)
         {

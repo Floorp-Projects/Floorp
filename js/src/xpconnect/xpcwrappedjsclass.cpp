@@ -83,9 +83,15 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
     {
         if(methodCount)
         {
-            if(NULL != (mDescriptors = new uint32[(methodCount/32)+1]))
+            int wordCount = (methodCount/32)+1;
+            if(NULL != (mDescriptors = new uint32[wordCount]))
             {
-                for(int i = 0; i < methodCount; i++)
+                int i;
+                // init flags to 0;
+                for(i = wordCount-1; i >= 0; i--)
+                    mDescriptors[i] = 0;
+
+                for(i = 0; i < methodCount; i++)
                 {
                     const nsXPTMethodInfo* info;
                     if(NS_SUCCEEDED(mInfo->GetMethodInfo(i, &info)))
@@ -525,7 +531,7 @@ nsXPCWrappedJSClass::DebugDump(int depth)
         }
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
-        free(iid);
+        delete iid;
         XPC_LOG_ALWAYS(("InterfaceInfo @ %x", mInfo));
         uint16 methodCount = 0;
         if(depth)

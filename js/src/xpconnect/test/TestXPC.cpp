@@ -422,6 +422,8 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     printf(message);
 }
 
+extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+
 int main()
 {
     JSRuntime *rt;
@@ -474,6 +476,10 @@ int main()
 
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
+
+
+    nsIXPConnectWrappedNative* fool_wrapper = NULL;
+
 /*
     if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo::IID(), &wrapper)))
 */
@@ -483,6 +489,9 @@ int main()
     {
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(cx, glob, glob_functions);
+
+        nsTestXPCFoo* fool = new nsTestXPCFoo();
+        xpc->WrapNative(cx, fool, nsITestXPCFoo2::IID(), &fool_wrapper);
 
         if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo2::IID(), &wrapper2)))
         {
@@ -501,7 +510,8 @@ int main()
             nsIXPConnectWrappedNative* echo_wrapper;
             JSObject* echo_jsobj;
             jsval echo_jsval;
-            xpc->WrapNative(cx, new MyEcho(), nsIEcho::IID(), &echo_wrapper);
+            MyEcho* myEcho = new MyEcho();
+            xpc->WrapNative(cx, myEcho, nsIEcho::IID(), &echo_wrapper);
             echo_wrapper->GetJSObject(&echo_jsobj);
             echo_jsval = OBJECT_TO_JSVAL(echo_jsobj);
             JS_SetProperty(cx, glob, "echo", &echo_jsval);
@@ -517,12 +527,12 @@ int main()
             if(JS_GetProperty(cx, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
-                nsIXPConnectWrappedJS* wrapper;
+                nsIXPConnectWrappedJS* wrapper3;
                 if(NS_SUCCEEDED(xpc->WrapJS(cx,
                                        JSVAL_TO_OBJECT(v),
-                                       nsITestXPCFoo::IID(), &wrapper)))
+                                       nsITestXPCFoo::IID(), &wrapper3)))
                 {
-                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper;
+                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper3;
                     int result;
                     JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
@@ -530,7 +540,7 @@ int main()
     
                     nsIXPConnectWrappedJSMethods* methods;
 
-                    wrapper->QueryInterface(nsIXPConnectWrappedJSMethods::IID(), 
+                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::IID(), 
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 
@@ -542,14 +552,16 @@ int main()
                     XPC_DUMP(xpc, 50);
 
                     NS_RELEASE(methods);
-                    NS_RELEASE(wrapper);
+                    NS_RELEASE(wrapper3);
 
                 }
             }
             NS_RELEASE(com_obj);
             NS_RELEASE(wrapper2);
+            NS_RELEASE(echo_wrapper);
+            NS_RELEASE(myEcho);
         }
-        NS_RELEASE(wrapper);
+//        NS_RELEASE(wrapper);
     }
     NS_RELEASE(foo);
 
@@ -561,13 +573,34 @@ int main()
 //    XPC_LOG_ALWAYS((""));
 //    XPC_DUMP(xpc, 3);
 
+    if(glob)
+    {
+        JS_DeleteProperty(cx, glob, "foo");
+        JS_DeleteProperty(cx, glob, "echo");
+        JS_DeleteProperty(cx, glob, "bar");
+        JS_DeleteProperty(cx, glob, "foo2");
+        JS_DeleteProperty(cx, glob, "baz");
+        JS_DeleteProperty(cx, glob, "baz2");
+        JS_DeleteProperty(cx, glob, "reciever");
+        JS_SetGlobalObject(cx, JS_NewObject(cx, &global_class, NULL, NULL));
+    }
+    NS_RELEASE(wrapper);
+
+    NS_RELEASE(fool_wrapper);
+
+//    js_DumpGCHeap = stdout;
+
     JS_GC(cx);
+//    printf("-----------------------\n");
+//    JS_GC(cx);
 
     // dump to log test...
-//    XPC_LOG_ALWAYS((""));
-//    XPC_LOG_ALWAYS(("after running JS_GC..."));
-//    XPC_LOG_ALWAYS((""));
-//    XPC_DUMP(xpc, 3);
+    XPC_LOG_ALWAYS((""));
+    XPC_LOG_ALWAYS(("after running JS_GC..."));
+    XPC_LOG_ALWAYS((""));
+    XPC_DUMP(xpc, 3);
+
+    NS_RELEASE(xpc);
 
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
