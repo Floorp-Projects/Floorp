@@ -3995,13 +3995,15 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
     return rv;
 
   //First look for the current signature, if we have one
+  nsCOMPtr<nsIDOMNode> lastNode;
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIDOMNode> tempNode;
   nsAutoString tagLocalName;
 
-  rv = rootElement->GetLastChild(getter_AddRefs(node));
-  if (NS_SUCCEEDED(rv) && nsnull != node)
+  rv = rootElement->GetLastChild(getter_AddRefs(lastNode));
+  if (NS_SUCCEEDED(rv) && nsnull != lastNode)
   {
+    node = lastNode;
     if (m_composeHTML)
     {
       /* In html, the signature is inside an element with
@@ -4089,9 +4091,13 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
       {
         //Now, I am sure I get the right node!
         editor->BeginTransaction();
+
+        tempNode = lastNode;
+        lastNode = node;
         do
         {
-          node->GetNextSibling(getter_AddRefs(tempNode));
+          node = tempNode;
+          node->GetPreviousSibling(getter_AddRefs(tempNode));
           rv = editor->DeleteNode(node);
           if (NS_FAILED(rv))
           {
@@ -4099,8 +4105,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             return rv;
           }
 
-          node = tempNode;
-        } while (node);
+        } while (node != lastNode && tempNode);
         editor->EndTransaction();
       }
     }
