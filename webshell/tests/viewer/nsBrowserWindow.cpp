@@ -2234,6 +2234,7 @@ NS_IMETHODIMP
 nsBrowserWindow::Prompt(const PRUnichar *dialogTitle, 
                         const PRUnichar *text,
                         const PRUnichar *passwordRealm,
+                        PRUint32 savePassword,
                         const PRUnichar *defaultText,
                         PRUnichar **result,
                         PRBool *_retval)
@@ -2260,7 +2261,7 @@ NS_IMETHODIMP
 nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
                                            const PRUnichar *text,
                                            const PRUnichar *passwordRealm,
-                                           PRBool persistPassword,
+                                           PRUint32 savePassword,
                                            PRUnichar **user,
                                            PRUnichar **pwd,
                                            PRBool *_retval)
@@ -2293,7 +2294,7 @@ NS_IMETHODIMP
 nsBrowserWindow::PromptPassword(const PRUnichar *dialogTitle, 
                                 const PRUnichar *text,
                                 const PRUnichar *passwordRealm,
-                                PRBool persistPassword,
+                                PRUint32 savePassword,
                                 PRUnichar **pwd,
                                 PRBool *_retval)
 {

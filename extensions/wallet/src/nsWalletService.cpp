@@ -40,8 +40,10 @@
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
+#include "nsINetSupportDialogService.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -317,7 +319,10 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                         rv = inputElement->GetValue(value);
                         if (NS_FAILED(rv) || value.Length() == 0) {
                           PRUnichar* valueString = NULL;
-                          SINGSIGN_RestoreSignonData(URLName, nameString, &valueString, elementNumber++);
+                          NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+                          if (NS_SUCCEEDED(rv)) {
+                            SINGSIGN_RestoreSignonData(dialog, URLName, nameString, &valueString, elementNumber++);
+                          }
                           if (valueString) {
                             nsAutoString value(valueString);                                    
                             rv = inputElement->SetValue(value);
@@ -377,9 +382,9 @@ nsWalletlibService::GetPassword(PRUnichar **password)
 }
 
 NS_IMETHODIMP
-nsWalletlibService::HaveData(const char *key, const PRUnichar *userName, PRBool *_retval)
+nsWalletlibService::HaveData(nsIPrompt* dialog, const char *key, const PRUnichar *userName, PRBool *_retval)
 {
-  return ::SINGSIGN_HaveData(key, userName, _retval);
+  return ::SINGSIGN_HaveData(dialog, key, userName, _retval);
 }
 
 NS_IMETHODIMP
@@ -426,38 +431,39 @@ nsSingleSignOnPrompt::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                             const PRUnichar *passwordRealm, const PRUnichar *defaultText, 
-                             PRUnichar **result, PRBool *_retval)
+                             const PRUnichar *passwordRealm, PRUint32 savePassword,
+                             const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
-  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.GetBuffer(), mPrompt, _retval);
+  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.GetBuffer(), mPrompt, _retval, savePassword);
   return rv;
 }
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                                                const PRUnichar *passwordRealm, PRBool persistPassword, 
+                                                const PRUnichar *passwordRealm, PRUint32 savePassword, 
                                                 PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
   rv = SINGSIGN_PromptUsernameAndPassword(dialogTitle, text, user, pwd,
-                                          realm.GetBuffer(), mPrompt, _retval, persistPassword);
+                                          realm.GetBuffer(), mPrompt, _retval, savePassword);
   return rv;
 }
 
 NS_IMETHODIMP
-nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm,
-                                     PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
+nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, 
+                                     const PRUnichar *passwordRealm, PRUint32 savePassword, 
+                                     PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
   rv = SINGSIGN_PromptPassword(dialogTitle, text, pwd,
-                               realm.GetBuffer(), mPrompt, _retval, persistPassword);
+                               realm.GetBuffer(), mPrompt, _retval, savePassword);
   return rv;
 }
 

@@ -34,6 +34,11 @@
 #include "nsVoidArray.h"
 #include "nsIPref.h"
 
+/* Duplicates defines as in nsIPrompt.idl -- keep in sync! */
+#define SINGSIGN_SAVE_PASSWORD_NEVER 0
+#define SINGSIGN_SAVE_FOR_SESSION    1
+#define SINGSIGN_SAVE_PERMANENTLY    2
+
 class nsIPrompt;
 XP_BEGIN_PROTOS
 
@@ -47,22 +52,22 @@ extern void
 SINGSIGN_SignonViewerReturn(const nsString& results);
 
 extern void
-SINGSIGN_RestoreSignonData(const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRBool persistPassword = PR_TRUE);
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
 
 extern nsresult
 SINGSIGN_PromptPassword
     (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd, const char* passwordRealm,
-     nsIPrompt* dialog, PRBool *returnValue, PRBool persistPassword = PR_TRUE);
+     nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue);
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
 
 extern PRBool
 SINGSIGN_RemoveUser
@@ -73,7 +78,7 @@ SINGSIGN_StorePassword
     (const char* passwordRealm, const PRUnichar *userName, const PRUnichar *password);
 
 extern nsresult
-SINGSIGN_HaveData(const char* passwordRealm, const PRUnichar *userName, PRBool *retval);
+SINGSIGN_HaveData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar *userName, PRBool *retval);
 
 extern void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
@@ -105,7 +110,7 @@ extern PRBool
 SINGSIGN_ReencryptAll();
 
 extern void
-SINGSIGN_RememberSignonData (const char* URLName, nsVoidArray * signonData);
+SINGSIGN_RememberSignonData(nsIPrompt* dialog, const char* URLName, nsVoidArray * signonData);
 
 XP_END_PROTOS
 

@@ -413,6 +413,23 @@ nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
   return JS_TRUE;
 }
 
+NS_EXPORT PRBool
+nsJSUtils::nsConvertJSValToUint32(PRUint32* aProp,
+                                  JSContext* aContext,
+                                  jsval aValue)
+{
+  uint32 temp;
+  if (JS_ValueToECMAUint32(aContext, aValue, &temp)) {
+    *aProp = (PRUint32)temp;
+  }
+  else {
+    JS_ReportError(aContext, "Parameter must be an integer");
+    return JS_FALSE;
+  }
+  
+  return JS_TRUE;
+}
+
 NS_EXPORT PRBool 
 nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
                                 JSContext* aContext,

@@ -1473,7 +1473,8 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             if (NS_FAILED(rv)) return rv;
 
             nsAutoString realm = NS_ConvertToString(signonURL);
-            rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsnull,
+            rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), 
+                                nsIPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
                                 getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 

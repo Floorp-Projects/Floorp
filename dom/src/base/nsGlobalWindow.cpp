@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1176,8 +1176,6 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
 
    if(argc > 0)
       nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-   else
-      str.AssignWithConversion("undefined");
 
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -1195,8 +1193,6 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
    *aReturn = PR_FALSE;
    if(argc > 0)
       nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-   else
-      str.AssignWithConversion("undefined");
 
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -1210,15 +1206,23 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
    NS_ENSURE_STATE(mDocShell);
 
    nsresult ret = NS_OK;
-   nsAutoString message, initial;
+   nsAutoString message, initial, title;
+   PRUint32 savePassword = nsIPrompt::SAVE_PASSWORD_NEVER;
 
    if(argc > 0) {
-      nsJSUtils::nsConvertJSValToString(message, cx, argv[0]);
+     nsJSUtils::nsConvertJSValToString(message, cx, argv[0]);
    
-      if(argc > 1)
-         nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
-      else 
-         initial.AssignWithConversion("undefined");
+     if(argc > 1) {
+       nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
+
+       if (argc > 2) {
+         nsJSUtils::nsConvertJSValToString(title, cx, argv[2]);
+
+         if (argc > 3) {
+           nsJSUtils::nsConvertJSValToUint32(&savePassword, cx, argv[3]);
+         }
+       }
+     }
    }
 
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
@@ -1227,7 +1231,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
 
    PRBool b;
    PRUnichar* uniResult = nsnull;
-   ret = prompter->Prompt(nsnull, message.GetUnicode(), nsnull,
+   ret = prompter->Prompt(title.GetUnicode(), message.GetUnicode(), nsnull, savePassword,
                           initial.GetUnicode(), &uniResult, &b);
 
    if (NS_SUCCEEDED(ret) && uniResult && b) {

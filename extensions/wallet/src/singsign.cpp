@@ -51,7 +51,6 @@
 
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
@@ -335,17 +334,13 @@ si_3ButtonConfirm(PRUnichar * szMessage) {
 #include "nsAppShellCIDs.h" // TODO remove later
 
 PRIVATE PRBool
-si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) {
+si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList, PRInt32* pCount) {
   if (si_UserHasBeenSelected) {
     /* a user was already selected for this form, use same one again */
     *pCount = 0; /* last user selected is now at head of list */
     return PR_TRUE;
   }
   nsresult rv;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
   PRInt32 selectedIndex;
   PRBool rtnValue;
   PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
@@ -359,19 +354,22 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
 static nsresult
 si_CheckGetPassword
   (PRUnichar ** password,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
+   const PRUnichar* dialogTitle,
+   const PRUnichar * szMessage,
+   nsIPrompt* dialog,
+   PRUint32 savePassword,
+   PRBool* checkValue)
 {
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  nsresult res;
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+    prompt_string = Wallet_Localize("PromptForPassword");
   PRUnichar * check_string;
-  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+    check_string = nsnull;
+  } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisValueEncrypted");
   } else {
     check_string = Wallet_Localize("SaveThisValueObscured");
@@ -397,8 +395,12 @@ si_CheckGetPassword
     1, /* is first edit field a password field */
     &buttonPressed);
 
-  Recycle(prompt_string);
-  Recycle(check_string);
+  if (dialogTitle == nsnull)
+    Recycle(prompt_string);
+  if (check_string)
+    Recycle(check_string);
+  else
+    *checkValue = PR_FALSE;
 
   if (NS_FAILED(res)) {
     return res;
@@ -413,19 +415,22 @@ si_CheckGetPassword
 static nsresult
 si_CheckGetData
   (PRUnichar ** data,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
+   const PRUnichar* dialogTitle,
+   const PRUnichar * szMessage,
+   nsIPrompt* dialog,
+   PRUint32 savePassword,
+   PRBool* checkValue)
 {
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForData");
+  PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+    prompt_string = Wallet_Localize("PromptForData");
   PRUnichar * check_string;
-  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+    check_string = nsnull;
+  } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisValueEncrypted");
   } else {
     check_string = Wallet_Localize("SaveThisValueObscured");
@@ -451,8 +456,12 @@ si_CheckGetData
     0, /* is first edit field a password field */
     &buttonPressed);
 
-  Recycle(prompt_string);
-  Recycle(check_string);
+  if (dialogTitle == nsnull)
+    Recycle(prompt_string);
+  if (check_string)
+    Recycle(check_string);
+  else
+    *checkValue = PR_FALSE;
 
   if (NS_FAILED(res)) {
     return res;
@@ -467,22 +476,24 @@ si_CheckGetData
 static nsresult
 si_CheckGetUsernamePassword
   (PRUnichar ** username,
-  PRUnichar ** password,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
+   PRUnichar ** password,
+   const PRUnichar* dialogTitle,
+   const PRUnichar * szMessage,
+   nsIPrompt* dialog,
+   PRUint32 savePassword,
+   PRBool* checkValue)
 {
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+    prompt_string = Wallet_Localize("PromptForPassword");
   PRUnichar * user_string = Wallet_Localize("UserName");
   PRUnichar * password_string = Wallet_Localize("Password");
   PRUnichar * check_string;
-  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+    check_string = nsnull;
+  } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveTheseValuesEncrypted");
   } else {
     check_string = Wallet_Localize("SaveTheseValuesObscured");
@@ -508,10 +519,14 @@ si_CheckGetUsernamePassword
     0, /* is first edit field a password field */
     &buttonPressed);
 
-  Recycle(prompt_string);
-  Recycle(check_string);
+  if (dialogTitle == nsnull)
+    Recycle(prompt_string);
   Recycle(user_string);
   Recycle(password_string);
+  if (check_string)
+    Recycle(check_string);
+  else
+    *checkValue = PR_FALSE;
 
   if (NS_FAILED(res)) {
     return res;
@@ -817,7 +832,7 @@ si_CheckForUser(const char *passwordRealm, const nsString& userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(const char* passwordRealm, PRBool pickFirstUser, const nsString& userText) {
+si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, const nsString& userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
@@ -898,7 +913,7 @@ si_GetUser(const char* passwordRealm, PRBool pickFirstUser, const nsString& user
       } else if (user_count == 1) {
         /* only one user for this form at this url, so select it */
         user = users[0];
-      } else if ((user_count > 1) && si_SelectDialog(selectUser, list, &user_count)) {
+      } else if ((user_count > 1) && si_SelectDialog(selectUser, dialog, list, &user_count)) {
         /* user pressed OK */
         if (user_count == -1) {
           user_count = 0; /* user didn't select, so use first one */
@@ -989,7 +1004,7 @@ si_GetSpecificUser(const char* passwordRealm, const nsString& userName, const ns
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetURLAndUserForChangeForm(const nsString& password)
+si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
 {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
@@ -1060,7 +1075,7 @@ si_GetURLAndUserForChangeForm(const nsString& password)
 
   /* query user */
   PRUnichar * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
-  if (user_count && si_SelectDialog(msg, list, &user_count)) {
+  if (user_count && si_SelectDialog(msg, dialog, list, &user_count)) {
     user = users[user_count];
     url = urls[user_count];
     /*
@@ -1837,7 +1852,7 @@ si_OkToSave(const char *passwordRealm, const nsString& userName) {
  * Check for a signon submission and remember the data if so
  */
 PRIVATE void
-si_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
+si_RememberSignonData (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData)
 {
   int passwordCount = 0;
   int pswd[3];
@@ -1908,7 +1923,7 @@ si_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
 
     /* ask user if this is a password change */
     si_lock_signon_list();
-    user = si_GetURLAndUserForChangeForm(data0->value);
+    user = si_GetURLAndUserForChangeForm(dialog, data0->value);
 
     /* return if user said no */
     if (!user) {
@@ -1948,7 +1963,7 @@ si_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
 }
 
 PUBLIC void
-SINGSIGN_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
+SINGSIGN_RememberSignonData (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
@@ -1964,12 +1979,12 @@ SINGSIGN_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData
   if (NS_FAILED(rv)) {
     return;
   }
-  si_RememberSignonData (strippedRealm, signonData);
+  si_RememberSignonData(dialog, strippedRealm, signonData);
   PR_Free(strippedRealm);
 }
 
 PRIVATE void
-si_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
   nsAutoString correctedName;
@@ -2002,7 +2017,7 @@ si_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnicha
 
   /* determine if name has been saved (avoids unlocking the database if not) */
   PRBool nameFound = PR_FALSE;
-  user = si_GetUser(passwordRealm, PR_FALSE, correctedName);
+  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName);
   if (user) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2053,7 +2068,7 @@ si_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnicha
 
   /* restore the data from previous time this URL was visited */
 
-  user = si_GetUser(passwordRealm, PR_FALSE, correctedName);
+  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName);
   if (user) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2072,7 +2087,7 @@ si_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnicha
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   nsresult rv;
   NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
   if (NS_FAILED(rv)) {
@@ -2087,7 +2102,7 @@ SINGSIGN_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PR
   if (NS_FAILED(rv)) {
     return;
   }
-  si_RestoreSignonData (strippedRealm, name, value, elementNumber);
+  si_RestoreSignonData(dialog, strippedRealm, name, value, elementNumber);
   PR_Free(strippedRealm);
 }
 
@@ -2132,7 +2147,7 @@ si_RememberSignonDataFromBrowser(const char* passwordRealm, const nsString& user
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (const char* passwordRealm, PRBool pickFirstUser, nsString& username, nsString& password) {
+    (nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, nsString& username, nsString& password) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
@@ -2141,7 +2156,7 @@ si_RestoreOldSignonDataFromBrowser
   if (username.Length() != 0) {
     user = si_GetSpecificUser(passwordRealm, username, NS_ConvertToString(USERNAMEFIELD));
   } else {
-    user = si_GetUser(passwordRealm, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
+    user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
   }
   if (!user) {
     /* leave original username and password from caller unchanged */
@@ -2191,7 +2206,7 @@ SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const P
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK, PRBool persistPassword) {
+     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK, PRUint32 savePassword) {
 
   nsresult res;
 
@@ -2199,18 +2214,18 @@ SINGSIGN_PromptUsernameAndPassword
   if (!si_GetSignonRememberingPref()){
     nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
     return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
-                                             persistPassword, user, pwd, pressedOK);
+                                             savePassword, user, pwd, pressedOK);
   }
 
   /* prefill with previous username/password if any */
   nsAutoString username, password;
-  si_RestoreOldSignonDataFromBrowser(passwordRealm, PR_FALSE, username, password);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
   *user = username.ToNewUnicode();
   *pwd = password.ToNewUnicode();
   PRBool checked = PR_FALSE;
-  res = si_CheckGetUsernamePassword(user, pwd, text, &checked);
+  res = si_CheckGetUsernamePassword(user, pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*user);
@@ -2230,7 +2245,7 @@ SINGSIGN_PromptUsernameAndPassword
 PUBLIC nsresult
 SINGSIGN_PromptPassword
     (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd, const char *passwordRealm,
-     nsIPrompt* dialog, PRBool *pressedOK, PRBool persistPassword) 
+     nsIPrompt* dialog, PRBool *pressedOK, PRUint32 savePassword) 
 {
 
   nsresult res;
@@ -2238,17 +2253,15 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
     nsString realm = NS_ConvertToString(passwordRealm);      // XXX hack
-    res = dialog->PromptPassword(prompt_string,
-                                 text, realm.GetUnicode(), persistPassword,
+    res = dialog->PromptPassword(dialogTitle,
+                                 text, realm.GetUnicode(), savePassword,
                                  pwd, pressedOK);
-    Recycle(prompt_string);
     return res;
   }
 
   /* get previous password used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser(passwordRealm, (username.Length() == 0), username, password);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, (username.Length() == 0), username, password);
 
   /* return if a password was found */
   if (password.Length() != 0) {
@@ -2260,7 +2273,7 @@ SINGSIGN_PromptPassword
   /* no password found, get new password from user */
   *pwd = password.ToNewUnicode();
   PRBool checked = PR_FALSE;
-  res = si_CheckGetPassword(pwd, text, &checked);
+  res = si_CheckGetPassword(pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*pwd);
@@ -2279,22 +2292,20 @@ SINGSIGN_PromptPassword
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK) 
+     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK, PRUint32 savePassword) 
 {
   nsresult res;
   nsAutoString data, emptyUsername;
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    PRUnichar * prompt_string = Wallet_Localize("PromptForData");
     nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
-    res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), prompt_string, resultText, pressedOK);
-    Recycle(prompt_string);
+    res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), savePassword, defaultText, resultText, pressedOK);
     return res;
   }
 
   /* get previous data used with this hostname */
-  si_RestoreOldSignonDataFromBrowser(passwordRealm, PR_TRUE, emptyUsername, data);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_TRUE, emptyUsername, data);
 
   /* return if data was found */
   if (data.Length() != 0) {
@@ -2304,9 +2315,10 @@ SINGSIGN_Prompt
   }
 
   /* no data found, get new data from user */
+  data = defaultText;
   *resultText = data.ToNewUnicode();
   PRBool checked = PR_FALSE;
-  res = si_CheckGetData(resultText, text, &checked);
+  res = si_CheckGetData(resultText, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*resultText);
@@ -2554,7 +2566,7 @@ SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
 }
 
 PUBLIC nsresult
-SINGSIGN_HaveData(const char *passwordRealm, const PRUnichar *userName, PRBool *retval)
+SINGSIGN_HaveData(nsIPrompt* dialog, const char *passwordRealm, const PRUnichar *userName, PRBool *retval)
 {
   nsAutoString data, usernameForLookup;
 
@@ -2565,7 +2577,7 @@ SINGSIGN_HaveData(const char *passwordRealm, const PRUnichar *userName, PRBool *
   }
 
   /* get previous data used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser(passwordRealm, (usernameForLookup.Length() == 0), usernameForLookup, data);
+  si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, (usernameForLookup.Length() == 0), usernameForLookup, data);
 
   if (data.Length()) {
     *retval = PR_TRUE;

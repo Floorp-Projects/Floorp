@@ -3503,7 +3503,10 @@ WLLT_OnSubmit(nsIContent* currentForm) {
 
           /* save login if appropriate */
           if (currentFormNode == formNode) {
-            SINGSIGN_RememberSignonData (URLName, signonData);
+            NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+              SINGSIGN_RememberSignonData(dialog, URLName, signonData);
+            }
           }
           PRInt32 count2 = signonData->Count();
           for (PRInt32 i=count2-1; i>=0; i--) {

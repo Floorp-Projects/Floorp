@@ -60,7 +60,7 @@ interface nsIWalletService : nsISupports {
   void SI_RemoveUser(in string key, in wstring userName);
   void SI_StorePassword(in string key, in wstring userName, in wstring pwd);
 
-  boolean haveData(in string key, in wstring userName);
+  boolean haveData(in nsIPrompt dialog, in string key, in wstring userName);
 
   [noscript] void WALLET_GetNopreviewListForViewer(in nsAutoStringRef aNopreviewList);
   [noscript] void WALLET_GetNocaptureListForViewer(in nsAutoStringRef aNocaptureList);
