@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.21 $ $Date: 2002/08/27 23:38:29 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.22 $ $Date: 2002/08/28 13:27:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -248,7 +248,7 @@ NSS_EXTERN NSSTrust *
 nssTrust_Create
 (
   nssPKIObject *object,
-  NSSCertificate *nssCert
+  NSSItem *certData
 );
 
 NSS_EXTERN NSSCRL *
