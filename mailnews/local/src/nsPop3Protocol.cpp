@@ -17,7 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-
+#include "nsIMsgMailNewsUrl.h"
 #include "nsPop3Protocol.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
@@ -416,8 +416,8 @@ void nsPop3Protocol::Initialize(nsIURL * aURL)
 			const char * hostName = nsnull;
 			PRUint32 port = POP3_PORT;
 
-			m_nsIPop3URL->GetHost(&hostName);
-			m_nsIPop3URL->GetHostPort(&port);
+			aURL->GetHost(&hostName);
+			aURL->GetHostPort(&port);
 			rv = OpenNetworkSocket(aURL, port, hostName);
 		}
 	} // if we got a url...
@@ -680,7 +680,8 @@ PRInt32 nsPop3Protocol::SendAuth()
 	nsString command("AUTH"CRLF, eOneByte);
 
     m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
-	return SendData(m_nsIPop3URL, command.GetBuffer());
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	return SendData(url, command.GetBuffer());
 }
 
 PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream, 
@@ -742,8 +743,8 @@ PRInt32 nsPop3Protocol::AuthLogin()
 
 	nsString2 command("AUTH LOGIN" CRLF, eOneByte);
     m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN_RESPONSE;
-
-    return SendData(m_nsIPop3URL, command.GetBuffer());
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url, command.GetBuffer());
 }
 
 PRInt32 nsPop3Protocol::AuthLoginResponse()
@@ -795,7 +796,8 @@ PRInt32 nsPop3Protocol::SendUsername()
 	cmd = "USER ";
 	cmd += m_username;
 	cmd += CRLF;
-	return SendData(m_nsIPop3URL, cmd.GetBuffer());
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+	return SendData(url, cmd.GetBuffer());
 }
 
 PRInt32 nsPop3Protocol::SendPassword()
@@ -825,7 +827,8 @@ PRInt32 nsPop3Protocol::SendPassword()
 	cmd = "PASS ";
 	cmd += m_password;
 	cmd += CRLF;
-    return SendData(m_nsIPop3URL, cmd.GetBuffer());
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url, cmd.GetBuffer());
 }
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
@@ -910,8 +913,8 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 		cmd = "GURL" CRLF;
         m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
     }
-    
-    return SendData(m_nsIPop3URL, cmd.GetBuffer());
+    nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url, cmd.GetBuffer());
 }
 
 
@@ -1041,7 +1044,8 @@ PRInt32 nsPop3Protocol::SendList()
     if (!m_pop3ConData->msg_info)
         return(MK_OUT_OF_MEMORY);
     m_pop3ConData->next_state_after_response = POP3_GET_LIST;
-    return SendData(m_nsIPop3URL, "LIST"CRLF);
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url, "LIST"CRLF);
 }
 
 
@@ -1111,7 +1115,8 @@ PRInt32 nsPop3Protocol::SendFakeUidlTop()
 	{
 		m_pop3ConData->next_state_after_response = POP3_GET_FAKE_UIDL_TOP;
 		m_pop3ConData->pause_for_read = PR_TRUE;
-		status = SendData(m_nsIPop3URL, cmd);
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		status = SendData(url, cmd);
 	}
 
 	PR_FREEIF(cmd);
@@ -1299,7 +1304,8 @@ PRInt32 nsPop3Protocol::SendXtndXlstMsgid()
         return StartUseTopForFakeUidl();
     m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
     m_pop3ConData->pause_for_read = PR_TRUE;
-    return SendData(m_nsIPop3URL, "XTND XLST Message-Id" CRLF);
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url, "XTND XLST Message-Id" CRLF);
 }
 
 
@@ -1391,7 +1397,8 @@ PRInt32 nsPop3Protocol::SendUidlList()
 
     m_pop3ConData->next_state_after_response = POP3_GET_UIDL_LIST;
     m_pop3ConData->pause_for_read = PR_TRUE;
-    return SendData(m_nsIPop3URL,"UIDL" CRLF);
+	nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+    return SendData(url,"UIDL" CRLF);
 }
 
 
@@ -1732,8 +1739,9 @@ nsPop3Protocol::SendTop()
 		/* zero the bytes received in message in preparation for
 		* the next
 		*/
-		m_pop3ConData->bytes_received_in_message = 0;    
-		status = SendData(m_nsIPop3URL,cmd);
+		m_pop3ConData->bytes_received_in_message = 0;
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		status = SendData(url,cmd);
 	}
 	PR_FREEIF(cmd);
 	return status;
@@ -1748,7 +1756,8 @@ PRInt32 nsPop3Protocol::SendXsender()
 	if (cmd)
 	{  
 		m_pop3ConData->next_state_after_response = POP3_XSENDER_RESPONSE;
-		status = SendData(m_nsIPop3URL, cmd);
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		status = SendData(url, cmd);
 	}
 	PR_FREEIF(cmd);
 	return status;
@@ -1823,8 +1832,8 @@ nsPop3Protocol::SendRetr()
         NET_Progress(ce->window_id, buf);
 #endif 
 		}
-		
-		status = SendData(m_nsIPop3URL, cmd);
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		status = SendData(url, cmd);
 	} // if cmd
 	PR_FREEIF(cmd);
     return status;
@@ -1922,8 +1931,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
          */
         m_pop3ConData->real_new_counter++;		
         /* (rb) count only real messages being downloaded */
-
-        m_nsIPop3Sink->IncorporateBegin(uidl, m_nsIPop3URL, flags,
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+        m_nsIPop3Sink->IncorporateBegin(uidl, url, flags,
                                         &m_pop3ConData->msg_closure);  
 
 #if 0
@@ -2151,7 +2160,8 @@ PRInt32 nsPop3Protocol::SendDele()
 	if (cmd)
 	{
    		m_pop3ConData->next_state_after_response = POP3_DELE_RESPONSE;
-		status = SendData(m_nsIPop3URL, cmd);
+		nsCOMPtr<nsIURL> url = do_QueryInterface(m_nsIPop3URL);
+		status = SendData(url, cmd);
 	}
 	PR_FREEIF(cmd);
 	return status;
@@ -2263,6 +2273,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
 nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength)
 {
     PRInt32 status = 0;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_nsIPop3URL);
 
 #if 0
     TRACEMSG(("Entering NET_ProcessPop3"));
@@ -2596,7 +2607,8 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
                     }
                 }
             }
-            status = SendData(m_nsIPop3URL, "QUIT" CRLF);
+			
+			status = SendData(mailnewsurl, "QUIT" CRLF);
             m_pop3ConData->next_state = POP3_WAIT_FOR_RESPONSE;
 #ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
             m_pop3ConData->next_state_after_response = POP3_QUIT_RESPONSE;
@@ -2636,17 +2648,16 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
                 m_nsIPop3Sink->EndMailDelivery();
 
             if (m_transport)
-                m_transport->OnStopBinding(m_nsIPop3URL, 0, nsnull);
+                m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
 
-			if (m_nsIPop3URL)
-				m_nsIPop3URL->SetUrlState(PR_FALSE, NS_OK);
+			if (mailnewsurl)
+				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
 
             m_pop3ConData->next_state = POP3_FREE;
             break;
 
         case POP3_INTERRUPTED:
-				{
-					SendData(m_nsIPop3URL, "QUIT" CRLF);
+			SendData(mailnewsurl, "QUIT" CRLF);
 #if 0
             /*
               nnet_graceful_shutdown(ce->socket, PR_FALSE);
@@ -2654,8 +2665,7 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
 #endif 
             m_pop3ConData->pause_for_read = PR_FALSE;
             m_pop3ConData->next_state = POP3_ERROR_DONE;
-				}
-				break;
+			break;
         
         case POP3_ERROR_DONE:
 
@@ -2705,10 +2715,10 @@ nsresult nsPop3Protocol::ProcessProtocolState (nsIURL* aURL, nsIInputStream* aIn
                 m_pop3ConData->next_state = POP3_FREE;
             
             if (m_transport)
-                m_transport->OnStopBinding(m_nsIPop3URL, 0, nsnull);
+                m_transport->OnStopBinding(mailnewsurl, 0, nsnull);
 
-			if (m_nsIPop3URL)
-				m_nsIPop3URL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
+			if (mailnewsurl)
+				mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 
             m_pop3ConData->pause_for_read = PR_FALSE;
             break;
