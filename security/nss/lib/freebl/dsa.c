@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.2 2000/09/11 04:17:01 wtc%netscape.com Exp $
+ * $Id: dsa.c,v 1.3 2000/09/16 15:56:06 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -244,10 +244,10 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest,
     **
     ** Signature is tuple (r, s)
     */
-    err = mp_to_unsigned_octets(&r, signature->data, DSA_SUBPRIME_LEN);
+    err = mp_to_fixlen_octets(&r, signature->data, DSA_SUBPRIME_LEN);
     if (err < 0) goto cleanup; else err = MP_OKAY;
-    err = mp_to_unsigned_octets(&s, signature->data + DSA_SUBPRIME_LEN, 
-                                    DSA_SUBPRIME_LEN);
+    err = mp_to_fixlen_octets(&s, signature->data + DSA_SUBPRIME_LEN, 
+                                  DSA_SUBPRIME_LEN);
     if (err < 0) goto cleanup; else err = MP_OKAY;
 cleanup:
     mp_clear(&p);
