@@ -3073,7 +3073,7 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
         pSourceCell->Unlink();
         pSourceCell->InsertAfter(pReplaceCell);
         // then delete the replace cell
-        pReplaceCell->Unlink;
+        pReplaceCell->Unlink();
         delete pReplaceCell;
 
         // Use size data from the cell we replaced
