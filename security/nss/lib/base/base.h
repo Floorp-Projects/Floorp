@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.2 $ $Date: 2000/05/12 18:43:25 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.3 $ $Date: 2000/05/17 20:19:23 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1022,6 +1022,40 @@ nsslibc_memequal
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 
 #define nsslibc_offsetof(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
+
+/*
+ * nss_NewThreadPrivateIndex
+ * 
+ */
+
+NSS_EXTERN PRStatus
+nss_NewThreadPrivateIndex
+(
+  PRUintn *ip
+);
+
+/*
+ * nss_GetThreadPrivate
+ *
+ */
+
+NSS_EXTERN void *
+nss_GetThreadPrivate
+(
+  PRUintn i
+);
+
+/*
+ * nss_SetThreadPrivate
+ *
+ */
+
+NSS_EXTERN void
+nss_SetThreadPrivate
+(
+  PRUintn i,
+  void *v
+);
 
 
 PR_END_EXTERN_C

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.2 $ $Date: 2000/05/17 20:19:23 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -94,7 +94,8 @@ error_once_function
   void
 )
 {
-  return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free);
+  return nss_NewThreadPrivateIndex(&error_stack_index);
+  /* return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free); */
 }
 
 /*
@@ -124,7 +125,7 @@ error_get_my_stack
     }
   }
 
-  rv = (error_stack *)PR_GetThreadPrivate(error_stack_index);
+  rv = (error_stack *)nss_GetThreadPrivate(error_stack_index);
   if( (error_stack *)NULL == rv ) {
     /* Doesn't exist; create one */
     new_size = 16;
@@ -152,7 +153,7 @@ error_get_my_stack
   }
 
   /* Set the value, whether or not the allocation worked */
-  PR_SetThreadPrivate(error_stack_index, new_stack);
+  nss_SetThreadPrivate(error_stack_index, new_stack);
   return new_stack;
 }
 
