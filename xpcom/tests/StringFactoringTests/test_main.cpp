@@ -6,6 +6,8 @@
 
 #include "nsString.h"
 #include "nsSharedString.h"
+#include "nsFragmentedString.h"
+#include "nsReadableUtils.h"
 
 #ifdef TEST_STD_STRING
 #include "nsStdStringWrapper.h"
@@ -106,6 +108,19 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
 
 template <class CharT>
 int
+test_Vidur_functions( const basic_nsAReadableString<CharT>& aString )
+  {
+    char* char_copy = ToNewCString(aString);
+    PRUnichar* PRUnichar_copy = ToNewUnicode(aString);
+
+    nsMemory::Free(PRUnichar_copy);
+    nsMemory::Free(char_copy);
+
+    return 0;
+  }
+
+template <class CharT>
+int
 test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
   {
     int tests_failed = 0;
@@ -163,17 +178,17 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading(3);
+    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading()+=3;
     if ( *iter1 != CharT('l') )
       {
-        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading(n)|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading()+=n|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading(2);
+    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading()-=2;
     if ( *iter2 != CharT('l') )
       {
-        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading(n)|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading()-=n|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
         ++tests_failed;
       }
 
@@ -198,6 +213,8 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
 
     tests_failed += test_multifragment_iterators(aReadable);
     // tests_failed += test_deprecated_GetBufferGetUnicode(aReadable);
+
+    test_Vidur_functions(aReadable);
 
     return tests_failed;
   }
@@ -409,6 +426,13 @@ main()
   {	
     int tests_failed = 0;
   	cout << "String unit tests.  Compiled " __DATE__ " " __TIME__ << endl;
+
+    {
+      nsFragmentedCString fs0;
+      fs0.Append("Hello");
+      tests_failed += test_readable_hello(fs0);
+      tests_failed += test_writable(fs0);
+    }
 
 
     {
