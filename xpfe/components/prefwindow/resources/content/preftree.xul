@@ -33,7 +33,7 @@
 
 <script>
 <![CDATA[
-  _elementIDs = []; // hack
+  var _elementIDs = []; // hack
 ]]>
 </script>
   
