@@ -1287,6 +1287,8 @@ lo_BlockedImageLayout(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	image->border_horiz_space = FEUNITS_X(image->border_horiz_space,
 						context);
 
+	lo_FillInImageGeometry( state, image );
+
 	/*
 	 * Make sure we don't load insecure images inside
 	 * a secure document.
@@ -1393,12 +1395,9 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	 * Assign it a properly sequencial element id.
 	 */
 
-	/*
 	image->ele_id = NEXT_ELEMENT;
 	image->x = state->x;
 	image->y = state->y;
-	*/
-
 
 	image->anchor_href = state->current_anchor;
 
@@ -1451,8 +1450,6 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		tmp_attr.fg.blue =  STATE_UNVISITED_ANCHOR_BLUE(state);
 		image->text_attr = lo_FetchTextAttr(state, &tmp_attr);
 	}
-
-	lo_FillInImageGeometry( state, image );
 
     /* During relayout the editor is not allowed to block. */
     if ( (image->width == 0)||(image->height == 0))
@@ -1888,8 +1885,8 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		else
 		{
 			image->percent_width = 0;
-			val = FEUNITS_X(val, context);
-		}
+			val = FEUNITS_X(val, context);			
+		}		
 		image->width = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
