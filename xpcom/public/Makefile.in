@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 
 EXPORTS		= \
-		  COM_auto_ptr.h \
+		  nsCOMPtr.h \
 		  nsCom.h \
 		  nsAgg.h \
 		  nsDebug.h \

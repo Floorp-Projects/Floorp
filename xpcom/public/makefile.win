@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 DEPTH=..\..
 
 EXPORTS = \
-	COM_auto_ptr.h			\
+	nsCOMPtr.h			\
 	nsAgg.h			\
 	nsCom.h			\
 	nsDebug.h		\
