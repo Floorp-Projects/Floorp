@@ -2873,6 +2873,10 @@ js_GetStringBytes(JSString *str)
         he = *hep;
         if (he) {
             bytes = (char *) he->value;
+
+            /* Try to catch failure to JS_ShutDown between runtime epochs. */
+            JS_ASSERT((*bytes == '\0' && JSSTRING_LENGTH(str) == 0) ||
+                      *bytes == (char) JSSTRING_CHARS(str)[0]);
         } else {
             bytes = js_DeflateString(NULL, JSSTRING_CHARS(str),
                                      JSSTRING_LENGTH(str));
