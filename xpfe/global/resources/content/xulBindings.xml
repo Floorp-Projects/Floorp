@@ -325,6 +325,24 @@
         <html:textarea class="textfield-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
       </xul:box>
     </content>
+    <implementation>
+      <property name="inputField" readonly="true">
+       <![CDATA[
+        var v = document.getAnonymousNodes(this);
+        var input = null;
+        for (var i = 0; i < v.length; i++) {
+          try {
+            var l = v[i].getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "textarea");
+            if (l.length > 0) {
+              input = l[0];
+              break;
+            }
+          } catch (e) {} 
+        }
+        input;
+      ]]>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="text-label">
