@@ -863,7 +863,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
 
         // CONTENT LENGTH
         if (!thisEntry->mSupressSize) {
-            aString.Append(thisEntry->mContentLen);
+            aString.AppendInt(thisEntry->mContentLen);
         } else {
             aString.Append('0');
         }

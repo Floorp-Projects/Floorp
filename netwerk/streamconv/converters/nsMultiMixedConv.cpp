@@ -294,7 +294,7 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
 
     nsCAutoString dummyURIStr(uriSpec);
     dummyURIStr.Append("##");
-    dummyURIStr.Append((PRInt32) mPartCount, 10 /* radix */);
+    dummyURIStr.AppendInt(mPartCount, 10 /* radix */);
 
     return mIOService->NewURI(dummyURIStr.GetBuffer(), nsnull, _retval);
 }
