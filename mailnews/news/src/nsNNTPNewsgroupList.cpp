@@ -177,12 +177,12 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList(nsINNTPHost* host,
     Init(host, newsgroup);
 }
 
-#if 0
+
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, (NS_INNTPNEWSGROUPLIST_IID));
-#endif
+
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_INNTPNEWSGROUPLIST_IID);
 
 nsresult
 nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
@@ -231,13 +231,6 @@ nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
 
     return NS_MSG_SUCCESS;
 }
-
-/* not supposed to be implemented */
-#if 0
-nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
-{
-}
-#endif
 
 nsresult
 nsNNTPNewsgroupList::CleanUp() {
