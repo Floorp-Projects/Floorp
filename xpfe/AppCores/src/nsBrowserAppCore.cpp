@@ -48,6 +48,10 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
+#include "nsIDocumentViewer.h"
+#include "nsIDOMHTMLImageElement.h"
+
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
@@ -83,6 +87,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
+  mWebShell             = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -95,6 +100,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mContentWindow);
   NS_IF_RELEASE(mContentScriptContext);
   NS_IF_RELEASE(mWebShellWin);
+  NS_IF_RELEASE(mWebShell);
   DecInstanceCount();  
 }
 
@@ -239,6 +245,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP    
 nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 {
@@ -253,6 +260,8 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   nsIWebShell * webShell;
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
+    mWebShell = webShell;
+    NS_ADDREF(mWebShell);
     const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
@@ -334,9 +343,58 @@ done:
   return NS_OK;
 }
 
+//----------------------------------------
+void nsBrowserAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName)
+{
+  PRInt32 count = 0;
+  nsCOMPtr<nsIDOMNode> button(FindNamedDOMNode(nsAutoString("button"), aParentNode, count, aBtnNum)); 
+  count = 0;
+  nsCOMPtr<nsIDOMNode> img(FindNamedDOMNode(nsAutoString("img"), button, count, 1)); 
+  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(img));
+  if (imgElement) {
+    char * str = aResName.ToNewCString();
+    imgElement->SetSrc(str);
+    delete [] str;
+  }
+
+}
+
+
 NS_IMETHODIMP    
 nsBrowserAppCore::PrintPreview()
-{  
+{ 
+  if (!mWebShell) 
+    return NS_OK;
+
+  //////////////////////////////////////////////////////
+  // This is Experimental code showing one approach 
+  // to dynamically changing the toolbar icons.
+  //////////////////////////////////////////////////////
+
+  // first get the toolbar child WebShell
+  nsCOMPtr<nsIContentViewer> cv;
+  mWebShell->GetContentViewer(getter_AddRefs(cv));
+  if (!cv)
+    return NS_OK;
+   
+  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+  if (!docv)
+    return NS_OK;
+
+  nsCOMPtr<nsIDocument> doc;
+  docv->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMNode> parentNode(GetParentNodeFromDOMDoc(domDoc)); 
+
+  SetButtonImage(parentNode, 1, "resource:/res/toolbar/TB_NewBack.gif");
+  SetButtonImage(parentNode, 2, "resource:/res/toolbar/TB_NewForward.gif");
+  SetButtonImage(parentNode, 3, "resource:/res/toolbar/TB_NewReload.gif");
+  SetButtonImage(parentNode, 4, "resource:/res/toolbar/TB_NewStop.gif");
+  SetButtonImage(parentNode, 5, "resource:/res/toolbar/TB_NewHome.gif"); 
+  SetButtonImage(parentNode, 6, "resource:/res/toolbar/TB_NewPrint.gif"); 
   return NS_OK;
 }
 

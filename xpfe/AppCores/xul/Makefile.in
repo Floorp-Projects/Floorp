@@ -96,6 +96,12 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/TB_WhatsRelated_mo.gif \
 	$(srcdir)/resources/StatusBar-insecure.gif \
 	$(srcdir)/resources/StatusBar-secure.gif \
+	$(srcdir)/resources/TB_NewBack.gif \
+	$(srcdir)/resources/TB_NewForward.gif \
+	$(srcdir)/resources/TB_NewReload.gif \
+	$(srcdir)/resources/TB_NewStop.gif \
+	$(srcdir)/resources/TB_NewHome.gif \
+	$(srcdir)/resources/TB_NewPrint.gif \
 	$(NULL)
 
 install:: 

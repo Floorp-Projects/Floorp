@@ -95,6 +95,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
   protected:
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
+    void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 
     nsString            mEnableScript;     
     nsString            mDisableScript;     
@@ -106,6 +107,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIDOMWindow       *mContentWindow;
 
     nsIWebShellWindow  *mWebShellWin;
+    nsIWebShell *       mWebShell;
+
 };
 
 #endif // nsBrowserAppCore_h___

@@ -157,6 +157,12 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\resources\TB_WhatsRelated_mo.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\StatusBar-insecure.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\StatusBar-secure.gif	$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewBack.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewForward.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewReload.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewStop.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewHome.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\TB_NewPrint.gif			$(DIST)\bin\res\toolbar
 
 clobber::
 	rm -f $(DIST)\lib\$(MODULE).lib
@@ -230,3 +236,9 @@ clobber::
 	rm -f $(DIST)\res\samples\TB_WhatsRelated_mo.gif 
 	rm -f $(DIST)\res\samples\StatusBar-insecure.gif 
 	rm -f $(DIST)\res\samples\StatusBar-secure.gif	
+	rm -f $(DIST)\res\samples\TB_NewBack.gif	
+	rm -f $(DIST)\res\samples\TB_NewForward.gif	
+	rm -f $(DIST)\res\samples\TB_NewReload.gif	
+	rm -f $(DIST)\res\samples\TB_NewStop.gif	
+	rm -f $(DIST)\res\samples\TB_NewHome.gif	
+	rm -f $(DIST)\res\samples\TB_NewPrint.gif	
