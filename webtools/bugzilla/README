@@ -28,8 +28,8 @@ First, you need some other things:
 	    Date::Format and Chart::Base available from your nearest
 			CPAN server. See http://www.perl.com/CPAN.
       ftp://ftp.cpan.org/pub/CPAN/authors/id/GBARR/TimeDate-1.08.tar.gz
-      ftp://ftp.cpan.com/pub/CPAN/authors/id/DBONNER/Chart-0.99.tar.gz
-      ftp://ftp.cpan.com/pub/CPAN/authors/id/LDS/GD-1.18.tar.gz
+      ftp://ftp.cpan.org/pub/CPAN/authors/id/DBONNER/Chart-0.99.tar.gz
+      ftp://ftp.cpan.org/pub/CPAN/authors/id/LDS/GD-1.18.tar.gz
    3) Some kind of HTTP server so you could use CGI scripts
 
 Earlier versions of Bugzilla required TCL.  THIS IS NO LONGER TRUE.

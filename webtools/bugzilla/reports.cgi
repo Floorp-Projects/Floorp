@@ -42,7 +42,7 @@ my %reports =
 	"show_chart" => \&show_chart,
 	);
 
-# patch from Sam Ziegler <ziegler@mediaguaranty.com>:
+# patch from Sam Ziegler <sam@ziegler.org>:
 #
 # "reports.cgi currently has it's own idea of what 
 # the header should be. This patch sets it to the 
