@@ -107,6 +107,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   SetParent(aParent);
   mMenuBar = gtk_menu_bar_new();
   
+  gtk_widget_show(mMenuBar);
   mParent->SetMenuBar(this);
   
   return NS_OK;
