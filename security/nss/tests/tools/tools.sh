@@ -142,6 +142,7 @@ US
 liz
 liz@moz.org
 SIGNSCRIPT
+  html_msg $? 0 "Create objsign cert (signtool -G)"
 
   echo "$SCRIPTNAME: Signing a set of files ----------------------------"
   echo "signtool -Z nojs.jar -d ${R_ALICEDIR} -p \"nss\" -k objsigner \\"
