@@ -51,6 +51,8 @@ bin\components\cookie.dll
 bin\components\cookieviewer.xpt
 bin\components\directory.xpt
 bin\components\directry.dll
+bin\components\docshell.dll
+bin\components\docshell_base.xpt
 bin\components\dom.xpt
 bin\components\editor.xpt
 bin\components\ender.dll
