@@ -620,7 +620,7 @@
                   RDFC.Init(kBMDS, rParent);
                   ix = RDFC.IndexOf(rSource);
                   if (ix >= 1) 
-                    RDFC.RemoveElementAt(ix, true, rSource);
+                    RDFC.RemoveElementAt(ix, true);
                 }
                 catch (ex) { }
               }
@@ -1287,7 +1287,7 @@
           // XXX if not bookmarks separator
           var itemURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
           openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                     "BookmarkProperties", "centerscreen,chrome,dialog=no,resizable=no", 
+                     "", "centerscreen,chrome,dialog=no,resizable=no,dependent", 
                      itemURI);
         ]]></body>
       </method>
