@@ -144,21 +144,6 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
-  
-  // XXX CONSTRUCTION
-#if 0
-  } else {
-    // Do we have any children?
-    if (nsnull == mFirstChild) {
-      // No. Create a pseudo frame
-      NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "unexpected reflow reason");
-      mFirstChild = new RootContentFrame(mContent, this);
-      mChildCount = 1;
-      nsIStyleContext* style = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
-      mFirstChild->SetStyleContext(&aPresContext,style);
-      NS_RELEASE(style);
-    }
-#endif
   }
 
   // Reflow our pseudo frame. It will choose whetever height its child frame
@@ -379,16 +364,6 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
 
-    // XXX CONSTRUCTION
-#if 0
-    // Do we have any children?
-    if (nsnull == mFirstChild) {
-      // No, create the first child frame
-      reflowReason = eReflowReason_Initial;
-      CreateFirstChild(&aPresContext);
-    }
-#endif
-  
     // Resize our frames
     if (nsnull != mFirstChild) {
       if (aPresContext.IsPaginated()) {
