@@ -355,6 +355,8 @@ LINK_LIBS= \
 !endif
 #!endif
 !ifndef NO_SECURITY
+    $(DIST)\lib\jar.lib \
+    $(DIST)\lib\secmocha.lib \
     $(DIST)\lib\secnav32.lib \
     $(DIST)\lib\export.lib \
     $(BINREL_DIST)\lib\ssl.lib \
@@ -508,9 +510,6 @@ CINCLUDES= \
     /I$(DEPTH)\lib\layout \
     /I$(DEPTH)\lib\libstyle \
     /I$(DEPTH)\lib\liblayer\include \
-!ifndef NO_SECURITY
-    /I$(DEPTH)\lib\libjar \
-!endif
     /I$(DEPTH)\lib\libnet \
     /I$(DEPTH)\lib\libcnv \
     /I$(DEPTH)\lib\libi18n \
@@ -575,7 +574,11 @@ CDISTINCLUDES= \
 !endif
     /I$(XPDIST)\public \
     /I$(XPDIST)\public\coreincl \
-    /I$(XPDIST)\public\util     
+!ifndef NO_SECURITY
+    /I$(XPDIST)\public\jar \
+!endif
+    /I$(XPDIST)\public\util
+
 RCDISTINCLUDES=$(DIST)\include;$(XPDIST)\public\security
 
 #Added MQUOTE
@@ -775,13 +778,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libi18n\kinsokuf.c
 	$(DEPTH)\lib\libi18n\net_junk.c 
 	$(DEPTH)\lib\libi18n\katakana.c 
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libjar\zig.c
-	$(DEPTH)\lib\libjar\zigsign.c
-	$(DEPTH)\lib\libjar\zigver.c
-	$(DEPTH)\lib\libjar\zig-ds.c
-	$(DEPTH)\lib\libjar\zigevil.c
-!endif
 	$(DEPTH)\lib\libcnv\libcnv.c 
 	$(DEPTH)\lib\libcnv\writejpg.c 
 	$(DEPTH)\lib\libcnv\colorqnt.c 
@@ -839,9 +835,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_applt.c
 	$(DEPTH)\lib\libmocha\lm_bars.c
 	$(DEPTH)\lib\libmocha\lm_cmpnt.c
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libmocha\lm_crypt.c
-!endif
 	$(DEPTH)\lib\libmocha\lm_doc.c
 	$(DEPTH)\lib\libmocha\lm_embed.c
 	$(DEPTH)\lib\libmocha\lm_event.c
@@ -861,9 +854,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_trggr.c  
 	$(DEPTH)\lib\libmocha\lm_url.c
 	$(DEPTH)\lib\libmocha\lm_win.c
-!ifndef NO_SECURITY
-	$(DEPTH)\lib\libmocha\lm_pk11.c
-!endif
 !if "$(MOZ_BITS)" == "32"
 !ifdef MOZ_JAVA
 	$(DEPTH)\lib\libmocha\lm_jsd.c
