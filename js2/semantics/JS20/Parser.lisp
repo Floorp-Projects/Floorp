@@ -36,13 +36,17 @@
     (deftag none)
     (deftag ok)
     (deftag future)
+    (deftag uninitialised)
     
     (deftype object (union undefined null boolean float64 string namespace compound-attribute class method-closure prototype instance package global))
     (deftype primitive-object (union undefined null boolean float64 string))
     (deftype dynamic-object (union prototype dynamic-instance global))
+    
     (deftype object-opt (union object (tag none)))
     (deftype object-fut (union object (tag future)))
     (deftype object-fut-opt (union object (tag future none)))
+    (deftype object-uninit (union object (tag uninitialised)))
+    (deftype object-uninit-fut (union object (tag uninitialised future)))
     
     
     (%heading (3 :semantics) "Undefined")
@@ -64,6 +68,7 @@
       (name string))
     
     (define public-namespace namespace (new namespace "public"))
+    (define enumerable-namespace namespace (new namespace "enumerable"))
     
     
     (%heading (4 :semantics) "Qualified Names")
@@ -82,14 +87,11 @@
     (deftag final)
     (deftype member-modifier (tag none static constructor operator abstract virtual final))
     
-    (deftag may-override)
-    (deftag override)
-    (deftype override-modifier (tag none may-override override))
+    (deftype override-modifier (tag none true false undefined))
     
     (deftuple compound-attribute
       (namespaces (list-set namespace))
       (explicit boolean)
-      (enumerable boolean)
       (dynamic boolean)
       (compile boolean)
       (member-mod member-modifier)
@@ -107,7 +109,6 @@
       (static-write-bindings (list-set static-binding) :var)
       (instance-read-bindings (list-set instance-binding) :var)
       (instance-write-bindings (list-set instance-binding) :var)
-      (v-table-entries (list-set v-table-entry) :var)
       (instance-init-order (vector instance-variable))
       (complete boolean :var)
       (super class-opt)
@@ -116,34 +117,9 @@
       (dynamic boolean)
       (primitive boolean)
       (final boolean)
-      (call invoker)
-      (construct invoker))
+      (call (-> (object argument-list phase) object))
+      (construct (-> (object argument-list phase) object)))
     (deftype class-opt (union class (tag none)))
-    (deftype class-fut (union class (tag future)))
-    
-    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (primitive boolean) (final boolean)) class
-      (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
-        (todo))
-      (function (construct (this object :unused) (args argument-list :unused) (phase phase :unused)) object
-        (todo))
-      (const private-namespace namespace (new namespace "private"))
-      (return (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                   (list-set-of v-table-entry) (vector-of instance-variable)
-                   true superclass null private-namespace dynamic primitive final call construct)))
-    
-    (define object-class class (make-built-in-class none false true false))
-    (define undefined-class class (make-built-in-class object-class false true true))
-    (define null-class class (make-built-in-class object-class false true true))
-    (define boolean-class class (make-built-in-class object-class false true true))
-    (define number-class class (make-built-in-class object-class false true true))
-    (define string-class class (make-built-in-class object-class false false true))
-    (define character-class class (make-built-in-class string-class false false true))
-    (define namespace-class class (make-built-in-class object-class false false true))
-    (define attribute-class class (make-built-in-class object-class false false true))
-    (define class-class class (make-built-in-class object-class false false true))
-    (define function-class class (make-built-in-class object-class false false true))
-    (define prototype-class class (make-built-in-class object-class true false true))
-    (define package-class class (make-built-in-class object-class true false true))
     
     (%text :comment "Return an ordered list of class " (:local c) :apostrophe "s ancestors, including " (:local c) " itself.")
     (define (ancestors (c class)) (vector class)
@@ -190,6 +166,7 @@
       (type class)
       (call invoker)
       (construct invoker)
+      (env environment)
       (typeof-string string)
       (slots (list-set slot) :var))
     
@@ -197,6 +174,7 @@
       (type class)
       (call invoker)
       (construct invoker)
+      (env environment)
       (typeof-string string)
       (slots (list-set slot) :var)
       (dynamic-properties (list-set dynamic-property) :var))
@@ -204,7 +182,7 @@
     (%heading (4 :semantics) "Slots")
     (defrecord slot
       (id instance-variable)
-      (value object-opt :var))
+      (value object-uninit :var))
     
     
     (%heading (3 :semantics) "Packages")
@@ -280,7 +258,7 @@
     
     (%text :comment "The first " (:type object) " is the " (:character-literal "this") " value. When the "
            (:type phase) " parameter is " (:tag compile) ", only compile-time expressions are allowed.")
-    (deftype invoker (-> (object argument-list phase) object))
+    (deftype invoker (-> (object argument-list environment phase) object))
     
     
     (%heading (2 :semantics) "Unary Operators")
@@ -330,8 +308,7 @@
            :apostrophe "s scope. The last frame is always the " (:type system-frame)
            ". The next-to-last frame is always a " (:type package) " or " (:type global) " frame.")
     (deftype environment (vector frame))
-    (deftype frame (union system-frame global package function-frame class regional-block-frame local-block-frame))
-    (deftype regional-frame (union system-frame global package function-frame class regional-block-frame))
+    (deftype frame (union system-frame global package function-frame class block-frame))
     
     (defrecord system-frame
       (static-read-bindings (list-set static-binding) :var)
@@ -344,13 +321,7 @@
       (this object-fut-opt)
       (this-from-prototype boolean))
     
-    (deftype block-frame (union regional-block-frame local-block-frame))
-    (defrecord regional-block-frame
-      (static-read-bindings (list-set static-binding) :var)
-      (static-write-bindings (list-set static-binding) :var)
-      (plurality plurality))
-    
-    (defrecord local-block-frame
+    (defrecord block-frame
       (static-read-bindings (list-set static-binding) :var)
       (static-write-bindings (list-set static-binding) :var)
       (plurality plurality))
@@ -359,30 +330,22 @@
     
     
     (%heading (3 :semantics) "Members")
-    (deftag indexable)
-    (deftag enumerable)
-    (deftype visibility-modifier (tag none indexable enumerable))
-    
     (deftuple static-binding 
       (qname qualified-name)
       (content static-member)
-      (visibility-modifier visibility-modifier))
+      (explicit boolean))
     
     (deftuple instance-binding 
       (qname qualified-name)
-      (index v-table-index)
-      (visibility-modifier visibility-modifier))
-    
-    (defrecord v-table-index)
-    (deftype v-table-index-opt (union v-table-index (tag none)))
+      (content instance-member))
     
     (deftag forbidden)
     (deftype static-member (union (tag forbidden) variable hoisted-var static-method accessor))
     (deftype static-member-opt (union static-member (tag none)))
     
     (defrecord variable
-      (type class-fut)
-      (value object-fut :var)
+      (type class :opt-const)
+      (value object-uninit-fut :var)
       (immutable boolean))
     
     (defrecord hoisted-var
@@ -398,26 +361,24 @@
       (code instance)) ;Getter or setter function code
     
     
-    (deftuple v-table-entry
-      (index v-table-index)
-      (final boolean)
-      (content instance-member))
-    
-    
     (deftype instance-member (union instance-variable instance-method instance-accessor))
+    (deftype instance-member-opt (union instance-member (tag none)))
     
     (defrecord instance-variable
-      (type class)
-      (initial-value object-opt)
-      (immutable boolean))
+      (type class :opt-const)
+      (eval-initial-value (-> () object-opt))
+      (immutable boolean)
+      (final boolean))
     
     (defrecord instance-method
       (type signature)
-      (code (union (tag abstract) instance)))  ;Method code
+      (code (union instance (tag abstract)))  ;Method code
+      (final boolean))
     
     (defrecord instance-accessor
-      (type class)
-      (code instance))  ;Getter or setter function code
+      (type class :opt-const)
+      (code (union instance (tag abstract)))  ;Getter or setter function code
+      (final boolean))
     
     
     (%heading (1 :semantics) "Data Operations")
@@ -565,27 +526,19 @@
         (cond
          ((= a b attribute) (return a))
          ((in b namespace :narrow-both)
-          (return (new compound-attribute (list-set a b) false false false false none none false false)))
+          (return (new compound-attribute (list-set a b) false false false none none false false)))
          (nil
           (return (set-field b namespaces (set+ (& namespaces b) (list-set a)))))))
        ((in b namespace :narrow-both)
         (return (set-field a namespaces (set+ (& namespaces a) (list-set b)))))
        (nil
-        (// "Both " (:local a) " and " (:local b)
-            " are compound attributes. Ensure that they have no duplicate or conflicting contents other than namespaces.")
-        (if (or (and (& explicit a) (& explicit b))
-                (and (& enumerable a) (& enumerable b))
-                (and (& dynamic a) (& dynamic b))
-                (and (& compile a) (& compile b))
-                (and (not-in (& member-mod a) (tag none)) (not-in (& member-mod b) (tag none)))
-                (and (not-in (& override-mod a) (tag none)) (not-in (& override-mod b) (tag none)))
-                (and (& prototype a) (& prototype b))
-                (and (& unused a) (& unused b)))
+        (// "Both " (:local a) " and " (:local b) " are compound attributes. Ensure that they have no conflicting contents.")
+        (if (or (and (not-in (& member-mod a) (tag none)) (not-in (& member-mod b) (tag none)) (/= (& member-mod a) (& member-mod b) member-modifier))
+                (and (not-in (& override-mod a) (tag none)) (not-in (& override-mod b) (tag none)) (/= (& override-mod a) (& override-mod b) override-modifier)))
           (throw bad-value-error)
           (return (new compound-attribute
                        (set+ (& namespaces a) (& namespaces b))
                        (or (& explicit a) (& explicit b))
-                       (or (& enumerable a) (& enumerable b))
                        (or (& dynamic a) (& dynamic b))
                        (or (& compile a) (& compile b))
                        (if (not-in (& member-mod a) (tag none)) (& member-mod a) (& member-mod b))
@@ -598,8 +551,8 @@
            " even if it was a simple namespace, " (:tag true) ", or " (:tag none) ".")
     (define (to-compound-attribute (a attribute-opt-not-false)) compound-attribute
       (case a
-        (:select (tag none true) (return (new compound-attribute (list-set-of namespace) false false false false none none false false)))
-        (:narrow namespace (return (new compound-attribute (list-set a) false false false false none none false false)))
+        (:select (tag none true) (return (new compound-attribute (list-set-of namespace) false false false none none false false)))
+        (:narrow namespace (return (new compound-attribute (list-set a) false false false none none false false)))
         (:narrow compound-attribute (return a))))
     
     
@@ -658,7 +611,7 @@
     (define (write-reference (r obj-or-ref-optional-limit) (o object) (phase (tag run))) void
       (case r
         (:select object (throw reference-error))
-        (:narrow lexical-reference (lexical-write (& env r) (& variable-multiname r) o (& cxt r) phase))
+        (:narrow lexical-reference (lexical-write (& env r) (& variable-multiname r) o (not (& strict (& cxt r))) phase))
         (:narrow dot-reference
           (const result (tag none ok) (write-property (& base r) (& property-multiname r) property-lookup true o phase))
           (rwhen (in result (tag none))
@@ -710,21 +663,21 @@
       (return none))
     
     
-    (%text :comment (:global-call get-regional-frame env) "Returns the most specific frame in " (:local env)
-           " that is not a local block frame.")
-    (define (get-regional-frame (env environment)) regional-frame
-      (const frame frame (nth env 0))
-      (case frame
-        (:narrow regional-frame (return frame))
-        (:select local-block-frame (return (get-regional-frame (subseq env 1))))))
-    
-    
-    (%text :comment (:global-call get-regional-environment env) " returns all frames in " (:local env) " up to and including the first regional frame.")
+    (%text :comment (:global-call get-regional-environment env) " returns all frames in " (:local env) " up to and including the first regional frame. "
+           "A regional frame is either any frame other than a local block frame or a local block frame whose immediate enclosing frame is a class.")
     (define (get-regional-environment (env environment)) (vector frame)
       (var i integer 0)
-      (while (in (nth env i) local-block-frame)
+      (while (in (nth env i) block-frame)
         (<- i (+ i 1)))
+      (when (and (/= i 0) (in (nth env i) class))
+        (<- i (- i 1)))
       (return (subseq env 0 i)))
+    
+    
+    (%text :comment (:global-call get-regional-frame env) " returns the most specific regional frame in " (:local env) ".")
+    (define (get-regional-frame (env environment)) frame
+      (const regional-env (vector frame) (get-regional-environment env))
+      (return (nth regional-env (- (length regional-env) 1))))
     
     
     (define (get-package-or-global-frame (env environment)) (union package global)
@@ -733,49 +686,70 @@
       (return g))
     
     
-    (%heading (3 :semantics) "Adding Definitions")
+    (%heading (3 :semantics) "Access Utilities")
     (deftag read)
     (deftag write)
     (deftag read-write)
-    (deftag read-no-write)
-    (deftype definition-access (tag read write read-write read-no-write))
-    (deftype variable-access (tag read-write read-no-write))
+    (deftype access (tag read write read-write))
     
-    (define (bind-definition (env environment) (id string) (a compound-attribute) (default-member-mod member-modifier) (access definition-access)
-                             (make-static-member (-> () static-member)) (make-instance-member (-> () instance-member)))
-            void
-      (var member-mod member-modifier (& member-mod a))
-      (when (in member-mod (tag none))
-        (if (& compile a)
-          (<- member-mod static)
-          (<- member-mod default-member-mod)))
-      (const regional-env (vector frame) (get-regional-environment env))
-      (const inner-frame frame (nth regional-env 0))
-      (const other-frames-in-region (vector frame) (subseq regional-env 1))
-      (const regional-frame frame (nth regional-env (- (length regional-env) 1)))
-      (var namespaces (list-set namespace) (& namespaces a))
-      (var c class-opt none)
-      (when (in regional-frame class :narrow-true)
-        (<- c regional-frame))
-      (cond
-       ((empty namespaces)
-        (<- namespaces (list-set public-namespace))))
-      (// "***** If in a class, consider overrides and adjust list of namespaces.")
-      (const multiname multiname (map namespaces ns (new qualified-name ns id)))
-      (rwhen (some (set+ (& static-read-bindings inner-frame) (& static-write-bindings inner-frame)) b (set-in (& qname b) multiname))
+    
+    (%text :comment (:global-call static-bindings-with-access f access) " returns the set of static bindings in frame " (:local f)
+           " which are used for reading, writing, or either, as selected by " (:local access) ".")
+    (define (static-bindings-with-access (f frame) (access access)) (list-set static-binding)
+      (case access
+        (:select (tag read) (return (& static-read-bindings f)))
+        (:select (tag write) (return (& static-write-bindings f)))
+        (:select (tag read-write) (return (set+ (& static-read-bindings f) (& static-write-bindings f))))))
+    
+    
+    (%text :comment (:global-call instance-bindings-with-access c access) " returns the set of instance bindings in class " (:local c)
+           " which are used for reading, writing, or either, as selected by " (:local access) ".")
+    (define (instance-bindings-with-access (c class) (access access)) (list-set instance-binding)
+      (case access
+        (:select (tag read) (return (& instance-read-bindings c)))
+        (:select (tag write) (return (& instance-write-bindings c)))
+        (:select (tag read-write) (return (set+ (& instance-read-bindings c) (& instance-write-bindings c))))))
+    
+    
+    (%text :comment (:global-call add-static-bindings f access new-bindings) " adds " (:local new-bindings)
+           " to the set of readable, writable, or both (as selected by " (:local access) ") static bindings in frame " (:local f) ".")
+    (define (add-static-bindings (f frame) (access access) (new-bindings (list-set static-binding))) void
+      (when (in access (tag read read-write))
+        (&= static-read-bindings f (set+ (& static-read-bindings f) new-bindings)))
+      (when (in access (tag write read-write))
+        (&= static-write-bindings f (set+ (& static-write-bindings f) new-bindings))))
+    
+    
+    (%heading (3 :semantics) "Adding Static Definitions")
+    (define (define-static-member (env environment) (id string) (namespaces (list-set namespace)) (override-mod override-modifier) (explicit boolean)
+              (access access) (m static-member))
+            multiname
+      (const local-frame frame (nth env 0))
+      (rwhen (or (not-in override-mod (tag none)) (and explicit (not-in local-frame package)))
         (throw definition-error))
-      (for-each other-frames-in-region frame
-        (rwhen (some (set+ (& static-read-bindings frame) (& static-write-bindings frame)) b (and (set-in (& qname b) multiname) (not-in (& content b) (tag forbidden))))
+      (var namespaces2 (list-set namespace) namespaces)
+      (when (empty namespaces2)
+        (<- namespaces2 (list-set public-namespace)))
+      (const multiname multiname (map namespaces2 ns (new qualified-name ns id)))
+      (const regional-env (vector frame) (get-regional-environment env))
+      (const regional-frame frame (nth regional-env (- (length regional-env) 1)))
+      (rwhen (some (static-bindings-with-access local-frame access) b (set-in (& qname b) multiname))
+        (throw definition-error))
+      (for-each (subseq regional-env 1) frame
+        (rwhen (some (static-bindings-with-access frame access) b (and (set-in (& qname b) multiname) (not-in (& content b) (tag forbidden))))
           (throw definition-error)))
       (rwhen (and (in regional-frame global :narrow-true)
                   (some (& dynamic-properties regional-frame) dp (set-in (new qualified-name public-namespace (& name dp)) multiname)))
         (throw definition-error))
-      (var v variable)
-      ;Check attributes.
-      ;(if (and (in regional-frame class) (
-      ;*****
-      (todo))
-    
+      (const new-bindings (list-set static-binding) (map multiname qname (new static-binding qname m explicit)))
+      (add-static-bindings local-frame access new-bindings)
+      (// "Mark the bindings of " (:local multiname) " as " (:tag forbidden)
+          " in all non-innermost frames in the current region if they haven" :apostrophe "t been marked as such already.")
+      (const new-forbidden-bindings (list-set static-binding) (map multiname qname (new static-binding qname forbidden true)))
+      (for-each (subseq regional-env 1) frame
+        (add-static-bindings frame access new-forbidden-bindings))
+      (return multiname))
+      
     
     (define (define-hoisted-var (env environment) (id string)) void
       (const qname qualified-name (new qualified-name public-namespace id))
@@ -784,7 +758,7 @@
       (assert (in regional-frame (union global function-frame) :narrow-true)
               (:local env) " is either the " (:type global) " frame or a " (:type function-frame)
               " because hoisting only occurs into global or function scope.")
-      (const existing-bindings (list-set static-binding) (map (set+ (& static-read-bindings regional-frame) (& static-write-bindings regional-frame)) b b
+      (const existing-bindings (list-set static-binding) (map (static-bindings-with-access regional-frame read-write) b b
                                                               (= (& qname b) qname qualified-name)))
       (cond
        ((empty existing-bindings)
@@ -792,18 +766,11 @@
                     (some (& dynamic-properties regional-frame) dp (= (& name dp) id string)))
           (throw definition-error))
         (const v hoisted-var (new hoisted-var undefined))
-        (&= static-read-bindings regional-frame (set+ (& static-read-bindings regional-frame) (list-set (new static-binding qname v indexable))))
-        (&= static-write-bindings regional-frame (set+ (& static-write-bindings regional-frame) (list-set (new static-binding qname v indexable)))))
+        (add-static-bindings regional-frame read-write (list-set (new static-binding qname v false))))
        ((some existing-bindings b (not-in (& content b) hoisted-var))
         (throw definition-error))
        (nil
         (// "A hoisted binding of the same " (:character-literal "var") " already exists, so there is no need to create another one."))))
-    
-    
-    (define (create-variable (env environment :unused) (access variable-access :unused) (hoisted-var boolean :unused)
-                             (attributes attribute-opt-not-false :unused) (name string :unused) (type class-opt :unused) (value object-opt :unused))
-            void
-      (todo))
     
     
     (define (instantiate-block-frame (template block-frame :unused)) block-frame
@@ -814,6 +781,93 @@
     (define (copy-bindings (bindings (list-set binding))) (list-set binding)
       (todo))
     |#
+    
+    
+    (%heading (3 :semantics) "Adding Instance Definitions")
+    (deftuple override-status-pair
+      (read-status override-status)
+      (write-status override-status))
+    
+    (deftag potential-conflict)
+    (deftuple override-status
+      (overridden-member (union instance-member (tag none potential-conflict)))
+      (multiname multiname))
+    
+    
+    (define (search-for-overrides (c class) (id string) (namespaces (list-set namespace)) (access (tag read write)))
+            override-status
+      (var multiname multiname (list-set-of qualified-name))
+      (var overridden-member instance-member-opt none)
+      (const s class-opt (& super c))
+      (for-each namespaces ns
+        (const qname qualified-name (new qualified-name ns id))
+        (const m instance-member-opt (find-instance-member s qname access))
+        (when (not-in m (tag none) :narrow-true)
+          (<- multiname (set+ multiname (list-set qname)))
+          (cond
+           ((in overridden-member (tag none) :narrow-false) (<- overridden-member m))
+           ((/= overridden-member m instance-member) (throw definition-error)))))
+      (return (new override-status overridden-member multiname)))
+    
+    
+    (define (resolve-overrides (c class) (cxt context) (id string) (namespaces (list-set namespace)) (access (tag read write)) (expect-method boolean))
+            override-status
+      (var os override-status)
+      (cond
+       ((empty namespaces)
+        (<- os (search-for-overrides c id (& open-namespaces cxt) access))
+        (when (in (& overridden-member os) (tag none))
+          (<- os (new override-status none (list-set (new qualified-name public-namespace id))))))
+       (nil
+        (const defined-multiname multiname (map namespaces ns (new qualified-name ns id)))
+        (const os2 override-status (search-for-overrides c id namespaces access))
+        (cond
+         ((in (& overridden-member os2) (tag none))
+          (const os3 override-status (search-for-overrides c id (set- (& open-namespaces cxt) namespaces) access))
+          (if (in (& overridden-member os3) (tag none))
+            (<- os (new override-status none defined-multiname))
+            (<- os (new override-status potential-conflict defined-multiname))))
+         (nil
+          (<- os (new override-status (& overridden-member os2) (set+ (& multiname os2) defined-multiname)))))))
+      (rwhen (some (instance-bindings-with-access c access) b (set-in (& qname b) (& multiname os)))
+        (throw definition-error))
+      (if expect-method
+        (rwhen (not-in (& overridden-member os) (union (tag none potential-conflict) instance-method))
+          (throw definition-error))
+        (rwhen (not-in (& overridden-member os) (union (tag none potential-conflict) instance-variable instance-accessor))
+          (throw definition-error)))
+      (return os))
+    
+    
+    (define (define-instance-member (c class) (cxt context) (id string) (namespaces (list-set namespace))
+              (override-mod override-modifier) (explicit boolean) (access access) (m instance-member))
+            override-status-pair
+      (rwhen explicit
+        (throw definition-error))
+      (const expect-method boolean (in m instance-method))
+      (const read-status override-status
+        (if (in access (tag read read-write))
+          (resolve-overrides c cxt id namespaces read expect-method)
+          (new override-status none (list-set-of qualified-name))))
+      (const write-status override-status
+        (if (in access (tag write read-write))
+          (resolve-overrides c cxt id namespaces write expect-method)
+          (new override-status none (list-set-of qualified-name))))
+      (cond
+       ((or (in (& overridden-member read-status) instance-member) (in (& overridden-member write-status) instance-member))
+        (rwhen (not-in override-mod (tag true undefined))
+          (throw definition-error)))
+       ((or (in (& overridden-member read-status) (tag potential-conflict)) (in (& overridden-member write-status) (tag potential-conflict)))
+        (rwhen (not-in override-mod (tag false undefined))
+          (throw definition-error)))
+       (nil
+        (rwhen (not-in override-mod (tag none false undefined))
+          (throw definition-error))))
+      (const new-read-bindings (list-set instance-binding) (map (& multiname read-status) qname (new instance-binding qname m)))
+      (&= instance-read-bindings c (set+ (& instance-read-bindings c) new-read-bindings))
+      (const new-write-bindings (list-set instance-binding) (map (& multiname write-status) qname (new instance-binding qname m)))
+      (&= instance-write-bindings c (set+ (& instance-write-bindings c) new-write-bindings))
+      (return (new override-status-pair read-status write-status)))
     
     
     
@@ -844,7 +898,7 @@
       (throw reference-error))
     
     
-    (define (lexical-write (env environment) (multiname multiname) (new-value object) (cxt context) (phase (tag run))) void
+    (define (lexical-write (env environment) (multiname multiname) (new-value object) (create-if-missing boolean) (phase (tag run))) void
       (const kind lookup-kind (new lexical-lookup (find-this env false)))
       (var i integer 0)
       (while (< i (length env))
@@ -853,7 +907,7 @@
         (rwhen (in result (tag ok))
           (return))
         (<- i (+ i 1)))
-      (when (not (& strict cxt))
+      (when create-if-missing
         (const g (union package global) (get-package-or-global-frame env))
         (when (in g global)
           (// "Now try to write the variable into " (:local g) " again, this time allowing new dynamic bindings to be created dynamically.")
@@ -871,9 +925,8 @@
     (%heading (3 :semantics) "Property Lookup")
     
     (deftag property-lookup)
-    (deftag indexable-lookup)
     (deftuple lexical-lookup (this object-fut-opt))
-    (deftype lookup-kind (union (tag property-lookup indexable-lookup) lexical-lookup))
+    (deftype lookup-kind (union (tag property-lookup) lexical-lookup))
     
     
     (define (select-public-name (multiname multiname)) string-opt
@@ -883,16 +936,9 @@
       (return none))
         
     
-    (define (find-flat-member (frame frame) (multiname multiname) (kind lookup-kind) (access (tag read write)) (phase phase :unused))
+    (define (find-flat-member (frame frame) (multiname multiname) (access (tag read write)) (phase phase :unused))
             static-member-opt
-      (var bindings (list-set static-binding))
-      (case access
-        (:select (tag read) (<- bindings (& static-read-bindings frame)))
-        (:select (tag write) (<- bindings (& static-write-bindings frame))))
-      (var matching-bindings (list-set static-binding) (map bindings b b (set-in (& qname b) multiname)))
-      (// "If this is an indexable lookup, drop bindings that are not indexable or enumerable.")
-      (when (in kind (tag indexable-lookup))
-        (<- matching-bindings (map matching-bindings b b (in (& visibility-modifier b) (tag indexable enumerable)))))
+      (const matching-bindings (list-set static-binding) (map (static-bindings-with-access frame access) b b (set-in (& qname b) multiname)))
       (when (empty matching-bindings)
         (return none))
       (const matching-members (list-set static-member) (map matching-bindings b (& content b)))
@@ -904,18 +950,11 @@
       (return (unique-elt-of matching-members)))
     
     
-    (define (find-class-static-member (c class-opt) (multiname multiname) (kind lookup-kind) (access (tag read write)) (phase phase :unused))
-            (union (tag none) static-member v-table-index)
+    (define (find-static-member (c class-opt) (multiname multiname) (access (tag read write)) (phase phase :unused))
+            (union (tag none) static-member qualified-name)
       (var s class-opt c)
       (while (not-in s (tag none) :narrow-true)
-        (var static-bindings (list-set static-binding))
-        (case access
-          (:select (tag read) (<- static-bindings (& static-read-bindings s)))
-          (:select (tag write) (<- static-bindings (& static-write-bindings s))))
-        (var matching-static-bindings (list-set static-binding) (map static-bindings b b (set-in (& qname b) multiname)))
-        (// "If this is an indexable lookup, drop bindings that are not indexable or enumerable.")
-        (when (in kind (tag indexable-lookup))
-          (<- matching-static-bindings (map matching-static-bindings b b (in (& visibility-modifier b) (tag indexable enumerable)))))
+        (const matching-static-bindings (list-set static-binding) (map (static-bindings-with-access s access) b b (set-in (& qname b) multiname)))
         (// "Note that if the same member was found via several different bindings " (:local b)
             ", then it will appear only once in the set " (:local matching-static-members) ".")
         (const matching-static-members (list-set static-member) (map matching-static-bindings b (& content b)))
@@ -927,21 +966,18 @@
             (// "This access is ambiguous because the bindings it found belong to several different static members in the same class.")
             (throw property-access-error))))
         (// "If a static member wasn't found in a class, look for an instance member in that class as well.")
-        (var instance-bindings (list-set instance-binding))
-        (case access
-          (:select (tag read) (<- instance-bindings (& instance-read-bindings s)))
-          (:select (tag write) (<- instance-bindings (& instance-write-bindings s))))
-        (var matching-instance-bindings (list-set instance-binding) (map instance-bindings b b (set-in (& qname b) multiname)))
-        (// "If this is an indexable lookup, drop bindings that are not indexable or enumerable.")
-        (when (in kind (tag indexable-lookup))
-          (<- matching-instance-bindings (map matching-instance-bindings b b (in (& visibility-modifier b) (tag indexable enumerable)))))
-        (// "Note that if the same " (:type v-table-index) " was found via several different bindings " (:local b)
-            ", then it will appear only once in the set " (:local matching-v-table-indices) ".")
-        (const matching-v-table-indices (list-set v-table-index) (map matching-instance-bindings b (& index b)))
-        (when (nonempty matching-v-table-indices)
+        (const matching-instance-bindings (list-set instance-binding) (map (instance-bindings-with-access s access) b b (set-in (& qname b) multiname)))
+        (// "Note that if the same " (:type instance-member) " was found via several different bindings " (:local b)
+            ", then it will appear only once in the set " (:local matching-instance-members) ".")
+        (const matching-instance-members (list-set instance-member) (map matching-instance-bindings b (& content b)))
+        (when (nonempty matching-instance-members)
           (cond
-           ((= (length matching-v-table-indices) 1)
-            (return (unique-elt-of matching-v-table-indices)))
+           ((= (length matching-instance-members) 1)
+            (// "Return the qualified name of any matching binding.  It doesn" :apostrophe
+                "t matter which because they all refer to the same " (:type instance-member)
+                ", and if one is overridden by a subclass then all must be overridden in the same way by that subclass.")
+            (const b instance-binding (elt-of matching-instance-bindings))
+            (return (& qname b)))
            (nil
             (// "This access is ambiguous because the bindings it found belong to several different members in the same class.")
             (throw property-access-error))))
@@ -949,39 +985,38 @@
       (return none))
     
     
-    (define (find-class-instance-member (c class) (multiname multiname) (kind lookup-kind) (access (tag read write)) (phase phase :unused))
-            v-table-index-opt
+    (define (resolve-instance-member-name (c class) (multiname multiname) (access (tag read write)) (phase phase :unused))
+            qualified-name-opt
       (// "Start from the root class (" (:character-literal "Object") ") and proceed through more specific classes that are ancestors of " (:local c) ".")
       (for-each (ancestors c) s
-        (var instance-bindings (list-set instance-binding))
-        (case access
-          (:select (tag read) (<- instance-bindings (& instance-read-bindings s)))
-          (:select (tag write) (<- instance-bindings (& instance-write-bindings s))))
-        (var matching-instance-bindings (list-set instance-binding) (map instance-bindings b b (set-in (& qname b) multiname)))
-        (// "If this is an indexable lookup, drop bindings that are not indexable or enumerable.")
-        (when (in kind (tag indexable-lookup))
-          (<- matching-instance-bindings (map matching-instance-bindings b b (in (& visibility-modifier b) (tag indexable enumerable)))))
-        (// "Note that if the same " (:type v-table-index) " was found via several different bindings " (:local b)
+        (const matching-instance-bindings (list-set instance-binding) (map (instance-bindings-with-access s access) b b (set-in (& qname b) multiname)))
+        (// "Note that if the same " (:type instance-member) " was found via several different bindings " (:local b)
             ", then it will appear only once in the set " (:local matching-members) ".")
-        (const matching-members (list-set v-table-index) (map matching-instance-bindings b (& index b)))
-        (when (nonempty matching-members)
+        (const matching-instance-members (list-set instance-member) (map matching-instance-bindings b (& content b)))
+        (when (nonempty matching-instance-members)
           (cond
-           ((= (length matching-members) 1)
-            (return (unique-elt-of matching-members)))
+           ((= (length matching-instance-members) 1)
+            (// "Return the qualified name of any matching binding.  It doesn" :apostrophe
+                "t matter which because they all refer to the same " (:type instance-member)
+                ", and if one is overridden by a subclass then all must be overridden in the same way by that subclass.")
+            (const b instance-binding (elt-of matching-instance-bindings))
+            (return (& qname b)))
            (nil
             (// "This access is ambiguous because the bindings it found belong to several different members in the same class.")
             (throw property-access-error)))))
       (return none))
     
     
-    (define (find-v-table-entry (c class) (i v-table-index)) v-table-entry
+    (define (find-instance-member (c class-opt) (qname qualified-name-opt) (access (tag read write))) instance-member-opt
+      (rwhen (in qname (tag none) :narrow-false)
+        (return none))
       (var s class-opt c)
-      (while true
-        (assert (not-in s (tag none) :narrow-true) (:local s) " cannot be " (:tag none) " here because an entry is guaranteed to be found.")
-        (reserve e)
-        (rwhen (some (& v-table-entries s) e (= (& index e) i v-table-index) :define-true)
-          (return e))
-        (<- s (& super s) :end-narrow)))
+      (while (not-in s (tag none) :narrow-true)
+        (reserve b)
+        (rwhen (some (instance-bindings-with-access s access) b (= (& qname b) qname qualified-name) :define-true)
+          (return (& content b)))
+        (<- s (& super s) :end-narrow))
+      (return none))
     
     
     (%heading (3 :semantics) "Reading a Property")
@@ -991,24 +1026,24 @@
       (case container
         (:narrow (union undefined null boolean float64 string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
-          (const i v-table-index-opt (find-class-instance-member c multiname kind read phase))
-          (if (and (in i (tag none)) (in container dynamic-instance :narrow-true))
+          (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
+          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
             (return (read-dynamic-property container multiname kind phase))
-            (return (read-instance-member container c i phase))))
+            (return (read-instance-member container c qname phase))))
         (:narrow (union system-frame global package function-frame block-frame)
-          (const m static-member-opt (find-flat-member container multiname kind read phase))
+          (const m static-member-opt (find-flat-member container multiname read phase))
           (if (and (in m (tag none)) (in container global :narrow-true))
             (return (read-dynamic-property container multiname kind phase))
             (return (read-static-member m phase))))
         (:narrow class
           (var this (union object (tag future none generic)))
           (case kind
-            (:select (tag property-lookup indexable-lookup)
+            (:select (tag property-lookup)
               (<- this generic))
             (:narrow lexical-lookup
               (<- this (& this kind))))
-          (const m2 (union (tag none) static-member v-table-index) (find-class-static-member container multiname kind read phase))
-          (rwhen (not-in m2 v-table-index :narrow-both)
+          (const m2 (union (tag none) static-member qualified-name) (find-static-member container multiname read phase))
+          (rwhen (not-in m2 qualified-name :narrow-both)
             (return (read-static-member m2 phase)))
           (case this
             (:select (tag none) (throw property-access-error))
@@ -1022,25 +1057,32 @@
           (const superclass class-opt (& super (& limit container)))
           (rwhen (in superclass (tag none) :narrow-false)
             (return none))
-          (const i v-table-index-opt (find-class-instance-member superclass multiname kind read phase))
-          (return (read-instance-member (& instance container) superclass i phase)))))
+          (const qname qualified-name-opt (resolve-instance-member-name superclass multiname read phase))
+          (return (read-instance-member (& instance container) superclass qname phase)))))
     
     
-    (define (read-instance-member (this object) (c class) (i v-table-index-opt) (phase phase))
+    (define (read-instance-member (this object) (c class) (qname qualified-name-opt) (phase phase))
             object-opt
-      (rwhen (in i (tag none) :narrow-false)
-        (return none))
-      (const e v-table-entry (find-v-table-entry c i))
-      (const m instance-member (& content e))
+      (const m instance-member-opt (find-instance-member c qname read))
       (case m
+        (:select (tag none)
+          (return none))
         (:narrow instance-variable
           (rwhen (and (in phase (tag compile)) (not (& immutable m)))
             (throw compile-expression-error))
-          (return (& value (find-slot this m))))
+          (const v object-uninit (& value (find-slot this m)))
+          (rwhen (in v (tag uninitialised) :narrow-false)
+            (throw uninitialised-error))
+          (return v))
         (:narrow instance-method
           (return (new method-closure this m)))
         (:narrow instance-accessor
-          (return ((& call (& code m)) this (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
+          (const code (union instance (tag abstract)) (& code m))
+          (case code
+            (:narrow instance
+              (return ((& call code) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))
+            (:select (tag abstract)
+              (throw property-access-error))))))
     
     
     (define (read-static-member (m static-member-opt) (phase phase)) object-opt
@@ -1051,7 +1093,8 @@
         (:narrow hoisted-var (return (& value m)))
         (:narrow static-method (return (& code m)))
         (:narrow accessor
-          (return ((& call (& code m)) null (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
+          (const code instance (& code m))
+          (return ((& call code) null (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
     
     
     (define (read-dynamic-property (container dynamic-object) (multiname multiname) (kind lookup-kind) (phase phase))
@@ -1068,7 +1111,7 @@
         (const parent prototype-opt (& parent container))
         (rwhen (not-in parent (tag none) :narrow-true)
           (return (read-dynamic-property parent multiname kind phase))))
-      (rwhen (in kind (tag property-lookup indexable-lookup))
+      (rwhen (in kind (tag property-lookup))
         (return undefined))
       (return none))
     
@@ -1076,8 +1119,8 @@
     (define (read-variable (v variable) (phase phase)) object
       (rwhen (and (in phase (tag compile)) (not (& immutable v)))
         (throw compile-expression-error))
-      (const value object-fut (& value v))
-      (rwhen (in value (tag future) :narrow-false)
+      (const value object-uninit-fut (& value v))
+      (rwhen (in value (tag uninitialised future) :narrow-false)
         (throw uninitialised-error))
       (return value))
     
@@ -1090,20 +1133,20 @@
         (:select (union undefined null boolean float64 string namespace compound-attribute method-closure)
           (return none))
         (:narrow (union system-frame global package function-frame block-frame)
-          (const m static-member-opt (find-flat-member container multiname kind write phase))
+          (const m static-member-opt (find-flat-member container multiname write phase))
           (if (and (in m (tag none)) (in container global :narrow-true))
             (return (write-dynamic-property container multiname create-if-missing new-value phase))
             (return (write-static-member m new-value phase))))
         (:narrow class
           (var this object-fut-opt)
           (case kind
-            (:select (tag property-lookup indexable-lookup)
+            (:select (tag property-lookup)
               (<- this none))
             (:narrow lexical-lookup
               (<- this (& this kind))))
-          (const m2 (union (tag none) static-member v-table-index) (find-class-static-member container multiname kind write phase))
+          (const m2 (union (tag none) static-member qualified-name) (find-static-member container multiname write phase))
           (cond
-           ((not-in m2 v-table-index :narrow-both)
+           ((not-in m2 qualified-name :narrow-both)
             (return (write-static-member m2 new-value phase)))
            ((in this (tag none) :narrow-false)
             (throw property-access-error))
@@ -1114,36 +1157,41 @@
           (return (write-dynamic-property container multiname create-if-missing new-value phase)))
         (:narrow instance
           (const c class (object-type container))
-          (const i v-table-index-opt (find-class-instance-member (object-type container) multiname kind write phase))
-          (if (and (in i (tag none)) (in container dynamic-instance :narrow-true))
+          (const qname qualified-name-opt (resolve-instance-member-name (object-type container) multiname write phase))
+          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
             (return (write-dynamic-property container multiname create-if-missing new-value phase))
-            (return (write-instance-member container c i new-value phase))))
+            (return (write-instance-member container c qname new-value phase))))
         (:narrow limited-instance
           (const superclass class-opt (& super (& limit container)))
           (rwhen (in superclass (tag none) :narrow-false)
             (return none))
-          (const i v-table-index-opt (find-class-instance-member superclass multiname kind write phase))
-          (return (write-instance-member (& instance container) superclass i new-value phase)))))
+          (const qname qualified-name-opt (resolve-instance-member-name superclass multiname write phase))
+          (return (write-instance-member (& instance container) superclass qname new-value phase)))))
     
     
-    (define (write-instance-member (this object) (c class) (i v-table-index-opt) (new-value object) (phase (tag run)))
+    (define (write-instance-member (this object) (c class) (qname qualified-name-opt) (new-value object) (phase (tag run)))
             (tag none ok)
-      (rwhen (in i (tag none) :narrow-false)
-        (return none))
-      (const e v-table-entry (find-v-table-entry c i))
-      (const m instance-member (& content e))
+      (const m instance-member-opt (find-instance-member c qname write))
       (case m
+        (:select (tag none)
+          (return none))
         (:narrow instance-variable
-          (rwhen (& immutable m)
+          (const s slot (find-slot this m))
+          (rwhen (and (& immutable m) (not-in (& value s) (tag uninitialised)))
             (throw property-access-error))
-          (const coerced-value object (assignment-conversion new-value (& type m)))
-          (&= value (find-slot this m) coerced-value)
+          (const coerced-value object (assignment-conversion new-value (&opt type m)))
+          (&= value s coerced-value)
           (return ok))
         (:select instance-method
           (throw property-access-error))
         (:narrow instance-accessor
-          (const coerced-value object (assignment-conversion new-value (& type m)))
-          (exec ((& call (& code m)) this (new argument-list (vector coerced-value) (list-set-of named-argument)) phase))
+          (const coerced-value object (assignment-conversion new-value (&opt type m)))
+          (const code (union instance (tag abstract)) (& code m))
+          (case code
+            (:narrow instance
+              (exec ((& call code) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase)))
+            (:select (tag abstract)
+              (throw property-access-error)))
           (return ok))))
     
     
@@ -1159,7 +1207,8 @@
           (return ok))
         (:narrow accessor
           (const coerced-value object (assignment-conversion new-value (& type m)))
-          (exec ((& call (& code m)) null (new argument-list (vector coerced-value) (list-set-of named-argument)) phase))
+          (const code instance (& code m))
+          (exec ((& call code) null (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
           (return ok))))
     
     
@@ -1175,13 +1224,13 @@
       (rwhen (not create-if-missing)
         (return none))
       (// "Before trying to create a new dynamic property, check that there is no read-only fixed property with the same name.")
-      (var m (union (tag none) static-member v-table-index))
+      (var m (union (tag none) static-member qualified-name))
       (case container
         (:select prototype (<- m none))
         (:narrow dynamic-instance
-          (<- m (find-class-instance-member (object-type container) multiname property-lookup read phase)))
+          (<- m (resolve-instance-member-name (object-type container) multiname read phase)))
         (:narrow global
-          (<- m (find-flat-member container multiname property-lookup read phase))))
+          (<- m (find-flat-member container multiname read phase))))
       (rwhen (not-in m (tag none))
         (return none))
       (&= dynamic-properties container (set+ (& dynamic-properties container) (list-set (new dynamic-property name new-value))))
@@ -1189,11 +1238,11 @@
     
     
     (define (write-variable (v variable) (new-value object) (phase (tag run) :unused)) void
-      (rwhen (& immutable v)
-        (throw property-access-error))
-      (const type class-fut (& type v))
-      (rwhen (or (in type (tag future) :narrow-false) (in (& value v) (tag future)))
+      (const type class (&opt type v))
+      (rwhen (in (& value v) (tag future))
         (throw uninitialised-error))
+      (rwhen (and (& immutable v) (not-in (& value v) (tag uninitialised)))
+        (throw property-access-error))
       (const coerced-value object (assignment-conversion new-value type))
       (&= value v coerced-value))
     
@@ -1206,6 +1255,7 @@
     (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused)
                                        (kind lookup-kind :unused) (phase (tag run) :unused)) boolean
       (todo))
+    
     
     
     (%heading (2 :semantics) "Operator Dispatch")
@@ -1261,6 +1311,9 @@
         (return ((& f best) (get-object left) (get-object right) phase)))
       (throw property-access-error))
     
+    
+    (%heading (2 :semantics) "Deferred Validation")
+    (defvar deferred-validators (vector (-> () void)) (vector-of (-> () void)))
     
     
     
@@ -2587,12 +2640,7 @@
                   (eval (-> (environment object) object)) (eval-using-frame (-> (environment frame object) object)))
       (production :block ({ :directives }) block-directives
         ((validate cxt env jt pl)
-         (var compile-frame block-frame)
-         (case (nth env 0)
-           (:select (union package class)
-             (<- compile-frame (new regional-block-frame (list-set-of static-binding) (list-set-of static-binding) pl)))
-           (:select (union system-frame global function-frame block-frame)
-             (<- compile-frame (new local-block-frame (list-set-of static-binding) (list-set-of static-binding) pl))))
+         (const compile-frame block-frame (new block-frame (list-set-of static-binding) (list-set-of static-binding) pl))
          (action<- (compile-frame :block 0) compile-frame)
          (exec ((validate :directives) cxt (cons compile-frame env) jt pl none)))
         ((validate-using-frame cxt env jt pl frame)
@@ -2985,10 +3033,10 @@
     (rule :nonexpression-attribute ((validate (-> (environment) void)) (eval (-> (environment phase) attribute)))
       (production :nonexpression-attribute (abstract) nonexpression-attribute-abstract
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false false abstract none false false))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false abstract none false false))))
       (production :nonexpression-attribute (final) nonexpression-attribute-final
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false false final none false false))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false final none false false))))
       (production :nonexpression-attribute (private) nonexpression-attribute-private
         ((validate env)
          (rwhen (in (get-enclosing-class env) (tag none))
@@ -2999,7 +3047,7 @@
          (return (& private-namespace c))))
       (production :nonexpression-attribute (static) nonexpression-attribute-static
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false false static none false false)))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false static none false false)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -3133,63 +3181,147 @@
     (rule :variable-definition ((validate (-> (context environment attribute-opt-not-false) void)) (eval (-> (environment object) object)))
       (production :variable-definition (:variable-definition-kind (:variable-binding-list allow-in)) variable-definition-definition
         ((validate cxt env attr)
-         (const access variable-access (access :variable-definition-kind))
-         ((validate :variable-binding-list) cxt env attr access))
+         (const immutable boolean (immutable :variable-definition-kind))
+         ((validate :variable-binding-list) cxt env attr immutable))
         ((eval env d)
-         (const access variable-access (access :variable-definition-kind))
-         ((eval :variable-binding-list) env access)
+         (const immutable boolean (immutable :variable-definition-kind))
+         ((eval :variable-binding-list) env immutable)
          (return d))))
     
-    (rule :variable-definition-kind ((access variable-access))
-      (production :variable-definition-kind (var) variable-definition-kind-var (access read-write))
-      (production :variable-definition-kind (const) variable-definition-kind-const (access read-no-write)))
+    (rule :variable-definition-kind ((immutable boolean))
+      (production :variable-definition-kind (var) variable-definition-kind-var (immutable false))
+      (production :variable-definition-kind (const) variable-definition-kind-const (immutable true)))
     
-    (rule (:variable-binding-list :beta) ((validate (-> (context environment attribute-opt-not-false variable-access) void))
-                                          (eval (-> (environment variable-access) void)))
+    (rule (:variable-binding-list :beta) ((validate (-> (context environment attribute-opt-not-false boolean) void))
+                                          (eval (-> (environment boolean) void)))
       (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one
-        ((validate cxt env attr access) ((validate :variable-binding) cxt env attr access))
-        ((eval env access) ((eval :variable-binding) env access)))
+        ((validate cxt env attr immutable) ((validate :variable-binding) cxt env attr immutable))
+        ((eval env immutable) ((eval :variable-binding) env immutable)))
       (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more
-        ((validate cxt env attr access)
-         ((validate :variable-binding-list) cxt env attr access)
-         ((validate :variable-binding) cxt env attr access))
-        ((eval env access)
-         ((eval :variable-binding-list) env access)
-         ((eval :variable-binding) env access))))
+        ((validate cxt env attr immutable)
+         ((validate :variable-binding-list) cxt env attr immutable)
+         ((validate :variable-binding) cxt env attr immutable))
+        ((eval env immutable)
+         ((eval :variable-binding-list) env immutable)
+         ((eval :variable-binding) env immutable))))
     
-    (rule (:variable-binding :beta) ((hoisted-var (writable-cell boolean)) (attributes (writable-cell attribute-opt-not-false))
-                                     (validate (-> (context environment attribute-opt-not-false variable-access) void))
-                                     (eval (-> (environment variable-access) void)))
+    (deftag hoisted)
+    (deftag static-compiled)
+    (deftag static-run)
+    (deftag instance-run)
+    (rule (:variable-binding :beta) ((kind (writable-cell (tag hoisted static-compiled static-run instance-run))) (multiname (writable-cell multiname))
+                                     (validate (-> (context environment attribute-opt-not-false boolean) void))
+                                     (eval (-> (environment boolean) void)))
       (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initialisation :beta)) variable-binding-full
-        ((validate cxt env attr access)
+        ((validate cxt env attr immutable)
          ((validate :typed-identifier) cxt env)
          ((validate :variable-initialisation) cxt env)
-         (action<- (attributes :variable-binding 0) attr)
+         (const name string (name :typed-identifier))
          (cond
           ((and (not (& strict cxt)) (in (get-regional-frame env) (union global function-frame))
-                (in access (tag read-write)) (in attr (tag none)) (not (type-present :typed-identifier)))
-           (action<- (hoisted-var :variable-binding 0) true)
-           (define-hoisted-var env (name :typed-identifier)))
+                (not immutable) (in attr (tag none)) (not (type-present :typed-identifier)))
+           (action<- (kind :variable-binding 0) hoisted)
+           (const qname qualified-name (new qualified-name public-namespace name))
+           (action<- (multiname :variable-binding 0) (list-set qname))
+           (define-hoisted-var env name))
           (nil
-           (action<- (hoisted-var :variable-binding 0) false)
            (const a compound-attribute (to-compound-attribute attr))
-           (rwhen (or (& prototype a) (& dynamic a))
+           (var member-mod member-modifier (& member-mod a))
+           (rwhen (or (& dynamic a) (& prototype a) (and (& compile a) (not immutable)))
              (throw definition-error))
-           (function (make-static-member) static-member
-             (todo))
-           (function (make-instance-member) instance-member
-             (todo))
-           (bind-definition env (name :typed-identifier) a final access make-static-member make-instance-member))))
-        ((eval env access)
-         (const t class-opt ((eval :typed-identifier) env))
-         (const o object-opt ((eval :variable-initialisation) env run))
-         (create-variable env access (hoisted-var :variable-binding 0) (attributes :variable-binding 0) (name :typed-identifier) t o))))
+           (if (in (nth env 0) class)
+             (when (in member-mod (tag none))
+               (<- member-mod (if (& compile a) static final)))
+             (rwhen (not-in member-mod (tag none))
+               (throw definition-error)))
+           (case member-mod
+             (:select (tag none static)
+               (const v variable (new variable :uninit future immutable))
+               (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v))
+               (action<- (multiname :variable-binding 0) multiname)
+               (function (deferred-static-validate) void
+                 (var t class-opt ((eval :typed-identifier) env))
+                 (when (in t (tag none))
+                   (<- t object-class))
+                 (&const= type v (assert-not-in t (tag none))))
+               (cond
+                ((& compile a)
+                 (deferred-static-validate)
+                 (const value object-opt ((eval :variable-initialisation) env compile))
+                 (rwhen (in value (tag none) :narrow-false)
+                   (throw definition-error))
+                 (const coerced-value object (assignment-conversion value (&opt type v)))
+                 (&= value v coerced-value)
+                 (action<- (kind :variable-binding 0) static-compiled))
+                (nil
+                 (<- deferred-validators (append deferred-validators (vector deferred-static-validate)))
+                 (action<- (kind :variable-binding 0) static-run))))
+             (:narrow (tag abstract virtual final)
+               (const c class (assert-in (nth env 0) class))
+               (function (eval-initial-value) object-opt
+                 (return ((eval :variable-initialisation) env run)))
+               (var m (union instance-variable instance-accessor))
+               (case member-mod
+                 (:select (tag abstract)
+                   (rwhen (has-initialiser :variable-initialisation)
+                     (throw syntax-error))
+                   (<- m (new instance-accessor :uninit abstract false)))
+                 (:select (tag virtual)
+                   (<- m (new instance-variable :uninit eval-initial-value immutable false)))
+                 (:select (tag final)
+                   (<- m (new instance-variable :uninit eval-initial-value immutable true))))
+               (const os override-status-pair (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a) read-write m))
+               (function (deferred-instance-validate) void
+                 (var t class-opt ((eval :typed-identifier) env))
+                 (when (in t (tag none))
+                   (const overridden-read (union instance-member (tag none potential-conflict)) (& overridden-member (& read-status os)))
+                   (const overridden-write (union instance-member (tag none potential-conflict)) (& overridden-member (& write-status os)))
+                   (cond
+                    ((not-in overridden-read (tag none potential-conflict) :narrow-true)
+                     (assert (not-in overridden-read instance-method :narrow-true) "Note that " (:global define-instance-member)
+                             " already ensured that " (:assertion) ".")
+                     (<- t (&opt type overridden-read)))
+                    ((not-in overridden-write (tag none potential-conflict) :narrow-true)
+                     (assert (not-in overridden-write instance-method :narrow-true) "Note that " (:global define-instance-member)
+                             " already ensured that " (:assertion) ".")
+                     (<- t (&opt type overridden-write)))
+                    (nil
+                     (<- t object-class))))
+                 (&const= type m (assert-not-in t (tag none))))
+               (<- deferred-validators (append deferred-validators (vector deferred-instance-validate)))
+               (action<- (kind :variable-binding 0) instance-run))
+             (:select (tag constructor operator)
+               (throw definition-error))))))
+        ((eval env immutable)
+         (case (kind :variable-binding 0)
+           (:select (tag hoisted)
+             (const value object-opt ((eval :variable-initialisation) env run))
+             (when (not-in value (tag none) :narrow-true)
+               (lexical-write env (multiname :variable-binding 0) value false run)))
+           (:select (tag static-compiled))
+           (:select (tag static-run)
+             (const local-frame frame (nth env 0))
+             (const members (list-set static-member) (map (& static-write-bindings local-frame) b (& content b) (set-in (& qname b) (multiname :variable-binding 0))))
+             (// "Note that the " (:local members) " set consists of exactly one " (:type variable) " element because " (:local local-frame)
+                 " was constructed with that " (:type variable) " inside " (:action validate) ".")
+             (const v variable (assert-in (unique-elt-of members) variable))
+             (const value object-opt ((eval :variable-initialisation) env compile))
+             (const t class (&opt type v))
+             (var coerced-value object-uninit)
+             (cond
+              ((not-in value (tag none) :narrow-true) (<- coerced-value (assignment-conversion value t)))
+              (immutable (<- coerced-value uninitialised))
+              (nil (<- coerced-value (assignment-conversion undefined t))))
+             (&= value v coerced-value))
+           (:select (tag instance-run))))))
     
-    (rule (:variable-initialisation :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
+    (rule (:variable-initialisation :beta) ((has-initialiser boolean) (validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
       (production (:variable-initialisation :beta) () variable-initialisation-none
+        (has-initialiser false)
         ((validate (cxt :unused) (env :unused)))
         ((eval (env :unused) (phase :unused)) (return none)))
       (production (:variable-initialisation :beta) (= (:variable-initialiser :beta)) variable-initialisation-variable-initialiser
+        (has-initialiser true)
         ((validate cxt env) ((validate :variable-initialiser) cxt env))
         ((eval env phase) (return ((eval :variable-initialiser) env phase)))))
     
@@ -3219,7 +3351,7 @@
         ((validate cxt env) ((validate :type-expression) cxt env))
         ((eval env) (return ((eval :type-expression) env)))))
     ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
-    (%print-actions ("Validation" name type-present access hoisted-var attributes validate) ("Evaluation" eval))
+    (%print-actions ("Validation" name type-present immutable kind multiname has-initialiser validate) ("Evaluation" eval))
     
     
     (%heading 2 "Simple Variable Definition")
@@ -3255,8 +3387,10 @@
          ((validate :variable-initialisation) cxt env)
          (define-hoisted-var env (name :identifier)))
         ((eval env)
-         (const o object-opt ((eval :variable-initialisation) env run))
-         (create-variable env read-write true none (name :identifier) none o))))
+         (const value object-opt ((eval :variable-initialisation) env run))
+         (when (not-in value (tag none) :narrow-true)
+           (const qname qualified-name (new qualified-name public-namespace (name :identifier)))
+           (lexical-write env (list-set qname) value false run)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -3326,10 +3460,8 @@
          (rwhen (not-in pl (tag singular))
            (throw syntax-error))
          (const superclass class ((validate :inheritance) cxt env))
-         (rwhen (or (not (& complete superclass)) (& final superclass))
-           (throw definition-error))
          (var a compound-attribute (to-compound-attribute attr))
-         (rwhen (& compile a)
+         (rwhen (or (not (& complete superclass)) (& final superclass) (& compile a))
            (throw definition-error))
          (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
            (todo))
@@ -3338,22 +3470,20 @@
          (var prototype object null)
          (when (& prototype a)
            (todo))
-         (var final boolean false)
-         (when (in (& member-mod a) (tag final))
-           (<- final true)
-           (<- a (set-field a member-mod none)))
+         (var final boolean)
+         (case (& member-mod a)
+           (:select (tag none) (<- final false))
+           (:select (tag final) (<- final true))
+           (:select (tag static constructor operator abstract virtual) (throw definition-error)))
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
          (const c class (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                             (list-set-of v-table-entry) (vector-of instance-variable)
-                             false superclass prototype private-namespace dynamic false final call construct))
+                             (vector-of instance-variable) false superclass prototype private-namespace dynamic false final call construct))
          (action<- (class :class-definition 0) c)
-         (function (make-static-member) static-member
-           (return (new variable class-class c true)))
-         (function (make-instance-member) instance-member
-           (return (new instance-variable class-class c true)))
-         (bind-definition env (name :identifier) a static read-no-write make-static-member make-instance-member)
-         ((validate-using-frame :block) cxt env (new jump-targets (list-set-of label) (list-set-of label)) pl c))
+         (const v variable (new variable class-class c true))
+         (exec (define-static-member env (name :identifier) (& namespaces a) (& override-mod a) (& explicit a) read-write v))
+         ((validate-using-frame :block) cxt env (new jump-targets (list-set-of label) (list-set-of label)) pl c)
+         (&= complete c true))
         ((eval env d)
          (const c class (class :class-definition 0))
          (return ((eval-using-frame :block) env c d)))))
@@ -3405,13 +3535,45 @@
       (production :program (:directives) program-directives
         (eval-program
          (begin
+          (const saved-deferred-validators (vector (-> () void)) deferred-validators)
+          (<- deferred-validators (vector-of (-> () void)))
           (exec ((validate :directives) initial-context initial-environment (new jump-targets (list-set-of label) (list-set-of label)) singular none))
+          (for-each deferred-validators v (v))
+          (<- deferred-validators saved-deferred-validators)
           (return ((eval :directives) initial-environment undefined))))))
+    (%print-actions ("Evaluation" eval-program))
     
     
     
     (%heading (1 :semantics) "Predefined Identifiers")
+    
+    
     (%heading (1 :semantics) "Built-in Classes")
+    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (primitive boolean) (final boolean)) class
+      (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+        (todo))
+      (function (construct (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+        (todo))
+      (const private-namespace namespace (new namespace "private"))
+      (return (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
+                   (vector-of instance-variable) true superclass null private-namespace dynamic primitive final call construct)))
+    
+    (define object-class class (make-built-in-class none false true false))
+    (define undefined-class class (make-built-in-class object-class false true true))
+    (define null-class class (make-built-in-class object-class false true true))
+    (define boolean-class class (make-built-in-class object-class false true true))
+    (define number-class class (make-built-in-class object-class false true true))
+    (define string-class class (make-built-in-class object-class false false true))
+    (define character-class class (make-built-in-class string-class false false true))
+    (define namespace-class class (make-built-in-class object-class false false true))
+    (define attribute-class class (make-built-in-class object-class false false true))
+    (define class-class class (make-built-in-class object-class false false true))
+    (define function-class class (make-built-in-class object-class false false true))
+    (define prototype-class class (make-built-in-class object-class true false true))
+    (define package-class class (make-built-in-class object-class true false true))
+    
+    
+    
     (%heading (1 :semantics) "Built-in Functions")
     (%heading (1 :semantics) "Built-in Attributes")
     (%heading (1 :semantics) "Built-in Operators")
@@ -3438,23 +3600,25 @@
     (define (call-object (this object) (a object) (args argument-list) (phase phase)) object
       (case a
         (:select (union undefined null boolean float64 string namespace compound-attribute prototype package global) (throw bad-value-error))
-        (:narrow (union class instance) (return ((& call a) this args phase)))
+        (:narrow class (return ((& call a) this args phase)))
+        (:narrow instance (return ((& call a) this args (& env a) phase)))
         (:narrow method-closure
           (const code (union (tag abstract) instance) (& code (& method a)))
-          (rwhen (in code (tag abstract) :narrow-false)
-            (throw property-access-error))
-          (return (call-object (& this a) code args phase)))))
+          (case code
+            (:narrow instance (return (call-object (& this a) code args phase)))
+            (:select (tag abstract) (throw property-access-error))))))
     
     (define (construct-object (this object) (a object) (args argument-list) (phase phase)) object
       (case a
         (:select (union undefined null boolean float64 string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
-        (:narrow (union class instance) (return ((& construct a) this args phase)))))
+        (:narrow class (return ((& construct a) this args phase)))
+        (:narrow instance (return ((& construct a) this args (& env a) phase)))))
     
     (define (bracket-read-object (this object :unused) (a object) (args argument-list) (phase phase)) object
       (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
         (throw argument-mismatch-error))
       (const name string (to-string (nth (& positional args) 0) phase))
-      (const result object-opt (read-property a (list-set (new qualified-name public-namespace name)) indexable-lookup phase))
+      (const result object-opt (read-property a (list-set (new qualified-name public-namespace name)) property-lookup phase))
       (if (in result (tag none) :narrow-false)
         (throw property-access-error)
         (return result)))
@@ -3466,7 +3630,7 @@
         (throw argument-mismatch-error))
       (const new-value object (nth (& positional args) 0))
       (const name string (to-string (nth (& positional args) 1) phase))
-      (const result (tag none ok) (write-property a (list-set (new qualified-name public-namespace name)) indexable-lookup true new-value phase))
+      (const result (tag none ok) (write-property a (list-set (new qualified-name public-namespace name)) property-lookup true new-value phase))
       (rwhen (in result (tag none))
         (throw property-access-error))
       (return undefined))
@@ -3477,7 +3641,7 @@
       (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
         (throw argument-mismatch-error))
       (const name string (to-string (nth (& positional args) 0) phase))
-      (return (delete-qualified-property a name public-namespace indexable-lookup phase)))
+      (return (delete-qualified-property a name public-namespace property-lookup phase)))
     
     
     (defvar plus-table (list-set unary-method) (list-set (new unary-method object-class plus-object)))
