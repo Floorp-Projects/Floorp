@@ -46,5 +46,5 @@ nsAbLDAPCard::~nsAbLDAPCard()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbLDAPCard, nsRDFResource, nsIAbCard)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbLDAPCard, nsRDFResource, nsIAbCard)
 

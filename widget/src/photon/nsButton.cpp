@@ -56,9 +56,7 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
-NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
-NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
-NS_IMPL_QUERY_INTERFACE_INHERITED(nsButton, nsWidget, nsIButton)
+NS_IMPL_ISUPPORTS_INHERITED1(nsButton, nsWidget, nsIButton)
 //-------------------------------------------------------------------------
 //
 // nsButton constructor

@@ -524,7 +524,7 @@ private:
 
 MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAnonymousContentList, nsGenericDOMNodeList, nsIAnonymousContentList)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAnonymousContentList, nsGenericDOMNodeList, nsIAnonymousContentList)
 
 nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
 {

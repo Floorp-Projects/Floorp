@@ -97,7 +97,7 @@ nsAbDirectory::~nsAbDirectory(void)
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbDirectory, nsAbRDFResource, nsIAbDirectory)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbDirectory, nsAbRDFResource, nsIAbDirectory)
 
 ////////////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsAbDirectory::OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)

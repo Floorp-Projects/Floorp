@@ -75,9 +75,9 @@ nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsDeviceContextPS,
-                            DeviceContextImpl,
-                            nsIDeviceContextPS)
+NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceContextPS,
+                             DeviceContextImpl,
+                             nsIDeviceContextPS)
 
 /** ---------------------------------------------------
  *  See documentation in nsDeviceContextPS.h

@@ -67,7 +67,7 @@ nsHTMLEditorLog::~nsHTMLEditorLog()
   StopLogging();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsHTMLEditorLog, nsHTMLEditor, nsIEditorLogging);
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLEditorLog, nsHTMLEditor, nsIEditorLogging)
 
 NS_IMETHODIMP
 nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsAReadableString &aAttribute, const nsAReadableString &aValue)

@@ -75,7 +75,7 @@ nsAbCard::~nsAbCard(void)
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbCard, nsAbRDFResource, nsIAbCard)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbCard, nsAbRDFResource, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsAbCard::OnCardEntryChange

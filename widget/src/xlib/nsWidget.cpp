@@ -703,7 +703,7 @@ NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsWidget, nsBaseWidget, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED1(nsWidget, nsBaseWidget, nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect,
                                        nsRect& aNewRect)

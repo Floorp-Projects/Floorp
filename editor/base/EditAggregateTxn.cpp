@@ -247,7 +247,7 @@ NS_IMETHODIMP_(nsrefcnt) EditAggregateTxn::Release(void)
   return EditTxn::Release();
 }
 
-//NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
+//NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, AdditionalInterface)
 NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;

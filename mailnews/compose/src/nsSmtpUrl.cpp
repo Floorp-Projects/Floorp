@@ -438,7 +438,7 @@ nsSmtpUrl::~nsSmtpUrl()
 {
 }
   
-NS_IMPL_ISUPPORTS_INHERITED(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)  
+NS_IMPL_ISUPPORTS_INHERITED1(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)  
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsISmtpUrl specific support

@@ -111,7 +111,7 @@ public:
   PRBool mOpen;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMenuListenerAccessible, nsAccessible, nsIDOMXULListener)
+NS_IMPL_ISUPPORTS_INHERITED1(nsMenuListenerAccessible, nsAccessible, nsIDOMXULListener)
 
 /**
  * A class that represents the button inside the Select to the right of the text field

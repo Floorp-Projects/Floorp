@@ -63,7 +63,7 @@ JSEvaluator::~JSEvaluator()
 		delete mJSMonitor;
 }
 
-NS_IMPL_ISUPPORTS(JSEvaluator, NS_GET_IID(nsIPluginStreamListener))
+NS_IMPL_ISUPPORTS1(JSEvaluator, nsIPluginStreamListener)
 
 const char* JSEvaluator::eval(const char* script)
 {

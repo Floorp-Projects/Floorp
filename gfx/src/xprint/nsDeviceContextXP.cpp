@@ -93,9 +93,9 @@ nsDeviceContextXp :: SetSpec(nsIDeviceContextSpec* aSpec)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsDeviceContextXp,
-                            DeviceContextImpl,
-                            nsIDeviceContextXp)
+NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceContextXp,
+                             DeviceContextImpl,
+                             nsIDeviceContextXp)
 
 /** ---------------------------------------------------
  *  See documentation in nsDeviceContextXp.h

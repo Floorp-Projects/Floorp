@@ -49,7 +49,6 @@
 
 /* define CID & IID */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-NS_DEFINE_IID(kAcceptLangCID, NS_ACCEPTLANG_CID);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +78,7 @@ nsAcceptLang::~nsAcceptLang()
   /* destructor code */
 }
 
-// NS_IMPL_THREADSAFE_ISUPPORTS(nsAcceptLang, NS_GET_IID(nsIAcceptLang))
+// NS_IMPL_THREADSAFE_ISUPPORTS1(nsAcceptLang, nsIAcceptLang)
 
 /* wstring getAcceptLangFromLocale ([const] in wstring aLocale); */
 NS_IMETHODIMP

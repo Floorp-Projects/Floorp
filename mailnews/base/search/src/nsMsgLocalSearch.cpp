@@ -308,7 +308,7 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //-----------------------------------------------------------------------------
 
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgSearchOfflineMail, nsMsgSearchAdapter, nsIUrlListener)
+NS_IMPL_ISUPPORTS_INHERITED1(nsMsgSearchOfflineMail, nsMsgSearchAdapter, nsIUrlListener)
 
 nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {

@@ -93,7 +93,7 @@ nsAbBSDirectory::~nsAbBSDirectory()
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbBSDirectory, nsRDFResource, nsIAbDirectory)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbBSDirectory, nsRDFResource, nsIAbDirectory)
 
 nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 {

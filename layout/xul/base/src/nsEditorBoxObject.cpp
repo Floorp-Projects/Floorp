@@ -60,7 +60,7 @@ protected:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS_INHERITED(nsEditorBoxObject, nsBoxObject, nsIEditorBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED1(nsEditorBoxObject, nsBoxObject, nsIEditorBoxObject)
 
 
 NS_IMETHODIMP

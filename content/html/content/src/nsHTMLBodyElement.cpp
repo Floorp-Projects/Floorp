@@ -146,7 +146,7 @@ public:
   BodyFixupRule*  mInlineStyleRule;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsBodySuper, nsGenericHTMLContainerElement, nsIBodySuper)
+NS_IMPL_ISUPPORTS_INHERITED1(nsBodySuper, nsGenericHTMLContainerElement, nsIBodySuper)
 
 nsBodySuper::nsBodySuper() : nsGenericHTMLContainerElement(),
                              mContentStyleRule(nsnull),

@@ -95,7 +95,7 @@ nsAbMDBCardProperty::~nsAbMDBCardProperty(void)
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbMDBCardProperty, nsAbCardProperty, nsIAbMDBCard)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbMDBCardProperty, nsAbCardProperty, nsIAbMDBCard)
 
 
 // nsIAbMDBCard attributes

@@ -59,7 +59,7 @@ nsAbOutlookCard::~nsAbOutlookCard(void)
     if (mMapiData) { delete mMapiData ; }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbOutlookCard, nsRDFResource, nsIAbCard)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbOutlookCard, nsRDFResource, nsIAbCard)
 
 static void splitString(nsString& aSource, nsString& aTarget)
 {

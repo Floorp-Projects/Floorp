@@ -166,7 +166,7 @@ nsWidget::~nsWidget( ) {
 // nsISupport stuff
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED(nsWidget, nsBaseWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED1(nsWidget, nsBaseWidget, nsIKBStateControl)
 
 NS_METHOD nsWidget::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect ) {
   if( mWidget ) {

@@ -68,7 +68,7 @@ nsAbRDFResource::~nsAbRDFResource(void)
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAbRDFResource, nsRDFResource, nsIAddrDBListener)
+NS_IMPL_ISUPPORTS_INHERITED1(nsAbRDFResource, nsRDFResource, nsIAddrDBListener)
 
 ////////////////////////////////////////////////////////////////////////////////
 
