@@ -27,6 +27,7 @@
 #undef NO_XPCOM_FILE_STREAMS
 
 #include "nsIFileStreams.h"       // New Necko file streams
+#include "nsISeekableStream.h"
 
 #include "nsNetUtil.h"
 #include "nsIFileTransportService.h"
@@ -483,11 +484,11 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
         if (httpChannel)
         {
-            nsCOMPtr<nsIRandomAccessStore> stream(do_QueryInterface(aPostData));
+            nsCOMPtr<nsISeekableStream> stream(do_QueryInterface(aPostData));
             if (stream)
             {
                 // Rewind the postdata stream
-                stream->Seek(PR_SEEK_SET, 0);
+                stream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
                 nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
                 NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
                 // Attach the postdata to the http channel

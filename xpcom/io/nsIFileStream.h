@@ -67,27 +67,6 @@ public:
 
 }; // class nsIOpenFile
 
-/* a6cf90e8-15b3-11d2-932e-00805f8add32 */
-#define NS_IRANDOMACCESS_IID \
-{  0xa6cf90eb, 0x15b3, 0x11d2, \
-    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
-
-//========================================================================================
-class nsIRandomAccessStore
-// Supports Seek, Tell etc.
-//========================================================================================
-: public nsISupports
-{
-public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRANDOMACCESS_IID; return iid; }
-    NS_IMETHOD                         Seek(PRSeekWhence whence, PRInt32 offset) = 0;
-    NS_IMETHOD                         Tell(PRIntn* outWhere) = 0;
-
-/* "PROTECTED" */
-    NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
-    NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
-}; // class nsIRandomAccessStore
-
 
 #ifndef NO_XPCOM_FILE_STREAMS   // hack to work around duplicate class definitions in here
                                 // and mozilla/netwerks/base/nsIFileStreams.idl
