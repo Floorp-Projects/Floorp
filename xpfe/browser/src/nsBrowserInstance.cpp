@@ -1899,15 +1899,14 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
             rv = timeBomb->GetTimebombURL(&urlString);
             if ( NS_FAILED(rv) ) return rv;
 
-            nsString url ( urlString );
-            *aDefaultArgs =  url.ToNewUnicode();
+            *aDefaultArgs =  NS_ConvertASCIItoUCS2(url).ToNewUnicode();
             nsAllocator::Free(urlString);
             return rv;
         }
     }
 
     /* the default, in case we fail somewhere */
-    args = "about:blank";
+    args.AssignWithConversion("about:blank");
 
     nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
     if (!prefs) return NS_ERROR_FAILURE;
@@ -1938,14 +1937,14 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
                     break;
                 case 0:
                 default:
-                    args = "about:blank";
+                    args.AssignWithConversion("about:blank");
                     break;
             }
         }
     }
 
     if (NS_SUCCEEDED(rv) && (const char *)url && (PL_strlen((const char *)url))) {              
-        args = (const char *) url;
+        args.AssignWithConversion((const char *) url);
     }
 #endif /* FORCE_CHECKIN_GUIDELINES */
 
