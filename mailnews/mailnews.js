@@ -179,33 +179,6 @@ pref("ldap_2.servers.history.dirType",							2);
 pref("ldap_2.servers.history.isOffline",						false);
 
 
-pref("ldap_2.servers.netcenter.position",						3);
-pref("ldap_2.servers.netcenter.description",					"Netcenter Member Directory");
-pref("ldap_2.servers.netcenter.vlvDisabled",					true);
-pref("ldap_2.servers.netcenter.serverName",						"memberdir.netscape.com");
-pref("ldap_2.servers.netcenter.searchBase",						"ou=member_directory,o=netcenter.com");
-pref("ldap_2.servers.netcenter.auth.enabled",					true);
-pref("ldap_2.servers.netcenter.auth.dn",						"uid=mozilla,ou=people,o=netcenter.com");
-pref("ldap_2.servers.netcenter.auth.savePassword",				true);
-pref("ldap_2.servers.netcenter.auth.password",					"BPqvLvWNew==");
-pref("ldap_2.servers.netcenter.customDisplayUrl",				"http://dirsearch.netscape.com/cgi-bin/member_lookup.cgi?dn=%s");
-pref("ldap_2.servers.netcenter.replication.never",				true);
-
-pref("ldap_2.servers.infospace.position",						4);
-pref("ldap_2.servers.infospace.description",					"InfoSpace Directory");
-pref("ldap_2.servers.infospace.serverName",						"ldap.infospace.com");
-pref("ldap_2.servers.infospace.searchBase",						"c=US");
-pref("ldap_2.servers.infospace.vlvDisabled",					true);
-pref("ldap_2.servers.infospace.autoComplete.never",				true);
-pref("ldap_2.servers.infospace.replication.never",				true);
-
-pref("ldap_2.servers.verisign.position",						5);
-pref("ldap_2.servers.verisign.description",						"Verisign Directory");
-pref("ldap_2.servers.verisign.serverName",						"directory.verisign.com");
-pref("ldap_2.servers.verisign.vlvDisabled",						true);
-pref("ldap_2.servers.verisign.autoComplete.never",				true);
-pref("ldap_2.servers.verisign.replication.never",				true);
-
 // A position of zero is a special value that indicates the directory is deleted.
 // These entries are provided to keep the (obsolete) Four11 directory and the
 // WhoWhere, Bigfoot and Switchboard directories from being migrated.
