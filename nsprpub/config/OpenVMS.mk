@@ -23,18 +23,18 @@ include $(MOD_DEPTH)/config/UNIX.mk
 
 ifdef INTERNAL_TOOLS
 CC			= c89
+CCC			= cxx
 OPTIMIZER		= -O
 else
 CC			= ccc
+CCC			= ccc
 endif
 
 RANLIB			= /bin/true
 
 CPU_ARCH_TAG		= _$(CPU_ARCH)
 
-NON_LD_FLAGS		= -ieee_with_inexact
-
-OS_CFLAGS		= -DOSF1 -DVMS
+OS_CFLAGS		= -DVMS
 
 # The command to build a shared library in POSIX on OpenVMS.
-MKSHLIB = c89 -wl,share
+XXXMKSHLIB = c89 -Wl,share

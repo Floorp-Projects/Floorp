@@ -92,7 +92,8 @@
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
-	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI)
+	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
+	|| defined(VMS)
 #define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
 #define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -152,11 +153,11 @@
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI)
+	|| defined(BSDI) || defined(VMS)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
-#if defined(OSF1)
+#if defined(OSF1) || defined(VMS)
 #define PT_PRIO_MIN            PRI_OTHER_MIN
 #define PT_PRIO_MAX            PRI_OTHER_MAX
 #elif defined(IRIX)
@@ -209,7 +210,7 @@
  */
 #if defined(_PR_DCETHREADS)
 #define PTHREAD_YIELD()            	pthread_yield()
-#elif defined(OSF1)
+#elif defined(OSF1) || defined(VMS)
 /*
  * sched_yield can't be called from a signal handler.  Must use
  * the _np version.

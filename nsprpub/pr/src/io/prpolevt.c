@@ -32,7 +32,7 @@ typedef struct MyFilePrivate {
     PRFilePrivate *oldSecret;
 } MyFilePrivate;
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(VMS)
 #define USE_TCP_SOCKETPAIR
 #endif
 

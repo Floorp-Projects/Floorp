@@ -74,6 +74,10 @@ HPUX_CSRCS = \
 	hpux.c \
 	$(NULL)
 
+OPENVMS_CSRCS = \
+       openvms.c \
+       $(NULL)
+
 OSF1_CSRCS = \
 	osf1.c \
 	$(NULL)
@@ -155,6 +159,9 @@ CSRCS += $(BSDI_CSRCS)
 endif
 ifeq ($(OS_ARCH),HP-UX)
 CSRCS += $(HPUX_CSRCS)
+endif
+ifeq ($(OS_ARCH),OpenVMS)
+CSRCS += $(OPENVMS_CSRCS)
 endif
 ifeq ($(OS_ARCH),OSF1)
 CSRCS += $(OSF1_CSRCS)

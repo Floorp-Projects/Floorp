@@ -1146,7 +1146,7 @@ static void suspend_signal_handler(PRIntn sig)
 	while (me->suspend & PT_THREAD_SUSPENDED)
 	{
 #if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD) \
-    && !defined(BSDI)  /*XXX*/
+    && !defined(BSDI) && !defined(VMS)  /*XXX*/
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif
@@ -1190,7 +1190,11 @@ static void PR_SuspendSet(PRThread *thred)
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
 	   ("doing pthread_kill in PR_SuspendSet thred %X tid = %X\n",
 	   thred, thred->id));
+#if defined(VMS)
+    rv = thread_suspend(thred);
+#else
     rv = pthread_kill (thred->id, SIGUSR2);
+#endif
     PR_ASSERT(0 == rv);
 }
 
@@ -1244,7 +1248,11 @@ PR_IMPLEMENT(void) PR_ResumeSet(PRThread *thred)
     thred->suspend &= ~PT_THREAD_SUSPENDED;
 
 #if defined(PT_NO_SIGTIMEDWAIT)
+#if defined(VMS)
+	thread_resume(thred);
+#else
 	pthread_kill(thred->id, SIGUSR1);
+#endif
 #endif
 
 }  /* PR_ResumeSet */

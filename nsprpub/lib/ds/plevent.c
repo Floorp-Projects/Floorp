@@ -50,6 +50,18 @@ typedef MPARAM WPARAM,LPARAM;
 #include "private/primpl.h"
 #endif /* XP_MAC */
 
+#if defined(VMS)
+/*
+** On OpenVMS, XtAppAddInput doesn't want a regular fd, instead it 
+** wants an event flag. So, we don't create and use a pipe for 
+** notification of when an event queue has something ready, instead
+** we use an event flag. Shouldn't be a problem if we only have
+** a few event queues.
+*/
+#include <lib$routines.h>
+#include <starlet.h>
+#include <stsdef.h>
+#endif /* VMS */
 
 static PRLogModuleInfo *event_lm = NULL;
 
@@ -75,7 +87,10 @@ struct PLEventQueue {
     PRThread*    handlerThread;
     EventQueueType type;
     PRBool       processingEvents;
-#if defined(XP_UNIX)
+#if defined(VMS)
+    int		 efn;
+    int		 notifyCount;
+#elif defined(XP_UNIX)
     PRInt32      eventPipe[2];
 	int          notifyCount;
 #elif defined(_WIN32) || defined(WIN16)
@@ -585,7 +600,26 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(XP_UNIX)
+#if defined(VMS)
+    {
+#ifdef VMS_USE_GETEF
+        unsigned int status;
+        status = LIB$GET_EF(&self->efn);
+        if (!$VMS_STATUS_SUCCESS(status))
+            return PR_FAILURE;
+#else
+        static int next_event_flag = 2;
+        if (next_event_flag <= 23) {
+            self->efn = next_event_flag++;
+        }
+        else {
+            printf("ERROR: Out of event flags\n");
+            return PR_FAILURE;
+        }
+#endif
+	return PR_SUCCESS;
+    }
+#elif defined(XP_UNIX)
     int err;
     int flags;
 
@@ -629,7 +663,14 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(XP_UNIX)
+#if defined(VMS)
+#ifdef VMS_USE_GETEF
+    {
+        unsigned int status;
+        status = LIB$FREE_EF(&self->efn);
+    }
+#endif /* VMS_USE_GETEF */
+#elif defined(XP_UNIX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
 #endif
@@ -655,7 +696,20 @@ _pl_NativeNotify(PLEventQueue* self)
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_OS2 */
 
-#if defined(XP_UNIX)
+#if defined(VMS)
+/* Just set the event flag */
+static PRStatus
+_pl_NativeNotify(PLEventQueue* self)
+{
+        unsigned int status;
+        status = SYS$SETEF(self->efn);
+        self->notifyCount++;
+        if ($VMS_STATUS_SUCCESS(status))
+            return PR_SUCCESS;
+        else
+            return PR_FAILURE;
+}/* --- end _pl_NativeNotify() --- */
+#elif defined(XP_UNIX)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
@@ -690,7 +744,20 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(XP_UNIX)
+#if defined(VMS)
+/* Clear the event flag if we're all done */
+/* NOTE that we might want to always clear the event flag, even if the */
+/* notifyCount says we shouldn't. */
+    if (self->notifyCount <= 0) return PR_SUCCESS;
+    self->notifyCount--;
+    if (self->notifyCount == 0) {
+        unsigned int status;
+        status = SYS$CLREF(self->efn);
+        if (!$VMS_STATUS_SUCCESS(status))
+            return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+#elif defined(XP_UNIX)
 
     PRInt32 count;
     unsigned char c;
@@ -720,7 +787,9 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
     if (self == NULL)
     return -1;
 
-#if defined(XP_UNIX)
+#if defined(VMS)
+    return self->efn;
+#elif defined(XP_UNIX)
     return self->eventPipe[0];
 #else
     return -1;    /* other platforms don't handle this (yet) */
