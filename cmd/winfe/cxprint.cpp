@@ -1281,7 +1281,24 @@ void CPrintCX::FormatAndPrintPages(MWContext *pContext)	{
 	}
 	else	{
 		//	Otherwise, we tell the owning view to refresh itself.
-		((CGenericView *)m_pPreviewView)->GetFrame()->GetFrameWnd()->Invalidate();
+        //  This is a PITA.  For frames, just invalidating the frame doesn't cause
+        //  a repaint.  Resizing the window does (has something to do with the horkage
+        //  regarding frames and print preview; see netsvw.cpp).  So, we disable
+        //  drawing, resize the frame a little, invalidate it, put the size back the
+        //  way it was, enable drawing, then invalidate again.  Whew.
+        CFrameWnd *pFrame = ((CGenericView *)m_pPreviewView)->GetFrame()->GetFrameWnd();
+        if (pFrame) {
+            RECT rect;
+            pFrame->GetWindowRect( &rect );
+            pFrame->LockWindowUpdate();
+            pFrame->SetWindowPos( NULL, rect.left, rect.top, rect.right-rect.left+1, rect.bottom-rect.top+1,
+                                SWP_NOACTIVATE || SWP_NOMOVE || SWP_NOZORDER );
+            pFrame->Invalidate();
+            pFrame->SetWindowPos( NULL, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
+                                SWP_NOACTIVATE || SWP_NOMOVE || SWP_NOZORDER );
+            pFrame->UnlockWindowUpdate();
+            pFrame->Invalidate();
+        }
 	}
 }
 
