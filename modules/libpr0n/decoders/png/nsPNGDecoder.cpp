@@ -207,11 +207,6 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   png_set_bgr(png_ptr);
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  // MacOS likes pixels padded to word boundaries
-  png_set_filler(png_ptr, 0, PNG_FILLER_BEFORE);
-#endif
-
   if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
       if (aGamma < 0)
           aGamma = 0.45455;
@@ -306,10 +301,9 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   PRUint32 bpr, abpr;
   decoder->mFrame->GetImageBytesPerRow(&bpr);
   decoder->mFrame->GetAlphaBytesPerRow(&abpr);
-  if (channels > 3) {
-    decoder->colorLine = (PRUint8 *)nsMemory::Alloc(bpr);
+  decoder->colorLine = (PRUint8 *)nsMemory::Alloc(bpr);
+  if (channels > 3)
     decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
-  }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels*width*height);
@@ -388,7 +382,18 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     switch (format) {
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
-      decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+        cptr = decoder->colorLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = 0;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+#else
+        decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
+#endif
       break;
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
@@ -438,6 +443,26 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
         decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
       }
+      break;
+    case gfxIFormats::RGBA:
+    case gfxIFormats::BGRA:
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      {
+        cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = 0;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *aptr++ = *line++;
+        }
+        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+      }
+#else
+      decoder->mFrame->SetImageData(line, bpr, row_num*bpr);
+#endif
       break;
     }
 
