@@ -644,7 +644,11 @@ sub BuildDist()
 	# we really do not need all these paths, but many client projects include them
 	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
 	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
-
+	
+	#make default plugins folder so that apprunner won't go looking for 3.0 and 4.0 plugins.
+	mkpath([ ":mozilla:dist:viewer:plugins", ":mozilla:dist:viewer_debug:plugins"]);
+	mkpath([ ":mozilla:dist:client:plugins", ":mozilla:dist:client_debug:plugins"]);
+	
 	if ($main::MOZ_FULLCIRCLE)
 	{
 		mkpath([ $dist_dir."TalkBack"]);
