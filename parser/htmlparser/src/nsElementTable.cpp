@@ -136,7 +136,7 @@ TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 
 
-TagList  gBlockQuoteExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
+TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913,23680
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
@@ -335,7 +335,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_blockquote,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,&gBlockQuoteExcludableParents,
+      /*autoclose starttags and endtags*/ 0,0,0,&gExcludableParents,
       /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
@@ -1117,7 +1117,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_td,
       /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
-      /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
+      /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,&gExcludableParents,
       /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
       /*special props, prop-range*/       kNoStyleLeaksIn|kNoStyleLeaksOut, kDefaultPropRange,
       /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown);
