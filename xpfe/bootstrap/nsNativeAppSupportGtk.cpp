@@ -127,7 +127,7 @@ nsSplashScreenGtk::Show()
    attr.event_mask = 0;
 
    mDialog = gdk_window_new( NULL, &attr, GDK_WA_X | GDK_WA_Y );	
-   gdk_window_set_override_redirect(mDialog, true);
+   gdk_window_set_override_redirect(mDialog, PR_TRUE);
    gdk_window_show( mDialog );
 
    GdkWindowPrivate *mprivate;
