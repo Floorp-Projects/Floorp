@@ -2466,6 +2466,6 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);
     // when an imap server is created, the copies and folder prefs for the associated identity
     // don't point to folders on the server.  they'll point to the one on "Local Folders"
-   	*aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
+   	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
     return NS_OK;
 } 
