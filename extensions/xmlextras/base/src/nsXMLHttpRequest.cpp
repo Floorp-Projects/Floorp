@@ -1268,9 +1268,17 @@ nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
-  if (httpChannel)
+  if (httpChannel) {
+    // We need to set, not add to, the header. Using empty value will
+    // clear existing header.
+    nsresult rv = httpChannel->SetRequestHeader(nsDependentCString(header),
+                                                nsCString());
+    if (NS_FAILED(rv))
+      return rv;
+    // Now set it for real
     return httpChannel->SetRequestHeader(nsDependentCString(header),
                                          nsDependentCString(value));
+  }
   
   return NS_OK;
 }
