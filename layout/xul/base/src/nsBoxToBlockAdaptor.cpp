@@ -171,13 +171,7 @@ nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
     PRBool needsWidget = PR_FALSE;
     parent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
-        nsCOMPtr<nsIPresContext> context;
-        mPresShell->GetPresContext(getter_AddRefs(context));
-
-        if (!mFrame->HasView()) {
-          nsStyleContext* style = mFrame->GetStyleContext();
-          nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
-        }
+        nsHTMLContainerFrame::CreateViewForFrame(mFrame, nsnull, PR_TRUE);
         nsIView* view = mFrame->GetView();
 
         if (!view->HasWidget())

@@ -76,7 +76,7 @@ public:
 
   nsStyleContext* GetFirstChild() const { return mChild; }
 
-  already_AddRefed<nsIAtom> GetPseudoType() const;
+  nsIAtom* GetPseudoType() const { return mPseudoTag; }
 
   already_AddRefed<nsStyleContext> 
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);

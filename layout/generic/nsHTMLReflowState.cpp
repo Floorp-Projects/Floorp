@@ -1392,8 +1392,8 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
         nsLayoutAtoms::areaFrame == frameType ||
         nsLayoutAtoms::scrollFrame == frameType) {
       if (nsLayoutAtoms::areaFrame == frameType) {
-        nsCOMPtr<nsIAtom> pseudo = rs->frame->GetStyleContext()->GetPseudoType();
-        if (pseudo == nsCSSAnonBoxes::scrolledContent) {
+        if (rs->frame->GetStyleContext()->GetPseudoType() ==
+            nsCSSAnonBoxes::scrolledContent) {
           continue;
         }
       }

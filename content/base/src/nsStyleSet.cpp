@@ -1478,7 +1478,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
       return aStyleContext;
     }
     else {  // really a new parent
-      nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
+      nsIAtom* pseudoTag = aStyleContext->GetPseudoType();
 
       nsRuleNode* ruleNode = aStyleContext->GetRuleNode();
       EnsureRuleWalker(aPresContext);

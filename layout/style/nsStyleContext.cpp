@@ -172,14 +172,6 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
   aChild->mPrevSibling = aChild;
 }
 
-already_AddRefed<nsIAtom>
-nsStyleContext::GetPseudoType() const
-{
-  nsIAtom* pseudoTag = mPseudoTag;
-  NS_IF_ADDREF(pseudoTag);
-  return pseudoTag;
-}
-
 already_AddRefed<nsStyleContext>
 nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag, 
                                    nsRuleNode* aRuleNode)

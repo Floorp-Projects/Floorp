@@ -660,7 +660,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
     if (NS_SUCCEEDED(rv))
     {
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
       mFrames.AppendFrame(this, aNewFrame);
     }
     else
@@ -694,7 +694,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
     if(NS_SUCCEEDED(rv))
     {
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
       mFrames.AppendFrame(this, aNewFrame);
     }
     else

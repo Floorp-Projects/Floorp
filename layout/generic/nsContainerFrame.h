@@ -138,8 +138,7 @@ public:
                                       PRUint32         aFlags = 0);
 
   // Returns PR_TRUE if the frame requires a view
-  static PRBool FrameNeedsView(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame, nsStyleContext* aStyleContext);
+  static PRBool FrameNeedsView(nsIFrame* aFrame);
   
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if
