@@ -4,31 +4,40 @@
 
 <!ENTITY cookiePolicy.label             "Cookie Acceptance Policy">
 
-<!ENTITY accAllCookiesRadio.label       "Enable all cookies">
+<!ENTITY accAllCookiesRadio.label       "Allow all cookies">
 <!ENTITY accAllCookiesRadio.accesskey   "c">
 
-<!ENTITY accOrgCookiesRadio.label       "Enable cookies for the originating web site only">
+<!ENTITY accOrgCookiesRadio.label       "Allow cookies for the originating web site only">
 <!ENTITY accOrgCookiesRadio.accesskey   "o">
 
-<!ENTITY accP3PCookiesRadio.label       "Enable cookies based on privacy settings">
+<!ENTITY accP3PCookiesRadio.label       "Allow cookies based on privacy settings">
 <!ENTITY accP3PCookiesRadio.accesskey   "p">
 
-<!ENTITY disableCookies.label           "Disable cookies">
-<!ENTITY disableCookies.accesskey       "D">
+<!ENTITY disableCookies.label           "Block cookies">
+<!ENTITY disableCookies.accesskey       "B">
 
-<!ENTITY warnAboutCookies.label         "Ask me before storing a cookie">
+<!ENTITY cookieLifetimePolicy.label     "Cookie Lifetime Policy">
+
+<!ENTITY acceptNormally.label           "Accept cookies normally">
+<!ENTITY acceptNormally.accesskey       "n">
+
+<!ENTITY acceptForSession.label         "Accept for current session only">
+<!ENTITY acceptForSession.accesskey     "s">
+
+<!ENTITY acceptforNDays.label           "Accept cookies for">
+<!ENTITY acceptforNDays.accesskey       "f">
+<!ENTITY days.label                     "days">
+
+<!ENTITY warnAboutCookies.label         "Ask for each cookie">
 <!ENTITY warnAboutCookies.accesskey     "A">
+<!ENTITY forCurrentSession.label        "except for session cookies">
+<!ENTITY forCurrentSession.accesskey    "e">
 
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that some web sites ask to store on (and later retrieve from) your computer.">
+<!ENTITY manageCookies.label            "Manage Cookies and Sites">
+<!ENTITY manageCookiesDescription.label "Allows you to view and manage stored cookies and per-site settings for accepting and rejecting cookies. Per-site settings will override the settings above.">
 
-<!ENTITY viewCookies.label              "Manage Stored Cookies">
+<!ENTITY viewCookies.label              "Cookie Manager">
 <!ENTITY viewCookies.accesskey          "M">
 <!ENTITY viewP3P.label                  "View">
 <!ENTITY viewP3P.accesskey              "V">
 
-<!ENTITY limitLifetime.label            "Limit maximum lifetime of cookies to:">
-<!ENTITY limitLifetime.accesskey        "L">
-<!ENTITY current.label                  "current session">
-<!ENTITY current.accesskey              "r">
-<!ENTITY days.label                     "days">
-<!ENTITY days.accesskey                 "y">

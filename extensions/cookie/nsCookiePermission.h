@@ -56,12 +56,11 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsCookiePermission() 
-    : mCookiesAskPermission(PR_FALSE)
-    , mCookiesLifetimeEnabled(PR_FALSE)
-#ifndef MOZ_PHOENIX
+    : mCookiesLifetimeSec(LL_MAXINT)
+    , mCookiesLifetimePolicy(LL_MAXINT)
+    , mCookiesAlwaysAcceptSession(PR_FALSE)
+#ifdef MOZ_MAIL_NEWS
     , mCookiesDisabledForMailNews(PR_TRUE)
-    , mCookiesLifetimeCurrentSession(PR_FALSE)
-    , mCookiesLifetimeSec(LL_MAXINT)
 #endif
     {}
   virtual ~nsCookiePermission() {}
@@ -72,13 +71,11 @@ public:
 private:
   nsCOMPtr<nsIPermissionManager> mPermMgr;
 
-  PRPackedBool mCookiesAskPermission;
-  PRPackedBool mCookiesLifetimeEnabled;        // cookie lifetime limit enabled
-                                               // (for phoenix, this implies limited to session)
-#ifndef MOZ_PHOENIX
-  PRPackedBool mCookiesDisabledForMailNews;
-  PRPackedBool mCookiesLifetimeCurrentSession; // limit cookie lifetime to current session
   nsInt64      mCookiesLifetimeSec;            // lifetime limit specified in seconds
+  PRUint8      mCookiesLifetimePolicy;         // pref for how long cookies are stored
+  PRPackedBool mCookiesAlwaysAcceptSession;    // don't prompt for session cookies
+#ifdef MOZ_MAIL_NEWS
+  PRPackedBool mCookiesDisabledForMailNews;
 #endif
 
 };

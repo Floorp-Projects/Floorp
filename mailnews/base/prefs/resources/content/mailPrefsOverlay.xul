@@ -21,9 +21,6 @@
       case "chrome://communicator/content/pref/pref-appearance.xul":
         _elementIDs.push("generalStartupMail");
         break;
-      case "chrome://cookie/content/pref-cookies.xul":
-        _elementIDs.push("networkDisableCookieForMailNews");
-        break;
       case "chrome://cookie/content/pref-images.xul":
         _elementIDs.push("networkImageDisableImagesInMailNews");
         break;
@@ -54,13 +51,6 @@
               pref="true" preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </groupbox>
-  <!--- cookie toggle for mail/news -->
-  <page id="cookiesPanel">
-    <checkbox id="networkDisableCookieForMailNews"
-              label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
-              preftype="bool" prefstring="network.cookie.disableCookieForMailNews"
-              insertafter="networkCookieBehaviorSeparator"/>
-  </page>
   <!--- image toggle for mail/news -->
   <groupbox id="imagesArea">
     <checkbox id="networkImageDisableImagesInMailNews"

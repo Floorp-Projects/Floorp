@@ -4,9 +4,6 @@
 <!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
 <!ENTITY enbPluginCheckMailNews.accesskey "p">
 
-<!ENTITY disableCookieForMailNews.label "Disable cookies in Mail &amp; Newsgroups">
-<!ENTITY disableCookieForMailNews.accesskey "m">
-
 <!ENTITY disableImageInMailNews.label       "Do not load remote images in Mail &amp; Newsgroup messages">
 <!ENTITY disableImageInMailNews.accesskey   "i">
 
