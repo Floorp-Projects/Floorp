@@ -732,9 +732,16 @@
                                                              (nonempty (set* (& namespaces pn) (& namespaces (& partial-name m)))))))
       (rwhen (nonempty matches)
         (rwhen (> (length matches) 1)
+          (// "This access is ambiguous because it found several different members in the same class.")
           (throw property-not-found-error))
-        (const matching-namespaces (list-set namespace) (set* (& namespaces pn) (& namespaces (& partial-name (elt-of matches)))))
-        (return (elt-of matching-namespaces)))
+        (/* "Let " (:local match) ":" :nbsp (:type member) " be the one element of " (:local matches) ".")
+        (const match member (elt-of matches))
+        (*/)
+        (const matching-namespaces (list-set namespace) (set* (& namespaces pn) (& namespaces (& partial-name match))))
+        (/* "Let " (:local ns2) ":" :nbsp (:type namespace) " be any element of " (:local matching-namespaces) ".")
+        (const ns2 namespace (elt-of matching-namespaces))
+        (*/)
+        (return ns2))
       (return null))
     
     
