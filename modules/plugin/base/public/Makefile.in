@@ -63,6 +63,10 @@ EXPORTS		+= \
 		nsISeekablePluginStreamPeer.h \
 		$(NULL)
 
+XPIDLSRCS 	= \
+		nsIScriptablePlugin.idl \
+		$(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
