@@ -63,7 +63,8 @@
     </radiogroup>
   </groupbox>
 
-  <groupbox align="start">
+#ifndef MOZ_THUNDERBIRD
+    <groupbox align="start">
     <caption label="&downloadManagerWindow.label;"/>
     
     <checkbox id="showWhenStarting" label="&showWhenStarting.label;" 
@@ -72,6 +73,7 @@
     <checkbox id="closeWhenDone" label="&closeWhenDone.label;" class="indent"
               prefstring="browser.download.closeWhenDone"/>
   </groupbox>
+#endif
   
   <groupbox flex="1">
     <caption label="&fileTypes.label;"/>
