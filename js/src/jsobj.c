@@ -432,10 +432,11 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
     JSString *idstr, *valstr, *str;
 
-    /* obj_toString for 1.2 calls toSource, and doesn't
-        want the extra parens on the outside */
-    outermost = (cx->version != JSVERSION_1_2) 
-                        && (cx->sharpObjectMap.depth == 0);
+    /*
+     * obj_toString for 1.2 calls toSource, and doesn't want the extra parens
+     * on the outside.
+     */
+    outermost = (cx->version != JSVERSION_1_2 && cx->sharpObjectMap.depth == 0);
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
     if (!he)
 	return JS_FALSE;

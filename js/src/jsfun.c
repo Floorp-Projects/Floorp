@@ -1140,9 +1140,9 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
 #if JS_HAS_ERROR_EXCEPTIONS
 /*
-    For exceptions, we want cross-context exceptions to be equal, i.e. a 
-    SyntaxError thrown from one context (another window) will still be a 
-    'instanceof SyntaxError' in another context (window). Here, if we're 
+    For exceptions, we want cross-context exceptions to be equal, i.e. a
+    SyntaxError thrown from one context (another window) will still be a
+    'instanceof SyntaxError' in another context (window). Here, if we're
     asking if an object is an instance of an exception, make a special
     call into js_exnHasInstance.
 */
@@ -1312,10 +1312,10 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     JSStackFrame *fp;
 
-    if (argc == 0)
-        /* will get globalObject as 'this'
-                    and no other agurments */
+    if (argc == 0) {
+        /* Will get globalObject as 'this' and no other agurments. */
         return fun_call(cx, obj, argc, argv, rval);
+    }
 
     if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &argv[-1]))
 	return JS_FALSE;
@@ -1329,16 +1329,15 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
-    if (argc >= 2)
-        /* if the second arg is null or undefined, call the
-           function with zero args */
-        if ((argv[1] == JSVAL_NULL) || (argv[1] == JSVAL_VOID))
+    if (argc >= 2) {
+        /* If the 2nd arg is null or void, call the function with 0 args. */
+        if (JSVAL_IS_NULL(argv[1]) || JSVAL_IS_VOID(argv[1])) {
             argc = 0;
-        else {
-            /* the second arg must be an array (or arguments object) */
-            if (!(aobj = JSVAL_TO_OBJECT(argv[1]))
-                    || ((OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass)
-                        && (OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass))) {
+        } else {
+            /* The second arg must be an array (or arguments object). */
+            aobj = JSVAL_TO_OBJECT(argv[1]);
+            if (OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass &&
+                OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass) {
 	        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_APPLY_ARGS);
                 return JS_FALSE;
@@ -1346,6 +1345,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!js_GetLengthProperty(cx, aobj, &length))
                 return JS_FALSE;
         }
+    }
 
     /* Convert the first arg to 'this' and skip over it. */
     if (!js_ValueToObject(cx, argv[0], &obj))
