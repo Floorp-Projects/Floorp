@@ -85,10 +85,8 @@ public:
 																		EventRecord&		aOSEvent,
 																		long						aMenuResult);
 
-		// be notified that a drop has occurred in this window so the appropriate event
-		// can be passed into gecko.
-	virtual PRBool 			DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
-	//virtual PRBool 			TrackDrag ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+		// be notified that a some form of drag event needs to go into Gecko
+	virtual PRBool 			DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 
 protected:
 
