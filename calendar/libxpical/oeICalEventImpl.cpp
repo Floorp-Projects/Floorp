@@ -103,31 +103,31 @@ oeICalEventImpl::oeICalEventImpl()
   /* member initializers and constructor code */
     nsresult rv;
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_start ))) {
-        m_start = NULL;
+        m_start = nsnull;
 	}
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_end ))) {
-        m_end = NULL;
+        m_end = nsnull;
 	}
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_recurend ))) {
-        m_recurend = NULL;
+        m_recurend = nsnull;
 	}
     m_id = 0;
-    m_title = NULL;
-    m_description = NULL;
-    m_location = NULL;
-    m_category = NULL;
+    m_title = nsnull;
+    m_description = nsnull;
+    m_location = nsnull;
+    m_category = nsnull;
     m_isprivate = true;
     m_syncid = 0;
     m_allday = false;
     m_hasalarm = false;
     m_alarmlength = 0;
-    m_alarmemail = NULL;
-    m_inviteemail = NULL;
+    m_alarmemail = nsnull;
+    m_inviteemail = nsnull;
     m_recurinterval = 1;
     m_recur = false;
     m_recurforever = true;
-    m_alarmunits = NULL;
-    m_recurunits = NULL;
+    m_alarmunits = nsnull;
+    m_recurunits = nsnull;
     m_recurweekdays = 0;
     m_recurweeknumber = 0;
     m_lastalarmack = icaltime_null_time();
@@ -197,7 +197,7 @@ NS_IMETHODIMP oeICalEventImpl::GetTitle(char **aRetVal)
     
     if( m_title ) {
         *aRetVal= (char*) nsMemory::Clone( m_title, strlen(m_title)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -220,7 +220,7 @@ NS_IMETHODIMP oeICalEventImpl::SetTitle(const char * aNewVal)
     if( aNewVal )
         m_title= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_title = NULL;
+        m_title = nsnull;
 
     return NS_OK;
 }
@@ -233,7 +233,7 @@ NS_IMETHODIMP oeICalEventImpl::GetDescription(char * *aRetVal)
 #endif
     if( m_description ) {
         *aRetVal= (char*) nsMemory::Clone( m_description , strlen(m_description)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -256,7 +256,7 @@ NS_IMETHODIMP oeICalEventImpl::SetDescription(const char * aNewVal)
     if( aNewVal )
         m_description= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_description = NULL;
+        m_description = nsnull;
     
     return NS_OK;
 }
@@ -270,7 +270,7 @@ NS_IMETHODIMP oeICalEventImpl::GetLocation(char **aRetVal)
 
     if( m_location ) {
         *aRetVal= (char*) nsMemory::Clone( m_location , strlen(m_location)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -292,7 +292,7 @@ NS_IMETHODIMP oeICalEventImpl::SetLocation(const char * aNewVal)
     if( aNewVal )
         m_location= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_location = NULL;
+        m_location = nsnull;
 
     return NS_OK;
 }
@@ -306,7 +306,7 @@ NS_IMETHODIMP oeICalEventImpl::GetCategory(char **aRetVal)
     
     if( m_category ) {
         *aRetVal= (char*) nsMemory::Clone( m_category , strlen(m_category)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -328,7 +328,7 @@ NS_IMETHODIMP oeICalEventImpl::SetCategory(const char * aNewVal)
     if( aNewVal )
         m_category= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_category = NULL;
+        m_category = nsnull;
     return NS_OK;
 }
 
@@ -420,7 +420,7 @@ NS_IMETHODIMP oeICalEventImpl::GetAlarmUnits(char * *aRetVal)
 #endif
     if( m_alarmunits ) {
         *aRetVal= (char*) nsMemory::Clone( m_alarmunits, strlen(m_alarmunits)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -438,7 +438,7 @@ NS_IMETHODIMP oeICalEventImpl::SetAlarmUnits(const char * aNewVal)
     if( aNewVal )
         m_alarmunits= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_alarmunits = NULL;
+        m_alarmunits = nsnull;
     return NS_OK;
 }
 
@@ -469,7 +469,7 @@ NS_IMETHODIMP oeICalEventImpl::GetAlarmEmailAddress(char * *aRetVal)
 #endif
     if( m_alarmemail ) {
         *aRetVal= (char*) nsMemory::Clone( m_alarmemail, strlen(m_alarmemail)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -487,7 +487,7 @@ NS_IMETHODIMP oeICalEventImpl::SetAlarmEmailAddress(const char * aNewVal)
     if( aNewVal )
         m_alarmemail= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_alarmemail = NULL;
+        m_alarmemail = nsnull;
     return NS_OK;
 }
 
@@ -499,7 +499,7 @@ NS_IMETHODIMP oeICalEventImpl::GetInviteEmailAddress(char * *aRetVal)
 #endif
     if( m_inviteemail ) {
         *aRetVal= (char*) nsMemory::Clone( m_inviteemail, strlen(m_inviteemail)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -516,7 +516,7 @@ NS_IMETHODIMP oeICalEventImpl::SetInviteEmailAddress(const char * aNewVal)
     if( aNewVal )
         m_inviteemail= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_inviteemail = NULL;
+        m_inviteemail = nsnull;
     return NS_OK;
 }
 
@@ -547,7 +547,7 @@ NS_IMETHODIMP oeICalEventImpl::GetRecurUnits(char **aRetVal)
 #endif
     if( m_recurunits ) {
         *aRetVal= (char*) nsMemory::Clone( m_recurunits, strlen(m_recurunits)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -564,7 +564,7 @@ NS_IMETHODIMP oeICalEventImpl::SetRecurUnits(const char * aNewVal)
     if( aNewVal )
         m_recurunits= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
-        m_recurunits = NULL;
+        m_recurunits = nsnull;
     return NS_OK;
 }
 
@@ -592,9 +592,12 @@ NS_IMETHODIMP oeICalEventImpl::SetRecur(PRBool aNewVal)
 NS_IMETHODIMP oeICalEventImpl::GetRecurForever(PRBool *aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "GetRecurForever()\n" );
+    printf( "GetRecurForever() = " );
 #endif
     *aRetVal = m_recurforever;
+#ifdef ICAL_DEBUG_ALL
+    printf( "%d\n", *aRetVal );
+#endif
     return NS_OK;
 }
 NS_IMETHODIMP oeICalEventImpl::SetRecurForever(PRBool aNewVal)
@@ -707,11 +710,11 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
     if( !m_hasalarm )
         return result;
 
-    icaltimetype starting;
-    if( icaltime_is_null_time( m_lastalarmack ) )
-        starting = begin;
-    else
+    icaltimetype starting = begin;
+
+    if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( begin, m_lastalarmack ) < 0 )
         starting = m_lastalarmack;
+
     icaltimetype checkloop = starting;
     do {
         checkloop = GetNextRecurrence( checkloop );
@@ -800,7 +803,7 @@ NS_IMETHODIMP oeICalEventImpl::GetIcalString(char **aRetVal)
     char *str = icalcomponent_as_ical_string( vcalendar );
     if( str ) {
         *aRetVal= (char*) nsMemory::Clone( str, strlen(str)+1);
-        if( *aRetVal == NULL )
+        if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
     } else
         *aRetVal= EmptyReturn();
@@ -905,7 +908,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = icalproperty_get_value_as_string( prop );
         SetTitle( tmpstr );
     } else
-        m_title = NULL;
+        m_title = nsnull;
 
 //description
     if( m_description )
@@ -915,7 +918,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = icalproperty_get_value_as_string( prop );
         SetDescription( tmpstr );
     } else
-        m_description = NULL;
+        m_description = nsnull;
 
 //location
     if( m_location )
@@ -925,7 +928,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = icalproperty_get_value_as_string( prop );
         SetLocation( tmpstr );
     } else
-        m_location = NULL;
+        m_location = nsnull;
 
 //category
     if( m_category )
@@ -935,7 +938,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = (char *)icalproperty_get_value_as_string( prop );
         SetCategory( tmpstr );
     } else
-        m_category= NULL;
+        m_category= nsnull;
 
 //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
@@ -1046,7 +1049,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = icalproperty_get_value_as_string( prop );
         SetAlarmEmailAddress( tmpstr );
     } else
-        m_alarmemail= NULL;
+        m_alarmemail= nsnull;
 
     //lastalarmack
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
@@ -1070,7 +1073,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         tmpstr = (char *)icalproperty_get_value_as_string( prop );
         SetInviteEmailAddress( tmpstr );
     } else
-        m_inviteemail = NULL;
+        m_inviteemail = nsnull;
 
 //recurinterval
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
@@ -1106,7 +1109,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
     }
 //recurenddate & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
-    m_recurforever = false;
+    m_recurforever = true;
     prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
     if ( prop != 0) {
         m_recur = true;
@@ -1115,8 +1118,8 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         m_recurend->m_datetime = recur.until;
         m_recurend->m_datetime.is_date = false;
         m_recurend->m_datetime.is_utc = false;
-        if( icaltime_is_null_time( recur.until ) )
-            m_recurforever = true;
+        if( !icaltime_is_null_time( recur.until ) )
+            m_recurforever = false;
         if( recur.freq == ICAL_WEEKLY_RECURRENCE ) {
             int k=0;
             while( recur.by_day[k] != ICAL_RECURRENCE_ARRAY_MAX ) {
@@ -1373,6 +1376,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                 break;
             case RECUR_WEEKLY:{
                 recur.freq = ICAL_WEEKLY_RECURRENCE;
+                //if the recur rule is weekly make sure a weekdaymask exists
                 if( m_recurweekdays == 0 ) {
                     m_recurweekdays = 1 << (icaltime_day_of_week( m_start->m_datetime )-1);
                 }

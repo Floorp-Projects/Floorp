@@ -48,8 +48,8 @@ public:
     oeIICalEvent* event;
     EventList* next;
     EventList() {
-        event = NULL;
-        next = NULL;
+        event = nsnull;
+        next = nsnull;
     }
     ~EventList() {
         if( event )
@@ -69,14 +69,14 @@ public:
     }
     oeIICalEvent* GetEventById( PRUint32 id ) {
         if( !event )
-            return NULL;
+            return nsnull;
         PRUint32 eid=0;
         event->GetId( &eid );
         if( eid == id )
             return event;
         if( next )
             return next->GetEventById( id );
-        return NULL;
+        return nsnull;
     }
     void Remove( PRUint32 id ) {
         if( !event )
@@ -89,11 +89,11 @@ public:
                 event = next->event;
                 EventList *tmp = next;
                 next = next->next;
-                tmp->next = NULL;
-                tmp->event = NULL;
+                tmp->next = nsnull;
+                tmp->event = nsnull;
                 delete tmp;
             } else {
-                event = NULL;
+                event = nsnull;
             }
         } else {
             if( next )
