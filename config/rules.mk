@@ -104,25 +104,43 @@ endif
 # If NO_STATIC_LIB is set, the static library will not be built.
 # If NO_SHARED_LIB is set, the shared library will not be built.
 #
+
+ifeq ($(OS_ARCH),OS2)
+STATIC_LIBS		= $(filter %_s, $(EXTRA_DSO_LIBS))
+SHARED_LIBS		= $(filter-out %_s, $(EXTRA_DSO_LIBS))
+EXTRA_DSO_LIBS		:= $(addprefix lib,$(STATIC_LIBS)) $(SHARED_LIBS)
+endif
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
+EXTRA_DSO_LIBS		:= $(filter-out %/bin %lib,$(EXTRA_DSO_LIBS))
+else
+EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LDOPTS))
+endif
+
 ifndef LIBRARY
 ifdef LIBRARY_NAME
+ifeq ($(OS_ARCH),OS2)
+ifdef SHORT_LIBNAME
+LIBRARY_NAME		:= $(SHORT_LIBNAME)
+endif
+endif
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 endif
 
 ifdef LIBRARY
-ifeq ($(OS_ARCH),OS2)
-ifndef DEF_FILE
-DEF_FILE		:= $(LIBRARY:.lib=.def)
-endif
-endif
-
 ifndef NO_SHARED_LIB
 ifdef MKSHLIB
 
 ifeq ($(OS_ARCH),OS2)
-SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
-MAPS			:= $(LIBRARY:.lib=.map)
+DEF_OBJS		= $(OBJS)
+ifeq ($(EXPORT_OBJS),1)
+DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
+endif
+SHARED_LIBRARY		:= $(LIBRARY_NAME).$(DLL_SUFFIX)
+DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
+IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
 else  # OS2
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
@@ -162,7 +180,7 @@ LIBRARY			= $(NULL)
 endif
 
 ifdef NO_SHARED_LIB
-DLL_SUFFIX		= a
+DLL_SUFFIX		= $(LIB_SUFFIX)
 endif
 
 ifndef TARGETS
@@ -173,7 +191,9 @@ ifndef OBJS
 OBJS			= $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o)
 endif
 
-ifndef OS2_IMPLIB
+ifeq ($(OS_ARCH),OS2)
+LIBOBJS			:= $(OBJS)
+else
 LIBOBJS			:= $(addprefix \", $(OBJS))
 LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
 endif
@@ -334,6 +354,13 @@ endif # non-gnu compilers
 endif # IS_COMPONENT
 endif # HP-UX
 
+ifeq ($(USE_TVFS),1)
+IFLAGS1 = -rb
+IFLAGS2 = -rb
+else
+IFLAGS1 = -m 444
+IFLAGS2 = -m 555
+endif
 
 ################################################################################
 
@@ -429,44 +456,101 @@ endif
 export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
-install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+##############################################
+ifeq ($(OS_ARCH),OS2)
+# Leave DLL-making for the install loop to ensure all libs required for linkage have been built
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
+	@echo "***** OS2 libs chkpt-STATIC LIBRARY *****"
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(IMPORT_LIBRARY) $(DIST)/lib
+endif
+endif
+ifdef SHARED_LIBRARY
+ifdef IS_COMPONENT
+	@echo "***** OS2 libs chkpt-SHARED_LIB COMPONENT *****"
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
+else
+	@echo "***** OS2 libs chkpt-SHARED_LIBRARY *****"
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
+endif
+endif
+	+$(LOOP_OVER_DIRS)
+endif # OS2
+
+ifeq ($(OS_ARCH),OS2)
+# Leave DLL-making for the install loop to ensure all libs required for linkage have been built
+install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS) $(PROGRAM) $(SIMPLE_PROGRAMS)
+	@echo "**** OS2 install *****"
+else
+install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+endif
+ifndef NO_STATIC_LIB
+ifdef LIBRARY
+ifeq ($(OS_ARCH),OS2)
+	@echo "**** OS2 install LIBRARY *****"
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(IMPORT_LIBRARY) $(DIST)/lib
+else
 ifdef IS_COMPONENT
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib/components
 else
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
 endif
+endif # OS2
 endif
 endif
 ifdef MAPS
-	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(MAPS) $(DIST)/bin
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
+ifeq ($(OS_ARCH),OS2)
+	@echo "**** OS2 install SHARED_LIBRARY COMPONENT *****"
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
+else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
+endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
+else # ! IS_COMPONENT
+ifeq ($(OS_ARCH),OS2)
+	@echo "**** OS2-M14 install NON COMPONENT *****"
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
 endif
 endif
 endif
 ifdef PROGRAM
-	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DIST)/bin
 endif
 ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
 
+#####  Old OS2 install loop for DLL
+ifeq ($(OS_ARCH),OS2)
+install:: $(SUBMAKEFILES) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
+	@echo "**** OS2 install *****"
+ifdef SHARED_LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
+else
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
+endif
+endif
+        +$(LOOP_OVER_DIRS)
+endif # OS2
+
 checkout:
-	cd $(topsrcdir); $(MAKE) -f client.mk checkout
+	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
 run_viewer: $(DIST)/bin/viewer
 	cd $(DIST)/bin; \
@@ -493,14 +577,14 @@ alltags:
 # creates OBJS, links with LIBS to create Foo
 #
 $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
-ifeq ($(OS_ARCH),OS2)
-	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(LD) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) /ST:0x1000000
 else
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
@@ -509,7 +593,7 @@ ifdef BEOS_PROGRAM_RESOURCE
 endif
 endif
 else
-	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
@@ -528,12 +612,20 @@ endif
 # SIMPLE_PROGRAMS = Foo Bar
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
-$(SIMPLE_PROGRAMS):%: %.o $(EXTRA_DEPS) Makefile Makefile.in
+$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	ilink /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(OS_LFLAGS)
+else
 	$(CCC) $(WRAP_MALLOC_CFLAGS) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+endif
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	ilink /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(OS_LFLAGS)
+else
 	$(CC) $(WRAP_MALLOC_CFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+endif
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
@@ -548,7 +640,7 @@ ifeq ($(CPP_PROG_LINK),1)
 else
 	$(PURIFY) $(CC) -o $^.pure $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
-	$(INSTALL) -m 555 $^.pure $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $^.pure $(DIST)/bin
 
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
@@ -556,7 +648,7 @@ ifeq ($(CPP_PROG_LINK),1)
 else
 	$(QUANTIFY) $(CC) -o $^.quantify $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
-	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
+	$(INSTALL) $(IFLAGS2) $^.quantify $(DIST)/bin
 
 ifneq ($(OS_ARCH),OS2)
 #
@@ -635,21 +727,35 @@ endif
 
 endif # USE_IMPLICIT_ARCHIVE
 else # OS2
-ifdef OS2_IMPLIB
-$(LIBRARY): $(OBJS) $(DEF_FILE)
+ifdef SHARED_LIBRARY
+$(DEF_FILE): $(DEF_OBJS)
 	rm -f $@
+	@cmd /C "echo LIBRARY $(LIBRARY_NAME) INITINSTANCE TERMINSTANCE >$(DEF_FILE)"
+	@cmd /C "echo PROTMODE >>$(DEF_FILE)"
+	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$(DEF_FILE)"
+	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$(DEF_FILE)"        
+	@cmd /C "echo EXPORTS >>$(DEF_FILE)"
+ifeq ($(XPCOM_SWITCH),1)
+	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
+else
+	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR >> $(DEF_FILE)
+endif
+	$(ADD_TO_DEF_FILE)
+$(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
+	rm -f $@
+	$(MAKE_DEF_FILE)
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 else
 $(LIBRARY): $(OBJS)
 	rm -f $@
-	$(AR) $(AR_FLAGS) $(LIBOBJS),,
+	$(AR) $(AR_FLAGS) $(LIBOBJS)
 	$(RANLIB) $@
 endif
 endif
 
 ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_O) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OpenVMS)
 ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
@@ -686,7 +792,7 @@ endif
 else
 $(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) Makefile Makefile.in
 	rm -f $@
-	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
 endif
@@ -695,7 +801,7 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 $(DLL): $(OBJS) $(EXTRA_LIBS)
 	rm -f $@
 ifeq ($(OS_ARCH),OS2)
-	$(LINK_DLL) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
@@ -703,18 +809,24 @@ endif
 
 %: %.c
 	$(REPORT_BUILD)
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
+ifeq ($(MOZ_OS2_TOOLS), VACPP)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+endif
 endif
 
 %.o: %.c Makefile.in
 	$(REPORT_BUILD)
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
+else
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
+endif
 endif
 
 moc_%.cpp: %.h
@@ -745,10 +857,14 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 	$(ELOG) $(CCC) -Fo$@ -c $(CXXFLAGS) $<
 else
+ifeq ($(MOZ_OS2_TOOLS), VACPP)
+	$(ELOG) $(CCC) -Fo$@ -c $(COMPILE_CXXFLAGS) $<
+else
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+endif
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
@@ -953,7 +1069,7 @@ JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT
 # problem because the source isn't in the current directory:
 #
 export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
-	$(NSINSTALL) -t -m 444 $(JMC_EXPORT_FILES) $(JMCSRCDIR)
+	$(NSINSTALL) -t $(IFLAGS1) $(JMC_EXPORT_FILES) $(JMCSRCDIR)
 endif # JAVA_OR_NSJVM
 endif
 
@@ -994,7 +1110,7 @@ $(PUBLIC)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(EXPORTS) $(PUBLIC)
-	$(INSTALL) -m 444 $^
+	$(INSTALL) $(IFLAGS1) $^
 endif 
 
 ################################################################################
@@ -1005,7 +1121,7 @@ $(DIST)/bin/defaults/pref::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
-	$(INSTALL) -m 444 $^
+	$(INSTALL) $(IFLAGS1) $^
 endif 
 
 ################################################################################
@@ -1032,7 +1148,7 @@ $(DIST)/idl::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(XPIDLSRCS) $(DIST)/idl
-	$(INSTALL) -m 444 $^
+	$(INSTALL) $(IFLAGS1) $^
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
 # warn against overriding existing .h file.  (Added to MAKE_DIRS above.)
@@ -1049,7 +1165,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
-	$(INSTALL) -m 444 $^
+	$(INSTALL) $(IFLAGS1) $^
 
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
@@ -1062,7 +1178,7 @@ $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
 
 install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
-	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/components
 
 endif
 
@@ -1339,3 +1455,63 @@ echo-module-name:
 
 echo-module-filelist:
 	@$(topsrcdir)/build/package/rpm/print-module-filelist.sh
+
+showtargs:
+ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
+	@echo --------------------------------------------------------------------------------
+	@echo "PROGRAM             = $(PROGRAM)"
+	@echo "SIMPLE_PROGRAMS     = $(SIMPLE_PROGRAMS)"
+	@echo "LIBRARY             = $(LIBRARY)"
+	@echo "SHARED_LIBRARY      = $(SHARED_LIBRARY)"
+	@echo "SHARED_LIBRARY_LIBS = $(SHARED_LIBRARY_LIBS)"
+	@echo "LIBS                = $(LIBS)"
+	@echo "DEF_FILE            = $(DEF_FILE)"
+	@echo "DEF_OBJS            = $(DEF_OBJS)"
+	@echo "IMPORT_LIBRARY      = $(IMPORT_LIBRARY)"
+	@echo "STATIC_LIBS         = $(STATIC_LIBS)"
+	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
+	@echo "EXTRA_DSO_LIBS      = $(EXTRA_DSO_LIBS)"
+	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
+	@echo --------------------------------------------------------------------------------
+endif
+	+$(LOOP_OVER_DIRS)
+
+showbuild:
+	@echo "MOZ_BUILD_ROOT     = $(MOZ_BUILD_ROOT)"
+	@echo "MOZ_WIDGET_TOOLKIT = $(MOZ_WIDGET_TOOLKIT)"
+	@echo "CC                 = $(CC)"
+	@echo "CXX                = $(CXX)"
+	@echo "CPP                = $(CPP)"
+	@echo "LD                 = $(LD)"
+	@echo "AR                 = $(AR)"
+	@echo "IMPLIB             = $(IMPLIB)"
+	@echo "FILTER             = $(FILTER)"
+	@echo "MKSHLIB            = $(MKSHLIB)"
+	@echo "MKCSHLIB           = $(MKCSHLIB)"
+	@echo "RC                 = $(RC)"
+	@echo "CFLAGS             = $(CFLAGS)"
+	@echo "OS_CFLAGS          = $(OS_CFLAGS)"
+	@echo "COMPILE_CFLAGS     = $(COMPILE_CFLAGS)"
+	@echo "CXXFLAGS           = $(CXXFLAGS)"
+	@echo "OS_CXXFLAGS        = $(OS_CFXXFLAGS)"
+	@echo "COMPILE_CXXFLAGS   = $(COMPILE_CXXFLAGS)"
+	@echo "LDFLAGS            = $(LDFLAGS)"
+	@echo "OS_LDFLAGS         = $(OS_LDFLAGS)"
+	@echo "DSO_LDOPTS         = $(DSO_LDOPTS)"
+	@echo "OS_INCLUDES        = $(OS_INCLUDES)"
+	@echo "OS_LIBS            = $(OS_LIBS)"
+	@echo "EXTRA_LIBS         = $(EXTRA_LIBS)"
+	@echo "BIN_FLAGS          = $(BIN_FLAGS)"
+	@echo "INCLUDES           = $(INCLUDES)"
+	@echo "DEFINES            = $(DEFINES)"
+	@echo "ACDEFINES          = $(ACDEFINES)"
+	@echo "BIN_SUFFIX         = $(BIN_SUFFIX)"
+	@echo "LIB_SUFFIX         = $(LIB_SUFFIX)"
+	@echo "DLL_SUFFIX         = $(DLL_SUFFIX)"
+	@echo "INSTALL            = $(INSTALL)"
+
+zipmakes:
+ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
+	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
+endif
+	+$(LOOP_OVER_DIRS)
