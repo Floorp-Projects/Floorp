@@ -64,7 +64,7 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mOwnerRequestor(nsnull),
    mChromeListener(nsnull)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsDocShellTreeOwner::~nsDocShellTreeOwner()
@@ -81,7 +81,7 @@ nsDocShellTreeOwner::~nsDocShellTreeOwner()
 
 NS_IMPL_ADDREF(nsDocShellTreeOwner)
 NS_IMPL_RELEASE(nsDocShellTreeOwner)
-            
+
 NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
@@ -268,186 +268,170 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    return NS_OK;
 }
 
+
 //*****************************************************************************
 // nsDocShellTreeOwner::nsIBaseWindow
 //*****************************************************************************   
 
+
 NS_IMETHODIMP nsDocShellTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* aParentWidget, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)   
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->InitWindow(aParentNativeWindow, aParentWidget, aX, aY,
-      aCX, aCY); 
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::Create()
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-   
-   return mOwnerWin->Create();
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::Destroy()
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->Destroy();
+    if (mOwnerWin)
+    {
+        return mOwnerWin->Destroy();
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetPosition(PRInt32 aX, PRInt32 aY)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetPosition(aX, aY);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetPosition(aX, aY);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetPosition(PRInt32* aX, PRInt32* aY)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-   
-   return mOwnerWin->GetPosition(aX, aY);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetPosition(aX, aY);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetSize(aCX, aCY, aRepaint);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetSize(aCX, aCY, aRepaint);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetSize(aCX, aCY);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetSize(aCX, aCY);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
    PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
    PRInt32* aCX, PRInt32* aCY)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetPositionAndSize(aX, aY, aCX, aCY);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetPositionAndSize(aX, aY, aCX, aCY);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::Repaint(PRBool aForce)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->Repaint(aForce);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetParentWidget(aParentWidget);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetParentWidget(aParentWidget);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetParentNativeWindow(aParentNativeWindow);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetSiteWindow(aParentNativeWindow);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetParentNativeWindow(aParentNativeWindow);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetVisibility(PRBool* aVisibility)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetVisibility(aVisibility);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetVisibility(PRBool aVisibility)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetVisibility(aVisibility);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetMainWidget(aMainWidget);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetFocus()
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetFocus();
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetFocus();
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->FocusAvailable(aCurrentFocus, aTookFocus);
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetTitle(PRUnichar** aTitle)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->GetTitle(aTitle);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetTitle(aTitle);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
-   if (!mOwnerWin)
-       return NS_ERROR_NULL_POINTER;
-
-   return mOwnerWin->SetTitle(aTitle);
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetTitle(aTitle);
+    }
+    return NS_ERROR_NULL_POINTER;
 }
+
 
 //*****************************************************************************
 // nsDocShellTreeOwner::nsIWebProgressListener
 //*****************************************************************************   
+
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::OnProgressChange(nsIWebProgress* aProgress,
@@ -545,15 +529,16 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
       mWebBrowserChrome = nsnull;
       mOwnerWin = nsnull;
       mOwnerRequestor = nsnull;
-   }
-   else {
-      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aWebBrowserChrome));
+      }
+   else
+      {
+      nsCOMPtr<nsIWebBrowserSiteWindow> ownerWin(do_QueryInterface(aWebBrowserChrome));
       nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aWebBrowserChrome));
 
-      NS_ENSURE_TRUE(baseWin, NS_ERROR_INVALID_ARG);
+      NS_ENSURE_TRUE(ownerWin, NS_ERROR_INVALID_ARG);
 
       mWebBrowserChrome = aWebBrowserChrome;
-      mOwnerWin = baseWin;
+      mOwnerWin = ownerWin;
       mOwnerRequestor = requestor;
    }
    return NS_OK;
@@ -615,7 +600,7 @@ ChromeListener :: ChromeListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome*
      mContextMenuListenerInstalled(PR_FALSE), mTooltipListenerInstalled(PR_FALSE),
      mShowingTooltip(PR_FALSE), mMouseClientX(0), mMouseClientY(0)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 } // ctor
 
 
@@ -950,25 +935,25 @@ ChromeListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult 
 ChromeListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-	return NS_OK; 
+    return NS_OK; 
 }
 
 nsresult 
 ChromeListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-	return NS_OK; 
+    return NS_OK; 
 }
 
 nsresult 
 ChromeListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-	return NS_OK; 
+    return NS_OK; 
 }
 
 nsresult 
 ChromeListener::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-	return NS_OK; 
+    return NS_OK; 
 }
 
 
