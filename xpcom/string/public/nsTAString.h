@@ -234,6 +234,37 @@ class nsTAString_CharT
         }
 #endif
 
+    // The LowerCaseEquals methods compare the lower case version of
+    // this string to some ASCII/Literal string. The ASCII string is
+    // *not* lowercased for you. If you compare to an ASCII or literal
+    // string that contains an uppercase character, it is guaranteed to
+    // return false. We will throw assertions too.
+      NS_COM PRBool LowerCaseEqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool LowerCaseEqualsASCII( const char* data ) const;
+
+    // LowerCaseEqualsLiteral must ONLY be applied to an actual
+    // literal string.  Do not attempt to use it with a regular char*
+    // pointer, or with a char array variable. Use
+    // LowerCaseEqualsASCII for them.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      inline PRBool LowerCaseEqualsLiteral( const char* str ) const
+        {
+          return LowerCaseEqualsASCII(str);
+        }
+#else
+      template<int N>
+      inline PRBool LowerCaseEqualsLiteral( const char (&str)[N] ) const
+        {
+          return LowerCaseEqualsASCII(str, N-1);
+        }
+      template<int N>
+      inline PRBool LowerCaseEqualsLiteral( char (&str)[N] ) const
+        {
+          const char* s = str;
+          return LowerCaseEqualsASCII(s, N-1);
+        }
+#endif
+
         /**
          * A string always references a non-null data pointer.  In some
          * applications (e.g., the DOM) it is necessary for a string class
@@ -332,6 +363,24 @@ class nsTAString_CharT
       NS_COM void Assign( const char_type* data, size_type length );
       NS_COM void Assign( char_type c );
 
+      NS_COM void AssignASCII( const char* data, size_type length );
+      NS_COM void AssignASCII( const char* data );
+
+    // AssignLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use AssignASCII for those.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      void AssignLiteral( const char* str )
+                  { return AssignASCII(str); }
+#else
+      template<int N>
+      void AssignLiteral( const char (&str)[N] )
+                  { return AssignASCII(str, N-1); }
+      template<int N>
+      void AssignLiteral( char (&str)[N] )
+                  { return AssignASCII(str, N-1); }
+#endif
+
         // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
       self_type& operator=( const self_type& readable )                                             { Assign(readable); return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                     { Assign(tuple); return *this; }
@@ -349,6 +398,24 @@ class nsTAString_CharT
       NS_COM void Append( const char_type* data );
       NS_COM void Append( const char_type* data, size_type length );
       NS_COM void Append( char_type c );
+
+      NS_COM void AppendASCII( const char* data, size_type length );
+      NS_COM void AppendASCII( const char* data );
+
+    // AppendLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use AppendASCII for those.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      void AppendLiteral( const char* str )
+                  { return AppendASCII(str); }
+#else
+      template<int N>
+      void AppendLiteral( const char (&str)[N] )
+                  { return AppendASCII(str, N-1); }
+      template<int N>
+      void AppendLiteral( char (&str)[N] )
+                  { return AppendASCII(str, N-1); }
+#endif
 
       self_type& operator+=( const self_type& readable )                                            { Append(readable); return *this; }
       self_type& operator+=( const substring_tuple_type& tuple )                                    { Append(tuple); return *this; }
