@@ -1,4 +1,4 @@
-`#!perl -w
+#!perl -w
 package			NGLayoutBuildList;
 
 require 5.004;
