@@ -102,6 +102,8 @@ var contentAreaDNDObserver = {
                 // use alt text as the title of the area, if it's there
                 titlestring = draggedNode.getAttribute("alt");
                 urlstring = areasrc;
+                if (!titlestring)
+                  titlestring = urlstring;
                 htmlstring = "<img src=\"" + urlstring + "\">";
                 break;
               case 'IMG':
@@ -113,6 +115,8 @@ var contentAreaDNDObserver = {
                 // use alt text as the title of the image, if it's there
                 titlestring = draggedNode.getAttribute("alt");
                 urlstring = imgsrc;
+                if (!titlestring)
+                  titlestring = urlstring;
                 htmlstring = "<img src=\"" + urlstring + "\">";
 
                 // if the image is also a link, then re-wrap htmlstring in
