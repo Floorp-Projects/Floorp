@@ -413,6 +413,7 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
         group = new nsTableRowGroup (rowGroupTag, PR_TRUE);
         NS_ADDREF(group);                         // group: REFCNT++
         AppendChild (group);
+        group->SetTable(this);
         NS_RELEASE(rowGroupTag);                                  // rowGroupTag: REFCNT--
       }
       // group is guaranteed to be allocated at this point
@@ -450,6 +451,11 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
       }
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
+
+    // Remember to set the table variable -- gpk
+    if (tableContentInterface)
+      tableContentInterface->SetTable(this);
+
     /* if aContent is not a known content type, make a capion out of it */
     // SEC the logic here is very suspicious!!!!
     if (PR_FALSE==contentHandled)
@@ -692,6 +698,7 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
       printf ("nsTablePart::AppendChild -- creating an implicit column group.\n");
     group = new nsTableColGroup (PR_TRUE);
     AppendChild (group);
+    group->SetTable(this);
   }
   PRBool result = group->AppendChild (aContent);
   return result;
@@ -1018,11 +1025,13 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   nsHTMLValue val;
 
-  if (aAttribute == nsHTMLAtoms::width) {
+  if (aAttribute == nsHTMLAtoms::width) 
+  {
     ParseValueOrPercent(aValue, val);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
-  else if (aAttribute == nsHTMLAtoms::border) {
+  else if ( aAttribute == nsHTMLAtoms::border)
+  {
     nsHTMLValue val;
     nsAutoString tmp(aValue);
     tmp.StripWhitespace();
@@ -1030,12 +1039,25 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
       // Just enable the border; same as border=1
       val.Set(1, eHTMLUnit_Absolute);/* XXX pixels? */
     }
-    else {
+    else 
+    {
       ParseValue(aValue, 1, val);
     }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
-  // border, background, cellpadding, cellspacing, etc.
+  else if (aAttribute == nsHTMLAtoms::cellspacing ||
+           aAttribute == nsHTMLAtoms::cellpadding) 
+  {
+    ParseValue(aValue, 0, val);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+  else if (aAttribute == nsHTMLAtoms::bgcolor) 
+  {
+    ParseColor(aValue, val);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
 }
 
 void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
