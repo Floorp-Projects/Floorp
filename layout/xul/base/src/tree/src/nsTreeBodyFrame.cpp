@@ -1069,7 +1069,7 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
 {
   if (mUpdateBatchNest)
     return NS_OK;
-  if (!EnsureScrollbar() || !mView)
+  if (!EnsureScrollbar() || !mView || mRowCount <= mPageCount)
     return NS_OK;
 
   nsIContent* scrollbar = mScrollbar->GetContent();
