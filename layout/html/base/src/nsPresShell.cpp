@@ -4118,6 +4118,9 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   }
 
   if (content) {
+    // Flush notifications so we scroll to the right place
+    FlushPendingNotifications(PR_FALSE);
+    
     // Get the primary frame
     nsIFrame* frame = nsnull;
     if (aScroll &&

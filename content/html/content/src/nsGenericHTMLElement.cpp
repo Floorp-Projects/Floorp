@@ -1283,6 +1283,9 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
     return NS_OK;
   }
 
+  // Now flush to make sure things are up to date
+  presShell->FlushPendingNotifications(PR_FALSE);
+  
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(this, &frame);
