@@ -135,7 +135,10 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	rv = PrepareMessageUrl(aSrcMailboxURI, aUrlListener, mailboxAction, getter_AddRefs(url));
 
 	if (NS_SUCCEEDED(rv))
+	{
+		url->SetMailboxCopyHandler(aMailboxCopyHandler);
 		rv = RunMailboxUrl(url);
+	}
 
 	if (aURL)
 	{
