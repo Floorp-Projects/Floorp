@@ -74,6 +74,10 @@ extern "C" {
 #include "ocsp.h"
 #include "plbase64.h"
 
+#include "nsNSSCleaner.h"
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
@@ -1265,7 +1269,12 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
     // has been loaded from the token.  Though the trust is correct (grabbed
     // from the cert db), the source is wrong.  I believe this is a safe
     // way to work around this.
+#ifdef NSS_3_4
+    // This is not a problem in NSS 3.4, & mCert->slot is always set
+    if (mCert->slot) {
+#else
     if (mCert->slot && !mCert->isperm) {
+#endif
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
         *aTokenName = ToNewUnicode(nsDependentCString(token));
@@ -2876,15 +2885,31 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
   CERTCertificate *tmpCert;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
+#ifdef NSS_3_4
+  PRBool isperm = PR_TRUE;
+  tmpCert = CERT_FindCertByDERCert(certdb, &der);
+  if (!tmpCert) {
+    isperm = PR_FALSE;
+    tmpCert = CERT_NewTempCertificate(certdb, &der,
+                                      nsnull, PR_FALSE, PR_TRUE);
+  }
+#else
   tmpCert = CERT_NewTempCertificate(certdb, &der,
                                     nsnull, PR_FALSE, PR_TRUE);
+#endif
   if (!tmpCert) {
     NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
   }
 
+  CERTCertificateCleaner tmpCertCleaner(tmpCert);
+
   PRBool canceled;
+#ifdef NSS_3_4
+  if (isperm) {
+#else
   if (tmpCert->isperm) {
+#endif
     dialogs->CACertExists(ctx, &canceled);
     return NS_ERROR_FAILURE;
   }
@@ -2930,17 +2955,17 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
     certToShow = do_QueryInterface(isupports);
     certToShow->GetRawDER((char **)&der.data, &der.len);
 
-    tmpCert = CERT_NewTempCertificate(certdb, &der,
-                                      nsnull, PR_FALSE, PR_TRUE);
+    CERTCertificate *tmpCert2 = 
+      CERT_NewTempCertificate(certdb, &der, nsnull, PR_FALSE, PR_TRUE);
 
-    if (!tmpCert) {
+    if (!tmpCert2) {
       NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
       continue;  // Let's try to import the rest of 'em
     }
-    nickname.Adopt(CERT_MakeCANickname(tmpCert));
-    CERT_AddTempCertToPerm(tmpCert, NS_CONST_CAST(char*,nickname.get()), 
+    nickname.Adopt(CERT_MakeCANickname(tmpCert2));
+    CERT_AddTempCertToPerm(tmpCert2, NS_CONST_CAST(char*,nickname.get()), 
                            defaultTrust.GetTrust());
-    CERT_DestroyCertificate(tmpCert);
+    CERT_DestroyCertificate(tmpCert2);
   }
   
   return NS_OK;  
