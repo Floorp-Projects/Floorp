@@ -3,6 +3,9 @@ interface XULTreeElement : XULElement {
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */
   readonly attribute NodeList selectedItems;
   readonly attribute NodeList selectedCells;
+  
+  readonly attribute XULElement currentItem;
+  readonly attribute XULElement currentCell;
 
   void selectItem(in XULElement treeItem);
   void selectCell(in XULElement treeCell);

@@ -234,7 +234,7 @@ Contributor(s): ______________________________________. -->
           <!-- Recursive rules for nested folders -->
           <rule iscontainer="true">
             <menupopup>
-              <menu class="standard" uri="rdf:*" crop="right" flex="1" align="left"
+              <menu class="standard" uri="rdf:*"
                 value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup class="standard"/>
               </menu>
@@ -247,7 +247,7 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="standard" align="left" uri="rdf:*" 
+              <menuitem class="standard" uri="rdf:*" 
                 value="rdf:http://home.netscape.com/NC-rdf#Name"
                 oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"/>
             </menupopup>
@@ -289,7 +289,7 @@ Contributor(s): ______________________________________. -->
 		      <!-- Recursive rules for nested folders -->
 		      <rule iscontainer="true">
 		        <menupopup class="standard">
-		          <menu class="standard" uri="rdf:*" crop="right" flex="1" align="left"
+		          <menu class="standard" uri="rdf:*" 
 		            value="rdf:http://home.netscape.com/NC-rdf#Name" >
 		            <menupopup class="standard"/>
 		          </menu>
@@ -302,7 +302,7 @@ Contributor(s): ______________________________________. -->
 		      </rule>
 		      <rule>
 		        <menupopup>
-		          <menuitem class="standard" align="left" uri="..." 
+		          <menuitem class="standard" uri="..." 
 		            value="rdf:http://home.netscape.com/NC-rdf#Name"
 		            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        </menupopup>

@@ -124,8 +124,8 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
    * the intended behavior
    */
   if (res)  {
-    printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
-    rv = NS_ERROR_UNEXPECTED;
+    //printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+    rv = NS_OK;
   }
 
   return rv;
@@ -144,9 +144,9 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
     *aState = (nsIPresState *)state;
   }
   else {
-    printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+    // printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
     *aState = nsnull;
-    rv = NS_ERROR_NULL_POINTER;
+    rv = NS_OK;
   }
   return rv;
 }

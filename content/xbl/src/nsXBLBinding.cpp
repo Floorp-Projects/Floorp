@@ -24,6 +24,38 @@
 // Static IIDs/CIDs. Try to minimize these.
 // None
 
+// Helper classes
+// {A2892B81-CED9-11d3-97FB-00400553EEF0}
+#define NS_IXBLATTR_IID \
+{ 0xa2892b81, 0xced9, 0x11d3, { 0x97, 0xfb, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+
+class nsIXBLAttributeEntry : public nsISupports {
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IXBLATTR_IID; return iid; }
+
+  NS_IMETHOD GetAttribute(nsIAtom** aResult) = 0;
+  NS_IMETHOD GetElement(nsIContent** aResult) = 0;
+};
+  
+
+class nsXBLAttributeEntry : public nsIXBLAttributeEntry {
+public:
+  NS_IMETHOD GetAttribute(nsIAtom** aResult) { *aResult = mAttribute; NS_IF_ADDREF(*aResult); return NS_OK; };
+  NS_IMETHOD GetElement(nsIContent** aResult) { *aResult = mElement; NS_IF_ADDREF(*aResult); return NS_OK; };
+
+  nsCOMPtr<nsIContent> mElement;
+  nsCOMPtr<nsIAtom> mAttribute;
+
+  nsXBLAttributeEntry(nsIAtom* aAtom, nsIContent* aContent) {
+    NS_INIT_REFCNT(); mAttribute = aAtom; mElement = aContent;
+  };
+
+  virtual ~nsXBLAttributeEntry() {};
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 
 class nsXBLBinding: public nsIXBLBinding
 {
@@ -40,6 +72,8 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
+
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
 
 public:
   nsXBLBinding();
@@ -59,6 +93,8 @@ protected:
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
+  NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
+
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
@@ -66,6 +102,7 @@ protected:
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
+  nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
 };
 
 // Static initialization
@@ -84,6 +121,7 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
+:mAttributeTable(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -156,6 +194,11 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
     child->SetParent(mBoundElement);
   }
 
+  // (3) We need to insert entries into our attribute table for any elements
+  // that are inheriting attributes.  This table allows us to quickly determine 
+  // which elements in our anonymous content need to be updated when attributes change.
+  ConstructAttributeTable(aParent);
+  
   return NS_OK;
 }
 
@@ -201,7 +244,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     // in the excludes list.
     nsAutoString excludes;
     content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-    if (excludes == "true") {
+    if (excludes != "") {
       // Walk the children and ensure that all of them
       // are in the excludes array.
       for (PRInt32 i = 0; i < childCount; i++) {
@@ -239,6 +282,54 @@ NS_IMETHODIMP
 nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 {
   // XXX Implement me!
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag)
+{
+  if (mNextBinding)
+    mNextBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag);
+
+  if (!mAttributeTable)
+    return NS_OK;
+
+  nsISupportsKey key(aAttribute);
+  nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
+                                                                 mAttributeTable->Get(&key)));
+
+  nsCOMPtr<nsISupportsArray> entry = do_QueryInterface(supports);
+  if (!entry)
+    return NS_OK;
+
+  // Iterate over the elements in the array.
+  PRUint32 count;
+  entry->Count(&count);
+
+  for (PRUint32 i=0; i<count; i++) {
+    nsCOMPtr<nsISupports> item;
+    entry->GetElementAt(i, getter_AddRefs(item));
+    nsCOMPtr<nsIXBLAttributeEntry> xblAttr = do_QueryInterface(item);
+    if (xblAttr) {
+      nsCOMPtr<nsIContent> element;
+      nsCOMPtr<nsIAtom> setAttr;
+      xblAttr->GetElement(getter_AddRefs(element));
+      xblAttr->GetAttribute(getter_AddRefs(setAttr));
+
+      if (aRemoveFlag)
+        element->UnsetAttribute(aNameSpaceID, setAttr, PR_TRUE);
+      else {
+        nsAutoString value;
+        nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
+        PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                              result == NS_CONTENT_ATTR_HAS_VALUE);
+
+        if (attrPresent)
+          element->SetAttribute(aNameSpaceID, setAttr, value, PR_TRUE);
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -294,6 +385,92 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   }
 
   return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
+{
+  // XXX This function still needs to deal with the
+  // ability to map one attribute to another.
+  nsAutoString inherits;
+  aElement->GetAttribute(kNameSpaceID_None, kInheritsAtom, inherits);
+  if (inherits != "") {
+    if (!mAttributeTable) {
+        mAttributeTable = new nsSupportsHashtable(8);
+    }
+
+    // The user specified at least one attribute.
+    char* str = inherits.ToNewCString();
+    char* newStr;
+    char* token = nsCRT::strtok( str, ", ", &newStr );   
+    while( token != NULL ) {
+      // Build an atom out of this attribute.
+      nsCOMPtr<nsIAtom> atom;
+      nsCOMPtr<nsIAtom> attribute;
+
+      // Figure out if this token contains a :. 
+      nsAutoString attr(token);
+      PRInt32 index = attr.Find(":", PR_TRUE);
+      if (index != -1) {
+        // This attribute maps to something different.
+        nsAutoString left, right;
+        attr.Left(left, index);
+        attr.Right(right, attr.Length()-index-1);
+
+        atom = getter_AddRefs(NS_NewAtom(left));
+        attribute = getter_AddRefs(NS_NewAtom(right));
+      }
+      else {
+        atom = getter_AddRefs(NS_NewAtom(token));
+        attribute = getter_AddRefs(NS_NewAtom(token));
+      }
+      
+      // Create an XBL attribute entry.
+      nsXBLAttributeEntry* xblAttr = new nsXBLAttributeEntry(attribute, aElement);
+
+      // Now we should see if some element within our anonymous
+      // content is already observing this attribute.
+      nsISupportsKey key(atom);
+      nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, 
+                                                                     mAttributeTable->Get(&key)));
+  
+      nsCOMPtr<nsISupportsArray> entry = do_QueryInterface(supports);
+      if (!entry) {
+        // Make a new entry.
+        NS_NewISupportsArray(getter_AddRefs(entry));
+
+        // Put it in the table.
+        mAttributeTable->Put(&key, entry);
+      }
+
+      // Append ourselves to our entry.
+      entry->AppendElement(xblAttr);
+
+      // Now make sure that this attribute is initially set.
+      // XXX How to deal with NAMESPACES!!!?
+      nsAutoString value;
+      nsresult result = mBoundElement->GetAttribute(kNameSpaceID_None, atom, value);
+      PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                            result == NS_CONTENT_ATTR_HAS_VALUE);
+
+      if (attrPresent)
+        aElement->SetAttribute(kNameSpaceID_None, attribute, value, PR_TRUE);
+
+      token = nsCRT::strtok( newStr, ", ", &newStr );
+    }
+
+    nsAllocator::Free(str);
+  }
+
+  // Recur into our children.
+  PRInt32 childCount;
+  aElement->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aElement->ChildAt(i, *getter_AddRefs(child));
+    ConstructAttributeTable(child);
+  }
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

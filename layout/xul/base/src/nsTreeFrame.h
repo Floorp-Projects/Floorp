@@ -85,8 +85,6 @@ public:
 
   PRBool ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, nsTableColFrame** aResult);
 
-  NS_IMETHOD MarkForDirtyReflow(nsIPresContext* aPresContext);
-
   void SuppressReflow() { mSuppressReflow = PR_TRUE; };
   void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
 

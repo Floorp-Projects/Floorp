@@ -155,7 +155,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetDatabase(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, obj, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIRDFCompositeDataSource), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -174,7 +174,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetResource(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFResource::GetIID(), cx, obj, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIRDFResource), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -193,7 +193,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetControllers(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, obj, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -481,6 +481,94 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 
 //
+// Native method Focus
+//
+PR_STATIC_CALLBACK(JSBool)
+XULElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_FOCUS, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+
+    result = nativeThis->Focus();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Blur
+//
+PR_STATIC_CALLBACK(JSBool)
+XULElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    PRBool ok;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    }
+    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_BLUR, PR_FALSE, &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+
+    result = nativeThis->Blur();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method GetElementsByAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -574,6 +662,8 @@ static JSFunctionSpec XULElementMethods[] =
   {"addBroadcastListener",          XULElementAddBroadcastListener,     2},
   {"removeBroadcastListener",          XULElementRemoveBroadcastListener,     2},
   {"doCommand",          XULElementDoCommand,     0},
+  {"focus",          XULElementFocus,     0},
+  {"blur",          XULElementBlur,     0},
   {"getElementsByAttribute",          XULElementGetElementsByAttribute,     2},
   {0}
 };

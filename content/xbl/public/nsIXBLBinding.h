@@ -55,6 +55,10 @@ public:
 
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
+
+  // Called when an attribute changes on a binding.
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
+
 };
 
 extern nsresult

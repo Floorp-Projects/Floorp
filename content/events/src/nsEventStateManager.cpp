@@ -1794,6 +1794,19 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         disabled = PR_FALSE;
       }
 
+      // Get the primary frame for the widget.  We don't tab into anything
+      // that doesn't have a frame.
+      nsCOMPtr<nsIPresShell> shell;
+      if (mPresContext) {
+        nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+        if (NS_SUCCEEDED(rv) && shell){
+          nsIFrame* potentialFrame;
+          shell->GetPrimaryFrameFor(child, &potentialFrame);
+          if (!potentialFrame)
+            hidden = PR_TRUE;
+        }
+      }
+
       //TabIndex not set (-1) treated at same level as set to 0
       tabIndex = tabIndex < 0 ? 0 : tabIndex;
 

@@ -85,7 +85,7 @@ GetXULEditorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetEditorShell(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIEditorShell::GetIID(), cx, obj, vp);
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIEditorShell), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);

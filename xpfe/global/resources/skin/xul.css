@@ -101,16 +101,17 @@ menubar[hidden="true"] {
 	display:none;
 }
 
-menu {
+menubar > menu {
+  behavior: url("resource:/chrome/xulBindings.xml#menusOnMenuBar");
+}
+
+menu,menuitem {
    display: block;
+   behavior: url("resource:/chrome/xulBindings.xml#menus");
 }
 
 menu[hidden="true"] {
 	display:none;
-}
-
-menuitem {
-   display: block;
 }
 
 menuitem[hidden="true"] {

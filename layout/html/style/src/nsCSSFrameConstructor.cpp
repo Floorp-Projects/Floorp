@@ -5930,7 +5930,17 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                                       aContainer,
                                                       aNewIndexInContainer);
 
-          if (prevSibling || innerFrame) {
+          // This needs to really be a previous sibling.
+          if (prevSibling && aNewIndexInContainer > 0) {
+            nsCOMPtr<nsIContent> prevContent;
+            nsCOMPtr<nsIContent> frameContent;
+            aContainer->ChildAt(aNewIndexInContainer-1, *getter_AddRefs(prevContent));
+            prevSibling->GetContent(getter_AddRefs(frameContent));
+            if (frameContent.get() != prevContent.get()) 
+              prevSibling = nsnull;
+          }
+
+          if (prevSibling || (innerFrame && aNewIndexInContainer == 0)) {
             // We're onscreen. Make sure a full reflow happens.
             treeRowGroup->OnContentAdded(aPresContext);
           }

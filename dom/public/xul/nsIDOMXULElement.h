@@ -65,6 +65,10 @@ public:
 
   NS_IMETHOD    DoCommand()=0;
 
+  NS_IMETHOD    Focus()=0;
+
+  NS_IMETHOD    Blur()=0;
+
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
 };
 
@@ -82,6 +86,8 @@ public:
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
+  NS_IMETHOD    Focus();  \
+  NS_IMETHOD    Blur();  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
@@ -99,6 +105,8 @@ public:
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \
+  NS_IMETHOD    Focus() { return _to Focus(); }  \
+  NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
