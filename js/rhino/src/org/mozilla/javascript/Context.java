@@ -614,16 +614,6 @@ public class Context
     }
 
     /**
-     * @deprecated
-     * @see ContextFactory#seal()
-     * @see ContextFactory#getGlobal()
-     */
-    public static void disableStaticContextListening()
-    {
-        ContextFactory.getGlobal().disableContextListening();
-    }
-
-    /**
      * Get the current Context.
      *
      * The current Context is per-thread; this method looks up
@@ -1415,16 +1405,6 @@ public class Context
     }
 
     /**
-     * @deprecated
-     * @see #decompileScript(Script script, int indent)
-     */
-    public final String decompileScript(Script script, Scriptable scope,
-                                        int indent)
-    {
-        return decompileScript(script, indent);
-    }
-
-    /**
      * Decompile the script.
      * <p>
      * The canonical source of the script is returned.
@@ -2019,78 +1999,6 @@ public class Context
      */
     public static void setCachingEnabled(boolean cachingEnabled)
     {
-    }
-
-    /**
-     * @deprecated
-     * Proxy to allow to use deprecated WrapHandler in place
-     * of WrapFactory.
-     */
-    private static class WrapHandlerProxy extends WrapFactory
-    {
-        WrapHandler _handler;
-
-        /**
-         * @deprecated
-         */
-        WrapHandlerProxy(WrapHandler handler)
-        {
-            _handler = handler;
-        }
-
-        public Object wrap(Context cx, Scriptable scope,
-                           Object obj, Class staticType)
-        {
-            if (obj == null) { return obj; }
-            Object result = _handler.wrap(scope, obj, staticType);
-            if (result == null) {
-                result = super.wrap(cx, scope, obj, staticType);
-            }
-            return result;
-        }
-
-        public Scriptable wrapNewObject(Context cx, Scriptable scope,
-                                        Object obj)
-        {
-            Object wrap = _handler.wrap(scope, obj, obj.getClass());
-            if (wrap instanceof Scriptable) {
-                return (Scriptable)wrap;
-            }
-            if (wrap == null) {
-                return super.wrapNewObject(cx, scope, obj);
-            }
-            throw new RuntimeException
-                ("Please upgrade from WrapHandler to WrapFactory");
-        }
-    }
-
-    /**
-     * @deprecated
-     * @see #setWrapFactory(WrapFactory)
-     * @see WrapFactory
-     */
-    public final void setWrapHandler(WrapHandler wrapHandler)
-    {
-        if (sealed) onSealedMutation();
-        if (wrapHandler == null) {
-            setWrapFactory(new WrapFactory());
-        } else {
-            setWrapFactory(new WrapHandlerProxy(wrapHandler));
-        }
-    }
-
-    /**
-     * @deprecated
-     * @see #getWrapFactory()
-     * @see WrapFactory
-     */
-    public final WrapHandler getWrapHandler()
-    {
-        WrapFactory f = getWrapFactory();
-        if (f instanceof WrapHandlerProxy) {
-            return ((WrapHandlerProxy)f)._handler;
-        }
-        return null;
     }
 
     /**
