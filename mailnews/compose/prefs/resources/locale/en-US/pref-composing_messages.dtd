@@ -47,8 +47,6 @@ Rights Reserved.
 <!ENTITY messageWrapping.label                "Message Wrapping">
 <!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
 <!ENTITY wrapInMsg.accesskey                  "w">
-<!ENTITY convertStructs.label                 "Convert structured phrases to HTML styles on Send. For example, convert '*test*' to '*test*'">
-<!ENTITY convertStructs.accesskey             "s">
 
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
@@ -70,5 +68,3 @@ Rights Reserved.
 <!ENTITY addressingEnable.label				  "Enable address autocompletion">
 
 <!-- Tooltips -->  
-<!ENTITY convertStructs.tooltip "Convert Structs">  
-

@@ -81,9 +81,6 @@
     <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;" accesskey="&spellCheck.accesskey;"
               pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
               prefattribute="checked"/>
-    <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
-              pref="true" preftype="bool" prefstring="mail.send_struct"
-              prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertStructs.tooltip;"/>
 	
 	<checkbox id="strictlyMime" value="&useMIME.label;" accesskey="&useMIME.accesskey;"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"

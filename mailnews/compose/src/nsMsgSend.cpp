@@ -1249,7 +1249,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     if (NS_SUCCEEDED(rv)) 
     {
       PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
-      PRBool enable_structs = PR_TRUE;
+      PRBool enable_structs = PR_FALSE;
       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
       if (NS_SUCCEEDED(rv) && prefs)
       {

@@ -411,9 +411,9 @@ pref("mail.server.default.dual_use_folders", true);
 
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
-pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507>
-pref("mail.display_struct",true);  // dito
-pref("mail.send_struct",true);     // dito
+pref("mail.display_glyph", true);   // see <http://www.bucksch.org/1/projects/mozilla/16507>
+pref("mail.display_struct", true);  // ditto
+pref("mail.send_struct", false);   // ditto
 
 pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete)1=forward as quoted
 
