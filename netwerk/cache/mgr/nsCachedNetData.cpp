@@ -239,10 +239,11 @@ nsCachedNetData::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsCachedNetData::Release(void)
 {
+    nsrefcnt count;
     NS_PRECONDITION(1 != mRefCnt, "dup release");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsCachedNetData");
-    if (mRefCnt == 1) {
+    count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+    NS_LOG_RELEASE(this, count, "nsCachedNetData");
+    if (count == 1) {
 
         nsCacheManager::NoteDormant(this);
         
@@ -265,9 +266,9 @@ nsCachedNetData::Release(void)
         mRecord = 0;
         mRecordID = recordID;
         delete mMetaData;
-	mMetaData = 0;
+        mMetaData = 0;
     }
-    return mRefCnt;
+    return count;
 }
 
 nsresult 
@@ -1162,7 +1163,7 @@ private:
     nsCOMPtr<nsIChannel>         mChannel;
 };
 
-NS_IMPL_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIStreamObserver)
 
 NS_IMETHODIMP
 nsCachedNetData::InterceptAsyncRead(nsIStreamListener *aOriginalListener,

@@ -78,9 +78,9 @@ nsStorageStream::~nsStorageStream()
 	    delete mSegmentedBuffer;
 }
 
-NS_IMPL_ISUPPORTS2(nsStorageStream,
-                   nsIStorageStream,
-                   nsIOutputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsStorageStream,
+                              nsIStorageStream,
+                              nsIOutputStream)
 
 NS_IMETHODIMP
 nsStorageStream::Init(PRUint32 segmentSize, PRUint32 maxSize,

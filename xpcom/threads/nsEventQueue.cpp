@@ -134,7 +134,9 @@ nsEventQueueImpl::InitFromPLQueue(PLEventQueue* aQueue)
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS2(nsEventQueueImpl,nsIEventQueue,nsPIEventQueueChain)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsEventQueueImpl,
+                              nsIEventQueue,
+                              nsPIEventQueueChain)
 
 /* nsIEventQueue interface implementation... */
 

@@ -36,6 +36,7 @@ nsRepeatService* nsRepeatService::gInstance = nsnull;
 
 nsRepeatService::nsRepeatService()
 {
+  NS_INIT_REFCNT();
 }
 
 nsRepeatService::~nsRepeatService()
@@ -98,5 +99,5 @@ NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
 
 }
 
-NS_IMPL_ISUPPORTS(nsRepeatService, NS_GET_IID(nsITimerCallback));
+NS_IMPL_ISUPPORTS1(nsRepeatService, nsITimerCallback)
 

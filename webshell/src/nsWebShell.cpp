@@ -203,7 +203,7 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIURICONTENTLISTENER
 
@@ -726,30 +726,34 @@ nsWebShell::DestroyChildren()
 }
 
 
-NS_IMPL_ADDREF(nsWebShell)
-NS_IMPL_RELEASE(nsWebShell)
+NS_IMPL_ADDREF_INHERITED(nsWebShell, nsDocShell)
+NS_IMPL_RELEASE_INHERITED(nsWebShell, nsDocShell)
 
 NS_INTERFACE_MAP_BEGIN(nsWebShell)
+#if 0 // inherits from nsDocShell:
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShell)
+#endif
    NS_INTERFACE_MAP_ENTRY(nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIContentViewerContainer, nsIWebShell)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
    NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+#if 0 // inherits from nsDocShell:
+   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-NS_INTERFACE_MAP_END
+#endif
+NS_INTERFACE_MAP_END_INHERITING(nsDocShell)
 
 NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)

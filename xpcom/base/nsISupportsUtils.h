@@ -136,6 +136,28 @@ public:
 #define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
   static const nsID& GetCID() {static nsID cid = the_cid; return cid;}
 
+////////////////////////////////////////////////////////////////////////////////
+// Macros to help detect thread-safety:
+
+#ifdef NS_DEBUG
+
+extern "C" NS_EXPORT void* NS_CurrentThread(void);
+
+#define NS_DECL_OWNINGTHREAD     void* _mOwningThread;
+#define NS_IMPL_OWNINGTHREAD()   (_mOwningThread = NS_CurrentThread())
+#define NS_ASSERT_OWNINGTHREAD(_class) \
+    NS_ASSERTION(_mOwningThread == NS_CurrentThread(), #_class " not thread-safe");
+
+#else // !NS_DEBUG
+
+#define NS_DECL_OWNINGTHREAD     /* nothing */
+#define NS_IMPL_OWNINGTHREAD()   ((void)0)
+#define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
+
+#endif // !NS_DEBUG
+
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Some convenience macros for implementing AddRef and Release
  */
@@ -153,6 +175,7 @@ public:                                                                     \
   NS_IMETHOD_(nsrefcnt) Release(void);                                      \
 protected:                                                                  \
   nsrefcnt mRefCnt;                                                         \
+  NS_DECL_OWNINGTHREAD                                                      \
 public:
 
 #define NS_DECL_ISUPPORTS_EXPORTED                                          \
@@ -163,6 +186,7 @@ public:                                                                     \
   NS_EXPORT NS_IMETHOD_(nsrefcnt) Release(void);                            \
 protected:                                                                  \
   nsrefcnt mRefCnt;                                                         \
+  NS_DECL_OWNINGTHREAD                                                      \
 public:
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,7 +195,7 @@ public:
  * Initialize the reference count variable. Add this to each and every
  * constructor you implement.
  */
-#define NS_INIT_REFCNT() mRefCnt = 0
+#define NS_INIT_REFCNT() (mRefCnt = 0, NS_IMPL_OWNINGTHREAD())
 #define NS_INIT_ISUPPORTS() NS_INIT_REFCNT() // what it should have been called in the first place
 
 /**
@@ -182,6 +206,7 @@ public:
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 {                                                            \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  \
+  NS_ASSERT_OWNINGTHREAD(_class);                            \
   ++mRefCnt;                                                 \
   NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));      \
   return mRefCnt;                                            \
@@ -204,6 +229,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
 {                                                            \
   NS_PRECONDITION(0 != mRefCnt, "dup release");              \
+  NS_ASSERT_OWNINGTHREAD(_class);                            \
   --mRefCnt;                                                 \
   NS_LOG_RELEASE(this, mRefCnt, #_class);                    \
   if (mRefCnt == 0) {                                        \
@@ -547,18 +573,15 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_RELEASE(_class)                                     \
   NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)
 
-#define NS_IMPL_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, \
-   _i9)   \
+#define NS_IMPL_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)   \
   NS_IMPL_ADDREF(_class)                                      \
   NS_IMPL_RELEASE(_class)                                     \
   NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)
 
-#define NS_IMPL_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, \
-   _i7, _i8, _i9, _i10)   \
+#define NS_IMPL_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)   \
   NS_IMPL_ADDREF(_class)                                      \
   NS_IMPL_RELEASE(_class)                                     \
-  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, \
-   _i9, _i10)
+  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -685,8 +708,10 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                               \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                               \
 {                                                                           \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
-  NS_LOG_ADDREF(this, mRefCnt+1, #_class, sizeof(*this));                   \
-  return PR_AtomicIncrement((PRInt32*)&mRefCnt);                            \
+  nsrefcnt count;                                                           \
+  count = PR_AtomicIncrement((PRInt32*)&mRefCnt);                           \
+  NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
+  return count;                                                             \
 }
 
 /**
@@ -699,9 +724,11 @@ nsrefcnt _class::Release(void)                                              \
 {                                                                           \
   nsrefcnt count;                                                           \
   NS_PRECONDITION(0 != mRefCnt, "dup release");                             \
-  NS_LOG_RELEASE(this, mRefCnt-1, #_class);                                 \
   count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);                          \
+  NS_LOG_RELEASE(this, count, #_class);                                     \
   if (0 == count) {                                                         \
+    /* enable this to find non-threadsafe destructors: */                   \
+    /* NS_ASSERT_OWNINGTHREAD(_class); */                                   \
     NS_DELETEXPCOM(this);                                                   \
     return 0;                                                               \
   }                                                                         \
@@ -803,6 +830,205 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)
 
 #endif /* !NS_MT_SUPPORTED */
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_IMPL_QUERY_TAIL_GUTS_THREADSAFE                               \
+    foundInterface = 0;                                                  \
+  nsresult status;                                                       \
+  if ( !foundInterface )                                                 \
+    {                                                                    \
+      static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);       \
+      status = aIID.Equals(kIsThreadsafeIID) ? NS_OK : NS_NOINTERFACE;   \
+    }                                                                    \
+  else                                                                   \
+    {                                                                    \
+      NS_ADDREF(foundInterface);                                         \
+      status = NS_OK;                                                    \
+    }                                                                    \
+  *aInstancePtr = foundInterface;                                        \
+  return status;                                                         \
+}
+
+#ifdef NS_DEBUG
+#define NS_INTERFACE_MAP_END_THREADSAFE                            NS_IMPL_QUERY_TAIL_GUTS_THREADSAFE
+#else
+#define NS_INTERFACE_MAP_END_THREADSAFE                            NS_IMPL_QUERY_TAIL_GUTS
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE0(_class)                                           \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(nsISupports)                                                       \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE1(_class, _i1)                                      \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE2(_class, _i1, _i2)                                 \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE3(_class, _i1, _i2, _i3)                            \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)                       \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)                  \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)             \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)        \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)   \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9) \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)  \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i10)                                                              \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END_THREADSAFE
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS(_class,_classiiddef) \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                       \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                      \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS0(_class)             \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                       \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                      \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE0(_class)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS1(_class, _interface) \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                       \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                      \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE1(_class, _interface)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS2(_class, _i1, _i2)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                       \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                      \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE2(_class, _i1, _i2)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS3(_class, _i1, _i2, _i3)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                            \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                           \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE3(_class, _i1, _i2, _i3)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS4(_class, _i1, _i2, _i3, _i4)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                 \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS5(_class, _i1, _i2, _i3, _i4, _i5)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS6(_class, _i1, _i2, _i3, _i4, _i5, _i6)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)   \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                      \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                     \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Debugging Macros

@@ -28,7 +28,7 @@
 
 #include "prmem.h"
 
-NS_IMPL_ISUPPORTS1(nsFileSpecImpl, nsIFileSpec)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileSpecImpl, nsIFileSpec)
 
 #ifdef NS_DEBUG
 #define TEST_OUT_PTR(p) \

@@ -320,8 +320,8 @@ class StringImpl
         
 }; // class StringImpl
 
-NS_IMPL_RELEASE(BasicStringImpl)
-NS_IMPL_ADDREF(BasicStringImpl)
+NS_IMPL_THREADSAFE_ADDREF(BasicStringImpl)
+NS_IMPL_THREADSAFE_RELEASE(BasicStringImpl)
 
 NS_IMPL_QUERY_HEAD(BasicStringImpl)
   NS_IMPL_QUERY_BODY(nsIRandomAccessStore)

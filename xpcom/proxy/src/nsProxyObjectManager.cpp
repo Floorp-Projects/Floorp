@@ -88,7 +88,7 @@ NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByProgID(const char *aProgID,
 
 nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 
-NS_IMPL_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
 {

@@ -113,7 +113,7 @@ nsThread::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS1(nsThread, nsIThread)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsThread, nsIThread)
 
 NS_IMETHODIMP
 nsThread::Join()
@@ -294,7 +294,7 @@ nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
         thread = new nsThread();
         if (thread == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(thread);
+        NS_ADDREF(thread);      // released by Exit
         thread->SetPRThread(prthread);
         nsresult rv = thread->RegisterThreadSelf();
         if (NS_FAILED(rv)) return rv;
@@ -327,6 +327,19 @@ nsIThread::GetMainThread(nsIThread **result)
     return NS_OK;
 }
 
+void 
+nsThread::Shutdown()
+{
+    if (gMainThread) {
+        // XXX nspr doesn't seem to be calling the main thread's destructor
+        // callback, so let's help it out:
+        nsThread::Exit(NS_STATIC_CAST(nsThread*, gMainThread));
+        nsrefcnt cnt;
+        NS_RELEASE2(gMainThread, cnt);
+        NS_WARN_IF_FALSE(cnt == 0, "Main thread being held past XPCOM shutdown.");
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
@@ -347,7 +360,7 @@ nsThreadPool::~nsThreadPool()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsThreadPool, nsIThreadPool)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsThreadPool, nsIThreadPool)
 
 NS_IMETHODIMP
 nsThreadPool::DispatchRequest(nsIRunnable* runnable)

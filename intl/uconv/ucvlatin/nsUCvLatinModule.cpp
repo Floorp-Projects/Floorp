@@ -895,7 +895,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
 //----------------------------------------------------------------------------
 // Class nsConverterFactory [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsConverterFactory, nsIFactory);
 
 nsConverterFactory::nsConverterFactory(FactoryData * aData) 
 {

@@ -38,7 +38,7 @@ PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
 };
 
 // nsISupports methods
-NS_IMPL_ISUPPORTS1(nsMIMEService, nsIMIMEService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEService, nsIMIMEService);
 
 NS_METHOD
 nsMIMEService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {

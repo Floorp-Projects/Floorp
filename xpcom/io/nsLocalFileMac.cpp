@@ -722,7 +722,7 @@ nsLocalFile::~nsLocalFile()
 
 #pragma mark -
 #pragma mark [nsISupports interface implementation]
-NS_IMPL_ISUPPORTS3(nsLocalFile, nsILocalFileMac, nsILocalFile, nsIFile)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFileMac, nsILocalFile, nsIFile)
 
 NS_METHOD
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)

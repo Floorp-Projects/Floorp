@@ -43,10 +43,6 @@ nsFileTransportService::nsFileTransportService()
 
 #define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (64 * 1024) /* (8*1024) */
 
-#ifdef DEBUG
-extern "C" NS_EXPORT void* NS_CurrentThread(void);
-#endif
-
 nsresult
 nsFileTransportService::Init()
 {
@@ -55,9 +51,6 @@ nsFileTransportService::Init()
                           NS_FILE_TRANSPORT_WORKER_COUNT_MIN,
                           NS_FILE_TRANSPORT_WORKER_COUNT_MAX,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
-#ifdef DEBUG
-    static void* th = NS_CurrentThread();       // XXX experiment -- is this exported on mac?
-#endif
     return rv;
 }
 
@@ -66,7 +59,7 @@ nsFileTransportService::~nsFileTransportService()
     mPool->Shutdown();
 }
 
-NS_IMPL_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
 
 NS_IMETHODIMP
 nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -636,29 +636,17 @@ nsresult nsXPBaseWindow::MouseOut(nsIDOMEvent* aMouseEvent)
 class nsXPBaseWindowFactory : public nsIFactory
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
+
   nsXPBaseWindowFactory();
   virtual ~nsXPBaseWindowFactory();
-
-  // nsISupports methods
-  NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-private:
-  nsrefcnt  mRefCnt;
 };
 
 //----------------------------------------------------------------------
 nsXPBaseWindowFactory::nsXPBaseWindowFactory()
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
 }
 
 //----------------------------------------------------------------------

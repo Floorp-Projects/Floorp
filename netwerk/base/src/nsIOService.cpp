@@ -95,7 +95,7 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsIOService, NS_GET_IID(nsIIOService));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOService, nsIIOService);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -182,9 +182,9 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 {
     nsresult rv = NS_OK;
 
-  // Establish the main thread here.
+    // Establish the main thread here.
     rv = nsIThread::SetMainThread();
-  if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
@@ -612,6 +612,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
     NS_PurgeAtomTable();
+    nsAllocator::Shutdown();
+    nsThread::Shutdown();
 
 #ifdef DEBUG
     nsTraceRefcnt::DumpStatistics();
@@ -619,8 +621,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
 #ifdef GC_LEAK_DETECTOR
-  // Shutdown the Leak detector.
-  NS_ShutdownLeakDetector();
+    // Shutdown the Leak detector.
+    NS_ShutdownLeakDetector();
 #endif
 
     return NS_OK;

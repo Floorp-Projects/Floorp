@@ -859,6 +859,7 @@ private:
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
+  NS_DECL_OWNINGTHREAD // for thread-safety checking
 
   nsIAtom**               mAttrNames;
   PRInt32                 mAttrCount;

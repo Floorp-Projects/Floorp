@@ -180,14 +180,14 @@ protected:
     nsCString m_windowTarget;
 };
 
-NS_IMPL_ADDREF(nsDocumentOpenInfo);
-NS_IMPL_RELEASE(nsDocumentOpenInfo);
+NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo);
+NS_IMPL_THREADSAFE_RELEASE(nsDocumentOpenInfo);
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_THREADSAFE
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
 {

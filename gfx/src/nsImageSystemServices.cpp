@@ -26,8 +26,6 @@
 #include "prmem.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kISystemServicesIID, IL_ISYSTEMSERVICES_IID);
-
 class ImageSystemServicesImpl : public ilISystemServices {
 public:
   static ImageSystemServicesImpl *sSS;
@@ -54,13 +52,14 @@ ImageSystemServicesImpl* ImageSystemServicesImpl::sSS = nsnull;
 
 ImageSystemServicesImpl::ImageSystemServicesImpl()
 {
+  NS_INIT_REFCNT();
 }
 
 ImageSystemServicesImpl::~ImageSystemServicesImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(ImageSystemServicesImpl, kISystemServicesIID)
+NS_IMPL_ISUPPORTS1(ImageSystemServicesImpl, ilISystemServices)
 
 static
 void
@@ -130,6 +129,6 @@ NS_NewImageSystemServices(ilISystemServices **aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return ImageSystemServicesImpl::sSS->QueryInterface(kISystemServicesIID, 
-                                                (void **) aInstancePtrResult);
+  return ImageSystemServicesImpl::sSS->QueryInterface(NS_GET_IID(ilISystemServices), 
+                                                      (void **) aInstancePtrResult);
 }

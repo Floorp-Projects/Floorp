@@ -761,6 +761,7 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
 
   // Fire up the walletService
   NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "wallet failed");
   if ( NS_SUCCEEDED(rv) )
       walletService->WALLET_FetchFromNetCenter();
 

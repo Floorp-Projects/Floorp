@@ -1228,12 +1228,12 @@ void nsSocketTransport::SetSocketTimeout(PRIntervalTime aTimeInterval)
 // --------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ADDREF(nsSocketTransport);
-NS_IMPL_THREADSAFE_RELEASE(nsSocketTransport);
-NS_IMPL_QUERY_INTERFACE5(nsSocketTransport, 
-                         nsIRequest, nsIChannel, 
-                         nsIDNSListener, nsIPipeObserver,
-                         nsISocketTransport);
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransport, 
+                              nsIChannel, 
+                              nsIRequest, 
+                              nsIDNSListener, 
+                              nsIPipeObserver,
+                              nsISocketTransport);
 
 //
 // --------------------------------------------------------------------------

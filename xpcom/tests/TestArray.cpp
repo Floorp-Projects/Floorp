@@ -34,14 +34,13 @@ static const PRBool kExitOnError = PR_TRUE;
 
 class IFoo : public nsISupports {
 public:
+  NS_DECL_ISUPPORTS
+
   IFoo(PRInt32 aID);
   ~IFoo();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);                           
-  NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
-  NS_IMETHOD_(nsrefcnt) Release(void);                                      
+  nsrefcnt RefCnt() { return mRefCnt; }
 
-  PRInt32 mRefCnt;
   PRInt32 mID;
   static PRInt32 gCount;
 };
@@ -91,7 +90,7 @@ void DumpArray(nsISupportsArray* aArray, PRInt32 aExpectedCount, PRInt32 aElemen
   for (index = 0; (index < count) && (index < aExpectedCount); index++) {
     IFoo* foo = (IFoo*)(aArray->ElementAt(index));
     fprintf(stdout, "%2d: %d=%d (%x) c: %d %s\n", 
-            index, aElementIDs[index], foo->mID, foo, foo->mRefCnt - 1,
+            index, aElementIDs[index], foo->mID, foo, foo->RefCnt() - 1,
             AssertEqual(foo->mID, aElementIDs[index]));
     foo->Release();
   }

@@ -192,3 +192,8 @@ PRBool nsAllocator::FetchAllocator()
     NS_ASSERTION(mAllocator, "failed to get Allocator!");
     return (mAllocator ? PR_TRUE : PR_FALSE);
 }    
+
+void nsAllocator::Shutdown()
+{
+    NS_IF_RELEASE(mAllocator);
+}

@@ -252,7 +252,7 @@ protected:
 //#endif
 };
 
-NS_IMPL_ISUPPORTS1(nsLocalFileSystem, nsIFileSystem);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocalFileSystem, nsIFileSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -323,7 +323,7 @@ protected:
     PRInt32                     mContentLength;
 };
 
-NS_IMPL_ISUPPORTS1(nsInputStreamFileSystem, nsIFileSystem);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsInputStreamFileSystem, nsIFileSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -440,32 +440,11 @@ nsFileTransport::~nsFileTransport()
 #endif
 }
 
-NS_IMETHODIMP
-nsFileTransport::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(NS_GET_IID(nsIChannel)) ||
-        aIID.Equals(NS_GET_IID(nsIRequest)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIRunnable))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIPipeObserver))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIPipeObserver*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsFileTransport);
-NS_IMPL_RELEASE(nsFileTransport);
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsFileTransport, 
+                              nsIChannel, 
+                              nsIRequest, 
+                              nsIRunnable, 
+                              nsIPipeObserver);
 
 NS_METHOD
 nsFileTransport::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)

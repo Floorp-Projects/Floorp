@@ -191,8 +191,9 @@ nsConverterInfo::~nsConverterInfo()
 //----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_ISUPPORTS2(nsCharsetConverterManager, nsICharsetConverterManager, 
-                   nsICharsetConverterManager2);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
+                              nsICharsetConverterManager, 
+                              nsICharsetConverterManager2);
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 :mDataBundle(NULL), mTitleBundle(NULL)

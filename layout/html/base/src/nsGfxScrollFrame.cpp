@@ -781,8 +781,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
                                                mHasHorizontalScrollbar(PR_FALSE),
                                                mOnePixel(20)
 {
+   NS_INIT_REFCNT();
    mOuter = aOuter;
-   mRefCnt = 0;
    mMaxElementSize.width = 0;
    mMaxElementSize.height = 0;
    mFirstPass = PR_FALSE;

@@ -633,13 +633,6 @@ nsresult LoadURLsFromFile(char *aFileName)
     return NS_OK;
 }
 
-
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -654,7 +647,7 @@ main(int argc, char* argv[])
       up the event queues. Copied from TestSocketIO.cpp
     */
 
-    rv = NS_AutoregisterComponents();
+    rv = NS_InitXPCOM(nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     
@@ -722,5 +715,6 @@ main(int argc, char* argv[])
 #endif /* !WIN32 */
     }
 
+    NS_ShutdownXPCOM(nsnull);
     return rv;
 }

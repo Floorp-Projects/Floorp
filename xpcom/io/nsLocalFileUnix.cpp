@@ -202,7 +202,7 @@ nsLocalFile::~nsLocalFile()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsLocalFile, nsIFile, nsILocalFile);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
 
 nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports *outer, const nsIID &aIID, void **aInstancePtr)
