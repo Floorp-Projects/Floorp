@@ -62,7 +62,7 @@ nsresult nsMIMEBasicBodyPart::SetBody(nsString& aBody)
 	mMimeBasicPart->content_type = MIME_CONTENT_TEXT;
 	mMimeBasicPart->content_subtype = strdup ("plain");
 	mMimeBasicPart->content_type_params = strdup ("charset=us-ascii");
-	mMimeBasicPart->encoding_type = MIME_ENCODING_7BIT;
+	mMimeBasicPart->encoding_type = MIME_ENCODING_7BIT;  //MIME_ENCODING_UNINITIALIZED
 
 	int ret = mime_basicPart_setDataBuf (mMimeBasicPart, strlen (body), body, TRUE);
 
@@ -70,7 +70,7 @@ nsresult nsMIMEBasicBodyPart::SetBody(nsString& aBody)
 	{
     delete body;
 		mime_basicPart_free_all(mMimeBasicPart);
-		free (mMimeBasicPart);
+		PR_Free (mMimeBasicPart);
 		return ret;
 	}
 

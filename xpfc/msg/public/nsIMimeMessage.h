@@ -36,6 +36,18 @@ typedef enum
   nsMIMEBodyType_messagepart = 3
 } nsMIMEBodyType;
 
+typedef enum
+{
+  nsMIMEEncoding_default            = 0,
+  nsMIMEEncoding_quoted_printable   = 1,
+  nsMIMEEncoding_base_64            = 2,
+  nsMIMEEncoding_binary             = 3,
+  nsMIMEEncoding_e7bit              = 4,
+  nsMIMEEncoding_e8bit              = 5,
+  nsMIMEEncoding_none               = 6
+} nsMIMEEncoding;
+
+
 
 class nsIMIMEMessage : public nsISupports
 {
@@ -54,6 +66,8 @@ public:
   NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart) = 0;
 
   NS_IMETHOD GetBodyType(nsMIMEBodyType& aBodyType) = 0;
+
+  NS_IMETHOD Encode() = 0;
 
 };
 

@@ -30,6 +30,7 @@ nsMIMEMessage :: nsMIMEMessage() : nsMessage()
   mBodyType = nsMIMEBodyType_empty;
   mBodyPart = nsnull;
   mMimeMessageT = nsnull;
+  mMimeMessageStreamT = nsnull;
 }
 
 nsMIMEMessage :: ~nsMIMEMessage()  
@@ -86,6 +87,12 @@ nsresult nsMIMEMessage::GetHeader(nsString& aHeaderName, nsString& aHeaderValue)
   return (NS_OK);
 }
 
+nsresult nsMIMEMessage::Encode()
+{
+  mime_message_putByteStream (mMimeMessageT, mMimeMessageStreamT); 
+  return NS_OK;
+}
+
 
 nsresult nsMIMEMessage::AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding)
 {
@@ -119,8 +126,6 @@ nsresult nsMIMEMessage::SetBody(nsString& aBody)
   basic = (nsMIMEBasicBodyPart *) mBodyPart;
 
   basic->Init();
-
-  //mime_message_create(body, nsnull, MIME_ENCODING_UNINITIALIZED, &mMimeMessageT);
 
   mMimeMessageT = (mime_message_t *) mime_malloc (sizeof (mime_message_t));
 

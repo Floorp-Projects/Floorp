@@ -45,6 +45,7 @@ public:
   NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart);
 
   NS_IMETHOD GetBodyType(nsMIMEBodyType& aBodyType) ;
+  NS_IMETHOD Encode();
 
 protected:
   ~nsMIMEMessage();
@@ -55,6 +56,7 @@ private:
 
 public:
   mime_message_t * mMimeMessageT;
+  nsmail_outputstream_t * mMimeMessageStreamT;
 
 };
 
