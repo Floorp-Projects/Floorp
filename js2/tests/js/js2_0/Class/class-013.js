@@ -47,7 +47,7 @@ class B extends A
 
 class C
 {
-  function C ()
+  constructor function C ()
   {
     this.color = cnRED;
   }
@@ -56,7 +56,7 @@ class C
 
 class D
 {
-  static function D()
+  constructor function D()
   {
     this.color = cnRED;
   }
