@@ -777,7 +777,6 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   PropagateDebug(aState);
 #endif
 
-  printf("***Beginning GetPrefSize XULScrollFrame %p\n", this);
   nsGfxScrollFrameInner::ScrollbarStyles styles = GetScrollbarStyles();
 
   nsSize vSize(0,0);
@@ -1009,7 +1008,6 @@ nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
   aState.SetLayoutFlags(flags);
 
   nsBox::DoLayout(aState);
-  printf("***XULScrollframe %p actualsize is %d,%d\n", this, mRect.width, mRect.height);
   return rv;
 }
 
