@@ -155,6 +155,7 @@ sub build_file_hash {
 
   use File::Find;
   for my $include (@include_list) {
+    $include .= ",v" if /\./;
     &find(\&find_cvs_files, "$cvsroot/$include"); 
   }
   return \%bases, \%fullpath;
@@ -200,12 +201,14 @@ sub find_cvs_files {
   my $dir = $File::Find::dir;
   $dir =~ s|^$cvsroot/||o;
   $dir =~ s|/$||;
-  if (defined $module_files{$_}) {
-    $bases{$_} = '[multiple]';
+  my $file = substr $_, 0, -2;
+
+  if (defined $module_files{$file}) {
+    $bases{$file} = '[multiple]';
   } else {
-    $bases{$_} = $dir;
+    $bases{$file} = $dir;
   }
-  $fullpath{"$dir/$_"} = 1;
+  $fullpath{"$dir/$file"} = 1;
 }
 
 sub last_successful_builds {
