@@ -34,7 +34,6 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
-#include <fstream.h>
 
 
 #define NS_IPARSER_IID      \
