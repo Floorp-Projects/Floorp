@@ -1564,6 +1564,11 @@ public class ScriptRuntime {
         } else {
             thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
         }
+        if (function instanceof BaseFunction) {
+            BaseFunction bf = (BaseFunction)function;
+            Reference ref = bf.referenceCall(cx, scope, thisObj, args);
+            if (ref != null) { return ref; }
+        }
         // No runtime support for now
         String msg = getMessage1("msg.no.ref.from.function",
                                  toString(getProp(fun, "name", scope)));
