@@ -18,7 +18,7 @@
 
 ##########################################################################
 #
-# Name:			config.mk
+# Name:			XfeWidgets.mk
 # Description:	Makefile defines used throughout XfeWidgets
 # Author:		Ramiro Estrugo <ramiro@netscape.com>
 #
