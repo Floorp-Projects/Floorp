@@ -3521,6 +3521,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
 
     // Use the 'display' property to choose a frame type
     switch (aDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_INLINE_BLOCK: // XXX temporary until really supported
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_RUN_IN:
