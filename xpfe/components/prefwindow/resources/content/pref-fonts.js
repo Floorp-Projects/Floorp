@@ -65,7 +65,7 @@ function GetFields()
     var lists = ["selectLangs", "proportionalFont"];
     for( var i = 0; i < lists.length; i++ )
       {
-        if( !dataObject.dataEls )
+        if( !( "dataEls" in dataObject ) )
           dataObject.dataEls = [];
         dataObject.dataEls[ lists[i] ] = [];
         dataObject.dataEls[ lists[i] ].value = document.getElementById( lists[i] ).value;
@@ -85,8 +85,8 @@ function GetFields()
 // manual data setting function for PrefWindow
 function SetFields( aDataObject )
   {
-    languageData = aDataObject.languageData ? aDataObject.languageData : languageData ;
-    currentLanguage = aDataObject.currentLanguage ? aDataObject.currentLanguage : null ;
+    languageData = "languageData" in aDataObject ? aDataObject.languageData : languageData ;
+    currentLanguage = "currentLanguage" in aDataObject ? aDataObject.currentLanguage : null ;
 
     var lists = ["selectLangs", "proportionalFont"];
     var prefvalue;
@@ -94,7 +94,7 @@ function SetFields( aDataObject )
     for( var i = 0; i < lists.length; i++ )
       {
         var element = document.getElementById( lists[i] );
-        if( aDataObject.dataEls )
+        if( "dataEls" in aDataObject )
           {
             element.selectedItem = element.getElementsByAttribute( "value", aDataObject.dataEls[ lists[i] ].value )[0];
           }
@@ -104,7 +104,7 @@ function SetFields( aDataObject )
             var preftype = element.getAttribute( "preftype" );
             if( prefstring && preftype )
               {
-                var prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
+                prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
                 element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
               }
           }
@@ -113,7 +113,7 @@ function SetFields( aDataObject )
     var screenResolution = document.getElementById( "screenResolution" );
     var resolution;
     
-    if( aDataObject.fontDPI )
+    if( "fontDPI" in aDataObject )
       {
         resolution = aDataObject.fontDPI;
       }
@@ -133,7 +133,7 @@ function SetFields( aDataObject )
     }
 
     var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
-    if( aDataObject.useDocFonts != undefined )
+    if( "useDocFonts" in aDataObject && aDataObject.useDocFonts != undefined )
       useDocFontsCheckbox.checked = aDataObject.useDocFonts ? true : false;
     else
       {
@@ -185,7 +185,7 @@ function Startup()
 
     // Get the pref and set up the dialog appropriately. Startup is called
     // after SetFields so we can't rely on that call to do the business.
-    prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
+    var prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
     if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
         resolution = prefvalue;
     else
@@ -335,18 +335,18 @@ function saveState()
     for( var i = 0; i < fontTypes.length; i++ )
       {
         // preliminary initialisation
-        if( currentLanguage && !languageData[currentLanguage] )
+        if( currentLanguage && !( currentLanguage in languageData ) )
           languageData[currentLanguage] = [];
-        if( currentLanguage && !languageData[currentLanguage].types )
+        if( currentLanguage && !( "types" in languageData[currentLanguage] ) )
           languageData[currentLanguage].types = [];
         // save data for the previous language
-        if( currentLanguage && languageData[currentLanguage] &&
-            languageData[currentLanguage].types )
+        if( currentLanguage && currentLanguage in languageData &&
+            "types" in languageData[currentLanguage] )
           languageData[currentLanguage].types[fontTypes[i]] = document.getElementById( fontTypes[i] ).value;
       }
 
-    if( currentLanguage && languageData[currentLanguage] &&
-        languageData[currentLanguage].types )
+    if( currentLanguage && currentLanguage in languageData &&
+        "types" in languageData[currentLanguage] )
       {
         languageData[currentLanguage].variableSize = parseInt( variableSize.value );
         languageData[currentLanguage].fixedSize = parseInt( fixedSize.value );
@@ -386,15 +386,16 @@ function selectLanguage()
         var strDefaultFontFace = selectElement.appendFontNames(fontEnumerator);
         //the first font face name returned by the enumerator is our last resort
         var defaultListSelection = selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0];
+        var selectedItem;
 
         //fall-back initialization values (first font face list entry)
-        var defaultListSelection = strDefaultFontFace ? selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0] : null;
+        defaultListSelection = strDefaultFontFace ? selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0] : null;
 
-        if( languageData[languageList.value] )
+        if( languageList.value in languageData )
           {
             // data exists for this language, pre-select items based on this information
             var dataElements = selectElement.listElement.getElementsByAttribute( "value", languageData[languageList.value].types[fontTypes[i]] );
-            var selectedItem = dataElements.length ? dataElements[0] : defaultListSelection;
+            selectedItem = dataElements.length ? dataElements[0] : defaultListSelection;
 
             minSizeSelect(languageData[languageList.value].minSize);
             if (strDefaultFontFace)
@@ -420,7 +421,6 @@ function selectLanguage()
                 //initialze pref panel only if font faces are available for this language family
 
                 var selectVal;
-                var selectedItem;
 
                 try {
                     var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
@@ -507,7 +507,7 @@ function changeScreenResolution()
       {
         // If the user selects "Other..." we bring up the calibrate screen dialog
         var rv = { newdpi : 0 };
-        calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
+        var calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
                                       "_blank", 
                                       "modal,chrome,centerscreen,resizable=no,titlebar",
                                       rv);
@@ -544,11 +544,11 @@ function setResolution( resolution )
     var screenResolution = document.getElementById( "screenResolution" );
     var userResolution = document.getElementById( "userResolution" );
 
-    var item = screenResolution.getElementsByAttribute( "value", resolution )[0];
-    if (item)
+    var items = screenResolution.getElementsByAttribute( "value", resolution );
+    if (items.length)
       {
         // If it's one of the hard-coded values, we'll select it directly 
-        screenResolution.selectedItem = item;
+        screenResolution.selectedItem = items[0];
         userResolution.setAttribute( "hidden", "true" );
       }   
     else
