@@ -64,6 +64,11 @@
 
 #define kGetInfoContextMenuItemTag 9
 
+// minimum sizes for the search panel
+const long kMinContainerSplitWidth = 150;
+const long kMinSearchPaneHeight = 80;
+
+
 @interface BookmarkViewController (Private) <BookmarksClient, NetworkServicesClient>
 -(void) setSearchResultArray:(NSArray *)anArray;
 -(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
@@ -140,8 +145,10 @@
 -(void)ensureBookmarks
 {
   if (!mRootBookmarks) {
+    mRootBookmarks = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] retain];
     [mContainerPane setTarget:self];
     [mContainerPane setDeleteAction:@selector(deleteCollection:)];
+    [mContainerPane reloadData];
     [mItemPane setTarget: self];
     [mItemPane setDoubleAction: @selector(openBookmark:)];
     [mItemPane setDeleteAction: @selector(deleteBookmarks:)];
@@ -152,7 +159,6 @@
     [mItemPane setAutosaveTableColumns:YES];
     [mSearchPane setAutosaveTableColumns:YES];
     [mContainerPane setAutosaveTableColumns:YES];
-    mRootBookmarks = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] retain];
   }
 }
 
@@ -520,8 +526,21 @@
 -(IBAction)startSearch:(id)aSender
 {
   NSString *searchString = [mSearchField stringValue];
-  if ([searchString length] > 0)
+  if ([searchString length] > 0) {
     [self setSearchResultArray:[[BookmarkManager sharedBookmarkManager] searchBookmarksForString:searchString]];
+  // display if it's hidden
+    NSArray *subviews = [mItemSearchSplit subviews];
+    NSRect bookmarkFrame = [[subviews objectAtIndex:0] frame];
+    NSRect searchFrame = [[subviews objectAtIndex:1] frame];
+    if (searchFrame.size.height < kMinSearchPaneHeight) {
+      searchFrame.size.height = kMinSearchPaneHeight;
+      bookmarkFrame.size.height -= kMinSearchPaneHeight;
+      [[subviews objectAtIndex:0] setFrame:bookmarkFrame];
+      [[subviews objectAtIndex:1] setFrame:searchFrame];
+      [mItemSearchSplit adjustSubviews];
+      [mItemSearchSplit setNeedsDisplay:YES];
+    }
+  }
 }
 
 -(IBAction) locateBookmark:(id)aSender
@@ -649,13 +668,19 @@
     else
       [self setCanEditSelectedContainerContents:YES];
     [mItemPane setDeleteAction: @selector(deleteBookmarks:)];
+    if ( kBookmarkMenuContainerIndex == inRowIndex )
+      [mAddSeparatorButton setEnabled:YES];
+    else
+      [mAddSeparatorButton setEnabled:NO];
   }
   [mItemPane reloadData];
 }
 
 - (void) selectLastContainer
 {
-  [self selectContainer:[mContainerPane selectedRow]];
+  int curRow = [mContainerPane selectedRow];
+  curRow = (curRow != -1) ? curRow : 0;
+  [self selectContainer:curRow];
 }
 
 - (int)numberOfRowsInTableView:(NSTableView *)tableView
@@ -958,7 +983,8 @@
   if ([types containsObject: @"MozBookmarkType"])
   {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    NSEnumerator *enumerator = [draggedItems objectEnumerator];
+    // added sequentially, so use reverse object enumerator to preserve order.
+    NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
     while ((aKid = [enumerator nextObject])) {
       if (isCopy) {
@@ -967,6 +993,8 @@
         [[aKid parent] moveChild:aKid toBookmarkFolder:item atIndex:index];
       }
     }
+    // clear selections
+    [ov deselectAll:self];
     return YES;
   }
   else if ([types containsObject: @"MozURLType"])
@@ -998,8 +1026,12 @@
     else
       return [item url];
   }
-  else if ([item isKindOfClass:[BookmarkFolder class]])
-    return [item description];
+  else if ([item isKindOfClass:[BookmarkFolder class]]) {
+    if ([[item description] length] > 0)
+      return [item description];
+    else
+      return [item title];
+  }
   else
     return nil;
 }
@@ -1217,35 +1249,6 @@
 #pragma mark -
 
 //
-// - splitViewDidResizeSubviews:
-//
-// Called when one of the views got resized. We want to ensure that the "add bookmark
-// item" button gets lined up with the left edge of the item panel. If the container/item
-// split was the one that changed, move it accordingly
-//
-- (void)splitViewDidResizeSubviews:(NSNotification *)notification
-{
-  const int kButtonGutter = 8;
-
-  if ( [notification object] == mContainersSplit ) {
-    // get the position of the item view relative to the window and set the button
-    // to that X value. Yes, this will fall down if the bookmark view is inset from the window
-    // but i think we can safely assume it won't be.
-    NSRect windowRect = [mItemPane convertRect:[mItemPane bounds] toView:nil];
-    NSRect newButtonLocation = [mAddBookmarkButton frame];
-    newButtonLocation.origin.x = windowRect.origin.x;
-    [mAddBookmarkButton setFrame:newButtonLocation];
-    [mAddBookmarkButton setNeedsDisplay:YES];
-
-    // offset by the width of the button and the gutter and we've got the location
-    // of the add folder button next to it.
-    newButtonLocation.origin.x += newButtonLocation.size.width + kButtonGutter;
-    [mAddFolderButton setFrame:newButtonLocation];
-    [mAddFolderButton setNeedsDisplay:YES];
-  }
-}
-
-//
 // - splitView:canCollapseSubview:
 //
 // Called when appkit wants to ask if it can collapse a subview. The only subview
@@ -1264,12 +1267,10 @@
 
 - (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset
 {
-  const int kMinimumContainerSplitWidth = 150;
-  float retVal = proposedCoord;
   if ( sender == mContainersSplit )
-    retVal = kMinimumContainerSplitWidth;
-  return retVal;
+    return kMinContainerSplitWidth;  // minimum size of collections pane
+  else
+    return proposedCoord;
 }
-
 
 @end
