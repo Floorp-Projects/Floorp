@@ -1274,7 +1274,6 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 		if(postMessage)
 		{
-			int status=0;
 			char *addrs1 = 0;
 			char *addrs2 = 0;
     		m_nextState = SMTP_RESPONSE;
