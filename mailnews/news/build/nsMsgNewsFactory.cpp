@@ -308,7 +308,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
   
-	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Service", 
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Protocol Handler", 
                                   NS_NNTPPROTOCOLINFO_PROGID,
                                   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
@@ -325,7 +325,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID,  
                                     "NNTP Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "nntp",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "news",
                                     path, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv)) return rv;
