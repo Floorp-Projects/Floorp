@@ -24,7 +24,6 @@ MODULE=transformiix
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  layout \
 		  widget \
 		  content_xsl \
 		  necko \

@@ -30,7 +30,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  dom \
 		  widget \
-		  layout \
 		  pref \
 		  intl \
 		  uriloader \
