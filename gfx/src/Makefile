@@ -30,7 +30,7 @@ REQUIRES=util img xpcom raptor netlib
 LCFLAGS=-D_IMPL_NS_GFX 
 
 CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
-    nsImageGroup.cpp nsImageManager.cpp nsImageNetContext.cpp \
+    nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
     nsImageURL.cpp nsRect.cpp nsTransform2D.cpp nsFontCache.cpp 
 
