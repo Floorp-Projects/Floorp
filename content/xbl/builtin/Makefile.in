@@ -62,7 +62,7 @@ PLATFORM_BINDINGS = $(srcdir)/$(PLATFORM_DIR)/platformHTMLBindings.xml
 PREPROCESS_BINDINGS = $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(PLATFORM_BINDINGS)
 
 $(DIST)/bin/res/builtin/platformHTMLBindings.xml $(DESTDIR)$(mozappdir)/res/builtin/platformHTMLBindings.xml: $(PLATFORM_BINDINGS) $(wildcard $(srcdir)/*.inc) Makefile
-	@mkdir -p $(dir $@)
+	@if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
 	@rm -f $@
 	@$(PREPROCESS_BINDINGS) > $@
 
