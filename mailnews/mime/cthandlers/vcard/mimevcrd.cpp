@@ -1781,7 +1781,8 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 	else
 		status = MK_OUT_OF_MEMORY;
 
-  PR_FREEIF(converted);
+  if (converted != line)
+    PR_FREEIF(converted);
 	return status;
 }
 
