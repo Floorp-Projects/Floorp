@@ -401,7 +401,27 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
 // Factory method to get an nsInputStream from a file, using most common options
 //----------------------------------------------------------------------------------------
 {
+  // This QueryInterface was needed because NS_NewIOFileStream
+  // does a cast from (void *) to (nsISupports *) thus causing a 
+  // vtable problem on Windows, where we really didn't have the proper pointer
+  // to an nsIInputStream, this ensures that we do 
+#if 1
+    nsISupports    * supports;
+    nsIInputStream * inStr;
+
+    nsresult rv = NS_NewIOFileStream(&supports, inFile, PR_RDONLY, 0700);
+
+    if (NS_OK == rv && 
+        NS_OK == supports->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), 
+        (void**)&inStr)) {
+      *aResult = inStr;
+      return NS_OK;
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+#else
     return NS_NewIOFileStream(aResult, inFile, PR_RDONLY, 0700);
+#endif
 }
 
 //----------------------------------------------------------------------------------------
@@ -432,11 +452,35 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
 // Factory method to get an nsOutputStream to a file - most common case.
 //----------------------------------------------------------------------------------------
 {
+  // This QueryInterface was needed because NS_NewIOFileStream
+  // does a cast from (void *) to (nsISupports *) thus causing a 
+  // vtable problem on Windows, where we really didn't have the proper pointer
+  // to an nsIOutputStream, this ensures that we do 
+#if 1
+    nsISupports     * supports;
+    nsIOutputStream * outStr;
+
+    nsresult rv = NS_NewIOFileStream(
+        &supports,
+        inFile,
+        (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
+        0700);
+
+    if (NS_OK == rv && 
+        NS_OK == supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), 
+                                          (void**)&outStr)) {
+      *aResult = outStr;
+      return NS_OK;
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+#else
     return NS_NewIOFileStream(
         aResult,
         inFile,
         (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
         0700);
+#endif
 }
 
 //----------------------------------------------------------------------------------------
