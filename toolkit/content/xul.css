@@ -146,7 +146,7 @@ tabbrowser {
 }
 
 editor {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#editor");
+  -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
 }
 
 iframe {
