@@ -421,8 +421,6 @@ static const char kDOMStringBundleURL[] =
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, _flags)
 
 
-#define DOCUMENT_ALL_DID_WARN (1 << 30)
-
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
 // arguments that are passed to NS_DEFINE_CLASSINFO_DATA are
@@ -5774,7 +5772,6 @@ PrintDocumentAllWarningOnConsole(JSContext *cx)
   JSStackFrame *fp, *iterator = nsnull;
   fp = ::JS_FrameIterator(cx, &iterator);
   PRUint32 lineno = 0;
-  const char* filename = nsnull;
   nsAutoString sourcefile;
   if (fp) {
     JSScript* script = ::JS_GetFrameScript(cx, fp);
@@ -5831,18 +5828,8 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
     // document.all is not being detected, and it resolved with a
     // qualified name. Expose the document.all collection.
 
-    if (!(flags & DOCUMENT_ALL_DID_WARN)) {
-      PrintDocumentAllWarningOnConsole(cx);
-
-      // Remember that we've complained about document.all being used
-      // in this document already.
-      flags |= DOCUMENT_ALL_DID_WARN;
-
-      if (!::JS_SetPrivate(cx, helper,
-                           JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
-        return JS_FALSE;
-      }
-    }
+    // Print a warning so developers can stop using document.all
+    PrintDocumentAllWarningOnConsole(cx);
 
     if (!JSVAL_IS_OBJECT(*vp)) {
       // First time through, create the collection, and set the
@@ -6027,17 +6014,11 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       // If we have (or just created) a helper, pass the resolve flags
       // to the helper as its private data.
-      if (helper) {
-        flags |=
-          (JSVAL_TO_INT(PRIVATE_TO_JSVAL(::JS_GetPrivate(cx, helper))) &
-           DOCUMENT_ALL_DID_WARN);
+      if (helper && !::JS_SetPrivate(cx, helper,
+                                     JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
+        nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
-        if (!::JS_SetPrivate(cx, helper,
-                             JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
-          nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
-
-          return NS_ERROR_UNEXPECTED;
-        }
+        return NS_ERROR_UNEXPECTED;
       }
 
       return NS_OK;
