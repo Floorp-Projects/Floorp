@@ -57,7 +57,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsScrollPortFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollableView.h"
@@ -71,6 +70,8 @@
 #include "nsIDOMNSDocument.h"
 #include "nsPIBoxObject.h"
 #include "nsINodeInfo.h"
+#include "nsScrollPortFrame.h"
+#include "nsLayoutUtils.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -364,6 +365,44 @@ nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
   if (mAdjustScroll)
      PostReflowCallback();
 
+  return rv;
+}
+
+nsSize
+nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
+{
+  nsSize result(0, 0);
+  nsAutoString sizeMode;
+  GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+  if (!sizeMode.IsEmpty()) {  
+    GetPrefSize(aBoxLayoutState, result);
+    result.height = 0;
+    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
+    if (scrollFrame &&
+        scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
+      nsMargin scrollbars =
+        scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+      result.width += scrollbars.left + scrollbars.right;
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{  
+  nsresult rv = nsBoxFrame::GetPrefSize(aBoxLayoutState, aSize);
+
+  PRInt32 size = GetFixedRowSize();
+  if (size > -1)
+    aSize.height = size*GetRowHeightTwips();
+   
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (scrollFrame &&
+      scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
+    nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
+    aSize.width += scrollbars.left + scrollbars.right;
+  }
   return rv;
 }
 
@@ -1429,83 +1468,6 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
   aFrame->Destroy(mPresContext);
 }
 
-//////////////////////////////////////////////////////////////////////////
-///// nsListboxScrollPortFrame
-
-class nsListboxScrollPortFrame : public nsScrollPortFrame
-{
-public:
-  nsListboxScrollPortFrame(nsIPresShell* aShell);
-  friend nsresult NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-};
-
-nsListboxScrollPortFrame::nsListboxScrollPortFrame(nsIPresShell* aShell):nsScrollPortFrame(aShell)
-{
-}
-
-NS_IMETHODIMP
-nsListboxScrollPortFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-{  
-  nsIBox* child = nsnull;
-  GetChildBox(&child);
- 
-  nsresult rv = child->GetPrefSize(aBoxLayoutState, aSize);
-  nsListBoxBodyFrame* outer = NS_STATIC_CAST(nsListBoxBodyFrame*,child);
-
-  nsAutoString sizeMode;
-  outer->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
-  if (!sizeMode.IsEmpty()) {  
-    nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
-    if (scrollFrame &&
-        scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
-      nsMargin scrollbars =
-        scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
-      aSize.width += scrollbars.left + scrollbars.right;
-    }
-  }
-  else aSize.width = 0;
-
-  aSize.height = 0;
-  
-  AddMargin(child, aSize);
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
-  return rv;
-
-}
-
-NS_IMETHODIMP
-nsListboxScrollPortFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-{  
-  nsIBox* child = nsnull;
-  GetChildBox(&child);
- 
-  nsresult rv = child->GetPrefSize(aBoxLayoutState, aSize);
-  nsListBoxBodyFrame* outer = NS_STATIC_CAST(nsListBoxBodyFrame*,child);
-
-  PRInt32 size = outer->GetFixedRowSize();
-
-  if (size > -1)
-    aSize.height = size*outer->GetRowHeightTwips();
-   
-  nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
-  if (scrollFrame &&
-      scrollFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
-    nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
-    aSize.width += scrollbars.left + scrollbars.right;
-  }
-
-  AddMargin(child, aSize);
-  AddBorderAndPadding(aSize);
-  AddInset(aSize);
-  nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
-  return rv;
-
-}
-
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
 nsresult
@@ -1523,19 +1485,4 @@ NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aI
   *aNewFrame = it;
   return NS_OK;
   
-}
-
-nsresult
-NS_NewListBoxScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
-{
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsListboxScrollPortFrame* it = new (aPresShell) nsListboxScrollPortFrame (aPresShell);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
 }

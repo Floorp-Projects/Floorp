@@ -181,6 +181,11 @@ public:
     */
   static nsIScrollableFrame* GetScrollableFrameFor(nsIScrollableView *aScrollableView);
 
+  /**
+    * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
+    */
+  static nsIScrollableFrame* GetScrollableFrameFor(nsIFrame *aScrolledFrame);
+
   static nsPresContext::ScrollbarStyles
     ScrollbarStylesOfView(nsIScrollableView *aScrollableView);
 

@@ -727,6 +727,12 @@ nsBox::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
   return NS_OK;
 }
 
+nsSize
+nsBox::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
+{
+  return nsSize(0, 0);
+}
+
 NS_IMETHODIMP
 nsBox::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {

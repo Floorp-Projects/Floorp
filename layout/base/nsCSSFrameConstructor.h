@@ -741,8 +741,7 @@ private:
                    nsIFrame*                aParentFrame,
                    nsIFrame*                aContentParentFrame,
                    nsIFrame*&               aNewFrame,
-                   nsStyleContext*&         aScrolledChildStyle,
-                   nsIFrame*                aScrollPort = nsnull);
+                   nsStyleContext*&         aScrolledChildStyle);
 
   // Builds the initial ScrollFrame
   already_AddRefed<nsStyleContext>
@@ -757,8 +756,7 @@ private:
                            nsIDocument*             aDocument,
                            PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame, 
-                           nsIFrame*&               aScrollableFrame,
-                           nsIFrame*                aScrollPort = nsnull);
+                           nsIFrame*&               aScrollableFrame);
 
   // Completes the building of the scrollframe:
   //  Creates and necessary views for the scrollframe and sets up the initial child list
@@ -784,8 +782,7 @@ private:
                      nsStyleContext*          aStyleContext,
                      PRBool                   aIsRoot,
                      nsIFrame*&               aNewFrame,
-                     nsFrameItems&            aAnonymousFrames,
-                     nsIFrame*                aScrollPort = nsnull);
+                     nsFrameItems&            aAnonymousFrames);
 
 
   // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false

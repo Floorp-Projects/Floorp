@@ -322,9 +322,6 @@ nsresult
 NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewListBoxScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef MOZ_ENABLE_CAIRO
@@ -5797,15 +5794,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         nsCOMPtr<nsIBoxLayout> layout;
       
-        PRBool listboxScrollPort = PR_FALSE;
-        
         if (aTag == nsXULAtoms::listboxbody) {
           NS_NewListBoxLayout(aPresShell, layout);
 
           rv = NS_NewListBoxBodyFrame(aPresShell, &newFrame, PR_FALSE, layout);
           ((nsListBoxBodyFrame*)newFrame)->InitGroup(this, aPresContext);
-          listboxScrollPort = PR_TRUE;
-
           processChildren = PR_FALSE;
         }
         else
@@ -5816,15 +5809,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         // Boxes can scroll.
         if (display->IsScrollableOverflow()) {
-
-          nsIFrame* scrollPort = nsnull;
-          if (listboxScrollPort) {
-            NS_NewListBoxScrollPortFrame(aPresShell, &scrollPort);
-          }
           // set the top to be the newly created scrollframe
           BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
                            aStyleContext, newFrame, aParentFrame, nsnull,
-                           topFrame, aStyleContext, scrollPort);
+                           topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
           aParentFrame = newFrame->GetParent();
@@ -5832,8 +5820,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           primaryFrameSet = PR_TRUE;
 
           frameHasBeenInitialized = PR_TRUE;
-
-        } 
+        }
       } //------- End Grid ------
 
       // ------- Begin Row/Column ---------
@@ -6091,8 +6078,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
                                                 nsIDocument*             aDocument,
                                                 PRBool                   aIsRoot,
                                                 nsIFrame*&               aNewFrame,
-                                                nsIFrame*&               aScrollableFrame,
-                                                nsIFrame*                aScrollPortFrame)
+                                                nsIFrame*&               aScrollableFrame)
 {
   // Check to see the type of parent frame so we know whether we need to 
   // turn off/on scaling for the scrollbars
@@ -6137,7 +6123,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
 
   InitGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument,
                      aParentFrame, aContentParentFrame, contentStyle,
-                     aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
+                     aIsRoot, gfxScrollFrame, anonymousItems);
 
   scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
   parentFrame = gfxScrollFrame;
@@ -6258,8 +6244,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
                                         nsIFrame*                aParentFrame,
                                         nsIFrame*                aContentParentFrame,
                                         nsIFrame*&               aNewFrame, 
-                                        nsStyleContext*&         aScrolledContentStyle,
-                                        nsIFrame*                aScrollPortFrame)
+                                        nsStyleContext*&         aScrolledContentStyle)
 {
     // Check to see the type of parent frame so we know whether we need to 
     // turn off/on scaling for the scrollbars
@@ -6289,8 +6274,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
                                                     mDocument,
                                                     PR_FALSE,
                                                     aNewFrame,
-                                                    scrollFrame,
-                                                    aScrollPortFrame);
+                                                    scrollFrame);
     
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         scrollFrame, scrolledContentStyle, nsnull, aScrolledFrame);
@@ -6331,13 +6315,12 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
                                           nsStyleContext*          aStyleContext,
                                           PRBool                   aIsRoot,
                                           nsIFrame*&               aNewFrame,
-                                          nsFrameItems&            aAnonymousFrames,
-                                          nsIFrame*                aScrollPortFrame)
+                                          nsFrameItems&            aAnonymousFrames)
 {
-  if (!aScrollPortFrame)
-    NS_NewScrollPortFrame(aPresShell, &aScrollPortFrame);
+  nsIFrame* scrollPort;
+  NS_NewScrollPortFrame(aPresShell, &scrollPort);
 
-  aAnonymousFrames.AddChild(aScrollPortFrame);
+  aAnonymousFrames.AddChild(scrollPort);
 
   // if there are any anonymous children for the scroll frame, create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
