@@ -24,9 +24,8 @@ JavaScript evaluation engine with a Java thread, set attributes of the
 engine, and compile and evaluate scripts.</li>
 
 <li>
-<a href="org/mozilla/javascript/ContextListener.html">ContextListener</a> 
-- Allows embeddings to be notified of the creation, entering, exiting,
-and releasing of Contexts. </li>
+<a href="org/mozilla/javascript/ContextFactory.html">ContextFactory</a> 
+- Allows embeddings to customize creation of Context instances and monitor entering and releasing of Contexts. </li>
 
 <li>
 <a href="org/mozilla/javascript/Script.html">Script</a> - The result of
@@ -74,7 +73,7 @@ for use by JavaScript.</li>
 The Host Object API</h4>
 These APIs provide support for adding objects specific to a particular
 embedding of JavaScript in a host environment. Note that if you just want
-to script existing Java classes, you should just use <a href="http://developer.netscape.com/library/documentation/communicator/jsguide4/livecon.htm">LiveConnect</a>.
+to script existing Java classes, you should just use <a href="http://devedge.netscape.com/library/manuals/2000/javascript/1.5/guide/lc.html">LiveConnect</a>. See also <a href="http://www.mozilla.org/js/liveconnect/">LiveConnect 3.0 specs</a>.
 It is also helpful to understand some of the implementation of the <a href="runtime.html">runtime</a>.
 <ul>
 <li>
@@ -101,7 +100,7 @@ to be used as JavaScript function objects.</li>
 
 <li>
 <a href="org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
-- Allows embeddings to use the importClass and importPackage functions.</li>
+- Allows embeddings to use the JavaImporter constructor.</li>
 </ul>
 
 <h4>
@@ -109,23 +108,23 @@ Exceptions</h4>
 These exceptions are thrown by JavaScript.
 <ul>
 <li>
+<a href="org/mozilla/javascript/RhinoException.html">RhinoException</a>
+- Common root for all exception explicitly thrown by Rhino engine.</li>
+
 <a href="org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
-- Thrown from within JavaScript by the JavaScript 'throw' statement, or
-by LiveConnect calls from JavaScript into Java. Wraps a JavaScript value.</li>
+- Thrown from within JavaScript by the JavaScript 'throw' statement. It wrapps the JavaScript value from 'throw' statement.</li>
 
 <li>
-<a href="org/mozilla/javascript/ClassDefinitionException.html">ClassDefinitionException</a>
-- Thrown if errors are detected while attempting to define a host object
-from a Java class.</li>
+<a href="org/mozilla/javascript/WrappedException.html">EcmaError</a>
+- Thrown by Rhino runtime when particular runtime operation a scripts tries to execute is not allowed. The exception is thrown, for example, when a script attempts to check properties of <tt>undefined</tt>or <tt>null</tt> or refer to a name that can not be found in the current scope chain.</li>
 
 <li>
-<a href="org/mozilla/javascript/PropertyException.html">PropertyException</a>
-- Thrown if errors are detected while attempting to define a property of
-a host object from a Java class or method, or if a property is not found.</li>
+<a href="org/mozilla/javascript/WrappedException.html">WrappedException</a>
+- Thrown by LiveConnect implementation from JavaScript when called Java method exits with an exception. It wraps the original Java exception.</li>
 
 <li>
 <a href="org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
-- An exception thrown when an error is detected during the execution of
+- An exception thrown when an error is detected during the compilation or execution of
 a script. The default error reporter will throw EvaluatorExceptions when
 an error is encountered.</li>
 </ul>

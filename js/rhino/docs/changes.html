@@ -48,7 +48,7 @@ The class gives the uniform way to access information about the script origin of
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244492">Bugzilla 244492</a> for details.
 </p>
 
-<h4>Removal of code complexity limits in the interpretr</tt></h4>
+<h4>Removal of code complexity limits in the interpretr</h4>
 <p>
 The interpreter mode in Rhino does not limit any longer the script size or code complexity. It should be possible to execute any script as long as JVM resources allow so.
 </p>
@@ -57,7 +57,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244014">Bugzilla 244014
 </p>
 
 
-<h4><tt>JavaImporter</tt> constructor</h4>
+<h4>JavaImporter constructor</h4>
 <p>
 <tt>JavaImporter</tt> is a new global constructor that allows to omit explicit package names when scripting Java:
 </p>
@@ -85,8 +85,14 @@ Previously such functionality was available only to embeddings that used <a href
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=245882">Bugzilla 245882</a> for details.
 </p>
 
+<h4>Context customization API</h4>
+<a href="apidocs/org/mozilla/javascript/ContextFactory.html"><tt>org.mozilla.javascript.ContextFactory</tt></a> provides new API for customization of <tt>org.mozilla.javascript.Context</tt> and ensures that application-specific Context subclasses will always be used with when Rhino runtime needs to create Context instances.
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=255595">Bugzilla 245882</a> for details.
+</p>
 
-<h4>Support for <tt>Date.now()</tt></h4>
+<h4>Support for Date.now()</h4>
 <p>
 <tt>Date.now()</tt> function which is a SpiderMonkey extension to ECMAScript standard is available now in Rhino. The function returns number of milliseconds passed since 1970-01-01 00:00:00 UTC.
 </p>
