@@ -26,7 +26,7 @@
 // Unix headers
 #include <unistd.h>
 #ifdef __MATH__
-#errror scream
+#error scream
 #endif
 #include <assert.h>
 #include <ctype.h>
@@ -35,7 +35,7 @@
 #include <locale.h>
 #include <setjmp.h>
 #ifdef __MATH__
-#errror scream
+#error scream
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,13 +47,4 @@
 
 #include <PP_MacHeaders.c>			// Toolbox headers
 									// Action Classes
-#include <Sound.h>			// Toolbox headers
-
-// no more compat.h
-#ifndef	MAX
-	#define	MAX(_a,_b)	((_a)<(_b)?(_b):(_a))
-#endif
-
-#ifndef	MIN
-	#define	MIN(_a,_b)	((_a)<(_b)?(_a):(_b))
-#endif
+#include <Sound.h>					// Toolbox headers
