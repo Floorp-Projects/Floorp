@@ -25,7 +25,6 @@ use diagnostics;
 use strict;
 use RelationSet;
 use XML::Dumper;
-use Data::Dumper;
 #use vars %::COOKIE;
 require "CGI.pl";
 

@@ -28,8 +28,6 @@
 use diagnostics;
 use strict;
 use XML::Parser;
-use Data::Dumper;
-$Data::Dumper::Useqq = 1;
 require "CGI.pl";
 require "globals.pl";
 
