@@ -3004,9 +3004,11 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
   // index-th spot in mChildren.
   if (ELEMENT_NODE == nodeType)
     mRootContent = content;
-  ContentInserted(nsnull, content, indx);
 
   content->SetDocument(this, PR_TRUE, PR_TRUE);
+
+  ContentInserted(nsnull, content, indx);
+
   *aReturn = aNewChild;
   NS_ADDREF(aNewChild);
 
