@@ -82,6 +82,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* prompt the user for a password */
   string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
 
+  /* forget the password in memory and in single signon database */
+  void forgetPassword();
+
   /* should we download whole messages when biff goes off? */
   /* in 4.x, this was "mail.pop3_gets_new_mail" for pop */
   /* "mail.imap.new_mail_get_headers" for imap, and it was global.  in 5.x, it is per server */

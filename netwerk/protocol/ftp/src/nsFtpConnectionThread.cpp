@@ -828,7 +828,7 @@ nsFtpConnectionThread::S_user() {
                 message += host;
             }
 
-            rv = proxyprompter->PromptUsernameAndPassword(host, NULL, message.GetUnicode(), &user, &passwd, &retval);
+            rv = proxyprompter->PromptUsernameAndPassword(host, PR_TRUE, NULL, message.GetUnicode(), &user, &passwd, &retval);
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
                 return NS_ERROR_FAILURE;
@@ -918,7 +918,7 @@ nsFtpConnectionThread::S_pass() {
                 message += " on ";
                 message += host;
             }
-            rv = proxyprompter->PromptPassword(userAtHostC, NULL, message.GetUnicode(), &passwd, &retval);
+            rv = proxyprompter->PromptPassword(userAtHostC, PR_TRUE, NULL, message.GetUnicode(), &passwd, &retval);
             nsCRT::free(userAtHostC);
 
             // we want to fail if the user canceled or didn't enter a password.

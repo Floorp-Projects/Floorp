@@ -41,10 +41,7 @@
 #include "nsTextFormatter.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h" 
-#include "nsIWalletService.h"
 #include "nsIMsgWindow.h"
-
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
 
@@ -538,10 +535,9 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
         {
-            NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+            rv = server->ForgetPassword();
             if (NS_FAILED(rv)) return rv;
-            nsAutoString user(userName);
-            rv = walletservice->SI_RemoveUser(hostName, (PRUnichar *)user.GetUnicode());
+
             PRUnichar *passwordTemplate = nsnull;
             mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
 

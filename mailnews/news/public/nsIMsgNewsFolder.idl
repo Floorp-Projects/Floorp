@@ -34,5 +34,8 @@ interface nsIMsgNewsFolder : nsISupports {
   string getGroupPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
   string getGroupUsernameWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
 
+  void forgetGroupUsername();
+  void forgetGroupPassword();
+
   nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
 };

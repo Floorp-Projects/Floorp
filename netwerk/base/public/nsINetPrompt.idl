@@ -30,13 +30,13 @@ interface nsINetPrompt : nsISupports
     /**
      * Puts up an alert dialog with an OK button.
      */
-    void alert( in string url, in wstring title, in wstring text);
+    void alert( in string url, in boolean stripurl, in wstring title, in wstring text);
 
     /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean confirm( in string url, in wstring title, in wstring text);
+    boolean confirm( in string url, in boolean stripurl, in wstring title, in wstring text);
 
     /**
      * Puts up a username/password dialog with OK and Cancel buttons.
@@ -44,6 +44,7 @@ interface nsINetPrompt : nsISupports
      */
     boolean promptUsernameAndPassword(
     								in string url,
+                                    in boolean stripurl,
     								 in wstring title,
     								   in wstring text,
                                       out wstring user, 
@@ -55,6 +56,7 @@ interface nsINetPrompt : nsISupports
      */
     boolean promptPassword(
     						in string url,
+                            in boolean stripurl,
     						in wstring title,
     					   in wstring text, 
                            out wstring pwd);
@@ -65,6 +67,7 @@ interface nsINetPrompt : nsISupports
      */
     boolean prompt(
     						in string url,
+                            in boolean stripurl,
     						in wstring title,
     					   in wstring text, 
                            out wstring pwd);

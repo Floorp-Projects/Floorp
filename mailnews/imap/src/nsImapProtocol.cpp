@@ -50,7 +50,6 @@
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
 #include "nsICopyMsgStreamListener.h"
-#include "nsIWalletService.h"
 
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
@@ -81,7 +80,6 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -6215,14 +6213,11 @@ PRBool nsImapProtocol::TryToLogon()
       {
               // login failed!
               // if we failed because of an interrupt, then do not bother the user
-          NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
-          if (NS_FAILED(rv)) return rv;
-          nsAutoString user(userName);
-          rv = walletservice->SI_RemoveUser(GetImapHostName(), (PRUnichar *)user.GetUnicode());
+              rv = m_server->ForgetPassword();
+
               if (!DeathSignalReceived())
               {
                 AlertUserEventUsingId(IMAP_LOGIN_FAILED);
-                m_server->SetPassword("");  // clear out the password
                 m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
                 PR_FREEIF(password);
                 m_currentBiffState = nsMsgBiffState_Unknown;

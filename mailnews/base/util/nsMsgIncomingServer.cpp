@@ -37,6 +37,7 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
+#include "nsIWalletService.h"
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "nsIMsgProtocolInfo.h"
@@ -44,6 +45,7 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
 
@@ -575,8 +577,8 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			nsXPIDLCString serverUri;
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			rv = dialog->PromptPassword(serverUri, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
-            if (NS_FAILED(rv)) return rv;
+			rv = dialog->PromptPassword(serverUri, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
+            		if (NS_FAILED(rv)) return rv;
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{
@@ -594,6 +596,26 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 
     rv = GetPassword(aPassword);
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::ForgetPassword()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    
+    nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetPassword("");
+    if (NS_FAILED(rv)) return rv;
+    
+    
+    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_TRUE, nsnull);
+    return rv;
 }
 
 NS_IMETHODIMP

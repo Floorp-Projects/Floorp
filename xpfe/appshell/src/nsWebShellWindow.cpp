@@ -2805,18 +2805,18 @@ NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PR
   return rv;
 }
 
-NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, const PRUnichar *title, const PRUnichar *text)
+NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text)
 {
 	return Alert( text );
 }
 
 
-NS_IMETHODIMP nsWebShellWindow::Confirm(const char *url, const PRUnichar *title, const PRUnichar *text, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Confirm(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRBool *_retval)
 {
 	return Confirm( text, _retval );
 }
 
-NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *url, const PRUnichar *title, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
 	nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
@@ -2824,11 +2824,11 @@ NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *url, const
 	     return PromptUsernameAndPassword(text,user, pwd, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptUsernameAndPasswordURL(text,user, pwd, url, prompter, _retval);
+   return wallet->PromptUsernameAndPasswordURL(text,user, pwd, url, stripUrl, prompter, _retval);
 }
 
 
-NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, const PRUnichar *title, const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
 {
    nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
@@ -2836,10 +2836,10 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, const PRUnichar 
 	     return PromptPassword(text, title, pwd, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptPasswordURL(text, pwd, url, prompter,  _retval);
+   return wallet->PromptPasswordURL(text, pwd, url, stripUrl, prompter,  _retval);
 }
 
-NS_IMETHODIMP nsWebShellWindow::Prompt(const char *url, const PRUnichar *title, const PRUnichar *text, PRUnichar **value, PRBool *_retval)
+NS_IMETHODIMP nsWebShellWindow::Prompt(const char *url, PRBool stripUrl, const PRUnichar *title, const PRUnichar *text, PRUnichar **value, PRBool *_retval)
 {
    nsresult res;
    NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
@@ -2847,5 +2847,5 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const char *url, const PRUnichar *title, 
 	     return Prompt(text, title, value, _retval);
    }
    nsCOMPtr<nsIPrompt> prompter = this;
-   return wallet->PromptURL(text, nsnull, value, url, prompter,  _retval);
+   return wallet->PromptURL(text, nsnull, value, url, stripUrl, prompter,  _retval);
 }

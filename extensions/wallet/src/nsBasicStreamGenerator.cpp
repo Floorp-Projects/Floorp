@@ -81,7 +81,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
     }
 
     // Get the offset byte from the stream. Our stream is
-    // just our password reapting itself infinite times.
+    // just our password repeating itself infinite times.
     *retval = mPassword[offset % mPassword.Length()];
     return rv;
 }

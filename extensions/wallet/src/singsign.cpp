@@ -800,7 +800,7 @@ si_GetURL(char * URLName) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip = PR_TRUE) {
+si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
   nsresult res;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
@@ -1256,7 +1256,7 @@ PRIVATE void
 si_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(""), PR_FALSE)) {
+    while (si_RemoveUser(NULL, nsAutoString(""), PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -2750,7 +2750,7 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
         /* get to first data item -- that's the user name */
         data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
         /* do the deletion */
-        si_RemoveUser(url->URLName, data->value, PR_TRUE);
+        si_RemoveUser(url->URLName, data->value, PR_TRUE, PR_TRUE);
         si_signon_list_changed = PR_TRUE;
       }
     }

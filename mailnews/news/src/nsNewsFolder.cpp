@@ -61,6 +61,8 @@
 
 #include "nsXPIDLString.h"
 
+#include "nsIWalletService.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -70,6 +72,7 @@ static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
@@ -1206,6 +1209,38 @@ NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
     return NS_OK;    
 }
 
+NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetGroupUsername("");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString signonURI(mURI);
+    signonURI += "#username";
+
+    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_TRUE, nsnull);
+    return rv;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetGroupPassword("");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString signonURI(mURI);
+    signonURI += "#password";
+
+    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_TRUE, nsnull);
+    return rv;
+}
+
 NS_IMETHODIMP
 nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
                                        PRUnichar *aPromptTitle,
@@ -1238,29 +1273,9 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
             PRBool okayValue = PR_TRUE;
             
             nsCAutoString signonURI(mURI);
-#if SINGLE_SIGNON_USING_FULL_URLS
             signonURI += "#password";
-#else
-            signonURI = NEWS_SCHEME;
-            signonURI += "//";
-            nsXPIDLCString hostname;
-            rv = GetHostname(getter_Copies(hostname));
-            if (NS_FAILED(rv)) return rv;
 
-            signonURI += (const char *)hostname;
-            signonURI += "-";
-
-            nsXPIDLString newsgroupname;
-            rv = GetName(getter_Copies(newsgroupname));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCAutoString asciiName(newsgroupname);
-
-            signonURI += (const char *)asciiName;
-            signonURI += "-password";
-#endif
-
-            rv = dialog->PromptPassword((const char *)signonURI, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
+            rv = dialog->PromptPassword((const char *)signonURI, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -1309,28 +1324,9 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             PRBool okayValue = PR_TRUE;
 
             nsCAutoString signonURI(mURI);
-#if SINGLE_SIGNON_USING_FULL_URLS
             signonURI += "#username";
-#else
-            signonURI = NEWS_SCHEME;
-            signonURI += "//";
-            nsXPIDLCString hostname;
-            rv = GetHostname(getter_Copies(hostname));
-            if (NS_FAILED(rv)) return rv;
 
-            signonURI += (const char *)hostname;
-            signonURI += "-";
-
-            nsXPIDLString newsgroupname;
-            rv = GetName(getter_Copies(newsgroupname));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCAutoString asciiName(newsgroupname);
-            
-            signonURI += (const char *)asciiName;
-            signonURI += "-username";
-#endif
-             rv = dialog->Prompt((const char *)signonURI, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
+            rv = dialog->Prompt((const char *)signonURI, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;
