@@ -83,6 +83,9 @@ nsJSID::SetName(const char* name)
 NS_IMETHODIMP
 nsJSID::GetName(char * *aName)
 {
+    if(!aName)
+        return NS_ERROR_NULL_POINTER;
+
     if(!NameIsSet())
         SetNameToNoString();
     NS_ASSERTION(mName, "name not set");
@@ -93,6 +96,9 @@ nsJSID::GetName(char * *aName)
 NS_IMETHODIMP
 nsJSID::GetNumber(char * *aNumber)
 {
+    if(!aNumber)
+        return NS_ERROR_NULL_POINTER;
+
     if(!mNumber)
     {
         if(!(mNumber = mID.ToString()))
@@ -106,6 +112,9 @@ nsJSID::GetNumber(char * *aNumber)
 NS_IMETHODIMP
 nsJSID::GetId(nsID* *aId)
 {
+    if(!aId)
+        return NS_ERROR_NULL_POINTER;
+
     *aId = (nsID*) nsAllocator::Clone(&mID, sizeof(nsID));
     return *aId ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -113,6 +122,9 @@ nsJSID::GetId(nsID* *aId)
 NS_IMETHODIMP
 nsJSID::GetValid(PRBool *aValid)
 {
+    if(!aValid)
+        return NS_ERROR_NULL_POINTER;
+
     *aValid = !mID.Equals(GetInvalidIID());
     return NS_OK;
 }
@@ -125,7 +137,7 @@ nsJSID::Equals(nsIJSID *other, PRBool *_retval)
 
     *_retval = PR_FALSE;
 
-    if(mID.Equals(GetInvalidIID()))
+    if(!other || mID.Equals(GetInvalidIID()))
         return NS_OK;
 
     nsID* otherID;
