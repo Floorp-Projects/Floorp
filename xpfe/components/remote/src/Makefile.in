@@ -27,6 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 install::
-	$(INSTALL) remoteControl.js $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/remoteControl.js $(DIST)/bin/components
 
 include $(topsrcdir)/config/rules.mk
