@@ -447,6 +447,16 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: {
+      if (mChange) {
+        // We're in the process of moving the thumb to the mouse,
+        // but the mouse just moved.  Make sure to update our
+        // destination point.
+        mDestinationPoint = aEvent->point;
+        nsRepeatService::GetInstance()->Stop();
+        nsRepeatService::GetInstance()->Start(mMediator);
+        break;
+      }
+
        // convert coord to pixels
       nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
 
@@ -501,6 +511,10 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
       //printf("stop capturing\n");
       AddListener();
       DragThumb(PR_FALSE);
+      if (mChange) {
+        nsRepeatService::GetInstance()->Stop();
+        mChange = 0;
+      }
       mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
       return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     }
@@ -542,18 +556,12 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     mDragStart = pos - mThumbStart;
   }
-  else if (mChange != 0 && aEvent->message == NS_MOUSE_MOVE) {
-    // We're in the process of moving the thumb to the mouse,
-    // but the mouse just moved.  Make sure to update our
-    // destination point.
-    mDestinationPoint = aEvent->point;
-  }
 
   // XXX hack until handle release is actually called in nsframe.
 //  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
   //   HandleRelease(aPresContext, aEvent, aEventStatus);
 
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH && mChange)
      HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -931,6 +939,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
     change = -1;
 
   mChange = change;
+  DragThumb(PR_TRUE);
   mDestinationPoint = aEvent->point;
   PageUpDown(thumbFrame, change);
   
@@ -945,8 +954,6 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
                                  nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Stop();
-
-  mChange = 0;
 
   return NS_OK;
 }
