@@ -237,7 +237,7 @@ jsopcode.h jsopcode.c: jsopcode.tbl
 
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	rm -f $@
-	$< > $@
+	$(OBJDIR)/jscpucfg > $@
 
 export:: $(OBJDIR)/jsautocfg.h
 	$(INSTALL) -m 444 $< $(DIST)/include
