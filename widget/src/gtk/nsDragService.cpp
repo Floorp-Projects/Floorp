@@ -589,7 +589,7 @@ GtkTargetList *targetListFromTransArr(nsISupportsArray *inArray)
     return NULL;
   nsVoidArray targetArray;
   GtkTargetEntry *targets;
-  GtkTargetList  *targetList;
+  GtkTargetList  *targetList = NULL;
   PRUint32 targetCount = 0;
   unsigned int numDragItems = 0;
 
