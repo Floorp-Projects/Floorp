@@ -18,7 +18,6 @@
 
 #include "nsInputStreamChannel.h"
 #include "nsIStreamListener.h"
-#include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
