@@ -28,6 +28,7 @@ var gSpellChecker = null;
 var gAllowSelectWord = true;
 var gPreviousReplaceWord = "";
 var gFirstTime = true;
+var gLastSelectedLang = null;
 
 function Startup()
 {
@@ -207,8 +208,10 @@ function InitLanguageMenu(curLang)
 
   // Now make sure the correct item in the menu list is selected.
 
-  if (defaultItem)
+  if (defaultItem) {
     gDialog.LanguageMenulist.selectedItem = defaultItem;
+    gLastSelectedLang = defaultItem;
+  }
 }
 
 function DoEnabling()
@@ -409,10 +412,15 @@ function SelectLanguage()
 {
   try {
     var item = gDialog.LanguageMenulist.selectedItem;
-    if (item.value != "more-cmd")
+    if (item.value != "more-cmd") {
       gSpellChecker.SetCurrentDictionary(item.value);
-    else
-      window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no,modal", xlateURL('urn:clienturl:composer:spellcheckers'));
+      gLastSelectedLang = item;
+    }
+    else {
+      window.opener.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", xlateURL('urn:clienturl:composer:spellcheckers'));
+      if (gLastSelectedLang)
+        gDialog.LanguageMenulist.selectedItem = gLastSelectedLang;
+    }
   } catch (ex) {
     dump(ex);
   }
