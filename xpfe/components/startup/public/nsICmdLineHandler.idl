@@ -40,7 +40,24 @@
 static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType);  \
 static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation);
 
-#define CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args) \
+#define CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
+NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
+{ \
+    if (!aDefaultArgs) return NS_ERROR_FAILURE; \
+    nsString args(macro_default_args); \
+    *aDefaultArgs = args.ToNewUnicode(); \
+    return NS_OK; \
+}
+
+#define CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)\
+NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
+{ \
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; \
+    *aChromeUrlForTask = PL_strdup(macro_chrome_url); \
+    return NS_OK; \
+}
+
+#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
 NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
 { \
     if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
@@ -51,12 +68,6 @@ NS_IMETHODIMP macro_class::GetPrefNameForStartup(char **aPrefNameForStartup) \
 { \
     if (!aPrefNameForStartup) return NS_ERROR_FAILURE; \
     *aPrefNameForStartup = PL_strdup(macro_pref_name); \
-    return NS_OK; \
-} \
-NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
-{ \
-    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; \
-    *aChromeUrlForTask = PL_strdup(macro_chrome_url); \
     return NS_OK; \
 } \
 NS_IMETHODIMP macro_class::GetHelpText(char **aHelpText) \
@@ -96,15 +107,19 @@ NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aP
     return NS_OK; \
 }
 
+#define CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args) \
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)
+
 #define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args) \
-NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
-{ \
-    if (!aDefaultArgs) return NS_ERROR_FAILURE; \
-    nsString args(macro_default_args); \
-    *aDefaultArgs = args.ToNewUnicode(); \
-    return NS_OK; \
-} \
+CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
 CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)
+
+//Creates a version without the GetChromeUrlForTaskFunction
+#define CMDLINEHANDLER3_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args)\
+CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+
 
 %}
 

@@ -6,7 +6,18 @@ function toNavigator()
 
 function toMessengerWindow()
 {
-	toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
+	try{
+		var layoutType = pref.GetIntPref("mail.pane_config");
+				
+		if(layoutType == 0)
+			toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
+		else
+			toOpenWindowByType("mail:3pane", "chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+	}
+	catch(ex)
+	{
+		toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
+	}
 }
 
 
