@@ -7551,7 +7551,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
 
-      if (display->IsFloating() || display->IsPositioned()) {
+      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -7629,7 +7629,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
       nextSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
 
-      if (display->IsFloating() || display->IsPositioned()) {
+      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -7687,7 +7687,7 @@ FindPreviousSibling(nsIPresShell* aPresShell,
         if (prevSibling)
           prevSibling = placeholderFrame;
       }
-      else if (display->IsFloating() || display->IsPositioned()) {
+      else if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -7742,7 +7742,7 @@ FindNextSibling(nsIPresShell* aPresShell,
       nextSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
 
-      if (display->IsFloating() || display->IsPositioned()) {
+      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
         // Nope. Get the place-holder instead
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
