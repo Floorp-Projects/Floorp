@@ -42,6 +42,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-download.dtd \
 		$(srcdir)/pref-fonts.dtd \
 		$(srcdir)/pref-languages.dtd \
+		$(srcdir)/pref-languages2.dtd \
 		$(srcdir)/pref-navigator.dtd \
 		$(srcdir)/pref-offline.dtd \
 		$(srcdir)/pref-policies.dtd \

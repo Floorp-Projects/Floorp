@@ -18,6 +18,9 @@ pref-editing.xul
 pref-fonts.xul
 pref-fonts.js
 pref-languages.xul
+pref-languages2.xul
+pref-languages-add.xul
+pref-languages.js
 pref-navigator.js
 pref-navigator.xul
 pref-offline.xul

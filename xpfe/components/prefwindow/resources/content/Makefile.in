@@ -49,6 +49,9 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-fonts.xul \
 		$(srcdir)/pref-fonts.js \
 		$(srcdir)/pref-languages.xul \
+ 		$(srcdir)/pref-languages2.xul \
+		$(srcdir)/pref-languages-add.xul \
+		$(srcdir)/pref-languages.js \
 		$(srcdir)/pref-navigator.xul \
 		$(srcdir)/pref-navigator.js \
 		$(srcdir)/pref-offline.xul \
