@@ -24,11 +24,68 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsIPresContext.h"
 #include "nsOutlinerBodyFrame.h"
 #include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 
+// The style context cache impl
+nsresult 
+nsOutlinerStyleCache::GetStyleContext(nsIPresContext* aPresContext, nsIContent* aContent, 
+                                      nsIStyleContext* aContext, nsISupportsArray* aInputWord,
+                                      nsIStyleContext** aResult)
+{
+  *aResult = nsnull;
+
+  PRUint32 count;
+  aInputWord->Count(&count);
+  nsDFAState startState(0);
+  nsDFAState* currState = &startState;
+  nsCOMPtr<nsIStyleContext> currContext = aContext;
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIAtom> pseudo = getter_AddRefs(NS_STATIC_CAST(nsIAtom*, aInputWord->ElementAt(i)));
+    nsTransitionKey key(currState->GetStateID(), pseudo);
+    if (!mTransitionTable) {
+      // Automatic miss. Build the table
+      mTransitionTable = new nsHashtable;
+    }
+    else
+      currState = NS_STATIC_CAST(nsDFAState*, mTransitionTable->Get(&key));
+
+    if (!currState) {
+      // We had a miss. Make a new state and add it to our hash.
+      currState = new nsDFAState(mNextState);
+      mNextState++;
+      mTransitionTable->Put(&key, currState);
+    }
+
+    // Look up our style context at this step of the computation.
+    nsCOMPtr<nsIStyleContext> nextContext = getter_AddRefs(NS_STATIC_CAST(nsIStyleContext*, mCache->Get(currState)));
+    if (!nextContext) {
+      // We missed. Resolve this pseudo-style.
+      aPresContext->ResolvePseudoStyleContextFor(aContent, pseudo,
+                                                 currContext, PR_FALSE,
+                                                 getter_AddRefs(nextContext));
+      // Put it in our table.
+      mCache->Put(currState, nextContext);
+    }
+
+    // Advance to the next context.
+    currContext = nextContext;
+  }
+
+  if (currState == &startState)
+    // No input word supplied.
+    return NS_OK;
+
+  // We're in some final state. Return the last context resolved.
+  *aResult = currContext;
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
 
 //
 // NS_NewOutlinerFrame
