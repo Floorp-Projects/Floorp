@@ -458,25 +458,29 @@ searchterm {
   border-left: 1px solid #000000;
 }
 
-#threadTree {
+#threadOutliner {
   border-top: 1px solid #63717B;
   border-right: none;
   border-bottom: 1px solid #C6D3D6;
   border-left: 1px solid #63717B;
 }
 
-#threadTree > .tree-container-treerows {
+#threadOutliner > outlinerrows {
   border-left: 1px solid #000000;
   border-bottom: 1px solid #7B969C;
 }
 
+#threadOutliner > .outliner-columns {
+  border-left: 1px solid #000000;
+}
+
 #folderTree > treechildren,
-#threadTree > treechildren {
+#threadOutliner > outlinerrows > .outliner-bodybox {
   border: 1px solid transparent;
 }
 
 #folderTree:focus > treechildren,
-#threadTree[focusring="true"] > treechildren {
+#threadOutliner:focus > outlinerrows > .outliner-bodybox{
   border: 1px solid black;
 }
 

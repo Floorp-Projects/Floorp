@@ -8,47 +8,31 @@
 
 outliner {
   border-spacing: 0px;
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
-  background-color: -moz-field;
-  color: WindowText;
+}
+
+outliner.inset {
+  border-left: 1px solid #9D9D9D;
+  border-top: 1px solid #9D9D9D;
+  border-right: 1px solid #FFFFFF;
+  border-bottom: 1px solid #FFFFFF;
+  margin: 1px 5px 2px 5px;
 }
 
 outlinerbody {
-  background-color: white;
-  color: black;
+  background-color: #EEEEEE;
+  color: #000000;
   -moz-user-select: none;
 }
 
 outlinerbody:-moz-outliner-row
 {
   height: 17px;
-  border: 1px solid transparent;
-}
-
-outlinerbody:-moz-outliner-row(current)
-{
-  border: 1px dotted #F5DB95;
+	border-bottom : 1px solid #FFFFFF;
 }
 
 outlinerbody:-moz-outliner-row(selected)
 {
   background-color: Highlight;
-  color: HighlightText;
-}
-
-outliner > outlinerbody:-moz-outliner-row(selected)
-{
-  background-color: ThreeDFace;
-  color: ButtonText;
-}
-
-outliner:focus > outlinerbody:-moz-outliner-row(selected)
-{
-  background-color: Highlight;
-  color: HighlightText;
 }
 
 outlinerbody:-moz-outliner-cell
@@ -69,11 +53,6 @@ outlinerbody:-moz-outliner-cell-text
   padding-right: 2px;
 }
 
-outlinerbody:-moz-outliner-cell-text(selected)
-{
-  color: white;  
-}
-
 outlinerbody:-moz-outliner-line
 {
   border: 1px dotted grey;
@@ -86,13 +65,13 @@ outlinerbody:-moz-outliner-line(selected)
 
 outlinercol
 { 
-  border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDDarkShadow;
-  border-bottom : 1px solid ThreeDDarkShadow;
+  background-color: #CCCCCC; 
+  border-left: 1px solid #666666 !important;
+  border-top: 1px solid #666666 !important;
+  border-right: 1px solid #333333 !important;
+  border-bottom: 1px solid #333333 !important;
+  color: black;
   padding: 0px;
-  background-color: ThreeDFace;
-  color: ButtonText;
 }
 
 .outlinercol-box,
@@ -113,7 +92,11 @@ outlinercol
   
 outlinercol:hover:active
 {
-  border: 1px solid ThreeDShadow !important;
+  background-color: #888888;
+  border-left: 1px solid #111111;
+  border-top: 1px solid #111111;
+  border-right: 1px solid #444444;
+  border-bottom: 1px solid #444444;
 }
 
 outlinercol:hover:active > .outlinercol-box,
@@ -125,10 +108,14 @@ outlinercol:hover:active > .outlinercol-image-box
   border-left: 1px solid transparent;
 }
   
-outlinercol:hover:active > .outlinercol-box,
-outlinercol:hover:active > .outlinercol-image-box
+outlinercol:hover:active > .outlinercol-box
 {
   padding: 1px 4px 0px 5px;
+}
+
+outlinercol:hover:active > .outlinercol-image-box
+{
+  padding: 1px 1px 0px 2px;
 }
 
 /* outliner header with sort direction indicators */

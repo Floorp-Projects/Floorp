@@ -437,38 +437,59 @@ searchterm
  */
 
 #threadpane-splitter
-{
-  border-left         : none;
-  border-top          : none;
-}
+  {
+    border-top            : none;
+  }
 
-#threadTree  
-{
-  border-top            : none;
-}
+#folderTree
+  {
+    border-right          : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDHighlight;
+  }
+  
+#folderTree > treechildren
+  {
+    border-top            : 1px solid transparent;
+    border-right          : 1px solid ThreeDLightShadow;
+    border-bottom         : 1px solid ThreeDLightShadow;
+    border-left           : 1px solid transparent;
+  }
+  
+#threadOutliner
+  {
+    border-bottom         : 1px solid ThreeDHighlight;
+    border-left           : 1px solid ThreeDShadow;
+  }
 
-#folderTree> treechildren,
-#threadTree > treechildren
-{
-  border                : 1px solid transparent;
-}
+#threadOutliner > .outliner-columns 
+  {
+    border-left           : 1px solid ThreeDDarkShadow;
+  }
+
+#threadOutliner > outlinerrows  > .outliner-bodybox
+  {
+    border-top            : 1px solid transparent;
+    border-right          : 1px solid transparent;
+    border-bottom         : 1px solid ThreeDLightShadow;
+    border-left           : 1px solid ThreeDDarkShadow;
+  }
 
 #folderTree:focus > treechildren,
-#threadTree[focusring="true"] > treechildren
-{
-  border                : 1px solid black;
-}
+#threadOutliner:focus > outlinerrows > .outliner-bodybox
+  {
+    border-color          : #000000;
+  }
 
 #messagepane 
-{
-  border-left           : 1px solid ThreeDDarkShadow;
-  border-top            : 1px solid ThreeDDarkShadow;
-}
+  {
+    border-left           : 1px solid ThreeDDarkShadow;
+    border-top            : 1px solid ThreeDDarkShadow;
+  }
 
 #messagepanebox[focusring="true"] 
-{
-  border                : 1px solid black;
-}
+  {
+    border                : 1px solid #000000;
+  }
 
 #messagepanebox
   {
@@ -479,25 +500,25 @@ searchterm
   }
 
 #msgHeaderView 
-{
-  border-top           : none;
-}
+  {
+    border-top           : none;
+  }
 
 #msgHeaderView > toolbar > toolbargrippy
-{
-  border-left          : none;
-}
+  {
+    border-left          : none;
+  }
 
 .awIdentityLabel
-{
-  width: 8em; 
-  margin-left: 5px;
-}
+  {
+    width: 8em; 
+    margin-left: 5px;
+  }
 
 #accountCentralBox
-{
-  background-color:#FFFFFF;
-}
+  {
+    background-color:#FFFFFF;
+  }
 
 #status-bar 
 {

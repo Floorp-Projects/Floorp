@@ -74,7 +74,7 @@ treeitem[dd-dropon="true"] > treerow {
 
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow,
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
-  border-color: #768AA0;
+  border-color: #243140;
 }
 
 treehead > treeitem > treerow,

@@ -417,30 +417,6 @@ searchterm
     border-left         : none;
   }
   
-#messagepane
-  {
-    border-left         : 1px solid #000000;
-    border-top          : 1px solid #000000;
-    border-right        : 1px solid #DDDDDD;
-    border-bottom       : 1px solid #DDDDDD;
-  }  
-  
-  
-#sidebar-splitter
-  {
-    border-right        : 1px solid #9D9D9D;
-  }
-    
-#threadpane-splitter
-  {
-    border-left         : 1px solid #FFFFFF;
-  }
-    
-#messagepanebox
-  {
-    border-right        : 1px solid #FFFFFF;
-  }
-  
 .awIdentityLabel
 {
   width: 8em; 
@@ -455,12 +431,64 @@ searchterm
 /** 
  *Focus rings on 3 pane view
  */
-  
-.window-focusborder[focusring="true"]{
- border:2px solid black;
-}
 
-.window-focusborder[focusring="false"]{
- border:2px solid transparent;
-}
- 
+#threadpane-splitter
+ {
+   border-top            : none;
+ }
+
+#folderTree
+ {
+   border-right          : 1px solid #999999;
+   border-bottom         : 1px solid #999999;
+ }
+
+#folderTree > treechildren
+ {
+   border                : 1px solid transparent;
+ }
+
+#threadOutliner
+ {
+   border-bottom         : 1px solid #FFFFFF;
+   border-left           : 1px solid #999999;
+ }
+
+#threadOutliner > outlinerrows  > .outliner-bodybox
+ {
+   border                : 1px solid transparent;
+ }
+
+#folderTree:focus > treechildren,
+#threadOutliner:focus > outlinerrows > .outliner-bodybox
+ {
+   border-color          : #000000;
+ }
+
+#messagepanebox[focusring="true"]
+  {
+    border-color          : #000000;
+  }
+
+#messagepanebox
+  {
+    border-top            : 1px solid #999999;
+    border-left           : 1px solid #999999;
+    border-right          : 1px solid #999999;
+    border-bottom         : 1px solid #999999;
+  }
+
+#msgHeaderView
+  {
+    border-top            : none;
+  }
+
+#msgHeaderView > toolbar > toolbargrippy
+  {
+    border-left           : none;
+  }
+
+#status-bar
+  {
+    border-left            : 1px solid #999999;
+  }  
