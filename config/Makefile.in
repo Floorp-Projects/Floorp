@@ -112,6 +112,7 @@ libs::
 	mv $(DIST)/sdk/nspr/lib $(DIST)/sdk/nspr/bin
 ifndef DISABLE_DIST_GRE
 ifeq ($(OS_ARCH),OS2)
+	$(NSINSTALL) -D $(GRE_DIST)
 	cp $(DIST)/sdk/nspr/bin/$(LIB_PREFIX)*$(DLL_SUFFIX) $(GRE_DIST)
 else
 	$(INSTALL) $(DIST)/sdk/nspr/bin/$(LIB_PREFIX)*$(DLL_SUFFIX) $(GRE_DIST)
