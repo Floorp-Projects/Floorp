@@ -47,36 +47,12 @@
  */
 
 #include "nscore.h"
+
 #define NS_STRINGAPI(x) extern "C" NS_COM x
 
-/* ------------------------------------------------------------------------- */
-
-/**
- * These are dummy class definitions for the abstract string types used in
- * XPIDL generated header files.  Do not count on the structure of these
- * classes, and do not try to mix these definitions with the internal 
- * definition of these classes used within the mozilla codebase.
- */
-
-#ifndef nsAString_external
-#define nsAString_external nsAString
-#endif
-
-class nsAString_external
-{
-private:
-  void *v;
-};
-
-#ifndef nsACString_external
-#define nsACString_external nsACString
-#endif
-
-class nsACString_external
-{
-private:
-  void *v;
-};
+/* The base string types */
+class nsAString;
+class nsACString;
 
 /* ------------------------------------------------------------------------- */
 
@@ -106,7 +82,8 @@ private:
  *       nsresult rv = GetBlah(sc);
  *       if (NS_SUCCEEDED(rv))
  *       {
- *         const PRUnichar *data = NS_StringGetDataPtr(sc);
+ *         const PRUnichar *data;
+ *         NS_StringGetData(sc, &data);
  *         //
  *         // |data| now points to the result of the GetBlah function
  *         //
@@ -126,7 +103,7 @@ private:
  *     if (NS_StringContainerInit(sc))
  *     {
  *       const PRUnichar kData[] = {'x','y','z','\0'};
- *       NS_StringSetData(sc, kData, sizeof(kData)-1);
+ *       NS_StringSetData(sc, kData, sizeof(kData)/2 - 1);
  *
  *       SetBlah(sc);
  *
@@ -134,16 +111,7 @@ private:
  *     }
  *   }
  */
-class nsStringContainer : public nsAString_external
-{
-private:
-  void     *d1;
-  PRUint32  d2;
-  void     *d3;
-
-public:
-  nsStringContainer() {} // MSVC6 needs this
-};
+class nsStringContainer;
 
 /**
  * NS_StringContainerInit
@@ -334,16 +302,7 @@ NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
  *
  * @see nsStringContainer for use cases and further documentation.
  */
-class nsCStringContainer : public nsACString_external
-{
-private:
-  void    *d1;
-  PRUint32 d2;
-  void    *d3;
-
-public:
-  nsCStringContainer() {} // MSVC6 needs this
-};
+class nsCStringContainer;
 
 /**
  * NS_CStringContainerInit
@@ -574,5 +533,193 @@ NS_CStringToUTF16(const nsACString &aSource, PRUint32 aSrcEncoding,
 NS_STRINGAPI(nsresult)
 NS_UTF16ToCString(const nsAString &aSource, PRUint32 aDestEncoding,
                   nsACString &aDest);
+
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Below we define nsAString and nsACString.  The "_external" suffix is an
+ * implementation detail.  nsAString_external is the name of the external
+ * representation of nsAString from the point of view of the Mozilla codebase.
+ * To a user of this API, nsAString_external is exactly nsAString.
+ *
+ * These classes should be treated as abstract classes with unspecified
+ * structure.  The inline methods are provided as helper functions around the
+ * C-style API provided above.
+ * 
+ * Do not try to mix these definitions of nsAString and nsACString with the
+ * internal definition of these classes from nsAString.h in the Mozilla tree.
+ */
+
+#ifndef NS_STRINGAPI_IMPL
+#define nsAString_external nsAString
+#define nsACString_external nsACString
+#endif
+
+class nsAString_external
+{
+#ifndef NS_STRINGAPI_IMPL
+
+public:
+  typedef PRUnichar             char_type;
+  typedef nsAString_external    self_type;
+  typedef PRUint32              size_type;
+  typedef PRUint32              index_type;
+
+  size_type Length() const
+  {
+    const char_type* data;
+    return NS_StringGetData(*this, &data);
+  }
+
+  void Assign(const self_type& aString)
+  {
+    NS_StringCopy(*this, aString);
+  }
+  void Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  {
+    NS_StringSetData(*this, aData, aLength);
+  }
+  void Assign(char_type aChar)
+  {
+    NS_StringSetData(*this, &aChar, 1);
+  }
+  
+  self_type& operator=(const self_type& aString) { Assign(aString);   return *this; }
+  self_type& operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
+  self_type& operator=(char_type aChar)          { Assign(aChar);     return *this; }
+
+  void Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
+  {
+    NS_StringSetDataRange(*this, cutStart, cutLength, data, length);
+  }
+  void Replace( index_type cutStart, size_type cutLength, char_type c )
+  {
+    Replace(cutStart, cutLength, &c, 1);
+  }
+  void Replace( index_type cutStart, size_type cutLength, const self_type& readable )
+  {
+    const char_type* data;
+    PRUint32 dataLen = NS_StringGetData(readable, &data);
+    NS_StringSetDataRange(*this, cutStart, cutLength, data, dataLen);
+  }
+
+  void Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
+  void Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
+  void Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
+
+  self_type& operator+=( char_type c )                                                    { Append(c);        return *this; }
+  self_type& operator+=( const char_type* data )                                          { Append(data);     return *this; }
+  self_type& operator+=( const self_type& readable )                                      { Append(readable); return *this; }
+
+  void Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
+  void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
+  void Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
+
+  void Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+
+#endif // NS_STRINGAPI_IMPL
+
+private:
+  void *v;
+};
+
+class nsACString_external
+{
+#ifndef NS_STRINGAPI_IMPL
+
+public:
+  typedef char                  char_type;
+  typedef nsACString_external   self_type;
+  typedef PRUint32              size_type;
+  typedef PRUint32              index_type;
+
+  size_type Length() const
+  {
+    const char_type* data;
+    return NS_CStringGetData(*this, &data);
+  }
+
+  void Assign(const self_type& aString)
+  {
+    NS_CStringCopy(*this, aString);
+  }
+  void Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  {
+    NS_CStringSetData(*this, aData, aLength);
+  }
+  void Assign(char_type aChar)
+  {
+    NS_CStringSetData(*this, &aChar, 1);
+  }
+  
+  self_type& operator=(const self_type& aString) { Assign(aString);   return *this; }
+  self_type& operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
+  self_type& operator=(char_type aChar)          { Assign(aChar);     return *this; }
+
+  void Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
+  {
+    NS_CStringSetDataRange(*this, cutStart, cutLength, data, length);
+  }
+  void Replace( index_type cutStart, size_type cutLength, char_type c )
+  {
+    Replace(cutStart, cutLength, &c, 1);
+  }
+  void Replace( index_type cutStart, size_type cutLength, const self_type& readable )
+  {
+    const char_type* data;
+    PRUint32 dataLen = NS_CStringGetData(readable, &data);
+    NS_CStringSetDataRange(*this, cutStart, cutLength, data, dataLen);
+  }
+
+  void Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
+  void Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
+  void Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
+
+  self_type& operator+=( char_type c )                                                    { Append(c);        return *this; }
+  self_type& operator+=( const char_type* data )                                          { Append(data);     return *this; }
+  self_type& operator+=( const self_type& readable )                                      { Append(readable); return *this; }
+
+  void Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
+  void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
+  void Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
+
+  void Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+
+#endif // NS_STRINGAPI_IMPL
+
+private:
+  void *v;
+};
+
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Below we define nsStringContainer and nsCStringContainer.  These classes
+ * have unspecified structure.  In most cases, your code should use
+ * nsEmbedString instead of these classes; however, if you prefer C-style
+ * programming, then look no further...
+ */
+
+class nsStringContainer : public nsAString_external
+{
+private:
+  void     *d1;
+  PRUint32  d2;
+  void     *d3;
+
+public:
+  nsStringContainer() {} // MSVC6 needs this
+};
+
+class nsCStringContainer : public nsACString_external
+{
+private:
+  void    *d1;
+  PRUint32 d2;
+  void    *d3;
+
+public:
+  nsCStringContainer() {} // MSVC6 needs this
+};
 
 #endif // nsStringAPI_h__
