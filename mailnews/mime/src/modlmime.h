@@ -19,6 +19,10 @@
 #ifndef _LIBMIME_H_
 #define _LIBMIME_H_
 
+#ifdef XP_UNIX
+#undef Bool
+#endif
+
 #include "xp.h"
 #include "prtypes.h"
 

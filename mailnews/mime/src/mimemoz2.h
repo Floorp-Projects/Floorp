@@ -28,6 +28,11 @@ extern "C" {
 #include "nsIMimeEmitter.h"
 
 // SHERRY - Need to get these out of here eventually
+
+#ifdef XP_UNIX
+#undef Bool
+#endif
+  
 #include "net.h"
 #include "mimei.h"
 
