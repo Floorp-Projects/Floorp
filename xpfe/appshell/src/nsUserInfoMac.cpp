@@ -38,6 +38,7 @@
 #include "nsUserInfo.h"
 #include "nsInternetConfig.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 nsUserInfo::nsUserInfo()
 {
@@ -61,7 +62,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 		 nsString fullName;
 		 fullName.AssignWithConversion( cName );
 		 nsMemory::Free( cName );
-     *aFullname = fullName.ToNewUnicode();
+     *aFullname = ToNewUnicode(fullName);
    }
    return result;
 }
@@ -90,7 +91,7 @@ nsUserInfo::GetUsername(char * *aUsername)
   if (atOffset != kNotFound)
     tempString.Truncate(atOffset);
       
-  *aUsername = tempString.ToNewCString();  
+  *aUsername = ToNewCString(tempString);  
   return NS_OK;
 }
 
@@ -110,7 +111,7 @@ nsUserInfo::GetDomain(char * *aDomain)
   {
     nsCAutoString domainString;
     tempString.Right(domainString, tempString.Length() - (atOffset + 1));
-    *aDomain = domainString.ToNewCString();
+    *aDomain = ToNewCString(domainString);
     return NS_OK;
   }
 

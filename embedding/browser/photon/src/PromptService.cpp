@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIFactory.h"
@@ -119,7 +120,7 @@ NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialo
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
 	CWebBrowserContainer *w = GetWebBrowser( parent );
-	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, mTitle.ToNewCString(), mText.ToNewCString(), nsnull, nsnull);
+	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
 
 	return NS_OK;
 	}
@@ -136,8 +137,8 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent,
 	int 		ret;
 	CWebBrowserContainer *w = GetWebBrowser( parent );
 
-	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, mTitle.ToNewCString(), mText.ToNewCString(), \
-			mMsg.ToNewCString(), &ret);
+	w->InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), \
+			ToNewCString(mMsg), &ret);
 	*checkValue = ret;
 
 	return NS_OK;
@@ -153,7 +154,7 @@ NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent,
 	nsString 			mText(text);
 	CWebBrowserContainer *w = GetWebBrowser( parent );
 
-	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, mTitle.ToNewCString(), mText.ToNewCString(), nsnull, nsnull) == Pt_CONTINUE)
+	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
@@ -187,8 +188,8 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
 	CWebBrowserContainer *w = GetWebBrowser( parent );
 
 
-	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, mTitle.ToNewCString(), mText.ToNewCString(), \
-			mMsg.ToNewCString(), &ret) == Pt_CONTINUE)
+	if (w->InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), \
+			ToNewCString(mMsg), &ret) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
@@ -225,15 +226,15 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 	cbinfo.cbdata = &auth;
 
 	memset(&auth, 0, sizeof(PtMozillaAuthenticateCb_t));
-	auth.title = mTitle.ToNewCString();
-	auth.realm = mRealm.ToNewCString();
+	auth.title = ToNewCString(mTitle);
+	auth.realm = ToNewCString(mRealm);
 
   if (PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo) == Pt_CONTINUE)
     {
 		nsCString	mUser(auth.user);
 		nsCString	mPass(auth.pass);
-		*username = mUser.ToNewUnicode();
-		*password = mPass.ToNewUnicode();
+		*username = ToNewUnicode(mUser);
+		*password = ToNewUnicode(mPass);
     	*_retval = PR_TRUE;
     }
     else

@@ -36,6 +36,7 @@
 #include "nsITransport.h"
 #include "nsICacheVisitor.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 
@@ -188,7 +189,7 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
     buffer.Append("</tt></td></tr>");
     // buffer.Append("<tr><td><b>Files:</b></td><td><tt> XXX</tt></td></tr>");
     buffer.Append("</table>");
-    *usageReport = buffer.ToNewCString();
+    *usageReport = ToNewCString(buffer);
     if (!*usageReport) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;

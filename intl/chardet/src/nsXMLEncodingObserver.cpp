@@ -50,6 +50,7 @@
 #include "nsIServiceManager.h"
 #include "nsObserverBase.h"
 #include "nsWeakReference.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -177,7 +178,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                           res = calias->GetPreferred(encoding, preferred);
                           if(NS_SUCCEEDED(res))
                           {
-                              const char* charsetInCStr = preferred.ToNewCString();
+                              const char* charsetInCStr = ToNewCString(preferred);
                               if(nsnull != charsetInCStr) {
                                  res = NotifyWebShell(0,0, charsetInCStr, kCharsetFromMetaTag );
                                  delete [] (char*)charsetInCStr;

@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsImageMap.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
@@ -331,7 +332,7 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
 
 void Area::ParseCoords(const nsString& aSpec)
 {
-  char* cp = aSpec.ToNewCString();
+  char* cp = ToNewCString(aSpec);
   if (cp) {
     mCoords = lo_parse_coord_list(cp, &mNumCoords);
     nsCRT::free(cp);

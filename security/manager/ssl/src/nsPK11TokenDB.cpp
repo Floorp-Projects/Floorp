@@ -24,6 +24,7 @@
 #include "nsIPK11TokenDB.h"
 #include "prerror.h"
 #include "secerr.h"
+#include "nsReadableUtils.h"
 
 #include "nsPK11TokenDB.h"
 
@@ -81,7 +82,7 @@ nsPK11Token::~nsPK11Token()
 /* readonly attribute wstring tokenName; */
 NS_IMETHODIMP nsPK11Token::GetTokenName(PRUnichar * *aTokenName)
 {
-  *aTokenName = mTokenName.ToNewUnicode();
+  *aTokenName = ToNewUnicode(mTokenName);
   if (!*aTokenName) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
@@ -90,7 +91,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenName(PRUnichar * *aTokenName)
 /* readonly attribute wstring tokenDesc; */
 NS_IMETHODIMP nsPK11Token::GetTokenLabel(PRUnichar **aTokLabel)
 {
-  *aTokLabel = mTokenLabel.ToNewUnicode();
+  *aTokLabel = ToNewUnicode(mTokenLabel);
   if (!*aTokLabel) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -98,7 +99,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenLabel(PRUnichar **aTokLabel)
 /* readonly attribute wstring tokenManID; */
 NS_IMETHODIMP nsPK11Token::GetTokenManID(PRUnichar **aTokManID)
 {
-  *aTokManID = mTokenManID.ToNewUnicode();
+  *aTokManID = ToNewUnicode(mTokenManID);
   if (!*aTokManID) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -106,7 +107,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenManID(PRUnichar **aTokManID)
 /* readonly attribute wstring tokenHWVersion; */
 NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(PRUnichar **aTokHWVersion)
 {
-  *aTokHWVersion = mTokenHWVersion.ToNewUnicode();
+  *aTokHWVersion = ToNewUnicode(mTokenHWVersion);
   if (!*aTokHWVersion) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -114,7 +115,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(PRUnichar **aTokHWVersion)
 /* readonly attribute wstring tokenFWVersion; */
 NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(PRUnichar **aTokFWVersion)
 {
-  *aTokFWVersion = mTokenFWVersion.ToNewUnicode();
+  *aTokFWVersion = ToNewUnicode(mTokenFWVersion);
   if (!*aTokFWVersion) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -122,7 +123,7 @@ NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(PRUnichar **aTokFWVersion)
 /* readonly attribute wstring tokenSerialNumber; */
 NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(PRUnichar **aTokSerialNum)
 {
-  *aTokSerialNum = mTokenSerialNum.ToNewUnicode();
+  *aTokSerialNum = ToNewUnicode(mTokenSerialNum);
   if (!*aTokSerialNum) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }

@@ -146,6 +146,7 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prtypes.h"
 
@@ -261,7 +262,7 @@ class NS_COM nsAutoCString
 //========================================================================================
 {
 public:
-    NS_EXPLICIT                  nsAutoCString(const nsString& other) : mCString(other.ToNewCString()) {}
+    NS_EXPLICIT                  nsAutoCString(const nsString& other) : mCString(ToNewCString(other)) {}
     virtual                      ~nsAutoCString();    
                                  operator const char*() const { return mCString; }
 

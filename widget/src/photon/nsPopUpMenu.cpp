@@ -40,6 +40,7 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 #include "nsPhWidgetLog.h"
 
@@ -87,7 +88,7 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 {
-  char * labelStr = mLabel.ToNewCString();
+  char * labelStr = ToNewCString(mLabel);
   delete[] labelStr;
 
   return NS_OK;
@@ -109,7 +110,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
   
   aMenu->GetLabel(Label);
 
-  labelStr = Label.ToNewCString();
+  labelStr = ToNewCString(Label);
 
   GetNativeData(voidData);
 //  parentmenu = GTK_WIDGET(voidData);

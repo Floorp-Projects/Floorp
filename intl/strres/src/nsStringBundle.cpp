@@ -40,6 +40,7 @@
 #include "nsID.h"
 #include "nsFileSpec.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nscore.h"
@@ -300,7 +301,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
   nsresult rv = mProps->GetStringProperty(name, aResult);
 
 #ifdef DEBUG_tao_
-  char *s = aResult.ToNewCString();
+  char *s = ToNewCString(aResult);
   printf("\n** GetStringFromID: aResult=%s, len=%d\n", s?s:"null", 
          aResult.Length());
   delete s;
@@ -317,8 +318,8 @@ nsStringBundle::GetStringFromName(const nsAReadableString& aName,
 
   rv = mProps->GetStringProperty(nsAutoString(aName), aResult);
 #ifdef DEBUG_tao_
-  char *s = aResult.ToNewCString(),
-       *ss = aName.ToNewCString();
+  char *s = ToNewCString(aResult),
+       *ss = ToNewCString(aName);
   printf("\n** GetStringFromName: aName=%s, aResult=%s, len=%d\n", 
          ss?ss:"null", s?s:"null", aResult.Length());
   delete s;
@@ -946,7 +947,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec,
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
   {
     nsAutoString aURLStr(aURLSpec);
-    char *s = aURLStr.ToNewCString();
+    char *s = ToNewCString(aURLStr);
     printf("\n** nsStringBundleService::CreateBundle: %s\n", s?s:"null");
     delete s;
   }
@@ -1062,7 +1063,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
         pos = args.Length();
       nsAutoString arg;
       args.Mid(arg, offset, pos);
-      argArray[i] = arg.ToNewUnicode();
+      argArray[i] = ToNewUnicode(arg);
       if (argArray[i] == nsnull) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         argCount = i - 1; // don't try to free uninitialized memory

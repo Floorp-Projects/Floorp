@@ -35,6 +35,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 // Interfaces needed to be included
 #include "nsIContextMenuListener.h"
@@ -884,7 +885,7 @@ NS_IMETHODIMP DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnich
   } // while not found
 
   *_retval = found;
-  *aText = (found) ? outText.ToNewUnicode() : nsnull;
+  *aText = (found) ? ToNewUnicode(outText) : nsnull;
 
   return NS_OK;
 }

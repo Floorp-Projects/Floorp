@@ -59,6 +59,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "jsapi.h"
+#include "nsReadableUtils.h"
 
 #include "nsAEEventHandling.h"
 
@@ -144,7 +145,7 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   // of the buffer, which is never freed until the command line handler
   // goes way (and, since it's static, that is at library unload time).
   
-  mArgsBuffer = mTempArgsString.ToNewCString();
+  mArgsBuffer = ToNewCString(mTempArgsString);
   mTempArgsString.Truncate();   // it's job is done
   
   // Parse the buffer.

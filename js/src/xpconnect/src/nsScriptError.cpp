@@ -43,6 +43,7 @@
  */
 
 #include "xpcprivate.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 
@@ -63,20 +64,20 @@ nsScriptError::~nsScriptError() {};
 // nsIConsoleMessage methods
 NS_IMETHODIMP
 nsScriptError::GetMessage(PRUnichar **result) {
-    *result = mMessage.ToNewUnicode();
+    *result = ToNewUnicode(mMessage);
     return NS_OK;
 }
 
 // nsIScriptError methods
 NS_IMETHODIMP
 nsScriptError::GetSourceName(PRUnichar **result) {
-    *result = mSourceName.ToNewUnicode();
+    *result = ToNewUnicode(mSourceName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScriptError::GetSourceLine(PRUnichar **result) {
-    *result = mSourceLine.ToNewUnicode();
+    *result = ToNewUnicode(mSourceLine);
     return NS_OK;
 }
 
@@ -100,7 +101,7 @@ nsScriptError::GetFlags(PRUint32 *result) {
 
 NS_IMETHODIMP
 nsScriptError::GetCategory(char **result) {
-    *result = mCategory.ToNewCString();
+    *result = ToNewCString(mCategory);
     return NS_OK;
 }
 
@@ -145,11 +146,11 @@ nsScriptError::ToString(char **_retval)
     char* tempSourceLine = nsnull;
 
     if(!mMessage.IsEmpty())
-        tempMessage = mMessage.ToNewCString();
+        tempMessage = ToNewCString(mMessage);
     if(!mSourceName.IsEmpty())
-        tempSourceName = mSourceName.ToNewCString();
+        tempSourceName = ToNewCString(mSourceName);
     if(!mSourceLine.IsEmpty())
-        tempSourceLine = mSourceLine.ToNewCString();
+        tempSourceLine = ToNewCString(mSourceLine);
 
     if(nsnull != tempSourceName && nsnull != tempSourceLine)
         temp = JS_smprintf(format0,

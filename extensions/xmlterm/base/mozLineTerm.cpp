@@ -28,6 +28,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prlog.h"
 #include "nsMemory.h"
 
@@ -173,7 +174,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
 
   secString.Append(".htmldocument.cookie");
 
-  char* prefStr = secString.ToNewCString();
+  char* prefStr = ToNewCString(secString);
   XMLT_LOG(mozLineTerm::ArePrefsSecure,32, ("prefStr=%s\n", prefStr));
 
   char *secLevelString;
@@ -350,7 +351,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   mObserver = anObserver;  // non-owning reference
 
   // Convert cookie to CString
-  char* cookieCStr = mCookie.ToNewCString();
+  char* cookieCStr = ToNewCString(mCookie);
   XMLT_LOG(mozLineTerm::Open,22, ("mCookie=%s\n", cookieCStr));
 
   // Convert initInput to CString
@@ -384,9 +385,9 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
     nsAutoString timeStamp;
     result = mozXMLTermUtils::TimeStamp(0, mLastTime, timeStamp);
     if (NS_SUCCEEDED(result)) {
-      char* temStr = timeStamp.ToNewCString();
+      char* temStr = ToNewCString(timeStamp);
       PR_LogPrint("<TS %s> LineTerm %d opened by principal %s\n",
-              temStr, mLTerm, securePrincipal);
+                  temStr, mLTerm, securePrincipal);
       nsMemory::Free(temStr);
     }
   }
@@ -548,7 +549,7 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
     result = mozXMLTermUtils::TimeStamp(60, mLastTime, timeStamp);
 
     if (NS_SUCCEEDED(result) && (timeStamp.Length() > 0)) {
-      char* temStr = timeStamp.ToNewCString();
+      char* temStr = ToNewCString(timeStamp);
       PR_LogPrint("<TS %s>\n", temStr);
       nsMemory::Free(temStr);
 

@@ -40,6 +40,7 @@
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsReadableUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 
@@ -224,7 +225,7 @@ nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, 
 		key.AppendInt(character,10);
     nsresult rv = entityProperties->GetStringProperty(key, value);
     if (NS_SUCCEEDED(rv)) {
-      *_retval = value.ToNewCString();
+      *_retval = ToNewCString(value);
       if(nsnull == *_retval)
         return NS_ERROR_OUT_OF_MEMORY;
       else
@@ -275,7 +276,7 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
     }
   }
 
-  *_retval = outString.ToNewUnicode();
+  *_retval = ToNewUnicode(outString);
   if (NULL == *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

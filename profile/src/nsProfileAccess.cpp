@@ -549,7 +549,7 @@ nsProfileAccess::GetFirstProfile(PRUnichar **firstProfile)
 
         if (profileItem->isMigrated)
         {
-            *firstProfile = profileItem->profileName.ToNewUnicode();
+            *firstProfile = ToNewUnicode(profileItem->profileName);
             break;
         }
     }
@@ -579,7 +579,7 @@ nsProfileAccess::GetCurrentProfile(PRUnichar **profileName)
 
     if (!mCurrentProfile.IsEmpty() || mForgetProfileCalled)
     {
-        *profileName = mCurrentProfile.ToNewUnicode();
+        *profileName = ToNewUnicode(mCurrentProfile);
     }
 
     // If there are profiles and profileName is not
@@ -876,7 +876,7 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
         else if (whichKind == nsIProfileInternal::LIST_ONLY_NEW && !profileItem->isMigrated)
             continue;
 
-        *next = profileItem->profileName.ToNewUnicode();
+        *next = ToNewUnicode(profileItem->profileName);
         if (*next == nsnull)
         {
             rv = NS_ERROR_OUT_OF_MEMORY;

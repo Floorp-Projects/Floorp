@@ -45,6 +45,7 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
 ERROR! Must have a byte order
@@ -353,7 +354,7 @@ nsNetDiskCache::GetDescription(PRUnichar* *aDescription)
   nsAutoString description ;
   description.AssignWithConversion("Disk Cache") ;
 
-  *aDescription = description.ToNewUnicode() ;
+  *aDescription = ToNewUnicode(description) ;
   if(!*aDescription)
     return NS_ERROR_OUT_OF_MEMORY ;
 

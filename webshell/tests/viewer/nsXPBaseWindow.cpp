@@ -78,6 +78,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 
 #if defined(WIN32) || defined(XP_OS2_VACPP)
@@ -383,7 +384,7 @@ NS_IMETHODIMP nsXPBaseWindow::SetTitle(const PRUnichar* aTitle)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 {
-  *aResult = mTitle.ToNewUnicode();
+  *aResult = ToNewUnicode(mTitle);
   return NS_OK;
 }
 

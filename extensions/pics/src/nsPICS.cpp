@@ -75,6 +75,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include <stdio.h>
 
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
@@ -398,7 +399,7 @@ nsPICS::ProcessPICSLabel(char *label)
 	  char*  quoteValue = PL_strndup(label, 1);
   //	nsString value2(theValue2);
 	  theLabel.Trim(quoteValue);
-	  char *lab = theLabel.ToNewCString();
+	  char *lab = ToNewCString(theLabel);
       PL_strcpy(label, lab);
     }
   //	rv = GetRootURL();

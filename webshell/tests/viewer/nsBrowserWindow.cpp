@@ -77,6 +77,7 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIViewManager.h"
 #include "nsGUIEvent.h"
 #include "nsIWebProgress.h"
@@ -413,7 +414,7 @@ NS_IMETHODIMP nsBrowserWindow::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
 
-   *aTitle = mTitle.ToNewUnicode();
+   *aTitle = ToNewUnicode(mTitle);
 
    return NS_OK;
 }
@@ -695,7 +696,7 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       nsAutoString fileURL;
       BuildFileURL(ev->mURL, fileURL);
       nsAutoString fileName(ev->mURL);
-      char * str = fileName.ToNewCString();
+      char * str = ToNewCString(fileName);
 
       PRInt32 len = strlen(str);
       PRInt32 sum = len + sizeof(FILE_PROTOCOL);
@@ -3045,7 +3046,7 @@ nsBrowserWindow::SetStringPref(const char * aPrefName, const nsString& aValue)
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (nsnull != prefs && nsnull != aPrefName)
   {
-    char * prefStr = aValue.ToNewCString();
+    char * prefStr = ToNewCString(aValue);
     prefs->SetCharPref(aPrefName, prefStr);
     prefs->SavePrefFile(nsnull);
     delete [] prefStr;

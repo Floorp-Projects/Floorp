@@ -38,6 +38,7 @@
 #include "nsLoggingSink.h"
 #include "nsHTMLTags.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
@@ -754,7 +755,7 @@ nsLoggingSink::GetNewCString(const nsAReadableString& aValue, char** aResult)
   result=QuoteText(aValue,temp);
   if(NS_SUCCEEDED(result)) {
     if(temp.Length()>0) {
-      *aResult=temp.ToNewCString();
+      *aResult = ToNewCString(temp);
     }
   }
   return result;

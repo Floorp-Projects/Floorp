@@ -54,6 +54,7 @@
 #include "nsIRollupListener.h"
 #include "nsIServiceManager.h"
 #include "nsWindow.h"
+#include "nsReadableUtils.h"
 
 #include "nsIPref.h"
 #include "nsPhWidgetLog.h"
@@ -564,7 +565,7 @@ NS_METHOD nsWidget::SetFont( const nsFont &aFont ) {
 		mFontMetrics->GetFontHandle(aFontHandle);
 		nsString *aString;
 		aString = (nsString *) aFontHandle;
-		char *str = aString->ToNewCString();
+		char *str = ToNewCString(*aString);
 
 		PtSetArg( &arg, Pt_ARG_TEXT_FONT, str, 0 );
 		PtSetResources( mWidget, 1, &arg );

@@ -30,6 +30,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
 #include "nsIMIMEService.h"
@@ -1469,7 +1470,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
   if (-1 != extLoc) 
   {
       specStr.Right(extStr, specStr.Length() - extLoc - 1);
-      char *ext = extStr.ToNewCString();
+      char *ext = ToNewCString(extStr);
       if (!ext) return NS_ERROR_OUT_OF_MEMORY;
       rv = GetTypeFromExtension(ext, aContentType);
       nsMemory::Free(ext);

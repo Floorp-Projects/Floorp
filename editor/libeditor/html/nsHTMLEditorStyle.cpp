@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsICaret.h"
 
+#include "nsReadableUtils.h"
+
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
 #include "nsTextEditUtils.h"
@@ -827,7 +829,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   { 
     nsAutoString propString;
     aProperty->ToString(propString);
-    char *propCString = propString.ToNewCString();
+    char *propCString = ToNewCString(propString);
     if (gNoisy) { printf("nsTextEditor::GetTextProperty %s\n", propCString); }
     nsCRT::free(propCString);
   }

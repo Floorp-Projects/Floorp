@@ -46,6 +46,7 @@
 #include "netCore.h"
 #include "nsIFileStreams.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsNetUtil.h"
 
@@ -342,7 +343,7 @@ nsFileTransport::GetName(PRUnichar* *result)
 {
     nsAutoString name;
     name.AppendWithConversion(mStreamName);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

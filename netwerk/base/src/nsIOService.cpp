@@ -47,6 +47,7 @@
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
+#include "nsReadableUtils.h"
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"
@@ -937,7 +938,7 @@ nsIOService::ResolveRelativePath(const char *relativePath, const char* basePath,
     if (c != '\0')
         path += --relativePath;
 
-    *result = path.ToNewCString();
+    *result = ToNewCString(path);
     return NS_OK;
 }
 

@@ -50,6 +50,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsHTMLUtils.h"
+#include "nsReadableUtils.h"
 
 
 class nsHTMLAreaElement : public nsGenericHTMLLeafElement,
@@ -512,7 +513,7 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
     }
     else {
       // Absolute URL is same as relative URL.
-      aBuf = relURLSpec.ToNewUTF8String();
+      aBuf = ToNewUTF8String(relURLSpec);
     }
   }
   else {

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "pratom.h"
 #include "prtypes.h"
 #include "nsISupports.h"
@@ -144,7 +145,7 @@ nsLocale::GetCategory(const PRUnichar *category,PRUnichar **result)
 	value = (const nsString*)PL_HashTableLookup(fHashtable,&aCategory);
 	if (value!=NULL)
 	{
-		(*result)=value->ToNewUnicode();
+		(*result) = ToNewUnicode(*value);
 		return NS_OK;
 	}
 

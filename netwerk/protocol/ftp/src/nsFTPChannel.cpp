@@ -44,6 +44,7 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
  
@@ -167,7 +168,7 @@ nsFTPChannel::GetName(PRUnichar* *result)
     if (NS_FAILED(rv)) return rv;
     nsString name;
     name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -395,7 +396,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     }
 
     if (!*aContentType) {
-        *aContentType = mContentType.ToNewCString();
+        *aContentType = ToNewCString(mContentType);
     }
 
     if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;

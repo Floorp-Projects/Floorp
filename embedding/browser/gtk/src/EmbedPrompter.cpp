@@ -20,6 +20,7 @@
  */
 
 #include "EmbedPrompter.h"
+#include "nsReadableUtils.h"
 
 // call backs from gtk widgets
 
@@ -152,19 +153,19 @@ EmbedPrompter::GetConfirmValue(PRBool *aConfirmValue)
 void
 EmbedPrompter::GetTextValue(PRUnichar **aTextValue)
 {
-  *aTextValue = mTextValue.ToNewUnicode();
+  *aTextValue = ToNewUnicode(mTextValue);
 }
 
 void
 EmbedPrompter::GetUser(PRUnichar **aUser)
 {
-  *aUser = mUser.ToNewUnicode();
+  *aUser = ToNewUnicode(mUser);
 }
 
 void
 EmbedPrompter::GetPassword(PRUnichar **aPass)
 {
-  *aPass = mPass.ToNewUnicode();
+  *aPass = ToNewUnicode(mPass);
 }
 
 void

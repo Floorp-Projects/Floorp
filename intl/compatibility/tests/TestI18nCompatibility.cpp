@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsII18nCompatibility.h"
 
 
@@ -79,7 +80,7 @@ int main(int argc, char** argv) {
     rv = I18nCompatibility->CSIDtoCharsetName(csid, &charsetUni);
     if (NS_SUCCEEDED(rv) && NULL != charsetUni) {
       nsString tempStr(charsetUni);
-      char *tempCstr = tempStr.ToNewCString();
+      char *tempCstr = ToNewCString(tempStr);
 
       nsMemory::Free(charsetUni);
 

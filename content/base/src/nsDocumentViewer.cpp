@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
@@ -2110,23 +2111,17 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
         const nsString* docTitle = doc->GetDocumentTitle();
-        if (docTitle != nsnull) {
-          nsAutoString title(docTitle->get());
-          if (title.Length() > 0) {
-            *aTitle = title.ToNewUnicode();
-          }
+        if (docTitle && !docTitle->IsEmpty()) {
+          *aTitle = ToNewUnicode(*docTitle);
         }
 
         nsCOMPtr<nsIURI> url;
         doc->GetDocumentURL(getter_AddRefs(url));
         if (url) {
-          char * urlCStr;
-          url->GetSpec(&urlCStr);
-          if (urlCStr) {
-            nsAutoString urlStr;
-            urlStr.AssignWithConversion(urlCStr);
-            *aURLStr = urlStr.ToNewUnicode();
-            nsMemory::Free(urlCStr);
+          nsXPIDLCString urlCStr;
+          url->GetSpec(getter_Copies(urlCStr));
+          if (urlCStr.get()) {
+            *aURLStr = ToNewUnicode(urlCStr);
           }
         }
 
@@ -3297,8 +3292,7 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
       docTitleStr = docURLStr;
       docURLStr   = nsnull;
     } else {
-      nsAutoString docStr(NS_LITERAL_STRING("Document"));
-      docTitleStr = docStr.ToNewUnicode();
+      docTitleStr = ToNewUnicode(NS_LITERAL_STRING("Document"));
     }
   }
   // BeginDocument may pass back a FAILURE code
@@ -3483,8 +3477,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
           GetWebShellTitleAndURL(webShell, &docTitleStr, &docURLStr); 
 
           if (!docTitleStr) {
-            nsAutoString emptyTitle(NS_LITERAL_STRING(""));
-            docTitleStr = emptyTitle.ToNewUnicode();
+            docTitleStr = ToNewUnicode(NS_LITERAL_STRING(""));
           }
 
           if (docTitleStr) {
@@ -4823,7 +4816,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
     else
       mDefaultCharacterSet.Assign(gDefCharset);
   }
-  *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
+  *aDefaultCharacterSet = ToNewUnicode(mDefaultCharacterSet);
   return NS_OK;
 }
 
@@ -4853,7 +4846,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(PRUnichar** aForceCharact
     *aForceCharacterSet = nsnull;
   }
   else {
-    *aForceCharacterSet = mForceCharacterSet.ToNewUnicode();
+    *aForceCharacterSet = ToNewUnicode(mForceCharacterSet);
   }
   return NS_OK;
 }
@@ -4881,7 +4874,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSet(PRUnichar * *aHintCharacte
   if(kCharsetUninitialized == mHintCharsetSource) {
     *aHintCharacterSet = nsnull;
   } else {
-    *aHintCharacterSet = mHintCharset.ToNewUnicode();
+    *aHintCharacterSet = ToNewUnicode(mHintCharset);
     // this can't possibly be right.  we can't set a value just because somebody got a related value!
     //mHintCharsetSource = kCharsetUninitialized;
   }

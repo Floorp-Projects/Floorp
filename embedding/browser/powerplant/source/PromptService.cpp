@@ -41,6 +41,7 @@
 #include "nsIPromptService.h"
 #include "nsIFactory.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsIServiceManager.h"
 #include "nsIWebBrowserChrome.h"
@@ -344,7 +345,7 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dial
 		    }
 		    responseText->GetDescriptor(pStr);
 		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-		    *value = ucStr.ToNewUnicode();    
+		    *value = ToNewUnicode(ucStr);    
    		    if (*value == nsnull)
    		        resultErr = NS_ERROR_OUT_OF_MEMORY;
    		        
@@ -428,7 +429,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent, co
 		    }
 		    userText->GetDescriptor(pStr);
 		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-		    *username = ucStr.ToNewUnicode();
+		    *username = ToNewUnicode(ucStr);
 		    if (*username == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 		    
@@ -438,7 +439,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent, co
 		    }
 		    pwdText->GetDescriptor(pStr);
 		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-		    *password = ucStr.ToNewUnicode();
+		    *password = ToNewUnicode(ucStr);
 		    if (*password == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 
@@ -518,7 +519,7 @@ NS_IMETHODIMP CPromptService::PromptPassword(nsIDOMWindow *parent, const PRUnich
 		    }
 		    pwdText->GetDescriptor(pStr);
 		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-		    *password = ucStr.ToNewUnicode();
+		    *password = ToNewUnicode(ucStr);
 		    if (*password == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 

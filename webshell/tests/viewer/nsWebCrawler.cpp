@@ -51,6 +51,7 @@
 #include "plhash.h"
 #include "nsINameSpaceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -928,7 +929,7 @@ OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
   a.Append(aBaseName);
   a.AppendWithConversion("/");
   a.Append(aOutputName);
-  char* fn = a.ToNewCString();
+  char* fn = ToNewCString(a);
   FILE* fp = fopen(fn, "r");
   if (!fp) {
     printf("Unable to open regression data file %s\n", fn);

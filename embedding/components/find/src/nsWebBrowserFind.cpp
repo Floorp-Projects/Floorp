@@ -41,6 +41,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIFocusController.h"
 #include "nsISelection.h"
+#include "nsReadableUtils.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -199,7 +200,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 {
     NS_ENSURE_ARG_POINTER(aSearchString);
-    *aSearchString = mSearchString.ToNewUnicode();
+    *aSearchString = ToNewUnicode(mSearchString);
     return NS_OK;
 }
 

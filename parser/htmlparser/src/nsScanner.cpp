@@ -109,7 +109,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
 {
   MOZ_COUNT_CTOR(nsScanner);
 
-  PRUnichar* buffer = anHTMLString.ToNewUnicode();
+  PRUnichar* buffer = ToNewUnicode(anHTMLString);
   mTotalRead = anHTMLString.Length();
   mSlidingBuffer = nsnull;
   mCountRemaining = 0;

@@ -57,6 +57,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 
+#include "nsReadableUtils.h"
 #include "nsProxiedService.h"
 #include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
@@ -580,14 +581,14 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
         //Check to see if this trigger item has a pretty name
         if(!(moduleName = triggerItem->mName).IsEmpty())
         {
-            ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
+            ioParamBlock->SetString(paramIndex, moduleName.get());
             paramIndex++;
             URL = triggerItem->mURL;
             offset = URL.RFind("/");
             if (offset != -1)
             {
                 URL.Cut(offset + 1, URL.Length() - 1);
-                ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
+                ioParamBlock->SetString(paramIndex, URL.get());
             }
             paramIndex++;
         }
@@ -601,10 +602,10 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
             if (offset != -1)
             {
                 moduleName.Cut(0, offset + 1);
-                ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
+                ioParamBlock->SetString(paramIndex, moduleName.get());
                 paramIndex++;
                 URL.Cut(offset + 1, URL.Length() - 1); 
-                ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
+                ioParamBlock->SetString(paramIndex, URL.get());
             }
             paramIndex++;
         }

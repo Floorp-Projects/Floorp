@@ -42,6 +42,7 @@
 #include "nsIFileTransportService.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -210,7 +211,7 @@ nsStreamIOChannel::GetName(PRUnichar* *result)
     if (NS_FAILED(rv)) return rv;
     nsString name;
     name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

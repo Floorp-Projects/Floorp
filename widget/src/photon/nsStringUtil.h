@@ -37,6 +37,7 @@
 
 // Convience macros for converting nsString's to chars +
 // creating temporary char[] bufs.
+#include "nsReadableUtils.h"
 
 #ifndef NS_STR_UTIL_H
 #define NS_STR_UTIL_H
@@ -61,7 +62,7 @@
     varName = _ns_smallBuffer;                                \
   }                                                           \
   else {                                                      \
-    varName = strName.ToNewCString();                         \
+    varName = ToNewCString(strName);                          \
   }
 
 #define NS_FREE_STR_BUF(varName)                              \

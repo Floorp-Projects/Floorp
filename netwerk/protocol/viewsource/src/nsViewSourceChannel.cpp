@@ -27,6 +27,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
@@ -248,7 +249,7 @@ nsViewSourceChannel::GetContentType(char* *aContentType)
     }
     else
     {
-        *aContentType = mContentType.ToNewCString();
+        *aContentType = ToNewCString(mContentType);
 
         if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
 

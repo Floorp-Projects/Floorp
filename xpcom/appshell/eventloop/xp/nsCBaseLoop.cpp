@@ -25,6 +25,7 @@
 #include "nsCBaseLoop.h"
 #include "nsCEvent.h"
 #include "nsCEventFilter.h"
+#include "nsReadableUtils.h"
 
 //*****************************************************************************
 //***    nsCBaseLoop: Object Management
@@ -232,7 +233,7 @@ NS_IMETHODIMP nsCBaseLoop::GetEventLoopName(PRUnichar** pName)
 {
 	NS_ENSURE_ARG_POINTER(pName);
 	
-	*pName = m_LoopName.ToNewUnicode();
+	*pName = ToNewUnicode(m_LoopName);
 
 	return *pName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

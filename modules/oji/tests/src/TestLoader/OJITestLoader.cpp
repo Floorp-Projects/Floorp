@@ -20,6 +20,7 @@
  */
 #include "OJITestLoader.h"
 //#include <io.h>
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIOJITestLoaderIID, OJITESTLOADER_IID);
@@ -96,7 +97,7 @@ TestResult* OJITestLoader::runTest(const char* testCase, const char* libName) {
 void OJITestLoader::registerRes(TestResult* res, char* tc){
 	char *outBuf = (char*)calloc(1, res->comment.Length() + PL_strlen(tc) + 100);
 	
-	sprintf(outBuf, "%s: %s (%s)\n", tc, res->status?"PASS":"FAILED", (res->comment).ToNewCString());
+	sprintf(outBuf, "%s: %s (%s)\n", tc, res->status?"PASS":"FAILED", NS_LossyConvertUCS2toASCII(res->comment).get());
 	if (fdResFile) {	
 		printf("%s", outBuf);	
 		if (PR_Write(fdResFile, outBuf, PL_strlen(outBuf)) < PL_strlen(outBuf))

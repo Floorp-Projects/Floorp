@@ -40,6 +40,7 @@
 
 #include "pratom.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -130,7 +131,7 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, PRUnichar **_re
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::GetCharset(PRUnichar * *aCharset)
 {
-  *aCharset = mCharset.ToNewUnicode() ;
+  *aCharset = ToNewUnicode(mCharset);
   if (!*aCharset)
     return NS_ERROR_OUT_OF_MEMORY;
 

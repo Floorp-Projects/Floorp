@@ -54,6 +54,7 @@
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 //#include "nsSVGPathCID.h"
+#include "nsReadableUtils.h"
 
 //
 // NS_NewSVGPathFrame
@@ -160,14 +161,14 @@ nsSVGPathFrame::Reflow(nsIPresContext*          aPresContext,
   nsAutoString coordStr;
   nsresult res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::x, coordStr);
   if (NS_SUCCEEDED(res)) {
-    char * s = coordStr.ToNewCString();
+    char * s = ToNewCString(coordStr);
     mX = NSIntPixelsToTwips(atoi(s), p2t*scale);
     delete [] s;
   }
 
   res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::y, coordStr);
   if (NS_SUCCEEDED(res)) {
-    char * s = coordStr.ToNewCString();
+    char * s = ToNewCString(coordStr);
     mY = NSIntPixelsToTwips(atoi(s), p2t*scale);
     delete [] s;
   }
@@ -175,7 +176,7 @@ nsSVGPathFrame::Reflow(nsIPresContext*          aPresContext,
   nsAutoString pathStr;
   res = mContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::d, pathStr);
   if (NS_SUCCEEDED(res)) {
-    char * s = pathStr.ToNewCString();
+    char * s = ToNewCString(pathStr);
     // parse path commands here
     delete [] s;
   }

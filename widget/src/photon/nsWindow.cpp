@@ -68,6 +68,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIWindowMediator.h"
 #include "nsIPresShell.h"
+#include "nsReadableUtils.h"
 
 
 PRBool             nsWindow::mResizeQueueInited = PR_FALSE;
@@ -610,7 +611,7 @@ NS_IMETHODIMP nsWindow::ScrollRect( nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy )
 
 NS_METHOD nsWindow::SetTitle( const nsString& aTitle ) {
   nsresult res = NS_ERROR_FAILURE;
-  char * title = aTitle.ToNewUTF8String();
+  char * title = ToNewUTF8String(aTitle);
   
   if( mWidget ) {
     PtSetResource( mWidget, Pt_ARG_WINDOW_TITLE, title, 0 );

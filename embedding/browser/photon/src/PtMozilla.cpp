@@ -57,6 +57,7 @@
 #include "nsIFocusController.h"
 #include "PromptService.h"
 
+#include "nsReadableUtils.h"
 
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
@@ -547,8 +548,7 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 
 		case Pt_ARG_MOZ_ENCODING: {
 			nsCString mStr( (char*)argt->value );
-			PRUnichar *ustring = mStr.ToNewUnicode();
-			moz->MyBrowser->mPrefs->SetUnicharPref( "intl.charset.default", ustring );
+			moz->MyBrowser->mPrefs->SetUnicharPref( "intl.charset.default", mStr.get() );
 			}
 			break;
 
@@ -596,8 +596,7 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 					nsCString searchString( wdata->FindInfo.szString );
 					nsCOMPtr<nsIWebBrowserFind> finder( do_GetInterface( moz->MyBrowser->WebBrowser ) );
 
-					PRUnichar *u = searchString.ToNewUnicode( );
-					finder->SetSearchString( u );
+					finder->SetSearchString( searchString.get() );
 
 					finder->SetMatchCase( wdata->FindInfo.flags & FINDFLAG_MATCH_CASE );
 					finder->SetFindBackwards( wdata->FindInfo.flags & FINDFLAG_GO_BACKWARDS );
@@ -740,10 +739,7 @@ static int mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 			PRUnichar *charset = nsnull;
 			moz->MyBrowser->mPrefs->GetLocalizedUnicharPref( "intl.charset.default", &charset );
 
-			nsAutoString str( charset );
-			const char *s=NS_ConvertUCS2toUTF8(str).get();
-
-			strcpy( (char*)argt->value, s );
+			strcpy( (char*)argt->value, NS_ConvertUCS2toUTF8(charset).get() );
 			}
 			break;
 
@@ -764,7 +760,7 @@ static int mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 				entry->GetURI( &url );
 
 				nsString stitle( title );
-			  strncpy( HistoryReplyBuf[j].title, stitle.ToNewCString(), 127 );
+			  strncpy( HistoryReplyBuf[j].title, ToNewCString(stitle), 127 );
 			  HistoryReplyBuf[j].title[127] = '\0';
 
 				char *urlspec;
@@ -796,32 +792,22 @@ static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value ) {
 
 /* HTML Options */
 	if( !strcmp( option, "A:visited color" ) ) {
-		nsCString mStr( value );
-		PRUnichar *ustring = mStr.ToNewUnicode();
-		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.visited_color", ustring );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUCS2(value).get() );
 		}
 	else if( !strcmp( option, "A:link color" ) ) {
-		nsCString mStr( value );
-		PRUnichar *ustring = mStr.ToNewUnicode();
-		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.anchor_color", ustring );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2(value).get() );
 		}
 
 /* the mozserver already has A:link color == browser.anchor_color for this */
 //	else if( !strcmp( option, "A:active color" ) ) {
-//		nsCString mStr( value );
-//		PRUnichar *ustring = mStr.ToNewUnicode();
-//		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.anchor_color", ustring );
+//		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2(value).get() );
 //		}
 
 	else if( !strcmp( option, "BODY color" ) ) {
-		nsCString mStr( value );
-		PRUnichar *ustring = mStr.ToNewUnicode();
-		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.foreground_color", ustring );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2(value).get() );
 		}
 	else if( !strcmp( option, "BODY background" ) ) {
-		nsCString mStr( value );
-		PRUnichar *ustring = mStr.ToNewUnicode();
-		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.background_color", ustring );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2(value).get() );
 		}
 	else if( !strcmp( option, "bIgnoreDocumentAttributes" ) )
 		moz->MyBrowser->mPrefs->SetBoolPref( "browser.display.use_document_colors", stricmp( value, "TRUE" ) ? PR_FALSE : PR_TRUE );

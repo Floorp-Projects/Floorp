@@ -42,6 +42,7 @@
 
 #include "nspr.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 //#define NOISY_FONTS
 
@@ -145,7 +146,7 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGrou
   {
     //we were not able to match the font name at all...
 
-    char *newname = firstFace.ToNewCString();
+    char *newname = ToNewCString(firstFace);
 
     PR_snprintf(&wildstring[namelen + 1], namelen + 200,
                "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",

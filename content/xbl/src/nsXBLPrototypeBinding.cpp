@@ -48,6 +48,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsNetUtil.h"
@@ -1045,7 +1046,7 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName, nsIScriptContext *
 
         // Change the class name and we're done.
         nsMemory::Free((void*) c->name);
-        c->name = aClassName.ToNewCString();
+        c->name = ToNewCString(aClassName);
       }
 
       // Add c to our table.
@@ -1336,7 +1337,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
     }
 
     // The user specified at least one attribute.
-    char* str = inherits.ToNewCString();
+    char* str = ToNewCString(inherits);
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars
     // so that we don't have to convert from Unicode to ASCII and then back
@@ -1442,7 +1443,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       }
       else {
         // The user specified at least one attribute.
-        char* str = includes.ToNewCString();
+        char* str = ToNewCString(includes);
         char* newStr;
         // XXX We should use a strtok function that tokenizes PRUnichar's
         // so that we don't have to convert from Unicode to ASCII and then back
@@ -1514,7 +1515,7 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
       mInterfaceTable = new nsSupportsHashtable(4);
 
     // The user specified at least one attribute.
-    char* str = impls.ToNewCString();
+    char* str = ToNewCString(impls);
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars
     // so that we don't have to convert from Unicode to ASCII and then back

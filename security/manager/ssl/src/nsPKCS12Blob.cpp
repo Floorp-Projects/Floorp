@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.19 2001/08/22 04:05:45 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.20 2001/09/29 08:28:00 jaggernaut%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -49,6 +49,7 @@
 #include "nsNSSHelper.h"
 #include "nsPKCS12Blob.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsFileStream.h"
 #include "nsXPIDLString.h"
 #include "nsDirectoryServiceDefs.h"
@@ -148,7 +149,7 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   }
 
   mToken->GetTokenName(getter_Copies(tokenName));
-  tokenNameCString.Adopt(NS_ConvertUCS2toUTF8(tokenName).ToNewCString());
+  tokenNameCString.Adopt(ToNewUTF8String(tokenName));
   tokNameRef = tokenNameCString; //I do this here so that the
                                  //NS_CONST_CAST below doesn't
                                  //break the build on Win32
@@ -587,7 +588,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
                                  NS_LITERAL_STRING("P12DefaultNickname").get(),
                                  nickFromProp);
   nsXPIDLCString nickFromPropC;
-  nickFromPropC.Adopt(nickFromProp.ToNewUTF8String());
+  nickFromPropC.Adopt(ToNewUTF8String(nickFromProp));
   // The user is trying to import a PKCS#12 file that doesn't have the
   // attribute we use to set the nickname.  So in order to reduce the
   // number of interactions we require with the user, we'll build a nickname

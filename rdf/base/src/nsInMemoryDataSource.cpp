@@ -70,6 +70,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsFixedSizeAllocator.h"
 #include "rdfutil.h"
@@ -888,7 +889,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
         nsXPIDLString value;
         literal->GetValue(getter_Copies(value));
         nsAutoString valueStr(value);
-        char* valueCStr = valueStr.ToNewCString();
+        char* valueCStr = ToNewCString(valueStr);
 
         PR_LOG(gLog, PR_LOG_ALWAYS,
            ("  -->(\"%s\")\n", valueCStr));

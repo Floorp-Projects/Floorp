@@ -6592,7 +6592,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
         nsCOMPtr<nsIDOMXULDocument> xulDocument(do_QueryInterface(document));
         nsCOMPtr<nsIDOMElement> domElement;
 
-        char* str = posStr.ToNewCString();
+        char* str = ToNewCString(posStr);
         char* rest;
         char* token = nsCRT::strtok(str, ", ", &rest);
 

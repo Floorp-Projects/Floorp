@@ -77,6 +77,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -286,7 +287,7 @@ public:
     nsresult rv = NS_OK;
     nsString data(someData);
     if (data.Find(mLastRequest) == 0) {
-      char* dataStr = data.ToNewCString();
+      char* dataStr = ToNewCString(data);
       printf("########## PageCycler loaded (%d ms): %s\n", 
              PR_IntervalToMilliseconds(PR_IntervalNow() - mIntervalTime), 
              dataStr);
@@ -336,7 +337,7 @@ public:
       }
     }
     else {
-      char* dataStr = data.ToNewCString();
+      char* dataStr = ToNewCString(data);
       printf("########## PageCycler possible failure for: %s\n", dataStr);
       nsCRT::free(dataStr);
     }
@@ -993,7 +994,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     }
   }
 
-  *aDefaultArgs = args.ToNewUnicode();
+  *aDefaultArgs = ToNewUnicode(args);
   return NS_OK;
 }
 

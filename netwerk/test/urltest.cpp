@@ -53,6 +53,7 @@
 #include "iostream.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 
 // Define CIDs...
@@ -136,10 +137,10 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRU
         output += ',';
         tURL->GetSpec(getter_Copies(temp));
         output += temp ? (const char*)temp : "";
-        *o_Result = output.ToNewCString();
+        *o_Result = ToNewCString(output);
     } else {
         output = "Can not create URL";
-        *o_Result = output.ToNewCString();
+        *o_Result = ToNewCString(output);
     }
     return NS_OK;
 }

@@ -41,6 +41,7 @@
 #include "nsInstallFileOpItem.h"
 #include "ScheduledTasks.h"
 #include "nsProcess.h"
+#include "nsReadableUtils.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -335,7 +336,7 @@ char* nsInstallFileOpItem::toString()
 
       mTarget->GetPath(&dstPath);
 
-      temp = mParams->ToNewCString();
+      temp = ToNewCString(*mParams);
       if((temp != nsnull) && (*temp != '\0'))
       {
         rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ExecuteWithArgs"));
@@ -415,7 +416,7 @@ char* nsInstallFileOpItem::toString()
         result.AssignWithConversion(temp);
         result.AppendWithConversion("\\");
         result.Append(*mDescription);
-        dstPath = result.ToNewCString();
+        dstPath = ToNewCString(result);
         if(dstPath != nsnull)
         {
           PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
@@ -973,7 +974,7 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
   cParams[0] = nsnull;
-  cParams[0] = mParams->ToNewCString();
+  cParams[0] = ToNewCString(*mParams);
 
   if(cParams[0] == nsnull)
     return nsInstall::OUT_OF_MEMORY;
@@ -1277,9 +1278,9 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
   char *iconNativePathStr        = nsnull;
 
   if(mDescription)
-    cDescription = mDescription->ToNewCString();
+    cDescription = ToNewCString(*mDescription);
   if(mParams)
-    cParams = mParams->ToNewCString();
+    cParams = ToNewCString(*mParams);
 
   if((cDescription == nsnull) || (cParams == nsnull))
     ret = nsInstall::OUT_OF_MEMORY;

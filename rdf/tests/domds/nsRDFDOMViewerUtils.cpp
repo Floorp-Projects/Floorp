@@ -70,10 +70,8 @@ nsDOMViewerObject::SetTargetLiteral(nsIRDFResource *aProperty,
   nsCOMPtr<nsIRDFService> rdf = 
            do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
 
-  PRUnichar* uniStr = str.ToNewUnicode();
   nsCOMPtr<nsIRDFLiteral> literal;
-  rv = rdf->GetLiteral(uniStr, getter_AddRefs(literal));
-  nsMemory::Free(uniStr);
+  rv = rdf->GetLiteral(str.get(), getter_AddRefs(literal));
 
   SetTarget(aProperty, literal);
   return NS_OK;

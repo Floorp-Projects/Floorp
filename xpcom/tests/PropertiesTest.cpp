@@ -49,6 +49,7 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include <iostream.h>  //BAD DOG -- no biscuit!
+#include "nsReadableUtils.h"
 
 #include "nsSpecialSystemDirectory.h"
 
@@ -161,7 +162,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(ret) || (!v.Length())) {
       break;
     }
-    char* value = v.ToNewCString();
+    char* value = ToNewCString(v);
     if (value) {
       cout << "\"" << i << "\"=\"" << value << "\"" << endl;
       delete[] value;
@@ -213,8 +214,8 @@ main(int argc, char* argv[])
     nsAutoString keyAdjustedLengthBuff(pKey);
     nsAutoString valAdjustedLengthBuff(pVal);
 
-	  char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
-	  char* valCStr = valAdjustedLengthBuff.ToNewCString();
+	  char* keyCStr = ToNewCString(keyAdjustedLengthBuff);
+	  char* valCStr = ToNewCString(valAdjustedLengthBuff);
 	  if (keyCStr && valCStr) 
 		cout << keyCStr << "\t" << valCStr << endl;
 	  delete[] keyCStr;

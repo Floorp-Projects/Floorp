@@ -39,6 +39,7 @@
 #include "nsWinProfileItem.h"
 #include "nspr.h"
 #include <windows.h>
+#include "nsReadableUtils.h"
 
 /* Public Methods */
 
@@ -138,9 +139,9 @@ nsWinProfile::NativeGetString(nsString section, nsString key, nsString* aReturn 
   /* make sure conversions worked */
   if(section.First() != '\0' && key.First() != '\0' && mFilename->First() != '\0')
   {
-    sectionCString  = section.ToNewCString();
-    keyCString      = key.ToNewCString();
-    filenameCString = mFilename->ToNewCString();
+    sectionCString  = ToNewCString(section);
+    keyCString      = ToNewCString(key);
+    filenameCString = ToNewCString(*mFilename);
 
     numChars        = GetPrivateProfileString(sectionCString, keyCString, "", valbuf, STRBUFLEN, filenameCString);
 
@@ -166,10 +167,10 @@ nsWinProfile::NativeWriteString( nsString section, nsString key, nsString value 
 	/* make sure conversions worked */
   if(section.First() != '\0' && key.First() != '\0' && mFilename->First() != '\0')
   {
-    sectionCString  = section.ToNewCString();
-    keyCString      = key.ToNewCString();
-    valueCString    = value.ToNewCString();
-    filenameCString = mFilename->ToNewCString();
+    sectionCString  = ToNewCString(section);
+    keyCString      = ToNewCString(key);
+    valueCString    = ToNewCString(value);
+    filenameCString = ToNewCString(*mFilename);
 
     success = WritePrivateProfileString( sectionCString, keyCString, valueCString, filenameCString );
 

@@ -49,6 +49,7 @@
 #include "nsICategoryManager.h"
 #include "nsIFileSpec.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 
 struct nsModuleComponentInfo;   // forward declaration
@@ -61,7 +62,7 @@ static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, c
 NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
 { \
     if (!aDefaultArgs) return NS_ERROR_FAILURE; \
-    *aDefaultArgs = NS_ConvertASCIItoUCS2(macro_default_args).ToNewUnicode(); \
+    *aDefaultArgs = ToNewUnicode(nsDependentCString(macro_default_args)); \
     return NS_OK; \
 }
 

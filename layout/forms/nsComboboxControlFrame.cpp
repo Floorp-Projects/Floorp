@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIFrameManager.h"
@@ -921,7 +922,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
               maxWidth = width;
             }
             //maxWidth = PR_MAX(width, maxWidth);
-            //printf("[%d] - %d %s \n", i, width, text.ToNewCString());
+            //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUCS2toASCII(text).get());
           }
         }          
       }
@@ -930,7 +931,7 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
   if (maxWidth == 0) {
     maxWidth = 11 * 15;
   }
-  char * str = maxStr.ToNewCString();
+  char * str = ToNewCString(maxStr);
   printf("id: %d maxWidth %d [%s]\n", mReflowId, maxWidth, str);
   delete [] str;
 
@@ -1995,7 +1996,7 @@ nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUp
 
       // Fix for Bug 42661 (remove comment later)
 #ifdef DO_REFLOW_DEBUG
-      char * str =  mTextStr.ToNewCString();
+      char * str =  ToNewCString(mTextStr);
       REFLOW_DEBUG_MSG2("UpdateSelection %s\n", str);
       delete [] str;
 #endif
@@ -2053,7 +2054,7 @@ nsComboboxControlFrame::SelectionChanged()
       shouldSetValue = PR_TRUE;
     } else {
       shouldSetValue = value != mTextStr;
-      REFLOW_DEBUG_MSG3("**** CBX::SelectionChanged  Old[%s]  New[%s]\n", value.ToNewCString(), mTextStr.ToNewCString());
+      REFLOW_DEBUG_MSG3("**** CBX::SelectionChanged  Old[%s]  New[%s]\n", NS_LossyConvertUCS2toASCII(value).get(), NS_LossyConvertUCS2toASCII(mTextStr).get());
     }
     if (shouldSetValue) {
       if (mTextStr.Length() == 0) {

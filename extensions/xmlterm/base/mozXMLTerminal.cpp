@@ -30,6 +30,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -787,7 +788,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   nsAutoString flavor;
   flavor.AssignWithConversion(bestFlavor);
 
-  char* temCStr = flavor.ToNewCString();
+  char* temCStr = ToNewCString(flavor);
   XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", temCStr));
   nsMemory::Free(temCStr);
 

@@ -38,6 +38,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsILocaleService.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 #include <stdio.h>
@@ -71,14 +72,14 @@ main(int argc, const char** argv)
 
 	charsetAsNSString = charset;
 	categoryAsNSString = category_value;
-	printf("DefaultCharset for %s is %s\n",categoryAsNSString.ToNewCString(),charsetAsNSString.ToNewCString());
+	printf("DefaultCharset for %s is %s\n", NS_LossyConvertUCS2toASCII(categoryAsNSString).get(), NS_LossyConvertUCS2toASCII(charsetAsNSString).get());
 
 	categoryAsNSString.AssignWithConversion("en-US");
 	rv = platform_charset->GetDefaultCharsetForLocale(categoryAsNSString.get(),&charset);
 	if (NS_FAILED(rv)) return -1;
 
 	charsetAsNSString = charset;
-	printf("DefaultCharset for %s is %s\n",categoryAsNSString.ToNewCString(),charsetAsNSString.ToNewCString());
+	printf("DefaultCharset for %s is %s\n", NS_LossyConvertUCS2toASCII(categoryAsNSString).get(), NS_LossyConvertUCS2toASCII(charsetAsNSString).get());
 
 	return 0;
 }

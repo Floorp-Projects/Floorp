@@ -30,6 +30,7 @@
 #include "prmem.h"
 #include "nsFileSpec.h"
 #include "ScheduledTasks.h"
+#include "nsReadableUtils.h"
 
 extern "C" NS_EXPORT PRInt32 SU_Uninstall(char *regPackageName);
 REGERR su_UninstallProcessItem(char *component_path);
@@ -104,7 +105,7 @@ char* nsInstallUninstall::toString()
     if (buffer == nsnull || !mInstall)
         return buffer;
     
-    char* temp = mUIName.ToNewCString();
+    char* temp = ToNewCString(mUIName);
     
     if (temp)
     {

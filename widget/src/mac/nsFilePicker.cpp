@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
@@ -126,7 +127,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   *retval = returnCancel;
   
   nsString filterList;
-  char *filterBuffer = filterList.ToNewCString();
+  char *filterBuffer = ToNewCString(filterList);
 
   Str255 title;
   Str255 defaultName;
@@ -536,7 +537,7 @@ nsFilePicker :: MapFilterToFileTypes ( )
     for (PRUint32 loop1 = 0; loop1 < mFilters.Count(); loop1++)
   	{
   		const nsString& filterWide = *mFilters[loop1];
-  		char* filter = filterWide.ToNewCString();
+  		char* filter = ToNewCString(filterWide);
 
       NS_ASSERTION ( filterWide.Length(), "Oops. filepicker.properties not correctly installed");       
   		if ( filterWide.Length() && filter )

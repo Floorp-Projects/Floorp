@@ -37,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIAtom.h"
 #include "nsDeque.h"
 #include "nsIInputStream.h"
@@ -150,7 +151,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     // Each MIME-type is a vertex in the graph, so first lets make sure
     // each MIME-type is represented as a key in our hashtable.
 
-    nsCStringKey *fromKey = new nsCStringKey(fromStr.ToNewCString(), -1, nsCStringKey::OWN);
+    nsCStringKey *fromKey = new nsCStringKey(ToNewCString(fromStr), fromStr.Length(), nsCStringKey::OWN);
     if (!fromKey) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *fromEdges = (SCTableData*)mAdjacencyList->Get(fromKey);
@@ -178,7 +179,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         fromKey = nsnull;
     }
 
-    nsCStringKey *toKey = new nsCStringKey(toStr.ToNewCString(), -1, nsCStringKey::OWN);
+    nsCStringKey *toKey = new nsCStringKey(ToNewCString(toStr), toStr.Length(), nsCStringKey::OWN);
     if (!toKey) return NS_ERROR_OUT_OF_MEMORY;
 
     if (!mAdjacencyList->Get(toKey)) {
@@ -333,7 +334,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
             nsIAtom *curVertexAtom = (nsIAtom*)edges->ElementAt(i);
             nsAutoString curVertexStr;
             curVertexAtom->ToString(curVertexStr);
-            nsCStringKey *curVertex = new nsCStringKey(curVertexStr.ToNewCString(), 
+            nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
                                         curVertexStr.Length(), nsCStringKey::OWN);
 
             SCTableData *data3 = (SCTableData*)lBFSTable.Get(curVertex);
@@ -488,12 +489,12 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                 return rv;
             }
 
-            PRUnichar *fromUni = fromStr.ToNewUnicode();
+            PRUnichar *fromUni = ToNewUnicode(fromStr);
             if (!fromUni) {
                 delete converterChain;
                 return NS_ERROR_OUT_OF_MEMORY;
             }
-            PRUnichar *toUni   = toStr.ToNewUnicode();
+            PRUnichar *toUni   = ToNewUnicode(toStr);
             if (!toUni) {
                 delete fromUni;
                 delete converterChain;
@@ -589,13 +590,13 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 return rv;
             }
 
-            PRUnichar *fromStrUni = fromStr.ToNewUnicode();
+            PRUnichar *fromStrUni = ToNewUnicode(fromStr);
             if (!fromStrUni) {
                 delete converterChain;
                 return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            PRUnichar *toStrUni   = toStr.ToNewUnicode();
+            PRUnichar *toStrUni   = ToNewUnicode(toStr);
             if (!toStrUni) {
                 delete fromStrUni;
                 delete converterChain;

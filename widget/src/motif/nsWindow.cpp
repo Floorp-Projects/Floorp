@@ -59,6 +59,7 @@
 #include "nsXtEventHandler.h"
 #include "nsXtManageWidget.h"
 #include "nsAppShell.h"
+#include "nsReadableUtils.h"
 
 #include "stdio.h"
 
@@ -1157,7 +1158,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   if(!mBaseWindow)
     return NS_ERROR_FAILURE;
     
-  const char *text = aTitle.ToNewCString();
+  const char *text = ToNewCString(aTitle);
   XStoreName(gDisplay, mBaseWindow, text);
   delete [] text;
 */

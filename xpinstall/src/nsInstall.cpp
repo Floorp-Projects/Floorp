@@ -29,6 +29,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsReadableUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -1236,33 +1237,25 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         if (NS_FAILED(ret))
             goto cleanup;
 
-        PRUnichar *pKey = nsnull;
-        PRUnichar *pVal = nsnull;
+        nsXPIDLString pKey;
+        nsXPIDLString pVal;
 
-        ret = propElem->GetKey(&pKey);
+        ret = propElem->GetKey(getter_Copies(pKey));
         if (NS_FAILED(ret)) 
             goto cleanup;
-        ret = propElem->GetValue(&pVal);
+        ret = propElem->GetValue(getter_Copies(pVal));
         if (NS_FAILED(ret))
             goto cleanup;
 
-        nsAutoString keyAdjustedLengthBuff(pKey);
-        nsAutoString valAdjustedLengthBuff(pVal);
+        nsXPIDLCString keyCStr;
+        keyCStr.Adopt(ToNewCString(pKey));
 
-        char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
-        PRUnichar* valCStr = valAdjustedLengthBuff.ToNewUnicode();
-        if (keyCStr && valCStr) 
+        if (keyCStr.get() && pVal.get()) 
         {
-            JSString* propValJSStr = JS_NewUCStringCopyZ(cx, (jschar*) valCStr);
+            JSString* propValJSStr = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, pVal.get()));
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
-            JS_SetProperty(cx, res, keyCStr, &propValJSVal);
-            delete[] keyCStr;
-            delete[] valCStr;
+            JS_SetProperty(cx, res, keyCStr.get(), &propValJSVal);
         }
-        if (pKey)
-            delete[] pKey;
-        if (pVal)
-            delete[] pVal;
         ret = propEnum->Next();
     }
 	 
@@ -2710,7 +2703,7 @@ nsInstall::GetResourcedString(const nsString& aResName)
         rscdStr.AssignWithConversion(nsInstallResources::GetDefaultVal(temp));
     }
     
-    return rscdStr.ToNewCString();
+    return ToNewCString(rscdStr);
 }
 
 

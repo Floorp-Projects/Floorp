@@ -24,6 +24,7 @@
 #include "nsBasePrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "plstr.h"
 #include "nsIPref.h"
 
@@ -307,13 +308,13 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
         if (grantedListStr.Length() > 0)
         {
             grantedListStr.Truncate(grantedListStr.Length()-1);
-            *aGrantedList = grantedListStr.ToNewCString();
+            *aGrantedList = ToNewCString(grantedListStr);
             if (!*aGrantedList) return NS_ERROR_OUT_OF_MEMORY;
         }
         if (deniedListStr.Length() > 0)
         {
             deniedListStr.Truncate(deniedListStr.Length()-1);
-            *aDeniedList = deniedListStr.ToNewCString();
+            *aDeniedList = ToNewCString(deniedListStr);
             if (!*aDeniedList) return NS_ERROR_OUT_OF_MEMORY;
         }
     }

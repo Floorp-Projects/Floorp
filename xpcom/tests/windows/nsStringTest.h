@@ -19,6 +19,7 @@
 
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include <time.h>
 
 #define USE_STL 
@@ -939,7 +940,7 @@ int CStringTester::TestCreators(){
 /* NOT WORKING YET
   {
     nsString  theString5("");
-    char* str0=theString5.ToNewCString();
+    char* str0 = ToNewCString(theString5);
     Recycle(str0);
 
     theString5+="hello rick";
@@ -947,11 +948,11 @@ int CStringTester::TestCreators(){
     delete theString6;
 
     nsString  theString1("hello again");
-    PRUnichar* thePBuf=theString1.ToNewUnicode();
+    PRUnichar* thePBuf=ToNewUnicode(theString1);
     if(thePBuf)
       Recycle(thePBuf);
 
-    char* str=theString5.ToNewCString();
+    char* str = ToNewCString(theString5);
     if(str)
       Recycle(str);
 
@@ -965,11 +966,11 @@ int CStringTester::TestCreators(){
     nsCString* theString6=theString5.ToNewString();
     delete theString6;
 
-    PRUnichar* thePBuf=theString5.ToNewUnicode();
+    PRUnichar* thePBuf=ToNewUnicode(theString5);
     if(thePBuf)
       Recycle(thePBuf);
 
-    char* str=theString5.ToNewCString();
+    char* str = ToNewCString(theString5);
     if(str)
       Recycle(str);
 

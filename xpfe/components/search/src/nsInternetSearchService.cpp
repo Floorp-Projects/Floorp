@@ -77,6 +77,7 @@
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
+#include "nsReadableUtils.h"
 
 #ifdef	XP_MAC
 #include <Files.h>
@@ -1806,7 +1807,7 @@ InternetSearchDataSource::getSearchURI(nsIRDFResource *src)
 				if (uriUni)
 				{
 					nsAutoString	uriString(uriUni);
-					uri = uriString.ToNewUTF8String();
+					uri = ToNewUTF8String(uriString);
 				}
 			}
 		}
@@ -2434,7 +2435,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 		// convert from escaped-UTF_8, to unicode, and then to
 		// the charset indicated by the dataset in question
 
-		char	*utf8data = text.ToNewUTF8String();
+		char	*utf8data = ToNewUTF8String(text);
 		if (utf8data)
 		{
 			nsCOMPtr<nsITextToSubURI> textToSubURI = 
@@ -2472,7 +2473,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	action += input;
 
 	// return a copy of the resulting search URL
-	*resultURL = action.ToNewCString();
+	*resultURL = ToNewCString(action);
 	return(NS_OK);
 }
 
@@ -2668,7 +2669,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			engineURI += searchText;
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-			char	*engineMatch = searchText.ToNewCString();
+			char	*engineMatch = ToNewCString(searchText);
 			if (engineMatch)
 			{
 				printf("FindInternetSearchResults: search for: '%s'\n\n",
@@ -2953,7 +2954,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 				if ((value.Find(kEngineProtocol) == 0) ||
 					(value.Find(kURINC_SearchCategoryEnginePrefix) == 0))
 				{
-					char	*val = value.ToNewCString();
+					char	*val = ToNewCString(value);
 					if (val)
 					{
 						engineArray->AppendElement(val);
@@ -3062,7 +3063,7 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	if (engineStr.Find(kEngineProtocol) != 0)
 		return(rv);
 	engineStr.Cut(0, sizeof(kEngineProtocol) - 1);
-	char	*baseFilename = engineStr.ToNewCString();
+	char	*baseFilename = ToNewCString(engineStr);
 	if (!baseFilename)
 		return(rv);
 	baseFilename = nsUnescape(baseFilename);
@@ -3543,7 +3544,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		// convert from escaped-UTF_8, to unicode, and then to
 		// the charset indicated by the dataset in question
 
-		char	*utf8data = textTemp.ToNewUTF8String();
+		char	*utf8data = ToNewUTF8String(textTemp);
 		if (utf8data)
 		{
 			nsCOMPtr<nsITextToSubURI> textToSubURI = 
@@ -4971,7 +4972,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			htmlResults.Cut(0, resultItemEnd);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-			char	*results = resultItem.ToNewCString();
+			char	*results = ToNewCString(resultItem);
 			if (results)
 			{
 				printf("\n----- Search result: '%s'\n\n", results);
@@ -5076,7 +5077,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsAutoString	site(hrefStr);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-			char *hrefCStr = hrefStr.ToNewCString();
+			char *hrefCStr = ToNewCString(hrefStr);
 			if (hrefCStr)
 			{
 				printf("HREF: '%s'\n", hrefCStr);

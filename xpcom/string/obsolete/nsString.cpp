@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsDeque.h"
@@ -530,34 +531,6 @@ nsCString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailin
  */
 nsCString* nsCString::ToNewString() const {
   return new nsCString(*this);
-}
-
-/**
- * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to
- * |nsMemory::Free|.
- * @update  gess 02/24/00
- * @return  ptr to new ascii string
- */
-char* nsCString::ToNewCString() const {
-  return nsCRT::strdup(mStr);
-}
-
-/**
- * Creates an unicode clone of this string
- * Note that calls to this method should be matched with calls to
- * |nsMemory::Free|.
- * @update  gess 01/04/99
- * @return  ptr to new ascii string
- */
-PRUnichar* nsCString::ToNewUnicode() const {
-  PRUnichar* result = NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc(sizeof(PRUnichar) * (mLength + 1)));
-  if (result) {
-    CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
-    nsAutoString temp(desc);
-    temp.AssignWithConversion(mStr);
-  }
-  return result;
 }
 
 /**
@@ -1330,7 +1303,7 @@ NS_COM int fputs(const nsCString& aString, FILE* out)
   char* cp = buf;
   PRInt32 len = aString.mLength;
   if (len >= PRInt32(sizeof(buf))) {
-    cp = aString.ToNewCString();
+    cp = ToNewCString(aString);
   } else {
     aString.ToCString(cp, len + 1);
   }
@@ -1376,7 +1349,7 @@ NS_ConvertUCS2toUTF8::Append( const PRUnichar* aString, PRUint32 aLength )
     if (! aString)
       return;
 
-    // Caculate how many bytes we need
+    // Calculate how many bytes we need
     const PRUnichar* p;
     PRInt32 count, utf8len;
     for (p = aString, utf8len = 0, count = aLength; 0 != count && 0 != (*p); count--, p++)
@@ -1461,6 +1434,20 @@ NS_ConvertUCS2toUTF8::Append( const PRUnichar* aString, PRUint32 aLength )
 
     *out = '\0'; // null terminate
     mLength += utf8len;
+  }
+
+NS_LossyConvertUCS2toASCII::NS_LossyConvertUCS2toASCII( const nsAString& aString )
+  {
+    SetCapacity(aString.Length());
+
+    nsAString::const_iterator start; aString.BeginReading(start);
+    nsAString::const_iterator end;   aString.EndReading(end);
+    
+    while (start != end) {
+      nsReadableFragment<PRUnichar> frag(start.fragment());
+      AppendWithConversion(frag.mStart, frag.mEnd - frag.mStart);
+      start.advance(start.size_forward());
+    }
   }
 
 

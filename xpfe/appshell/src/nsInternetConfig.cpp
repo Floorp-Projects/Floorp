@@ -37,6 +37,7 @@
  
 #include "nsInternetConfig.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsDebug.h"
 
 #include <CodeFragments.h>   
@@ -140,7 +141,7 @@ nsresult nsInternetConfig::GetString( unsigned char* inKey, char** outString )
 				
 			// Buffer is a Pascal string
 			nsCString temp( &buffer[1], buffer[0] );
-			*outString = temp.ToNewCString();
+			*outString = ToNewCString(temp);
  			result = NS_OK;
 		}
 	}

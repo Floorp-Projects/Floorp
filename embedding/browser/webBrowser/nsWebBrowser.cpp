@@ -29,6 +29,7 @@
 #include "nsWidgetsCID.h"
 
 //Interfaces Needed
+#include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -375,7 +376,7 @@ NS_IMETHODIMP nsWebBrowser::GetName(PRUnichar** aName)
    if(mDocShell)  
       mDocShellAsItem->GetName(aName);
    else
-      *aName = mInitInfo->name.ToNewUnicode();
+      *aName = ToNewUnicode(mInitInfo->name);
 
    return NS_OK;
 }

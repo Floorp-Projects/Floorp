@@ -46,6 +46,7 @@
 
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 /* Some UNIXy platforms don't have pw_gecos. In this case we use pw_name */
 #if defined(NO_PW_GECOS)
@@ -99,7 +100,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
         fullname.ReplaceSubstring("&", (const char *) username);
     }
 
-    *aFullname = fullname.ToNewUnicode();
+    *aFullname = ToNewUnicode(fullname);
 
     if (*aFullname)
         return NS_OK;

@@ -44,6 +44,7 @@ extern "C" {
 }
 
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsIXlibWindowService.h"
 #include "nsIUnixToolkitService.h"
@@ -265,7 +266,7 @@ int main(int argc, char **argv)
   char *url = "http://www.mozilla.org/unix/xlib.html";
 
   nsString URL(url);
-  PRUnichar *u_url = URL.ToNewUnicode();
+  PRUnichar *u_url = ToNewUnicode(URL);
   // XXX fix me - what's the new API?
   //sgWebShell->LoadURL(u_url);
   

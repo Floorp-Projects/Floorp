@@ -1265,7 +1265,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         rv = PRInt64ToChars(n, valueStr);
         if (NS_FAILED(rv)) return rv;
         
-        value = (void *)valueStr.ToNewCString();
+        value = (void *)ToNewCString(valueStr);
         if (aProperty == kNC_Date)
           col = kToken_LastVisitDateColumn;
         else
@@ -1281,8 +1281,8 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString valueStr; valueStr.AppendInt(intValue);
-        value = valueStr.ToNewUnicode();
-        len = nsCRT::strlen((PRUnichar*)value);
+        value = ToNewUnicode(valueStr);
+        len = valueStr.Length() * sizeof(PRUnichar);
         col = kToken_VisitCountColumn;
       }
       

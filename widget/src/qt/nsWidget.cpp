@@ -43,6 +43,7 @@
 #include "nsIComponentManager.h"
 #include "nsIMenuRollup.h"
 #include "nsFontMetricsQT.h"
+#include "nsReadableUtils.h"
 
 #include <qapplication.h>
 
@@ -582,7 +583,7 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth,PRInt32 aHeight)
 NS_METHOD nsWidget::SetTitle(const nsString &aTitle)
 {
   if (mWidget) {
-    const char *title = aTitle.ToNewCString();
+    const char *title = ToNewCString(aTitle);
 
     mWidget->SetTitle(title);
     delete [] title;

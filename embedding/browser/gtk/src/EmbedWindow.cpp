@@ -25,6 +25,7 @@
 #include <nsIComponentManager.h>
 #include <nsIDocShellTreeItem.h>
 #include "nsIWidget.h"
+#include "nsReadableUtils.h"
 
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"
@@ -316,7 +317,7 @@ EmbedWindow::SetFocus(void)
 NS_IMETHODIMP
 EmbedWindow::GetTitle(PRUnichar **aTitle)
 {
-  *aTitle = mTitle.ToNewUnicode();
+  *aTitle = ToNewUnicode(mTitle);
   return NS_OK;
 }
 
@@ -370,7 +371,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 {
   
   nsAutoString tipText ( aTipText );
-  const char* tipString = tipText.ToNewCString();
+  const char* tipString = ToNewCString(tipText);
 
   if (sTipWindow)
     gtk_widget_destroy(sTipWindow);

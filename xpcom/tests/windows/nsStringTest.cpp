@@ -3,6 +3,7 @@
 #include "nsStr.h"
 #include "nsStringTest2.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 int main(){
 
@@ -13,11 +14,11 @@ int main(){
   temp1.CompressSet("\t\n\r ",' ',false,false);
 
   nsString temp3("");
-  char* s=temp3.ToNewCString();
+  char* s = ToNewCString(temp3);
   delete s;
 
-  char* f=nsAutoString("").ToNewCString();
-  char* f1=nsCAutoString("").ToNewCString();
+  char* f = ToNewCString(nsAutoString(""));
+  char* f1 = ToNewCString(nsCAutoString(""));
   delete f;
   delete f1;
   

@@ -21,6 +21,7 @@
  */
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 
@@ -304,7 +305,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI,
         if(keyword)
         {
             nsCAutoString keywordSpec("keyword:");
-            char *utf8Spec = uriString.ToNewUTF8String();
+            char *utf8Spec = ToNewUTF8String(uriString);
             if(utf8Spec)
             {
                 char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);

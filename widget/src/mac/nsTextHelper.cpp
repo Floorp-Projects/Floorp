@@ -43,6 +43,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #define DBG 0
@@ -123,7 +124,7 @@ PRUint32  nsTextHelper::SetText(const nsString& aText)
     char * buf = new char[aText.Length()+1];
     memset(buf, '*', aText.Length());
     buf[aText.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    //printf("SetText [%s]  [%s]\n", NS_LossyConvertUCS2toASCII(data->mPassword).get(), buf);
     //XmTextSetString(mWidget, buf);
     data->mIgnore = PR_FALSE;
   	}
@@ -150,7 +151,7 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
     char * buf = new char[data->mPassword.Length()+1];
     memset(buf, '*', data->mPassword.Length());
     buf[data->mPassword.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    //printf("SetText [%s]  [%s]\n", NS_LossyConvertUCS2toASCII(data->mPassword).get(), buf);
     //XmTextInsert(mWidget, aStartPos, buf);
     data->mIgnore = PR_FALSE;
   	}

@@ -1629,7 +1629,7 @@ nsPostScriptObj::GetUnixPrinterSetting(const nsCAutoString& aKey, char** aVal)
   if (!NS_SUCCEEDED(res)) {
     return PR_FALSE;
   }
-  *aVal = oValue.ToNewCString();
+  *aVal = ToNewCString(oValue);
   return PR_TRUE;
 }
 

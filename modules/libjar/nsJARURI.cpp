@@ -24,6 +24,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIZipReader.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
  
@@ -392,7 +393,7 @@ nsJARURI::GetJAREntry(char* *entryPath)
     PRInt32 pos = entry.RFindCharInSet("#?;");
     if (pos >= 0)
         entry.Truncate(pos);
-    *entryPath = entry.ToNewCString();
+    *entryPath = ToNewCString(entry);
     return *entryPath ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

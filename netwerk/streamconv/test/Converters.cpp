@@ -1,6 +1,7 @@
 #include "Converters.h"
 #include "nsIStringStream.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 //////////////////////////////////////////////////
 // TestConverter
@@ -29,7 +30,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     // verify that the data we're converting matches the from type
     // if it doesn't then we're being handed the wrong data.
     nsString from(aFromType);
-    char *fromMIME = from.ToNewCString();
+    char *fromMIME = ToNewCString(from);
     char fromChar = *fromMIME;
     nsMemory::Free(fromMIME);
 
@@ -41,7 +42,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
 
     // Get the first character 
     nsString to(aToType);
-    char *toMIME = to.ToNewCString();
+    char *toMIME = ToNewCString(to);
     char toChar = *toMIME;
     nsMemory::Free(toMIME);
 

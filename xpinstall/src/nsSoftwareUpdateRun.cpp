@@ -48,6 +48,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsILocalFile.h"
 #include "nsIChromeRegistry.h"
 #include "nsInstallTrigger.h"
@@ -98,17 +99,14 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
          * Got an error object; prepare appropriate-width versions of
          * various arguments to it.
          */
-        nsAutoString fileUni;
-        fileUni.AssignWithConversion(report->filename);
 
-        const PRUnichar *newFileUni = fileUni.ToNewUnicode();
-        
         PRUint32 column = report->uctokenptr - report->uclinebuf;
 
-        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage), newFileUni, NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
+        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
+                               NS_ConvertASCIItoUCS2(report->filename).get(),
+                               NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
                                report->lineno, column, report->flags,
                                "XPInstall JavaScript");
-        nsMemory::Free((void *)newFileUni);
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
             if (NS_SUCCEEDED(rv)) {

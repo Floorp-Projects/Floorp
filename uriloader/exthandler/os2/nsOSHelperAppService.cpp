@@ -23,6 +23,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIMIMEInfo.h"
@@ -85,7 +86,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
   {
     GetFromExtension(fileExtension, aMIMEInfo);
      // this is the ONLY code path which leads to success where we should set our return variables...
-     *aFileExtension = fileExtension.ToNewCString();
+     *aFileExtension = ToNewCString(fileExtension);
   } // if we got an entry out of the registry...
 
   return rv;

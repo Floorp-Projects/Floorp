@@ -40,6 +40,7 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 #include "nsQEventHandler.h"
 
@@ -101,7 +102,7 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsPopUpMenu::AddItem()\n"));
-    char * labelStr = mLabel.ToNewCString();
+    char * labelStr = ToNewCString(mLabel);
 
     mMenu->insertItem(labelStr);
 
@@ -137,7 +138,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
   
     aMenu->GetLabel(Label);
 
-    labelStr = Label.ToNewCString();
+    labelStr = ToNewCString(Label);
 
     aMenu->GetNativeData(&voidData);
     newmenu = (QPopupMenu *) voidData;

@@ -42,6 +42,7 @@
 
 #include "nsBuildID.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsInstall.h"
 #include "nsInstallFile.h"
 #include "nsInstallTrigger.h"
@@ -1595,7 +1596,7 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   ConvertJSValToStr(b0, cx, argv[0]);
   
   char *tempStr;
-  tempStr = b0.ToNewCString();
+  tempStr = ToNewCString(b0);
   printf("Install:\t%s\n", tempStr);
 
   Recycle(tempStr);

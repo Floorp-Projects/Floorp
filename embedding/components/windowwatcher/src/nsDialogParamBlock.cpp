@@ -38,6 +38,7 @@
  
 #include "nsDialogParamBlock.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsDialogParamBlock, nsIDialogParamBlock)
 
@@ -90,7 +91,7 @@ NS_IMETHODIMP nsDialogParamBlock::GetString(PRInt32 inIndex, PRUnichar **_retval
     SetNumberStrings(kNumStrings);
   nsresult rv = InBounds(inIndex, mNumStrings);
   if (rv == NS_OK)
-    *_retval = mString[inIndex].ToNewUnicode();
+    *_retval = ToNewUnicode(mString[inIndex]);
   return rv;
 }
 

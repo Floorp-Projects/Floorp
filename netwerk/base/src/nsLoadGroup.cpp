@@ -47,6 +47,7 @@
 #include "nsCRT.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsString.h"
 
 #if defined(PR_LOGGING)
@@ -174,7 +175,7 @@ nsLoadGroup::GetName(PRUnichar* *result)
         if (NS_SUCCEEDED(rv)) {
             nsString name;
             name.Assign(nameStr);
-            *result = name.ToNewUnicode();
+            *result = ToNewUnicode(name);
             return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }
     }

@@ -842,7 +842,7 @@ GetOptionText(const nsIParserNode& aNode, nsString& aText)
     break;
   }
     nsAutoString x;
-    char* y = aText.ToNewCString();
+    char* y = ToNewCString(aText);
     printf("foo");
 }
 #endif
@@ -4002,7 +4002,7 @@ HTMLContentSink::ScrollToRef()
   // XXX Duplicate code in nsXMLContentSink.
   // XXX Be sure to change both places if you make changes here.
   if (!mRef.IsEmpty()) {
-    char* tmpstr = mRef.ToNewCString();
+    char* tmpstr = ToNewCString(mRef);
     if(! tmpstr)
       return;
     nsUnescape(tmpstr);

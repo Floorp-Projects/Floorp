@@ -37,6 +37,7 @@
 
 #include "nsMIMEInfoImpl.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsEscape.h"
@@ -73,7 +74,7 @@ nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
 
     for (PRUint32 i=0; i < count; i++) {
         nsCString* ext = mExtensions.CStringAt(i);
-        _retExts[i] = ext->ToNewCString();
+        _retExts[i] = ToNewCString(*ext);
         if (!_retExts[i]) {
             // clean up all the strings we've allocated
             while (i-- != 0) nsMemory::Free(_retExts[i]);
@@ -114,7 +115,7 @@ nsMIMEInfoImpl::FirstExtension(char **_retval) {
     PRUint32 extCount = mExtensions.Count();
     if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
 
-    *_retval = (mExtensions.CStringAt(0))->ToNewCString();
+    *_retval = ToNewCString(*(mExtensions.CStringAt(0)));
     if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;    
 }
@@ -132,7 +133,7 @@ nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (mMIMEType.Length() < 1)
         return NS_ERROR_NOT_INITIALIZED;
 
-    *aMIMEType = mMIMEType.ToNewCString();
+    *aMIMEType = ToNewCString(mMIMEType);
     if (!*aMIMEType) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -149,7 +150,7 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::GetDescription(PRUnichar * *aDescription) {
     if (!aDescription) return NS_ERROR_NULL_POINTER;
 
-    *aDescription = mDescription.ToNewUnicode();
+    *aDescription = ToNewUnicode(mDescription);
     if (!*aDescription) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -221,7 +222,7 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 
 NS_IMETHODIMP nsMIMEInfoImpl::GetApplicationDescription(PRUnichar ** aApplicationDescription)
 {
-  *aApplicationDescription = mPreferredAppDescription.ToNewUnicode();
+  *aApplicationDescription = ToNewUnicode(mPreferredAppDescription);
   return NS_OK;
 }
  

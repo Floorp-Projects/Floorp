@@ -36,6 +36,7 @@
 
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
+#include "nsReadableUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsInstallLogComment)
 
@@ -89,8 +90,8 @@ char* nsInstallLogComment::toString()
     if (buffer == nsnull || !mInstall)
         return nsnull;
 
-    char* cstrFileOpCommand = mFileOpCommand.ToNewCString();
-    char* cstrComment       = mComment.ToNewCString();
+    char* cstrFileOpCommand = ToNewCString(mFileOpCommand);
+    char* cstrComment       = ToNewCString(mComment);
 
     if((cstrFileOpCommand == nsnull) || (cstrComment == nsnull))
         return nsnull;

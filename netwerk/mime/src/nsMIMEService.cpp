@@ -36,6 +36,7 @@
 #include "nsMIMEService.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsMIMEInfoImpl.h"
 #include "nsIURL.h"
 #include "nsIFileChannel.h"
@@ -172,7 +173,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
         specStr.Right(extStr, specStr.Length() - extLoc - 1);
-        char *ext = extStr.ToNewCString();
+        char *ext = ToNewCString(extStr);
         if (!ext) return NS_ERROR_OUT_OF_MEMORY;
         rv = GetTypeFromExtension(ext, aContentType);
         nsMemory::Free(ext);

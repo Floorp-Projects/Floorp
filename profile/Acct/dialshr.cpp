@@ -65,6 +65,7 @@
 //nclude "prefapi.h"
 //#include "prmem.h"
 //#include "nsString.h"   
+#include "nsReadableUtils.h"
  
 #define trace
 
@@ -4255,12 +4256,12 @@ void SetDataArray(nsString data)
 
 #if defined(DEBUG_profile)
 	printf("ProfileManager : Setting new profile data\n");
-	printf("SetDataArray data : %s\n", data.ToNewCString());
+	printf("SetDataArray data : %s\n", NS_LossyConvertUCS2toASCII(data).get());
 #endif
 
 	int index = 0;
 	char *newStr=nsnull;
-	char *tokstr = data.ToNewCString();
+	char *tokstr = ToNewCString(data);
 	char *token = nsCRT::strtok(tokstr, "%", &newStr);
 
 #if defined(DEBUG_profile)
@@ -4361,9 +4362,9 @@ char* GetModemConfig(void)
 //	strcpy( returnData, (const char*)str ); */
 	returnData.AssignWithConversion(modemResults[0]);
 //	returnData = tmp;
-	printf("this is the modem inside the modemconfig %s \n", returnData.ToNewCString());
+	printf("this is the modem inside the modemconfig %s \n", NS_LossyConvertUCS2toASCII(returnData).get());
 	delete []modemResults;
 
-return returnData.ToNewCString();
+	return ToNewCString(returnData);
 }
 

@@ -50,6 +50,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsPICSElementObserver.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIPICS.h"
 #include "nspics.h"
 #include "nsIWebShellServices.h"
@@ -154,19 +155,19 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
   int status;
   nsIWebShellServices* ws;
 //  nsString theURL(aSpec);
-// char* url = aSpec.ToNewCString();
+// char* url = ToNewCString(aSpec);
   nsIURI* uaURL = nsnull;
 //  rv = NS_NewURL(&uaURL, nsString(aSpec));
  
     if(numOfAttributes >= 2) {
       const nsString& theValue1=valueArray[0];
-      char *val1 = theValue1.ToNewCString();
+      char *val1 = ToNewCString(theValue1);
       if(theValue1.EqualsIgnoreCase("\"PICS-LABEL\"")) {
 #ifdef DEBUG
         printf("\nReceived notification for a PICS-LABEl\n");
 #endif
         const nsString& theValue2=valueArray[1];
-        char *label = theValue2.ToNewCString();
+        char *label = ToNewCString(theValue2);
         if (valueArray[numOfAttributes]) {
           const nsString& theURLValue=valueArray[numOfAttributes];
           nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));

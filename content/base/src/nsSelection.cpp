@@ -44,6 +44,8 @@
 #include "nsWeakReference.h"
 #include "nsIFactory.h"
 #include "nsIEnumerator.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMRange.h"
 #include "nsIFrameSelection.h"
 #include "nsISelection.h"
@@ -1762,7 +1764,7 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
 
   nsAutoString tmp;
   rv = encoder->EncodeToString(tmp);
-  *aReturn = tmp.ToNewUnicode();//get the unicode pointer from it. this is temporary
+  *aReturn = ToNewUnicode(tmp);//get the unicode pointer from it. this is temporary
   return rv;
 }
 
@@ -5814,7 +5816,7 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     {
 	    nsAutoString tagString;
 	    tag->ToString(tagString);
-	    char * tagCString = tagString.ToNewCString();
+	    char * tagCString = ToNewCString(tagString);
 	    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
 	    delete [] tagCString;
     }
@@ -6638,7 +6640,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     {
 	    nsAutoString tagString;
 	    tag->ToString(tagString);
-	    char * tagCString = tagString.ToNewCString();
+	    char * tagCString = ToNewCString(tagString);
 	    printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
 	    delete [] tagCString;
     }
@@ -6736,7 +6738,8 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
           nsAutoString name, value;
           aNode->GetNodeName(name);
           aNode->GetNodeValue(value);
-          printf("%s [%s]: %d, %d\n", name.ToNewCString(), value.ToNewCString(),
+          printf("%s [%s]: %d, %d\n", NS_LossyConvertUCS2toASCII(name).get(),
+                 NS_LossyConvertUCS2toASCII(value).get(),
                  nodeStartsBeforeRange, nodeEndsAfterRange);
 #endif
           PRUint16 nodeType;

@@ -29,6 +29,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsISocketTransportService.h"
 #include "nsIStringStream.h"
 #include "nsMimeTypes.h"
@@ -149,7 +150,7 @@ nsGopherChannel::GetName(PRUnichar* *result)
     name.AppendWithConversion(mHost);
     name.AppendWithConversion(":");
     name.AppendInt(mPort);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

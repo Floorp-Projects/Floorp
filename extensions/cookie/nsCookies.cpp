@@ -47,6 +47,7 @@
 #include "xp_core.h"
 #include "prmem.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -1461,10 +1462,10 @@ COOKIE_Read() {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     memset(new_cookie, 0, sizeof(cookie_CookieStruct));
-    new_cookie->name = name.ToNewCString();
-    new_cookie->cookie = cookie.ToNewCString();
-    new_cookie->host = host.ToNewCString();
-    new_cookie->path = path.ToNewCString();
+    new_cookie->name = ToNewCString(name);
+    new_cookie->cookie = ToNewCString(cookie);
+    new_cookie->host = ToNewCString(host);
+    new_cookie->path = ToNewCString(path);
     if (isDomain.EqualsWithConversion("TRUE")) {
       new_cookie->isDomain = PR_TRUE;
     } else {
@@ -1475,7 +1476,7 @@ COOKIE_Read() {
     } else {
       new_cookie->isSecure = PR_FALSE;
     }
-    char * expiresCString = expires.ToNewCString();
+    char * expiresCString = ToNewCString(expires);
     new_cookie->expires = strtoul(expiresCString, nsnull, 10);
     nsCRT::free(expiresCString);
 

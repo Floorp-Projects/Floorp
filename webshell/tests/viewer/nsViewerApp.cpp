@@ -41,6 +41,7 @@
 #endif
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsXPBaseWindow.h" 
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
@@ -231,8 +232,8 @@ nsTestFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
                                   nsString& aValue)
 {
 #ifdef DEBUG_kmcclusk
-  char *name = aName.ToNewCString();
-  char *value = aValue.ToNewCString();
+  char *name = ToNewCString(aName);
+  char *value = ToNewCString(aValue);
   printf("ProcessValue: name %s value %s\n",  name, value);
   delete [] name;
   delete [] value;
@@ -865,7 +866,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
         PRUint32 size;
 
         mStopAfterTxt->GetText(str, 255, size);
-        char * cStr = str.ToNewCString();
+        char * cStr = ToNewCString(str);
         sscanf(cStr, "%d", &gDebugRobotLoads);
         if (gDebugRobotLoads <= 0) {
           gDebugRobotLoads = 5000;
@@ -1295,7 +1296,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
           PRInt32  inx;
 
           mSiteIndexTxt->GetText(str, 255, size);
-          char * cStr = str.ToNewCString();
+          char * cStr = ToNewCString(str);
           sscanf(cStr, "%d", &inx);
           if (inx >= 0 && inx < gTop100LastPointer) {
             gTop100Pointer = inx;

@@ -28,6 +28,7 @@
 #include "nsNetUtil.h"
 #include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsInstallTrigger.h"
 #include "nsIChromeRegistry.h"
 #include "nsIDirectoryService.h"
@@ -115,7 +116,7 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
             // make sure we have a trailing slash
             escPath += "/";
         }
-        *aURL = escPath.ToNewCString();
+        *aURL = ToNewCString(escPath);
         if (*aURL == nsnull) {
             nsMemory::Free(ePath);
             return NS_ERROR_OUT_OF_MEMORY;

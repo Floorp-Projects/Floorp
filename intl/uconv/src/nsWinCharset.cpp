@@ -43,6 +43,7 @@
 #include "nsUConvDll.h"
 #include "nsIWin32Locale.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 
@@ -128,20 +129,20 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	nsresult result;
   winLocale = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
 	result = winLocale->GetPlatformLocale(&localeAsNSString,&localeAsLCID);
-	if (NS_FAILED(result)) { *_retValue = charset.ToNewUnicode(); return result; }
+	if (NS_FAILED(result)) { *_retValue = ToNewUnicode(charset); return result; }
 
-	if (GetLocaleInfo(localeAsLCID,LOCALE_IDEFAULTANSICODEPAGE,acp_name,sizeof(acp_name))==0) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_FAILURE; }
+	if (GetLocaleInfo(localeAsLCID,LOCALE_IDEFAULTANSICODEPAGE,acp_name,sizeof(acp_name))==0) { *_retValue = ToNewUnicode(charset); return NS_ERROR_FAILURE; }
 
 	//
 	// load property file and convert from LCID->charset
 	//
-	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+	if (!gInfo) { *_retValue = ToNewUnicode(charset); return NS_ERROR_OUT_OF_MEMORY; }
 
      nsAutoString acp_key; acp_key.AssignWithConversion("acp.");
 	 acp_key.AppendWithConversion(acp_name);
 	 result = gInfo->Get(acp_key,charset);
 	
-	 *_retValue = charset.ToNewUnicode();
+	 *_retValue = ToNewUnicode(charset);
 	 return result;
 }
 

@@ -41,6 +41,7 @@
 
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -84,7 +85,7 @@ inPNGEncoder::WritePNG(inIBitmap *aBitmap, const PRUnichar *aURL, PRInt16 aType)
 
   nsAutoString str;
   str.Assign(aURL);
-  FILE *file = fopen(str.ToNewCString(), "wb");
+  FILE *file = fopen(ToNewCString(str), "wb");
   if (file) {
     pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, gPNGErrorHandler, NULL);
     infoStruct = png_create_info_struct(pngStruct);

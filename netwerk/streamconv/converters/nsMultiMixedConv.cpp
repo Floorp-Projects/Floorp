@@ -44,6 +44,7 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIByteArrayInputStream.h"
+#include "nsReadableUtils.h"
 
 
 //
@@ -287,7 +288,7 @@ nsPartChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsPartChannel::GetContentType(char * *aContentType)
 {
-    *aContentType = mContentType.ToNewCString();
+    *aContentType = ToNewCString(mContentType);
     return NS_OK;
 }
 
@@ -859,7 +860,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
             // examine header
             if (headerStr.EqualsIgnoreCase("content-type")) {
-                char *tmpString = headerVal.ToNewCString();
+                char *tmpString = ToNewCString(headerVal);
                 ParseContentType(tmpString);
                 nsCRT::free(tmpString);
             } else if (headerStr.EqualsIgnoreCase("content-length")) {

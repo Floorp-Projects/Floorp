@@ -38,6 +38,7 @@
 
 #include "nsToolbarItemFrame.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 #include "nsWidgetsCID.h"
 
@@ -150,12 +151,12 @@ nsToolbarItemFrame::HandleEvent(nsIPresContext* aPresContext,
       trans->AddDataFlavor(&textPlainFlavor);
       nsString dragText = "Drag Text";
       PRUint32 len = 9; 
-      trans->SetTransferData(&textPlainFlavor, dragText.ToNewCString(), len);   // transferable consumes the data
+      trans->SetTransferData(&textPlainFlavor, ToNewCString(dragText), len);   // transferable consumes the data
 
       trans2->AddDataFlavor(&textPlainFlavor);
       nsString dragText2 = "More Drag Text";
       len = 14; 
-      trans2->SetTransferData(&textPlainFlavor, dragText2.ToNewCString(), len);   // transferable consumes the data
+      trans2->SetTransferData(&textPlainFlavor, ToNewCString(dragText2), len);   // transferable consumes the data
 
       nsCOMPtr<nsISupportsArray> items;
       NS_NewISupportsArray(getter_AddRefs(items));

@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "pratom.h"
 #include "prio.h"
 #include "prprf.h"
@@ -311,7 +312,7 @@ NS_IMETHODIMP
 nsFindComponent::Context::GetSearchString(PRUnichar * *aSearchString) {
     nsresult rv = NS_OK;
     if ( aSearchString ) {
-        *aSearchString = mSearchString.ToNewUnicode();
+        *aSearchString = ToNewUnicode(mSearchString);
         if ( !*aSearchString ) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
@@ -332,7 +333,7 @@ NS_IMETHODIMP
 nsFindComponent::Context::GetReplaceString(PRUnichar * *aReplaceString) {
     nsresult rv = NS_OK;
     if ( aReplaceString ) {
-        *aReplaceString = mReplaceString.ToNewUnicode();
+        *aReplaceString = ToNewUnicode(mReplaceString);
         if ( !*aReplaceString ) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }

@@ -41,6 +41,7 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsAEUtils.h"
 #include "nsAESpyglassSuiteHandler.h"
 
@@ -128,7 +129,7 @@ NS_IMETHODIMP nsDocLoadObserver::Observe(nsISupports* /*aSubject*/,
 
 	// create the descriptor for the URL
 	nsString urlText(someData);
-	char* urlString = urlText.ToNewCString();
+	char* urlString = ToNewCString(urlText);
 
 	StAEDesc url;
 	OSErr err = ::AECreateDesc(typeChar, urlString, urlText.Length(), &url);

@@ -52,6 +52,7 @@
 #include "nsIAccount.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
 
 static NS_DEFINE_CID(kAccountCID, NS_Account_CID);
@@ -129,7 +130,7 @@ AccountServicesImpl::GetAcctConfig(char** AccountList)
 {
 	nsString localVar;
 	mAccount->GetAcctConfig(localVar);
-	*AccountList = PL_strdup(localVar.ToNewCString());
+	*AccountList = ToNewCString(localVar);
 
     return NS_OK;
 }
@@ -139,7 +140,7 @@ AccountServicesImpl::GetModemConfig(char** ModemList)
 {
 	nsString localVar;
 	mAccount->GetModemConfig(localVar);
-	*ModemList = PL_strdup(localVar.ToNewCString());
+	*ModemList = ToNewCString(localVar);
 
     return NS_OK;
 }
@@ -149,7 +150,7 @@ AccountServicesImpl::GetSiteName(char** SiteList)
 {
 	nsString localVar;
 	mAccount->GetSiteName(localVar);
-	*SiteList = PL_strdup(localVar.ToNewCString());
+	*SiteList = ToNewCString(localVar);
 
     return NS_OK;
 }
@@ -159,7 +160,7 @@ AccountServicesImpl::GetPhone(char** PhoneList)
 {
 	nsString localVar;
 	mAccount->GetPhone(localVar);
-	*PhoneList = PL_strdup(localVar.ToNewCString());
+	*PhoneList = ToNewCString(localVar);
 
     return NS_OK;
 }
@@ -176,6 +177,6 @@ AccountServicesImpl::CheckForDun(char** dunlist)
 {
 	nsString localVar;
 	mAccount->CheckForDun(localVar);
-	*dunlist =PL_strdup(localVar.ToNewCString());
+	*dunlist = ToNewCString(localVar);
 	return NS_OK;
 }

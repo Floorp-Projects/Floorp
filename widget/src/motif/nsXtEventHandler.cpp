@@ -45,6 +45,7 @@
 #include "nsCheckButton.h"
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
+#include "nsReadableUtils.h"
 
 #include "stdio.h"
 
@@ -419,7 +420,7 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
   }
 
   if (cbs->reason == XmCR_ACTIVATE) {
-    char* password = data->mPassword.ToNewCString();
+    char* password = ToNewCString(data->mPassword);
     printf ("Password: %s\n", password);
     delete[] password;
     return;

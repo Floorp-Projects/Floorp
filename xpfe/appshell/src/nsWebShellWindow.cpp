@@ -52,6 +52,7 @@
 #include "nsNetCID.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
+#include "nsReadableUtils.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsEscape.h"
@@ -745,13 +746,13 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
         pnsMenuItem->AddMenuListener(listener);
         
 #ifdef DEBUG_MENUSDEL
-        printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+        printf("Adding menu listener to [%s]\n", NS_LossyConvertUCS2toASCII(menuitemName).get());
 #endif
       } 
 #ifdef DEBUG_MENUSDEL
       else 
       {
-        printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+        printf("*** NOT Adding menu listener to [%s]\n", NS_LossyConvertUCS2toASCII(menuitemName).get());
       }
 #endif
       NS_RELEASE(icmd);
@@ -771,7 +772,7 @@ void nsWebShellWindow::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -825,7 +826,7 @@ void nsWebShellWindow::LoadSubMenu(
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
+        printf("Type [%s] %d\n", NS_LossyConvertUCS2toASCII(menuitemNodeType).get(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
         if (menuitemNodeType.EqualsWithConversion("menuitem")) {
@@ -972,7 +973,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
 
 #ifdef DEBUG_rods
-              printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+              printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
 #endif
               CreateMenu(pnsMenuBar, menuNode, menuName);
             } 
@@ -1296,7 +1297,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, n
   while (node) {
     nsString name;
     node->GetNodeName(name);
-    //printf("FindNamedDOMNode[%s]==[%s] %d == %d\n", aName.ToNewCString(), name.ToNewCString(), aCount+1, aEndCount); //this leaks
+    //printf("FindNamedDOMNode[%s]==[%s] %d == %d\n", NS_LossyConvertUCS2toASCII(aName).get(), NS_LossyConvertUCS2toASCII(name).get(), aCount+1, aEndCount);
     if (name.Equals(aName)) {
       aCount++;
       if (aCount == aEndCount)
@@ -1418,7 +1419,7 @@ void nsWebShellWindow::LoadContentAreas() {
       // see if we have a webshell with a matching contentAreaID
       rv = GetContentShellById(contentAreaID, &contentShell);
       if (NS_SUCCEEDED(rv)) {
-        urlChar = contentURL.ToNewCString();
+        urlChar = ToNewCString(contentURL);
         if (urlChar) {
           nsUnescape(urlChar);
           contentURL.AssignWithConversion(urlChar);

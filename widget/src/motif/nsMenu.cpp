@@ -46,6 +46,7 @@
 #include "nsIMenuListener.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsCOMPtr.h"
@@ -164,7 +165,7 @@ NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
 
   mLabel = aLabel;
 
-  char * labelStr = mLabel.ToNewCString();
+  char * labelStr = ToNewCString(mLabel);
 
   char wName[512];
 
@@ -373,7 +374,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("label"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
   
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -412,7 +413,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
         menuitemElement->GetNodeName(menuitemNodeType);
     
 #ifdef DEBUG_saari
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
+        printf("Type [%s] %d\n", NS_LossyConvertUCS2toASCII(menuitemNodeType).get(), menuitemNodeType.Equals("menuseparator"));
 #endif
     
         if (menuitemNodeType.Equals("menuitem")) {

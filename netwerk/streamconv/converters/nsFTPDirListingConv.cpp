@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
@@ -184,7 +185,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         convertedData.Length(), convertedData.get()) );
 #else
-    char *unescData = convertedData.ToNewCString();
+    char *unescData = ToNewCString(convertedData);
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", convertedData.Length(), unescData);
     nsMemory::Free(unescData);
@@ -283,7 +284,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         // combine the buffers so we don't lose any data.
         mBuffer.Append(buffer);
         nsMemory::Free(buffer);
-        buffer = mBuffer.ToNewCString();
+        buffer = ToNewCString(mBuffer);
         mBuffer.Truncate();
     }
 
@@ -325,7 +326,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         indexFormat.Length(), indexFormat.get()) );
 #else
-    char *unescData = indexFormat.ToNewCString();
+    char *unescData = ToNewCString(indexFormat);
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
     nsMemory::Free(unescData);

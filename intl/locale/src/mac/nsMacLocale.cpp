@@ -39,6 +39,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsILocale.h"
 #include "nsMacLocale.h"
 #include "nsLocaleCID.h"
@@ -235,7 +236,7 @@ nsMacLocale::GetPlatformLocale(const nsString* locale,short* scriptCode, short* 
   	char  country_code[3];
   	char  lang_code[3];
   	char  region_code[3];
-	char* xp_locale = locale->ToNewCString();
+	char* xp_locale = ToNewCString(*locale);
 	bool  validCountryFound;
 	int	i;
 	

@@ -40,6 +40,7 @@
  */
 
 #include "nsConsoleMessage.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage);
 
@@ -58,7 +59,7 @@ nsConsoleMessage::~nsConsoleMessage() {};
 
 NS_IMETHODIMP
 nsConsoleMessage::GetMessage(PRUnichar **result) {
-    *result = mMessage.ToNewUnicode();
+    *result = ToNewUnicode(mMessage);
 
     return NS_OK;
 }
@@ -66,7 +67,7 @@ nsConsoleMessage::GetMessage(PRUnichar **result) {
 //  NS_IMETHODIMP
 //  nsConsoleMessage::Init(const PRUnichar *message) {
 //      nsAutoString newMessage(message);
-//      mMessage = newMessage.ToNewUnicode();
+//      mMessage = ToNewUnicode(newMessage);
 //      return NS_OK;
 //  }
 

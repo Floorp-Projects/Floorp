@@ -56,6 +56,7 @@
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
@@ -4862,7 +4863,7 @@ nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   }
   for (int i = 0; i < count; ++i) {
     nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
-    PRUnichar* str = font->name.ToNewUnicode();
+    PRUnichar* str = ToNewUnicode(font->name);
     if (!str) {
       for (i = i - 1; i >= 0; --i) {
         nsMemory::Free(array[i]);
@@ -4960,7 +4961,7 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
     nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
     if (SignatureMatchesLangGroup(&font->signature, aLangGroup) &&
         FontMatchesGenericType(font, aGeneric, aLangGroup)) {
-      PRUnichar* str = font->name.ToNewUnicode();
+      PRUnichar* str = ToNewUnicode(font->name);
       if (!str) {
         for (j = j - 1; j >= 0; --j) {
           nsMemory::Free(array[j]);

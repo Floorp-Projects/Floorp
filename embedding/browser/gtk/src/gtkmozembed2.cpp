@@ -1078,7 +1078,7 @@ gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed)
   embedPrivate = (EmbedPrivate *)embed->data;
                    
   if (embedPrivate->mWindow)
-    retval = embedPrivate->mWindow->mTitle.ToNewUnicode();
+    retval = ToNewUnicode(embedPrivate->mWindow->mTitle);
                    
   return retval;
 }

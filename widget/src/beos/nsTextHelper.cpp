@@ -40,6 +40,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 #include <TextView.h>
 
@@ -80,7 +81,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 	mText = aText;
 	
 	const char *text;
-	text = aText.ToNewCString();
+	text = ToNewCString(aText);
 	if(mTextView && mTextView->LockLooper())
 	{
 		mTextView->SetText(text);
@@ -95,7 +96,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 {
 	const char *text;
-	text = aText.ToNewCString();
+	text = ToNewCString(aText);
 	if(mTextView)
 	{
 		if(mTextView->LockLooper())
@@ -107,7 +108,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
 			mTextView->Insert(aStartPos, text, aActualSize);
 	}
 	delete [] text;
-	mText.Insert(aText.ToNewUnicode(), aStartPos, aText.Length());
+	mText.Insert(ToNewUnicode(aText), aStartPos, aText.Length());
 	return NS_OK;
 }
 

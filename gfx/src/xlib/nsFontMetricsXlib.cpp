@@ -4146,7 +4146,7 @@ EnumerateNode(void* aElement, void* aData)
   }
   PRUnichar** array = info->mArray;
   int j = info->mIndex;
-  PRUnichar* str = node->mName.ToNewUnicode();
+  PRUnichar* str = ToNewUnicode(node->mName);
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
       nsMemory::Free(array[j]);

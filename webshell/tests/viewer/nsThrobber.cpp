@@ -49,6 +49,7 @@
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 #include "nsIImage.h"
+#include "nsReadableUtils.h"
 
 
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
@@ -365,7 +366,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   }
   mTimer->Init(ThrobTimerCallback, this, 33, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
   
-  char * mask = aFileNameMask.ToNewCString();
+  char * mask = ToNewCString(aFileNameMask);
   for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)
   {
     PR_snprintf(url, sizeof(url), mask, cnt);

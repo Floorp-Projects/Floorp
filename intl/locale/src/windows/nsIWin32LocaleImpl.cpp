@@ -39,6 +39,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsILocale.h"
 #include "nsIWin32LocaleImpl.h"
 #include "nsLocaleCID.h"
@@ -431,7 +432,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 	char		region_code[3];
 	int			i,j;
 
-	locale_string = locale->ToNewCString();
+	locale_string = ToNewCString(*locale);
 	if (locale_string!=NULL)
 	{	
 		if (!ParseLocaleString(locale_string,language_code,country_code,region_code)) {

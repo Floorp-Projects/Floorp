@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsFilePicker.h"
@@ -173,9 +174,9 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
   {
     // we need *.{htm, html, xul, etc}
 
-    char *filters = aFilters[i].ToNewCString();
+    char *filters = ToNewCString(aFilters[i]);
 #ifdef DEBUG
-    char *foo = aTitles[i].ToNewCString();
+    char *foo = ToNewCString(aTitles[i]);
     printf("%20s %s\n", foo, filters);
     nsCRT::free(foo);
 #endif

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsHTMLUtils.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement.h"
 #include "nsIDOMEventReceiver.h"
@@ -773,7 +774,7 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
     }
     else {
       // Absolute URL is same as relative URL.
-      aBuf = relURLSpec.ToNewUTF8String();
+      aBuf = ToNewUTF8String(relURLSpec);
     }
   }
   else {

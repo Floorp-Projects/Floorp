@@ -24,6 +24,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 #define DEFAULT_IMAGE_SIZE          16
@@ -360,7 +361,7 @@ nsMozIconURI::SetImageSize(PRUint32 aImageSize)  // measured by # of pixels in a
 NS_IMETHODIMP
 nsMozIconURI::GetContentType(char ** aContentType)  
 {
-  *aContentType = mContentType.ToNewCString();
+  *aContentType = ToNewCString(mContentType);
   return NS_OK;
 }
 
@@ -393,7 +394,7 @@ nsMozIconURI::GetFileExtension(char ** aFileExtension)
         tempFileExt = ".";
         tempFileExt.Append(fileExt);
 
-        *aFileExtension = tempFileExt.ToNewCString();
+        *aFileExtension = ToNewCString(tempFileExt);
         return NS_OK;
       }
     }

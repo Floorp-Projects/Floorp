@@ -39,6 +39,7 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsPrimitiveHelpers.h"
 
 #include "nsTextFormatter.h"

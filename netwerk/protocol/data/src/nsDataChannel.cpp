@@ -49,6 +49,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -170,7 +171,7 @@ nsDataChannel::ParseData() {
         // it's ascii encoded binary, don't let any spaces in
         nsCAutoString dataBuf(comma+1);
         dataBuf.StripWhitespace();
-        dataBuffer = dataBuf.ToNewCString();
+        dataBuffer = ToNewCString(dataBuf);
         cleanup = PR_TRUE;
     }
     
@@ -375,7 +376,7 @@ nsDataChannel::GetContentType(char* *aContentType) {
     if (!aContentType) return NS_ERROR_NULL_POINTER;
 
     if (mContentType.Length()) {
-        *aContentType = mContentType.ToNewCString();
+        *aContentType = ToNewCString(mContentType);
         if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
     } else {
         NS_ASSERTION(0, "data protocol should have content type by now");

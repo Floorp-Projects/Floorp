@@ -42,6 +42,7 @@
 #include "rdf.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
 
@@ -988,11 +989,9 @@ nsRDFDOMDataSource::createLiteral(nsString& str, nsIRDFNode **aResult)
   nsresult rv;
   nsCOMPtr<nsIRDFLiteral> literal;
     
-  PRUnichar* uniStr = str.ToNewUnicode();
-  rv = getRDFService()->GetLiteral(uniStr,
+  rv = getRDFService()->GetLiteral(str.get(),
                                    getter_AddRefs(literal));
-  nsMemory::Free(uniStr);
-    
+
   *aResult = literal;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
@@ -1266,7 +1265,7 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindowInternal *window) {
   }
 #endif
 
-  printf("Got root frame: %s\n", framename.ToNewCString());
+  printf("Got root frame: %s\n", NS_LossyConvertUCS2toASCII(framename).get());
   return rv;
 }
 

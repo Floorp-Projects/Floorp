@@ -55,6 +55,7 @@
 #include "nsDateTimeFormatCID.h"
 
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 
@@ -263,7 +264,7 @@ nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
   if (mShortDesc.IsEmpty())
     *aText = nsnull;
   else
-    *aText = mShortDesc.ToNewUnicode();
+    *aText = ToNewUnicode(mShortDesc);
   return NS_OK;
 }
 
@@ -957,18 +958,13 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
     {
-      char *url = SSL_RevealURL(sslSocket);
-      NS_ASSERTION(url, "could not find valid URL in ssl socket");
-      nsAutoString autoURL = NS_ConvertASCIItoUCS2(url);
-      PRUnichar *autoUnichar = autoURL.ToNewUnicode();
-      NS_ASSERTION(autoUnichar, "Could not allocate new PRUnichar");
-      rv = badCertHandler->MismatchDomain(csi, autoUnichar,
+      nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
+      NS_ASSERTION(url.get(), "could not find valid URL in ssl socket");
+      rv = badCertHandler->MismatchDomain(csi, NS_ConvertASCIItoUCS2(url).get(),
                                           callBackCert, &retVal);
-      Recycle(autoUnichar);
       if (NS_SUCCEEDED(rv) && retVal) {
         rv = CERT_AddOKDomainName(peerCert, url);
       }
-      PR_Free(url);
     }
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
@@ -981,18 +977,13 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     break;
   case SEC_ERROR_CRL_EXPIRED:
     {
-      char *url = SSL_RevealURL(sslSocket);
+      nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url, "could not find valid URL in ssl socket");
-      nsAutoString autoURL = NS_ConvertASCIItoUCS2(url);
-      PRUnichar *autoUnichar = autoURL.ToNewUnicode();
-      NS_ASSERTION(autoUnichar, "Could not allocate new PRUnichar");
-      rv = badCertHandler->CrlNextupdate(csi, autoUnichar, callBackCert);
-      Recycle(autoUnichar);
+      rv = badCertHandler->CrlNextupdate(csi, NS_ConvertASCIItoUCS2(url).get(), callBackCert);
       if (NS_SUCCEEDED(rv) && retVal) {
-        rv = CERT_AddOKDomainName(peerCert, url);
+        rv = CERT_AddOKDomainName(peerCert, url.get());
       }
       retVal = PR_FALSE;
-      PR_Free(url);
     }
     break;
   default:
@@ -1648,9 +1639,6 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     /* user selects a cert to present */
     int i;
     nsIClientAuthDialogs *dialogs = NULL;
-    PRUnichar *cn = NULL;
-    PRUnichar *org = NULL;
-    PRUnichar *issuer = NULL;
     PRInt32 selectedIndex = -1;
     PRUnichar **certNicknameList = NULL;
     PRUnichar **certDetailsList = NULL;
@@ -1721,9 +1709,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     }
 
     /* Get CN and O of the subject and O of the issuer */
-    cn = NS_ConvertUTF8toUCS2(CERT_GetCommonName(&serverCert->subject)).ToNewUnicode();
-    org = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->subject)).ToNewUnicode();
-    issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
+    NS_ConvertUTF8toUCS2 cn(CERT_GetCommonName(&serverCert->subject));
+    NS_ConvertUTF8toUCS2 org(CERT_GetOrgName(&serverCert->subject));
+    NS_ConvertUTF8toUCS2 issuer(CERT_GetOrgName(&serverCert->issuer));
 
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
@@ -1873,8 +1861,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
             Subject: $issuerName
         */
 
-        certNicknameList[i] = nickWithSerial.ToNewUnicode();
-        certDetailsList[i] = str.ToNewUnicode();
+        certNicknameList[i] = ToNewUnicode(nickWithSerial);
+        certDetailsList[i] = ToNewUnicode(str);
       }
 
       NS_RELEASE(tempCert);
@@ -1885,7 +1873,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     if (NS_FAILED(rv)) goto loser;
 
-    rv = dialogs->ChooseCertificate(info, cn, org, issuer, 
+    rv = dialogs->ChooseCertificate(info, cn.get(), org.get(), issuer.get(), 
       (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
       nicknames->numnicknames, &selectedIndex, &canceled);
 

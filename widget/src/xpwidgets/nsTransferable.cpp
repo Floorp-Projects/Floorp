@@ -49,6 +49,7 @@ Notes to self:
  
 #include "nsTransferable.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsIFormatConverter.h"
 #include "nsVoidArray.h"
@@ -402,7 +403,7 @@ nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32
   for ( PRInt32 i=0; i < mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if (data->IsDataAvilable()) {
-      *aFlavor = data->GetFlavor().ToNewCString();
+      *aFlavor = ToNewCString(data->GetFlavor());
       data->GetData(aData, aDataLen);
       return NS_OK;
     }

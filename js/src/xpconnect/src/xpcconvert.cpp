@@ -38,6 +38,7 @@
 /* Data conversion between native and JavaScript types. */
 
 #include "xpcprivate.h"
+#include "nsReadableUtils.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1119,24 +1120,13 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
             bestMessage = NS_LITERAL_STRING("JavaScript Error");
         }
 
-        const PRUnichar *newMessage = bestMessage.ToNewUnicode();
-        const PRUnichar *newSourceName = nsnull;
-        if(report->filename)
-        {
-            nsAutoString newSourceNameStr;
-            newSourceNameStr.AssignWithConversion(report->filename);
-            newSourceName = newSourceNameStr.ToNewUnicode();
-        }
-
         data = new nsScriptError();
         NS_ADDREF(data);
-        data->Init(newMessage, newSourceName,
+        data->Init(bestMessage.get(),
+                   NS_ConvertASCIItoUCS2(report->filename).get(),
                    (const PRUnichar *)report->uclinebuf, report->lineno,
                    report->uctokenptr - report->uclinebuf, report->flags,
                    "XPConnect JavaScript");
-        nsMemory::Free((void *)newMessage);
-        if(nsnull != newSourceName)
-            nsMemory::Free((void *) newSourceName);
     }
     else
         data = nsnull;

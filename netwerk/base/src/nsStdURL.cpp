@@ -44,6 +44,7 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
@@ -646,7 +647,7 @@ nsStdURL::GetSpec(char **o_Spec)
     {
         finalSpec += ePath;
     }
-    *o_Spec = finalSpec.ToNewCString();
+    *o_Spec = ToNewCString(finalSpec);
     CRTFREEIF(ePath);
 
     return (*o_Spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
@@ -682,7 +683,7 @@ nsStdURL::GetPrePath(char **o_Spec)
             portBuffer = 0;
         }
     }
-    *o_Spec = finalSpec.ToNewCString();
+    *o_Spec = ToNewCString(finalSpec);
 
     return (*o_Spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
@@ -734,7 +735,7 @@ nsStdURL::GetPreHost(char **o_PreHost)
         if (NS_FAILED(rv))
             return rv;
 
-        *o_PreHost = temp.ToNewCString();
+        *o_PreHost = ToNewCString(temp);
         if (!*o_PreHost)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -762,7 +763,7 @@ nsStdURL::SetDirectory(const char* i_Directory)
     }
 
     CRTFREEIF(mDirectory);
-    mDirectory = dir.ToNewCString();
+    mDirectory = ToNewCString(dir);
     if (!mDirectory)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -787,7 +788,7 @@ nsStdURL::SetFileName(const char* i_FileName)
     nsresult status = AppendString(dir,mDirectory,ESCAPED,
                                    esc_Directory);
     dir += i_FileName;
-    char *eNewPath = dir.ToNewCString();
+    char *eNewPath = ToNewCString(dir);
     if (!eNewPath) 
         return NS_ERROR_OUT_OF_MEMORY;
     status = SetPath(eNewPath);
@@ -854,7 +855,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         }
 
         finalSpec += relativePath;
-        *result = finalSpec.ToNewCString();
+        *result = ToNewCString(finalSpec);
         if (*result) {
             char* path = PL_strstr(*result,"://");
             if (path) {
@@ -940,7 +941,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
             finalSpec += (char*)start;
       }
     }
-    *result = finalSpec.ToNewCString();
+    *result = ToNewCString(finalSpec);
 
     if (*result) {
         char* path = PL_strstr(*result,"://");
@@ -992,7 +993,7 @@ nsStdURL::GetPath(char** o_Path)
         if (NS_FAILED(rv))
             return rv;
     }
-    *o_Path = path.ToNewCString();
+    *o_Path = ToNewCString(path);
     return (*o_Path ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -1005,7 +1006,7 @@ nsStdURL::GetDirectory(char** o_Directory)
                       esc_Directory);
     if (NS_FAILED(rv))
         return rv;
-    *o_Directory = directory.ToNewCString();
+    *o_Directory = ToNewCString(directory);
     return (*o_Directory ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -1120,7 +1121,7 @@ nsStdURL::GetFilePath(char **o_DirFile)
     if (NS_FAILED(rv))
         return rv;
 
-    *o_DirFile = temp.ToNewCString();
+    *o_DirFile = ToNewCString(temp);
     if (!*o_DirFile)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -1140,7 +1141,7 @@ nsStdURL::GetFileName(char **o_FileName)
         if (NS_FAILED(rv))
             return rv;
 
-        *o_FileName = temp.ToNewCString();
+        *o_FileName = ToNewCString(temp);
         if (!*o_FileName)
             return NS_ERROR_OUT_OF_MEMORY;
     } else {

@@ -39,6 +39,7 @@
 #include "nsPrintOptionsImpl.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
+#include "nsReadableUtils.h"
 
 // For Prefs
 #include "nsIPref.h"
@@ -435,7 +436,7 @@ NS_IMETHODIMP nsPrintOptions::SetOrientation(PRInt32 aOrientation)
 NS_IMETHODIMP nsPrintOptions::GetPrintCommand(PRUnichar * *aPrintCommand)
 {
   //NS_ENSURE_ARG_POINTER(aPrintCommand);
-  *aPrintCommand = mPrintCommand.ToNewUnicode();
+  *aPrintCommand = ToNewUnicode(mPrintCommand);
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintOptions::SetPrintCommand(const PRUnichar * aPrintCommand)
@@ -461,7 +462,7 @@ NS_IMETHODIMP nsPrintOptions::SetPrintToFile(PRBool aPrintToFile)
 NS_IMETHODIMP nsPrintOptions::GetToFileName(PRUnichar * *aToFileName)
 {
   //NS_ENSURE_ARG_POINTER(aToFileName);
-  *aToFileName = mToFileName.ToNewUnicode();
+  *aToFileName = ToNewUnicode(mToFileName);
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintOptions::SetToFileName(const PRUnichar * aToFileName)
@@ -551,7 +552,7 @@ NS_IMETHODIMP nsPrintOptions::SetPrintRange(PRInt16 aPrintRange)
 NS_IMETHODIMP nsPrintOptions::GetTitle(PRUnichar * *aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
-  *aTitle = mTitle.ToNewUnicode();
+  *aTitle = ToNewUnicode(mTitle);
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintOptions::SetTitle(const PRUnichar * aTitle)
@@ -565,7 +566,7 @@ NS_IMETHODIMP nsPrintOptions::SetTitle(const PRUnichar * aTitle)
 NS_IMETHODIMP nsPrintOptions::GetDocURL(PRUnichar * *aDocURL)
 {
   NS_ENSURE_ARG_POINTER(aDocURL);
-  *aDocURL = mURL.ToNewUnicode();
+  *aDocURL = ToNewUnicode(mURL);
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
@@ -585,15 +586,15 @@ nsPrintOptions::GetMarginStrs(PRUnichar * *aTitle,
   *aTitle = nsnull;
   if (aType == eHeader) {
     switch (aJust) {
-      case kJustLeft:   *aTitle = mHeaderStrs[0].ToNewUnicode();break;
-      case kJustCenter: *aTitle = mHeaderStrs[1].ToNewUnicode();break;
-      case kJustRight:  *aTitle = mHeaderStrs[2].ToNewUnicode();break;
+      case kJustLeft:   *aTitle = ToNewUnicode(mHeaderStrs[0]);break;
+      case kJustCenter: *aTitle = ToNewUnicode(mHeaderStrs[1]);break;
+      case kJustRight:  *aTitle = ToNewUnicode(mHeaderStrs[2]);break;
     } //switch
   } else {
     switch (aJust) {
-      case kJustLeft:   *aTitle = mFooterStrs[0].ToNewUnicode();break;
-      case kJustCenter: *aTitle = mFooterStrs[1].ToNewUnicode();break;
-      case kJustRight:  *aTitle = mFooterStrs[2].ToNewUnicode();break;
+      case kJustLeft:   *aTitle = ToNewUnicode(mFooterStrs[0]);break;
+      case kJustCenter: *aTitle = ToNewUnicode(mFooterStrs[1]);break;
+      case kJustRight:  *aTitle = ToNewUnicode(mFooterStrs[2]);break;
     } //switch
   }
   return NS_OK;
@@ -761,7 +762,7 @@ nsresult nsPrintOptions::WritePrefString(nsIPref *    aPref,
   NS_ENSURE_ARG_POINTER(aPref);
   NS_ENSURE_ARG_POINTER(aPrefId);
 
-  PRUnichar * str = aString.ToNewUnicode();
+  PRUnichar * str = ToNewUnicode(aString);
   nsresult rv = aPref->SetUnicharPref(aPrefId, str);
   nsMemory::Free(str);
 
@@ -817,7 +818,7 @@ void nsPrintOptions::WriteInchesFromTwipsPref(nsIPref *    aPref,
   double inches = NS_TWIPS_TO_INCHES(aTwips);
   nsAutoString inchesStr;
   inchesStr.AppendFloat(inches);
-  char * str = inchesStr.ToNewCString();
+  char * str = ToNewCString(inchesStr);
   if (str) {
     aPref->SetCharPref(aPrefId, str);
   } else {

@@ -45,6 +45,7 @@
 #include "nsIComponentManager.h"
 #include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
+#include "nsReadableUtils.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt;
@@ -129,12 +130,12 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	
 	nsresult rv;
   pMacLocale = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &rv);
-	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+	if (NS_FAILED(rv)) { *_retValue = ToNewUnicode(charset); return rv; }
 	
 	rv = pMacLocale->GetPlatformLocale(&localeAsString,&script,&language,&region);
-	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
+	if (NS_FAILED(rv)) { *_retValue = ToNewUnicode(charset); return rv; }
 	
-	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+	if (!gInfo) { *_retValue = ToNewUnicode(charset); return NS_ERROR_OUT_OF_MEMORY; }
 	
 	nsAutoString locale_key; locale_key.AssignWithConversion("region.");
 	locale_key.AppendInt(region,10);
@@ -146,7 +147,7 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 		rv = gInfo->Get(locale_key,charset);
 		if (NS_FAILED(rv)) { charset.AssignWithConversion("x-mac-roman");}
 	}
-	*_retValue = charset.ToNewUnicode();	
+	*_retValue = ToNewUnicode(charset);	
 	return rv;
 }
 

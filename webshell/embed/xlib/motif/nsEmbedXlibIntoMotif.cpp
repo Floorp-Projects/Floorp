@@ -6,6 +6,7 @@
 #include "EmbedMozilla.h"
 
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsIXlibWindowService.h"
 #include "nsIUnixToolkitService.h"
@@ -252,7 +253,7 @@ int main(int argc, char **argv)
   char *url = "http://www.slashdot.org/";
 
   nsString URL(url);
-  PRUnichar *u_url = URL.ToNewUnicode();
+  PRUnichar *u_url = ToNewUnicode(URL);
   sgWebShell->LoadURL(u_url);
   
   XtPopup(sgTopLevel,XtGrabNone);

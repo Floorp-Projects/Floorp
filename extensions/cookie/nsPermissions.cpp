@@ -43,6 +43,7 @@
 #include "nsPermissions.h"
 #include "nsUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIFileSpec.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
@@ -526,7 +527,7 @@ PERMISSION_Read() {
         }
       } else {
         if (!permissionString.IsEmpty()) {
-          rv = Permission_AddHost(host.ToNewCString(), permission, type, PR_FALSE);
+          rv = Permission_AddHost(ToNewCString(host), permission, type, PR_FALSE);
           if (NS_FAILED(rv)) {
             strm.close();
             return rv;

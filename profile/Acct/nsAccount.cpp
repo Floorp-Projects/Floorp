@@ -55,6 +55,7 @@
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 //#include "nsIFileLocator.h"
 //#include "nsFileLocations.h"
 //#include "nsEscape.h"
@@ -344,12 +345,12 @@ int nsAccount::IterateDirectoryChildren(nsFileSpec& startChild)
 
 int nsAccount::GetNCIValues(nsString MiddleValue)
 {
-	  nsresult ret;
+  nsresult ret;
 
   nsIInputStream* in = nsnull;
-	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
-	Trial = Trial + MiddleValue;
-	printf("this is the trial value %s \n", Trial.ToNewCString());
+  nsAutoString Trial(NS_LITERAL_STRING("resource:/res/acct/NCI_Dir/") +
+                     MiddleValue);
+  printf("this is the trial value %s \n", NS_LossyConvertUCS2toASCII(Trial).get());
   nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
@@ -392,11 +393,10 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 
 	printf("Failed to return the Get property \n");
     }
-	PL_strcpy(IspLocation[LocCount], v.ToNewCString());
 
-	char* lvalue = v.ToNewCString();
+	PL_strcpy(IspLocation[LocCount], v.get());
+
       cout << "the value is " << IspLocation[LocCount] << "." << endl;
-      delete[] lvalue;
 	LocCount++;
 
     sprintf(name, "%s", "Phone");
@@ -406,8 +406,8 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 
       	printf("Failed to return the Get property \n");
     }
-	PL_strcpy(IspPhone[PhoneCount], v.ToNewCString());
-	char* value = v.ToNewCString();
+	char* value = ToNewCString(v);
+	PL_strcpy(IspPhone[PhoneCount], value);
 //    if (value) {
       cout << "the value is " << IspPhone[PhoneCount] << "." << endl;
 //	  printf ("this is the %d and its value \n ",ind);
@@ -431,7 +431,7 @@ int nsAccount::GetConfigValues(nsString fileName)
   nsIInputStream* in = nsnull;
 	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
 	Trial = Trial + fileName;
-	printf("this is the trial value %s \n", Trial.ToNewCString());
+	printf("this is the trial value %s \n", NS_LossyConvertUCS2toASCII(Trial).get());
   nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
@@ -476,7 +476,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	printf("Failed to return the Get property \n");
     }
 
-	PL_strcpy(domainname, v.ToNewCString());
+	PL_strcpy(domainname, ToNewCString(v));
 
     sprintf(name, "%s", "DNSAddress");
     ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
@@ -485,7 +485,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 
       	printf("Failed to return the Get property \n");
     }
-	PL_strcpy(dnsp, v.ToNewCString());
+	PL_strcpy(dnsp, ToNewCString(v));
 
     sprintf(name, "%s", "DNSAddress2");
     ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
@@ -494,7 +494,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 
       	printf("Failed to return the Get property \n");
     }
-	PL_strcpy(dnss, v.ToNewCString());
+	PL_strcpy(dnss, ToNewCString(v));
 
 			printf (" This is the dnsp name %s \n",dnsp);
 			printf (" This is the dnss name %s \n",dnss);
@@ -639,7 +639,7 @@ NS_IMETHODIMP nsAccount::GetModemConfig(nsString& ModemList)
 //	strcpy( returnData, (const char*)str ); 
 //	returnData = modemResults[0];
 //	returnData = tmp;
-	printf("this is the modem inside the modemconfig %s \n", ModemList.ToNewCString());
+	printf("this is the modem inside the modemconfig %s \n", NS_LossyConvertUCS2toASCII(ModemList).get());
 	delete []modemResults;
 
 
@@ -692,7 +692,7 @@ NS_IMETHODIMP nsAccount::GetAcctConfig(nsString& AccountList)
 				AccountList.AppendWithConversion(gNCIInfo[i]);
 			}
 
-//			printf("this is the acct strings %s\n",AccountList.ToNewCString());
+//			printf("this is the acct strings %s\n", NS_LossyConvertUCS2toASCII(AccountList).get());
 			delete []connectionNames;
 		}
 	}

@@ -41,6 +41,7 @@
 #include "nsRenderingContextQT.h"
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
@@ -220,8 +221,8 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
 
 	  cmdStr = command;
 	  printFileStr = printfile;
-	  char *pCmdStr = cmdStr.ToNewCString();
-	  char *pPrintFileStr = printFileStr.ToNewCString();
+	  char *pCmdStr = ToNewCString(cmdStr);
+	  char *pPrintFileStr = ToNewCString(printFileStr);
 	  sprintf(mPrData.command,pCmdStr);
 	  sprintf(mPrData.path,pPrintFileStr);
 	  nsMemory::Free(pCmdStr);

@@ -43,6 +43,7 @@
 #include "nsLocalFileMac.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include <TextUtils.h>
 #include "nsColor.h"
@@ -591,7 +592,7 @@ NS_IMETHODIMP nsInternetConfigService::GetString(PRUint32 inKey, char **value)
 
     // Buffer is a Pascal string; convert it to a c-string
     nsCString temp( &buffer[1], buffer[0] );
-    *value = temp.ToNewCString();
+    *value = ToNewCString(temp);
   }
 
   return result;

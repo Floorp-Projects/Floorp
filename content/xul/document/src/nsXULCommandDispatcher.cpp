@@ -66,6 +66,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -321,7 +322,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
 
 #if 0
   {
-    char*   actionString = aEventName.ToNewCString();
+    char*   actionString = ToNewCString(aEventName);
     printf("Doing UpdateCommands(\"%s\")\n", actionString);
     free(actionString);    
   }

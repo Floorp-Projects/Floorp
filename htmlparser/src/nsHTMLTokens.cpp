@@ -2126,7 +2126,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
  *  @return  
  */
 void CEntityToken::DebugDumpSource(nsOutputStream& out) {
-  char* cp=mTextValue.ToNewCString();
+  char* cp = ToNewCString(mTextValue);
   out << "&" << *cp;
   delete[] cp;
 }
