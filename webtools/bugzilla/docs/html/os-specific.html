@@ -357,6 +357,86 @@ CLASS="programlisting"
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="section"
+><H4
+CLASS="section"
+><A
+NAME="win32-code-bugmail"
+></A
+>4.3.1.3.2. Changes to <TT
+CLASS="filename"
+>BugMail.pm</TT
+></H4
+><P
+>To make bug e-mail work on Win32 (until
+          <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=84876"
+TARGET="_top"
+>bug
+          84876</A
+> lands), the
+          simplest way is to have Net::SMTP installed and change this (in
+          <TT
+CLASS="filename"
+>Bugzilla/BugMail.pm</TT
+>):</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
+  die "Can't open sendmail";
+
+print SENDMAIL trim($msg) . "\n";
+close SENDMAIL;
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>to</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;use Net::SMTP;
+$smtp_server = 'smtp.mycompany.com';  # change this
+
+# Use die on error, so that the mail will be in the 'unsent mails' and
+# can be sent from the sanity check page.
+my $smtp = Net::SMTP-&#62;new($smtp_server) ||
+  die 'Cannot connect to server \'$smtp_server\'';
+
+$smtp-&#62;mail('bugzilla-daemon@mycompany.com');  # change this
+$smtp-&#62;to($person);
+$smtp-&#62;data();
+$smtp-&#62;datasend($msg);
+$smtp-&#62;dataend();
+$smtp-&#62;quit;
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>Don't forget to change the name of your SMTP server and the
+          domain of the sending e-mail address (after the '@') in the above
+          lines of code.</P
+></DIV
 ></DIV
 ><DIV
 CLASS="section"

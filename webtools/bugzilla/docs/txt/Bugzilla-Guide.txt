@@ -1451,6 +1451,37 @@ my $webservergid = getgrnam($my_webservergroup)
 my $webservergid = '8'
      _________________________________________________________________
 
+4.3.1.3.2. Changes to BugMail.pm
+
+   To make bug e-mail work on Win32 (until bug 84876 lands), the simplest
+   way is to have Net::SMTP installed and change this (in
+   Bugzilla/BugMail.pm):
+open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
+  die "Can't open sendmail";
+
+print SENDMAIL trim($msg) . "\n";
+close SENDMAIL;
+
+   to
+use Net::SMTP;
+$smtp_server = 'smtp.mycompany.com';  # change this
+
+# Use die on error, so that the mail will be in the 'unsent mails' and
+# can be sent from the sanity check page.
+my $smtp = Net::SMTP->new($smtp_server) ||
+  die 'Cannot connect to server \'$smtp_server\'';
+
+$smtp->mail('bugzilla-daemon@mycompany.com');  # change this
+$smtp->to($person);
+$smtp->data();
+$smtp->datasend($msg);
+$smtp->dataend();
+$smtp->quit;
+
+   Don't forget to change the name of your SMTP server and the domain of
+   the sending e-mail address (after the '@') in the above lines of code.
+     _________________________________________________________________
+
 4.3.1.4. Serving the web pages
 
    As is the case on Unix based systems, any web server should be able to
@@ -2596,7 +2627,7 @@ skip-networking
    positive check, which returns 1 (allow) if certain conditions are
    true, or a negative check, which returns 0 (deny.) E.g.:
     if ($field eq "qacontact") {
-        if (UserInGroup("quality_assurance")) {
+        if (Bugzilla->user->groups("quality_assurance")) {
             return 1;
         }
         else {
@@ -2607,7 +2638,7 @@ skip-networking
    This says that only users in the group "quality_assurance" can change
    the QA Contact field of a bug. Getting more weird:
     if (($field eq "priority") &&
-        ($vars->{'user'}{'login'} =~ /.*\@example\.com$/))
+        (Bugzilla->user->email =~ /.*\@example\.com$/))
     {
         if ($oldvalue eq "P1") {
             return 1;
@@ -3033,27 +3064,12 @@ Appendix A. The Bugzilla FAQ
    for bug-tracking?
 
    There are dozens of major companies with public Bugzilla sites to
-   track bugs in their products. A few include:
-
-   Netscape/AOL
-   Mozilla.org
-   NASA
-   Red Hat Software
-   SuSe Corp
-   The Horde Project
-   AbiSource
-   Real Time Enterprises, Inc
-   Eggheads.org
-   Strata Software
-   RockLinux
-   Creative Labs (makers of SoundBlaster)
-   The Apache Foundation
-   The Gnome Foundation
-   Ximian
-   Linux-Mandrake
-
-   Suffice to say, there are more than enough huge projects using
-   Bugzilla that we can safely say it's extremely popular.
+   track bugs in their products. We have a fairly complete list available
+   on our website at http://bugzilla.org/installation_list.html. If you
+   have an installation of Bugzilla and would like to be added to the
+   list, whether it's a public install or not, simply e-mail Gerv
+   <gerv@mozilla.org>. Keep in mind that it's kinda difficult to get onto
+   the "high-profile" list ;).
 
    A.1.5. Who maintains Bugzilla?
 

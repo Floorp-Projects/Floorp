@@ -183,7 +183,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >    if ($field eq "qacontact") {
-        if (UserInGroup("quality_assurance")) {
+        if (Bugzilla-&#62;user-&#62;groups("quality_assurance")) {
             return 1;
         } 
         else {
@@ -208,7 +208,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >    if (($field eq "priority") &#38;&#38;
-        ($vars-&#62;{'user'}{'login'} =~ /.*\@example\.com$/))
+        (Bugzilla-&#62;user-&#62;email =~ /.*\@example\.com$/))
     {
         if ($oldvalue eq "P1") {
             return 1;
