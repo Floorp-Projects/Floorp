@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  rdfutil \
 		  mime \
+		  caps \
 		  msgcompose \
       addrbook \
 		  docshell \

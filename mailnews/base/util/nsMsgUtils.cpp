@@ -62,7 +62,7 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsISpamSettings.h"
-
+#include "nsISignatureVerifier.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -731,5 +731,84 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
   }
 
   return NS_OK;
+}
+
+// digest needs to be a pointer to a 16 byte buffer
+nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest)
+{
+#define DIGEST_LENGTH 16
+  nsresult rv;
+  unsigned char result[DIGEST_LENGTH];
+  unsigned char *presult = result;
+
+  nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  // this code adapted from http://www.cis.ohio-state.edu/cgi-bin/rfc/rfc2104.html
+
+  char innerPad[65];    /* inner padding - key XORd with innerPad */
+  char outerPad[65];    /* outer padding - key XORd with outerPad */
+  int i;
+  /* if key is longer than 64 bytes reset it to key=MD5(key) */
+  if (key_len > 64) 
+  {
+
+    HASHContextStr      *tctx;
+    PRUint32 resultLen;
+
+    rv = verifier->HashBegin(nsISignatureVerifier::MD5, &tctx);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = verifier->HashUpdate(tctx, key, key_len);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = verifier->HashEnd(tctx, &presult, &resultLen, DIGEST_LENGTH);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    key = (const char *) result;
+    key_len = DIGEST_LENGTH;
+  }
+
+  /*
+   * the HMAC_MD5 transform looks like:
+   *
+   * MD5(K XOR outerPad, MD5(K XOR innerPad, text))
+   *
+   * where K is an n byte key
+   * innerPad is the byte 0x36 repeated 64 times
+   * outerPad is the byte 0x5c repeated 64 times
+   * and text is the data being protected
+   */
+
+  /* start out by storing key in pads */
+  memset(innerPad, 0, sizeof innerPad);
+  memset(outerPad, 0, sizeof outerPad);
+  memcpy(innerPad, key,  key_len);
+  memcpy(outerPad, key, key_len);
+
+  /* XOR key with innerPad and outerPad values */
+  for (i=0; i<64; i++)
+  {
+    innerPad[i] ^= 0x36;
+    outerPad[i] ^= 0x5c;
+  }
+  /*
+   * perform inner MD5
+   */
+  HASHContextStr      *context;
+  PRUint32 resultLen;
+  rv = verifier->HashBegin(nsISignatureVerifier::MD5, &context); /* init context for 1st pass */
+  rv = verifier->HashUpdate(context, innerPad, 64);      /* start with inner pad */
+  rv = verifier->HashUpdate(context, text, text_len); /* then text of datagram */
+  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);          /* finish up 1st pass */
+  /*
+   * perform outer MD5
+   */
+  verifier->HashBegin(nsISignatureVerifier::MD5, &context);  /* init context for 2nd pass */
+  rv = verifier->HashUpdate(context, outerPad, 64);     /* start with outer pad */
+  rv = verifier->HashUpdate(context, (const char *) result, 16);     /* then results of 1st hash */
+  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);  /* finish up 2nd pass */
+  strncpy((char *) digest, (const char *) result, DIGEST_LENGTH);
+  return rv;
+
 }
 
