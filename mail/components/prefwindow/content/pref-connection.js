@@ -70,6 +70,16 @@ function ReloadPAC() {
 
 function onConnectionsDialogOK()
 {
+
+  var autoURL = document.getElementById("networkProxyAutoconfigURL");
+  var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                           .getService(Components.interfaces.nsIURIFixup);
+  try {
+    var fixedUpURI = URIFixup.createFixupURI(autoURL.value, 0);
+    autoURL.value = fixedUpURI.spec;
+  }
+  catch(ex) {}
+
   window.opener.top.hPrefWindow.wsm.savePageData(window.location.href, window); 
   return true;
 }
