@@ -23,7 +23,7 @@ nsTransactionStack::nsTransactionStack()
   : mQue(0)
 {
   nsTransactionReleaseFunctor* theFunctor=new nsTransactionReleaseFunctor();
-  mQue->mSetDeallocator(theFunctor);
+  mQue.SetDeallocator(theFunctor);
 } 
 
 nsTransactionStack::~nsTransactionStack()
