@@ -96,6 +96,10 @@ nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
 {
   if (nsnull == _retval)
     return NS_ERROR_NULL_POINTER;
+  if (nsnull == inString)
+    return NS_ERROR_NULL_POINTER;
+  if (0 == *inString)
+    return NS_ERROR_ILLEGAL_VALUE;
   nsresult rv;
 
   if (NULL == mEncoder) return NS_ERROR_FAILURE;  // need to call Init() before Convert()
