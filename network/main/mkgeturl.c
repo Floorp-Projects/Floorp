@@ -604,7 +604,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 		
 	if (bSetupAll || !PL_strcmp(prefChanged,"browser.cache.memory_cache_size")) {
-		int32 nMemCache;
+		int32 nMemCache = 8192;
 		PREF_GetIntPref("browser.cache.memory_cache_size",&nMemCache);
 		NET_SetMemoryCacheSize(nMemCache * 1024);
 	}
