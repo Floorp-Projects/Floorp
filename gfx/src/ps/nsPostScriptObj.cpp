@@ -87,6 +87,8 @@ static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #define NS_PS_RED(x) (((float)(NS_GET_R(x))) / 255.0) 
 #define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
+#define NS_PS_GRAY(x) (((float)(x)) / 255.0) 
+#define NS_RGB_TO_GRAY(r,g,b) ((int(r) * 77 + int(g) * 150 + int(b) * 29) / 256)
 #define NS_TWIPS_TO_POINTS(x) (((x) / 20))
 #define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
@@ -2618,7 +2620,8 @@ nsPostScriptObj::grayimage(nsIImage *aImage,
           fprintf(mPrintContext->prSetup->tmpBody, "\n");
           n = 0;
       }
-      fprintf(mPrintContext->prSetup->tmpBody, "%02x", (int) (0xff & *curline));
+      int gray = NS_RGB_TO_GRAY(curline[0], curline[1], curline[2]);
+      fprintf(mPrintContext->prSetup->tmpBody, "%02x", (int) (0xff & gray));
       curline+=3; 
       n += 2;
     }
@@ -2741,9 +2744,10 @@ float greyBrightness;
    */
 
   if(mPrintSetup->color == PR_FALSE ) {
-    greyBrightness=(NS_PS_RED(aColor)+NS_PS_GREEN(aColor)+NS_PS_BLUE(aColor))/3;
-    fprintf(mPrintContext->prSetup->tmpBody,"%3.2f %3.2f %3.2f setrgbcolor\n",
-    greyBrightness,greyBrightness,greyBrightness);
+    greyBrightness=NS_PS_GRAY(NS_RGB_TO_GRAY(NS_GET_R(aColor),
+                                             NS_GET_G(aColor),
+                                             NS_GET_B(aColor)));
+    fprintf(mPrintContext->prSetup->tmpBody,"%3.2f setgray\n", greyBrightness);
   } else {
     fprintf(mPrintContext->prSetup->tmpBody,"%3.2f %3.2f %3.2f setrgbcolor\n",
     NS_PS_RED(aColor), NS_PS_GREEN(aColor), NS_PS_BLUE(aColor));
