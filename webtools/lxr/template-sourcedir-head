@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<META NAME="GENERATOR" CONTENT="lxr-0.3: http://lxr.linux.no">
+<META NAME="AUTHOR" CONTENT="Dawn Endico dawn@cannibal.mi.org">
+<title>$title</title>
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var event = 0
+function js_dir_menu() {}
+function js_file_menu() {}
+//-->
+</SCRIPT>
+<SCRIPT LANGUAGE="JavaScript1.2">
+<!--
+function js_dir_menu(dir,d) {
+    if( parseInt(navigator.appVersion) < 4 ){
+        return true;
+    }
+    l = document.layers['popup'];
+    urlmonth="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=month&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    urlweek="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    text="<table border><tr><td><a href=\"mozilla/source"+dir+"\"><a href=\""+urlweek+"\">Checkins to mozilla"+dir+" in the last week</a> <br><a href=\""+urlmonth+"\">Checkins to mozilla"+dir+" in the last month</a> </td></tr> </table>"
+    l.document.write(text);
+    l.top = d.target.y;
+    l.left = d.target.x +  110;
+    if( (l.left + l.clipWidth) > window.width ){
+        l.left = window.width - l.clipWidth;
+    }
+    l.visibility="show";
+    l.document.close();
+    return false;
+}
+
+
+function js_file_menu(file,d) {
+    if( parseInt(navigator.appVersion) < 4 ){
+        return true;
+    }
+    l = document.layers['popup'];
+
+    text="<table border><tr><td><a href=\"/webtools/bonsai/cvslog.cgi?file=/mozilla"+file+"&root=/cvsroot\">mozilla"+file+" change log</a><br><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=mozilla"+file+"&root=/cvsroot\">mozilla"+file+" with change log annotations</a></td></tr></table>"
+    l.document.write(text);
+    l.top = d.target.y;
+    l.left = d.target.x +  110;
+    if( (l.left + l.clipWidth) > window.width ){
+        l.left = window.width - l.clipWidth;
+    }
+    l.visibility="show";
+    l.document.close();
+    return false;
+}
+// end script -->
+</script>
+
+
+<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#dddddd" visibility="hide">
+</layer>
+
+</head>
+
+<BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
+	LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR><TD><A HREF="http://www.mozilla.org/"><IMG
+ SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
+ BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+
+<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH="100%">
+ <TR>
+  <TD ALIGN=LEFT VALIGN=CENTER>
+   <NOBR><FONT SIZE="+2"><B>
+    <A HREF="/webtools/lxr/">Mozilla Cross Reference:</A>
+   </B></FONT></NOBR>
+   <BR><B>$banner</B>
+  </TD>
+
+  <TD ALIGN=RIGHT VALIGN=TOP WIDTH="1%">
+   <TABLE BORDER CELLPADDING=6 CELLSPACING=0>
+    <TR>
+     <TD BGCOLOR="#FAFAFA">
+      <TABLE BORDER=0 CELLPADDING=6 CELLSPACING=0>
+       <TR>
+        <TD NOWRAP ALIGN=LEFT>
+         changes to<BR>this directory<BR>in the last:
+        </TD>
+        <TD NOWRAP>
+         <A HREF="$baseurl../bonsai/cvsquery.cgi?file=mozilla$pathname&date=day">day</A><BR>
+         <A HREF="$baseurl../bonsai/cvsquery.cgi?file=mozilla$pathname&date=week">week</A><BR>
+         <A HREF="$baseurl../bonsai/cvsquery.cgi?file=mozilla$pathname&date=month">month</A><BR>
+        </TD>
+       </TR>
+      </TABLE>
+     </TD>
+    </TR>
+   </TABLE>
+  </TD>
+
+ </TR>
+</TABLE>

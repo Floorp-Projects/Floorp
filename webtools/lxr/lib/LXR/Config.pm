@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.1 1998/06/11 23:56:23 jwz Exp $
+# $Id: Config.pm,v 1.2 1998/06/16 00:51:27 jwz Exp $
 
 package LXR::Config;
 
@@ -104,6 +104,16 @@ sub _initialize {
 		     $dir eq 'glimpsebin' ||
 		     $dir eq 'htmlhead' ||
 		     $dir eq 'htmltail' ||
+		     $dir eq 'sourcehead' ||
+		     $dir eq 'sourcetail' ||
+		     $dir eq 'sourcedirhead' ||
+		     $dir eq 'sourcedirtail' ||
+		     $dir eq 'findhead' ||
+		     $dir eq 'findtail' ||
+		     $dir eq 'identhead' ||
+		     $dir eq 'identtail' ||
+		     $dir eq 'searchhead' ||
+		     $dir eq 'searchtail' ||
 		     $dir eq 'htmldir') {
 		if ($arg =~ /(\S+)/) {
 		    $self->{$dir} = $1;
@@ -211,6 +221,56 @@ sub htmlhead {
 sub htmltail {
     my $self = shift;
     return($self->varexpand($self->{'htmltail'}));
+}
+
+sub sourcehead {
+    my $self = shift;
+    return($self->varexpand($self->{'sourcehead'}));
+}
+
+sub sourcetail {
+    my $self = shift;
+    return($self->varexpand($self->{'sourcetail'}));
+}
+
+sub sourcedirhead {
+    my $self = shift;
+    return($self->varexpand($self->{'sourcedirhead'}));
+}
+
+sub sourcedirtail {
+    my $self = shift;
+    return($self->varexpand($self->{'sourcedirtail'}));
+}
+
+sub findhead {
+    my $self = shift;
+    return($self->varexpand($self->{'findhead'}));
+}
+
+sub findtail {
+    my $self = shift;
+    return($self->varexpand($self->{'findtail'}));
+}
+
+sub identhead {
+    my $self = shift;
+    return($self->varexpand($self->{'identhead'}));
+}
+
+sub identtail {
+    my $self = shift;
+    return($self->varexpand($self->{'identtail'}));
+}
+
+sub searchhead {
+    my $self = shift;
+    return($self->varexpand($self->{'searchhead'}));
+}
+
+sub searchtail {
+    my $self = shift;
+    return($self->varexpand($self->{'searchtail'}));
 }
 
 

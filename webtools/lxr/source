@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.3 1998/06/15 22:18:06 jwz Exp $
+# $Id: source,v 1.4 1998/06/16 00:51:20 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -314,11 +314,22 @@ sub printfile {
 #if the file is html then don't print a header because the file
 #has its own -dme
 if (!($Path->{'file'} =~ /\.(html)$/)) {
-    &makeheader('source');
+    if ($Path->{'file'}) {
+	&makeheader('source');
+    } else {
+	&makeheader('sourcedir');
     }
+}
+
 &printfile;
+
 if (!($Path->{'file'} =~ /\.(html)$/)) {
-    &makefooter('source');
+    if ($Path->{'file'}) {
+	&makefooter('source');
+    } else {
+	&makefooter('sourcedir');
     }
+}
+
 #$len = length($file);
 #print ("length is: ", $len) ;

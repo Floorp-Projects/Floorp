@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.3 1998/06/15 17:15:35 jwz Exp $
+# $Id: Common.pm,v 1.4 1998/06/16 00:51:27 jwz Exp $
 
 package LXR::Common;
 
@@ -369,16 +369,20 @@ sub expandtemplate {
 # The first one is simple, the "banner" template is empty, so we
 # simply return an appropriate value.
 sub bannerexpand {
-    if ($who eq 'source' || $who eq 'diff') {
+    if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 	return($Path->{'xref'});
     } else {
 	return('');
     }
 }
 
+sub pathname {
+    return $Path->{'virtf'};
+}
+
 
 sub titleexpand {
-    if ($who eq 'source' || $who eq 'diff') {
+    if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 	return($Conf->sourcerootname.$Path->{'virtf'});
 
     } elsif ($who eq 'ident') {
@@ -420,7 +424,7 @@ sub modeexpand {
     my @mlist = ();
     local $mode;
     
-    if ($who eq 'source') {
+    if ($who eq 'source' || $who eq 'sourcedir') {
 	push(@mlist, "<b><i>source navigation</i></b>");
     } else {
 	push(@mlist, &fileref("source navigation", $Path->{'virtf'}));
@@ -429,7 +433,7 @@ sub modeexpand {
     if ($who eq 'diff') {
 	push(@mlist, "<b><i>diff markup</i></b>");
 	
-    } elsif ($who eq 'source' && $Path->{'file'}) {
+    } elsif (($who eq 'source' || $who eq 'sourcedir') && $Path->{'file'}) {
 	push(@mlist, &diffref("diff markup", $Path->{'virtf'}));
     }
     
@@ -475,7 +479,7 @@ sub varlinks {
 	if ($val eq $oldval) {
 	    $vallink = "<b><i>$val</i></b>";
 	} else {
-	    if ($who eq 'source') {
+	    if ($who eq 'source' || $who eq 'sourcedir') {
 		$vallink = &fileref($val, 
 				    $Conf->mappath($Path->{'virtf'},
 						   "$var=$val"),
@@ -526,11 +530,42 @@ sub varexpand {
 
 sub makeheader {
     local $who = shift;
+    $template = undef;
+    my $def_templ = "<html><body>\n<hr>\n";
 
-    if ($Conf->htmlhead && !open(TEMPL, $Conf->htmlhead)) {
-	&warning("Template ".$Conf->htmlhead." does not exist.");
-	$template ||= "<html><body>\n<hr>\n";
-    } else {
+    if ($who eq "sourcedir" && $Conf->sourcedirhead) {
+	if (!open(TEMPL, $Conf->sourcedirhead)) {
+	    &warning("Template ".$Conf->sourcedirhead." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcehead) {
+	if (!open(TEMPL, $Conf->sourcehead)) {
+	    &warning("Template ".$Conf->sourcehead." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "find" && $Conf->findhead) {
+	if (!open(TEMPL, $Conf->findhead)) {
+	    &warning("Template ".$Conf->findhead." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "ident" && $Conf->identhead) {
+	if (!open(TEMPL, $Conf->identhead)) {
+	    &warning("Template ".$Conf->identhead." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "search" && $Conf->searchhead) {
+	if (!open(TEMPL, $Conf->searchhead)) {
+	    &warning("Template ".$Conf->searchhead." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($Conf->htmlhead) {
+	if (!open(TEMPL, $Conf->htmlhead)) {
+	    &warning("Template ".$Conf->htmlhead." does not exist.");
+	    $template = $def_templ;
+	}
+    }
+
+    if (!$template) {
 	$save = $/; undef($/);
 	$template = <TEMPL>;
 	$/ = $save;
@@ -550,6 +585,7 @@ sub makeheader {
 			  ('banner',	\&bannerexpand),
 			  ('baseurl',	\&baseurl),
 			  ('thisurl',	\&thisurl),
+			  ('pathname',	\&pathname),
     			  ('modes',	\&modeexpand),
     			  ('variables',	\&varexpand)));
 }
@@ -557,11 +593,42 @@ sub makeheader {
 
 sub makefooter {
     local $who = shift;
+    $template = undef;
+    my $def_templ = "<hr>\n</body>\n";
 
-    if ($Conf->htmltail && !open(TEMPL, $Conf->htmltail)) {
-	&warning("Template ".$Conf->htmltail." does not exist.");
-	$template = "<hr>\n</body>\n";
-    } else {
+    if ($who eq "sourcedir" && $Conf->sourcedirtail) {
+	if (!open(TEMPL, $Conf->sourcedirtail)) {
+	    &warning("Template ".$Conf->sourcedirtail." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcetail) {
+	if (!open(TEMPL, $Conf->sourcetail)) {
+	    &warning("Template ".$Conf->sourcetail." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "find" && $Conf->findtail) {
+	if (!open(TEMPL, $Conf->findtail)) {
+	    &warning("Template ".$Conf->findtail." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "ident" && $Conf->identtail) {
+	if (!open(TEMPL, $Conf->identtail)) {
+	    &warning("Template ".$Conf->identtail." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($who eq "search" && $Conf->searchtail) {
+	if (!open(TEMPL, $Conf->searchtail)) {
+	    &warning("Template ".$Conf->searchtail." does not exist.");
+	    $template = $def_templ;
+	}
+    } elsif ($Conf->htmltail) {
+	if (!open(TEMPL, $Conf->htmltail)) {
+	    &warning("Template ".$Conf->htmltail." does not exist.");
+	    $template = $def_templ;
+	}
+    }
+
+    if (!$template) {
 	$save = $/; undef($/);
 	$template = <TEMPL>;
 	$/ = $save;
