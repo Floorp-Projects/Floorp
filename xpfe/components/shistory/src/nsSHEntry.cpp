@@ -23,6 +23,7 @@
 // Local Includes
 #include "nsSHEntry.h"
 #include "nsXPIDLString.h"
+#include "nsIDocShellLoadInfo.h"
 
 //*****************************************************************************
 //***    nsSHEntry: Object Management
@@ -148,6 +149,19 @@ NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsSHEntry::GetLoadType(PRUint32 * aResult)
+{
+   NS_ENSURE_ARG_POINTER(aResult);
+   
+   *aResult = mLoadType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetLoadType(PRUint32  aLoadType)
+{
+   mLoadType = aLoadType;
+   return NS_OK;
+}
 
 nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
@@ -158,6 +172,8 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
 	SetDocument(aDOMDocument);
 	SetPostData(aInputStream);
 	SetLayoutHistoryState(aHistoryLayoutState);
+	// Set the LoadType by default to loadHistory during creation
+	SetLoadType((PRInt32)nsIDocShellLoadInfo::loadHistory);
 	return NS_OK;
 	
 }

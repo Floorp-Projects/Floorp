@@ -56,6 +56,12 @@ attribute nsILayoutHistoryState layoutHistoryState;
 /** parent of this entry */
 attribute nsISHEntry parent;
 
+/**
+ * The loadType for this entry. This is typically loadHistory except
+ * when reload is pressed, it has the appropriate reload flag
+ */
+attribute  unsigned long loadType;
+
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
 			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState);
