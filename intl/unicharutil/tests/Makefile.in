@@ -29,6 +29,7 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
 
 EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
+		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
 		  $(NULL)
 
 PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
