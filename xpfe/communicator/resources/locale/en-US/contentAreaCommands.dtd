@@ -40,7 +40,7 @@
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY bookmarkLinkCmd.label        "File Bookmark for Link...">
 <!ENTITY bookmarkLinkCmd.accesskey    "b">
-<!ENTITY savePageCmd.label            "Save As...">
+<!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "a">
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
