@@ -41,7 +41,8 @@ endif
 _DEFS = $(subst \,\\\\\,$(ACDEFINES))
 
 pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
-	mozilla-gtkmozembed.pc mozilla-nss.pc
+	mozilla-gtkmozembed.pc mozilla-nss.pc \
+	mozilla-plugin.pc
 
 GARBAGE	= $(pkg_config_files) mozilla-config
 
