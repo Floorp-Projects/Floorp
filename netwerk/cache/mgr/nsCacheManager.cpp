@@ -92,13 +92,13 @@ nsCacheManager::~nsCacheManager()
     delete mActiveCacheRecords;
     delete mMemSpaceManager;
     delete mDiskSpaceManager;
-	  nsresult rv;
-	  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-		if ( NS_SUCCEEDED (rv ) )
-		{
-			prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
-			prefs->UnregisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
-		}
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if ( NS_SUCCEEDED (rv ) )
+    {
+        prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
+        prefs->UnregisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
+    }
 }
 
 
@@ -117,7 +117,7 @@ nsresult nsCacheManager::InitPrefs()
 		return rv;
 	// Init the prefs 
 	diskCacheSizeChanged( CACHE_DISK_CAPACITY, this );	
-  memCacheSizeChanged( CACHE_MEM_CAPACITY, this );
+    memCacheSizeChanged( CACHE_MEM_CAPACITY, this );
 	return rv;
 }
 
@@ -196,8 +196,8 @@ nsCacheManager::Init()
         if (NS_FAILED(rv)) return rv;
     }
 
-		InitPrefs();
-		return NS_OK;
+    InitPrefs();
+    return NS_OK;
 }
 
 nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager )
@@ -206,25 +206,25 @@ nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDa
 	if ( mDiskCache.get() )
 		mDiskCache->GetEnabled( &diskCacheEnabled );
 
-  if (aFlags & CACHE_AS_FILE) {
-      if ( diskCacheEnabled )
-     	 cache = mDiskCache;
+    if (aFlags & CACHE_AS_FILE) {
+        if ( diskCacheEnabled )
+            cache = mDiskCache;
      	else
-     		cache = NULL;
-      spaceManager = mDiskSpaceManager;
+     		return NS_ERROR_NOT_AVAILABLE;
+        spaceManager = mDiskSpaceManager;
 
-      // Ensure that cache is initialized
-      if (mDiskCacheCapacity == (PRUint32)-1)
-          return NS_ERROR_NOT_AVAILABLE;
+        // Ensure that cache is initialized
+        if (mDiskCacheCapacity == (PRUint32)-1)
+            return NS_ERROR_NOT_AVAILABLE;
 
-  } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
-             ( !mDiskCache && !mFlatCache) || !mDiskCacheCapacity  || !diskCacheEnabled) {
-      cache = mMemCache;
-      spaceManager = mMemSpaceManager;
-  } else {
-      cache = mFlatCache ? mFlatCache : mDiskCache;
-      spaceManager = mDiskSpaceManager;
-  }
+    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
+               ( !mDiskCache && !mFlatCache) || !mDiskCacheCapacity  || !diskCacheEnabled) {
+        cache = mMemCache;
+        spaceManager = mMemSpaceManager;
+    } else {
+        cache = mFlatCache ? mFlatCache : mDiskCache;
+        spaceManager = mDiskSpaceManager;
+    }
 	return NS_OK;
 }
  
@@ -238,9 +238,9 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
     nsINetDataCache *cache;
     nsReplacementPolicy *spaceManager;
 	
-		rv = GetCacheAndReplacementPolicy( aFlags, cache, spaceManager );
-		if ( NS_FAILED ( rv ) )
-			return rv;
+    rv = GetCacheAndReplacementPolicy( aFlags, cache, spaceManager );
+    if (NS_FAILED(rv))
+        return rv;
     // Construct the cache key by appending the secondary key to the URI spec
     nsCAutoString cacheKey(aUriSpec);
 

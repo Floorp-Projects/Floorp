@@ -325,9 +325,9 @@ nsDateTimeChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::GetShouldCache(PRBool *aShouldCache)
+nsDateTimeChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_FALSE;
+    *file = nsnull;
     return NS_OK;
 }
 

@@ -21,10 +21,10 @@
  */
 
 #include "nsISupports.idl"
+#include "nsINetDataCache.idl"
 
 interface nsISimpleEnumerator;
 interface nsICachedNetData;
-interface nsINetDataCache;
 interface nsINetDataDiskCache;
 interface nsIURI;
 
@@ -137,12 +137,12 @@ interface nsINetDataCacheManager : nsISupports
      * even those in active use, will be deleted.  Also, any global cache
      * database files will be deleted.
      */
-    void RemoveAll();
+    void removeAll();
     
     /**
       *	Clears the specified cache
       */
-    void Clear( in PRUint32 aCacheToClear );
+    void clear( in PRUint32 aCacheToClear );
 
     /**
      * The disk cache is made up of the file cache (for stream-as-file

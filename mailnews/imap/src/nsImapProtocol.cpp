@@ -6807,9 +6807,9 @@ nsImapMockChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsImapMockChannel::GetShouldCache(PRBool *aShouldCache)
+nsImapMockChannel::GetLocalFile(nsIFile* *file)
 {
-    NS_NOTREACHED("GetShouldCache");
+    NS_NOTREACHED("GetLocalFile");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

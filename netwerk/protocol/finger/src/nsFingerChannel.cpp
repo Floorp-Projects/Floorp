@@ -361,9 +361,9 @@ nsFingerChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::GetShouldCache(PRBool *aShouldCache)
+nsFingerChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_FALSE;
+    *file = nsnull;
     return NS_OK;
 }
 

@@ -516,9 +516,9 @@ nsFTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetShouldCache(PRBool *aShouldCache)
+nsFTPChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_TRUE;
+    *file = nsnull;
     return NS_OK;
 }
 

@@ -506,9 +506,9 @@ nsMsgProtocol::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsMsgProtocol::GetShouldCache(PRBool *aShouldCache)
+nsMsgProtocol::GetLocalFile(nsIFile* *file)
 {
-    NS_NOTREACHED("GetShouldCache");
+    NS_NOTREACHED("GetLocalFile");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

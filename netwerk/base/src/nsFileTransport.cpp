@@ -1032,9 +1032,16 @@ nsFileTransport::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsFileTransport::GetShouldCache(PRBool *aShouldCache)
+nsFileTransport::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_FALSE;
+    nsresult rv;
+    nsCOMPtr<nsIFileIO> fileIO = do_QueryInterface(mStreamIO, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileIO->GetFile(file);
+    if (NS_FAILED(rv)) {
+        *file = nsnull;
+    }
     return NS_OK;
 }
 
