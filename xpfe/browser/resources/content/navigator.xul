@@ -177,6 +177,9 @@
  
       <hbox id="nav-bar-inner" flex="1">
         <observes element="nav-bar" attribute="buttonstyle"/>
+        <!-- Need hidden label on textbox for accessibility, because what 
+             receives focus needs a text name -->
+        <label control="urlbar" hidden="true" value="&locationBar.title;"/>
         <textbox id="urlbar" class="chromeclass-location uri-element" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"

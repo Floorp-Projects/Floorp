@@ -84,9 +84,6 @@
       </field>
 
       <constructor><![CDATA[
-        // set default property values
-        this.ifSetAttribute("disablehistory", true);
-
         mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
                         createInstance(Components.interfaces.nsIAutoCompleteController);
       ]]></constructor>
@@ -96,9 +93,13 @@
       <property name="accessible">
         <getter>
           <![CDATA[
+            // enablehistory="true": dropmarker shows up, so expose as a combobox.
+            // enablehistory="false" (default): no dropmarker, so expose as a textfield.
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].
                               getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULComboboxAccessible(this);
+            return (this.getAttribute("enablehistory") == 'true') ?
+                         accService.createXULComboboxAccessible(this) :
+                         accService.createXULTextBoxAccessible(this);
           ]]>
         </getter>
       </property>
@@ -219,9 +220,7 @@
                 onset="this.setAttribute('crop',val); return val;"
                 onget="return this.getAttribute('crop');"/>
 
-      <property name="label"
-                onset="this.setAttribute('label',val); return val;"
-                onget="return this.getAttribute('label');"/>
+      <property name="label" readonly="true" onget="return this.mInputElt.value;"/>
 
       <property name="open"
                 onget="return this.getAttribute('open') == 'true';">
