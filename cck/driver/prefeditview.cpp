@@ -20,6 +20,12 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// bitmaps to use for the tree control as defined in IB_TREEIMAGES
+const int bm_closedFolder = 0;
+const int bm_openFolder = 1;
+const int bm_lockedPad = 2;
+const int bm_unlockedPad = 3;
+const int bm_unlockedPadGray = 4;
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrefEditView
@@ -229,7 +235,7 @@ void CPrefEditView::startElement(const char *name, const char **atts)
   if (stricmp(name, "PREFSGROUP") == 0)
   {
     int imageIndex = 0;     // tree ctrl images
-    int imageIndexSel = 0;  // 0 is a closed folder
+    int imageIndexSel = bm_closedFolder;
 
     // Assumes this element has one tag and that it's the uiname for the group.
     CString strLabel = atts[1];
@@ -298,11 +304,13 @@ HTREEITEM CPrefEditView::InsertPrefElement(CPrefElement* pe, HTREEITEM group)
   ASSERT(group);
 
   int imageIndex = 0;     // tree ctrl images
-  int imageIndexSel = 0;  // 0 is a closed folder
-  if (pe->IsLocked())
-    imageIndexSel = imageIndex = 2;   // a locked padlock
+  int imageIndexSel = bm_closedFolder;
+  if (!pe->IsManage())
+    imageIndexSel = imageIndex = bm_unlockedPadGray;
+  else if (pe->IsLocked())
+    imageIndexSel = imageIndex = bm_lockedPad;
   else
-    imageIndexSel = imageIndex = 3;   // an unlocked padlock
+    imageIndexSel = imageIndex = bm_unlockedPad;
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
   HTREEITEM hNewItem = treeCtrl.InsertItem(pe->GetPrettyNameValueString(), imageIndex, imageIndexSel, group, TVI_LAST);
@@ -686,6 +694,7 @@ void CPrefEditView::EditSelectedPrefsItem()
   dlg.m_pstrChoices = pe->GetChoiceStringArray();
   dlg.m_strSelectedChoice = pe->GetSelectedChoiceString();
   dlg.m_bChoose = pe->IsChoose();
+  dlg.m_bManage = pe->IsManage();
 
 
   if (dlg.DoModal() == IDOK)
@@ -697,10 +706,23 @@ void CPrefEditView::EditSelectedPrefsItem()
     // set '0' or '1' or whatever the value for the selected choice.
     pe->SetPrefValue(dlg.m_strValue);
     pe->SetLocked(dlg.m_bLocked);
+    pe->SetManage(dlg.m_bManage);
 
     // Adjust the tree control to reflect the changes.
     treeCtrl.SetItemText(hTreeCtrlItem, pe->GetPrettyNameValueString());
-    treeCtrl.SetItemImage(hTreeCtrlItem, dlg.m_bLocked? 2 : 3, dlg.m_bLocked? 2 : 3);
+
+    int imageIndex = 0;     // tree ctrl images
+    int imageIndexSel = 0;
+
+    if (!pe->IsManage())
+      imageIndexSel = imageIndex = bm_unlockedPadGray;
+    else if (pe->IsLocked())
+      imageIndexSel = imageIndex = bm_lockedPad;
+    else
+      imageIndexSel = imageIndex = bm_unlockedPad;
+
+
+    treeCtrl.SetItemImage(hTreeCtrlItem, imageIndex, imageIndexSel);
    
   }
 }

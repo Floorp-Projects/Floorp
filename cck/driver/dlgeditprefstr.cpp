@@ -23,6 +23,7 @@ CDlgEditPrefStr::CDlgEditPrefStr(CWnd* pParent /*=NULL*/)
 	m_strValue = _T("");
 	m_bLocked = FALSE;
 	m_bValue = FALSE;
+	m_bManage = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -34,6 +35,9 @@ void CDlgEditPrefStr::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_VALLIST, m_listValue);
 	DDX_Control(pDX, IDC_VALCHECK, m_checkValue);
 	DDX_Control(pDX, IDC_VALUE, m_editValue);
+	DDX_Control(pDX, IDC_LOCKED, m_checkLocked);
+	DDX_Control(pDX, IDC_MANAGE, m_checkManage);
+	DDX_Check(pDX, IDC_MANAGE, m_bManage);
 	DDX_Text(pDX, IDC_DESCRIPTION, m_strDescription);
 	DDX_Text(pDX, IDC_PREFNAME, m_strPrefName);
 	DDX_Text(pDX, IDC_VALUE, m_strValue);
@@ -47,6 +51,7 @@ BEGIN_MESSAGE_MAP(CDlgEditPrefStr, CDialog)
 	//{{AFX_MSG_MAP(CDlgEditPrefStr)
 	ON_WM_CREATE()
 	ON_WM_CANCELMODE()
+	ON_BN_CLICKED(IDC_MANAGE, OnManage)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -116,6 +121,8 @@ BOOL CDlgEditPrefStr::OnInitDialog()
     m_checkValue.ShowWindow(SW_HIDE);
   }
 
+	EnableControls(m_bManage);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -145,4 +152,20 @@ void CDlgEditPrefStr::OnOK()
   }
 
 	CDialog::OnOK();
+}
+
+void CDlgEditPrefStr::OnManage() 
+{
+	m_bManage = m_checkManage.GetCheck();
+	EnableControls(m_bManage);
+  
+}
+
+
+void CDlgEditPrefStr::EnableControls(BOOL bEnable)
+{
+	m_editValue.EnableWindow(bEnable);
+	m_listValue.EnableWindow(bEnable);
+	m_checkValue.EnableWindow(bEnable);
+	m_checkLocked.EnableWindow(bEnable);
 }

@@ -47,6 +47,7 @@
 #define IDC_PREFTYPE_INT                1016
 #define IDC_PREFTYPE_BOOL               1017
 #define IDC_PREFTYPEGROUP               1018
+#define IDC_MANAGE                      1019
 #define IDC_PROGRESS1                   1036
 #define IDC_PROGESSTEXT_STATIC          1037
 #define IDD_HELP_DLG                    1537
@@ -64,7 +65,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        148
 #define _APS_NEXT_COMMAND_VALUE         32778
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

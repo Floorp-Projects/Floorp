@@ -732,6 +732,10 @@ void endElement(void *userData, const char *name)
   if (stricmp(name, "PREF") == 0)
   {
     
+    // Only write those prefs that have been marked as "Manage." Ignore all others.
+    BOOL bManage = ((CPrefElement*)userData)->IsManage();
+    if (!bManage)
+      return;
 
     // Write the pref element to prefs file.
     ExtractXPIFile(gstrInstallFile, gstrPrefFile);

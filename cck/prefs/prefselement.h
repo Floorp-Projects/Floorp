@@ -24,6 +24,8 @@ public:
   BOOL IsLockable() {return m_bLockable; };
   BOOL IsLocked() { return m_bLocked; };
   void SetLocked(BOOL bLocked) { m_bLocked = bLocked; };
+  BOOL IsManage() { return m_bManage; };
+  void SetManage(BOOL bManage) { m_bManage = bManage; };
   CString GetUIName() { return m_strUIName; };
   CString GetPrefValue() { return m_strPrefValue; };
   void SetPrefValue(CString strValue);
@@ -56,6 +58,7 @@ private:
 
   BOOL m_bLocked;
   BOOL m_bLockable;
+  BOOL m_bManage;
 
   CString m_astrChoiceName[MAX_CHOICES+1];  // Array of possible choice names. Last is empty string.
   CString m_astrChoiceVal[MAX_CHOICES+1];   // Matching values for the above names.

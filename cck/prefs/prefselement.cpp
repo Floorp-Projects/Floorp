@@ -48,6 +48,7 @@ void CPrefElement::ReInit()
   m_strDescription = "";
   m_bLocked = FALSE;
   m_bLockable = TRUE;
+  m_bManage = FALSE;
   m_iChoices = 0;
 }
 
@@ -188,6 +189,12 @@ void CPrefElement::startElement(const char* name, const char** atts)
       return;
 
   }
+  else if (stricmp(name, "MANAGE") == 0)
+  {
+    if (!m_bPrefOpen)
+      return;
+
+  }
   else
   {
     return;
@@ -231,6 +238,21 @@ void CPrefElement::characterData(const char* s, int len)
     // Done with the data for this tag.
     m_strCurrentTag = "";
   }
+  else if (m_strCurrentTag.CompareNoCase("MANAGE") == 0)
+  {
+    CString tmp;
+    char* p = tmp.GetBufferSetLength(len);
+    memcpy(p, s, len);
+    tmp.ReleaseBuffer();
+    tmp.TrimLeft("\r\n");
+    tmp.TrimRight("\r\n");
+   
+    m_bManage = (tmp.CompareNoCase("true") == 0);
+
+    // Done with the data for this tag.
+    m_strCurrentTag = "";
+  }
+
 }
 
 // Called by the parser. Handle the end tag.
@@ -320,6 +342,8 @@ CString CPrefElement::XML(int iIndentSize, int iIndentLevel)
   strTmp.Format("%*s<LOCKED>%s</LOCKED>\n", iIndentSpaces + iIndentSize, " ", IsLocked()?"true":"false");
   strRet += strTmp;
 
+  strTmp.Format("%*s<MANAGE>%s</MANAGE>\n", iIndentSpaces + iIndentSize, " ", IsManage()?"true":"false");
+  strRet += strTmp;
 
   CString strCloseTag;
   strCloseTag.Format("%*s</PREF>\n", iIndentSpaces, " ");

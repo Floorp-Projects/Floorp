@@ -28,12 +28,15 @@ public:
 	enum { IDD = IDD_EDITPREF };
 	CComboBox	m_listValue;
 	CButton	m_checkValue;
+	CButton m_checkLocked;
+	CButton m_checkManage;
 	CEdit	m_editValue;
 	CString	m_strDescription;
 	CString	m_strPrefName;
 	CString	m_strValue;
 	BOOL	m_bLocked;
 	BOOL	m_bValue;
+	BOOL  m_bManage;
 	//}}AFX_DATA
 
 
@@ -53,8 +56,12 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
+	afx_msg void OnManage();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+private:
+	void EnableControls(BOOL bEnable);
 };
 
 //{{AFX_INSERT_LOCATION}}
