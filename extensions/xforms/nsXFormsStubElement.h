@@ -51,6 +51,13 @@
  */
 class nsXFormsStubElement : public nsIXTFGenericElement
 {
+protected:
+  // We need a virtual destructor so that when a subclass does
+  // NS_IMPL_ISUPPORTS_INHERITED, our Release() implementation calls the
+  // derived class destructor.
+  virtual ~nsXFormsStubElement() {}
+
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
@@ -66,6 +73,13 @@ class nsXFormsStubElement : public nsIXTFGenericElement
  */
 class nsXFormsXMLVisualStub : public nsIXTFXMLVisual
 {
+protected:
+  // We need a virtual destructor so that when a subclass does
+  // NS_IMPL_ISUPPORTS_INHERITED, our Release() implementation calls the
+  // derived class destructor.
+  virtual ~nsXFormsXMLVisualStub() {}
+
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFVISUAL
