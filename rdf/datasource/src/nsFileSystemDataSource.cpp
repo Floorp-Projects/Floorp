@@ -73,6 +73,9 @@
 #include <NodeInfo.h>
 #endif
 
+#if defined(XP_UNIX) || defined(XP_OS2)
+#define USE_NC_EXTENSION
+#endif
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
@@ -102,6 +105,10 @@ private:
     static nsIRDFResource		*kNC_pulse;
     static nsIRDFResource		*kRDF_InstanceOf;
     static nsIRDFResource		*kRDF_type;
+
+#ifdef USE_NC_EXTENSION
+    static nsIRDFResource		*kNC_extension;
+#endif
 
 #ifdef	XP_WIN
     static nsIRDFResource		*kNC_IEFavoriteObject;
@@ -136,6 +143,10 @@ public:
     static nsresult GetFileSize(nsIRDFResource *source, nsIRDFInt** aResult);
     static nsresult GetLastMod(nsIRDFResource *source, nsIRDFDate** aResult);
 
+#ifdef USE_NC_EXTENSION
+    static nsresult GetExtension(nsIRDFResource *source, nsIRDFLiteral** aResult);
+#endif
+
 #ifdef	XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
     static nsresult getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
@@ -164,6 +175,10 @@ nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
 nsIRDFResource		*FileSystemDataSource::kNC_pulse;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
+
+#ifdef USE_NC_EXTENSION
+nsIRDFResource          *FileSystemDataSource::kNC_extension;
+#endif
 
 #ifdef	XP_WIN
 nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteObject;
@@ -286,6 +301,9 @@ FileSystemDataSource::FileSystemDataSource(void)
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",       &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
 
+#ifdef USE_NC_EXTENSION
+		gRDFService->GetResource(NC_NAMESPACE_URI "extension",        &kNC_extension);
+#endif
 		gFileSystemDataSource = this;
 	}
 }
@@ -320,6 +338,10 @@ FileSystemDataSource::~FileSystemDataSource (void)
         	nsCRT::free(ieFavoritesDir);
         	ieFavoritesDir = nsnull;
         }
+#endif
+
+#ifdef USE_NC_EXTENSION
+	NS_RELEASE(kNC_extension);
 #endif
 
         gFileSystemDataSource = nsnull;
@@ -528,6 +550,16 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 				return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			}
 		}
+#ifdef USE_NC_EXTENSION
+		else if (property == kNC_extension)
+		{
+		    nsCOMPtr<nsIRDFLiteral> extension;
+		    rv = GetExtension(source, getter_AddRefs(extension));
+		    if (!extension)    rv = NS_RDF_NO_VALUE;
+		    if (rv == NS_RDF_NO_VALUE) return(rv);
+		    return extension->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+		}
+#endif
 	}
 
 	return(NS_RDF_NO_VALUE);
@@ -728,8 +760,9 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 		return NS_ERROR_NULL_POINTER;
 
 	// we only have positive assertions in the file system data source.
+	*hasAssertion = PR_FALSE;
+
 	if (! tv) {
-		*hasAssertion = PR_FALSE;
 		return NS_OK;
 	}
 
@@ -740,12 +773,25 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 			nsCOMPtr<nsIRDFResource> resource( do_QueryInterface(target) );
 			if (resource.get() == kRDF_type) {
 				*hasAssertion = PR_TRUE;
-				return NS_OK;
 			}
 		}
+#ifdef USE_NC_EXTENSION
+		else if (property == kNC_extension)
+		{
+			// Cheat just a little here by making dirs always match
+			if (isDirURI(source))
+				*hasAssertion = PR_TRUE;
+			else {
+				nsCOMPtr<nsIRDFLiteral> extension;
+				GetExtension(source, getter_AddRefs(extension));
+				if (extension.get() == target) {
+					*hasAssertion = PR_TRUE;
+				}
+			}
+		}
+#endif
 	}
 
-	*hasAssertion = PR_FALSE;
 	return NS_OK;
 }
 
@@ -1416,7 +1462,31 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	return NS_OK;
 }
 
+#ifdef USE_NC_EXTENSION
+nsresult
+FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResult)
+{
+    nsCOMPtr<nsIRDFLiteral> name;
+    nsresult rv = GetName(source, getter_AddRefs(name));
+    if (NS_FAILED(rv)) return rv;
 
+    const PRUnichar* unicodeLeafName;
+    rv = name->GetValueConst(&unicodeLeafName);
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString filename(unicodeLeafName);
+    PRInt32 lastDot = filename.RFindChar('.');
+    if (lastDot == -1) {
+        gRDFService->GetLiteral(NS_LITERAL_STRING(""), aResult);
+    } else {
+      nsAutoString extension;
+      filename.Right(extension, (filename.Length() - lastDot));
+      gRDFService->GetLiteral(extension.GetUnicode(), aResult);
+    }
+
+    return NS_OK;
+}
+#endif
 
 #ifdef	XP_WIN
 nsresult
