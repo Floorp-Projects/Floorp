@@ -42,4 +42,11 @@
   0x45f27d10, 0x987b, 0x11d2,                        \
  {0xbd, 0x40, 0x00, 0x10, 0x5a, 0xa4, 0x5e, 0x89} }
 
+//The dom cannot provide the crypto or pkcs11 classes that
+//were used in older days, so if someone wants to provide
+//the service they must implement an object and give it 
+//this class ID
+#define NS_CRYPTO_PROGID "component://netscape/security/crypto"
+#define NS_PKCS11_PROGID "component://netscape/security/pkcs11"
+
 #endif /* nsDOMCID_h__ */
