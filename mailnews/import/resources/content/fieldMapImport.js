@@ -5,6 +5,8 @@ var recordNum = 0;
 var amAtEnd = false;
 var addInterface = null;
 var dialogResult = null;
+var dragStart = false;
+var dragData = null;
 
 function OnLoadFieldMapImport()
 {
@@ -100,29 +102,25 @@ function CreateField( name, index, on, cBoxIndex)
 	item.setAttribute('field-index', index);
 	
 	var cCell = document.createElement( 'treecell');
-	var cBox = document.createElement( 'html:input');
-	cBox.setAttribute( 'type', "checkbox");
+	var cBox = document.createElement( 'checkbox');
 	if (on == true)
 		cBox.setAttribute( 'checked', "true");
-	// cBox.onclick = new Function( "return BoxClick( " + cBoxIndex + ")");
+	cBox.setAttribute( 'value', name);
 
 	cCell.appendChild( cBox);
 	cCell.setAttribute( 'allowevents', "true");	
 
 	row.appendChild( cCell);
-	row.appendChild(cell);
+	/* row.appendChild(cell); */
 
 	cell = document.createElement( 'treecell');
 	cell.setAttribute( "class", "importsampledata");
 	cell.setAttribute( 'value', " ");
 	cell.setAttribute( 'noDrag', "true");	
-	// cell.setAttribute( 'style', "border-left: 5px grey ridge; padding-left: 10px;");
 		
 	row.appendChild( cell);
 
 	item.appendChild(row);
-
-	// cBox.setAttribute( 'onclick', "return BoxClick( event.target);");
 
 	return( item);
 }
@@ -135,50 +133,71 @@ function AddFieldToList(body, name, index, on)
 
 function BeginDrag( event)
 {
+	top.dragStart = false;
+
 	var tree = document.getElementById("fieldList");
-	if ( event.target == tree )
+	if ( event.target == tree ) {
 		return( true);					// continue propagating the event
-    
-	if (!tree)
+    }
+
+	if (!tree) {
 		return( false);
-    
+	}
+
 	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
 	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-	if ( !dragService )	return(false);
+	if ( !dragService )	{
+		return(false);
+	}
 
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-	if ( !trans )		return(false);
+	if ( !trans ) {
+		return(false);
+	}
 
 	var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
 	if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
-	if (!genData)		return(false);
+	if (!genData) {
+		return(false);
+	}
 
+    // trans.addDataFlavor( "text/unicode");
     trans.addDataFlavor( top.transferType);
-    trans.addDataFlavor( "text/unicode");
 
 	// the index is on the <treeitem> which is two levels above the <treecell> which is
 	// the target of the event.
-	if (event.target.getAttribute( 'noDrag') == "true")
+	if (event.target.getAttribute( 'noDrag') == "true") {
 		return( false);
+	}
 
 	var index = event.target.parentNode.parentNode.getAttribute("field-index");
+	if (!index)
+		index = event.target.parentNode.parentNode.parentNode.getAttribute( "field-index");
+	if (!index)
+		return( false);
+
 	var indexStr = ("" + index);
 	genData.data = indexStr;
-
+	
+	// trans.setTransferData ( "text/unicode", genData, indexStr.length * 2);
 	trans.setTransferData ( top.transferType, genData, indexStr.length * 2);
-	trans.setTransferData ( "text/unicode", genData, indexStr.length * 2);
 
 	var transArray = Components.classes["component://netscape/supports-array"].createInstance();
 	if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
-	if ( !transArray )	return(false);
+	if ( !transArray )	{
+		return(false);
+	}
 
 	// put it into the transferable as an |nsISupports|
 	var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
 	transArray.AppendElement(genTrans);
 	
 	var nsIDragService = Components.interfaces.nsIDragService;
+	top.dragStart = true;
+
 	dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
+	
 
 	return( false);  // don't propagate the event if a drag has begun
 }
@@ -194,15 +213,22 @@ function SetRow( row, dstIndex, dstBox, dstField)
 		row.firstChild.firstChild.firstChild.checked = false;
 	}
 
-	row.firstChild.childNodes[1].setAttribute( "value", dstField);
+	/* row.firstChild.childNodes[1].setAttribute( "value", dstField); */
+
+	row.firstChild.firstChild.firstChild.setAttribute( 'value', dstField);
 }
 
 
 function AssignRow( toRow, fromRow)
 {
+	/*
 	SetRow( toRow,	fromRow.getAttribute( 'field-index'), 
 					fromRow.firstChild.firstChild.firstChild.checked,
 					fromRow.firstChild.childNodes[1].getAttribute( "value"));
+	*/
+	SetRow( toRow,	fromRow.getAttribute( 'field-index'), 
+					fromRow.firstChild.firstChild.firstChild.checked,
+					fromRow.firstChild.firstChild.firstChild.getAttribute( "value"));
 }
 
 
@@ -266,6 +292,7 @@ function DropOnTree( event)
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )		return(false);
 	trans.addDataFlavor( top.transferType);
+	// trans.addDataFlavor( "text/unicode");
 
 	var body = document.getElementById( "fieldBody");
 	if (!body)
@@ -285,7 +312,10 @@ function DropOnTree( event)
 			if ( !dataObj )	{
 				continue;
 			}
+
 			var fIndex = parseInt( dataObj.data);
+			
+			dump( "Source row: " + fIndex + "\n");
 
 			// so now what, move the given row to the new position!
 			// find the source row index
@@ -312,7 +342,7 @@ function DropOnTree( event)
 			
 			var maxIndex = body.childNodes.length - 1;
 			var dstBox = body.childNodes[srcRow].firstChild.firstChild.firstChild.checked;
-			var dstField = body.childNodes[srcRow].firstChild.childNodes[1].getAttribute( "value");
+			var dstField = body.childNodes[srcRow].firstChild.firstChild.firstChild.getAttribute( 'value');
 			var dstIndex = body.childNodes[srcRow].getAttribute( 'field-index');
 			
 			dump( "FieldDrag from " + srcRow + " to " + dstRow + "\n");
@@ -354,6 +384,9 @@ function DropOnTree( event)
 
 		}
 		catch( ex) {
+			dump( "Caught drag exception in DropOnTree\n");
+			dump( ex);
+			dump( "\n");
 		}
 	}
 
@@ -363,6 +396,9 @@ function DropOnTree( event)
 
 function DragOverTree( event)
 {
+	if (!top.dragStart)
+		return( false);
+
 	var validFlavor = false;
 	var dragSession = null;
 	var retVal = true;
@@ -375,6 +411,7 @@ function DragOverTree( event)
 	if ( !dragSession )	return(false);
 
 	if ( dragSession.isDataFlavorSupported( top.transferType) )	validFlavor = true;
+	// if ( dragSession.isDataFlavorSupported( "text/unicode") )	validFlavor = true;
 	
 	if (event.target == document.getElementById( "fieldBody")) return( false);
 
@@ -397,10 +434,12 @@ function ShowSampleData( data)
 	var fields = data.split( "\n");
 	for (var i = 0; i < fBody.childNodes.length; i++) {
 		if (i < fields.length) {
-			fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', fields[i]);
+			// fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', fields[i]);
+			fBody.childNodes[i].firstChild.childNodes[1].setAttribute( 'value', fields[i]);
 		}
 		else {
-			fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', " ");
+			// fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', " ");
+			fBody.childNodes[i].firstChild.childNodes[1].setAttribute( 'value', " ");
 		}
 	}
 
@@ -434,7 +473,7 @@ function OnPreviousRecord()
 	top.recordNum--;
 	top.amAtEnd = false;
 	if (FetchSampleData()) {
-		SetDivText( "recordNumber", ("" + top.recordNum));		
+		document.getElementById('recordNumber').setAttribute('value', ("" + top.recordNum));		
 	}
 }
 
@@ -448,7 +487,7 @@ function OnNextRecord()
 		top.recordNum--;
 	}
 	else
-		SetDivText( "recordNumber", ("" + top.recordNum));		
+		document.getElementById('recordNumber').setAttribute('value', ("" + top.recordNum));		
 }
 
 function FieldImportOKButton()

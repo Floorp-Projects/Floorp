@@ -22,6 +22,7 @@
 
 var progressMeter = 0;
 var progressInfo = null;
+var progressStatus = null;
 
 function OnLoadProgressDialog()
 {
@@ -30,6 +31,7 @@ function OnLoadProgressDialog()
 	dump( "*** Loaded progress window\n");
 
 	top.progressMeter = document.getElementById( 'progressMeter');
+	top.progressStatus = document.getElementById( 'progressStatus');
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])
@@ -39,10 +41,10 @@ function OnLoadProgressDialog()
 			top.window.title = window.arguments[0].windowTitle;
 		
 		if ( window.arguments[0].progressTitle )
-			SetDivText( 'progressTitle', window.arguments[0].progressTitle );
+			document.getElementById( 'progressTitle').setAttribute( "value", window.arguments[0].progressTitle);
 		
 		if ( window.arguments[0].progressStatus )
-			SetDivText( 'progressStatus', window.arguments[0].progressStatus );
+			top.progressStatus.setAttribute( "value", window.arguments[0].progressStatus);
 		
 		top.progressInfo = window.arguments[0].progressInfo;
 	}
@@ -52,25 +54,14 @@ function OnLoadProgressDialog()
 
 }
 
+function SetStatusText( val)
+{
+	top.progressStatus.setAttribute( "value", val);
+}
+
 function SetProgress( val)
 {
 	top.progressMeter.setAttribute( "value", val);
-}
-
-function SetDivText(id, text)
-{
-	var div = document.getElementById(id);
-	
-	if ( div )
-	{
-		if ( div.childNodes.length == 0 )
-		{
-			var textNode = document.createTextNode(text);
-			div.appendChild(textNode);                   			
-		}
-		else if ( div.childNodes.length == 1 )
-			div.childNodes[0].nodeValue = text;
-	}
 }
 
 function Continue()

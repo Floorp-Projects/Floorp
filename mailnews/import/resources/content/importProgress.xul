@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/importDialog.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -27,38 +27,21 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/importDialog.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        style="padding:0px; width:30em;"
         onload="OnLoadProgressDialog()"
-        align="vertical">
+        orient="vertical">
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/importProgress.js"/>
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/importProgress.js"/>
 
 	<keyset id="keyset"/>
 
-	<box align="vertical">
-		
-		<html:div id="progressTitle">Title</html:div>
-
-		<spring style="height:1em"/>
-		
-		<html:div id="progressStatus" flex="100%">Processing</html:div>
-		
-		<spring style="height:1em"/>
-		
-		<box align="horizontal">
-			<spring style="width: 1em;"/>
-			<progressmeter id="progressMeter" mode="normal" value="5" flex="100%"/>
-			<spring style="width: 2em"/>
-		</box>
-
-		<spring style="height: 2em"/>
-
-	</box>
+	<text id="progressTitle" value="Title"/>
+	
+	<text id="progressStatus" value="Processing" flex="1"/>
+				
+	<progressmeter id="progressMeter" mode="normal" value="5" flex="1"/>
 
 </window>

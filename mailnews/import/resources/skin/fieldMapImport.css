@@ -21,8 +21,19 @@
  *   Pete Collins, Ben Goodger
  */
 
+@import url(chrome://communicator/skin/);
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
 treecell.importsampledata {
 		padding-left: 10px;
 		border-left: 3px solid #CCCCCC;
 }
 
+#fieldList-box {
+  border: 1px inset white;
+  width:32em;
+  height:300px;
+  margin: 1.5em 3em 1.5em 3em;
+}

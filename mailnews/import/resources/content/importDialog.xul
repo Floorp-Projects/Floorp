@@ -19,8 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/importDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/importDialog.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -28,61 +27,38 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/importDialog.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        style="padding:0px"
         onload="OnLoadImportDialog()"
-        align="vertical"
+        orient="vertical"
         title="&importDialog.windowTitle;">
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/importDialog.js"/>
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/importDialog.js"/>
 
 	<keyset id="keyset"/>
 	
-	<box align = "vertical">
-		<spring style="height: 1em"/>
-		<box align="horizontal">
-			<spring flex="1"/>
-			<html:label><html:input type="radio" id="addressbookRadio" onclick="OnAddressType();"/>&importDialog.addressbookTitle;</html:label>
-			<html:label><html:input type="radio" id="mailRadio" onclick="OnMailType();"/>&importDialog.mailTitle;</html:label>		
-			<html:label><html:input type="radio" id="settingsRadio" onclick="OnSettingsType();"/>&importDialog.settingsTitle;</html:label>
-			<spring flex="1"/>
-		</box>
+	<box id="import-type-radio-box" orient="horizontal">
+		<spring flex="1"/>
+      		<radio id="addressbookRadio" value="&importDialog.addressbookTitle;" onclick="OnAddressType();"/>
+      		<radio id="mailRadio" value="&importDialog.mailTitle;" onclick="OnMailType();"/>
+      		<radio id="settingsRadio" value="&importDialog.settingsTitle;" onclick="OnSettingsType();"/>
+		<spring flex="1"/>
 	</box>
 				
-	<box align="horizontal">
-	
-		<spring style="width: 3em"/>
+	<!-- module list -->
+	<box id="import-module-list-box" orient="vertical">
+		<text id="listLabel"/>
 		
-		<!-- module list -->
-		<box align="vertical" style="height:170px">
-			<spring style="height:1em"/>
-			<html:div id="listLabel">*</html:div>
-			<spring style="height:.5em"/>
-			<box align="vertical" style="border: 1px inset white">
-				<html:div style="width:20em; height:100px">
-					<tree id="moduleList" style="width:100%; height:100%" onselect="ImportSelectionChanged()">
-						<treecol style="width:100%"/>
-						<treechildren id="bucketBody"/>
-					</tree>
-				</html:div>
-			</box>
-			
-			<spring style="height:1.5em"/>
-			
-			<box align="vertical" style="height: 3em; background-color:white; border:1px inset white;">
-				<html:div id="description" style="width:20em; height:100%;"></html:div>
-			</box>
-			
-			<spring style="height:2em"/>
+		<box id="import-module-tree-box" orient="vertical">
+			<tree id="moduleList" flex="1" onselect="ImportSelectionChanged()">
+				<treecol style="width:100%"/>
+				<treechildren id="bucketBody"/>
+			</tree>
 		</box>
-	
-		<spring style="width: 3em"/>
-
+		
+		<html id="description"/>
 	</box>
 
 	

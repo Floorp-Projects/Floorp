@@ -21,4 +21,41 @@
  *   
  */
 
+@import url(chrome://communicator/skin/);
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
+#import-type-radio-box {
+  padding-top: 1em;
+}
+
+#import-module-list-box {
+  padding: 1em 3em 2em 3em;
+}
+
+#import-module-tree-box {
+  height: 8em;
+  width: 20em;
+  border: 1px inset white;
+  margin-top: .5em;
+}
+
+#description {
+  margin: 1.5em 0px 0px 0px;
+  padding: 0px 2px 0px 2px;
+  height: 4em;
+  width: 20em;
+  background-color:white;
+  border:1px inset white;
+}
+
+#progressStatus {
+  margin: 1em 0px 0px 0px;
+}
+
+#progressMeter {
+  margin: 1em 2em 2em 1em; 
+  width: 26em;
+}
 

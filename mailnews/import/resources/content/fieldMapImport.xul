@@ -19,7 +19,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/fieldMapImport.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -28,66 +27,49 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/fieldMapImport.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&fieldMapImport.title;"
 		class="dialog"
-        style="padding:0px"
         onload="OnLoadFieldMapImport()"
         align="vertical">
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/fieldMapImport.js"/>
-<!-- <html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/> -->
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/fieldMapImport.js"/>
 
 	<keyset id="keyset"/>
 
-	<box align="horizontal">
-	
-		<spring style="width:3em"/>
-		
-		<!-- field list -->
-		<box align="vertical">
-			<spring style="height:1em"/>
-			<box align="horizontal">
-				<html:div flex="35%" id="fieldLabel">&fieldMapImport.fieldListTitle;</html:div>
-				<!-- <spring flex="35%"/> -->
-				<html:div flex="65%" id="dataLabel">&fieldMapImport.dataTitle;</html:div>
-			</box>
-			<spring style="height:.5em"/>
-				
-			<box align="vertical" style="border: 1px inset white">
-				<tree	id="fieldList" style="width:32em; height:300px;" 
-						ondragover="return DragOverTree(event);"
-						ondraggesture="return BeginDrag( event);"
-						ondragdrop="return DropOnTree( event);">
-					<treecol style="width:10%"/>
-					<treecol style="width:25%"/>
-					<treecol id="dataColumn" style="width:65%"/>
-					<treechildren id="fieldBody"/>
-				</tree>
-			</box>
-						
-			<spring style="height:1.5em"/>
-			
-		</box>
-					
-		<spring style="width:3em"/>
+	<!-- field list -->
+	<box id="fieldList-box" align="vertical">
+		<tree	id="fieldList" flex="1"
+				ondragover="return DragOverTree(event);"
+				ondraggesture="return BeginDrag( event);"
+				ondragdrop="return DropOnTree( event);">
+			<treecol style="width:35%"/>
+			<treecol id="dataColumn" style="width:65%"/>
 
+			<treehead>
+				<treerow id="headRow">
+					<treecell id="fieldNameHeader" value="&fieldMapImport.fieldListTitle;"/>
+					<treecell id="sampleDataHeader" value="&fieldMapImport.dataTitle;"/>
+				</treerow>
+			</treehead>
+
+			<treechildren id="fieldBody"/>
+		</tree>
 	</box>
 	
 	<spring style="height: .5em"/>
 
 	<box align="horizontal">
 		<spring flex="50%"/>
-		<titledbutton class="dialog push" id="previous" onclick="OnPreviousRecord()" value="&fieldMapImport.previous;"/>
+		<button class="dialog" id="previous" oncommand="OnPreviousRecord()" value="&fieldMapImport.previous;"/>
 		<spring style="width: 2em"/>
-		<html:div>&fieldMapImport.recordNumber;</html:div>
+		<text value="&fieldMapImport.recordNumber;"/>
 		<spring style="width: 1em"/>
-		<html:div id="recordNumber">0</html:div>
+		<text id="recordNumber"/>
 		<spring style="width: 2em"/>
-		<titledbutton class="dialog push" id="next" onclick="OnNextRecord()" value="&fieldMapImport.next;"/>
+		<button class="dialog" id="next" oncommand="OnNextRecord()" value="&fieldMapImport.next;"/>
 		<spring flex="50%"/>		
 	</box>
 

@@ -78,21 +78,24 @@ function SetUpImportType()
 	{
 		case "mail":
 			// top.window.title = top.bundle.GetStringFromName('ImportMailDialogTitle');
-			SetDivText('listLabel', GetBundleString('ImportMailListLabel'));
+			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportMailListLabel'));
+			//SetDivText('listLabel', GetBundleString('ImportMailListLabel'));
 			document.getElementById( "mailRadio").checked = true;
 			document.getElementById( "addressbookRadio").checked = false;
 			document.getElementById( "settingsRadio").checked = false;
 			break;
 		case "addressbook":
 			// top.window.title = top.bundle.GetStringFromName('ImportAddressBooksDialogTitle');
-			SetDivText('listLabel', GetBundleString('ImportAddressBooksListLabel'));
+			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportAddressBooksListLabel'));
+			//SetDivText('listLabel', GetBundleString('ImportAddressBooksListLabel'));
 			document.getElementById( "addressbookRadio").checked = true;
 			document.getElementById( "mailRadio").checked = false;
 			document.getElementById( "settingsRadio").checked = false;
 			break;
 		case "settings":
 			// top.window.title = top.bundle.GetStringFromName('ImportSettingsDialogTitle');
-			SetDivText('listLabel', GetBundleString('ImportSettingsListLabel'));
+			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportSettingsListLabel'));
+			//SetDivText('listLabel', GetBundleString('ImportSettingsListLabel'));
 			document.getElementById( "settingsRadio").checked = true;
 			document.getElementById( "addressbookRadio").checked = false;
 			document.getElementById( "mailRadio").checked = false;
@@ -325,7 +328,7 @@ function ContinueImport( info) {
 					if (mailName != null) {
 						mailName = mailName.QueryInterface( Components.interfaces.nsISupportsWString);
 						if (mailName != null)
-							info.progressWindow.SetDivText( 'progressStatus', mailName.data);
+							info.progressWindow.SetStatusText( mailName.data);
 					}
 				}
 			}
