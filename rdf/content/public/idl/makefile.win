@@ -29,7 +29,6 @@ IDLSRCS =  \
         XULElement.idl          \
         XULCommandDispatcher.idl   \
         XULTreeElement.idl     \
-        XULMenuListElement.idl \
        $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public

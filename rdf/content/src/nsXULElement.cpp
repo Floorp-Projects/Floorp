@@ -107,7 +107,6 @@
 #include "nsXULAttributes.h"
 #include "nsXULControllers.h"
 #include "nsXULTreeElement.h"
-#include "nsXULMenuListElement.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
@@ -632,27 +631,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menulist) {
-        // We delegate XULMenuListElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULMenuListElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
     }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
@@ -1962,10 +1940,6 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         if (tag.get() == nsXULAtoms::tree) {
             fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
-        }
-        else if (tag.get() == nsXULAtoms::menulist) {
-            fn = NS_NewScriptXULMenuListElement;
-            rootname = "nsXULMenuListElement::mScriptObject";
         }
         else {
             fn = NS_NewScriptXULElement;

@@ -5829,7 +5829,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
      // Menu Construction    
     else if (aTag == nsXULAtoms::menu ||
              aTag == nsXULAtoms::menuitem || 
-             aTag == nsXULAtoms::menulist ||
              aTag == nsXULAtoms::menubutton) {
       // A derived class box frame
       // that has custom reflow to prevent menu children

@@ -40,7 +40,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULAttributeValue.obj                 \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj    \
         .\$(OBJDIR)\nsXULControllers.obj          \
-        .\$(OBJDIR)\nsXULMenuListElement.obj    \
         .\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsXULPrototypeDocument.obj    \
         .\$(OBJDIR)\nsXULPrototypeCache.obj       \
@@ -48,7 +47,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
-        .\$(OBJDIR)\nsJSXULMenuListElement.obj    \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsXULElement.obj              \
         .\$(OBJDIR)\nsXULContentUtils.obj         \

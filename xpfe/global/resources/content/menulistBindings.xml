@@ -9,7 +9,7 @@
   BINDING : menulist
   XUL REPRESENTATION : <menulist>
   -->
-  <binding id="menulist">
+  <binding id="menulist" extends="xul:menu">
     <content includes="menupopup">
       <xul:image class="menu-icon" inherits="src"/>
       <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
@@ -17,10 +17,116 @@
     </content>
 	  <handlers>
       <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
-	  </handlers>
+	    <handler event="create">
+        <![CDATA[
+          if (event.target.parentNode == this && this.selectedItem) {
+            // Not ready for auto-setting the active child in hierarchies yet.
+            // For now, only do this when the outermost menupopup opens.
+            var menuBox = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            menuBox.activeChild = this.selectedItem;
+          }
+        ]]>
+      </handler>
+      <handler event="bindingattached" action="this.setInitialSelection()"/>
+    </handlers>
     <implementation>
+      <method name="setInitialSelection">
+        <body>
+          <![CDATA[
+            this.setAttribute('sizetopopup', 'true');
+            if (!this.value) {
+              var arr = this.getElementsByAttribute('selected', 'true');
+              if (arr.length == 1)
+                this.selectedItem = arr[0];
+              else this.selectedIndex = 0;          
+            }
+          ]]>
+        </body>
+      </method>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
+      <property name="crop" onset="this.setAttribute('crop',val); return val;"
+                            onget="return this.getAttribute('crop');"/>
+      <property name="src"  onset="this.setAttribute('src',val); return val;"
+                            onget="return this.getAttribute('src');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                             onget="return this.getAttribute('value');"/>
+      <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
+                                       else this.removeAttribute('disabled');
+                                       return val;"
+                                onget="return (this.getAttribute('disabled')=='true');"/>
+      <property name="selectedInternal">
+        null
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+          <![CDATA[
+            // Quick and dirty. We won't deal with hierarchical menulists yet.
+            if (!this.selectedItem)
+              return -1;
+
+            var children = this.selectedItem.parentNode.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              if (children[i] == this.selectedItem)
+                return i;
+            }
+
+            return -1;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val < 0)
+              this.selectedItem = null;
+            else {
+              var curr = this.firstChild;
+              while (curr && curr.localName != 'menupopup')
+                curr = curr.nextSibling;
+              if (!curr)
+                return;
+              if (curr.childNodes.length <= val)
+                return;
+              this.selectedItem = curr.childNodes[val];
+            }
+            return val;    
+          ]]>
+        </setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter>
+          <![CDATA[
+            return this.selectedInternal;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (this.selectedInternal == val)
+              return val;
+            
+            if (this.selectedInternal)
+              this.selectedInternal.removeAttribute('selected');
+
+            this.selectedInternal = val;
+            if (!this.selectedInternal) {
+              this.removeAttribute('data');
+              this.removeAttribute('src');
+              this.removeAttribute('value');
+              return val;
+            }
+
+            val.setAttribute('selected', 'true');
+
+            this.setAttribute('data', val.getAttribute('data'));
+            this.setAttribute('src', val.getAttribute('src'));
+            this.setAttribute('value', val.getAttribute('value'));
+
+            return val;
+
+          ]]>
+        </setter>
+      </property>
     </implementation>  
   </binding>
 
@@ -28,15 +134,12 @@
   BINDING : menulist-editable
   XUL REPRESENTATION : <menulist editable="true">
   -->
-  <binding id="menulist-editable">
+  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist">
     <content includes="menupopup">
       <xul:image class="menu-icon" inherits="src"/>
 	    <html:input event="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
       <xul:image class="menu-dropmarker"/>
     </content>
-	  <handlers>
-      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
-	  </handlers>
   </binding>
   
 <!-- 
