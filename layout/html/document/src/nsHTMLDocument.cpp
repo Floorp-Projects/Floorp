@@ -103,6 +103,8 @@
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsIBookmarksService.h"
+#include "nsINetDataCacheManager.h"
+#include "nsICachedNetData.h"
 #include "nsIXMLContent.h" //for createelementNS
 #include "nsHTMLParts.h" //for createelementNS
 
@@ -486,6 +488,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
+  nsCOMPtr<nsICachedNetData> cachedData;
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
@@ -501,6 +504,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   
   nsAutoString lastModified;
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+
+  PRBool bTryCache = PR_FALSE;
+  PRUint32 cacheFlags = 0;
+
   if (httpChannel) 
   {
     nsXPIDLCString lastModHeader;
@@ -570,6 +577,19 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           }
         }
       }
+    }
+
+    PRUint32 loadAttr = 0;
+    rv = httpChannel->GetLoadAttributes(&loadAttr);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"cannot get load attribute");
+    if(NS_SUCCEEDED(rv) )
+    {
+       // copy from nsHTTPChannel.cpp
+       if(loadAttr & nsIChannel::CACHE_AS_FILE)
+           cacheFlags = nsINetDataCacheManager::CACHE_AS_FILE;
+       else if(loadAttr & nsIChannel::INHIBIT_PERSISTENT_CACHING)
+           cacheFlags = nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE;
+       bTryCache = PR_TRUE;
     }
 
     // Don't propogate the result code beyond here, since it
@@ -778,6 +798,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsXPIDLCString scheme;
     aURL->GetScheme(getter_Copies(scheme));
 
+    nsXPIDLCString urlSpec;
+    aURL->GetSpec(getter_Copies(urlSpec));
+
     if (scheme && nsCRT::strcasecmp("about", scheme) && (kCharsetFromBookmarks > charsetSource))
     {
       nsCOMPtr<nsIRDFDataSource>  datasource;
@@ -786,8 +809,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
            nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
            if (bookmarks)
            {
-                 nsXPIDLCString urlSpec;
-                 aURL->GetSpec(getter_Copies(urlSpec));
 
                  if (urlSpec)
                  {
@@ -804,6 +825,33 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
            }
        }
     } 
+
+    if(bTryCache)
+    {
+       nsCOMPtr<nsINetDataCacheManager> cacheMgr;
+       cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);       
+       NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot get cache mgr");
+       if(NS_SUCCEEDED(rv) && urlSpec)
+       {
+          rv = cacheMgr->GetCachedNetData(urlSpec, nsnull, 0, cacheFlags, getter_AddRefs(cachedData));
+          NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot get cached net data");
+          if(NS_SUCCEEDED(rv)) {
+              if(kCharsetFromCache > charsetSource) 
+              {
+                nsXPIDLCString cachedCharset;
+                PRUint32 cachedCharsetLen = 0;
+                rv = cachedData->GetAnnotation( "charset", &cachedCharsetLen, 
+                      getter_Copies(cachedCharset));
+                if(NS_SUCCEEDED(rv) && (cachedCharsetLen > 0)) 
+                {
+                   charset.AssignWithConversion(cachedCharset);
+                   charsetSource = kCharsetFromCache;
+                }
+              }    
+          }
+       }
+       rv=NS_OK;
+    }
 
     if (kCharsetFromParentFrame > charsetSource) {
       if (dcInfo) {
@@ -856,6 +904,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   rv = this->SetDocumentCharacterSet(charset);
   if (NS_FAILED(rv)) { return rv; }
+
+  if(cachedData)
+  {
+       rv=cachedData->SetAnnotation("charset",charset.Length()+1,
+               NS_ConvertUCS2toUTF8(charset.GetUnicode()));
+       NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetAnnotation");
+  }
 
   // Set the parser as the stream listener for the document loader...
   if (mParser) 
