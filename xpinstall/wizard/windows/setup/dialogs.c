@@ -1752,8 +1752,11 @@ LPSTR GetStartInstallMessage()
   siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
   while(siCObject)
   {
-    dwBufSize += 4; // take into account 4 indentation spaces
-    dwBufSize += lstrlen(siCObject->szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+    if(siCObject->dwAttributes & SIC_SELECTED)
+    {
+      dwBufSize += 4; // take into account 4 indentation spaces
+      dwBufSize += lstrlen(siCObject->szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+    }
 
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
@@ -1804,7 +1807,7 @@ LPSTR GetStartInstallMessage()
         break;
 
       default:
-        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType1.szDescriptionShort);
+        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType0.szDescriptionShort);
         break;
     }
     lstrcat(szMessageBuf, "\r\n\r\n");
@@ -1820,9 +1823,12 @@ LPSTR GetStartInstallMessage()
     siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
     while(siCObject)
     {
-      lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-      lstrcat(szMessageBuf, siCObject->szDescriptionShort);
-      lstrcat(szMessageBuf, "\r\n");
+      if(siCObject->dwAttributes & SIC_SELECTED)
+      {
+        lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+        lstrcat(szMessageBuf, siCObject->szDescriptionShort);
+        lstrcat(szMessageBuf, "\r\n");
+      }
 
       ++dwIndex0;
       siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
