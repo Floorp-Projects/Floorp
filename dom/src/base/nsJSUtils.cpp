@@ -331,7 +331,9 @@ nsJSUtils::nsConvertJSValToObject(nsISupports** aSupports,
   else if (JSVAL_IS_OBJECT(aValue)) {
     JSObject* jsobj = JSVAL_TO_OBJECT(aValue); 
     JSClass* jsclass = JS_GetClass(aContext, jsobj);
-    if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
+    if ((nsnull != jsclass) && 
+        (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
+        (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
       nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
       if (NS_OK != supports->QueryInterface(aIID, (void **)aSupports)) {
         char buf[128];
