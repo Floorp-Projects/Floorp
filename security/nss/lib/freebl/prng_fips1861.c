@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.6 2000/08/23 18:11:47 mcgreer%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.7 2000/09/06 23:27:34 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -356,7 +356,7 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
                                void *dest, size_t len, unsigned char *q)
 {
     PRUint8 num;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     unsigned char *output = dest;
     /* check for a valid global RNG context */
     PORT_Assert(rng != NULL);
