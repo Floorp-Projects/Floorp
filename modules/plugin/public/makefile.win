@@ -27,8 +27,9 @@ EXPORTS	=				      \
 	nsIMalloc.h                           \
 	nsIPlugin.h			      \
 	nsIPluginInstance.h		      \
-	nsIPluginInstancePeer.h	              \
-	nsIPluginInstancePeer2.h              \
+	nsIPluginInstancePeer.h	      \
+	nsIPluginInstancePeer2.h      \
+	nsIPluginManager.h		      \
 	nsIPluginManager2.h		      \
 	nsIPluginTagInfo.h		      \
 	nsIPluginTagInfo2.h		      \
@@ -36,7 +37,7 @@ EXPORTS	=				      \
 	nsIPluginStreamListener.h             \
 	nsIPluginStreamInfo.h                 \
 	nsplugin.h			      \
-	nsplugindefs.h		 	      \
+	nsplugindefs.h		\
 	nsICookieStorage.h
 
 # DEPRECATED -- remove before we ship 5.0
@@ -54,8 +55,7 @@ EXPORTS = $(EXPORTS)                          \
 
 XPIDLSRCS = 				      \
 	.\nsIScriptablePlugin.idl             \
-	.\nsIHTTPHeaderListener.idl           \
-	.\nsIPluginManager.idl                \
+	.\nsIHTTPHeaderListener.idl     \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
