@@ -358,42 +358,6 @@ il_scale_CI_row(
         }																	  \
         output_bits_remaining--;                                              \
     }
-/********************************************************************/
-/*
- *    png_msrand version 0.9.5, April 2000
- *
- *    Copyright 2000, Glenn Randers-Pehrson
- *
- *    minimal standard random number generator,
- *    Adapted for use with libpng by Glenn Randers-Pehrson
- *
- *    From Stephen K. Park and Keith W. Miller
- *    Random number generators: good ones are hard to find
- *    CACM vol 31 no 10, Oct 88
- *
- *    Usage: random_number = png_msrand(previous_random_number);
- *    Range of results is 1 through slightly under (2^31) as a
- *    32-bit unsigned integer.
- */
-
-PRUint32
-msrand(PRUint32 seed)
-{
-      PRUint32 a_lo;
-      PRUint32 r_hi;
-      if(seed == 0 || seed >= 2147483647L){
-        a_lo=16807L;
-        r_hi=0L;
-      }
-      else{
-        a_lo = 16807L*(seed%127773L);
-        r_hi =  2836L*(seed/127773L);
-      }
-      if(a_lo > r_hi)
-        return (a_lo - r_hi);
-      else
-        return ((a_lo + 2147483647L) - r_hi);
-}
 
 /*-----------------------------------------------------------------------------
  * 
@@ -401,8 +365,8 @@ msrand(PRUint32 seed)
  * Accumulate the mask in 32-bit chunks for efficiency.
  *******
 
-   A Special thanks to Glenn Randers-Pehrson <randeg@alum.rpi.edu> for 
-   contributing a nice, fast dithering function, originally known as the 
+   A Special thanks to Glenn Randers-Pehrson <glennrp@home.com> for 
+   contributing a nice, fast dithering function, the 
    "GlennRP_random_dither_alpha" function,  to convert
    8 bit alpha masks to 1bit dithered masks for use where 8 bit 
    masks are not supported.
@@ -445,18 +409,9 @@ il_alpha_mask(
     if (src_len >= mask_len)
     {      
         while (output_bits_remaining ) {
-	        int tmprand2;
-            PRUint32 seed;
-
-            seed = msrand(seed);
-            tmprand2 =(seed&0xff);
-          //  if ((tmprand2 > 240)||(tmprand2 < 20))
-          //      tmprand2= 0;
-
-           if (tmprand2 > 240)
-                tmprand2 = 0;
-
-            not_transparent = (*(src+3) > tmprand2);
+	        int tmprand=0;
+	        tmprand = 1+(int)(200.0*rand()/(RAND_MAX+1.0));
+            not_transparent = (*(src+3) > tmprand);
 	 
             SHIFT_IMAGE_MASK(not_transparent);
             n += src_len;
@@ -471,17 +426,13 @@ il_alpha_mask(
     /* Scaling up */
     {
         while (output_bits_remaining) {
-	        int tmprand2;
-            PRUint32 seed;
-
+	        int tmprand=0;
             n += mask_len;
-            seed = msrand(seed);
-            tmprand2 =(seed&0xff);
-            if ((tmprand2 > 240)||(tmprand2 < 20))
-                tmprand2= 0;
 
             while (n >= src_len) {
-                not_transparent = (*(src+3) > tmprand2);
+               tmprand = 1+(int)(200.0*rand()/(RAND_MAX+1.0));
+               not_transparent = (*(src+3) > tmprand);
+
                 SHIFT_IMAGE_MASK(not_transparent);
                 n -= src_len;
             }
