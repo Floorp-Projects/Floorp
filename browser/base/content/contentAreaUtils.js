@@ -562,18 +562,19 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
   default:
     var mimeInfo = getMIMEInfoForType(aContentType);
     if (mimeInfo) {
-      var extCount = { };
-      var extList = { };
-      mimeInfo.GetFileExtensions(extCount, extList);
-      
+
+      var extEnumerator = mimeInfo.getFileExtensions();
+
       var extString = "";
-      for (var i = 0; i < extCount.value; ++i) {
-        if (i > 0) 
-          extString += "; "; // If adding more than one extension, separate by semi-colon
-        extString += "*." + extList.value[i];
+      while (extEnumerator.hasMore()) {
+        var extension = extEnumerator.getNext();
+        if (extString)
+          extString += "; ";    // If adding more than one extension,
+                                // separate by semi-colon
+        extString += "*." + extension;
       }
-      
-      if (extCount.value > 0) {
+
+      if (extString) {
         aFilePicker.appendFilter(mimeInfo.Description, extString);
       } else {
         aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
