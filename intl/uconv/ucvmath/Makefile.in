@@ -36,6 +36,8 @@ REQUIRES	= xpcom \
 		  uconv \
 		  $(NULL)
 
+LOCAL_INCLUDES	= -I$(srcdir)/../util
+
 CPPSRCS		= \
 		nsUnicodeToMathematica1.cpp \
 		nsUnicodeToMathematica2.cpp \
@@ -43,7 +45,6 @@ CPPSRCS		= \
 		nsUnicodeToMathematica4.cpp \
 		nsUnicodeToMathematica5.cpp \
 		nsUnicodeToMTExtra.cpp \
-		nsUCvMathSupport.cpp \
 		nsUCvMathModule.cpp \
 		$(NULL)
 
@@ -64,6 +65,10 @@ CPPSRCS		+= \
 
 
 EXPORTS		= nsUCvMathCID.h
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
