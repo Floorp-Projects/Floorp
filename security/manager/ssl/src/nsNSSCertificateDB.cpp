@@ -1434,7 +1434,6 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
                                          NS_CONST_CAST(char*,nickname.get()), 
                                          trust.GetTrust()); 
 
-  CERT_DestroyCertificate(tmpCert);
 
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
