@@ -51,6 +51,6 @@ public:
 
 
 extern "C" NS_APPSHELL nsresult
-NS_NewCommandLineServiceFactory(nsIFactory** aFactory);
+NS_NewCmdLineServiceFactory(nsIFactory** aFactory);
 
 #endif /* nsICmdLineService_h__ */
