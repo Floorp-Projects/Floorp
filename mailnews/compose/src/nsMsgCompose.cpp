@@ -2516,16 +2516,16 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
   /* First, build an array with original recipients */
   nsCOMPtr<nsISupportsArray> recipientsList[MAX_OF_RECIPIENT_ARRAY];
 
-	PRUnichar* originalRecipients[MAX_OF_RECIPIENT_ARRAY];
-	m_compFields->GetTo(&originalRecipients[0]);
-	m_compFields->GetCc(&originalRecipients[1]);
-	m_compFields->GetBcc(&originalRecipients[2]);
+	nsXPIDLString originalRecipients[MAX_OF_RECIPIENT_ARRAY];
+	m_compFields->GetTo(getter_Copies(originalRecipients[0]));
+	m_compFields->GetCc(getter_Copies(originalRecipients[1]));
+	m_compFields->GetBcc(getter_Copies(originalRecipients[2]));
 
   nsCOMPtr<nsIMsgRecipientArray> addressArray;
   nsCOMPtr<nsIMsgRecipientArray> emailArray;
 	for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
 	{
-		rv = m_compFields->SplitRecipientsEx(originalRecipients[i], getter_AddRefs(addressArray), getter_AddRefs(emailArray));
+		rv = m_compFields->SplitRecipientsEx((const PRUnichar *)(originalRecipients[i]), getter_AddRefs(addressArray), getter_AddRefs(emailArray));
 		if (NS_SUCCEEDED(rv))
 		{
       PRInt32 nbrRecipients;
