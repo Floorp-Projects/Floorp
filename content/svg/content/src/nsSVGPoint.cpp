@@ -40,6 +40,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGValue.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 class nsSVGPoint : public nsIDOMSVGPoint,
                    public nsSVGValue
@@ -128,10 +129,12 @@ NS_IMETHODIMP nsSVGPoint::SetY(float aY)
 }
 
 /* nsIDOMSVGPoint matrixTransform (in nsIDOMSVGMatrix matrix); */
-NS_IMETHODIMP nsSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix, nsIDOMSVGPoint **_retval)
+NS_IMETHODIMP nsSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
+                                          nsIDOMSVGPoint **_retval)
 {
-  if (!matrix) return NS_ERROR_FAILURE;
-  
+  if (!matrix)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   float a, b, c, d, e, f;
   matrix->GetA(&a);
   matrix->GetB(&b);

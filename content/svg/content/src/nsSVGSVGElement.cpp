@@ -630,32 +630,56 @@ nsSVGSVGElement::SetCurrentTime(float seconds)
 
 /* nsIDOMNodeList getIntersectionList (in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement); */
 NS_IMETHODIMP
-nsSVGSVGElement::GetIntersectionList(nsIDOMSVGRect *rect, nsIDOMSVGElement *referenceElement, nsIDOMNodeList **_retval)
+nsSVGSVGElement::GetIntersectionList(nsIDOMSVGRect *rect,
+                                     nsIDOMSVGElement *referenceElement,
+                                     nsIDOMNodeList **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!rect || !referenceElement)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMNodeList getEnclosureList (in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement); */
 NS_IMETHODIMP
-nsSVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect, nsIDOMSVGElement *referenceElement, nsIDOMNodeList **_retval)
+nsSVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect,
+                                  nsIDOMSVGElement *referenceElement,
+                                  nsIDOMNodeList **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!rect || !referenceElement)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean checkIntersection (in nsIDOMSVGElement element, in nsIDOMSVGRect rect); */
 NS_IMETHODIMP
-nsSVGSVGElement::CheckIntersection(nsIDOMSVGElement *element, nsIDOMSVGRect *rect, PRBool *_retval)
+nsSVGSVGElement::CheckIntersection(nsIDOMSVGElement *element,
+                                   nsIDOMSVGRect *rect,
+                                   PRBool *_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!element || !rect)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean checkEnclosure (in nsIDOMSVGElement element, in nsIDOMSVGRect rect); */
 NS_IMETHODIMP
-nsSVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element, nsIDOMSVGRect *rect, PRBool *_retval)
+nsSVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element,
+                                nsIDOMSVGRect *rect,
+                                PRBool *_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!element || !rect)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -723,6 +747,9 @@ NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, 
                                               nsIDOMSVGTransform **_retval)
 {
+  if (!matrix)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   nsresult rv = NS_NewSVGTransform(_retval);
   if (NS_FAILED(rv))
     return rv;
@@ -1118,8 +1145,13 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
 NS_IMETHODIMP
-nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element, nsIDOMSVGMatrix **_retval)
+nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
+                                       nsIDOMSVGMatrix **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!element)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

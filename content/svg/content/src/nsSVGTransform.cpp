@@ -45,6 +45,7 @@
 #include "nsSVGMatrix.h"
 #include "nsTextFormatter.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -244,8 +245,9 @@ NS_IMETHODIMP nsSVGTransform::GetAngle(float *aAngle)
 /* void setMatrix (in nsIDOMSVGMatrix matrix); */
 NS_IMETHODIMP nsSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
 {
-  NS_ENSURE_ARG(matrix);
-  
+  if (!matrix)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   WillModify();
 
   mType = SVG_TRANSFORM_MATRIX;

@@ -209,8 +209,13 @@ NS_IMETHODIMP nsSVGNumberList::Clear()
 }
 
 /* nsIDOMSVGNumber initialize (in nsIDOMSVGNumber newItem); */
-NS_IMETHODIMP nsSVGNumberList::Initialize(nsIDOMSVGNumber *newItem, nsIDOMSVGNumber **_retval)
+NS_IMETHODIMP nsSVGNumberList::Initialize(nsIDOMSVGNumber *newItem,
+                                          nsIDOMSVGNumber **_retval)
 {
+  if (!newItem) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
   Clear();
   return AppendItem(newItem, _retval);
 }
@@ -230,11 +235,15 @@ NS_IMETHODIMP nsSVGNumberList::GetItem(PRUint32 index, nsIDOMSVGNumber **_retval
 
 /* nsIDOMSVGNumber insertItemBefore (in nsIDOMSVGNumber newItem, in unsigned long index); */
 NS_IMETHODIMP
-nsSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem, PRUint32 index, nsIDOMSVGNumber **_retval)
+nsSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
+                                  PRUint32 index,
+                                  nsIDOMSVGNumber **_retval)
 {
   *_retval = newItem;
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  if (!newItem) return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  nsSVGValueAutoNotifier autonotifier(this);
 
   PRInt32 idx = index;
   PRInt32 count = mNumbers.Count();
@@ -250,8 +259,15 @@ nsSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem, PRUint32 index, nsID
 
 /* nsIDOMSVGNumber replaceItem (in nsIDOMSVGNumber newItem, in unsigned long index); */
 NS_IMETHODIMP
-nsSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem, PRUint32 index, nsIDOMSVGNumber **_retval)
+nsSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem,
+                             PRUint32 index,
+                             nsIDOMSVGNumber **_retval)
 {
+  if (!newItem) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
+
   nsresult rv = RemoveItem(index, _retval);
   if (NS_FAILED(rv))
     return rv;
@@ -279,15 +295,10 @@ NS_IMETHODIMP nsSVGNumberList::RemoveItem(PRUint32 index, nsIDOMSVGNumber **_ret
 NS_IMETHODIMP
 nsSVGNumberList::AppendItem(nsIDOMSVGNumber *newItem, nsIDOMSVGNumber **_retval)
 {
-  nsCOMPtr<nsIDOMSVGNumber> number = do_QueryInterface(newItem);
-  if (!number) {
-    NS_ERROR("number doesn't implement required interface");
-    *_retval = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-  AppendElement(number);
-
   *_retval = newItem;
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  AppendElement(newItem);
   NS_ADDREF(*_retval);
   return NS_OK;
 }

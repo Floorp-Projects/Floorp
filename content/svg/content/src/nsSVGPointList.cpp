@@ -263,8 +263,13 @@ NS_IMETHODIMP nsSVGPointList::Clear()
 }
 
 /* nsIDOMSVGPoint initialize (in nsIDOMSVGPoint newItem); */
-NS_IMETHODIMP nsSVGPointList::Initialize(nsIDOMSVGPoint *newItem, nsIDOMSVGPoint **_retval)
+NS_IMETHODIMP nsSVGPointList::Initialize(nsIDOMSVGPoint *newItem,
+                                         nsIDOMSVGPoint **_retval)
 {
+  if (!newItem) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
   Clear();
   return AppendItem(newItem, _retval);
 }
@@ -283,15 +288,27 @@ NS_IMETHODIMP nsSVGPointList::GetItem(PRUint32 index, nsIDOMSVGPoint **_retval)
 }
 
 /* nsIDOMSVGPoint insertItemBefore (in nsIDOMSVGPoint newItem, in unsigned long index); */
-NS_IMETHODIMP nsSVGPointList::InsertItemBefore(nsIDOMSVGPoint *newItem, PRUint32 index, nsIDOMSVGPoint **_retval)
+NS_IMETHODIMP nsSVGPointList::InsertItemBefore(nsIDOMSVGPoint *newItem,
+                                               PRUint32 index,
+                                               nsIDOMSVGPoint **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGPoint replaceItem (in nsIDOMSVGPoint newItem, in unsigned long index); */
-NS_IMETHODIMP nsSVGPointList::ReplaceItem(nsIDOMSVGPoint *newItem, PRUint32 index, nsIDOMSVGPoint **_retval)
+NS_IMETHODIMP nsSVGPointList::ReplaceItem(nsIDOMSVGPoint *newItem,
+                                          PRUint32 index,
+                                          nsIDOMSVGPoint **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -313,15 +330,18 @@ NS_IMETHODIMP nsSVGPointList::RemoveItem(PRUint32 index, nsIDOMSVGPoint **_retva
 }
 
 /* nsIDOMSVGPoint appendItem (in nsIDOMSVGPoint newItem); */
-NS_IMETHODIMP nsSVGPointList::AppendItem(nsIDOMSVGPoint *newItem, nsIDOMSVGPoint **_retval)
+NS_IMETHODIMP nsSVGPointList::AppendItem(nsIDOMSVGPoint *newItem,
+                                         nsIDOMSVGPoint **_retval)
 {
   // XXX The SVG specs state that 'if newItem is already in a list, it
   // is removed from its previous list before it is inserted into this
   // list'. We don't do that. Should we?
   
   *_retval = newItem;
-  NS_ADDREF(*_retval);
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   AppendElement(newItem);
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
 

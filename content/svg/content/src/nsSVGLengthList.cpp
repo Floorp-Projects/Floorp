@@ -211,8 +211,13 @@ NS_IMETHODIMP nsSVGLengthList::Clear()
 }
 
 /* nsIDOMSVGLength initialize (in nsIDOMSVGLength newItem); */
-NS_IMETHODIMP nsSVGLengthList::Initialize(nsIDOMSVGLength *newItem, nsIDOMSVGLength **_retval)
+NS_IMETHODIMP nsSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
+                                          nsIDOMSVGLength **_retval)
 {
+  if (!newItem) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
   Clear();
   return AppendItem(newItem, _retval);
 }
@@ -232,16 +237,28 @@ NS_IMETHODIMP nsSVGLengthList::GetItem(PRUint32 index, nsIDOMSVGLength **_retval
 
 /* nsIDOMSVGLength insertItemBefore (in nsIDOMSVGLength newItem, in unsigned long index); */
 NS_IMETHODIMP
-nsSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem, PRUint32 index, nsIDOMSVGLength **_retval)
+nsSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
+                                  PRUint32 index,
+                                  nsIDOMSVGLength **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGLength replaceItem (in nsIDOMSVGLength newItem, in unsigned long index); */
 NS_IMETHODIMP
-nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem, PRUint32 index, nsIDOMSVGLength **_retval)
+nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
+                             PRUint32 index,
+                             nsIDOMSVGLength **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -268,9 +285,8 @@ nsSVGLengthList::AppendItem(nsIDOMSVGLength *newItem, nsIDOMSVGLength **_retval)
 {
   nsCOMPtr<nsISVGLength> length = do_QueryInterface(newItem);
   if (!length) {
-    NS_ERROR("length doesn't implement required interface");
     *_retval = nsnull;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
   AppendElement(length);
 
