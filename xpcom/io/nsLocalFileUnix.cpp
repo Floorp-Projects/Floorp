@@ -776,8 +776,13 @@ NS_IMETHODIMP
 nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
 {
     NS_ENSURE_ARG(aLastModificationDate);
-    VALIDATE_STAT_CACHE();
-    mLL_II2L(0, (PRUint32)mCachedStat.st_mtime, *aLastModificationDate);
+    CHECK_mPath();
+    PRFileInfo64 info;
+    if (PR_GetFileInfo64(mPath, &info) != PR_SUCCESS) {
+        return NSRESULT_FOR_ERRNO();
+    }
+    // PRTime is a 64 bit value
+    *aLastModificationDate = info.modifyTime;
     return NS_OK;
 }
 
