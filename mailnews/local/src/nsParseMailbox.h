@@ -251,8 +251,7 @@ public:
 										 nsIMsgFilter *filter,
 										 PRBool *pMoved);
 #endif
-	// nsIMsgFilterHitNotification method(s)
-	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
+	NS_DECL_NSIMSGFILTERHITNOTIFY
 
 	nsOutputFileStream *GetLogFile();
 	virtual PRInt32	PublishMsgHeader(nsIMsgWindow *msgWindow);
@@ -267,7 +266,7 @@ protected:
                                             nsIMsgFilter *filter,
                                             nsIMsgWindow *msgWindow);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
-			void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
+  void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;
 	nsCOMPtr <nsIFolder> m_rootFolder;
 	nsIOFileStream		*m_inboxFileStream;

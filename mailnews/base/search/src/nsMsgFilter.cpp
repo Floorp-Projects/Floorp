@@ -268,7 +268,7 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
 #define LOG_ENTRY_END_TAG "</pre>\n"
 #define LOG_ENTRY_END_TAG_LEN (strlen(LOG_ENTRY_END_TAG))
 
-NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
+NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *aMsgHdr)
 {
     nsCOMPtr <nsIOutputStream> logStream;
     nsresult rv = m_filterList->GetLogStream(getter_AddRefs(logStream));
@@ -285,17 +285,19 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
 
     GetFilterName(getter_Copies(filterName));
     GetAction(&actionType);
-    rv = msgHdr->GetDate(&date);
+    rv = aMsgHdr->GetDate(&date);
     PRExplodedTime exploded;
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
 
-    msgHdr->GetAuthor(getter_Copies(author));
-    msgHdr->GetSubject(getter_Copies(subject));
+    aMsgHdr->GetAuthor(getter_Copies(author));
+    aMsgHdr->GetSubject(getter_Copies(subject));
 
     nsCString buffer;
-    buffer.SetCapacity(512);
-
+    // this is big enough to hold a log entry.  
+    // do this so we avoid growing and copying as we append to the log.
+    buffer.SetCapacity(512);  
+    
     buffer = "Applied filter \"";
     buffer +=  NS_ConvertUCS2toUTF8(filterName).get();
     buffer +=  "\" to message from ";
@@ -318,7 +320,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
     buffer += "\n";
     if (actionType == nsMsgFilterAction::MoveToFolder) {
       nsXPIDLCString msgId;
-      msgHdr->GetMessageId(getter_Copies(msgId));
+      aMsgHdr->GetMessageId(getter_Copies(msgId));
       buffer += (const char *) actionFolderUri;
       buffer += " id = ";
       buffer += (const char*)msgId;
@@ -331,6 +333,9 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
     NS_ENSURE_SUCCESS(rv,rv);
     NS_ASSERTION(writeCount == LOG_ENTRY_START_TAG_LEN, "failed to write out start log tag");
 
+    // html escape the log for security reasons.
+    // we don't want some to send us a message with a subject with
+    // html tags, especially <script>
     char *escapedBuffer = nsEscapeHTML(buffer.get());
     if (!escapedBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -344,10 +349,6 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
     rv = logStream->Write(LOG_ENTRY_END_TAG, LOG_ENTRY_END_TAG_LEN, &writeCount);
     NS_ENSURE_SUCCESS(rv,rv);
     NS_ASSERTION(writeCount == LOG_ENTRY_END_TAG_LEN, "failed to write out end log tag");
-
-    // flush to disk after ever log hit  
-    rv = logStream->Flush();
-    NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
 }
 

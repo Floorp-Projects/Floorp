@@ -4910,6 +4910,10 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     else
       aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
   }
+
+  if (m_filterList)
+    (void)m_filterList->FlushLogIfNecessary();
+ 
   return NS_OK;
 }
 

@@ -616,11 +616,11 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
   return NS_OK;
 }
 
-// remove this when news supports filters
+// fix this when news supports filters
 NS_IMETHODIMP
 nsNntpIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 

@@ -82,7 +82,6 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 #define PORT_NOT_SET -1
 
@@ -222,13 +221,13 @@ nsMsgIncomingServer::Shutdown()
   nsresult rv = CloseCachedConnections();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIMsgFilterList> filterList;
-  rv = GetFilterList(nsnull, getter_AddRefs(filterList));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // close the filter log stream
-  rv = filterList->SetLogStream(nsnull);
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (mFilterList) 
+  {
+    // close the filter log stream
+    rv = mFilterList->SetLogStream(nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+    mFilterList = nsnull;
+  }
   return rv;
 }
 
@@ -1069,11 +1068,9 @@ nsMsgIncomingServer::SetFilterList(nsIMsgFilterList *aFilterList)
 nsresult
 nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
-  nsresult rv;
-  
   if (!mFilterList) {
       nsCOMPtr<nsIMsgFolder> msgFolder;
-      rv = GetRootMsgFolder(getter_AddRefs(msgFolder));
+      nsresult rv = GetRootMsgFolder(getter_AddRefs(msgFolder));
       NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIFileSpec> thisFolder;
@@ -1089,13 +1086,13 @@ nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **
       mFilterFile->AppendRelativeUnixPath("rules.dat");
       
       nsCOMPtr<nsIMsgFilterService> filterService =
-          do_GetService(kMsgFilterServiceCID, &rv);
+          do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       
       rv = filterService->OpenFilterList(mFilterFile, msgFolder, aMsgWindow, getter_AddRefs(mFilterList));
       NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   NS_IF_ADDREF(*aResult = mFilterList);
   return NS_OK;
     

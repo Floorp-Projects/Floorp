@@ -240,7 +240,6 @@ NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLis
 NS_IMETHODIMP
 nsNoIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
-    *aResult = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

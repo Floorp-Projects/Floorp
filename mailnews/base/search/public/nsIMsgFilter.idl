@@ -100,7 +100,5 @@ interface nsIMsgFilter : nsISupports {
                   //                  [array, size_is(headerSize)] in string headers,
                   in unsigned long headerSize, out boolean result);
 
-    void logRuleHit(in nsIMsgDBHdr header);
-
-
+    void logRuleHit(in nsIMsgDBHdr aHeader);
 };

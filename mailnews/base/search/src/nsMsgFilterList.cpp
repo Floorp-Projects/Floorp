@@ -56,8 +56,6 @@
 #include "nsIFileStreams.h"
 #include "nsISupportsObsolete.h"
 
-static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
-
 // unicode "%s" format string
 static const PRUnichar unicodeFormatter[] = {
     (PRUnichar)'%',
@@ -330,7 +328,7 @@ nsMsgFilterList::SaveToDefaultFile()
 {
     nsresult rv;
     nsCOMPtr<nsIMsgFilterService> filterService =
-        do_GetService(kMsgFilterServiceCID, &rv);
+        do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return filterService->SaveFilterList(this, m_defaultFile);
@@ -1027,7 +1025,24 @@ NS_IMETHODIMP nsMsgFilterList::GetArbitraryHeaders(char **aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFilterList::FlushLogIfNecessary()
+{
+  // if we are logging, flush the log at the end of applying the filters
+  PRBool loggingEnabled = PR_FALSE;
+  nsresult rv = GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
 
+  if (loggingEnabled) 
+  {
+    nsCOMPtr <nsIOutputStream> logStream;
+    rv = GetLogStream(getter_AddRefs(logStream));    
+    if (NS_SUCCEEDED(rv) && logStream) {
+      rv = logStream->Flush();
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+  return rv;
+}
 
 #ifdef DEBUG
 void nsMsgFilterList::Dump()

@@ -125,6 +125,7 @@ interface nsIMsgFilterList : nsISupports {
     readonly attribute string logURL;
     void clearLog();
     void ensureLogFile();
+	void flushLogIfNecessary();
 };
 
 

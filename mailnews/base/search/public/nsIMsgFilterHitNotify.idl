@@ -54,7 +54,6 @@ interface nsIMsgWindow;
 
 [scriptable, uuid(c9f15174-1f3f-11d3-a51b-0060b0fc04b7)]
 interface nsIMsgFilterHitNotify : nsISupports {
-
     boolean applyFilterHit(in nsIMsgFilter filter, in nsIMsgWindow msgWindow);
 };
 

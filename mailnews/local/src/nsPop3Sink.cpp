@@ -240,6 +240,16 @@ nsPop3Sink::EndMailDelivery()
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
+  if (server) {
+    nsCOMPtr <nsIMsgFilterList> filterList;
+    rv = server->GetFilterList(nsnull, getter_AddRefs(filterList)); 
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (filterList)
+      (void) filterList->FlushLogIfNecessary();
+  }
+
 #ifdef DEBUG
     printf("End mail message delivery.\n");
 #endif 

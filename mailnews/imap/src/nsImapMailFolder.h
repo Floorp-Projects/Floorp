@@ -332,9 +332,10 @@ public:
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
-	// nsIMsgFilterHitNotification method(s)
-	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
-        NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
+	
+  NS_DECL_NSIMSGFILTERHITNOTIFY
+
+	      NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
         NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
         
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 

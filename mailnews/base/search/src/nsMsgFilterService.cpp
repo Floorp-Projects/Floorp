@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -59,6 +60,7 @@
 #include "nsIRDFService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgCopyService.h"
+#include "nsIOutputStream.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
@@ -360,14 +362,16 @@ nsMsgFilterAfterTheFact::~nsMsgFilterAfterTheFact()
 }
 
 // do what we have to do to cleanup.
-nsresult  nsMsgFilterAfterTheFact::OnEndExecution(nsresult executionStatus)
+nsresult nsMsgFilterAfterTheFact::OnEndExecution(nsresult executionStatus)
 {
   if (m_searchSession)
     m_searchSession->UnregisterListener(this);
 
+  if (m_filters)
+    (void)m_filters->FlushLogIfNecessary();
+
   Release(); // release ourselves.
   return executionStatus;
-
 }
 
 nsresult nsMsgFilterAfterTheFact::RunNextFilter()
@@ -462,6 +466,7 @@ NS_IMETHODIMP nsMsgFilterAfterTheFact::OnSearchDone(nsresult status)
   PRBool continueExecution = NS_SUCCEEDED(status);
   if (!continueExecution)
     continueExecution = ContinueExecutionPrompt();
+
   if (continueExecution)
     return (m_searchHits.GetSize() > 0) ? ApplyFilter() : RunNextFilter();
   else
@@ -477,7 +482,6 @@ NS_IMETHODIMP nsMsgFilterAfterTheFact::OnNewSearch()
 
 nsresult nsMsgFilterAfterTheFact::ApplyFilter()
 {
-
   nsresult rv = NS_OK;
   if (m_curFilter && m_curFolder)
   {
