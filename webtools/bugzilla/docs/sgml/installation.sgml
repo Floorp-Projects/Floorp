@@ -597,7 +597,7 @@
       
       <para> 
         <programlisting>
-perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm processmail syncshadowdb
+perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm syncshadowdb
         </programlisting>
 
         Change <filename>/usr/bin/perl</filename> to match the location
@@ -1424,18 +1424,13 @@ my $webservergid = '8'
           the <function>system</function> call.  For example, you'll need to
           change:
           </para>
-<!-- We'll need a different example when there's no more processmail -->
           <programlisting>
-system("./processmail", $id, $exporter);
+system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
           </programlisting>
           <para>with</para>
           <programlisting>
-system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
+system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filename");
           </programlisting>
-
-          <para>Notice that the <computeroutput>./</computeroutput> is also
-          removed.
-          </para>
 
           <tip>
             <para>The <command>grep</command> command is very helpful in finding
@@ -1443,6 +1438,16 @@ system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
             <productname class="trade">cygwin</productname> utilities.
             </para>
           </tip>
+
+          <note>
+            <para>It appears that the only <function>system</function> call
+            remaining in the Bugzilla codebase is in
+            <filename>showdependencygraph.cgi</filename>. Not changing this
+            file will only cause dependency graphs to not function if the
+            <option>webdotbase</option> paramater points to a local
+            installation of <ulink url="http://www.graphviz.org">GraphViz</ulink>.
+            </para>
+          </note>
 
         </section>
 
@@ -1613,7 +1618,7 @@ AllowOverride Limit
           <para><filename>$BUGZILLA_HOME/.htaccess</filename>
           <programlisting><![CDATA[
 # don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
+<FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
   deny from all
 </FilesMatch>
 <FilesMatch ^(localconfig.js|localconfig.rdf)$>
@@ -1721,7 +1726,6 @@ deny from all
 ns_register_filter preauth GET /bugzilla/localconfig filter_deny
 ns_register_filter preauth GET /bugzilla/*.pl filter_deny
 ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-ns_register_filter preauth GET /bugzilla/processmail filter_deny
 ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
 ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
 

@@ -778,14 +778,16 @@
 	</question>
 	<answer>
 	  <para>
-	    If you are using an alternate Mail Transport Agent (MTA other than
-	    sendmail), make sure the options given in the "processmail" and other
-      scripts for all
-	    instances of "sendmail" are correct for your MTA.
+	    If you are using an alternate <glossterm linkend="gloss-mta">MTA</glossterm>,
+            make sure the options given in <filename>Bugzilla/BugMail.pm</filename>
+            and any other place where <application>sendmail</application> is called from
+	    are correct for your MTA. You should also ensure that the
+            <option>sendmailnow</option> param is set to <literal>on</literal>.
 	  </para>
 	  <para>
-	    If you are using Sendmail, try enabling "sendmailnow" in editparams.cgi.
-            If you are using Postfix, you will also need to enable <quote>sendmailnow</quote>.
+	    If you are using <application>sendmail</application>, try enabling
+            <option>sendmailnow</option> in <filename>editparams.cgi</filename>.
+            <!-- TODO provide more info about this, possibly a link to admin -->
 	  </para>
 	</answer>
       </qandaentry>

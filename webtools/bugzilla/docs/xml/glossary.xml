@@ -227,6 +227,21 @@
   <glossdiv id="gloss-m">
     <title>M</title>
 
+    <glossentry id="gloss-mta">
+      <glossterm>Message Transport Agent</glossterm>
+      <acronym>MTA</acronym>
+
+      <glossdef>
+        <para>A Message Transport Agent is used to control the flow of email
+        on a system. Many unix based systems use
+        <ulink url="http://www.sendmail.org">sendmail</ulink> which is what
+        Bugzilla expects to find by default at <filename>/usr/sbin/sendmail</filename>.
+        Many other MTA's will work, but they all require that the
+        <option>sendmailnow</option> param be set to <literal>on</literal>.
+        </para>
+      </glossdef>
+    </glossentry>
+
     <glossentry>
       <glossterm>mysqld</glossterm>
 
