@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 
 class nsIInputStream;
-struct nsIStreamListener;
+class nsIStreamListener;
 class nsString;
 
 #define NS_IURL_IID           \
