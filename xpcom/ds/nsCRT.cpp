@@ -234,7 +234,7 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
     delimTable[i] = '\0';
 
   for (i = 0; delims[i]; i++) {
-    SET_DELIM(delimTable, PRUint8(delims[i]));
+    SET_DELIM(delimTable, (PRUint8)delims[i]);
   }
   NS_ASSERTION(delims[i] == '\0', "too many delimiters");
 
@@ -246,7 +246,7 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
 
   // fix up the end of the token
   while (*str) {
-    if (IS_DELIM(delimTable, PRUint8(*str))) {
+    if (IS_DELIM(delimTable, (PRUint8)*str)) {
       *str++ = '\0';
       break;
     }
