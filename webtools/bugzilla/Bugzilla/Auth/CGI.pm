@@ -25,9 +25,8 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
-#                 Erik Stambaugh <erik@dasbistro.com>
 
-package Bugzilla::Auth::Login::CGI;
+package Bugzilla::Auth::CGI;
 
 use strict;
 
@@ -50,7 +49,7 @@ sub login {
     my $username = $cgi->param("Bugzilla_login");
     my $passwd = $cgi->param("Bugzilla_password");
 
-    my $authmethod = Param("user_verify_method");
+    my $authmethod = Param("loginmethod");
     my ($authres, $userid, $extra, $info) =
       Bugzilla::Auth->authenticate($username, $passwd);
 
@@ -99,11 +98,11 @@ sub login {
         $username = $cgi->cookie("Bugzilla_login");
         $passwd = $cgi->cookie("Bugzilla_logincookie");
 
-        require Bugzilla::Auth::Login::CGI::Cookie;
+        require Bugzilla::Auth::Cookie;
         my $authmethod = "Cookie";
 
         ($authres, $userid, $extra) =
-          Bugzilla::Auth::Login::CGI::Cookie->authenticate($username, $passwd);
+          Bugzilla::Auth::Cookie->authenticate($username, $passwd);
 
         # If the data for the cookie was incorrect, then treat that as
         # NODATA. This could occur if the user's IP changed, for example.
@@ -144,7 +143,7 @@ sub login {
                            { 'target' => $cgi->url(-relative=>1),
                              'form' => \%::FORM,
                              'mform' => \%::MFORM,
-                             'caneditaccount' => Bugzilla::Auth->can_edit->{'new'},
+                             'caneditaccount' => Bugzilla::Auth->can_edit,
                            }
                           )
           || ThrowTemplateError($template->error());
@@ -234,7 +233,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Auth::Login::CGI - CGI-based logins for Bugzilla
+Bugzilla::Auth::CGI - CGI-based logins for Bugzilla
 
 =head1 SUMMARY
 
@@ -247,7 +246,7 @@ Users are first authenticated against the default authentication handler,
 using the CGI parameters I<Bugzilla_login> and I<Bugzilla_password>.
 
 If no data is present for that, then cookies are tried, using
-L<Bugzilla::Auth::Login::CGI::Cookie>.
+L<Bugzilla::Auth::Cookie>.
 
 =head1 SEE ALSO
 

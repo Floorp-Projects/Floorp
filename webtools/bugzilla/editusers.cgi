@@ -23,7 +23,6 @@
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joel Peshkin <bugreport@peshkin.net>
-#                 Erik Stambaugh <erik@dasbistro.com>
 #
 # Direct any questions on this source code to
 #
@@ -115,11 +114,15 @@ sub EmitFormElements ($$$$)
     if ($editall) {
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Password:</TH>\n";
+        if(!Bugzilla::Auth->can_edit) {
+          print "  <TD><FONT COLOR=RED>This site's authentication method does not allow password changes through Bugzilla!</FONT></TD>\n";
+        } else {
           print qq|
             <TD><INPUT TYPE="PASSWORD" SIZE="16" MAXLENGTH="16" NAME="password" VALUE=""><br>
                 (enter new password to change)
             </TD>
           |;
+        }
         print "</TR><TR>\n";
 
         print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
@@ -206,7 +209,7 @@ sub EmitFormElements ($$$$)
 sub PutTrailer (@)
 {
     my (@links) = ("Back to the <a href=\"./\">index</a>");
-    if($editall) {
+    if($editall && Bugzilla::Auth->can_edit) {
           push(@links,
               "<a href=\"editusers.cgi?action=add\">add</a> a new user");
     }
@@ -358,7 +361,7 @@ if ($action eq 'list') {
         }
         print "</TR>";
     }
-    if ($editall) {
+    if ($editall && Bugzilla::Auth->can_edit) {
         print "<TR>\n";
         my $span = $candelete ? 3 : 2;
         print qq{
@@ -392,6 +395,12 @@ if ($action eq 'add') {
         exit;
     }
 
+    if(!Bugzilla::Auth->can_edit) {
+      print "The authentication mechanism you are using does not permit accounts to be created from Bugzilla";
+      PutTrailer();
+      exit;
+    }
+
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
@@ -421,6 +430,12 @@ if ($action eq 'new') {
         print "Sorry, you don't have permissions to add new users.";
         PutTrailer();
         exit;
+    }
+
+    if (!Bugzilla::Auth->can_edit) {
+      print "This site's authentication mechanism does not allow new users to be added.";
+      PutTrailer();
+      exit;
     }
 
     # Cleanups and valididy checks
@@ -799,7 +814,7 @@ if ($action eq 'update') {
 
 
     # Update the database with the user's new password if they changed it.
-    if ( $editall && $password ) {
+    if ( Bugzilla::Auth->can_edit && $editall && $password ) {
         my $passworderror = ValidatePassword($password);
         if ( !$passworderror ) {
             my $cryptpassword = SqlQuote(Crypt($password));

@@ -26,7 +26,7 @@
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
 
-package Bugzilla::Auth::Login::CGI::Cookie;
+package Bugzilla::Auth::Cookie;
 
 use strict;
 
@@ -93,7 +93,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Auth::Login::CGI::Cookie - cookie authentication for Bugzilla
+Bugzilla::Cookie - cookie authentication for Bugzilla
 
 =head1 SUMMARY
 
@@ -108,8 +108,8 @@ restricted to certain IP addresses as a security meaure. The exact
 restriction can be specified by the admin via the C<loginnetmask> parameter.
 
 This module does not ever send a cookie (It has no way of knowing when a user
-is successfully logged in). Instead L<Bugzilla::Auth::Login::CGI> handles this.
+is successfully logged in). Instead L<Bugzilla::Auth::CGI> handles this.
 
 =head1 SEE ALSO
 
-L<Bugzilla::Auth>, L<Bugzilla::Auth::Login::CGI>
+L<Bugzilla::Auth>, L<Bugzilla::Auth::CGI>
