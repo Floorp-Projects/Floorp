@@ -1,0 +1,90 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
+ *
+ * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
+ * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
+ * get linked with the plugin. You will however need to link with the "backward
+ * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
+ * browsers. 
+ *
+ * <P>See nsPlugin.idl for an overview of how this interface fits with the 
+ * overall plugin architecture.
+ */
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsIPluginManager.idl"
+
+/**
+ * Plugin Manager 2 Interface
+ * These extensions to nsIPluginManager are only available in Communicator 5.0.
+ */
+[scriptable, uuid(99967220-2df8-11d4-8cf4-0060b0fc14a3)]
+interface nsIPluginManager2 : nsIPluginManager
+{
+    /**
+     * Puts up a wait cursor.
+     */
+    void beginWaitCursor();
+
+    /**
+     * Restores the previous (non-wait) cursor.
+     */
+    void endWaitCursor();
+
+    /**
+     * Returns true if a URL protocol (e.g. "http") is supported.
+     *
+     * @param protocol - the protocol name
+     * @result - true if the protocol is supported
+     */
+    boolean supportsURLProtocol(in string protocol);
+
+    /**
+     * This method may be called by the plugin to indicate that an error 
+     * has occurred, e.g. that the plugin has failed or is shutting down 
+     * spontaneously. This allows the browser to clean up any plugin-specific 
+     * state.
+     *
+     * @param plugin - the plugin whose status is changing
+     * @param errorStatus - the the error status value
+     */
+    void notifyStatusChange(in nsIPlugin plugin,
+                            in nsresult errorStatus);
+    
+    /**
+     * Returns the proxy info for a given URL. The caller is required to
+     * free the resulting memory with nsIAllocator::Free. The result will be in the
+     * following format
+     * 
+     *   i)   "DIRECT"  -- no proxy
+     *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
+     *   iii) Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
+     *                    "PROXY 111.111.111.111;...
+     *
+     * Which proxy to use is determined by the plugin.
+     */
+    string findProxyForURL(in wstring url);
+};
