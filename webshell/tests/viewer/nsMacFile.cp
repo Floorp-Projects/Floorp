@@ -20,6 +20,14 @@
 #include "xp_file.h"
 #include "prlog.h"
 
+#define USE_MSL
+
+#ifdef USE_MSL
+PR_BEGIN_EXTERN_C
+PR_EXTERN(OSErr) ConvertUnixPathToMacPath(const char *, char **);
+PR_END_EXTERN_C
+#endif
+
 //
 // XP_File routines
 // The implementation has not been thorougly tested
@@ -45,6 +53,19 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 		PR_ASSERT(FALSE);
 		return NULL;
 	}
+
+#ifdef USE_MSL
+	// use MSL like the other functions in xp_file.h
+	char *macFileName = NULL;
+
+    OSErr err = ConvertUnixPathToMacPath(name, &macFileName);
+	if (err != noErr)
+		return NULL;
+
+	return (XP_File)fopen(macFileName, inPermissions);
+
+#else
+	// use NSPR as is would be nice to do one day
 	PRIntn permissions = 0;
 	for ( char * p = inPermissions; *p; p++)
 	{
@@ -80,6 +101,7 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 		}
 	}
 	return (XP_File)PR_Open(name, 0x600,  permissions);
+#endif // USE_MSL
 }
 
 int XP_FileRemove( const char* name, XP_FileType type )
