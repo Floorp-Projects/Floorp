@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMDocument.idl"
 
 [scriptable, uuid(8816d003-e7c8-4065-8827-829b8d07b6e0)]
-interface nsIDOMXMLDocument : nsISupports
+interface nsIDOMXMLDocument : nsIDOMDocument
 {
   void                      load(in DOMString url);
 };
