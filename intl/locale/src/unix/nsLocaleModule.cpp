@@ -43,6 +43,7 @@
 #include "nsLocaleSO.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsLanguageAtomService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -53,6 +54,11 @@ NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
 NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+
+//
+// for language atoms
+//
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -228,6 +234,8 @@ static Components gComponents[] = {
     NULL, },
   { "Scriptable Date Format", &kScriptableDateFormatCID,
     NS_SCRIPTABLEDATEFORMAT_PROGID, },
+  { "Language Atom Service", &kLanguageAtomServiceCID,
+    NS_LANGUAGEATOMSERVICE_PROGID, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
