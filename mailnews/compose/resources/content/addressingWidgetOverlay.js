@@ -101,6 +101,8 @@ function CompFields2Recipients(msgCompFields)
 		// remove extra rows
 		while ( top.MAX_RECIPIENTS > row )
 			awRemoveRow(top.MAX_RECIPIENTS);
+		
+		setTimeout("awFinishCopyNodes();", 0);
 	}
 }
 
@@ -501,7 +503,7 @@ function awFinishCopyNode(node)
 			}
 		}
 	}
-
+	
 	// children of nodes
 	if ( node.childNodes )
 	{
@@ -510,6 +512,13 @@ function awFinishCopyNode(node)
 		for ( var child = 0; child < node.childNodes.length; child++ )
 			childNode = awFinishCopyNode(node.childNodes[child]);
 	}
+}
+
+
+function awFinishCopyNodes()
+{
+    for ( var row = 2; row <= top.MAX_RECIPIENTS; row++ )
+        awFinishCopyNode(awGetTreeRow(row));
 }
 
 
