@@ -48,26 +48,27 @@
 #include "nsIStringBundle.h"
 #include "nsIFindComponent.h"
 #include "nsILocalFile.h"
+#include "nsWeakReference.h"
 
-class nsMessenger : public nsIMessenger
+class nsMessenger : public nsIMessenger, public nsSupportsWeakReference
 {
   
 public:
   nsMessenger();
   virtual ~nsMessenger();
 
-	NS_DECL_ISUPPORTS  
-	NS_DECL_NSIMESSENGER
+  NS_DECL_ISUPPORTS  
+  NS_DECL_NSIMESSENGER
     
   nsresult Alert(const char * stringName);
-    nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
+  nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
                             const char* messageUri, const char* contentType, 
                             void *closure);
   nsresult PromptIfFileExists(nsFileSpec &fileSpec);
 
 protected:
-	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
-	nsresult DoCommand(nsIRDFCompositeDataSource *db, const char * command, nsISupportsArray *srcArray, 
+  nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
+  nsresult DoCommand(nsIRDFCompositeDataSource *db, const char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
   PRUnichar *GetString(const PRUnichar *aStringName);
   nsresult InitStringBundle();
@@ -84,7 +85,7 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
   /* rhp - need this to drive message display */
-  nsIDOMWindowInternal              *mWindow;
+  nsIDOMWindowInternal      *mWindow;
   nsCOMPtr<nsIMsgWindow>    mMsgWindow;
   nsCOMPtr<nsIDocShell>     mDocShell;
 
@@ -96,6 +97,7 @@ private:
   nsCOMPtr<nsISupports>  mSearchContext;
   nsCString   mLastDisplayURI; // this used when the user attempts to force a charset reload of a message...we need to get the last displayed
                                // uri so we can re-display it..
+  PRBool  mSendingUnsentMsgs;
 };
 
 #define NS_MESSENGER_CID \

@@ -104,6 +104,8 @@ interface nsIMessenger : nsISupports {
     void find();
     void findAgain();
 
+    attribute boolean sendingUnsentMsgs;
+
     nsIMsgMessageService messageServiceFromURI(in string uri);
 };
 

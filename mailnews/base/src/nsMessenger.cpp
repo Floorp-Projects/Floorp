@@ -303,12 +303,12 @@ public:
 //
 nsMessenger::nsMessenger() 
 {
-	NS_INIT_REFCNT();
-	mScriptObject = nsnull;
-	mWindow = nsnull;
+  NS_INIT_REFCNT();
+  mScriptObject = nsnull;
+  mWindow = nsnull;
   mMsgWindow = nsnull;
   mStringBundle = nsnull;
-
+  mSendingUnsentMsgs = PR_FALSE;
   //	InitializeFolderRoot();
 }
 
@@ -321,7 +321,8 @@ nsMessenger::~nsMessenger()
 }
 
 
-NS_IMPL_ISUPPORTS1(nsMessenger, nsIMessenger)
+NS_IMPL_ISUPPORTS2(nsMessenger, nsIMessenger, nsISupportsWeakReference)
+NS_IMPL_GETSET(nsMessenger, SendingUnsentMsgs, PRBool, mSendingUnsentMsgs);
 
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
@@ -1423,7 +1424,7 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 class SendLaterListener: public nsIMsgSendLaterListener
 {
 public:
-  SendLaterListener(void);
+  SendLaterListener(nsIMessenger *);
   virtual ~SendLaterListener(void);
 
   // nsISupports interface
@@ -1440,22 +1441,34 @@ public:
 
   /* void OnStopSending (in nsresult aStatus, in wstring aMsg, in PRUint32 aTotalTried, in PRUint32 aSuccessful); */
   NS_IMETHOD OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, PRUint32 aSuccessful);
+protected:
+  nsWeakPtr m_messenger; 
 };
 
 NS_IMPL_ISUPPORTS1(SendLaterListener, nsIMsgSendLaterListener)
 
-SendLaterListener::SendLaterListener()
+SendLaterListener::SendLaterListener(nsIMessenger *aMessenger)
 {
+  m_messenger = getter_AddRefs(NS_GetWeakReference(aMessenger));
   NS_INIT_REFCNT();
 }
 
 SendLaterListener::~SendLaterListener()
 {
+  nsCOMPtr <nsIMessenger> messenger = do_QueryReferent(m_messenger);
+  // best to be defensive about this, in case OnStopSending doesn't get called.
+  if (messenger)
+    messenger->SetSendingUnsentMsgs(PR_FALSE);
+  m_messenger = nsnull;
 }
 
 nsresult
 SendLaterListener::OnStartSending(PRUint32 aTotalMessageCount)
 {
+  // this never gets called :-(
+  nsCOMPtr <nsIMessenger> messenger = do_QueryReferent(m_messenger);
+  if (messenger)
+    messenger->SetSendingUnsentMsgs(PR_TRUE);
   return NS_OK;
 }
 
@@ -1481,34 +1494,38 @@ SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint
             aTotalTried, aSuccessful);
 #endif
 
+  nsCOMPtr <nsIMessenger> messenger = do_QueryReferent(m_messenger);
+  if (messenger)
+    messenger->SetSendingUnsentMsgs(PR_FALSE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWindow)
 {
-	nsresult rv;
-	nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
-	rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,NS_GET_IID(nsIMsgSendLater),
-																					(void **)getter_AddRefs(pMsgSendLater)); 
-	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
-	{ 
+    nsresult rv;
+    nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
+    rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,NS_GET_IID(nsIMsgSendLater),
+																				    (void **)getter_AddRefs(pMsgSendLater)); 
+    if (NS_SUCCEEDED(rv) && pMsgSendLater) 
+    { 
 #ifdef DEBUG
-		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
+        printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
 #endif
 
-    SendLaterListener *sendLaterListener = new SendLaterListener();
-    if (!sendLaterListener)
-        return NS_ERROR_FAILURE;
+      SendLaterListener *sendLaterListener = new SendLaterListener(this);
+      if (!sendLaterListener)
+          return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(sendLaterListener);
-    pMsgSendLater->AddListener(sendLaterListener);
-    pMsgSendLater->SetMsgWindow(aMsgWindow);
+      NS_ADDREF(sendLaterListener);
+      pMsgSendLater->AddListener(sendLaterListener);
+      pMsgSendLater->SetMsgWindow(aMsgWindow);
+      mSendingUnsentMsgs = PR_TRUE;
 
-    pMsgSendLater->SendUnsentMessages(aIdentity); 
-    NS_RELEASE(sendLaterListener);
-	} 
-	return NS_OK;
+      pMsgSendLater->SendUnsentMessages(aIdentity); 
+      NS_RELEASE(sendLaterListener);
+    } 
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMessenger::DoPrint()
