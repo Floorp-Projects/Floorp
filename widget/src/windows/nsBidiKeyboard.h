@@ -43,6 +43,7 @@ protected:
   PRBool mDefaultsSet;
   char mLTRKeyboard[KL_NAMELENGTH];
   char mRTLKeyboard[KL_NAMELENGTH];
+  char mCurrentLocaleName[KL_NAMELENGTH];
 #endif // IBMBIDI
 };
 
