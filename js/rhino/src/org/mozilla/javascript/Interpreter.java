@@ -413,28 +413,19 @@ public class Interpreter
                 break;
             }
 
-            case Token.TARGET : {
+            case Token.TARGET :
                 markTargetLabel(node, iCodeTop);
                 break;
-            }
 
             case Token.EQOP :
-            case Token.RELOP : {
+            case Token.RELOP :
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 int op = node.getOperation();
-                if (version == Context.VERSION_1_2) {
-                    if (op == Token.EQ) {
-                        op = Token.SHEQ;
-                    } else if (op == Token.NE) {
-                        op = Token.SHNE;
-                    }
-                }
                 iCodeTop = addToken(op, iCodeTop);
                 itsStackDepth--;
                 break;
-            }
 
             case Token.NEW :
             case Token.CALL : {

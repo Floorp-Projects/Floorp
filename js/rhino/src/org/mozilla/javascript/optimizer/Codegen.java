@@ -2825,15 +2825,14 @@ public class Codegen extends Interpreter {
         generateCodeFromNode(child, node);
         generateCodeFromNode(child.getNext(), node);
 
-        // JavaScript 1.2 uses shallow equality for == and !=
         String name;
         switch (op) {
           case Token.EQ:
-            name = version == Context.VERSION_1_2 ? "seqB" : "eqB";
+            name = "eqB";
             break;
 
           case Token.NE:
-            name = version == Context.VERSION_1_2 ? "sneB" : "neB";
+            name = "neB";
             break;
 
           case Token.SHEQ:
@@ -2935,7 +2934,7 @@ public class Codegen extends Interpreter {
         String name;
         switch (op) {
           case Token.EQ:
-            name = version == Context.VERSION_1_2 ? "shallowEq" : "eq";
+            name = "eq";
             addScriptRuntimeInvoke(name,
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
@@ -2943,7 +2942,7 @@ public class Codegen extends Interpreter {
             break;
 
           case Token.NE:
-            name = version == Context.VERSION_1_2 ? "shallowNeq" : "neq";
+            name = "neq";
             addOptRuntimeInvoke(name,
                                 "(Ljava/lang/Object;"
                                 +"Ljava/lang/Object;"
