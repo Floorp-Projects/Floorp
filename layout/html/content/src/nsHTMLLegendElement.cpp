@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLLegendElement.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,8 +27,11 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIForm.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 
 class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
                             public nsIScriptObjectOwner,
@@ -72,6 +76,7 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  nsIForm*                      mForm;
 };
 
 nsresult
@@ -92,10 +97,14 @@ nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mForm = nsnull;
 }
 
 nsHTMLLegendElement::~nsHTMLLegendElement()
 {
+  if (mForm) {
+    NS_RELEASE(mForm);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLLegendElement)
@@ -129,25 +138,52 @@ nsHTMLLegendElement::CloneNode(nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = nsnull;/* XXX */
-  return NS_OK;
+  nsresult result = NS_OK;
+  *aForm = nsnull;
+  if (nsnull != mForm) {
+    nsIDOMHTMLFormElement* formElem = nsnull;
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    if (NS_OK == result) {
+      *aForm = formElem;
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP
 nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  return NS_OK;
+	if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    return aForm->QueryInterface(kIFormIID, (void**)&mForm);
+  }
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align, eSetAttrNotify_Reflow)
+
+// this contains center, because IE4 does
+static nsGenericHTMLElement::EnumTable kAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
+  { 0 }
+};
 
 NS_IMETHODIMP
 nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
                                        const nsString& aValue,
                                        nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -156,7 +192,12 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -165,7 +206,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 

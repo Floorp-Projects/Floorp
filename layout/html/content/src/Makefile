@@ -38,6 +38,7 @@ CPPSRCS=				\
 	nsHTMLDirectoryElement.cpp	\
 	nsHTMLDivElement.cpp		\
 	nsHTMLEmbedElement.cpp		\
+	nsHTMLFieldSetElement.cpp		\
 	nsHTMLFontElement.cpp		\
 	nsHTMLFormElement.cpp		\
 	nsHTMLFrameElement.cpp		\

@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsIDOMHTMLLegendElement.h"
+#include "nsIDOMHTMLFieldsetElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -28,19 +28,22 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIForm.h"
+#include "nsIFormControl.h"
 
-static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFieldSetElementIID, NS_IDOMHTMLFIELDSETELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 
-class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
-                            public nsIScriptObjectOwner,
-                            public nsIDOMEventReceiver,
-                            public nsIHTMLContent
+class nsHTMLFieldSetElement : public nsIDOMHTMLFieldSetElement,
+                              public nsIScriptObjectOwner,
+                              public nsIDOMEventReceiver,
+                              public nsIHTMLContent,
+                              public nsIFormControl
 {
 public:
-  nsHTMLLegendElement(nsIAtom* aTag);
-  ~nsHTMLLegendElement();
+  nsHTMLFieldSetElement(nsIAtom* aTag);
+  ~nsHTMLFieldSetElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -57,10 +60,6 @@ public:
   // nsIDOMHTMLLegendElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -74,60 +73,91 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFormControl
+  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD SetWidget(nsIWidget* aWidget);
+  NS_IMETHOD Init() { return NS_OK; }
+
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIForm*                      mForm;
 };
 
+// construction, destruction
+
 nsresult
-NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* it = new nsHTMLLegendElement(aTag);
+  nsIHTMLContent* it = new nsHTMLFieldSetElement(aTag);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
+nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
 }
 
-nsHTMLLegendElement::~nsHTMLLegendElement()
+nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 {
-  if (mForm) {
+  if (nsnull != mForm) {
+    // prevent mForm from decrementing its ref count on us
+    mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
 }
 
-NS_IMPL_ADDREF(nsHTMLLegendElement)
+// nsISupports
 
-NS_IMPL_RELEASE(nsHTMLLegendElement)
+NS_IMPL_ADDREF(nsHTMLFieldSetElement)
+
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLFieldSetElement::Release()
+{
+  --mRefCnt;
+	if (mRefCnt <= 0) {
+    delete this;                                       
+    return 0;                                          
+  } else if ((1 == mRefCnt) && mForm) { 
+    mRefCnt = 0;
+    delete this;
+    return 0;
+  } else {
+    return mRefCnt;
+  }
+}
 
 nsresult
-nsHTMLLegendElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsHTMLFieldSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLLegendElementIID)) {
-    nsIDOMHTMLLegendElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
+  if (aIID.Equals(kIDOMHTMLFieldSetElementIID)) {
+    *aInstancePtr = (void*)(nsIDOMHTMLFieldSetElement*)this;
+    mRefCnt++;
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFormControlIID)) {
+    *aInstancePtr = (void*)(nsIFormControl*)this;
     mRefCnt++;
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
 
+// nsIDOMHTMLFieldSetElement
+
 nsresult
-nsHTMLLegendElement::CloneNode(nsIDOMNode** aReturn)
+nsHTMLFieldSetElement::CloneNode(nsIDOMNode** aReturn)
 {
-  nsHTMLLegendElement* it = new nsHTMLLegendElement(mInner.mTag);
+  nsHTMLFieldSetElement* it = new nsHTMLFieldSetElement(mInner.mTag);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -136,7 +166,7 @@ nsHTMLLegendElement::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
+nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   nsresult result = NS_OK;
   *aForm = nsnull;
@@ -151,7 +181,7 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsHTMLFieldSetElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
 	if (nsnull == aForm) {
     mForm = nsnull;
@@ -162,42 +192,19 @@ nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
   }
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align, eSetAttrNotify_Reflow)
-
-// this contains center, because IE4 does
-static nsGenericHTMLElement::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
-  { 0 }
-};
-
 NS_IMETHODIMP
-nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
+nsHTMLFieldSetElement::StringToAttribute(nsIAtom* aAttribute,
                                        const nsString& aValue,
                                        nsHTMLValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
+nsHTMLFieldSetElement::AttributeToString(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -210,7 +217,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLFieldSetElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
 {
   aMapFunc = &MapAttributesInto;
   return NS_OK;
@@ -218,7 +225,7 @@ nsHTMLLegendElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) 
 
 
 NS_IMETHODIMP
-nsHTMLLegendElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLFieldSetElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
@@ -226,4 +233,24 @@ nsHTMLLegendElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+// nsIFormControl
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetType(PRInt32* aType)
+{
+  if (aType) {
+    *aType = NS_FORM_FIELDSET;
+    return NS_OK;
+  } else {
+    return NS_FORM_NOTOK;
+  }
+}
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::SetWidget(nsIWidget* aWidget)
+{
+  NS_ASSERTION(0, "Fieldset has no widget");
+  return NS_FORM_NOTOK;
 }
