@@ -163,6 +163,7 @@ pull_seamonkey: pull_clientmak
 pull_l10n:
 	cd $(MOZ_SRC)\.
 !if defined(MOZ_LANGPACKS)
+	$(CVSCO) mozilla/l10n/makefile.win
 	$(CVSCO) mozilla/l10n/langpacks
 !else
 	$(CVSCO) mozilla/l10n/makefile.win
