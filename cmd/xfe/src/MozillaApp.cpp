@@ -916,14 +916,18 @@ xfeDoCommandAction(Widget w, XEvent *event,
 
 			if (handler)
 			{
+#ifdef DEBUG_kin
 				printf("handler->doCommand(0x%.8x): %s\n", handler, cmd);
 				fflush(stdout);
+#endif /* DEBUG_kin */
 				handler->doCommand(v, &info);
 			}
 			else
 			{
+#ifdef DEBUG_kin
 				printf("v->doCommand(0x%.8x): %s\n", v, cmd);
 				fflush(stdout);
+#endif /* DEBUG_kin */
 				v->doCommand(cmd, NULL, &info);
 			}
 			return;
