@@ -92,6 +92,11 @@ static void PR_CALLBACK highPriority(void *arg)
 {
 }
 
+static void PR_CALLBACK unjoinable(void *arg)
+{
+    PR_Sleep(PR_INTERVAL_NO_TIMEOUT);
+}
+
 void runTest(PRThreadScope scope1, PRThreadScope scope2)
 {
     PRThread *low,*high;
@@ -139,6 +144,45 @@ void runTest(PRThreadScope scope1, PRThreadScope scope2)
     }
 }
 
+void joinWithUnjoinable(void)
+{
+    PRThread *thread;
+
+    /* create the unjoinable thread */
+    
+    thread = PR_CreateThread(PR_USER_THREAD,
+                     unjoinable, 0, 
+                     PR_PRIORITY_NORMAL,
+                     PR_GLOBAL_THREAD,
+                     PR_UNJOINABLE_THREAD,
+                     0);
+    if (!thread) {
+        if (debug_mode) printf("\tcannot create unjoinable thread\n");
+        else Test_Result(FAIL);
+        return;
+    }
+
+    if (PR_JoinThread(thread) == PR_SUCCESS) {
+        if (debug_mode) printf("\tsuccessfully joined with unjoinable thread?!\n");
+        else Test_Result(FAIL);
+        return;
+    } else {
+        if (debug_mode) printf("\tcannot join with unjoinable thread, as expected\n");
+        if (PR_GetError() != PR_INVALID_ARGUMENT_ERROR) {
+            if (debug_mode) printf("\tWrong error code\n");
+            else Test_Result(FAIL);
+            return;
+        }
+    }
+    if (PR_Interrupt(thread) == PR_FAILURE) {
+        if (debug_mode) printf("\tcannot interrupt unjoinable thread\n");
+        else Test_Result(FAIL);
+        return;
+    } else {
+        if (debug_mode) printf("\tinterrupted unjoinable thread\n");
+    }
+}
+
 static PRIntn PR_CALLBACK RealMain(int argc, char **argv)
 {
     /* The command line argument: -d is used to determine if the test is being run
@@ -180,6 +224,8 @@ static PRIntn PR_CALLBACK RealMain(int argc, char **argv)
     runTest(PR_GLOBAL_THREAD, PR_LOCAL_THREAD);
     printf("Kernel-Kernel test\n");
     runTest(PR_GLOBAL_THREAD, PR_GLOBAL_THREAD);
+    printf("Join with unjoinable thread\n");
+    joinWithUnjoinable();
 
     printf("PASSED\n");
 
