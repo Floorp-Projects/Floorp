@@ -769,7 +769,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 {
 #ifdef HAVE_PORT
   nsresult err = NS_OK;
-  XP_ASSERT (srcFolder->GetType() == GetType());  // we can only adopt the same type of folder
+  PR_ASSERT (srcFolder->GetType() == GetType());  // we can only adopt the same type of folder
   MSG_FolderInfoMail *mailFolder = (MSG_FolderInfoMail*) srcFolder;
 
   if (srcFolder == this)
@@ -806,7 +806,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
   // Add the folder to our tree in the right sorted position
   if (NS_OK == err)
   {
-    XP_ASSERT(m_subFolders->FindIndex(0, srcFolder) == -1);
+    PR_ASSERT(m_subFolders->FindIndex(0, srcFolder) == -1);
     *pOutPos = m_subFolders->Add (srcFolder);
   }
 

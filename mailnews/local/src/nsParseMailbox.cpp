@@ -400,7 +400,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 	if (line[0] == 'F' && IsEnvelopeLine(line, lineLength))
 	{
 		// **** This used to be
-		// XP_ASSERT (m_parseMsgState->m_state == nsMailboxParseBodyState);
+		// PR_ASSERT (m_parseMsgState->m_state == nsMailboxParseBodyState);
 		// **** I am not sure this is a right thing to do. This happens when
 		// going online, downloading a message while playing back append
 		// draft/template offline operation. We are mixing
@@ -2304,7 +2304,7 @@ PRInt32 ParseOutgoingMessage::ParseBlock(const char *block, PRUint32 length)
 		if (m_outputBuffer == nsnull)
 			m_ouputBufferSize /= 2;
 	}
-	XP_ASSERT(m_outputBuffer != nsnull);
+	PR_ASSERT(m_outputBuffer != nsnull);
 
 	return msg_LineBuffer (block, length, &m_outputBuffer, &m_ouputBufferSize,  &m_outputBufferIndex, PR_FALSE,
 #ifdef XP_OS2
