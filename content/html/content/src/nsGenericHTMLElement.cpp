@@ -1663,6 +1663,15 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
       }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
+  } else if (nsHTMLAtoms::dir == aAttribute) {
+    nsHTMLValue value;
+    nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      EnumValueToString(value, kDirTable, aResult);
+
+      return NS_OK;
+    }
   }
   aResult.Truncate();
   return NS_CONTENT_ATTR_NOT_THERE;
