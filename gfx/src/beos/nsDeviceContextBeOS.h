@@ -54,6 +54,7 @@ public:
   //in the device context for re-use.
 
   NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+  NS_IMETHOD GetRect(nsRect &aRect);
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
