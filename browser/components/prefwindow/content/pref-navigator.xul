@@ -67,8 +67,10 @@
                          .createInstance(nsIFilePicker);
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-      // XXXBlake Localize!
-      fp.init(window, "Select Download Directory:", nsIFilePicker.modeGetFolder);
+
+      var prefbundle = document.getElementById("bundle_prefutilities");
+      var description = prefbundle.getString("downloadDirTitle");
+      fp.init(window, description, nsIFilePicker.modeGetFolder);
       try 
       {
         var initialDir = pref.getComplexValue("browser.download.dir", nsILocalFile);
@@ -235,7 +237,8 @@
       <radio id="alwaysAskRadio" label="&rememberLast.label;" value="false"/>
       <hbox flex="1">
         <radio id="useDownloadDirRadio" label="&useDownloadDir.label;" value="true"/>
-        <textbox id="defaultDir" flex="1" readonly="true" prefstring="browser.download.dir"/>
+        <textbox id="defaultDir" flex="1" prefstring="browser.download.dir"
+                 onchange="checkDownloadDirectory();"/>
         <button id="browse" label="&browse.label;" oncommand="selectFolder();"/>
       </hbox>
     </radiogroup>
