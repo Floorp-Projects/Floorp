@@ -1533,16 +1533,17 @@ nsXPCConstructor::CallOrConstruct(JSContext *cx, JSObject *obj,
     // security check not required because we are going to call through the
     // code which is reflected into JS which will do that for us later.
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> cidHolder;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> iidHolder;
     JSObject* cidObj;
     JSObject* iidObj;
 
     if(NS_FAILED(xpc->WrapNative(cx, obj, mClassID, NS_GET_IID(nsIJSCID), 
-                 getter_AddRefs(holder))) || !holder ||
-       NS_FAILED(holder->GetJSObject(&cidObj)) || !cidObj ||
+                 getter_AddRefs(cidHolder))) || !cidHolder ||
+       NS_FAILED(cidHolder->GetJSObject(&cidObj)) || !cidObj ||
        NS_FAILED(xpc->WrapNative(cx, obj, mInterfaceID, NS_GET_IID(nsIJSIID), 
-                 getter_AddRefs(holder))) || !holder ||
-       NS_FAILED(holder->GetJSObject(&iidObj)) || !iidObj)
+                 getter_AddRefs(iidHolder))) || !iidHolder ||
+       NS_FAILED(iidHolder->GetJSObject(&iidObj)) || !iidObj)
     {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, retval);
     }
