@@ -65,6 +65,12 @@
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 
+// for X remote support
+#ifdef XP_UNIX
+#include "nsXRemoteClientCID.h"
+#include "nsIXRemoteClient.h"
+#endif
+
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
@@ -1063,6 +1069,52 @@ static void DumpVersion(char *appname)
 	printf("%s: version info\n", appname);
 }
 
+#ifdef XP_UNIX
+// use int here instead of a PR type since it will be returned
+// from main - just to keep types consistent
+static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
+{
+  int i = 0;
+  for (i=1; i < argc; i++) {
+    if (PL_strcasecmp(argv[i], "-remote") == 0) {
+      // someone used a -remote flag
+      *aArgUsed = PR_TRUE;
+      // check to make sure there's another arg
+      if (argc-1 == i) {
+        PR_fprintf(PR_STDERR, "-remote requires an argument\n");
+        return 1;
+      }
+      // try to get the X remote client
+      nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
+      if (!client)
+        return 1;
+      nsresult rv;
+      // try to init - connects to the X server and stuff
+      rv = client->Init();
+      if (NS_FAILED(rv)) {
+        PR_fprintf(PR_STDERR, "Failed to connect to X server.\n");
+        return 1;
+      }
+      PRBool success = PR_FALSE;
+      rv = client->SendCommand(argv[i+1], &success);
+      // did the command fail?
+      if (NS_FAILED(rv)) {
+        PR_fprintf(PR_STDERR, "Failed to send command.\n");
+        return 1;
+      }
+      // was there a window not running?
+      if (!success) {
+        PR_fprintf(PR_STDERR, "No running window found.\n");
+        return 1;
+      }
+      client->Shutdown();
+      // success
+      return 0;
+    }
+  }
+  return 0;
+}
+#endif /* XP_UNIX */
 
 static PRBool HandleDumpArguments(int argc, char* argv[])
 {
@@ -1192,6 +1244,19 @@ int main(int argc, char* argv[])
 
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
+
+#ifdef XP_UNIX
+  // handle -remote now that xpcom is fired up
+  int remoterv;
+  PRBool argused = PR_FALSE;
+  // argused will be true if someone tried to use a -remote flag.  We
+  // always exit in that case.
+  remoterv = HandleRemoteArguments(argc, argv, &argused);
+  if (argused) {
+    NS_ShutdownXPCOM(NULL);
+    return remoterv;
+  }
+#endif
 
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash);
 
