@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -1176,6 +1177,29 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
 static PRInt32 gInstanceCount;
 #endif
 
+#define B_BORDER_TOP_STYLE    0x001
+#define B_BORDER_LEFT_STYLE   0x002
+#define B_BORDER_RIGHT_STYLE  0x004
+#define B_BORDER_BOTTOM_STYLE 0x008
+#define B_BORDER_TOP_COLOR    0x010
+#define B_BORDER_LEFT_COLOR   0x020
+#define B_BORDER_RIGHT_COLOR  0x040
+#define B_BORDER_BOTTOM_COLOR 0x080
+#define B_BORDER_TOP_WIDTH    0x100
+#define B_BORDER_LEFT_WIDTH   0x200
+#define B_BORDER_RIGHT_WIDTH  0x400
+#define B_BORDER_BOTTOM_WIDTH 0x800
+
+#define B_BORDER_STYLE        0x00f
+#define B_BORDER_COLOR        0x0f0
+#define B_BORDER_WIDTH        0xf00
+
+#define B_BORDER_TOP          0x111
+#define B_BORDER_LEFT         0x222
+#define B_BORDER_RIGHT        0x444
+#define B_BORDER_BOTTOM       0x888
+
+#define B_BORDER              0xfff
 
 NS_IMPL_ZEROING_OPERATOR_NEW(nsCSSDeclaration)
 
@@ -4027,6 +4051,10 @@ nsCSSDeclaration::AppendComment(const nsAString& aComment)
 nsresult
 nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 {
+  PRBool  isImportant = GetValueIsImportant(aProperty);
+  if (isImportant) {
+    return mImportant->GetValue(aProperty, aValue);
+  }
   nsresult result = NS_OK;
 
   switch (aProperty) {
@@ -4979,7 +5007,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                            nsAString& aValue)
 {
   PRBool  isImportant = GetValueIsImportant(aProperty);
-  if (PR_TRUE == isImportant) {
+  if (isImportant) {
     return mImportant->GetValue(aProperty, aValue);
   }
 
@@ -5352,9 +5380,22 @@ nsCSSDeclaration::GetValueIsImportant(nsCSSProperty aProperty)
   return PR_FALSE;
 }
 
-#define SHORTHAND_BORDER_WIDTH 0x001
-#define SHORTHAND_BORDER_STYLE 0x010
-#define SHORTHAND_BORDER_COLOR 0x100
+PRBool
+nsCSSDeclaration::AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
+                                              PRInt32 aThird, PRInt32 aFourth,
+                                              PRInt32 aFifth, PRInt32 aSixth,
+                                              PRBool & aImportance)
+{
+  aImportance = GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aFirst-1));
+  if ((aSecond && aImportance != GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aSecond-1))) ||
+      (aThird && aImportance != GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aThird-1))) ||
+      (aFourth && aImportance != GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aFourth-1))) ||
+      (aFifth && aImportance != GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aFifth-1))) ||
+      (aSixth && aImportance != GetValueIsImportant((nsCSSProperty)mOrder->ValueAt(aSixth-1)))) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
 
 PRBool
 nsCSSDeclaration::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
@@ -5365,23 +5406,30 @@ nsCSSDeclaration::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
   // are > 0; 0 is a flag for "not set".  We here are passed the actual
   // index, which comes from finding the value in the mOrder property array.
   // Of course, re-getting the mOrder value here is pretty silly.
-  GetValue((nsCSSProperty)mOrder->ValueAt(aFirst), firstValue);
-  GetValue((nsCSSProperty)mOrder->ValueAt(aSecond), otherValue);
+  GetValue((nsCSSProperty)mOrder->ValueAt(aFirst-1), firstValue);
+  GetValue((nsCSSProperty)mOrder->ValueAt(aSecond-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
-  GetValue((nsCSSProperty)mOrder->ValueAt(aThird), otherValue);
+  GetValue((nsCSSProperty)mOrder->ValueAt(aThird-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
-  GetValue((nsCSSProperty)mOrder->ValueAt(aFourth), otherValue);
+  GetValue((nsCSSProperty)mOrder->ValueAt(aFourth-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
   return PR_TRUE;
 }
 
- 
+void
+nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant, nsAString& aString)
+{
+  if (aIsImportant) {
+   aString.Append(NS_LITERAL_STRING(" ! important"));
+  }
+}
+
 void
 nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                                  nsAString& aString)
@@ -5390,130 +5438,130 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
   aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aProperty))
                  + NS_LITERAL_STRING(": "));
   AppendValueToString(aProperty, aString);
+  PRBool  isImportant = GetValueIsImportant(aProperty);
+  AppendImportanceToString(isImportant, aString);
   aString.Append(NS_LITERAL_STRING("; "));
 }
 
-void
-nsCSSDeclaration::TryBorderShorthand(nsAString & aString,
-                                     PRInt32 & aBorderTopWidth,
-                                     PRInt32 & aBorderTopStyle,
-                                     PRInt32 & aBorderTopColor,
-                                     PRInt32 & aBorderBottomWidth,
-                                     PRInt32 & aBorderBottomStyle,
-                                     PRInt32 & aBorderBottomColor,
-                                     PRInt32 & aBorderLeftWidth,
-                                     PRInt32 & aBorderLeftStyle,
-                                     PRInt32 & aBorderLeftColor,
-                                     PRInt32 & aBorderRightWidth,
-                                     PRInt32 & aBorderRightStyle,
-                                     PRInt32 & aBorderRightColor)
+PRBool
+nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSet,
+                                     PRInt32 aBorderTopWidth,
+                                     PRInt32 aBorderTopStyle,
+                                     PRInt32 aBorderTopColor,
+                                     PRInt32 aBorderBottomWidth,
+                                     PRInt32 aBorderBottomStyle,
+                                     PRInt32 aBorderBottomColor,
+                                     PRInt32 aBorderLeftWidth,
+                                     PRInt32 aBorderLeftStyle,
+                                     PRInt32 aBorderLeftColor,
+                                     PRInt32 aBorderRightWidth,
+                                     PRInt32 aBorderRightStyle,
+                                     PRInt32 aBorderRightColor)
 {
-  PRInt32 border = 0;
+  PRBool border = PR_FALSE, isImportant;
   // 0 means not in the mOrder array; otherwise it's index+1
-  if (aBorderTopWidth && aBorderBottomWidth
-      && aBorderLeftWidth && aBorderRightWidth
-      && AllPropertiesSameValue(aBorderTopWidth-1, aBorderBottomWidth-1,
-                                aBorderLeftWidth-1, aBorderRightWidth-1))
-    border |= SHORTHAND_BORDER_WIDTH;
-  if (aBorderTopStyle && aBorderBottomStyle
-      && aBorderLeftStyle && aBorderRightStyle
-      && AllPropertiesSameValue(aBorderTopStyle-1, aBorderBottomStyle-1,
-                                aBorderLeftStyle-1, aBorderRightStyle-1))
-    border |= SHORTHAND_BORDER_STYLE;
-  if (aBorderTopColor && aBorderBottomColor
-      && aBorderLeftColor && aBorderRightColor
-      && AllPropertiesSameValue(aBorderTopColor-1, aBorderBottomColor-1,
-                                aBorderLeftColor-1, aBorderRightColor-1))
-    border |= SHORTHAND_BORDER_COLOR;
-
+  if (B_BORDER == aPropertiesSet
+      && AllPropertiesSameValue(aBorderTopWidth, aBorderBottomWidth,
+                                aBorderLeftWidth, aBorderRightWidth)
+      && AllPropertiesSameValue(aBorderTopStyle, aBorderBottomStyle,
+                                aBorderLeftStyle, aBorderRightStyle)
+      && AllPropertiesSameValue(aBorderTopColor, aBorderBottomColor,
+                                aBorderLeftColor, aBorderRightColor)) {
+    border = PR_TRUE;
+  }
+  if (border) {
+    border = PR_FALSE;
+    PRBool  isWidthImportant, isStyleImportant, isColorImportant;
+    if (AllPropertiesSameImportance(aBorderTopWidth, aBorderBottomWidth,
+                                    aBorderLeftWidth, aBorderRightWidth,
+                                    0, 0,
+                                    isWidthImportant) &&
+        AllPropertiesSameImportance(aBorderTopStyle, aBorderBottomStyle,
+                                    aBorderLeftStyle, aBorderRightStyle,
+                                    0, 0,
+                                    isStyleImportant) &&
+        AllPropertiesSameImportance(aBorderTopColor, aBorderBottomColor,
+                                    aBorderLeftColor, aBorderRightColor,
+                                    0, 0,
+                                    isColorImportant)) {
+      if (isWidthImportant == isStyleImportant && isWidthImportant == isColorImportant) {
+        border = PR_TRUE;
+        isImportant = isWidthImportant;
+      }
+    }
+  }
   if (border) {
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_border))
                    + NS_LITERAL_STRING(": "));
-    if (border & SHORTHAND_BORDER_WIDTH) {
-      AppendValueToString(eCSSProperty_border_top_width, aString);
-      border ^= SHORTHAND_BORDER_WIDTH;
-      aBorderTopWidth = 0;
-      aBorderBottomWidth = 0;
-      aBorderLeftWidth = 0;
-      aBorderRightWidth = 0;
-      if (border)
-        aString.Append(PRUnichar(' '));
-      else
-        aString.Append(NS_LITERAL_STRING("; "));
-    }
-    if (border & SHORTHAND_BORDER_STYLE) {
-      AppendValueToString(eCSSProperty_border_top_style, aString);
-      border ^= SHORTHAND_BORDER_STYLE;
-      aBorderTopStyle = 0;
-      aBorderBottomStyle = 0;
-      aBorderLeftStyle = 0;
-      aBorderRightStyle = 0;
-      if (border)
-        aString.Append(PRUnichar(' '));
-      else
-        aString.Append(NS_LITERAL_STRING("; "));
-    }
-    if (border & SHORTHAND_BORDER_COLOR) {
-      nsAutoString valueString;
-      AppendValueToString(eCSSProperty_border_top_color, valueString);
-      if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
-        aString.Append(valueString);
-      }
-      aBorderTopColor = 0;
-      aBorderBottomColor = 0;
-      aBorderLeftColor = 0;
-      aBorderRightColor = 0;
-      aString.Append(NS_LITERAL_STRING("; "));
-    }
-  }
-}
 
-void
-nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
-                                         nsCSSProperty aShorthand,
-                                         PRInt32 & aBorderWidth,
-                                         PRInt32 & aBorderStyle,
-                                         PRInt32 & aBorderColor)
-{
-  // 0 means not in the mOrder array; otherwise it's index+1
-  if ((aBorderWidth && aBorderStyle) ||
-      (aBorderWidth && aBorderColor) ||
-      (aBorderStyle && aBorderColor)) {
-    // ok, we have at least two values and we can make a shorthand
-    aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aShorthand))
-                   + NS_LITERAL_STRING(":"));
-    if (aBorderWidth) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderWidth-1), aString);
-      aBorderWidth = 0;
+    AppendValueToString(eCSSProperty_border_top_width, aString);
+    aString.Append(PRUnichar(' '));
+
+    AppendValueToString(eCSSProperty_border_top_style, aString);
+    aString.Append(PRUnichar(' '));
+
+    nsAutoString valueString;
+    AppendValueToString(eCSSProperty_border_top_color, valueString);
+    if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
+      /* don't output this value, it's proprietary Mozilla and  */
+      /* not intended to be exposed ; we can remove it from the */
+      /* values of the shorthand since this value represents the */
+      /* initial value of border-*-color */
+      aString.Append(valueString);
     }
-    if (aBorderStyle) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderStyle-1), aString);
-      aBorderStyle = 0;
-    }
-    if (aBorderColor) {
-      nsAutoString valueString;
-      AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderColor-1), valueString);
-      if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
-        aString.Append(NS_LITERAL_STRING(" ") + valueString);
-      }
-      aBorderColor = 0;
-    }
+    AppendImportanceToString(isImportant, aString);
     aString.Append(NS_LITERAL_STRING("; "));
   }
+  return border;
 }
 
-void
-nsCSSDeclaration::TryMarginOrPaddingShorthand(nsAString & aString,
-                                              nsCSSProperty aShorthand,
-                                              PRInt32 & aTop,
-                                              PRInt32 & aBottom,
-                                              PRInt32 & aLeft,
-                                              PRInt32 & aRight)
+PRBool
+nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
+                                         nsCSSProperty aShorthand,
+                                         PRInt32 aBorderWidth,
+                                         PRInt32 aBorderStyle,
+                                         PRInt32 aBorderColor)
+{
+  PRBool isImportant;
+  if (AllPropertiesSameImportance(aBorderWidth, aBorderStyle, aBorderColor,
+                                  0, 0, 0,
+                                  isImportant)) {
+    aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aShorthand))
+                   + NS_LITERAL_STRING(":"));
+    aString.Append(PRUnichar(' '));
+    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderWidth-1), aString);
+
+    aString.Append(PRUnichar(' '));
+    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderStyle-1), aString);
+
+    nsAutoString valueString;
+    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderColor-1), valueString);
+    if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
+      aString.Append(NS_LITERAL_STRING(" "));
+      aString.Append(valueString);
+    }
+    AppendImportanceToString(isImportant, aString);
+    aString.Append(NS_LITERAL_STRING("; "));
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
+                                        nsCSSProperty aShorthand,
+                                        PRInt32 & aTop,
+                                        PRInt32 & aBottom,
+                                        PRInt32 & aLeft,
+                                        PRInt32 & aRight,
+                                        PRBool aClearIndexes)
 {
   // 0 means not in the mOrder array; otherwise it's index+1
-  if (aTop && aBottom && aLeft && aRight) {
+  PRBool isImportant;
+  if (aTop && aBottom && aLeft && aRight &&
+      AllPropertiesSameImportance(aTop, aBottom, aLeft, aRight,
+                                  0, 0,
+                                  isImportant)) {
     // all 4 properties are set, we can output a shorthand
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aShorthand))
                    + NS_LITERAL_STRING(": "));
@@ -5539,9 +5587,14 @@ nsCSSDeclaration::TryMarginOrPaddingShorthand(nsAString & aString,
         }
       }
     }
-    aTop = 0; aBottom = 0; aLeft = 0; aRight = 0;
+    if (aClearIndexes) {
+      aTop = 0; aBottom = 0; aLeft = 0; aRight = 0;
+    }
+    AppendImportanceToString(isImportant, aString);
     aString.Append(NS_LITERAL_STRING("; "));
+    return PR_TRUE;
   }
+  return PR_FALSE;
 }
 
 void
@@ -5556,59 +5609,52 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
   // 0 means not in the mOrder array; otherwise it's index+1
   // check if we have at least two properties set; otherwise, no need to
   // use a shorthand
-  PRInt8 numberPropertiesSpecified = (aBgColor ? 1 : 0) + (aBgImage ? 1 : 0)
-                                     + (aBgRepeat ? 1 : 0) + (aBgAttachment ? 1 : 0)
-                                     + (aBgPositionX*aBgPositionY ? 1 : 0);
-  if (numberPropertiesSpecified >= 2) {
+  PRBool isImportant;
+  if (aBgColor && aBgImage && aBgRepeat && aBgAttachment && aBgPositionX && aBgPositionY &&
+      AllPropertiesSameImportance(aBgColor, aBgImage, aBgRepeat, aBgAttachment,
+                                  aBgPositionX, aBgPositionY, isImportant)) {
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_background))
                    + NS_LITERAL_STRING(":"));
-    if (aBgColor) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_color, aString);
-      aBgColor = 0;
-    }
-    if (aBgImage) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_image, aString);
-      aBgImage = 0;
-    }
-    if (aBgRepeat) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_repeat, aString);
-      aBgRepeat = 0;
-    }
-    if (aBgAttachment) {
-      aString.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_attachment, aString);
-      aBgAttachment = 0;
-    }
-    if (aBgPositionX && aBgPositionY) {
-      aString.Append(PRUnichar(' '));
-      TryBackgroundPosition(aString, aBgPositionX, aBgPositionY);
-    }
+
+    aString.Append(PRUnichar(' '));
+    AppendValueToString(eCSSProperty_background_color, aString);
+    aBgColor = 0;
+
+    aString.Append(PRUnichar(' '));
+    AppendValueToString(eCSSProperty_background_image, aString);
+    aBgImage = 0;
+
+    aString.Append(PRUnichar(' '));
+    AppendValueToString(eCSSProperty_background_repeat, aString);
+    aBgRepeat = 0;
+
+    aString.Append(PRUnichar(' '));
+    AppendValueToString(eCSSProperty_background_attachment, aString);
+    aBgAttachment = 0;
+
+    aString.Append(PRUnichar(' '));
+    UseBackgroundPosition(aString, aBgPositionX, aBgPositionY);
+    AppendImportanceToString(isImportant, aString);
     aString.Append(NS_LITERAL_STRING("; "));
   }
 }
 
 void
-nsCSSDeclaration::TryBackgroundPosition(nsAString & aString,
+nsCSSDeclaration::UseBackgroundPosition(nsAString & aString,
                                         PRInt32 & aBgPositionX,
                                         PRInt32 & aBgPositionY)
 {
-  // 0 means not in the mOrder array; otherwise it's index+1
-  if (aBgPositionX && aBgPositionY) {
-    nsAutoString backgroundXValue, backgroundYValue;
-    AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
-    AppendValueToString(eCSSProperty_background_y_position, backgroundYValue);
-    aString.Append(backgroundYValue);
-    if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
-      // the two values are different
-      aString.Append(PRUnichar(' '));
-      aString.Append(backgroundXValue);
-    }
-    aBgPositionX = 0;
-    aBgPositionY = 0;
+  nsAutoString backgroundXValue, backgroundYValue;
+  AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
+  AppendValueToString(eCSSProperty_background_y_position, backgroundYValue);
+  aString.Append(backgroundYValue);
+  if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
+    // the two values are different
+    aString.Append(PRUnichar(' '));
+    aString.Append(backgroundXValue);
   }
+  aBgPositionX = 0;
+  aBgPositionY = 0;
 }
 
 #define NS_CASE_OUTPUT_PROPERTY_VALUE(_prop, _index) \
@@ -5618,6 +5664,20 @@ case _prop: \
             _index = 0; \
           } \
           break;
+
+#define NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(_condition, _prop, _index) \
+case _prop: \
+          if ((_condition) && _index) { \
+            AppendPropertyAndValueToString(property, aString); \
+            _index = 0; \
+          } \
+          break;
+
+void nsCSSDeclaration::PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue)
+{
+  aPropertyIndex = aIndex + 1;
+  aSet |= aValue;
+}
 
 nsresult
 nsCSSDeclaration::ToString(nsAString& aString)
@@ -5634,23 +5694,48 @@ nsCSSDeclaration::ToString(nsAString& aString)
     PRInt32 paddingTop = 0, paddingBottom = 0, paddingLeft = 0, paddingRight = 0;
     PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
     PRInt32 bgPositionX = 0, bgPositionY = 0;
+    PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
     for (index = 0; index < count; index++) {
       nsCSSProperty property = (nsCSSProperty)mOrder->ValueAt(index);
       switch (property) {
-        case eCSSProperty_border_top_width:      borderTopWidth    = index+1; break;
-        case eCSSProperty_border_bottom_width:   borderBottomWidth = index+1; break;
-        case eCSSProperty_border_left_width:     borderLeftWidth   = index+1; break;
-        case eCSSProperty_border_right_width:    borderRightWidth  = index+1; break;
+        case eCSSProperty_border_top_width:
+          PropertyIsSet(borderTopWidth, index, borderPropertiesSet, B_BORDER_TOP_WIDTH);
+          break;
+        case eCSSProperty_border_bottom_width:
+          PropertyIsSet(borderBottomWidth, index, borderPropertiesSet, B_BORDER_BOTTOM_WIDTH);
+          break;
+        case eCSSProperty_border_left_width:
+          PropertyIsSet(borderLeftWidth, index, borderPropertiesSet, B_BORDER_LEFT_WIDTH);
+          break;
+        case eCSSProperty_border_right_width:
+          PropertyIsSet(borderRightWidth, index, borderPropertiesSet, B_BORDER_RIGHT_WIDTH);
+          break;
 
-        case eCSSProperty_border_top_style:      borderTopStyle    = index+1; break;
-        case eCSSProperty_border_bottom_style:   borderBottomStyle = index+1; break;
-        case eCSSProperty_border_left_style:     borderLeftStyle   = index+1; break;
-        case eCSSProperty_border_right_style:    borderRightStyle  = index+1; break;
+        case eCSSProperty_border_top_style:
+          PropertyIsSet(borderTopStyle, index, borderPropertiesSet, B_BORDER_TOP_STYLE);
+          break;
+        case eCSSProperty_border_bottom_style:
+          PropertyIsSet(borderBottomStyle, index, borderPropertiesSet, B_BORDER_BOTTOM_STYLE);
+          break;
+        case eCSSProperty_border_left_style:
+          PropertyIsSet(borderLeftStyle, index, borderPropertiesSet, B_BORDER_LEFT_STYLE);
+          break;
+        case eCSSProperty_border_right_style:
+          PropertyIsSet(borderRightStyle, index, borderPropertiesSet, B_BORDER_RIGHT_STYLE);
+          break;
 
-        case eCSSProperty_border_top_color:      borderTopColor    = index+1; break;
-        case eCSSProperty_border_bottom_color:   borderBottomColor = index+1; break;
-        case eCSSProperty_border_left_color:     borderLeftColor   = index+1; break;
-        case eCSSProperty_border_right_color:    borderRightColor  = index+1; break;
+        case eCSSProperty_border_top_color:
+          PropertyIsSet(borderTopColor, index, borderPropertiesSet, B_BORDER_TOP_COLOR);
+          break;
+        case eCSSProperty_border_bottom_color:
+          PropertyIsSet(borderBottomColor, index, borderPropertiesSet, B_BORDER_BOTTOM_COLOR);
+          break;
+        case eCSSProperty_border_left_color:
+          PropertyIsSet(borderLeftColor, index, borderPropertiesSet, B_BORDER_LEFT_COLOR);
+          break;
+        case eCSSProperty_border_right_color:
+          PropertyIsSet(borderRightColor, index, borderPropertiesSet, B_BORDER_RIGHT_COLOR);
+          break;
 
         case eCSSProperty_margin_top:            marginTop         = index+1; break;
         case eCSSProperty_margin_bottom:         marginBottom      = index+1; break;
@@ -5672,46 +5757,102 @@ nsCSSDeclaration::ToString(nsAString& aString)
       }
     }
 
-    TryBorderShorthand(aString,
-                       borderTopWidth, borderTopStyle, borderTopColor,
-                       borderBottomWidth, borderBottomStyle, borderBottomColor,
-                       borderLeftWidth, borderLeftStyle, borderLeftColor,
-                       borderRightWidth, borderRightStyle, borderRightColor);
-    TryBorderSideShorthand(aString, eCSSProperty_border_top,
-                           borderTopWidth, borderTopStyle, borderTopColor);
-    TryBorderSideShorthand(aString, eCSSProperty_border_bottom,
-                           borderBottomWidth, borderBottomStyle, borderBottomColor);
-    TryBorderSideShorthand(aString, eCSSProperty_border_left,
-                           borderLeftWidth, borderLeftStyle, borderLeftColor);
-    TryBorderSideShorthand(aString, eCSSProperty_border_right,
-                           borderRightWidth, borderRightStyle, borderRightColor);
+    if (!TryBorderShorthand(aString, borderPropertiesSet,
+                            borderTopWidth, borderTopStyle, borderTopColor,
+                            borderBottomWidth, borderBottomStyle, borderBottomColor,
+                            borderLeftWidth, borderLeftStyle, borderLeftColor,
+                            borderRightWidth, borderRightStyle, borderRightColor)) {
+      PRUint32 borderPropertiesToSet = 0;
+      if ((borderPropertiesSet & B_BORDER_STYLE) != B_BORDER_STYLE ||
+          !TryFourSidesShorthand(aString, eCSSProperty_border_style,
+                                 borderTopStyle, borderBottomStyle,
+                                 borderLeftStyle, borderRightStyle,
+                                 PR_FALSE)) {
+        borderPropertiesToSet |= B_BORDER_STYLE;
+      }
+      if ((borderPropertiesSet & B_BORDER_COLOR) != B_BORDER_COLOR ||
+          !TryFourSidesShorthand(aString, eCSSProperty_border_color,
+                                 borderTopColor, borderBottomColor,
+                                 borderLeftColor, borderRightColor,
+                                 PR_FALSE)) {
+        borderPropertiesToSet |= B_BORDER_COLOR;
+      }
+      if ((borderPropertiesSet & B_BORDER_WIDTH) != B_BORDER_WIDTH ||
+          !TryFourSidesShorthand(aString, eCSSProperty_border_width,
+                                 borderTopWidth, borderBottomWidth,
+                                 borderLeftWidth, borderRightWidth,
+                                 PR_FALSE)) {
+        borderPropertiesToSet |= B_BORDER_WIDTH;
+      }
+      borderPropertiesToSet &= borderPropertiesSet;
+      if (borderPropertiesToSet) {
+        if ((borderPropertiesSet & B_BORDER_TOP) != B_BORDER_TOP ||
+            !TryBorderSideShorthand(aString, eCSSProperty_border_top,
+                                    borderTopWidth, borderTopStyle, borderTopColor)) {
+          finalBorderPropertiesToSet |= B_BORDER_TOP;
+        }
+        if ((borderPropertiesSet & B_BORDER_LEFT) != B_BORDER_LEFT ||
+            !TryBorderSideShorthand(aString, eCSSProperty_border_left,
+                                    borderLeftWidth, borderLeftStyle, borderLeftColor)) {
+          finalBorderPropertiesToSet |= B_BORDER_LEFT;
+        }
+        if ((borderPropertiesSet & B_BORDER_RIGHT) != B_BORDER_RIGHT ||
+            !TryBorderSideShorthand(aString, eCSSProperty_border_right,
+                                    borderRightWidth, borderRightStyle, borderRightColor)) {
+          finalBorderPropertiesToSet |= B_BORDER_RIGHT;
+        }
+        if ((borderPropertiesSet & B_BORDER_BOTTOM) != B_BORDER_BOTTOM ||
+            !TryBorderSideShorthand(aString, eCSSProperty_border_bottom,
+                                    borderBottomWidth, borderBottomStyle, borderBottomColor)) {
+          finalBorderPropertiesToSet |= B_BORDER_BOTTOM;
+        }
+        finalBorderPropertiesToSet &= borderPropertiesToSet;
+      }
+    }
 
-
-    TryMarginOrPaddingShorthand(aString, eCSSProperty_margin,
-                                marginTop, marginBottom, marginLeft, marginRight);
-    TryMarginOrPaddingShorthand(aString, eCSSProperty_padding,
-                                paddingTop, paddingBottom, paddingLeft, paddingRight);
-
+    TryFourSidesShorthand(aString, eCSSProperty_margin,
+                          marginTop, marginBottom,
+                          marginLeft, marginRight,
+                          PR_TRUE);
+    TryFourSidesShorthand(aString, eCSSProperty_padding,
+                          paddingTop, paddingBottom,
+                          paddingLeft, paddingRight,
+                          PR_TRUE);
     TryBackgroundShorthand(aString,
                            bgColor, bgImage, bgRepeat, bgAttachment,
                            bgPositionX, bgPositionY);
 
     for (index = 0; index < count; index++) {
+      PRBool isImportant;
       nsCSSProperty property = (nsCSSProperty)mOrder->ValueAt(index);
       switch (property) {
 
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_top_width, borderTopWidth)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_bottom_width, borderBottomWidth)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_left_width, borderLeftWidth)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_right_width, borderRightWidth)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_top_style, borderTopStyle)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_bottom_style, borderBottomStyle)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_left_style, borderLeftStyle)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_right_style, borderRightStyle)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_top_color, borderTopColor)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_bottom_color, borderBottomColor)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_left_color, borderLeftColor)
-        NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_border_right_color, borderRightColor)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_STYLE,
+                                                  eCSSProperty_border_top_style, borderTopStyle)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_STYLE,
+                                                  eCSSProperty_border_left_style, borderLeftStyle)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_STYLE,
+                                                  eCSSProperty_border_right_style, borderRightStyle)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_STYLE,
+                                                  eCSSProperty_border_bottom_style, borderBottomStyle)
+
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_COLOR,
+                                                  eCSSProperty_border_top_color, borderTopColor)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_COLOR,
+                                                  eCSSProperty_border_left_color, borderLeftColor)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_COLOR,
+                                                  eCSSProperty_border_right_color, borderRightColor)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_COLOR,
+                                                  eCSSProperty_border_bottom_color, borderBottomColor)
+
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_TOP_WIDTH,
+                                                  eCSSProperty_border_top_width, borderTopWidth)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_LEFT_WIDTH,
+                                                  eCSSProperty_border_left_width, borderLeftWidth)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_RIGHT_WIDTH,
+                                                  eCSSProperty_border_right_width, borderRightWidth)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(finalBorderPropertiesToSet & B_BORDER_BOTTOM_WIDTH,
+                                                  eCSSProperty_border_bottom_width, borderBottomWidth)
 
         NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_top, marginTop)
         NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_bottom, marginBottom)
@@ -5731,10 +5872,13 @@ nsCSSDeclaration::ToString(nsAString& aString)
         case eCSSProperty_background_x_position:
         case eCSSProperty_background_y_position:
           // 0 means not in the mOrder array; otherwise it's index+1
-          if (bgPositionX && bgPositionY) {
+          if (bgPositionX && bgPositionY &&
+              AllPropertiesSameImportance(bgPositionX, bgPositionY,
+                                          0, 0, 0, 0, isImportant)) {
             aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_background_position))
                            + NS_LITERAL_STRING(": "));
-            TryBackgroundPosition(aString, bgPositionX, bgPositionY);
+            UseBackgroundPosition(aString, bgPositionX, bgPositionY);
+            AppendImportanceToString(isImportant, aString);
             aString.Append(NS_LITERAL_STRING("; "));
           }
           else if (eCSSProperty_background_x_position == property && bgPositionX) {

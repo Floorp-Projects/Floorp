@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -607,42 +608,51 @@ protected:
   nsresult RemoveProperty(nsCSSProperty aProperty);
 
 private:
+  void     AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult);
   PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult);
   nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
   PRBool operator==(const nsCSSDeclaration& aCopy) const;
 
-  void TryBorderShorthand(nsAString & aString,
-                          PRInt32 & aBorderTopWidth,
-                          PRInt32 & aBorderTopStyle,
-                          PRInt32 & aBorderTopColor,
-                          PRInt32 & aBorderBottomWidth,
-                          PRInt32 & aBorderBottomStyle,
-                          PRInt32 & aBorderBottomColor,
-                          PRInt32 & aBorderLeftWidth,
-                          PRInt32 & aBorderLeftStyle,
-                          PRInt32 & aBorderLeftColor,
-                          PRInt32 & aBorderRightWidth,
-                          PRInt32 & aBorderRightStyle,
-                          PRInt32 & aBorderRightColor);
-  void  TryBorderSideShorthand(nsAString & aString,
-                               nsCSSProperty  aShorthand,
-                               PRInt32 & aBorderWidth,
-                               PRInt32 & aBorderStyle,
-                               PRInt32 & aBorderColor);
-  void  TryMarginOrPaddingShorthand(nsAString & aString,
-                                    nsCSSProperty aShorthand,
-                                    PRInt32 & aTop, PRInt32 & aBottom,
-                                    PRInt32 & aLeft, PRInt32 & aRight);
+  void   PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue);
+  PRBool TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSet,
+                            PRInt32 aBorderTopWidth,
+                            PRInt32 aBorderTopStyle,
+                            PRInt32 aBorderTopColor,
+                            PRInt32 aBorderBottomWidth,
+                            PRInt32 aBorderBottomStyle,
+                            PRInt32 aBorderBottomColor,
+                            PRInt32 aBorderLeftWidth,
+                            PRInt32 aBorderLeftStyle,
+                            PRInt32 aBorderLeftColor,
+                            PRInt32 aBorderRightWidth,
+                            PRInt32 aBorderRightStyle,
+                            PRInt32 aBorderRightColor);
+  PRBool  TryBorderSideShorthand(nsAString & aString,
+                                 nsCSSProperty  aShorthand,
+                                 PRInt32 aBorderWidth,
+                                 PRInt32 aBorderStyle,
+                                 PRInt32 aBorderColor);
+  PRBool  TryFourSidesShorthand(nsAString & aString,
+                                nsCSSProperty aShorthand,
+                                PRInt32 & aTop,
+                                PRInt32 & aBottom,
+                                PRInt32 & aLeft,
+                                PRInt32 & aRight,
+                                PRBool aClearIndexes);
   void  TryBackgroundShorthand(nsAString & aString,
                                PRInt32 & aBgColor, PRInt32 & aBgImage,
                                PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
                                PRInt32 & aBgPositionX,
                                PRInt32 & aBgPositionY);
-  void  TryBackgroundPosition(nsAString & aString,
+  void  UseBackgroundPosition(nsAString & aString,
                               PRInt32 & aBgPositionX,
                               PRInt32 & aBgPositionY);
 
+  PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
+                                       PRInt32 aThird, PRInt32 aFourth,
+                                       PRInt32 aFifth, PRInt32 aSixth,
+                                       PRBool & aImportance);
   PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
                                   PRInt32 aThird, PRInt32 aFourth);
   void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
