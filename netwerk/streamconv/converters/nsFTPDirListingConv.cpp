@@ -238,6 +238,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
                                   nsnull,    // notificationCallbacks
                                   nsIChannel::LOAD_NORMAL,
                                   nsnull,    // originalURI
+                                  0, 0,
                                   &mPartChannel);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;

@@ -69,7 +69,11 @@ public:
                   nsILoadGroup* aLoadGroup, 
                   nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes,
-                  nsIURI* originalURI);
+                  nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize, 
+                  PRUint32 bufferMaxSize);
+
+    friend class nsDirEnumerator;
 
 protected:
     nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
@@ -86,6 +90,8 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIStreamListener>         mRealListener;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif // nsFileChannel_h__

@@ -60,6 +60,8 @@ protected:
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIChannel>                mFileTransport;
     nsCOMPtr<nsIStreamListener>         mRealListener;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif // nsInputStreamChannel_h__

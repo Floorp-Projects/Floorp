@@ -191,6 +191,8 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsIInterfaceRequestor* notificationCallbacks,
                           nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
+                          PRUint32 bufferSegmentSize,
+                          PRUint32 bufferMaxSize,
                           nsIChannel **o_Instance)
 {
     nsresult rv;
@@ -235,7 +237,9 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         pChannel = new nsHTTPChannel(i_URL, 
                                      verb,
                                      originalURI,
-                                     this);
+                                     this,
+                                     bufferSegmentSize,
+                                     bufferMaxSize);
         if (pChannel) {
             NS_ADDREF(pChannel);
             rv = pChannel->SetLoadAttributes(loadAttributes);
@@ -354,8 +358,10 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
 
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
-                                     nsHTTPChannel* i_Channel,
-                                     nsIChannel** o_pTrans)
+                                         nsHTTPChannel* i_Channel,
+                                         PRUint32 bufferSegmentSize,
+                                         PRUint32 bufferMaxSize,
+                                         nsIChannel** o_pTrans)
 {
     nsresult rv;
     PRUint32 count;
@@ -448,11 +454,13 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         // Create a new one...
         if (!mProxy || !mUseProxy)
         {
-            rv = CreateTransport(host, port, host, &trans);
+            rv = CreateTransport(host, port, host,
+                                 bufferSegmentSize, bufferMaxSize, &trans);
         }
         else
         {
-            rv = CreateTransport(mProxy, mProxyPort, host, &trans);
+            rv = CreateTransport(mProxy, mProxyPort, host, 
+                                 bufferSegmentSize, bufferMaxSize, &trans);
         }
         if (NS_FAILED(rv)) return rv;
     }
@@ -474,17 +482,21 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 }
 
 nsresult nsHTTPHandler::CreateTransport(const char* host, 
-                            PRInt32 port, 
-                            const char* aPrintHost,
-                            nsIChannel** o_pTrans)
+                                        PRInt32 port, 
+                                        const char* aPrintHost,
+                                        PRUint32 bufferSegmentSize,
+                                        PRUint32 bufferMaxSize,
+                                        nsIChannel** o_pTrans)
 {
     nsresult rv;
 
     NS_WITH_SERVICE(nsISocketTransportService, sts, 
-            kSocketTransportServiceCID, &rv);
+                    kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return sts->CreateTransport(host, port, aPrintHost, o_pTrans);  
+    return sts->CreateTransport(host, port, aPrintHost,
+                                bufferSegmentSize, bufferMaxSize,
+                                o_pTrans);
 }
 
 nsHTTPHandler * nsHTTPHandler::GetInstance(void)

@@ -73,10 +73,14 @@ public:
                   nsILoadGroup* aLoadGroup, 
                   nsIInterfaceRequestor* notificationCallbacks,
                   nsLoadFlags loadAttributes,
-                  nsIURI* originalURI);
+                  nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
 
     nsresult ExtractJARElement(nsIFileChannel* jarFileChannel);
     nsresult GetCacheFile(nsFileSpec& cacheFile);
+
+    friend class nsJARDownloadObserver;
 
 protected:
 	char*                               mCommand;
@@ -98,6 +102,8 @@ protected:
     nsCOMPtr<nsIFileChannel>            mJARBaseFile;
     char*                               mJAREntry;
     nsCOMPtr<nsIZipReader>              mJAR;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif // nsJARChannel_h__

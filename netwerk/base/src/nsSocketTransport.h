@@ -129,7 +129,9 @@ public:
                 const char* aHost, 
                 PRInt32 aPort,
                 const char* aSocketType,
-                const char* aPrintHost); // This host is used for status mesg
+                const char* aPrintHost, // This host is used for status mesg
+                PRUint32 bufferSegmentSize,
+                PRUint32 bufferMaxSize);
 
   nsresult Process(PRInt16 aSelectFlags);
 
@@ -226,7 +228,8 @@ protected:
   nsCOMPtr<nsIStreamObserver>       mWriteObserver;
   nsCOMPtr<nsIBufferInputStream>    mWritePipeIn;
   nsCOMPtr<nsIBufferOutputStream>   mWritePipeOut;
-
+  PRUint32                          mBufferSegmentSize;
+  PRUint32                          mBufferMaxSize;
 };
 
 

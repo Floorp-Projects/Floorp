@@ -101,6 +101,8 @@ nsDataHandler::NewChannel(const char* verb, nsIURI* url,
                           nsIInterfaceRequestor* notificationCallbacks,
                           nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
+                          PRUint32 bufferSegmentSize,
+                          PRUint32 bufferMaxSize,
                           nsIChannel* *result)
 {
     nsresult rv;
@@ -110,7 +112,7 @@ nsDataHandler::NewChannel(const char* verb, nsIURI* url,
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI);
+                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

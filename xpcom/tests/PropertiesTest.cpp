@@ -111,7 +111,7 @@ main(int argc, char* argv[])
   nsIChannel *channel = nsnull;
   // XXX NECKO verb? loadgroup? getter?
   ret = service->NewChannel("load", TEST_URL, nsnull, nsnull, nsnull,
-                            nsIChannel::LOAD_NORMAL, nsnull, &channel);
+                            nsIChannel::LOAD_NORMAL, nsnull, 0, 0, &channel);
   if (NS_FAILED(ret)) return ret;
 
   nsIEventQueue *eventQ = nsnull;

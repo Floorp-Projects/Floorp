@@ -67,12 +67,16 @@ nsInputStreamChannel::Init(nsIURI* uri,
                            nsILoadGroup *aGroup,
                            nsIInterfaceRequestor* notificationCallbacks,
                            nsLoadFlags loadAttributes,
-                           nsIURI* originalURI)
+                           nsIURI* originalURI,
+                           PRUint32 bufferSegmentSize,
+                           PRUint32 bufferMaxSize)
 {
     nsresult rv;
     mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mContentLength = contentLength;
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
 
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
@@ -171,7 +175,8 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                        "load", getter_AddRefs(mFileTransport));
+                                        "load", mBufferSegmentSize, mBufferMaxSize,
+                                        getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
 
     return mFileTransport->AsyncOpen(observer, ctxt);
@@ -227,7 +232,8 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
 
         rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                            "load", getter_AddRefs(mFileTransport));
+                                            "load", mBufferSegmentSize, mBufferMaxSize,
+                                            getter_AddRefs(mFileTransport));
         if (NS_FAILED(rv)) return rv;
     }
 

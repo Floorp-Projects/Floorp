@@ -60,13 +60,19 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsFileSpec& spec, 
-                  const char* command);
+                  const char* command,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
     nsresult Init(nsIInputStream* fromStream, 
                   const char* contentType,
                   PRInt32 contentLength,
-                  const char* command);
+                  const char* command,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
     nsresult Init(nsIFileSystem* fsObj,
-                  const char* command);
+                  const char* command,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
 
     void Process(void);
 
@@ -95,6 +101,8 @@ protected:
     nsFileSpec                          mSpec;      // eliminate?
     nsCOMPtr<nsIFileSystem>             mFileObject;
     char*                               mContentType;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 
     nsCOMPtr<nsIStreamObserver>         mOpenObserver;
     nsCOMPtr<nsISupports>               mOpenContext;
@@ -123,7 +131,7 @@ protected:
     char*                               mBuffer;
 };
 
-#define NS_FILE_TRANSPORT_SEGMENT_SIZE   (2*1024)
-#define NS_FILE_TRANSPORT_BUFFER_SIZE    (8*1024)
+#define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)
+#define NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE    (8*1024)
 
 #endif // nsFileTransport_h__

@@ -160,8 +160,7 @@ nsStreamXferOp::Start( void ) {
                 // Next, create output file channel.
                 nsFileSpec target;
                 mOutputSpec->GetFileSpec( &target );
-                rv = fts->CreateTransport( target,
-                                          "load",
+                rv = fts->CreateTransport( target, "load", 0, 0,
                                           getter_AddRefs( mOutputChannel ) );
     
                 if ( NS_SUCCEEDED( rv ) ) {

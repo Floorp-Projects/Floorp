@@ -295,31 +295,33 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsFileSpec& spec, const char* command)
+nsFileTransport::Init(nsFileSpec& spec, const char* command,
+                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
 {
     nsresult rv;
     mSpec = spec;
     nsCOMPtr<nsIFileSystem> fsObj;
     rv = nsLocalFileSystem::Create(spec, getter_AddRefs(fsObj));
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command);
+    return Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
 }
 
 nsresult
 nsFileTransport::Init(nsIInputStream* fromStream, const char* contentType,
-                      PRInt32 contentLength, const char* command)
+                      PRInt32 contentLength, const char* command,
+                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
 {
     nsresult rv;
     nsCOMPtr<nsIFileSystem> fsObj;
     rv = nsInputStreamFileSystem::Create(fromStream, contentType, contentLength,
                                          getter_AddRefs(fsObj));
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command);
+    return Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
 }
 
 nsresult
-nsFileTransport::Init(nsIFileSystem* fsObj,
-                      const char* command)
+nsFileTransport::Init(nsIFileSystem* fsObj, const char* command,
+                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
 {
     nsresult rv = NS_OK;
     if (mMonitor == nsnull) {
@@ -328,6 +330,10 @@ nsFileTransport::Init(nsIFileSystem* fsObj,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     mFileObject = fsObj;
+    mBufferSegmentSize = bufferSegmentSize != 0
+        ? bufferSegmentSize : NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE;
+    mBufferMaxSize = bufferMaxSize != 0
+        ? bufferMaxSize : NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE;
     return rv;
 }
 
@@ -480,8 +486,7 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
                     getter_AddRefs(mBufferOutputStream),
                     this,     // nsIPipeObserver
-                    NS_FILE_TRANSPORT_SEGMENT_SIZE,
-                    NS_FILE_TRANSPORT_BUFFER_SIZE);
+                    mBufferSegmentSize, mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);
@@ -595,8 +600,7 @@ nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
                     getter_AddRefs(mBufferOutputStream),
                     this,       // nsIPipeObserver
-                    NS_FILE_TRANSPORT_SEGMENT_SIZE,
-                    NS_FILE_TRANSPORT_BUFFER_SIZE);
+                    mBufferSegmentSize, mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     rv = mBufferInputStream->SetNonBlocking(PR_TRUE);
@@ -889,7 +893,7 @@ nsFileTransport::Process(void)
             // transfer
 
             mStatus = NS_OK;
-            mBuffer = new char[NS_FILE_TRANSPORT_SEGMENT_SIZE];
+            mBuffer = new char[mBufferSegmentSize];
             if (mBuffer == nsnull) {
                 mStatus = NS_ERROR_OUT_OF_MEMORY;
                 mState = END_WRITE;
@@ -910,9 +914,9 @@ nsFileTransport::Process(void)
       }
 
       case WRITING: {
-        PRUint32 transferAmt = NS_FILE_TRANSPORT_SEGMENT_SIZE;
+        PRUint32 transferAmt = mBufferSegmentSize;
         if (mTransferAmount >= 0)
-            transferAmt = PR_MIN(NS_FILE_TRANSPORT_SEGMENT_SIZE, mTransferAmount);
+            transferAmt = PR_MIN(mBufferSegmentSize, (PRUint32)mTransferAmount);
         PRUint32 writeAmt;
         if (mBufferInputStream) {
             mStatus = mBufferInputStream->ReadSegments(nsWriteToFile, mSink,

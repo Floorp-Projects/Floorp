@@ -39,6 +39,8 @@ nsAbout::NewChannel(const char *verb,
                     nsIInterfaceRequestor* notificationCallbacks,
                     nsLoadFlags loadAttributes,
                     nsIURI* originalURI,
+                    PRUint32 bufferSegmentSize,
+                    PRUint32 bufferMaxSize,
                     nsIChannel **result)
 {
     nsresult rv;
@@ -47,7 +49,8 @@ nsAbout::NewChannel(const char *verb,
         return rv;
    	rv = ioService->NewChannel(verb, kURI, NULL, aLoadGroup,
                                notificationCallbacks, loadAttributes,
-                               originalURI, result);
+                               originalURI, bufferSegmentSize, bufferMaxSize,
+                               result);
     return rv;
 }
 

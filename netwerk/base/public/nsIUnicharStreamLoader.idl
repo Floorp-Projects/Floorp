@@ -45,7 +45,9 @@ interface nsIUnicharStreamLoader : nsISupports
               in nsIUnicharStreamLoaderObserver completionObserver,
               in nsILoadGroup loadGroup,
               in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes);
+              in nsLoadFlags loadAttributes,
+              in unsigned long bufferSegmentSize,
+              in unsigned long bufferMaxSize);
 
     /**
      * Gets the number of bytes read so far.

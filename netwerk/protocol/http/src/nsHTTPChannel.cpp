@@ -71,7 +71,9 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              const char *i_Verb,
                              nsIURI* originalURI,
-                             nsHTTPHandler* i_Handler): 
+                             nsHTTPHandler* i_Handler,
+                             PRUint32 bufferSegmentSize,
+                             PRUint32 bufferMaxSize): 
     mAuthTriedWithPrehost(PR_FALSE),
     mConnected(PR_FALSE),
     mHandler(dont_QueryInterface(i_Handler)),
@@ -83,7 +85,9 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mState(HS_IDLE),
     mURI(dont_QueryInterface(i_URL)),
     mUsingProxy(PR_FALSE),
-    mRawResponseListener(nsnull)
+    mRawResponseListener(nsnull),
+    mBufferSegmentSize(bufferSegmentSize),
+    mBufferMaxSize(bufferMaxSize)
 {
     NS_INIT_REFCNT();
 
@@ -640,8 +644,8 @@ nsHTTPChannel::Open(void)
       }
     }
      
-    rv = mHandler->RequestTransport(mURI, 
-                                    this, 
+    rv = mHandler->RequestTransport(mURI, this, 
+                                    mBufferSegmentSize, mBufferMaxSize, 
                                     getter_AddRefs(transport));
 
     if (NS_ERROR_BUSY == rv) {
@@ -765,7 +769,8 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 #endif /* PR_LOGGING */
 
   rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mCallbacks,
-                               mLoadAttributes, mOriginalURI, getter_AddRefs(channel));
+                               mLoadAttributes, mOriginalURI, 
+                               mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
 
   // Start the redirect...
@@ -1007,7 +1012,8 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
     // This smells like a clone function... maybe there is a 
     // benefit in doing that, think. TODO.
     rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, mCallbacks, 
-                                 mLoadAttributes, mOriginalURI, getter_AddRefs(channel));
+                                 mLoadAttributes, mOriginalURI, 
+                                 mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv; 
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);

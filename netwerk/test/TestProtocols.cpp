@@ -521,6 +521,7 @@ nsresult StartLoadingURL(const char* aUrlString)
                                          callbacks, // notificationCallbacks
                                          nsIChannel::LOAD_NORMAL,
                                          nsnull,    // originalURI
+                                         0, 0, 
                                          getter_AddRefs(pChannel));
         NS_RELEASE(callbacks);
         if (NS_FAILED(rv)) {

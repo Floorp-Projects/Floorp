@@ -230,9 +230,16 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
-                                 const char* aPrintHost)
+                                 const char* aPrintHost,
+                                 PRUint32 bufferSegmentSize,
+                                 PRUint32 bufferMaxSize)
 {
   nsresult rv = NS_OK;
+
+  mBufferSegmentSize = bufferSegmentSize != 0
+    ? bufferSegmentSize : NS_SOCKET_TRANSPORT_SEGMENT_SIZE;
+  mBufferMaxSize = bufferMaxSize != 0
+    ? bufferMaxSize : NS_SOCKET_TRANSPORT_BUFFER_SIZE;
 
   mService = aService;
   NS_ADDREF(mService);
@@ -1568,8 +1575,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
-                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
-                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
+                    mBufferSegmentSize, mBufferMaxSize);
     if (NS_SUCCEEDED(rv)) {
       rv = mReadPipeIn->SetNonBlocking(PR_TRUE);
     }
@@ -1683,8 +1689,7 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
-                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
-                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
+                    mBufferSegmentSize, mBufferMaxSize);
     if (NS_SUCCEEDED(rv)) {
       rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
       *result = mReadPipeIn;
@@ -1742,8 +1747,7 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
     // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     this,       // nsIPipeObserver
-                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
-                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
+                    mBufferSegmentSize, mBufferMaxSize);
     if (NS_SUCCEEDED(rv)) {
       rv = in->SetNonBlocking(PR_TRUE);
     }

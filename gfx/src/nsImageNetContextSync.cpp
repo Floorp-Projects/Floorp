@@ -197,7 +197,8 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
     // XXX NECKO what verb? what event sink getter
     nsIChannel *channel = nsnull;
     rv = service->NewChannelFromURI("load", uri, nsnull, nsnull,
-                                    nsIChannel::LOAD_NORMAL, nsnull, &channel);
+                                    nsIChannel::LOAD_NORMAL, nsnull, 0, 0,
+                                    &channel);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) 
         return -1;

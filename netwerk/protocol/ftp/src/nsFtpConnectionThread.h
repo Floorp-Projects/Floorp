@@ -131,7 +131,9 @@ public:
 
     nsresult Init(nsIProtocolHandler    *aHandler,
                   nsIChannel            *aChannel,
-                  nsISupports           *aContext);
+                  nsISupports           *aContext,
+                  PRUint32              bufferSegmentSize,
+                  PRUint32              bufferMaxSize);
 
     nsresult Process();
 
@@ -267,6 +269,8 @@ private:
 
     nsCOMPtr<nsIStreamObserver>     mObserver;
     nsCOMPtr<nsISupports>           mObserverContext;
+    PRUint32                        mBufferSegmentSize;
+    PRUint32                        mBufferMaxSize;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

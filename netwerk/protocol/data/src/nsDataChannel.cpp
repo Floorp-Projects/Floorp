@@ -58,7 +58,9 @@ nsDataChannel::Init(const char* verb,
                     nsILoadGroup* aLoadGroup,
                     nsIInterfaceRequestor* notificationCallbacks, 
                     nsLoadFlags loadAttributes,
-                    nsIURI* originalURI)
+                    nsIURI* originalURI,
+                    PRUint32 bufferSegmentSize,
+                    PRUint32 bufferMaxSize)
 {
     // we don't care about event sinks in data
     nsresult rv;
@@ -75,6 +77,8 @@ nsDataChannel::Init(const char* verb,
     // Data urls contain all the data within the url string itself.
     mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
 
     rv = ParseData();
     if (NS_FAILED(rv)) return rv;

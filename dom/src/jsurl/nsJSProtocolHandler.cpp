@@ -196,6 +196,8 @@ nsJSProtocolHandler::NewChannel(const char* verb,
                                 nsIInterfaceRequestor* notificationCallbacks,
                                 nsLoadFlags loadAttributes,
                                 nsIURI* originalURI,
+                                PRUint32 bufferSegmentSize,
+                                PRUint32 bufferMaxSize,
                                 nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
@@ -342,7 +344,8 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     rv = NS_NewInputStreamChannel(uri, "text/html", length,
                                   in, aLoadGroup,
                                   notificationCallbacks, loadAttributes,
-                                  originalURI, &channel);
+                                  originalURI, bufferSegmentSize, 
+                                  bufferMaxSize, &channel);
     if (NS_FAILED(rv))
         return rv;
 

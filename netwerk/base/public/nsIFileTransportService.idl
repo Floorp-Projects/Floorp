@@ -36,17 +36,23 @@ native nsFileSpec(nsFileSpec&);
 interface nsIFileTransportService : nsISupports
 {
     [noscript] nsIChannel createTransport(in nsFileSpec spec,       // XXX change to nsIFile later
-                                          in string command);
+                                          in string command,
+                                          in unsigned long bufferSegmentSize,
+                                          in unsigned long bufferMaxSize);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
     nsIChannel createTransportFromStream(in nsIInputStream fromStream,
                                          in string contentType,
                                          in long contentLength,
-                                         in string command);
+                                         in string command,
+                                         in unsigned long bufferSegmentSize,
+                                         in unsigned long bufferMaxSize);
 
     nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj,
-                                             in string command);
+                                             in string command,
+                                             in unsigned long bufferSegmentSize,
+                                             in unsigned long bufferMaxSize);
 
     void dispatchRequest(in nsIRunnable runnable);
     void suspend(in nsIRunnable trans);

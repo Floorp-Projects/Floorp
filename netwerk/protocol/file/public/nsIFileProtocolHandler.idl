@@ -27,5 +27,11 @@ interface nsIFileChannel;
 [scriptable, uuid(fa1941f2-3102-11d3-8cd0-0060b0fc14a3)]
 interface nsIFileProtocolHandler : nsIProtocolHandler
 {
-    nsIFileChannel NewChannelFromNativePath(in string nativePath);
+    nsIFileChannel NewChannelFromNativePath(in string nativePath,
+                                            in nsILoadGroup aLoadGroup,
+                                            in nsIInterfaceRequestor notificationCallbacks,
+                                            in nsLoadFlags loadAttributes,
+                                            in nsIURI originalURI,
+                                            in unsigned long bufferSegmentSize,
+                                            in unsigned long bufferMaxSize);
 };

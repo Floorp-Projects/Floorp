@@ -68,7 +68,9 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull)
 inline nsresult
 NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
            nsIInterfaceRequestor *capabilities = nsnull,
-           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL)
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           PRUint32 bufferSegmentSize = 0, 
+           PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -77,7 +79,8 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
 
     nsIChannel* channel;
     rv = serv->NewChannelFromURI("load", uri, aGroup, capabilities, 
-                                 loadAttributes, nsnull, &channel);
+                                 loadAttributes, nsnull, 
+                                 bufferSegmentSize, bufferMaxSize, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -185,6 +188,8 @@ NS_NewInputStreamChannel(nsIURI* uri,
                          nsIInterfaceRequestor* notificationCallbacks,
                          nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
+                         PRUint32 bufferSegmentSize,
+                         PRUint32 bufferMaxSize,
                          nsIChannel **result)
 {
     nsresult rv;
@@ -196,7 +201,8 @@ NS_NewInputStreamChannel(nsIURI* uri,
                                             getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     rv = channel->Init(uri, contentType, contentLength, inStr, group, 
-                       notificationCallbacks, loadAttributes, originalURI);
+                       notificationCallbacks, loadAttributes, originalURI,
+                       bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -229,7 +235,9 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
                           nsIUnicharStreamLoaderObserver* observer,
                           nsILoadGroup* loadGroup = nsnull,
                           nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                          nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL)
+                          nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+                          PRUint32 bufferSegmentSize = 0, 
+                          PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
     nsCOMPtr<nsIUnicharStreamLoader> loader;
@@ -239,7 +247,8 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
                                             NS_GET_IID(nsIUnicharStreamLoader),
                                             getter_AddRefs(loader));
     if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, observer, loadGroup, notificationCallbacks, loadAttributes);
+    rv = loader->Init(uri, observer, loadGroup, notificationCallbacks, loadAttributes,
+                      bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
     *result = loader;
     NS_ADDREF(*result);
