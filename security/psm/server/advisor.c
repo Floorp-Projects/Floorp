@@ -2253,7 +2253,7 @@ SSMStatus sa_compose(SSMTextGenContext *cx)
 							}
 				
 							for (i=0; i < numErrCerts; i++) {
-								option = PR_smprintf("<option>%s</option>\n", errCerts[i]);
+								option = PR_smprintf("<option selected>%s</option>\n", errCerts[i]);
 								SSM_ConcatenateUTF8String(&out, option);
 							}
 
