@@ -37,7 +37,11 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\netlib                \
       -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\js                    \
-      -I$(PUBLIC)\dom
+      -I$(PUBLIC)\dom                   \
+      -I$(PUBLIC)\rdf                   \
+      -I$(PUBLIC)\editor 
+#      -I$(PUBLIC)\editor                \
+#      -I..\browser
 
 MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\apprunner.exe
