@@ -139,7 +139,6 @@ public:
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
   // nsBrowserWindow
   void SetWebCrawler(nsWebCrawler* aWebCrawler);

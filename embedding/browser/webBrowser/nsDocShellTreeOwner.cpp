@@ -626,13 +626,6 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetFocus()
     return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-                                                  PRBool aForward,
-                                                  PRBool* aTookFocus)
-{
-    return NS_ERROR_NULL_POINTER;
-}
-
 NS_IMETHODIMP nsDocShellTreeOwner::GetTitle(PRUnichar** aTitle)
 {
     if (mOwnerWin)

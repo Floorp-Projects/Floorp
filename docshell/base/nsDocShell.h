@@ -278,12 +278,6 @@ protected:
 
     PRBool IsFrame();
 
-    // DocShell Focus helpers
-    void     ForceUpdate(nsIDocShell* aDocShell);
-    nsresult FindNextChildDoc(nsIDocShellTreeNode* aNode, PRBool aForward, nsIDocShell** aDocShell);
-    PRBool   FocusNextChild(nsIBaseWindow * aCurrentFocus, PRBool aForward);
-    void     MakeSureOfSetFocus(nsIBaseWindow * aCurrentFocus, nsIDocShell* aDocShell = nsnull);
-
     //
     // Helper method that is called when a new document (including any
     // sub-documents - ie. frames) has been completely loaded.

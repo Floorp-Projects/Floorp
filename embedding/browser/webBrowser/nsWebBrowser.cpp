@@ -702,9 +702,7 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
         break;
     case nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT:
         {
-           NS_ENSURE_STATE(mDocShell);
-           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetFocusDocBeforeContent(aValue);
+            // obsolete
         }
         break;
     default:
@@ -1291,38 +1289,6 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
 
    if (NS_FAILED(mDocShellAsWin->SetFocus()))
      return NS_ERROR_FAILURE;
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowser::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-                                           PRBool aForward,
-                                           PRBool* aTookFocus)
-{
-   NS_ENSURE_ARG_POINTER(aTookFocus);
-
-   // Next person we should call is first the parent otherwise the 
-   // docshell tree owner.
-   nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
-   if(!nextCallWin)
-      nextCallWin = do_QueryInterface(nsnull /*mTreeOwner*/);
-
-   //If the current focus is us, offer it to the next owner.
-   if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
-      {
-      if(nextCallWin)
-         return nextCallWin->FocusAvailable(aCurrentFocus,
-                                            aForward, aTookFocus);
-      return NS_OK;
-      }
-
-   //Otherwise, check the chilren and offer it to the next sibling.
-   if((mDocShellAsWin.get() != aCurrentFocus) &&
-      NS_SUCCEEDED(mDocShellAsWin->SetFocus()))
-      {
-      *aTookFocus = PR_TRUE;
-      return NS_OK;
-      }
 
    return NS_OK;
 }

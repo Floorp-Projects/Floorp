@@ -80,6 +80,8 @@ interface nsIWebBrowserSetup : nsISupports
      * Enables/disables whether the document as a whole gets focus before
      * traversing the document's content, or after traversing its content.
      *
+     * NOTE: this property is obsolete and now has no effect
+     *
      * @see setProperty
      */
     const unsigned long SETUP_FOCUS_DOC_BEFORE_CONTENT = 6;
