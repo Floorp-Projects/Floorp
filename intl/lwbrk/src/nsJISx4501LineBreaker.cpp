@@ -217,13 +217,14 @@ IS_CJK_CHAR(PRUnichar u)
 {
   return ((0x1100 <= (u) && (u) <= 0x11ff) ||
           (0x2e80 <= (u) && (u) <= 0xd7ff) ||
-          (0xf900 <= (u) && (u) <= 0xfaff) );
+          (0xf900 <= (u) && (u) <= 0xfaff) ||
+          (0xff00 <= (u) && (u) <= 0xffff) );
 }
 
 static inline int
 IS_SPACE(PRUnichar u)
 {
-  return ((u) == 0x0020 || (u) == 0x0009 || (u) == 0x000a || (u) == 0x000d);
+  return ((u) == 0x0020 || (u) == 0x0009 || (u) == 0x000a || (u) == 0x000d || (u)==0x200b);
 }
 
 PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
