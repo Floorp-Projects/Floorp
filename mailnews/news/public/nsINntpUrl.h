@@ -34,9 +34,14 @@
 
 /* BDD12930-A682-11d2-804C-006008128C4E */
 
-#define NS_INNTPURL_IID                         \
-{ 0xbdd12930, 0xa682, 0x11d2,                   \
+#define NS_INNTPURL_IID									\
+{ 0xbdd12930, 0xa682, 0x11d2,							\
     { 0x80, 0x4c, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+
+/* 196B4B30-E18C-11d2-806E-006008128C4E */
+#define NS_NNTPURL_CID									\
+{ 0x196b4b30, 0xe18c, 0x11d2,							\
+    { 0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
 class nsINntpUrl : public nsIURL
 {
