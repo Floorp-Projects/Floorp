@@ -112,27 +112,27 @@ protected:
     MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
 
 protected:
-    nsString                mLabel;
-    PRUint32                mNumMenuItems;
-    nsSupportsArray         mMenuItemsArray;        // array holds refs
+    nsString                    mLabel;
+    PRUint32                    mNumMenuItems;
+    nsSupportsArray             mMenuItemsArray;        // array holds refs
 
-    nsIMenu*                mMenuParent;            // weak, my parent owns me
-    nsIMenuBar*             mMenuBarParent;
-    nsIChangeManager*       mManager;               // weak ref, it will outlive us
-    nsWeakPtr                  mWebShellWeakRef;    // weak ref to webshell
-    nsCOMPtr<nsIDOMNode>       mDOMNode;            // strong ref
-    nsCOMPtr<nsIMenuListener>  mListener;
+    nsISupports*                mParent;                // weak, my parent owns me
+    // nsIMenu*                    mMenuParent;            
+    // nsIMenuBar*                 mMenuBarParent;
+    nsIChangeManager*           mManager;               // weak ref, it will outlive us
+    nsWeakPtr                   mWebShellWeakRef;       // weak ref to webshell
+    nsCOMPtr<nsIDOMNode>        mDOMNode;               // strong ref
+    nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
 
     // MacSpecific
-    PRInt16                 mMacMenuID;
-    MenuHandle              mMacMenuHandle;
-    UnicodeToTextRunInfo    mUnicodeTextRunConverter;
-    PRInt16                 mHelpMenuOSItemsCount;
-    PRPackedBool            mIsHelpMenu;
-    PRPackedBool            mIsEnabled;
-    PRPackedBool            mDestroyHandlerCalled;
-    PRPackedBool            mNeedsRebuild;
-    PRPackedBool            mConstructed;
+    PRInt16                     mMacMenuID;
+    MenuHandle                  mMacMenuHandle;
+    PRInt16                     mHelpMenuOSItemsCount;
+    PRPackedBool                mIsHelpMenu;
+    PRPackedBool                mIsEnabled;
+    PRPackedBool                mDestroyHandlerCalled;
+    PRPackedBool                mNeedsRebuild;
+    PRPackedBool                mConstructed;
 };
 
 #endif // nsMenuX_h__

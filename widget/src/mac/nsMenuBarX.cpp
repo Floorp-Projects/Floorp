@@ -51,26 +51,15 @@
 #include <Appearance.h>
 #include "nsMacResources.h"
 
-
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-nsWeakPtr    gMacMenubarX;
-
-#if !TARGET_CARBON
-extern nsMenuStack          gPreviousMenuStack;
-#endif
-
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-PRInt32   gMenuBarCounterX = 0;
-
-
 NS_IMPL_ISUPPORTS5(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, nsIChangeManager, nsISupportsWeakReference)
+
+static MenuRef gDefaultRootMenu = nsnull;
 
 //
 // nsMenuBarX constructor
@@ -81,16 +70,14 @@ nsMenuBarX::nsMenuBarX()
     mNumMenus       = 0;
     mParent         = nsnull;
     mIsMenuBarAdded = PR_FALSE;
-    mMacMBarHandle = nsnull;
-    ++gMenuBarCounterX;
 
-    // if there's already a menu bar, save off its contents, so we have a clean slate.
-    if (gMacMenubarX) {
-        nsCOMPtr<nsIMenuBar> menuBar = do_QueryReferent(gMacMenubarX);
-        if (menuBar) menuBar->SetNativeData(::GetMenuBar());
-        gMacMenubarX = nsnull;
+    OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
+    NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
+
+    if (gDefaultRootMenu == nsnull) {
+        gDefaultRootMenu = ::AcquireRootMenu();
+        NS_ASSERTION(gDefaultRootMenu != nsnull, "nsMenuBarX::nsMenuBarX:  no default root menu!.");
     }
-    ::ClearMenuBar();
 }
 
 //
@@ -109,12 +96,11 @@ nsMenuBarX::~nsMenuBarX()
         doc->RemoveObserver(observer);
     }
 
-    --gMenuBarCounterX;
-    if (gMenuBarCounterX == 0)
-        ::ClearMenuBar();
-    
-    if (mMacMBarHandle)
-        ::DisposeHandle(mMacMBarHandle);
+    if (mRootMenu != NULL) {
+        NS_ASSERTION(gDefaultRootMenu != nsnull, "nsMenuBarX::~nsMenuBarX:  no default root menu!.");
+        ::SetRootMenu(gDefaultRootMenu);
+        ::ReleaseMenu(mRootMenu);
+    }
 }
 
 nsEventStatus 
@@ -133,7 +119,7 @@ nsMenuBarX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     if(menuListener)
     {
       eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      if(nsEventStatus_eIgnore != eventStatus)
+      if (nsEventStatus_eIgnore != eventStatus)
         return eventStatus;
     }
   }
@@ -246,8 +232,6 @@ nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aWebShell )
 {
-    gMacMenubarX = getter_AddRefs(NS_GetWeakReference((nsIMenuBar*)this));
-
     mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
     mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
 
@@ -308,9 +292,6 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
     // The parent takes ownership
     aParentWindow->SetMenuBar(this);
 
-    // Get a copy of the menu list
-    SetNativeData(::GetMenuBar());
-
     return nsEventStatus_eIgnore;
 }
 
@@ -351,28 +332,30 @@ NS_METHOD nsMenuBarX::SetParent(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
 {
-  // XXX add to internal data structure
-  nsCOMPtr<nsISupports> supports = do_QueryInterface(aMenu);
-  if(supports)
-    mMenusArray.AppendElement(supports);    // owner
+    // keep track of all added menus.
+    mMenusArray.AppendElement(aMenu);    // owner
 
-  MenuHandle menuHandle = nsnull;
-  aMenu->GetNativeData((void**)&menuHandle);
-  
-  mNumMenus++;
-  PRBool helpMenu;
-  aMenu->IsHelpMenu(&helpMenu);
-  if(!helpMenu) {
-    nsCOMPtr<nsIDOMNode> domNode;
-    aMenu->GetDOMNode(getter_AddRefs(domNode));
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
-    nsAutoString menuHidden;
-    domElement->GetAttribute(NS_LITERAL_STRING("hidden"), menuHidden);
-    if( menuHidden != NS_LITERAL_STRING("true"))
-      ::InsertMenu(menuHandle, 0);
-  }
-  
-  return NS_OK;
+    MenuRef menuRef = nsnull;
+    aMenu->GetNativeData((void**)&menuRef);
+
+    mNumMenus++;
+    PRBool helpMenu;
+    aMenu->IsHelpMenu(&helpMenu);
+    if(!helpMenu) {
+        nsCOMPtr<nsIDOMNode> domNode;
+        aMenu->GetDOMNode(getter_AddRefs(domNode));
+        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
+        nsAutoString menuHidden;
+        domElement->GetAttribute(NS_LITERAL_STRING("hidden"), menuHidden);
+        if (menuHidden != NS_LITERAL_STRING("true")) {
+            Str255 title;
+            ::InsertMenuItem(mRootMenu, ::GetMenuTitle(menuRef, title), mNumMenus);
+            OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, menuRef);
+            NS_ASSERTION(status == noErr, "nsMenuBarX::AddMenu: SetMenuItemHierarchicalMenu failed.");
+        }
+    }
+
+    return NS_OK;
 }
 
                                 
@@ -418,34 +401,28 @@ NS_METHOD nsMenuBarX::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::GetNativeData(void *& aData)
 {
-  aData = (void *) mMacMBarHandle;
-  return NS_OK;
+    aData = (void *) mRootMenu;
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::SetNativeData(void* aData)
 {
-  Handle  menubarHandle = (Handle)aData;
-  
-  if(mMacMBarHandle && mMacMBarHandle != menubarHandle)
-     ::DisposeHandle(mMacMBarHandle);
-  
-  mMacMBarHandle = menubarHandle;
-  return NS_OK;
+#if 0
+    Handle menubarHandle = (Handle)aData;
+    if (mMacMBarHandle && mMacMBarHandle != menubarHandle)
+        ::DisposeHandle(mMacMBarHandle);
+    mMacMBarHandle = menubarHandle;
+#endif
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::Paint()
 {
     // hack to correctly swap menu bars.
-    nsCOMPtr<nsIMenuBar> menuBar = do_QueryReferent(gMacMenubarX);
-    if (menuBar.get() != (nsIMenuBar*)this) {
-        if (menuBar)
-            menuBar->SetNativeData(::GetMenuBar());
-        gMacMenubarX = getter_AddRefs(NS_GetWeakReference((nsIMenuBar*)this));
-        if (mMacMBarHandle)
-            ::SetMenuBar(mMacMBarHandle);
-    }
+    // hopefully this is fast enough.
+    ::SetRootMenu(mRootMenu);
 
 #if !TARGET_CARBON
     // Now we have blown away the merged Help menu, so we have to rebuild it

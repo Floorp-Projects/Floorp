@@ -157,21 +157,18 @@ protected:
     void GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument ) ;
     void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
     
-    static void SwapMenuBar();
+    nsHashtable             mObserverTable;     // stores observers for content change notification
 
-    nsHashtable           mObserverTable;   // stores observers for content change notification
+    PRUint32                mNumMenus;
+    nsSupportsArray         mMenusArray;        // holds refs
+    nsCOMPtr<nsIDOMNode>    mDOMNode;
+    nsIWidget*              mParent;            // weak ref
 
-    PRUint32              mNumMenus;
-    nsSupportsArray       mMenusArray;        // holds refs
-    nsCOMPtr<nsIDOMNode>  mDOMNode;
-    nsIWidget *           mParent;            // weak ref
+    PRBool                  mIsMenuBarAdded;
 
-    PRBool       mIsMenuBarAdded;
+    nsWeakPtr               mWebShellWeakRef;   // weak ref to webshell
 
-    nsWeakPtr   mWebShellWeakRef;    // weak ref to webshell
-
-    // Mac Specific
-    Handle      mMacMBarHandle;
+    MenuRef                 mRootMenu;          // root menu, representing entire menu bar.
 };
 
 #endif // nsMenuBarX_h__
