@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -43,8 +43,8 @@
  * kTagRDF_ID to be "ID"
  */
 
-#define DEFINE_RDF_VOCAB(namespace, prefix, name) \
-static const char* kURI##prefix##_##name = namespace #name ;\
+#define DEFINE_RDF_VOCAB(ns, prefix, name) \
+static const char* kURI##prefix##_##name = ns #name ;\
 static const char* kTag##prefix##_##name = #name
 
 /**
