@@ -42,14 +42,14 @@
 #define nsTriStateCheckboxFrame_h__
 
 
-#include "nsFormControlFrame.h"
 #include "nsLeafFrame.h"
 #include "prtypes.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 
 class nsIPresContext;
 class nsString;
 class nsIContent;
-class nsIAtom;
 
 
 nsresult NS_NewTriStateCheckboxFrame(nsIFrame*& aResult) ;
@@ -102,6 +102,10 @@ protected:
 
     //GFX-rendered state variables
   PRBool mMouseDownOnCheckbox;
+  
+    // atom for the "depress" attribute. We will have a CSS rule that
+    // when this is set, draws the button depressed.
+  //static nsCOMPtr<nsIAtom> sDepressAtom;
 
 }; // class nsTriStateCheckboxFrame
 

@@ -32,6 +32,7 @@
 #include "nsINameSpaceManager.h"
 
 
+
 //
 // NS_NewTriStateCheckboxFrame
 //
@@ -53,7 +54,11 @@ NS_NewTriStateCheckboxFrame(nsIFrame*& aResult)
 nsTriStateCheckboxFrame::nsTriStateCheckboxFrame()
   : mMouseDownOnCheckbox(PR_FALSE), nsLeafFrame()
 {
-}
+  // create an atom for the "depress" attribute if it hasn't yet been created.
+//  if ( !sDepressAtom )
+//    sDepressAtom = dont_QueryInterface(NS_NewAtom("depress"));
+
+} // cntr
 
 
 //
@@ -214,12 +219,16 @@ nsTriStateCheckboxFrame::HandleEvent(nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_LEFT_BUTTON_DOWN:
-      // set "hover" state so CSS redraws us
+      // set "depressed" state so CSS redraws us
+//      if ( NS_SUCCEEDED(mContent->SetAttribute(kNameSpaceID_None, sDepressAtom, NS_STRING_TRUE, PR_TRUE)) )
+//        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
       mMouseDownOnCheckbox = PR_TRUE;
       break;
 
     case NS_MOUSE_EXIT:
-      // clear hover state so css redraws us
+      // clear "depressed" state so css redraws us
+      if ( NS_SUCCEEDED(mContent->UnsetAttribute(kNameSpaceID_None, sDepressAtom, PR_TRUE)) )
+        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
       mMouseDownOnCheckbox = PR_FALSE;
       break;
 
