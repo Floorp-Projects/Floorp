@@ -408,7 +408,6 @@ protected:
                      PRBool aKickOffLoad = PR_TRUE);
 
   nsresult PrepareToLoadURI(nsIURI * aUri, 
-                            const char * aCommand,
                             nsIInputStream * aPostStream,
                             PRBool aModifyHistory,
                             nsLoadFlags aType,
@@ -1383,7 +1382,7 @@ nsWebShell::DoContent(const char * aContentType,
   aOpenedChannel->GetURI(getter_AddRefs(aUri));
   if (loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
   {
-    PrepareToLoadURI(aUri, strCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
+    PrepareToLoadURI(aUri, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
     // mscott: when I called DoLoadURL I found that we ran into problems because
     // we currently don't have channel retargeting yet. Basically, what happens is that
     // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
@@ -1401,7 +1400,6 @@ nsWebShell::DoContent(const char * aContentType,
 }
 
 nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
-                                      const char * aCommand,
                                       nsIInputStream * aPostStream,
                                       PRBool aModifyHistory,
                                       nsLoadFlags aType,
@@ -1476,7 +1474,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
                     const PRUnichar* aReferrer,
                     const char * aWindowTarget)
 {
-  nsresult rv = PrepareToLoadURI(aUri, aCommand, aPostDataStream,
+  nsresult rv = PrepareToLoadURI(aUri, aPostDataStream,
                                  aModifyHistory, aType, aLocalIP,
                                  aHistoryState, aReferrer);
   if (NS_SUCCEEDED(rv))
