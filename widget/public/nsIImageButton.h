@@ -118,6 +118,12 @@ public:
   NS_IMETHOD SetImageDimensions(const PRInt32 & aWidth, const PRInt32 & aHeight) = 0;
 
  /**
+  * Gets the Dimensions of the Image in the button
+  *
+  */
+  NS_IMETHOD GetImageDimensions(PRInt32 & aWidth, PRInt32 & aHeight) = 0;
+
+ /**
   * Sets the URLs for the Buttons images
   *
   */

@@ -118,6 +118,7 @@ public:
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
   NS_IMETHOD SetImageDimensions(const PRInt32 & aWidth, const PRInt32 & aHeight);
+  NS_IMETHOD GetImageDimensions(PRInt32 & aWidth, PRInt32 & aHeight);
   NS_IMETHOD SetImageURLs(const nsString& aUpURL,
                           const nsString& aPressedURL,
                           const nsString& aDisabledURL,
