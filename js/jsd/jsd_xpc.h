@@ -85,6 +85,35 @@ class jsdContext : public jsdIContext
     JSDContext *mCx;
 };
 
+class jsdPC : public jsdIPC
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIPC
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdPC (jsuword aPC) : mPC(aPC)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    static jsdIPC *FromPtr (jsuword aPC)
+    {
+        if (!aPC)
+            return 0;
+        
+        jsdIPC *rv = new jsdPC (aPC);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+  private:
+    jsdPC(); /* no implementation */
+    jsdPC(const jsdPC&); /* no implementation */
+
+    jsuword  mPC;
+};
+
 class jsdObject : public jsdIObject
 {
   public:
@@ -113,9 +142,10 @@ class jsdObject : public jsdIObject
     jsdObject(); /* no implementation */
     jsdObject(const jsdObject&); /* no implementation */
 
-    JSDContext  *mCx;
-    JSDObject   *mObject;
+    JSDContext *mCx;
+    JSDObject *mObject;
 };
+
 
 class jsdProperty : public jsdIProperty
 {
@@ -322,17 +352,14 @@ class jsdService : public jsdIDebuggerService
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
 
-    jsdService() : mNestedLoopLevel(0), mJSrt(0), mJSDcx(0), mDebugBreakHook(0),
-                   mDebuggerHook(0), mInterruptHook(0), mScriptHook(0)
-    {
-        NS_INIT_ISUPPORTS();
-    }
+    jsdService();
     virtual ~jsdService() { }
     
   private:
+    PRBool      mOn;
     PRUint32    mNestedLoopLevel;
-    JSRuntime  *mJSrt;
-    JSDContext *mJSDcx;
+    JSDContext *mCx;
+    nsCOMPtr<jsdIExecutionHook> mBreakpointHook;
     nsCOMPtr<jsdIExecutionHook> mDebugBreakHook;
     nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
     nsCOMPtr<jsdIExecutionHook> mInterruptHook;
