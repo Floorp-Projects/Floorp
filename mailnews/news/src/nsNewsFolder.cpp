@@ -119,7 +119,7 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 		return NS_OK;
 	}
 
-	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
+	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

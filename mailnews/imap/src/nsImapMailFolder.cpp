@@ -157,7 +157,7 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 		return NS_OK;
 	}
 
-	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
+	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)

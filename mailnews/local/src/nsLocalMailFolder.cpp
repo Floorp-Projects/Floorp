@@ -141,7 +141,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstan
 		return NS_OK;
 	}
 
-	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
+	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
