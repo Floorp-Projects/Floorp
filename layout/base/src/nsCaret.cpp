@@ -560,17 +560,12 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext& inRendContext)
 		frameRect.width = mCaretWidth;
 		mCaretRect = frameRect;
 		
-		if (mDrawn)
-		{
+		/*
 		if (mReadOnly)
 			inRendContext.SetColor(NS_RGB(85, 85, 85));		// we are drawing it; gray
-		else
-			inRendContext.SetColor(NS_RGB(0, 0, 0));			// we are drawing it; black
-		}
-		else
-		inRendContext.SetColor(NS_RGB(255, 255, 255));	// we are erasing it; white
-
-		inRendContext.FillRect(mCaretRect);
+	  */
+	  
+		inRendContext.InvertRect(mCaretRect);
 	}
 	
 	PRBool dummy;
