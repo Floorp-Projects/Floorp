@@ -984,6 +984,22 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
   g_print("  nsClipboard::SelectionClearCB\n");
 #endif /* DEBUG_CLIPBOARD */
 
+  if (!aWidget)
+  {
+    NS_ASSERTION(PR_FALSE, "Null widget passed to SelectionClearCB)\n");
+    return;
+  }
+  if (!aEvent)
+  {
+    NS_ASSERTION(PR_FALSE, "Null event passed to SelectionClearCB)\n");
+    return;
+  }
+  if (!aData)
+  {
+    NS_ASSERTION(PR_FALSE, "Null data passed to SelectionClearCB)\n");
+    return;
+  }
+
   nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
                                                        "cb");
 
