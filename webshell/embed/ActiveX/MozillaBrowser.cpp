@@ -125,9 +125,16 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	// Load browser helpers
 	LoadBrowserHelpers();
 
-	// Browse to a default page
-	USES_CONVERSION;
-	Navigate(A2OLE(c_szDefaultPage.c_str()), NULL, NULL, NULL, NULL);
+	// Browse to a default page - if in design mode
+    BOOL bUserMode = FALSE;
+    if (SUCCEEDED(GetAmbientUserMode(bUserMode)))
+    {
+		if (!bUserMode)
+		{
+			USES_CONVERSION;
+			Navigate(A2OLE(c_szDefaultPage.c_str()), NULL, NULL, NULL, NULL);
+		}
+	}
 
 	return 0;
 }
