@@ -393,6 +393,30 @@ set to 1. This won't be a problem if your module only returns 1
  implementation does).
 
 
+*** CTCPPing($event, $who, $what)
+
+ Called when the bot receives a CTCP ping.
+
+ Return 1 if you can't do anything (this is all the default
+ implementation does).
+
+
+*** CTCPVerson($event, $who, $what)
+
+ Called when the bot receives a CTCP verson.
+
+ Return 1 if you can't do anything (this is all the default
+ implementation does).
+
+
+*** CTCPSource($event, $who, $what)
+
+ Called when the bot receives a CTCP source.
+
+ Return 1 if you can't do anything (this is all the default
+ implementation does).
+
+
 *** Scheduled($event, @data)
 
  Called when a scheduled timer triggers. (See 'schedule' in the next
@@ -685,6 +709,22 @@ recommended.
  Examples:
     $self->sayOrEmote($event, $greeting);
     $self->directSayOrEmote($event, $privateMessage);
+
+
+*** ctcpSend($event, $type, $data)
+
+ Same as say() but for sending CTCP messages.
+
+ Examples:
+    $self->ctcpSend($event, 'PING', time());
+
+
+*** ctcpReply($event, $type, $data)
+
+ Same as ctcpSend() but for sending CTCP replies.
+
+ Examples:
+    $self->ctcpReply($event, 'VERSION', "Version $major.$minor");
 
 
 *** isAdmin($event)

@@ -62,9 +62,7 @@
 # XXX compile self before run
 # XXX parse mode (+o, etc)
 # XXX customise gender
-# XXX version, source
 # XXX optimisations
-# XXX ctcp pong
 # XXX maybe should catch hangup signal and go to background?
 # XXX protect the bot from DOS attacks causing server overload
 # XXX protect the server from an overflowing log (add log size limitter
@@ -130,7 +128,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.4 $;
+my $VERSION = q$Revision: 2.5 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -658,13 +656,6 @@ sub on_kick {
     }
 }
 
-# Yells about incoming CTCP PINGs.
-sub on_cping {
-    my ($self, $event) = @_;
-    $self->ctcp_reply($event->nick, join(' ', ($event->args)));
-    &debug('received CTCP PING request from '.$event->nick.' and responded');
-}
-
 # Gives lag results for outgoing PINGs.
 sub on_cpong {
     my ($self, $event) = @_;
@@ -697,8 +688,10 @@ sub on_invite { &do(@_, 'Invited'); }
 sub on_nick { &do(@_, 'SpottedNickChange'); }
 sub on_mode { &do(@_, 'ModeChange'); } # XXX need to parse modes # XXX on key change, change %channelKeys hash
 sub on_umode { &do(@_, 'UModeChange'); }
-sub on_version { &do(@_, 'Version'); }
-sub on_source { &do(@_, 'Source'); }
+sub on_version { &do(@_, 'CTCPVersion'); }
+sub on_source { &do(@_, 'CTCPSource'); }
+sub on_cping { &do(@_, 'CTCPPing'); }
+
 
 sub do {
     my $self = shift @_;
@@ -744,7 +737,7 @@ sub do {
     } else {
         $e->{'userName'} = 0;
     }
-    unless (scalar(grep($e->{'user'} =~ /^\Q$_\E$/g, @ignoredUsers))) {
+    unless (scalar(grep $e->{'user'} =~ /^\Q$_\E$/g, @ignoredUsers)) {
         my $continue;
         do {
             my $type = shift @_;
@@ -805,12 +798,20 @@ my $timeLastSetAway = 0; # the time since the away flag was last set, so that we
 # messages aren't the only type of flood :-( away is included
 sub sendmsg {
     my ($self, $who, $msg, $do) = (@_, 'msg');
-    unless ((defined($do)) and (defined($msg)) and (defined($who)) and (not ref($msg)) and ($who ne '')) {
+    unless ((defined($do) and defined($msg) and defined($who) and ($who ne '')) and
+            ((($do eq 'msg') and (not ref($msg))) or
+             (($do eq 'me') and (not ref($msg))) or
+             (($do eq 'ctcpSend') and (ref($msg) eq 'ARRAY') and (@$msg >= 2)) or
+             (($do eq 'ctcpReply') and (not ref($msg))))) {
         cluck('Wrong arguments passed to sendmsg() - ignored');
     } else {
-        $self->schedule($delaytime / 2, \&drainmsgqueue) unless @msgqueue; 
-        foreach (splitMessageAcrossLines($msg)) {
-            push(@msgqueue, [$who, $_, $do]);
+        $self->schedule($delaytime / 2, \&drainmsgqueue) unless @msgqueue;
+        if ($msg eq 'msg' or $msg eq 'me') {
+            foreach (splitMessageAcrossLines($msg)) {
+                push(@msgqueue, [$who, $_, $do]);
+            }
+        } else {
+            push(@msgqueue, [$who, $msg, $do]);
         }
     }
 }
@@ -828,6 +829,13 @@ sub drainmsgqueue {
         } elsif ($do eq 'me') {
             &debug("->$who * $msg"); # XXX
             $self->me($who, $msg);
+        } elsif ($do eq 'ctcpSend') {
+            { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
+            my $type = shift @$msg; # @$msg contains (type, args)
+            $self->ctcp($type, $who, @$msg);
+        } elsif ($do eq 'ctcpReply') {
+            { local $" = ' '; &debug("->$who CTCP NOTICE $msg"); }
+            $self->ctcp_reply($who, $msg);
         } else {
             &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
         }
@@ -1242,6 +1250,12 @@ sub do {
         return $self->SpottedKick($e, $e->{'channel'}, $e->{'data'});
     } elsif ($type eq 'SpottedQuit') {
         return $self->SpottedQuit($e, $e->{'from'}, $e->{'data'});
+    } elsif ($type eq 'CTCPPing') {
+        return $self->CTCPPing($e, $e->{'from'}, $e->{'data'});
+    } elsif ($type eq 'CTCPVersion') {
+        return $self->CTCPVersion($e, $e->{'from'}, $e->{'data'});
+    } elsif ($type eq 'CTCPSource') {
+        return $self->CTCPSource($e, $e->{'from'}, $e->{'data'});
 
     # XXX have not implemented mode parsing yet
     } elsif ($type eq 'GotOpped') {
@@ -1254,7 +1268,7 @@ sub do {
         return $self->SpottedDeopping($e, $e->{'channel'}, $e->{'from'});
     } else {
         $self->debug("Unknown action type '$type'. Ignored.");
-        # UModeChange, Version, Source - XXX
+        # XXX UModeChange (not implemented yet)
         return 1; # could not do it
     }
 }
@@ -1465,6 +1479,27 @@ sub tellAdmin {
         &::sendmsg($event->{'bot'}, $lastadmin, $data);
     } else {
         $self->debug("Wanted to tell an admin '$data', but I've never seen one.");
+    }
+}
+
+# ctcpSend - Sends a CTCP message to someone
+sub ctcpSend {
+    my $self = shift;
+    my ($event, $type, $data) = @_;
+    &::sendmsg($event->{'bot'}, $event->{'from'}, [$type, $data], 'ctcpSend');
+}
+
+# ctcpReply - Sends a CTCP reply to someone
+sub ctcpReply {
+    my $self = shift;
+    my ($event, $type, $data) = @_;
+    unless (defined($type)) {
+        cluck('No type passed to ctcpReply - ignored');
+    }
+    if (defined($data)) {
+        &::sendmsg($event->{'bot'}, $event->{'from'}, "$type $data", 'ctcpReply');
+    } else {
+        &::sendmsg($event->{'bot'}, $event->{'from'}, $type, 'ctcpReply');
     }
 }
 
@@ -1707,8 +1742,8 @@ sub JoinedChannel {
     my $self = shift;
     my ($event, $channel) = @_; 
     if ($self->{'autojoin'}) {
-        push(@{$self->{'channels'}}, $channel) unless ((scalar(grep($_ eq $channel, @{$self->{'channels'}}))) or 
-                                                       (scalar(grep($_ eq $channel, @{$self->{'channelsBlocked'}}))));
+        push(@{$self->{'channels'}}, $channel) unless ((scalar(grep $_ eq $channel, @{$self->{'channels'}})) or 
+                                                       (scalar(grep $_ eq $channel, @{$self->{'channelsBlocked'}})));
         $self->saveConfig();
     }
 }
@@ -1729,15 +1764,15 @@ sub PartedChannel {
 sub InChannel {
     my $self = shift;
     my ($event) = @_;
-    return scalar(grep($_ eq $event->{'channel'}, @{$self->{'channels'}})); 
+    return scalar(grep $_ eq $event->{'channel'}, @{$self->{'channels'}}); 
     # XXX could be optimised - cache the list into a hash.
 }
 
 sub IsBanned {
     my $self = shift;
     my ($event) = @_;
-    return 0 if scalar(grep({ $_ = $self->sanitizeRegexp($_); $event->{'user'} =~ /^$_$/ } @{$self->{'allowusers'}}));
-    return      scalar(grep({ $_ = $self->sanitizeRegexp($_); $event->{'user'} =~ /^$_$/ } @{$self->{'denyusers'}}));
+    return 0 if scalar(grep { $_ = $self->sanitizeRegexp($_); $event->{'user'} =~ /^$_$/ } @{$self->{'allowusers'}});
+    return      scalar(grep { $_ = $self->sanitizeRegexp($_); $event->{'user'} =~ /^$_$/ } @{$self->{'denyusers'}});
 }
 
 # Baffled - Called for messages prefixed by the bot's nick which we don't understand
@@ -1878,6 +1913,27 @@ sub SpottedKick {
 sub SpottedQuit {
     my $self = shift;
     my ($event, $who, $why) = @_;
+    return 1;
+}
+
+# CTCPPing - Called when we receive a CTCP Ping.
+sub CTCPPing {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
+    return 1;
+}
+
+# CTCPVersion - Called when we receive a CTCP Version.
+sub CTCPVersion {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
+    return 1;
+}
+
+# CTCPSource - Called when we receive a CTCP Source.
+sub CTCPSource {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
     return 1;
 }
 
@@ -2377,7 +2433,7 @@ sub Invited {
     # This is important so that case is kept in the list of channels
     # on the server should the bot join first.
     my $channel = lc($channelName);
-    if (grep($_ eq $channel, @channels)) {
+    if (grep $_ eq $channel, @channels) {
         $self->directSay($event, "I think I'm already *in* channel $channel! If this is not the case please make me part and then rejoin.");
     } else {
         if ($self->isAdmin($event) || $self->{'allowInviting'}) {
@@ -2434,7 +2490,7 @@ sub LoadModule {
         &Configuration::Get($cfgfile, $newmodule->configStructure());
         $newmodule->Schedule($event);
         # ensure we don't add it if it is there already
-        push(@modulenames, $newmodule->{'_name'}) unless grep($_ eq $newmodule->{'_name'}, @modulenames);
+        push(@modulenames, $newmodule->{'_name'}) unless grep $_ eq $newmodule->{'_name'}, @modulenames;
         $newmodule->saveConfig();
         &Configuration::Save($cfgfile, &::configStructure(\@modulenames)); 
         $self->debug("Successfully loaded module '$name'.");
@@ -2667,6 +2723,13 @@ sub SpottedQuit {
     delete($authenticatedUsers{$event->{'user'}});
     # XXX this doesn't deal with a user who has authenticated twice.
     return $self->SUPER::SpottedQuit(@_);
+}
+
+sub CTCPVersion {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
+    local $" = ', ';
+    $self->ctcpReply($event, 'VERSION', "$NAME $VERSION (@modulenames)");
 }
 
 
