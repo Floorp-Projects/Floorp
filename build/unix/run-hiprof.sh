@@ -14,6 +14,6 @@ $ECHO atom $PROG -tool hiprof -env threads -toolargs="-calltime -systime" -all $
 
 cd components && (
     for f in lib*.so; do
-        mv ../$f.hiprof.threads .
+        mv ../$f.$PROG.hiprof.threads .
     done
 )
