@@ -1128,7 +1128,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	switch (type)
 	{
 		case NORMAL_FILE_TYPE:
-			err = ::FSpCreate(&mResolvedSpec, mType, mCreator, smCurrentScript);
+			err = ::FSpCreate(&mResolvedSpec, mCreator, mType, smCurrentScript);
 			return (MacErrorMapper(err));
 			break;
 
@@ -2343,12 +2343,10 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
 	
 	if (aDocToLoad)
 	{
-		FSSpec		docSpec;
-
 		err = AECreateList(nil, 0, false, &docList);
 		if (err != noErr) return NS_ERROR_FAILURE;
 		
-		err = AECreateDesc(typeFSS, &docSpec, sizeof(FSSpec), &docDesc);
+		err = AECreateDesc(typeFSS, aDocToLoad, sizeof(FSSpec), &docDesc);
 		if (err != noErr) return NS_ERROR_FAILURE;
 		
 		err = AEPutDesc(&docList, 0, &docDesc);
@@ -2384,8 +2382,7 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
         ::AEGetDescData(&launchDesc, &launchThis.launchAppParameters, sizeof(launchThis.launchAppParameters));
 #else
         // no need to lock this handle.
-        AppParameters appParameters = *(AppParametersPtr)*launchDesc.dataHandle;
-		launchThis.launchAppParameters = &appParameters;
+		    launchThis.launchAppParameters = (AppParametersPtr) *(launchDesc.dataHandle);
 #endif
 		launchThis.launchBlockID = extendedBlock;
 		launchThis.launchEPBLength = extendedBlockLen;
