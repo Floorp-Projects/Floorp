@@ -899,7 +899,7 @@ nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
-   if ((0 == mRect.width) || (0 == mRect.height)) {
+  if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
@@ -908,31 +908,29 @@ nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
 
   // don't draw if the image is not dirty
   if (!mHasImage || !aDirtyRect.Intersects(mImageRect))
-      return NS_OK;
+    return NS_OK;
 
+  if (eFramePaintLayer_Content != aWhichLayer)
+    return NS_OK;
 
-    nsIImage* image = mImageLoader.GetImage();
-    if (nsnull == image) {
-      // No image yet, or image load failed. Draw the alt-text and an icon
-      // indicating the status
-      if (eFramePaintLayer_Underlay == aWhichLayer) {
-        DisplayAltFeedback(aPresContext, aRenderingContext,
-                           mImageLoader.GetLoadImageFailed()
-                           ? NS_ICON_BROKEN_IMAGE
-                           : NS_ICON_LOADING_IMAGE);
-      }
-      return NS_OK;
+  nsCOMPtr<nsIImage> image ( dont_AddRef(mImageLoader.GetImage()) );
+  if ( !image ) {
+    // No image yet, or image load failed. Draw the alt-text and an icon
+    // indicating the status
+    if (eFramePaintLayer_Underlay == aWhichLayer) {
+      DisplayAltFeedback(aPresContext, aRenderingContext,
+                       mImageLoader.GetLoadImageFailed()
+                       ? NS_ICON_BROKEN_IMAGE
+                       : NS_ICON_LOADING_IMAGE);
     }
-
-    if (eFramePaintLayer_Content == aWhichLayer) {
-      // Now render the image into our content area (the area inside the
-      // borders and padding)
-      aRenderingContext.DrawImage(image, mImageRect);
-    }
-
-    NS_IF_RELEASE(image);
-
-   return NS_OK;
+  }
+  else {
+    // Now render the image into our content area (the area inside the
+    // borders and padding)
+    aRenderingContext.DrawImage(image, mImageRect);
+  }
+  
+  return NS_OK;
 }
 
 
