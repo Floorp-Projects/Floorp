@@ -379,6 +379,7 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
                 mRequestBuffer.Append(": ");
                 mRequestBuffer.Append(autoBuffer);
                 mRequestBuffer.Append(CRLF);
+                nsCRT::free(fieldName);
             }
             enumerator->HasMoreElements(&bMoreHeaders);
         }
