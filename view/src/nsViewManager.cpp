@@ -563,7 +563,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     onscreencx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
 #ifdef XP_UNIX
-    onscreencx->SetClipRect(trect, nsClipCombine_kReplace, result);
+    localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 #endif //unix
     onscreencx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
 #endif //mac
