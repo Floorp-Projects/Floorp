@@ -283,6 +283,34 @@ PyXPCOMMethod_WrapObject(PyObject *self, PyObject *args)
 	return Py_nsISupports::PyObjectFromInterface(ret, iid, PR_FALSE, bWrapClient);
 }
 
+static PyObject *
+PyXPCOMMethod_UnwrapObject(PyObject *self, PyObject *args)
+{
+	PyObject *ob;
+	if (!PyArg_ParseTuple(args, "O", &ob))
+		return NULL;
+
+	nsISupports *uob = NULL;
+	nsIInternalPython *iob = NULL;
+	PyObject *ret = NULL;
+	if (!Py_nsISupports::InterfaceFromPyObject(ob, 
+				NS_GET_IID(nsISupports), 
+				&uob, 
+				PR_FALSE))
+		goto done;
+	if (NS_FAILED(uob->QueryInterface(NS_GET_IID(nsIInternalPython), reinterpret_cast<void **>(&iob)))) {
+		PyErr_SetString(PyExc_ValueError, "This XPCOM object is not implemented by Python");
+		goto done;
+	}
+	ret = iob->UnwrapPythonObject();
+done:
+	Py_BEGIN_ALLOW_THREADS;
+	NS_IF_RELEASE(uob);
+	NS_IF_RELEASE(iob);
+	Py_END_ALLOW_THREADS;
+	return ret;
+}
+
 // @pymethod int|pythoncom|_GetInterfaceCount|Retrieves the number of interface objects currently in existance
 static PyObject *
 PyXPCOMMethod_GetInterfaceCount(PyObject *self, PyObject *args)
@@ -420,6 +448,7 @@ static struct PyMethodDef xpcom_methods[]=
 	{"ID", PyXPCOMMethod_IID, 1}, // This is the official name.
 	{"NS_ShutdownXPCOM", PyXPCOMMethod_NS_ShutdownXPCOM, 1},
 	{"WrapObject", PyXPCOMMethod_WrapObject, 1},
+	{"UnwrapObject", PyXPCOMMethod_UnwrapObject, 1},
 	{"_GetInterfaceCount", PyXPCOMMethod_GetInterfaceCount, 1},
 	{"_GetGatewayCount", PyXPCOMMethod_GetGatewayCount, 1},
 	{"getProxyForObject", PyXPCOMMethod_GetProxyForObject, 1},
