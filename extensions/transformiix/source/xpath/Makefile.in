@@ -81,6 +81,7 @@ CPPSRCS = AdditiveExpr.cpp \
         RootExpr.cpp \
         StringFunctionCall.cpp \
         StringResult.cpp \
+        txErrorExpr.cpp \
         txLiteralExpr.cpp \
         txNameTest.cpp \
         txNodeSet.cpp \

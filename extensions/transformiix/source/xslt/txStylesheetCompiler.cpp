@@ -702,12 +702,6 @@ txStylesheetCompilerState::popPtr()
     return value;
 }
 
-MBool
-txStylesheetCompilerState::fcp()
-{
-    return mElementContext->mForwardsCompatibleParsing;
-}
-
 nsresult
 txStylesheetCompilerState::addToplevelItem(txToplevelItem* aItem)
 {
@@ -933,6 +927,12 @@ PRBool
 txStylesheetCompilerState::caseInsensitiveNameTests()
 {
     return PR_FALSE;
+}
+
+PRBool
+txStylesheetCompilerState::fcp()
+{
+    return mElementContext->mForwardsCompatibleParsing;
 }
 
 void

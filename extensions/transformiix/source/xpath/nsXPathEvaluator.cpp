@@ -204,6 +204,11 @@ PRBool nsXPathEvaluator::ParseContextImpl::caseInsensitiveNameTests()
     return !mIsCaseSensitive;
 }
 
+PRBool nsXPathEvaluator::ParseContextImpl::fcp()
+{
+    return PR_FALSE;
+}
+
 void
 nsXPathEvaluator::ParseContextImpl::SetErrorOffset(PRUint32 aOffset)
 {

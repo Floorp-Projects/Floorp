@@ -124,9 +124,6 @@ public:
     nsresult pushPtr(void* aPtr);
     void* popPtr();
 
-    // State-checking functions
-    MBool fcp();
-    
     // stylesheet functions
     nsresult addToplevelItem(txToplevelItem* aItem);
     nsresult openInstructionContainer(txInstructionContainer* aContainer);
@@ -145,6 +142,7 @@ public:
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  FunctionCall*& aFunction);
     PRBool caseInsensitiveNameTests();
+    PRBool fcp();
     void SetErrorOffset(PRUint32 aOffset);
 
 
