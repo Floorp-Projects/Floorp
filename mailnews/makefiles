@@ -31,6 +31,11 @@ mailnews/news/src/Makefile
 mailnews/news/tests/Makefile
 mailnews/news/tests/nntp/Makefile
 mailnews/mime/Makefile
+mailnews/mime/cthandlers/Makefile
+mailnews/mime/cthandlers/vcard/Makefile
+mailnews/mime/cthandlers/calendar/Makefile
+mailnews/mime/tests/Makefile
+mailnews/mime/tests/xpcomtest/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
 mailnews/compose/Makefile
@@ -46,8 +51,6 @@ mailnews/ui/messenger/public/Makefile
 mailnews/ui/messenger/src/Makefile
 mailnews/ui/messenger/resources/Makefile
 mailnews/ui/compose/Makefile
-mailnews/ui/compose/public/Makefile
-mailnews/ui/compose/src/Makefile
 mailnews/ui/compose/resources/Makefile
 mailnews/ui/ab/Makefile
 mailnews/public/Makefile
