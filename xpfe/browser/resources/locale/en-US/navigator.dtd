@@ -63,6 +63,30 @@
 <!ENTITY translateMenu.label "Translate">
 <!ENTITY translateMenu.accesskey "t">
 <!ENTITY translate.commandKey "t">
+<!ENTITY bidiMenu.label "Bidi Options">
+<!ENTITY directionBidiMenu.label "Default Direction">
+<!ENTITY directionRTLBidiCmd.label "Right to Left">
+<!ENTITY directionLTRBidiCmd.label "Left to Right">
+<!ENTITY texttypeBidiMenu.label "Text Type">
+<!ENTITY charsettexttypeBidiCmd.label "Based on Character Set">
+<!ENTITY logicaltexttypeBidiCmd.label "Logical">
+<!ENTITY visualtexttypeBidiCmd.label "Visual">
+<!ENTITY numeralBidiMenu.label "Numeral Shape">
+<!ENTITY regularcontextnumeralBidiCmd.label "Contextual">
+<!ENTITY hindicontextnumeralBidiCmd.label "Hindi Numerals on RTL Document Direction">
+<!ENTITY arabicnumeralBidiCmd.label "Arabic">
+<!ENTITY hindinumeralBidiCmd.label "Hindi">
+<!ENTITY controlstextmodeBidiMenu.label "Text Mode in Controls">
+<!ENTITY logicalcontrolstextmodeBidiCmd.label "Logical">
+<!ENTITY visiualcontrolstextmodeBidiCmd.label "Visual">
+<!ENTITY containercontrolstextmodeBidiCmd.label "Like Containing Document">
+<!ENTITY clipboardtextmodeBidiMenu.label "Text Mode in clipboard">
+<!ENTITY logicalclipboardtextmodeBidiCmd.label "Logical">
+<!ENTITY visiualclipboardtextmodeBidiCmd.label "Visual">
+<!ENTITY sourceclipboardtextmodeBidiCmd.label "As Source">
+<!ENTITY charactersetBidiMenu.label "Character set">
+<!ENTITY doccharactersetBidiCmd.label "Use the document specified character set">
+<!ENTITY defaultcharactersetBidiCmd.label "Use my default character set, overriding the document-specified character set">
 <!ENTITY webContentMenu.label "Languages and Web Content">
 <!ENTITY webContentMenu.accesskey "l">
 <!ENTITY downloadMore.label "Download More">
