@@ -587,20 +587,26 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
         mVisited->Put(urlAtom, "visited");
         if (OkToLoad(absURLSpec)) {
           mPendingURLs.AppendElement(new nsString(absURLSpec));
-          printf("Adding '");
-          fputs(absURLSpec, stdout);
-          printf("'\n");
+          if (mVerbose) {
+            printf("Adding '");
+            fputs(absURLSpec, stdout);
+            printf("'\n");
+          }
         }
         else {
-          printf("Skipping '");
-          fputs(absURLSpec, stdout);
-          printf("'\n");
+          if (mVerbose) {
+            printf("Skipping '");
+            fputs(absURLSpec, stdout);
+            printf("'\n");
+          }
         }
       }
       else {
-        printf("Already visited '");
-        fputs(absURLSpec, stdout);
-        printf("'\n");
+        if (mVerbose) {
+          printf("Already visited '");
+          fputs(absURLSpec, stdout);
+          printf("'\n");
+        }
       }
       NS_RELEASE(urlAtom);
     }
