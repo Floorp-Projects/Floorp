@@ -1053,8 +1053,6 @@
     "xultreeelement.clearitemselection", \
     "xultreeelement.currentcell", \
     "xultreeelement.currentitem", \
-    "xultreeelement.ensureelementisvisible", \
-    "xultreeelement.getrowindexof", \
     "xultreeelement.invertselection", \
     "xultreeelement.removecellfromselection", \
     "xultreeelement.removeitemfromselection", \
