@@ -51,6 +51,7 @@ XPIDLSRCS = \
     nsIPKCS11Slot.idl \
     nsIPK11TokenDB.idl \
     nsINSSDialogs.idl \
+    nsISSLStatus.idl \
     nsICertOutliner.idl \
     $(NULL)
 
