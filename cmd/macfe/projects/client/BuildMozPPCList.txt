@@ -1,0 +1,44 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+:ns:lib:mac:NSStdLib:NSStdLib.mcp               "Stub Library"
+:ns:lib:mac:MacMemoryAllocator:MemAllocator.mcp "Stub Library"
+:ns:cmd:macfe:projects:client:Navigator.mcp     "Stub Library"
+
+:ns:lib:mac:NSRuntime:NSRuntime.mcp
+:ns:cmd:macfe:restext:NavStringLibPPC.mcp
+:ns:lib:mac:MoreFiles:build:MoreFilesPPC.prj
+:ns:nsprpub:macbuild:NSPR20PPC.mcp
+:ns:dbm:macbuild:DBMPPC.mcp
+:ns:lib:mac:MacMemoryAllocator:MemAllocator.mcp "PPC Shared Library"
+:ns:lib:mac:NSStdLib:NSStdLib.mcp               "PPC Shared Library"
+:ns:modules:security:freenav:macbuild:NoSecurity.mcp "PPC Shared Library"
+:ns:xpcom:macbuild:xpcomPPC.mcp
+:ns:lib:mac:PowerPlant:PowerPlant.mcp
+:ns:modules:zlib:macbuild:zlib.mcp              "PPC Shared Library"
+:ns:jpeg:macbuild:JPEG.mcp                      "PPC Shared Library"
+:ns:sun-java:stubs:macbuild:JavaStubs.mcp       "PPC Shared Library"
+:ns:js:jsj:macbuild:JSJ_PPC.mcp
+:ns:js:macbuild:JavaScriptPPC.mcp
+:ns:nav-java:stubs:macbuild:NavJavaStubs.mcp    "PPC Shared Library"
+:ns:modules:rdf:macbuild:RDF.mcp                "PPC Shared Library -LDAP"
+:ns:modules:libfont:macbuild:FontBroker.mcp     "PPC Library"
+:ns:modules:schedulr:macbuild:Schedulr.mcp		"PPC Shared Library"
+:ns:cmd:macfe:Composer:build:Composer.mcp       "PPC Library"
+:ns:cmd:macfe:projects:client:Navigator.mcp     "Moz PPC App"
+
+

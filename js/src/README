@@ -1,0 +1,14 @@
+The js/ref directory contains standalone ANSI-C source for the Netscape
+JavaScript Reference implementation, JSRef, which is licensed to over 160
+companies.
+
+The js/src directory contains source files listed in the file "commfiles",
+that are derived via prconv.sed from counterparts in the js/ref directory.
+It also contains files such as jsjava.c that are not in js/ref yet.  The
+Makefile in js/src has refconv and refdiff targets to help keep js/ref and
+js/src in synch.
+
+If you think you need to change a file listed in commfiles here, please let
+us know by mailing jsengteam first.
+
+Brendan Eich (brendan), 12-Nov-97

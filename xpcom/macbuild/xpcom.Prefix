@@ -1,0 +1,8 @@
+//
+//	JavaScript.Prefix
+//
+// Global prefix file for the JavaScriptPPC project.
+//
+//
+
+#include "xpcomConfig.h"

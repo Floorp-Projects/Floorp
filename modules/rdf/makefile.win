@@ -1,0 +1,10 @@
+
+DEPTH=..\..
+
+DIRS=\
+	classes \
+	include \
+	src \
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>

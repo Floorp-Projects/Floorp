@@ -1,0 +1,9 @@
+//
+//	DBM.Prefix
+//
+// Global prefix file for the non-debug DBM project.
+//
+//
+
+
+#include "DBMConfig.h"

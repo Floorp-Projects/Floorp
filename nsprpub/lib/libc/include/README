@@ -1,0 +1,7 @@
+NSPR 2.0 libc functions
+-----------------------
+
+Last edited: AOF 04 March 1997
+
+This directory contains the API for various libc-types of functions.
+

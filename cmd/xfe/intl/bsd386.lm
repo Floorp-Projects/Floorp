@@ -1,0 +1,6 @@
+
+! This table maps the host's locale names to MIME charsets
+!
+*localeCharset*C:		iso-8859-1
+
+
