@@ -61,7 +61,7 @@ Rights Reserved.
           
           <rows>
             <row>
-              <hbox pack="end">
+              <hbox pack="end" align="center">
                 <label value="&server.label;" control="serverMenu"/>
               </hbox>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
@@ -77,7 +77,7 @@ Rights Reserved.
                 </template>
               </menulist>
             </row>
-            <row>
+            <row align="center">
           		<label value="&namefield.label;" id="namefieldlabel" control="namefield"/>
           		<textbox id="namefield" flex="1" oninput="Search();"/>
             </row>
