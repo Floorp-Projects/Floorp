@@ -27,13 +27,48 @@
 #include "nsVoidArray.h"
 #include "nsIFileSpec.h"
 #include "nsIFile.h"
+#include "nsILocalFile.h"
+
 
 class ProfileStruct
-{
+{    
+public:
+     explicit ProfileStruct() { }
+     explicit ProfileStruct(const ProfileStruct& src);
+                
+    ~ProfileStruct() { }
+    
+    /*
+     * GetResolvedProfileDir returns the directory specified in the
+     * registry. It will return NULL if the spec in the registry
+     * could not be resolved to a path. This directory does not
+     * nescesarily exist, although it can be created (i.e. the path
+     * is not on an unmounted drive or something).
+     */            
+    nsresult    GetResolvedProfileDir(nsILocalFile **aDirectory);
+    
+    /*
+     * SetResolvedProfileDir will update the directory in the profile
+     * entry. The next time this entry is externalized, this directory
+     * will replace the existing entry in the registry.
+     */
+    nsresult    SetResolvedProfileDir(nsILocalFile *aDirectory);
+    
+    /*
+     * Copies private members to another ProfileStruct
+     */
+    nsresult    CopyProfileLocation(ProfileStruct *destStruct);
+    
+    /*
+     * Methods used by routines which internalize
+     * and externalize profile info.
+     */
+    nsresult    InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey, PRBool is4x, PRBool isOld50);
+    nsresult    ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey);
+    
 public:
     nsString    profileName;
-    nsString    profileLocation;
-    nsString    isMigrated;
+    PRBool      isMigrated;
     nsString    NCProfileName;
     nsString    NCDeniedService;
     nsString    NCEmailAddress;
@@ -41,16 +76,19 @@ public:
     PRBool      updateProfileEntry;
 
 private:
-    // prevent inadvertent copies and assignments
-    //ProfileStruct& operator=(const ProfileStruct& rhs); 
-    //ProfileStruct(const ProfileStruct& rhs); 
+    nsresult    EnsureDirPathExists(nsILocalFile *aFile, PRBool *wasCreated);
+    
+private:
+    // These are mutually exclusive - We have one or the other.    
+    nsString regLocationData;
+    nsCOMPtr<nsILocalFile> resolvedLocation;
 };
+
 
 class nsProfileAccess
 {
 
 private:
-    nsCOMPtr <nsIRegistry> m_registry;
     nsCOMPtr <nsIFile> mNewRegFile;
 
     // This is an array that holds all the profile information--migrated/unmigrated
@@ -62,8 +100,6 @@ private:
     PRInt32       mCount;
 
     nsString      mCurrentProfile;
-    nsString      mVersion;
-    PRBool        mFixRegEntries;
     nsString      mHavePREGInfo;
 
     // Represents the size of the m4xProfiles array
@@ -71,9 +107,6 @@ private:
     // and does not change subsequently.
     PRInt32       m4xCount;
 
-
-    nsresult OpenRegistry(const char* regName);
-    nsresult CloseRegistry();
 
     // It looks like mCount and m4xCount are not required.
     // But retaining them for now to avoid some problems.
@@ -105,7 +138,6 @@ public:
     void GetCurrentProfile(PRUnichar **profileName);
 
     void RemoveSubTree(const PRUnichar* profileName);
-    void FixRegEntry(PRUnichar** dirName);
 
     nsresult HavePregInfo(char **info);
     nsresult GetValue(const PRUnichar* profileName, ProfileStruct** aProfile);
@@ -123,9 +155,6 @@ public:
     nsresult SetMozRegDataMovedFlag(nsIFile* regName);
     nsresult ResetProfileMembers();
     nsresult DetermineForceMigration(PRBool *forceMigration);
-    nsresult GetProfilePathString(const PRUnichar *dirString, const PRUnichar *profileName, nsString& profilePath, PRBool *pathChanged);
-    nsresult SetProfilePathString(const nsString& dirPath, const nsString& profileName, nsString& persistentPath);
-    nsresult CreateDefaultProfileFolder(const PRUnichar *profileName, nsILocalFile** profleDir);
 };
 
 #endif // __nsProfileAccess_h___
