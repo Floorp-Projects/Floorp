@@ -554,6 +554,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext
 
   nscoord height = mRect.height;
   nsIFrame* firstKid = mFrames.FirstChild();
+  NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
   nsRect kidRect = firstKid->GetRect();
   nscoord childHeight = kidRect.height;
 
@@ -798,6 +799,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
+  NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
 
   nscoord computedPaginatedHeight = 0;
 
