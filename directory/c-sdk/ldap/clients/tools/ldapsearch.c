@@ -912,7 +912,7 @@ print_entry( ld, entry, attrsonly )
 
 		    if ( LDAPTOOL_MKTEMP( tmpfname ) == NULL ) {
 			perror( tmpfname );
-		    } else if (( tmpfp = fopen( tmpfname, mode)) == NULL ) {
+		    } else if (( tmpfp = ldaptool_open_file( tmpfname, mode)) == NULL ) {
 			perror( tmpfname );
 		    } else if ( bvals[ i ]->bv_len > 0 &&
 			    fwrite( bvals[ i ]->bv_val,

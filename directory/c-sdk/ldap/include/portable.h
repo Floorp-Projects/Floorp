@@ -451,5 +451,11 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
 #endif /* XP_OS2 */
 
+/* Define a macro to support large files */
+#ifdef _LARGEFILE64_SOURCE
+#define NSLDAPI_FOPEN( filename, mode )	fopen64( filename, mode )
+#else
+#define NSLDAPI_FOPEN( filename, mode )	fopen( filename, mode )
+#endif
 
 #endif /* _PORTABLE_H */

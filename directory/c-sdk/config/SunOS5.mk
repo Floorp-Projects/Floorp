@@ -160,9 +160,9 @@ OS_DEFINES		+= -D_PR_HAVE_OFF64_T
 #     set.
 # But gcc 2.7.2.x fails to define _LARGEFILE64_SOURCE by default.
 # The native compiler, gcc 2.8.x, and egcs don't have this problem.
-ifeq ($(NS_USE_GCC), 1)
+#ifeq ($(NS_USE_GCC), 1)
 OS_DEFINES		+= -D_LARGEFILE64_SOURCE
-endif
+#endif
 endif
 endif
 

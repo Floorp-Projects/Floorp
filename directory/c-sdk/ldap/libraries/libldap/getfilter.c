@@ -57,7 +57,7 @@ ldap_init_getfilter( char *fname )
     int 		eof;
     LDAPFiltDesc	*lfdp;
 
-    if (( fp = fopen( fname, "r" )) == NULL ) {
+    if (( fp = NSLDAPI_FOPEN( fname, "r" )) == NULL ) {
 	return( NULL );
     }
 

@@ -124,7 +124,7 @@ endif
 ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
 OS_CFLAGS	+= -D_PR_NO_LARGE_FILES
 else
-OS_CFLAGS	+= -D_PR_HAVE_OFF64_T
+OS_CFLAGS	+= -D_PR_HAVE_OFF64_T -D_LARGEFILE64_SOURCE
 endif
 
 ifeq ($(OS_RELEASE),4.1)

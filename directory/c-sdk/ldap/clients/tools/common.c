@@ -375,9 +375,9 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	case 'f':	/* input file */
 	    if ( optarg[0] == '-' && optarg[1] == '\0' ) {
 		ldaptool_fp = stdin;
-	    } else if (( ldaptool_fp = fopen( optarg, "r" )) == NULL ) {
-		perror( optarg );
-		exit( LDAP_PARAM_ERROR );
+	    } else if (( ldaptool_fp = ldaptool_open_file( optarg, "r" )) == NULL ) {
+			perror( optarg );
+			exit( LDAP_PARAM_ERROR );
 	    }
 	    break;
 	case 'h':	/* ldap host */
@@ -2219,3 +2219,13 @@ ldaptool_boolean_str2value ( const char *ptr, int strict )
 	}	
     }
 } 
+
+FILE *
+ldaptool_open_file(const char *filename, const char *mode)
+{
+#ifdef _LARGEFILE64_SOURCE 
+	return fopen64(filename, mode);
+#else
+	return fopen(filename, mode);
+#endif
+}

@@ -106,7 +106,7 @@ ldap_init_templates( char *file, struct ldap_disptmpl **tmpllistp )
 
     *tmpllistp = NULLDISPTMPL;
 
-    if (( fp = fopen( file, "r" )) == NULL ) {
+    if (( fp = NSLDAPI_FOPEN( file, "r" )) == NULL ) {
 	return( LDAP_TMPL_ERR_FILE );
     }
 

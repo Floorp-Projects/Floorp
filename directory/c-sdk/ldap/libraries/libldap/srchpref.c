@@ -65,7 +65,7 @@ ldap_init_searchprefs( char *file, struct ldap_searchobj **solistp )
     long	rlen, len;
     int		rc, eof;
 
-    if (( fp = fopen( file, "r" )) == NULL ) {
+    if (( fp = NSLDAPI_FOPEN( file, "r" )) == NULL ) {
 	return( LDAP_SEARCHPREF_ERR_FILE );
     }
 

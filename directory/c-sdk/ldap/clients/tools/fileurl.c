@@ -345,7 +345,7 @@ berval_from_file( const char *path, struct berval *bvp, int reporterrs )
     char	mode[20] = "r";
 #endif
 
-    if (( fp = fopen( path, mode )) == NULL ) {
+    if (( fp = ldaptool_open_file( path, mode )) == NULL ) {
 	if ( reporterrs ) perror( path );
 	return( LDAPTOOL_FILEURL_FILEIOERROR );
     }

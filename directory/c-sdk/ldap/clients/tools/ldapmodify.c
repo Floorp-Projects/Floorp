@@ -215,7 +215,7 @@ main( int argc, char **argv )
 		    newfile = 1;
 		}
 	    }
-	    if (( rfp = fopen( rejfile, "a" )) == NULL ) {
+	    if (( rfp = ldaptool_open_file( rejfile, "a" )) == NULL ) {
 		fprintf( stderr, "Cannot open error file \"%s\" - "
 			"erroneous entries will not be saved\n", rejfile );
 		rejfile = NULL;
