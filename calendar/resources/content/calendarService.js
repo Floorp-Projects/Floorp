@@ -292,7 +292,7 @@ var CalendarModule = new Object();
 CalendarModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    dump("*** Registering -calendar handler.\n");
+    // dump("*** Registering -calendar handler.\n");
 
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
@@ -309,7 +309,7 @@ function (compMgr, fileSpec, location, type)
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
 
-    dump("*** Registering text/calendar handler.\n");
+    // dump("*** Registering text/calendar handler.\n");
     compMgr.registerFactoryLocation(ICALCNT_HANDLER_CID,
                                     "Webcal Content Handler",
                                     ICALCNT_HANDLER_CONTRACTID,
@@ -317,7 +317,7 @@ function (compMgr, fileSpec, location, type)
                                     location,
                                     type);
 
-    dump("*** Registering webcal protocol handler.\n");
+    // dump("*** Registering webcal protocol handler.\n");
     compMgr.registerFactoryLocation(ICALPROT_HANDLER_CID,
                                     "Webcal protocol handler",
                                     ICALPROT_HANDLER_CONTRACTID,
