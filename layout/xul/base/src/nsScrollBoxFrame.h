@@ -50,7 +50,7 @@
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsScrollBoxFrame : public nsBoxFrame, public nsIStatefulFrame {
+class nsScrollBoxFrame : public nsBoxFrame {
 public:
   friend nsresult NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -124,8 +124,6 @@ public:
 
   virtual nsIView* GetMouseCapturer() const;
 
-  void ScrollToRestoredPosition();
-
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);
 
@@ -137,17 +135,11 @@ protected:
                                           nsIFrame* aParent,
                                           nsIView** aParentView);
 
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
-
 private:
   nsresult CreateScrollingView(nsPresContext* aPresContext);
   PRPackedBool mVerticalOverflow;
   PRPackedBool mHorizontalOverflow;
-  nsRect mRestoreRect;
-  nsPoint mLastPos;
-  
+
 protected:
   virtual PRBool NeedsClipWidget();
   virtual void PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, nsScrollPortEvent::orientType aType);

@@ -294,6 +294,7 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
   mNeedToReset        = PR_TRUE;
+  mPostChildrenLoadedReset = PR_FALSE;
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -558,127 +559,7 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void *)((nsISelectControlFrame*)this);
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr =
-      NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIStatefulFrame*,this));
-    return NS_OK;
-  }
   return nsHTMLScrollFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-// These methods were originally in the nsScrollFrame superclass,
-// but were moved here when nsListControlFrame switched to use
-// nsHTMLScrollFrame.
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::SaveState(nsPresContext* aPresContext,
-                              nsIPresState** aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-  nsCOMPtr<nsIPresState> state;
-  nsresult res = NS_OK;
-
-  nsIScrollableView* scrollingView = GetScrollableView();
-
-  nscoord x = 0, y = 0;
-  if (scrollingView) {
-    scrollingView->GetScrollPosition(x, y);
-  }
-
-  // Don't save scroll position if we are at (0,0)
-  if (x || y) {
-    nsIView* child = nsnull;
-    scrollingView->GetScrolledView(child);
-    NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-
-    nsRect childRect = child->GetBounds();
-
-    res = NS_NewPresState(getter_AddRefs(state));
-    NS_ENSURE_SUCCESS(res, res);
-
-    nsCOMPtr<nsISupportsPRInt32> xoffset =
-      do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID, &res);
-    if (xoffset) {
-      res = xoffset->SetData(x);
-      NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), xoffset);
-    }
-
-    nsCOMPtr<nsISupportsPRInt32> yoffset =
-      do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID, &res);
-    if (yoffset) {
-      res = yoffset->SetData(y);
-      NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), yoffset);
-    }
-
-    nsCOMPtr<nsISupportsPRInt32> width =
-      do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID, &res);
-    if (width) {
-      res = width->SetData(childRect.width);
-      NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("width"), width);
-    }
-
-    nsCOMPtr<nsISupportsPRInt32> height =
-      do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID, &res);
-    if (height) {
-      res = height->SetData(childRect.height);
-      NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("height"), height);
-    }
-    *aState = state;
-    NS_ADDREF(*aState);
-  }
-  return res;
-}
-
-//-----------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::RestoreState(nsPresContext* aPresContext,
-                                 nsIPresState* aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-
-  nsCOMPtr<nsISupportsPRInt32> xoffset;
-  nsCOMPtr<nsISupportsPRInt32> yoffset;
-  nsCOMPtr<nsISupportsPRInt32> width;
-  nsCOMPtr<nsISupportsPRInt32> height;
-  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), getter_AddRefs(xoffset));
-  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), getter_AddRefs(yoffset));
-  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("width"), getter_AddRefs(width));
-  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("height"), getter_AddRefs(height));
-
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (xoffset && yoffset) {
-    PRInt32 x,y,w,h;
-    res = xoffset->GetData(&x);
-    if (NS_SUCCEEDED(res))
-      res = yoffset->GetData(&y);
-    if (NS_SUCCEEDED(res))
-      res = width->GetData(&w);
-    if (NS_SUCCEEDED(res))
-      res = height->GetData(&h);
-
-    if (NS_SUCCEEDED(res)) {
-      nsIScrollableView* scrollingView = GetScrollableView();
-      if (scrollingView) {
-        nsIView* child = nsnull;
-        nsRect childRect(0,0,0,0);
-        if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
-          childRect = child->GetBounds();
-        }
-        x = (int)(((float)childRect.width / w) * x);
-        y = (int)(((float)childRect.height / h) * y);
-
-        scrollingView->ScrollTo(x,y,0);
-      }
-    }
-  }
-
-  return res;
 }
 
 #ifdef ACCESSIBILITY
@@ -1885,7 +1766,7 @@ nsListControlFrame::MouseClicked(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsListControlFrame::OnContentReset()
 {
-  ResetList();
+  ResetList(PR_TRUE);
   return NS_OK;
 }
 
@@ -1894,7 +1775,7 @@ nsListControlFrame::OnContentReset()
 // those values as determined by the original HTML
 //---------------------------------------------------------
 void 
-nsListControlFrame::ResetList()
+nsListControlFrame::ResetList(PRBool aAllowScrolling)
 {
   REFLOW_DEBUG_MSG("LBX::ResetList\n");
 
@@ -1904,14 +1785,18 @@ nsListControlFrame::ResetList()
     return;
   }
 
-  // Scroll to the selected index
-  PRInt32 indexToSelect = kNothingSelected;
+  if (aAllowScrolling) {
+    mPostChildrenLoadedReset = PR_TRUE;
 
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
-  NS_ASSERTION(selectElement, "No select element!");
-  if (selectElement) {
-    selectElement->GetSelectedIndex(&indexToSelect);
-    ScrollToIndex(indexToSelect);
+    // Scroll to the selected index
+    PRInt32 indexToSelect = kNothingSelected;
+
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
+    NS_ASSERTION(selectElement, "No select element!");
+    if (selectElement) {
+      selectElement->GetSelectedIndex(&indexToSelect);
+      ScrollToIndex(indexToSelect);
+    }
   }
 
   mStartSelectionIndex = kNothingSelected;
@@ -2095,7 +1980,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
       // if all the frames are now present we can initalize
       if (CheckIfAllFramesHere()) {
         mHasBeenInitialized = PR_TRUE;
-        ResetList();
+        ResetList(PR_TRUE);
       }
     }
   }
@@ -2129,6 +2014,7 @@ nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 
   // Make sure we scroll to the selected option as needed
   mNeedToReset = PR_TRUE;
+  mPostChildrenLoadedReset = mIsAllContentHere;
   return NS_OK;
 }
 
@@ -2139,6 +2025,7 @@ nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
   // Need to reset if we're a dropdown
   if (IsInDropDownMode()) {
     mNeedToReset = PR_TRUE;
+    mPostChildrenLoadedReset = mIsAllContentHere;
   }
 
   return NS_OK;
@@ -2444,7 +2331,16 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
 
   if (mNeedToReset) {
     mNeedToReset = PR_FALSE;
-    ResetList();
+    // Suppress scrolling to the selected element if we restored
+    // scroll history state AND the list contents have not changed
+    // since we loaded all the children AND nothing else forced us
+    // to scroll by calling ResetList(PR_TRUE). The latter two conditions
+    // are folded into mPostChildrenLoadedReset.
+    //
+    // The idea is that we want scroll history restoration to trump ResetList
+    // scrolling to the selected element, when the ResetList was probably only
+    // caused by content loading normally.
+    ResetList(!DidHistoryRestore() || mPostChildrenLoadedReset);
   }
 
   return rv;
@@ -2841,6 +2737,8 @@ nsresult
 nsListControlFrame::ScrollToIndex(PRInt32 aIndex)
 {
   if (aIndex < 0) {
+    // XXX shouldn't we just do nothing if we're asked to scroll to
+    // kNothingSelected?
     return ScrollToFrame(nsnull);
   } else {
     nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(aIndex));

@@ -3511,14 +3511,8 @@ PresShell::EndLoad(nsIDocument *aDocument)
       CallQueryInterface(scrollFrame, &scrollableFrame);
       NS_ASSERTION(scrollableFrame, "RootScrollFrame is not scrollable?");
       if (scrollableFrame) {
-        // XXX We shouldn't depend on the scrolling guts here. Make this
-        // go away!
-        nsIFrame* scrollBoxFrame = scrollFrame->GetFirstChild(nsnull);
-
-        if (scrollBoxFrame) {
-          FrameManager()->RestoreFrameStateFor(scrollBoxFrame, historyState,
-                                               nsIStatefulFrame::eDocumentScrollState);
-        }
+        FrameManager()->RestoreFrameStateFor(scrollFrame, historyState,
+                                             nsIStatefulFrame::eDocumentScrollState);
         scrollableFrame->ScrollToRestoredPosition();
       }
     }
@@ -4503,13 +4497,8 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   if (aLeavingPage) {
     nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
     if (scrollFrame) {
-      // XXX We shouldn't depend on the scrolling guts here. Make this
-      // go away!
-      nsIFrame* scrollBoxFrame = scrollFrame->GetFirstChild(nsnull);
-      if (scrollBoxFrame) {
-        FrameManager()->CaptureFrameStateFor(scrollBoxFrame, historyState,
-                                             nsIStatefulFrame::eDocumentScrollState);
-      }
+      FrameManager()->CaptureFrameStateFor(scrollFrame, historyState,
+                                           nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
