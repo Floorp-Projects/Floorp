@@ -600,7 +600,9 @@ nsWebShell::Destroy()
   nsresult rv = NS_OK;
 
   // Stop any URLs that are currently being loaded...
-  mDocLoader->Stop();
+  if (nsnull != mDocLoader) {
+    mDocLoader->Stop();
+  }
 
   // Cancel any timers that were set for this loader.
   CancelRefreshURLTimers();
