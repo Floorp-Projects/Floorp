@@ -31,9 +31,7 @@
 #include <X11/Xmu/Editres.h>
 #endif
 
-//#define DR_EVIL 1
-
-#ifdef DR_EVIL
+#ifdef MOZ_USING_XLIBRGB
 #include "xlibrgb.h"
 #endif
 
@@ -109,10 +107,10 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
 
-#ifdef DR_EVIL
+#ifdef MOZ_USING_XLIBRGB
   xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
 
-  printf("nsAppShell::Create(dpy=%p  screen=%p)\n",
+  printf("xlib_rgb_init(display=%p,screen=%p)\n",
          XtDisplay(mTopLevel),
          XtScreen(mTopLevel));
 #endif
