@@ -549,7 +549,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
     JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
     onError = cx->errorReporter;
     if (onError) {
-        /* 
+        /*
          * We are typically called with non-null ts and null cg from jsparse.c.
          * We can be called with null ts from the regexp compilation functions.
          * The code generator (jsemit.c) may pass null ts and non-null cg.
@@ -592,7 +592,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
          * as the non-top-level "load", "eval", or "compile" native function
          * returns false, the top-level reporter will eventually receive the
          * uncaught exception report.
-         * 
+         *
          * XXX it'd probably be best if there was only one call to this
          * function, but there seem to be two error reporter call points.
          */
@@ -740,23 +740,43 @@ GetUnicodeEscape(JSTokenStream *ts)
     return '\\';
 }
 
+static JSToken *
+NewToken(JSTokenStream *ts)
+{
+    JSToken *tp;
+
+    ts->cursor = (ts->cursor + 1) & NTOKENS_MASK;
+    tp = &CURRENT_TOKEN(ts);
+    tp->ptr = ts->linebuf.ptr - 1;
+    tp->pos.begin.index = ts->linepos + (tp->ptr - ts->linebuf.base);
+    tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
+    return tp;
+}
+
 JSTokenType
 js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
     JSTokenType tt;
+    int32 c, qc;
     JSToken *tp;
-    int32 c;
     JSAtom *atom;
     JSBool hadUnicodeEscape;
 
-#define INIT_TOKENBUF(tb)   ((tb)->ptr = (tb)->base)
-#define FINISH_TOKENBUF(tb) if (!AddToTokenBuf(cx, tb, 0)) RETURN(TOK_ERROR)
-#define TOKEN_LENGTH(tb)    ((tb)->ptr - (tb)->base - 1)
-#define RETURN(tt)          { if (tt == TOK_ERROR) ts->flags |= TSF_ERROR;    \
-                              tp->pos.end.index = ts->linepos +               \
-                                  (ts->linebuf.ptr - ts->linebuf.base) -      \
-                                  ts->ungetpos;                               \
-                              return (tp->type = tt); }
+#define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
+#define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
+#define TOKENBUF_LENGTH()   (ts->tokenbuf.ptr - ts->tokenbuf.base)
+#define TOKENBUF_BASE()     (ts->tokenbuf.base)
+#define TOKENBUF_CHAR(i)    (ts->tokenbuf.base[i])
+#define TOKENBUF_TO_ATOM()  (js_AtomizeChars(cx,                              \
+                                             TOKENBUF_BASE(),                 \
+                                             TOKENBUF_LENGTH(),               \
+                                             0))
+
+#define ADD_TO_TOKENBUF(c)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))                     \
+            goto error;                                                       \
+    JS_END_MACRO
 
     /* If there was a fatal error, keep returning TOK_ERROR. */
     if (ts->flags & TSF_ERROR)
@@ -781,14 +801,12 @@ retry:
         }
     } while (JS_ISSPACE(c));
 
-    ts->cursor = (ts->cursor + 1) & NTOKENS_MASK;
-    tp = &CURRENT_TOKEN(ts);
-    tp->ptr = ts->linebuf.ptr - 1;
-    tp->pos.begin.index = ts->linepos + (tp->ptr - ts->linebuf.base);
-    tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
+    tp = NewToken(ts);
+    if (c == EOF) {
+        tt = TOK_EOF;
+        goto out;
+    }
 
-    if (c == EOF)
-        RETURN(TOK_EOF);
     if (c != '-' && c != '\n')
         ts->flags |= TSF_DIRTYLINE;
 
@@ -797,10 +815,9 @@ retry:
         (c == '\\' &&
          (c = GetUnicodeEscape(ts),
           hadUnicodeEscape = JS_ISIDENT_START(c)))) {
-        INIT_TOKENBUF(&ts->tokenbuf);
+        INIT_TOKENBUF();
         for (;;) {
-            if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                RETURN(TOK_ERROR);
+            ADD_TO_TOKENBUF(c);
             c = GetChar(ts);
             if (c == '\\') {
                 c = GetUnicodeEscape(ts);
@@ -813,25 +830,23 @@ retry:
             }
         }
         UngetChar(ts, c);
-        FINISH_TOKENBUF(&ts->tokenbuf);
 
-        atom = js_AtomizeChars(cx,
-                               ts->tokenbuf.base,
-                               TOKEN_LENGTH(&ts->tokenbuf),
-                               0);
+        atom = TOKENBUF_TO_ATOM();
         if (!atom)
-            RETURN(TOK_ERROR);
+            goto error;
         if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
             struct keyword *kw = ATOM_KEYWORD(atom);
 
             if (JSVERSION_IS_ECMA(cx->version) || kw->version <= cx->version) {
                 tp->t_op = (JSOp) kw->op;
-                RETURN(kw->tokentype);
+                tt = kw->tokentype;
+                goto out;
             }
         }
         tp->t_op = JSOP_NAME;
         tp->t_atom = atom;
-        RETURN(TOK_NAME);
+        tt = TOK_NAME;
+        goto out;
     }
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(PeekChar(ts)))) {
@@ -840,15 +855,13 @@ retry:
         jsdouble dval;
 
         radix = 10;
-        INIT_TOKENBUF(&ts->tokenbuf);
+        INIT_TOKENBUF();
 
         if (c == '0') {
-            if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                RETURN(TOK_ERROR);
+            ADD_TO_TOKENBUF(c);
             c = GetChar(ts);
             if (JS_TOLOWER(c) == 'x') {
-                if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                    RETURN(TOK_ERROR);
+                ADD_TO_TOKENBUF(c);
                 c = GetChar(ts);
                 radix = 16;
             } else if (JS7_ISDEC(c)) {
@@ -871,76 +884,72 @@ retry:
                                                      JSREPORT_WARNING,
                                                      JSMSG_BAD_OCTAL,
                                                      c == '8' ? "08" : "09")) {
-                        RETURN(TOK_ERROR);
+                        goto error;
                     }
                     radix = 10;
                 }
             }
-            if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                RETURN(TOK_ERROR);
+            ADD_TO_TOKENBUF(c);
             c = GetChar(ts);
         }
 
         if (radix == 10 && (c == '.' || JS_TOLOWER(c) == 'e')) {
             if (c == '.') {
                 do {
-                    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                        RETURN(TOK_ERROR);
+                    ADD_TO_TOKENBUF(c);
                     c = GetChar(ts);
                 } while (JS7_ISDEC(c));
             }
             if (JS_TOLOWER(c) == 'e') {
-                if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                    RETURN(TOK_ERROR);
+                ADD_TO_TOKENBUF(c);
                 c = GetChar(ts);
                 if (c == '+' || c == '-') {
-                    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                        RETURN(TOK_ERROR);
+                    ADD_TO_TOKENBUF(c);
                     c = GetChar(ts);
                 }
                 if (!JS7_ISDEC(c)) {
                     js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_MISSING_EXPONENT);
-                    RETURN(TOK_ERROR);
+                    goto error;
                 }
                 do {
-                    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                        RETURN(TOK_ERROR);
+                    ADD_TO_TOKENBUF(c);
                     c = GetChar(ts);
                 } while (JS7_ISDEC(c));
             }
         }
 
+        /* Put back the next char and NUL-terminate tokenbuf for js_strto*. */
         UngetChar(ts, c);
-        FINISH_TOKENBUF(&ts->tokenbuf);
+        ADD_TO_TOKENBUF(0);
 
         if (radix == 10) {
-            if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
+            if (!js_strtod(cx, TOKENBUF_BASE(), &endptr, &dval)) {
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
-                RETURN(TOK_ERROR);
+                goto error;
             }
         } else {
-            if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
+            if (!js_strtointeger(cx, TOKENBUF_BASE(), &endptr, radix, &dval)) {
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
-                RETURN(TOK_ERROR);
+                goto error;
             }
         }
         tp->t_dval = dval;
-        RETURN(TOK_NUMBER);
+        tt = TOK_NUMBER;
+        goto out;
     }
 
     if (c == '"' || c == '\'') {
-        int32 val, qc = c;
-
-        INIT_TOKENBUF(&ts->tokenbuf);
+        qc = c;
+        INIT_TOKENBUF();
         while ((c = GetChar(ts)) != qc) {
             if (c == '\n' || c == EOF) {
                 UngetChar(ts, c);
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_STRING);
-                RETURN(TOK_ERROR);
+                goto error;
             }
             if (c == '\\') {
                 switch (c = GetChar(ts)) {
@@ -953,7 +962,8 @@ retry:
 
                   default:
                     if ('0' <= c && c < '8') {
-                        val = JS7_UNDEC(c);
+                        int32 val = JS7_UNDEC(c);
+
                         c = PeekChar(ts);
                         if ('0' <= c && c < '8') {
                             val = 8 * val + JS7_UNDEC(c);
@@ -968,6 +978,7 @@ retry:
                                     val = save;
                             }
                         }
+
                         c = (jschar)val;
                     } else if (c == 'u') {
                         jschar cp[4];
@@ -994,37 +1005,36 @@ retry:
                     break;
                 }
             }
-            if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                RETURN(TOK_ERROR);
+            ADD_TO_TOKENBUF(c);
         }
-        FINISH_TOKENBUF(&ts->tokenbuf);
-        atom = js_AtomizeChars(cx,
-                               ts->tokenbuf.base,
-                               TOKEN_LENGTH(&ts->tokenbuf),
-                               0);
+        atom = TOKENBUF_TO_ATOM();
         if (!atom)
-            RETURN(TOK_ERROR);
+            goto error;
         tp->pos.end.lineno = (uint16)ts->lineno;
         tp->t_op = JSOP_STRING;
         tp->t_atom = atom;
-        RETURN(TOK_STRING);
+        tt = TOK_STRING;
+        goto out;
     }
 
     switch (c) {
-      case '\n': 
-        c = TOK_EOL; 
+      case '\n':
+        tt = TOK_EOL;
         break;
 
-      case ';': c = TOK_SEMI; break;
-      case '.': c = TOK_DOT; break;
-      case '[': c = TOK_LB; break;
-      case ']': c = TOK_RB; break;
-      case '{': c = TOK_LC; break;
-      case '}': c = TOK_RC; break;
-      case '(': c = TOK_LP; break;
-      case ')': c = TOK_RP; break;
-      case ',': c = TOK_COMMA; break;
-      case '?': c = TOK_HOOK; break;
+      case ';': tt = TOK_SEMI; break;
+      case '[': tt = TOK_LB; break;
+      case ']': tt = TOK_RB; break;
+      case '{': tt = TOK_LC; break;
+      case '}': tt = TOK_RC; break;
+      case '(': tt = TOK_LP; break;
+      case ')': tt = TOK_RP; break;
+      case ',': tt = TOK_COMMA; break;
+      case '?': tt = TOK_HOOK; break;
+
+      case '.':
+        tt = TOK_DOT;
+        break;
 
       case ':':
         /*
@@ -1032,37 +1042,37 @@ retry:
          * object initializer, likewise for setter.
          */
         tp->t_op = JSOP_NOP;
-        c = TOK_COLON;
+        tt = TOK_COLON;
         break;
 
       case '|':
         if (MatchChar(ts, c)) {
-            c = TOK_OR;
+            tt = TOK_OR;
         } else if (MatchChar(ts, '=')) {
             tp->t_op = JSOP_BITOR;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         } else {
-            c = TOK_BITOR;
+            tt = TOK_BITOR;
         }
         break;
 
       case '^':
         if (MatchChar(ts, '=')) {
             tp->t_op = JSOP_BITXOR;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         } else {
-            c = TOK_BITXOR;
+            tt = TOK_BITXOR;
         }
         break;
 
       case '&':
         if (MatchChar(ts, c)) {
-            c = TOK_AND;
+            tt = TOK_AND;
         } else if (MatchChar(ts, '=')) {
             tp->t_op = JSOP_BITAND;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         } else {
-            c = TOK_BITAND;
+            tt = TOK_BITAND;
         }
         break;
 
@@ -1073,10 +1083,10 @@ retry:
 #else
             tp->t_op = cx->jsop_eq;
 #endif
-            c = TOK_EQOP;
+            tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOP;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         }
         break;
 
@@ -1087,10 +1097,10 @@ retry:
 #else
             tp->t_op = cx->jsop_ne;
 #endif
-            c = TOK_EQOP;
+            tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOT;
-            c = TOK_UNARYOP;
+            tt = TOK_UNARYOP;
         }
         break;
 
@@ -1106,26 +1116,26 @@ retry:
         }
         if (MatchChar(ts, c)) {
             tp->t_op = JSOP_LSH;
-            c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
+            tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
         } else {
             tp->t_op = MatchChar(ts, '=') ? JSOP_LE : JSOP_LT;
-            c = TOK_RELOP;
+            tt = TOK_RELOP;
         }
         break;
 
       case '>':
         if (MatchChar(ts, c)) {
             tp->t_op = MatchChar(ts, c) ? JSOP_URSH : JSOP_RSH;
-            c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
+            tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
         } else {
             tp->t_op = MatchChar(ts, '=') ? JSOP_GE : JSOP_GT;
-            c = TOK_RELOP;
+            tt = TOK_RELOP;
         }
         break;
 
       case '*':
         tp->t_op = JSOP_MUL;
-        c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_STAR;
+        tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_STAR;
         break;
 
       case '/':
@@ -1186,7 +1196,7 @@ retry:
                                     JS_free(cx, (void *) ts->filename);
                                 ts->filename = JS_strdup(cx, filename);
                                 if (!ts->filename)
-                                    RETURN(TOK_ERROR);
+                                    goto error;
                                 ts->flags |= TSF_OWNFILENAME;
                             }
                             ts->lineno = line;
@@ -1210,33 +1220,30 @@ skipline:
             if (c == EOF) {
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_COMMENT);
-                RETURN(TOK_ERROR);
+                goto error;
             }
             goto retry;
         }
 
 #if JS_HAS_REGEXPS
-        if (ts->flags & TSF_REGEXP) {
+        if (ts->flags & TSF_OPERAND) {
             JSObject *obj;
             uintN flags;
 
-            INIT_TOKENBUF(&ts->tokenbuf);
+            INIT_TOKENBUF();
             while ((c = GetChar(ts)) != '/') {
                 if (c == '\n' || c == EOF) {
                     UngetChar(ts, c);
                     js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_UNTERMINATED_REGEXP);
-                    RETURN(TOK_ERROR);
+                    goto error;
                 }
                 if (c == '\\') {
-                    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                        RETURN(TOK_ERROR);
+                    ADD_TO_TOKENBUF(c);
                     c = GetChar(ts);
                 }
-                if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
-                    RETURN(TOK_ERROR);
+                ADD_TO_TOKENBUF(c);
             }
-            FINISH_TOKENBUF(&ts->tokenbuf);
             for (flags = 0; ; ) {
                 if (MatchChar(ts, 'g'))
                     flags |= JSREG_GLOB;
@@ -1253,17 +1260,17 @@ skipline:
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_REGEXP_FLAG);
                 (void) GetChar(ts);
-                RETURN(TOK_ERROR);
+                goto error;
             }
             obj = js_NewRegExpObject(cx, ts,
-                                     ts->tokenbuf.base,
-                                     TOKEN_LENGTH(&ts->tokenbuf),
+                                     TOKENBUF_BASE(),
+                                     TOKENBUF_LENGTH(),
                                      flags);
             if (!obj)
-                RETURN(TOK_ERROR);
+                goto error;
             atom = js_AtomizeObject(cx, obj, 0);
             if (!atom)
-                RETURN(TOK_ERROR);
+                goto error;
 
             /*
              * If the regexp's script is one-shot, we can avoid the extra
@@ -1276,47 +1283,48 @@ skipline:
                        ? JSOP_OBJECT
                        : JSOP_REGEXP;
             tp->t_atom = atom;
-            RETURN(TOK_OBJECT);
+            tt = TOK_OBJECT;
+            break;
         }
 #endif /* JS_HAS_REGEXPS */
 
         tp->t_op = JSOP_DIV;
-        c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
         break;
 
       case '%':
         tp->t_op = JSOP_MOD;
-        c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
+        tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
         break;
 
       case '~':
         tp->t_op = JSOP_BITNOT;
-        c = TOK_UNARYOP;
+        tt = TOK_UNARYOP;
         break;
 
       case '+':
         if (MatchChar(ts, '=')) {
             tp->t_op = JSOP_ADD;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         } else if (MatchChar(ts, c)) {
-            c = TOK_INC;
+            tt = TOK_INC;
         } else {
             tp->t_op = JSOP_POS;
-            c = TOK_PLUS;
+            tt = TOK_PLUS;
         }
         break;
 
       case '-':
         if (MatchChar(ts, '=')) {
             tp->t_op = JSOP_SUB;
-            c = TOK_ASSIGN;
+            tt = TOK_ASSIGN;
         } else if (MatchChar(ts, c)) {
             if (PeekChar(ts) == '>' && !(ts->flags & TSF_DIRTYLINE))
                 goto skipline;
-            c = TOK_DEC;
+            tt = TOK_DEC;
         } else {
             tp->t_op = JSOP_NEG;
-            c = TOK_MINUS;
+            tt = TOK_MINUS;
         }
         ts->flags |= TSF_DIRTYLINE;
         break;
@@ -1340,7 +1348,7 @@ skipline:
             if (n >= ATOM_INDEX_LIMIT) {
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_SHARPVAR_TOO_BIG);
-                RETURN(TOK_ERROR);
+                goto error;
             }
         }
         tp->t_dval = (jsdouble) n;
@@ -1353,14 +1361,16 @@ skipline:
                                              JSREPORT_STRICT,
                                              JSMSG_DEPRECATED_USAGE,
                                              buf)) {
-                RETURN(TOK_ERROR);
+                goto error;
             }
         }
         if (c == '=')
-            RETURN(TOK_DEFSHARP);
-        if (c == '#')
-            RETURN(TOK_USESHARP);
-        goto badchar;
+            tt = TOK_DEFSHARP;
+        else if (c == '#')
+            tt = TOK_USESHARP;
+        else
+            goto badchar;
+        break;
       }
 
       badchar:
@@ -1369,16 +1379,29 @@ skipline:
       default:
         js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_ILLEGAL_CHARACTER);
-        RETURN(TOK_ERROR);
+        goto error;
     }
 
-    JS_ASSERT(c < TOK_LIMIT);
-    RETURN((JSTokenType)c);
+out:
+    JS_ASSERT(tt < TOK_LIMIT);
+    tp->pos.end.index = ts->linepos +
+                        (ts->linebuf.ptr - ts->linebuf.base) -
+                        ts->ungetpos;
+    tp->type = tt;
+    return tt;
+
+error:
+    tt = TOK_ERROR;
+    ts->flags |= TSF_ERROR;
+    goto out;
 
 #undef INIT_TOKENBUF
-#undef FINISH_TOKENBUF
-#undef TOKEN_LENGTH
-#undef RETURN
+#undef TRIM_TOKENBUF
+#undef TOKENBUF_LENGTH
+#undef TOKENBUF_BASE
+#undef TOKENBUF_CHAR
+#undef TOKENBUF_TO_ATOM
+#undef ADD_TO_TOKENBUF
 }
 
 void
