@@ -116,9 +116,8 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromWebShell(nsIWebShell *aShell)
   return node;
 }
 
-void GetWindowType( nsIWebShellWindow* inWindow, nsString& outType )
+void GetAttribute( nsIWebShellWindow* inWindow, const nsAutoString& inAttribute, nsAutoString& outValue )
 {
- 
   nsIWebShell* shell = NULL;
   if ( inWindow &&
   		NS_SUCCEEDED(inWindow->GetWebShell( shell ) ) )
@@ -129,10 +128,16 @@ void GetWindowType( nsIWebShellWindow* inWindow, nsString& outType )
 	  {
 	  	nsCOMPtr<nsIDOMElement> webshellElement( do_QueryInterface(node));
   		if ( webshellElement.get() )
-  			webshellElement->GetAttribute("windowtype", outType );
+  			webshellElement->GetAttribute(inAttribute.GetUnicode(), outValue );
   	  }
   	NS_IF_RELEASE( shell );
   }
+}
+
+void GetWindowType( nsIWebShellWindow* inWindow, nsAutoString& outType )
+{
+ 	nsAutoString typeAttrib("windowtype");
+ 	GetAttribute( inWindow, typeAttrib, outType );
 }
 
 class nsWindowMediator;
@@ -152,9 +157,9 @@ struct nsWindowInfo
 	PRInt32			  mTimeStamp;
 	nsCOMPtr<nsIWebShellWindow> mWindow;
 	
-	nsString    GetType()
+	nsAutoString    GetType()
 		{ 
-			nsString rtnString;
+			nsAutoString rtnString;
 		 	GetWindowType( mWindow, rtnString );
 		 	return rtnString;
 		}
@@ -495,7 +500,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
 	PRInt32 lastTimeStamp = -1;
 	PRInt32 count = mWindowList.Count();
 	nsIWebShellWindow* mostRecentWindow = NULL;
-	nsString typeString( inType );
+	nsAutoString typeString( inType );
 	// Find the most window with the highest time stamp that matches the requested type
 	for ( int32 i = 0; i< count; i++ )
 	{	
@@ -571,7 +576,17 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIWebShellWindow* inWindow,
 				return rv;
 			}
 
-			rv = Assert( window , kNC_Name, newTitle, PR_TRUE );
+			// Should this title be displayed
+			PRBool display = PR_TRUE;
+			nsAutoString typeAttrib("intaskslist");
+			nsAutoString displayString;
+ 			GetAttribute( inWindow, typeAttrib, displayString );
+ 			displayString.ToLowerCase();
+ 			
+			if ( displayString=="false" )
+				display=PR_FALSE;
+				
+			rv = Assert( window , kNC_Name, newTitle, display );
   			if (rv != NS_RDF_ASSERTION_ACCEPTED)
 			{
 				NS_ERROR("unable to set window name");
@@ -590,7 +605,7 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 	PRInt32 count = mWindowList.Count();
 	// Find the window
 	nsresult result = NS_ERROR_FAILURE;
-	nsString temp( inResource );
+	nsAutoString temp( inResource );
 	char* resourceString = temp.ToNewCString();
 	for ( int32 i = 0; i< count; i++ )
 	{	
@@ -754,10 +769,10 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 	nsCOMPtr<nsIRDFResource> window;
 	nsresult rv;	
 	
-	nsString	windowTitle;
+	nsAutoString	windowTitle;
 	
 	// Make up a unique ID and create the RDF NODE
-	nsString uniqueID = "window-";
+	nsAutoString uniqueID = "window-";
 	uniqueID.Append(windowTitle );
 	uniqueID.Append( mTimeStamp, 10 );
 	char cID[ 256];
@@ -768,7 +783,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 		return rv;
 	}
 	ioWindowInfo->mRDFID = window ;
-		
+	#if 0	
 	// Get the RDF literal and add it to our node 
 	nsCOMPtr<nsIRDFLiteral> windowTitleLiteral;
 	if (NS_FAILED(rv = gRDFService->GetLiteral( windowTitle.GetUnicode(), getter_AddRefs(windowTitleLiteral))))
@@ -783,7 +798,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 		NS_ERROR("unable to set window name");
 		return rv;
 	}
-	
+	#endif
 	// Add the element to the container
   nsCOMPtr<nsIRDFContainer> container;
   rv = NS_NewRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
@@ -861,7 +876,7 @@ NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
 		GetDOMWindow( windowInfo->mWindow, domWindow );
 		domWindow->QueryInterface( kISupportsIID ,(void**)retval );
 		
-		mCurrentPosition++;
+		mCurrentPosition = index;
 	}
 	return NS_OK;
 }
