@@ -81,7 +81,7 @@ private:
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;
-	nsIDOMEditorAppCore*		m_editor;
+	nsIEditorShell*		m_editor;
 	nsCOMPtr<nsMsgCompFields>	m_compFields;
 	PRBool						m_composeHTML;
 };

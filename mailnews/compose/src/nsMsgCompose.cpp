@@ -141,15 +141,19 @@ nsresult nsMsgCompose::LoadFields()
     			tempFile.write(nsAutoCString(msgBody), msgBody.Length());
     			tempFile.close();
     			
-        		m_editor->LoadUrl(nsFileURL(aPath).GetURLString());
+    			nsAutoString  urlStr = nsFileURL(aPath).GetURLString();
+        	m_editor->LoadUrl(urlStr.GetUnicode());
     		}
     	}
     	else
     	{
+    	  nsAutoString  urlStr;
     		if (m_composeHTML)
-        		m_editor->LoadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
+        		urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
         	else
-        		m_editor->LoadUrl("chrome://messengercompose/content/defaultTextBody.html");
+        		urlStr = "chrome://messengercompose/content/defaultTextBody.html";
+        		
+        	m_editor->LoadUrl(urlStr.GetUnicode());
     	}
     }
 
@@ -253,10 +257,15 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *cal
 
 				if (m_editor)
 				{
+				  PRUnichar *bodyText = NULL;
 					if (m_composeHTML)
-						m_editor->GetContentsAsHTML(msgBody);
+						m_editor->GetContentsAsHTML(&bodyText);
 					else
-						m_editor->GetContentsAsText(msgBody);
+						m_editor->GetContentsAsText(&bodyText);
+					
+					msgBody = bodyText;
+					delete [] bodyText;
+					
 					SendMsgEx(deliverMode, msgTo.GetUnicode(), msgCc.GetUnicode(), msgBcc.GetUnicode(),
 						msgNewsgroup.GetUnicode(), msgSubject.GetUnicode(), msgBody.GetUnicode(), callback);          
 				}
@@ -408,7 +417,7 @@ nsresult nsMsgCompose::SetEditor(/*nsIDOMEditorAppCore*/nsISupports * aEditor)
 {
 	nsresult rv;
 	if (aEditor)
-		rv = aEditor->QueryInterface(nsIDOMEditorAppCore::GetIID(), (void **)&m_editor);
+		rv = aEditor->QueryInterface(nsIEditorShell::GetIID(), (void **)&m_editor);
 	else
 		return NS_ERROR_NULL_POINTER;
 
