@@ -123,4 +123,3 @@ file:///s|/mozilla/layout/html/tests/table/marvin/tr_valign_baseline.html
 file:///s|/mozilla/layout/html/tests/table/marvin/tr_valign_bottom.html
 file:///s|/mozilla/layout/html/tests/table/marvin/tr_valign_middle.html
 file:///s|/mozilla/layout/html/tests/table/marvin/tr_valign_top.html
-file:///s|/mozilla/layout/html/tests/table/marvin/tr_valign_top.html

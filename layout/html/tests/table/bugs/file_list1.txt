@@ -59,4 +59,3 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug1318.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug13169.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug13484.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug13526.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug13526.html
