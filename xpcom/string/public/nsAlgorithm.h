@@ -85,15 +85,15 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
       {
         PRUint32 lengthToCopy = PRUint32( NS_MIN(last.size_backward(), result.size_backward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
+          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.get() - first.get()));
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
 #ifdef _MSC_VER
         // XXX Visual C++ can't stomach 'typename' where it rightfully should
-        nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<OutputIterator::value_type>::move(result.get()-lengthToCopy, last.get()-lengthToCopy, lengthToCopy);
 #else
-        nsCharTraits<typename OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<typename OutputIterator::value_type>::move(result.get()-lengthToCopy, last.get()-lengthToCopy, lengthToCopy);
 #endif
 
         last -= PRInt32(lengthToCopy);

@@ -121,17 +121,22 @@ class nsReadingIterator
       // nsReadingIterator( const nsReadingIterator<CharT>& ); ...use default copy-constructor
       // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& ); ...use default copy-assignment operator
 
+      pointer
+      get() const
+        {
+          return mPosition;
+        }
       
       CharT
       operator*() const
         {
-          return *mPosition;
+          return *get();
         }
 
       pointer
       operator->() const
         {
-          return mPosition;
+          return get();
         }
 
       nsReadingIterator<CharT>&
@@ -441,7 +446,7 @@ inline
 PRBool
 operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
   {
-    return lhs.operator->() == rhs.operator->();
+    return lhs.get() == rhs.get();
   }
 
 template <class CharT>
@@ -449,7 +454,7 @@ inline
 PRBool
 operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
   {
-    return lhs.operator->() != rhs.operator->();
+    return lhs.get() != rhs.get();
   }
 
 
@@ -576,7 +581,7 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
     for (;;)
       {
         PRInt32 lengthToExamineInThisFragment = iter.size_forward();
-        result += PRUint32(NS_COUNT(iter.operator->(), iter.operator->()+lengthToExamineInThisFragment, c));
+        result += PRUint32(NS_COUNT(iter.get(), iter.get()+lengthToExamineInThisFragment, c));
         if ( !(lengthToExamine -= lengthToExamineInThisFragment) )
           return result;
         iter += lengthToExamineInThisFragment;
@@ -1112,7 +1117,7 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
         if ( lengthAvailable > lengthToCompare )
           lengthAvailable = lengthToCompare;
         
-        if ( int result = nsCharTraits<CharT>::compare(leftIter.operator->(), rightIter.operator->(), lengthAvailable) )
+        if ( int result = nsCharTraits<CharT>::compare(leftIter.get(), rightIter.get(), lengthAvailable) )
           return result;
 
         if ( !(lengthToCompare -= lengthAvailable) )
