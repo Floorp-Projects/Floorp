@@ -839,7 +839,7 @@ NS_IMETHODIMP nsRegistry::EnumerateSubtrees( Key baseKey, nsIEnumerator **result
         // Check for success.
         if( *result ) {
             // Bump refcnt on behalf of caller.
- (*result)->AddRef();
+          NS_ADDREF(*result);
         } else {
             // Unable to allocate space for the enumerator object.
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -862,7 +862,7 @@ NS_IMETHODIMP nsRegistry::EnumerateAllSubtrees( Key baseKey, nsIEnumerator **res
         // Check for success.
         if( *result ) {
             // Bump refcnt on behalf of caller.
- (*result)->AddRef();
+          NS_ADDREF(*result);
         } else {
             // Unable to allocate space for the enumerator object.
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -939,7 +939,7 @@ NS_IMETHODIMP nsRegistry::EnumerateValues( Key baseKey, nsIEnumerator **result )
         // Check for success.
         if( *result ) {
             // Bump refcnt on behalf of caller.
-            (*result)->AddRef();
+            NS_ADDREF(*result);
         } else {
             // Unable to allocate space for the enumerator object.
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1101,7 +1101,7 @@ nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
     if( result ) {
         *result = new nsRegistryNode( mReg, mName, (RKEY) mNext );
         if( *result ) {
-            (*result)->AddRef();
+            NS_ADDREF(*result);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
@@ -1141,7 +1141,7 @@ nsRegValueEnumerator::CurrentItem( nsISupports **result ) {
     if( result ) {
         *result = new nsRegistryValue( mReg, mKey, mEnum );
         if( *result ) {
-            (*result)->AddRef();
+            NS_ADDREF(*result);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
