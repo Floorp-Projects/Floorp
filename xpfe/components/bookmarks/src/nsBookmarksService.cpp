@@ -358,6 +358,10 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 			offset = line.Find("<");
 			if (offset < 0)
 			{
+				if (description.Length() > 0)
+				{
+					description += "\n";
+				}
 				description += line;
 				continue;
 			}
@@ -1785,7 +1789,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 								strm << "</A>\n";
 								
 								// output description (if one exists)
-								WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_FALSE);
+								WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_TRUE);
 							}
 						}
 					}
