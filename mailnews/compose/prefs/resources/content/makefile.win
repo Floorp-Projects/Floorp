@@ -28,7 +28,7 @@ CHROME_CONTENT_DIR = messenger\content\messengercompose
 CHROME_CONTENT = \
 	.\pref-composing_messages.xul \
 	.\pref-formatting.xul \
-	($NULL)
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
