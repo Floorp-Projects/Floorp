@@ -898,6 +898,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
                                     nsReflowStatus&          aStatus)
 {
   nsIFrame* prevRowFrame = nsnull;
+  aDesiredSize.height = 0;
   nsresult  rv = NS_OK;
 
   // get the style set
@@ -911,14 +912,13 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
 
-  nscoord heightTaken = 0;
   nscoord availWidth  = nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);
   nscoord availHeight = nsTableFrame::RoundToPixel(aReflowState.availableHeight, p2t);
+  nscoord lastDesiredHeight = 0;
 
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
   for (nsIFrame* rowFrame = GetFirstFrame(); rowFrame; GetNextFrame(rowFrame, &rowFrame)) {
-    PRInt32 rowEndY = 0;
     PRBool rowIsOnCurrentPage = PR_TRUE;
     PRBool degenerateRow = PR_FALSE;
     nsRect bounds;
@@ -931,7 +931,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
       nscoord pageHeight = actualRect.height;
       // reflow the row in the availabe space and have it split if it is the 1st
       // row or there is at least 20% of the current page available 
-      if (!prevRowFrame || (availHeight - heightTaken > pageHeight / 5)) { 
+      if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 5)) { 
         // Reflow the row in the available space and have it split
         nsSize              availSize(availWidth, availHeight - bounds.y);
         nsHTMLReflowState   rowReflowState(aPresContext, aReflowState, rowFrame,
@@ -947,18 +947,19 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // the row frame is incomplete and all of the cells' block frames have split
           CreateContinuingRowFrame(*aPresContext, *styleSet.get(), *rowFrame, &contRowFrame);
-          rowEndY = PR_MIN(rowEndY, heightTaken + aTableFrame->GetCellSpacingY() + desiredSize.height);
+          aDesiredSize.height += aTableFrame->GetCellSpacingY() + desiredSize.height;
         } 
         else if (0 == desiredSize.height) {
           // the row frame is complete because it had no cells originating in it.
           CreateContinuingRowFrame(*aPresContext, *styleSet.get(), *rowFrame, &contRowFrame);
           aStatus = NS_FRAME_NOT_COMPLETE;
+          aDesiredSize.height = availHeight;
           degenerateRow = PR_TRUE;
         }
         else {
           // the row frame is complete because it's minimum height was greater than the 
           // the available height we gave it 
-          if (heightTaken > 0) {
+          if (aDesiredSize.height > 0) {
             // put the row on the next page since it needs more height than it was given
             rowIsOnCurrentPage = PR_FALSE;
           }
@@ -972,7 +973,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
               PushChildren(aPresContext, nextRowFrame, rowFrame);
             }
             aStatus = nextRowFrame ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
-            rowEndY = bounds.YMost();
+            aDesiredSize.height = bounds.YMost();
           }
         }
       }
@@ -982,23 +983,23 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
         // Push this row frame and those that follow to the next-in-flow
         PushChildren(aPresContext, rowFrame, prevRowFrame);
         aStatus = NS_FRAME_NOT_COMPLETE;
-        rowEndY = bounds.y - aTableFrame->GetCellSpacingY();
       }
       if (prevRowFrame) {
         nscoord tallestCell = 
           SplitSpanningCells(*aPresContext, aReflowState, *styleSet, *aTableFrame, 
-                             *(nsTableRowFrame*)rowFrame, rowEndY, (nsTableRowFrame*)contRowFrame);
+                             *(nsTableRowFrame*)rowFrame, aDesiredSize.height, (nsTableRowFrame*)contRowFrame);
         if (degenerateRow) {
-          rowEndY = PR_MIN(rowEndY, heightTaken + aTableFrame->GetCellSpacingY() + tallestCell);
+          aDesiredSize.height = lastDesiredHeight + aTableFrame->GetCellSpacingY() + tallestCell;
         }
       }
-      aDesiredSize.height = rowEndY;
       break;
     }
-    heightTaken = bounds.YMost();
-    prevRowFrame = rowFrame;
+    else {
+      aDesiredSize.height = bounds.YMost();
+      lastDesiredHeight   = aDesiredSize.height;
+      prevRowFrame = rowFrame;
+    }
   }
-
   return NS_OK;
 }
 
