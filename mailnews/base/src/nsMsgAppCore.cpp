@@ -461,18 +461,37 @@ nsMsgAppCore::OpenURL(const char * url)
 			NS_MailNewsLoadUrl(url, mWebShell); 
 		else if (PL_strncmp(url, "mailbox:", 8) == 0)
 		{
-			// right now these urls are just mailbox:# where # is the ordinal number representing what message
-			// we want to load...we have a whole syntax for mailbox urls which are used in the normal case but
-			// we aren't using for this little demo menu....
-			url += 8; // skip past mailbox: stuff...
-			PRUint32 msgIndex = atol(url); // extract the index to use...
-
+			PRUint32 msgIndex;
+		  nsFileSpec folderPath; 
+			PRBool displayNumber;
+			if(isdigit(url[8]))
+			{
+				// right now these urls are just mailbox:# where # is the ordinal number representing what message
+				// we want to load...we have a whole syntax for mailbox urls which are used in the normal case but
+				// we aren't using for this little demo menu....
+				url += 8; // skip past mailbox: stuff...
+				msgIndex = atol(url); // extract the index to use...
+				folderPath = m_folderPath;
+				displayNumber = PR_TRUE;
+			}
+			else
+			{
+				nsString folderURI;
+				nsParseLocalMessageURI(url, folderURI, &msgIndex);
+				char *rootURI = folderURI.ToNewCString();
+				nsURI2Path(kMailboxRootURI, rootURI, folderPath);
+				displayNumber = PR_FALSE;
+			}
 			nsIMailboxService * mailboxService = nsnull;
 			nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
 			if (NS_SUCCEEDED(rv) && mailboxService)
 			{
 				nsIURL * url = nsnull;
-				mailboxService->DisplayMessageNumber(m_folderPath, msgIndex, mWebShell, nsnull, nsnull);
+				if(displayNumber)
+					mailboxService->DisplayMessageNumber(folderPath, msgIndex, mWebShell, nsnull, nsnull);
+				else
+					mailboxService->DisplayMessage(folderPath, msgIndex, nsnull, mWebShell, nsnull, nsnull);
+
 				nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
 			}
 		}
