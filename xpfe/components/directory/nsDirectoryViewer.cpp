@@ -72,43 +72,53 @@
 { 0x82776710, 0x5690, 0x11d3, { 0xbe, 0x36, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 
-#define HTTPINDEX_NAMESPACE_URI "urn:http-index-format:"
+// Note: due to aggregation, the HTTPINDEX namespace should match
+// what's used in the rest of the application
+#define HTTPINDEX_NAMESPACE_URI 	NC_NAMESPACE_URI
 
 //----------------------------------------------------------------------
 //
 // nsHTTPIndex
 //
 
-class nsHTTPIndex : public nsIHTTPIndex
+class nsHTTPIndex : public nsIHTTPIndex, public nsIRDFDataSource
 {
+private:
+	static nsIRDFResource		*kNC_Child;
+	static nsIRDFResource		*kNC_loading;
+
 protected:
-  // We grab a reference to the content viewer container (which
-  // indirectly owns us) so that we can insert ourselves as a global
-  // in the script context _after_ the XUL doc has been embedded into
-  // content viewer. We'll know that this has happened once we receive
-  // an OnStartRequest() notification
-  nsISupports* mContainer; // [WEAK]
+	// We grab a reference to the content viewer container (which
+	// indirectly owns us) so that we can insert ourselves as a global
+	// in the script context _after_ the XUL doc has been embedded into
+	// content viewer. We'll know that this has happened once we receive
+	// an OnStartRequest() notification
 
-  nsCString mBaseURL;
+	nsCOMPtr<nsIRDFDataSource>	mInner;
+	nsISupports			*mContainer;	// [WEAK]
+	nsCString			mBaseURL;
 
-  nsCOMPtr<nsIRDFDataSource> mDataSource;
-
-  nsHTTPIndex(nsISupports* aContainer);
-  nsresult Init(nsIURI* aBaseURL);
-  virtual ~nsHTTPIndex();
+			nsHTTPIndex(nsISupports* aContainer);
+	nsresult 	Init(nsIURI* aBaseURL);
+	PRBool		isWellknownContainerURI(nsIRDFResource *r);
 
 public:
+			nsHTTPIndex();
+	virtual		~nsHTTPIndex();
+	nsresult	Init(void);
+static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
 
-  static nsresult Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
+	// nsIHTTPIndex interface
+	NS_DECL_NSIHTTPINDEX
 
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
+	// NSIRDFDataSource interface
+	NS_DECL_NSIRDFDATASOURCE
 
-  // nsIHTTPIndex interface
-  NS_IMETHOD GetBaseURL(char** _result);
-  NS_IMETHOD GetDataSource(nsIRDFDataSource** _result);
-  NS_IMETHOD CreateListener(nsIStreamListener** _result);
+	// nsISupports interface
+	NS_DECL_ISUPPORTS
 };
 
 
@@ -120,10 +130,11 @@ public:
 class nsHTTPIndexParser : public nsIStreamListener
 {
 protected:
-  static nsrefcnt gRefCnt;
+  static nsrefcnt gRefCntParser;
   static nsIRDFService* gRDF;
   static nsIRDFResource* kHTTPIndex_Comment;
   static nsIRDFResource* kHTTPIndex_Filename;
+  static nsIRDFResource* kHTTPIndex_Filetype;
   static nsIRDFResource* kHTTPIndex_Loading;
   static nsIRDFLiteral*  kTrueLiteral;
 
@@ -132,14 +143,15 @@ protected:
   static nsresult ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
 
   struct Field {
-    const char*     mName;
+    const char      *mName;
+    const char      *mResName;
     nsresult        (*mParse)(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
     nsIRDFResource* mProperty;
   };
 
   static Field gFieldTable[];
 
-  nsHTTPIndex* mHTTPIndex; // [WEAK]
+  nsIHTTPIndex* mHTTPIndex; // [WEAK]
 
   nsCOMPtr<nsIRDFDataSource> mDataSource;
 
@@ -148,9 +160,9 @@ protected:
   nsCOMPtr<nsIRDFContainer> mDirectoryContainer;
 
   nsCString mBuf;
-  nsresult ProcessData();
+  nsresult ProcessData(nsISupports *context);
   nsresult ParseFormat(const char* aFormatStr);
-  nsresult ParseData(const char* aDataStr);
+  nsresult ParseData(const char* aDataStr, nsISupports *context);
 
   nsAutoString mComment;
 
@@ -178,24 +190,34 @@ public:
 };
 
 
-nsrefcnt nsHTTPIndexParser::gRefCnt = 0;
+
+nsIRDFService		*gRDF = nsnull;
+PRInt32			gRefCnt = 0;
+
+nsIRDFResource	*nsHTTPIndex::kNC_Child;
+nsIRDFResource	*nsHTTPIndex::kNC_loading;
+
+nsrefcnt nsHTTPIndexParser::gRefCntParser = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Comment;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filename;
+nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filetype;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
 nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
+
+
 
 // This table tells us how to parse the fields in the HTTP-index
 // stream into an RDF graph.
 nsHTTPIndexParser::Field
 nsHTTPIndexParser::gFieldTable[] = {
-  { "Filename",       nsHTTPIndexParser::ParseLiteral, nsnull },
-  { "Content-Length", nsHTTPIndexParser::ParseInt,     nsnull },
-  { "Last-Modified",  nsHTTPIndexParser::ParseDate,    nsnull },
-  { "Content-Type",   nsHTTPIndexParser::ParseLiteral, nsnull },
-  { "File-Type",      nsHTTPIndexParser::ParseLiteral, nsnull },
-  { "Permissions",    nsHTTPIndexParser::ParseLiteral, nsnull },
-  { nsnull,           nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "Filename",       "http://home.netscape.com/NC-rdf#Name",              nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "Content-Length", "http://home.netscape.com/NC-rdf#Content-Length",    nsHTTPIndexParser::ParseInt,     nsnull },
+  { "Last-Modified",  "http://home.netscape.com/WEB-rdf#LastModifiedDate", nsHTTPIndexParser::ParseDate,    nsnull },
+  { "Content-Type",   "http://home.netscape.com/NC-rdf#Content-Type",      nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "File-Type",      "http://home.netscape.com/NC-rdf#File-Type",         nsHTTPIndexParser::ParseLiteral, nsnull },
+  { "Permissions",    "http://home.netscape.com/NC-rdf#Permissions",       nsHTTPIndexParser::ParseLiteral, nsnull },
+  { nsnull,           "",                                                  nsHTTPIndexParser::ParseLiteral, nsnull },
 };
 
 nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsISupports* aContainer)
@@ -222,7 +244,7 @@ nsHTTPIndexParser::Init()
   if (! mDataSource)
     return NS_ERROR_UNEXPECTED;
 
-  if (gRefCnt++ == 0) {
+  if (gRefCntParser++ == 0) {
     rv = nsServiceManager::GetService("component://netscape/rdf/rdf-service",
                                       NS_GET_IID(nsIRDFService),
                                       NS_REINTERPRET_CAST(nsISupports**, &gRDF));
@@ -231,18 +253,20 @@ nsHTTPIndexParser::Init()
     rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Comment",  &kHTTPIndex_Comment);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Filename", &kHTTPIndex_Filename);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Name", &kHTTPIndex_Filename);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Loading",  &kHTTPIndex_Loading);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "File-Type", &kHTTPIndex_Filetype);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "loading",  &kHTTPIndex_Loading);
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDF->GetLiteral(nsAutoString("true").GetUnicode(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;
 
     for (Field* field = gFieldTable; field->mName; ++field) {
-      nsCAutoString str(HTTPINDEX_NAMESPACE_URI);
-      str += field->mName;
+      nsCAutoString str(field->mResName);
 
       rv = gRDF->GetResource(str, &field->mProperty);
       if (NS_FAILED(rv)) return rv;
@@ -255,9 +279,10 @@ nsHTTPIndexParser::Init()
 
 nsHTTPIndexParser::~nsHTTPIndexParser()
 {
-  if (--gRefCnt == 0) {
+  if (--gRefCntParser == 0) {
     NS_IF_RELEASE(kHTTPIndex_Comment);
     NS_IF_RELEASE(kHTTPIndex_Filename);
+    NS_IF_RELEASE(kHTTPIndex_Filetype);
     NS_IF_RELEASE(kHTTPIndex_Loading);
     NS_IF_RELEASE(kTrueLiteral);
 
@@ -398,7 +423,7 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
 
   // Clean up any remaining data
   if (mBuf.Length() > 0)
-    ProcessData();
+    ProcessData(aContext);
 
   nsresult rv;
 
@@ -450,13 +475,13 @@ nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
   mBuf.mLength = len + count;
   AddNullTerminator(mBuf);
 
-  return ProcessData();
+  return ProcessData(aContext);
 }
 
 
 
 nsresult
-nsHTTPIndexParser::ProcessData()
+nsHTTPIndexParser::ProcessData(nsISupports *context)
 {
 	while(PR_TRUE)
 	{
@@ -505,7 +530,7 @@ nsHTTPIndexParser::ProcessData()
 					else if (buf[2] == '1' && buf[3] == ':')
 					{
 						// 201. Field data
-						rv = ParseData(buf + 4);
+						rv = ParseData(buf + 4, context);
 						if (NS_FAILED(rv)) return rv;
 					}
 				}
@@ -569,7 +594,7 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
 
 
 nsresult
-nsHTTPIndexParser::ParseData(const char* aDataStr)
+nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
 {
   // Parse a "201" data line, using the field ordering specified in
   // mFormat.
@@ -621,6 +646,8 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   rv = NS_OK;
   nsCOMPtr<nsIRDFResource> entry;
 
+	nsCAutoString	filename, filetype;
+
   for (PRInt32 i = 0; i < mFormat.Count(); ++i) {
     // If we've exhausted the data before we run out of fields, just
     // bail.
@@ -664,18 +691,26 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
 
     Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(i));
     if (field && field->mProperty == kHTTPIndex_Filename) {
+      filename = value.mStr;
+    }
+    else if (field && field->mProperty == kHTTPIndex_Filetype) {
+      filetype = value.mStr;
+    }
+  }
+
       // we found the filename; construct a resource for its entry
       nsAutoString entryuri;
       char* result = nsnull;
-      rv = ioServ->Escape(value.mStr, nsIIOService::url_FileBaseName +
+      rv = ioServ->Escape(filename, nsIIOService::url_FileBaseName +
                           nsIIOService::url_Forced, &result);
       rv = NS_MakeAbsoluteURI(entryuri, result, realbase);
       CRTFREEIF(result);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
-      if (NS_FAILED(rv)) break;
+      if (filetype.EqualsIgnoreCase("directory"))
+      {
+            entryuri.Append(PRUnichar('/'));
+      }
       rv = gRDF->GetResource(nsCAutoString(entryuri), getter_AddRefs(entry));
-    }
-  }
 
   // At this point, we'll (hopefully) have found the filename and
   // constructed a resource for it, stored in entry. So now take a
@@ -697,7 +732,23 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
       }
     }
 
-    rv = mDirectoryContainer->AppendElement(entry);
+	if (!mDirectoryContainer)
+	{
+		nsCOMPtr<nsIRDFResource>	parentRes = do_QueryInterface(context);
+		if (parentRes)
+		{
+			NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, "component://netscape/rdf/container-utils", &rv);
+			if (NS_FAILED(rv)) return rv;
+
+			rv = rdfc->MakeSeq(mDataSource, parentRes, getter_AddRefs(mDirectoryContainer));
+			if (NS_FAILED(rv)) return rv;
+		}
+	}
+
+	if (mDirectoryContainer)
+	{
+	    rv = mDirectoryContainer->AppendElement(entry);
+	}
   }
 
   // If we needed to spill values onto the heap, make sure we clean up
@@ -785,10 +836,65 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 // nsHTTPIndex implementation
 //
 
-nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
-  : mContainer(aContainer)
+nsHTTPIndex::nsHTTPIndex()
+	: mContainer(nsnull), mInner(nsnull)
 {
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
+}
+
+
+
+nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
+  : mContainer(aContainer), mInner(nsnull)
+{
+	NS_INIT_REFCNT();
+}
+
+
+
+nsHTTPIndex::~nsHTTPIndex()
+{
+	if (--gRefCnt == 0)
+	{
+		NS_IF_RELEASE(kNC_Child);
+		NS_IF_RELEASE(kNC_loading);
+
+		if (gRDF)
+		{
+			nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
+			gRDF = nsnull;
+		}
+	}
+}
+
+
+
+nsresult
+nsHTTPIndex::Init()
+{
+	nsresult	rv;
+
+	if (gRefCnt++ == 0)
+	{
+		rv = nsServiceManager::GetService(kRDFServiceCID,
+			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDF);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+		if (NS_FAILED(rv)) return rv;
+
+		if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+				nsnull, NS_GET_IID(nsIRDFDataSource), (void**) getter_AddRefs(mInner))))
+		{
+			return(rv);
+		}
+
+		gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
+		gRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+
+		// register this as a named data source with the RDF service
+		rv = gRDF->RegisterDataSource(this, PR_FALSE);
+		if (NS_FAILED(rv)) return rv;
+	}
+	return(NS_OK);
 }
 
 
@@ -808,10 +914,6 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
   mBaseURL.Assign(url);
 
-  static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-  rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull,
-                                          NS_GET_IID(nsIRDFDataSource),
-                                          getter_AddRefs(mDataSource));
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
@@ -826,7 +928,13 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aR
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = result->Init(aBaseURL);
+  nsresult rv = result->Init();
+  if (NS_FAILED(rv)) {
+    delete result;
+    return rv;
+  }
+
+  rv = result->Init(aBaseURL);
   if (NS_FAILED(rv)) {
     delete result;
     return rv;
@@ -839,12 +947,8 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aR
 
 
 
-nsHTTPIndex::~nsHTTPIndex()
-{
-}
+NS_IMPL_ISUPPORTS2(nsHTTPIndex, nsIHTTPIndex, nsIRDFDataSource);
 
-
-NS_IMPL_ISUPPORTS1(nsHTTPIndex, nsIHTTPIndex);
 
 
 NS_IMETHODIMP
@@ -862,7 +966,7 @@ nsHTTPIndex::GetBaseURL(char** _result)
 NS_IMETHODIMP
 nsHTTPIndex::GetDataSource(nsIRDFDataSource** _result)
 {
-  *_result = mDataSource;
+  *_result = this;
   NS_IF_ADDREF(*_result);
   return NS_OK;
 }
@@ -881,6 +985,359 @@ nsHTTPIndex::CreateListener(nsIStreamListener** _result)
 
   return NS_OK;
 }
+
+
+
+// rjc: isWellknownContainerURI() decides whether a URI is a container for which,
+// when asked (say, by the template builder), we'll make a network connection
+// to get its contents. For the moment, all we speak is ftp:// URLs, even though
+//    a) we can get "http-index" mimetypes for really anything
+//    b) we could easily handle file:// URLs here
+//         Q: Why don't we?
+//         A: The file system datasource ("rdf:file"); at some point, the two
+//            should be perhaps united.  Until then, we can't aggregate both
+//            "rdf:file" and "http-index" (such as with bookmarks) because we'd
+//            get double the # of answers we really want... also, "rdf:file" is
+//            less expensive in terms of both memory usage as well as speed
+
+static const char		kFTPProtocol[] = "ftp://";
+
+PRBool
+nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
+{
+	PRBool		isContainerFlag = PR_FALSE;
+	const char	*uri = nsnull;
+	
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kFTPProtocol, sizeof(kFTPProtocol) - 1)))
+	{
+		if (uri[strlen(uri)-1] == '/')
+		{
+			isContainerFlag = PR_TRUE;
+		}
+	}
+	return(isContainerFlag);
+}
+
+
+
+NS_IMETHODIMP
+nsHTTPIndex::GetURI(char * *aURI)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	*aURI = nsnull;
+
+	if (mInner)
+	{
+		rv = mInner->GetURI(aURI);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue,
+			nsIRDFResource **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	*_retval = nsnull;
+
+	if (mInner)
+	{
+		rv = mInner->GetSource(aProperty, aTarget, aTruthValue, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue,
+			nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	if (mInner)
+	{
+		rv = mInner->GetSources(aProperty, aTarget, aTruthValue, _retval);
+	}
+	else
+	{
+		rv = NS_NewEmptyEnumerator(_retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue,
+			nsIRDFNode **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	*_retval = nsnull;
+
+	if (isWellknownContainerURI(aSource) && (aProperty == kNC_Child) && (aTruthValue))
+	{
+		// fake out the generic builder (i.e. return anything in this case)
+		// so that search containers never appear to be empty
+		NS_IF_ADDREF(aSource);
+		*_retval = aSource;
+		return(NS_OK);
+	}
+
+	if (mInner)
+	{
+		rv = mInner->GetTarget(aSource, aProperty, aTruthValue, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue,
+			nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	if (isWellknownContainerURI(aSource) && (aProperty == kNC_Child))
+	{
+		PRBool		doNetworkRequest = PR_TRUE;
+		if (NS_SUCCEEDED(rv) && (_retval))
+		{
+			// check and see if we already have data for the search in question;
+			// if we do, BeginSearchRequest() won't bother doing the search again,
+			// otherwise it will kickstart it
+			PRBool		hasResults = PR_FALSE;
+			if (NS_SUCCEEDED((*_retval)->HasMoreElements(&hasResults)) && (hasResults == PR_TRUE))
+			{
+				doNetworkRequest = PR_FALSE;
+			}
+		}
+		if (doNetworkRequest == PR_TRUE)
+		{
+			const char	*uri = nsnull;
+			aSource->GetValueConst(&uri);
+
+			nsCOMPtr<nsIURI>	url;
+			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), uri)))
+			{
+				nsCOMPtr<nsIChannel>	channel;
+				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull)))
+				{
+					nsCOMPtr<nsIStreamListener>	listener;
+					if (NS_SUCCEEDED(rv = CreateListener(getter_AddRefs(listener))))
+					{
+						if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
+						{
+							nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+							gRDF->GetLiteral(nsAutoString("true").GetUnicode(),
+								getter_AddRefs(trueLiteral));
+							rv = mInner->Assert(aSource, kNC_loading, trueLiteral, PR_TRUE);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (mInner)
+	{
+		rv = mInner->GetTargets(aSource, aProperty, aTruthValue, _retval);
+	}
+	else
+	{
+		rv = NS_NewEmptyEnumerator(_retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::Assert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget,
+			PRBool aTruthValue)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::Unassert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->Unassert(aSource, aProperty, aTarget);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::Change(nsIRDFResource *aSource, nsIRDFResource *aProperty,
+			nsIRDFNode *aOldTarget, nsIRDFNode *aNewTarget)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::Move(nsIRDFResource *aOldSource, nsIRDFResource *aNewSource,
+			nsIRDFResource *aProperty, nsIRDFNode *aTarget)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty,
+			nsIRDFNode *aTarget, PRBool aTruthValue, PRBool *_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->HasAssertion(aSource, aProperty, aTarget, aTruthValue, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::AddObserver(nsIRDFObserver *aObserver)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->AddObserver(aObserver);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::RemoveObserver(nsIRDFObserver *aObserver)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->RemoveObserver(aObserver);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->ArcLabelsIn(aNode, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+
+	*_retval = nsnull;
+
+	nsCOMPtr<nsISupportsArray> array;
+	rv = NS_NewISupportsArray(getter_AddRefs(array));
+	if (NS_FAILED(rv)) return rv;
+
+	if (isWellknownContainerURI(aSource))
+	{
+		array->AppendElement(kNC_Child);
+	}
+
+	if (mInner)
+	{
+		nsCOMPtr<nsISimpleEnumerator>	anonArcs;
+		rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
+		PRBool	hasResults = PR_TRUE;
+		while (NS_SUCCEEDED(rv) && (anonArcs->HasMoreElements(&hasResults) &&
+			(hasResults == PR_TRUE)))
+		{
+			nsCOMPtr<nsISupports>	anonArc;
+			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))
+				break;
+			array->AppendElement(anonArc);
+		}
+	}
+
+	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+	if (! result)
+	return NS_ERROR_OUT_OF_MEMORY;
+
+	NS_ADDREF(result);
+	*_retval = result;
+	return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetAllResources(nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->GetAllResources(_retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->GetAllCommands(aSource, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand,
+				nsISupportsArray *aArguments, PRBool *_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->IsCommandEnabled(aSources, aCommand, aArguments, _retval);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand,
+				nsISupportsArray *aArguments)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->DoCommand(aSources, aCommand, aArguments);
+	}
+	return(rv);
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+	nsresult	rv = NS_ERROR_UNEXPECTED;
+	if (mInner)
+	{
+		rv = mInner->GetAllCmds(aSource, _retval);
+	}
+	return(rv);
+}
+
 
 
 //----------------------------------------------------------------------
@@ -1036,12 +1493,18 @@ nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
 ////////////////////////////////////////////////////////////////////////
 // Component Exports
 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
+
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/application/http-index-format",
       nsDirectoryViewerFactory::Create,
     },
+    { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_PROGID,
+      nsHTTPIndexConstructor },
+    { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_PROGID,
+      nsHTTPIndexConstructor },
 };
 
 NS_IMPL_NSGETMODULE("nsDirectoryViewerModule", components)

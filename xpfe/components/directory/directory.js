@@ -32,7 +32,7 @@
 function debug(msg)
 {
     // Uncomment to print out debug info.
-    //dump(msg);
+    // dump(msg);
 }
 
 function Init()
@@ -41,7 +41,6 @@ function Init()
 
     // Add the HTTPIndex datasource into the tree
     var tree = document.getElementById('tree');
-    tree.database.AddDataSource(HTTPIndex.DataSource);
 
     // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
     debug("base URL = " + HTTPIndex.BaseURL + "\n");
@@ -58,16 +57,7 @@ function OnClick(event)
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
-    if (targetclass == 'twisty') {
-        // The twisty is nested three below the treeitem:
-        // <treeitem>
-        //   <treerow>
-        //     <treecell>
-        //       <titledbutton class="twisty"> <!-- anonymous -->
-        var treeitem = event.target.parentNode.parentNode.parentNode;
-        ToggleOpenState(treeitem);
-    }
-    else {
+    if (targetclass != 'twisty') {
         // The click'll have hit a cell, which is nested two below the
         // treeitem.
         var treeitem = event.target.parentNode.parentNode;
@@ -84,63 +74,6 @@ function OnClick(event)
         }
     }
 }
-
-
-function OnDblClick(event)
-{
-    debug('OnDblClick()\n');
-
-    // This'll be set to 'filename' if they're over the filename link.
-    var targetclass = event.target.getAttribute('class');
-
-    // This'll be the treeitem that got the event
-    var treeitem = event.target.parentNode.parentNode;
-
-    // This'll be set to 'FILE' for files and 'DIRECTORY' for
-    // directories.
-    var type = treeitem.getAttribute('type');
-
-    if (targetclass == 'filename' && type == 'DIRECTORY') {
-        ToggleOpenState(treeitem);
-    }
-}
-
-
-function ToggleOpenState(treeitem)
-{
-    debug('ToggleOpenState(' + treeitem.tagName + ')');
-
-    if (treeitem.getAttribute('open') == 'true') {
-        var url = treeitem.getAttribute('id');
-        if (!Read[url]) {
-            treeitem.setAttribute('loading', 'true');
-            ReadDirectory(url);
-            Read[url] = true;
-        }
-    }
-}
-
-// This array contains the URL of each directory we've read, so that
-// we don't load a directory into the datasource >1 time.
-var Read = new Array();
-
-function ReadDirectory(url)
-{
-    debug('ReadDirectory(' + url + ')\n');
-
-    var ios = Components.classes['component://netscape/network/io-service'].getService();
-    ios = ios.QueryInterface(Components.interfaces.nsIIOService);
-
-    var uri = ios.newURI(url, null);
-
-    // Create a channel...
-    var channel = ios.newChannelFromURI(uri, null);
-
-    // ...so that we can pipe it into a new HTTPIndex listener to
-    // parse the directory's contents.
-    channel.asyncRead(HTTPIndex.CreateListener(), null);
-}
-
 
 
 // We need this hack because we've completely circumvented the onload() logic.
@@ -177,11 +110,16 @@ function doSort(sortColName)
 		}
 	}
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
-	if (!isupports)    return(false);
-	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
-	if (!xulSortService)    return(false);
-	xulSortService.Sort(node, sortResource, sortDirection);
-
+	try
+	{
+		var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+		if (!isupports)    return(false);
+		var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+		if (!xulSortService)    return(false);
+		xulSortService.Sort(node, sortResource, sortDirection);
+	}
+	catch(ex)
+	{
+	}
 	return(false);
 }
