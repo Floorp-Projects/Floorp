@@ -74,6 +74,9 @@
                      predicate="http://home.netscape.com/NC-rdf#HasUnreadMessages"
                      object="?hasUnreadMessages" />
             <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+                     object="?subfoldersHaveUnreadMessages" />
+            <binding subject="?member"
                      predicate="http://home.netscape.com/NC-rdf#IsSecure"
                      object="?isSecure" />
             <binding subject="?member"
@@ -100,15 +103,18 @@
                                          isServer-?isServer
                                          newMessages-?newMessages
                                          hasUnreadMessages-?hasUnreadMessages
+                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages
                                          isSecure-?isSecure
                                          serverType-?serverType
                                          noSelect-?noSelect"/>
                <outlinercell ref="folderUnreadCol"
                              label="?unreadCount"
-			     properties="hasUnreadMessages-?hasUnreadMessages"/>
+			     properties="hasUnreadMessages-?hasUnreadMessages
+                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
                <outlinercell ref="folderTotalCol"
                              label="?totalCount"
-			     properties="hasUnreadMessages-?hasUnreadMessages"/>
+			     properties="hasUnreadMessages-?hasUnreadMessages
+                                         subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
             </outlinerrow>
           </action>
         </rule>

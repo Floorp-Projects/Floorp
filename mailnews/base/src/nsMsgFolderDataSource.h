@@ -153,18 +153,17 @@ protected:
                                       nsIRDFNode **target);
   nsresult createFolderCanCompactNode(nsIMsgFolder *folder,
                                      nsIRDFNode **target);
-	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createBiffStateNodeFromFolder(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createBiffStateNodeFromFlag(PRUint32 flag, nsIRDFNode **target);
-	nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createNewMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, PRBool aIncludeSubfolders, nsIRDFNode **target);
+  nsresult createNewMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderNoSelectNode(nsIMsgFolder *folder,
                                     nsIRDFNode **target);
-    nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
-    nsresult createFolderSyncDisabledNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderSyncDisabledNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
   nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
@@ -201,10 +200,9 @@ protected:
   nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, PRInt32 aUnreadMessages);
   nsresult NotifyFolderTreeSimpleNameChanged(nsIMsgFolder *folder);
   nsresult NotifyFolderNameChanged(nsIMsgFolder *folder);
-
-	nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
-
-	nsresult CreateLiterals(nsIRDFService *rdf);
+  nsresult NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aPropertyResource, nsIRDFNode *aNode);
+  nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
+  nsresult CreateLiterals(nsIRDFService *rdf);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_Folder;

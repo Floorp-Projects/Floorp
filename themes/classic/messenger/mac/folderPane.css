@@ -143,6 +143,11 @@ outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp, 
 
 /* All Servers */
 
+outlinerbody:-moz-outliner-cell-text(closed, subfoldersHaveUnreadMessages-true)
+{
+  font-weight: bold;
+}
+
 outlinerbody:-moz-outliner-cell-text(folderNameCol, isServer-true),
 outlinerbody:-moz-outliner-cell-text(hasUnreadMessages-true) {
   font-weight: bold;
