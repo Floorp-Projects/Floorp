@@ -39,6 +39,7 @@ class   nsIDeviceContext;
 struct  nsRect;
 struct  nsFont;
 class   nsIMenuBar;
+class   nsIEventListener;
 /**
  * Callback function that processes events.
  * The argument is actually a subtype (subclass) of nsEvent which carries
@@ -61,6 +62,7 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_REGION		5
 #define NS_NATIVE_OFFSETX		6
 #define NS_NATIVE_OFFSETY		7
+#define NS_NATIVE_PLUGIN_PORT	8
 
 // {18032AD5-B265-11d1-AA2A-000000000000}
 #define NS_IWIDGET_IID \
@@ -445,6 +447,15 @@ class nsIWidget : public nsISupports {
      */
 
     NS_IMETHOD AddMouseListener(nsIMouseListener * aListener) = 0;
+
+    /**
+     * Adds an event listener to this widget
+     * Any existing event listener is replaced
+     *
+     * @param aListener event listener to add to this widget.
+     */
+
+    NS_IMETHOD AddEventListener(nsIEventListener * aListener) = 0;
 
     /**
      * Adds a menu listener to this widget
