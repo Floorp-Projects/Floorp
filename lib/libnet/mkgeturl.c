@@ -61,7 +61,6 @@
 #endif
 
 #include "mktcp.h"  /* for NET_InGetHostByName semaphore */
-#include "cert.h"
 #ifdef MOZILLA_CLIENT
 #include "secnav.h"
 #ifdef MOCHA
@@ -76,7 +75,6 @@
 #include "il_strm.h"             /* Image Lib public API. */
 
 #include "libi18n.h"
-#include "xp_sec.h"
 #include "mkmocha.h"
 #include "htmldlgs.h"
 
@@ -4215,16 +4213,8 @@ NET_FreeURLStruct (URL_Struct * URL_s)
 	FREEIF(URL_s->wysiwyg_url);
 	FREEIF(URL_s->error_msg);
 
-    FREEIF(URL_s->key_cipher);
-    FREEIF(URL_s->key_issuer);
-    FREEIF(URL_s->key_subject);
-	if ( URL_s->certificate ) {
-		CERT_DestroyCertificate(URL_s->certificate);
-	}
-	
-	if ( URL_s->redirecting_cert ) {
-		CERT_DestroyCertificate(URL_s->redirecting_cert);
-	}
+    FREEIF(URL_s->sec_info);
+    FREEIF(URL_s->redirect_sec_info);
 
     /* Free all memory associated with header information */
     net_FreeURLAllHeaders(URL_s);
@@ -4460,10 +4450,8 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 	  }
 
 	if(URL_s->cache_file || URL_s->memory_copy)
-		sec_msg = XP_PrettySecurityStatus(URL_s->security_on, 
-										  URL_s->key_cipher, 
-										  URL_s->key_size, 
-										  URL_s->key_secret_size);
+		sec_msg = SECNAV_PrettySecurityStatus(URL_s->security_on, 
+                                              URL_s->sec_info);
 	else
 		sec_msg = XP_STRDUP(XP_GetString(XP_STATUS_UNKNOWN));
 
@@ -4473,20 +4461,10 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 		FREE(sec_msg);
 	  }
 
-	if(URL_s->certificate)
-		sec_msg = CERT_HTMLCertInfo(URL_s->certificate, PR_TRUE,
-					    PR_TRUE);
-	else
-		sec_msg = 0;
+    sec_msg = SECNAV_SSLSocketCertString(URL_s->sec_info);
 
 	if(sec_msg)
 	  {
-		char *extstring;
-		extstring = SECNAV_MakeCertButtonString(URL_s->certificate);
-		if ( extstring ) {
-			StrAllocCat(sec_msg, extstring);
-			XP_FREE(extstring);
-		}
 		ADD_CELL(XP_GetString(XP_CERTIFICATE_), sec_msg);
 		FREE(sec_msg);
 	  }
