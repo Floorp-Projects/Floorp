@@ -1,30 +1,28 @@
 dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
-dnl The contents of this file are subject to the Mozilla Public License
-dnl Version 1.0 (the "License"); you may not use this file except in
-dnl compliance with the License. You may obtain a copy of the License
-dnl at http://www.mozilla.org/MPL/
-dnl 
-dnl Software distributed under the License is distributed on an "AS IS"
-dnl basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See 
-dnl the License for the specific language governing rights and 
-dnl limitations under the License.
-dnl 
+dnl The contents of this file are subject to the Mozilla Public
+dnl License Version 1.1 (the "License"); you may not use this file
+dnl except in compliance with the License. You may obtain a copy of
+dnl the License at http://www.mozilla.org/MPL/
+dnl
+dnl Software distributed under the License is distributed on an "AS
+dnl IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+dnl implied. See the License for the specific language governing
+dnl rights and limitations under the License.
+dnl
 dnl The Original Code is this file as it was released upon August 6, 1998.
 dnl
-dnl The Initial Developer of this code under the MPL is Christopher
-dnl Seawood, <cls@seawood.org>.  Portions created by Christopher Seawood 
-dnl are Copyright (C) 1998 Christopher Seawood.  All Rights Reserved.
+dnl The Initial Developer of the Original Code is Christopher
+dnl Seawood. Portions created by Christopher Seawood are
+dnl Copyright (C) 1998 Christopher Seawood. All
+dnl Rights Reserved.
 dnl
-dnl Contributors:
-dnl Jamie Zawinski <jwz@jwz.org>
-dnl    gettimeofday args check
-dnl
-dnl Christopher Blizzard <blizzard@appliedtheory.com>
-dnl    gnomefe update & enable-pthreads
-dnl
-dnl Ramiro Estrugo <ramiro@netscape.com>
-dnl    X11 makedepend support
-dnl    Insure support.
+dnl Contributor(s): Jamie Zawinski <jwz@jwz.org>
+dnl                 gettimeofday args check
+dnl               Christopher Blizzard <blizzard@appliedtheory.com>
+dnl                 gnomefe update & enable-pthreads
+dnl               Ramiro Estrugo <ramiro@netscape.com>
+dnl                 X11 makedepend support
+dnl                 Insure support.
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
