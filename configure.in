@@ -951,13 +951,6 @@ dnl the qsort routine under solaris is faulty
        AR_FLAGS='-o $@'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
-       case $OS_TEST in
-         sun4u)
-           NS_USE_NATIVE=1
-           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
-           AC_DEFINE(ULTRA_SPARC)
-           ;;
-       esac
     else
        ASFLAGS="$ASFLAGS -fPIC"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
@@ -968,13 +961,6 @@ dnl the qsort routine under solaris is faulty
        if test "$OS_RELEASE" = "5.3"; then
 	  AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
        fi
-       case $OS_TEST in
-         sun4u)
-            CFLAGS="${CFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0"
-            CXXFLAGS="${CXXFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC"
-            AC_DEFINE(ULTRA_SPARC)
-            ;;
-       esac
     fi
     if test "$OS_RELEASE" = "5.5.1"; then
        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
@@ -3380,12 +3366,33 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
     [ _MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
 )
 
-
 dnl Disable jar packaging
 MOZ_ARG_DISABLE_BOOL(jar-packaging,
 [  --disable-jar-packaging Disable Jar packaging ],
     MOZ_DISABLE_JAR_PACKAGING=1
 )
+
+dnl Enable Ultrasparc specific compiler options
+MOZ_ARG_ENABLE_BOOL(ultrasparc,
+[  --enable-ultrasparc     Enable UltraSPARC specific compiler options ],
+    [case "$target_os" in
+    solaris*)   
+        case $OS_TEST in
+        sun4u)
+            if test -z "$USE_GCC"; then
+                NS_USE_NATIVE=1
+                ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
+                AC_DEFINE(ULTRA_SPARC)
+            else
+                CFLAGS="${CFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0"
+                CXXFLAGS="${CXXFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC"
+                AC_DEFINE(ULTRA_SPARC)
+            fi
+            ;;
+        esac
+        ;;
+    esac
+])
 
 dnl ========================================================
 dnl =
