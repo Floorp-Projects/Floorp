@@ -621,62 +621,84 @@ NS_IMETHODIMP imgContainer::FrameChanged(imgIContainer *aContainer, nsISupports 
 // Fill aFrame with color. Does not change the mask.
 void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
 {
-  if(!aFrame) return;
+  if (!aFrame) return;
 
   aFrame->LockImageData();
-
-  PRUint32 bpr;
-  aFrame->GetImageBytesPerRow(&bpr);
 
   nscoord width;
   nscoord height;
   aFrame->GetWidth(&width);
   aFrame->GetHeight(&height);
 
-  PRUint8* imageData;
-  PRUint32 imageDataLength;
-  aFrame->GetImageData(&imageData, &imageDataLength);
-
-  PRUint8* foo = (PRUint8*) nsMemory::Alloc(imageDataLength);
-  gfx_color backgroundColor = color;
-
   gfx_format format;
   aFrame->GetFormat(&format);
 
-    switch (format) {
+  switch (format) {
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
-        PRUint32 iwidth = width;
-        PRUint32 iheight = height;
-        
-        for(PRUint32 y=0; y<iheight; y++) {
-          PRUint8* rgbRowIndex = foo;
-          for (PRUint32 x=0; x<iwidth; x++) {
+        const PRUint8 colorBlue = (color >> 16) & 0xFF;
+        const PRUint8 colorGreen = (color >> 8) & 0xFF;
+        const PRUint8 colorRed = color & 0xFF;
+
+        // Copy in the color the fast way if we can
+        // Mac uses 4 bytes per color, with a 0x00 filler
+        // so we can only optimize Macs if all colors are 0
+#if defined(XP_MAC) || defined(XP_MACOSX)
+        if (colorRed == 0 && colorBlue == 0 && colorGreen == 0) {
+#else
+        if (colorRed == colorBlue && colorBlue == colorGreen) {
+#endif
+          PRUint8* aData;
+          PRUint32 aDataLength;
+
+          aFrame->GetImageData(&aData, &aDataLength);
+          memset(aData, colorRed, aDataLength);
+        }
+        else
+        {
+          PRUint32 bpr;
+          aFrame->GetImageBytesPerRow(&bpr);
+
+          PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(bpr));
+          if (!tmpRow) {
+            aFrame->UnlockImageData();
+            return;
+          }
+
+          // Set up one row with color
+          PRUint8* rgbRowIndex = tmpRow;
+          for (nscoord x=0; x<width; x++) {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_PHOTON)
-            *rgbRowIndex++ = (backgroundColor & 0x00FF0000) >> 16;
-            *rgbRowIndex++ = (backgroundColor & 0x0000FF00) >> 8;
-            *rgbRowIndex++ = backgroundColor & 0x000000FF;
+            *rgbRowIndex++ = colorBlue;
+            *rgbRowIndex++ = colorGreen;
+            *rgbRowIndex++ = colorRed;
 #else
 #if defined(XP_MAC) || defined(XP_MACOSX)
             *rgbRowIndex++ = 0;
 #endif
-            *rgbRowIndex++ = backgroundColor & 0x000000FF;
-            *rgbRowIndex++ = (backgroundColor & 0x0000FF00) >> 8;
-            *rgbRowIndex++ = (backgroundColor & 0x00FF0000) >> 16;
+            *rgbRowIndex++ = colorRed;
+            *rgbRowIndex++ = colorGreen;
+            *rgbRowIndex++ = colorBlue;
 #endif
           }
-          aFrame->SetImageData(foo, bpr, y*bpr);
+
+          // Copy row tmpRow to every row in frame
+          for (nscoord y=0; y<height; y++) {
+            aFrame->SetImageData(tmpRow, bpr, y*bpr);
+          }
+
+          nsMemory::Free(tmpRow);
         }
       }
 
       break;
+
     default:
       break;
 
-    }
+  }
   aFrame->UnlockImageData();
-  nsMemory::Free(foo);
 }
 
 //******************************************************************************
