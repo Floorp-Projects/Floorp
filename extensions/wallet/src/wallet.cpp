@@ -1899,6 +1899,7 @@ wallet_GetSelectIndex(
           valueLC.ToLowerCase();
           optionValue.ToLowerCase();
           optionText.ToLowerCase();
+          optionText.Trim(" \n\t\r");
           if (valueLC==optionValue || valueLC==optionText) {
             index = optionX;
             return 0;
@@ -3656,6 +3657,7 @@ schema.SetLength(0);
                 if (valueOK && wallet_Capture(doc, field, optionValue, schema)) {
                   captured = PR_TRUE;
                 }
+                optionText.Trim(" \n\t\r");
                 if (textOK && wallet_Capture(doc, field, optionText, schema)) {
                   captured = PR_TRUE;
                 }
