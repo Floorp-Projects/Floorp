@@ -434,7 +434,12 @@ nsImapProtocol::nsImapProtocol() :
 
   // where should we do this? Perhaps in the factory object?
   if (!IMAP)
+  {
     IMAP = PR_NewLogModule("IMAP");
+#ifdef DEBUG_bienvenu
+    PR_SetLogBuffering(50000);
+#endif
+  }
 }
 
 nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
@@ -2115,6 +2120,10 @@ void nsImapProtocol::ProcessSelectedStateURL()
           FetchMessage(messageIds, 
                        kHeadersRFC822andUid,
                        bMessageIdsAreUids);
+          // if we explicitly ask for headers, as opposed to getting them as a result
+          // of selecting the folder, or biff, send the headerFetchCompleted notification
+          // to flush out the header cache.
+          HeaderFetchCompleted(); 
         }
         break;
       case nsIImapUrl::nsImapSearch:
