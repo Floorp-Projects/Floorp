@@ -463,21 +463,30 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
                                           nsIStyleContext* aParentContext, nsISupportsArray* aRules)
 {
-  // check for cached ruleSet to context or create
-  ContextKey tempKey(aParentContext, aRules);
-  nsIStyleContext*  result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
-  if (nsnull == result) {
-    if (NS_OK == NS_NewStyleContext(&result, aRules, aPresContext, aParentFrame)) {
-      tempKey.SetContext(result);
-      mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
-      NS_ADDREF(result);  // add ref for the caller
-//fprintf(stdout, "+");
-    }
+  nsIStyleContext* result;
+
+  if ((nsnull != aParentContext) && (0 == aRules->Count()) && 
+      (0 == aParentContext->GetStyleRuleCount())) {
+    // this and parent are empty
+    result = aParentContext;
+//fprintf(stdout, ".");
   }
   else {
-    NS_ADDREF(result);
+    // check for cached ruleSet to context or create
+    ContextKey tempKey(aParentContext, aRules);
+    result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
+    if (nsnull == result) {
+      if (NS_OK == NS_NewStyleContext(&result, aRules, aPresContext, aParentFrame)) {
+        tempKey.SetContext(result);
+        mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
+//fprintf(stdout, "+");
+      }
+    }
+    else {
 //fprintf(stdout, "-");
+    }
   }
+  NS_ADDREF(result);  // add ref for the caller
   return result;
 }
 
