@@ -1,4 +1,3 @@
-@import url(chrome://global/skin/global.css);
 @import url(chrome://messenger/skin/messenger.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
