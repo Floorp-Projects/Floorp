@@ -458,14 +458,14 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
     nsIAtom* nameAtom = NS_NewAtom(name);
     PRInt32 nameSpaceID = (nsnull == nameSpacePrefix) ? kNameSpaceID_None : GetNameSpaceId(nameSpacePrefix);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // XXX is this correct? or is it a bad document?
+    }
     if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
       NS_RELEASE(nameAtom);
       name.Insert("xmlns:", 0);
       nameAtom = NS_NewAtom(name);
-      nameSpaceID = kNameSpaceID_HTML;
-    }
-    else if ((kNameSpaceID_None == nameSpaceID) && aIsHTML) {
-      nameSpaceID = kNameSpaceID_HTML;
+      nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
     }
 
     nsAutoString value;
