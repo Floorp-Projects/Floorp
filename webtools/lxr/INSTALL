@@ -1,3 +1,8 @@
+This INSTALL file is customized for the version of lxr used by 
+mozilla.org. The original version can be found at
+   http://lxr.linux.no/
+
+
 In order to install LXR, you will need:
 
  - Perl version 5 or later.
@@ -25,33 +30,42 @@ featured webservers should do as well.
 
 To install LXR itself:
 
- - Set the variables PERLBIN and INSTALLPREFIX in the makefile to
-   reflect where the Perl 5 binary is located on your system and where
-   you want the LXR files to be installed.
+ - Retrieve the lxr source via anonymous cvs from mozilla.org's
+   server from mozilla/webtools/lxr. Find out about anonymous
+   cvs at mozilla.org at http://www.mozilla.org/cvs.html
 
- - Do "make install".
+ - Edit lxr.conf to fit your source code installations and needs.
 
- - Edit $(INSTALLPREFIX)/http/lxr.conf to fit your source code
-   installations and needs.
+ - Make sure the files in http can be reached via your webserver.  
+   Make sure your webserver executes the files search, source, ident 
+   and diff as cgi-scripts.  With the Apache webserver this can be 
+   accomplished by making .htaccess contain the following lines:
 
- - Make sure the files in $(INSTALLPREFIX)/http can be reached via
-   your webserver.  Make sure your webserver executes the files
-   search, source, ident and diff as cgi-scripts.  With the Apache
-   webserver this can be accomplished by making 
-   $(INSTALLPREFIX)/http/.htaccess contain the following lines:
+       <Files ~ (search|source|ident|diff)$>
+       SetHandler cgi-script
+       </Files>
 
-   <Files ~ (search|source|ident|diff)$>
-   SetHandler cgi-script
-   </Files>
+   You may also need to edit these Apache config files appropriately
+        srm.conf
+            AddHandler cgi-script .cgi
+
+        access.conf
+            Options <whatever> # setting to all will work
+            AllowOverride Options
+
+   Its also recommended to set up a robots.txt file on your server to
+   discourage robots from traversing your source tree and performing
+   an identifier lookup for each identifier in your code. This will
+   take up a lot of cpu time and probably several gigabytes of files.
 
  - Generate the identifier database.  Go to the directory you
-   configured as "dbdir" and do "$(INSTALLPREFIX)/bin/genxref foo",
-   where foo is the subdirectory containing the actual source code.
+   configured as "dbdir" in lxr.conf and do "genxref foo", where foo 
+   is the subdirectory containing the actual source code.
 
  - (Optional) Generate the Glimpse database.  Go to the directory you
-   configured as "dbdir" and do "glimpseindex -H . foo", where foo is
-   the same as above.  You might want to add other options to the
-   commandline (e.g. "-n"), see the Glimpse documentation for details.
+   configured as "dbdir" in lxr.conf and do "glimpseindex -H . foo", 
+   where foo is the same as above.  You might want to add other options 
+   to the commandline (e.g. "-n"), see the Glimpse documentation for details.
 
 
 If it doesn't work:
@@ -72,19 +86,38 @@ The lxr.conf file:
 
  LXR recognizes the following options in the configuration file. 
 
+ baseurl
+  The url for the root directory of your source. 
+
  htmlhead
   The header of all html files. This is a template that
   contains mainly html code but it can also contain some special
   directives, these are documented below.
 
+ sourcehead
+  A special version of htmlhead used for source code listings.
+
+ sourcedirhead
+  A special version of htmlhead used for directory listings.
+
  htmltail
   Template for bottom of pages.
 
  htmldir
-  Template for the directory listing.
+  Template file for the directory listings.
 
  sourceroot 
-  The root of the source that you want to index.
+  The root directory of the source to be indexed. If you're indexing
+  several version you could include a variable in the path.
+      sourceroot: /usr/local/lxr/source/$v/linux/
+
+ virtroot
+  This is prepended to the path name when forming the url in links.
+
+ bonsaihome
+  If bonsai is set up for your code then set this as the url prefix. If not,
+  then remove the bonsai related code in the htmlhead file and ignore this.
+  More info on bonsai can be found at http://www.mozilla.org/bonsai.html
 
  sourcerootname 
   The name of the root (more....)
@@ -103,15 +136,22 @@ The lxr.conf file:
   This defines a variable that can be used in templates and
   the config file. The syntax is 
     variable: <name>, <text>, <values>, <default>
-  <name> is the name of the variable, <text> is a textual description, 
+  <name> is the name of the variable, <text> is a textual description,
   <values> are the possible values of the variable.
-  <default> is the default value of the variable. 
+  <default> is the default value of the variable.
 
   The <values> field can either be a list starting with a "(" and
   ending with a ")", with elements separated with ",", or it can be 
   [ <filename> ]. In this case the values are read from a file with
   one value on each line.
-  
+ 
+  EXAMPLE:
+  # Define typed variable "v", read valueset from file.
+  variable: v, Version, [/local/lxr/source/versions], [/local/lxr/source/defversion]
+
+  # Define typed variable "a".  First value is default.
+  variable: a, Architecture, (i386, alpha, m68k, mips, ppc, sparc, sparc64)
+
  map - This makes it possible to rewrite directories using variables. 
   The linux sourcecode for instance contains several different
   architectures, the include files for each of these are found in the

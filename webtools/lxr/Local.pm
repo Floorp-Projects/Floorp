@@ -1,22 +1,9 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.2 1998/09/09 05:14:57 jwz%mozilla.org Exp $
+# $Id: Local.pm,v 1.3 1998/11/11 17:33:24 leaf%mozilla.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ######################################################################
 # This package is for placing subroutines that are likely to need
 # to be customized for each installation. In particular, the file
@@ -232,6 +219,27 @@ sub descexpand {
     my $linecount=0;
     local $desc= "";
 
+    if (open(DESC, $Path->{'real'}. $filename."/README.html")) {
+        undef $/;
+        $desc = <DESC>;
+        $/ = "\n";
+        close(DESC);
+
+        # Make sure there is no <span> embedded in our string. If so 
+        # then we've matched against the wrong /span and this string is junk
+        # so we'll throw it away and refrain from writing a descrioption.
+        # Disallowing embedded spans theoretically removes some flexibility
+        # but this seems to be a little used tag and doing this makes lxr 
+        # a lot faster.
+        if ($desc =~ /<SPAN CLASS=LXRSHORTDESC>(.*?)<\/SPAN>/is) {
+            $short = $1;
+            if (!($short =~ /\<span/is)) {
+                return ($short);
+            }
+        }
+    }
+
+    $desc = ""; 
     if (open(FILE, $Path->{'real'}. $filename."README")) {
 	$path = $Path->{'virt'}.$filename;
 	$path =~ s#/(.+)/#$1#;
@@ -278,7 +286,54 @@ sub descexpand {
 # inventing strict rules which create gobbeldygook when they're broken.
 sub dirdesc {
     my ($path) = @_;
-    my $string; 
+
+    if (-f $Path->{'real'}."/README") {
+	    descreadme($path);
+    } elsif (-f $Path->{'real'}."/README.html") {
+	    descreadmehtml($path);
+    }
+}
+
+
+sub descreadmehtml {
+    my ($path) = @_;
+
+    my $string = ""; 
+
+    if (!(open(DESC, $Path->{'real'}."/README.html"))) {
+	return;
+        }
+    undef $/;
+    $string = <DESC>;
+    $/ = "\n";
+    close(DESC);
+
+    # if the README is 0 length then give up
+    if (!$string) {
+        return;
+    }
+
+    # check if there's a short desc nested inside the long desc. If not, do
+    # a non-greedy search for a long desc. assume there are no other stray
+    # spans within the description.
+    if ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?<SPAN CLASS=LXRSHORTDESC>.*?<\/SPAN>.*?)<\/SPAN>/is) {
+        $long = $1;
+        if (!($long =~ /<span.*?\<span/is)) {
+            print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
+        }
+    } elsif ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?)<\/SPAN>/is) {
+        $long = $1;
+        if (!($long =~ /\<span/is)) {
+            print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
+        }
+    }
+}
+
+sub descreadme {
+    my ($path) = @_;
+
+    my $string = ""; 
+#    $string =~ s#(</?([^>^\s]+[^>]*)>.*$)#($2~/B|A|IMG|FONT|BR|EM|I|TT/i)?$1:""#sg;
     my $n; 
     my $count;
     my $temp;
@@ -287,20 +342,13 @@ sub dirdesc {
     my $minlines = 5;   # Too small. Go back and add another paragraph.
     my $chopto = 10;    # Truncate long READMEs to this length
 
-    if (-f $Path->{'real'}."/README") {
-            if (!(open(DESC, $Path->{'real'}."/README"))) {
-		return;
-            }
-
-        # dme: mozillaism: need to name the readme in the root directory 
-	# something else since there is already a directory by that name.
-        } elsif (!(open(DESC, $Path->{'real'}."/README.moz"))) {
-	    return;
+    if (!(open(DESC, $Path->{'real'}."/README"))) {
+	return;
         }
 
-    while(<DESC>){
-	$string = $string . $_;
-	}
+    undef $/;
+    $string = <DESC>;
+    $/ = "\n";
     close(DESC);
 
     # if the README is 0 length then give up
