@@ -1008,6 +1008,7 @@ public:
 
     bool                isMethodClosure;        // if true, use the thisObject from below
     js2val              thisObject;
+	const String *sourceText;
 
     virtual void markChildren();
     virtual ~FunctionInstance();

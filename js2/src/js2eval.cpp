@@ -884,7 +884,7 @@ namespace MetaData {
 
     bool JS2Class::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
     {
-        InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, WriteAccess);
+        InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, ReadWriteAccess);
         if (mBase) {
             *result = false;
             return true;
@@ -892,9 +892,11 @@ namespace MetaData {
         if (this != meta->objectType(base))
             return false;
 
-        Member *m = meta->findCommonMember(&base, multiname, WriteAccess, false);
-        if (m == NULL)
-            return false;
+        Member *m = meta->findCommonMember(&base, multiname, ReadWriteAccess, false);
+        if (m == NULL) {
+            *result = true;
+            return true;
+		}
         switch (m->memberKind) {
         case Member::ForbiddenMember:
             meta->reportError(Exception::propertyAccessError, "It is forbidden", meta->engine->errorPos());

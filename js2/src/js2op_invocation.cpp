@@ -306,7 +306,6 @@ doCall:
         {
             b = pop();
             a = pop();      // doing 'a instanceof b'
-
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::typeError, "Object expected for instanceof", errorPos());
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
@@ -355,33 +354,24 @@ doInstanceOfLoop:
                         push(JS2VAL_FALSE);
                     else {
                         aObj = JS2VAL_TO_OBJECT(a);
-                        if (aObj->kind != SimpleInstanceKind)
+                        if (aObj->kind == SimpleInstanceKind) 
+	                        a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
+						else
+                        if (aObj->kind == PackageKind) 
+	                        a_protoVal = checked_cast<Package *>(aObj)->super;
+						else
+						if (aObj->kind == ClassKind)
+							a_protoVal = checked_cast<JS2Class *>(aObj)->prototype;
+						else
                             meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
-                        a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
                         b_protoVal = checked_cast<JS2Class *>(obj)->prototype;
 						goto doInstanceOfLoop;
-/*
-                        bool result = false;
-                        while (!JS2VAL_IS_NULL(a_protoVal) && !JS2VAL_IS_UNDEFINED(a_protoVal)) {
-                            if (b_protoVal == a_protoVal) {
-                                result = true;
-                                break;
-                            }
-                            if (!JS2VAL_IS_OBJECT(a_protoVal))
-                                meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
-                            aObj = JS2VAL_TO_OBJECT(a_protoVal);
-                            if (aObj->kind != SimpleInstanceKind)
-                                meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
-                            a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
-                        }
-                        push(BOOLEAN_TO_JS2VAL(result));
-*/
+
                     }
                 }
                 else
                     meta->reportError(Exception::typeError, "Function or Class expected in instanceOf", errorPos());
             }
-
         }
         break;
 

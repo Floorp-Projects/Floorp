@@ -395,6 +395,20 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                                     printFormat(stdOut, "function = 0x%08X\n", im->fInst);
                                 }
                                 break;
+							case Member::InstanceGetterMember:
+								{
+									InstanceGetter *g = checked_cast<InstanceGetter *>(ns.second->content);
+									stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
+									stdOut << " get" << ":" << *g->type->name << "\n";
+								}
+								break;
+							case Member::InstanceSetterMember:
+								{
+									InstanceSetter *s = checked_cast<InstanceSetter *>(ns.second->content);
+									stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
+									stdOut << " set" << ":" << *s->type->name << "\n";
+								}
+								break;
                             }
                         }
                     }

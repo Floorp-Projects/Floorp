@@ -193,6 +193,11 @@ namespace MetaData {
             }
             break;
         }
+		StringFormatter sFmt;
+		PrettyPrinter pp(sFmt);
+		fnDef->print(pp, NULL, true);
+        pp.end();
+		fnInst->sourceText = engine->allocStringPtr(&sFmt.getString());
     }
 
     void JS2Metadata::validateConstructor(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, size_t pos)
@@ -3844,9 +3849,15 @@ static const uint8 urlCharType[256] =
             return GlobalObject_toString(meta, thisValue, NULL, 0);
         }
         else {
-            JS2Class *type = (checked_cast<SimpleInstance *>(obj))->type;
-            String s = "[object " + *type->name + "]";
-            return STRING_TO_JS2VAL(meta->engine->allocString(s));
+			if (obj->kind == ClassKind && meta->cxt.E3compatibility) {
+				String s = widenCString("[object Function]");
+				return STRING_TO_JS2VAL(meta->engine->allocString(s));
+			}
+			else {
+				JS2Class *type = (checked_cast<SimpleInstance *>(obj))->type;
+				String s = "[object " + *type->name + "]";
+				return STRING_TO_JS2VAL(meta->engine->allocString(s));
+			}
         }
     }
     
@@ -4023,8 +4034,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         createDynamicProperty(glob, engine->undefined_StringAtom, JS2VAL_UNDEFINED, ReadAccess, true, false);
         createDynamicProperty(glob, &world.identifiers["NaN"], engine->nanValue, ReadAccess, true, false);
         createDynamicProperty(glob, &world.identifiers["Infinity"], engine->posInfValue, ReadAccess, true, false);
-        // XXX add 'version()' 
-//        createDynamicProperty(glob, &world.identifiers["version"], INT_TO_JS2VAL(0), ReadAccess, true, false);
 
 
 /*** ECMA 3  Object Class ***/
@@ -4041,6 +4050,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             v = new Variable(objectClass, INT_TO_JS2VAL(1), true);
             defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         env->removeTopFrame();
+
+		glob->super = objectClass->prototype;
 
 /*** ECMA 3  Function Class ***/
 // Need this initialized early, as subsequent FunctionInstances need the Function.prototype value
@@ -4078,7 +4089,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         defineInstanceMember(objectClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, s, 0);
 
 
-// Adding 'toString' to the Object.prototype XXX Or make this a static class member?
+// Adding 'toString' etc to the Object.prototype XXX Or make this a static class member?
         fInst = createFunctionInstance(env, true, true, Object_toString, 0, NULL);
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         // and 'valueOf'
@@ -4086,8 +4097,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->valueOf_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         // and 'constructor'
         fInst = createFunctionInstance(env, true, true, Object_Constructor, 0, NULL);
-        // XXX 'this' == JS2VAL_INACCESSIBLE for above???
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
+		// and various property/enumerable functions
+        fInst = createFunctionInstance(env, true, true, Object_hasOwnProperty, 0, NULL);
+        createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["hasOwnProperty"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
+        fInst = createFunctionInstance(env, true, true, Object_isPropertyOf, 0, NULL);
+        createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["isPropertyOf"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
+        fInst = createFunctionInstance(env, true, true, Object_propertyIsEnumerble, 0, NULL);
+        createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["propertyIsEnumerable"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
 
 
 /*** ECMA 4  Integer Class ***/
@@ -4746,8 +4763,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // Adding "prototype" & "length", etc as static members of the class - not dynamic properties; XXX
         env->addFrame(builtinClass);
         {
-            Variable *v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
-            defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            Variable *v = new Variable(integerClass, INT_TO_JS2VAL(1), true);
+            defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadAccess, v, 0, false);
             
             pf = staticFunctions;
             if (pf) {
@@ -4978,10 +4995,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         : SimpleInstance(meta, parent, type) 
     {
         length = 0;
-//        JS2Object *result = this;
-//        DEFINE_ROOTKEEPER(rk1, result);
-
-//        meta->createDynamicProperty(this, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadWriteAccess, true, false);
     }
 
  /************************************************************************************
@@ -4991,7 +5004,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     FunctionInstance::FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type)
-     : SimpleInstance(meta, parent, type), isMethodClosure(false), fWrap(NULL), thisObject(JS2VAL_VOID) 
+     : SimpleInstance(meta, parent, type), isMethodClosure(false), fWrap(NULL), thisObject(JS2VAL_VOID), sourceText(NULL)
     {
         // Add prototype property
         JS2Object *result = this;
@@ -5016,6 +5029,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 fWrap->bCon->mark();
         }
         GCMARKVALUE(thisObject);
+		if (sourceText) JS2Object::mark(sourceText);
     }
 
     FunctionInstance::~FunctionInstance()

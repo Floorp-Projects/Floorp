@@ -2038,7 +2038,11 @@ JS::StmtNode *JS::Parser::parseProgram()
 // Parser Utilities
 //
 
+#ifdef DEBUG
 const bool debugExprNodePrint = true;   // Print extra parentheses around subexpressions?
+#else
+const bool debugExprNodePrint = false;   // Print extra parentheses around subexpressions?
+#endif
 const int32 basicIndent = 4;            // Size of one level of statement indentation
 const int32 caseIndent = basicIndent/2; // Indentation before a case or default statement
 const int32 varIndent = 2;              // Indentation of var or const statement bindings
@@ -2473,7 +2477,10 @@ void JS::StmtNode::printBlockStatements(PrettyPrinter &f, const StmtNode *statem
                     statements->print(f, false);
                 } else {
                     f.linearBreak(nSpaces, loose);
-                    statements->print(f, !statements->next);
+					// XXX I overrode the 'nosemi' flag in order to
+					// get E3 regression tests to pass. Maybe use an E3
+					// compatibility flag instead?
+                    statements->print(f, false/*!statements->next*/);
                 }
                 statements = statements->next;
                 nSpaces = 1;

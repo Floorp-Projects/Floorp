@@ -121,8 +121,11 @@ namespace MetaData {
                 || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
                 || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
             meta->reportError(Exception::typeError, "Function.toString called on something other than a function thing", meta->engine->errorPos());
-//        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
-        return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
+        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
+		if (fnInst->sourceText)
+			return STRING_TO_JS2VAL(fnInst->sourceText);
+		else
+			return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
     }
 
     static js2val Function_call(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
