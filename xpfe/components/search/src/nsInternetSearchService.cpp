@@ -1804,11 +1804,11 @@ InternetSearchDataSource::RememberLastSearchText(const PRUnichar *escapedSearchS
 		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
 			getter_AddRefs(textNode))) && (rv != NS_RDF_NO_VALUE))
 		{
-			Change(kNC_LastSearchRoot, kNC_LastText, textNode, textLiteral);
+			mInner->Change(kNC_LastSearchRoot, kNC_LastText, textNode, textLiteral);
 		}
 		else
 		{
-			Assert(kNC_LastSearchRoot, kNC_LastText, textLiteral, PR_TRUE);
+			mInner->Assert(kNC_LastSearchRoot, kNC_LastText, textLiteral, PR_TRUE);
 		}
 	}
 	return(rv);

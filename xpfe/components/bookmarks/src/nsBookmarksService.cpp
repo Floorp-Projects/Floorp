@@ -2683,11 +2683,38 @@ nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
 	*isBookmarkedFlag = PR_FALSE;
 
 	nsresult			rv;
+	PRBool				flag = PR_FALSE;
 	nsCOMPtr<nsIRDFResource>	bookmark;
+
+	// check if it has the proper type
 	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark))))
 	{
 		rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
-			PR_TRUE, isBookmarkedFlag);
+			PR_TRUE, &flag);
+	}
+	if (flag == PR_FALSE)	return(NS_OK);
+
+	// make sure it is referred to by an ordinal (i.e. is contained in a rdf seq)
+	nsCOMPtr<nsISimpleEnumerator>	enumerator;
+	if (NS_FAILED(rv = mInner->ArcLabelsIn(bookmark, getter_AddRefs(enumerator))))
+		return(rv);
+		
+	PRBool	more = PR_TRUE;
+	while(NS_SUCCEEDED(rv = enumerator->HasMoreElements(&more))
+		&& (more == PR_TRUE))
+	{
+		nsCOMPtr<nsISupports>		isupports;
+		if (NS_FAILED(rv = enumerator->GetNext(getter_AddRefs(isupports))))
+			break;
+		nsCOMPtr<nsIRDFResource>	property = do_QueryInterface(isupports);
+		if (!property)	continue;
+
+		if (NS_FAILED(rv = gRDFC->IsOrdinalProperty(property, &flag)))	continue;
+		if (flag == PR_TRUE)
+		{
+			*isBookmarkedFlag = PR_TRUE;
+			break;
+		}
 	}
 	return(rv);
 }
