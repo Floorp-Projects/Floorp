@@ -1098,7 +1098,7 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
   }
 
-  result = mSelection->Init((nsIFocusTracker *) this);
+  result = mSelection->Init((nsIFocusTracker *) this, nsnull);
   if (!NS_SUCCEEDED(result))
     return result;
   // Important: this has to happen after the selection has been set up
