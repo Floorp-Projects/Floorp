@@ -928,8 +928,7 @@ select:focus, select[size="1"]:focus {
 }
 
 select[disabled] {
-  background-color: rgb(204, 204, 204);
-  border: 2px inset rgb(153, 153, 153);
+  color: rgb(132, 132, 132);
 }
 
 /* combobox button */
@@ -953,7 +952,7 @@ select > input[type="button"]:active {
 }
 
 select[disabled] > input[type="button"] {
-  border: solid 1px rgb(204, 204, 204);
+  border: solid 2px rgb(153, 153, 153);
 }
 
 
