@@ -828,5 +828,8 @@ verification_services=OCSP Settings
 crl_dialog_text=Delete CRL
 select_crl_text=Select which CRL(s) you want to delete:
 
+root_certificates=Root Certificates
+
+
 
 
