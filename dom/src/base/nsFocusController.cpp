@@ -45,7 +45,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocument.h"

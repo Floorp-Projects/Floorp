@@ -83,13 +83,14 @@ enum EventArrayType {
   eEventArrayType_XUL = 11,
   eEventArrayType_Scroll = 12,
   eEventArrayType_Mutation = 13,
+  eEventArrayType_DOMUI = 14,
   eEventArrayType_Hash,
   eEventArrayType_None
 };
 
 //Keep this in line with event array types, not counting
 //types HASH and NONE
-#define EVENT_ARRAY_TYPE_LENGTH 14
+#define EVENT_ARRAY_TYPE_LENGTH eEventArrayType_Hash
 
 /*
  * Event listener manager
@@ -336,5 +337,10 @@ protected:
 #define NS_EVENT_BITS_CONTEXT_NONE  0x00
 #define NS_EVENT_BITS_CONTEXT_MENU  0x01
 
+// nsIDOMUIListener
+#define NS_EVENT_BITS_DOMUI_NONE      0x00
+#define NS_EVENT_BITS_DOMUI_ACTIVATE  0x01
+#define NS_EVENT_BITS_DOMUI_FOCUSIN   0x02
+#define NS_EVENT_BITS_DOMUI_FOCUSOUT  0x04
 
 #endif // nsEventListenerManager_h__

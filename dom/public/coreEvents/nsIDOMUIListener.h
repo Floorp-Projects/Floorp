@@ -14,12 +14,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Christopher Blizzard <blizzard@mozilla.org>
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,57 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef gtkmozembedprivate_h
-#define gtkmozembedprivate_h
+#ifndef nsIDOMUIListener_h__
+#define nsIDOMUIListener_h__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "nsIDOMEventListener.h"
 
-#include "gtkmozembed.h"
+class nsIDOMEvent;
 
-/* signals */
+/*
+ * UI event listener interface.
+ */
+// {5cb5527a-512f-4163-9393-ca95ceddbc13}
+#define NS_IDOMUILISTENER_IID \
+{ 0x5cb5527a, 0x512f, 0x4163, { 0x93, 0x93, 0xca, 0x95, 0xce, 0xdd, 0xbc, 0x13 } }
 
-enum {
-  LINK_MESSAGE,
-  JS_STATUS,
-  LOCATION,
-  TITLE,
-  PROGRESS,
-  PROGRESS_ALL,
-  NET_STATE,
-  NET_STATE_ALL,
-  NET_START,
-  NET_STOP,
-  NEW_WINDOW,
-  VISIBILITY,
-  DESTROY_BROWSER,
-  OPEN_URI,
-  SIZE_TO,
-  DOM_KEY_DOWN,
-  DOM_KEY_PRESS,
-  DOM_KEY_UP,
-  DOM_MOUSE_DOWN,
-  DOM_MOUSE_UP,
-  DOM_MOUSE_CLICK,
-  DOM_MOUSE_DBL_CLICK,
-  DOM_MOUSE_OVER,
-  DOM_MOUSE_OUT,
-  SECURITY_CHANGE,
-  STATUS_CHANGE,
-  DOM_ACTIVATE,
-  DOM_FOCUS_IN,
-  DOM_FOCUS_OUT,
-  EMBED_LAST_SIGNAL
+class nsIDOMUIListener : public nsIDOMEventListener {
+ public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMUILISTENER_IID)
+
+  NS_IMETHOD Activate(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD FocusIn(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD FocusOut(nsIDOMEvent* aEvent) = 0;
 };
-
-extern guint moz_embed_signals[EMBED_LAST_SIGNAL];
-
-extern void gtk_moz_embed_single_create_window(GtkMozEmbed **aNewEmbed,
-					       guint aChromeFlags);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* gtkmozembedprivate_h */
+#endif // nsIDOMUIListener_h__

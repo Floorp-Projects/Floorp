@@ -39,6 +39,7 @@
 #include <nsIDOMMouseEvent.h>
 
 #include "nsIDOMKeyEvent.h"
+#include "nsIDOMUIEvent.h"
 
 #include "EmbedEventListener.h"
 #include "EmbedPrivate.h"
@@ -59,6 +60,7 @@ NS_INTERFACE_MAP_BEGIN(EmbedEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMUIListener)
 NS_INTERFACE_MAP_END
 
 nsresult
@@ -218,5 +220,50 @@ EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_OUT],
 		  (void *)mouseEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::Activate(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  if (!uiEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[DOM_ACTIVATE],
+                  (void *)uiEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::FocusIn(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  if (!uiEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[DOM_FOCUS_IN],
+                  (void *)uiEvent, &return_val);
+  return return_val;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::FocusOut(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  if (!uiEvent)
+    return NS_OK;
+  // return NS_OK to this function to mark this event as not
+  // consumed...
+  gint return_val = NS_OK;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[DOM_FOCUS_OUT],
+                  (void *)uiEvent, &return_val);
   return return_val;
 }

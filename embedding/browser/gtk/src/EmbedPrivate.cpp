@@ -781,6 +781,13 @@ EmbedPrivate::AttachListeners(void)
     return;
   }
 
+  rv = mEventReceiver->AddEventListenerByIID(eventListener,
+                                             NS_GET_IID(nsIDOMUIListener));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to add UI listener\n");
+    return;
+  }
+
   // ok, all set.
   mListenersAttached = PR_TRUE;
 }
@@ -811,6 +818,12 @@ EmbedPrivate::DetachListeners(void)
     return;
   }
 
+  rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
+						NS_GET_IID(nsIDOMUIListener));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to remove UI listener\n");
+    return;
+  }
 
   mListenersAttached = PR_FALSE;
 }

@@ -121,7 +121,10 @@ public:
     eDOMEvents_nodeinsertedintodocument,
     eDOMEvents_attrmodified,
     eDOMEvents_characterdatamodified,
-    eDOMEvents_popupBlocked
+    eDOMEvents_popupBlocked,
+    eDOMEvents_DOMActivate,
+    eDOMEvents_DOMFocusIn,
+    eDOMEvents_DOMFocusOut
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
@@ -139,48 +142,28 @@ public:
   // nsIDOMUIEvent Interface
   NS_DECL_NSIDOMUIEVENT
 
+  // nsIDOMPopupBlockedEvent interface
   NS_DECL_NSIDOMPOPUPBLOCKEDEVENT
 
-  // nsIDOMMouseEvent Interface and nsIDOMKeyEvent Interface
-  NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
-  NS_IMETHOD    GetScreenY(PRInt32* aScreenY);
-  NS_IMETHOD    GetClientX(PRInt32* aClientX);
-  NS_IMETHOD    GetClientY(PRInt32* aClientY);
-  NS_IMETHOD    GetAltKey(PRBool* aAltKey);
-  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey);
-  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);
-  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);
-  NS_IMETHOD    GetButton(PRUint16* aButton);
-  NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
-  NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
-  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    InitMouseEvent(const nsAString & aTypeArg, 
-                               PRBool aCanBubbleArg, PRBool aCancelableArg, 
-                               nsIDOMAbstractView *aViewArg, PRInt32 aDetailArg, 
-                               PRInt32 aScreenXArg, PRInt32 aDcreenYArg, 
-                               PRInt32 aClientXArg, PRInt32 aClientYArg, 
-                               PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
-                               PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
-                               PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg);
-  NS_IMETHOD    InitKeyEvent(const nsAString& aTypeArg,
-                             PRBool aCanBubbleArg, PRBool aCancelableArg,
-                             nsIDOMAbstractView* aViewArg, 
-                             PRBool aCtrlKeyArg, PRBool aAltKeyArg,
-                             PRBool aShiftKeyArg, PRBool aMetaKeyArg,
-                             PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg);
+  // nsIDOMMouseEvent interface
+  NS_DECL_NSIDOMMOUSEEVENT
+
+  // nsIDOMKeyEvent interface
+  NS_IMETHOD GetCharCode(PRUint32 *aCharCode);
+  NS_IMETHOD GetKeyCode(PRUint32 *aKeyCode);
+  // defined in nsIDOMMouseEvent
+  // NS_IMETHOD GetAltKey(PRBool *aAltKey);
+  // NS_IMETHOD GetCtrlKey(PRBool *aCtrlKey);
+  // NS_IMETHOD GetShiftKey(PRBool *aShiftKey);
+  // NS_IMETHOD GetMetaKey(PRBool *aMetaKey);
+  NS_IMETHOD InitKeyEvent(const nsAString &aTypeTag, PRBool aCanBubbleArg,
+                          PRBool aCancelableArg, nsIDOMAbstractView *aViewArg,
+                          PRBool aCtrlKeyArg, PRBool aAltKeyArg,
+                          PRBool aShiftKeyArg, PRBool aMetaKeyArg,
+                          PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg);
 
   // nsIDOMNSUIEvent interface
-  NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
-  NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
-  NS_IMETHOD    GetPageX(PRInt32* aClientX);
-  NS_IMETHOD    GetPageY(PRInt32* aClientY);
-  NS_IMETHOD    GetWhich(PRUint32* aKeyCode);
-  NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent);
-  NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);
-  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);
-  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);
-  NS_IMETHOD    GetIsChar(PRBool* aIsChar);
-  NS_IMETHOD    GetPreventDefault(PRBool* aReturn);
+  NS_DECL_NSIDOMNSUIEVENT
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();

@@ -97,6 +97,9 @@ struct _GtkMozEmbedClass
 				guint state);
   void (* status_change)       (GtkMozEmbed *embed, gpointer request,
 				gint status, gpointer message);
+  gint (* dom_activate)        (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_focus_in)        (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_focus_out)       (GtkMozEmbed *embed, gpointer dom_event);
 };
 
 GtkType      gtk_moz_embed_get_type         (void);

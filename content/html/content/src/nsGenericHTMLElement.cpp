@@ -1415,27 +1415,41 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
         break;
 
       case NS_MOUSE_LEFT_CLICK:
-      {
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aEvent);
+          if (inputEvent->isControl || inputEvent->isMeta ||
+              inputEvent->isAlt ||inputEvent->isShift) {
+            break;  // let the click go through so we can handle it in JS/XUL
+          }
+
+          // The default action is simply to dispatch DOMActivate
+          nsIPresShell *shell = aPresContext->GetPresShell();
+          if (shell) {
+            nsDOMUIEvent actEvent(NS_DOMUI_ACTIVATE, 1); // single-click
+            nsEventStatus status = nsEventStatus_eIgnore;
+
+            ret = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+            *aEventStatus = status;
+          }
+
+          if (*aEventStatus != nsEventStatus_eConsumeNoDefault)
+            *aEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
+        break;
+
+      case NS_DOMUI_ACTIVATE:
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString target;
           nsCOMPtr<nsIURI> baseURI = GetBaseURI();
           GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
           if (target.IsEmpty()) {
             GetBaseTarget(target);
           }
-          if (inputEvent->isControl || inputEvent->isMeta ||
-              inputEvent->isAlt ||inputEvent->isShift) {
-            break;  // let the click go through so we can handle it in JS/XUL
-          }
 
           ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, hrefURI,
                             target, PR_TRUE, PR_TRUE);
-
-          *aEventStatus = nsEventStatus_eConsumeDoDefault;
         }
-      }
-      break;
+        break;
 
       case NS_KEY_PRESS:
         if (aEvent->eventStructType == NS_KEY_EVENT) {
@@ -1723,7 +1737,10 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
           aName == nsLayoutAtoms::onDOMNodeInsertedIntoDocument || 
           aName == nsLayoutAtoms::onDOMNodeRemovedFromDocument  ||
           aName == nsLayoutAtoms::onDOMNodeInserted             || 
-          aName == nsLayoutAtoms::onDOMNodeRemoved);
+          aName == nsLayoutAtoms::onDOMNodeRemoved              ||
+          aName == nsLayoutAtoms::onDOMActivate                 ||
+          aName == nsLayoutAtoms::onDOMFocusIn                  ||
+          aName == nsLayoutAtoms::onDOMFocusOut);
 }
 
 nsresult

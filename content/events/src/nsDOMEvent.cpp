@@ -74,7 +74,7 @@ static const char* const sEventNames[] = {
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
-  "popupBlocked"
+  "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut"
 }; 
 
 /** event pool used as a simple recycler for objects of this class */
@@ -514,9 +514,6 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
 NS_IMETHODIMP
 nsDOMEvent::GetDetail(PRInt32* aDetail)
 {
-  //detail is valid for more than just mouseevents but we don't
-  //use it for anything else right now
-
   if (!mEvent) {
     *aDetail = 0;
     return NS_OK;
@@ -556,10 +553,12 @@ nsDOMEvent::GetDetail(PRInt32* aDetail)
     }
 
     case NS_MOUSE_SCROLL_EVENT:
-    {
       *aDetail = ((nsMouseScrollEvent*)mEvent)->delta;
       break;
-    }
+
+    case NS_DOMUI_EVENT:
+      *aDetail = ((nsDOMUIEvent*)mEvent)->detail;
+      break;
 
     default:
       *aDetail = 0;
@@ -1237,6 +1236,13 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
     else if (atom == nsLayoutAtoms::onDOMSubtreeModified)
       mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
+  } else if (mEvent->eventStructType == NS_DOMUI_EVENT) {
+    if (atom == nsLayoutAtoms::onDOMActivate)
+      mEvent->message = NS_DOMUI_ACTIVATE;
+    else if (atom == nsLayoutAtoms::onDOMFocusIn)
+      mEvent->message = NS_DOMUI_FOCUSIN;
+    else if (atom == nsLayoutAtoms::onDOMFocusOut)
+      mEvent->message = NS_DOMUI_FOCUSOUT;
   }
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
@@ -1259,6 +1265,16 @@ NS_IMETHODIMP
 nsDOMEvent::InitUIEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
                         nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)
 {
+  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  if (mEvent->eventStructType == NS_DOMUI_EVENT) {
+    nsDOMUIEvent *event = NS_STATIC_CAST(nsDOMUIEvent*, mEvent);
+    event->detail = aDetailArg;
+    return NS_OK;
+  }
+
+  NS_ERROR("event type mismatch");
   return NS_ERROR_FAILURE;
 }
 
@@ -1269,9 +1285,8 @@ nsDOMEvent::InitMouseEvent(const nsAString & aTypeArg, PRBool aCanBubbleArg, PRB
                            PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, 
                            PRBool aMetaKeyArg, PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg)
 {
-  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
-  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   NS_ASSERTION(mEvent->eventStructType == NS_MOUSE_EVENT || mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT, "event type mismatch");
   if (mEvent->eventStructType == NS_MOUSE_EVENT || mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
@@ -1309,10 +1324,8 @@ nsDOMEvent::InitKeyEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool
                          PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
                          PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg)
 {
-  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
-  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
-  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
+  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
   if (mEvent->eventStructType == NS_KEY_EVENT) {
@@ -1336,10 +1349,8 @@ NS_IMETHODIMP nsDOMEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
                             nsIURI *aPopupWindowURI,
                             const nsAString & aPopupWindowFeatures)
 {
-  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
-  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
-  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
+  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   NS_ASSERTION(mEvent->eventStructType == NS_POPUPBLOCKED_EVENT, "event type mismatch");
   if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
@@ -1577,6 +1588,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_CONTEXTMENU:
   case NS_CONTEXTMENU_KEY:
     return sEventNames[eDOMEvents_contextmenu];
+  case NS_DOMUI_ACTIVATE:
+    return sEventNames[eDOMEvents_DOMActivate];
+  case NS_DOMUI_FOCUSIN:
+    return sEventNames[eDOMEvents_DOMFocusIn];
+  case NS_DOMUI_FOCUSOUT:
+    return sEventNames[eDOMEvents_DOMFocusOut];
   default:
     break;
   }
@@ -1619,6 +1636,9 @@ nsDOMEvent::AllocateEvent(const nsAString& aEventType)
   }
   else if (eventType.EqualsIgnoreCase("PopupBlockedEvents")) {
     mEvent = new nsPopupBlockedEvent();
+  }
+  else if (eventType.EqualsIgnoreCase("UIEvents")) {
+    mEvent = new nsDOMUIEvent();
   }
   else {
     mEvent = new nsEvent();

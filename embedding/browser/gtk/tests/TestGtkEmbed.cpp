@@ -44,6 +44,7 @@
 // mozilla specific headers
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMUIEvent.h"
 #include "prenv.h"
 
 #ifdef NS_TRACE_MALLOC
@@ -167,6 +168,12 @@ static gint dom_mouse_dbl_click_cb (GtkMozEmbed *embed,
 static gint dom_mouse_over_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 				  TestGtkBrowser *browser);
 static gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_activate_cb      (GtkMozEmbed *embed, nsIDOMUIEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_focus_in_cb      (GtkMozEmbed *embed, nsIDOMUIEvent *event,
+				  TestGtkBrowser *browser);
+static gint dom_focus_out_cb     (GtkMozEmbed *embed, nsIDOMUIEvent *event,
 				  TestGtkBrowser *browser);
 
 // callbacks from the singleton object
@@ -516,6 +523,12 @@ new_gtk_browser(guint32 chromeMask)
 		     GTK_SIGNAL_FUNC(dom_mouse_over_cb), browser);
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_out",
 		     GTK_SIGNAL_FUNC(dom_mouse_out_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_activate",
+		     GTK_SIGNAL_FUNC(dom_activate_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_in",
+		     GTK_SIGNAL_FUNC(dom_focus_in_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_out",
+		     GTK_SIGNAL_FUNC(dom_focus_out_cb), browser);
   // hookup to when the window is destroyed
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
 		     GTK_SIGNAL_FUNC(destroy_cb), browser);
@@ -971,6 +984,27 @@ gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 			   TestGtkBrowser *browser)
 {
   //g_print("dom_mouse_out_cb\n");
+  return NS_OK;
+}
+
+gint dom_activate_cb      (GtkMozEmbed *embed, nsIDOMUIEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //g_print("dom_activate_cb\n");
+  return NS_OK;
+}
+
+gint dom_focus_in_cb      (GtkMozEmbed *embed, nsIDOMUIEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //g_print("dom_focus_in_cb\n");
+  return NS_OK;
+}
+
+gint dom_focus_out_cb     (GtkMozEmbed *embed, nsIDOMUIEvent *event,
+			   TestGtkBrowser *browser)
+{
+  //g_print("dom_focus_out_cb\n");
   return NS_OK;
 }
 

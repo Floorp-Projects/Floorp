@@ -60,6 +60,7 @@ EXPORTS =				\
 	nsIDOMXULListener.h		\
 	nsIDOMScrollListener.h		\
 	nsIDOMContextMenuListener.h	\
+	nsIDOMUIListener.h		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -435,6 +435,19 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_MOUSE_LEFT_CLICK:
         {
+          nsIPresShell *presShell = aPresContext->GetPresShell();
+          if (presShell) {
+            nsDOMUIEvent event(NS_DOMUI_ACTIVATE, 1); // single-click
+            nsEventStatus status = nsEventStatus_eIgnore;
+
+            presShell->HandleDOMEventWithTarget(this, &event, &status);
+            *aEventStatus = status;
+          }
+        }
+        break;
+
+      case NS_DOMUI_ACTIVATE:
+        {
           if (mForm) {
             if (mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET) {
               nsFormEvent event((mType == NS_FORM_BUTTON_RESET)
@@ -513,7 +526,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
 	  } else {
       switch (aEvent->message) {
-      case NS_MOUSE_LEFT_CLICK:
+      case NS_DOMUI_ACTIVATE:
         if (mForm && mType == NS_FORM_BUTTON_SUBMIT) {
           // tell the form to flush a possible pending submission.
           // the reason is that the script returned false (the event was
@@ -521,7 +534,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
           // be submitted immediatelly.
           mForm->FlushPendingSubmission();
         }
-        break;// NS_MOUSE_LEFT_CLICK
+        break;// NS_DOMUI_ACTIVATE
       } //switch
     } //if
   } //if
