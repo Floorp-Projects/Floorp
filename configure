@@ -2533,7 +2533,7 @@ if test "$GNU_CC"; then
     #             be a little bit stricter
     # -pipe     - speeds up the build a little by using pipes rather than
     #             temp files
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -pipe"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align"
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -2546,7 +2546,7 @@ fi
 
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -pipe"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -W -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Woverloaded-virtual -Wsynth -pipe"
 
     _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -8182,7 +8182,7 @@ if test "${enable_pedantic+set}" = set; then
   enableval="$enable_pedantic"
   if test "$enableval" = "yes"; then
      _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" 
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic -Wno-long-long" 
   elif test "$enableval" = "no"; then
     :
   else
