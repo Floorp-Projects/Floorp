@@ -3125,8 +3125,10 @@ if (true) {
         if (((childNumberFlag != null)
                     && (childNumberFlag.intValue() == Node.BOTH))
                 || (op == TokenStream.INSTANCEOF)
-                || (op == TokenStream.IN)) {
-            aload(variableObjectLocal);
+                || (op == TokenStream.IN)) 
+        {
+            if (op == TokenStream.INSTANCEOF)
+                aload(variableObjectLocal);
             generateCodeFromNode(child, node, -1, -1);
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             int trueGOTO = acquireLabel();
