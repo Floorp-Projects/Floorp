@@ -23,4 +23,3 @@
 nsIIMAPHostSessionList.h
 nsIImapExtensionSink.h
 nsIImapMiscellaneousSink.h
-nsIImapService.h
