@@ -333,6 +333,7 @@ static Components gComponents[] = {
 
   { "Selection", NS_SELECTION_CID, nsnull, },
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
+  { "Dom selection", NS_DOMSELECTION_CID, nsnull, },
   { "Range", NS_RANGE_CID, nsnull, },
   { "Content iterator", NS_CONTENTITERATOR_CID, nsnull, },
   { "Generated Content iterator", NS_GENERATEDCONTENTITERATOR_CID, nsnull, },
@@ -356,6 +357,7 @@ static Components gComponents[] = {
   { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
   
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
+  { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },
 
   { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID }
 };
