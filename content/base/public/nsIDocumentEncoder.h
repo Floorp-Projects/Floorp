@@ -156,7 +156,11 @@ public:
 
     // Output the content of noframes elements (only for serializing
     // to plaintext).
-    OutputNoFramesContent = 4096
+    OutputNoFramesContent = 4096,
+
+    // Don't allow any formatting nodes (e.g. <br>, <b>) inside a <pre>.
+    // This is used primarily by mail.
+    OutputNoFormattingInPre = 8192
   };
 
   /**
