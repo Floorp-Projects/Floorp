@@ -36,6 +36,7 @@
 
 class nsIContent;
 class nsISupportsArray;
+class nsIScriptContext;
 
 // {DDDBAD20-C8DF-11d3-97FB-00400553EEF0}
 #define NS_IXBLBINDING_IID \
@@ -66,6 +67,7 @@ public:
   // Called when an attribute changes on a binding.
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
 
+  NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext) = 0;
 };
 
 extern nsresult

@@ -146,6 +146,8 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
 
+  NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext);
+
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
@@ -947,11 +949,29 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLBinding::RemoveScriptReferences(nsIScriptContext* aContext)
+{
+  if (mNextBinding)
+    mNextBinding->RemoveScriptReferences(aContext);
+
+  if (mScriptObject) {
+    aContext->RemoveReference((void*) &mScriptObject, mScriptObject);
+  }
+
+  return NS_OK;
+}
+
 // nsIScriptObjectOwner methods ///////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsXBLBinding::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
+  if (!mScriptObject && mNextBinding) {
+    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mNextBinding));
+    return owner->GetScriptObject(aContext, aScriptObject);
+  }
+
   *aScriptObject = mScriptObject;
   return NS_OK;
 }
@@ -959,7 +979,8 @@ nsXBLBinding::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 NS_IMETHODIMP
 nsXBLBinding::SetScriptObject(void *aScriptObject)
 {
-  // XXX Deal with release??
+  // DO NOT EVER CALL THIS WITH NULL!
+  NS_ASSERTION(aScriptObject, "Attempt to void out an XBL binding script object using SetScriptObject. Bad!");
   mScriptObject = aScriptObject;
   return NS_OK;
 }
@@ -1028,8 +1049,10 @@ nsXBLBinding::CreateScriptObject(nsIScriptContext* aContext, nsIDocument* aDocum
     JS_SetPrivate(jscontext, object, privateData);
 
     // Set ourselves as the new script object.
-    owner->SetScriptObject(object);
     SetScriptObject(object);
+
+    // Need to addref on copy of proto chain
+    NS_IF_ADDREF(NS_REINTERPRET_CAST(nsISupports*, privateData));
 
     // Ensure that a reference exists to this binding
     aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXBLBinding::mScriptObject");
