@@ -137,7 +137,7 @@
     <command id="cmd_copyImageContents"/>
 
     <!-- View Menu -->
-    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
