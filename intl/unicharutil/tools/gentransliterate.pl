@@ -90,6 +90,18 @@ entity.732=~
 entity.8250=>
 # LATIN SMALL LIGATURE OE
 entity.339=oe
+# U+2000 EN QUAD
+entity.8192=\u0020
+# U+2001 EM QUAD
+entity.8193=\u0020
+# U+2010 HYPHEN
+entity.8208=-
+# U+2011 NON-BREAKING HYPHEN
+entity.8209=-
+# U+2012 FIGURE DASH
+entity.8210=-
+# U+2015 HORIZONTAL BAR
+entity.8213=--
 ##
 ## End of hand coded section
 ## Below are generated from the unicode character database
