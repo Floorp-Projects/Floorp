@@ -126,12 +126,11 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
 
   // Dispatch the reflow command to our child frame. Allow it to be as high
   // as it wants
-  ReflowChild(nextFrame, aPresContext, kidSize, kidReflowState, status);
+  ReflowChild(nextFrame, aPresContext, kidSize, kidReflowState, aX, aY, 0, status);
 
   // Place and size the page. If the page is narrower than our max width, then
   // center it horizontally
-  nsRect  rect(aX, aY, kidSize.width, kidSize.height);
-  nextFrame->SetRect(&aPresContext, rect);
+  FinishReflowChild(nextFrame, aPresContext, kidSize, aX, aY, 0);
   aY += kidSize.height + PAGE_SPACING_TWIPS;
 
   // Check if the page is complete...
@@ -169,8 +168,9 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
       ReflowChild(kidFrame, aPresContext, childSize, childReflowState,
-                  status);
-      kidFrame->SetRect(&aPresContext, nsRect(aX, aY, childSize.width, childSize.height));
+                  aX, aY, 0, status);
+
+      FinishReflowChild(kidFrame, aPresContext, childSize, aX, aY, 0);
       aY += childSize.height;
 
       // Leave a slight gap between the pages
@@ -242,8 +242,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
-      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
-      kidFrame->SetRect(&aPresContext, nsRect(x, y, kidSize.width, kidSize.height));
+      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
+
+      FinishReflowChild(kidFrame, aPresContext, kidSize, x, y, 0);
       y += kidSize.height;
 
       // Leave a slight gap between the pages

@@ -80,7 +80,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
   
     kidReflowState.isTopOfPage = PR_TRUE;
     ReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
-                kidReflowState, aStatus);
+                kidReflowState, 0, 0, 0, aStatus);
   
     // Place and size the child. Make sure the child is at least as
     // tall as our max size (the containing window)
@@ -88,8 +88,8 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
       aDesiredSize.height = aReflowState.availableHeight;
     }
 
-    nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    mFrames.FirstChild()->SetRect(&aPresContext, rect);
+    FinishReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
+                      0, 0, 0);
 
   } else {
     // Do we have any children?
@@ -122,7 +122,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
       kidReflowState.isTopOfPage = PR_TRUE;
 
       // Get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
+      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
 
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.availableHeight) {
@@ -130,10 +130,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
       }
 
       // Place and size the child
-      nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-      frame->SetRect(&aPresContext, rect);
-      // XXX Should we be sending the DidReflow?
-      frame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+      FinishReflowChild(frame, aPresContext, aDesiredSize, 0, 0, 0);
 
       // Is the frame complete?
       if (NS_FRAME_IS_COMPLETE(aStatus)) {

@@ -619,14 +619,16 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   if (kidReflowState.reason == eReflowReason_Incremental)
     kidReflowState.reason = eReflowReason_Resize;
 
-  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
-
-   // Set the child's width and height to its desired size
   nsRect rect;
   frame->GetRect(rect);
-  rect.width = aDesiredSize.width;
-  rect.height = aDesiredSize.height;
-  frame->SetRect(&aPresContext, rect);
+  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState,
+                   rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
+
+   // Set the child's width and height to its desired size
+   // Note: don't position or size the view now, we'll do that in the
+   // DidReflow() function
+  frame->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+  frame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Don't let it affect our size.
   aDesiredSize.width = w;
@@ -652,7 +654,10 @@ nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
       mMenuParent->IsMenuBar(onMenuBar);
 
     menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
+// XXX TROY
+#if 0
     menuPopup->DidReflow(aPresContext, aStatus);
+#endif
   }
 
   return rv;

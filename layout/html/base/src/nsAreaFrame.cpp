@@ -328,57 +328,6 @@ nsAreaFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAreaFrame::DidReflow(nsIPresContext& aPresContext,
-                       nsDidReflowStatus aStatus)
-{
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    // If we should position our view, and we have child frames that stick
-    // outside our box, then we need to size our view large enough to include
-    // those child frames
-    if ((mState & NS_FRAME_SYNC_FRAME_AND_VIEW) &&
-        (mState & NS_FRAME_OUTSIDE_CHILDREN)) {
-      
-      nsIView*              view;
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        mStyleContext->GetStyleData(eStyleStruct_Display);
-
-      GetView(&aPresContext, &view);
-      if (view && (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow)) {
-        // Don't let our base class position the view since we're doing it
-        mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-  
-        // Set the view's bit that indicates that it has transparent content
-        nsIViewManager* vm;
-        
-        view->GetViewManager(vm);
-        vm->SetViewContentTransparency(view, PR_TRUE);
-      
-        // Position and size view relative to its parent, not relative to our
-        // parent frame (our parent frame may not have a view).
-        nsIView*  parentWithView;
-        nsPoint   origin;
-
-        // XXX We need to handle the case where child frames stick out on the
-        // left and top edges as well...
-        GetOffsetFromView(&aPresContext, origin, &parentWithView);
-        vm->ResizeView(view, mCombinedArea.XMost(), mCombinedArea.YMost());
-        vm->MoveViewTo(view, origin.x, origin.y);
-        NS_RELEASE(vm);
-  
-        // Call our base class
-        nsresult  rv = nsBlockFrame::DidReflow(aPresContext, aStatus);
-  
-        // Set the flag again...
-        mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-        return rv;
-      }
-    }
-  }
-
-  return nsBlockFrame::DidReflow(aPresContext, aStatus);
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostics
 

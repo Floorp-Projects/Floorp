@@ -248,12 +248,14 @@ protected:
                           nsIFrame*       aKidFrame,
                           nsSize*         aMaxElementSize);
 
-  void PlaceChild(nsIPresContext& aPresContext,
-                  RowReflowState& aState,
-                  nsIFrame*       aKidFrame,
-                  const nsRect&   aKidRect,
-                  nsSize*         aMaxElementSize,
-                  nsSize*         aKidMaxElementSize);
+  void PlaceChild(nsIPresContext&      aPresContext,
+                  RowReflowState&      aState,
+                  nsIFrame*            aKidFrame,
+                  nsHTMLReflowMetrics& aDesiredSize,
+                  nscoord              aX,
+                  nscoord              aY,
+                  nsSize*              aMaxElementSize,
+                  nsSize*              aKidMaxElementSize);
 
   nscoord ComputeCellXOffset(const RowReflowState& aState,
                              nsIFrame*             aKidFrame,

@@ -234,6 +234,9 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Init(nsIPresContext&  aPresContext,
                           nsIContent*      aContent,
@@ -258,6 +261,25 @@ nsHTMLFramesetFrame::Init(nsIPresContext&  aPresContext,
       break;
     }
   }
+
+  // create the view. a view is needed since it needs to be a mouse grabber
+  nsIView* view;
+  nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                                 (void **)&view);
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext.GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIViewManager> viewMan;
+  presShell->GetViewManager(getter_AddRefs(viewMan));
+
+  nsIFrame* parWithView;
+  nsIView *parView;
+  GetParentWithView(&aPresContext, &parWithView);
+  parWithView->GetView(&aPresContext, &parView);
+  nsRect boundBox(0, 0, 0, 0); 
+  result = view->Init(viewMan, boundBox, parView, nsnull);
+  viewMan->InsertChild(parView, view, 0);
+  SetView(&aPresContext, view);
+
   return rv;
 }
 
@@ -785,13 +807,14 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   metrics.height= aSize.height;
   nsReflowStatus status;
   
-  ReflowChild(aChild, aPresContext, metrics, reflowState, status);
+  ReflowChild(aChild, aPresContext, metrics, reflowState, aOffset.x,
+              aOffset.y, 0, status);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
   
   // Place and size the child
-  nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-  aChild->SetRect(&aPresContext, rect);
-  aChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // this call is needed
+  metrics.width = aSize.width;
+  metrics.height = aSize.height;
+  FinishReflowChild(aChild, aPresContext, metrics, aOffset.x, aOffset.y, 0);
 }
 
 static
@@ -902,10 +925,6 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 #define FRAME 1
 #define BLANK 2
 
-
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
@@ -918,25 +937,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   PRBool firstTime = (0 == mNumRows);
 
   if (firstTime) { 
-    // create the view. a view is needed since it needs to be a mouse grabber
-
-    nsIView* view;
-    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                                   (void **)&view);
-	  nsCOMPtr<nsIPresShell> presShell;
-    aPresContext.GetShell(getter_AddRefs(presShell));
-	  nsCOMPtr<nsIViewManager> viewMan;
-    presShell->GetViewManager(getter_AddRefs(viewMan));
-
-    nsIFrame* parWithView;
-	  nsIView *parView;
-    GetParentWithView(&aPresContext, &parWithView);
-	  parWithView->GetView(&aPresContext, &parView);
-    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
-    result = view->Init(viewMan, boundBox, parView, nsnull);
-    viewMan->InsertChild(parView, view, 0);
-    SetView(&aPresContext, view);
-
     // parse the rows= cols= data
     ParseRowCol(nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
     ParseRowCol(nsHTMLAtoms::cols, mNumCols, &mColSpecs);

@@ -25,6 +25,13 @@
 #include "nsSplittableFrame.h"
 #include "nsFrameList.h"
 
+// Option flags for ReflowChild() and FinishReflowChild()
+// member functions
+#define NS_FRAME_NO_MOVE_VIEW         0x0001
+#define NS_FRAME_NO_MOVE_FRAME        (0x0002 | NS_FRAME_NO_MOVE_VIEW)
+#define NS_FRAME_NO_SIZE_VIEW         0x0004
+#define NS_FRAME_NO_MOVE_CHILD_VIEWS  0x0008
+
 /**
  * Implementation of a container frame.
  */
@@ -67,6 +74,82 @@ public:
     return tmp.GetLength();
   }
 
+  // Positions the frame's view based on the frame's origin
+  static void PositionFrameView(nsIPresContext* aPresContext,
+                                nsIFrame*       aKidFrame,
+                                nsIView*        aView);
+
+  // Sets several view attributes:
+  // - if requested sizes the frame's view based on the current size and origin.
+  //   Takes into account the combined area and (if overflow is visible) whether
+  //   the frame has children that extend outside
+  // - opacity
+  // - visibility
+  // - content transparency
+  // - clip
+  //
+  // Flags:
+  // NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+  //    don't want to automatically sync the frame and view
+  // NS_FRAME_NO_MOVE_VIEW - don't move the frame. aX and aY are ignored in this
+  //   case. Also implies NS_FRAME_NO_MOVE_VIEW
+  static void SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame,
+                                       nsIView*        aView,
+                                       nsRect*         aCombinedArea,
+                                       PRUint32        aFlags = 0);
+  
+  /**
+   * Invokes the WillReflow() function, positions the frame and its view (if
+   * requested), and then calls Reflow(). If the reflow succeeds and the child
+   * frame is complete, deletes any next-in-flows using DeleteChildsNextInFlow()
+   *
+   * Flags:
+   * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+   *    don't want to automatically sync the frame and view
+   * NS_FRAME_NO_MOVE_VIEW - don't move the frame. aX and aY are ignored in this
+   *    case. Also implies NS_FRAME_NO_MOVE_VIEW
+   */
+  nsresult ReflowChild(nsIFrame*                aKidFrame,
+                       nsIPresContext&          aPresContext,
+                       nsHTMLReflowMetrics&     aDesiredSize,
+                       const nsHTMLReflowState& aReflowState,
+                       nscoord                  aX,
+                       nscoord                  aY,
+                       PRUint32                 aFlags,
+                       nsReflowStatus&          aStatus);
+
+  /**
+   * The second half of frame reflow. Does the following:
+   * - sets the frame's bounds
+   * - sizes and positions (if requested) the frame's view. If the frame's final
+   *   position differs from the current position and the frame itself does not
+   *   have a view, then any child frames with views are positioned so they stay
+   *   in sync
+   * - sets the view's visibility, opacity, content transparency, and clip
+   * - invoked the DidReflow() function
+   *
+   * Flags:
+   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
+   *    case. Also implies NS_FRAME_NO_MOVE_VIEW
+   * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+   *    don't want to automatically sync the frame and view
+   * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
+   * NS_FRAME_NO_MOVE_CHILD_VIEWS - don't move child views. This is for the case
+   *    where the frame's new position differs from its current position and the
+   *    frame itself doesn't have a view, so moving the frame would cause any child
+   *    views to be out of sync
+   */
+  static nsresult FinishReflowChild(nsIFrame*            aKidFrame,
+                                    nsIPresContext&      aPresContext,
+                                    nsHTMLReflowMetrics& aDesiredSize,
+                                    nscoord              aX,
+                                    nscoord              aY,
+                                    PRUint32             aFlags);
+  
+  static void PositionChildViews(nsIPresContext* aPresContext,
+                                 nsIFrame*       aFrame);
+
 protected:
   nsContainerFrame();
   ~nsContainerFrame();
@@ -86,18 +169,6 @@ protected:
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
-
-  /**
-   * Queries the child frame for the nsIHTMLReflow interface and if it's
-   * supported invokes the WillReflow() and Reflow() member functions. If
-   * the reflow succeeds and the child frame is complete, deletes any
-   * next-in-flows using DeleteChildsNextInFlow()
-   */
-  nsresult ReflowChild(nsIFrame*                aKidFrame,
-                       nsIPresContext&          aPresContext,
-                       nsHTMLReflowMetrics&     aDesiredSize,
-                       const nsHTMLReflowState& aReflowState,
-                       nsReflowStatus&          aStatus);
 
   /**
    * Get the frames on the overflow list

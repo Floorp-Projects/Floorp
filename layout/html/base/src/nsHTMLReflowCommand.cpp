@@ -30,6 +30,7 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
 #include "nsFrame.h"
+#include "nsContainerFrame.h"
 
 static NS_DEFINE_IID(kIReflowCommandIID, NS_IREFLOWCOMMAND_IID);
 
@@ -133,8 +134,20 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
     nsHTMLReflowState reflowState(aPresContext, root, *this,
                                   &aRendContext, aMaxSize);
     nsReflowStatus    status;
+    nsIView*          view;
 
+    root->WillReflow(aPresContext);
+    root->GetView(&aPresContext, &view);
+    if (view) {
+      nsContainerFrame::PositionFrameView(&aPresContext, root, view);
+    }
     root->Reflow(aPresContext, aDesiredSize, reflowState, status);
+    root->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+    if (view) {
+      nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, root, view,
+                                                 nsnull);
+    }
+    root->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   return NS_OK;

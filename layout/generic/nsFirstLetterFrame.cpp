@@ -247,6 +247,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   // Place and size the child and update the output metrics
   kid->MoveTo(&aPresContext, bp.left, bp.top);
   kid->SizeTo(&aPresContext, aMetrics.width, aMetrics.height);
+  kid->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   aMetrics.width += lr;
   aMetrics.height += tb;
   aMetrics.ascent += bp.top;

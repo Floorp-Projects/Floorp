@@ -516,6 +516,9 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   // the view also breaks the outline code. For some reason you can not reset 
   // the clip rect to draw outside you bounds if you have a view. And you need to
   // because the outline must be drawn outside of our bounds according to CSS. -EDV
+
+  // XXX If you do decide you need a view, then create it in the Init() function
+  // and not here...
 #if 0
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
@@ -596,11 +599,15 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
 
-  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
+  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
+              focusPadding.left + aReflowState.mComputedBorderPadding.left,
+              focusPadding.top + aReflowState.mComputedBorderPadding.top,
+              0, aStatus);
 
   // Place the child
-  nsRect rect = nsRect(focusPadding.left + aReflowState.mComputedBorderPadding.left, focusPadding.top + aReflowState.mComputedBorderPadding.top, aDesiredSize.width, aDesiredSize.height);
-  firstKid->SetRect(&aPresContext, rect);
+  FinishReflowChild(firstKid, aPresContext, aDesiredSize,
+                    focusPadding.left + aReflowState.mComputedBorderPadding.left,
+                    focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 
 #if 0 // old way
   // if computed use the computed values.

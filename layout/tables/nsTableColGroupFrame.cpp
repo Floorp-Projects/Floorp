@@ -343,9 +343,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
                                      nsSize(0,0), eReflowReason_Initial);
 
     nsReflowStatus status;
-    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
-    // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
-    kidFrame->SetRect(&aPresContext, nsRect(0,0,0,0));
+    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, status);
+    FinishReflowChild(kidFrame, aPresContext, kidSize, 0, 0, 0);
   }
 
   aDesiredSize.width=0;
@@ -454,7 +453,8 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresC
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aNextFrame,
                                    nsSize(aReflowState.availableWidth,
                                           aReflowState.availableHeight));
-  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
+  aNextFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   if (NS_FAILED(rv))
     return rv;
 

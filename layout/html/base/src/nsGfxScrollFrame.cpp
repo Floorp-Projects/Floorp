@@ -1206,7 +1206,8 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext&          aPresContext,
        childReflowState.mComputedHeight -= childReflowState.mComputedBorderPadding.top + childReflowState.mComputedBorderPadding.bottom;
     */
      
-    mOuter->ReflowChild(aFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
+    mOuter->ReflowChild(aFrame, aPresContext, aDesiredSize, childReflowState,
+                        0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
     // if the frame size change then mark the flag
@@ -1214,6 +1215,7 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext&          aPresContext,
        aFrame->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
        aResized = PR_TRUE;
     }
+    aFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
     // add the margin back in
     aDesiredSize.width += margin.left + margin.right;
@@ -1467,13 +1469,29 @@ nsGfxScrollFrameInner::LayoutChildren(nsIPresContext&          aPresContext,
   const nsMargin& border = aReflowState.mComputedBorderPadding;
 
   // Place scroll area
+  nsIView*  view;
   mScrollAreaFrame->MoveTo(&aPresContext, border.left, border.top);
+  mScrollAreaFrame->GetView(&aPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, mScrollAreaFrame,
+                                               view, nsnull);
+  }
 
   // place vertical scrollbar
   mVScrollbarFrame->MoveTo(&aPresContext, border.left + scrollAreaSize.width, border.top);
+  mVScrollbarFrame->GetView(&aPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, mVScrollbarFrame,
+                                               view, nsnull);
+  }
 
   // place horizontal scrollbar
   mHScrollbarFrame->MoveTo(&aPresContext, border.left, border.top + scrollAreaSize.height);
+  mHScrollbarFrame->GetView(&aPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, mHScrollbarFrame,
+                                               view, nsnull);
+  }
 
   // Compute our desired size
   // ---------- compute width ----------- 

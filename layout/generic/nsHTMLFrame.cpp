@@ -324,7 +324,8 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                aStatus);
+                kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
+                0, aStatus);
 
     // The document element's background should cover the entire canvas, so
     // take into account the combined area and any space taken up by
@@ -385,10 +386,10 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
 
-    // Position and size the child frame
+    // Complete the reflow and position and size the child frame
     nsRect  rect(kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
-    kidFrame->SetRect(&aPresContext, rect);
+    FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, rect.x, rect.y, 0);
 
     // If the child frame was just inserted, then we're responsible for making sure
     // it repaints

@@ -39,6 +39,7 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
+#include "nsIViewManager.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -107,6 +108,8 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   // the NS_FRAME_IN_REFLOW bit
   nsresult  result = nsFrame::DidReflow(aPresContext, aStatus);
 
+  // XXX TROY
+#if 0
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Apply DidReflow to each and every list that this frame implements
     nsIAtom* listName = nsnull;
@@ -122,6 +125,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
       GetAdditionalChildListName(listIndex++, &listName);
     } while(nsnull != listName);
   }
+#endif
 
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
   return result;
@@ -372,17 +376,194 @@ nsContainerFrame::ReplaceFrame(nsIPresContext& aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
+void
+nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
+                                    nsIFrame*       aKidFrame,
+                                    nsIView*        aView)
+{
+  if (aView) {
+    // Position view relative to its parent, not relative to aKidFrame's
+    // frame which may not have a view
+    nsIView*  containingView;
+    nsPoint   origin;
+    nsIView*  parentView;
+
+    aView->GetParent(parentView);
+    aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
+    
+    if (containingView == parentView) {
+      nsIViewManager *vm;
+      aView->GetViewManager(vm);
+      vm->MoveViewTo(aView, origin.x, origin.y);
+      NS_RELEASE(vm);
+    }
+  }
+}
+
+void
+nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
+                                           nsIFrame*       aFrame,
+                                           nsIView*        aView,
+                                           nsRect*         aCombinedArea,
+                                           PRUint32        aFlags)
+{
+  if (aView) {
+    nsIViewManager  *vm;
+    nsFrameState    kidState;
+    nsSize          frameSize;
+    
+    aView->GetViewManager(vm);
+    aFrame->GetFrameState(&kidState);
+    aFrame->GetSize(frameSize);
+    
+    // Make sure the view is sized and positioned correctly
+    if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
+      nsIView*  containingView;
+      nsPoint   origin;
+      nsIView*  parentView;
+
+      aView->GetParent(parentView);
+      aFrame->GetOffsetFromView(aPresContext, origin, &containingView);
+      
+      if (containingView == parentView) {
+        vm->MoveViewTo(aView, origin.x, origin.y);
+      }
+    }
+
+    if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
+      // If the frame has child frames that stick outside the content
+      // area, then size the view large enough to include those child
+      // frames
+      if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
+        vm->ResizeView(aView, aCombinedArea->XMost(), aCombinedArea->YMost());
+
+      } else {
+        vm->ResizeView(aView, frameSize.width, frameSize.height);
+      }
+    }
+  
+    const nsStyleColor* color;
+    const nsStyleDisplay* display;
+    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
+    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+    // Set the view's opacity
+    vm->SetViewOpacity(aView, color->mOpacity);
+
+    // See if the view should be hidden or visible
+    PRBool  viewIsVisible = PR_TRUE;
+    PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+              NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+
+    if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+      viewIsVisible = PR_FALSE;
+    }
+    else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+      // If it has a widget, hide the view because the widget can't deal with it
+      nsIWidget* widget = nsnull;
+      aView->GetWidget(widget);
+      if (widget) {
+        viewIsVisible = PR_FALSE;
+        NS_RELEASE(widget);
+      }
+      else {
+        // If it's a scroll frame, then hide the view. This means that
+        // child elements can't override their parent's visibility, but
+        // it's not practical to leave it visible in all cases because
+        // the scrollbars will be showing
+        nsIAtom*  frameType;
+        aFrame->GetFrameType(&frameType);
+
+        if (frameType == nsLayoutAtoms::scrollFrame) {
+          viewIsVisible = PR_FALSE;
+
+        } else {
+          // If we're a container element, then leave the view visible, but
+          // mark it as having transparent content. The reason we need to
+          // do this is that child elements can override their parent's
+          // hidden visibility and be visible anyway
+          nsIFrame* firstChild;
+
+          aFrame->FirstChild(nsnull, &firstChild);
+          if (firstChild) {
+            // Not a left frame, so the view needs to be visible, but marked
+            // as having transparent content
+            viewHasTransparentContent = PR_TRUE;
+          } else {
+            // Leaf frame so go ahead and hide the view
+            viewIsVisible = PR_FALSE;
+          }
+        }
+        NS_IF_RELEASE(frameType);
+      }
+    }
+
+    // If the frame has visible content that overflows the content area, then we
+    // need the view marked as having transparent content
+    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
+      if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+        viewHasTransparentContent = PR_TRUE;
+      }
+    }
+
+    // Make sure visibility is correct
+    vm->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
+                          nsViewVisibility_kHide);
+
+    // Make sure content transparency is correct
+    if (viewIsVisible) {
+      vm->SetViewContentTransparency(aView, viewHasTransparentContent);
+    }
+
+    // Clip applies to block-level and replaced elements with overflow
+    // set to other than 'visible'
+    if (display->IsBlockLevel()) {
+      if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN) {
+        nscoord left, top, right, bottom;
+
+        // Start with the 'auto' values and then factor in user
+        // specified values
+        left = top = 0;
+        right = frameSize.width;
+        bottom = frameSize.height;
+
+        if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+          top += display->mClip.top;
+        }
+        if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+          right -= display->mClip.right;
+        }
+        if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+          bottom -= display->mClip.bottom;
+        }
+        if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+          left += display->mClip.left;
+        }
+        aView->SetClip(left, top, right, bottom);
+
+      } else {
+        // Make sure no clip is set
+        aView->SetClip(0, 0, 0, 0);
+      }
+    }
+
+    NS_RELEASE(vm);
+  }
+}
+
 /**
- * Queries the child frame for the nsIHTMLReflow interface and if it's
- * supported invokes the WillReflow() and Reflow() member functions. If
- * the reflow succeeds and the child frame is complete, deletes any
- * next-in-flows using DeleteChildsNextInFlow()
+ * Invokes the WillReflow() function, positions the frame and its view (if
+ * requested), and then calls Reflow(). If the reflow succeeds and the child
+ * frame is complete, deletes any next-in-flows using DeleteChildsNextInFlow()
  */
 nsresult
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
+                              nscoord                  aX,
+                              nscoord                  aY,
+                              PRUint32                 aFlags,
                               nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
@@ -399,8 +580,23 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 #endif
 #endif
 
-  // Send the WillReflow notification, and reflow the child frame
+  // Send the WillReflow() notification, and position the child frame
+  // and its view if requested
   aKidFrame->WillReflow(aPresContext);
+
+  if (0 == (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
+    aKidFrame->MoveTo(&aPresContext, aX, aY);
+  }
+
+  if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
+    nsIView*  view;
+    aKidFrame->GetView(&aPresContext, &view);
+    if (view) {
+      PositionFrameView(&aPresContext, aKidFrame, view);
+    }
+  }
+
+  // Reflow the child frame
   result = aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState,
                              aStatus);
 
@@ -439,6 +635,97 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
     }
   }
   return result;
+}
+
+void
+nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
+                                     nsIFrame*       aFrame)
+{
+  nsIAtom*  childListName = nsnull;
+  PRInt32   childListIndex = 0;
+
+  do {
+    // Recursively walk aFrame's child frames
+    nsIFrame* childFrame;
+    aFrame->FirstChild(childListName, &childFrame);
+    while (childFrame) {
+      nsIView*  view;
+
+      // See if the child frame has a view
+      childFrame->GetView(aPresContext, &view);
+
+      if (view) {
+        // Position the view. Because any child views are relative to their
+        // parent, there's no need to recurse
+        PositionFrameView(aPresContext, childFrame, view);
+
+      } else {
+        // Recursively examine its child frames
+        PositionChildViews(aPresContext, childFrame);
+      }
+
+      // Get the next sibling child frame
+      childFrame->GetNextSibling(&childFrame);
+    }
+
+    NS_IF_RELEASE(childListName);
+    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName);
+}
+
+/**
+ * The second half of frame reflow. Does the following:
+ * - sets the frame's bounds
+ * - sizes and positions (if requested) the frame's view. If the frame's final
+ *   position differs from the current position and the frame itself does not
+ *   have a view, then any child frames with views are positioned so they stay
+ *   in sync
+ * - sets the view's visibility, opacity, content transparency, and clip
+ * - invoked the DidReflow() function
+ *
+ * Flags:
+ * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
+ *    case. Also implies NS_FRAME_NO_MOVE_VIEW
+ * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+ *    don't want to automatically sync the frame and view
+ * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
+ * NS_FRAME_NO_MOVE_CHILD_VIEWS - don't move child views. This is for the case
+ *    where the frame's new position differs from its current position and the
+ *    frame itself doesn't have a view, so moving the frame would cause any child
+ *    views to be out of sync
+*/
+nsresult
+nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
+                                    nsIPresContext&      aPresContext,
+                                    nsHTMLReflowMetrics& aDesiredSize,
+                                    nscoord              aX,
+                                    nscoord              aY,
+                                    PRUint32             aFlags)
+{
+  nsPoint curOrigin;
+  nsRect  bounds(aX, aY, aDesiredSize.width, aDesiredSize.height);
+
+  aKidFrame->GetOrigin(curOrigin);
+  aKidFrame->SetRect(&aPresContext, bounds);
+
+  nsIView*  view;
+  aKidFrame->GetView(&aPresContext, &view);
+  if (view) {
+    // Make sure the frame's view is properly sized and positioned and has
+    // things like opacity correct
+    SyncFrameViewAfterReflow(&aPresContext, aKidFrame, view,
+                             &aDesiredSize.mCombinedArea,
+                             aFlags);
+
+  } else if (0 == (aFlags & NS_FRAME_NO_MOVE_CHILD_VIEWS)) {
+    // If the frame has moved, then we need to make sure any child views are
+    // correctly positioned
+    if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
+      PositionChildViews(&aPresContext, aKidFrame);
+    }
+  }
+  
+  return aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
 /**

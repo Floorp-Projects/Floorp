@@ -205,7 +205,9 @@ protected:
   void PlaceChild(nsIPresContext&      aPresContext,
                   RowGroupReflowState& aReflowState,
                   nsIFrame*            aKidFrame,
-                  const nsRect&        aKidRect,
+                  nsHTMLReflowMetrics& aDesiredSize,
+                  nscoord              aX,
+                  nscoord              aY,
                   nsSize*              aMaxElementSize,
                   nsSize&              aKidMaxElementSize);
 

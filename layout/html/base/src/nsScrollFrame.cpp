@@ -164,6 +164,8 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     // and size and position our view
     rv = nsFrame::DidReflow(aPresContext, aStatus);
     
+    // XXX TROY
+#if 0
     // Send the DidReflow notification to the scrolled frame's view
     nsIFrame* frame = mFrames.FirstChild();
 
@@ -179,6 +181,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     scrolledView->GetViewManager(vm);
     vm->ResizeView(scrolledView, size.width, size.height);
     NS_RELEASE(vm);
+#endif
 
     // Have the scrolling view layout
     nsIScrollableView* scrollingView;
@@ -617,7 +620,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   kidReflowState.mComputedHeight = theHeight;
 
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-              aStatus);
+              border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   CalculateChildTotalSize(kidFrame, kidDesiredSize);
 
@@ -683,7 +686,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // Reflow the child frame with a reflow reason of reflow
       kidReflowState.reason = eReflowReason_Resize;
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                  aStatus);
+                  border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
       CalculateChildTotalSize(kidFrame, kidDesiredSize);
     }
@@ -711,10 +714,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Place and size the child.
-  nscoord x = border.left;
-  nscoord y = border.top;
-  nsRect rect(x, y, kidDesiredSize.width, kidDesiredSize.height);
-  kidFrame->SetRect(&aPresContext, rect);
+  FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, border.left,
+                    border.top, NS_FRAME_NO_MOVE_VIEW);
 
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;

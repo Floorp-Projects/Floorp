@@ -174,10 +174,10 @@ nsScrollPortFrame::DidReflow(nsIPresContext&   aPresContext,
     // and size and position our view
     rv = nsFrame::DidReflow(aPresContext, aStatus);
     
+// XXX TROY
+#if 0
     // Send the DidReflow notification to the scrolled frame's view
     nsIFrame* frame = mFrames.FirstChild();
-
-    frame->DidReflow(aPresContext, aStatus);
 
     // Size the scrolled frame's view. Leave its position alone
     nsSize          size;
@@ -203,8 +203,18 @@ nsScrollPortFrame::DidReflow(nsIPresContext&   aPresContext,
       if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
         scrollingView->ComputeScrollOffsets(PR_TRUE);
       }
-     
     }
+
+    frame->DidReflow(aPresContext, aStatus);
+#else
+    // Have the scrolling view layout
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(&aPresContext, &view);
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      scrollingView->ComputeScrollOffsets(PR_TRUE);
+    }
+#endif
   }
 
   return rv;
@@ -440,7 +450,7 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
  
  
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-              aStatus);
+              border.left, border.top, 0, aStatus);
 
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   CalculateChildTotalSize(kidFrame, kidDesiredSize);
@@ -471,8 +481,7 @@ nsScrollPortFrame::Reflow(nsIPresContext&          aPresContext,
 
   aDesiredSize.height += border.top + border.bottom;
 
-  nsRect rect(x, y, kidDesiredSize.width, kidDesiredSize.height);
-  kidFrame->SetRect(&aPresContext, rect);
+  FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, x, y, 0);
   //printf("width=%d, height=%d\n", kidDesiredSize.width, kidDesiredSize.height);
 
 
@@ -648,7 +657,8 @@ nsScrollPortFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLRef
     nsReflowStatus status = NS_FRAME_COMPLETE;
 
     ReflowChild(aFrame, aPresContext, kidDesiredSize, kidReflowState,
-                status);
+                0, 0, NS_FRAME_NO_MOVE_FRAME, status);
+    aFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 

@@ -70,6 +70,12 @@ public:
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -202,6 +208,46 @@ nsrefcnt nsImageControlFrame::Release(void)
   return 1;
 }
 
+NS_IMETHODIMP
+nsImageControlFrame::Init(nsIPresContext&  aPresContext,
+                          nsIContent*      aContent,
+                          nsIFrame*        aParent,
+                          nsIStyleContext* aContext,
+                          nsIFrame*        aPrevInFlow)
+{
+  // call our base class
+  nsresult  rv = nsImageControlFrameSuper::Init(aPresContext, aContent, aParent,
+                                                aContext, aPrevInFlow);
+  
+  // create our view, we need a view to grab the mouse 
+  nsIView* view;
+  GetView(&aPresContext, &view);
+  if (!view) {
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext.GetShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIViewManager> viewMan;
+    presShell->GetViewManager(getter_AddRefs(viewMan));
+
+    nsIFrame* parWithView;
+    nsIView *parView;
+    GetParentWithView(&aPresContext, &parWithView);
+    parWithView->GetView(&aPresContext, &parView);
+    // the view's size is not know yet, but its size will be kept in synch with our frame.
+    nsRect boundBox(0, 0, 0, 0); 
+    result = view->Init(viewMan, boundBox, parView, nsnull);
+    view->SetContentTransparency(PR_TRUE);
+    viewMan->InsertChild(parView, view, 0);
+    SetView(&aPresContext, view);
+
+    const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
+    // set the opacity
+    viewMan->SetViewOpacity(view, color->mOpacity);
+  }
+
+  return NS_OK;
+}
+
 NS_METHOD
 nsImageControlFrame::Reflow(nsIPresContext&         aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -211,32 +257,6 @@ nsImageControlFrame::Reflow(nsIPresContext&         aPresContext,
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
-
-    // create our view, we need a view to grab the mouse 
-    nsIView* view;
-    GetView(&aPresContext, &view);
-    if (!view) {
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	    nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
-	    nsCOMPtr<nsIViewManager> viewMan;
-      presShell->GetViewManager(getter_AddRefs(viewMan));
-
-      nsIFrame* parWithView;
-	    nsIView *parView;
-      GetParentWithView(&aPresContext, &parWithView);
-	    parWithView->GetView(&aPresContext, &parView);
-      // the view's size is not know yet, but its size will be kept in synch with our frame.
-      nsRect boundBox(0, 0, 500, 500); 
-      result = view->Init(viewMan, boundBox, parView, nsnull);
-      view->SetContentTransparency(PR_TRUE);
-      viewMan->InsertChild(parView, view, 0);
-      SetView(&aPresContext, view);
-
-      const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
-      // set the opacity
-      viewMan->SetViewOpacity(view, color->mOpacity);
-    }
   }
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }

@@ -225,14 +225,13 @@ nsPopupSetFrame::Reflow(nsIPresContext&   aPresContext,
   nscoord w = aDesiredSize.width;
   nscoord h = aDesiredSize.height;
   
-  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
-
-   // Set the child's width and height to its desired size
   nsRect rect;
   frame->GetRect(rect);
-  rect.width = aDesiredSize.width;
-  rect.height = aDesiredSize.height;
-  frame->SetRect(&aPresContext, rect);
+  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState,
+                   rect.x, rect.y, 0, aStatus);
+
+   // Set the child's width and height to its desired size
+  FinishReflowChild(frame, aPresContext, aDesiredSize, rect.x, rect.y, 0);
 
   // Don't let it affect our size.
   aDesiredSize.width = w;

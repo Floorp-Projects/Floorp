@@ -507,6 +507,8 @@ NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord 
   mRect.x = aX;
   mRect.y = aY;
 
+  // XXX TROY
+#if 0
   nsIView*  view;
   GetView(aPresContext, &view);
   if (view) {
@@ -526,6 +528,7 @@ NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord 
       NS_RELEASE(vm);
     }
   }
+#endif
 
   return NS_OK;
 }
@@ -535,6 +538,8 @@ NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nsco
   mRect.width = aWidth;
   mRect.height = aHeight;
 
+  // XXX TROY
+#if 0
   // Let the view know
   nsIView*  view;
   GetView(aPresContext, &view);
@@ -551,6 +556,7 @@ NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nsco
       NS_RELEASE(vm);
     }
   }
+#endif
 
   return NS_OK;
 }
@@ -1266,6 +1272,8 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
 
+    // XXX TROY
+#if 0
     // Make sure the view is sized and positioned correctly and it's
     // visibility, opacity, content transparency, and clip are correct
     nsIView*  view;
@@ -1390,6 +1398,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       }
       NS_RELEASE(vm);
     }
+#endif
   }
   return NS_OK;
 }

@@ -137,25 +137,6 @@ protected:
     */
   PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
 
-  /** position the child frame
-    * @param  aReflowState      the state of the reflow process
-    * @param  aKidFrame         the frame to place. 
-    * @param  aKidRect          the computed dimensions of aKidFrame.  The origin of aKidRect 
-    *                           is relative to the upper-left origin of this frame.
-    * @param  aMaxElementSize   the table's maxElementSize
-    *                           may be nsnull, meaning that we're not computing maxElementSize during this reflow
-    *                           set to the caption's maxElementSize, if aKidFrame is the caption
-    *                           the tables maxElementSize eventually gets set to the max of
-    *                           the value here and the value of the inner table, elsewhere during reflow.
-    * @param aKidMaxElementSize the maxElementSize of aKidFrame, if available  
-    */
-  void PlaceChild(OuterTableReflowState& aReflowState,
-                  nsIFrame*              aKidFrame,
-                  const nsRect&          aKidRect,
-                  nsSize*                aMaxElementSize,
-                  nsSize&                aKidMaxElementSize);
-
-
   /** compute the width available to the table during reflow, based on 
     * the reflow state and the table's style.
     * @return the computed width
