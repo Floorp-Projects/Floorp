@@ -27,6 +27,12 @@ function onLoad()
     initSmtpSettings(null);
 }
 
+function onSave()
+{
+    saveSmtpSettings(null);
+}
+
+
 function onAdvanced(event)
 {
     var args = {result: false};

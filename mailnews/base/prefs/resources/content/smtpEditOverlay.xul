@@ -38,6 +38,9 @@
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
+      <!-- This hidden one will hold the integer version
+           of smtp.useUsername -->
+      <text hidden="true" id="smtp.authMethod" wsm_persist="true"/>
       <checkbox id="smtp.useUsername" value="&alwaysUseUsername.label;"
                 oncommand="onUseUsername(event.target,true);"/>
       <box orient="vertical" style="margin-left: 2em">

@@ -36,32 +36,46 @@ function initSmtpSettings(server) {
     gSmtpUsername = document.getElementById("smtp.username");
     gSmtpHostname = document.getElementById("smtp.hostname");
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
+    gSmtpAuthMethod = document.getElementById("smtp.authMethod");
     gSmtpSavePassword = document.getElementById("smtp.savePassword")
     
     if (server) {
         gSmtpHostname.value = server.hostname;
         gSmtpUsername.value = server.username;
         gSmtpSavePassword.checked = server.savePassword;
+        gSmtpAuthMethod.setAttribute("value", server.authMethod);
         // radio groups not implemented
         //document.getElementById("smtp.trySSL").value = server.trySSL;
-        
-        if (server.username && server.username != "")
-            gSmtpUseUsername.checked = true;
+
     }
 
+    if (gSmtpAuthMethod.getAttribute("value") == "1")
+        gSmtpUseUsername.checked = true;
+    
+    dump("gSmtpAuthMethod = <" + gSmtpAuthMethod.localName + ">\n");
+    dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
+    
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
 }
 
 function saveSmtpSettings(server)
 {
-    if (!server) return;
 
-    server.hostname = gSmtpHostname.value;
-    //    server.alwaysUseUsername = document.getElementById("smtp.alwaysUseUsername").checked;
-    server.username = gSmtpUsername.value;
-    //server.savePassword = gSmtpSavePassword.checked;
-    
+    if (gSmtpUseUsername.checked)
+        gSmtpAuthMethod.setAttribute("value", "1");
+    else
+        gSmtpAuthMethod.setAttribute("value", "0");
+
+    dump("Saving to " + server + "\n");
+    if (server) {
+        server.hostname = gSmtpHostname.value;
+        server.authMethod = (gSmtpUseUsername.checked ? 1 : 0);
+        dump("Saved authmethod = " + server.authMethod +
+             " but checked = " + gSmtpUseUsername.checked + "\n");
+        server.username = gSmtpUsername.value;
+        //server.savePassword = gSmtpSavePassword.checked;
+    }
 }
 
 function onUseUsername(checkbox, dofocus)
