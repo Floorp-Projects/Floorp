@@ -356,7 +356,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
     nsAutoString name;
     attr->GetName(name);
-    if (name != L"excludes") {
+    if (name != "excludes") {
       nsAutoString value;
       nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
       element->GetAttribute(name, value);
