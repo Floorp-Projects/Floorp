@@ -422,7 +422,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 	int  charIndex = 0;
 	int  tokenIndex = 0;
 	PRBool closeQuoteFound = PR_FALSE;
-	nsString2 returnString = currentChar;
+	nsString2 returnString(currentChar, eOneByte);
 	
 	while (!closeQuoteFound && ContinueParse())
 	{
@@ -484,7 +484,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 		}
 	}
 	
-	return returnString.ToNewCString();
+	return PL_strdup(returnString.GetBuffer());
 }
 
 

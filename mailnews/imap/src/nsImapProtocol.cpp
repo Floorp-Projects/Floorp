@@ -3716,6 +3716,9 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 	char *dstPtr = nsnull;
 	PRInt32 dstLength = 0;
 	static PRBool tryCharsetConversion = PR_FALSE;
+#ifdef DEBUG_bienvenu
+	tryCharsetConversion = PR_TRUE;
+#endif
     // ***** temporary **** Fix me ****
 	if (!tryCharsetConversion)
 	{
@@ -3732,7 +3735,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 	if(NS_SUCCEEDED(res) && (nsnull != ccm))
 	{
 		nsString aCharset("x-imap4-modified-utf7");
-		PRUnichar *unichars;
+		PRUnichar *unichars = nsnull;
 		PRInt32 unicharLength;
 
 		if (!aConvertToUtf7Imap)
@@ -3758,7 +3761,9 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				}
 				NS_IF_RELEASE(decoder);
 				nsString2 unicodeStr(unichars, eTwoByte);
-				convertedString = unicodeStr.ToNewCString();
+				convertedString = (char *) PR_Malloc(srcLen + 1);
+				if (convertedString)
+					unicodeStr.ToCString(convertedString, srcLen + 1, 0);
 			}
 		}
 		else
@@ -3786,7 +3791,9 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 			}
 			NS_IF_RELEASE(encoder);
 			nsString2 unicodeStr2(dstPtr, eTwoByte);
-			convertedString = unicodeStr2.ToNewCString();
+			convertedString = (char *) PR_Malloc(dstLength + 1);
+			if (convertedString)
+				unicodeStr2.ToCString(convertedString, dstLength + 1, 0);
         }
         delete [] unichars;
       }

@@ -1833,7 +1833,7 @@ void nsImapServerResponseParser::namespace_data()
 							SetSyntaxError(PR_TRUE);
 						}
 					}
-					delete [] namespacePrefix;
+					PR_FREEIF(namespacePrefix);
 				}
 			}
 		}
