@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src emitters cthandlers resources
+DIRS = public src emitters cthandlers build resources
 
 ifdef ENABLE_TESTS
 DIRS += tests
