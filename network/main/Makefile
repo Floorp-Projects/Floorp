@@ -45,6 +45,7 @@ CSRCS		= \
 	mkutils.c	\
 	prefetch.c	\
 	unix-dns.c	\
+	autoupdt.c	\
 	$(NULL)
 
 ifndef MODULAR_NETLIB
@@ -55,7 +56,7 @@ endif
 
 EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 	netstream.h mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
-        mkutils.h mktrace.h net_xp_file.h
+        mkutils.h mktrace.h net_xp_file.h autoupdt.h
 
 ifdef MOZ_MAIL_NEWS
 EXPORTS += mkldap.h

@@ -54,6 +54,7 @@
 
 #ifdef MOZ_SMARTUPDATE
 #include "softupdt.h"	/* software update converters */
+NET_StreamClass * autoupdate_Converter(FO_Present_Types format_out, void *data_object, URL_Struct *URL_s, MWContext *window_id);
 #endif
 
 #include "m_cvstrm.h"
@@ -631,6 +632,10 @@ net_RegisterDefaultDecoders (void)
   NET_RegisterContentTypeConverter("*", FO_SOFTWARE_UPDATE, NULL, SU_NewStream);
   NET_RegisterContentTypeConverter(APPLICATION_JAVAARCHIVE, FO_PRESENT, NULL, SU_NewStream);
   NET_cdataCommit(APPLICATION_JAVAARCHIVE, ".jar");
+
+  NET_RegisterContentTypeConverter( "*", FO_CACHE_AND_AUTOUPDATE, NULL, NET_CacheConverter);
+  NET_RegisterContentTypeConverter( "*", FO_AUTOUPDATE, NULL, autoupdate_Converter);
+
 #endif
 
 #ifndef MCC_PROXY
