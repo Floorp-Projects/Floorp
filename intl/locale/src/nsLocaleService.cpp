@@ -255,9 +255,12 @@ nsLocaleService::nsLocaleService(void)
         }
 
         LocaleObject locale_object = NULL;
-        UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
-                              (UniChar *)L"", &locale_object);
-
+        int result = UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
+                                           (UniChar *)L"", &locale_object);
+        if (result != ULS_SUCCESS) {
+            int result = UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
+                                               (UniChar *)L"en_US", &locale_object);
+        }
         char* lc_temp;
         for( i = 0; i < LocaleListLength; i++ ) {
             lc_temp = nsnull;
@@ -280,7 +283,8 @@ nsLocaleService::nsLocaleService(void)
                     result = os2Converter->GetXPLocale(lang,&xpLocale); 
             }
             if (NS_FAILED(result)) {
-                nsCRT::free(lc_temp);
+                UniFreeMem(lc_temp);
+                UniFreeLocaleObject(locale_object);
                 return;
             }
             resultLocale->AddCategory(category.get(),xpLocale.get());
