@@ -33,6 +33,7 @@ EXPORTS	= \
 	nsIXULChildDocument.h		\
 	nsIXULDocumentInfo.h		\
 	nsIXULPopupListener.h \
+	nsIDOMXULFocusTracker.h \
 	nsIStreamLoadableDocument.h  \
 	$(NULL)
 
