@@ -1181,6 +1181,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       }
     }
 
+    if (GetReplyOnTop() == 1) 
+      mCitePrefix += NS_LITERAL_STRING("<br><br>");
+
     nsXPIDLString author;
     rv = originalMsg->GetMime2DecodedAuthor(getter_Copies(author));
     if (NS_SUCCEEDED(rv))
@@ -1190,7 +1193,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
 
       if (parser)
       {
-        nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
+        nsAutoString aCharset;
+        aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
         nsAutoString authorStr; authorStr.Assign(author);
         rv = ConvertFromUnicode(aCharset, authorStr, &utf8Author);
@@ -1198,36 +1202,35 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         {
           nsCAutoString acharsetC;
           acharsetC.AssignWithConversion(aCharset);
-          rv = parser->ExtractHeaderAddressName(acharsetC, utf8Author, &authorName);
+          rv = parser->ExtractHeaderAddressName(acharsetC, utf8Author,
+                                                &authorName);
           if (NS_SUCCEEDED(rv))
             rv = ConvertToUnicode(aCharset, authorName, authorStr);
         }
-        
-        if (!utf8Author || NS_FAILED(rv))
+        else
         {
           nsCAutoString authorCStr;
           authorCStr.AssignWithConversion(author);
-          rv = parser->ExtractHeaderAddressName(nsnull, authorCStr, &authorName);
+          rv = parser->ExtractHeaderAddressName(nsnull, authorCStr,
+                                                &authorName);
           if (NS_SUCCEEDED(rv))
             authorStr.AssignWithConversion(authorName);
         }
-        if (NS_SUCCEEDED(rv))
-        {
-          if (GetReplyOnTop() == 1)
-            mCitePrefix.AppendWithConversion("<br><br>");
-
-          mCitePrefix.Append(author);
-          mCitePrefix.AppendWithConversion(" wrote:<br><html>");
-        }
+        PR_FREEIF(utf8Author);
         if (authorName)
           PL_strfree(authorName);
-        PR_FREEIF(utf8Author);
+
+        if (NS_SUCCEEDED(rv) && !authorStr.IsEmpty())
+          mCitePrefix.Append(authorStr);
+        else
+          mCitePrefix.Append(author);
+        mCitePrefix.AppendWithConversion(" wrote:<br><html>");  //XXX I18n?
       }
     }
   }
-  
+
   if (mCitePrefix.IsEmpty())
-    mCitePrefix.AppendWithConversion("<br><br>--- Original Message ---<br><html>");
+    mCitePrefix.AppendWithConversion("<br><br>--- Original Message ---<br><html>");  //XXX I18n?
   
   NS_INIT_REFCNT(); 
 }
