@@ -1311,7 +1311,7 @@ PRUint32                  i;
       m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, nsnull);  
     else
     {
-      nsString2 tEmail(myEmail);
+      nsString tEmail(myEmail);
       m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail.GetBuffer());  
     }
 
@@ -1345,7 +1345,7 @@ PRUint32                  i;
     //
 		if (m_attachments[i].m_content_id)  
     {
-      nsString2   newSpec("cid:");
+      nsString   newSpec("cid:");
       
       newSpec.Append(m_attachments[i].m_content_id);
       if (anchor) 

@@ -284,7 +284,7 @@ GetIMessageFromURI(const PRUnichar *msgURI)
 {
   nsresult                  rv;
   nsIRDFResource            *myRDFNode = nsnull;
-  nsString2                 convertString(msgURI);
+  nsString                 convertString(msgURI);
   char                      *tmpURI = nsnull;
   nsIMessage                *returnMessage;
 
@@ -457,6 +457,6 @@ HackUpAURIToPlayWith(void)
   NS_IF_RELEASE(enumerator);
   char    *tURI;
   myRDFNode->GetValue(&tURI);
-  nsString2   workURI(tURI);
+  nsString   workURI(tURI);
   return workURI.ToNewUnicode(); 
 }

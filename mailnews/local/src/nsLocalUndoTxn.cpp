@@ -83,7 +83,7 @@ nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
     char *uri = nsnull;
     if (!srcFolder) return rv;
     rv = srcFolder->GetURI(&uri);
-    nsString2 protocolType(uri, eOneByte);
+    nsCString protocolType(uri);
     PR_FREEIF(uri);
     protocolType.SetLength(protocolType.FindChar(':'));
     if (protocolType.EqualsIgnoreCase("imap"))
@@ -176,7 +176,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIUrlListener> urlListener;
-            nsString2 msgIds("", eOneByte);
+            nsCString msgIds;
             PRUint32 i, count = keyArray.GetSize();
 
             urlListener = do_QueryInterface(folder, &rv);

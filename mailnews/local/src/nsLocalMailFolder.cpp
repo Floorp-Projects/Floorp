@@ -811,7 +811,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
   if (mDepth == 1) {
     // Depth == 1 means we are on the mail server level
     // override the name here to say "Local Mail"
-	nsString2 localMailStr("Local Mail");
+	nsString localMailStr("Local Mail");
     *prettyName = localMailStr.ToNewUnicode();
 	if(!(*prettyName))
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -1108,7 +1108,7 @@ nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFold
 	if(NS_FAILED(rv)) 
 		return rv;
 
-	nsString2 uri(eOneByte);
+	nsCString uri;
 	uri.Append(mURI);
 	uri.Append('/');
 
@@ -1324,7 +1324,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
-  nsString2 protocolType(uri, eOneByte);
+  nsCString protocolType(uri);
   PR_FREEIF(uri);
   protocolType.SetLength(protocolType.FindChar(':'));
 
@@ -1556,7 +1556,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
   }
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
-    nsString2 result("", eOneByte);
+    nsCString result;
     char timeBuffer[128];
     PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
