@@ -169,6 +169,26 @@ jsd_CallExecutionHook(JSDContext* jsdc,
 }
 
 JSBool
+jsd_CallCallHook (JSDContext* jsdc,
+                  JSContext *cx,
+                  uintN type,
+                  JSD_CallHookProc hook,
+                  void* hookData)
+{
+    JSBool hookanswer;
+    JSDThreadState*  jsdthreadstate;
+    
+    hookanswer = JS_FALSE;
+    if(hook && NULL != (jsdthreadstate = jsd_NewThreadState(jsdc, cx)))
+    {
+        hookanswer = hook(jsdc, jsdthreadstate, type, hookData);
+        jsd_DestroyThreadState(jsdc, jsdthreadstate);
+    }
+
+    return hookanswer;
+}
+
+JSBool
 jsd_SetInterruptHook(JSDContext*           jsdc,
                      JSD_ExecutionHookProc hook,
                      void*                 callerdata)
@@ -257,6 +277,52 @@ jsd_ClearThrowHook(JSDContext* jsdc)
 {
     JSD_LOCK();
     jsdc->throwHook      = NULL;
+    JSD_UNLOCK();
+
+    return JS_TRUE;
+}
+
+JSBool
+jsd_SetFunctionHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata)
+{
+    JSD_LOCK();
+    jsdc->functionHookData  = callerdata;
+    jsdc->functionHook      = hook;
+    JSD_UNLOCK();
+
+    return JS_TRUE;
+}
+
+JSBool
+jsd_ClearFunctionHook(JSDContext* jsdc)
+{
+    JSD_LOCK();
+    jsdc->functionHook      = NULL;
+    JSD_UNLOCK();
+
+    return JS_TRUE;
+}
+
+JSBool
+jsd_SetTopLevelHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata)
+{
+    JSD_LOCK();
+    jsdc->toplevelHookData  = callerdata;
+    jsdc->toplevelHook      = hook;
+    JSD_UNLOCK();
+
+    return JS_TRUE;
+}
+
+JSBool
+jsd_ClearTopLevelHook(JSDContext* jsdc)
+{
+    JSD_LOCK();
+    jsdc->toplevelHook      = NULL;
     JSD_UNLOCK();
 
     return JS_TRUE;

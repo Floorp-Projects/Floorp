@@ -555,6 +555,24 @@ typedef uintN
                          void*           callerdata,
                          jsval*          rval);
 
+/* possible 'type' params for JSD_CallHookProc */
+#define JSD_HOOK_TOPLEVEL_START  0   /* about to evaluate top level script */
+#define JSD_HOOK_TOPLEVEL_END    1   /* done evaluting top level script    */
+#define JSD_HOOK_FUNCTION_CALL   2   /* about to call a function           */
+#define JSD_HOOK_FUNCTION_RETURN 3   /* done calling function              */
+
+/*
+* Implement a callback of this form in order to hook function call/returns.
+* Return JS_TRUE from a TOPLEVEL_START or FUNCTION_CALL type call hook if you
+* want to hear about the TOPLEVEL_END or FUNCTION_RETURN too.  Return value is
+* ignored to TOPLEVEL_END and FUNCTION_RETURN type hooks.
+*/
+typedef JSBool
+(*JSD_CallHookProc)(JSDContext*     jsdc,
+                    JSDThreadState* jsdthreadstate,
+                    uintN           type,
+                    void*           callerdata);
+
 /*
 * Set Hook to be called whenever the given pc is about to be executed --
 * i.e. for 'trap' or 'breakpoint'
@@ -648,6 +666,32 @@ JSD_SetThrowHook(JSDContext*           jsdc,
 */
 extern JSD_PUBLIC_API(JSBool)
 JSD_ClearThrowHook(JSDContext* jsdc);
+
+/*
+* Set the hook that should be called when a toplevel script begins or completes.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_SetTopLevelHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata);
+/*
+* Clear the toplevel call hook
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_ClearTopLevelHook(JSDContext* jsdc);
+
+/*
+* Set the hook that should be called when a function call or return happens.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_SetFunctionHook(JSDContext*      jsdc,
+                    JSD_CallHookProc hook,
+                    void*            callerdata);
+/*
+* Clear the function call hook
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_ClearFunctionHook(JSDContext* jsdc);
 
 /***************************************************************************/
 /* Stack Frame functions */
