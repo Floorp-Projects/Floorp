@@ -88,6 +88,10 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("enter nsContainerFrame::DidReflow: status=%d",
                       aStatus));
+  // Let nsFrame position and size our view (if we have one), and clear
+  // the NS_FRAME_IN_REFLOW bit
+  nsresult  result = nsFrame::DidReflow(aPresContext, aStatus);
+
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Apply DidReflow to each and every list that this frame implements
     nsIAtom* listName = nsnull;
@@ -110,10 +114,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   }
 
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
-
-  // Let nsFrame position and size our view (if we have one), and clear
-  // the NS_FRAME_IN_REFLOW bit
-  return nsFrame::DidReflow(aPresContext, aStatus);
+  return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////
