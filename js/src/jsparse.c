@@ -2278,6 +2278,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn2 = MemberExpr(cx, ts, tc, JS_FALSE);
         if (!pn2)
             return NULL;
+        pn->pn_op = JSOP_NEW;
         PN_INIT_LIST_1(pn, pn2);
 
         if (js_MatchToken(cx, ts, TOK_LP)) {
@@ -2497,7 +2498,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                 return NULL;
                             pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                             pn3->pn_expr = NULL;
-                            /* have to fake a 'function' token */
+
+                            /* We have to fake a 'function' token here. */
                             CURRENT_TOKEN(ts).t_op = JSOP_NOP;
                             CURRENT_TOKEN(ts).type = TOK_FUNCTION;
                             pn2 = FunctionDef(cx, ts, tc, JS_TRUE);
@@ -2513,6 +2515,13 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                         pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                     break;
                   case TOK_RC:
+                    if (JS_HAS_STRICT_OPTION(cx) &&
+                        !js_ReportCompileErrorNumber(cx, ts,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_TRAILING_COMMA)) {
+                        return NULL;
+                    }
                     goto end_obj_init;
                   default:
                     js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
