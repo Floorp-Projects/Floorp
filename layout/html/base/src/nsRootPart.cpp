@@ -538,8 +538,6 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
               mEvent.eventStructType = NS_MOUSE_EVENT;
               mEvent.message = NS_MOUSE_EXIT;
               mLastContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
-
-              NS_RELEASE(mLastContent);
             }
             //fire mouseover
             nsEventStatus mStatus;
@@ -551,6 +549,7 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
 
             NS_RELEASE(mStateManager);
           }
+          NS_IF_RELEASE(mLastContent);
         }
       }
       break;
