@@ -383,7 +383,7 @@ public final class RDN implements java.io.Serializable {
      * Returns the syntax for the attribute if the given attribute is registered 
      * in the internal attribute table.
      * @param attr the attribute to lookup in the table.
-     * @returns the syntax of the attribute if found, null otherwise.
+     * @return the syntax of the attribute if found, null otherwise.
      * @see netscape.ldap.util.RDN#unregisterAttributeSyntax
      * @see netscape.ldap.util.RDN#registerAttributeSyntax
      * @see netscape.ldap.util.RDN#getAttributesForSyntax

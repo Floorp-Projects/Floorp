@@ -188,7 +188,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
     /**
      * Gets the change type, which identifies the type of change
      * that occurred.
-     * @returns change type identifying the type of change that
+     * @return change type identifying the type of change that
      * occurred.  This can be one of the following values:
      * <P>
      *
@@ -212,7 +212,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
 
     /**
      * Gets the previous DN of the entry (if the entry was renamed).
-     * @returns the previous distinguished name of the entry.
+     * @return the previous distinguished name of the entry.
      * @see netscape.ldap.controls.LDAPEntryChangeControl#setPreviousDN
      */
     public String getPreviousDN() {

@@ -125,7 +125,7 @@ public class ConnectionPool {
 
     /** 
      * Constructor for using an existing connection to clone
-     * from
+     * from.
      * <P>
      * The connection to clone must be already established and
      * the user authenticated.
