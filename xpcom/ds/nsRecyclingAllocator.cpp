@@ -159,7 +159,7 @@ nsRecyclingAllocator::~nsRecyclingAllocator()
 
 // Allocation and free routines
 void*
-nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
+nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
 {
     // Mark that we are using. This will prevent any
     // timer based release of unused memory.
@@ -173,7 +173,7 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
      
     // We need to do an allocation
     // Add 4 bytes to what we allocate to hold the bucket index
-    PRUint32 allocBytes = bytes + NS_ALLOCATOR_OVERHEAD_BYTES;
+    PRSize allocBytes = bytes + NS_ALLOCATOR_OVERHEAD_BYTES;
   
     // We dont have that memory already. Allocate.
     Block *ptr = (Block *) (zeroit ? calloc(1, allocBytes) : malloc(allocBytes));
@@ -275,7 +275,7 @@ nsRecyclingAllocator::FreeUnusedBuckets()
 }
 
 nsRecyclingAllocator::Block*
-nsRecyclingAllocator::FindFreeBlock(PRUint32 bytes)
+nsRecyclingAllocator::FindFreeBlock(PRSize bytes)
 {
     // We dont enter lock for this check. This is intentional.
     // Here is my logic: we are checking if (!mFreeList). Doing this check
