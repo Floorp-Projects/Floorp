@@ -46,35 +46,48 @@
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
- 
-  <titledbox orient="vertical" id="walletArea" style="display: none;">
-  	<!--not shown for beta 1 only, therefore style 'display: none' here in XUL
-	so we don't have to introduce a new CSS file just for this temporary measure-->
+
+  <!--should use titledbox instead of fieldset, but that was causing an assertion
+      when pref.js was setting it to display:none--> 
+  <!--titledbox orient="vertical" id="walletAreax"-->
+  <html:fieldset id="walletArea">
     <title><text value="&walletHeader;"/></title>
-    <html:div >&walletDetails;</html:div>
+    <html:div>&walletDetails;</html:div>
     <spring class="vgap"/>
-	<box>
-		<html:div>
-     	<html:label for="walletServer" accesskey="c" tabindex="0">
-	    	&server.label;
-  	  </html:label> 
-	  </html:div> 
-		<html:input name="Wallet Server:" type="text"	id="walletServer" 
-		  pref="true" preftype="string" prefstring="wallet.Server" flex="1"/> 
+    <box align="horizontal" vertical-align="baseline" >
+      <spring flex="1"/>
+      <html:div>
+        <html:label for="walletServer" accesskey="c" tabindex="0">
+          &server.label;
+        </html:label> 
+      </html:div> 
+      <html:input name="Wallet Server:" type="text" id="walletServer" 
+        pref="true" preftype="string" prefstring="wallet.Server" flex="1"/> 
     </box>
     <box align="horizontal">
+      <html:input type="checkbox" id="walletCaptureForms" prefdefval="true"
+            pref="true" preftype="bool" prefstring="wallet.captureForms" />
+      <html:label for="walletCaptureForms" accesskey="&walletEnabledCheck.accesskey;"
+                  tabindex="0">
+        &walletEnabledCheck.label; 
+      </html:label>
       <spring flex="1"/>
       <titledbutton value="&viewWallet.label;" class="dialog push" onclick="viewWallet();"/>
     </box>
-  </titledbox>
+  </html:fieldset>
+  <!--/titledbox-->
 
   <titledbox orient="vertical" id="signonArea">
     <title><text value="&signonHeader;"/></title>
     <html:div>&signonDetails;</html:div>
-	<spring class="vgap"/>
+    <spring class="vgap"/>
     <box align="horizontal" vertical-align="baseline" >
-		<html:input type="checkbox" id="signonEnabledCheck" checked="true" disabled="true"/>
-		<html:label for="signonEnabledCheck">&signonEnabledCheck.label;</html:label>
+      <html:input type="checkbox" id="signonRememberSignons" prefdefval="true"
+            pref="true" preftype="bool" prefstring="signon.rememberSignons" />
+      <html:label for="signonEnabledCheck" accesskey="&signonEnabledCheck.accesskey;"
+                  tabindex="0">
+        &signonEnabledCheck.label; 
+      </html:label>
       <spring flex="1"/>
       <titledbutton value="&viewSignons.label;" class="dialog push" onclick="viewSignons();"/>
     </box>

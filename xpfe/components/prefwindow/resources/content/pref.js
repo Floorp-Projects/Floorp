@@ -276,13 +276,6 @@ function PREF_onpageload( tag )
       if (tag == "pref-wallet") {
         element = window.frames[this.contentFrame].document.getElementById("walletArea");
         element.setAttribute("style","display: none;" );
-      } else if (tag == "pref-advanced") {
-        element =
-          window.frames[this.contentFrame].document.getElementById("walletCaptureForms");
-        element.setAttribute("style","display: none;" );
-        element = 
-          window.frames[this.contentFrame].document.getElementById("walletCaptureFormsLabel");
-        element.setAttribute("style","display: none;" );
       }
     }
   } catch(e) {

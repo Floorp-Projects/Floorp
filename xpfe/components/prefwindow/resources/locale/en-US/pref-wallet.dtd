@@ -5,12 +5,13 @@
 <!ENTITY rHeader "Manage stored data about yourself">
 <!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
 <!ENTITY server.label "Server for wallet tables">
-
 <!ENTITY walletHeader "Wallet">
 <!ENTITY walletDetails "Wallet stores personal information so that filling out forms on webpages is easier.">
 <!ENTITY viewWallet.label "View Wallet Entries">
-
 <!ENTITY signonHeader "Password Manager">
 <!ENTITY signonDetails "Password Manager stores your usernames and passwords for web sites that require you to log in, and enters them for you automatically when you visit those sites.">
 <!ENTITY viewSignons.label "View Stored Passwords">
-<!ENTITY signonEnabledCheck.label "Enable Password Manager">
+<!ENTITY signonEnabledCheck.label "Enable Password Manager.">
+<!ENTITY signonEnabledCheck.accesskey "s">
+<!ENTITY walletEnabledCheck.label "Save form data when submitting forms.">
+<!ENTITY walletEnabledCheck.accesskey "w">
