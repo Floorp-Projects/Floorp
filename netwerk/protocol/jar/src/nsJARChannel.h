@@ -87,6 +87,7 @@ private:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsISupports>           mOwner;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsISupports>           mSecurityInfo;
     nsCOMPtr<nsIProgressEventSink>  mProgressSink;
     nsCOMPtr<nsILoadGroup>          mLoadGroup;
     nsCOMPtr<nsIStreamListener>     mListener;

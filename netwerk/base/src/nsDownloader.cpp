@@ -153,7 +153,7 @@ nsDownloader::OnStopRequest(nsIRequest  *request,
         }
     }
 
-    mObserver->OnDownloadComplete(this, status, mLocation);
+    mObserver->OnDownloadComplete(this, request, ctxt, status, mLocation);
     mObserver = nsnull;
 
     return NS_OK;

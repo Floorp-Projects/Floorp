@@ -70,13 +70,15 @@ interface nsIDownloader : nsIStreamListener
               in nsIFile             downloadLocation);
 };
 
-[scriptable, uuid(814bd098-4dfb-46dd-8305-9052c998ed94)]
+[scriptable, uuid(44b3153e-a54e-4077-a527-b0325e40924e)]
 interface nsIDownloadObserver : nsISupports
 {
     /**
      * Called to signal a download that has completed.
      */
     void onDownloadComplete(in nsIDownloader downloader,
+                            in nsIRequest    request,
+                            in nsISupports   ctxt,
                             in nsresult      status,
                             in nsIFile       result);
 };
