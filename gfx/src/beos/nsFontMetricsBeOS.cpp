@@ -44,7 +44,6 @@
 #include "nsFontMetricsBeOS.h" 
 #include "nsIServiceManager.h" 
 #include "nsICharsetConverterManager.h" 
-#include "nsICharsetConverterManager2.h" 
 #include "nsISaveAsCharset.h" 
 #include "nsIPref.h" 
 #include "nsCOMPtr.h" 
