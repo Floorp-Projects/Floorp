@@ -1199,7 +1199,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 #elif defined(XP_PC) || defined(NTO)
     controlValue.AssignWithConversion("true");
 #else 
-    altValue = "true";
+    altValue.AssignWithConversion("true");
 #endif
   }
   
