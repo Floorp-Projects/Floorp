@@ -132,7 +132,6 @@
   <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
-  <command id="cmd_insert"/>
 </commandset>
 
 <broadcasterset id="composeBroadcasters">
@@ -281,9 +280,9 @@
         </menupopup>
       </menu>
   
-      <menu id="insertMenu" command="cmd_insert"/>
+      <menu id="insertMenu" command="cmd_renderedHTMLEnabler"/>
 
-      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_insert">
+      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_renderedHTMLEnabler">
         <menupopup id="formatMenuPopup">
           <menu id="tableMenu"/>
           <menuseparator/>

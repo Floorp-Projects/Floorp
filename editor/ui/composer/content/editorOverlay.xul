@@ -649,7 +649,7 @@
   </toolbarbutton>
 
   <!-- InsertPopupButton is used by messengercompose.xul -->
-  <toolbarbutton type="menu" id="InsertPopupButton" observes="cmd_insert"
+  <toolbarbutton type="menu" id="InsertPopupButton" observes="cmd_renderedHTMLEnabler"
               tooltiptext="&InsertPopupButton.tooltip;">
     <menupopup id="InsertPopup">
       <menuitem id="InsertLinkItem" class="menuitem-iconic" observes="cmd_link"
