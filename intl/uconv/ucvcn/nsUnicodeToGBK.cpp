@@ -205,7 +205,7 @@ NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
     }                   
 
   //GBK font lib also have single byte ASCII characters, set them here
-  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++);
+  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++)
   {
     SET_REPRESENTABLE(aInfo, SrcUnicode);
   }   

@@ -199,7 +199,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
     }                   
 
   //GB2312 font lib also have single byte ASCII characters, set them here
-  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++);
+  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++)
   {
     SET_REPRESENTABLE(aInfo, SrcUnicode);
   }     
