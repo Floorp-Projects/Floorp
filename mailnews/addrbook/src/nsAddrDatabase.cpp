@@ -2340,7 +2340,7 @@ NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* 
     nsIMdbRow    *cardRow = nsnull; 
     // Please DO NOT change the 3rd param of GetRowFromAttribute() call to 
     // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
-  nsresult result = GetRowFromAttribute(kPriEmailColumn, emailAddress, PR_FALSE /* retain case */, &cardRow);
+    nsresult result = GetRowFromAttribute(kPriEmailColumn, emailAddress, PR_FALSE /* retain case */, &cardRow);
     if (cardRow)
     {
         mdbOid outOid;
@@ -3716,58 +3716,6 @@ nsresult nsAddrDatabase::DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow)
     err = dbTable->CutRow(GetEnv(), dbRow);
 
     return (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAddrDatabase::RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32 nCabMax)
-{
-    nsresult err = NS_OK;
-    mdb_err merror;
-    nsIMdbTableRowCursor* rowCursor = nsnull;
-    nsIMdbRow* findRow = nsnull;
-     mdb_pos    rowPos = 0;
-    nsVoidArray delCardArray;
-
-    merror = m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-
-    if (!(merror == NS_OK && rowCursor))
-        return NS_ERROR_FAILURE;
-
-    do 
-    {
-        merror = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
-
-        if (merror == NS_OK && findRow)
-        {
-            mdbOid rowOid;
-            merror = findRow->GetOid(GetEnv(), &rowOid);
-
-            if (merror == NS_OK && IsCardRowScopeToken(rowOid.mOid_Scope))
-            {
-                delCardArray.AppendElement(findRow);
-                if (--cardTotal == nCabMax)
-                    break;
-            }
-        }
-    } while (findRow);
-        NS_RELEASE(rowCursor);
-
-    PRInt32 count = delCardArray.Count();
-    PRInt32 i;
-    for (i = 0; i < count; i++)
-    {
-        findRow = (nsIMdbRow*)delCardArray.ElementAt(i);
-
-        nsCOMPtr<nsIAbCard>    card;
-        CreateCard(findRow, 0, getter_AddRefs(card));
-        //need to create the card before we delete the row
-        err = DeleteRow(m_mdbPabTable, findRow);
-
-        if (card)
-            NotifyCardEntryChange(AB_NotifyDeleted, card, nsnull);
-
-                NS_RELEASE(findRow);
-    }
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDBWithKey(nsIAbDirectory *newList, PRBool notify, PRUint32 *key)

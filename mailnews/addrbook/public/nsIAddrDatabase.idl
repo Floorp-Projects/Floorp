@@ -168,7 +168,6 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	PRBool findMailListbyUnicodeName(in wstring listName);
 
 	void getCardCount(out PRUint32 count);
-	void removeExtraCardsInCab(in PRUint32 cardTotal, in PRUint32 cabMax);
 
 	[noscript] readonly attribute nsIMdbRow newRow;
 	[noscript] readonly attribute nsIMdbRow newListRow;

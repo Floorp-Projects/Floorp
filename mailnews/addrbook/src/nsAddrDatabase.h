@@ -286,7 +286,6 @@ public:
 	NS_IMETHOD FindMailListbyUnicodeName(const PRUnichar *listName, PRBool *exist);
 
 	NS_IMETHOD GetCardCount(PRUint32 *count);
-	NS_IMETHOD RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32 nCabMax);
 
   NS_IMETHOD SetCardValue(nsIAbCard *card, const char *name, const PRUnichar *value, PRBool notify);
   NS_IMETHOD GetCardValue(nsIAbCard *card, const char *name, PRUnichar **value);
