@@ -26,16 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_ENABLE_GTK
-DIRS        += gtk
-endif
-
-ifdef MOZ_ENABLE_XLIB
-DIRS        += gtk
-endif
-
-ifdef MOZ_ENABLE_QT
-DIRS        += gtk
+ifneq (,$(filter gtk gtk2 xlib qt beos,$(MOZ_WIDGET_TOOLKIT)))
+DIRS	+= gtk
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -44,10 +36,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DIRS = win
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-DIRS = gtk
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
