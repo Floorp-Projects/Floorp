@@ -161,8 +161,11 @@ OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBa
 					NavCallBackUserData callBackUD)
 {
 	WindowPtr  windowPtr;
-                     
-	windowPtr = (WindowPtr) callBackParms->eventData.eventDataParms.event->message;
+  
+  if (!callBackParms || !callBackParms->eventData.eventDataParms.event)
+  	return;
+
+	windowPtr = (WindowPtr)callBackParms->eventData.eventDataParms.event->message;
 	if (!windowPtr)
 		return;
 		
@@ -670,44 +673,45 @@ ClearDiskSpaceMsgs(void)
 ** a string of the appropriate size and the caller
 ** should assume ownership of the returned pointer.
 */
+#define kMaxLongLen	12
 char *
 ltoa(long n)
 {
-	char *s;
-	int i, j, sign, tmp;
+	char	s[kMaxLongLen] = "";
+	char *returnBuf;
+	int i, j, sign;
 	
 	/* check sign and convert to positive to stringify numbers */
 	if ( (sign = n) < 0)
 		n = -n;
 	i = 0;
-	s = (char*) malloc(sizeof(char));
 	
 	/* grow string as needed to add numbers from powers of 10 down till none left */
 	do
 	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
 		s[i++] = n % 10 + '0';  /* '0' or 30 is where ASCII numbers start from */
-		s[i] = '\0';
 	}
 	while( (n /= 10) > 0);	
 	
 	/* tack on minus sign if we found earlier that this was negative */
 	if (sign < 0)
 	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
 		s[i++] = '-';
 	}
+
 	s[i] = '\0';
 	
 	/* pop numbers (and sign) off of string to push back into right direction */
 	for (i = 0, j = strlen(s) - 1; i < j; i++, j--)
 	{
-		tmp = s[i];
+		char tmp = s[i];
 		s[i] = s[j];
 		s[j] = tmp;
 	}
-	
-	return s;
+
+	returnBuf = (char *)malloc(strlen(s) + 1);
+	strcpy(returnBuf, s);
+	return returnBuf;
 }
 
 short

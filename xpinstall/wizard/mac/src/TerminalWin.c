@@ -70,20 +70,22 @@ ShowTerminalWin(void)
 			return;
 		}
 		
+		gControls->tw->siteSelector = NULL;
+		gControls->tw->saveBitsCheckbox = NULL;
+		
 		gControls->tw->startMsgBox = viewRect;
 	
 		gControls->tw->startMsg = TENew(&viewRect, &viewRect);
-	    if (gControls->tw->startMsg == NULL)
-	    {
-	    	ErrorHandler(eMem);
-	    	return;
-	    }
-	    
+    if (gControls->tw->startMsg == NULL)
+    {
+    	ErrorHandler(eMem);
+    	return;
+    }
+    
 #if MOZILLA == 0	
         // site selector
 		if (gControls->cfg->numSites > 0)
 		{
-			gControls->tw->siteSelector = NULL;
 			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
 			if (!gControls->tw->siteSelector)
 			{
@@ -215,32 +217,38 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 	
-#if MOZILLA == 0			
-	HLock((Handle)gControls->tw->siteSelector);
-	r = (**(gControls->tw->siteSelector)).contrlRect;
-	HUnlock((Handle)gControls->tw->siteSelector);
-	if (PtInRect(localPt, &r))
+#if MOZILLA == 0
+	if (gControls->tw->siteSelector)
 	{
-		part = FindControl(localPt, gWPtr, &currCntl);
-		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
-		gControls->opt->siteChoice = GetControlValue(currCntl);
-		return;
-	}		
-	
-	HLock((Handle)gControls->tw->saveBitsCheckbox);
-	r = (**(gControls->tw->saveBitsCheckbox)).contrlRect;
-	HUnlock((Handle)gControls->tw->saveBitsCheckbox);
-	if (PtInRect(localPt, &r))
+		HLock((Handle)gControls->tw->siteSelector);
+		r = (**(gControls->tw->siteSelector)).contrlRect;
+		HUnlock((Handle)gControls->tw->siteSelector);
+		if (PtInRect(localPt, &r))
+		{
+			part = FindControl(localPt, gWPtr, &currCntl);
+			part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
+			gControls->opt->siteChoice = GetControlValue(currCntl);
+			return;
+		}		
+	}
+
+	if (gControls->tw->saveBitsCheckbox)
 	{
-		part = FindControl(localPt, gWPtr, &currCntl);
-		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
-		checkboxVal = GetControlValue(currCntl);
-		SetControlValue(currCntl, 1 - checkboxVal);
-		if (checkboxVal)  // was selected so now toggling off
-			gControls->opt->saveBits = false;
-		else			  // was not selected so now toggling on
-			gControls->opt->saveBits = true;
-		return;
+		HLock((Handle)gControls->tw->saveBitsCheckbox);
+		r = (**(gControls->tw->saveBitsCheckbox)).contrlRect;
+		HUnlock((Handle)gControls->tw->saveBitsCheckbox);
+		if (PtInRect(localPt, &r))
+		{
+			part = FindControl(localPt, gWPtr, &currCntl);
+			part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
+			checkboxVal = GetControlValue(currCntl);
+			SetControlValue(currCntl, 1 - checkboxVal);
+			if (checkboxVal)  // was selected so now toggling off
+				gControls->opt->saveBits = false;
+			else			  // was not selected so now toggling on
+				gControls->opt->saveBits = true;
+			return;
+		}
 	}
 #endif /* MOZILLA == 0 */
 					

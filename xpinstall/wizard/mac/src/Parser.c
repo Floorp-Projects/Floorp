@@ -125,7 +125,7 @@ ReadConfigFile(char **text)
 		bSuccess = false;
 	if (dataSize > 0)
 	{
-		*text = (char*) NewPtrClear(dataSize);
+		*text = (char*) NewPtrClear(dataSize + 1);		// ensure null termination
 		if (!(*text))
 		{
 			ErrorHandler(eMem);
@@ -499,9 +499,9 @@ PopulateCompWinKeys(char *cfgText)
 		{
 			// currKey = "Dependee<j>"
 			currDepNum = ltoa(j);
-			currKey = NewPtrClear(strlen(currKeyBuf) + strlen(currDepNum));
-			strncpy(currKey, currKeyBuf, strlen(currKeyBuf));
-			strncat(currKey, currDepNum, strlen(currDepNum));
+			currKey = NewPtrClear(strlen(currKeyBuf) + strlen(currDepNum) + 1);
+			strcpy(currKey, currKeyBuf);
+			strcat(currKey, currDepNum);
 
 			gControls->cfg->comp[i].depName[j] = NewHandleClear(kValueMaxLen);
 			if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].depName[j], cfgText))
@@ -1030,7 +1030,6 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	/* Fill key-value pair using the pascal string section name and key name */
 	
 	char		*value;
-	long		len;
 	Boolean		bFound = false;
 	
 	value = (char*) NewPtrClear(kValueMaxLen);
@@ -1042,9 +1041,19 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 			
 	if (FindKeyValue(cfgText, sectionName, keyName, value))
 	{
+		long	len = strlen(value);		
+		OSErr	err;
+		
+		SetHandleSize(dest, len + 1);
+		err = MemError();
+		if (err != noErr)
+		{
+			ErrorHandler(err);
+			return false;
+		}
+		
 		HLock(dest);
-		len = strlen(value);
-		strncpy(*dest, value, len);
+		strcpy(*dest, value);
 		HUnlock(dest);
 		bFound = true;
 	}
@@ -1188,12 +1197,10 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
 	
 	/* clear out extra carriage returns above next key */
 	while( (*sbuf == MAC_EOL) || (*sbuf == WIN_EOL) || (*sbuf == ' ') || (*sbuf == '\t')) 
-	{
-		if (*sbuf == MY_EOF) /* no more keys */
-			return false;
-		else
 			sbuf++;
-	}
+
+	if (*sbuf == MY_EOF) /* no more keys */
+		return false;
 	
 	if (*sbuf == ';') /* comment encountered */
 	{
@@ -1221,6 +1228,7 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
 		else
 			sbuf++;
 	}
+
 	*key = MY_EOF; /* close string */
 	sbuf++;
 	
