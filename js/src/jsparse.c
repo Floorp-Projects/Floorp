@@ -2420,11 +2420,11 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              : (preorder ? JSOP_DECPROP : JSOP_PROPDEC);
         break;
 
-      case TOK_LB:
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
         kid->pn_op = JSOP_SETCALL;
 #endif
+      case TOK_LB:
         op = (tt == TOK_INC)
              ? (preorder ? JSOP_INCELEM : JSOP_ELEMINC)
              : (preorder ? JSOP_DECELEM : JSOP_ELEMDEC);

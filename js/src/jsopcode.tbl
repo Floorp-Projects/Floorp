@@ -31,6 +31,7 @@
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
  */
+
 /*
  * JavaScript operation bytecodes.  If you need to allocate a bytecode, look
  * for a name of the form JSOP_UNUSED* and claim it.  Otherwise, always add at
@@ -304,3 +305,20 @@ OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 12,  JOF_BYTE)
  * The function object's atom index is the second immediate operand.
  */
 OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_DEFLOCALVAR)
+
+/* Extended jumps. */
+OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_IFEQX,         140,"ifeqx",    NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_IFNEX,         141,"ifnex",    NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_ORX,           142,"orx",      NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_ANDX,          143,"andx",     NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_GOSUBX,        144,"gosubx",   NULL,       5,  0,  1,  0,  JOF_JUMPX)
+OPDEF(JSOP_CASEX,         145,"casex",    NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_DEFAULTX,      146,"defaultx", NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_TABLESWITCHX,  147,"tableswitchx",NULL,   -1,  1,  0,  0,  JOF_TABLESWITCHX)
+OPDEF(JSOP_LOOKUPSWITCHX, 148,"lookupswitchx",NULL,  -1,  1,  0,  0,  JOF_LOOKUPSWITCHX)
+
+/* Placeholders for a real jump opcode set during backpatch chain fixup. */
+OPDEF(JSOP_BACKPATCH,     149,"backpatch",NULL,       3,  0,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
+OPDEF(JSOP_BACKPATCH_POP, 150,"backpatch_pop",NULL,   3,  1,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
+OPDEF(JSOP_BACKPATCH_PUSH,151,"backpatch_push",NULL,  3,  0,  1,  0,  JOF_JUMP|JOF_BACKPATCH)
