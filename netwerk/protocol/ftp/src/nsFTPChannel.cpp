@@ -324,7 +324,14 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         nsCAutoString cacheKey;
         GenerateCacheKey(cacheKey);
 
-        return mCacheSession->AsyncOpenCacheEntry(cacheKey.get(), accessRequested, this);
+        rv = mCacheSession->AsyncOpenCacheEntry(cacheKey.get(),
+                                                accessRequested,
+                                                this);
+        if (NS_SUCCEEDED(rv)) return rv;
+        
+        // If we failed to use the cache, try without
+        PR_LOG(gFTPLog, PR_LOG_DEBUG,
+               ("Opening cache entry failed [rv=%x]", rv));
     }
     
     return SetupState();
