@@ -1185,6 +1185,129 @@ void ModifySidebar(CString inputFile, CString outputFile)
 	dstf.close();
 }
 
+void ModifyBookmarks(CString inputFile, CString outputFile)
+// add custom bookmark(s) either at the top or bottom of the bookmark menu
+{
+	char tempbuf[MAX_SIZE];
+
+	// variables for custom personal toolbar
+	CString toolbarURL1      = GetGlobal("ToolbarURL1");
+	CString toolbarURL2      = GetGlobal("ToolbarURL2");
+	CString toolbarURL3      = GetGlobal("ToolbarURL3");
+	CString toolbarTitle1    = GetGlobal("ToolbarTitle1");
+	CString toolbarTitle2    = GetGlobal("ToolbarTitle2");
+	CString toolbarTitle3    = GetGlobal("ToolbarTitle3");
+	CString toolbarSearchStr = ">Personal Toolbar Folder<";
+
+	// variables for custom bookmark
+	CString bkmkChoice         = GetGlobal("radioGroup3");
+	CString bkmkLocation       = GetGlobal("BookmarkLocation");
+	CString firstbkmkSearchStr = "<h1>Bookmarks</h1>";
+	CString lastbkmkSearchStr  = ">Travel<";
+	CString folderTitle        = GetGlobal("FolderTitle");
+	CString bookmarkTitle      = GetGlobal("BookmarkTitle");
+	CString bookmarkTitle1     = GetGlobal("BookmarkTitle1");
+	CString bookmarkTitle2     = GetGlobal("BookmarkTitle2");
+	CString bookmarkTitle3     = GetGlobal("BookmarkTitle3");
+	CString bookmarkTitle4     = GetGlobal("BookmarkTitle4");
+	CString bookmarkTitle5     = GetGlobal("BookmarkTitle5");
+	CString bookmarkURL        = GetGlobal("BookmarkURL");
+	CString bookmarkURL1       = GetGlobal("BookmarkURL1");
+	CString bookmarkURL2       = GetGlobal("BookmarkURL2");
+	CString bookmarkURL3       = GetGlobal("BookmarkURL3");
+	CString bookmarkURL4       = GetGlobal("BookmarkURL4");
+	CString bookmarkURL5       = GetGlobal("BookmarkURL5");
+
+	ifstream srcf(inputFile);
+	if (!srcf)
+	{
+		AfxMessageBox("Cannot open input file: " + CString(inputFile),MB_OK);
+		return;
+	}       
+	ofstream dstf(outputFile); 
+	if (!dstf)
+	{
+		AfxMessageBox("Cannot open output file: " + CString(outputFile), MB_OK);
+		srcf.close();
+		return;
+	}
+
+	while (!srcf.eof()) 
+	{
+		srcf.getline(tempbuf,MAX_SIZE);
+		dstf << tempbuf << "\n";
+		
+		if ((CString(tempbuf).Find(toolbarSearchStr)) != -1)
+		// add custom personal toolbar items
+		{
+			srcf.getline(tempbuf,MAX_SIZE);
+			dstf << tempbuf << "\n";
+			if (!(toolbarTitle1.IsEmpty()) && !(toolbarURL1.IsEmpty()))
+				dstf << " <dt><a HREF=\"" << toolbarURL1 << "\">" << toolbarTitle1 << "</a>\n";
+			if (!(toolbarTitle2.IsEmpty()) && !(toolbarURL2.IsEmpty()))
+				dstf << " <dt><a HREF=\"" << toolbarURL2 << "\">" << toolbarTitle2 << "</a>\n";
+			if (!(toolbarTitle3.IsEmpty()) && !(toolbarURL3.IsEmpty()))
+				dstf << " <dt><a HREF=\"" << toolbarURL3 << "\">" << toolbarTitle3 << "</a>\n";
+		}
+	
+		if (bkmkChoice == "1")
+		// add single custom bookmark
+		{
+			if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+				 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+			{
+				srcf.getline(tempbuf,MAX_SIZE);
+				dstf << tempbuf << "\n";
+				if (bkmkLocation == "Last")
+				{
+					// read one more line if bookmark location is 'last'
+					srcf.getline(tempbuf,MAX_SIZE);
+					dstf << tempbuf << "\n";
+				}
+				if (!(bookmarkTitle.IsEmpty()) && !(bookmarkURL.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << bookmarkURL << "\">" << bookmarkTitle << "</a>\n";
+			}
+		}
+		else if (bkmkChoice == "2")
+		// add custom bookmark folder
+		{
+			if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+				 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+			{
+				srcf.getline(tempbuf,MAX_SIZE);
+				dstf << tempbuf << "\n";
+				
+				if (bkmkLocation == "Last")
+				{
+					// read one more line if bookmark location is 'last'
+					srcf.getline(tempbuf,MAX_SIZE);
+					dstf << tempbuf << "\n";
+				}
+
+				if (!(folderTitle.IsEmpty()))
+				{
+					dstf << "<dt><h3>" << folderTitle << "</h3>\n";
+					dstf << "<dl><p>\n";
+					if (!(bookmarkTitle1.IsEmpty()) && !(bookmarkURL1.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL1 << "\">" << bookmarkTitle1 << "</a>\n";
+					if (!(bookmarkTitle2.IsEmpty()) && !(bookmarkURL2.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL2 << "\">" << bookmarkTitle2 << "</a>\n";
+					if (!(bookmarkTitle3.IsEmpty()) && !(bookmarkURL3.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL3 << "\">" << bookmarkTitle3 << "</a>\n";
+					if (!(bookmarkTitle4.IsEmpty()) && !(bookmarkURL4.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL4 << "\">" << bookmarkTitle4<< "</a>\n";
+					if (!(bookmarkTitle5.IsEmpty()) && !(bookmarkURL5.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL5 << "\">" << bookmarkTitle5 << "</a>\n";
+					dstf << "</dl><p>\n";
+				}
+			}
+		}
+	}
+	
+	srcf.close();
+	dstf.close();
+}
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -1352,7 +1475,8 @@ int interpret(char *cmd)
 		}
 	}
 
-	else if (strcmp(cmdname, "modifySidebar") == 0)
+	else if ((strcmp(cmdname, "modifySidebar") == 0) || 
+		(strcmp(cmdname, "modifyBookmarks") == 0))
 	{
 		// extract the file to be modified from the jar/xpi
 		// and process the file
@@ -1377,6 +1501,8 @@ int interpret(char *cmd)
 
 		if (strcmp(cmdname, "modifySidebar") == 0)
 			ModifySidebar(inputFile, outputFile);
+		else if (strcmp(cmdname, "modifyBookmarks") == 0)
+			ModifyBookmarks(inputFile, outputFile);
 			
 		remove(inputFile);
 		rename(outputFile, inputFile);
