@@ -314,8 +314,8 @@ nsInputFileStream::nsInputFileStream(nsIFileSpec* inSpec)
 nsInputFileStream::~nsInputFileStream()
 //----------------------------------------------------------------------------------------
 {
-    if (is_open())
-      close();
+//    if (is_open())
+//      close();
 }
 
 //----------------------------------------------------------------------------------------
@@ -349,12 +349,8 @@ nsOutputFileStream::nsOutputFileStream(nsIFileSpec* inSpec)
 nsOutputFileStream::~nsOutputFileStream()
 //----------------------------------------------------------------------------------------
 {
-    if (is_open())
-    {
-      flush();
-      close();
-    }
-
+//    if (is_open())
+//      close();
 }
 //----------------------------------------------------------------------------------------
 void nsOutputFileStream::AssignFrom(nsISupports* stream)
