@@ -19,6 +19,11 @@
 
 //#include <afxwin.h>         // MFC core and standard components
 //#include <afxext.h>         // MFC extensions
+// Adding WINVER = 0x401 for compiling purposes
+#ifdef WINVER
+#undef WINVER
+#endif
+#define WINVER 0x0401
 
 #include <windows.h>
 #include <string.h>
