@@ -383,10 +383,33 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
 
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
-  NS_IF_ADDREF(mRegion);
-  *aRegion = (nsIRegion*)&mRegion;
+  nsresult  rv = NS_OK;
 
-  return NS_OK;
+  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+
+  if (nsnull == *aRegion)
+  {
+    nsRegionGTK *rgn = new nsRegionGTK();
+
+    if (nsnull != rgn)
+    {
+      NS_ADDREF(rgn);
+
+      rv = rgn->Init();
+
+      if (NS_OK == rv)
+        *aRegion = rgn;
+      else
+        NS_RELEASE(rgn);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (rv == NS_OK)
+    (*aRegion)->SetTo(*mRegion);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
