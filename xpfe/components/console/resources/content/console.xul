@@ -52,7 +52,9 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 <command id="cmd_close" oncommand="window.close()"/>
 <command id="cmd_quit"/>
 
-  <broadcaster id="Console:clear" label="&clear.label;" oncommand="clearConsole();"/>
+  <broadcaster id="Console:clear" label="&clear.label;" 
+               accesskey="&clear.accesskey;" 
+               oncommand="clearConsole();"/>
   
   <broadcaster id="Console:sortAscend" label="&sortFirst.label;" 
                accesskey="&sortFirst.accesskey;"
@@ -70,12 +72,16 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 
 <broadcasterset id="ModeBroadcasters">
   <broadcaster id="Console:modeAll" label="&all.label;" 
+               accesskey="&all.accesskey;" 
                oncommand="changeMode('All');"/>
   <broadcaster id="Console:modeErrors" label="&errors.label;"
+               accesskey="&errors.accesskey;"
                oncommand="changeMode('Errors');"/>
   <broadcaster id="Console:modeWarnings" label="&warnings.label;"
+               accesskey="&warnings.accesskey;"
                oncommand="changeMode('Warnings');"/>
   <broadcaster id="Console:modeMessages" label="&messages.label;"
+               accesskey="&messages.accesskey;"
                oncommand="changeMode('Messages');"/>
 </broadcasterset>
 

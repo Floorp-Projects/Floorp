@@ -28,10 +28,15 @@ Contributor(s): ______________________________________. -->
 <!ENTITY errColumn.label "Column:">
 
 <!ENTITY all.label       "All">
+<!ENTITY all.accesskey   "A">
 <!ENTITY errors.label    "Errors">
+<!ENTITY errors.accesskey "r">
 <!ENTITY warnings.label  "Warnings">
+<!ENTITY warnings.accesskey "n">
 <!ENTITY messages.label  "Messages">
+<!ENTITY messages.accesskey "M">
 <!ENTITY clear.label     "Clear">
+<!ENTITY clear.accesskey "l">
 <!ENTITY evaluate.label  "Evaluate">
 
 <!ENTITY sortFirst.label "First > Last Sort Order">
