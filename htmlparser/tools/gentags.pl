@@ -251,9 +251,9 @@ print CPP_FILE "#include \"$file_base.h\"\n\n";
 print CPP_FILE "static char* tagTable[] = {\n  ";
 $width = 2;
 for ($j = 0; $j < $i; $j++) {
-    $upper = $tags[$j];
-    $upper =~ tr/a-z/A-Z/;
-    $str = "\"" . $upper . "\"";
+    $lower = $tags[$j];
+    $lower =~ tr/A-Z/a-z/;
+    $str = "\"" . $lower . "\"";
     if ($j < $i - 1) {
 	$str = $str . ", ";
     }
