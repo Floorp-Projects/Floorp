@@ -342,7 +342,7 @@ nsWinReg::NativeSetValueString(const nsString& subkey, const nsString& valname, 
     char*   valnameCString  = valname.ToNewCString();
     char*   valueCString    = value.ToNewCString();
     
-    length = subkey.Length();
+    length = value.Length();
 
     root   = (HKEY) mRootKey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey);
