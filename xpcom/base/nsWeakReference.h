@@ -55,6 +55,7 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
 		protected:
 
 			inline void ClearWeakReferences();
+			PRBool HasWeakReferences() const {return mProxy != 0;}
   };
 
 class NS_COM nsWeakReference : public nsIWeakReference
