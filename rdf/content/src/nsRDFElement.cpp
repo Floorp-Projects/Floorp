@@ -1866,7 +1866,8 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     }
 
     // XUL Only. Find out if we have a broadcast listener for this element.
-    if (successful && mBroadcastListeners != nsnull) {
+    if (successful) {
+      if (mBroadcastListeners != nsnull) {
         PRInt32 count = mBroadcastListeners->Count();
         for (PRInt32 i = 0; i < count; i++)
         {
@@ -1881,11 +1882,12 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
                   element->RemoveAttribute(aString);
             }
         }
+      }
    
-        // Notify document
-        if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-            mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
-        }
+      // Notify document
+      if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+          mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
+      }
     }
 
     // End XUL Only Code
