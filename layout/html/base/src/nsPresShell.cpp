@@ -2638,7 +2638,7 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   if (!curDoc) {
     // This can happen if the previously focused DOM window has been
     // unhooked from its document during document teardown.  We don't
-    // really have any other inforation to help us determine where
+    // really have any other information to help us determine where
     // focusedWindow fits into the DOM window hierarchy.  For now, we'll
     // go ahead and allow this window to take focus, so that something
     // ends up focused.
