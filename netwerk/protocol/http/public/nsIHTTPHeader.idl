@@ -27,6 +27,6 @@ interface nsIAtom;
 [scriptable, uuid(a3ec67f0-465a-11d3-9a89-0080c7cb1080)]
 interface nsIHTTPHeader : nsISupports
 {
-    void GetField(out nsIAtom headerAtom);
-    void GetValue(out string headerValue);
+    nsIAtom GetField();
+    string GetValue();
 };
