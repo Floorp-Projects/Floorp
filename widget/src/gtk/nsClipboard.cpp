@@ -24,6 +24,9 @@
 
 #include "nsClipboard.h"
 
+#include <gdk/gdkx.h>
+#include <X11/Xlib.h>
+
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
 
@@ -38,6 +41,14 @@
 
 #include "nsTextFormatter.h"
 #include "nsVoidArray.h"
+
+
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+// unicode conversion
+#define NS_IMPL_IDS
+#  include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
 
 
 // The class statics:
@@ -524,7 +535,12 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
   nsCAutoString type(gdk_atom_name(aSD->type));
 
-  if (type.Equals("UTF8_STRING")) {
+  if (type.Equals("COMPOUND_TEXT")) {
+#ifdef DEBUG_CLIPBOARD
+    g_print("COMPOUND_TEXT\n");
+#endif
+  }
+  else if (type.Equals("UTF8_STRING")) {
     mSelectionData = *aSD;
 
     static const PRUnichar unicodeFormatter[] = {
@@ -649,7 +665,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
  *
  * @param  widget The widget
  * @param  aSelectionData Selection data
- * @param  info Value passed in from the callback init
+ * @param  the type being asked for
  * @param  time Time when the selection request came in
  */
 void nsClipboard::SelectionGetCB(GtkWidget        *widget,
@@ -686,18 +702,16 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   }
 #ifdef DEBUG_CLIPBOARD
   g_print("  aInfo == %s\n  transferable == %p\n", gdk_atom_name(aInfo), transferable.get());
+  g_print("  aSD->type == %s\n  aSD->target == %s\n", gdk_atom_name(aSelectionData->type),
+          gdk_atom_name(aSelectionData->target));
 #endif
   char* dataFlavor = nsnull;
   nsCAutoString type(gdk_atom_name(aInfo));
 
-  PRBool needToDoConversionToPlainText = PR_FALSE;
-
-  if (type.Equals("STRING")) {
-    // if someone was asking for text/plain, lookup unicode instead so we can convert it.
-    dataFlavor = kUnicodeMime;
-    needToDoConversionToPlainText = PR_TRUE;
-  } else if (type.Equals("UTF8_STRING")) {
-    // XXX fixme -- need to do conversion here
+  if (type.Equals("STRING") ||
+      type.Equals("UTF8_STRING") ||
+      type.Equals("COMPOUND_TEXT"))
+  {
     dataFlavor = kUnicodeMime;
   } else {
     dataFlavor = type;
@@ -715,25 +729,120 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     //    size_t size = sizeof((void*)((unsigned char)clipboardData[0]));
     //    g_print("************  *****************      ******************* %i\n", size);
     
-    // if required, do the extra work to convert unicode to plain text and replace the output
-    // values with the plain text.
-    if ( needToDoConversionToPlainText ) {
+
+#ifdef DEBUG_CLIPBOARD
+    printf("got data from transferable\n");
+    printf("clipboardData is %s\n", clipboardData);
+    printf("length is %d\n", dataLength);
+#endif
+
+    if (type.Equals("STRING")) {
+      // if someone was asking for text/plain, lookup unicode instead so we can convert it.
       char* plainTextData = nsnull;
       PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
       PRInt32 plainTextLen = 0;
-      nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataLength / 2, &plainTextData, &plainTextLen );
-      if ( clipboardData ) {
+      nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText (castedUnicode, dataLength / 2,
+                                                             &plainTextData, &plainTextLen);
+      if (clipboardData) {
         nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = plainTextData;
         dataLength = plainTextLen;
       }
-    }
+    } else if (type.Equals("UTF8_STRING")) {
+      if (clipboardData) {
+        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
+        nsString str(castedUnicode, dataLength);
+        char *utf8String = str.ToNewUTF8String();
+        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        clipboardData = utf8String;
+        dataLength = strlen(utf8String);
+      }
+    } else if (type.Equals("COMPOUND_TEXT")) {
+      char *platformText;
+      PRInt32 platformLen;
+      // Get the appropriate unicode encoder. We're guaranteed that this won't change
+      // through the life of the app so we can cache it.
 
-    if ( clipboardData )
+      static nsCOMPtr<nsIUnicodeEncoder> encoder;
+      static PRBool hasConverter = PR_FALSE;
+      if ( !hasConverter ) {
+        // get the charset
+        nsAutoString platformCharset;
+        nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+          rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+        if (NS_FAILED(rv))
+          platformCharset.AssignWithConversion("ISO-8859-1");
+      
+        // get the encoder
+        NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+        rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+
+        hasConverter = PR_TRUE;
+      }
+
+      // Estimate out length and allocate the buffer based on a worst-case estimate, then do
+      // the conversion.
+      PRUnichar *castedData = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
+      encoder->GetMaxLength(castedData, dataLength, &platformLen);
+      if ( platformLen ) {
+        platformText = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(platformLen + sizeof(char)));
+        if ( platformText ) {
+          PRInt32 len = (PRInt32)dataLength;
+          rv = encoder->Convert(castedData, &len, platformText, &platformLen);
+          (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
+        }
+      } // if valid length
+
+#ifdef DEBUG_CLIPBOARD
+      g_print("platformText is %s\n", platformText);
+      g_print("dblength is %d\n", platformLen);
+#endif
+
+#if 0
+
+      if (platformLen > 0) {
+        char **data;
+        int count = 0;
+
+        XTextProperty prop;
+        prop.value = platformText;
+        prop.encoding = XInternAtom(GDK_DISPLAY(), "COMPOUND_TEXT", FALSE);
+        prop.format = 8;
+        prop.nitems = 1;
+
+        XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &data, &count);
+
+        if (*data) {
+#ifdef DEBUG_CLIPBOARD
+          printf("%s %i\n", *data, count);
+#endif
+          nsAllocator::Free(platformText);
+          platformText = *data;
+          platformLen = sizeof(data);
+        }
+      }
+#endif
+
+      if (platformText) {
+        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        clipboardData = platformText;
+        dataLength = platformLen;
+      }
+    }
+#ifdef DEBUG_CLIPBOARD
+    g_print("clipboardData is %s\n", clipboardData);
+    g_print("length is %d\n", dataLength);
+#endif
+    if (clipboardData && dataLength > 0)
       gtk_selection_data_set(aSelectionData,
                              aInfo, size*8,
                              NS_REINTERPRET_CAST(unsigned char *, clipboardData),
                              dataLength);
+    else
+      gtk_selection_data_set(aSelectionData,
+                             gdk_atom_intern("NULL", FALSE), 8,
+                             nsnull, 0);
     nsCRT::free ( NS_REINTERPRET_CAST(char*, clipboardData) );
   }
   else
@@ -853,10 +962,12 @@ void nsClipboard::RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom)
 
   // for Text and Unicode we want to add some extra types to the X clipboard
   if (mimeStr.Equals(kTextMime)) {
-    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);    // STRING -- we will convert to unicode internally
+    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
   } else if (mimeStr.Equals(kUnicodeMime)) {
+    // we will do the conversions to and from unicode internally
+    AddTarget(gdk_atom_intern("COMPOUND_TEXT", FALSE), aSelectionAtom);
     AddTarget(gdk_atom_intern("UTF8_STRING", FALSE), aSelectionAtom);
-    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);    // STRING -- we will convert to unicode internally
+    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
   }
 
   AddTarget(atom, aSelectionAtom);
@@ -878,7 +989,9 @@ PRBool nsClipboard::DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom)
     r = DoRealConvert(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
     if (r) return r;
   } else if (mimeStr.Equals(kUnicodeMime)) {
-    r = DoRealConvert(gdk_atom_intern("UTF_STRING", FALSE), aSelectionAtom);
+    r = DoRealConvert(gdk_atom_intern("COMPOUND_TEXT", FALSE), aSelectionAtom);
+    if (r) return r;
+    r = DoRealConvert(gdk_atom_intern("UTF8_STRING", FALSE), aSelectionAtom);
     if (r) return r;
   }
 
