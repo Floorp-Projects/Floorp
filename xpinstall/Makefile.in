@@ -47,7 +47,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
-DIRS		= public res src stub cleanup
+DIRS		= public src stub cleanup
+
+ifndef MOZ_PHOENIX
+DIRS		+= res
+endif
 
 ifdef MOZ_INSTALLER
 DIRS		+= wizard/libxpnet
