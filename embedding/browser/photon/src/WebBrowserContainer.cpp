@@ -592,7 +592,7 @@ NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, PRBool a
 
 
 /* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *aCanHandleContent)
+NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *aCanHandleContent)
 {
 
   if (aContentType &&

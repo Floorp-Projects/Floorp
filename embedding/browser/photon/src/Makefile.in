@@ -57,38 +57,6 @@ REQUIRES    = xpcom \
 			  mimetype \
  	          $(NULL)
 
-REQUIRES	= xpcom \
-		  string \
-		  chrome \
-		  docshell \
-		  webbrwsr \
-		  dom \
-		  widget \
-		  necko \
-		  uriloader \
-		  cookie \
-		  intl \
-		  pref \
-		  prefmigr \
-		  appshell \
-		  uconv \
-		  appcomps \
-		  windowwatcher \
-		  js \
-		  gfx \
-		  view \
-		  content \
-		  webshell \
-		  layout \
-		  exthandler \
-		  shistory \
-		  embed_base \
-		  find \
-		  mpfilelocprovider \
-		  helperAppDlg \
-		  mimetype \
-		  $(NULL)
-
 CPPSRCS		= \
 		PhMozEmbedStream.cpp \
 		PtMozilla.cpp \
