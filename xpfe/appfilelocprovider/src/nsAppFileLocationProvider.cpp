@@ -40,6 +40,11 @@ static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile);
 #include <windows.h>
 #include <shlobj.h>
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile);
+#elif defined(XP_UNIX)
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <prenv.h>
 #endif
 static nsresult GetChromeLocale(PRUnichar** localeName);
 static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
@@ -479,7 +484,7 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
       NS_ENSURE_SUCCESS(rv, rv);
     }
 #elif defined(XP_UNIX)
-    rv = NS_NewLocalFile(PR_GetEnv("HOME"), aLocalFile);
+    rv = NS_NewLocalFile(PR_GetEnv("HOME"), PR_TRUE, aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     pLocalFile = *aLocalFile;
     pLocalFile->AppendRelativePath(".mozilla");
