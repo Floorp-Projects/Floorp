@@ -58,3 +58,10 @@ toolbargrippy:hover
   }
 
 
+.toolbarseparator-standard
+  { 
+    width                 : 1px;
+    border-left           : 1px solid #9D9D9D;
+    border-right          : 1px solid #FFFFFF;
+    margin                : 2px 0.2em 2px 0.2em;
+  } 

@@ -132,18 +132,6 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 /* Image URLs for all Editor toolbar buttons */
 
-#boldButton {
-  list-style-image:url(chrome://editor/skin/images/bold.gif); 
-}
-
-#italicButton {
-  list-style-image:url(chrome://editor/skin/images/italic.gif); 
-}
-
-#underlineButton {
-  list-style-image:url(chrome://editor/skin/images/underline.gif); 
-}
-
 #newButton {
 	list-style-image:url("chrome://editor/skin/images/newfile.gif");
 }
@@ -210,64 +198,121 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 	list-style-image:url("chrome://editor/skin/images/spell.gif");
 }
 
+/* formatting buttons */
+
 #DecreaseFontSizeButton {
 	list-style-image:url("chrome://editor/skin/images/dec-font-size.gif");
-  border: 1px solid transparent;
-  margin:  1px 0px 1px 1px;
-  padding: 2px 1px 2px 2px;
 }
-#DecreaseFontSizeButton:hover {
-  border: 1px solid white;
+
+#DecreaseFontSizeButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/dec-font-size_disabled.gif");
 }
-#DecreaseFontSizeButton:active {
-  border: 1px inset white;
-  padding: 3px 0px 1px 3px;
-}
+
 #IncreaseFontSizeButton {
 	list-style-image:url("chrome://editor/skin/images/inc-font-size.gif");
-  border: 1px solid transparent;
-  margin: 1px 1px 1px 0px;
-  padding: 2px 2px 2px 0px;
 }
-#IncreaseFontSizeButton:hover {
-  border: 1px solid white;
+
+#IncreaseFontSizeButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/inc-font-size_disabled.gif");
 }
-#IncreaseFontSizeButton:active {
-  border: 1px inset white;
-  padding: 3px 1px 1px 1px;
+
+#boldButton {
+  list-style-image:url(chrome://editor/skin/images/bold.gif); 
+}
+#boldButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/bold_disabled.gif); 
+}
+
+#italicButton {
+  list-style-image:url(chrome://editor/skin/images/italic.gif); 
+}
+#italicButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/italic_disabled.gif); 
+}
+
+#underlineButton {
+  list-style-image:url(chrome://editor/skin/images/underline.gif); 
+}
+#underlineButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/underline_disabled.gif); 
 }
 
 #ulButton {
 	list-style-image:url("chrome://editor/skin/images/bullets.gif");
 }
+#ulButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/bullets_disabled.gif");
+}
+
 #olButton {
 	list-style-image:url("chrome://editor/skin/images/numbers.gif");
 }
+#olButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/numbers_disabled.gif");
+}
+
 #outdentButton {
 	list-style-image:url("chrome://editor/skin/images/outdent.gif");
 }
+#outdentButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/outdent_disabled.gif");
+}
+
 #indentButton {
 	list-style-image:url("chrome://editor/skin/images/indent.gif");
 }
+#indentButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/indent_disabled.gif");
+}
+
 #AlignPopupButton {
 	list-style-image:url("chrome://editor/skin/images/align.gif");
 }
+
 #InsertPopupButton {
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-#text-align-left {
+#text-align-left,
+#align-left-button
+{
 	list-style-image:url("chrome://editor/skin/images/left.gif");
 }
-#text-align-center {
+
+#text-align-left[disabled="true"],
+#align-left-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/left_disabled.gif");
+}
+
+#text-align-center,
+#align-center-button {
 	list-style-image:url("chrome://editor/skin/images/center.gif");
 }
-#text-align-right {
+
+#text-align-center[disabled="true"],
+#align-center-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/center_disabled.gif");
+}
+
+#text-align-right,
+#align-right-button {
 	list-style-image:url("chrome://editor/skin/images/right.gif");
 }
-#text-align-justify {
+
+#text-align-right[disabled="true"],
+#align-right-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/right_disabled.gif");
+}
+
+#text-align-justify,
+#align-justify-button {
 	list-style-image:url("chrome://editor/skin/images/justify.gif");
 }
+#text-align-justify[disabled="true"],
+#align-justify-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/justify_disabled.gif");
+}
+
 
 .ColorPickerLabel {
   border:     1px inset white;

@@ -24,8 +24,11 @@
       border                : 1px solid #336699;
     }
     
-  .button-toolbar > .button-internal-box, 
-  .button-toolbar:hover > .button-internal-box
+  .button-toolbar > .button-internal-box,
+  .button-toolbar:hover > .button-internal-box,
+  .button-toolbar[disabled="true"] > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
     {
       padding               : 1px 3px 1px 3px;
       border                : none;
@@ -52,16 +55,17 @@
     
   .button-toolbar[toggled="true"]
     {
-      border                : 1px solid #999999;
-      background-color      : #EEEEEE;
+      border                : 1px solid 0x003366;
+      background-color      : #99CCCC;
+      -moz-border-radius    : 4px;
     }    
-    
+
   .button-toolbar[disabled="true"],
   .button-toolbar[disabled="true"]:hover,
   .button-toolbar[disabled="true"]:hover:active
     {
-      color                 : #999999;
-      border                : none;
+/*      background-color      : #DDDDDD; */
+      border                : 1px solid transparent;
     }
 
 /** The largest type of toolbar buttons. In the Seamonkey implementation, 
