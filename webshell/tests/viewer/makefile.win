@@ -30,14 +30,15 @@ MISCDEP=                        \
  $(DIST)\lib\libplc21.lib
 
 
-OBJS =                                  \
-	.\$(OBJDIR)\winmain.obj         \
-	.\$(OBJDIR)\nsViewer.obj \
-    .\$(OBJDIR)\JSConsole.obj       \
-    .\$(OBJDIR)\nsDocLoader.obj       \
+OBJS =					\
+	.\$(OBJDIR)\winmain.obj		\
+	.\$(OBJDIR)\nsViewer.obj	\
+	.\$(OBJDIR)\JSConsole.obj	\
+	.\$(OBJDIR)\nsDocLoader.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
+
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \
  $(DIST)\lib\raptorgfx.lib      \
@@ -58,6 +59,10 @@ LLIBS= $(MYLIBS)                \
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef MOZ_NO_DEBUG_RTL
+OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
+!endif
+
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 	$(MAKE_INSTALL) samples\test0.html $(DIST)\bin\res\samples
@@ -68,10 +73,10 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test5.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test6.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test7.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) samples\test8.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) samples\test8siz.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) samples\test8sca.html $(DIST)\bin\res\samples
-  $(MAKE_INSTALL) samples\test8tab.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test8.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test8siz.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test8sca.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test8tab.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\raptor.jpg $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\Anieyes.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\gear1.gif $(DIST)\bin\res\samples
