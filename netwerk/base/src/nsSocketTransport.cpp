@@ -326,7 +326,12 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         SetFlag(eSocketRead_Done);
         SetFlag(eSocketWrite_Done);
 
-        CloseConnection();
+        // only close the connection if we had one to begin with.
+        if (NS_ERROR_DNS_DOES_NOT_EXIST != rv) {
+            CloseConnection();
+        } else {
+            mCurrentState = eSocketState_Closed;
+        }
         //
         // Fall into the Done state...
         //
@@ -497,7 +502,7 @@ nsresult nsSocketTransport::doResolveHost(void)
     PR_LOG(gSocketLog, PR_LOG_ERROR, 
            ("Host name resolution FAILURE [this=%x].\n", this));
 
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_DNS_DOES_NOT_EXIST;
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
