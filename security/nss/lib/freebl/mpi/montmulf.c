@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: montmulf.c,v 1.2 2000/11/17 20:15:28 nelsonb%netscape.com Exp $
+ *  $Id: montmulf.c,v 1.3 2000/12/01 03:58:17 nelsonb%netscape.com Exp $
  */
 
 #define RF_INLINE_MACROS
@@ -175,7 +175,7 @@ unsigned int a;
  for(;i<len;i++)
    {
      a=i32[i];
-     d32[i]=(double)(a);
+     d32[i]=(double)(i32[i]);
      d16[2*i]=(double)(a&0xffff);
      d16[2*i+1]=(double)(a>>16);
    }
