@@ -37,6 +37,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
+#include "nsEnumeratorUtils.h"
 #include "nsModule.h"
 #include "nsCRT.h"
 
@@ -147,6 +148,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     filedlg.fl = FDS_CENTER;
     if (mMode == modeSave) {
        filedlg.fl |= FDS_SAVEAS_DIALOG | FDS_ENABLEFILELB;
+    } else if (mMode == modeOpenMultiple) {
+       filedlg.fl |= FDS_MULTIPLESEL | FDS_OPEN_DIALOG;
     } else {
        filedlg.fl |= FDS_OPEN_DIALOG;
     }
@@ -233,7 +236,35 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
-      mFile.Append(filedlg.szFullFile);
+      if (mMode == modeOpenMultiple) {
+        nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        if (filedlg.papszFQFilename) {
+          for (int i=0;i<filedlg.ulFQFCount;i++) {
+            nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            rv = file->InitWithNativePath(nsDependentCString(*(filedlg.papszFQFilename)[i]));
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            rv = mFiles->AppendElement(file);
+            NS_ENSURE_SUCCESS(rv,rv);
+          }
+          WinFreeFileDlgList(filedlg.papszFQFilename);
+        } else {
+          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          rv = file->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          rv = mFiles->AppendElement(file);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
+      } else {
+        mFile.Append(filedlg.szFullFile);
+      }
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
 
@@ -327,6 +358,12 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
   NS_ADDREF(*aFileURL = fileURL);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
+{
+  NS_ENSURE_ARG_POINTER(aFiles);
+  return NS_NewArrayEnumerator(aFiles, mFiles);
 }
 
 //-------------------------------------------------------------------------
