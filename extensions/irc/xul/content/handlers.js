@@ -33,7 +33,6 @@ function onLoad()
     /* 
        Called in a callback once the document loads due to a current bug
     */
-    //initStatic(); 
     mainStep();
     
 }
@@ -68,9 +67,11 @@ function onUserListPopupClick (e)
 {
 
     var code = e.target.getAttribute("code");
+    var ary = code.substr(1, code.length).match (/(\S+)? ?(.*)/);    
 
-    var ary = code.substr(1, code.length).match (/(\S+)? ?(.*)/);
-    
+    if (!ary)
+        return;
+
     var command = ary[1];
 
     var ev = new CEvent ("client", "input-command", client,
@@ -714,7 +715,8 @@ function cli_iserver (e)
     if (!e.inputData)
         return false;
 
-    var ary = e.inputData.match(/^(\S+) ?(\d+)?$/);
+    var ary = e.inputData.match(/^([^\s\:]+)[\s\:]?(\d+)? ?(\S+)?/);
+    var pass = (ary[2]) ? ary[2] : "";
     
     if (ary == null)
         return false;
@@ -726,7 +728,7 @@ function cli_iserver (e)
         new CIRCNetwork (ary[1], [{name: ary[1], port: ary[2]}],
                          client.eventPump);
     
-    client.onInputAttach ({inputData: ary[1]});
+    client.onInputAttach ({inputData: ary[1] + " " + pass});
     
     return true;
 
@@ -839,7 +841,8 @@ client.onInputAttach =
 function cli_iattach (e)
 {
     var net;
-
+    var pass;
+    
     if (!e.inputData)
     {
         if (client.lastNetwork)
@@ -859,7 +862,10 @@ function cli_iattach (e)
     }
     else
     {
-        net = client.networks[e.inputData];
+        var ary = e.inputData.match (/(\S+) ?(\S+)?/);
+        net = client.networks[ary[1]];
+        pass = ary[2];
+        
         if (!net)
         {
             client.currentObject.display ("Unknown network '" +
@@ -873,7 +879,7 @@ function cli_iattach (e)
         CIRCNetwork.prototype.INITIAL_NICK =
             prompt ("Please select a nickname", client.defaultNick);
     
-    net.connect();
+    net.connect(pass);
     net.display ("Connecting...", "INFO");
     setCurrentObject(net);
     return true;
@@ -1049,17 +1055,18 @@ function cli_ijoin (e)
         return false;
     }
     
-    var name = e.inputData.match(/\S+/);
-    if (!name)
+    var ary = e.inputData.match(/(\S+) ?(\S+)?/);
+    if (!ary)
         return false;
-
-    name = String(name);
     
-    if ((name[0] != "#") && (name[0] != "&"))
+    var name = ary[1];
+    var key = (ary[2]) ? ary[2] : "";
+
+    if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+"))
         name = "#" + name;
 
     e.channel = e.server.addChannel (name);
-    e.channel.join();
+    e.channel.join(key);
     e.channel.display ("Joining...", "INFO");
     setCurrentObject(e.channel);
     
@@ -1499,8 +1506,49 @@ function cli_ikick (e)
         cuser.kick(ary[2]);
     }
     else     
+
     cuser.kick();    
             
+    return true;
+}
+
+client.onInputStalk =
+function cli_istalk ( e )
+{
+    if (!e.inputData)
+    {
+        if ( client.stalkingVictims.length == 0 ) {
+            client.currentObject.display( "No stalking victims.", "STALK" );
+        } else {
+            client.currentObject.display( "Currently stalking [" +
+                                      client.stalkingVictims.join(", ") + "]",
+                                      "STALK");
+        }
+        return true;
+    }
+    client.stalkingVictims[client.stalkingVictims.length] = e.inputData;
+    client.currentObject.display( "Now stalking " + e.inputData, "STALK"
+);
+    return true;
+}
+
+client.onInputUnstalk =
+function cli_iunstalk ( e )
+{
+    if ( !e.inputData )
+        return false;
+
+    for ( i in client.stalkingVictims ) {
+        if ( client.stalkingVictims[i].match( "^" + e.inputData +"$", "i" ) ) {
+            client.stalkingVictims.splice(i,1);
+            client.currentObject.display( "No longer stalking " +
+                e.inputData, "UNSTALK" );
+            return true;
+        }
+    }
+
+    client.currentObject.display( "Not stalking " + e.inputData,
+        "UNSTALK" );
     return true;
 }
 
@@ -1552,8 +1600,20 @@ function my_showtonet (e)
             break;
 
         case "001":
-            updateTitle(e.network);
-            updateNetwork (e.network);
+            updateTitle(this);
+            updateNetwork (this);
+            if (this.pendingURLs)
+            {
+                var url = this.pendingURLs.pop();
+                while (url)
+                {
+                    gotoIRCURL(url);
+                    url = this.pendingURLs.pop();
+                }
+                delete this.pendingURLs;
+            }
+            str = e.meat;
+            break;
             
         case "372":
         case "375":
@@ -1759,8 +1819,8 @@ function my_cjoin (e)
         setCurrentObject(this);
     }
     else
-        this.display(e.user.properNick + " (" + e.user.name + "@" +
-                     abbreviateWord(e.user.host, client.MAX_WORD_DISPLAY) +
+        this.display(e.user.properNick + " (" + e.user.name + " @ " +
+                     hyphenateWord(e.user.host, client.MAX_WORD_DISPLAY) +
                      ") has joined " + e.channel.name, "JOIN", e.user.nick);
 
     this._addUserToGraph (e.user);

@@ -39,7 +39,7 @@ client.MAX_HISTORY = 50;
 client.MAX_NICK_DISPLAY = 14;
 /* longest word to show in display before abbreviating, currently
  * only for urls and hostnames onJoin */
-client.MAX_WORD_DISPLAY = 46;
+client.MAX_WORD_DISPLAY = 35;
 client.TYPE = "IRCClient";
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
 client.ADDRESSED_NICK_SEP = ", ";
@@ -47,7 +47,7 @@ client.ADDRESSED_NICK_SEP = ", ";
 client.name = "*client*";
 client.viewsArray = new Array();
 client.activityList = new Object();
-client.uiState = new Object(); /* state of ui elements (visible/collapsed */
+client.uiState = new Object(); /* state of ui elements (visible/collapsed) */
 client.inputHistory = new Array();
 client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
@@ -55,6 +55,8 @@ client.isPermanent = true;
 
 client.lastTabUp = new Date();
 client.DOUBLETAB_TIME = 500;
+
+client.stalkingVictims = new Array();
 
 CIRCNetwork.prototype.INITIAL_NICK = client.defaultNick;
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
@@ -123,6 +125,10 @@ function initStatic()
         setMenuCheck ("menu-view-status", isVisible("status-bar-tbox"));
 
     onSortCol ("usercol-nick");
+
+    if (document.location.search)
+        gotoIRCURL (document.location.search.substr(1));
+    
 }
 
 function setMenuCheck (id, state)
@@ -152,12 +158,12 @@ function initHost(obj)
     addCommands (obj.commands);
     
     obj.networks = new Object();
-    obj.eventPump = new CEventPump (10);
+    obj.eventPump = new CEventPump (200);
     
     obj.networks["efnet"] =
 	new CIRCNetwork ("efnet", [{name: "irc.magic.ca", port: 6667},
-                                   {name: "irc.freei.net", port: 6667},
-                                   {name: "irc.cs.cmu.edu",   port: 6667}],
+                               {name: "irc.freei.net", port: 6667},
+                               {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
     obj.networks["moznet"] =
 	new CIRCNetwork ("moznet", [{name: "irc.mozilla.org", port: 6667}],
@@ -188,8 +194,9 @@ function initHost(obj)
     obj.munger = new CMunger();
     obj.munger.enabled = true;
     obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
+    obj.munger.addRule ("im-stalking-you", matchMyNick, "" );
     obj.munger.addRule
-        ("link", /((http|mailto|ftp)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
+        ("link", /((http|mailto|ftp|irc)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
          insertLink);
     obj.munger.addRule
         ("face",
@@ -203,6 +210,9 @@ function initHost(obj)
     obj.munger.addRule ("underline2", /\W(\_[^\_]*\_)/, "underline");
          //obj.munger.addRule ("strikethrough", /(\-.*\-)/, "strikethrough");
     obj.munger.addRule ("smallcap", /(\#[^\#]*\#)/, "smallcap");
+    obj.munger.addRule ("word-hyphenator",
+                        new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),
+                        insertHyphenatedWord);
 
     obj.rdf = new RDFHelper();
     
@@ -214,10 +224,16 @@ function initHost(obj)
 function matchMyNick (text, containerTag, eventDetails)
 {
     if (eventDetails && eventDetails.server)
-    {
-        var re = new RegExp("(^|[\\W\\s])" + eventDetails.server.me.nick + 
+    {        
+        var sv = "(" + eventDetails.server.me.nick + ")";
+        if ( client.stalkingVictims.length > 0 ) {
+            sv += "|(" + client.stalkingVictims.join( ")|(" ) + ")";
+        }
+
+        var re = new RegExp("(^|[\\W\\s])" + sv + 
                             "([\\W\\s]|$)", "i");
-        if (text.search(re) != -1)
+        if (text.search(re) != -1 || 
+            eventDetails.orig.lastNickDisplayed.search(re) != -1)
         {
             containerTag.setAttribute ("directedToMe", "true");
             notifyAttention(eventDetails.orig);
@@ -241,9 +257,9 @@ function insertLink (matchText, containerTag)
     var anchor = document.createElementNS ("http://www.w3.org/TR/REC-html40",
                                            "html:a");
     anchor.setAttribute ("href", href);
-    anchor.setAttribute ("target", "other_window");
+    anchor.setAttribute ("target", "_content");
     if (matchText.length >= client.MAX_WORD_DISPLAY)
-        matchText = abbreviateWord (matchText, client.MAX_WORD_DISPLAY);
+        matchText = hyphenateWord (matchText, client.MAX_WORD_DISPLAY);
     anchor.appendChild (document.createTextNode (matchText));
     containerTag.appendChild (anchor);
     
@@ -280,6 +296,13 @@ function insertSmiley (emoticon, containerTag)
         containerTag.appendChild (img);
     }
     
+}
+
+function insertHyphenatedWord (longWord, containerTag)
+{
+    containerTag.appendChild
+        (document.createTextNode (hyphenateWord(longWord,
+                                                client.MAX_WORD_DISPLAY)));
 }
 
 /* timer-based mainloop */
@@ -388,6 +411,9 @@ function setOutputStyle (styleSheet)
               "<body onload='setClientOutput(document)'>" + 
 	      "<div id='output' class='output-window'></div></body>" +
               "</html>");
+
+    oc.close();
+
     client.output = oc.getElementById ("output");
     
 }
@@ -398,7 +424,244 @@ function setClientOutput(doc)
     /* continue processing now: */
     initStatic();
     if (client.STARTUP_NETWORK)
-        client.onInputAttach ({inputData: client.STARTUP_NETWORK});
+        client.onInputAttach ({inputData: client.STARTUP_NETWORK});    
+}
+
+testURLs =
+    ["irc:", "irc://", "irc:///", "irc:///help", "irc:///help,needkey",
+    "irc://irc.foo.org", "irc://foo:6666",
+    "irc://foo", "irc://irc.foo.org/", "irc://foo:6666/", "irc://foo/",
+    "irc://irc.foo.org/,needpass", "irc://foo/,isserver",
+    "irc://moznet/,isserver", "irc://moznet/",
+    "irc://foo/chatzilla", "irc://irc.foo.org/?msg=hello%20there",
+    "irc://irc.foo.org/?msg=hello%20there&ignorethis",
+    "irc://irc.foo.org/%23mozilla,needkey?msg=hello%20there&ignorethis",
+    "invalids",
+    "irc://irc.foo.org/,isnick"];
+
+function doURLTest()
+{
+    for (var u in testURLs)
+    {
+        dd ("-*- testing url \"" + testURLs[u] + "\"");
+        var o = parseIRCURL(testURLs[u]);
+        if (!o)
+            dd ("-!- PARSE FAILED!");
+        else
+            dd (dumpObjectTree(o));
+        dd ("---");
+    }
+}
+
+function parseIRCURL (url)
+{
+    var specifiedHost = "";
+    
+    var rv = new Object();
+    rv.spec = url;
+    rv.host = client.STARTUP_NETWORK;
+    rv.target = "";
+    rv.port = 6667;
+    rv.msg = "";
+    rv.needpass = false;
+    rv.needkey = false;
+    rv.isnick = false;
+    rv.isserver = false;
+    
+    if (url.search(/^(irc:|irc:\/\/)$/i) != -1)
+        return rv;
+
+    /* split url into <host>/<everything-else> pieces */
+    var ary = url.match (/^irc:\/\/([^\/\s]+)?(\/.*)?\s*$/i);
+    if (!ary)
+    {
+        dd ("chatzilla: parseIRCURL: initial split failed");
+        return null;
+    }
+    var host = ary[1];
+    var rest = ary[2];
+
+    /* split <host> into server (or network) / port */
+    ary = host.match (/^([^\s\:]+)?(\:\d+)?$/);
+    if (!ary)
+    {
+        dd ("chatzilla: parseIRCURL: host/port split failed");
+        return null;
+    }
+    
+    if (ary[2])
+    {
+        if (!ary[1])
+        {
+            dd ("chatzilla: parseIRCURL: port with no host");
+            return null;
+        }
+        specifiedHost = rv.host = ary[1].toLowerCase();
+        rv.isserver = true;
+        rv.port = parseInt(ary[2].substr(1));
+    }
+    else if (ary[1])
+    {
+        if (client.networks[ary[1]])
+            specifiedHost = rv.host = ary[1].toLowerCase();
+        else
+        {
+            specifiedHost = rv.host = ary[1].toLowerCase();
+            rv.isserver = true;
+        }
+    }
+
+    if (rest)
+    {
+        ary = rest.match (/^\/([^\,\?\s]*)?(,[^\?]*)?(\?.*)?$/);
+        if (!ary)
+        {
+            dd ("chatzilla: parseIRCURL: rest split failed '" + rest + "'");
+            return null;
+        }
+        
+        rv.target = (ary[1]) ? 
+            unescape(ary[1]).toLowerCase().replace("\n", "\\n"): "";
+        var params = (ary[2]) ? ary[2].toLowerCase() : "";
+        var query = (ary[3]) ? ary[3] : "";
+
+        if (params)
+        {
+            rv.isnick =
+                (params.search (/,\s*isnick\s*,|,\s*isnick\s*$/) != -1);
+            if (rv.isnick && !rv.target)
+            {
+                dd ("chatzilla: parseIRCURL: isnick w/o target");
+                    /* isnick w/o a target is bogus */
+                return null;
+            }
+        
+            rv.isserver =
+                (params.search (/,\s*isserver\s*,|,\s*isserver\s*$/) != -1);
+            if (rv.isserver && !specifiedHost)
+            {
+                dd ("chatzilla: parseIRCURL: isserver w/o host");
+                    /* isserver w/o a host is bogus */
+                return null;
+            }
+                
+            rv.needpass =
+                (params.search (/,\s*needpass\s*,|,\s*needpass\s*$/) != -1);
+
+            rv.needkey =
+                (params.search (/,\s*needkey\s*,|,\s*needkey\s*$/) != -1);
+
+        }
+
+        if (query)
+        {
+            ary = query.match
+                (/^\?msg=([^\&]*)$|^\?msg=([^\&]*)\&|\&msg=([^\&]*)\&|\&msg=([^\&]*)$/);
+            if (ary)
+                for (var i = 1; i < ary.length; i++)
+                    if (ary[i])
+                    {
+                        rv.msg = unescape(ary[i]).replace ("\n", "\\n");
+                        break;
+                    }
+            
+        }
+    }
+
+    return rv;
+    
+}
+
+function gotoIRCURL (url)
+{
+    if (typeof url == "string")
+        url = parseIRCURL(url);
+    
+    if (!url)
+    {
+        window.alert ("Invalid IRC URL '" + url + "'");
+        return;
+    }
+
+    var net;
+    var pass = "";
+    
+    if (url.needpass)
+        pass = window.prompt ("Enter a password for the url " + url.spec);
+    
+    if (url.isserver)
+    {
+        var alreadyThere = false;
+        for (var n in client.networks)
+        {
+            if ((client.networks[n].isConnected()) &&
+                (client.networks[n].primServ.connection.host == url.host) &&
+                (client.networks[n].primServ.connection.port == url.port))
+            {
+                /* already connected to this server/port */
+                net = client.networks[n];
+                alreadyThere = true;
+                break;
+            }
+        }
+
+        if (!alreadyThere)
+        {
+            dd ("-*- chatzilla: gotoIRCURL: not already connected to " +
+                "server " + ary[1] + " trying to connect...");
+            client.onInputServer ({inputData: url.host + " " + url.port +
+                                                  " " + pass});
+            net = client.networks[url.host];
+            if (!net.pendingURLs)
+                net.pendingURLs = new Array();
+            net.pendingURLs.push (url);            
+            return;
+        }
+    }
+    else
+    /* parsed as a network name */
+    {
+        net = client.networks[url.host];
+        if (!net.isConnected())
+        {
+            dd ("-*- chatzilla: gotoIRCURL: not already connected to " +
+                "network " + url.host + " trying to connect...");
+            client.onInputAttach ({inputData: url.host + " " + pass});
+            if (!net.pendingURLs)
+                net.pendingURLs = new Array();
+            net.pendingURLs.push (url);            
+            return;
+        }
+    }
+    
+    /* already connected, do whatever comes next in the url */
+    dd ("-*- chatzilla: gotoIRCURL: connected, time to finish parsing '" +
+        url + "'");
+    if (url.target)
+    {
+        var key = "";
+        if (url.needkey)
+            key = window.prompt ("Enter key for url " + url.spec);
+        if (url.isnick)
+        {
+                /* eek, do nick stuff here */
+        }
+        else
+        {
+            var ev = {inputData: url.target + " " + key,
+                      network: net, server: net.primServ}
+            client.onInputJoin (ev);
+            if (url.msg)
+            {
+                var msg;
+                if (url.msg.indexOf("\01ACTION") == 0)
+                    msg = filterOutput (url.msg, "ACTION", "!ME");
+                else
+                    msg = filterOutput (url.msg, "PRIVMSG", "!ME");
+                ev.channel.say (msg);
+            }
+        }
+    }
 
 }
 
@@ -419,9 +682,10 @@ function updateNetwork(obj)
         if (o.server.me)
             nick = o.server.me.properNick;
         lag = (o.server.lag != -1) ? o.server.lag : "(unknown)";
+        
         if (o.server.lastPing)
         {
-            var mins = o.server.lastPing.getMinutes();
+            var mins = String(o.server.lastPing.getMinutes());
             if (mins.length == 1)
                 mins = "0" + mins;
             ping = o.server.lastPing.getHours() + ":" + mins;
@@ -597,7 +861,7 @@ function setCurrentObject (obj)
     if (client.currentObject == obj)
         return true;
         
-    var tb;
+    var tb, userList;
 
     if (client.currentObject)
         tb = getTBForObject(client.currentObject);
@@ -608,6 +872,15 @@ function setCurrentObject (obj)
     if (client.output.firstChild)
         client.output.removeChild (client.output.firstChild);
     client.output.appendChild (obj.messages);
+
+    /* Unselect currenrly selected users. */
+    userList = document.getElementById("user-list");
+    if (userList) 
+        /* Remove curently selection items before this tree gets rerooted, because it seems to 
+        remember the selections for eternity if not. */
+        userList.clearItemSelection ();    
+    else
+        dd ("setCurrentObject: could not find element with ID='user-list'");        
 
     if (obj.TYPE == "IRCChannel")
         client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
@@ -690,8 +963,8 @@ function addHistory (source, obj)
                 source.messages.removeChild (source.messages.lastChild);
     }
 
-    if (needScroll)
-        w.scrollTo (0, w.document.height);
+    if (needScroll && client.currentObject == source)
+        w.scrollTo (w.pageXOffset, w.document.height);
     
 }
 
@@ -998,7 +1271,7 @@ function user_display(message, msgtype, sourceNick)
         var realNick = (!sourceNick || sourceNick != "!ME") ? this.properNick :
             this.parent.me.properNick;
 
-        var displayNick = abbreviateWord (realNick, client.MAX_NICK_DISPLAY);
+        var displayNick = hyphenateWord (realNick, client.MAX_NICK_DISPLAY);
         
         switch (msgtype)
         {                
@@ -1083,29 +1356,40 @@ function user_display(message, msgtype, sourceNick)
 }
 
 /**
- * Retrieves the selected nicks from the associated
- * gui list object. This simply calls list.getSelectedNicks
- * and then promotes each string into an actual instance
- * of CIRCChanUser.
+ * Retrieves the selected nicks from the user-list
+ * tree object. This grabs the tree element's
+ * selected items, extracts the appropriate text
+ * for the nick, promotes each nick to a CIRCChanUser
+ * instance and returns an array of these objects.
  */
 CIRCChannel.prototype.getSelectedUsers =
 function my_getselectedusers () 
 {
-    /* retrieve raw text list from list object first */
-    var ary = this.list.getSelectedItems();
 
-    if (ary  && ary.length > 0)
+    /* Grab a reference to the tree element with ID = user-list . See chatzilla.xul */
+    var tree = document.getElementById("user-list");
+    var cell; /* reference to each selected cell of the tree object */
+    var rv_ary = new Array; /* return value arrray for CIRCChanUser objects */
+
+    for (var i = 0; i < tree.selectedItems.length; i++)
     {
-        for (var i in ary)
-        {
-            /* promote each string to chan user object */
-            ary[i] = this.getUser(ary[i]);
-        }
+        /* First, set the reference to the XUL element. */
+        cell = tree.selectedItems[i].firstChild.childNodes[2].firstChild;
+
+        /* Now, create an instance of CIRCChaneUser by passing the text
+       *  of the cell to the getUser function of this CIRCChannel instance.
+       */
+        rv_ary[i] = this.getUser( cell.getAttribute("value") );
     }
-    /* USAGE NOTE: If the return value is non-null, the caller
-       can assume the array is valid, and NOT 
-       need to check the length */
-    return ary.length > 0 ? ary : null;
+
+    /* 
+     *  USAGE NOTE: If the return value is non-null, the caller
+     *  can assume the array is valid, and NOT 
+     *  need to check the length, and vice versa.
+     */
+
+    return rv_ary.length > 0 ? rv_ary : null;
+
 }
 
 CIRCChannel.prototype.getGraphResource =
@@ -1146,7 +1430,7 @@ function chan_display (message, msgtype, nick)
         else    
             realNick = nick + "?";
         
-        var displayNick = abbreviateWord (realNick, client.MAX_NICK_DISPLAY);
+        var displayNick = hyphenateWord (realNick, client.MAX_NICK_DISPLAY);
 
         switch (msgtype)
         {                

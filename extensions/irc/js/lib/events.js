@@ -178,7 +178,7 @@ function ep_routeevent (e)
         this.onHook (e);
         var destObject = e.destObject;
         e.destObject = (void 0);
-
+        
         switch (typeof destObject[e.destMethod])
         {
             case "function":
@@ -233,10 +233,10 @@ function ep_stepevents()
     while (i < this.eventsPerStep)
     {
         var e = this.queue.pop();
-        if (!e)
+        if (!e || e.type == "yield")
             break;
         this.routeEvent (e);
-        i++
+        i++;
     }
 
     return true;

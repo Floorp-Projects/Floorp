@@ -103,10 +103,11 @@ CIRCNetwork.prototype.stayingPower = false;
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
 
 CIRCNetwork.prototype.connect =
-function net_conenct()
+function net_conenct(pass)
 {
 
     var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
+    ev.password = pass;
     this.eventPump.addEvent (ev);
 
 }
@@ -183,7 +184,7 @@ function net_connect (e)
 
     this.primServ = e.server;
     this.primServ.login (this.INITIAL_NICK, this.INITIAL_NAME,
-                         this.INITIAL_DESC);
+                         this.INITIAL_DESC, e.pass);
     return true;
 
 }
@@ -207,14 +208,17 @@ function CIRCServer (parent, connection)
     this.channels = new Object();
     this.users = new Object();
     this.sendQueue = new Array();
-    this.lastSend = new Date();
+    this.lastSend = new Date("1/1/1980");
     this.sendsThisRound = 0;
     this.savedLine = "";
     this.lag = -1;    
     this.usersStable = true;
-    
-    this.parent.eventPump.addEvent (new CEvent ("server", "poll", this,
-                                                "onPoll"));
+
+    if (typeof connection.startAsyncRead == "function")
+        connection.startAsyncRead(this);
+    else
+        this.parent.eventPump.addEvent(new CEvent ("server", "poll", this,
+                                                   "onPoll"));
     
 }
 
@@ -240,10 +244,12 @@ function serv_flush()
 }
 
 CIRCServer.prototype.login =
-function serv_login(nick, name, desc)
+function serv_login(nick, name, desc, pass)
 {
 
     this.me = new CIRCUser (this, nick, name);
+    if (pass)
+       this.sendData ("PASS " + pass + "\n");
     this.sendData ("NICK " + nick + "\n");
     this.sendData ("USER " + name + " foo bar :" + desc + "\n");
     
@@ -304,14 +310,17 @@ CIRCServer.prototype.sendData =
 function serv_senddata (msg)
 {
     
-    arrayInsertAt (this.sendQueue, 0, msg);
+    this.queuedSendData (msg);
         
 }
 
 CIRCServer.prototype.queuedSendData =
 function serv_senddata (msg)
 {
-    
+
+    if (this.sendQueue.length == 0)
+        this.parent.eventPump.addEvent (new CEvent ("server", "senddata",
+                                                    this, "onSendData"));
     arrayInsertAt (this.sendQueue, 0, msg);
         
 }
@@ -430,11 +439,9 @@ function serv_disconnect(e)
 
 }
 
-CIRCServer.prototype.onPoll = 
-function serv_poll(e)
+CIRCServer.prototype.onSendData =
+function serv_onsenddata (e)
 {
-    var lines;
-    var ex;
     var d = new Date();
 
     if (!this.connection.isConnected)
@@ -451,11 +458,31 @@ function serv_poll(e)
     if (((d - this.lastSend) >= this.MS_BETWEEN_SENDS) &&
         this.sendQueue.length > 0)                            
     {
-        var s = this.sendQueue.pop();
-        //dd ("queued send: " + s);
-        this.connection.sendData (s);
-        this.lastSend = d;
+        var s = this.sendQueue.pop();  
+      
+        if (s)
+        {
+            //dd ("queued send: " + s);
+            this.connection.sendData (s);
+            this.lastSend = d;
+        }
+
     }
+    else
+        this.parent.eventPump.addEvent (new CEvent ("event-pump", "yield",
+                                                    null, ""));
+
+    if (this.sendQueue.length > 0)
+        this.parent.eventPump.addEvent (new CEvent ("server", "senddata",
+                                                    this, "onSendData"));
+    
+}
+
+CIRCServer.prototype.onPoll = 
+function serv_poll(e)
+{
+    var lines;
+    var ex;
     
     try
     {
@@ -485,6 +512,22 @@ function serv_poll(e)
         
     this.parent.eventPump.addEvent (new CEvent ("server", "poll", this,
                                                 "onPoll"));
+
+    if (line)
+    {
+        var ev = new CEvent ("server", "data-available", this,
+                             "onDataAvailable");
+        ev.line = line;
+        this.parent.eventPump.addEvent (ev);
+    }
+    
+}
+
+CIRCServer.prototype.onDataAvailable = 
+function serv_ppline(e)
+{
+    var line = e.line;
+    
     if (line == "")
         return false;
     
@@ -506,9 +549,6 @@ function serv_poll(e)
         ev.data = lines[i].replace(/\r/g, "");
         this.parent.eventPump.addEvent (ev);
     }
-    
-    return true;
-    
 }
 
 /*
@@ -1419,10 +1459,12 @@ function chan_ctcpto (code, msg, type)
 }
 
 CIRCChannel.prototype.join = 
-function chan_join ()
+function chan_join (key)
 {
+    if (!key)
+        key = "";
     
-    this.parent.sendData ("JOIN " + this.name + "\n");
+    this.parent.sendData ("JOIN " + this.name + " " + key + "\n");
     return true;
     
 }

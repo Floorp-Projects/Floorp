@@ -36,7 +36,7 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoad();" onunload="onUnload();"
-        persist="width height">
+        persist="width height" windowtype="irc:chatzilla">
 
 <html:script src="chrome://chatzilla/content/lib/js/utils.js"/>
 <html:script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
@@ -51,8 +51,6 @@
 <html:script src="chrome://chatzilla/content/static.js"/>
 <html:script src="chrome://chatzilla/content/handlers.js"/>
 <html:script src="chrome://chatzilla/content/rdf.js"/>
-
-<!-- This is to test the popups in the 'quickList' channel name list -->
 
 <popupset>
 	<popup id="userlistPopup" onclick="onUserListPopupClick(event)">
@@ -141,7 +139,9 @@
   <box id="inner-box" align="horizontal" flex="1">
     <box id="user-list-box" flex="30%">
     <tree id="user-list" container="true" datasources="rdf:null" flex="1"
-     containment="http://home.netscape.com/NC-irc#chanuser">
+     containment="http://home.netscape.com/NC-irc#chanuser"
+     multiple="true"
+     context="userlistPopup">
 
       <template>
         <treechildren>

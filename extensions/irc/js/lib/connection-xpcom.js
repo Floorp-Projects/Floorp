@@ -67,19 +67,15 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     if (typeof tcp_flag == "undefined")
 		tcp_flag = false;
     
-    this.host = host;
+    this.host = host.toLowerCase();
     this.port = port;
     this.bind = bind;
     this.tcp_flag = tcp_flag;
 
-    this._channel = this._sockService.createTransport (host, port, null, -1, 0, 0);
+    this._channel = this._sockService.createTransport (host, port, null, -1,
+                                                       0, 0);
     if (!this._channel)
         throw ("Error opening channel.");
-
-    this._inputStream =
-        toScriptableInputStream(this._channel.openInputStream (0, 0));
-    if (!this._inputStream)
-        throw ("Error getting input stream.");
 
     this._outputStream = this._channel.openOutputStream(0);
     if (!this._outputStream)
@@ -133,15 +129,26 @@ CBSConnection.prototype.readData = function(timeout)
     if (!this.isConnected)
         throw "Not Connected.";
 
+    if (!this._inputStream)
+    {
+        this._inputStream =
+            toScriptableInputStream(this._channel.openInputStream (0, 0));
+        if (!this._inputStream)
+            throw ("Error getting input stream.");
+    }
+    
     var rv, av;
 
-    try {
+    try
+    {
         av = this._inputStream.available();
         if (av)
             rv = this._inputStream.read (av);
         else
             rv = "";
-    } catch (ex) {
+    }
+    catch (ex)
+    {
         dd ("*** Caught " + ex + " while reading.")
         if (typeof ex != "undefined") {
             this.isConnected = false;
@@ -153,3 +160,41 @@ CBSConnection.prototype.readData = function(timeout)
     
     return rv;
 }
+
+CBSConnection.prototype.startAsyncRead =
+function (server)
+{
+    this._channel.asyncRead (new StreamListener (server), this);
+
+}
+
+function StreamListener(server)
+{
+    this.server = server;
+}
+
+StreamListener.prototype.onStartRequest =
+function (channel, ctxt)
+{
+    dd ("onStartRequest: " + channel + ", " + ctxt);
+}
+
+StreamListener.prototype.onStopRequest =
+function (channel, ctxt, status, errorMsg)
+{
+    dd ("onStopRequest: " + channel + ", " + ctxt + ", " + status + ", " +
+        errorMsg);
+}
+
+StreamListener.prototype.onDataAvailable =
+function (channel, ctxt, inStr, sourceOffset, count)
+{
+    if (!this.lastInStr)
+        ctxt._inputStream = toScriptableInputStream (inStr);
+
+    var ev = new CEvent ("server", "data-available", this.server,
+                         "onDataAvailable");
+    ev.line = ctxt.readData(0);
+    this.server.parent.eventPump.addEvent (ev);
+}
+

@@ -396,6 +396,20 @@ function abbreviateWord (str, length)
     return left + "..." + right;
 }
 
+function hyphenateWord (str, length, hyphen)
+{
+    if (typeof hyphen == "undefined")
+        hyphen = " ";
+    
+    if (str.length <= length)
+        return str;
+
+    var left = str.substr (0, (length));
+    var right = hyphenateWord(str.substr (length), length, hyphen);
+
+    return left + hyphen + right;
+}
+
 function getRandomElement (ary)
 {
     var i = parseInt (Math.random() * ary.length)

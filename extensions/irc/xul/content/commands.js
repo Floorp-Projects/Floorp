@@ -46,9 +46,10 @@ function addCommands(commandObject)
          "Sets the current network to <network-name>");
 
     add ("server", "onInputServer",
-         "<server-hostname> [<port>]",
+         "<server-hostname> [<port>] [<password>]",
          "Connects to server <server-hostname> on <port>, or 6667 if " +
-         "<port> is not specified.");
+         "<port> is not specified.  Provides the password <password> if " +
+         "specified.");
 
     add ("quit", "onInputQuit", "[<reason>]",
          "Disconnects from the server represented by the active view when " +
@@ -86,9 +87,10 @@ function addCommands(commandObject)
          "if pattern is not specified.");
     
     add ("attach", "onInputAttach",
-         "[<network-name>]",
+         "[<network-name>] [<password>]",
          "Attaches to the network specified by <network-name>, " +
-         "or the current network, if no network is specified.");
+         "or the current network, if no network is specified.  " +
+         "Provides the password <password> if specified.");
       
     add ("me", "onInputMe",
          "<action>",
@@ -131,14 +133,20 @@ function addCommands(commandObject)
          "<target>.  If <params> are specified they are sent along as well.");
     
     add ("join", "onInputJoin",
-         "[#|&]<channel-name>",
-         "Joins a the global (name starts with #) or local (name starts " +
-         "with &) channel named <channel-name>.  If no prefix is given, # is " +
-         "assumed.");
+         "[#|&|+]<channel-name> [<key>]",
+         "Joins a the global (name starts with #), local (name starts " +
+         "with &), or modeless (name starts with a +) channel named " +
+         "<channel-name>.  If no prefix is given, # is " +
+         "assumed.  Provides the key <key> if specified.");
 
     add ("leave", "onInputLeave",
          "",
-         "Parts the current channel");
+         "Leaves the current channel, use /delete or /hide to force the " +
+         "view to go away.");
+
+    add ("part", "onInputLeave",
+         "",
+         "See /leave");
 
     add ("zoom", "onInputZoom",
          "<nick>",
@@ -183,8 +191,17 @@ function addCommands(commandObject)
     add ("devoice", "onInputDevoice",
          "<nick>",
          "Removes voice status from <nick> on current channel. " +
-         "Requires operator status.");         
+         "Requires operator status.");    
     
+    add ("stalk", "onInputStalk",
+         "<text>",
+         "Add text to list of words for which you would like to see alerts.");
+    
+    add ("unstalk", "onInputUnstalk",
+         "<text>",
+         "Remove word from list of terms for which you would like to see " +
+         "alerts.");
+
     add ("echo", "onInputEcho",
          "<text>",
          "Displays <text> in the current view, but does not send it to " +
@@ -207,20 +224,5 @@ function addCommands(commandObject)
          "[<channel>] <nick>",
          "Kicks <nick> from <channel> or current channel if not " +
          "supplied. Requires operator status.");    
-    
-    /* NOT implemented yet 
-    add ("server", "onInputServer",
-         "<server> [<port>]",
-         "Connects you to <server> using port 6667 if <port> is not" +
-         " specified.");
-    */
-    
-    /* NOT implemented yet
-    add ("quit", "onInputExit",
-         "[<message>]",
-         "Terminates the connection with the server associated with the" +
-         " current view, overriding the default quit message with" +
-         " message if specified.");
-    */
 }
 

@@ -85,5 +85,5 @@ function cmgr_listnames (partialName)
     for (var c in cmds)
         cmdNames.push (cmds[c].name);
 
-    return cmdNames;
+    return cmdNames.sort();
 }
