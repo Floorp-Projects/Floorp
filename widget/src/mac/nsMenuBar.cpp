@@ -21,6 +21,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
@@ -32,6 +33,9 @@
 #include "nsIWidget.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsIStringBundle.h"
+
+#include "nsIDOMXULDocument.h"
 
 #include <Menus.h>
 #include <TextUtils.h>
@@ -39,6 +43,11 @@
 #include <Traps.h>
 #include <Resources.h>
 #include "nsMacResources.h"
+
+
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
 
 #pragma options align=mac68k
 typedef struct {
@@ -435,15 +444,45 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 #ifdef APPLE_MENU_HACK
   if (mNumMenus == 0)
   {
-  	Str32					menuStr = { 1, 0x14 };
-  	MenuHandle		appleMenu = ::NewMenu(kAppleMenuID, menuStr);
+  	Str32 menuStr = { 1, 0x14 };
+  	MenuHandle appleMenu = ::NewMenu(kAppleMenuID, menuStr);
 
-		if (appleMenu)
-		{
-			// XXX This should come from a string bundle
-		  ::AppendMenu(appleMenu, "\pAbout MozillaÉ");
-		  ::AppendMenu(appleMenu, "\p-");
-		  ::AppendResMenu(appleMenu, 'DRVR');
+	if (appleMenu)
+	{
+	  nsresult ret;
+	  nsIStringBundleService *pStringService = nsnull;
+      ret = nsServiceManager::GetService(kStringBundleServiceCID, 
+        kIStringBundleServiceIID, (nsISupports**) &pStringService);
+      if (NS_FAILED(ret)) {
+        NS_WARNING("cannot get string service\n");
+        return ret;
+      }
+      
+      //XXX "chrome://global/locale/brand.properties" should be less hardcoded
+      nsILocale *locale = nsnull;
+      nsIStringBundle *bundle = nsnull;
+      ret = pStringService->CreateBundle("chrome://global/locale/brand.properties", 
+        locale, &bundle);
+       
+      nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+      
+      if (NS_FAILED(ret)) {
+        NS_WARNING("cannot create instance\n");
+        return ret;
+      }      
+      
+      //XXX "aboutStrName" should be less hardcoded
+      nsAutoString temp = "aboutStrName";
+      const PRUnichar *ptrtmp = temp.GetUnicode();  
+      PRUnichar *ptrv = nsnull;
+      bundle->GetStringFromName(ptrtmp, &ptrv);
+            
+      nsAutoString label = ptrv;
+		  	
+      char labelStr[256];
+      ::AppendMenu(appleMenu, c2pstr(label.ToCString(labelStr, sizeof(labelStr))));
+      ::AppendMenu(appleMenu, "\p-");
+	  ::AppendResMenu(appleMenu, 'DRVR');
       ::InsertMenu(appleMenu, 0);
     }
   }
