@@ -63,6 +63,13 @@ public:
 
   NS_IMETHOD IsDone();
 
+  NS_IMETHOD PositionAt(nsIContent* aCurNode);
+
+  NS_IMETHOD MakePre();
+
+  NS_IMETHOD MakePost();
+
+  
   // nsIEnumertor interface methods ------------------------------
   
   //NS_IMETHOD CurrentItem(nsISupports **aItem);
@@ -86,6 +93,7 @@ protected:
   nsCOMPtr<nsIContent> mCommonParent;
 
   PRBool mIsDone;
+  PRBool mPre;
   
 private:
 
@@ -152,7 +160,7 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
 
 nsContentIterator::nsContentIterator() :
   // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
-  mIsDone(PR_FALSE)
+  mIsDone(PR_FALSE), mPre(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -416,25 +424,49 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
   if (!ioNextNode)
     return NS_ERROR_NULL_POINTER;
     
-  nsCOMPtr<nsIContent> cN = *ioNextNode;
-  nsCOMPtr<nsIContent> cSibling;
-  nsCOMPtr<nsIContent> parent;
-  PRInt32              indx;
-
-  // get next sibling if there is one
-    if (!NS_SUCCEEDED(cN->GetParent(*getter_AddRefs(parent))))
-    return NS_ERROR_FAILURE;
-  if (!NS_SUCCEEDED(parent->IndexOf(cN, indx)))
-    return NS_ERROR_FAILURE;
-  if (NS_SUCCEEDED(parent->ChildAt(++indx,*getter_AddRefs(cSibling))) && cSibling)
+  if (mPre)  // if we are a Pre-order iterator, use pre-order
   {
-    // next node is siblings "deep left" child
-    *ioNextNode = GetDeepFirstChild(cSibling); 
-    return NS_OK;
-  }
+    nsCOMPtr<nsIContent> cN = *ioNextNode;
+    nsCOMPtr<nsIContent> cFirstChild;
+    PRInt32 numChildren;
   
-  // else it's the parent
-  *ioNextNode = parent;
+    cN->ChildCount(numChildren);
+  
+    // if it has children then next node is first child
+    if (numChildren)
+    {
+      cN->ChildAt(0,*getter_AddRefs(cFirstChild)); 
+      if (!cFirstChild)
+        return NS_ERROR_FAILURE;
+      *ioNextNode = cFirstChild;
+      return NS_OK;
+    }
+  
+    // else next sibling is next
+    return GetNextSibling(cN, ioNextNode);
+  }
+  else  // post-order
+  {
+    nsCOMPtr<nsIContent> cN = *ioNextNode;
+    nsCOMPtr<nsIContent> cSibling;
+    nsCOMPtr<nsIContent> parent;
+    PRInt32              indx;
+  
+    // get next sibling if there is one
+    if (!NS_SUCCEEDED(cN->GetParent(*getter_AddRefs(parent))))
+      return NS_ERROR_FAILURE;
+    if (!NS_SUCCEEDED(parent->IndexOf(cN, indx)))
+      return NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(parent->ChildAt(++indx,*getter_AddRefs(cSibling))) && cSibling)
+    {
+      // next node is siblings "deep left" child
+      *ioNextNode = GetDeepFirstChild(cSibling); 
+      return NS_OK;
+    }
+  
+    // else it's the parent
+    *ioNextNode = parent;
+  }
   return NS_OK;
 }
 
@@ -443,24 +475,50 @@ nsresult nsContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode)
   if (!ioNextNode)
     return NS_ERROR_NULL_POINTER;
    
-  nsCOMPtr<nsIContent> cN = *ioNextNode;
-  nsCOMPtr<nsIContent> cLastChild;
-  PRInt32 numChildren;
-  
-  cN->ChildCount(numChildren);
-  
-  // if it has children then prev node is last child
-  if (numChildren)
+  if (mPre)  // if we are a Pre-order iterator, use pre-order
   {
-    cN->ChildAt(--numChildren,*getter_AddRefs(cLastChild)); 
-    if (!cLastChild)
-      return NS_ERROR_FAILURE;
-    *ioNextNode = cLastChild;
-    return NS_OK;
-  }
+    nsCOMPtr<nsIContent> cN = *ioNextNode;
+    nsCOMPtr<nsIContent> cSibling;
+    nsCOMPtr<nsIContent> parent;
+    PRInt32              indx;
   
-  // else prev sibling is previous
-  return GetPrevSibling(cN, ioNextNode);
+    // get prev sibling if there is one
+    if (!NS_SUCCEEDED(cN->GetParent(*getter_AddRefs(parent))))
+      return NS_ERROR_FAILURE;
+    if (!NS_SUCCEEDED(parent->IndexOf(cN, indx)))
+      return NS_ERROR_FAILURE;
+    if (indx && NS_SUCCEEDED(parent->ChildAt(--indx,*getter_AddRefs(cSibling))) && cSibling)
+    {
+      // prev node is siblings "deep right" child
+      *ioNextNode = GetDeepLastChild(cSibling); 
+      return NS_OK;
+    }
+  
+    // else it's the parent
+    *ioNextNode = parent;
+  }
+  else  // post-order
+  {
+    nsCOMPtr<nsIContent> cN = *ioNextNode;
+    nsCOMPtr<nsIContent> cLastChild;
+    PRInt32 numChildren;
+  
+    cN->ChildCount(numChildren);
+  
+    // if it has children then prev node is last child
+    if (numChildren)
+    {
+      cN->ChildAt(--numChildren,*getter_AddRefs(cLastChild)); 
+      if (!cLastChild)
+        return NS_ERROR_FAILURE;
+      *ioNextNode = cLastChild;
+      return NS_OK;
+    }
+  
+    // else prev sibling is previous
+    return GetPrevSibling(cN, ioNextNode);
+  }
+  return NS_OK;
 }
 
 /******************************************************
@@ -532,6 +590,31 @@ nsresult nsContentIterator::IsDone()
 }
 
 
+nsresult nsContentIterator::PositionAt(nsIContent* aCurNode)
+{
+  // XXX need to confirm that aCurNode is within range
+  if (!aCurNode)
+    return NS_ERROR_NULL_POINTER;
+  mCurNode = do_QueryInterface(aCurNode);
+  mIsDone = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult nsContentIterator::MakePre()
+{
+  // XXX need to confirm mCurNode is within range
+  mPre = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult nsContentIterator::MakePost()
+{
+  // XXX need to confirm mCurNode is within range
+  mPre = PR_FALSE;
+  return NS_OK;
+}
+
+
 nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
 {
   if (!mCurNode) 
@@ -576,6 +659,12 @@ public:
   NS_IMETHOD Next();
 
   NS_IMETHOD Prev();
+
+  NS_IMETHOD PositionAt(nsIContent* aCurNode);
+
+  NS_IMETHOD MakePre();
+
+  NS_IMETHOD MakePost();
 
 protected:
 
@@ -814,6 +903,21 @@ nsresult nsContentSubtreeIterator::Prev()
     return NS_ERROR_FAILURE;
   prevNode = GetDeepLastChild(prevNode);
   return GetTopAncestorInRange(prevNode, &mCurNode);
+}
+
+nsresult nsContentSubtreeIterator::PositionAt(nsIContent* aCurNode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsContentSubtreeIterator::MakePre()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsContentSubtreeIterator::MakePost()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /****************************************************************
