@@ -28,7 +28,14 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME=xpconnect
 MODULE=xpconnect
+
+# XXX hackage!
+# only copy the .so to components dir on platforms where xptcall is supported
+ifneq (,$(filter Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
+ifeq (86,$(findstring 86,$(OS_TEST)))
 IS_COMPONENT =  1
+endif
+endif
 
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
