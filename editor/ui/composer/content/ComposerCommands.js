@@ -695,7 +695,8 @@ var gPersistObj;
 // Don't forget to do these things after calling OutputFileWithPersistAPI:
 //    window.editorShell.doAfterSave(doUpdateURLOnDocument, urlstring);  // we need to update the url before notifying listeners
 //    if (!aSaveCopy && success)
-//      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+//      window.editorShell.editor.resetModificationCount();
+      // this should cause notification to listeners that document has changed
 
 const webPersist = Components.interfaces.nsIWebBrowserPersist;
 function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFilesParentDir, aMimeType)
@@ -860,7 +861,8 @@ var gEditorOutputProgressListener =
         try {
           window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
           var editor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditor);
-          editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+          editor.resetModificationCount();
+          // this should cause notification to listeners that doc has changed
 
           // Set UI based on whether we're editing a remote or local url
           SetSaveAndPublishUI(urlstring);
@@ -1260,7 +1262,8 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     try {
       window.editorShell.doAfterSave(doUpdateURL, urlstring);  // we need to update the url before notifying listeners
       if (!aSaveCopy)
-        window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+        window.editorShell.editor.resetModificationCount();
+      // this should cause notification to listeners that document has changed
 
       // Set UI based on whether we're editing a remote or local url
       SetSaveAndPublishUI(urlstring);
@@ -1673,10 +1676,9 @@ var nsFindCommand =
     
     if (newfind)
     {
-      dump("Using new find dialog\n");
       try {
         window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
-                          "chrome,close,titlebar,modal", "");
+                          "chrome,dependent", "");
       }
       catch(ex) {
         dump("*** Exception: couldn't open Replace Dialog\n");
@@ -1684,7 +1686,6 @@ var nsFindCommand =
       window._content.focus();
     }
     else {
-      dump("Using old find\n");
       window.editorShell.Replace();
     }
   }

@@ -50,6 +50,11 @@ interface nsIDOMNode;
 interface nsIEditor;
 interface nsISupportsArray;
 
+/**
+ * nsIEditorShell is a DEPRECATED INTERFACE.
+ * Please use the editor classes (nsIEditor, nsIHTMLEditor, etc.)
+ * directly whenever possible.
+ */
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
 {
@@ -175,7 +180,7 @@ interface nsIEditorShell : nsISupports
 
   /** Rebuild the entire document from source HTML
    *  Needed to be able to edit HEAD and other outside-of-BODY content
-   *  param source: HTML source string of the entire new document
+   *  @param source: HTML source string of the entire new document
    */
   void RebuildDocumentFromSource(in wstring source);
 
@@ -190,7 +195,7 @@ interface nsIEditorShell : nsISupports
 
   /** Let editor handle clicking on a non-text element
     *  to do selection, property editing, etc.
-    * Returns true if we "consumed" the event
+    * @return true if we "consumed" the event
     */
   boolean HandleMouseClickOnElement(in nsIDOMElement element, in PRInt32 clickCount, in PRInt32 x, in PRInt32 y);
 

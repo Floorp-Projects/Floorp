@@ -248,29 +248,37 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAReadableString & aInput
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAReadableString & aInString)
+NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAString & aInString)
 {
   nsAutoString charset;
   return InsertHTMLWithCharset(aInString, charset);
 }
 
-nsresult nsHTMLEditor::InsertHTMLWithContext(const nsAReadableString & aInputString, const nsAReadableString & aContextStr, const nsAReadableString & aInfoStr)
+nsresult
+nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
+                                    const nsAString & aContextStr,
+                                    const nsAString & aInfoStr)
 {
   nsAutoString charset;
-  return InsertHTMLWithCharsetAndContext(aInputString, charset, aContextStr, aInfoStr);
+  return InsertHTMLWithCharsetAndContext(aInputString, charset,
+                                         aContextStr, aInfoStr);
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsAReadableString & aInputString, const nsAReadableString & aCharset)
+NS_IMETHODIMP
+nsHTMLEditor::InsertHTMLWithCharset(const nsAString & aInputString,
+                                    const nsAString & aCharset)
 {
-  return InsertHTMLWithCharsetAndContext(aInputString, aCharset, nsAutoString(), nsAutoString());
+  return InsertHTMLWithCharsetAndContext(aInputString, aCharset,
+                                         nsAutoString(), nsAutoString());
 }
 
 
-nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString & aInputString,
-                                                       const nsAReadableString & aCharset,
-                                                       const nsAReadableString & aContextStr,
-                                                       const nsAReadableString & aInfoStr)
+nsresult
+nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
+                                              const nsAString & aCharset,
+                                              const nsAString & aContextStr,
+                                              const nsAString & aInfoStr)
 {
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1361,7 +1369,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation(PRInt32 aSelectionType)
   return PasteAsCitedQuotation(citation, aSelectionType);
 }
 
-NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAReadableString & aCitation,
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
                                                   PRInt32 aSelectionType)
 {
   nsAutoEditBatch beginBatching(this);
@@ -1471,7 +1479,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAReadableString & aQuotedText,
+NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAString & aQuotedText,
                                               nsIDOMNode **aNodeInserted)
 {
   if (mFlags & eEditorPlaintextMask)
@@ -1488,7 +1496,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAReadableString & aQuotedT
 // in that here, quoted material is enclosed in a <pre> tag
 // in order to preserve the original line wrapping.
 NS_IMETHODIMP
-nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
+nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
   nsresult rv;
@@ -1582,10 +1590,10 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
-                                     const nsAReadableString & aCitation,
+nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
+                                     const nsAString & aCitation,
                                      PRBool aInsertHTML,
-                                     const nsAReadableString & aCharset,
+                                     const nsAString & aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
   nsCOMPtr<nsIDOMNode> newNode;

@@ -163,10 +163,10 @@ function onAccept()
     var initialText = gDialog.textareaValue.value;
     if (initialText != textareaElement.value) {
       while (textareaElement.hasChildNodes())
-        editorShell.editor.DeleteNode(textareaElement.firstChild);
+        editorShell.editor.deleteNode(textareaElement.firstChild);
       if (initialText) {
         var textNode = editorShell.editorDocument.createTextNode(initialText);
-        editorShell.editor.InsertNode(textNode, textareaElement, 0);
+        editorShell.editor.insertNode(textNode, textareaElement, 0);
       }
     }
 

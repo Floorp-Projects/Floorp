@@ -22,6 +22,3 @@
 
 nsEditorCID.h
 nsIEditorLogging.h
-nsIEditorMailSupport.h
-nsIEditorStyleSheets.h
-nsITableEditor.h

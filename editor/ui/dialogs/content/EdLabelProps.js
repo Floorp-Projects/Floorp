@@ -118,10 +118,10 @@ function onAccept()
   {
     var editor = editorShell.editor;
     while (labelElement.firstChild)
-      editor.DeleteNode(labelElement.firstChild);
+      editor.deleteNode(labelElement.firstChild);
     if (gDialog.labelText.value) {
       var textNode = editorShell.editorDocument.createTextNode(gDialog.labelText.value);
-      editor.InsertNode(textNode, labelElement, 0);
+      editor.insertNode(textNode, labelElement, 0);
       editorShell.SelectElement(labelElement);
     }
   }

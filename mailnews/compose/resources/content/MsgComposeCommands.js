@@ -151,9 +151,7 @@ function ReleaseGlobalVariables()
 
 function disableEditableFields()
 {
-  var flags = new Object;
-  editorShell.editor.GetFlags(flags);
-  editorShell.editor.SetFlags(flags.value | nsIPlaintextEditor.eEditorReadonlyMask);
+  editorShell.editor.flags |= nsIPlaintextEditor.eEditorReadonlyMask;
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -163,9 +161,7 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  var flags = new Object;
-  editorShell.editor.GetFlags(flags);
-  editorShell.editor.SetFlags(flags.value ^ nsIPlaintextEditor.eEditorReadonlyMask);
+  editorShell.editor.flags ^= nsIPlaintextEditor.eEditorReadonlyMask;
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {

@@ -31,9 +31,6 @@ MODULE		= editor
 EXPORTS		= \
 		nsEditorCID.h \
 		nsIEditorLogging.h \
-		nsIEditorMailSupport.h \
-		nsIEditorStyleSheets.h \
-		nsITableEditor.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
- *
+ *   Akkana Peck <akkana@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,8 +36,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
@@ -72,115 +70,131 @@ interface nsIHTMLEditor : nsISupports
    * SetInlineProperty() sets the aggregate properties on the current selection
    *
    * @param aProperty   the property to set on the selection 
-   * @param aAttribute  the attribute of the property, if applicable.  May be null.
+   * @param aAttribute  the attribute of the property, if applicable.
+   *                    May be null.
    *                    Example: aProperty="font", aAttribute="color"
-   * @param aValue      if aAttribute is not null, the value of the attribute.  May be null.
-   *                    Example: aProperty="font", aAttribute="color", aValue="0x00FFFF"
+   * @param aValue      if aAttribute is not null, the value of the attribute.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color",
+   *                             aValue="0x00FFFF"
    */
-  void SetCSSInlineProperty(in nsIAtom aProperty, 
-                             in DOMString aAttribute,
-                             in DOMString aValue);
-  void SetInlineProperty(in nsIAtom aProperty, 
-                             in DOMString aAttribute,
-                             in DOMString aValue);
+  void setCSSInlineProperty(in nsIAtom aProperty, 
+                            in AString aAttribute,
+                            in AString aValue);
+  void setInlineProperty(in nsIAtom aProperty, 
+                         in AString aAttribute,
+                         in AString aValue);
 
   /**
-   * GetInlineProperty() gets the aggregate properties of the current selection.
+   * getInlineProperty() gets aggregate properties of the current selection.
    * All object in the current selection are scanned and their attributes are
    * represented in a list of Property object.
    *
    * @param aProperty   the property to get on the selection 
-   * @param aAttribute  the attribute of the property, if applicable.  May be null.
+   * @param aAttribute  the attribute of the property, if applicable.
+   *                    May be null.
    *                    Example: aProperty="font", aAttribute="color"
-   * @param aValue      if aAttribute is not null, the value of the attribute.  May be null.
-   *                    Example: aProperty="font", aAttribute="color", aValue="0x00FFFF"
-   * @param aFirst      [OUT] PR_TRUE if the first text node in the selection has the property
-   * @param aAny        [OUT] PR_TRUE if any of the text nodes in the selection have the property
-   * @param aAll        [OUT] PR_TRUE if all of the text nodes in the selection have the property
+   * @param aValue      if aAttribute is not null, the value of the attribute.
+   *                    May be null.
+   *                    Example: aProperty="font", aAttribute="color",
+   *                             aValue="0x00FFFF"
+   * @param aFirst      [OUT] PR_TRUE if the first text node in the
+   *                          selection has the property
+   * @param aAny        [OUT] PR_TRUE if any of the text nodes in the
+   *                          selection have the property
+   * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
+   *                          selection have the property
    */
-  void GetInlineProperty(in nsIAtom aProperty, 
-                             in DOMString  aAttribute,
-                             in DOMString  aValue,
-                             out boolean aFirst, out boolean aAny, out boolean aAll);
+  void getInlineProperty(in nsIAtom aProperty, 
+                         in AString  aAttribute,
+                         in AString  aValue,
+                         out boolean aFirst,
+                         out boolean aAny,
+                         out boolean aAll);
 
-  void  GetInlinePropertyWithAttrValue(in nsIAtom aProperty, 
-                             in DOMString  aAttribute,
-                             in DOMString  aValue,
-                             out boolean aFirst, out boolean aAny, out boolean aAll,
-                             out DOMString outValue);
+  AString getInlinePropertyWithAttrValue(in nsIAtom aProperty, 
+                                           in AString  aAttribute,
+                                           in AString  aValue,
+                                           out boolean aFirst,
+                                           out boolean aAny,
+                                           out boolean aAll);
                              
   /**
-   * RemoveAllInlineProperties() deletes all the inline properties from all 
+   * removeAllInlineProperties() deletes all the inline properties from all 
    * text in the current selection.
    */
-  void  RemoveAllInlineProperties();
+  void removeAllInlineProperties();
 
 
   /**
-   * RemoveInlineProperty() deletes the properties from all text in the current selection.
-   * If aProperty is not set on the selection, nothing is done.
+   * removeInlineProperty() deletes the properties from all text in the current
+   * selection.  If aProperty is not set on the selection, nothing is done.
    *
    * @param aProperty   the property to remove from the selection 
-   *                    All atoms are for normal HTML tags (e.g.: nsIEditorProptery::font)
-   *                      except when you want to remove just links and not named anchors
-   *                      For that, use nsIEditorProperty::href
-   * @param aAttribute  the attribute of the property, if applicable.  May be null.
-   *                    Example: aProperty=nsIEditorProptery::font, aAttribute="color"
-   *                    nsIEditProperty::allAttributes is special.  It indicates that
-   *                    all content-based text properties are to be removed from the selection.
+   *                    All atoms are for normal HTML tags (e.g.:
+   *                    nsIEditorProperty::font) except when you want to
+   *                    remove just links and not named anchors.
+   *                    For that, use nsIEditorProperty::href
+   * @param aAttribute  the attribute of the property, if applicable.
+   *                    May be null.
+   *                    Example: aProperty=nsIEditorProptery::font,
+   *                    aAttribute="color"
+   *                    nsIEditProperty::allAttributes is special.
+   *                    It indicates that all content-based text properties
+   *                    are to be removed from the selection.
    */
-  void  RemoveInlineProperty(in nsIAtom aProperty, in DOMString  aAttribute);
+  void removeInlineProperty(in nsIAtom aProperty, in AString  aAttribute);
 
   /**
    *  Increase font size for text in selection by 1 HTML unit
    *  All existing text is scanned for existing <FONT SIZE> attributes
-   *    so they will be incremented instead of inserting new <FONT> tag
+   *  so they will be incremented instead of inserting new <FONT> tag
    */
-  void  IncreaseFontSize();
+  void increaseFontSize();
 
   /**
    *  Decrease font size for text in selection by 1 HTML unit
    *  All existing text is scanned for existing <FONT SIZE> attributes
-   *    so they will be decreased instead of inserting new <FONT> tag
+   *  so they will be decreased instead of inserting new <FONT> tag
    */
-  void  DecreaseFontSize();
+  void decreaseFontSize();
 
   /* ------------ Drag/Drop methods -------------- */
 
   /** 
-   * CanDrag decides if a drag should be started
+   * canDrag decides if a drag should be started
    * (for example, based on the current selection and mousepoint).
    */
-  void  CanDrag(in nsIDOMEvent aEvent, out boolean aCanDrag);
+  boolean canDrag(in nsIDOMEvent aEvent);
 
   /** 
-   * DoDrag transfers the relevant data (as appropriate)
+   * doDrag transfers the relevant data (as appropriate)
    * to a transferable so it can later be dropped.
    */
-  void  DoDrag(in nsIDOMEvent aEvent);
+  void doDrag(in nsIDOMEvent aEvent);
 
   /** 
-   * InsertFromDrop looks for a dragsession and inserts the
+   * insertFromDrop looks for a dragsession and inserts the
    * relevant data in response to a drop.
    */
-  void  InsertFromDrop(in nsIDOMEvent aEvent);
+  void insertFromDrop(in nsIDOMEvent aEvent);
 
   /* ------------ HTML content methods -------------- */
 
   /**
-   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
+   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD.
    *   This does NOT consider CSS effect on display type
    *
    * @param aNode      the node to test
    */
-  void NodeIsBlock(in nsIDOMNode node, out boolean isBlock);
+  boolean nodeIsBlock(in nsIDOMNode node);
 
   /**
    * Insert some HTML source at the current location
    *
    * @param aInputString   the string to be inserted
    */
-  void  InsertHTML(in DOMString   aInputString);
+  void insertHTML(in AString aInputString);
 
 
   /** Rebuild the entire document from source HTML
@@ -188,7 +202,7 @@ interface nsIHTMLEditor : nsISupports
    *
    *  @param aSourceString   HTML source string of the entire new document
    */
-  void  RebuildDocumentFromSource(in DOMString   aSourceString);
+  void rebuildDocumentFromSource(in AString aSourceString);
 
   /**
    * Insert some HTML source, interpreting
@@ -199,8 +213,8 @@ interface nsIHTMLEditor : nsISupports
    * @param aParentNode    Parent to insert under.
    *                       If null, insert at the current location.
    */
-  void  InsertHTMLWithCharset(in DOMString   aInputString,
-                                   in DOMString   aCharset);
+  void insertHTMLWithCharset(in AString aInputString,
+                             in AString aCharset);
 
 
   /** Insert an element, which may have child nodes, at the selection
@@ -214,11 +228,12 @@ interface nsIHTMLEditor : nsISupports
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */  
-  void  InsertElementAtSelection(in nsIDOMElement aElement, in boolean aDeleteSelection);
+  void insertElementAtSelection(in nsIDOMElement aElement,
+                                in boolean aDeleteSelection);
 
   /** Set the documents title.
    */
-  void SetDocumentTitle(in DOMString aTitle);
+  void setDocumentTitle(in AString aTitle);
 
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */
@@ -227,7 +242,7 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement   An element in the document
     */
-  void  SelectElement(in nsIDOMElement  aElement);
+  void selectElement(in nsIDOMElement aElement);
 
   /** Create a collapsed selection just after aElement
     * 
@@ -240,53 +255,53 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement  An element in the document
     */
-  void  SetCaretAfterElement(in nsIDOMElement  aElement);
+  void setCaretAfterElement(in nsIDOMElement aElement);
 
   /**
    * SetParagraphFormat       Insert a block paragraph tag around selection
    * @param aParagraphFormat  "p", "h1" to "h6", "address", "pre", or "blockquote"
    */
-  void  SetParagraphFormat(in DOMString   aParagraphFormat);
+  void setParagraphFormat(in AString aParagraphFormat);
 
   /**
-   * GetParagraphState returns what block tag paragraph format is in the selection.
+   * getParagraphState returns what block tag paragraph format is in
+   * the selection.
    * @param aMixed     True if there is more than one format
-   * @param outState   Name of block tag. "" is returned for none.
+   * @return           Name of block tag. "" is returned for none.
    */
-  void  GetParagraphState(out boolean aMixed,out DOMString  outState);
+  AString getParagraphState(out boolean aMixed);
 
   /** 
-   * GetFontFaceState returns what font face is in the selection.
+   * getFontFaceState returns what font face is in the selection.
    * @param aMixed    True if there is more than one font face
-   * @param outFace   Name of face.  Note: "tt" is returned for
+   * @return          Name of face.  Note: "tt" is returned for
    *                  tt tag.  "" is returned for none.
    */
-  void  GetFontFaceState(out boolean aMixed,out DOMString  outFont);
+  AString getFontFaceState(out boolean aMixed);
   
   /** 
-   * GetFontColorState returns what font face is in the selection.
+   * getFontColorState returns what font face is in the selection.
    * @param aMixed     True if there is more than one font color
-   * @param outColor   Color string. "" is returned for none.
+   * @return           Color string. "" is returned for none.
    */
-  void  GetFontColorState(out boolean aMixed,out DOMString  outColor);
+  AString getFontColorState(out boolean aMixed);
 
   /** 
-   * GetFontColorState returns what font face is in the selection.
+   * getFontColorState returns what font face is in the selection.
    * @param aMixed     True if there is more than one font color
-   * @param outColor   Color string. "" is returned for none.
+   * @return           Color string. "" is returned for none.
    */
-  void  GetBackgroundColorState(out boolean aMixed,out DOMString  outColor);
+  AString getBackgroundColorState(out boolean aMixed);
 
   /** 
-   * GetHighlightColorState returns what the highlight color of the selection.
+   * getHighlightColorState returns what the highlight color of the selection.
    * @param aMixed     True if there is more than one font color
-   * @param outColor   Color string. "" is returned for none.
+   * @return           Color string. "" is returned for none.
    */
-  void  GetHighlightColorState(out boolean aMixed,out DOMString  outColor);
-  wstring GetHighlightColor(out boolean mixed);
+  AString getHighlightColorState(out boolean aMixed);
 
   /** 
-   * GetListState returns what list type is in the selection.
+   * getListState returns what list type is in the selection.
    * @param aMixed    True if there is more than one type of list, or
    *                  if there is some list and non-list
    * @param aOL       The company that employs me.  No, really, it's 
@@ -294,55 +309,59 @@ interface nsIHTMLEditor : nsISupports
    * @param aUL       true if an "ul" list is selected.
    * @param aDL       true if a "dl" list is selected.
    */
-  void  GetListState(out boolean aMixed, out boolean aOL, out boolean aUL, out boolean aDL);
+  void getListState(out boolean aMixed, out boolean aOL, out boolean aUL,
+                    out boolean aDL);
   
   /** 
-   * GetListItemState returns what list item type is in the selection.
+   * getListItemState returns what list item type is in the selection.
    * @param aMixed    True if there is more than one type of list item, or
    *                  if there is some list and non-list
    * @param aLI       true if "li" list items are selected.
    * @param aDT       true if "dt" list items are selected.
    * @param aDD       true if "dd" list items are selected.
    */
-  void  GetListItemState(out boolean aMixed, out boolean aLI, out boolean aDT, out boolean aDD);
+  void getListItemState(out boolean aMixed, out boolean aLI,
+                        out boolean aDT, out boolean aDD);
   
   /** 
-   * GetAlignment     returns what alignment is in the selection.
+   * getAlignment     returns what alignment is in the selection.
    * @param aMixed    True if there is more than one type of list item, or
    *                  if there is some list and non-list
-   * @param aAlign    enum value for first encountered alignment (left/center/right)
+   * @param aAlign    enum value for first encountered alignment
+   *                  (left/center/right)
    */
-  void  GetAlignment(out boolean aMixed, out short aAlign);
+  void getAlignment(out boolean aMixed, out short aAlign);
   
   /**
    * Document me!
    * 
    */
-  void  GetIndentState(out boolean aCanIndent, out boolean aCanOutdent);
+  void getIndentState(out boolean aCanIndent, out boolean aCanOutdent);
 
   /**
    * Document me!
    * 
    */
-  void  MakeOrChangeList(in DOMString   aListType, in boolean entireList, in DOMString aBulletType);
+  void makeOrChangeList(in AString aListType, in boolean entireList,
+                        in AString aBulletType);
 
   /**
    * Document me!
    * 
    */
-  void  RemoveList(in DOMString   aListType);
+  void removeList(in AString aListType);
 
   /**
    * Document me!
    * 
    */
-  void  Indent(in DOMString   aIndent);
+  void indent(in AString aIndent);
 
   /**
    * Document me!
    * 
    */
-  void  Align(in DOMString   aAlign);
+  void  align(in AString aAlign);
 
   /** Return the input node or a parent matching the given aTagName,
     *   starting the search at the supplied node.
@@ -358,18 +377,21 @@ interface nsIHTMLEditor : nsISupports
     *    Use "list" to get an OL, UL, or DL list node
     *    Use "td" to get either a TD or TH cell node
     *
-    * @param aNode    The node in the document to start the search
-    *     If it is null, the anchor node of the current selection is used
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * @param aNode    The node in the document to start the search.
+    *     If it is null, the anchor node of the current selection is used.
+    * @return         NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *                 (passes NS_SUCCEEDED macro)
     */
-  void  GetElementOrParentByTagName(in DOMString   aTagName, in nsIDOMNode aNode, out nsIDOMElement aReturn);
+  nsIDOMElement getElementOrParentByTagName(in AString aTagName,
+                                            in nsIDOMNode aNode);
 
   /** Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
     * The exception is a link, which is more like a text attribute:
     *    The Anchor tag is returned if the selection is within the textnode(s)
     *    that are children of the "A" node.
-    *    This could be a collapsed selection, i.e., a caret within the link text.
+    *    This could be a collapsed selection, i.e., a caret
+    *    within the link text.
     *
     * @param aTagName  The HTML tagname or and empty string 
     *       to get any element (but only if it is the only element selected)
@@ -378,17 +400,18 @@ interface nsIHTMLEditor : nsISupports
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * @return          NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *                  (passes NS_SUCCEEDED macro)
     */
-  void  GetSelectedElement(in DOMString   aTagName, out nsIDOMElement aReturn);
+  nsIDOMElement getSelectedElement(in AString aTagName);
 
   /** Output the contents of the <HEAD> section as text/HTML format
     */
-  void  GetHeadContentsAsHTML(out DOMString  aOutputString);
+  AString getHeadContentsAsHTML();
 
   /** Replace all children of <HEAD> with string of HTML source
     */
-  void  ReplaceHeadContentsWithHTML(in DOMString   aSourceToInsert);
+  void replaceHeadContentsWithHTML(in AString aSourceToInsert);
 
   /** Return a new element with default attribute values
     * 
@@ -404,20 +427,21 @@ interface nsIHTMLEditor : nsISupports
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
+    * @return          The new element created.
     */
-  void  CreateElementWithDefaults(in DOMString   aTagName, out nsIDOMElement aReturn);
+  nsIDOMElement createElementWithDefaults(in AString aTagName);
 
   /** Insert an link element as the parent of the current selection
     *
     * @param aElement   An "A" element with a non-empty "href" attribute
     */
-  void  InsertLinkAroundSelection(in nsIDOMElement  aAnchorElement);
+  void insertLinkAroundSelection(in nsIDOMElement aAnchorElement);
 
   /** Set the value of the "bgcolor" attribute on the document's <body> element
     *
     * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
     */
-  void  SetBackgroundColor(in DOMString   aColor);
+  void setBackgroundColor(in AString aColor);
 
 
   /** Set an attribute on the document's <body> element
@@ -428,11 +452,12 @@ interface nsIHTMLEditor : nsISupports
     * @param aAttr   The attribute to be set
     * @param aValue  The value of the attribute
     */
-  void  SetBodyAttribute(in DOMString   aAttr, in DOMString   aValue);
+  void setBodyAttribute(in AString aAttr, in AString aValue);
   
-  //XXX Used to suppress spurious drag/drop events to workaround bug 50703
-  // Don't use this method! It will go away after first release!
-  void  IgnoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
+  /** XXX Used to suppress spurious drag/drop events to workaround bug 50703
+    * Don't use this method! It will go away after first release!
+    */
+  void ignoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
 
   /**
    * Find all the nodes in the document which contain references
@@ -441,17 +466,15 @@ interface nsIHTMLEditor : nsISupports
    *
    * @return aNodeList    the linked nodes found
    */
-  nsISupportsArray GetLinkedObjects();
+  nsISupportsArray getLinkedObjects();
 
-  void   SetCSSEnabled(in boolean aIsCSSPrefChecked);
-
-  /** IsCSSEnabled answers a boolean which is true is the HTMLEditor has been
-    * instantiated with CSS knowledge and if the CSS pref is currently checked
+  /** A boolean which is true is the HTMLEditor has been instantiated
+    * with CSS knowledge and if the CSS pref is currently checked
     *
-    * @param aIsCSSEnabled [OUT] true if CSS handled and enabled
+    * @return    true if CSS handled and enabled
     */
-  void   IsCSSEnabled(out boolean aIsCSSEnabled);
+  attribute boolean isCSSEnabled;
 
-  nsIDOMCSSStyleRule ParseStyleAttrIntoCSSRule(in wstring aString);
+  nsIDOMCSSStyleRule parseStyleAttrIntoCSSRule(in AString aString);
 };
 

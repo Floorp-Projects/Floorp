@@ -25,9 +25,6 @@ DEPTH=..\..
 EXPORTS =                            \
     nsEditorCID.h                    \
     nsIEditorLogging.h               \
-    nsIEditorMailSupport.h           \
-    nsIEditorStyleSheets.h           \
-    nsITableEditor.h                 \
     $(NULL)
 
 MODULE = editor 

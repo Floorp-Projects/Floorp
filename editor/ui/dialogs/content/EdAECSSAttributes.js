@@ -29,7 +29,7 @@ function BuildCSSAttributeTable()
   // outside of the document's tree
   var styleAttr = gElement.getAttribute("style");
   var editor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  var styleRule = editor.ParseStyleAttrIntoCSSRule(styleAttr);
+  var styleRule = editor.parseStyleAttrIntoCSSRule(styleAttr);
   
   if (styleRule == undefined)
   {

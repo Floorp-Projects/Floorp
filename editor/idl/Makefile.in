@@ -35,12 +35,15 @@ XPIDLSRCS	= \
 		nsIEditorController.idl \
 		nsIEditor.idl \
 		nsIEditorIMESupport.idl \
+		nsIEditorMailSupport.idl \
 		nsIEditorObserver.idl \
 		nsIEditorService.idl \
 		nsIEditorShell.idl \
 		nsIEditorSpellCheck.idl \
+		nsIEditorStyleSheets.idl \
 		nsIHTMLEditor.idl \
 		nsIPlaintextEditor.idl \
+		nsITableEditor.idl \
 		nsIURIRefObject.idl \
 		nsPIEditorTransaction.idl \
 		$(NULL)

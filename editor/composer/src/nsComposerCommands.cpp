@@ -1399,7 +1399,7 @@ nsHighlightColorStateCommand::IsCommandEnabled(const nsAReadableString & aComman
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
     if (!htmlEditor) return NS_ERROR_FAILURE;
     PRBool useCSS;
-    htmlEditor->IsCSSEnabled(&useCSS);
+    htmlEditor->GetIsCSSEnabled(&useCSS);
       
     *outCmdEnabled = useCSS;
   }

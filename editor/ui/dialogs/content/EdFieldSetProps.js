@@ -174,8 +174,8 @@ function onAccept()
         if (newLegend)
           editorShell.InsertElement(legendElement, fieldsetElement, 0, true);
         else while (legendElement.firstChild)
-          editor.DeleteNode(legendElement.firstChild);
-        editor.InsertNode(editorShell.editorDocument.createTextNode(gDialog.legendText.value), legendElement, 0);
+          editor.deleteNode(legendElement.firstChild);
+        editor.insertNode(editorShell.editorDocument.createTextNode(gDialog.legendText.value), legendElement, 0);
       }
       else if (!newLegend)
         editorShell.DeleteElement(legendElement);
