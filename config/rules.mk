@@ -392,7 +392,7 @@ endif
 ifdef PROGRAM
 	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 ifeq ($(OS_ARCH),BeOS)
-	rm components add-ons lib
+	-rm components add-ons lib
 	ln -sf $(DIST)/bin/components components
 	ln -sf $(DIST)/bin add-ons
 	ln -sf $(DIST)/bin lib
@@ -401,7 +401,7 @@ endif
 ifdef SIMPLE_PROGRAMS
 	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
 ifeq ($(OS_ARCH),BeOS)
-	rm components add-ons lib
+	-rm components add-ons lib
 	ln -sf $(DIST)/bin/components components
 	ln -sf $(DIST)/bin add-ons
 	ln -sf $(DIST)/bin lib
