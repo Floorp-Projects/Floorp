@@ -128,3 +128,15 @@ NS_METHOD nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
   // FIXME: Need to implement.  --ZuperDee
   return NS_OK;
 }
+
+#ifdef NS_DEBUG
+NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
+                                        const nsMetricNavFontID   aFontID, 
+                                        const PRInt32             aFontSize, 
+                                        nsSize &aSize)
+{
+  aSize.width  = 0;
+  aSize.height = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif

@@ -22,6 +22,10 @@
 #include "nsColor.h"
 #include "nsFont.h"
 
+#ifdef NS_DEBUG
+#include "nsSize.h"
+#endif
+
 
 // {21B51DE1-21A3-11d2-B6E0-00805F8A2676}
 #define NS_ILOOKANDFEEL_IID \
@@ -119,6 +123,33 @@ public:
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric) = 0;
+
+
+#ifdef NS_DEBUG
+  typedef enum {
+    eMetricSize_TextField = 0,
+    eMetricSize_TextArea  = 1,
+    eMetricSize_ListBox   = 2,
+    eMetricSize_ComboBox  = 3,
+    eMetricSize_Radio     = 4,
+    eMetricSize_CheckBox  = 5,
+    eMetricSize_Button    = 6
+  } nsMetricNavWidgetID;
+
+  typedef enum {
+    eMetricSize_Courier   = 0,
+    eMetricSize_SansSerif = 1
+  } nsMetricNavFontID;
+
+  // This method returns the actual (or nearest estimate) 
+  // of the Navigator size for a given form control for a given font
+  // and font size. This is used in NavQuirks mode to see how closely
+  // we match its size
+  NS_IMETHOD GetNavSize(const nsMetricNavWidgetID aWidgetID,
+                        const nsMetricNavFontID   aFontID, 
+                        const PRInt32             aFontSize, 
+                        nsSize &aSize) = 0;
+#endif
 };
 
 #define nsLAF nsILookAndFeel
