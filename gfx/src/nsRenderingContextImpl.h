@@ -90,7 +90,7 @@ public:
    */
   NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
 
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer); 
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer); 
   NS_IMETHOD ReleaseBackbuffer(void);
   NS_IMETHOD DestroyCachedBackbuffer(void);
   NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
@@ -158,8 +158,9 @@ protected:
    * @param aMaxSize maximum size that may be requested for the backbuffer
    * @param aBackbuffer drawing surface used as the backbuffer
    * @param aCacheBackbuffer PR_TRUE then the backbuffer will be cached, if PR_FALSE it is created each time
+   * @param aSurfFlags flags passed to CreateDrawingSurface()
    */
-  nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer);
+  nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer, PRUint32 aSurfFlags);
 
 public:
 

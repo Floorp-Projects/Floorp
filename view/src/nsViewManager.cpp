@@ -881,13 +881,13 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   PRBool anyTransparentPixels
     = BuildRenderingDisplayList(aView, damageRegion, &displayList, displayArena);
-  if (!(aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)) {
-    for (PRInt32 i = 0; i < displayList.Count(); i++) {
-      DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
-      if (element->mFlags & PUSH_FILTER) {
-        aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
-        break;
-      }
+  PRBool needBlending = PR_FALSE;
+  for (PRInt32 i = 0; i < displayList.Count(); i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
+    if (element->mFlags & PUSH_FILTER) {
+      aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+      needBlending = PR_TRUE;
+      break;
     }
   } 
 
@@ -897,7 +897,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     GetMaxWidgetBounds(maxWidgetSize);
 
     nsRect r(0, 0, widgetDamageRectInPixels.width, widgetDamageRectInPixels.height);
-    if (NS_FAILED(localcx->GetBackbuffer(r, maxWidgetSize, ds))) {
+    if (NS_FAILED(localcx->GetBackbuffer(r, maxWidgetSize, needBlending, ds))) {
       //Failed to get backbuffer so turn off double buffering
       aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
     }

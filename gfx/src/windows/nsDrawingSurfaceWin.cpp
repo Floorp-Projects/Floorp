@@ -433,34 +433,35 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Init(HDC aDC, PRUint32 aWidth,
 
     if (aWidth > 0 && aHeight > 0)
     {
-      // We'll create the DIB for pixel access even if not explicitly requested
-      // as it's much faster than creating it from the DC on demand.
-      // See bug 228399 for more information.
-
-      void        *bits;
-      BITMAPINFO  *binfo;
-      int         depth;
-
-      depth = ::GetDeviceCaps(aDC, BITSPIXEL);
-      // Always use at least 24-bit bitmaps regardless of the device context.
-      // See bug 228399 for more information.
-      if (depth < 24)
-        depth = 24;
-
-      binfo = CreateBitmapInfo(aWidth, aHeight, depth);
-
-      if (nsnull != binfo)
-        mSelectedBitmap = tbits = ::CreateDIBSection(aDC, binfo, DIB_RGB_COLORS, &bits, NULL, 0);
-
-      if (NULL == mSelectedBitmap)
-        tbits = ::CreateCompatibleBitmap(aDC, aWidth, aHeight);
-      else
+      if (aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)
       {
-        mBitmapInfo = binfo;
-        mDIBits = (PRUint8 *)bits;
-        mBitmap.bmWidthBytes = RASWIDTH(aWidth, depth);
-        mBitmap.bmBitsPixel = depth;
+        void        *bits;
+        BITMAPINFO  *binfo;
+        int         depth;
+
+        depth = ::GetDeviceCaps(aDC, BITSPIXEL);
+        // Always use at least 24-bit bitmaps regardless of the device context.
+        // See bug 228399 for more information.
+        if (depth < 24)
+          depth = 24;
+
+        binfo = CreateBitmapInfo(aWidth, aHeight, depth);
+
+        if (nsnull != binfo)
+          mSelectedBitmap = tbits = ::CreateDIBSection(aDC, binfo, DIB_RGB_COLORS, &bits, NULL, 0);
+
+        if (NULL == mSelectedBitmap)
+          tbits = ::CreateCompatibleBitmap(aDC, aWidth, aHeight);
+        else
+        {
+          mBitmapInfo = binfo;
+          mDIBits = (PRUint8 *)bits;
+          mBitmap.bmWidthBytes = RASWIDTH(aWidth, depth);
+          mBitmap.bmBitsPixel = depth;
+        }
       }
+      else
+        tbits = ::CreateCompatibleBitmap(aDC, aWidth, aHeight);
     }
     else
     {

@@ -807,6 +807,7 @@ nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 NS_IMETHODIMP
 nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                        const nsRect &aMaxSize,
+                                       PRBool aForBlending,
                                        nsIDrawingSurface* &aBackbuffer)
 {
     if (!mBackBufferSurface) {

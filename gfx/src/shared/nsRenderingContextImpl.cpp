@@ -73,16 +73,16 @@ nsRenderingContextImpl :: ~nsRenderingContextImpl()
 }
 
 
-NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
+NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer)
 {
   // Default implementation assumes the backbuffer will be cached.
   // If the platform implementation does not require the backbuffer to
   // be cached override this method and make the following call instead:
   // AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE);
-  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_TRUE);
+  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_TRUE, 0);
 }
 
-nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer)
+nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer, PRUint32 aSurfFlags)
 {
   nsRect newBounds;
   nsresult rv = NS_OK;
@@ -103,7 +103,7 @@ nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize
         gBackbuffer = nsnull;
       }
 
-      rv = CreateDrawingSurface(newBounds, 0, gBackbuffer);
+      rv = CreateDrawingSurface(newBounds, aSurfFlags, gBackbuffer);
       //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
       if (NS_SUCCEEDED(rv)) {
         gBackbufferBounds = newBounds;
