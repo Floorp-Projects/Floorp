@@ -72,7 +72,7 @@ public:
   // the region or rectangle passed in should be in the window's
   // coordinate space. Often called in response to a paint/redraw event
   // from the native windowing system.
-  virtual void Refresh(nsIRenderingContext *aContext, nsRegion *region,
+  virtual void Refresh(nsIRenderingContext *aContext, nsIRegion *region,
                        PRUint32 aUpdateFlags);
   virtual void Refresh(nsIView* aView, nsIRenderingContext *aContext,
                        nsRect *rect, PRUint32 aUpdateFlags);
@@ -83,7 +83,7 @@ public:
   // Called to inform the layer manager that some portion of a layer
   // is dirty and needs to be redrawn. The region or rect passed in
   // should be in the layer's coordinate space.
-  virtual void UpdateView(nsIView *aView, nsRegion *aRegion,
+  virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
                           PRUint32 aUpdateFlags);
   virtual void UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags);
 

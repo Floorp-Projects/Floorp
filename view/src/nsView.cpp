@@ -435,7 +435,7 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPain
   rc.PopState();
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags)
+void nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags)
 {
   // XXX apply region to rc
   // XXX get bounding rect from region

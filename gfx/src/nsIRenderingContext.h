@@ -31,6 +31,7 @@ class nsTransform2D;
 class nsString;
 class nsIFontCache;
 class nsIDeviceContext;
+class nsIRegion;
 
 struct nsFont;
 struct nsPoint;
@@ -106,15 +107,26 @@ public:
   /**
    * Sets the clipping for the RenderingContext to the passed in rectangle
    * @param aRect The rectangle to set the clipping rectangle to
-   * @param aIntersect A boolean, if true will cause aRect to be intersected with exsiting clip rects
+   * @param aIntersect A boolean, if true will cause aRect to be
+   *        intersected with existing clip area
    */
   virtual void SetClipRect(const nsRect& aRect, PRBool aIntersect) = 0;
 
   /**
    * Gets the clipping rectangle of the RenderingContext
-   * @return The clipping rectangle for the RenderingContext
+   * @param aRect out parameter to containt the clipping rectangle
+   *        for the RenderingContext
+   * @return PR_TRUE if the rendering context has a cliprect set
    */
-  virtual const nsRect& GetClipRect() = 0;
+  virtual PRBool GetClipRect(nsRect &aRect) = 0;
+
+  /**
+   * Sets the clipping for the RenderingContext to the passed in region
+   * @param aRegion The region to set the clipping area to
+   * @param aIntersect A boolean, if true will cause aRegion to be
+   *        intersected with existing clip area
+   */
+  virtual void SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect) = 0;
 
   /**
    * Sets the forground color for the RenderingContext

@@ -23,7 +23,8 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIView.h"
-class nsRegion;
+
+class nsIRegion;
 class nsIEvent;
 class nsIPresContext;
 class nsIView;
@@ -133,7 +134,7 @@ public:
    * @param region nsIRegion to be updated
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void Refresh(nsIRenderingContext *aContext, nsRegion *region,
+  virtual void Refresh(nsIRenderingContext *aContext, nsIRegion *region,
                        PRUint32 aUpdateFlags) = 0;
 
   /**
@@ -161,7 +162,7 @@ public:
    *               view is marked as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, nsRegion *aRegion,
+  virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
                           PRUint32 aUpdateFlags) = 0;
 
   /**

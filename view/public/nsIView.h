@@ -26,7 +26,7 @@
 #include "nsGUIEvent.h"
 
 class nsIViewManager;
-class nsRegion;
+class nsIRegion;
 class nsIRenderingContext;
 class nsTransform2D;
 class nsIFrame;
@@ -134,7 +134,7 @@ public:
    * @param region damage area
    * @param aPaintFlags see nsIView.h for flag definitions
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags) = 0;
+  virtual void Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags) = 0;
   
   /**
    * Called to indicate that the specified event should be handled

@@ -432,9 +432,16 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, PRBool aIntersect
   ::SelectClipRgn(mDC, mStates->mClipRegion);
 }
 
-const nsRect& nsRenderingContextWin :: GetClipRect()
+PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
 {
-  return mStates->mLocalClip;
+  aRect = mStates->mLocalClip;
+
+  return PR_TRUE;
+}
+
+void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect)
+{
+  //XXX wow, needs to do something.
 }
 
 void nsRenderingContextWin :: SetColor(nscolor aColor)
