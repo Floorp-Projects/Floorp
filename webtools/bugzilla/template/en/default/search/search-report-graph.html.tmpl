@@ -27,18 +27,33 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Generate Report"
-  onload = "selectProduct(document.forms['reportform']);"
+  title = "Generate Graphical Report"
+  onload = "selectProduct(document.forms['reportform']);chartTypeChanged()"
 %]
 
 [% PROCESS "search/search-report-select.html.tmpl" %]
 
 <p>
-  Produce a pictorial graph of [% terms.bug %] counts by choosing one or more fields as
-  your axes, and then refining your set of [% terms.bugs %] using the rest of the form.
-  If you choose a third axis, it will be represented by multiple tables of data.
-  Note: vertical axis settings will be ignored for pie charts.
+  Choose one or more fields as your axes, and then refine your set of 
+  [% terms.bugs %] using the rest of the form.
 </p>
+
+<script type="text/javascript"><!--
+  [%# The Y-axis fields are not used for pie charts %]
+  function chartTypeChanged() {
+    // format[2] is the pie chart radio button
+    if (document.reportform.format[2].checked == true) {
+      document.reportform.y_axis_field.disabled = true;
+      document.reportform.cumulate[0].disabled = true;
+      document.reportform.cumulate[1].disabled = true;
+    } else {
+      document.reportform.y_axis_field.disabled = false;
+      document.reportform.cumulate[0].disabled = false;
+      document.reportform.cumulate[1].disabled = false;
+    }
+  }
+// -->
+</script>
 
 [% button_name = "Generate Report" %]
 
@@ -48,6 +63,7 @@
   <tr>
     <td valign="middle">
       <b>Vertical Axis:</b><br>
+      <noscript><small>(not for pie charts)</small><br></noscript>
       [% PROCESS select name = 'y_axis_field' %]<br>
       <br>
         <b>Plot Data Sets:</b><br>
@@ -56,8 +72,7 @@
         Individually<br>
         <input type="radio" name="cumulate" value="1"
         [% " checked" IF default.cumulate.0 == "1" %]>
-        Added
-
+        Summed
     </td>
     <td width="150" height="150">
       <table border="1" width="100%" height="100%">
@@ -80,6 +95,7 @@
       [% FOREACH chart_format = chart_formats %]
         <input type="radio" name="format"
                value="[% chart_format.name FILTER html %]"
+               onchange="chartTypeChanged()"
           [% " checked" IF default.chart_format.0 == chart_format.name %]>
           [% chart_format.description FILTER html %]<br>
       [% END %]

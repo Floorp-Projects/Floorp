@@ -287,7 +287,7 @@ if ($action eq "wrap") {
     $vars->{'imagebase'}   = $cgi->canonicalise_query( 
                     $tbl_field, "action", "ctype", "format", "width", "height");
     $vars->{'switchbase'}  = $cgi->canonicalise_query( 
-                                "action", "ctype", "format", "width", "height");
+                "query_format", "action", "ctype", "format", "width", "height");
     $vars->{'data'} = \%data;
 }
 elsif ($action eq "plot") {

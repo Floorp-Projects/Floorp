@@ -27,16 +27,15 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Generate Report"
+  title = "Generate Tabular Report"
   onload = "selectProduct(document.forms['reportform']);"
 %]
 
 [% PROCESS "search/search-report-select.html.tmpl" %]
 
 <p>
-  Produce a table of [% terms.bug %] counts by choosing one or more fields as your axes,
-  and then refining your set of [% terms.bugs %] using the rest of the form.
-  If you choose a third axis, it will be represented by multiple tables of data.
+  Choose one or more fields as your axes, and then refine your set of 
+  [% terms.bugs %] using the rest of the form.
 </p>
 
 [% button_name = "Generate Report" %]
@@ -50,12 +49,6 @@
     <td align="center">
       <b>Horizontal Axis:</b>
       [% PROCESS select name = 'x_axis_field' %]
-    </td>
-    <td>&nbsp;&nbsp;</td>
-    <td rowspan="2">
-      <b>Format:</b><br>
-      <input type="radio" name="ctype" value="html" checked="checked">HTML<br>
-      <input type="radio" name="ctype" value="csv">CSV
     </td>
   </tr>
 
