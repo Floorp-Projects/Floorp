@@ -18,6 +18,7 @@
 DEPTH=..\..
 MODULE=profile
 
+DIRS= locale
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
@@ -26,16 +27,13 @@ FILES=\
         cpw.js					\
         cpw.xul					\
         pm.css					\
-		pm.js					\
+	pm.js					\
         pm.xul					\
-		pmDelete.xul			\
+	pmDelete.xul			\
         pmMigrateAll.xul		\
-		pmRename.xul			\
-		test-content1_1.xul		\
-		test-content1_2.xul		\
-		test-tab2.xul			\
-        test-tab3.xul			\
-		test-tab4.xul			\
+	pmRename.xul			\
+	test-content1_1.xul		\
+	test-content1_2.xul		\
         $(NULL)
 
 install::
