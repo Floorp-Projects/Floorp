@@ -88,13 +88,16 @@ nsSoundDatasource::Init()
   mRDFService = do_GetService(kRDFServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = mRDFService->GetResource(NC_NAMESPACE_URI "child",getter_AddRefs(kNC_Child));
+  rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                                getter_AddRefs(kNC_Child));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = mRDFService->GetResource(NC_NAMESPACE_URI "Name",getter_AddRefs(kNC_Name));
+  rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),
+                                getter_AddRefs(kNC_Name));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = mRDFService->GetResource(NC_NAMESPACE_URI "SoundURL",getter_AddRefs(kNC_SoundURL));
+  rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "SoundURL"),
+                                getter_AddRefs(kNC_SoundURL));
   NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
 }
@@ -173,7 +176,8 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
   else if (property == kNC_Child.get()) {
     if (strcmp(value.get(),SOUND_ROOT) == 0) {
       nsCOMPtr <nsIRDFResource> childResource;
-      rv = mRDFService->GetResource(DEFAULT_SOUND_URL, getter_AddRefs(childResource));
+      rv = mRDFService->GetResource(NS_LITERAL_CSTRING(DEFAULT_SOUND_URL),
+                                    getter_AddRefs(childResource));
       NS_ENSURE_SUCCESS(rv,rv);
       return childResource->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
     }
@@ -238,7 +242,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr <nsIRDFResource> res;
-    rv = mRDFService->GetResource(DEFAULT_SOUND_URL, getter_AddRefs(res));
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(DEFAULT_SOUND_URL), getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv,rv);
     rv = children->AppendElement(res);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -292,7 +296,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
           // if it doesn't end with .wav, or it contains a %20, skip it.
           if (!strstr(theFileSpec.get(),"%20") && (theFileSpec.Length() > WAV_EXTENSION_LENGTH)) {
             if (strcmp(theFileSpec.get() + theFileSpec.Length() - WAV_EXTENSION_LENGTH, WAV_EXTENSION) == 0) {
-              rv = mRDFService->GetResource(theFileSpec.get(), getter_AddRefs(res));
+              rv = mRDFService->GetResource(theFileSpec, getter_AddRefs(res));
               NS_ENSURE_SUCCESS(rv,rv);
               
               rv = children->AppendElement(res);
@@ -318,7 +322,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (!strncmp(soundURLSpec.get(), FILE_SCHEME, FILE_SCHEME_LEN)) {
-      rv = mRDFService->GetResource(soundURLSpec.get(), getter_AddRefs(res));
+      rv = mRDFService->GetResource(soundURLSpec, getter_AddRefs(res));
       NS_ENSURE_SUCCESS(rv,rv);
       rv = children->AppendElement(res);
       NS_ENSURE_SUCCESS(rv,rv);
