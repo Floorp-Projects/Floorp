@@ -39,6 +39,7 @@ EXPORTS =		\
     nsIObserverService.h    \
     nsIObserverList.h       \
     nsIObserver.h           \
+    nsQuickSort.h	\
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

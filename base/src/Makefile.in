@@ -56,6 +56,7 @@ CPPSRCS =                       \
     nsObserverService.cpp	\
     nsObserverList.cpp		\
     nsObserver.cpp		\
+    nsQuickSort.cpp		\
     $(NULL)
 
 EXPORTS =                       \
