@@ -45,6 +45,7 @@
 #include "domstubs.h" // for SetDOMStringToNull();
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 
 nsNodeInfo::nsNodeInfo()
   : nsINodeInfo(), mOwnerManager(nsnull)
