@@ -81,6 +81,7 @@ function debug(msg)
 
 function doLoad()
 {
+  var categoryList = document.getElementById("categoryList");
   // adjust category popup
   var internetSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
   if (internetSearch) internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
@@ -92,7 +93,6 @@ function doLoad()
     if (catDS)  catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (catDS)
     {
-      var categoryList = document.getElementById("categoryList");
       if (categoryList)
       {
         categoryList.database.AddDataSource(catDS);
@@ -134,7 +134,6 @@ function doLoad()
   debug("\nSearchPanelStartup: lastCategoryName = '" + lastCategoryName + "'\n");
 
   // select the appropriate category
-  var categoryList = document.getElementById( "categoryList" );
   var categoryPopup = document.getElementById( "categoryPopup" );
   if( categoryList && categoryPopup )
   {
