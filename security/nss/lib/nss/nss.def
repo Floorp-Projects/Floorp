@@ -448,6 +448,15 @@ PK11_NeedUserInit;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.2.1 {       # NSS 3.2 release
+;+    global:
+CERT_AddRDN;
+CERT_CreateRDN;
+CERT_CreateAVA;
+CERT_CreateName;
+;+    local:
+;+       *;
+;+};
 ;+NSS_3.3 { 	# NSS 3.3. release
 ;+    global:
 SECKEY_CreateDHPrivateKey;
