@@ -433,6 +433,7 @@ rdf/resources/Makefile
 rdf/build/Makefile
 rdf/content/Makefile
 rdf/content/public/Makefile
+rdf/content/public/idl/Makefile
 rdf/content/src/Makefile
 rdf/datasource/Makefile
 rdf/datasource/public/Makefile

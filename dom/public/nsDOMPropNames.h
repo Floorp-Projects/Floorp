@@ -752,10 +752,8 @@
     "nsdocument.characterset", \
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
-    "nsdocument.height", \
     "nsdocument.load", \
     "nsdocument.plugins", \
-    "nsdocument.width", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \
     "nshtmlanchorelement.hostname", \
@@ -780,6 +778,7 @@
     "nshtmldocument.embeds", \
     "nshtmldocument.fgcolor", \
     "nshtmldocument.getselection", \
+    "nshtmldocument.height", \
     "nshtmldocument.lastmodified", \
     "nshtmldocument.layers", \
     "nshtmldocument.linkcolor", \
@@ -789,6 +788,7 @@
     "nshtmldocument.releaseevents", \
     "nshtmldocument.routeevent", \
     "nshtmldocument.vlinkcolor", \
+    "nshtmldocument.width", \
     "nshtmldocument.write", \
     "nshtmldocument.writeln", \
     "nshtmlformelement.encoding", \
@@ -1020,9 +1020,11 @@
     "xuldocument.controls", \
     "xuldocument.getelementbyid", \
     "xuldocument.getelementsbyattribute", \
+    "xuldocument.height", \
     "xuldocument.persist", \
     "xuldocument.popupnode", \
     "xuldocument.tooltipnode", \
+    "xuldocument.width", \
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.anonymouscontent", \
