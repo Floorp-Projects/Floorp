@@ -211,6 +211,7 @@ sub InstallNonChromeResources()
     {
         MakeAlias(":mozilla:layout:mathml:content:src:mathml.dtd",                     "$resource_dir"."dtd:");
         MakeAlias(":mozilla:layout:mathml:content:src:mathml.css",                     "$resource_dir");
+        InstallResources(":mozilla:layout:mathml:base:src:MANIFEST",                   "$resource_dir"."fonts:");
     }
 
     MakeAlias(":mozilla:layout:html:document:src:ua.css",                          "$resource_dir");
