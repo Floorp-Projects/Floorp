@@ -94,7 +94,7 @@ endif
 # Generate prerr.h, prerr.c, and prerr.properties from prerr.et.
 #
 build_prerr:
-	$(PERL) $(srcdir)/compile-et.pl prerr.et
+	cd $(srcdir); $(PERL) compile-et.pl prerr.et
 
 export:: $(TARGETS)
 
