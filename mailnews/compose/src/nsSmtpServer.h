@@ -60,6 +60,7 @@ private:
     nsresult getDefaultIntPref(nsIPref *prefs, PRInt32 defVal, const char *prefName, PRInt32 *val);
     nsCString m_password;
     static void clearPrefEnum(const char *aPref, void *aClosure);
+    
 };
 
 #endif

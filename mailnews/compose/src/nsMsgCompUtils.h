@@ -145,7 +145,6 @@ char        *nsMsgParseURLHost(const char *url);
 
 char        *GenerateFileNameFromURI(nsIURI *aURL);
 
-char        *GetFolderNameFromURLString(char *aUrl);
 char        *nsMsgParseSubjectFromFile(nsFileSpec* fileSpec); 
 
 //

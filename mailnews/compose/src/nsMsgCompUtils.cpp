@@ -1692,27 +1692,6 @@ nsMsgParseURLHost(const char *url)
 }
 
 char *
-GetFolderNameFromURLString(char *url)
-{
-  char *rightSlash = nsnull;
-
-  if (!url)
-    return nsnull;
-
-  rightSlash  = PL_strrchr(url, '/');
-  if (!rightSlash)
-    rightSlash = PL_strrchr(url, '\\');
-   
-  if (rightSlash)
-  {
-    char *retVal = PL_strdup(rightSlash + 1);
-    return retVal;
-  }
-
-  return nsnull;
-}
-
-char *
 GenerateFileNameFromURI(nsIURI *aURL)
 {
   nsresult    rv; 
