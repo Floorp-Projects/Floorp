@@ -104,6 +104,15 @@ if (defined $startup_buildnames_pat
   system "./startup.pl $tinderbox{tree} $tinderbox{logfile}";
 }
 
+# Scrape data
+#   Compare the name with $scrape_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $scrape_buildnames_pat
+    and $tinderbox{build} =~ /^$scrape_buildnames_pat$/
+    and $tinderbox{status} eq 'success') {
+  system "./scrape.pl $tinderbox{tree} $tinderbox{logfile}";
+}
+
 # Static pages
 #   For Sidebar flash and tinderbox panels.
 $ENV{QUERY_STRING}="tree=$tinderbox{tree}&static=1";
