@@ -95,7 +95,7 @@ nsresult nsStatusBarBiffManager::Init()
   nsCOMPtr<nsIMsgMailSession> mailSession = 
     do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
   if(NS_SUCCEEDED(rv))
-    mailSession->AddFolderListener(this, nsIFolderListener::propertyFlagChanged);
+    mailSession->AddFolderListener(this, nsIFolderListener::intPropertyChanged);
 
   mInitialized = PR_TRUE;
   return NS_OK;

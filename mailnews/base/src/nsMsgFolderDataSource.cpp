@@ -341,8 +341,7 @@ nsresult nsMsgFolderDataSource::Init()
       nsIFolderListener::removed |
       nsIFolderListener::intPropertyChanged |
       nsIFolderListener::boolPropertyChanged |
-      nsIFolderListener::unicharPropertyChanged |
-      nsIFolderListener::propertyFlagChanged);
+      nsIFolderListener::unicharPropertyChanged);
 
   return NS_OK;
 }
