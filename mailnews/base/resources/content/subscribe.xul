@@ -33,6 +33,8 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
 		class="dialog"
+		height="300"
+		width="600"
         onload="SubscribeOnLoad()"
         style="padding:10px"> 
         
@@ -48,7 +50,7 @@ Rights Reserved.
 				<titledbutton id="currentserver" value="..."/>
 			</box>
 			<box align="horizontal" flex="100%">
-				<html:div>&newsgroup.label;</html:div>
+				<html:div>&folders.label;</html:div>
 				<html:input tabindex="0" type="text" id="name" 
 						style="width:100%"/>
 			</box>
@@ -60,27 +62,17 @@ Rights Reserved.
 <tree style="width:100px;" flex="100%"
 	      		class="inset"
 				id="subscribetree"
-				datasources="rdf:newshostinfo"
 				onclick="SubscribeOnClick(event);"> 
-
-	<template>
-		<rule>
-	      	<treechildren>
-			<treeitem uri="...">
-		  	  		<treerow>
-						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#subscribed"/>
-					</treerow>
-			</treeitem>
-			</treechildren>
-		</rule>
-	</template>
 	<treehead>	
 		<treerow id="headRow">
-			<treecell value="&newsgroupHeader.label;"/>
+			<treecell value="&foldersHeader.label;"/>
 			<treecell value="&subscribedHeader.label;"/>
+			<treecell value="&messagesHeader.label;"/>
 		</treerow>
 	</treehead>	
+    <treechildren>
+		<treeitem id="folders"/>
+	</treechildren>
 </tree>
 
 		</box>
@@ -88,6 +80,7 @@ Rights Reserved.
 			<spring flex="100%"/>
 			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState('true')"/>
 			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState('false')"/>
+			<titledbutton id="refresh" class="push" value="&refreshButton.label;" onclick="RefreshList()"/>
 			<spring flex="100%"/>
 		</box>
 	</box>
