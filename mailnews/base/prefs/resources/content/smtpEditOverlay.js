@@ -84,8 +84,7 @@ function initSmtpSettings(server) {
             gSmtpTrySSL.getElementsByAttribute("value", "1")[0];
     }
 
-    if (gSmtpAuthMethod.getAttribute("value") == "1")
-        gSmtpUseUsername.checked = true;
+    gSmtpUseUsername.checked = (gSmtpAuthMethod.getAttribute("value") == "1");
 
     //dump("gSmtpAuthMethod = <" + gSmtpAuthMethod.localName + ">\n");
     //dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
