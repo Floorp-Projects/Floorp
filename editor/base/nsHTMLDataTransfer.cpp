@@ -1587,9 +1587,6 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
   res = docFragRange->SetEnd(endParent, endOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsAutoString str;
-  docFragRange->ToString(str);
-
   // now use a subtree iterator over the range to create a list of nodes
   nsTrivialFunctor functor;
   nsDOMSubtreeIterator iter;
