@@ -376,7 +376,8 @@ MNGDecoder::ImgDWriteReady(PRUint32 *max_read)
 
   imng_structp imng_p = (imng_structp)ilContainer->ds;
 
-  *max_read = imng_p->bufferSize - imng_p->bufferEnd;
+  /* add a bit, because libimg actually believes us if max_read==0 */
+  *max_read = imng_p->bufferSize - imng_p->bufferEnd + 1024;
   
   dprintf((stderr, "%d\n", *max_read));
 
