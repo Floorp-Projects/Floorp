@@ -41,7 +41,8 @@
   * MsgFolder
   */ 
 
-class NS_MSG_BASE nsMsgFolder: public nsRDFResource, public nsIMsgFolder
+class NS_MSG_BASE nsMsgFolder : public nsRDFResource,
+                                public nsIMsgFolder
 {
 public: 
   nsMsgFolder(void);
@@ -236,6 +237,9 @@ protected:
 	// derived folder class.
 	virtual const char* GetIncomingServerType() = 0;
 
+  // helper routine to parse the URI and update member variables
+  nsresult parseURI(PRBool needServer=PR_FALSE);
+  
 protected:
   PRUint32 mFlags;
   nsIFolder *mParent;     //This won't be refcounted for ownership reasons.
@@ -271,6 +275,7 @@ protected:
   // stuff from the uri
   //
   
+  PRBool mIsServerIsValid;
   PRBool mIsServer;
   nsString mName;
   

@@ -56,6 +56,7 @@ nsMsgFolder::nsMsgFolder(void)
     mPrefFlags(0),
     mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
+    mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE)
 	{
 //  NS_INIT_REFCNT(); done by superclass
@@ -123,70 +124,6 @@ nsMsgFolder::Init(const char* aURI)
 
   rv = nsRDFResource::Init(aURI);
 
-  nsCOMPtr<nsIURL> url;
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          (void **)getter_AddRefs(url));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = url->SetSpec(aURI);
-  if (NS_FAILED(rv)) return rv;
-
-  //
-  // pull some info out of the URI
-  //
-  
-  // empty path tells us it's a server.
-  nsXPIDLCString path;
-  rv = url->GetPath(getter_Copies(path));
-  if (NS_SUCCEEDED(rv)) {
-    if (!nsCRT::strcmp(path, "/"))
-      mIsServer = PR_TRUE;
-    else
-      mIsServer = PR_FALSE;
-  }
-
-  // mName:
-  // the name is the trailing directory in the path
-  nsXPIDLCString fileName;
-  rv = url->GetFileName(getter_Copies(fileName));
-  if (NS_SUCCEEDED(rv)) {
-    // XXX conversion to unicode here? is fileName in UTF8?
-    mName = fileName;
-  }
-
-  // Get username and hostname so we can get the server
-  nsXPIDLCString userName;
-  rv = url->GetPreHost(getter_Copies(userName));
-  if (NS_SUCCEEDED(rv) && (const char*)userName)
-      nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
-  
-  nsXPIDLCString hostName;
-  rv = url->GetHost(getter_Copies(hostName));
-  if (NS_SUCCEEDED(rv) && (const char*)hostName)
-    nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
-  
-  // turn it back into a server:
-
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIMsgIncomingServer *server;
-  rv = accountManager->FindServer(userName,
-                                  hostName,
-                                  GetIncomingServerType(),
-                                  &server);
-
-  // there is a reason we aren't returning rv if NS_FAILED(rv)
-  // if you feel the need to uncomment the line below, ask alecf@netscape.com
-  // if NS_FAILED(rv)) return rv;
-
-  // keep weak ref to server
-  m_server = server;
-  NS_IF_RELEASE(server);
-
-  NS_ASSERTION(m_server, "Failed to get server..");
   return NS_OK;
 }
 
@@ -447,17 +384,141 @@ NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url
 NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 {
   NS_ENSURE_ARG_POINTER(aServer);
+
+  nsresult rv;
+
+  // short circut the server if we have it.
+  if (m_server) {
+    *aServer = m_server;
+    NS_ADDREF(*aServer);
+    return NS_OK;
+  }
+
+  // ok, we lost. Time to look it up
+  rv = parseURI(PR_TRUE);
   
+  // done getting m_server
   *aServer = m_server;
   NS_IF_ADDREF(*aServer);
   
 	return NS_OK;
 }
 
+nsresult
+nsMsgFolder::parseURI(PRBool needServer)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURL> url;
+  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
+                                          NS_GET_IID(nsIURL),
+                                          (void **)getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = url->SetSpec(mURI);
+  if (NS_FAILED(rv)) return rv;
+
+  //
+  // pull some info out of the URI
+  //
+  
+  // empty path tells us it's a server.
+  if (!mIsServerIsValid) {
+    nsXPIDLCString path;
+    rv = url->GetPath(getter_Copies(path));
+    if (NS_SUCCEEDED(rv)) {
+      if (!nsCRT::strcmp(path, "/"))
+        mIsServer = PR_TRUE;
+      else
+        mIsServer = PR_FALSE;
+    }
+    mIsServerIsValid = PR_TRUE;
+  }
+
+  // grab the name off the leaf of the server
+  if (mName.IsEmpty()) {
+    // mName:
+    // the name is the trailing directory in the path
+    nsXPIDLCString fileName;
+    rv = url->GetFileName(getter_Copies(fileName));
+    if (NS_SUCCEEDED(rv)) {
+      // XXX conversion to unicode here? is fileName in UTF8?
+      mName = fileName;
+    }
+  }
+
+  // grab the server by parsing the URI and looking it up
+  // in the account manager...
+  // But avoid this extra work by first asking the parent, if any
+
+  if (!m_server) {
+    
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    // first try asking the parent instead of the URI
+    nsCOMPtr<nsIFolder> parent;
+    rv = GetParent(getter_AddRefs(parent));
+    
+    if (NS_SUCCEEDED(rv) && parent) {
+      nsCOMPtr<nsIMsgFolder> parentMsgFolder =
+        do_QueryInterface(parent, &rv);
+
+      if (NS_SUCCEEDED(rv))
+        rv = parentMsgFolder->GetServer(getter_AddRefs(server));
+    }
+
+    if (!server && needServer) {
+      // Get username and hostname so we can get the server
+      nsXPIDLCString userName;
+      rv = url->GetPreHost(getter_Copies(userName));
+      if (NS_SUCCEEDED(rv) && (const char*)userName)
+        nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+      
+      nsXPIDLCString hostName;
+      rv = url->GetHost(getter_Copies(hostName));
+      if (NS_SUCCEEDED(rv) && (const char*)hostName)
+        nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
+      
+      // turn it back into a server:
+      
+      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                      NS_MSGACCOUNTMANAGER_PROGID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_alecf
+      // this is a failing case, and it would be nice if this
+      // was never called
+      // (we should ALWAYS handle this case, but try to design
+      // the code so we have a parent wherever possible)
+      printf("No parent->");
+#endif
+      rv = accountManager->FindServer(userName,
+                                      hostName,
+                                      GetIncomingServerType(),
+                                      getter_AddRefs(server));
+      
+      if (NS_FAILED(rv)) return rv;
+      
+    }
+    
+    // keep weak ref to server - do not addref!
+    m_server = server;
+    
+  } /* !m_server */
+    
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgFolder::GetIsServer(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
+
+  // make sure we've parsed the URI
+  if (!mIsServerIsValid) {
+    nsresult rv = parseURI();
+    if (NS_FAILED(rv) || !mIsServerIsValid)
+      return NS_ERROR_FAILURE;
+  }
+    
   *aResult = mIsServer;
   return NS_OK;
 }
@@ -532,6 +593,12 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 {
 	if (!name)
 		return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+  if (mName.IsEmpty()) {
+    rv = parseURI();
+    if (NS_FAILED(rv)) return rv;
+  }
   
   *name = mName.ToNewUnicode();
   
@@ -1512,23 +1579,32 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
   NS_ENSURE_ARG_POINTER(userName);
-  NS_ASSERTION(m_server, "No server when getting username");
-  if (!m_server) return NS_ERROR_UNEXPECTED;
+  nsresult rv;
+  nsCOMPtr <nsIMsgIncomingServer> server;
   
-  m_server->GetUsername(userName);
-  
-  return NS_OK;
+  rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  if (server)
+    return server->GetUsername(userName);
+
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
 {
   NS_ENSURE_ARG_POINTER(hostName);
-  NS_ASSERTION(m_server, "No server when getting hostname");
-  if (!m_server) return NS_ERROR_UNEXPECTED;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  if (server)
+    return server->GetHostName(hostName);
   
-  m_server->GetHostName(hostName);
-  
-  return NS_OK;
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetNewMessages(nsIMsgWindow *)
@@ -1645,6 +1721,18 @@ nsMsgFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 NS_IMETHODIMP
 nsMsgFolder::GetPath(nsIFileSpec * *aPath)
 {
+  nsresult rv;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  
+  rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  if (!server) return NS_ERROR_FAILURE;
+
+
+  nsCOMPtr<nsIFileSpec> path;
+  rv = server->GetLocalPath(getter_AddRefs(path));
+  if (NS_FAILED(rv)) return rv;
+
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
