@@ -255,6 +255,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup
         if (aLoadGroup) {
           PRUint32 flags;
           aLoadGroup->GetLoadFlags(&flags);
+          if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
+            flags |= nsIRequest::LOAD_BACKGROUND;
           newChannel->SetLoadFlags(flags | nsIRequest::VALIDATE_ALWAYS);
         }
 
@@ -304,6 +306,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup
     if (aLoadGroup) {
       PRUint32 flags;
       aLoadGroup->GetLoadFlags(&flags);
+      if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
+        flags |= nsIRequest::LOAD_BACKGROUND;
       newChannel->SetLoadFlags(flags);
     }
 
