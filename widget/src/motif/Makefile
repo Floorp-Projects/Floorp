@@ -20,7 +20,7 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
-LIBRARY_NAME = raptorwidgetunix_s
+LIBRARY_NAME = raptorwidgetmotif_s
 
 MODULE=raptor
 
