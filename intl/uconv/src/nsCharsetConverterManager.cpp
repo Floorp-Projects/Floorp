@@ -308,7 +308,7 @@ void nsCharsetConverterManager::FillInfoArrays()
     res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
     if (NS_FAILED(res)) goto done1;
 
-    res = node->GetName(&name);
+    res = node->GetNameUTF8(&name);
     if (NS_FAILED(res)) goto done1;
 
     ci = new nsConverterInfo();
@@ -487,7 +487,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
     res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
     if (NS_FAILED(res)) goto done1;
 
-    res = node->GetName(&name);
+    res = node->GetNameUTF8(&name);
     if (NS_FAILED(res)) goto done1;
 
     s = new nsString("charsetDetector.");

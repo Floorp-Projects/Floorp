@@ -85,14 +85,16 @@ interface nsIRegistry : nsISupports
 [scriptable, uuid(D1B54831-AC07-11d2-805E-00600811A9C3)]
 interface nsIRegistryNode : nsISupports
 {
-    readonly attribute string name;
+    readonly attribute string nameUTF8;
+    readonly attribute wstring name;
     readonly attribute nsRegistryKey key;
 };
 
 [scriptable,uuid(5316C380-B2F8-11d2-A374-0080C6F80E4B)]
 interface nsIRegistryValue : nsISupports
 {
-    readonly attribute string name;
+    readonly attribute wstring name;
+    readonly attribute string nameUTF8;
     readonly attribute unsigned long type;
     readonly attribute PRUint32 length;
 };

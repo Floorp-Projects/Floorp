@@ -282,7 +282,7 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
                 if ( NS_SUCCEEDED( rv ) ) {
                     // Get node name.
                     char *name;
-                    rv = node->GetName( &name );
+                    rv = node->GetNameUTF8( &name );
                     if ( NS_SUCCEEDED( rv ) ) {
                         // If this is a CID of a component; apply function to it.
                         nsCID cid;

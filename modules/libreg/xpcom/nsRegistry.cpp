@@ -42,6 +42,8 @@
 #define PR_Unlock(x)         (void)0
 #endif
 
+PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
+
 /*-------------------------------- nsRegistry ----------------------------------
 | This class implements the nsIRegistry interface using the functions          |
 | provided by libreg (as declared in mozilla/modules/libreg/include/NSReg.h).  |
@@ -614,8 +616,7 @@ NS_IMETHODIMP nsRegistry::GetString(nsRegistryKey baseKey, const PRUnichar *valn
     rv = GetStringUTF8( baseKey, utf8name, &tmpstr );
     if (NS_SUCCEEDED(rv))
     {
-        nsString tmpfmt("%s");
-        *_retval = nsTextFormatter::smprintf( tmpfmt.GetUnicode(), tmpstr );
+        *_retval = nsTextFormatter::smprintf( widestrFormat, tmpstr );
         nsCRT::free(tmpstr);
         if ( *_retval == nsnull )
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1396,7 +1397,19 @@ nsRegistryNode::~nsRegistryNode()
 | If we haven't fetched it yet, get the name of the corresponding subkey now,  |
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
+NS_IMETHODIMP nsRegistryNode::GetName( PRUnichar **result ) {
+    if (result == nsnull) return NS_ERROR_NULL_POINTER;
+    // Make sure there is a place to put the result.
+    *result = nsTextFormatter::smprintf( widestrFormat, mName );
+    if ( !*result ) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+/*-------------------------- nsRegistryNode::GetNameUTF8 -----------------------
+| If we haven't fetched it yet, get the name of the corresponding subkey now,  |
+| using NR_RegEnumSubkeys.                                                     |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistryNode::GetNameUTF8( char **result ) {
     if (result == nsnull) return NS_ERROR_NULL_POINTER;
     // Make sure there is a place to put the result.
     *result = nsCRT::strdup( mName );
@@ -1441,7 +1454,31 @@ nsRegistryValue::~nsRegistryValue()
 /*------------------------- nsRegistryValue::GetName ---------------------------
 | See nsRegistryNode::GetName; we use NR_RegEnumEntries in this case.         |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryValue::GetName( char **result ) {
+NS_IMETHODIMP nsRegistryValue::GetName( PRUnichar **result ) {
+    nsresult rv = NS_OK;
+    // Make sure we have a place to put the result.
+    if( result ) {
+        // Ensure we've got the info we need.
+        rv = getInfo();            
+        if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
+            // worked, return actual result.
+            *result = nsTextFormatter::smprintf( widestrFormat, mName );
+            if ( *result ) {
+                rv = NS_OK;
+            } else {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+/*------------------------- nsRegistryValue::GetNameUTF8 -----------------------
+| See nsRegistryNode::GetName; we use NR_RegEnumEntries in this case.         |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistryValue::GetNameUTF8( char **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {

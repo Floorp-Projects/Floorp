@@ -67,14 +67,14 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 // Common Key Names 
 const char xpcomKeyName[]="software/mozilla/XPCOM";
-const char classesKeyName[]="classes";
-const char classIDKeyName[]="CLSID";
+const char classesKeyName[]="progID";
+const char classIDKeyName[]="classID";
 const char componentsKeyName[]="components";
 const char componentLoadersKeyName[]="componentLoaders";
 const char xpcomComponentsKeyName[]="software/mozilla/XPCOM/components";
 
 // Common Value Names
-const char classIDValueName[]="CLSID";
+const char classIDValueName[]="ClassID";
 const char versionValueName[]="VersionString";
 const char lastModValueName[]="LastModTimeStamp";
 const char fileSizeValueName[]="FileSize";
@@ -800,7 +800,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
         // Get library name
         nsXPIDLCString cidString;
-        rv = node->GetName(getter_Copies(cidString));
+        rv = node->GetNameUTF8(getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
 
         // Get key associated with library
@@ -854,7 +854,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
         // Get the progid string
         nsXPIDLCString progidString;
-        rv = node->GetName(getter_Copies(progidString));
+        rv = node->GetNameUTF8(getter_Copies(progidString));
         if (NS_FAILED(rv)) continue;
 
         // Get cid string
@@ -2074,7 +2074,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
             continue;
 
         nsXPIDLCString type;
-        rv = node->GetName(getter_Copies(type));
+        rv = node->GetNameUTF8(getter_Copies(type));
         if (NS_FAILED(rv))
             continue;
         

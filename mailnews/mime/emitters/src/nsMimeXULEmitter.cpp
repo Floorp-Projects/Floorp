@@ -188,7 +188,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
       return rv;
     
     nsXPIDLCString name;
-    rv = node->GetName(getter_Copies(name));
+    rv = node->GetNameUTF8(getter_Copies(name));
     if (NS_FAILED(rv)) 
       return rv;
     

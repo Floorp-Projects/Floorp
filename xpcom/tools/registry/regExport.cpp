@@ -165,7 +165,7 @@ void display( nsIRegistry *reg, nsRegistryKey root, const char *rootName ) {
                 if ( rv == NS_OK ) {
                     // Get node name.
                     char *name;
-                    rv = node->GetName( &name );
+                    rv = node->GetNameUTF8( &name );
                     // Test result.
                     if ( rv == NS_OK ) {
                         // Build complete name.
@@ -238,7 +238,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                 if ( rv == NS_OK ) {
                     // Get node name.
                     char *name;
-                    rv = value->GetName( &name );
+                    rv = value->GetNameUTF8( &name );
                     // Test result.
                     if ( rv == NS_OK ) {
                         // Print name:

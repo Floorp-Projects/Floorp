@@ -196,7 +196,7 @@ nsCategoryManager::initialize()
               keys->CurrentItem(getter_AddRefs(supportsNode));
 
               nsCOMPtr<nsIRegistryNode> registryNode = do_QueryInterface(supportsNode);
-              registryNode->GetName(getter_Copies(categoryName));
+              registryNode->GetNameUTF8(getter_Copies(categoryName));
               registryNode->GetKey(&categoryKey);
             }
 
@@ -211,7 +211,7 @@ nsCategoryManager::initialize()
                   values->CurrentItem(getter_AddRefs(supportsValue));
 
                   nsCOMPtr<nsIRegistryValue> registryValue = do_QueryInterface(supportsValue);
-                  registryValue->GetName(getter_Copies(entryName));
+                  registryValue->GetNameUTF8(getter_Copies(entryName));
                 }
                 
                 nsXPIDLCString value;
