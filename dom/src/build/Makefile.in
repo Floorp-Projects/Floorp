@@ -53,6 +53,7 @@ EXTRA_DSO_LDOPTS = \
 	-ljsdomevents_s	\
 	-ljsdomhtml_s	\
 	-ljsdomcss_s	\
+	-ljsdomcore_s	\
 	-ljsurl		\
 	-L$(DIST)/bin	\
 	-lraptorbase	\
