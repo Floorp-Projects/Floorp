@@ -214,8 +214,8 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
     PRBool inIdle = PR_FALSE;
     if (!sendingIdleDone)
     {
-      tagToken = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
-      commandToken = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
+      tagToken = nsCRT::strtok(copyCurrentCommand, WHITESPACE, &placeInTokenString);
+      commandToken = nsCRT::strtok(placeInTokenString, WHITESPACE,&placeInTokenString);
     }
     else
       commandToken = "DONE";
@@ -369,14 +369,14 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
     if (copyCurrentCommand && !fServerConnection.DeathSignalReceived())
     {
       char *placeInTokenString = nsnull;
-      char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
-      char *uidToken           = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
-      char *fetchToken         = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
+      char *tagToken           = nsCRT::strtok(copyCurrentCommand, WHITESPACE,&placeInTokenString);
+      char *uidToken           = nsCRT::strtok(placeInTokenString, WHITESPACE,&placeInTokenString);
+      char *fetchToken         = nsCRT::strtok(placeInTokenString, WHITESPACE,&placeInTokenString);
       uidToken = nsnull; // use variable to quiet compiler warning
       tagToken = nsnull; // use variable to quiet compiler warning
       if (!PL_strcasecmp(fetchToken, "FETCH") )
       {
-        char *uidStringToken = Imapstrtok_r(nsnull, WHITESPACE, &placeInTokenString);
+        char *uidStringToken = nsCRT::strtok(placeInTokenString, WHITESPACE, &placeInTokenString);
         if (!PL_strchr(uidStringToken, ',') && !PL_strchr(uidStringToken, ':'))	// , and : are uid delimiters
         {
           fCurrentCommandIsSingleMessageFetch = PR_TRUE;

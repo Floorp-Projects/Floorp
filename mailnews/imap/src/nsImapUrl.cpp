@@ -487,7 +487,7 @@ NS_IMETHODIMP nsImapUrl::GetMsgFlags(imapMessageFlagsType *result)	// kAddMsgFla
 void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 {
   m_tokenPlaceHolder = imapPartOfUrl;
-  m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+  m_urlidSubString = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
   
   if (!m_urlidSubString)
   {
@@ -769,9 +769,9 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       ParseUidChoice();
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseListOfMessageIds();
-    	char *flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+    	char *flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
       m_customAddFlags.Assign(flagsPtr);
-      flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+      flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
       m_customSubtractFlags.Assign(flagsPtr);
     }
     else
@@ -1392,7 +1392,7 @@ char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldCh
 
 void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 {
-	char *resultPath = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *resultPath = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	
 	if (!resultPath)
 	{
@@ -1463,7 +1463,7 @@ void nsImapUrl::ParseSearchCriteriaString()
 
 void nsImapUrl::ParseChildDiscoveryDepth()
 {
-	char *discoveryDepth = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *discoveryDepth = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!discoveryDepth)
 	{
 		m_validUrl = PR_FALSE;
@@ -1475,7 +1475,7 @@ void nsImapUrl::ParseChildDiscoveryDepth()
 
 void nsImapUrl::ParseUidChoice()
 {
-	char *uidChoiceString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *uidChoiceString = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (!uidChoiceString)
 		m_validUrl = PR_FALSE;
 	else
@@ -1484,7 +1484,7 @@ void nsImapUrl::ParseUidChoice()
 
 void nsImapUrl::ParseMsgFlags()
 {
-	char *flagsPtr = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *flagsPtr = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	if (flagsPtr)
 	{
 		// the url is encodes the flags byte as ascii 
@@ -1497,7 +1497,7 @@ void nsImapUrl::ParseMsgFlags()
 
 void nsImapUrl::ParseListOfMessageIds()
 {
-  m_listOfMessageIds = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+  m_listOfMessageIds = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
   if (!m_listOfMessageIds)
     m_validUrl = PR_FALSE;
   else
@@ -1518,7 +1518,7 @@ void nsImapUrl::ParseListOfMessageIds()
 
 void nsImapUrl::ParseCustomMsgFetchAttribute()
 {
-  m_msgFetchAttribute = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+  m_msgFetchAttribute = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
 }
 // nsIMsgI18NUrl support
 

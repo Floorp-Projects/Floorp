@@ -43,79 +43,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
-/*************************************************
-   The following functions are used to implement
-   a thread safe strtok
- *************************************************/
-/*
- * Get next token from string *stringp, where tokens are (possibly empty)
- * strings separated by characters from delim.  Tokens are separated
- * by exactly one delimiter iff the skip parameter is false; otherwise
- * they are separated by runs of characters from delim, because we
- * skip over any initial `delim' characters.
- *
- * Writes NULs into the string at *stringp to end tokens.
- * delim will usually, but need not, remain CONSTant from call to call.
- * On return, *stringp points past the last NUL written (if there might
- * be further tokens), or is NULL (if there are definitely no more tokens).
- *
- * If *stringp is NULL, strtoken returns NULL.
- */
-static 
-char *strtoken_r(char ** stringp, const char *delim, int skip)
-{
-  char *s;
-  const char *spanp;
-  int c, sc;
-  char *tok;
-  
-  if ((s = *stringp) == NULL)
-    return (NULL);
-  
-  if (skip) {
-		/*
-                * Skip (span) leading delimiters (s += strspn(s, delim)).
-    */
-cont:
-		c = *s;
-                for (spanp = delim; (sc = *spanp++) != 0;) {
-                  if (c == sc) {
-                    s++;
-                    goto cont;
-                  }
-                }
-                if (c == 0) {		/* no token found */
-                  *stringp = NULL;
-                  return (NULL);
-                }
-  }
-  
-  /*
-	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
-	 */
-  tok = s;
-  while ((c = *s++)) {
-    for (spanp = delim; (sc = *spanp++);) {
-      if (sc == c) {
-          s[-1] = 0;
-        *stringp = s;
-        return( (char *) tok );
-      }
-    }
-  }
-  *stringp = NULL;
-  return( (char *) tok );
-}
-
-
-/* static */ char *nsIMAPGenericParser::Imapstrtok_r(char *s1, const char *s2, char **lasts)
-{
-  if (s1)
-    *lasts = s1;
-  return (strtoken_r(lasts, s2, 1));
-}
-
-
 ////////////////// nsIMAPGenericParser /////////////////////////
 
 
@@ -263,12 +190,12 @@ void nsIMAPGenericParser::AdvanceToNextToken()
   {
     if (fTokenizerAdvanced)
     {
-      fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+      fNextToken = nsCRT::strtok(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);;
       fTokenizerAdvanced = PR_FALSE;
     }
     else
     {
-      fNextToken = Imapstrtok_r(nsnull, WHITESPACE, &fCurrentTokenPlaceHolder);
+      fNextToken = nsCRT::strtok(fCurrentTokenPlaceHolder, WHITESPACE, &fCurrentTokenPlaceHolder);
     }
     if (!fNextToken)
     {
@@ -299,7 +226,7 @@ void nsIMAPGenericParser::AdvanceToNextLine()
     if (fStartOfLineOfTokens)
     {
       fLineOfTokens = fStartOfLineOfTokens;
-      fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+      fNextToken = nsCRT::strtok(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
       if (!fNextToken)
       {
         fAtEndOfLine = PR_TRUE;
