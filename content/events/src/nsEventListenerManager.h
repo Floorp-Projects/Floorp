@@ -61,7 +61,7 @@ protected:
 
   PRUint32 mRefCnt : 31;
 
-  virtual nsresult nsEventListenerManager::TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, 
+  virtual nsresult TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, 
                                                   nsIPresContext& aPresContext, 
                                                   nsIDOMEvent** aDOMEvent);
 
