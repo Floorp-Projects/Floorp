@@ -1600,8 +1600,9 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,
                                     eHTMLTag_td,eHTMLTag_th,
                                     eHTMLTag_tr,eHTMLTag_caption,
-                                    eHTMLTag_object,eHTMLTag_ol,
-                                    eHTMLTag_ul,eHTMLTag_optgroup,
+                                    eHTMLTag_object,eHTMLTag_applet,
+                                    eHTMLTag_ol, eHTMLTag_ul,
+                                    eHTMLTag_optgroup,
                                     eHTMLTag_nobr,eHTMLTag_dir};
 
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
