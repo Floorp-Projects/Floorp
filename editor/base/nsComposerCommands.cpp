@@ -169,6 +169,7 @@ nsBaseStateUpdatingCommand::UpdateCommandState(const PRUnichar *aCommandName, ns
 }
 
 
+/*
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -202,6 +203,8 @@ nsCloseCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   
   return rv;  
 }
+*/
+
 
 #ifdef XP_MAC
 #pragma mark -

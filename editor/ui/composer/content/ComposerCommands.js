@@ -48,7 +48,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
   gComposerCommandManager.registerCommand("cmd_preview",       nsPreviewCommand);
   gComposerCommandManager.registerCommand("cmd_quit",          nsQuitCommand);
-
+  gComposerCommandManager.registerCommand("cmd_close",         nsCloseCommand);
+  
   gComposerCommandManager.registerCommand("cmd_find",       nsFindCommand);
   gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
   gComposerCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
@@ -197,7 +198,7 @@ dump("*** nsOpenCommand: doCommand\n");
     /* This checks for already open window and activates it... 
      * note that we have to test the native path length
      *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
-    */
+     */
     if (fp.file && fp.file.path.length > 0) {
       EditorOpenUrl(fp.fileURL.spec);
     }
@@ -248,7 +249,7 @@ var nsSaveAsCharsetCommand =
     return (window.editorShell && window.editorShell.documentEditable);
   },
   doCommand: function(aCommand)
-  {
+  {    
     window.ok = false;
     // In editor.js
     FinishHTMLSource();
@@ -260,6 +261,7 @@ var nsSaveAsCharsetCommand =
     return false;
   }
 };
+
 //-----------------------------------------------------------------------------------
 var nsRevertCommand =
 {
@@ -314,6 +316,30 @@ var nsRevertCommand =
 };
 
 //-----------------------------------------------------------------------------------
+var nsCloseCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return window.editorShell;
+  },
+  
+  doCommand: function(aCommand)
+  {
+    CloseWindow();
+  }
+};
+
+function CloseWindow()
+{
+  // Close window; check to make sure document is saved
+  var result = CheckAndSaveDocument(window.editorShell.GetString("BeforeClosing"));
+  if (result == true) // If they saved the document, or it is unchanged, exit
+  {
+    window.editorShell.CloseWindowWithoutSaving();
+  }
+}
+
+//-----------------------------------------------------------------------------------
 var nsNewEditorCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -358,7 +384,7 @@ var nsPreviewCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-	  if (!editorShell.CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
+	  if (CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
 	    return;
 
 	  var fileurl = "";
