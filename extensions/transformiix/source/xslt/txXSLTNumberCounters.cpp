@@ -38,7 +38,7 @@
 
 #include "txXSLTNumber.h"
 #include "nsReadableUtils.h"
-#include "primitives.h"
+#include "txCore.h"
 
 class txDecimalCounter : public txFormattedCounter {
 public:

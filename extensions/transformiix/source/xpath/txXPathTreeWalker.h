@@ -39,10 +39,9 @@
 #ifndef txXPathTreeWalker_h__
 #define txXPathTreeWalker_h__
 
-#include "baseutils.h"
+#include "txCore.h"
 #include "txXPathNode.h"
 
-class nsAString;
 class nsIAtom;
 
 #ifndef TX_EXE

@@ -40,12 +40,9 @@
 #ifndef TRANSFRMX_NODESORTER_H
 #define TRANSFRMX_NODESORTER_H
 
-#include "baseutils.h"
+#include "txCore.h"
 #include "List.h"
-#include "nsIAtom.h"
-#include "txXPathNode.h"
 
-class Element;
 class Expr;
 class txExecutionState;
 class txNodeSet;

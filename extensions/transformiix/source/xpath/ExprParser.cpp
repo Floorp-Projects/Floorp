@@ -47,6 +47,7 @@
 #include "FunctionLib.h"
 #include "txStack.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
 #include "txXPathNode.h"

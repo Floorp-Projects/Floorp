@@ -15,8 +15,8 @@
  * The Original Code is TransforMiiX XSLT processor code.
  *
  * The Initial Developer of the Original Code is
- * Keith Visco.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The MITRE Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,21 +36,75 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __txCore_h__
+#define __txCore_h__
 
-#ifndef TRANSFRMX_TXOBJECT_H
-#define TRANSFRMX_TXOBJECT_H
+#include "nscore.h"
+#include "nsDebug.h"
+#include "prtypes.h"
 
-#include "baseutils.h"
+class nsAString;
 
-class TxObject {
+class txObject
+{
+public:
+    /**
+     * Deletes this txObject
+    **/
+    virtual ~txObject()
+    {
+    };
+};
 
- public:
+/**
+ * Utility class for doubles
+ */
+class txDouble
+{
+public:
+    /**
+     * Useful constants
+     */
+    static const double NaN;
+    static const double POSITIVE_INFINITY;
+    static const double NEGATIVE_INFINITY;
 
     /**
-     * Deletes this TxObject
-    **/
-    virtual ~TxObject() {};
+     * Determines whether the given double represents positive or negative.
+     * inifinity
+     */
+    static PRBool isInfinite(double aDbl);
 
+    /**
+     * Determines whether the given double is NaN.
+     */
+    static PRBool isNaN(double aDbl);
+
+    /**
+     * Determines whether the given double is negative.
+     */
+    static PRBool isNeg(double aDbl);
+
+    /**
+     * Converts the value of the given double to a string, and appends
+     * the result to the destination string.
+     */
+    static void toString(double aValue, nsAString& aDest);
+
+    /**
+     * Converts the given String to a double, if the string value does not
+     * represent a double, NaN will be returned
+     */
+    static double toDouble(const nsAString& aStr);
 };
+
+// XXX These should go away eventually.
+#define TxObject txObject
+typedef txDouble Double;
+typedef PRBool MBool;
+
+#define MB_TRUE  PR_TRUE
+#define MB_FALSE PR_FALSE
+// XXX
 
 #endif

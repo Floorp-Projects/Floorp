@@ -41,7 +41,6 @@
 #include "txXSLTPatterns.h"
 #include "txToplevelItems.h"
 #include "txInstructions.h"
-#include "primitives.h"
 #include "XSLTFunctions.h"
 #include "TxLog.h"
 #include "txKey.h"

@@ -40,6 +40,7 @@
 #include "FunctionLib.h"
 #include "nsReadableUtils.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
 #include "txXPathTreeWalker.h"

@@ -39,9 +39,7 @@
 #ifndef TRANSFRMX_LIST_H
 #define TRANSFRMX_LIST_H
 
-#include "baseutils.h"
-#include "TxObject.h"
-#include "txError.h"
+#include "txCore.h"
 
 class txListIterator;
 

@@ -39,9 +39,8 @@
 #ifndef TRANSFRMX_TXINSTRUCTIONS_H
 #define TRANSFRMX_TXINSTRUCTIONS_H
 
-#include "txError.h"
 #include "nsCOMPtr.h"
-#include "TxObject.h"
+#include "txCore.h"
 #include "nsString.h"
 #include "XMLUtils.h"
 #include "txNamespaceMap.h"

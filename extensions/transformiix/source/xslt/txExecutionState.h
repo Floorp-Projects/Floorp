@@ -39,9 +39,7 @@
 #ifndef TRANSFRMX_TXEXECUTIONSTATE_H
 #define TRANSFRMX_TXEXECUTIONSTATE_H
 
-#include "txError.h"
-#include "baseutils.h"
-#include "txXMLEventHandler.h"
+#include "txCore.h"
 #include "txStack.h"
 #include "XMLUtils.h"
 #include "nsVoidArray.h"
@@ -52,6 +50,8 @@
 #include "txKey.h"
 #include "txStylesheet.h"
 
+class txAOutputHandlerFactory;
+class txAXMLEventHandler;
 class txInstruction;
 class txIOutputHandlerFactory;
 class txExpandedNameMap;
