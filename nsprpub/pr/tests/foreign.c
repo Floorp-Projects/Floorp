@@ -66,8 +66,8 @@ static int _debug_on = 0;
 #define DPRINTF(arg)	if (_debug_on) PR_fprintf arg
 
 #if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
-#include "md/_pth.h"
 #include <pthread.h>
+#include "md/_pth.h"
 static void *pthread_start(void *arg)
 {
     StartFn start = ((StartObject*)arg)->start;
