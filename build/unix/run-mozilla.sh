@@ -59,9 +59,9 @@
 ##
 #
 cmdname=`basename $0`
+MOZ_DIST_BIN=`dirname $0`
 MOZ_APPRUNNER_NAME="./mozilla-bin"
 MOZ_VIEWER_NAME="./viewer"
-MOZ_DIST_BIN=""
 MOZ_PROGRAM=""
 #
 ##
@@ -303,48 +303,6 @@ then
 	fi
 fi
 #
-##
-## Running the program from its source dir
-##
-if [ -f Makefile.in ]
-then
-	# Use DEPTH in the Makefile.in to determine the depth
-	depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
-	##
-	## Make sure dist/bin exists
-	##
-	if [ ! -d $depth/dist/bin ]
-	then
-		moz_bail "$depth/dist/bin does not exist."
-	fi
-	# push
-	here=`pwd`
-	cd $depth/dist/bin
-	MOZ_DIST_BIN=`pwd`
-	# pop
-	cd $here
-else
-	##
-	## Running the program from dist/bin
-	##
-	if [ -d components -a -d res ]
-	then
-		MOZ_DIST_BIN=`pwd`
-	fi
-fi
-#
-##
-## Make sure dist/bin is ok
-##
-if [ -z "$MOZ_DIST_BIN" ]
-then
-	moz_bail "Cannot access dir dist/bin directory."
-fi
-#
-if [ ! -d $MOZ_DIST_BIN ]
-then
-	moz_bail "Cannot access dir dist/bin directory."
-fi
 #
 ##
 ## Make sure the program is executable
