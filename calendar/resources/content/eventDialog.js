@@ -297,7 +297,7 @@ function loadCalendarEventDialog()
                      setFieldValue("alarm-trigger-relation", alarmRelated);
                 } else {
                      dump("loadCalendarEventDialog: ERROR! alarmRelated: " +
-                          alarmRelated + " is invalid! (trying to set " +
+                           alarmRelated + " is invalid! (trying to set " +
                           "START/END when the necessary datepicker isn't " +
                           "enabled?)\n");
                 }
@@ -319,11 +319,11 @@ function loadCalendarEventDialog()
         for (i in ritems) {
             if (ritems[i] instanceof calIRecurrenceRule) {
                 if (theRule) {
-                    dump ("XXXX eventDialog already found a calIRecurrenceRule, we can't handle multiple ones!\n");
+                    dump ("eventDialog.js: Already found a calIRecurrenceRule, we can't handle multiple ones!\n");
                 } else {
                     theRule = ritems[i].QueryInterface(calIRecurrenceRule);
                     if (theRule.isNegative) {
-                        dump ("XXXX eventDialog found an EXRULE, we can't handle this!\n");
+                        dump ("eventDialog.js: Found an EXRULE, we can't handle this!\n");
                         theRule = null;
                     }
                 }
@@ -332,7 +332,7 @@ function loadCalendarEventDialog()
                 if (exc.isNegative) {
                     theExceptions.push(exc);
                 } else {
-                    dump ("XXXX eventDialog found a calIRecurrenceDate that wasn't an exception!\n");
+                    dump ("eventDialog.js: found a calIRecurrenceDate that wasn't an exception!\n");
                 }
             }
         }
@@ -340,13 +340,7 @@ function loadCalendarEventDialog()
         if (theRule) {
             setFieldValue("repeat-checkbox", true, "checked");
             setFieldValue("repeat-length-field", theRule.interval);
-
-            var typeMap = { "DAILY"   : "days",
-                            "WEEKLY"  : "weeks",
-                            "MONTHLY" : "months",
-                            "YEARLY"  : "years" };
-
-            setFieldValue("repeat-length-units", typeMap[theRule.type]);
+            menuListSelectItem("repeat-length-units", theRule.type);
 
             if (theRule.count == -1) {
                 setFieldValue("repeat-forever-radio", true, "selected");
@@ -359,6 +353,8 @@ function loadCalendarEventDialog()
                     document.getElementById("repeat-end-date-picker").value = theRule.endDate.jsDate;
                 }
             }
+        } else {
+            menuListSelectItem("repeat-length-units", "DAILY");
         }
 
         if (theExceptions.length > 0) {
@@ -368,7 +364,7 @@ function loadCalendarEventDialog()
             }
         }
     }
-
+    // Put today's date in the recurrence exceptions datepicker
     document.getElementById("exceptions-date-picker").value = gStartDate;
 
 
@@ -522,7 +518,6 @@ function onOKCommand()
         }
         event.status          = getFieldValue("todo-status-field");
         event.percentComplete = getFieldValue("percent-complete-menulist");
-
     }
 
     // XXX should do an idiot check here to see if duration is negative
@@ -572,22 +567,17 @@ function onOKCommand()
     event.recurrenceInfo = null;
     
     if (getFieldValue("repeat-checkbox", "checked")) {
-        recurrenceInfo = createRecurrenceInfo();
+        var recurrenceInfo = createRecurrenceInfo();
         debug("** recurrenceInfo: " + recurrenceInfo );
         recurrenceInfo.initialize(event);
 
         var recRule = new calRecurrenceRule();
 
-        recurUnits    = getFieldValue("repeat-length-units");
-        recurInterval = getFieldValue("repeat-length-field");
-
         if (getFieldValue("repeat-forever-radio", "selected")) {
             recRule.count = -1;
-        }
-        else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
+        } else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
             recRule.count = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"));
-        }
-        else if (getFieldValue("repeat-until-radio", "selected")) {
+        } else if (getFieldValue("repeat-until-radio", "selected")) {
             var recurEndDate = document.getElementById("repeat-end-date-picker").value;
             recRule.endDate = jsDateToDateTime(recurEndDate);
         }
@@ -595,24 +585,18 @@ function onOKCommand()
         // don't allow for a null interval here; js
         // silently converts that to 0, which confuses
         // libical.
+        var recurInterval = getFieldValue("repeat-length-field");
         if (recurInterval == null)
             recurInterval = 1;
         recRule.interval = recurInterval;
-        
-        var typeMap = { "days"   : "DAILY",
-                        "weeks"  : "WEEKLY",
-                        "months" : "MONTHLY",
-                        "years"  : "YEARLY" };
-        recRule.type = typeMap[recurUnits];
+        recRule.type     = getFieldValue("repeat-length-units");
 
         // XXX need to do extra work for weeks here and for months incase 
         // extra things are checked
 
         recurrenceInfo.appendRecurrenceItem(recRule);
 
-        //
         // Exceptions
-        //
         var listbox = document.getElementById("exception-dates-listbox");
 
         var exceptionArray = new Array();
@@ -645,12 +629,12 @@ function onOKCommand()
     }
 
     if (getFieldValue("invite-checkbox", "checked"))
-        event.setProperty('inviteEmailAddress', getFieldValue("invite-email-field"));
+        event.setProperty("inviteEmailAddress", getFieldValue("invite-email-field"));
     else
-        event.deleteProperty('inviteEmailAddress');
+        event.deleteProperty("inviteEmailAddress");
 
 
-    /* File attachments */
+    // ATTACHMENTS -------------------------------------------------------
     /* XXX this could will work when attachments are supported by calItemBase
     var attachmentListbox = documentgetElementById("attachmentBucket");
 
@@ -1015,10 +999,6 @@ function updateRepeatPlural()
 }
 
 
-/*
- * Update plural singular menu items
- */
-
 function updateAlarmPlural()
 {
     updateMenuLabels( "alarm-length-field", "alarm-length-units" );
@@ -1054,22 +1034,22 @@ function updateRepeatUnitExtensions( )
     // XXX FIX ME! WHEN THE WINDOW LOADS, THIS DOESN'T EXIST
     if( repeatMenu.selectedItem ) {
         switch( repeatMenu.selectedItem.value ) {
-        case "days":
+        case "DAILY":
             hideElement("repeat-extensions-week");
             hideElement("repeat-extensions-month");
             break;
-        case "weeks":
+        case "WEEKLY":
             showElement("repeat-extensions-week");
             hideElement("repeat-extensions-month");
             updateAdvancedWeekRepeat();
             break;
-        case "months":
+        case "MONTHLY":
             hideElement("repeat-extensions-week");
             showElement("repeat-extensions-month");
             //the following line causes resize problems after turning on repeating events
             updateAdvancedRepeatDayOfMonth();
             break;
-        case "years":
+        case "YEARLY":
             hideElement("repeat-extensions-week");
             hideElement("repeat-extensions-month");
             break;
