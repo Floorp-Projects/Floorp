@@ -49,6 +49,10 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
+    aBase = PR_TRUE;
+    return NS_OK;
+  }
 };
 
 // Pseudo frame created by the root frame
@@ -66,6 +70,10 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
+    aBase = PR_TRUE;
+    return NS_OK;
+  }
 
   void ComputeChildMargins(nsMargin& aMargin);
 };

@@ -242,7 +242,10 @@ public:
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
-
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
+    aBase = PR_TRUE;
+    return NS_OK;
+  }
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
