@@ -32,8 +32,8 @@
 #include "nsIComponentManager.h"
 
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -4041,6 +4041,24 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
   SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "true" );
+
+  // Disable JavaScript in this document:
+  nsCOMPtr<nsIScriptGlobalObjectOwner> sgoo (do_QueryInterface(mContentAreaWebShell));
+  if (sgoo)
+  {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    sgoo->GetScriptGlobalObject(getter_AddRefs(sgo));
+    if (sgo)
+    {
+      nsCOMPtr<nsIScriptContext> scriptContext;
+      sgo->GetContext(getter_AddRefs(scriptContext));
+      if (scriptContext)
+      {
+        scriptContext->SetScriptsEnabled(PR_FALSE);
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -4065,7 +4083,6 @@ NS_IMETHODIMP
 nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel)
 {
-
    return NS_OK;
 }
 

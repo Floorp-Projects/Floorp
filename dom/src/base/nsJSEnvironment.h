@@ -46,6 +46,7 @@ private:
   nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
   nsScriptTerminationFunc mTerminationFunc;
   nsCOMPtr<nsISupports> mRef;
+  PRBool mScriptsEnabled;
   
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -103,6 +104,8 @@ public:
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef);
+  NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
 
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();

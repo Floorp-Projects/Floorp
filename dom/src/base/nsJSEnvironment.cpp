@@ -164,6 +164,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mSecurityManager = nsnull;
   mOwner = nsnull;
   mTerminationFunc = nsnull;
+  mScriptsEnabled = PR_TRUE;
 }
 
 const char kScriptSecurityManagerProgID[] = NS_SCRIPTSECURITYMANAGER_PROGID;
@@ -203,6 +204,12 @@ nsJSContext::EvaluateString(const nsString& aScript,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
+  if (!mScriptsEnabled) {
+    *aIsUndefined = PR_TRUE;
+    aRetValue.Truncate();
+    return NS_OK;
+  }
+
   nsresult rv;
   if (!aScopeObject)
     aScopeObject = ::JS_GetGlobalObject(mContext);
@@ -288,7 +295,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
 
   // If all went well, convert val to a string (XXXbe unless undefined?).
   if (ok) {
-    *aIsUndefined = JSVAL_IS_VOID(val);
+    if (aIsUndefined) *aIsUndefined = JSVAL_IS_VOID(val);
     JSString* jsstring = ::JS_ValueToString(mContext, val);
     if (jsstring)
       aRetValue.Assign(::JS_GetStringChars(jsstring));
@@ -296,7 +303,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
-    *aIsUndefined = PR_TRUE;
+    if (aIsUndefined) *aIsUndefined = PR_TRUE;
     aRetValue.Truncate();
   }
 
@@ -386,6 +393,12 @@ nsJSContext::ExecuteScript(void* aScriptObject,
                            nsString* aRetValue,
                            PRBool* aIsUndefined)
 {
+  if (!mScriptsEnabled) {
+    *aIsUndefined = PR_TRUE;
+    aRetValue->Truncate();
+    return NS_OK;
+  }
+
   nsresult rv;
 
   if (!aScopeObject)
@@ -815,6 +828,20 @@ nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
   mTerminationFunc = aFunc;
   mRef = aRef;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::GetScriptsEnabled(PRBool *aEnabled)
+{
+  *aEnabled = mScriptsEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::SetScriptsEnabled(PRBool aEnabled)
+{
+  mScriptsEnabled = aEnabled;
   return NS_OK;
 }
 
