@@ -1,6 +1,6 @@
 /**
  *  File Name:          LexicalConventions/regexp-literals-001.js
- *  ECMA Section:       7.7.5
+ *  ECMA Section:       7.8.5
  *  Description:
  *
  *
