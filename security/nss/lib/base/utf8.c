@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:51:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:24:57 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -311,7 +311,8 @@ nssUTF8_Size
 #endif /* NSSDEBUG */
 
   sv = PL_strlen((const char *)s) + 1;
-  if( '\0' != ((const char *)s)[ sv ] ) {
+#ifdef PEDANTIC
+  if( '\0' != ((const char *)s)[ sv-1 ] ) {
     /* wrapped */
     nss_SetError(NSS_ERROR_VALUE_TOO_LARGE);
     if( (PRStatus *)NULL != statusOpt ) {
@@ -319,6 +320,7 @@ nssUTF8_Size
     }
     return 0;
   }
+#endif /* PEDANTIC */
 
   if( (PRStatus *)NULL != statusOpt ) {
     *statusOpt = PR_SUCCESS;
@@ -567,6 +569,8 @@ nssUTF8_GetEncoding
 )
 {
   NSSItem *rv = (NSSItem *)NULL;
+  PRStatus status = PR_SUCCESS;
+
 #ifdef NSSDEBUG
   if( (NSSArena *)NULL != arenaOpt ) {
     if( PR_SUCCESS != nssArena_verifyPointer(arenaOpt) ) {
@@ -615,11 +619,11 @@ nssUTF8_GetEncoding
 
       rv->data = dup;
       dup = (NSSUTF8 *)NULL;
-      if( PR_SUCCESS != nssUTF8_Size(dup, &rv->size) ) {
+      rv->size = nssUTF8_Size(rv->data, &status);
+      if( (0 == rv->size) && (PR_SUCCESS != status) ) {
         if( (NSSItem *)NULL == rvOpt ) {
           (void)nss_ZFreeIf(rv);
         }
-        (void)nss_ZFreeIf(dup);
         return (NSSItem *)NULL;
       }
     }
@@ -678,7 +682,7 @@ nssUTF8_CopyIntoFixedBuffer
     string = "";
   }
 
-  (void)nssUTF8_Size(string, &stringSize);
+  stringSize = nssUTF8_Size(string, (PRStatus *)NULL);
   stringSize--; /* don't count the trailing null */
   if( stringSize > bufferSize ) {
     PRUint32 bs = bufferSize;
