@@ -785,6 +785,8 @@ void nsWindow::GetBounds(nsRect &aRect)
         }
         aRect.x = r.left;
         aRect.y = r.top;
+    } else {
+        aRect.SetRect(0,0,0,0);
     }
 }
 
@@ -810,6 +812,8 @@ void nsWindow::GetNonClientBounds(nsRect &aRect)
         }
         aRect.x = r.left;
         aRect.y = r.top;
+    } else {
+        aRect.SetRect(0,0,0,0);
     }
 }
 
