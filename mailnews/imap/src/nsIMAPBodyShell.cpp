@@ -885,6 +885,30 @@ PRBool	nsIMAPBodypartLeaf::ShouldFetchInline()
 				(!PL_strcmp(m_parentPart->GetPartNumberString(), generatingPart)))
 				return PR_TRUE;
 
+			// The parent of this part is a multipart
+			if (m_parentPart->GetType() == IMAP_BODY_MULTIPART)
+			{
+				// This is the first text part of a forwarded message
+				// with a multipart body, and that message is being generated,
+				// then generate this part.
+				nsIMAPBodypart *grandParent = m_parentPart->GetParentPart();
+				NS_ASSERTION(grandParent, "grandparent doesn't exist for multi-part alt");		// grandParent must exist, since multiparts need parents
+				if (grandParent && 
+					(grandParent->GetType() == IMAP_BODY_MESSAGE_RFC822) &&
+					(!PL_strcmp(grandParent->GetPartNumberString(), generatingPart)) &&
+					(m_partNumberString[PL_strlen(m_partNumberString)-1] == '1') &&
+					!PL_strcasecmp(m_bodyType, "text"))
+					return PR_TRUE;	// we're downloading it inline
+
+
+				// This is a child of a multipart/appledouble attachment,
+				// and that multipart/appledouble attachment is being generated
+				if (m_parentPart &&
+					!PL_strcasecmp(m_parentPart->GetBodySubType(), "appledouble") &&
+					!PL_strcmp(m_parentPart->GetPartNumberString(), generatingPart))
+					return PR_TRUE;	// we're downloading it inline
+			}
+
 			// Leave out all other leaves if this isn't the one
 			// we're generating.
 			// Maybe change later to check parents, etc.
@@ -907,7 +931,8 @@ PRBool	nsIMAPBodypartLeaf::ShouldFetchInline()
 		if (m_parentPart->GetType() == IMAP_BODY_MESSAGE_RFC822)
 			return m_parentPart->ShouldFetchInline();
 
-		if (!m_shell->GetShowAttachmentsInline())
+		// View Attachments As Links is on.
+		if (!(m_shell->GetContentModified() == IMAP_CONTENT_MODIFIED_VIEW_INLINE))
 		{
 			// The first text part is still displayed inline,
 			// even if View Attachments As Links is on.
@@ -915,15 +940,48 @@ PRBool	nsIMAPBodypartLeaf::ShouldFetchInline()
 				!PL_strcasecmp(m_bodyType, "text"))
 				return PR_TRUE;	// we're downloading it inline
 			else
-				return PR_FALSE;	// we can leave it on the server
+			{
+				// This is the first text part of a top-level multipart.
+				// For instance, a message with multipart body, where the first
+				// part is multipart, and this is the first leaf of that first part.
+				if (m_parentPart->GetType() == IMAP_BODY_MULTIPART &&
+					(PL_strlen(m_partNumberString) >= 2) &&
+					!PL_strcmp(m_partNumberString + PL_strlen(m_partNumberString) - 2, ".1") &&	// this is the first text type on this level
+					!PL_strcmp(m_parentPart->GetPartNumberString(), "1") &&
+					!PL_strcasecmp(m_bodyType, "text"))
+					return PR_TRUE;
+				else
+					return PR_FALSE;	// we can leave it on the server
+			}
 		}
+#ifdef XP_MAC
+		// If it is either applesingle, or a resource fork for appledouble
+		if (!PL_strcasecmp(m_contentType, "application/applefile"))
+		{
+			// if it is appledouble
+			if (m_parentPart->GetType() == IMAP_BODY_MULTIPART &&
+				!PL_strcasecmp(m_parentPart->GetBodySubType(), "appledouble"))
+			{
+				// This is the resource fork of a multipart/appledouble.
+				// We inherit the inline attributes of the parent,
+				// which was derived from its OTHER child.  (The data fork.)
+				return m_parentPart->ShouldFetchInline();
+			}
+			else	// it is applesingle
+			{
+				return PR_FALSE;	// we can leave it on the server
+			}
+		}
+#endif	// XP_MAC
+
+		// Leave out parts with type application/*
 		if (!PL_strcasecmp(m_bodyType, "APPLICATION") &&	// If it is of type "application"
 			PL_strncasecmp(m_bodySubType, "x-pkcs7", 7)	// and it's not a signature (signatures are inline)
-#ifdef XP_MAC
-			&& PL_strcasecmp(m_bodySubType, "applefile")	// and it's not an appledouble resource fork on Mac  (they're inline)
-#endif
 			)
 			return PR_FALSE;	// we can leave it on the server
+
+		// Here's where we can add some more intelligence -- let's leave out
+		// any other parts that we know we can't display inline.
 		return PR_TRUE;	// we're downloading it inline
 	}
 }
@@ -1377,12 +1435,42 @@ PRBool	nsIMAPBodypartMultipart::ShouldFetchInline()
 		if (ShouldExplicitlyNotFetchInline())
 			return PR_FALSE;
 
+		nsIMAPBodypart *grandparentPart = m_parentPart->GetParentPart();
+
 		// If "Show Attachments as Links" is on, and
 		// the parent of this multipart is not a message,
 		// then it's not inline.
-		if (!m_shell->GetShowAttachmentsInline() &&
-			(m_parentPart->GetType() != IMAP_BODY_MESSAGE_RFC822))
+		if (!(m_shell->GetContentModified() == IMAP_CONTENT_MODIFIED_VIEW_INLINE) &&
+			(m_parentPart->GetType() != IMAP_BODY_MESSAGE_RFC822) &&
+			(m_parentPart->GetType() == IMAP_BODY_MULTIPART ?
+				(grandparentPart ? grandparentPart->GetType() != IMAP_BODY_MESSAGE_RFC822 : PR_TRUE)
+				: PR_TRUE))
 			return PR_FALSE;
+
+#ifdef XP_MAC
+		// If this is a multipart of type multipart/appledouble,
+		// then it is only inline if its data fork is inline.
+		// There should only be one data fork, but to be safe use the
+		// boolean AND of any children which aren't resource forks.
+		if (!PL_strcasecmp(GetBodySubType(), "appledouble"))
+		{
+			PRBool partInline = TRUE;
+			NS_ASSERTION(m_partList->GetSize() == 2, "invalid apple double part");	// 2 == resource fork + data fork
+			for (int i = 0; partInline && (i < m_partList->GetSize()); i++)
+			{
+				nsIMAPBodypart *child = (nsIMAPBodypart *)(m_partList->GetAt(i));
+
+				// If this isn't the resource fork
+				if (!(!PL_strcasecmp(child->GetBodyType(), "application") &&
+					!PL_strcasecmp(child->GetBodySubType(), "applefile")))
+				{
+					partInline = partInline && child->ShouldFetchInline();
+				}
+			}
+			if (!partInline)	// the data fork isn't inline
+				return PR_FALSE;	// leave the whole multipart/appledouble out
+		}
+#endif	// XP_MAC
 
 		// multiparts are always inline
 		// (their children might not be, though)

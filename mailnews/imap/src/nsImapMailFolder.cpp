@@ -52,6 +52,7 @@
 #include "nsIMsgFolderCacheElement.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsTextFormatter.h"
+#include "nsIPref.h"
 
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterService.h"
@@ -76,6 +77,7 @@ static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define FOUR_K 4096
 
@@ -3344,7 +3346,13 @@ NS_IMETHODIMP
 nsImapMailFolder::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
                                            PRBool* aBool)
 {
-    return NS_ERROR_FAILURE;
+  if (!aBool)
+    return NS_ERROR_NULL_POINTER;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+    prefs->GetBoolPref("mail.inline_attachments", aBool);  
+  return rv;
 }
 
 NS_IMETHODIMP

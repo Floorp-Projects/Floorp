@@ -91,6 +91,8 @@ public:
 	virtual PRBool ContinueParse();	// overrides the parser, but calls it anyway
 	virtual nsIMAPBodypartMessage	*GetnsIMAPBodypartMessage() { return NULL; }
 
+	const char	*GetBodyType() { return m_bodyType; }
+	const char	*GetBodySubType() { return m_bodySubType; }
 
 protected:
 	virtual void	QueuePrefetchMIMEHeader();
@@ -98,9 +100,6 @@ protected:
 	virtual PRBool ParseIntoObjects() = 0;	// Parses buffer and fills in both this and any children with associated objects
 									// Returns PR_TRUE if it produced a valid Shell
 									// Must be overridden in the concerte derived class
-	const char	*GetBodyType() { return m_bodyType; }
-	const char	*GetBodySubType() { return m_bodySubType; }
-
 	nsIMAPBodypart(nsIMAPBodyShell *shell, char *partNumber, const char *buf, nsIMAPBodypart *parentPart);
 
 protected:

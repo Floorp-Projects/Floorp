@@ -187,7 +187,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
-    PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
+    PRInt32 keyEndSeparator = uriStr.FindCharInSet("/?&", 
                                                    keySeparator); 
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
