@@ -109,7 +109,7 @@ sub EmitFormElements ($$$$$$$)
     if ($editall) {
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Password:</TH>\n";
-        print "  <TD><INPUT SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
+        print "  <TD><INPUT TYPE=\"PASSWORD\" SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
 
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
