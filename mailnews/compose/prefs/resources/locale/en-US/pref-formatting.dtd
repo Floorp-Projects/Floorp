@@ -35,10 +35,10 @@ Rights Reserved.
 
 <!-- Html and Plain Text Domains  -->
 <!ENTITY domain.title                 "HTML and Plain Text Domains">
-<!ENTITY domaindesc.label             "You can specify those mail domain names(for example netscape.net) that you know can receive HTML messages, as well as those that can receive plain text only.When you send a message to an address that has one of those domain names listed below, Mail automatically sends the message in the correct format.">
-<!ENTITY HTMLdomaintitle.label        "HTML domains.">
+<!ENTITY domaindesc.label             "You can specify those mail domain names (for example netscape.net) that you know can receive HTML messages, as well as those that can receive plain text only. When you send a message to an address that has one of the domain names listed below, Mail automatically sends the message in the correct format.">
+<!ENTITY HTMLdomaintitle.label        "HTML Domains">
 <!ENTITY HTMLdomaintitle.accesskey    "h">
-<!ENTITY PlainTexttitle.label         "Plain Text domains.">
+<!ENTITY PlainTexttitle.label         "Plain Text Domains">
 <!ENTITY PlainTexttitle.accesskey     "p">
 <!ENTITY AddButton.label              "Add...">
 <!ENTITY AddHtmlDomain.accesskey      "a">
