@@ -100,6 +100,7 @@ public:
 
   nsresult Init(nsIDocument* aDoc, nsIURL* aURL, nsIWebWidget* aWebWidget);
   nsIHTMLContent* GetCurrentContainer(eHTMLTags* aType);
+  nsIHTMLContent* GetTableParent();
 
   virtual PRBool SetTitle(const nsString& aValue);
 
@@ -186,6 +187,12 @@ protected:
   void FlushText();
 
   nsresult AddText(const nsString& aText, nsIHTMLContent** aContent);
+
+  void AppendToCorrectParent(nsHTMLTag aParentTag,
+                             nsIHTMLContent* aParent,
+                             nsHTMLTag aChildTag,
+                             nsIHTMLContent* aChild,
+                             PRBool aAllowReflow);
 
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
@@ -731,7 +738,9 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
       }
 #endif
       
-      parent->AppendChild(container,  allowReflow);
+      AppendToCorrectParent(parentType, parent,
+                            (nsHTMLTag) aNode.GetNodeType(), container,
+                            allowReflow);
 #ifdef NS_DEBUG
       if (allowReflow && (((PRInt32)gSinkLogModuleInfo->level) > 127)) {
         PRInt32 i, ns = mDocument->GetNumberOfShells();
@@ -1051,10 +1060,12 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 #ifdef NS_DEBUG
         if (allowReflow) {
           SINK_TRACE(SINK_TRACE_REFLOW,
-                     ("HTMLContentSink::CloseContainer: reflow after append"));
+                     ("HTMLContentSink::AddLeaf: reflow after append"));
         }
 #endif
-        parent->AppendChild(leaf, allowReflow);
+        AppendToCorrectParent(parentType, parent,
+                              (nsHTMLTag) aNode.GetNodeType(), leaf,
+                              allowReflow);
       } else {
         // XXX drop stuff on the floor that doesn't have a container!
         // Bad parser!
@@ -1064,6 +1075,107 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   NS_IF_RELEASE(leaf);
 
   return 0;
+}
+
+// Special handling code to push unexpected table content out of the
+// table and into the table's parent, just before the table. Because
+// the table is a container, it will not have been added to it's
+// parent yet so we can just append the inappropriate content.
+void
+HTMLContentSink::AppendToCorrectParent(nsHTMLTag aParentTag,
+                                       nsIHTMLContent* aParent,
+                                       nsHTMLTag aChildTag,
+                                       nsIHTMLContent* aChild,
+                                       PRBool aAllowReflow)
+{
+  nsIHTMLContent* realParent = aParent;
+
+  // These are the tags that are allowed in a table
+  static char tableTagSet[] = {
+    eHTMLTag_tbody, eHTMLTag_thead, eHTMLTag_tfoot,
+    eHTMLTag_tr, eHTMLTag_col, eHTMLTag_colgroup,
+    eHTMLTag_caption,/* XXX ok? */
+    0,
+  };
+
+  // These are the tags that are allowed in a tbody/thead/tfoot
+  static char tbodyTagSet[] = {
+    eHTMLTag_tr,
+    eHTMLTag_caption,/* XXX ok? */
+    0,
+  };
+
+  // These are the tags that are allowed in a colgroup
+  static char colgroupTagSet[] = {
+    eHTMLTag_col,
+    0,
+  };
+
+  // These are the tags that are allowed in a tr
+  static char trTagSet[] = {
+    eHTMLTag_td, eHTMLTag_th,
+    0,
+  };
+
+  switch (aParentTag) {
+  case eHTMLTag_table:
+    if (0 == strchr(tableTagSet, aChildTag)) {
+      realParent = GetTableParent();
+    }
+    break;
+
+  case eHTMLTag_tbody:
+  case eHTMLTag_thead:
+  case eHTMLTag_tfoot:
+    if (0 == strchr(tbodyTagSet, aChildTag)) {
+      realParent = GetTableParent();
+    }
+    break;
+
+  case eHTMLTag_col:
+    realParent = GetTableParent();
+    break;
+
+  case eHTMLTag_colgroup:
+    if (0 == strchr(colgroupTagSet, aChildTag)) {
+      realParent = GetTableParent();
+    }
+    break;
+
+  case eHTMLTag_tr:
+    if (0 == strchr(trTagSet, aChildTag)) {
+      realParent = GetTableParent();
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  realParent->AppendChild(aChild, aAllowReflow);
+}
+
+// Find the parent of the currently open table
+nsIHTMLContent*
+HTMLContentSink::GetTableParent()
+{
+  PRInt32 sp = mStackPos - 1;
+  while (sp >= 0) {
+    switch (mNodeStack[sp]) {
+    case eHTMLTag_table:
+    case eHTMLTag_tr:
+    case eHTMLTag_tbody:
+    case eHTMLTag_thead:
+    case eHTMLTag_tfoot:
+    case eHTMLTag_col:
+    case eHTMLTag_colgroup:
+      break;
+    default:
+      return mContainerStack[sp];
+    }
+    sp--;
+  }
+  return mBody;
 }
 
 nsresult
