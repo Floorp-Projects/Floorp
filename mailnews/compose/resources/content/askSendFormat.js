@@ -93,7 +93,7 @@ function Startup()
       if (useDefault)
         var radioSelect=defaultAction;
       else
-        var radioSelect=param.action;
+        radioSelect=param.action;
 
       switch (radioSelect)
       {
