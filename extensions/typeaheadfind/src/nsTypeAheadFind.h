@@ -186,6 +186,8 @@ protected:
   nsString mFindNextBuffer;
   nsString mIMEString;
 
+  nsCString mNotFoundSoundURL;
+
   // PRBool's are used instead of PRPackedBool's where the address of the
   // boolean variable is getting passed into a method. For example:
   // GetBoolPref("accessibility.typeaheadfind.linksonly", &mLinksOnlyPref);
@@ -217,7 +219,6 @@ protected:
   // If we destroy mSoundInterface before sound has played, it won't play
   nsCOMPtr<nsISound> mSoundInterface;
   PRBool mIsSoundInitialized;
-  PRBool mIsSoundEnabledPref;
   
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
