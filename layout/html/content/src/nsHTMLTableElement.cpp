@@ -30,6 +30,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsHTMLParts.h"
 
 /* for collections */
 #include "nsIDOMElement.h"
@@ -540,7 +541,27 @@ NS_IMETHODIMP
 nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsresult rv = NS_OK;
+  nsIDOMHTMLTableSectionElement *head=nsnull;
+  GetTHead(&head);
+  if (nsnull!=head)
+  { // return the existing thead
+    head->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    NS_ASSERTION(nsnull!=*aValue, "head must be a DOMHTMLElement");
+    NS_RELEASE(head);
+  }
+  else
+  { // create a new head rowgroup
+    nsIHTMLContent *newHead=nsnull;
+    rv = NS_NewHTMLTableSectionElement(&newHead,nsHTMLAtoms::thead);
+    if (NS_SUCCEEDED(rv) && (nsnull!=newHead))
+    {
+      rv = mInner.AppendChildTo(newHead, PR_TRUE);
+      newHead->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      NS_RELEASE(newHead);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -553,7 +574,27 @@ NS_IMETHODIMP
 nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsresult rv = NS_OK;
+  nsIDOMHTMLTableSectionElement *foot=nsnull;
+  GetTFoot(&foot);
+  if (nsnull!=foot)
+  { // return the existing tfoot
+    foot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    NS_ASSERTION(nsnull!=*aValue, "foot must be a DOMHTMLElement");
+    NS_RELEASE(foot);
+  }
+  else
+  { // create a new foot rowgroup
+    nsIHTMLContent *newFoot=nsnull;
+    rv = NS_NewHTMLTableSectionElement(&newFoot,nsHTMLAtoms::tfoot);
+    if (NS_SUCCEEDED(rv) && (nsnull!=newFoot))
+    {
+      rv = mInner.AppendChildTo(newFoot, PR_TRUE);
+      newFoot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      NS_RELEASE(newFoot);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -565,8 +606,30 @@ nsHTMLTableElement::DeleteTFoot()
 NS_IMETHODIMP
 nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 {
+{
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsresult rv = NS_OK;
+  nsIDOMHTMLTableCaptionElement *caption=nsnull;
+  GetCaption(&caption);
+  if (nsnull!=caption)
+  { // return the existing thead
+    caption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    NS_ASSERTION(nsnull!=*aValue, "caption must be a DOMHTMLElement");
+    NS_RELEASE(caption);
+  }
+  else
+  { // create a new head rowgroup
+    nsIHTMLContent *newCaption=nsnull;
+    rv = NS_NewHTMLTableCaptionElement(&newCaption,nsHTMLAtoms::caption);
+    if (NS_SUCCEEDED(rv) && (nsnull!=newCaption))
+    {
+      rv = mInner.AppendChildTo(newCaption, PR_TRUE);
+      newCaption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      NS_RELEASE(newCaption);
+    }
+  }
+  return NS_OK;
+}
 }
 
 NS_IMETHODIMP
