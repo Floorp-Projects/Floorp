@@ -204,10 +204,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
   if (aAttributes && aPresContext && aContext) {
     nsHTMLValue value;
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsStylePosition* position = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsMutableStyleDisplay display(aContext);
+    nsMutableStylePosition position(aContext);
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       switch (value.GetIntValue()) {

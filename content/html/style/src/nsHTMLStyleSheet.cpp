@@ -156,11 +156,8 @@ HTMLColorRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext
 NS_IMETHODIMP
 HTMLColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
-
-  if (nsnull != styleColor) {
-    styleColor->mColor = mColor;
-  }
+  nsMutableStyleColor styleColor(aContext);
+  styleColor->mColor = mColor;
   return NS_OK;
 }
 
@@ -222,16 +219,13 @@ HTMLDocumentColorRule::~HTMLDocumentColorRule()
 NS_IMETHODIMP
 HTMLDocumentColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
-
-  if (nsnull != styleColor) {
-    if (mForegroundSet) {
-      styleColor->mColor = mColor;
-    }
-    if (mBackgroundSet) {
-      styleColor->mBackgroundColor = mBackgroundColor;
-      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    }
+  nsMutableStyleColor styleColor(aContext);
+  if (mForegroundSet) {
+    styleColor->mColor = mColor;
+  }
+  if (mBackgroundSet) {
+    styleColor->mBackgroundColor = mBackgroundColor;
+    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
   }
   return NS_OK;
 }
@@ -426,8 +420,7 @@ TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresConte
   nsIStyleContext* parentContext = aContext->GetParent();
 
   if (parentContext) {
-    nsStyleColor* styleColor;
-    styleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+    nsMutableStyleColor styleColor(aContext);
 
     const nsStyleColor* parentStyleColor;
     parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
@@ -474,8 +467,8 @@ TableTHRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPre
   nsIStyleContext* parentContext = aContext->GetParent();
 
   if (parentContext) {
-    nsStyleText* styleText = 
-      (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    nsMutableStyleText styleText(aContext);
+
     if (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign) {
       const nsStyleText* parentStyleText = 
         (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);

@@ -2124,8 +2124,7 @@ MapBdoAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   // Get dir attribute
   aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
   if (eHTMLUnit_Enumerated == value.GetUnit() ) {
-    nsStyleText* text = (nsStyleText*)
-                        aStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    nsMutableStyleText text(aStyleContext);
     text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_OVERRIDE;
   }
 }
@@ -2928,8 +2927,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
   nsHTMLValue value;
   aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) {
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aStyleContext->GetMutableStyleData(eStyleStruct_Display);
+    nsMutableStyleDisplay display(aStyleContext);
     display->mDirection = value.GetIntValue();
 #ifdef IBMBIDI
     display->mExplicitDirection = display->mDirection;
@@ -2948,8 +2946,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
         return;
       }
     }
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aStyleContext->GetMutableStyleData(eStyleStruct_Display);
+    nsMutableStyleDisplay display(aStyleContext);
     nsAutoString lang;
     value.GetStringValue(lang);
     gLangService->LookupLanguage(lang.GetUnicode(),
@@ -2997,10 +2994,8 @@ nsGenericHTMLElement::MapImageAttributesInto(const nsIHTMLMappedAttributes* aAtt
 
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
-  nsStylePosition* pos = (nsStylePosition*)
-    aContext->GetMutableStyleData(eStyleStruct_Position);
-  nsStyleMargin* margin = (nsStyleMargin*)
-    aContext->GetMutableStyleData(eStyleStruct_Margin);
+  nsMutableStylePosition pos(aContext);
+  nsMutableStyleMargin margin(aContext);
 
   // width: value
   aAttributes->GetAttribute(nsHTMLAtoms::width, value);
@@ -3074,12 +3069,9 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* 
   aAttributes->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) {
     PRUint8 align = (PRUint8)(value.GetIntValue());
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsStyleText* text = (nsStyleText*)
-      aContext->GetMutableStyleData(eStyleStruct_Text);
-    nsStyleMargin* margin = (nsStyleMargin*)
-      aContext->GetMutableStyleData(eStyleStruct_Margin);
+    nsMutableStyleDisplay display(aContext);
+    nsMutableStyleText text(aContext);
+    nsMutableStyleMargin margin(aContext);
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
@@ -3141,8 +3133,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
 
   // Fixup border-padding sums: subtract out the old size and then
   // add in the new size.
-  nsStyleBorder* border = (nsStyleBorder*)
-    aContext->GetMutableStyleData(eStyleStruct_Border);
+  nsMutableStyleBorder border(aContext);
 
   nsStyleCoord coord;
   coord.SetCoordValue(twips);
@@ -3218,8 +3209,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
                                              getter_AddRefs(docURL));
             rv = NS_MakeAbsoluteURI(absURLSpec, spec, docURL);
             if (NS_SUCCEEDED(rv)) {
-              nsStyleColor* color = (nsStyleColor*)
-                aContext->GetMutableStyleData(eStyleStruct_Color);
+				      nsMutableStyleColor color(aContext);
               color->mBackgroundImage = absURLSpec;
               color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
               color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
@@ -3233,8 +3223,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
       aPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks == mode &&
           eHTMLUnit_Empty == value.GetUnit()) {
-        nsStyleColor* color;
-        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+	      nsMutableStyleColor color(aContext);
         color->mBackgroundImage.Truncate();
         color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
         color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
@@ -3246,8 +3235,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
   if (NS_CONTENT_ATTR_HAS_VALUE == aAttributes->GetAttribute(nsHTMLAtoms::bgcolor, value)) {
     if ((eHTMLUnit_Color == value.GetUnit()) ||
         (eHTMLUnit_ColorName == value.GetUnit())) {
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
+      nsMutableStyleColor color(aContext);
       color->mBackgroundColor = value.GetColorValue();
       color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
     }

@@ -132,44 +132,38 @@ CSSFirstLineRule::MapStyleInto(nsIMutableStyleContext* aContext,
   parentContext = aContext->GetParent();
 
   // Disable border
-  nsStyleBorder* border = (nsStyleBorder*)
-    aContext->GetMutableStyleData(eStyleStruct_Border);
-  if (border) {
-    border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-  }
+  nsMutableStyleBorder border(aContext);
+  border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+  border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+  border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+  border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
   // Undo any change made to "direction"
-  nsStyleDisplay* display = (nsStyleDisplay*)
-    aContext->GetMutableStyleData(eStyleStruct_Display);
   if (parentContext) {
     const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
       parentContext->GetStyleData(eStyleStruct_Display);
     if (parentDisplay) {
+      nsMutableStyleDisplay display(aContext);
       display->mDirection = parentDisplay->mDirection;
     }
   }
 
   // Undo any change made to "cursor"
-  nsStyleColor* color = (nsStyleColor*)
-    aContext->GetMutableStyleData(eStyleStruct_Color);
   if (parentContext) {
     const nsStyleColor* parentColor = (const nsStyleColor*)
       parentContext->GetStyleData(eStyleStruct_Color);
     if (parentColor) {
+      nsMutableStyleColor color(aContext);
       color->mCursor = parentColor->mCursor;
     }
   }
 
   // Undo any change to quotes
-  nsStyleContent* content = (nsStyleContent*)
-    aContext->GetMutableStyleData(eStyleStruct_Content);
   if (parentContext) {
     const nsStyleContent* parentContent = (const nsStyleContent*)
       parentContext->GetStyleData(eStyleStruct_Content);
     if (parentContent) {
+      nsMutableStyleContent content(aContext);
       nsAutoString open, close;
       PRUint32 i, n = parentContent->QuotesCount();
       content->AllocateQuotes(n);
@@ -261,34 +255,31 @@ CSSFirstLetterRule::MapStyleInto(nsIMutableStyleContext* aContext,
   parentContext = aContext->GetParent();
 
   // Undo any change made to "direction"
-  nsStyleDisplay* display = (nsStyleDisplay*)
-    aContext->GetMutableStyleData(eStyleStruct_Display);
   if (parentContext) {
     const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
       parentContext->GetStyleData(eStyleStruct_Display);
     if (parentDisplay) {
+      nsMutableStyleDisplay display(aContext);
       display->mDirection = parentDisplay->mDirection;
     }
   }
 
   // Undo any change made to "cursor"
-  nsStyleColor* color = (nsStyleColor*)
-    aContext->GetMutableStyleData(eStyleStruct_Color);
   if (parentContext) {
     const nsStyleColor* parentColor = (const nsStyleColor*)
       parentContext->GetStyleData(eStyleStruct_Color);
     if (parentColor) {
+      nsMutableStyleColor color(aContext);
       color->mCursor = parentColor->mCursor;
     }
   }
 
   // Undo any change to quotes
-  nsStyleContent* content = (nsStyleContent*)
-    aContext->GetMutableStyleData(eStyleStruct_Content);
   if (parentContext) {
     const nsStyleContent* parentContent = (const nsStyleContent*)
       parentContext->GetStyleData(eStyleStruct_Content);
     if (parentContent) {
+      nsMutableStyleContent content(aContext);
       nsAutoString open, close;
       PRUint32 i, n = parentContent->QuotesCount();
       content->AllocateQuotes(n);

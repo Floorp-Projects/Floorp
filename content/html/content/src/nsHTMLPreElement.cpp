@@ -185,8 +185,7 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     // variable: empty
     aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {
-      nsStyleFont* font = (nsStyleFont*)
-        aContext->GetMutableStyleData(eStyleStruct_Font);
+      nsMutableStyleFont font(aContext);
       font->mFont.name.AssignWithConversion("serif");
     }
   }
@@ -203,34 +202,29 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     // wrap: empty
     aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
     if (value.GetUnit() != eHTMLUnit_Null) {
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText text(aContext);
       text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
       
     // cols: int (nav4 attribute)
     aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
-      nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
+      nsMutableStylePosition position(aContext);
       position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
       // Force wrap property on since we want to wrap at a width
       // boundary not just a newline.
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText text(aContext);
       text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
 
     // width: int (html4 attribute == nav4 cols)
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
-      nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
+      nsMutableStylePosition position(aContext);
       position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
       // Force wrap property on since we want to wrap at a width
       // boundary not just a newline.
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleText text(aContext);
       text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
 

@@ -282,8 +282,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
-    nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsMutableStylePosition pos(aContext);
 
     // width: value
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
@@ -314,16 +313,13 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
-        nsStyleBorder* border = (nsStyleBorder*)
-          aContext->GetMutableStyleData(eStyleStruct_Border);
-        if (border) {
-          nsStyleCoord coord;
-          coord.SetCoordValue(0);
-          border->mBorder.SetTop(coord);
-          border->mBorder.SetRight(coord);
-          border->mBorder.SetBottom(coord);
-          border->mBorder.SetLeft(coord);
-        }
+	      nsMutableStyleBorder border(aContext);
+        nsStyleCoord coord;
+        coord.SetCoordValue(0);
+        border->mBorder.SetTop(coord);
+        border->mBorder.SetRight(coord);
+        border->mBorder.SetBottom(coord);
+        border->mBorder.SetLeft(coord);
       }
     }
   }

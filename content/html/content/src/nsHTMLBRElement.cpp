@@ -182,12 +182,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  nsStyleDisplay* display = (nsStyleDisplay*)
-    aContext->GetMutableStyleData(eStyleStruct_Display);
-
   nsHTMLValue value;
   aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) {
+    nsMutableStyleDisplay display(aContext);
     display->mBreakType = value.GetIntValue();
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,

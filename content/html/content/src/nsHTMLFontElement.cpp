@@ -218,9 +218,8 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsStyleFont* font = (nsStyleFont*)
-      aContext->GetMutableStyleData(eStyleStruct_Font);
-    const nsStyleFont* parentFont = font;
+    nsMutableStyleFont font(aContext);
+    const nsStyleFont* parentFont = font.get();
     nsIStyleContext* parentContext = aContext->GetParent();
     if (nsnull != parentContext) {
       parentFont = (const nsStyleFont*)
@@ -398,10 +397,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
       const nsStyleFont* font = (const nsStyleFont*)
         aContext->GetStyleData(eStyleStruct_Font);
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsMutableStyleColor color(aContext);
+      nsMutableStyleText text(aContext);
       if (((eHTMLUnit_Color == value.GetUnit())) ||
           (eHTMLUnit_ColorName == value.GetUnit())) {
         color->mColor = value.GetColorValue();

@@ -37,6 +37,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsNetUtil.h"
 #include "nsIStyleRuleSupplier.h"
+#include "nsISizeOfHandler.h"
 
 #ifdef MOZ_PERF_METRICS
   #include "nsITimeRecorder.h"
@@ -49,17 +50,7 @@
   #define STYLESET_STOP_TIMER(a) ((void)0)
 #endif
 
-#include "nsISizeOfHandler.h"
-
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
-
-// - fast cache uses a CRC32 on the style context to quickly find sharing candidates.
-//   Enabling it by defining USE_FAST_CACHE makes style sharing significantly faster
-//   but introduces more code and logic, and is thus potentially more error-prone
-// - Enabled by default: disable to determine if there are problems in the fast-cache
-// NOTE: make sure the define COMPUTE_STYLEDATA_CRC is ON in nsStyleContext.cpp for 
-//       this to be affective...
-#define USE_FAST_CACHE
 
 #ifdef USE_FAST_CACHE
 ///////////////////////////////////////
@@ -78,6 +69,7 @@ static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_I
 
 #ifdef USE_FAST_CACHE
 
+#include "nsHashtable.h"
 PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure);
 PRBool PR_CALLBACK HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure);
 PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);

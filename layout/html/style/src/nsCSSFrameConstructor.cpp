@@ -33,6 +33,7 @@
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
@@ -1516,9 +1517,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
   
         if (display->mDisplay != displayValue) {
           // Reset the value
-          nsStyleDisplay* mutableDisplay = (nsStyleDisplay*)
-            pseudoStyleContext->GetMutableStyleData(eStyleStruct_Display);
-  
+          nsMutableStyleDisplay mutableDisplay(pseudoStyleContext);
           mutableDisplay->mDisplay = displayValue;
         }
 
@@ -1528,9 +1527,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
           (const nsStylePosition*)pseudoStyleContext->GetStyleData(eStyleStruct_Position);
         if (NS_STYLE_POSITION_NORMAL != stylePosition->mPosition) {
           // Reset the value
-          nsStylePosition* mutablePosition = (nsStylePosition*)
-            pseudoStyleContext->GetMutableStyleData(eStyleStruct_Position);
-  
+          nsMutableStylePosition mutablePosition(pseudoStyleContext);
           mutablePosition->mPosition = NS_STYLE_POSITION_NORMAL;
         }
 
@@ -2513,7 +2510,7 @@ void
 FixUpOuterTableFloat(nsIStyleContext* aOuterSC,
                      nsIStyleContext* aInnerSC)
 {
-  nsStyleDisplay* outerStyleDisplay = (nsStyleDisplay*)aOuterSC->GetMutableStyleData(eStyleStruct_Display);
+  nsMutableStyleDisplay outerStyleDisplay(aOuterSC);
   nsStyleDisplay* innerStyleDisplay = (nsStyleDisplay*)aInnerSC->GetStyleData(eStyleStruct_Display);
   if (outerStyleDisplay->mFloats != innerStyleDisplay->mFloats) {
     outerStyleDisplay->mFloats = innerStyleDisplay->mFloats;
@@ -3279,24 +3276,25 @@ PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
                             const nsStyleColor* aColor,
                             nsIStyleContext*    aParentStyleContext)
 {
-  nsStyleColor* mutableColor;
-  mutableColor = (nsStyleColor*)aParentStyleContext->GetMutableStyleData(eStyleStruct_Color);
-
-  mutableColor->mBackgroundAttachment = aColor->mBackgroundAttachment;
-  mutableColor->mBackgroundFlags = aColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
-  mutableColor->mBackgroundRepeat = aColor->mBackgroundRepeat;
-  mutableColor->mBackgroundColor = aColor->mBackgroundColor;
-  mutableColor->mBackgroundXPosition = aColor->mBackgroundXPosition;
-  mutableColor->mBackgroundYPosition = aColor->mBackgroundYPosition;
-  mutableColor->mBackgroundImage = aColor->mBackgroundImage;
-
+  {
+    nsMutableStyleColor mutableColor(aParentStyleContext);
+    mutableColor->mBackgroundAttachment = aColor->mBackgroundAttachment;
+    mutableColor->mBackgroundFlags = aColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
+    mutableColor->mBackgroundRepeat = aColor->mBackgroundRepeat;
+    mutableColor->mBackgroundColor = aColor->mBackgroundColor;
+    mutableColor->mBackgroundXPosition = aColor->mBackgroundXPosition;
+    mutableColor->mBackgroundYPosition = aColor->mBackgroundYPosition;
+    mutableColor->mBackgroundImage = aColor->mBackgroundImage;
+  }
   // Reset the BODY's background to transparent
-  mutableColor = (nsStyleColor*)aStyleContext->GetMutableStyleData(eStyleStruct_Color);
-  mutableColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                   NS_STYLE_BG_IMAGE_NONE |
-                                   NS_STYLE_BG_PROPAGATED_TO_PARENT;
-  mutableColor->mBackgroundImage.SetLength(0);
-  mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+  {
+    nsMutableStyleColor mutableColor(aStyleContext);
+    mutableColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                              NS_STYLE_BG_IMAGE_NONE |
+                              NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    mutableColor->mBackgroundImage.SetLength(0);
+    mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+  }
 }
 
 /**
@@ -3484,7 +3482,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
           // Since we always create a block frame, we need to make sure that the 
           // style context's display type is block level.
-          nsStyleDisplay* disp = (nsStyleDisplay*)styleContext->GetMutableStyleData(eStyleStruct_Display);
+          nsMutableStyleDisplay disp(styleContext);
           disp->mDisplay = NS_STYLE_DISPLAY_BLOCK;
         }
 
@@ -3687,7 +3685,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                            getter_AddRefs(viewportPseudoStyle));
 
   { // ensure that the viewport thinks it is a block frame, layout goes pootsy if it doesn't
-    nsStyleDisplay* display = (nsStyleDisplay*)viewportPseudoStyle->GetMutableStyleData(eStyleStruct_Display);
+    nsMutableStyleDisplay display(viewportPseudoStyle);
     display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
   }
 
@@ -4886,7 +4884,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         }
         if (allowSubframes) {
           // make <noframes> be display:none if frames are enabled
-          nsStyleDisplay* display = (nsStyleDisplay*)aStyleContext->GetMutableStyleData(eStyleStruct_Display);
+          nsMutableStyleDisplay display(aStyleContext);
           display->mDisplay = NS_STYLE_DISPLAY_NONE;
           aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
         } 

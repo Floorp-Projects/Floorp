@@ -206,12 +206,11 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsStyleList* list = (nsStyleList*)
-      aContext->GetMutableStyleData(eStyleStruct_List);
 
     // type: enum
     aAttributes->GetAttribute(nsHTMLAtoms::type, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsMutableStyleList list(aContext);
       list->mListStyleType = value.GetIntValue();
     }
   }

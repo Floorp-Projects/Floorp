@@ -273,7 +273,7 @@ BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
                            nsIPresContext* aPresContext)
 {
   // set up the basefont (defaults to 3)
-  nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+  nsMutableStyleFont font(aContext);
   PRInt32 scaler;
   aPresContext->GetFontScaler(&scaler);
   float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
@@ -295,9 +295,9 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
                        nsIPresContext* aPresContext)
 {
   if (mPart) {
-    nsStyleMargin* marginStyle = (nsStyleMargin*)(aContext->GetMutableStyleData(eStyleStruct_Margin));
+    nsMutableStyleMargin marginStyle(aContext);
 
-    if (nsnull != marginStyle) {
+    {
       nsHTMLValue   value;
       PRInt32       attrCount;
       float         p2t;
@@ -514,18 +514,12 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
 
   // get the context data for the background information
   PRBool bFixedBackground = PR_FALSE;
-  nsStyleColor* canvasStyleColor;
-  nsStyleColor* htmlStyleColor;
-  nsStyleColor* bodyStyleColor;
-  bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-  htmlStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
-  canvasStyleColor = (nsStyleColor*)canvasContext->GetMutableStyleData(eStyleStruct_Color);
-  nsStyleColor* styleColor = bodyStyleColor; // default to BODY
 
-  NS_ASSERTION(bodyStyleColor && htmlStyleColor && canvasStyleColor, "null context data");
-  if (!(bodyStyleColor && htmlStyleColor && canvasStyleColor)){
-    return NS_ERROR_FAILURE;
-  }
+  nsMutableStyleColor canvasStyleColor(canvasContext.get());
+  nsMutableStyleColor htmlStyleColor(parentContext.get());
+  nsMutableStyleColor bodyStyleColor(aContext);
+
+  nsStyleColor* styleColor = bodyStyleColor.get(); // default to BODY
 
   // Use the CSS precedence rules for dealing with background: if the value
   // of the 'background' property for the HTML element is different from
@@ -545,9 +539,9 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
     // if HTML background is not transparent then we use its background for the canvas,
     // otherwise we use the BODY's background
     if (!(htmlStyleColor->BackgroundIsTransparent())) {
-      styleColor = htmlStyleColor;
+      styleColor = htmlStyleColor.get();
     } else if (!(bodyStyleColor->BackgroundIsTransparent())) {
-      styleColor = bodyStyleColor;
+      styleColor = bodyStyleColor.get();
     } else {
       PRBool isPaginated = PR_FALSE;
       aPresContext->IsPaginated(&isPaginated);
@@ -575,7 +569,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
       canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
 
     // only reset the background values if we used something other than the default canvas style
-    if (styleColor == htmlStyleColor || styleColor == bodyStyleColor) {
+    if (styleColor == htmlStyleColor.get() || styleColor == bodyStyleColor.get()) {
       // reset the background values for the context that was propogated
       styleColor->mBackgroundImage.SetLength(0);
       styleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
@@ -589,7 +583,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
       // nsCSSStyleRule.cpp MapDeclarationColorInto)
     }
 
-    if (styleColor == bodyStyleColor) {
+    if (styleColor == bodyStyleColor.get()) {
       htmlStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
     }
   }
@@ -598,11 +592,11 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
   // use the nsStyleColor that we would have used before the fix to
   // bug 67478.
   nsStyleColor* documentStyleColor = styleColor;
-  if (bodyStyleColor != styleColor && htmlStyleColor != styleColor) {
+  if (bodyStyleColor.get() != styleColor && htmlStyleColor.get() != styleColor) {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_NavQuirks == mode)
-      documentStyleColor = bodyStyleColor;
+      documentStyleColor = bodyStyleColor.get();
   }
 
   nsCOMPtr<nsIPresShell> presShell;
@@ -883,8 +877,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::text, value);
     if ((eHTMLUnit_Color == value.GetUnit()) || 
         (eHTMLUnit_ColorName == value.GetUnit())){
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
+      nsMutableStyleColor color(aContext);
       color->mColor = value.GetColorValue();
     }
 

@@ -24,6 +24,7 @@
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -153,19 +154,20 @@ nsTableOuterFrame::AdjustZeroWidth()
 {
   // a 0 width table becomes auto
   PRBool makeAuto = PR_FALSE;
-  nsStylePosition* position = (nsStylePosition*)mStyleContext->GetMutableStyleData(eStyleStruct_Position);
-  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
-    if (0 >= position->mWidth.GetCoordValue()) {
+  nsStylePosition* posData = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  if (posData->mWidth.GetUnit() == eStyleUnit_Coord) {
+    if (0 >= posData->mWidth.GetCoordValue()) {
       makeAuto= PR_TRUE;
     }
   }
-  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
-    if (0.0f >= position->mWidth.GetPercentValue()) {
+  else if (posData->mWidth.GetUnit() == eStyleUnit_Percent) {
+    if (0.0f >= posData->mWidth.GetPercentValue()) {
       makeAuto= PR_TRUE;
     }
   }
 
   if (makeAuto) {
+    nsMutableStylePosition position(mStyleContext);
     position->mWidth = nsStyleCoord(eStyleUnit_Auto);
   }
   return NS_OK;

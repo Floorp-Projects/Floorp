@@ -19,9 +19,14 @@
  *
  * Contributor(s): 
  */
+
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 
+
+// If you add structures in that list, look for the comments tagged with
+// the string //#insert new style structs here# in "nsStyleContext.cpp".
+// You should also add a helper class in "nsIMutableStyleContext.h"
 enum nsStyleStructID {
   eStyleStruct_Font           = 1,
   eStyleStruct_Color          = 2,
@@ -40,12 +45,13 @@ enum nsStyleStructID {
 #ifdef INCLUDE_XUL
   eStyleStruct_XUL            = 15,
   eStyleStruct_Max            = eStyleStruct_XUL,
-  eStyleStruct_BorderPaddingShortcut = 16       // only for use in GetStyle()
 #else
   eStyleStruct_Max            = eStyleStruct_Outline,
-  eStyleStruct_BorderPaddingShortcut = 15       // only for use in GetStyle()
 #endif
+  eStyleStruct_BorderPaddingShortcut = 99       // only for use in GetStyle()
 };
+
+class nsIPresContext;
 
 struct nsStyleStruct {
 };
