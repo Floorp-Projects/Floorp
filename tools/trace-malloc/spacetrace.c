@@ -1232,7 +1232,7 @@ PRUint32 byteSize(STAllocation* aAlloc)
 ** Given an allocation, does a recalculation of Cost - weight, heapcount etc.
 ** and does the right thing to propogate the cost upwards.
 */
-int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation)
+int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool updateParent)
 {
     /*
     ** Now, see if they desire a callsite update.
@@ -1270,7 +1270,7 @@ int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation)
         ** This has positive effect of not updating realloc callsites
         **  with the same data over and over again.
         */
-        if(0 < aAllocation->mEventCount)
+        if(updateParent && 0 < aAllocation->mEventCount)
         {
             tmcallsite* callsite = aAllocation->mEvents[0].mCallsite;
             STRun* callsiteRun = NULL;
@@ -1381,7 +1381,7 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
             /*
             ** update allocation cost
             */
-            recalculateAllocationCost(aRun, aAllocation);
+            recalculateAllocationCost(aRun, aAllocation, PR_TRUE);
         }
         else
         {
@@ -1662,7 +1662,7 @@ int recalculateRunCost(STRun* aRun)
         current = aRun->mAllocations[traverse];
         if(NULL != current)
         {
-            recalculateAllocationCost(aRun, current);
+            recalculateAllocationCost(aRun, current, PR_TRUE);
         }
     }
 
@@ -5329,6 +5329,9 @@ int displayIndex(void)
     htmlAnchor("root_callsites.html", "Root Callsites", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
+    htmlAnchor("categories_summary.html", "Categories Report", NULL);
+
+    PR_fprintf(globals.mRequest.mFD, "\n<li>");
     htmlAnchor("top_callsites.html", "Top Callsites Report", NULL);
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
@@ -5436,6 +5439,35 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             tmcallsite** array = NULL;
             PRUint32 arrayCount = 0;
 
+            /*
+            ** We can get an argument to focus on a category. Take care of it.
+            */
+
+            if(globals.mRequest.mGetData && *globals.mRequest.mGetData)
+            {
+                char* categoryName = NULL;
+                int getRes = getDataString(globals.mRequest.mGetData, "mCategory", &categoryName, NULL);
+                STCategoryNode* node;
+                if (categoryName && *categoryName &&
+                    strcmp(categoryName, globals.mOptions.mCategoryName) &&
+                    (node = findCategoryNode(categoryName, &globals)))
+                {
+                    /*
+                    ** category has changed. Refocus.
+                    */
+                    recalculateRunCost(node->run);
+
+                    globals.mCache.mSortedRun = node->run;
+                    if (globals.mOptions.mCategoryName)
+                        free(globals.mOptions.mCategoryName);
+                    globals.mOptions.mCategoryName = categoryName;
+                }
+            }
+
+            /*
+            ** Display header after we figure out if we are going to focus
+            ** on a category.
+            */
             htmlHeader("SpaceTrace Top Callsites Report");
 
             if(0 < globals.mCache.mSortedRun->mAllocationCount)
@@ -5687,6 +5719,21 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             htmlFooter();
         }
 #endif /* WANT_QUIT */
+        else if(0 == strcmp("categories_summary.html", aFileName))
+        {
+            int displayRes = 0;
+
+            htmlHeader("Category Report");
+
+            displayRes = displayCategoryReport(&globals.mCategoryRoot, 1);
+            if(0 != displayRes)
+            {
+                retval = __LINE__;
+                REPORT_ERROR(__LINE__, displayMemoryLeaks);
+            }
+
+            htmlFooter();
+        }
         else
         {
             htmlNotFound();

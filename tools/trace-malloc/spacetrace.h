@@ -344,7 +344,7 @@ struct __struct_STCategoryNode
         PRUint32 nchildren;
 
         /*
-        ** For leaf nodes, the Run
+        ** The Run. Valid for both leaf and parent nodes.
         */
         STRun *run;
 };
@@ -653,9 +653,17 @@ extern int initCategories(STGlobals* g);
 extern int categorizeRun(const STRun* aRun, STGlobals* g);
 extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
-#endif /* spacetrace_h__ */
+extern int displayCategoryReport(STCategoryNode *root, int depth);
+
+extern int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
+extern void htmlHeader(const char* aTitle);
+extern void htmlFooter(void);
+extern void htmlAnchor(const char* aHref, const char* aText, const char* aTarget);
+
 
 /*
 ** shared globals
 */
 extern STGlobals globals;
+
+#endif /* spacetrace_h__ */
