@@ -8,6 +8,7 @@
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+
 <tree rdf:datasources="rdf:mailnews" onclick="return parent.parent.ChangeFolder(event.target.parentNode)">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
@@ -20,7 +21,7 @@
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</treecell>
+      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="resource:/res/samples/localMailHost.gif"/>Local Mail</treecell>
       </treeitem>
   </treebody>
 </tree>

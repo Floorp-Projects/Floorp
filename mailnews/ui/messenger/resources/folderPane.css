@@ -41,3 +41,10 @@ treehead treeitem treecell {
  color: black;
 } 
 
+treeitem > treecell > titledbutton {
+ list-style-image: url("resource:/res/samples/closedMailFolder.gif");
+}
+
+treeitem[open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/samples/openMailFolder.gif");
+}

@@ -52,3 +52,7 @@ icon {
  list-style-image: url(http://www.shadowland.org/client/images/ClosedRead.gif);
 }
 
+treeitem > treecell > titledbutton {
+ vertical-align: bottom;
+ list-style-image: url("resource:/res/samples/mailMessage.gif");
+}

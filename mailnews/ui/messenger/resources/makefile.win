@@ -37,6 +37,10 @@ install::
 	$(MAKE_INSTALL) shareglue.js	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) 3panemail.html 	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) messagePane.xul	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) closedMailFolder.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) openMailFolder.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) localMailHost.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) mailMessage.gif	$(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\res\samples\mailshell.xul
