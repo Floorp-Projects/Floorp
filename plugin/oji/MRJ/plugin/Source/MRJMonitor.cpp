@@ -112,3 +112,8 @@ void MRJMonitor::notifyAll()
 		env->MonitorExit(mMonitor);
 	}
 }
+
+jobject MRJMonitor::getObject()
+{
+	return mMonitor;
+}

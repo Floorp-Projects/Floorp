@@ -43,6 +43,8 @@ public:
 	virtual void wait(long long millis);
 	virtual void notify();
 	virtual void notifyAll();
+	
+	virtual jobject getObject();
 
 private:
 	MRJSession* mSession;
