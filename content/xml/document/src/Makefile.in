@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  necko \
 		  view \
+		  imglib2 \
 		  docshell \
 		  webshell \
 		  uriloader \
