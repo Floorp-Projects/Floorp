@@ -39,7 +39,6 @@ LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\msgbaseutil.lib		\
 	$(DIST)\lib\msgdb_s.lib			\
-	$(DIST)\lib\msgmork_s.lib		\
     $(LIBNSPR)						\
     $(DIST)\lib\plc3.lib			\
 	$(NULL)

@@ -28,12 +28,15 @@
 #include "nsString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
-
+#include "nsMorkCID.h"
+#include "nsIMdbFactoryFactory.h"
 #include "nsIMimeConverter.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleFactory.h"
+
+static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
 #if defined(XP_MAC) && defined(CompareString)
 	#undef CompareString
@@ -372,17 +375,12 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_NOINTERFACE;
 }   
 
-extern nsIMdbFactory *NS_NewIMdbFactory();
-
 /* static */ nsIMdbFactory *nsMsgDatabase::GetMDBFactory()
 {
-	static nsIMdbFactory *gMDBFactory = NULL;
+	static nsIMdbFactory *gMDBFactory = nsnull;
 	if (!gMDBFactory)
 	{
-		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
-#if 0
-        nsComponentManager::CreateInstance(
-#endif
+		nsresult rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
 	}
 	return gMDBFactory;
 }
