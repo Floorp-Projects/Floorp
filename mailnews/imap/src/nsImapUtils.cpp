@@ -507,19 +507,20 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
         }
         else 
         {
+			// this should be enough of a finish buffer - utf7 isn't changing, and it'll always be '-'
+		  char finishBuffer[20];
+		  PRInt32 finishSize = sizeof(finishBuffer);
+
           res = encoder->Convert(unicodeStr.GetUnicode(), &unicharLength, dstPtr, &dstLength);
+		  encoder->Finish(finishBuffer, &finishSize);
+		  finishBuffer[finishSize] = '\0';
           dstPtr[dstLength] = 0;
+		  strcat(dstPtr, finishBuffer);
         }
       }
-	  // ack, this is silly - why pass through unicodeStr2 back to convertedString?
       NS_IF_RELEASE(encoder);
-      nsString unicodeStr2(dstPtr);
-      convertedString = (char *) PR_Malloc(dstLength + 1);
-      if (convertedString)
-        unicodeStr2.ToCString(convertedString, dstLength + 1, 0);
         }
-    PR_FREEIF(dstPtr);
-    return convertedString;
+    return dstPtr;
 }
 
 
