@@ -1091,7 +1091,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	if (NS_SUCCEEDED(rv) || dialog) {
 		nsXPIDLString errorText;
         GetNewsStringByName("errorFromServer", getter_Copies(errorText));
-		nsAutoString combinedMsg = errorText;
+		nsAutoString combinedMsg = NS_STATIC_CAST(const PRUnichar*, errorText);
 		combinedMsg += m_responseText;
          rv = dialog->Alert(combinedMsg.GetUnicode());  
 		// XXX:  todo, check rv?
