@@ -55,6 +55,8 @@
 
 #include <gdk/gdkprivate.h>
 
+#include <gdk/gdkx.h>
+
 NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 
 static int gLastXError;
@@ -73,6 +75,8 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mInputAtom = do_GetAtom("input");
   mFocusedAtom = do_GetAtom("focused");
   mFirstTabAtom = do_GetAtom("first-tab");
+  mCurPosAtom = do_GetAtom("curpos");
+  mMaxPosAtom = do_GetAtom("maxpos");
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
 
@@ -155,6 +159,26 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   return attr.EqualsIgnoreCase("true"); // This handles the XUL case.
 }
 
+static PRInt32 CheckIntegerAttr(nsIFrame *aFrame, nsIAtom *aAtom)
+{
+  if (!aFrame)
+    return 0;
+
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if (!content)
+    return 0;
+
+  nsAutoString attr;
+  content->GetAttr(kNameSpaceID_None, aAtom, attr);
+  if (attr.IsEmpty())
+    return 0;
+
+  PRInt32 error;
+  PRInt32 retval = attr.ToInteger(&error);
+  return retval;
+}
+
 PRBool
 nsNativeThemeGTK::IsDisabled(nsIFrame* aFrame)
 {
@@ -177,24 +201,36 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 {
   if (aState) {
     if (!aFrame) {
-      aState->active = FALSE;
-      aState->focused = FALSE;
-      aState->inHover = FALSE;
-      aState->disabled = FALSE;
-      aState->isDefault = FALSE;
-      aState->canDefault = FALSE;
+      // reset the entire struct to zero
+      memset(aState, 0, sizeof(GtkWidgetState));
     } else {
       // for dropdown textfields, look at the parent frame (the textbox)
       if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
         aFrame->GetParent(&aFrame);
+
       PRInt32 eventState = GetContentState(aFrame);
+
       aState->active = (eventState & NS_EVENT_STATE_ACTIVE);
+
       if (aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
           aWidgetType == NS_THEME_RADIO_CONTAINER)
         aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
       else
         aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
+          aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
+        // for scrollbars we need to go up two to go from the thumb to
+        // the slider to the actual scrollbar object
+        nsIFrame *tmpFrame = aFrame;
+        tmpFrame->GetParent(&tmpFrame);
+        tmpFrame->GetParent(&tmpFrame);
+
+        aState->curpos = CheckIntegerAttr(tmpFrame, mCurPosAtom);
+        aState->maxpos = CheckIntegerAttr(tmpFrame, mMaxPosAtom);
+      }
+
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER);
       aState->disabled = IsDisabled(aFrame);
       aState->isDefault = FALSE; // XXX fix me
@@ -245,12 +281,16 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_BUTTON;
     break;
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK_VERTICAL;
+    break;
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK;
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL;
     break;
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_VERTICAL;
+    break;
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB;
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
     break;
   case NS_THEME_TOOLBAR_GRIPPER:
     aGtkWidgetType = MOZ_GTK_GRIPPER;
@@ -343,30 +383,38 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   nsTransform2D* transformMatrix;
   aContext->GetCurrentTransform(transformMatrix);
+
   nsRect tr(aRect);
   transformMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
   GdkRectangle gdk_rect = {tr.x, tr.y, tr.width, tr.height};
+
   nsRect cr(aClipRect);
   transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
   GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
 
-  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType), "Trying to render an unsafe widget!");
+  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
+               "Trying to render an unsafe widget!");
 
   gLastXError = 0;
   XErrorHandler oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+
   moz_gtk_widget_paint(gtkWidgetType, window, &gdk_rect, &gdk_clip, &state,
                        flags);
+
   gdk_flush();
   XSetErrorHandler(oldHandler);
+
   if (gLastXError) {
 #ifdef DEBUG
-    printf("GTK theme failed for widget type %d, error was %d, state was [active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-           aWidgetType, gLastXError, state.active, state.focused, state.inHover, state.disabled);
+    printf("GTK theme failed for widget type %d, error was %d, state was "
+           "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
+           aWidgetType, gLastXError, state.active, state.focused,
+           state.inHover, state.disabled);
 #endif
     NS_WARNING("GTK theme failed; disabling unsafe widget");
     SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
-    // force refresh of the window, because the widget was not successfully drawn
-    // it must be redrawn using the default look
+    // force refresh of the window, because the widget was not
+    // successfully drawn it must be redrawn using the default look
     RefreshWidgetWindow(aFrame);
   }
 

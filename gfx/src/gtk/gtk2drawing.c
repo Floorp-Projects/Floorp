@@ -56,7 +56,8 @@ static GtkWidget* gButtonWidget;
 static GtkWidget* gProtoWindow;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
-static GtkWidget* gScrollbarWidget;
+static GtkWidget* gHorizScrollbarWidget;
+static GtkWidget* gVertScrollbarWidget;
 static GtkWidget* gEntryWidget;
 static GtkWidget* gArrowWidget;
 static GtkWidget* gDropdownButtonWidget;
@@ -125,9 +126,13 @@ ensure_radiobutton_widget()
 static gint
 ensure_scrollbar_widget()
 {
-    if (!gScrollbarWidget) {
-        gScrollbarWidget = gtk_vscrollbar_new(NULL);
-        setup_widget_prototype(gScrollbarWidget);
+    if (!gVertScrollbarWidget) {
+        gVertScrollbarWidget = gtk_vscrollbar_new(NULL);
+        setup_widget_prototype(gVertScrollbarWidget);
+    }
+    if (!gHorizScrollbarWidget) {
+        gHorizScrollbarWidget = gtk_hscrollbar_new(NULL);
+        setup_widget_prototype(gHorizScrollbarWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -435,9 +440,17 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GdkRectangle button_rect;
     GdkRectangle arrow_rect;
     GtkStyle* style;
+    GtkAdjustment *adj;
+    GtkScrollbar *scrollbar;
 
     ensure_scrollbar_widget();
-    style = gScrollbarWidget->style;
+
+    if (type < 2)
+        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
+    else
+        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
+
+    style = GTK_WIDGET(scrollbar)->style;
 
     ensure_arrow_widget();
   
@@ -445,7 +458,8 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     TSOffsetStyleGCs(style, button_rect.x, button_rect.y);
 
     gtk_paint_box(style, drawable, state_type, shadow_type, cliprect,
-                  gScrollbarWidget, (type < 2) ? "vscrollbar" : "hscrollbar",
+                  GTK_WIDGET(scrollbar),
+                  (type < 2) ? "vscrollbar" : "hscrollbar",
                   button_rect.x, button_rect.y, button_rect.width,
                   button_rect.height);
 
@@ -456,7 +470,7 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         (button_rect.height - arrow_rect.height) / 2;  
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gScrollbarWidget, (type < 2) ?
+                    GTK_WIDGET(scrollbar), (type < 2) ?
                     "vscrollbar" : "hscrollbar", 
                     type, TRUE, arrow_rect.x, arrow_rect.y, arrow_rect.width,
                     arrow_rect.height);
@@ -465,13 +479,21 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_scrollbar_trough_paint(GdkDrawable* drawable, GdkRectangle* rect,
+moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
+                               GdkDrawable* drawable, GdkRectangle* rect,
                                GdkRectangle* cliprect, GtkWidgetState* state)
 {
     GtkStyle* style;
+    GtkScrollbar *scrollbar;
 
     ensure_scrollbar_widget();
-    style = gScrollbarWidget->style;
+
+    if (widget ==  MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL)
+        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
+    else
+        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
+
+    style = GTK_WIDGET(scrollbar)->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_style_apply_default_background(style, drawable, TRUE, GTK_STATE_ACTIVE,
@@ -479,12 +501,12 @@ moz_gtk_scrollbar_trough_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                        rect->width, rect->height);
 
     gtk_paint_box(style, drawable, GTK_STATE_ACTIVE, GTK_SHADOW_IN, cliprect,
-                  gScrollbarWidget, "trough", rect->x, rect->y,  rect->width,
-                  rect->height);
+                  GTK_WIDGET(scrollbar), "trough", rect->x, rect->y,
+                  rect->width, rect->height);
 
     if (state->focused) {
         gtk_paint_focus(style, drawable, GTK_STATE_ACTIVE, cliprect,
-                        gScrollbarWidget, "trough",
+                        GTK_WIDGET(scrollbar), "trough",
                         rect->x, rect->y, rect->width, rect->height);
     }
 
@@ -492,22 +514,55 @@ moz_gtk_scrollbar_trough_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_scrollbar_thumb_paint(GdkDrawable* drawable, GdkRectangle* rect,
+moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
+                              GdkDrawable* drawable, GdkRectangle* rect,
                               GdkRectangle* cliprect, GtkWidgetState* state)
 {
     GtkStateType state_type = (state->inHover || state->active) ?
         GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
     GtkStyle* style;
+    GtkScrollbar *scrollbar;
+    GtkAdjustment *adj;
 
     ensure_scrollbar_widget();
-    style = gScrollbarWidget->style;
+
+    if (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL)
+        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
+    else
+        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
+
+    /* Make sure to set the scrollbar range before painting so that
+       everything is drawn properly.  At least the bluecurve (and
+       maybe other) themes don't draw the top or bottom black line
+       surrounding the scrollbar if the theme thinks that it's butted
+       up against the scrollbar arrows.  Note the increases of the
+       clip rect below. */
+    adj = gtk_range_get_adjustment(GTK_RANGE(scrollbar));
+
+    if (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) {
+        cliprect->x -= 1;
+        cliprect->width += 2;
+        adj->page_size = rect->width;
+    }
+    else {
+        cliprect->y -= 1;
+        cliprect->height += 2;
+        adj->page_size = rect->height;
+    }
+
+    adj->lower = 0;
+    adj->value = state->curpos;
+    adj->upper = state->maxpos;
+    gtk_adjustment_changed(adj);
+
+    style = GTK_WIDGET(scrollbar)->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
     gtk_paint_slider(style, drawable, state_type, GTK_SHADOW_OUT, cliprect,
-                     gScrollbarWidget, "slider", rect->x, rect->y,
+                     GTK_WIDGET(scrollbar), "slider", rect->x, rect->y,
                      rect->width,  rect->height,
-                     (rect->width >= rect->height) ?
+                     (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
                      GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL);
 
     return MOZ_GTK_SUCCESS;
@@ -617,7 +672,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     real_arrow_rect.y = floor (arrow_rect.y + ((arrow_rect.height - real_arrow_rect.height) / 2) + 0.5);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gHorizScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,
                     real_arrow_rect.width, real_arrow_rect.height);
 
@@ -895,8 +950,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCROLLBAR_BUTTON:
-    case MOZ_GTK_SCROLLBAR_TRACK:
-    case MOZ_GTK_SCROLLBAR_THUMB:
+    case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
+    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_PROGRESS_CHUNK:
@@ -951,27 +1008,27 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
     ensure_scrollbar_widget();
 
     if (slider_width) {
-        gtk_widget_style_get (gScrollbarWidget, "slider-width",
+        gtk_widget_style_get (gHorizScrollbarWidget, "slider-width",
                               slider_width, NULL);
     }
 
     if (trough_border) {
-        gtk_widget_style_get (gScrollbarWidget, "trough-border",
+        gtk_widget_style_get (gHorizScrollbarWidget, "trough-border",
                               trough_border, NULL);
     }
 
     if (stepper_size) {
-        gtk_widget_style_get (gScrollbarWidget, "stepper-size",
+        gtk_widget_style_get (gHorizScrollbarWidget, "stepper-size",
                               stepper_size, NULL);
     }
 
     if (stepper_spacing) {
-        gtk_widget_style_get (gScrollbarWidget, "stepper-spacing",
+        gtk_widget_style_get (gHorizScrollbarWidget, "stepper-spacing",
                               stepper_spacing, NULL);
     }
 
     if (min_slider_size) {
-        *min_slider_size = GTK_RANGE(gScrollbarWidget)->min_slider_size;
+        *min_slider_size = GTK_RANGE(gHorizScrollbarWidget)->min_slider_size;
     }
 
     return MOZ_GTK_SUCCESS;
@@ -998,11 +1055,15 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_scrollbar_button_paint(drawable, rect, cliprect,
                                               state, (GtkArrowType) flags);
         break;
-    case MOZ_GTK_SCROLLBAR_TRACK:
-        return moz_gtk_scrollbar_trough_paint(drawable, rect, cliprect, state);
+    case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
+        return moz_gtk_scrollbar_trough_paint(widget, drawable, rect,
+                                              cliprect, state);
         break;
-    case MOZ_GTK_SCROLLBAR_THUMB:
-        return moz_gtk_scrollbar_thumb_paint(drawable, rect, cliprect, state);
+    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
+        return moz_gtk_scrollbar_thumb_paint(widget, drawable, rect,
+                                             cliprect, state);
         break;
     case MOZ_GTK_GRIPPER:
         return moz_gtk_gripper_paint(drawable, rect, cliprect, state);
