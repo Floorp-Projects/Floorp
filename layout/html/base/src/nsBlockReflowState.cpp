@@ -45,8 +45,6 @@
 #include "nsITextContent.h"
 #include "nsStyleChangeList.h"
 
-// XXX for IsEmptyLine
-#include "nsTextFragment.h"
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 
@@ -985,6 +983,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
   }
 
+#ifdef BLOCK_DOES_FIRST_LINE
   // It is possible that we just acquired first-line style. See if
   // this is the case, and if so, fix things up.
   if (0 == (NS_BLOCK_HAS_FIRST_LINE_STYLE & mState)) {
@@ -1005,6 +1004,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
     }
   }
+#endif
   return rv;
 }
 
@@ -2185,7 +2185,6 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   // Setup the line-layout for the new line
   aState.mCurrentLine = aLine;
   aLine->ClearDirty();
-  aLine->SetNeedDidReflow();
 
   // Now that we know what kind of line we have, reflow it
   nsRect  oldCombinedArea = aLine->mCombinedArea;
@@ -2643,38 +2642,6 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   return PR_FALSE;
 }
 
-#if 0
-      const nsStyleText* styleText;
-      GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
-      if ((NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
-          (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)) {
-        // Since whitespace is significant, we know that the paragraph
-        // is not empty (even if it has no text in it because it has
-        return PR_FALSE;
-
-static PRBool
-IsEmptyHTMLParagraph(nsIFrame* aFrame)
-{
-  nsBlockFrame* bf;
-  if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID, (void**)&bf)) &&
-      nsBlockReflowContext::IsHTMLParagraph(aFrame)) {
-    if (!bf->mLines) {
-      // It's an html paragraph and it's empty
-      return PR_TRUE;
-    }
-
-    nsLineBox* line = bf->mLines;
-    while (line) {
-      if (!IsEmptyLine(line)) {
-        return PR_FALSE;
-      }
-      line = line->mNext;
-    }
-  }
-  return PR_FALSE;
-}
-#endif
-
 nsIFrame*
 nsBlockFrame::GetTopBlockChild()
 {
@@ -3071,6 +3038,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                               availWidth, availHeight,
                               impactedByFloaters,
                               PR_FALSE /*XXX isTopOfPage*/);
+
+  // XXX Unfortunately we need to know this before reflowing the first
+  // inline frame in the line. FIX ME.
   if ((0 == aLineLayout.GetLineNumber()) &&
       (NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState)) {
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
@@ -3287,10 +3257,13 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     // line and don't stop the line reflow...
     PRBool splitLine = !reflowingFirstLetter;
     if (reflowingFirstLetter) {
+#ifdef BLOCK_DOES_FIRST_LINE
       if (aLine->IsFirstLine()) {
         splitLine = PR_TRUE;
       }
-      else {
+      else
+#endif
+      {
         nsIAtom* frameType;
         if (NS_SUCCEEDED(aFrame->GetFrameType(&frameType)) && frameType) {
           if (frameType == nsLayoutAtoms::inlineFrame) {
@@ -3391,7 +3364,9 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
       aLine->mNext = to;
     }
     to->SetIsBlock(aLine->IsBlock());
+#ifdef BLOCK_DOES_FIRST_LINE
     to->SetIsFirstLine(aLine->IsFirstLine());
+#endif
     aLine->mChildCount -= pushCount;
 
     // Let line layout know that some frames are no longer part of its
@@ -3656,20 +3631,6 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     aLine->mMaxElementWidth = aMaxElementSize.width;
   }
 
-#if XXX_need_line_outside_children
-  // Compute LINE_OUTSIDE_CHILDREN state for this line. The bit is set
-  // if any child frame has outside children.
-  if ((aLine->mCombinedArea.x < aLine->mBounds.x) ||
-      (aLine->mCombinedArea.XMost() > aLine->mBounds.XMost()) ||
-      (aLine->mCombinedArea.y < aLine->mBounds.y) ||
-      (aLine->mCombinedArea.YMost() > aLine->mBounds.YMost())) {
-    aLine->SetOutsideChildren();
-  }
-  else {
-    aLine->ClearOutsideChildren();
-  }
-#endif
-
   // Update xmost
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
@@ -3847,6 +3808,7 @@ nsBlockFrame::LastChild()
   return nsnull;
 }
 
+#ifdef BLOCK_DOES_FIRST_LINE
 nsresult
 nsBlockFrame::WrapFramesInFirstLineFrame(nsIPresContext* aPresContext)
 {
@@ -3938,6 +3900,7 @@ nsBlockFrame::WrapFramesInFirstLineFrame(nsIPresContext* aPresContext)
 
   return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
@@ -3963,12 +3926,14 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
   nsLineBox* lastLine = nsLineBox::LastLine(mLines);
   if (lastLine) {
     lastKid = lastLine->LastChild();
+#ifdef BLOCK_DOES_FIRST_LINE
     if (lastLine->IsFirstLine()) {
       // Get last frame in the nsFirstLineFrame
       lastKid->FirstChild(nsnull, &lastKid);
       nsFrameList frames(lastKid);
       lastKid = frames.LastChild();
     }
+#endif
   }
 
   // Add frames after the last child
@@ -4058,6 +4023,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
   nsLineBox* prevSibLine = nsnull;
   PRInt32 prevSiblingIndex = -1;
   if (aPrevSibling) {
+#ifdef BLOCK_DOES_FIRST_LINE
     // Its possible we have an nsFirstLineFrame managing some of our
     // child frames. If we do and the AddFrames is targetted at it,
     // use AddFirstLineFrames to get the frames properly placed.
@@ -4079,7 +4045,9 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
                                 (nsFirstLineFrame*)prevSiblingParent,
                                 aFrameList, aPrevSibling);
     }
-    else {
+    else
+#endif
+    {
       // Find the line that contains the previous sibling
       prevSibLine = nsLineBox::FindLineContaining(mLines, aPrevSibling,
                                                   &prevSiblingIndex);
@@ -4091,12 +4059,14 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
       }
     }
   }
+#ifdef BLOCK_DOES_FIRST_LINE
   else if (mLines && mLines->IsFirstLine()) {
     mLines->MarkDirty();
     return AddFirstLineFrames(aPresContext,
                               (nsFirstLineFrame*)mLines->mFirstChild,
                               aFrameList, nsnull);
   }
+#endif
 
   // Find the frame following aPrevSibling so that we can join up the
   // two lists of frames.
@@ -4168,20 +4138,22 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     aPrevSibling->SetNextSibling(prevSiblingNextFrame);
   }
 
+#ifdef BLOCK_DOES_FIRST_LINE
   // Fixup any frames that should be in a first-line frame but aren't
   if ((NS_BLOCK_HAS_FIRST_LINE_STYLE & mState) &&
       (nsnull != mLines) && !mLines->IsBlock()) {
     // We just added one or more frame(s) to the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
+#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
 #endif
-  MarkEmptyLines(aPresContext);
   return NS_OK;
 }
 
+#ifdef BLOCK_DOES_FIRST_LINE
 nsresult
 nsBlockFrame::AddFirstLineFrames(nsIPresContext* aPresContext,
                                  nsFirstLineFrame* aLineFrame,
@@ -4310,6 +4282,7 @@ nsBlockFrame::TakeKidsFromLineFrame(nsFirstLineFrame* aLineFrame,
 
   return kids.FirstChild();
 }
+#endif
 
 void
 nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
@@ -4404,12 +4377,14 @@ nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
 {
+#ifdef BLOCK_DOES_FIRST_LINE
   nsIFrame* parent;
   aDeletedFrame->GetParent(&parent);
   if (parent != this) {
     return RemoveFirstLineFrame(aPresContext, (nsFirstLineFrame*)parent,
                                 aDeletedFrame);
   }
+#endif
 
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
@@ -4446,6 +4421,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
   while (nsnull != aDeletedFrame) {
     while ((nsnull != line) && (nsnull != aDeletedFrame)) {
 #ifdef NS_DEBUG
+#ifndef BLOCK_DOES_FIRST_LINE
+      nsIFrame* parent;
+#endif
       aDeletedFrame->GetParent(&parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
       NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
@@ -4547,6 +4525,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     }
   }
 
+#ifdef BLOCK_DOES_FIRST_LINE
   // Fixup any frames that should be in a first-line frame but aren't
   if ((NS_BLOCK_HAS_FIRST_LINE_STYLE & mState) &&
       (nsnull != mLines) && !mLines->IsBlock()) {
@@ -4554,14 +4533,15 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     // removed a block that preceeded the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
+#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
 #endif
-  MarkEmptyLines(aPresContext);
   return NS_OK;
 }
 
+#ifdef BLOCK_DOES_FIRST_LINE
 nsresult
 nsBlockFrame::RemoveFirstLineFrame(nsIPresContext* aPresContext,
                                    nsFirstLineFrame* aLineFrame,
@@ -4596,106 +4576,7 @@ nsBlockFrame::RemoveFirstLineFrame(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
-
-static PRBool
-IsEmptyLine(nsIPresContext* aPresContext, nsLineBox* aLine)
-{
-  PRInt32 i, n = aLine->ChildCount();
-  nsIFrame* frame = aLine->mFirstChild;
-  for (i = 0; i < n; i++) {
-    nsIContent* content;
-    nsresult rv = frame->GetContent(&content);
-    if (NS_FAILED(rv) || (nsnull == content)) {
-      // If it doesn't have any content then this can't be an empty line
-      return PR_FALSE;
-    }
-    nsITextContent* tc;
-    rv = content->QueryInterface(kITextContentIID, (void**) &tc);
-    if (NS_FAILED(rv) || (nsnull == tc)) {
-      // If it's not text content then this can't be an empty line
-      NS_RELEASE(content);
-      return PR_FALSE;
-    }
-
-    const nsTextFragment* frag;
-    PRInt32 numFrags;
-    rv = tc->GetText(frag, numFrags);
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(content);
-      NS_RELEASE(tc);
-      return PR_FALSE;
-    }
-
-    // If the text has any non-whitespace characters in it then the
-    // line is not an empty line.
-    while (--numFrags >= 0) {
-      PRInt32 len = frag->GetLength();
-      if (frag->Is2b()) {
-        const PRUnichar* cp = frag->Get2b();
-        const PRUnichar* end = cp + len;
-        while (cp < end) {
-          PRUnichar ch = *cp++;
-          if (!XP_IS_SPACE(ch)) {
-            NS_RELEASE(tc);
-            NS_RELEASE(content);
-            return PR_FALSE;
-          }
-        }
-      }
-      else {
-        const char* cp = frag->Get1b();
-        const char* end = cp + len;
-        while (cp < end) {
-          char ch = *cp++;
-          if (!XP_IS_SPACE(ch)) {
-            NS_RELEASE(tc);
-            NS_RELEASE(content);
-            return PR_FALSE;
-          }
-        }
-      }
-      frag++;
-    }
-
-    NS_RELEASE(tc);
-    NS_RELEASE(content);
-    frame->GetNextSibling(&frame);
-  }
-  return PR_TRUE;
-}
-
-void
-nsBlockFrame::MarkEmptyLines(nsIPresContext* aPresContext)
-{
-  // PRE-formatted content considers whitespace significant
-  const nsStyleText* text;
-  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
-  if ((NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) ||
-      (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == text->mWhiteSpace)) {
-    return;
-  }
-
-  PRBool afterBlock = PR_TRUE;
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
-    if (line->IsBlock()) {
-      afterBlock = PR_TRUE;
-    }
-    else if (afterBlock) {
-      afterBlock = PR_FALSE;
-
-      // This is an inline line and it is immediately after a block
-      // (or its our first line). See if it contains nothing but
-      // collapsible text.
-      PRBool isEmpty = IsEmptyLine(aPresContext, line);
-      line->SetIsEmptyLine(isEmpty);
-    }
-    else {
-      line->SetIsEmptyLine(PR_FALSE);
-    }
-    line = line->mNext;
-  }
-}
+#endif
 
 void
 nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
@@ -5609,6 +5490,40 @@ nsBlockFrame::VerifyTree() const
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  PRUint32 sum = sizeof(*this);
+
+  // Add in size of each line object
+  nsLineBox* line = mLines;
+  while (line) {
+    sum += sizeof(nsLineBox);
+    line = line->mNext;
+  }
+  line = mOverflowLines;
+  while (line) {
+    sum += sizeof(nsLineBox);
+    line = line->mNext;
+  }
+
+  // Add in text-run data
+  nsTextRun* runs = mTextRuns;
+  while (runs) {
+    PRUint32 runSize;
+    runs->SizeOf(aHandler, &runSize);
+    sum += runSize;
+    runs = runs->GetNext();
+  }
+
+  *aResult = sum;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
@@ -5643,6 +5558,7 @@ nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
   return fls;
 }
 
+#ifdef BLOCK_DOES_FIRST_LINE
 nsIStyleContext*
 nsBlockFrame::GetFirstLineStyle(nsIPresContext* aPresContext)
 {
@@ -5652,6 +5568,7 @@ nsBlockFrame::GetFirstLineStyle(nsIPresContext* aPresContext)
                                            mStyleContext, PR_FALSE, &fls);
   return fls;
 }
+#endif
 
 NS_IMETHODIMP
 nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
@@ -5677,6 +5594,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
         NS_RELEASE(firstLetterStyle);
       }
 
+#ifdef BLOCK_DOES_FIRST_LINE
       nsIStyleContext* firstLineStyle = GetFirstLineStyle(&aPresContext);
       if (nsnull != firstLineStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LINE_STYLE;
@@ -5686,6 +5604,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #endif
         NS_RELEASE(firstLineStyle);
       }
+#endif
     }
 
     rv = AddFrames(&aPresContext, aChildList, nsnull);
@@ -6238,9 +6157,15 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
       if (line->IsBlock()) {
         seenBlock = PR_TRUE;
       }
-      if (line->IsFirstLine() || line->IsBlock()) {
+#ifdef BLOCK_DOES_FIRST_LINE
+      if (line->IsFirstLine()) {
         NS_ASSERTION(1 == line->mChildCount, "bad first line");
       }
+#endif
+      if (line->IsBlock()) {
+        NS_ASSERTION(1 == line->mChildCount, "bad first line");
+      }
+#ifdef BLOCK_DOES_FIRST_LINE
       if (NS_BLOCK_HAS_FIRST_LINE_STYLE & mState) {
         if (seenBlock) {
           NS_ASSERTION(!line->IsFirstLine(), "bad first line");
@@ -6249,6 +6174,7 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
           NS_ASSERTION(line->IsFirstLine(), "bad first line");
         }
       }
+#endif
     }
     NS_ASSERTION(line->mChildCount < MAX_LINE_COUNT, "bad line child count");
     count += line->mChildCount;

@@ -451,3 +451,14 @@ nsAreaFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Area", aResult);
 }
+
+NS_IMETHODIMP
+nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    nsBlockFrame::SizeOf(aHandler, aResult);
+    *aResult += sizeof(*this) - sizeof(nsBlockFrame);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}

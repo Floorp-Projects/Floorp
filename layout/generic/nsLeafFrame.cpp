@@ -126,3 +126,13 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsLeafFrame::SizeOf(nsISizeOfHandler* aHandler,
+                    PRUint32* aResult) const
+{
+  if (aResult) {
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}

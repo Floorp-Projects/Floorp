@@ -26,7 +26,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 {
   mFirstChild = aFrame;
   mChildCount = aCount;
-  mState = LINE_IS_DIRTY | LINE_NEED_DID_REFLOW | flags;
+  mState = LINE_IS_DIRTY | flags;
   mFloaters = nsnull;
   mNext = nsnull;
   mBounds.SetRect(0,0,0,0);

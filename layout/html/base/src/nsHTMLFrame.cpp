@@ -89,6 +89,7 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   // XXX Temporary hack...
   NS_IMETHOD SetRect(const nsRect& aRect);
@@ -449,4 +450,14 @@ NS_IMETHODIMP
 RootFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Root", aResult);
+}
+
+NS_IMETHODIMP
+RootFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = sizeof(*this);
+  return NS_OK;
 }

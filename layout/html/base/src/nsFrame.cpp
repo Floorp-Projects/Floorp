@@ -1587,6 +1587,16 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
 }
 
 NS_IMETHODIMP
+nsFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
 nsFrame::VerifyTree() const
 {
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");

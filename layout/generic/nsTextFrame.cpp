@@ -227,6 +227,8 @@ public:
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
                          nscoord         aXCoord,
                          nsIContent **   aNewContent,
@@ -3069,6 +3071,16 @@ nsTextFrame::GetFrameType(nsIAtom** aType) const
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = nsLayoutAtoms::textFrame; 
   NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = sizeof(*this);
   return NS_OK;
 }
 

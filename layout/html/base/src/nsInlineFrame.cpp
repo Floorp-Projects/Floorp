@@ -1240,6 +1240,20 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   }
   DrainOverflow(&aPresContext);
 
+  if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
+#ifdef DEBUG_kipp
+    {
+      extern char* nsPresShell_ReflowStackPointerTop;
+      char marker;
+      char* newsp = (char*) &marker;
+      printf("XXX: frame tree is too deep; approx stack size = %d\n",
+             nsPresShell_ReflowStackPointerTop - newsp);
+    }
+#endif
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
   // Set our own reflow state (additional state above and beyond
   // aReflowState)
   InlineReflowState irs;
@@ -1472,6 +1486,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
 
+#ifdef DEBUG_kipp
     // Note: we use the actual font height for sizing our selves
     // instead of the computed font height. On systems where they
     // disagree the actual font height is more appropriate. This
@@ -1484,6 +1499,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
       if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
         useComputedHeight = PR_TRUE;
       }
+      firstTime = 0;
     }
 #endif
     if (useComputedHeight) {
@@ -1505,6 +1521,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
         aMetrics.height = computedHeight;
       }
     }
+#endif /* DEBUG_kipp */
     NS_RELEASE(fm);
   }
 
@@ -1892,8 +1909,16 @@ nsFirstLineFrame::AppendFrames(nsIPresContext& aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aFrameList)
 {
+#ifdef BLOCK_DOES_FIRST_LINE
   return mParent->AppendFrames(aPresContext, aPresShell, aListName,
                                aFrameList);
+#else
+  nsresult rv = nsInlineFrame::AppendFrames(aPresContext, aPresShell,
+                                            aListName, aFrameList);
+//  nsFrameList frames(aFrameList);
+//  ReResolveChildList(&aPresContext, mStyleContext, frames);
+  return rv;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1903,8 +1928,16 @@ nsFirstLineFrame::InsertFrames(nsIPresContext& aPresContext,
                                nsIFrame*       aPrevFrame,
                                nsIFrame*       aFrameList)
 {
+#ifdef BLOCK_DOES_FIRST_LINE
   return mParent->InsertFrames(aPresContext, aPresShell, aListName,
                                aPrevFrame, aFrameList);
+#else
+  nsresult rv = nsInlineFrame::InsertFrames(aPresContext, aPresShell,
+                                            aListName, aPrevFrame, aFrameList);
+//  nsFrameList frames(aFrameList);
+//  ReResolveChildList(&aPresContext, mStyleContext, frames);
+  return rv;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1913,10 +1946,17 @@ nsFirstLineFrame::RemoveFrame(nsIPresContext& aPresContext,
                               nsIAtom*        aListName,
                               nsIFrame*       aOldFrame)
 {
+#ifdef BLOCK_DOES_FIRST_LINE
   return mParent->RemoveFrame(aPresContext, aPresShell, aListName,
                               aOldFrame);
+#else
+  nsresult rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell,
+                                           aListName, aOldFrame);
+  return rv;
+#endif
 }
 
+#ifdef BLOCK_DOES_FIRST_LINE
 nsresult
 nsFirstLineFrame::AppendFrames2(nsIPresContext* aPresContext,
                                 nsIFrame*       aFrameList)
@@ -1952,9 +1992,10 @@ nsFirstLineFrame::RemoveFrame2(nsIPresContext* aPresContext,
   mFrames.RemoveFrame(aOldFrame);
   return NS_OK;
 }
+#endif
 
 void
-nsFirstLineFrame::RemoveFramesFrom(nsIFrame* aFrame)
+nsFirstLineFrame::StealFramesFrom(nsIFrame* aFrame)
 {
   nsIFrame* prevFrame = mFrames.GetPrevSiblingFor(aFrame);
   if (prevFrame) {
@@ -2137,4 +2178,15 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::SizeOf(nsISizeOfHandler* aHandler,
+                                PRUint32* aResult) const
+{
+  if (aResult) {
+    *aResult = sizeof(*this);
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
 }

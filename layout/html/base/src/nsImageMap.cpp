@@ -78,7 +78,7 @@ public:
   const nsString& GetAltText() const { return mAltText; }
   PRBool GetSuppress() const { return mSuppressFeedback; }
 
-  virtual void SizeOf(nsISizeOfHandler* aHandler) const;
+  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   nsString mBase;
   nsString mHREF;
@@ -106,15 +106,18 @@ Area::~Area()
 }
 
 void
-Area::SizeOf(nsISizeOfHandler* aHandler) const
+Area::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  aHandler->Add(sizeof(*this));
-  aHandler->Add((size_t) (- ((PRInt32)sizeof(nsString) * 4) ) );
-  mBase.SizeOf(aHandler);
-  mHREF.SizeOf(aHandler);
-  mTarget.SizeOf(aHandler);
-  mAltText.SizeOf(aHandler);
-  aHandler->Add(mNumCoords * sizeof(nscoord));
+  if (aResult) {
+    PRUint32 sum = sizeof(*this);
+    PRUint32 s;
+    mBase.SizeOf(aHandler, &s);         sum += s;
+    mHREF.SizeOf(aHandler, &s);         sum += s;
+    mTarget.SizeOf(aHandler, &s);       sum += s;
+    mAltText.SizeOf(aHandler, &s);      sum += s;
+    sum += mNumCoords * sizeof(nscoord);
+    *aResult = sum;
+  }
 }
 
 #include <stdlib.h>
@@ -1131,4 +1134,20 @@ NS_IMETHODIMP
 nsImageMap::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
+}
+
+void
+nsImageMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (aResult) {
+    PRUint32 sum = sizeof(*this);
+    PRInt32 i, n = mAreas.Count();
+    for (i = 0; i < n; i++) {
+      Area* area = (Area*) mAreas.ElementAt(i);
+      PRUint32 areaSize;
+      area->SizeOf(aHandler, &areaSize);
+      sum += areaSize;
+    }
+    *aResult = sum;
+  }
 }

@@ -82,6 +82,7 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
   /** return the index of the column the col represents.  always >= 0 */
   virtual PRInt32 GetColumnIndex ();

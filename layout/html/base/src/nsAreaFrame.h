@@ -104,6 +104,8 @@ public:
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+
   // nsIAreaFrame
   NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
 

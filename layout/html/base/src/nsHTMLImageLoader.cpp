@@ -372,3 +372,17 @@ nsHTMLImageLoader::GetLoadStatus() const
   }
   return loadStatus;
 }
+
+// Note: this doesn't factor in:
+// -- the mBaseURL (it might be shared)
+// -- the mFrame (that will be counted elsewhere most likely)
+// -- the mClosure (we don't know what type it is)
+// -- the mImageLoader (it might be shared)
+PRUint32
+nsHTMLImageLoader::GetDataSize() const
+{
+  PRUint32 sum = sizeof(*this);
+  sum += sizeof(PRUnichar) * mURLSpec.Length() +
+    sizeof(PRUnichar) * mURL.Length();
+  return sum;
+}
