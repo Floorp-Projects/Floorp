@@ -234,6 +234,21 @@ NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
 
 //-------------------------------------------------------------------------
 //
+// Set this window's title
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
+{
+	Str255 title;
+	title[0] = aTitle.Length();
+	aTitle.ToCString((char*)title + 1, sizeof(title) - 1);
+	::SetWTitle(mWindowPtr, title);
+	return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
 // Handle OS events
 //
 //-------------------------------------------------------------------------
