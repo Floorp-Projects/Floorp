@@ -476,7 +476,7 @@ Rights Reserved.
 <!ENTITY folderContextRemove.accesskey "D">
 <!ENTITY folderContextCompact.label "Compact This Folder">
 <!ENTITY folderContextCompact.accesskey "t">
-<!ENTITY folderContextEmptyTrash.label "Empty Trash Can">
+<!ENTITY folderContextEmptyTrash.label "Empty Trash">
 <!ENTITY folderContextEmptyTrash.accesskey "y">
 <!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
 <!ENTITY folderContextSendUnsentMessages.accesskey "d">
