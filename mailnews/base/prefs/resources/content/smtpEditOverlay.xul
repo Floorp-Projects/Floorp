@@ -68,7 +68,7 @@
                       <hbox pack="end"><label value="&serverPort.label;" accesskey="&serverPort.accesskey;" control="smtp.port"/>
                       </hbox>
 
-                      <hbox>
+                      <hbox align="center">
                           <textbox id="smtp.port" size="4"
                                    preftype="int"
                                    prefstring="mail.smtpserver.%serverkey%.port"/>
