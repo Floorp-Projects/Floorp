@@ -26,7 +26,7 @@
  */
 
 #include "nsIRDFCursor.h"
-#include "nsIRDFDataBase.h"
+#include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"

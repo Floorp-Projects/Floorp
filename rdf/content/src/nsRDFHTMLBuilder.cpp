@@ -26,10 +26,10 @@
  */
 
 #include "nsIDocument.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
-#include "nsIRDFDataBase.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -55,7 +55,7 @@ class RDFHTMLBuilderImpl : public nsIRDFContentModelBuilder
 {
 private:
     nsIRDFDocument* mDocument;
-    nsIRDFDataBase* mDB;
+    nsIRDFCompositeDataSource* mDB;
 
 public:
     RDFHTMLBuilderImpl();

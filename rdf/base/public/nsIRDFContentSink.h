@@ -29,8 +29,7 @@
 
 #include "nsIXMLContentSink.h"
 class nsIDocument;
-class nsIRDFDataSource;
-class nsIRDFXMLDocument;
+class nsIRDFXMLDataSource;
 class nsINameSpaceManager;
 class nsIURL;
 
@@ -52,14 +51,12 @@ public:
     /**
      * Set the content sink's RDF Data source
      */
-    NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource) = 0;
+    NS_IMETHOD SetDataSource(nsIRDFXMLDataSource* aDataSource) = 0;
 
     /**
      * Retrieve the content sink's RDF data source.
      */
-    NS_IMETHOD GetDataSource(nsIRDFDataSource*& rDataSource) = 0;
-
-    NS_IMETHOD SetRDFXMLDocument(nsIRDFXMLDocument* aDocument) = 0;
+    NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& rDataSource) = 0;
 };
 
 

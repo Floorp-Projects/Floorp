@@ -50,10 +50,9 @@
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentSink.h"
-#include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDocument.h"
+#include "nsIRDFXMLDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIXMLContentSink.h"
@@ -358,9 +357,8 @@ public:
 
     // nsIRDFContentSink
     NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
-    NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
-    NS_IMETHOD GetDataSource(nsIRDFDataSource*& ds);
-    NS_IMETHOD SetRDFXMLDocument(nsIRDFXMLDocument* aDocument);
+    NS_IMETHOD SetDataSource(nsIRDFXMLDataSource* ds);
+    NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& ds);
 
 protected:
     // Text management
@@ -400,8 +398,7 @@ protected:
 
     // Miscellaneous RDF junk
     nsIRDFService*         mRDFService;
-    nsIRDFDataSource*      mDataSource;
-    nsIRDFXMLDocument*     mDocument;
+    nsIRDFXMLDataSource*   mDataSource;
     RDFContentSinkState    mState;
 
     // content stack management
@@ -423,7 +420,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
     : mDocumentURL(nsnull),
       mRDFService(nsnull),
       mDataSource(nsnull),
-      mDocument(nsnull),
       mGenSym(0),
       mNameSpaceManager(nsnull),
       mNameSpaceStack(nsnull),
@@ -512,25 +508,25 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillBuildModel(void)
 {
-    return (mDocument != nsnull) ? mDocument->BeginLoad() : NS_OK;
+    return (mDataSource != nsnull) ? mDataSource->BeginLoad() : NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 {
-    return (mDocument != nsnull) ? mDocument->EndLoad() : NS_OK;
+    return (mDataSource != nsnull) ? mDataSource->EndLoad() : NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillInterrupt(void)
 {
-    return (mDocument != nsnull) ? mDocument->Interrupt() : NS_OK;
+    return (mDataSource != nsnull) ? mDataSource->Interrupt() : NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::WillResume(void)
 {
-    return (mDocument != nsnull) ? mDocument->Resume() : NS_OK;
+    return (mDataSource != nsnull) ? mDataSource->Resume() : NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -674,7 +670,7 @@ static const char kDataSourcePI[] = "<?rdf-datasource";
     nsresult rv;
     FlushText();
 
-    if (! mDocument)
+    if (! mDataSource)
         return NS_OK;
 
     // XXX For now, we don't add the PI to the content model.
@@ -709,7 +705,7 @@ static const char kDataSourcePI[] = "<?rdf-datasource";
         if (NS_FAILED(rv = NS_NewURL(&url, absURL)))
             return rv;
 
-        rv = mDocument->AddCSSStyleSheetURL(url);
+        rv = mDataSource->AddCSSStyleSheetURL(url);
         NS_RELEASE(url);
     }
     else if (0 == text.Find(kDataSourcePI)) {
@@ -721,7 +717,7 @@ static const char kDataSourcePI[] = "<?rdf-datasource";
         char uri[256];
         href.ToCString(uri, sizeof(uri));
 
-        rv = mDocument->AddNamedDataSourceURI(uri);
+        rv = mDataSource->AddNamedDataSourceURI(uri);
     }
 
     return rv;
@@ -841,7 +837,7 @@ RDFContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
 }
 
 NS_IMETHODIMP
-RDFContentSinkImpl::SetDataSource(nsIRDFDataSource* ds)
+RDFContentSinkImpl::SetDataSource(nsIRDFXMLDataSource* ds)
 {
     NS_IF_RELEASE(mDataSource);
     mDataSource = ds;
@@ -851,18 +847,10 @@ RDFContentSinkImpl::SetDataSource(nsIRDFDataSource* ds)
 
 
 NS_IMETHODIMP
-RDFContentSinkImpl::GetDataSource(nsIRDFDataSource*& ds)
+RDFContentSinkImpl::GetDataSource(nsIRDFXMLDataSource*& ds)
 {
     ds = mDataSource;
     NS_IF_ADDREF(mDataSource);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFContentSinkImpl::SetRDFXMLDocument(nsIRDFXMLDocument* aDocument)
-{
-    mDocument = aDocument;
-    NS_IF_ADDREF(mDocument);
     return NS_OK;
 }
 
@@ -1198,9 +1186,9 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
 
     AddProperties(aNode, rdfResource);
 
-    if (mDocument && !mHaveSetRootResource) {
+    if (mDataSource && !mHaveSetRootResource) {
         mHaveSetRootResource = PR_TRUE;
-        mDocument->SetRootResource(rdfResource);
+        mDataSource->SetRootResource(rdfResource);
     }
 
     NS_RELEASE(rdfResource);

@@ -18,13 +18,13 @@
 
 /*
 
-  RDF data base interface. An RDF database aggregates individual RDF
-  data sources.
+  RDF composite data source interface. A composite data source
+  aggregates individual RDF data sources.
 
  */
 
-#ifndef nsIRDFDataBase_h__
-#define nsIRDFDataBase_h__
+#ifndef nsIRDFCompositeDataSource_h__
+#define nsIRDFCompositeDataSource_h__
 
 #include "nsISupports.h"
 #include "nsIRDFDataSource.h"
@@ -32,14 +32,14 @@
 class nsIRDFDataSource;
 
 // 96343820-307c-11d2-bc15-00805f912fe7
-#define NS_IRDFDATABASE_IID \
+#define NS_IRDFCOMPOSITEDATASOURCE_IID \
 { 0x96343820, 0x307c, 0x11d2, { 0xb, 0x15, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
 /**
- * An <tt>nsIRDFDataBase</tt> composes individual data sources, providing
+ * An <tt>nsIRDFCompositeDataSource</tt> composes individual data sources, providing
  * the illusion of a single, coherent RDF graph.
  */
-class nsIRDFDataBase : public nsIRDFDataSource {
+class nsIRDFCompositeDataSource : public nsIRDFDataSource {
 public:
     /**
      * Add a datasource the the database.
@@ -52,5 +52,7 @@ public:
     NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source) = 0;
 };
 
+extern nsresult
+NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result);
 
-#endif /* nsIRDFDataBase_h__ */
+#endif /* nsIRDFCompositeDataSource_h__ */

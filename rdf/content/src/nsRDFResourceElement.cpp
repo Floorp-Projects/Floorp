@@ -62,9 +62,9 @@
 #include "nsIEventStateManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContent.h"
 #include "nsIRDFCursor.h"
-#include "nsIRDFDataBase.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -84,7 +84,7 @@ static NS_DEFINE_IID(kIDOMNodeListIID,        NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIRDFContentIID,         NS_IRDFCONTENT_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,  NS_ISCRIPTOBJECTOWNER_IID);
@@ -1035,7 +1035,7 @@ RDFResourceElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFDataBase* db   = nsnull;
+    nsIRDFCompositeDataSource* db = nsnull;
     nsIRDFNode* property = nsnull;
     nsIRDFNode* value    = nsnull;
 
@@ -1130,7 +1130,7 @@ RDFResourceElementImpl::GetAttributeNameAt(PRInt32 aIndex,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFDataBase* db       = nsnull;
+    nsIRDFCompositeDataSource* db = nsnull;
     nsIRDFCursor* properties = nsnull;
     PRBool moreProperties;
 

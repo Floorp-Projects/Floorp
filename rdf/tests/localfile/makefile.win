@@ -31,6 +31,7 @@ OBJS=           .\$(OBJDIR)\localfile.obj
 
 LINCS=          -I$(PUBLIC)\rdf         \
                 -I$(LIBNSPR)            \
+                -I$(PUBLIC)\dom         \
                 -I$(PUBLIC)\xpcom       \
                 -I$(PUBLIC)\netlib      \
                 -I$(PUBLIC)\raptor      \

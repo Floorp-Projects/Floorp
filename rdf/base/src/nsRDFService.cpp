@@ -464,12 +464,16 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
         PL_HashTableAdd(mResources, uri, result);
 
         // *We* don't AddRef() the resource: that way, the resource
-        // can be garbage collected when the last refcount goes away.
+        // can be garbage collected when the last refcount goes
+        // away. The single addref that the CreateResource() call made
+        // will be owned by the callee.
+    }
+    else {
+        // Addref for the callee.
+        NS_ADDREF(result);
     }
 
-    result->AddRef();
     *resource = result;
-
     return NS_OK;
 }
 

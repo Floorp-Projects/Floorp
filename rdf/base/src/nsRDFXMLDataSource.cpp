@@ -199,15 +199,16 @@ class RDFXMLDataSourceImpl : public nsIRDFXMLDataSource,
 {
 protected:
     nsIRDFDataSource* mInner;
-    PRBool            mIsWritable;
-    PRBool            mIsDirty;
+    PRBool            mIsSynchronous; // true if the document should be loaded synchronously
+    PRBool            mIsWritable;    // true if the document can be written back
+    PRBool            mIsDirty;       // true if the document should be written back
     nsVoidArray       mObservers;
     char**            mNamedDataSourceURIs;
     PRInt32           mNumNamedDataSourceURIs;
     nsIURL**          mCSSStyleSheetURLs;
     PRInt32           mNumCSSStyleSheetURLs;
     nsIRDFResource*   mRootResource;
-    PRBool            mIsLoading;
+    PRBool            mIsLoading; // true while the document is loading
 
 public:
     RDFXMLDataSourceImpl(void);
@@ -302,6 +303,8 @@ public:
     }
 
     // nsIRDFXMLDataSource interface
+    NS_IMETHOD SetSynchronous(PRBool aIsSynchronous);
+    NS_IMETHOD SetReadOnly(PRBool aIsReadOnly);
     NS_IMETHOD BeginLoad(void);
     NS_IMETHOD Interrupt(void);
     NS_IMETHOD Resume(void);
@@ -338,7 +341,9 @@ NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result)
 
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
-    : mIsWritable(PR_FALSE),
+    : mIsSynchronous(PR_FALSE),
+      mIsWritable(PR_TRUE),
+      mIsDirty(PR_FALSE),
       mNamedDataSourceURIs(nsnull),
       mNumNamedDataSourceURIs(0),
       mCSSStyleSheetURLs(nsnull),
@@ -413,6 +418,10 @@ rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
 {
     nsresult rv;
 
+    // XXX I really hate the way that we're spoon-feeding this stuff
+    // to the parser: it seems like this is something that netlib
+    // should be able to do by itself.
+
     nsIInputStream* in;
     if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */)))
         return rv;
@@ -466,8 +475,8 @@ static const char kResourceURIPrefix[] = "resource:";
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
-    if (PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) == 0)
-        mIsWritable = PR_TRUE;
+    if (PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0)
+        mIsWritable = PR_FALSE;
 
     nsIRDFService* rdfService = nsnull;
     nsINameSpaceManager* ns = nsnull;
@@ -540,13 +549,11 @@ static const char kResourceURIPrefix[] = "resource:";
     // bootstrapped. Force "file:" and "resource:" URIs to be loaded
     // by a blocking read. Maybe there needs to be a distinct
     // interface for stream data sources?
-    if ((PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) == 0) ||
-        (PL_strncmp(uri, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) == 0)) {
-        rdf_BlockingParse(url, lsnr);
+    if (mIsSynchronous) {
+        rv = rdf_BlockingParse(url, lsnr);
     }
     else {
-        if (NS_FAILED(NS_OpenURL(url, lsnr)))
-            goto done;
+        rv = NS_OpenURL(url, lsnr);
     }
 
 done:
@@ -633,6 +640,22 @@ done:
 // nsIRDFXMLDataSource methods
 
 NS_IMETHODIMP
+RDFXMLDataSourceImpl::SetSynchronous(PRBool aIsSynchronous)
+{
+    mIsSynchronous = aIsSynchronous;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
+{
+    if (mIsWritable && aIsReadOnly)
+        mIsWritable = PR_FALSE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
     mIsLoading = PR_TRUE;
@@ -646,7 +669,6 @@ RDFXMLDataSourceImpl::BeginLoad(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
-    mIsLoading = PR_FALSE;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
         obs->OnInterrupt(this);
@@ -667,6 +689,7 @@ RDFXMLDataSourceImpl::Resume(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
+    mIsLoading = PR_FALSE;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
         obs->OnEndLoad(this);
