@@ -1134,12 +1134,17 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         spacingStyle->mBorder.SetBottom(width);
         spacingStyle->mBorder.SetRight(width);
 
-        spacingStyle->SetBorderStyle(NS_SIDE_TOP,    NS_STYLE_BORDER_STYLE_BG_INSET);
-        spacingStyle->SetBorderStyle(NS_SIDE_LEFT,   NS_STYLE_BORDER_STYLE_BG_INSET);
-        spacingStyle->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_INSET);
-        spacingStyle->SetBorderStyle(NS_SIDE_RIGHT,  NS_STYLE_BORDER_STYLE_BG_INSET);
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
+                              ? NS_STYLE_BORDER_STYLE_BG_INSET : NS_STYLE_BORDER_STYLE_INSET;
+          // BG_INSET results in a border color based on background colors
+          // used for NavQuirks only...
 
-        // BG_INSET results in a border color based on background colors
+        spacingStyle->SetBorderStyle(NS_SIDE_TOP,    borderStyle);
+        spacingStyle->SetBorderStyle(NS_SIDE_LEFT,   borderStyle);
+        spacingStyle->SetBorderStyle(NS_SIDE_BOTTOM, borderStyle);
+        spacingStyle->SetBorderStyle(NS_SIDE_RIGHT,  borderStyle);
       }
     }
     else {  // handle attributes for table
