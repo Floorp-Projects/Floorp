@@ -14,8 +14,8 @@
 #
 # The Original Code is the Win32 Version System.
 #
-# The Initial Developer of the Original Code is Aki Sasaki <asasaki@netscape.com>
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Netscape Communications Corporation
+# Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):

@@ -13,8 +13,8 @@
 #
 # The Original Code is the Win32 Version System.
 #
-# The Initial Developer of the Original Code is Aki Sasaki <asasaki@netscape.com>
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Netscape Communications Corporation
+# Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -41,9 +41,11 @@ INCLUDED_VERSION_MK=1
 # Windows gmake build:
 # Build default .rc file if $(RESFILE) isn't defined.
 # TODO:
-# PBI      : ??
-# BINARY   : ??
-# RCINCLUDE: ??
+# PBI      : Private build info.  Not used currently.
+#            Guessing the best way would be to set an env var.
+# BINARY   : Binary name.  Not used currently.
+# RCINCLUDE: Another .rc file to merge with the built .rc file.
+#            Not used currently.
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifndef RESFILE
 RCFILE=./module.rc
@@ -61,13 +63,8 @@ endif
 
 GARBAGE += $(RESFILE) $(RCFILE)
 
-#dummy target so clean_resfile doesn't become the default =P
+#dummy target so $(RCFILE) doesn't become the default =P
 all::
-
-clean_resfile:
-	-rm -f $(RESFILE) $(RCFILE)
-
-clean:: clean_resfile
 
 $(RCFILE):
 	$(PERL) $(topsrcdir)/config/version_win.pl $(_RC_STRING)

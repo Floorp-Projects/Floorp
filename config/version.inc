@@ -13,8 +13,8 @@
 #
 # The Original Code is the Win32 Version System.
 #
-# The Initial Developer of the Original Code is Aki Sasaki <asasaki@netscape.com>
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Netscape Communications Corporation
+# Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -40,17 +40,12 @@ CONFIG_RESFILE_INC=1
 
 #//------------------------------------------------------------------------
 #// Build .rc and .res files if $(RESFILE) isn't defined.
-#// PBI      : ??
-#// DEBUG    : $(MOZ_DEBUG)
-#// OFFICIAL : $(MOZILLA_OFFICIAL)
-#// MSTONE   : grabs automagically
-#// OBJDIR   : $(OBJDIR)
-#// MODNAME  : $(MODULE)
-#// DEPTH    : $(DEPTH)
-#// BINARY   : ??
-#// BITS     : $(MOZ_BITS)
-#// RCINCLUDE: ??
-#// QUIET    : 1
+#// TODO:
+#// PBI      : Private build info.  Not used currently.
+#//            Guessing the best way would be to set an env var.
+#// BINARY   : Binary name.  Not used currently.
+#// RCINCLUDE: Another .rc file to merge with the built .rc file.
+#//            Not used currently.
 #//------------------------------------------------------------------------
 
 _RC_STRING = -OBJDIR $(OBJDIR) -DEPTH $(DEPTH) -TOPSRCDIR $(topsrcdir) -BITS $(MOZ_BITS) -QUIET 1 -SRCDIR .
@@ -65,20 +60,19 @@ _RC_STRING = $(_RC_STRING) -MODNAME $(MODULE)
 !endif
 
 RESFILE=$(OBJDIR)\module.res
+RCFILE=$(OBJDIR)\module.rc
 
+GARBAGE = $(GARBAGE) $(RESFILE) $(RCFILE)
+
+# Dummy target so $(RESFILE) doesn't become the default
 all::
 
-$(RESFILE):: $(OBJDIR)\module.rc
+$(RESFILE):: $(RCFILE)
 
-$(OBJDIR)\module.rc:
+$(RCFILE):
 	echo $(PERL) $(DEPTH)\config\version_win.pl $(_RC_STRING)
 	$(PERL) $(DEPTH)\config\version_win.pl $(_RC_STRING)
 	$(RC) $(OBJDIR)\module.rc
-
-clobber_resfile:
-    -rm -f $(RESFILE) $(OBJDIR)\module.rc
-
-clobber:: clobber_resfile
 
 !endif
 !endif # !CONFIG_RESFILE_INC
