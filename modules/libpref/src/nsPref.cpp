@@ -51,12 +51,12 @@ public:
   static nsPref *GetInstance();
 
   // Initialize/shutdown
-  NS_IMETHOD Startup(char *filename);
+  NS_IMETHOD Startup(const char *filename);
   NS_IMETHOD Shutdown();
 
   // Config file input
-  NS_IMETHOD ReadUserJSFile(char *filename);
-  NS_IMETHOD ReadLIJSFile(char *filename);
+  NS_IMETHOD ReadUserJSFile(const char *filename);
+  NS_IMETHOD ReadLIJSFile(const char *filename);
 
   // JS stuff
   NS_IMETHOD GetConfigContext(JSContext **js_context);
@@ -71,54 +71,54 @@ public:
   // Getters
   NS_IMETHOD GetCharPref(const char *pref, 
 			 char * return_buf, int * buf_length);
-  NS_IMETHOD GetIntPref(const char *pref, int32 * return_int);	
-  NS_IMETHOD GetBoolPref(const char *pref, XP_Bool * return_val);	
+  NS_IMETHOD GetIntPref(const char *pref, PRInt32 * return_int);	
+  NS_IMETHOD GetBoolPref(const char *pref, PRBool * return_val);	
   NS_IMETHOD GetBinaryPref(const char *pref, 
 			   void * return_val, int * buf_length);	
   NS_IMETHOD GetColorPref(const char *pref,
 			  uint8 *red, uint8 *green, uint8 *blue);
-  NS_IMETHOD GetColorPrefDWord(const char *pref, uint32 *colorref);
+  NS_IMETHOD GetColorPrefDWord(const char *pref, PRUint32 *colorref);
   NS_IMETHOD GetRectPref(const char *pref, 
-			 int16 *left, int16 *top, 
-			 int16 *right, int16 *bottom);
+			 PRInt16 *left, PRInt16 *top, 
+			 PRInt16 *right, PRInt16 *bottom);
 
   // Setters
   NS_IMETHOD SetCharPref(const char *pref,const char* value);
-  NS_IMETHOD SetIntPref(const char *pref,int32 value);
+  NS_IMETHOD SetIntPref(const char *pref,PRInt32 value);
   NS_IMETHOD SetBoolPref(const char *pref,PRBool value);
   NS_IMETHOD SetBinaryPref(const char *pref,void * value, long size);
   NS_IMETHOD SetColorPref(const char *pref, 
 			  uint8 red, uint8 green, uint8 blue);
-  NS_IMETHOD SetColorPrefDWord(const char *pref, uint32 colorref);
+  NS_IMETHOD SetColorPrefDWord(const char *pref, PRUint32 colorref);
   NS_IMETHOD SetRectPref(const char *pref, 
-			 int16 left, int16 top, int16 right, int16 bottom);
+			 PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
   // Get Defaults
   NS_IMETHOD GetDefaultCharPref(const char *pref, 
 				char * return_buf, int * buf_length);
-  NS_IMETHOD GetDefaultIntPref(const char *pref, int32 * return_int);
-  NS_IMETHOD GetDefaultBoolPref(const char *pref, XP_Bool * return_val);
+  NS_IMETHOD GetDefaultIntPref(const char *pref, PRInt32 * return_int);
+  NS_IMETHOD GetDefaultBoolPref(const char *pref, PRBool * return_val);
   NS_IMETHOD GetDefaultBinaryPref(const char *pref, 
 				  void * return_val, int * buf_length);
   NS_IMETHOD GetDefaultColorPref(const char *pref, 
 				 uint8 *red, uint8 *green, uint8 *blue);
   NS_IMETHOD GetDefaultColorPrefDWord(const char *pref, 
-				      uint32 *colorref);
+				      PRUint32 *colorref);
   NS_IMETHOD GetDefaultRectPref(const char *pref, 
-				int16 *left, int16 *top, 
-				int16 *right, int16 *bottom);
+				PRInt16 *left, PRInt16 *top, 
+				PRInt16 *right, PRInt16 *bottom);
 
   // Set defaults
   NS_IMETHOD SetDefaultCharPref(const char *pref,const char* value);
-  NS_IMETHOD SetDefaultIntPref(const char *pref,int32 value);
+  NS_IMETHOD SetDefaultIntPref(const char *pref,PRInt32 value);
   NS_IMETHOD SetDefaultBoolPref(const char *pref,PRBool value);
   NS_IMETHOD SetDefaultBinaryPref(const char *pref,
 				  void * value, long size);
   NS_IMETHOD SetDefaultColorPref(const char *pref, 
 				 uint8 red, uint8 green, uint8 blue);
   NS_IMETHOD SetDefaultRectPref(const char *pref, 
-				int16 left, int16 top, 
-				int16 right, int16 bottom);
+				PRInt16 left, PRInt16 top, 
+				PRInt16 right, PRInt16 bottom);
   
   // Copy prefs
   NS_IMETHOD CopyCharPref(const char *pref, char ** return_buf);
@@ -136,7 +136,7 @@ public:
 			 const char *path, PRBool set_default);
 
   // Pref info
-  NS_IMETHOD PrefIsLocked(const char *pref, XP_Bool *res);
+  NS_IMETHOD PrefIsLocked(const char *pref, PRBool *res);
 
   // Save pref files
   NS_IMETHOD SavePrefFile(void);
@@ -150,6 +150,8 @@ public:
   NS_IMETHOD UnregisterCallback( const char* domain,
 				 PrefChangedFunc callback, 
 				 void* instance_data );
+  NS_IMETHOD CopyPrefsTree(const char *srcRoot, const char *destRoot);
+  NS_IMETHOD DeleteBranch(const char *branchName);
 };
 
 nsPref* nsPref::mInstance = NULL;
@@ -199,17 +201,18 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
 {
   /* temporary hack to load up pref files */
 
+#ifdef PREF_USE_SYSDIR
+  if (!aPrefInst)
+    return;
+  nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  sysDir += "prefs50.js";
+  aPrefInst->Startup(sysDir.GetCString());
+     // Actually, should provide version of startup that takes an nsFileSpec.
+#endif /* PREF_USE_SYSDIR */
+
 #ifdef PREF_BACKOUT
   if (!aPrefInst)
     return;
-
-#ifdef PREF_USE_SYSDIR
-  nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  sysDir += "prefs.js";
-  nsFilePath prefPath(sysDir);
-  /* incomplete */
-#endif /* PREF_USE_SYSDIR */
-
 
 #if defined(XP_UNIX)
   aPrefInst->Startup("preferences.js");
@@ -219,6 +222,8 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
   aPrefInst->Startup("prefs.js");
 #endif
 
+//  aPrefInst->Startup("prefs50.js");
+  
 #endif /* PREF_BACKOUT */
 
   return;
@@ -243,7 +248,7 @@ NS_IMPL_ISUPPORTS(nsPref, kIPrefIID);
  * nsIPref Implementation
  */
 
-NS_IMETHODIMP nsPref::Startup(char *filename)
+NS_IMETHODIMP nsPref::Startup(const char *filename)
 {
 
   if (!filename)
@@ -274,12 +279,12 @@ NS_IMETHODIMP nsPref::Shutdown()
  * Config file input
  */
 
-NS_IMETHODIMP nsPref::ReadUserJSFile(char *filename)
+NS_IMETHODIMP nsPref::ReadUserJSFile(const char *filename)
 {
   return _convertRes(PREF_ReadUserJSFile(filename));
 }
 
-NS_IMETHODIMP nsPref::ReadLIJSFile(char *filename)
+NS_IMETHODIMP nsPref::ReadLIJSFile(const char *filename)
 {
   return _convertRes(PREF_ReadLIJSFile(filename));
 }
@@ -327,12 +332,12 @@ NS_IMETHODIMP nsPref::GetCharPref(const char *pref,
   return _convertRes(PREF_GetCharPref(pref, return_buf, buf_length));
 }
 
-NS_IMETHODIMP nsPref::GetIntPref(const char *pref, int32 * return_int)
+NS_IMETHODIMP nsPref::GetIntPref(const char *pref, PRInt32 * return_int)
 {
   return _convertRes(PREF_GetIntPref(pref, return_int));
 }
 
-NS_IMETHODIMP nsPref::GetBoolPref(const char *pref, XP_Bool * return_val)
+NS_IMETHODIMP nsPref::GetBoolPref(const char *pref, PRBool * return_val)
 {
   return _convertRes(PREF_GetBoolPref(pref, return_val));
 }
@@ -350,14 +355,14 @@ NS_IMETHODIMP nsPref::GetColorPref(const char *pref,
 }
 
 NS_IMETHODIMP nsPref::GetColorPrefDWord(const char *pref, 
-					uint32 *colorref)
+					PRUint32 *colorref)
 {
   return _convertRes(PREF_GetColorPrefDWord(pref, colorref));
 }
 
 NS_IMETHODIMP nsPref::GetRectPref(const char *pref, 
-				  int16 *left, int16 *top, 
-				  int16 *right, int16 *bottom)
+				  PRInt16 *left, PRInt16 *top, 
+				  PRInt16 *right, PRInt16 *bottom)
 {
   return _convertRes(PREF_GetRectPref(pref, left, top, right, bottom));
 }
@@ -371,7 +376,7 @@ NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
   return _convertRes(PREF_SetCharPref(pref, value));
 }
 
-NS_IMETHODIMP nsPref::SetIntPref(const char *pref,int32 value)
+NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
 {
   return _convertRes(PREF_SetIntPref(pref, value));
 }
@@ -393,14 +398,14 @@ NS_IMETHODIMP nsPref::SetColorPref(const char *pref,
 }
 
 NS_IMETHODIMP nsPref::SetColorPrefDWord(const char *pref, 
-					uint32 value)
+					PRUint32 value)
 {
   return _convertRes(PREF_SetColorPrefDWord(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetRectPref(const char *pref, 
-				  int16 left, int16 top, 
-				  int16 right, int16 bottom)
+				  PRInt16 left, PRInt16 top, 
+				  PRInt16 right, PRInt16 bottom)
 {
   return _convertRes(PREF_SetRectPref(pref, left, top, right, bottom));
 }
@@ -417,13 +422,13 @@ NS_IMETHODIMP nsPref::GetDefaultCharPref(const char *pref,
 }
 
 NS_IMETHODIMP nsPref::GetDefaultIntPref(const char *pref,
-					int32 * return_int)
+					PRInt32 * return_int)
 {
   return _convertRes(PREF_GetDefaultIntPref(pref, return_int));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultBoolPref(const char *pref,
-					 XP_Bool * return_val)
+					 PRBool * return_val)
 {
   return _convertRes(PREF_GetDefaultBoolPref(pref, return_val));
 }
@@ -443,14 +448,14 @@ NS_IMETHODIMP nsPref::GetDefaultColorPref(const char *pref,
 }
 
 NS_IMETHODIMP nsPref::GetDefaultColorPrefDWord(const char *pref, 
-					       uint32 *colorref)
+					       PRUint32 *colorref)
 {
   return _convertRes(PREF_GetDefaultColorPrefDWord(pref, colorref));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultRectPref(const char *pref, 
-					 int16 *left, int16 *top, 
-					 int16 *right, int16 *bottom)
+					 PRInt16 *left, PRInt16 *top, 
+					 PRInt16 *right, PRInt16 *bottom)
 {
   return _convertRes(PREF_GetDefaultRectPref(pref, 
 					     left, top, right, bottom));
@@ -465,7 +470,7 @@ NS_IMETHODIMP nsPref::SetDefaultCharPref(const char *pref,const char* value)
   return _convertRes(PREF_SetDefaultCharPref(pref, value));
 }
 
-NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,int32 value)
+NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)
 {
   return _convertRes(PREF_SetDefaultIntPref(pref, value));
 }
@@ -488,8 +493,8 @@ NS_IMETHODIMP nsPref::SetDefaultColorPref(const char *pref,
 }
 
 NS_IMETHODIMP nsPref::SetDefaultRectPref(const char *pref, 
-					 int16 left, int16 top,
-					 int16 right, int16 bottom)
+					 PRInt16 left, PRInt16 top,
+					 PRInt16 right, PRInt16 bottom)
 {
   return _convertRes(PREF_SetDefaultRectPref(pref, left, top, right, bottom));
 }
@@ -540,7 +545,7 @@ NS_IMETHODIMP nsPref::SetPathPref(const char *pref,
  * Pref info
  */
 
-NS_IMETHODIMP nsPref::PrefIsLocked(const char *pref, XP_Bool *res)
+NS_IMETHODIMP nsPref::PrefIsLocked(const char *pref, PRBool *res)
 {
   if (res == NULL) {
     return NS_ERROR_INVALID_POINTER;
@@ -586,6 +591,20 @@ NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
 					  void* instance_data )
 {
   return _convertRes(PREF_UnregisterCallback(domain, callback, instance_data));
+}
+
+/*
+ * Callbacks
+ */
+
+NS_IMETHODIMP nsPref::CopyPrefsTree(const char *srcRoot, const char *destRoot)
+{
+  return _convertRes(PREF_CopyPrefsTree(srcRoot, destRoot));
+}
+
+NS_IMETHODIMP nsPref::DeleteBranch(const char *branchName)
+{
+  return _convertRes(PREF_DeleteBranch(branchName));
 }
 
 class nsPrefFactory: public nsIFactory {
