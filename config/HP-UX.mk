@@ -68,6 +68,7 @@ ifndef NS_USE_GCC
 NO_INLINE		= +d
 endif
 else
+PORT_FLAGS		+= -DHAVE_SNPRINTF
 OS_LIBS			+= -lm
 endif
 
