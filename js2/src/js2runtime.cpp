@@ -2300,6 +2300,8 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
                     String *parenStr = new String(str->substr((uint32)(regexp_result->parens[i].index), (uint32)(regexp_result->parens[i].length)));
                     resultArray->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
                 }
+		else
+                    resultArray->setProperty(cx, *numberToString(i + 1), NULL, kUndefinedValue);
             }
             // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
             resultArray->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(regexp_result->endIndex)));
