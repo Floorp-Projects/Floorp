@@ -80,8 +80,10 @@ static void Usage()
 	PRINTUSAGE("",      "-g", "key size (in bytes).");
 	PRINTUSAGE("",      "-p", "do performance test.");
 	PRINTUSAGE("(rsa)", "-e", "rsa public exponent.");
+#if NSS_SOFTOKEN_DOES_RC5
 	PRINTUSAGE("(rc5)", "-r", "number of rounds.");
 	PRINTUSAGE("(rc5)", "-w", "wordsize (32 or 64).");
+#endif
 	fprintf(stderr, "\n");
 	PRINTUSAGE(progName, "-D -m mode", "Decrypt a buffer.");
 	PRINTUSAGE("",      "", "[-i plaintext] [-o ciphertext] [-k key] [-v iv]");
@@ -856,6 +858,7 @@ rc4_test(blapitestInfo *info)
 	return rv;
 }
 
+#if NSS_SOFTOKEN_DOES_RC5
 /************************
 **  RC5 
 ************************/
@@ -978,6 +981,7 @@ rc5_cbc_test(blapitestInfo *info)
 	RC5_DestroyContext(rc5cx, PR_TRUE);
 	return rv;
 }
+#endif
 
 static SECStatus
 rsa_test(blapitestInfo *info)
@@ -1354,8 +1358,10 @@ static blapitestCryptoFn crypto_fns[] =
 	rc2_ecb_test,
 	rc2_cbc_test,
 	rc4_test,
+#if NSS_SOFTOKEN_DOES_RC5
 	rc5_ecb_test,
 	rc5_cbc_test,
+#endif
 	rsa_test,
 	NULL,
 	pqg_test,
@@ -1376,8 +1382,10 @@ static char *mode_strings[] =
 	"rc2_ecb",
 	"rc2_cbc",
 	"rc4",
+#if NSS_SOFTOKEN_DOES_RC5
 	"rc5_ecb",
 	"rc5_cbc",
+#endif
 	"rsa",
 	"#endencrypt",
 	"pqg",

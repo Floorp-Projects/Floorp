@@ -516,14 +516,16 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     PK11SessionContext *context;
     PK11Attribute *att;
     CK_RC2_CBC_PARAMS *rc2_param;
+#if NSS_SOFTOKEN_DOES_RC5
     CK_RC5_CBC_PARAMS *rc5_param;
+    SECItem rc5Key;
+#endif
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
     SECKEYLowPublicKey *pubKey;
     unsigned effectiveKeyLength;
     unsigned char newdeskey[8];
     PRBool useNewKey=PR_FALSE;
-    SECItem rc5Key;
     int t;
 
     session = pk11_SessionFromHandle(hSession);
@@ -586,6 +588,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	context->update = (PK11Cipher) RC2_Encrypt;
 	context->destroy = (PK11Destroy) RC2_DestroyContext;
 	break;
+#if NSS_SOFTOKEN_DOES_RC5
     case CKM_RC5_CBC_PAD:
 	context->doPad = PR_TRUE;
 	/* fall thru */
@@ -617,6 +620,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	context->update = (PK11Cipher) RC5_Encrypt;
 	context->destroy = (PK11Destroy) RC5_DestroyContext;
 	break;
+#endif
     case CKM_RC4:
 	if (key_type != CKK_RC4) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
@@ -898,8 +902,10 @@ static CK_RV pk11_DecryptInit( CK_SESSION_HANDLE hSession,
     PK11Attribute *att;
     PK11SessionContext *context;
     CK_RC2_CBC_PARAMS *rc2_param;
+#if NSS_SOFTOKEN_DOES_RC5
     CK_RC5_CBC_PARAMS *rc5_param;
     SECItem rc5Key;
+#endif
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
     unsigned effectiveKeyLength;
@@ -965,6 +971,7 @@ static CK_RV pk11_DecryptInit( CK_SESSION_HANDLE hSession,
 	context->update = (PK11Cipher) RC2_Decrypt;
 	context->destroy = (PK11Destroy) RC2_DestroyContext;
 	break;
+#if NSS_SOFTOKEN_DOES_RC5
     case CKM_RC5_CBC_PAD:
 	context->doPad = PR_TRUE;
 	/* fall thru */
@@ -996,6 +1003,7 @@ static CK_RV pk11_DecryptInit( CK_SESSION_HANDLE hSession,
 	context->update = (PK11Cipher) RC5_Decrypt;
 	context->destroy = (PK11Destroy) RC5_DestroyContext;
 	break;
+#endif
     case CKM_RC4:
 	if (key_type != CKK_RC4) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
@@ -1785,8 +1793,10 @@ pk11_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     CK_MECHANISM cbc_mechanism;
     CK_ULONG mac_bytes = PK11_INVALID_MAC_SIZE;
     CK_RC2_CBC_PARAMS rc2_params;
+#if NSS_SOFTOKEN_DOES_RC5
     CK_RC5_CBC_PARAMS rc5_params;
     CK_RC5_MAC_GENERAL_PARAMS *rc5_mac;
+#endif
     unsigned char ivBlock[PK11_MAX_BLOCK_SIZE];
     PK11SessionContext *context;
     CK_RV crv;
@@ -1808,6 +1818,7 @@ pk11_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	cbc_mechanism.ulParameterLen = sizeof(rc2_params);
 	blockSize = 8;
 	break;
+#if NSS_SOFTOKEN_DOES_RC5
     case CKM_RC5_MAC_GENERAL:
 	mac_bytes = 
 	    ((CK_RC5_MAC_GENERAL_PARAMS *)pMechanism->pParameter)->ulMacLength;
@@ -1826,6 +1837,7 @@ pk11_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	cbc_mechanism.pParameter = &rc5_params;
 	cbc_mechanism.ulParameterLen = sizeof(rc5_params);
 	break;
+#endif
     /* add cast and idea later */
     case CKM_DES_MAC_GENERAL:
 	mac_bytes = *(CK_ULONG *)pMechanism->pParameter;
@@ -2873,10 +2885,12 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	key_type = CKK_RC2;
 	if (key_length == 0) crv = CKR_TEMPLATE_INCOMPLETE;
 	break;
+#if NSS_SOFTOKEN_DOES_RC5
     case CKM_RC5_KEY_GEN:
 	key_type = CKK_RC5;
 	if (key_length == 0) crv = CKR_TEMPLATE_INCOMPLETE;
 	break;
+#endif
     case CKM_RC4_KEY_GEN:
 	key_type = CKK_RC4;
 	if (key_length == 0) crv = CKR_TEMPLATE_INCOMPLETE;
