@@ -117,13 +117,13 @@ public:
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
   // nsIContent
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, 
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify, 
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 protected:
   /**
@@ -509,33 +509,22 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLOptionElement::GetText(nsAString& aText)
 {
-  PRInt32 numNodes, i;
+  PRUint32 i, numNodes = GetChildCount();
 
   aText.Truncate();
 
-  nsresult rv = ChildCount(numNodes);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   nsAutoString text;
   for (i = 0; i < numNodes; i++) {
-    nsCOMPtr<nsIContent> node;
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(GetChildAt(i)));
 
-    ChildAt(i, getter_AddRefs(node));
-
-    if (node) {
-      nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
-
-      if (domText) {
-        rv = domText->GetData(text);
-        if (NS_FAILED(rv)) {
-          aText.Truncate();
-          return rv;
-        }
-
-        aText.Append(text);
+    if (domText) {
+      nsresult rv = domText->GetData(text);
+      if (NS_FAILED(rv)) {
+        aText.Truncate();
+        return rv;
       }
+
+      aText.Append(text);
     }
   }
 
@@ -550,21 +539,12 @@ nsHTMLOptionElement::GetText(nsAString& aText)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetText(const nsAString& aText)
 {
-  PRInt32 numNodes, i;
+  PRUint32 i, numNodes = GetChildCount();
   PRBool usedExistingTextNode = PR_FALSE;  // Do we need to create a text node?
-
-  nsresult rv = ChildCount(numNodes);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = NS_OK;
 
   for (i = 0; i < numNodes; i++) {
-    nsCOMPtr<nsIContent> node;
-
-    ChildAt(i, getter_AddRefs(node));
-
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(GetChildAt(i)));
 
     if (domText) {
       rv = domText->SetData(aText);
@@ -617,7 +597,7 @@ nsHTMLOptionElement::NotifyTextChanged()
 // is changing
 //
 NS_IMETHODIMP
-nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,
@@ -628,7 +608,7 @@ nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsresult rv = nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex,
@@ -649,7 +629,7 @@ nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDee
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex,
                                                              aNotify);

@@ -235,7 +235,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (!document)
       break;
 
-    document->GetShellAt(0, getter_AddRefs(presShell));
+    presShell = document->GetShellAt(0);
     nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
     // there is no selection controller for full page plugins
     if (!selCon)

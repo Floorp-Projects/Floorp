@@ -74,7 +74,8 @@ public:
         if (entry) {
             entry->mContent = aContent;
             entry->mTemplate = aTemplate;
-        } }
+        }
+    }
 
     void
     Remove(nsIContent* aContent) {
@@ -83,7 +84,7 @@ public:
 
         PL_DHashTableOperate(&mTable, aContent, PL_DHASH_REMOVE);
 
-        PRInt32 count;
+        PRUint32 count;
 
         // If possible, use the special nsIXULContent interface to
         // "peek" at the child count without accidentally creating
@@ -91,18 +92,16 @@ public:
         // outta the map anyway.
         nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aContent);
         if (xulcontent) {
-            xulcontent->PeekChildCount(count);
+            count = xulcontent->PeekChildCount();
         }
         else {
-            aContent->ChildCount(count);
+            count = aContent->GetChildCount();
         }
 
-        for (PRInt32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIContent> child;
-            aContent->ChildAt(i, getter_AddRefs(child));
-
-            Remove(child);
-        } }
+        for (PRUint32 i = 0; i < count; ++i) {
+            Remove(aContent->GetChildAt(i));
+        }
+    }
 
 
     void
@@ -113,7 +112,8 @@ public:
         if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
             NS_IF_ADDREF(*aResult = entry->mTemplate);
         else
-            *aResult = nsnull; }
+            *aResult = nsnull;
+    }
 
     void
     Clear() { Finish(); Init(); }

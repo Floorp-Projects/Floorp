@@ -173,7 +173,7 @@ public:
 
     // Implementation methods
     // VoidArray Helpers
-    PRInt32 Count() { return mAttributes.Count(); };
+    PRUint32 Count() { return mAttributes.Count(); };
     nsXULAttribute* ElementAt(PRInt32 i) { return (nsXULAttribute*)mAttributes.ElementAt(i); };
     void AppendElement(nsXULAttribute* aElement) { mAttributes.AppendElement((void*)aElement); };
     void RemoveElementAt(PRInt32 aIndex) { mAttributes.RemoveElementAt(aIndex); };

@@ -770,11 +770,12 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (!content) return PR_FALSE;  // ooops
   
-  PRInt32 attrCount, i, nameSpaceID;
+  PRInt32 nameSpaceID;
   nsCOMPtr<nsIAtom> attrName, prefix;
-  content->GetAttrCount(attrCount);
+
+  PRUint32 i, attrCount = content->GetAttrCount();
   
-  for (i=0; i<attrCount; i++)
+  for (i = 0; i < attrCount; ++i)
   {
     content->GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attrName),
                            getter_AddRefs(prefix));
@@ -1133,9 +1134,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
       else
       { // handle non-text leaf nodes here
-        PRBool canContainChildren;
-        content->CanContainChildren(canContainChildren);
-        if (canContainChildren)
+        if (content->CanContainChildren())
         {
           skipNode = PR_TRUE;
         }

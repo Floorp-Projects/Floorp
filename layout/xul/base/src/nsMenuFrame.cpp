@@ -928,16 +928,14 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
   nsCOMPtr<nsIXBLService> xblService = 
            do_GetService("@mozilla.org/xbl;1", &rv);
   PRInt32 dummy;
-  PRInt32 count;
-  mContent->ChildCount(count);
+  PRUint32 count = mContent->GetChildCount();
 
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    mContent->ChildAt(i, getter_AddRefs(child));
+  for (PRUint32 i = 0; i < count; i++) {
+    nsIContent *child = mContent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
-    if (tag && tag.get() == nsXULAtoms::menupopup) {
-      *aResult = child.get();
+    if (tag == nsXULAtoms::menupopup) {
+      *aResult = child;
       NS_ADDREF(*aResult);
       return;
     }
@@ -1735,14 +1733,12 @@ nsMenuFrame::OnCreate()
   if (child) {
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(child->GetDocument()));
 
-    PRInt32 count;
-    child->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIContent> grandChild;
-      child->ChildAt(i, getter_AddRefs(grandChild));
+    PRUint32 count = child->GetChildCount();
+    for (PRUint32 i = 0; i < count; i++) {
+      nsIContent *grandChild = child->GetChildAt(i);
       nsCOMPtr<nsIAtom> tag;
       grandChild->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menuitem) {
+      if (tag == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
         grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);

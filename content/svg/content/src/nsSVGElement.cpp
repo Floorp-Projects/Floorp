@@ -127,40 +127,32 @@ nsSVGElement::Init()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP
-nsSVGElement::CanContainChildren(PRBool& aResult) const
+NS_IMETHODIMP_(PRBool)
+nsSVGElement::CanContainChildren() const
 {
-  aResult = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP_(PRUint32)
+nsSVGElement::GetChildCount() const
+{
+  return mChildren.Count();
+}
+
+NS_IMETHODIMP_(nsIContent *)
+nsSVGElement::GetChildAt(PRUint32 aIndex) const
+{
+  return (nsIContent *)mChildren.SafeElementAt(aIndex);
+}
+
+NS_IMETHODIMP_(PRInt32)
+nsSVGElement::IndexOf(nsIContent* aPossibleChild) const
+{
+  return mChildren.IndexOf(aPossibleChild);
 }
 
 NS_IMETHODIMP
-nsSVGElement::ChildCount(PRInt32& aResult) const
-{
-  aResult = mChildren.Count();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::ChildAt(PRInt32 aIndex, nsIContent** aResult) const
-{
-  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(aIndex);
-
-  *aResult = child;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
-{
-  NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  aResult = mChildren.IndexOf(aPossibleChild);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsSVGElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                             PRBool aNotify,
                             PRBool aDeepSetDocument)
 {
@@ -203,7 +195,7 @@ nsSVGElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                              PRBool aNotify,
                              PRBool aDeepSetDocument)
 {
@@ -277,7 +269,7 @@ nsSVGElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 }
 
 NS_IMETHODIMP
-nsSVGElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
@@ -387,7 +379,7 @@ nsSVGElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetAttrNameAt(PRInt32 aIndex,
+nsSVGElement::GetAttrNameAt(PRUint32 aIndex,
                             PRInt32* aNameSpaceID,
                             nsIAtom** aName,
                             nsIAtom** aPrefix) const
@@ -395,11 +387,10 @@ nsSVGElement::GetAttrNameAt(PRInt32 aIndex,
   return mAttributes->GetAttrNameAt(aIndex, aNameSpaceID, aName, aPrefix);
 }
 
-NS_IMETHODIMP
-nsSVGElement::GetAttrCount(PRInt32& aResult) const
+NS_IMETHODIMP_(PRUint32)
+nsSVGElement::GetAttrCount() const
 {
-  aResult = mAttributes->Count();
-  return NS_OK;
+  return mAttributes->Count();
 }
 
 #ifdef DEBUG
@@ -653,12 +644,8 @@ nsSVGElement::HasAttributes(PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   
-  PRInt32 attrCount = 0;
-  
-  GetAttrCount(attrCount);
-  
-  *aReturn = (attrCount > 0);
-  
+  *aReturn = GetAttrCount() > 0;
+
   return NS_OK;
 }
 

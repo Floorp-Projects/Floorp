@@ -146,7 +146,7 @@ public:
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                        PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
                            nsIAtom** aPrefix) const
@@ -242,16 +242,10 @@ NS_IMPL_RELEASE(nsDocumentFragment)
 NS_IMETHODIMP
 nsDocumentFragment::DisconnectChildren()
 {
-  nsCOMPtr<nsIContent> child;
-  PRInt32 i, count;
-
-  ChildCount(count);
+  PRUint32 i, count = GetChildCount();
 
   for (i = 0; i < count; i++) {
-    ChildAt(i, getter_AddRefs(child));
-    NS_ASSERTION(child, "Bad content container");
-
-    child->SetParent(nsnull);
+    GetChildAt(i)->SetParent(nsnull);
   }
 
   return NS_OK;
@@ -260,25 +254,18 @@ nsDocumentFragment::DisconnectChildren()
 NS_IMETHODIMP
 nsDocumentFragment::ReconnectChildren()
 {
-  nsCOMPtr<nsIContent> child, parent;
-  PRInt32 i, count = 0;
-
-  ChildCount(count);
+  PRUint32 i, count = GetChildCount();
 
   for (i = 0; i < count; i++) {
-    ChildAt(i, getter_AddRefs(child));
-    NS_ASSERTION(child, "Bad content container");
-
-    parent = child->GetParent();
+    nsIContent *child = GetChildAt(i);
+    nsIContent *parent = child->GetParent();
 
     if (parent) {
-      PRInt32 indx = -1;
-
       // This is potentially a O(n**2) operation, but it should only
       // happen in error cases (such as out of memory or something
       // similar) so we don't care for now.
 
-      parent->IndexOf(child, indx);
+      PRInt32 indx = parent->IndexOf(child);
 
       if (indx >= 0) {
         parent->RemoveChildAt(indx, PR_TRUE);
@@ -294,11 +281,9 @@ nsDocumentFragment::ReconnectChildren()
 NS_IMETHODIMP
 nsDocumentFragment::DropChildReferences()
 {
-  PRInt32 count;
+  PRUint32 count = GetChildCount();
 
-  ChildCount(count);
-
-  for (PRInt32 index = 0; index < count; ++index) {
+  for (PRUint32 index = 0; index < count; ++index) {
     nsIContent* kid = NS_STATIC_CAST(nsIContent*, mChildren.ElementAt(index));
     NS_RELEASE(kid);
   }

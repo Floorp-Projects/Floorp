@@ -3219,9 +3219,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     }
 
     // see if there are attributes for the content
-    PRInt32 attrCount = 0;
-    aContent->GetAttrCount(attrCount);
-    mHasAttributes = attrCount > 0;
+    mHasAttributes = aContent->GetAttrCount() > 0;
 
     // check for HTMLContent and Link status
     if (aContent->IsContentOfType(nsIContent::eHTML)) 
@@ -3283,9 +3281,7 @@ const nsString* RuleProcessorData::GetLang(void)
       return nsnull;
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
-      PRInt32 attrCount = 0;
-      content->GetAttrCount(attrCount);
-      if (attrCount > 0) {
+      if (content->GetAttrCount() > 0) {
         // xml:lang has precedence over lang on HTML elements (see
         // XHTML1 section C.7).
         nsAutoString value;
@@ -3532,14 +3528,14 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     while (result && (nsnull != pseudoClass)) {
       if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
           (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
-        nsCOMPtr<nsIContent> firstChild;
-        nsCOMPtr<nsIContent> parent = data.mParentContent;
+        nsIContent *firstChild = nsnull;
+        nsIContent *parent = data.mParentContent;
         if (parent) {
           PRBool acceptNonWhitespace =
             nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
           PRInt32 index = -1;
           do {
-            parent->ChildAt(++index, getter_AddRefs(firstChild));
+            firstChild = parent->GetChildAt(++index);
             // stop at first non-comment and non-whitespace node (and
             // non-text node for firstChild)
           } while (firstChild &&
@@ -3549,15 +3545,14 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
                (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
-        nsCOMPtr<nsIContent> lastChild;
-        nsCOMPtr<nsIContent> parent = data.mParentContent;
+        nsIContent *lastChild = nsnull;
+        nsIContent *parent = data.mParentContent;
         if (parent) {
           PRBool acceptNonWhitespace =
             nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
-          PRInt32 index;
-          parent->ChildCount(index);
+          PRUint32 index = parent->GetChildCount();
           do {
-            parent->ChildAt(--index, getter_AddRefs(lastChild));
+            lastChild = parent->GetChildAt(--index);
             // stop at first non-comment and non-whitespace node (and
             // non-text node for lastChild)
           } while (lastChild &&
@@ -3566,11 +3561,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         result = localTrue == (data.mContent == lastChild);
       }
       else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
-        nsCOMPtr<nsIContent> child;
-        nsCOMPtr<nsIContent> element = data.mContent;
+        nsIContent *child = nsnull;
+        nsIContent *element = data.mContent;
         PRInt32 index = -1;
         do {
-          element->ChildAt(++index, getter_AddRefs(child));
+          child = element->GetChildAt(++index);
           // stop at first non-comment and non-whitespace node
         } while (child && !IsSignificantChild(child, PR_TRUE));
         result = localTrue == (child == nsnull);
@@ -3737,13 +3732,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // have a chance at matching, of course, are ones that the element
           // actually has attributes in), short-circuiting if we ever match.
           // Then deal with the localFalse/localTrue stuff.
-          PRInt32 attrCount;
-          data.mContent->GetAttrCount(attrCount);
+          PRUint32 attrCount = data.mContent->GetAttrCount();
           PRInt32 nameSpaceID;
           nsCOMPtr<nsIAtom> name;
           nsCOMPtr<nsIAtom> prefix;
           PRBool attrSelectorMatched = PR_FALSE;
-          for (PRInt32 i = 0; i < attrCount; ++i) {
+          for (PRUint32 i = 0; i < attrCount; ++i) {
 #ifdef DEBUG
             nsresult attrState =
 #endif
@@ -3883,11 +3877,10 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         newdata = curdata->mPreviousSiblingData;
         if (!newdata) {
           nsIContent* parent = lastContent->GetParent();
-          PRInt32 index;
           if (parent) {
-            parent->IndexOf(lastContent, index);
+            PRInt32 index = parent->IndexOf(lastContent);
             while (0 <= --index) {  // skip text & comment nodes
-              parent->ChildAt(index, &content);
+              content = parent->GetChildAt(index);
               nsCOMPtr<nsIAtom> tag;
               content->GetTag(getter_AddRefs(tag));
               if ((tag != nsLayoutAtoms::textTagName) && 
@@ -3898,8 +3891,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
                 curdata->mPreviousSiblingData = newdata;    
                 break;
               }
-              NS_RELEASE(content);
             }
+
+            content = nsnull;
           }
         } else {
           content = newdata->mContent;

@@ -585,10 +585,11 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   SetContentListFor(aContent, nsnull);
   SetAnonymousNodesFor(aContent, nsnull);
 
-  for (PRInt32 i = aOldDocument->GetNumberOfShells() - 1; i >= 0; --i) {
-    nsCOMPtr<nsIPresShell> shell;
-    aOldDocument->GetShellAt(i, getter_AddRefs(shell));
-    NS_ASSERTION(shell != nsnull, "Zoiks! nsIPresShell::ShellAt() broke");
+  PRUint32 count = aOldDocument->GetNumberOfShells();
+
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsIPresShell *shell = aOldDocument->GetShellAt(i);
+    NS_ASSERTION(shell != nsnull, "Zoiks! nsIDocument::GetShellAt() broke");
 
     // See if the element has nsIAnonymousContentCreator-created
     // anonymous content...
@@ -878,15 +879,15 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAString& aU
   // ...and recreate it's frames. We need to do this since the frames may have
   // been removed and style may have changed due to the removal of the
   // anonymous children.
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = doc->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   return presShell->RecreateFramesFor(aContent);;
 }
 
 NS_IMETHODIMP
-nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& aURL,
+nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
+                                      const nsAString& aURL,
                                       nsIDocument** aResult)
 {
   NS_ConvertUCS2toUTF8 url(aURL);
@@ -1412,11 +1413,10 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
     // It's anonymous.
     return NS_OK;
 
-  PRInt32 childCount;
-  nsCOMPtr<nsIContent> child;
-  aContainer->ChildCount(childCount);
-  aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
-  
+  PRInt32 childCount = aContainer->GetChildCount();
+
+  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+
   nsCOMPtr<nsIContent> ins;
   GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
 
@@ -1439,7 +1439,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
           // We're real. Jam all the kids in.
           // XXX Check the filters to find the correct points.
           for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
-            aContainer->ChildAt(j, getter_AddRefs(child));
+            child = aContainer->GetChildAt(j);
             point->AddChild(child);
             SetInsertionParent(child, ins);
           }

@@ -129,8 +129,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
       nsCOMPtr<nsIDocument> parentDoc;
       mDocument->GetParentDocument(getter_AddRefs(parentDoc));
       if (parentDoc) {
-        nsCOMPtr<nsIPresShell> parentShell;
-        parentDoc->GetShellAt(0, getter_AddRefs(parentShell));
+        nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         nsCOMPtr<nsIWeakReference> weakParentShell(do_GetWeakReference(parentShell));
         if (weakParentShell) {
           nsCOMPtr<nsIAccessibleDocument> parentDocAccessible;

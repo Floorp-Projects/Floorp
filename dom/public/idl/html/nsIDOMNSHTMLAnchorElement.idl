@@ -45,7 +45,7 @@ interface nsIDOMNSHTMLAnchorElement : nsISupports
 {
            attribute DOMString        protocol;
            attribute DOMString        host;
-           attribute DOMString        hostname;  
+           attribute DOMString        hostname;
            attribute DOMString        pathname;
            attribute DOMString        search;
            attribute DOMString        port;

@@ -71,28 +71,19 @@ public:
 
   // nsIContent interface methods
 
-  // NS_IMETHOD GetDocument(nsIDocument** aResult) const;
-  // NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-  //                       PRBool aCompileEventHandlers);
-  // NS_IMETHOD GetParent(nsIContent** aResult) const;
-  // NS_IMETHOD SetParent(nsIContent* aParent);
-  // NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpaceID) const;
-  // NS_IMETHOD GetTag(nsIAtom** aResult) const;
-  // NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const;
-  
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
-  NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+  NS_IMETHOD_(PRBool) CanContainChildren() const;
+  NS_IMETHOD_(PRUint32) GetChildCount() const;
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                             PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo** aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
@@ -109,11 +100,11 @@ public:
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                        PRBool aNotify);
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
                            nsIAtom** aPrefix) const;
-  NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+  NS_IMETHOD_(PRUint32) GetAttrCount() const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;

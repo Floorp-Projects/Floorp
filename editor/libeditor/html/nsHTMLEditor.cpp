@@ -1633,8 +1633,7 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
     nsIContent* parent = content->GetParent();
     if (parent)
     { 
-      PRInt32 index; 
-      if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 
+      if (parent->IndexOf(content) < 0)
       { 
         rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
         result = CallQueryInterface(rootElement, aEventReceiver); 

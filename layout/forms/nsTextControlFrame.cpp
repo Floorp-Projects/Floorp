@@ -265,8 +265,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) 
       {
-        nsCOMPtr<nsIPresShell> presShell;
-        doc->GetShellAt(0, getter_AddRefs(presShell));
+        nsIPresShell *presShell = doc->GetShellAt(0);
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
@@ -790,24 +789,20 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
   HINT hint = HINTLEFT;
   if (aForward)
   {
-    parentDIV->ChildCount(offset);
+    offset = parentDIV->GetChildCount();
 
     // Prevent the caret from being placed after the last
     // BR node in the content tree!
 
     if (offset > 0)
     {
-      nsCOMPtr<nsIContent> child;
-      result = parentDIV->ChildAt(offset - 1, getter_AddRefs(child));
-      if (NS_SUCCEEDED(result) && child)
+      nsIContent *child = parentDIV->GetChildAt(offset - 1);
+      nsCOMPtr<nsIAtom> tagName;
+      child->GetTag(getter_AddRefs(tagName));
+      if (tagName == nsHTMLAtoms::br)
       {
-        nsCOMPtr<nsIAtom> tagName;
-        result = child->GetTag(getter_AddRefs(tagName));
-        if (NS_SUCCEEDED(result) && tagName.get() == nsHTMLAtoms::br)
-        {
-          --offset;
-          hint = HINTRIGHT; // for Bug 106855
-        }
+        --offset;
+        hint = HINTRIGHT; // for Bug 106855
       }
     }
   }
@@ -2306,19 +2301,16 @@ nsTextControlFrame::SelectAllContents()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
-  PRInt32 numChildren = 0;
-  rv = rootContent->ChildCount(numChildren);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 numChildren = rootContent->GetChildCount();
 
   if (numChildren > 0) {
     // We never want to place the selection after the last
     // br under the root node!
-    nsCOMPtr<nsIContent> child;
-    rv = rootContent->ChildAt(numChildren - 1, getter_AddRefs(child));
-    if (NS_SUCCEEDED(rv) && child) {
+    nsIContent *child = rootContent->GetChildAt(numChildren - 1);
+    if (child) {
       nsCOMPtr<nsIAtom> tagName;
-      rv = child->GetTag(getter_AddRefs(tagName));
-      if (NS_SUCCEEDED(rv) && tagName == nsHTMLAtoms::br)
+      child->GetTag(getter_AddRefs(tagName));
+      if (tagName == nsHTMLAtoms::br)
         --numChildren;
     }
   }

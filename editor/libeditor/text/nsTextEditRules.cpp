@@ -892,8 +892,8 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
       if (!content) return NS_ERROR_NULL_POINTER;
       if (aCollapsedAction == nsIEditor::ePrevious)
         --startOffset;
-      res = content->ChildAt(startOffset, getter_AddRefs(child));
-      if (NS_FAILED(res)) return res;
+      child = content->GetChildAt(startOffset);
+
       nsCOMPtr<nsIDOMNode> nextNode = do_QueryInterface(child);
       
       // scan for next node, deleting empty text nodes on way
@@ -914,8 +914,8 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (aCollapsedAction == nsIEditor::ePrevious)
           --startOffset;
           // don't need to increment startOffset for nsIEditor::eNext
-        res = content->ChildAt(startOffset, getter_AddRefs(child));
-        if (NS_FAILED(res)) return res;
+        child = content->GetChildAt(startOffset);
+
         nextNode = do_QueryInterface(child);
       }
       // fix for bugzilla #125161: if we are about to forward delete a <BR>,

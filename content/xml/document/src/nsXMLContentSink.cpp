@@ -330,35 +330,33 @@ nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
     // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
     NS_ConvertUTF8toUCS2 ref(unescapedRef);
 
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    PRUint32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(i, getter_AddRefs(shell));
-      if (shell) {
-        // Scroll to the anchor
-        if (aReallyScroll) {
-          shell->FlushPendingNotifications(PR_FALSE);
-        }
+      nsIPresShell *shell = mDocument->GetShellAt(i);
 
-        // Check an empty string which might be caused by the UTF-8 conversion
-        if (!ref.IsEmpty())
-          rv = shell->GoToAnchor(ref, aReallyScroll);
-        else
-          rv = NS_ERROR_FAILURE;
+      // Scroll to the anchor
+      if (aReallyScroll) {
+        shell->FlushPendingNotifications(PR_FALSE);
+      }
 
-        // If UTF-8 URL failed then try to assume the string as a
-        // document's charset.
+      // Check an empty string which might be caused by the UTF-8 conversion
+      if (!ref.IsEmpty())
+        rv = shell->GoToAnchor(ref, aReallyScroll);
+      else
+        rv = NS_ERROR_FAILURE;
 
-        if (NS_FAILED(rv)) {
-          nsCAutoString docCharset;
-          rv = mDocument->GetDocumentCharacterSet(docCharset);
+      // If UTF-8 URL failed then try to assume the string as a
+      // document's charset.
 
-          if (NS_SUCCEEDED(rv)) {
-            rv = CharsetConvRef(docCharset, unescapedRef, ref);
+      if (NS_FAILED(rv)) {
+        nsCAutoString docCharset;
+        rv = mDocument->GetDocumentCharacterSet(docCharset);
 
-            if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-              rv = shell->GoToAnchor(ref, aReallyScroll);
-          }
+        if (NS_SUCCEEDED(rv)) {
+          rv = CharsetConvRef(docCharset, unescapedRef, ref);
+
+          if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
+            rv = shell->GoToAnchor(ref, aReallyScroll);
         }
       }
     }
@@ -1122,8 +1120,7 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
     // Disable theming for the presshell if the value is no.
     nsAutoString value(aValue);
     if (value.EqualsIgnoreCase("no")) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = mDocument->GetShellAt(0);
       if (shell)
         shell->DisableThemeSupport();
     }
@@ -1326,26 +1323,24 @@ nsXMLContentSink::StartLayout()
     scrollableContainer->ResetScrollbarPreferences();
   }
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
-    if (nsnull != shell) {
-      // Make shell an observer for next time
-      shell->BeginObservingDocument();
+    nsIPresShell *shell = mDocument->GetShellAt(i);
 
-      // Resize-reflow this time
-      nsCOMPtr<nsIPresContext> cx;
-      shell->GetPresContext(getter_AddRefs(cx));
-      nsRect r;
-      cx->GetVisibleArea(r);
-      shell->InitialReflow(r.width, r.height);
+    // Make shell an observer for next time
+    shell->BeginObservingDocument();
 
-      // Now trigger a refresh
-      nsIViewManager* vm = shell->GetViewManager();
-      if (vm) {
-        RefreshIfEnabled(vm);
-      }
+    // Resize-reflow this time
+    nsCOMPtr<nsIPresContext> cx;
+    shell->GetPresContext(getter_AddRefs(cx));
+    nsRect r;
+    cx->GetVisibleArea(r);
+    shell->InitialReflow(r.width, r.height);
+
+    // Now trigger a refresh
+    nsIViewManager* vm = shell->GetViewManager();
+    if (vm) {
+      RefreshIfEnabled(vm);
     }
   }
 
@@ -1357,7 +1352,7 @@ nsXMLContentSink::StartLayout()
     // finding the 'ref' part of the URI, we'll haveto revert to
     // string routines for finding the data past '#'
 
-    nsresult rv = mDocumentURL->GetSpec(ref);
+    mDocumentURL->GetSpec(ref);
 
     nsReadingIterator<char> start, end;
 
@@ -1390,19 +1385,17 @@ nsXMLContentSink::StartLayout()
     // scroll bars.
     ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(i, getter_AddRefs(shell));
-      if (shell) {
-        nsIViewManager* vm = shell->GetViewManager();
-        if (vm) {
-          nsIView* rootView = nsnull;
-          vm->GetRootView(rootView);
-          if (rootView) {
-            nsIScrollableView* sview = nsnull;
-            CallQueryInterface(rootView, &sview);
-            if (sview) {
-              sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-            }
+      nsIPresShell *shell = mDocument->GetShellAt(i);
+
+      nsIViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsIView* rootView = nsnull;
+        vm->GetRootView(rootView);
+        if (rootView) {
+          nsIScrollableView* sview = nsnull;
+          CallQueryInterface(rootView, &sview);
+          if (sview) {
+            sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
           }
         }
       }

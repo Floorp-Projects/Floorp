@@ -464,18 +464,13 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
     // Iterate through all of the template children, constructing
     // "real" content model nodes for each "template" child.
-    PRInt32    count;
-    rv = aTemplateNode->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 count = aTemplateNode->GetChildCount();
 
-    for (PRInt32 kid = 0; kid < count; kid++) {
-        nsCOMPtr<nsIContent> tmplKid;
-        rv = aTemplateNode->ChildAt(kid, getter_AddRefs(tmplKid));
-        if (NS_FAILED(rv)) return rv;
+    for (PRUint32 kid = 0; kid < count; kid++) {
+        nsIContent *tmplKid = aTemplateNode->GetChildAt(kid);
 
         PRInt32 nameSpaceID;
-        rv = tmplKid->GetNameSpaceID(&nameSpaceID);
-        if (NS_FAILED(rv)) return rv;
+        tmplKid->GetNameSpaceID(&nameSpaceID);
 
         // Check whether this element is the "resource" element. The
         // "resource" element is the element that is cookie-cutter
@@ -597,12 +592,11 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     *aContainer = aRealNode;
                     NS_ADDREF(*aContainer);
 
-					PRInt32 indx;
-                    aRealNode->ChildCount(indx);
+                    PRUint32 indx = aRealNode->GetChildCount();
 
-					// Since EnsureElementHasGenericChild() added us, make
-					// sure to subtract one for our real index.
-					*aNewIndexInContainer = indx - 1;
+                    // Since EnsureElementHasGenericChild() added us, make
+                    // sure to subtract one for our real index.
+                    *aNewIndexInContainer = indx - 1;
                 }
             }
 
@@ -715,8 +709,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 *aContainer = aRealNode;
                 NS_ADDREF(*aContainer);
 
-                PRInt32 indx;
-                aRealNode->ChildCount(indx);
+                PRUint32 indx = aRealNode->GetChildCount();
 
                 // Since we haven't inserted any content yet, our new
                 // index in the container will be the current count of
@@ -731,11 +724,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
             // Copy all attributes from the template to the new
             // element.
-            PRInt32    numAttribs;
-            rv = tmplKid->GetAttrCount(numAttribs);
-            if (NS_FAILED(rv)) return rv;
+            PRUint32 numAttribs = tmplKid->GetAttrCount();
 
-            for (PRInt32 attr = 0; attr < numAttribs; attr++) {
+            for (PRUint32 attr = 0; attr < numAttribs; attr++) {
                 PRInt32 attribNameSpaceID;
                 nsCOMPtr<nsIAtom> attribName, prefix;
 
@@ -774,8 +765,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             
             nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
             if (xulcontent) {
-                PRInt32 count2;
-                tmplKid->ChildCount(count2);
+                PRUint32 count2 = tmplKid->GetChildCount();
 
                 if (count2 == 0 && !isResourceElement) {
                     // If we're at a leaf node, then we'll eagerly
@@ -921,50 +911,42 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     // check all attributes on the template node; if they reference a resource,
     // update the equivalent attribute on the content node
 
-    PRInt32    numAttribs;
-    rv = aTemplateNode->GetAttrCount(numAttribs);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 numAttribs = aTemplateNode->GetAttrCount();
 
-    // XXXwaterson. Ugh, we just checked the failure code, above. Why
-    // do it again? This method needs a scrub-down, and could stand
-    // to have some of this bogo-error checking removed.
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++) {
-            PRInt32    attribNameSpaceID;
-            nsCOMPtr<nsIAtom> attribName, prefix;
-            rv = aTemplateNode->GetAttrNameAt(aLoop,
-                                              &attribNameSpaceID,
-                                              getter_AddRefs(attribName),
-                                              getter_AddRefs(prefix));
-            if (NS_FAILED(rv)) break;
+    for (PRUint32 loop = 0; loop < numAttribs; ++loop) {
+        PRInt32    attribNameSpaceID;
+        nsCOMPtr<nsIAtom> attribName, prefix;
+        rv = aTemplateNode->GetAttrNameAt(loop, &attribNameSpaceID,
+                                          getter_AddRefs(attribName),
+                                          getter_AddRefs(prefix));
+        if (NS_FAILED(rv)) break;
 
-            // See if it's one of the attributes that we unilaterally
-            // ignore. If so, on to the next one...
-            if (IsIgnoreableAttribute(attribNameSpaceID, attribName))
-                continue;
+        // See if it's one of the attributes that we unilaterally
+        // ignore. If so, on to the next one...
+        if (IsIgnoreableAttribute(attribNameSpaceID, attribName))
+            continue;
 
-            nsAutoString attribValue;
-            rv = aTemplateNode->GetAttr(attribNameSpaceID,
-                                        attribName,
-                                        attribValue);
+        nsAutoString attribValue;
+        rv = aTemplateNode->GetAttr(attribNameSpaceID,
+                                    attribName,
+                                    attribValue);
 
-            if (! IsAttrImpactedByVars(aMatch, attribValue, aModifiedVars))
-                continue;
+        if (! IsAttrImpactedByVars(aMatch, attribValue, aModifiedVars))
+            continue;
 
-            nsAutoString newvalue;
-            SubstituteText(aMatch, attribValue, newvalue);
+        nsAutoString newvalue;
+        SubstituteText(aMatch, attribValue, newvalue);
 
-            if (!newvalue.IsEmpty()) {
-                aRealElement->SetAttr(attribNameSpaceID,
-                                      attribName,
-                                      newvalue,
-                                      PR_TRUE);
-            }
-            else {
-                aRealElement->UnsetAttr(attribNameSpaceID,
-                                        attribName,
-                                        PR_TRUE);
-            }
+        if (!newvalue.IsEmpty()) {
+            aRealElement->SetAttr(attribNameSpaceID,
+                                  attribName,
+                                  newvalue,
+                                  PR_TRUE);
+        }
+        else {
+            aRealElement->UnsetAttr(attribNameSpaceID,
+                                    attribName,
+                                    PR_TRUE);
         }
     }
 
@@ -982,21 +964,15 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     }
 
     if (contentsGenerated) {
-        PRInt32 count;
-        rv = aTemplateNode->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
+        PRUint32 count = aTemplateNode->GetChildCount();
 
-        for (PRInt32 loop=0; loop<count; loop++) {
-            nsCOMPtr<nsIContent> tmplKid;
-            rv = aTemplateNode->ChildAt(loop, getter_AddRefs(tmplKid));
-            if (NS_FAILED(rv)) return rv;
+        for (PRUint32 loop = 0; loop < count; ++loop) {
+            nsIContent *tmplKid = aTemplateNode->GetChildAt(loop);
 
             if (! tmplKid)
                 break;
 
-            nsCOMPtr<nsIContent> realKid;
-            rv = aRealElement->ChildAt(loop, getter_AddRefs(realKid));
-            if (NS_FAILED(rv)) return rv;
+            nsIContent *realKid = aRealElement->GetChildAt(loop);
 
             if (! realKid)
                 break;
@@ -1092,9 +1068,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
 
         nsCOMPtr<nsIContent> parent = child->GetParent();
 
-        PRInt32 pos;
-        rv = parent->IndexOf(child, pos);
-        if (NS_FAILED(rv)) return rv;
+        PRInt32 pos = parent->IndexOf(child);
 
         NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
         if (pos < 0) continue;
@@ -1206,7 +1180,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     // "containment" arcs out of the element's resource.
     nsresult rv;
 
-	// Compile the rules now, if they haven't been already.
+    // Compile the rules now, if they haven't been already.
     if (! mRulesCompiled) {
         rv = CompileRules();
         if (NS_FAILED(rv)) return rv;
@@ -1437,15 +1411,10 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
         nsIContent* element = NS_STATIC_CAST(nsIContent*, ungenerated[last]);
         ungenerated.RemoveElementAt(last);
 
-        PRInt32 i = 0;
-        element->ChildCount(i);
+        PRUint32 i = element->GetChildCount();
 
-        while (--i >= 0) {
-            nsCOMPtr<nsIContent> child;
-            element->ChildAt(i, getter_AddRefs(child));
-            NS_ASSERTION(child != nsnull, "huh? no child?");
-            if (! child)
-                continue;
+        while (i-- > 0) {
+            nsIContent *child = element->GetChildAt(i);
 
             // Optimize for the <template> element, because we *know*
             // it won't have any generated content: there's no reason

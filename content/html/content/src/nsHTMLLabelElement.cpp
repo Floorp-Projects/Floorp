@@ -511,23 +511,19 @@ nsHTMLLabelElement::GetForContent()
 already_AddRefed<nsIContent>
 nsHTMLLabelElement::GetFirstFormControl(nsIContent *current)
 {
-  PRInt32 numNodes;
-  nsresult rv = current->ChildCount(numNodes);
-  if (NS_SUCCEEDED(rv)) {
-    for (PRInt32 i = 0; i < numNodes; i++) {
-      nsIContent *child;
-      current->ChildAt(i, &child);
-      if (child) {
-        if (child->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-          return child;
-        }
-        else {
-          nsIContent* content = GetFirstFormControl(child).get();
-          NS_RELEASE(child);
-          if (content) {
-            return content;
-          }
-        }
+  PRUint32 numNodes = current->GetChildCount();
+
+  for (PRUint32 i = 0; i < numNodes; i++) {
+    nsIContent *child = current->GetChildAt(i);
+    if (child) {
+      if (child->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+        NS_ADDREF(child);
+        return child;
+      }
+
+      nsIContent* content = GetFirstFormControl(child).get();
+      if (content) {
+        return content;
       }
     }
   }

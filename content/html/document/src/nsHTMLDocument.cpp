@@ -1154,7 +1154,7 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName,
   nsAutoString name;
   PRUint32 i, n = mImageMaps.Count();
 
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     nsCOMPtr<nsIDOMHTMLMapElement> map = mImageMaps[i];
     NS_ASSERTION(map, "Null map in map list!");
 
@@ -1368,15 +1368,10 @@ nsHTMLDocument::ContentAppended(nsIContent* aContainer,
 
   // Register new content. That is the content numbered from
   // aNewIndexInContainer and upwards.
-  PRInt32 count=0;
-  aContainer->ChildCount(count);
+  PRUint32 count = aContainer->GetChildCount();
 
-  PRInt32 i;
-  nsCOMPtr<nsIContent> newChild;
-  for (i = aNewIndexInContainer; i < count; ++i) {
-    aContainer->ChildAt(i, getter_AddRefs(newChild));
-    if (newChild)
-      RegisterNamedItems(newChild);
+  for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
+    RegisterNamedItems(aContainer->GetChildAt(i));
   }
 
   return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
@@ -2168,8 +2163,7 @@ GetHTMLDocumentNamespace(nsIContent *aContent)
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
 {
-  nsCOMPtr<nsINodeInfo> ni;
-  aContent->GetNodeInfo(getter_AddRefs(ni));
+  nsINodeInfo *ni = aContent->GetNodeInfo();
 
   if (ni) {
     PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
@@ -2202,8 +2196,7 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 {
-  nsCOMPtr<nsINodeInfo> ni;
-  aContent->GetNodeInfo(getter_AddRefs(ni));
+  nsINodeInfo *ni = aContent->GetNodeInfo();
 
   if (ni) {
     PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
@@ -2422,20 +2415,17 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   nsCOMPtr<nsIContent> root(mRootContent);
 
   if (root) {
-    PRInt32 count;
-    root->ChildCount(count);
+    PRUint32 count = root->GetChildCount();
 
     // Remove all the children from the root.
-    while (--count >= 0) {
+    while (count-- > 0) {
       root->RemoveChildAt(count, PR_TRUE);
     }
 
-    count = 0;
-
-    mRootContent->GetAttrCount(count);
+    count = mRootContent->GetAttrCount();
 
     // Remove all attributes from the root element
-    while (--count >= 0) {
+    while (count-- > 0) {
       nsCOMPtr<nsIAtom> name, prefix;
       PRInt32 nsid;
 
@@ -2560,12 +2550,12 @@ nsHTMLDocument::Close()
   nsresult rv = NS_OK;
 
   if (mParser && mIsWriting) {
-    mWriteLevel++;
+    ++mWriteLevel;
     rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
                         NS_GENERATE_PARSER_KEY(),
                         NS_LITERAL_CSTRING("text/html"), PR_FALSE,
                         PR_TRUE);
-    mWriteLevel--;
+    --mWriteLevel;
     mIsWriting = 0;
     mParser = nsnull;
 
@@ -2616,7 +2606,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  mWriteLevel++;
+  ++mWriteLevel;
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
   static NS_NAMED_LITERAL_STRING(empty, "");
@@ -2634,7 +2624,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                       NS_LITERAL_CSTRING("text/html"), PR_FALSE,
                       (!mIsWriting || (mWriteLevel > 1)));
 
-  mWriteLevel--;
+  --mWriteLevel;
 
   return rv;
 }
@@ -2733,7 +2723,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     if (argc > 1) {
       nsAutoString string_buffer;
 
-      for (i = 0; i < argc; i++) {
+      for (i = 0; i < argc; ++i) {
         JSString *str = JS_ValueToString(cx, argv[i]);
         NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2875,14 +2865,14 @@ nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
 NS_IMETHODIMP
 nsHTMLDocument::AddedForm()
 {
-  mNumForms++;
+  ++mNumForms;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::RemovedForm()
 {
-  mNumForms--;
+  --mNumForms;
   return NS_OK;
 }
 
@@ -2981,11 +2971,9 @@ nsHTMLDocument::GetWidth(PRInt32* aWidth)
   NS_ENSURE_ARG_POINTER(aWidth);
   *aWidth = 0;
 
-  nsCOMPtr<nsIPresShell> shell;
-
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
-  GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = GetShellAt(0);
   if (!shell) {
     return NS_OK;
   }
@@ -3003,11 +2991,9 @@ nsHTMLDocument::GetHeight(PRInt32* aHeight)
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  nsCOMPtr<nsIPresShell> shell;
-
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
-  GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = GetShellAt(0);
   if (!shell) {
     return NS_OK;
   }
@@ -3450,11 +3436,7 @@ nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
     return NS_OK;
   }
 
-  PRInt32 i;
-
-  list->IndexOf(aContent, i);
-
-  if (i < 0) {
+  if (list->IndexOf(aContent, PR_FALSE) < 0) {
     list->AppendElement(aContent);
   }
 
@@ -3572,16 +3554,10 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
     return rv;
   }
 
-  PRInt32 i, count;
+  PRUint32 i, count = aContent->GetChildCount();
 
-  aContent->ChildCount(count);
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-
-    aContent->ChildAt(i, getter_AddRefs(child));
-
-    UnregisterNamedItems(child);
+  for (i = 0; i < count; ++i) {
+    UnregisterNamedItems(aContent->GetChildAt(i));
   }
 
   return NS_OK;
@@ -3616,16 +3592,10 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
     }
   }
 
-  PRInt32 i, count;
+  PRUint32 i, count = aContent->GetChildCount();
 
-  aContent->ChildCount(count);
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-
-    aContent->ChildAt(i, getter_AddRefs(child));
-
-    RegisterNamedItems(child);
+  for (i = 0; i < count; ++i) {
+    RegisterNamedItems(aContent->GetChildAt(i));
   }
 
   return NS_OK;
@@ -3661,16 +3631,10 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
     }
   }
 
-  PRInt32 i, count;
+  PRUint32 i, count = aContent->GetChildCount();
 
-  aContent->ChildCount(count);
-
-  nsCOMPtr<nsIContent> child;
-
-  for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, getter_AddRefs(child));
-
-    FindNamedItems(aName, child, aEntry, aIsXHTML);
+  for (i = 0; i < count; ++i) {
+    FindNamedItems(aName, aContent->GetChildAt(i), aEntry, aIsXHTML);
   }
 }
 
@@ -3821,24 +3785,18 @@ nsHTMLDocument::GetBodyContent()
     return PR_FALSE;
   }
 
-  PRInt32 i, child_count;
-  root->ChildCount(child_count);
+  PRUint32 i, child_count = root->GetChildCount();
 
-  for (i = 0; i < child_count; i++) {
-    nsCOMPtr<nsIContent> child;
-
-    root->ChildAt(i, getter_AddRefs(child));
+  for (i = 0; i < child_count; ++i) {
+    nsIContent *child = root->GetChildAt(i);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-    if (child->IsContentOfType(nsIContent::eHTML)) {
-      nsCOMPtr<nsINodeInfo> ni;
-      child->GetNodeInfo(getter_AddRefs(ni));
+    if (child->IsContentOfType(nsIContent::eHTML) &&
+        child->GetNodeInfo()->Equals(nsHTMLAtoms::body,
+                                     mDefaultNamespaceID)) {
+      mBodyContent = do_QueryInterface(child);
 
-      if (ni->Equals(nsHTMLAtoms::body, mDefaultNamespaceID)) {
-        mBodyContent = do_QueryInterface(child);
-
-        return PR_TRUE;
-      }
+      return PR_TRUE;
     }
   }
 

@@ -1883,8 +1883,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   if (!document) {
     // XXXbz GetOwnerDocument
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    targetContent->GetNodeInfo(getter_AddRefs(nodeInfo));
+    nsINodeInfo *nodeInfo = targetContent->GetNodeInfo();
     if (nodeInfo) {
       document = nodeInfo->GetDocument();
     }
@@ -1896,8 +1895,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
 
   // Obtain a presentation shell
-  nsCOMPtr<nsIPresShell> shell;
-  document->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = document->GetShellAt(0);
   if (!shell) {
     return NS_OK;
   }

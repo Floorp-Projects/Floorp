@@ -205,9 +205,8 @@ nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
     if (!content) {
       break;
     }
-    
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    content->GetNodeInfo(getter_AddRefs(nodeInfo));
+
+    nsINodeInfo *nodeInfo = content->GetNodeInfo();
     NS_ASSERTION(nodeInfo, "element without node info");
 
     if (nodeInfo) {

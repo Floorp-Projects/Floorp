@@ -43,6 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -154,29 +155,20 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
                                   nsIAtom* aTag,
                                   nsIContent** aResult)
 {
-    nsresult rv;
+    PRUint32 count = aElement->GetChildCount();
 
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, getter_AddRefs(kid))))
-            return rv; // XXX fatal
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *kid = aElement->GetChildAt(i);
 
         PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(&nameSpaceID)))
-            return rv; // XXX fatal
+        kid->GetNameSpaceID(&nameSpaceID);
 
         if (nameSpaceID != aNameSpaceID)
             continue; // wrong namespace
 
-        nsCOMPtr<nsIAtom> kidTag;
-        if (NS_FAILED(rv = kid->GetTag(getter_AddRefs(kidTag))))
-            return rv; // XXX fatal
+        nsINodeInfo *ni = kid->GetNodeInfo();
 
-        if (kidTag.get() != aTag)
+        if (!ni || !ni->Equals(aTag))
             continue;
 
         *aResult = kid;

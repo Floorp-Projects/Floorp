@@ -302,12 +302,13 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
   rv = aTargetNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if(NS_SUCCEEDED(rv) && domDoc)
   {
-    nsCOMPtr<nsIPresShell> shell;
     nsCOMPtr<nsIPresContext> context;
     nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
-    tempdoc->GetShellAt(0, getter_AddRefs(shell));  // Get nsIDOMElement for targetNode
+
+    // Get nsIDOMElement for targetNode
+    nsIPresShell *shell = tempdoc->GetShellAt(0);
     if (!shell)
-        return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
 
     shell->GetPresContext(getter_AddRefs(context));
  
@@ -402,11 +403,9 @@ static void
 GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
 {
   *aResult = nsnull;
-  PRInt32 childCount;
-  aContent->ChildCount(childCount);
+  PRInt32 childCount = aContent->GetChildCount();
   for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child = aContent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (aTag == tag.get()) {

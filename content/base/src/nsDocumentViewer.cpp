@@ -1693,7 +1693,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 // Note this is also defined in nsPrintEngine
 // They can't share it because nsPrintEngine may not be available
 // when printing isn't turned on
-static nsIPresShell*
+static nsIPresShell *
 GetPresShellFor(nsIDocShell* aDocShell)
 {
   nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
@@ -1702,10 +1702,7 @@ GetPresShellFor(nsIDocShell* aDocShell)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc) return nsnull;
 
-  nsIPresShell* shell = nsnull;
-  doc->GetShellAt(0, &shell);
-
-  return shell;
+  return doc->GetShellAt(0);
 }
 
 //---------------------------------------------------------------------
@@ -1725,15 +1722,17 @@ DocumentViewerImpl::GetPresShellAndRootContent(nsIWebShell *  aWebShell,
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
 
-  nsCOMPtr<nsIPresShell> presShell(getter_AddRefs(GetPresShellFor(docShell)));
-  if (!presShell) return;
+  nsIPresShell *presShell = GetPresShellFor(docShell);
+  if (!presShell)
+    return;
 
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
-  if (!doc) return;
+  if (!doc)
+    return;
 
   doc->GetRootContent(aContent); // this addrefs
-  *aPresShell = presShell.get();
+  *aPresShell = presShell;
   NS_ADDREF(*aPresShell);
 }
 
@@ -1742,14 +1741,14 @@ nsresult
 DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent,
                                         const nsIID& aIID)
 {
-  PRInt32 numChildren;
-  aParentContent->ChildCount(numChildren);
+  PRUint32 numChildren = aParentContent->GetChildCount();
 
   // do a breadth search across all siblings
-  PRInt32 inx;
+  PRUint32 inx;
   for (inx = 0; inx < numChildren; ++inx) {
-    nsCOMPtr<nsIContent> child;
-    if (NS_SUCCEEDED(aParentContent->ChildAt(inx, getter_AddRefs(child))) && child) {
+    nsIContent *child = aParentContent->GetChildAt(inx);
+
+    if (child) {
       nsCOMPtr<nsISupports> temp;
       if (NS_SUCCEEDED(child->QueryInterface(aIID, (void**)getter_AddRefs(temp)))) {
         return NS_OK;

@@ -76,7 +76,8 @@ public:
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
 
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, PRBool aDeepSetDocument)
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                           PRBool aDeepSetDocument)
   {
     nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
     if (NS_SUCCEEDED(rv)) {
@@ -85,7 +86,8 @@ public:
     return rv;
   }
 
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, PRBool aDeepSetDocument)
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument)
   {
     nsresult rv = nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
     if (NS_SUCCEEDED(rv)) {
@@ -94,7 +96,8 @@ public:
     return rv;
   }
 
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDocument)
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument)
   {
     nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify, aDeepSetDocument);
     if (NS_SUCCEEDED(rv)) {
@@ -103,7 +106,7 @@ public:
     return rv;
   }
 
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   {
     nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex, aNotify);
     if (NS_SUCCEEDED(rv)) {
@@ -123,7 +126,7 @@ public:
     return rv;
   }
  
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  NS_IMETHOD SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
                                                          aValue, aNotify);

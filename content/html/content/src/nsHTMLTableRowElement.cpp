@@ -82,6 +82,15 @@ nsTableCellCollection::~nsTableCellCollection()
 {
 }
 
+static PRBool
+IsCell(nsIContent *aContent)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && (ni->Equals(nsHTMLAtoms::td) || ni->Equals(nsHTMLAtoms::th)) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
+}
+
 NS_IMETHODIMP 
 nsTableCellCollection::GetLength(PRUint32* aLength)
 {
@@ -94,22 +103,13 @@ nsTableCellCollection::GetLength(PRUint32* aLength)
   nsresult result = NS_OK;
 
   if (mParent) {
-    nsCOMPtr<nsIContent> child;
+    nsIContent *child;
     PRUint32 childIndex = 0;
 
-    mParent->ChildAt(childIndex, getter_AddRefs(child));
-
-    while (child) {
-      nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(getter_AddRefs(childTag));
-
-      if ((nsHTMLAtoms::td == childTag.get()) ||
-          (nsHTMLAtoms::th == childTag.get())) {
+    while ((child = mParent->GetChildAt(childIndex++))) {
+      if (IsCell(child)) {
         (*aLength)++;
       }
-
-      childIndex++;
-      mParent->ChildAt(childIndex, getter_AddRefs(child));
     }
   }
 
@@ -125,29 +125,20 @@ nsTableCellCollection::Item(PRUint32     aIndex,
   nsresult rv = NS_OK;
 
   if (mParent) {
-    nsCOMPtr<nsIContent> child;
+    nsIContent *child;
     PRUint32 childIndex = 0;
 
-    mParent->ChildAt(childIndex, getter_AddRefs(child));
-
-    while (child) {
-      nsCOMPtr<nsIAtom> childTag;
-
-      child->GetTag(getter_AddRefs(childTag));
-
-      if ((nsHTMLAtoms::td == childTag.get()) ||
-          (nsHTMLAtoms::th == childTag.get())) {
+    while ((child = mParent->GetChildAt(childIndex++))) {
+      if (IsCell(child)) {
         if (aIndex == theIndex) {
           CallQueryInterface(child, aReturn);
           NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
 
           break;
         }
+
         theIndex++;
       }
-
-      childIndex++;
-      mParent->ChildAt(childIndex, getter_AddRefs(child));
     }
   }
 
@@ -206,8 +197,7 @@ void DebugList(nsIDOMHTMLTableElement* aTable) {
       if (root) {
         root->List();
       }
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
         nsIFrame* rootFrame;
         shell->GetRootFrame(rootFrame);

@@ -45,9 +45,10 @@
 #include "nsIPrincipal.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 
-nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager = nsnull;
-PRUint32 nsNodeInfoManager::gNodeManagerCount = 0;
+nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager;
+PRUint32 nsNodeInfoManager::gNodeManagerCount;
 
 
 nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult)
@@ -286,23 +287,29 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
 {
   NS_ENSURE_ARG(!aQualifiedName.IsEmpty());
 
-  nsAutoString name(aQualifiedName);
-  nsAutoString prefix;
-  PRInt32 nsoffset = name.FindChar(':');
-  if (-1 != nsoffset) {
-    name.Left(prefix, nsoffset);
-    name.Cut(0, nsoffset+1);
-  }
-
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+  nsAString::const_iterator start, end;
+  aQualifiedName.BeginReading(start);
+  aQualifiedName.EndReading(end);
 
   nsCOMPtr<nsIAtom> prefixAtom;
 
-  if (!prefix.IsEmpty()) {
-    prefixAtom = do_GetAtom(prefix);
+  nsAString::const_iterator iter(start);
+
+  if (FindCharInReadable(':', iter, end)) {
+    prefixAtom = do_GetAtom(Substring(start, iter));
     NS_ENSURE_TRUE(prefixAtom, NS_ERROR_OUT_OF_MEMORY);
+
+    start = ++iter; // step over the ':'
+
+    if (iter == end) {
+      // No data after the ':'.
+
+      return NS_ERROR_INVALID_ARG;
+    }
   }
+
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(Substring(start, end));
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   PRInt32 nsid = kNameSpaceID_None;
 
@@ -395,7 +402,10 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
   NS_WARN_IF_FALSE(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
   if (aNodeInfo) {
-    PRBool ret = PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
+#ifdef DEBUG
+    PRBool ret =
+#endif
+    PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 
     NS_WARN_IF_FALSE(ret, "Can't find nsINodeInfo to remove!!!");
   }

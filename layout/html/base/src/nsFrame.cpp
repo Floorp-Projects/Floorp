@@ -857,15 +857,13 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK; //if frame does not allow selection. do nothing
 
 
-  nsCOMPtr<nsIContent> newContent = mContent->GetParent();
+  nsIContent *newContent = mContent->GetParent();
 
   //check to see if we are anonymous content
-  PRInt32 offset;
+  PRInt32 offset = 0;
   if (newContent) {
     // XXXbz there has GOT to be a better way of determining this!
-    result = newContent->IndexOf(mContent, offset);
-    if (NS_FAILED(result)) 
-      return result;
+    offset = newContent->IndexOf(mContent);
   }
 
   SelectionDetails *details;
@@ -1101,9 +1099,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   nsCOMPtr<nsIContent> parentContent = tableOrCellContent->GetParent();
   if (!parentContent) return NS_ERROR_FAILURE;
 
-  PRInt32 offset;
-  result = parentContent->IndexOf(tableOrCellContent, offset);
-  if (NS_FAILED(result)) return result;
+  PRInt32 offset = parentContent->IndexOf(tableOrCellContent);
   // Not likely?
   if (offset < 0) return NS_ERROR_FAILURE;
 
@@ -2001,21 +1997,15 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
           nsCOMPtr<nsIContent> content = kidContent->GetParent();
 
           if (content) {
-            PRInt32 kidCount = 0;
+            PRInt32 kidCount = content->ChildCount();
+            PRInt32 kidIndex = content->IndexOf(kidContent);
 
-            result = content->ChildCount(kidCount);
-            if (NS_SUCCEEDED(result)) {
+            // IndexOf() should return -1 for the index if it doesn't
+            // find kidContent in it's child list.
 
-              PRInt32 kidIndex = 0;
-              result = content->IndexOf(kidContent, kidIndex);
-
-              // IndexOf() should return -1 for the index if it doesn't
-              // find kidContent in it's child list.
-
-              if (NS_SUCCEEDED(result) && (kidIndex < 0 || kidIndex >= kidCount)) {
-                // Must be anonymous content! So skip it!
-                skipThisKid = PR_TRUE;
-              }
+            if (kidIndex < 0 || kidIndex >= kidCount) {
+              // Must be anonymous content! So skip it!
+              skipThisKid = PR_TRUE;
             }
           }
         }
@@ -2114,10 +2104,10 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
     
     PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
     
-    result = (*aNewContent)->IndexOf(mContent, contentOffset);
-    if (NS_FAILED(result) || contentOffset < 0) 
+    contentOffset = (*aNewContent)->IndexOf(mContent);
+    if (contentOffset < 0) 
     {
-      return (result?result:NS_ERROR_FAILURE);
+      return NS_ERROR_FAILURE;
     }
     aContentOffset = contentOffset; //its clear save the result
 
@@ -2645,13 +2635,13 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 
 PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 {
-  PRInt32     result = -1;
+  PRInt32 result = -1;
 
   nsIContent* content = aFrame->GetContent();
   if (content) {
     nsIContent* parentContent = content->GetParent();
     if (parentContent) {
-      parentContent->IndexOf(content, result);
+      result = parentContent->IndexOf(content);
     }
   }
 
@@ -3098,12 +3088,8 @@ nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* 
   {
     nsIContent* newContent = mContent->GetParent();
     if (newContent){
-      PRInt32 newOffset;
-      nsresult result = newContent->IndexOf(mContent, newOffset);
-      if (NS_FAILED(result)) 
-      {
-        return result;
-      }
+      PRInt32 newOffset = newContent->IndexOf(mContent);
+
       if (inOffset > newOffset)
         bottomLeft.x = GetRect().width;
     }
@@ -3295,7 +3281,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                   if (parent)
                   {
                     aPos->mResultContent = parent;
-                    parent->IndexOf(content, aPos->mContentOffset);
+                    aPos->mContentOffset = parent->IndexOf(content);
                     aPos->mPreferLeft = PR_FALSE;
                     if ((point.x - offset.x+ tempRect.x)>tempRect.width)
                     {
@@ -3652,15 +3638,13 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       {
         nsIContent* newContent = mContent->GetParent();
         if (newContent){
-          PRInt32 newOffset;
           aPos->mResultContent = newContent;
-          result = newContent->IndexOf(mContent, newOffset);
+
+          PRInt32 newOffset = newContent->IndexOf(mContent);
+
           if (aPos->mStartOffset < 0)//start at "end"
             aPos->mStartOffset = newOffset + 1;
-          if (NS_FAILED(result)) 
-          {
-            return result;
-          }
+
           if ((aPos->mDirection == eDirNext && newOffset < aPos->mStartOffset) || //need to go to next one
               (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
           {

@@ -125,8 +125,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
     return nsnull;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
   NS_ASSERTION(shell, "No pres shell");
 
   nsCOMPtr<nsIPresContext> presContext;
@@ -172,9 +171,8 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-    
+    nsIPresShell *presShell = doc->GetShellAt(0);
+
     if (presShell) {
       // Flush all pending notifications so that our frames are uptodate
       presShell->FlushPendingNotifications(PR_FALSE);

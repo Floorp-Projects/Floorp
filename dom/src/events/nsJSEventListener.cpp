@@ -122,7 +122,6 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-
   rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), mObject,
                        NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -82,7 +82,10 @@ nsDOMCSSAttributeDeclaration::DeclarationChanged()
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
   nsHTMLValue val;
-  nsresult rv = mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
+#ifdef DEBUG
+  nsresult rv =
+#endif
+  mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
   NS_ASSERTION(rv == NS_CONTENT_ATTR_HAS_VALUE &&
                eHTMLUnit_ISupports == val.GetUnit(),
                "content must have rule");
@@ -160,12 +163,9 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   *aBaseURI = nsnull;
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
-  
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult result = mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
-  if (NS_FAILED(result)) {
-    return result;
-  }
+
+  nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
+
   // XXXbz GetOwnerDocument
   nsIDocument* doc = nodeInfo->GetDocument();
 
@@ -177,13 +177,15 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   }
   NS_ASSERTION(!doc || *aCSSLoader, "Document with no CSS loader!");
   
+  nsresult rv = NS_OK;
+
   if (*aCSSLoader) {
-    result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
+    rv = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
   } else {
-    result = NS_NewCSSParser(aCSSParser);
+    rv = NS_NewCSSParser(aCSSParser);
   }
-  if (NS_FAILED(result)) {
-    return result;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   
   // If we are not HTML, we need to be case-sensitive.  Otherwise, Look up our

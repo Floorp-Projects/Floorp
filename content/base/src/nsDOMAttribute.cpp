@@ -622,8 +622,7 @@ nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
       nsCOMPtr<nsIContent> content(do_QueryInterface(nodeOwner));
       // Check to see if we're in HTML.
       if (content->IsContentOfType(nsIContent::eHTML)) {
-        nsCOMPtr<nsINodeInfo> ni;
-        content->GetNodeInfo(getter_AddRefs(ni));
+        nsINodeInfo *ni = content->GetNodeInfo();
         if (ni) {
           // If there is no namespace, we're in HTML (as opposed to XHTML)
           // and we'll need to compare node names case insensitively.

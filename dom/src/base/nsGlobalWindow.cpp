@@ -4011,28 +4011,26 @@ GlobalWindowImpl::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
-  if (mDocument) {
-    nsCOMPtr<nsIDocument> idoc(do_QueryInterface(mDocument));
-    if (idoc) {
-      // Obtain a presentation context
-      PRInt32 count = idoc->GetNumberOfShells();
-      if (count == 0)
-        return NS_OK;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+  if (doc) {
+    // Obtain a presentation context
+    nsIPresShell *shell = doc->GetShellAt(0);
+    if (!shell) {
+      return NS_OK;
+    }
 
-      nsCOMPtr<nsIPresShell> shell;
-      idoc->GetShellAt(0, getter_AddRefs(shell));
+    // Retrieve the context
+    nsCOMPtr<nsIPresContext> aPresContext;
+    shell->GetPresContext(getter_AddRefs(aPresContext));
 
-      // Retrieve the context
-      nsCOMPtr<nsIPresContext> aPresContext;
-      shell->GetPresContext(getter_AddRefs(aPresContext));
-
-      nsCOMPtr<nsIEventStateManager> esm;
-      if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-        return esm->DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject *,
-                                                    this), aEvent, _retval);
-      }
+    nsCOMPtr<nsIEventStateManager> esm;
+    aPresContext->GetEventStateManager(getter_AddRefs(esm));
+    if (esm) {
+      return esm->DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject *,
+                                                  this), aEvent, _retval);
     }
   }
+
   return NS_ERROR_FAILURE;
 }
 

@@ -583,7 +583,6 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
   if (mPrimaryFrameMap.ops) {
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
         PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
@@ -620,14 +619,13 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
       nsIContent* parent = aContent->GetParent();
       if (parent)
       {
-        PRInt32 index;
-        rv = parent->IndexOf(aContent, index);
-        if (NS_SUCCEEDED(rv) && index > 0)  // no use looking if it's the first child
+        PRInt32 index = parent->IndexOf(aContent);
+        if (index > 0)  // no use looking if it's the first child
         {
-          nsCOMPtr<nsIContent> prevSibling;
+          nsIContent *prevSibling;
           nsCOMPtr<nsIAtom> tag;
           do {
-            parent->ChildAt(--index, getter_AddRefs(prevSibling));
+            prevSibling = parent->GetChildAt(--index);
             prevSibling->GetTag(getter_AddRefs(tag));
           } while (index &&
                    (tag == nsLayoutAtoms::textTagName ||
@@ -635,7 +633,7 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
                     tag == nsLayoutAtoms::processingInstructionTagName));
           if (prevSibling) {
             entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-                PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling.get(),
+                PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
                                      PL_DHASH_LOOKUP));
             if (PL_DHASH_ENTRY_IS_BUSY(entry))
               hint.mPrimaryFrameForPrevSibling = entry->frame;

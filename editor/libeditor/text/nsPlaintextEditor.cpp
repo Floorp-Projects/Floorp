@@ -767,8 +767,7 @@ nsPlaintextEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
     nsCOMPtr<nsIContent> parent = content->GetParent();
     if (parent)
     { 
-      PRInt32 index; 
-      if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 
+      if (parent->IndexOf(content) < 0 ) 
       { 
         rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
         result = CallQueryInterface(rootElement, aEventReceiver);
@@ -1373,11 +1372,10 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
       nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
       if (content)
       {
-        range->SetStart(rootElement,0);
-        PRInt32 children;
-        if (NS_SUCCEEDED(content->ChildCount(children)))
-          range->SetEnd(rootElement,children);
-        // XXX else, should we return the error code?
+        PRInt32 children = content->GetChildCount();
+
+        range->SetStart(rootElement, 0);
+        range->SetEnd(rootElement, children);
 
         if (NS_FAILED(selection->AddRange(range)))
           return NS_ERROR_FAILURE;

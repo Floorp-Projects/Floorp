@@ -93,6 +93,8 @@ public:
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
 protected:
+  already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
+
   GenericElementCollection *mTBodies;
   TableRowsCollection *mRows;
 };
@@ -451,32 +453,33 @@ nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
   return rv;
 }
 
+already_AddRefed<nsIDOMHTMLTableSectionElement>
+nsHTMLTableElement::GetSection(nsIAtom *aTag)
+{
+  PRUint32 childCount = GetChildCount();
+
+  nsCOMPtr<nsIDOMHTMLTableSectionElement> section;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent *child = GetChildAt(i);
+
+    section = do_QueryInterface(child);
+
+    if (section && child->GetNodeInfo()->Equals(aTag)) {
+      nsIDOMHTMLTableSectionElement *result = section;
+      NS_ADDREF(result);
+
+      return result;
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 {
-  *aValue = nsnull;
-  nsCOMPtr<nsIDOMNode> child;
-  GetFirstChild(getter_AddRefs(child));
-
-  while (child) {
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> section(do_QueryInterface(child));
-
-    if (section) {
-      nsCOMPtr<nsIAtom> tag;
-      nsCOMPtr<nsIContent> content = do_QueryInterface(section);
-
-      content->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsHTMLAtoms::thead) {
-        *aValue = section;
-        NS_ADDREF(*aValue);
-
-        break;
-      }
-    }
-
-    nsIDOMNode *temp = child.get();
-    temp->GetNextSibling(getter_AddRefs(child));
-  }
+  *aValue = GetSection(nsHTMLAtoms::thead).get();
 
   return NS_OK;
 }
@@ -506,30 +509,7 @@ nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 {
-  *aValue = nsnull;
-  nsCOMPtr<nsIDOMNode> child;
-  GetFirstChild(getter_AddRefs(child));
-
-  while (child) {
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> section(do_QueryInterface(child));
-
-    if (section) {
-      nsCOMPtr<nsIAtom> tag;
-      nsCOMPtr<nsIContent> content = do_QueryInterface(section);
-
-      content->GetTag(getter_AddRefs(tag));
-
-      if (tag.get() == nsHTMLAtoms::tfoot) {
-        *aValue = section;
-        NS_ADDREF(*aValue);
-
-        break;
-      }
-    }
-
-    nsIDOMNode *temp = child.get();
-    temp->GetNextSibling(getter_AddRefs(child));
-  }
+  *aValue = GetSection(nsHTMLAtoms::tfoot).get();
 
   return NS_OK;
 }

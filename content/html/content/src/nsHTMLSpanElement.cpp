@@ -145,9 +145,8 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  nsCOMPtr<nsIAtom> tag;
-  GetTag(getter_AddRefs(tag));
-  if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
+      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
     return GetContentsAsText(aInnerHTML);
   }
 
@@ -157,9 +156,8 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  nsCOMPtr<nsIAtom> tag;
-  GetTag(getter_AddRefs(tag));
-  if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
+      mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
     return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
   }
 

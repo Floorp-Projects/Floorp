@@ -457,9 +457,9 @@ Node::OrderInfo* Node::getOrderInfo()
             PRInt32 thisNS = getNamespaceID();
 
             // find this attribute in parents attrlist
-            PRInt32 count, i;
+            PRUint32 count, i;
             nsCOMPtr<nsIContent> owner = do_QueryInterface(parent->getNSObj());
-            owner->GetAttrCount(count);
+            count = owner->GetAttrCount();
             for (i = 0; i < count; ++i) {
                 nsCOMPtr<nsIAtom> attName;
                 nsCOMPtr<nsIAtom> attPrefix;
@@ -486,8 +486,7 @@ Node::OrderInfo* Node::getOrderInfo()
             nsCOMPtr<nsIContent> parentCont(do_QueryInterface(parentObj));
             // Is parent an nsIContent
             if (parentCont) {
-                PRInt32 index;
-                parentCont->IndexOf(cont, index);
+                PRInt32 index = parentCont->IndexOf(cont);
                 mOrderInfo->mOrder[lastElem] = index + kTxChildIndexOffset;
                 return mOrderInfo;
             }
@@ -495,8 +494,7 @@ Node::OrderInfo* Node::getOrderInfo()
             nsCOMPtr<nsIDocument> parentDoc(do_QueryInterface(parentObj));
             // Is parent an nsIDocument
             if (parentDoc) {
-                PRInt32 index;
-                parentDoc->IndexOf(cont, index);
+                PRInt32 index = parentDoc->IndexOf(cont);
                 mOrderInfo->mOrder[lastElem] = index + kTxChildIndexOffset;
                 return mOrderInfo;
             }

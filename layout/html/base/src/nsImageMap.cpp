@@ -449,10 +449,9 @@ void RectArea::ParseCoords(const nsAString& aSpec)
       return;
 
     // XXX GetOwnerDocument
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    mArea->GetNodeInfo(getter_AddRefs(nodeInfo));
+    nsINodeInfo *nodeInfo = mArea->GetNodeInfo();
     NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
-    
+
     nsIDocument* doc = nodeInfo->GetDocument();
     nsCAutoString urlSpec;
     if (doc) {
@@ -833,20 +832,18 @@ nsresult
 nsImageMap::UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor)
 {
   nsresult rv = NS_OK;
-  PRInt32 i, n;
-  aParent->ChildCount(n);
+  PRUint32 i, n = aParent->GetChildCount();
+
   for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
-    nsCOMPtr<nsIContent> child;
-    rv = aParent->ChildAt(i, getter_AddRefs(child));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMHTMLAnchorElement> area = do_QueryInterface(child, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        *aFoundAnchor = PR_TRUE;
-        rv = AddArea(child);
-      }
-      else {
-        rv = UpdateAreasForBlock(child, aFoundAnchor);
-      }
+    nsIContent *child = aParent->GetChildAt(i);
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> area = do_QueryInterface(child);
+    if (area) {
+      *aFoundAnchor = PR_TRUE;
+      rv = AddArea(child);
+    }
+    else {
+      rv = UpdateAreasForBlock(child, aFoundAnchor);
     }
   }
   
@@ -859,17 +856,14 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  PRInt32 i, n;
+  PRUint32 i, n = mMap->GetChildCount();
   PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
 
-  mMap->ChildCount(n);
   for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIContent> child;
-    mMap->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child = mMap->GetChildAt(i);
 
     // Only look at elements and not text, comments, etc.
-    nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(child);
-    if (! element)
+    if (!child->IsContentOfType(nsIContent::eHTML))
       continue;
 
     // First check if this map element contains an AREA element.
@@ -1153,8 +1147,7 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
             nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
             //This check is necessary to see if we're still attached to the doc
             if (doc) {
-              nsCOMPtr<nsIPresShell> presShell;
-              doc->GetShellAt(0, getter_AddRefs(presShell));
+              nsIPresShell *presShell = doc->GetShellAt(0);
               if (presShell) {
                 nsIFrame* imgFrame;
                 if (NS_SUCCEEDED(presShell->GetPrimaryFrameFor(targetContent, &imgFrame)) && imgFrame) {

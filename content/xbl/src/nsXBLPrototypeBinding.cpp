@@ -505,11 +505,10 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
       realElement->GetTag(getter_AddRefs(tag));
       if (dstAttr == nsXBLAtoms::xbltext || (tag == nsHTMLAtoms::html) && (dstAttr == nsHTMLAtoms::value)) {
         // Flush out all our kids.
-        PRInt32 childCount;
-        realElement->ChildCount(childCount);
-        for (PRInt32 i = 0; i < childCount; i++)
+        PRUint32 childCount = realElement->GetChildCount();
+        for (PRUint32 i = 0; i < childCount; i++)
           realElement->RemoveChildAt(0, aNotify);
-      
+
         if (!aRemoveFlag) {
           // Construct a new text node and insert it.
           nsAutoString value;
@@ -725,17 +724,15 @@ nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID)
 already_AddRefed<nsIContent>
 nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
 {
-  PRInt32 childCount;
-  mBinding->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    mBinding->ChildAt(i, getter_AddRefs(child));
+  PRUint32 childCount = mBinding->GetChildCount();
+
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *child = mBinding->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (aTag == tag) {
-      nsIContent* result = child;
-      NS_ADDREF(result);
-      return result;
+      NS_ADDREF(child);
+      return child;
     }
   }
 
@@ -829,12 +826,11 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
         defContent = currPoint->GetDefaultContent();
         if (defContent) {
           // Find out the index of the template element within the <children> elt.
-          PRInt32 index;
-          childPoint->IndexOf(aTemplChild, index);
+          PRInt32 index = childPoint->IndexOf(aTemplChild);
           
           // Now we just have to find the corresponding elt underneath the cloned
           // default content.
-          defContent->ChildAt(index, &result); // addrefs
+          result = defContent->GetChildAt(index);
         } 
         break;
       }
@@ -842,10 +838,11 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   }
   else if (copyParent)
   {
-    PRInt32 index;
-    templParent->IndexOf(aTemplChild, index);
-    copyParent->ChildAt(index, &result); // Addref happens here.
+    PRInt32 index = templParent->IndexOf(aTemplChild);
+    result = copyParent->GetChildAt(index);
   }
+
+  NS_IF_ADDREF(result);
 
   return result;
 }
@@ -1053,12 +1050,9 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
   }
 
   // Recur into our children.
-  PRInt32 childCount;
-  aElement->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aElement->ChildAt(i, getter_AddRefs(child));
-    ConstructAttributeTable(child);
+  PRUint32 childCount = aElement->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; i++) {
+    ConstructAttributeTable(aElement->GetChildAt(i));
   }
 }
 
@@ -1136,8 +1130,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // if we dynamically obtain our index each time, then the removals of previous
       // siblings will cause the index to adjust (and we won't have to take that into
       // account explicitly).
-      PRInt32 index;
-      parent->IndexOf(child, index);
+      PRInt32 index = parent->IndexOf(child);
       xblIns->SetInsertionIndex((PRUint32)index);
 
       // Now remove the <children> element from the template.  This ensures that the
@@ -1148,8 +1141,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // See if the insertion point contains default content.  Default content must
       // be cached in our insertion point entry, since it will need to be cloned
       // in situations where no content ends up being placed at the insertion point.
-      PRInt32 defaultCount;
-      child->ChildCount(defaultCount);
+      PRUint32 defaultCount = child->GetChildCount();
       if (defaultCount > 0) {
         // Annotate the insertion point with our default content.
         xblIns->SetDefaultContent(child);
@@ -1239,11 +1231,11 @@ void
 nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
                                          nsISupportsArray** aList)
 {
-  PRInt32 childCount;
-  aContent->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, getter_AddRefs(child));
+  PRUint32 childCount = aContent->GetChildCount();
+
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *child = aContent->GetChildAt(i);
+
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (aTag == tag) {

@@ -595,8 +595,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   if ( targetAsContent ) {
     nsCOMPtr<nsIDocument> targetDocument = targetAsContent->GetDocument();
     if (targetDocument) {
-      nsCOMPtr<nsIPresShell> shell;
-      targetDocument->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = targetDocument->GetShellAt(0);
       if ( shell ) {
         // We might be inside a popup widget. If so, we need to use that widget and
         // not the root view's widget.

@@ -559,9 +559,9 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
 {
   // normal case, quick return if there are no attributes
   NS_ASSERTION(aContent, "null arg");
-  PRInt32 attrCount = 0;
+  PRUint32 attrCount = 0;
   if (aContent)
-    aContent->GetAttrCount(attrCount);
+    attrCount = aContent->GetAttrCount();
   if (!attrCount)
     return 0;
 
@@ -587,7 +587,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
   nsCOMPtr<nsIAtom> prefix;
   nsCOMPtr<nsIAtom> attrAtom;
   PRInt32 ruleCount = 0;
-  for (PRInt32 i = 0; i < attrCount; ++i) {
+  for (PRUint32 i = 0; i < attrCount; ++i) {
     aContent->GetAttrNameAt(i, &nameSpaceID,
                             getter_AddRefs(attrAtom),
                             getter_AddRefs(prefix));

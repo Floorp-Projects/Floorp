@@ -622,15 +622,13 @@ nsresult nsTreeWalker::IndexOf(nsIDOMNode* aParent,
         nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
 
         if (possibleIndex >= 0) {
-            nsCOMPtr<nsIContent> tmp;
-            contParent->ChildAt(possibleIndex, getter_AddRefs(tmp));
-            if (tmp == child) {
+            if (child == contParent->GetChildAt(possibleIndex)) {
                 *_childNum = possibleIndex;
                 return NS_OK;
             }
         }
 
-        contParent->IndexOf(child, *_childNum);
+        *_childNum = contParent->IndexOf(child);
 
         return *_childNum >= 0 ? NS_OK : NS_ERROR_UNEXPECTED;
     }
@@ -640,15 +638,13 @@ nsresult nsTreeWalker::IndexOf(nsIDOMNode* aParent,
         nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
 
         if (possibleIndex >= 0) {
-            nsCOMPtr<nsIContent> tmp;
-            docParent->ChildAt(possibleIndex, getter_AddRefs(tmp));
-            if (tmp == child) {
+            if (child == docParent->GetChildAt(possibleIndex)) {
                 *_childNum = possibleIndex;
                 return NS_OK;
             }
         }
 
-        docParent->IndexOf(child, *_childNum);
+        *_childNum = docParent->IndexOf(child);
 
         return *_childNum >= 0 ? NS_OK : NS_ERROR_UNEXPECTED;
     }

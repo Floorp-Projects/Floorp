@@ -287,7 +287,7 @@ protected:
   void   GetFontPreferences();
   void   GetDocumentColorPreferences();
   void   UpdateCharSet(const char* aCharSet);
-  void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode);
+  void SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
 
 private:
   static int PR_CALLBACK PrefChangedCallback(const char*, void*);

@@ -1047,8 +1047,7 @@ nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
     if (!parentA || !contentA) {
       return NS_ERROR_UNEXPECTED;
     }
-    rv = parentA->IndexOf(contentA, indexA);
-    NS_ENSURE_SUCCESS(rv, rv);
+    indexA = parentA->IndexOf(contentA);
   }
 
   nsCOMPtr<nsIDOMNode> parentBNode;
@@ -1067,8 +1066,7 @@ nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
     if (!parentB || !bContent) {
       return NS_ERROR_UNEXPECTED;
     }
-    rv = parentB->IndexOf(bContent, indexB);
-    NS_ENSURE_SUCCESS(rv, rv);
+    indexB = parentB->IndexOf(bContent);
   }
 
   *retval = ComparePoints(parentANode, indexA, parentBNode, indexB);

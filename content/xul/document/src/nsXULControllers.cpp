@@ -163,7 +163,10 @@ nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
 {
   nsXULControllerData*  controllerData = new nsXULControllerData(++mCurControllerID, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
-  PRBool  inserted = mControllers.InsertElementAt((void *)controllerData, aIndex);
+#ifdef DEBUG
+  PRBool inserted =
+#endif
+  mControllers.InsertElementAt((void *)controllerData, aIndex);
   NS_ASSERTION(inserted, "Insertion of controller failed");
   return NS_OK;
 }
@@ -176,10 +179,13 @@ nsXULControllers::RemoveControllerAt(PRUint32 aIndex, nsIController **_retval)
 
   nsXULControllerData*  controllerData = NS_STATIC_CAST(nsXULControllerData*, mControllers.SafeElementAt(aIndex));
   if (!controllerData) return NS_ERROR_FAILURE;
-  
-  PRBool removed = mControllers.RemoveElementAt(aIndex);
+
+#ifdef DEBUG
+  PRBool removed =
+#endif
+  mControllers.RemoveElementAt(aIndex);
   NS_ASSERTION(removed, "Removal of controller failed");
-    
+
   controllerData->GetController(_retval);
   delete controllerData;
   
@@ -205,7 +211,11 @@ nsXULControllers::AppendController(nsIController *controller)
   // This assigns controller IDs starting at 1 so we can use 0 to test if an ID was obtained
   nsXULControllerData*  controllerData = new nsXULControllerData(++mCurControllerID, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
-  PRBool  appended = mControllers.AppendElement((void *)controllerData);
+
+#ifdef DEBUG
+  PRBool appended =
+#endif
+  mControllers.AppendElement((void *)controllerData);
   NS_ASSERTION(appended, "Appending controller failed");
   return NS_OK;
 }

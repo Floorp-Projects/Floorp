@@ -419,8 +419,7 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
   nsCOMPtr<nsIDocument> parentDoc;
 
   while (document) {
-    nsCOMPtr<nsIPresShell> presShell;
-    document->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = document->GetShellAt(0);
     if (!presShell) {
       return;
     }
@@ -792,7 +791,7 @@ void nsDocAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShel
 {
   // XXX aaronl - this is not ideal.
   // We could avoid this whole section and the fallible 
-  // doc->GetShellAt(0, ...) by putting the event handler
+  // doc->GetShellAt(0) by putting the event handler
   // on nsDocAccessible instead.
   // The disadvantage would be that we would be seeing some events
   // for inner documents that we don't care about.
@@ -800,8 +799,10 @@ void nsDocAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShel
   nsCOMPtr<nsIDOMDocument> domDocument;
   aNode->GetOwnerDocument(getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
-  if (doc)
-    doc->GetShellAt(0, aEventShell);
+  if (doc) {
+    *aEventShell = doc->GetShellAt(0);
+    NS_IF_ADDREF(*aEventShell);
+  }
 }
 
 void nsDocAccessible::GetEventDocAccessible(nsIDOMNode *aNode, 

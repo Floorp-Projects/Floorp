@@ -654,10 +654,9 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
   if (NS_FAILED(res)) return res;
 
   if (nsEditor::NodeIsType(aNode, nsEditProperty::span)) {
-    PRInt32 attrCount;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    res = content->GetAttrCount(attrCount);
-    if (NS_FAILED(res)) return res;
+    PRUint32 attrCount = content->GetAttrCount();
+
     if (0 == attrCount) {
       // no more attributes on this span, let's remove the element
       res = mHTMLEditor->RemoveContainer(aNode);

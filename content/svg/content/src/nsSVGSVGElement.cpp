@@ -373,9 +373,8 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   *aPixelUnitToMillimeterX = 0.28f; // 90dpi
 
   if (!mDocument) return NS_OK;
-    // Get Presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0,getter_AddRefs(presShell));
+  // Get Presentation shell 0
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -407,8 +406,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 
   if (!mDocument) return NS_OK;
     // Get Presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -482,8 +480,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
     return NS_OK;
   
   if (!mDocument) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresShell> presShell;
-    mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to suspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -535,8 +532,7 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   mRedrawSuspendCount = 0;
   
   if (!mDocument) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -563,8 +559,7 @@ nsSVGSVGElement::ForceRedraw()
 {
   if (!mDocument) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -961,8 +956,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
 
   if (!mDocument) return;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
     NS_ERROR("couldn't get presshell");
     return;

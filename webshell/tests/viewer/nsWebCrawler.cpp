@@ -802,18 +802,9 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     }
   }
 
-  PRBool canHaveKids;
-  aNode->CanContainChildren(canHaveKids);
-  if (canHaveKids) {
-    PRInt32 i, n;
-    aNode->ChildCount(n);
-    for (i = 0; i < n; i++) {
-      nsCOMPtr<nsIContent> kid;
-      aNode->ChildAt(i, getter_AddRefs(kid));
-      if (nsnull != kid) {
-        FindURLsIn(aDocument, kid);
-      }
-    }
+  PRUint32 i, n = aNode->GetChildCount();
+  for (i = 0; i < n; ++i) {
+    FindURLsIn(aDocument, aNode->GetChildAt(i));
   }
 }
 

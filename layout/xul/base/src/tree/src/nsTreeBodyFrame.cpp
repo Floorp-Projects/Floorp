@@ -266,12 +266,10 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Cache our index.
   mColIndex = -1;
   nsIContent* parent = mColElement->GetParent();
-  PRInt32 count;
-  parent->ChildCount(count);
+  PRUint32 count = parent->GetChildCount();
   PRInt32 j = 0;
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    parent->ChildAt(i, getter_AddRefs(child));
+  for (PRUint32 i = 0; i < count; i++) {
+    nsIContent *child = parent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (tag == nsXULAtoms::treecol) {
@@ -3443,8 +3441,8 @@ nsTreeBodyFrame::EnsureColumns()
       ChildIterator iter, last;
       ChildIterator::Init(parent, &iter, &last);
       nsCOMPtr<nsIContent> treeCols = *iter;
-      nsCOMPtr<nsIContent> column;
-      treeCols->ChildAt(0, getter_AddRefs(column));
+
+      nsIContent *column = treeCols->GetChildAt(0);
 
       nsIFrame* colFrame = nsnull;
       shell->GetPrimaryFrameFor(column, &colFrame);

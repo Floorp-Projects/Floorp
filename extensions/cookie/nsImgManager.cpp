@@ -126,7 +126,8 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
   nsresult rv = NS_OK;
 
   // we can't do anything w/ out these.
-  if (!aContentLoc || !aContext) return rv;
+  if (!aContentLoc || !aContext)
+    return rv;
 
   if (aContentType == nsIContentPolicy::IMAGE) {
     // we only want to check http, https, ftp
@@ -151,23 +152,25 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
 
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsINodeInfo> nodeinfo;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
     NS_ASSERTION(content, "no content available");
     if (content) {
       // XXXbz GetOwnerDocument
       doc = content->GetDocument();
       if (!doc) {
-        rv = content->GetNodeInfo(getter_AddRefs(nodeinfo));
-        if (NS_FAILED(rv) || !nodeinfo) return rv;
+        nsINodeInfo *nodeinfo = content->GetNodeInfo();
+        if (!nodeinfo)
+          return NS_OK;
 
         doc = nodeinfo->GetDocument();
         // XXX what should this code do if there is really no document?
-        if (!doc) return NS_OK;
+        if (!doc)
+          return NS_OK;
       }
 
       rv = doc->GetBaseURL(getter_AddRefs(baseURI));
-      if (NS_FAILED(rv) || !baseURI) return rv;
+      if (NS_FAILED(rv) || !baseURI)
+        return rv;
 
       nsCOMPtr<nsIDocShell> docshell;
       rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
@@ -186,7 +189,8 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
       }
       
       rv =  TestPermission(aContentLoc, baseURI, aShouldLoad);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_FAILED(rv))
+        return rv;
     }
   }
   return NS_OK;

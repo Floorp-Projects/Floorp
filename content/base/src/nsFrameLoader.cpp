@@ -384,8 +384,7 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
   nsCOMPtr<nsIDocument> doc = mOwnerContent->GetDocument();
 
   while (doc) {
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = doc->GetShellAt(0);
 
     if (presShell) {
       presShell->GetPresContext(aPresContext);
@@ -519,7 +518,7 @@ nsFrameLoader::EnsureDocShell()
       nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
 
-      if(parentTreeOwner) {
+      if (parentTreeOwner) {
         PRBool is_primary = parentType == nsIDocShellTreeItem::typeChrome &&
                             value == NS_LITERAL_STRING("content-primary");
 

@@ -372,41 +372,7 @@ public:
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
   NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpaceID) const;
   NS_IMETHOD GetTag(nsIAtom** aResult) const;
-  NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const;
-  // NS_IMETHOD CanContainChildren(PRBool& aResult) const;
-  // NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  // NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
-  // NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  // NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
-  //                          PRBool aNotify);
-  // NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
-  //                           PRBool aNotify);
-  // NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  // NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  // NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-  //                                nsINodeInfo** aNodeInfo);
-  // NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                    const nsAString& aValue,
-  //                    PRBool aNotify);
-  // NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-  //                    const nsAString& aValue,
-  //                    PRBool aNotify);
-  // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                    nsAString& aResult) const;
-  // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                    nsIAtom** aPrefix,
-  //                    nsAString& aResult) const;
-  // NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-  //                      PRBool aNotify);
-  // NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
-  //                          PRInt32& aNameSpaceID, 
-  //                          nsIAtom** aName,
-  //                          nsIAtom** aPrefix) const;
-  // NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
-#ifdef DEBUG
-  // NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  // NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
-#endif
+  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
   NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
@@ -800,26 +766,26 @@ public:
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                        PRBool aNotify);
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
                            nsIAtom** aPrefix) const;
-  NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+  NS_IMETHOD_(PRUint32) GetAttrCount() const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
-  NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD_(PRBool) CanContainChildren() const;
+  NS_IMETHOD_(PRUint32) GetChildCount() const;
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;

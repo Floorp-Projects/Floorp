@@ -1065,13 +1065,10 @@ MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString&
   }
   
   nsIContent *result = nsnull;
-  PRInt32 i, count;
+  PRUint32 i, count = aContent->GetChildCount();
 
-  aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
   for (i = 0; i < count && result == nsnull; i++) {
-    aContent->ChildAt(i, getter_AddRefs(child));
-    result = MatchElementId(child, aUTF8Id, aId);
+    result = MatchElementId(aContent->GetChildAt(i), aUTF8Id, aId);
   }  
 
   return result;

@@ -487,12 +487,12 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   PRInt32 namespaceID;
     
-  PRInt32 index, count;
+  PRUint32 index, count;
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
-  content->GetAttrCount(count);
-  
+  count = content->GetAttrCount();
+
   // First scan for namespace declarations, pushing each on the stack
   for (index = 0; index < count; index++) {
     

@@ -79,24 +79,21 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 
     PL_DHashTableOperate(&mMap, aElement, PL_DHASH_REMOVE);
 
-    PRInt32 count;
+    PRUint32 count;
 
     // If possible, use the special nsIXULContent interface to "peek"
     // at the child count without accidentally creating children as a
     // side effect, since we're about to rip 'em outta the map anyway.
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     if (xulcontent) {
-        xulcontent->PeekChildCount(count);
+        count = xulcontent->PeekChildCount();
     }
     else {
-        aElement->ChildCount(count);
+        count = aElement->GetChildCount();
     }
 
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> child;
-        aElement->ChildAt(i, getter_AddRefs(child));
-
-        Remove(child);
+    for (PRUint32 i = 0; i < count; ++i) {
+        Remove(aElement->GetChildAt(i));
     }
 
     return NS_OK;

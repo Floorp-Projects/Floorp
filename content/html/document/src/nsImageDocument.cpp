@@ -525,8 +525,7 @@ nsImageDocument::CreateSyntheticDocument()
 nsresult
 nsImageDocument::CheckOverflowing()
 {
-  nsCOMPtr<nsIPresShell> shell;
-  GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = GetShellAt(0);
   if (!shell) {
     return NS_OK;
   }

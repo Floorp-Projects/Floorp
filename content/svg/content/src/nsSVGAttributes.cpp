@@ -790,11 +790,8 @@ nsSVGAttributes::NormalizeAttrString(const nsAString& aStr,
   NS_ASSERTION(mContent,"no owner content");
   if (!mContent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINodeInfo> contentNodeInfo;
-  mContent->GetNodeInfo(getter_AddRefs(contentNodeInfo));
-  
   nsCOMPtr<nsINodeInfoManager> nimgr;
-  contentNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
+  mContent->GetNodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
   NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
   
   return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
@@ -833,11 +830,8 @@ nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value)
   NS_ASSERTION(mContent,"no owner content");
   if (!mContent) return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsINodeInfo> contentNodeInfo;
-  mContent->GetNodeInfo(getter_AddRefs(contentNodeInfo));
-  
   nsCOMPtr<nsINodeInfoManager> nimgr;
-  contentNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
+  mContent->GetNodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
   NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> ni;

@@ -74,7 +74,10 @@ enum eNormalLineHeightControl {
   eIncludeExternalLeading,  // use whatever value font vendor provides
   eCompensateLeading        // compensate leading if leading provided by font vendor is not enough
 };
+
+#ifdef FONT_LEADING_APIS_V2
 static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
+#endif
 
 #ifdef DEBUG
 const char*

@@ -252,8 +252,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
   
   // Get shell
-  nsCOMPtr<nsIPresShell> presShell;
-  document->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = document->GetShellAt(0);
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   // Get PresContext

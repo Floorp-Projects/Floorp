@@ -268,22 +268,26 @@ nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
 }
 
 
-static PRBool PR_CALLBACK DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
+static PRBool PR_CALLBACK
+DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
 {
-    if (!closure || !aData)
-        return PR_FALSE;
+  if (!closure || !aData)
+    return PR_FALSE;
 
-    nsIRDFCompositeDataSource* compositeDS = (nsIRDFCompositeDataSource*) closure;
+  nsIRDFCompositeDataSource* compositeDS = (nsIRDFCompositeDataSource*) closure;
 
-    nsCOMPtr<nsISupports> supports = (nsISupports*)aData;
+  nsCOMPtr<nsISupports> supports = (nsISupports*)aData;
 
-    nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports);
-    if (!dataSource)
-        return PR_FALSE;
+  nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports);
+  if (!dataSource)
+    return PR_FALSE;
 
-    nsresult rv = compositeDS->RemoveDataSource(dataSource);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to RemoveDataSource");
-    return PR_TRUE;
+#ifdef DEBUG
+  nsresult rv =
+#endif
+  compositeDS->RemoveDataSource(dataSource);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to RemoveDataSource");
+  return PR_TRUE;
 }
 
 
@@ -1528,49 +1532,47 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  PRInt32 shellCount = document->GetNumberOfShells();
-  for (PRInt32 k = 0; k < shellCount; k++) {
-    nsCOMPtr<nsIPresShell> shell;
-    document->GetShellAt(k, getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsIStyleSet> styleSet;
-      rv = shell->GetStyleSet(getter_AddRefs(styleSet));
+  PRUint32 shellCount = document->GetNumberOfShells();
+  for (PRUint32 k = 0; k < shellCount; k++) {
+    nsIPresShell *shell = document->GetShellAt(k);
+
+    nsCOMPtr<nsIStyleSet> styleSet;
+    rv = shell->GetStyleSet(getter_AddRefs(styleSet));
+    if (NS_FAILED(rv)) return rv;
+    if (styleSet) {
+      // Reload only the chrome URL agent style sheets.
+      nsCOMPtr<nsISupportsArray> agents;
+      rv = NS_NewISupportsArray(getter_AddRefs(agents));
       if (NS_FAILED(rv)) return rv;
-      if (styleSet) {
-        // Reload only the chrome URL agent style sheets.
-        nsCOMPtr<nsISupportsArray> agents;
-        rv = NS_NewISupportsArray(getter_AddRefs(agents));
+
+      nsCOMPtr<nsISupportsArray> newAgentSheets;
+      rv = NS_NewISupportsArray(getter_AddRefs(newAgentSheets));
+      if (NS_FAILED(rv)) return rv;
+
+      PRInt32 bc = styleSet->GetNumberOfAgentStyleSheets();
+      for (PRInt32 l = 0; l < bc; l++) {
+        nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(l));
+        nsCOMPtr<nsIURI> uri;
+        rv = sheet->GetURL(*getter_AddRefs(uri));
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsISupportsArray> newAgentSheets;
-        rv = NS_NewISupportsArray(getter_AddRefs(newAgentSheets));
-        if (NS_FAILED(rv)) return rv;
-
-        PRInt32 bc = styleSet->GetNumberOfAgentStyleSheets();
-        for (PRInt32 l = 0; l < bc; l++) {
-          nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(l));
-          nsCOMPtr<nsIURI> uri;
-          rv = sheet->GetURL(*getter_AddRefs(uri));
+        if (IsChromeURI(uri)) {
+          // Reload the sheet.
+          nsCOMPtr<nsICSSStyleSheet> newSheet;
+          rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
           if (NS_FAILED(rv)) return rv;
-
-          if (IsChromeURI(uri)) {
-            // Reload the sheet.
-            nsCOMPtr<nsICSSStyleSheet> newSheet;
-            rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
-            if (NS_FAILED(rv)) return rv;
-            if (newSheet) {
-              rv = newAgentSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
-              if (NS_FAILED(rv)) return rv;
-            }
-          }
-          else {  // Just use the same sheet.
-            rv = newAgentSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
+          if (newSheet) {
+            rv = newAgentSheets->AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
             if (NS_FAILED(rv)) return rv;
           }
         }
-
-        styleSet->ReplaceAgentStyleSheets(newAgentSheets);
+        else {  // Just use the same sheet.
+          rv = newAgentSheets->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
+          if (NS_FAILED(rv)) return rv;
+        }
       }
+
+      styleSet->ReplaceAgentStyleSheets(newAgentSheets);
     }
   }
 

@@ -731,9 +731,9 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
   nsCOMPtr<nsIDocument> document = content->GetDocument();
-  nsCOMPtr<nsIPresShell> shell;
-  if (document) 
-    document->GetShellAt(0,getter_AddRefs(shell));
+  nsIPresShell *shell = nsnull;
+  if (document)
+    shell = document->GetShellAt(0);
   if (!shell)
     return NS_ERROR_FAILURE;
 

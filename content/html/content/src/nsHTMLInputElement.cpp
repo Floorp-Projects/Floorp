@@ -1233,41 +1233,39 @@ nsHTMLInputElement::Click()
 
   // see what type of input we are.  Only click button, checkbox, radio,
   // reset, submit, & image
-  if (mType == NS_FORM_INPUT_BUTTON || mType == NS_FORM_INPUT_CHECKBOX ||
-      mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_RESET ||
-      mType == NS_FORM_INPUT_SUBMIT) {
+  if (mDocument &&
+      (mType == NS_FORM_INPUT_BUTTON   ||
+       mType == NS_FORM_INPUT_CHECKBOX ||
+       mType == NS_FORM_INPUT_RADIO    ||
+       mType == NS_FORM_INPUT_RESET    ||
+       mType == NS_FORM_INPUT_SUBMIT)) {
 
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong in case the event kills it
-    if (doc) {
-      PRInt32 numShells = doc->GetNumberOfShells();
-      nsCOMPtr<nsIPresContext> context;
-      for (PRInt32 i=0; i<numShells; i++) {
-        nsCOMPtr<nsIPresShell> shell;
-        doc->GetShellAt(i, getter_AddRefs(shell));
+    nsCOMPtr<nsIPresContext> context;
 
-        if (shell) {
-          shell->GetPresContext(getter_AddRefs(context));
+    nsIPresShell *shell = doc->GetShellAt(0);
 
-          if (context) {
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_MOUSE_EVENT;
-            event.message = NS_MOUSE_LEFT_CLICK;
-            event.isShift = PR_FALSE;
-            event.isControl = PR_FALSE;
-            event.isAlt = PR_FALSE;
-            event.isMeta = PR_FALSE;
-            event.clickCount = 0;
-            event.widget = nsnull;
-            
-            SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
+    if (shell) {
+      shell->GetPresContext(getter_AddRefs(context));
 
-            rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
-                                &status);
+      if (context) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_MOUSE_EVENT;
+        event.message = NS_MOUSE_LEFT_CLICK;
+        event.isShift = PR_FALSE;
+        event.isControl = PR_FALSE;
+        event.isAlt = PR_FALSE;
+        event.isMeta = PR_FALSE;
+        event.clickCount = 0;
+        event.widget = nsnull;
 
-            SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
-          }
-        }
+        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
+
+        rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
+                            &status);
+
+        SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
       }
     }
   }

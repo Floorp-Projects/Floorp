@@ -202,18 +202,14 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
-  PRInt32 numKids;
-  mContent->ChildCount(numKids);
-  for (PRInt32 kid=0; kid<numKids; kid++) {
-    nsCOMPtr<nsIContent> kidContent;
-    mContent->ChildAt(kid, getter_AddRefs(kidContent));
-    if (kidContent.get()) {
-      nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
-      if (kidText.get()) {
-        nsAutoString kidData;
-        kidText->GetData(kidData);
-        data += kidData;
-      }
+  PRUint32 numKids = mContent->GetChildCount();
+  for (PRUint32 kid = 0; kid < numKids; ++kid) {
+    nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(mContent->GetChildAt(kid)));
+
+    if (kidText) {
+      nsAutoString kidData;
+      kidText->GetData(kidData);
+      data += kidData;
     }
   }
   PRInt32 length = data.Length();

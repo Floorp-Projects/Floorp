@@ -373,9 +373,7 @@ nsresult nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(bodyContent);
 
-    PRInt32 childCount;
-    rv = bodyContent->ChildCount(childCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 childCount = bodyContent->GetChildCount();
 
     aSearchRange->SetStart(bodyNode, 0);
     aSearchRange->SetEnd(bodyNode, childCount);
@@ -427,9 +425,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     nsCOMPtr<nsIContent> bodyContent (do_QueryInterface(bodyNode));
     NS_ENSURE_ARG_POINTER(bodyContent);
 
-    PRInt32 childCount;
-    rv = bodyContent->ChildCount(childCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 childCount = bodyContent->GetChildCount();
 
     // There are four possible range endpoints we might use:
     // DocumentStart, SelectionStart, SelectionEnd, DocumentEnd.
