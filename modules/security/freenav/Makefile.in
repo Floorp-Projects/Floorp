@@ -52,7 +52,5 @@ EXPORTS		= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-INHIBIT_STRIP_NOT_EXPORTED = 1
-
 include $(topsrcdir)/config/rules.mk
 

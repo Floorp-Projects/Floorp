@@ -302,12 +302,6 @@ EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 endif
 endif
 
-ifdef MOZ_STRIP_NOT_EXPORTED
-ifndef INHIBIT_STRIP_NOT_EXPORTED
-EXTRA_DSO_LDOPTS	+= -Wl,--version-exports-section -Wl,Mozilla
-endif
-endif
-
 ################################################################################
 
 all:: export libs install
@@ -645,11 +639,6 @@ else
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
-ifdef MOZ_STRIP_NOT_EXPORTED
-ifdef INHIBIT_STRIP_NOT_EXPORTED
-	objcopy -R ".exports" $@
-endif
-endif
 else
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 ifndef IS_COMPONENT
