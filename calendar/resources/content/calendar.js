@@ -99,7 +99,7 @@ var gHeaderDateItemArray = null;
 var gClockId;
 
 // Show event details on mouseover
-var showEventDetails = true;
+var showTooltip = true;
 
 // DAY VIEW VARIABLES
 var kDayViewHourHeight = 50;
@@ -659,6 +659,8 @@ function changeToolTipTextForToDo( event )
 
    if( toDoItem )
    {
+      showTooltip = true; //needed to show the tooltip.
+         
       if (toDoItem.title)
       {
          var TitleHtml = document.createElement( "description" );
@@ -688,7 +690,11 @@ function changeToolTipTextForToDo( event )
       }
       
       Html.appendChild( HolderBox );
-   }   
+   } 
+   else
+   {
+      showTooltip = false; //Don't show the tooltip
+   }
 }
 
 function changeToolTipTextForEvent( event )
@@ -703,7 +709,12 @@ function changeToolTipTextForEvent( event )
    }
    
    if( !thisEvent )
-      return( false );
+   {
+      showTooltip = false;
+      return;
+   }
+      
+   showTooltip = true;
    
    var HolderBox = getPreviewText( thisEvent );
    
@@ -845,5 +856,10 @@ function print()
 function publishCalendarData()
 {
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
-   calendarPublish(calendarString, "ftp://home.planet.com/", "CalendarDataFile.ics", "ajb", "*****", "text/calendar");
+   calendarPublish(calendarString, Server, FilePath, UserName, Password, "text/calendar");
+}
+
+function checkTooltip()
+{
+   return( showTooltip );
 }

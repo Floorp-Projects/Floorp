@@ -176,9 +176,6 @@
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
 
 
-<!-- Pop up menus -->
-<tooltip id="savetip"/>
-
 <!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
@@ -247,12 +244,9 @@
 
 <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
    <!-- Menu -->
-   <menubar id="main-menubar" persist="collapsed"
-          grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
+   <menubar id="main-menubar" persist="collapsed"/>
 
-   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" 
-          grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
-          tbalign="stretch">
+   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" tbalign="stretch">
           <!--<toolbarbutton class="toolbarbutton-1" id="calendar-new-task-button"   label="&calendar.newtask.button.label;"         tooltiptext="&calendar.newtask.button.tooltip;"      observes="new_todo_command"/>-->
           <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     observes="new_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
@@ -272,7 +266,7 @@
    </toolbar>
 </toolbox>
 
-<tooltip id="savetip"/>
+<tooltip id="savetip" onpopupshowing="return( checkTooltip() );"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
@@ -306,7 +300,7 @@
                <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" oncommand="toDoUnifinderRefesh( event )" persist="checked"/>
             </box>
 
-            <tree tooltip="savetip" id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
+            <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"
                      persist="hidden ordinal width" minwidth="18" maxwidth="18" width="18" 
@@ -350,7 +344,7 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren onmousemove="changeToolTipTextForToDo( event )" 
+                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForToDo( event )" 
                     onclick="unifinderClickToDo( event )" 
                     ondblclick="unifinderDoubleClickToDo( event )"
                     onmousedown="unifinderMouseDownToDo( event )"
@@ -385,7 +379,7 @@
                   </menulist>
                </box>
                
-               <tree tooltip="savetip" id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
+               <tree id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
                       persist="hidden ordinal width" flex="1" 
@@ -407,7 +401,7 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren onmousemove="changeToolTipTextForEvent( event )" 
+                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForEvent( event )" onpopupshowing="return( false );" 
                     onclick="unifinderClickEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
