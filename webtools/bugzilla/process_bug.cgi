@@ -935,7 +935,7 @@ SWITCH: for ($::FORM{'knob'}) {
         if (Param("noresolveonopenblockers")
             && $::FORM{'resolution'} eq 'FIXED')
         {
-            my @dependencies = CountOpenDependencies(@idlist);
+            my @dependencies = Bugzilla::Bug::CountOpenDependencies(@idlist);
             if (scalar @dependencies > 0) {
                 ThrowUserError("still_unresolved_bugs",
                                { dependencies     => \@dependencies,

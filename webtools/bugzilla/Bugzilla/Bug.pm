@@ -536,6 +536,32 @@ sub GetComments {
     return \@comments;
 }
 
+# CountOpenDependencies counts the number of open dependent bugs for a
+# list of bugs and returns a list of bug_id's and their dependency count
+# It takes one parameter:
+#  - A list of bug numbers whose dependencies are to be checked
+sub CountOpenDependencies {
+    my (@bug_list) = @_;
+    my @dependencies;
+    my $dbh = Bugzilla->dbh;
+
+    my $sth = $dbh->prepare(
+          "SELECT blocked, count(bug_status) " .
+            "FROM bugs, dependencies " .
+           "WHERE blocked IN (" . (join "," , @bug_list) . ") " .
+             "AND bug_id = dependson " .
+             "AND bug_status IN ('" . (join "','", &::OpenStates())  . "') " .
+        "GROUP BY blocked ");
+    $sth->execute();
+
+    while (my ($bug_id, $dependencies) = $sth->fetchrow_array()) {
+        push(@dependencies, { bug_id       => $bug_id,
+                              dependencies => $dependencies });
+    }
+
+    return @dependencies;
+}
+
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
   my $attr = $AUTOLOAD;
