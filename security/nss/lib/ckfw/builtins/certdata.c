@@ -32,7 +32,7 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.19 $ $Date: 2002/08/27 20:15:58 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.19 $ $Date: 2002/08/27 20:15:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.20 $ $Date: 2002/08/27 20:41:18 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.20 $ $Date: 2002/08/27 20:41:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -402,55 +402,55 @@ static const CK_ATTRIBUTE_TYPE nss_builtins_types_116 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_117 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_118 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_119 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_120 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_121 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_122 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_123 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_124 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_125 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_126 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_127 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_128 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_129 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_130 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_131 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_132 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_133 [] = {
- CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING
 };
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_134 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERTIFICATE_TYPE,  CKA_SUBJECT,  CKA_ID,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_VALUE
@@ -466,7 +466,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.19 $ $Date: 2002/08/27 20:15:58 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.19 $ $Date: 2002/08/27 20:15:58 $ $Name:  $", (PRUint32)179 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.20 $ $Date: 2002/08/27 20:41:18 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.20 $ $Date: 2002/08/27 20:41:18 $ $Name:  $", (PRUint32)179 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -7321,6 +7321,16 @@ static const NSSItem nss_builtins_items_117 [] = {
 , (PRUint32)20 },
   { (void *)"\201\065\271\373\373\022\312\030\151\066\353\256\151\170\241\361"
 , (PRUint32)16 },
+  { (void *)"\060\146\061\022\060\020\006\003\125\004\012\023\011\142\145\124"
+"\122\125\123\124\145\144\061\033\060\031\006\003\125\004\013\023"
+"\022\142\145\124\122\125\123\124\145\144\040\122\157\157\164\040"
+"\103\101\163\061\063\060\061\006\003\125\004\003\023\052\142\145"
+"\124\122\125\123\124\145\144\040\122\157\157\164\040\103\101\055"
+"\102\141\154\164\151\155\157\162\145\040\111\155\160\154\145\155"
+"\145\156\164\141\164\151\157\156"
+, (PRUint32)104 },
+  { (void *)"\074\265\075\106"
+, (PRUint32)4 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -7466,6 +7476,16 @@ static const NSSItem nss_builtins_items_119 [] = {
 , (PRUint32)20 },
   { (void *)"\175\206\220\217\133\361\362\100\300\367\075\142\265\244\251\073"
 , (PRUint32)16 },
+  { (void *)"\060\146\061\022\060\020\006\003\125\004\012\023\011\142\145\124"
+"\122\125\123\124\145\144\061\033\060\031\006\003\125\004\013\023"
+"\022\142\145\124\122\125\123\124\145\144\040\122\157\157\164\040"
+"\103\101\163\061\063\060\061\006\003\125\004\003\023\052\142\145"
+"\124\122\125\123\124\145\144\040\122\157\157\164\040\103\101\055"
+"\102\141\154\164\151\155\157\162\145\040\111\155\160\154\145\155"
+"\145\156\164\141\164\151\157\156"
+, (PRUint32)104 },
+  { (void *)"\074\265\075\106"
+, (PRUint32)4 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -7596,6 +7616,16 @@ static const NSSItem nss_builtins_items_121 [] = {
 , (PRUint32)20 },
   { (void *)"\206\102\005\011\274\247\235\354\035\363\056\016\272\330\035\320"
 , (PRUint32)16 },
+  { (void *)"\060\142\061\022\060\020\006\003\125\004\012\023\011\142\145\124"
+"\122\125\123\124\145\144\061\033\060\031\006\003\125\004\013\023"
+"\022\142\145\124\122\125\123\124\145\144\040\122\157\157\164\040"
+"\103\101\163\061\057\060\055\006\003\125\004\003\023\046\142\145"
+"\124\122\125\123\124\145\144\040\122\157\157\164\040\103\101\040"
+"\055\040\122\123\101\040\111\155\160\154\145\155\145\156\164\141"
+"\164\151\157\156"
+, (PRUint32)100 },
+  { (void *)"\073\131\307\173\315\133\127\236\275\067\122\254\166\264\252\032"
+, (PRUint32)16 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -7688,6 +7718,13 @@ static const NSSItem nss_builtins_items_123 [] = {
 , (PRUint32)20 },
   { (void *)"\167\015\031\261\041\375\000\102\234\076\014\245\335\013\002\216"
 , (PRUint32)16 },
+  { (void *)"\060\072\061\031\060\027\006\003\125\004\012\023\020\122\123\101"
+"\040\123\145\143\165\162\151\164\171\040\111\156\143\061\035\060"
+"\033\006\003\125\004\013\023\024\122\123\101\040\123\145\143\165"
+"\162\151\164\171\040\062\060\064\070\040\126\063"
+, (PRUint32)60 },
+  { (void *)"\012\001\001\001\000\000\002\174\000\000\000\012\000\000\000\002"
+, (PRUint32)16 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -7762,6 +7799,13 @@ static const NSSItem nss_builtins_items_125 [] = {
 "\275\371\134\166"
 , (PRUint32)20 },
   { (void *)"\072\345\120\260\071\276\307\106\066\063\241\376\202\076\215\224"
+, (PRUint32)16 },
+  { (void *)"\060\072\061\031\060\027\006\003\125\004\012\023\020\122\123\101"
+"\040\123\145\143\165\162\151\164\171\040\111\156\143\061\035\060"
+"\033\006\003\125\004\013\023\024\122\123\101\040\123\145\143\165"
+"\162\151\164\171\040\061\060\062\064\040\126\063"
+, (PRUint32)60 },
+  { (void *)"\012\001\001\001\000\000\002\174\000\000\000\013\000\000\000\002"
 , (PRUint32)16 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
@@ -7856,6 +7900,14 @@ static const NSSItem nss_builtins_items_127 [] = {
 , (PRUint32)20 },
   { (void *)"\367\165\253\051\373\121\116\267\167\136\377\005\074\231\216\365"
 , (PRUint32)16 },
+  { (void *)"\060\102\061\013\060\011\006\003\125\004\006\023\002\125\123\061"
+"\026\060\024\006\003\125\004\012\023\015\107\145\157\124\162\165"
+"\163\164\040\111\156\143\056\061\033\060\031\006\003\125\004\003"
+"\023\022\107\145\157\124\162\165\163\164\040\107\154\157\142\141"
+"\154\040\103\101"
+, (PRUint32)68 },
+  { (void *)"\002\064\126"
+, (PRUint32)3 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -7978,6 +8030,20 @@ static const NSSItem nss_builtins_items_129 [] = {
 , (PRUint32)20 },
   { (void *)"\277\140\131\243\133\272\366\247\166\102\332\157\032\173\120\317"
 , (PRUint32)16 },
+  { (void *)"\060\201\243\061\013\060\011\006\003\125\004\006\023\002\125\123"
+"\061\013\060\011\006\003\125\004\010\023\002\125\124\061\027\060"
+"\025\006\003\125\004\007\023\016\123\141\154\164\040\114\141\153"
+"\145\040\103\151\164\171\061\036\060\034\006\003\125\004\012\023"
+"\025\124\150\145\040\125\123\105\122\124\122\125\123\124\040\116"
+"\145\164\167\157\162\153\061\041\060\037\006\003\125\004\013\023"
+"\030\150\164\164\160\072\057\057\167\167\167\056\165\163\145\162"
+"\164\162\165\163\164\056\143\157\155\061\053\060\051\006\003\125"
+"\004\003\023\042\125\124\116\055\125\123\105\122\106\151\162\163"
+"\164\055\116\145\164\167\157\162\153\040\101\160\160\154\151\143"
+"\141\164\151\157\156\163"
+, (PRUint32)166 },
+  { (void *)"\104\276\014\213\120\000\044\264\021\323\066\060\113\300\063\167"
+, (PRUint32)16 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -8080,6 +8146,16 @@ static const NSSItem nss_builtins_items_131 [] = {
 , (PRUint32)20 },
   { (void *)"\024\361\010\255\235\372\144\342\211\347\034\317\250\255\175\136"
 , (PRUint32)16 },
+  { (void *)"\060\143\061\013\060\011\006\003\125\004\006\023\002\125\123\061"
+"\034\060\032\006\003\125\004\012\023\023\101\155\145\162\151\143"
+"\141\040\117\156\154\151\156\145\040\111\156\143\056\061\066\060"
+"\064\006\003\125\004\003\023\055\101\155\145\162\151\143\141\040"
+"\117\156\154\151\156\145\040\122\157\157\164\040\103\145\162\164"
+"\151\146\151\143\141\164\151\157\156\040\101\165\164\150\157\162"
+"\151\164\171\040\061"
+, (PRUint32)101 },
+  { (void *)"\001"
+, (PRUint32)1 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -8214,6 +8290,16 @@ static const NSSItem nss_builtins_items_133 [] = {
 , (PRUint32)20 },
   { (void *)"\326\355\074\312\342\146\017\257\020\103\015\167\233\004\011\277"
 , (PRUint32)16 },
+  { (void *)"\060\143\061\013\060\011\006\003\125\004\006\023\002\125\123\061"
+"\034\060\032\006\003\125\004\012\023\023\101\155\145\162\151\143"
+"\141\040\117\156\154\151\156\145\040\111\156\143\056\061\066\060"
+"\064\006\003\125\004\003\023\055\101\155\145\162\151\143\141\040"
+"\117\156\154\151\156\145\040\122\157\157\164\040\103\145\162\164"
+"\151\146\151\143\141\164\151\157\156\040\101\165\164\150\157\162"
+"\151\164\171\040\062"
+, (PRUint32)101 },
+  { (void *)"\001"
+, (PRUint32)1 },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
@@ -8452,23 +8538,23 @@ nss_builtins_data[] = {
   { 11, nss_builtins_types_114, nss_builtins_items_114, {NULL} },
   { 12, nss_builtins_types_115, nss_builtins_items_115, {NULL} },
   { 11, nss_builtins_types_116, nss_builtins_items_116, {NULL} },
-  { 10, nss_builtins_types_117, nss_builtins_items_117, {NULL} },
+  { 12, nss_builtins_types_117, nss_builtins_items_117, {NULL} },
   { 11, nss_builtins_types_118, nss_builtins_items_118, {NULL} },
-  { 10, nss_builtins_types_119, nss_builtins_items_119, {NULL} },
+  { 12, nss_builtins_types_119, nss_builtins_items_119, {NULL} },
   { 11, nss_builtins_types_120, nss_builtins_items_120, {NULL} },
-  { 10, nss_builtins_types_121, nss_builtins_items_121, {NULL} },
+  { 12, nss_builtins_types_121, nss_builtins_items_121, {NULL} },
   { 11, nss_builtins_types_122, nss_builtins_items_122, {NULL} },
-  { 10, nss_builtins_types_123, nss_builtins_items_123, {NULL} },
+  { 12, nss_builtins_types_123, nss_builtins_items_123, {NULL} },
   { 11, nss_builtins_types_124, nss_builtins_items_124, {NULL} },
-  { 10, nss_builtins_types_125, nss_builtins_items_125, {NULL} },
+  { 12, nss_builtins_types_125, nss_builtins_items_125, {NULL} },
   { 11, nss_builtins_types_126, nss_builtins_items_126, {NULL} },
-  { 10, nss_builtins_types_127, nss_builtins_items_127, {NULL} },
+  { 12, nss_builtins_types_127, nss_builtins_items_127, {NULL} },
   { 11, nss_builtins_types_128, nss_builtins_items_128, {NULL} },
-  { 10, nss_builtins_types_129, nss_builtins_items_129, {NULL} },
+  { 12, nss_builtins_types_129, nss_builtins_items_129, {NULL} },
   { 11, nss_builtins_types_130, nss_builtins_items_130, {NULL} },
-  { 10, nss_builtins_types_131, nss_builtins_items_131, {NULL} },
+  { 12, nss_builtins_types_131, nss_builtins_items_131, {NULL} },
   { 11, nss_builtins_types_132, nss_builtins_items_132, {NULL} },
-  { 10, nss_builtins_types_133, nss_builtins_items_133, {NULL} },
+  { 12, nss_builtins_types_133, nss_builtins_items_133, {NULL} },
   { 11, nss_builtins_types_134, nss_builtins_items_134, {NULL} },
   { 12, nss_builtins_types_135, nss_builtins_items_135, {NULL} }
 };
