@@ -75,6 +75,12 @@ public:
     virtual void stringValue(nsAString& str) = 0;
 
     /**
+     * Returns a pointer to the stringvalue if possible. Otherwise null is
+     * returned.
+     */
+    virtual nsAString* stringValuePointer() = 0;
+
+    /**
      * Converts this ExprResult to a Boolean (MBool) value
      * @return the Boolean value
     **/
@@ -88,6 +94,15 @@ public:
 
 };
 
+#define TX_DECL_EXPRRESULT                                        \
+    virtual ExprResult* clone();                                  \
+    virtual short getResultType();                                \
+    virtual void stringValue(nsAString& str);                     \
+    virtual nsAString* stringValuePointer();                      \
+    virtual PRBool booleanValue();                                \
+    virtual double numberValue();                                 \
+
+
 class BooleanResult : public ExprResult {
 
 public:
@@ -95,11 +110,7 @@ public:
     BooleanResult();
     BooleanResult(MBool boolean);
 
-    virtual ExprResult* clone();
-    virtual short  getResultType();
-    virtual void   stringValue(nsAString& str);
-    virtual MBool  booleanValue();
-    virtual double numberValue();
+    TX_DECL_EXPRRESULT
 
 private:
     MBool value;
@@ -112,11 +123,7 @@ public:
     NumberResult();
     NumberResult(double dbl);
 
-    virtual ExprResult* clone();
-    virtual short  getResultType();
-    virtual void   stringValue(nsAString& str);
-    virtual MBool  booleanValue();
-    virtual double numberValue();
+    TX_DECL_EXPRRESULT
 
 private:
     double value;
@@ -129,11 +136,7 @@ public:
     StringResult();
     StringResult(const nsAString& str);
 
-    virtual ExprResult* clone();
-    virtual short  getResultType();
-    virtual void   stringValue(nsAString& str);
-    virtual MBool  booleanValue();
-    virtual double numberValue();
+    TX_DECL_EXPRRESULT
 
     nsString mValue;
 };
