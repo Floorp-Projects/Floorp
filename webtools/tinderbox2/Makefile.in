@@ -47,6 +47,13 @@ builddir=@builddir@
 config_script=@config_script@
 confdir=localconf
 
+# how to run xargs to print only one argument on a line
+xargs_single=@xargs_single@
+
+#------------------------------------------------------------
+
+@CONFIGURE_ARGS@
+
 # Makefile Targets
 #------------------------------------------------------------
 
@@ -81,14 +88,14 @@ compile_all_code: build
 	find $(builddir) -type f | \
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
 	egrep -v -i "initrc|ignore_waitstatus" | \
-	  xargs -l perl -T -w -c 
+	  xargs $(xargs_single) perl -T -w -c 
 
 compile_bin_code: build
 	@echo
 	@echo "----- Testing if perl can compile all files in the bin directory -----"
 	find $(builddir)/bin -type f | \
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
-	  xargs -l perl -T -w -c 
+	  xargs $(xargs_single) perl -T -w -c 
 
 
 cvskeyword_test: 
@@ -113,6 +120,17 @@ link_test:
 	find $(builddir) -type f -print | \
 	egrep -v -i "test|mage|clientbin" | \
 	xargs egrep -i "<a +href"
+
+check_all_use_statements:
+	rm file
+	echo '#!perl' >> file
+	echo >> file
+	find $(builddir) \
+		| xargs egrep -h '^use ' | egrep ';$' \
+		| sort -r -u \
+	>> $(builddir)/bin/check_all_use_statements	
+	echo >> file
+	echo '1;' >> file
 
 STAGE_FILE := \
     tb2StageFile() { \
