@@ -1125,13 +1125,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("startupNotifier");
 
   // Start up the core services:
-
-  // Please do not add new things to main1() - please hook into the
-  // nsIAppStartupNotifier service.
-  nsCOMPtr<nsIObserver> startupNotifier = do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv);
-  if(NS_FAILED(rv))
-    return rv;
-  startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+  {
+    // Please do not add new things to main1() - please hook into the
+    // nsIAppStartupNotifier service.
+    nsCOMPtr<nsIObserver> startupNotifier = do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv);
+    if(NS_FAILED(rv))
+      return rv;
+    startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+  }
   NS_TIMELINE_LEAVE("startupNotifier");
 
   NS_TIMELINE_ENTER("cmdLineArgs");
