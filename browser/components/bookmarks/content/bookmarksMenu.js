@@ -53,7 +53,7 @@ var BookmarksMenu = {
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
     //element.setAttribute("class", "groupmark-item menuitem-iconic bookmark-item");
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
-    element.setAttribute("oncommand", "BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode, this.database); event.preventBubble();");
+    element.setAttribute("oncommand", "BookmarksMenu.loadBookmark(event,event.target.parentNode.parentNode,this.database)");
     aTarget.appendChild(element);
   },
 
@@ -323,15 +323,19 @@ var BookmarksMenu = {
     }
   },
 
-  loadBookmark: function (aEvent, aDS)
+  ///////////////////////////////////////////////////////////////
+  // Load a bookmark in menus or toolbar buttons
+  // aTarget may not the aEvent target (see Open in tabs command)
+  loadBookmark: function (aEvent, aTarget, aDS)
   {
     // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
-    if (!this.isBTBookmark(aEvent.target.id))
+    if (!this.isBTBookmark(aTarget.id))
       return;
-    var rSource   = RDF.GetResource(aEvent.target.id);
+    var rSource   = RDF.GetResource(aTarget.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
     var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
     BookmarksCommand.openBookmark(selection, browserTarget, aDS);
+    aEvent.preventBubble();
   },
 
   ////////////////////////////////////////////////
