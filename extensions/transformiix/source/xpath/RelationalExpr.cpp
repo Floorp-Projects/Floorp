@@ -62,7 +62,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
         for ( int i = 0; i < nodeSet->size(); i++) {
                 String str;
                 Node* node = nodeSet->get(i);
-                XMLDOMUtils::getNodeValue(node, &str);
+                XMLDOMUtils::getNodeValue(node, str);
                 StringResult strResult(str);
                 result = compareResults(&strResult, right);
                 if ( result ) break;
@@ -74,7 +74,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
         for ( int i = 0; i < nodeSet->size(); i++) {
                 String str;
                 Node* node = nodeSet->get(i);
-                XMLDOMUtils::getNodeValue(node, &str);
+                XMLDOMUtils::getNodeValue(node, str);
                 StringResult strResult(str);
                 result = compareResults(left, &strResult);
                 if ( result ) break;

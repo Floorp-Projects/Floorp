@@ -28,33 +28,48 @@ REQUIRES	= string \
 		  necko \
 		  content_xsl \
 		  content \
+		  unicharutil \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DIRS=util functions
 
-!if defined(TX_EXE)
+!ifdef TX_EXE
 DEFINES= $(DEFINES) -DTX_EXE
 !endif
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\Names.obj			\
 	.\$(OBJDIR)\Numbering.obj		\
-	.\$(OBJDIR)\OutputFormat.obj		\
+	.\$(OBJDIR)\txOutputFormat.obj		\
 	.\$(OBJDIR)\ProcessorState.obj		\
+	.\$(OBJDIR)\txRtfHandler.obj		\
+	.\$(OBJDIR)\txTextHandler.obj		\
 	.\$(OBJDIR)\VariableBinding.obj		\
-	.\$(OBJDIR)\XSLTProcessor.obj		\
+	.\$(OBJDIR)\XSLTProcessor.obj
+
+!ifdef TX_EXE
+CPP_OBJS = $(CPP_OBJS)				\
+	.\$(OBJDIR)\txHTMLOutput.obj	\
+	.\$(OBJDIR)\txTextOutput.obj	\
+	.\$(OBJDIR)\txXMLOutput.obj		\
 	$(NULL)
+!else
+CPP_OBJS = $(CPP_OBJS)					\
+	.\$(OBJDIR)\txMozillaTextOutput.obj	\
+	.\$(OBJDIR)\txMozillaXMLOutput.obj	\
+	$(NULL)
+!endif
 
 EXPORTS = 					\
 	$(NULL)
 
-!ifndef TX_EXE
-LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
-      -I..\base -I ..\xml -I .\util -I ..\net -I..\xml\parser -I.\functions
-!else
+!ifdef TX_EXE
 LINCS=-I. -I..\base -I..\net -I..\xml -I..\xml\dom -I..\xml\parser \
 	-I..\xml\parser\xmlparse -I..\xml\printer -I..\xpath -Iutil -Ifunctions
+!else
+LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
+      -I..\base -I ..\xml -I .\util -I ..\net -I..\xml\parser -I.\functions
 !endif
 
 LCFLAGS = \

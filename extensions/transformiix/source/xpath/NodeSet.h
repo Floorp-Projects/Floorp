@@ -239,4 +239,6 @@ private:
 
 }; //-- NodeSet
 
+typedef NodeSet txResultTreeFragment;
+
 #endif

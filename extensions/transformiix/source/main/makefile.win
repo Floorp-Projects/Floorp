@@ -95,13 +95,15 @@ CPP_OBJS=                                       \
   ../xml/$(OBJDIR)/XMLUtils.obj \
   ../xml/$(OBJDIR)/XMLDOMUtils.obj \
   ../xml/parser/$(OBJDIR)/XMLParser.obj \
-  ../xml/printer/$(OBJDIR)/XMLPrinter.obj \
-  ../xml/printer/$(OBJDIR)/HTMLPrinter.obj \
-  ../xml/printer/$(OBJDIR)/TEXTPrinter.obj \
-  ../xslt/$(OBJDIR)/OutputFormat.obj \
+  ../xslt/$(OBJDIR)/txOutputFormat.obj \
   ../xslt/$(OBJDIR)/Names.obj \
   ../xslt/$(OBJDIR)/Numbering.obj \
   ../xslt/$(OBJDIR)/ProcessorState.obj \
+  ../xslt/$(OBJDIR)/txHTMLOutput.obj \
+  ../xslt/$(OBJDIR)/txRtfHandler.obj \
+  ../xslt/$(OBJDIR)/txTextHandler.obj \
+  ../xslt/$(OBJDIR)/txTextOutput.obj \
+  ../xslt/$(OBJDIR)/txXMLOutput.obj \
   ../xslt/$(OBJDIR)/VariableBinding.obj \
   ../xslt/$(OBJDIR)/XSLTProcessor.obj \
   ../xslt/functions/$(OBJDIR)/CurrentFunctionCall.obj \
@@ -122,8 +124,7 @@ EXPORTS = 					\
 	$(NULL)
 
 LINCS=-I../xslt -I../base -I../net \
-  -I../xml -I../xml/dom \
-  -I../xml/printer -I../xpath -I../xslt/util \
+  -I../xml -I../xml/dom -I../xpath -I../xslt/util \
   -I../xslt/functions -I../xml/parser
 
 LCFLAGS = \

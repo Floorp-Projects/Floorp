@@ -211,7 +211,6 @@ void commentHandler(void* userData, const XML_Char* s)
 {
     ParserState* ps = (ParserState*)userData;
     String data((UNICODE_CHAR*)s);
-    Node* prevSib = ps->currentNode->getLastChild();
     ps->currentNode->appendChild(ps->document->createComment(data));
 } //-- commentHandler
 

@@ -51,6 +51,7 @@
  */
 
 #define XML_ATOMS        \
+TX_ATOM(_empty, "");     \
 TX_ATOM(base, "base");   \
 TX_ATOM(lang, "lang");   \
 TX_ATOM(space, "space"); \
@@ -83,7 +84,6 @@ public:
 #include "txXSLTAtomList.h"
 };
 
-#ifndef TX_EXE
 class txHTMLAtoms
 {
 public:
@@ -91,7 +91,6 @@ public:
     static void shutdown();
 #include "txHTMLAtomList.h"
 };
-#endif
 
 #undef TX_ATOM
 

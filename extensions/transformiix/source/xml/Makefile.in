@@ -38,9 +38,6 @@ REQUIRES	= string \
 endif
 
 DIRS            = dom parser
-ifdef TX_EXE
-DIRS +=		printer
-endif
 
 CPPSRCS	= XMLDOMUtils.cpp XMLUtils.cpp
 

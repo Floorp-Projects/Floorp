@@ -82,10 +82,10 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
         Expr* expr = (Expr*)iter.next();
         ExprResult* exprResult = expr->evaluate(context, cs);
         if (exprResult && 
-	    exprResult->getResultType() == ExprResult::NODESET) {
+            exprResult->getResultType() == ExprResult::NODESET) {
             ((NodeSet*)exprResult)->copyInto(*nodes);
         }
-	delete exprResult;
+        delete exprResult;
     }
 
     return nodes;

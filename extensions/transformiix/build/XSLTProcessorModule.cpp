@@ -96,10 +96,11 @@ PR_STATIC_CALLBACK(void)
 Shutdown(nsIModule* aSelf)
 {
   NS_PRECONDITION(gInitialized, "module not initialized");
-  if (! gInitialized)
+  if (!gInitialized)
     return;
 
   gInitialized = PR_FALSE;
+
   txXMLAtoms::shutdown();
   txXPathAtoms::shutdown();
   txXSLTAtoms::shutdown();

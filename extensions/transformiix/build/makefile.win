@@ -107,10 +107,14 @@ CPP_OBJS=							\
 	..\source\xml\$(OBJDIR)\XMLDOMUtils.obj \
 	..\source\xml\parser\$(OBJDIR)\nsSyncLoader.obj \
 	..\source\xml\parser\$(OBJDIR)\XMLParser.obj \
-	..\source\xslt\$(OBJDIR)\OutputFormat.obj \
+	..\source\xslt\$(OBJDIR)\txOutputFormat.obj \
 	..\source\xslt\$(OBJDIR)\Names.obj \
 	..\source\xslt\$(OBJDIR)\Numbering.obj \
 	..\source\xslt\$(OBJDIR)\ProcessorState.obj \
+	..\source\xslt\$(OBJDIR)\txMozillaTextOutput.obj \
+	..\source\xslt\$(OBJDIR)\txMozillaXMLOutput.obj \
+	..\source\xslt\$(OBJDIR)\txRtfHandler.obj \
+	..\source\xslt\$(OBJDIR)\txTextHandler.obj \
 	..\source\xslt\$(OBJDIR)\VariableBinding.obj \
 	..\source\xslt\$(OBJDIR)\XSLTProcessor.obj \
 	..\source\xslt\functions\$(OBJDIR)\CurrentFunctionCall.obj \

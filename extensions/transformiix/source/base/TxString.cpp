@@ -836,12 +836,31 @@ PRInt32 String::indexOf(const String& data, PRInt32 offset) const
 //
 MBool String::isEqual(const String& data) const
 {
-  if (this == &data)
-    return MB_TRUE;
-  else if (strLength != data.length())
+  if (strLength != data.length())
     return MB_FALSE;
-  else
-    return isEqual(strBuffer, data.toUnicode(), data.length());
+  return isEqual(strBuffer, data.toUnicode(), data.length());
+}
+
+MBool String::isEqualIgnoreCase(const String& data) const
+{
+  if (strLength != data.length())
+    return MB_FALSE;
+
+  const UNICODE_CHAR* otherBuffer = data.strBuffer;
+  UNICODE_CHAR thisChar, otherChar;
+  PRInt32 compLoop = 0;
+  while (compLoop < strLength) {
+    thisChar = strBuffer[compLoop];
+    if ((thisChar >= 'A') && (thisChar <= 'Z'))
+      thisChar += 32;
+    otherChar = otherBuffer[compLoop];
+    if ((otherChar >= 'A') && (otherChar <= 'Z'))
+      otherChar += 32;
+    if (thisChar != otherChar)
+      return MB_FALSE;
+    ++compLoop;
+  }
+  return MB_TRUE;
 }
 
 /**
@@ -940,13 +959,12 @@ String& String::subString(PRInt32 start, String& dest) const
 String& String::subString(PRInt32 start, PRInt32 end, String& dest) const
 {
   PRInt32 srcLoop;
-  PRInt32 destLoop = 0;
 
-  start = start < 0? 0 : start;
-  end = end > strLength? strLength : end;
+  start = start < 0 ? 0 : start;
+  end = end > strLength ? strLength : end;
 
   dest.clear();
-  if ((start < end))
+  if (start < end)
     {
     dest.ensureCapacity(end - start);
     for (srcLoop=start;srcLoop<end;srcLoop++)

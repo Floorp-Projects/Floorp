@@ -89,11 +89,6 @@ const String& NodeDefinition::getNodeName() const
   return nodeName;
 }
 
-const String& NodeDefinition::getNodeValue() const
-{
-  return nodeValue;
-}
-
 const String& NodeDefinition::getNodeValue()
 {
   return nodeValue;
@@ -395,9 +390,17 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
     node = node->getXPathParent();
 
   String name("xmlns:");
-  String prefixString;
-  TX_GET_ATOM_STRING(aPrefix, prefixString);
-  name.append(prefixString);
+  if (aPrefix && (aPrefix != txXMLAtoms::_empty)) {
+      //  We have a prefix, search for xmlns:prefix attributes.
+      String prefixString;
+      TX_GET_ATOM_STRING(aPrefix, prefixString);
+      name.append(prefixString);
+  }
+  else {
+      // No prefix, look up the default namespace by searching for xmlns
+      // attributes. Remove the trailing :, set length to 5 (xmlns).
+      name.setLength(5);
+  }
   Attr* xmlns;
   while (node && node->getNodeType() == Node::ELEMENT_NODE) {
     String nsURI;
@@ -411,6 +414,8 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
     }
     node = node->getXPathParent();
   }
+  if (!aPrefix || (aPrefix == txXMLAtoms::_empty))
+      return kNameSpaceID_None;
   return kNameSpaceID_Unknown;
 }
 

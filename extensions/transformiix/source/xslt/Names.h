@@ -68,11 +68,9 @@ extern const String PARAM;
 extern const String PROC_INST;
 extern const String PRESERVE_SPACE;
 extern const String STRIP_SPACE;
-extern const String STYLESHEET;
 extern const String SORT;
 extern const String TEMPLATE;
 extern const String TEXT;
-extern const String TRANSFORM;
 extern const String VALUE_OF;
 extern const String VARIABLE;
 extern const String WHEN;
@@ -80,49 +78,14 @@ extern const String WITH_PARAM;
 
 
 //-- Attributes
-extern const String CASE_ORDER_ATTR;
-extern const String CDATA_ELEMENTS;
-extern const String COUNT_ATTR;
-extern const String DATA_TYPE_ATTR;
-extern const String DECIMAL_SEPARATOR_ATTR;
-extern const String DEFAULT_SPACE_ATTR;
-extern const String DIGIT_ATTR;
-extern const String DOCTYPE_PUBLIC_ATTR;
-extern const String DOCTYPE_SYSTEM_ATTR;
 extern const String ELEMENTS_ATTR;
-extern const String ENCODING_ATTR;
-extern const String EXPR_ATTR;
-extern const String FORMAT_ATTR;
-extern const String FROM_ATTR;
-extern const String GROUPING_SEPARATOR_ATTR;
 extern const String HREF_ATTR;
-extern const String INDENT_ATTR;
-extern const String INFINITY_ATTR;
-extern const String LANG_ATTR;
-extern const String LEVEL_ATTR;
 extern const String MATCH_ATTR;
-extern const String MEDIA_TYPE_ATTR;
-extern const String METHOD_ATTR;
-extern const String MINUS_SIGN_ATTR;
 extern const String MODE_ATTR;
 extern const String NAME_ATTR;
-extern const String NAMESPACE_ATTR;
-extern const String NAN_ATTR;
-extern const String OMIT_XMLDECL_ATTR;
-extern const String ORDER_ATTR;
-extern const String PATTERN_SEPARATOR_ATTR;
-extern const String PER_MILLE_ATTR;
-extern const String PERCENT_ATTR;
-extern const String PRIORITY_ATTR;
 extern const String SELECT_ATTR;
-extern const String STANDALONE;
 extern const String TEST_ATTR;
 extern const String USE_ATTR;
-extern const String USE_ATTRIBUTE_SETS_ATTR;
-extern const String VALUE_ATTR;
-extern const String VERSION_ATTR;
-extern const String XML_LANG_ATTR;
-extern const String ZERO_DIGIT_ATTR;
 
 //-- Attribute Values
 extern const String ANY_VALUE;
@@ -140,9 +103,6 @@ extern const String UPPER_FIRST_VALUE;
 extern const String YES_VALUE;
 
 //-- Stylesheet attributes
-extern const String INDENT_RESULT_ATTR;
-extern const String RESULT_NS_ATTR;
-
 extern const String ANCESTOR_AXIS;
 extern const String ANCESTOR_OR_SELF_AXIS;
 extern const String ATTRIBUTE_AXIS;

@@ -27,6 +27,7 @@
 
 #include "dom.h"
 #include "txAtoms.h"
+#include "XMLUtils.h"
 
 //
 //Construct an Attribute object using the specified name and document owner
@@ -46,7 +47,7 @@ Attr::Attr(const String& name, Document* owner):
   }
   else {
     String tmp;
-    nodeName.subString(idx+1, tmp);
+    nodeName.subString(idx + 1, tmp);
     mLocalName = TX_GET_ATOM(tmp);
     // namespace handling has to be handled late, the attribute must
     // be added to the tree to resolve the prefix, unless it's
@@ -62,6 +63,22 @@ Attr::Attr(const String& name, Document* owner):
       mNamespaceID = kNameSpaceID_Unknown;
     TX_IF_RELEASE_ATOM(prefixAtom);
   }
+}
+
+Attr::Attr(const String& aNamespaceURI,
+           const String& aName,
+           Document* aOwner) :
+    NodeDefinition(Node::ATTRIBUTE_NODE, aName, NULL_STRING, aOwner)
+{
+ if (aNamespaceURI.isEmpty())
+    mNamespaceID = kNameSpaceID_None;
+  else
+    mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
+
+  specified = MB_TRUE;
+  String localPart;
+  XMLUtils::getLocalPart(nodeName, localPart);
+  mLocalName = TX_GET_ATOM(localPart);
 }
 
 //

@@ -23,39 +23,31 @@
  *
  */
 
-
 #ifndef TRANSFRMX_XMLDOMUTILS_H
 #define TRANSFRMX_XMLDOMUTILS_H
 
 #include "dom.h"
-#include "NamespaceResolver.h"
 #include "baseutils.h"
 
-
-/**
+/*
  * A utility class for use with XML DOM implementations
-**/
-class XMLDOMUtils {
-
+ */
+class XMLDOMUtils
+{
 public:
+    /*
+     *  Appends the value of the given node to aResult.
+     */
+    static void getNodeValue(Node* aNode, String& aResult);
 
-    /**
-     *  Copies the given Node, using the owner Document to create all
-     *  necessary new Node(s)
-    **/
-   static Node* copyNode(Node* node, Document* owner, NamespaceResolver* resolver);
-
-    /**
-     *  Appends the value of the given Node to the target String
-    **/
-   static void getNodeValue(Node* node, String* target);
-
-   /**
-    * Returns the Namespace associated with the given prefix
-   **/
-   static MBool getNameSpace(const String& prefix, Element* element, String& dest);
-
-}; //-- XMLDOMUtils
+    /*
+     * Looks up the namespace URI associated with the given prefix.
+     *
+     * @return true if the namespace URI was found
+     */
+    static MBool getNamespaceURI(const String& aPrefix,
+                                 Element* aElement,
+                                 String& aResult);
+};
 
 #endif
-

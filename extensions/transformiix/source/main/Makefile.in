@@ -101,13 +101,15 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xml/parser/xmlrole.$(OBJ_SUFFIX) \
   ../xml/parser/xmlparse.$(OBJ_SUFFIX) \
   ../xml/parser/xmltok.$(OBJ_SUFFIX) \
-  ../xml/printer/XMLPrinter.$(OBJ_SUFFIX) \
-  ../xml/printer/HTMLPrinter.$(OBJ_SUFFIX) \
-  ../xml/printer/TEXTPrinter.$(OBJ_SUFFIX) \
-  ../xslt/OutputFormat.$(OBJ_SUFFIX) \
+  ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../xslt/Names.$(OBJ_SUFFIX) \
   ../xslt/Numbering.$(OBJ_SUFFIX) \
   ../xslt/ProcessorState.$(OBJ_SUFFIX) \
+  ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
+  ../xslt/txTextHandler.$(OBJ_SUFFIX) \
+  ../xslt/txTextOutput.$(OBJ_SUFFIX) \
+  ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
   ../xslt/VariableBinding.$(OBJ_SUFFIX) \
   ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
@@ -128,5 +130,5 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
   -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
   -I$(srcdir)/../xml/parser -I$(srcdir)/../xml/parser/xmlparse \
-  -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
+  -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
   -I$(srcdir)/../xslt/functions

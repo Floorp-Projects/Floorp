@@ -62,7 +62,9 @@ Document::Document() : Node(0, 0)
     ownerDocument = this;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
                                              DeleteWrapper, nsnull);
+#ifdef DEBUG
     bInHashTableDeletion = PR_FALSE;
+#endif
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
     NS_ASSERTION(doc,"document doesn't implement nsIDocument");
     if (doc) {
@@ -83,7 +85,9 @@ Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
     ownerDocument = this;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
                                              DeleteWrapper, nsnull);
+#ifdef DEBUG
     bInHashTableDeletion = PR_FALSE;
+#endif
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
     NS_ASSERTION(doc,"document doesn't implement nsIDocument");
     if (doc) {
@@ -99,19 +103,10 @@ Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
 Document::~Document()
 {
     removeWrapper(this);
+#ifdef DEBUG
     bInHashTableDeletion = PR_TRUE;
+#endif
     delete wrapperHashTable;
-}
-
-/**
- * Flags wether the document is deleting the wrapper hash table and the objects
- * that it contains.
- *
- * @return flags wether the document is deleting the wrapper hash table
- */
-PRBool Document::inHashTableDeletion()
-{
-    return bInHashTableDeletion;
 }
 
 /**
@@ -288,7 +283,7 @@ Attr* Document::createAttribute(const String& aName)
  * @return the Attribute
  */
 Attr* Document::createAttributeNS(const String& aNamespaceURI,
-            const String& aName)
+                                  const String& aName)
 {
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMAttr> attr;
@@ -640,4 +635,21 @@ TxObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
 {
     nsISupportsKey key(aObject->getNSObj());
     return (TxObject*)wrapperHashTable->Remove(&key);
+}
+
+PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
+{
+    PRInt32 namesspaceID = kNameSpaceID_Unknown;
+    if (nsNSManager)
+        nsNSManager->RegisterNameSpace(aNamespaceURI.getConstNSString(),
+                                       namesspaceID);
+    return namesspaceID;
+}
+
+void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
+{
+    if (nsNSManager)
+        nsNSManager->GetNameSpaceURI(aNamespaceID,
+                                     aNamespaceURI.getNSString());
+    return;
 }

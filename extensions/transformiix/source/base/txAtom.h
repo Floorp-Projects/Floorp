@@ -82,6 +82,11 @@ public:
         aString = mString;
         return MB_TRUE;
     }
+    friend ostream& operator << (ostream& aOutput, const txAtom& aSource)
+    {
+        aOutput << aSource.mString;
+        return aOutput;
+    }
 private:
     String mString;
 };
