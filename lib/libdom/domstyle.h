@@ -33,7 +33,7 @@ typedef struct DOM_StyleRule DOM_StyleRule;
 
 /*
  * DOM_StyleTokens are used for identification of elements ("H1"), style
- * properties ("color"), style values ("blue") and pseudo-classes (":visited").
+ * properties ("color"), style values ("blue") and pseudo-classes ("visited").
  */
 
 /* this may become int or something later, for speed */
@@ -44,25 +44,48 @@ typedef const char *DOM_StyleToken;
 #define DOM_STYLE_SELECTOR_TYPE(sel)	((sel) & ~DOM_STYLE_PSEUDO_TAG)
 #define DOM_PSEUDOIZE(sel)		((sel) | DOM_STYLE_PSEUDO_TAG)
 
-typedef enum {
+enum {
     SELECTOR_UNKNOWN = 0
     SELECTOR_ID,
     SELECTOR_CLASS,
     SELECTOR_TAG
-}
-
-struct DOM_StyleDatabase {
-    void *hashtable;  /* PRHash, from js/ref or nsprpub, depending? */
 };
 
+struct DOM_StyleDatabase {
+    PRHashTable *hashtable;  /* PRHash, from js/ref or nsprpub, depending? */
+};
+
+DOM_StyleDatabase *
+DOM_NewStyleDatabase(JSContext *cx);
+
 struct DOM_StyleSelector {
-    int8 selectorType;
+    int8 type;
     DOM_StyleToken selector;
     DOM_StyleToken pseudo;
     DOM_StyleSelector *enclosing;
     DOM_StyleSelector *sibling;
     DOM_StyleRule *rules;
 };
+
+/*
+ * Find or create a selector for the given enclosing element type, starting
+ * from the provided (optional) base selector.
+ *
+ * Usage examples:
+ *
+ * Find/create a selector for "B"
+ * sel = DOM_StyleFindSelector(cx, db, NULL, "B", NULL);
+ *
+ * Now find/create a selector for "CODE B":
+ * sel2 = DOM_StyleFindSelector(cx, db, sel, "CODE", NULL);
+ *
+ * And for "A:visited CODE B":
+ * sel3 = DOM_StyleFindSelector(cx, db, sel2, "A", "visited");
+ */
+DOM_StyleSelector *
+DOM_StyleFindSelector(JSContext *cx, DOM_StyleDatabase *db,
+                      DOM_StyleSelector *base, DOM_StyleToken enclosing,
+                      DOM_StyleToken pseudo);
 
 struct DOM_StyleRule {
     DOM_AttributeEntry entry;
@@ -106,30 +129,8 @@ DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
 
 JSBool
 DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db, DOM_Node *node,
-		     DOM_StyleToken property, DOM_StyleToken psuedo,
-		     DOM_AttributeEntry **entryp);
-
-/*
- * Find or create a selector for the given enclosing element type, starting
- * from the provided (optional) base selector.
- *
- * Usage examples:
- *
- * Find/create a selector for "B"
- * sel = DOM_StyleFindSelector(cx, db, NULL, "B");
- *
- * Now find/create a selector for "CODE B":
- * sel2 = DOM_StyleFindSelector(cx, db, sel, "CODE");
- *
- * And for "H1 CODE B":
- * sel3 = DOM_StyleFindSelector(cx, db, sel2, "H1");
- *
- * Pseudo-classes are prefixed with ":":
- * visited = DOM_StyleFindSelector(cx, db, hrefSel, ":visited");
- */
-DOM_StyleSelector *
-DOM_StyleFindSelector(JSContext *cx, DOM_StyleDatabase *db,
-		      DOM_StyleSelector *base, DOM_StyleToken enclosing);
+                     DOM_StyleToken property, DOM_StyleToken psuedo,
+                     DOM_AttributeEntry **entryp);
 
 /*
  * Add a property to the provided selector.
@@ -137,7 +138,7 @@ DOM_StyleFindSelector(JSContext *cx, DOM_StyleDatabase *db,
  * DOM_StyleAddRule(cx, db, sel, "color", "blue");
  */
 JSBool
-DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleToken name,
-		 const char *value);
+DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleSelector *sel,
+                 DOM_StyleToken name, const char *value);
 
 #endif /* DOM_STYLE_H */

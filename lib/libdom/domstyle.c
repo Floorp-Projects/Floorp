@@ -19,10 +19,65 @@
 #include "domstyle.h"
 
 static DOM_StyleSelector *
-GetBaseSelector(DOM_StyleDatabase *db, DOM_StyleToken type)
+GetBaseSelector(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleToken type,
+		DOM_StyleToken pseudo)
 {
     DOM_StyleSelector *sel = NULL;
     /* sel = HASH_LOOKUP(db->hashtable, type); */
+    return sel;
+}
+
+static void
+DestroySelector(JSContext *cx, DOM_StyleSelector *sel)
+{
+    XP_FREE(sel->selector);
+    if (sel->pseudo)
+	XP_FREE(sel->pseudo);
+    if (sel->rules) {
+	DOM_StyleRule *iter, *next;
+	iter = sel->rules;
+	do {
+	    next = iter->next;
+	    XP_FREE(iter->entry.name);
+	    XP_FREE(iter->entry.value);
+	    XP_FREE(iter);
+	    iter = next;
+	} while (iter);
+    }
+    XP_FREE(sel);
+}
+
+static DOM_StyleSelector *
+NewSelector(JSContext *cx, DOM_StyleToken selector, DOM_StyleToken pseudo)
+{
+    DOM_StyleSelector *sel;
+    sel = XP_NEW_ZAP(DOM_StyleSelector);
+    if (!sel)
+	return NULL;
+    if (selector[0] == '.') {
+	sel->type = SELECTOR_CLASS;
+	selector++;
+    } else if (selector[0] == '#') {
+	sel->type = SELECTOR_ID;
+	selector++;
+    } else {
+	sel->type = SELECTOR_TAG;
+    }
+
+    sel->selector = XP_STRDUP(selector);
+    if (!sel->selector) {
+	DestroySelector(cx, sel);
+	return NULL;
+    }
+
+    if (pseudo) {
+	sel->pseudo = XP_STRDUP(pseudo);
+	if (!sel->pseudo) {
+	    DestroySelector(cx, sel);
+	    return NULL;
+	}
+    }
+    
     return sel;
 }
 
@@ -56,6 +111,14 @@ GetPseudo(JSContext *cx, DOM_Element *element)
 		sel->selector, sel->pseudo ? sel->pseudo : "",		      \
 		element->tagName);					      \
 #endif
+
+static JSBool
+SelectorMatchesToken(JSContext *cx, DOM_StyleSelector *sel,
+		     DOM_StyleToken token, DOM_StyleToken pseudo)
+{
+    /* XXX handle #ID and .class */
+    return !XPSTRCMP(sel->type, token);
+}
 
 static JSBool
 SelectorMatchesElement(JSContext *cx, DOM_Element *element,
@@ -177,6 +240,52 @@ DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db,
     if (!sel)
 	return JS_TRUE;
 
-    return CheckSelector(cx, element, sel, property, entryp, &best,
-			 1);
+    /*
+     * CheckSelector will recursively find the best match for a given
+     * property.
+     */
+    return CheckSelector(cx, element, sel, property, entryp, &best, 1);
+}
+
+DOM_StyleSelector *
+DOM_StyleFindSelector(JSContext *cx, DOM_StyleDatabase *db,
+		      DOM_StyleSelector *base, DOM_StyleToken enclosing,
+		      DOM_StyleToken pseudo)
+{
+    DOM_StyleSelector *sel;
+
+    /* looking for the base one */
+    if (!base) {
+	sel = GetBaseSelector(cx, db, enclosing, pseudo);
+	if (!sel)
+	    sel = NewSelector(cx, enclosing, pseudo);
+	if (sel)
+	    InsertBaseSelector(cx, db, sel);
+	return sel;
+    }
+    
+    if (!base->enclosing) {
+	sel = NewSelector(cx, enclosing, pseudo);
+	if (!sel)
+	    return NULL;
+	base->enclosing = sel;
+	return sel;
+    }
+    
+    /* check existing enclosing selectors */
+    sel = base->enclosing;
+    do {
+	if (SelectorMatchesToken(cx, sel, enclosing, pseudo))
+	    return sel;
+	sel = sel->sibling;
+    } while (sel);
+
+    /* nothing found that matches, so create a new one */
+    sel = NewSelector(cx, enclosing, pseudo);
+    if (!sel)
+	return NULL;
+    sel->sibling = base->enclosing;
+    base->enclosing = sel;
+
+    return sel;
 }
