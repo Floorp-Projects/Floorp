@@ -155,19 +155,21 @@ NS_IMPL_ISUPPORTS1(nsFindContentIterator, nsIContentIterator)
 nsresult
 nsFindContentIterator::Init(nsIDOMRange* aRange)
 {
-  if (mFindBackward) {
-    // Use post-order in the reverse case, so we get parents
-    // before children in case we want to prevent descending
-    // into a node.
-    mOuterIterator = do_CreateInstance(kCContentIteratorCID);
+  if (!mOuterIterator) {
+    if (mFindBackward) {
+      // Use post-order in the reverse case, so we get parents
+      // before children in case we want to prevent descending
+      // into a node.
+      mOuterIterator = do_CreateInstance(kCContentIteratorCID);
+    }
+    else {
+      // Use pre-order in the forward case, so we get parents
+      // before children in case we want to prevent descending
+      // into a node.
+      mOuterIterator = do_CreateInstance(kCPreContentIteratorCID);
+    }
+    NS_ENSURE_ARG_POINTER(mOuterIterator);
   }
-  else {
-    // Use pre-order in the forward case, so we get parents
-    // before children in case we want to prevent descending
-    // into a node.
-    mOuterIterator = do_CreateInstance(kCPreContentIteratorCID);
-  }
-  NS_ENSURE_ARG_POINTER(mOuterIterator);
 
   // mRange is the search range that we will examine
   return aRange->CloneRange(getter_AddRefs(mRange));
@@ -177,20 +179,12 @@ void
 nsFindContentIterator::First()
 {
   Reset();
-  mOuterIterator->First();
-  if (mInnerIterator) {
-    mInnerIterator->First();
-  }
 }
 
 void
 nsFindContentIterator::Last()
 {
   Reset();
-  mOuterIterator->Last();
-  if (mInnerIterator) {
-    mInnerIterator->Last();
-  }
 }
 
 void
@@ -206,14 +200,7 @@ nsFindContentIterator::Next()
   else {
     mOuterIterator->Next();
   }
-
   MaybeSetupInnerIterator();  
-  if (mInnerIterator) {
-    mInnerIterator->First();
-    // finish setup: position mOuterIterator on the actual "next"
-    // node (this completes its re-init, @see SetupInnerIterator)
-    mOuterIterator->First();
-  }
 }
 
 void
@@ -229,14 +216,7 @@ nsFindContentIterator::Prev()
   else {
     mOuterIterator->Prev();
   }
-
   MaybeSetupInnerIterator();
-  if (mInnerIterator) {
-    mInnerIterator->Last();
-    // finish setup: position mOuterIterator on the actual "previous"
-    // node (this completes its re-init, @see SetupInnerIterator)
-    mOuterIterator->Last();
-  }
 }
 
 nsIContent*
@@ -259,23 +239,15 @@ nsFindContentIterator::IsDone() {
 nsresult
 nsFindContentIterator::PositionAt(nsIContent* aCurNode)
 {
+  nsIContent* oldNode = mOuterIterator->GetCurrentNode();
   nsresult rv = mOuterIterator->PositionAt(aCurNode);
   if (NS_SUCCEEDED(rv)) {
     MaybeSetupInnerIterator();
-    if (mInnerIterator) {
-      // same rationale as in Next() and Prev() above
-      if (!mFindBackward) {
-        mInnerIterator->First();
-        mOuterIterator->First();
-      }
-      else {
-        mInnerIterator->Last();
-        mOuterIterator->Last();
-      }
-    }
   }
-  else if (mInnerIterator) {
-    rv = mInnerIterator->PositionAt(aCurNode);
+  else {
+    mOuterIterator->PositionAt(oldNode);
+    if (mInnerIterator)
+      rv = mInnerIterator->PositionAt(aCurNode);
   }
   return rv;
 }
@@ -318,11 +290,25 @@ nsFindContentIterator::Reset()
     if (mStartOuterNode != startNode) {
       // the start node was an anonymous text node
       SetupInnerIterator(startContent);
+      if (mInnerIterator)
+        mInnerIterator->First();
     }
+    mOuterIterator->First();
   }
-  else if (mEndOuterNode != endNode) {
-    // the end node was an anonymous text node
-    SetupInnerIterator(endContent);
+  else {
+    if (mEndOuterNode != endNode) {
+      // the end node was an anonymous text node
+      SetupInnerIterator(endContent);
+      if (mInnerIterator)
+        mInnerIterator->Last();
+    }
+    mOuterIterator->Last();
+  }
+
+  // if we didn't create an inner-iterator, the boundary node could still be
+  // a text control, in which case we also need an inner-iterator straightaway
+  if (!mInnerIterator) {
+    MaybeSetupInnerIterator();
   }
 }
 
@@ -342,6 +328,20 @@ nsFindContentIterator::MaybeSetupInnerIterator()
     return;
 
   SetupInnerIterator(content);
+  if (mInnerIterator) {
+    if (!mFindBackward) {
+      mInnerIterator->First();
+      // finish setup: position mOuterIterator on the actual "next"
+      // node (this completes its re-init, @see SetupInnerIterator)
+      mOuterIterator->First();
+    }
+    else {
+      mInnerIterator->Last();
+      // finish setup: position mOuterIterator on the actual "previous"
+      // node (this completes its re-init, @see SetupInnerIterator)
+      mOuterIterator->Last();
+    }
+  }
 }
 
 void
