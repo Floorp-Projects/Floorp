@@ -37,10 +37,10 @@
 package org.mozilla.javascript;
 
 /**
- * Thrown if errors are detected while attempting to define a host object
- * from a Java class.
+ * @deprecated The exception is no longer thrown by Rhino runtime as
+ * {@link EvaluatorException} is used instead.
  */
-public class ClassDefinitionException extends Exception {
+public class ClassDefinitionException extends RuntimeException {
 
     public ClassDefinitionException(String detail) {
         super(detail);

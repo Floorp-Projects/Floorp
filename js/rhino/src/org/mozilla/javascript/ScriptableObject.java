@@ -653,7 +653,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *
      * First, the zero-parameter constructor of the class is called to
      * create the prototype. If no such constructor exists,
-     * a ClassDefinitionException is thrown. <p>
+     * a {@link EvaluatorException} is thrown. <p>
      *
      * Next, all methods are scanned for special prefixes that indicate that they
      * have special meaning for defining JavaScript objects.
@@ -695,11 +695,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * Java constructor, that constructor is used to define
      * the JavaScript constructor. If the the class has two constructors,
      * one must be the zero-argument constructor (otherwise an
-     * ClassDefinitionException would have already been thrown
+     * {@link EvaluatorException} would have already been thrown
      * when the prototype was to be created). In this case
      * the Java constructor with one or more parameters will be used
      * to define the JavaScript constructor. If the class has three
-     * or more constructors, an ClassDefinitionException
+     * or more constructors, an {@link EvaluatorException}
      * will be thrown.<p>
      *
      * Finally, if there is a method
@@ -720,8 +720,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *            the named class
      * @exception InvocationTargetException if an exception is thrown
      *            during execution of methods of the named class
-     * @exception ClassDefinitionException if an appropriate
-     *            constructor cannot be found to create the prototype
      * @see org.mozilla.javascript.Function
      * @see org.mozilla.javascript.FunctionObject
      * @see org.mozilla.javascript.ScriptableObject#READONLY
@@ -729,7 +727,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public static void defineClass(Scriptable scope, Class clazz)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException
+               InvocationTargetException
     {
         defineClass(scope, clazz, false);
     }
@@ -755,14 +753,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *            the named class
      * @exception InvocationTargetException if an exception is thrown
      *            during execution of methods of the named class
-     * @exception ClassDefinitionException if an appropriate
-     *            constructor cannot be found to create the prototype
      * @since 1.4R3
      */
     public static void defineClass(Scriptable scope, Class clazz,
                                    boolean sealed)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException
+               InvocationTargetException
     {
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < methods.length; i++) {
@@ -804,8 +800,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
         if (protoCtor == null) {
-            throw new ClassDefinitionException(
-                    Context.getMessage1("msg.zero.arg.ctor", clazz.getName()));
+            throw Context.reportRuntimeError1(
+                      "msg.zero.arg.ctor", clazz.getName());
         }
 
         Scriptable proto = (Scriptable)
@@ -834,9 +830,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                     ctorMember = ctors[0];
             }
             if (ctorMember == null) {
-                throw new ClassDefinitionException(
-                    Context.getMessage1("msg.ctor.multiple.parms",
-                                        clazz.getName()));
+                throw Context.reportRuntimeError1(
+                          "msg.ctor.multiple.parms", clazz.getName());
             }
         }
 
@@ -877,7 +872,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             } else if (name.startsWith(staticFunctionPrefix)) {
                 prefix = staticFunctionPrefix;
                 if (!Modifier.isStatic(methods[i].getModifiers())) {
-                    throw new ClassDefinitionException(
+                    throw Context.reportRuntimeError(
                         "jsStaticFunction must be used with static method.");
                 }
             } else if (name.startsWith(getterPrefix)) {

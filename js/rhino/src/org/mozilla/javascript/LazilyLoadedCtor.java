@@ -73,8 +73,6 @@ public final class LazilyLoadedCtor {
                     try {
                         ScriptableObject.defineClass(obj, cl, sealed);
                         isReplaced = true;
-                    } catch (ClassDefinitionException ex) {
-                        removeOnError = true;
                     } catch (InvocationTargetException ex) {
                         Throwable target = ex.getTargetException();
                         if (target instanceof RuntimeException) {
