@@ -86,7 +86,7 @@ enum eHTMLCategory {
 
 nsresult      ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
 nsresult      ConsumeAttributeText(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
-const char*   GetTagName(PRInt32 aTag);
+const PRUnichar* GetTagName(PRInt32 aTag);
 //PRInt32     FindEntityIndex(nsString& aString,PRInt32 aCount=-1);
 
 

@@ -187,7 +187,10 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
+NS_IMETHODIMP_(eAutoDetectResult)
+CWellFormedDTD::CanParse(CParserContext& aParserContext,
+                         const nsString& aBuffer, PRInt32 aVersion)
+{
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource!=aParserContext.mParserCommand) {
@@ -198,9 +201,12 @@ eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsStri
        aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
-    else {
-      if (0 == aParserContext.mMimeType.Length() &&
-          kNotFound != aBuffer.Find("<?xml ")) {
+    else if (aParserContext.mMimeType.IsEmpty()) {
+      nsAReadableString::const_iterator iter, end;
+      aBuffer.BeginReading(iter);
+      aBuffer.EndReading(end);
+
+      if (FindInReadable(NS_LITERAL_STRING("<?xml "), iter, end)) {
         aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kXMLTextContentType));
         result=eValidDetect;
       }
@@ -457,17 +463,22 @@ PRBool CWellFormedDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  * Give rest of world access to our tag enums, so that CanContain(), etc,
  * become useful.
  */
-NS_IMETHODIMP CWellFormedDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+NS_IMETHODIMP
+CWellFormedDTD::StringTagToIntTag(const nsAReadableString &aTag,
+                                  PRInt32* aIntTag) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CWellFormedDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+NS_IMETHODIMP_(const PRUnichar *)
+CWellFormedDTD::IntTagToStringTag(PRInt32 aIntTag) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
 }
 
-NS_IMETHODIMP CWellFormedDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+NS_IMETHODIMP
+CWellFormedDTD::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                       PRInt32* aUnicode) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -354,24 +354,23 @@ void nsCParserNode::GetSource(nsString& aString) {
   aString.Truncate();
 
   eHTMLTags theTag=(eHTMLTags)mToken->GetTypeID();
-  aString.AppendWithConversion("<");
-  const char* theTagName=nsHTMLTags::GetCStringValue(theTag);
+  aString.Append(PRUnichar('<'));
+  const PRUnichar* theTagName=nsHTMLTags::GetStringValue(theTag);
   if(theTagName) {
-    aString.AppendWithConversion(theTagName);
+    aString.Append(theTagName);
   }
   if(mAttributes) {
-    nsAutoString  theAttrStr;
     int           index=0;
     for(index=0;index<mAttributes->GetSize();index++) {
       CAttributeToken *theToken=(CAttributeToken*)mAttributes->ObjectAt(index);
       if(theToken) {
-        theToken->AppendSource(theAttrStr);
-        aString.AppendWithConversion(" "); //this will get removed...
+        theToken->AppendSource(aString);
+        aString.Append(PRUnichar(' ')); //this will get removed...
       }
     }
-    aString.Append(theAttrStr);
   }
-  aString.AppendWithConversion(">");
+
+  aString.Append(PRUnichar('>'));
 }
 
 /** Release all the objects you're holding to.

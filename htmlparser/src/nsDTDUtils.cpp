@@ -1553,7 +1553,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
           nsIElementObserver* observer = NS_STATIC_CAST(nsIElementObserver*,theObservers->ElementAt(index));
           if (observer) {
             result = observer->Notify(aWebShell, channel,
-                                      NS_ConvertASCIItoUCS2(nsHTMLTags::GetStringValue(theTag)).get(),
+                                      nsHTMLTags::GetStringValue(theTag),
                                       &keys, &values);
             if (NS_FAILED(result)) {
               break;

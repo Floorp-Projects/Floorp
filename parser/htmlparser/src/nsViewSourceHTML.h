@@ -1,5 +1,4 @@
-
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -49,9 +48,9 @@ class nsParser;
 class nsITokenizer;
 class nsCParserNode;
 
-class CViewSourceHTML: public nsIDTD {
-            
-  public:
+class CViewSourceHTML: public nsIDTD
+{
+public:
 
     NS_DECL_ISUPPORTS
 
@@ -65,8 +64,6 @@ class CViewSourceHTML: public nsIDTD {
      */
     CViewSourceHTML();
 
-    virtual const nsIID&  GetMostDerivedIID(void) const;
-
     /**
      *  
      *  
@@ -77,13 +74,15 @@ class CViewSourceHTML: public nsIDTD {
     virtual ~CViewSourceHTML();
 
 
+    NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const;
+
     /**
      * Call this method if you want the DTD to construct a clone of itself.
      * @update	gess7/23/98
      * @param 
      * @return
      */
-    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
+    NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);
 
 
     /**
@@ -95,7 +94,9 @@ class CViewSourceHTML: public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
+    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext,
+                                            const nsString& aBuffer,
+                                            PRInt32 aVersion);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -106,7 +107,8 @@ class CViewSourceHTML: public nsIDTD {
       * @param	aSink
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink);
+    NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
+                              nsIContentSink* aSink);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -116,7 +118,9 @@ class CViewSourceHTML: public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);
+    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
+                          nsITokenObserver* anObserver = nsnull,
+                          nsIContentSink* aSink = nsnull);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -126,7 +130,9 @@ class CViewSourceHTML: public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
+                             nsIParser* aParser,
+                             nsIContentSink* aSink = nsnull);
 
     /**
      *  
@@ -151,7 +157,7 @@ class CViewSourceHTML: public nsIDTD {
      * @param 
      * @return
      */
-    virtual  nsTokenAllocator* GetTokenAllocator(void);
+    NS_IMETHOD_(nsTokenAllocator *) GetTokenAllocator(void);
 
     /**
      * 
@@ -187,7 +193,7 @@ class CViewSourceHTML: public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
+    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
      * Use this id you want to stop the building content model
@@ -199,20 +205,24 @@ class CViewSourceHTML: public nsIDTD {
      * @param 
      * @return
      */
-    virtual nsresult  Terminate(nsIParser* aParser=nsnull);
+    NS_IMETHOD Terminate(nsIParser* aParser = nsnull);
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,
      * become useful.
      */
-    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
+                                 PRInt32* aIntTag) const;
 
-    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const;
 
-    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
+    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                      PRInt32* aUnicode) const;
 
-    virtual PRBool  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
-    virtual PRBool  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
+                                       PRInt32 aParentID) const;
+    NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
+                                        PRInt32 aParentID) const;
 
     /**
      *  This method gets called to determine whether a given 
@@ -222,7 +232,7 @@ class CViewSourceHTML: public nsIDTD {
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool IsContainer(PRInt32 aTag) const;
+    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;
 
 
 private:

@@ -37,172 +37,480 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTags.h"
+#include "nsCRT.h"
+#include "nsReadableUtils.h"
+#include "plhash.h"
 
-#include "nsString.h"
-#include "nsStaticNameTable.h"
+// C++ sucks! There's no way to do this with a macro, at least not
+// that I know, if you know how to do this with a macro then please do
+// so...
+static const PRUnichar sHTMLTagUnicodeName_a[] =
+  {'a', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_abbr[] =
+  {'a', 'b', 'b', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_acronym[] =
+  {'a', 'c', 'r', 'o', 'n', 'y', 'm', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_address[] =
+  {'a', 'd', 'd', 'r', 'e', 's', 's', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_applet[] =
+  {'a', 'p', 'p', 'l', 'e', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_area[] =
+  {'a', 'r', 'e', 'a', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_b[] =
+  {'b', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_base[] =
+  {'b', 'a', 's', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_basefont[] =
+  {'b', 'a', 's', 'e', 'f', 'o', 'n', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_bdo[] =
+  {'b', 'd', 'o', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_bgsound[] =
+  {'b', 'g', 's', 'o', 'u', 'n', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_big[] =
+  {'b', 'i', 'g', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_blink[] =
+  {'b', 'l', 'i', 'n', 'k', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_blockquote[] =
+  {'b', 'l', 'o', 'c', 'k', 'q', 'u', 'o', 't', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_body[] =
+  {'b', 'o', 'd', 'y', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_br[] =
+  {'b', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_button[] =
+  {'b', 'u', 't', 't', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_caption[] =
+  {'c', 'a', 'p', 't', 'i', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_center[] =
+  {'c', 'e', 'n', 't', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_cite[] =
+  {'c', 'i', 't', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_code[] =
+  {'c', 'o', 'd', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_col[] =
+  {'c', 'o', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_colgroup[] =
+  {'c', 'o', 'l', 'g', 'r', 'o', 'u', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_counter[] =
+  {'c', 'o', 'u', 'n', 't', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_dd[] =
+  {'d', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_del[] =
+  {'d', 'e', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_dfn[] =
+  {'d', 'f', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_dir[] =
+  {'d', 'i', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_div[] =
+  {'d', 'i', 'v', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_dl[] =
+  {'d', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_dt[] =
+  {'d', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_em[] =
+  {'e', 'm', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_embed[] =
+  {'e', 'm', 'b', 'e', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_endnote[] =
+  {'e', 'n', 'd', 'n', 'o', 't', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_fieldset[] =
+  {'f', 'i', 'e', 'l', 'd', 's', 'e', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_font[] =
+  {'f', 'o', 'n', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_form[] =
+  {'f', 'o', 'r', 'm', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_frame[] =
+  {'f', 'r', 'a', 'm', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_frameset[] =
+  {'f', 'r', 'a', 'm', 'e', 's', 'e', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h1[] =
+  {'h', '1', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h2[] =
+  {'h', '2', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h3[] =
+  {'h', '3', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h4[] =
+  {'h', '4', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h5[] =
+  {'h', '5', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_h6[] =
+  {'h', '6', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_head[] =
+  {'h', 'e', 'a', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_hr[] =
+  {'h', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_html[] =
+  {'h', 't', 'm', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_i[] =
+  {'i', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_iframe[] =
+  {'i', 'f', 'r', 'a', 'm', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_ilayer[] =
+  {'i', 'l', 'a', 'y', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_image[] =
+  {'i', 'm', 'a', 'g', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_img[] =
+  {'i', 'm', 'g', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_input[] =
+  {'i', 'n', 'p', 'u', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_ins[] =
+  {'i', 'n', 's', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_isindex[] =
+  {'i', 's', 'i', 'n', 'd', 'e', 'x', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_kbd[] =
+  {'k', 'b', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_keygen[] =
+  {'k', 'e', 'y', 'g', 'e', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_label[] =
+  {'l', 'a', 'b', 'e', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_layer[] =
+  {'l', 'a', 'y', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_legend[] =
+  {'l', 'e', 'g', 'e', 'n', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_li[] =
+  {'l', 'i', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_link[] =
+  {'l', 'i', 'n', 'k', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_listing[] =
+  {'l', 'i', 's', 't', 'i', 'n', 'g', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_map[] =
+  {'m', 'a', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_menu[] =
+  {'m', 'e', 'n', 'u', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_meta[] =
+  {'m', 'e', 't', 'a', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_multicol[] =
+  {'m', 'u', 'l', 't', 'i', 'c', 'o', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_nobr[] =
+  {'n', 'o', 'b', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_noembed[] =
+  {'n', 'o', 'e', 'm', 'b', 'e', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_noframes[] =
+  {'n', 'o', 'f', 'r', 'a', 'm', 'e', 's', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_nolayer[] =
+  {'n', 'o', 'l', 'a', 'y', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_noscript[] =
+  {'n', 'o', 's', 'c', 'r', 'i', 'p', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_object[] =
+  {'o', 'b', 'j', 'e', 'c', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_ol[] =
+  {'o', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_optgroup[] =
+  {'o', 'p', 't', 'g', 'r', 'o', 'u', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_option[] =
+  {'o', 'p', 't', 'i', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_p[] =
+  {'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_param[] =
+  {'p', 'a', 'r', 'a', 'm', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_parsererror[] =
+  {'p', 'a', 'r', 's', 'e', 'r', 'e', 'r', 'r', 'o', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_plaintext[] =
+  {'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_pre[] =
+  {'p', 'r', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_q[] =
+  {'q', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_s[] =
+  {'s', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_samp[] =
+  {'s', 'a', 'm', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_script[] =
+  {'s', 'c', 'r', 'i', 'p', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_select[] =
+  {'s', 'e', 'l', 'e', 'c', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_server[] =
+  {'s', 'e', 'r', 'v', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_small[] =
+  {'s', 'm', 'a', 'l', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_sound[] =
+  {'s', 'o', 'u', 'n', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_sourcetext[] =
+  {'s', 'o', 'u', 'r', 'c', 'e', 't', 'e', 'x', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_spacer[] =
+  {'s', 'p', 'a', 'c', 'e', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_span[] =
+  {'s', 'p', 'a', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_strike[] =
+  {'s', 't', 'r', 'i', 'k', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_strong[] =
+  {'s', 't', 'r', 'o', 'n', 'g', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_style[] =
+  {'s', 't', 'y', 'l', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_sub[] =
+  {'s', 'u', 'b', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_sup[] =
+  {'s', 'u', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_table[] =
+  {'t', 'a', 'b', 'l', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_tbody[] =
+  {'t', 'b', 'o', 'd', 'y', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_td[] =
+  {'t', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_textarea[] =
+  {'t', 'e', 'x', 't', 'a', 'r', 'e', 'a', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_tfoot[] =
+  {'t', 'f', 'o', 'o', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_th[] =
+  {'t', 'h', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_thead[] =
+  {'t', 'h', 'e', 'a', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_title[] =
+  {'t', 'i', 't', 'l', 'e', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_tr[] =
+  {'t', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_tt[] =
+  {'t', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_u[] =
+  {'u', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_ul[] =
+  {'u', 'l', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_var[] =
+  {'v', 'a', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_wbr[] =
+  {'w', 'b', 'r', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_xmp[] =
+  {'x', 'm', 'p', '\0'};
 
-// define an array of all HTML tags
-#define HTML_TAG(_tag) #_tag,
-static const char* kTagTable[] = {
+
+// static array of unicode tag names
+#define HTML_TAG(_tag) sHTMLTagUnicodeName_##_tag,
+static const PRUnichar* kTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
 
-static PRInt32 gTableRefCount;
-static nsStaticCaseInsensitiveNameTable* gTagTable;
 
-void
-nsHTMLTags::AddRefTable(void) 
+#ifdef DEBUG
+// static array of ASCII tag names for debugging purposes
+#define HTML_TAG(_tag) #_tag,
+static const char* kTagASCIIDebugTable[] = {
+#include "nsHTMLTagList.h"
+};
+#undef HTML_TAG
+#endif
+
+static PRInt32 gTableRefCount;
+static PLHashTable* gTagTable;
+
+
+static PLHashNumber
+HTMLTagsHashCodeUCPtr(const void *key)
 {
-  if (0 == gTableRefCount++) {
-    NS_ASSERTION(!gTagTable, "pre existing array!");
-    gTagTable = new nsStaticCaseInsensitiveNameTable();
-    if (gTagTable) {
+  const PRUnichar *str = (const PRUnichar *)key;
+
+  return nsCRT::HashCode(str);
+}
+
+static PRIntn
+HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
+{
+  const PRUnichar *str1 = (const PRUnichar *)key1;
+  const PRUnichar *str2 = (const PRUnichar *)key2;
+
+  return nsCRT::strcmp(str1, str2) == 0;
+}
+
+
+static PRUint32 sMaxTagNameLength;
+#define NS_HTMLTAG_NAME_MAX_LENGTH 11
+
+// static
+nsresult
+nsHTMLTags::AddRefTable(void)
+{
+  if (gTableRefCount++ == 0) {
+    NS_ASSERTION(!gTagTable, "pre existing hash!");
+
+    gTagTable = PL_NewHashTable(64, HTMLTagsHashCodeUCPtr,
+                                HTMLTagsKeyCompareUCPtr, PL_CompareValues,
+                                nsnull, nsnull);
+    NS_ENSURE_TRUE(gTagTable, NS_ERROR_OUT_OF_MEMORY);
+
+    // Fill in gTagTable with the above static PRUnichar strings as
+    // keys and the value of the corresponding enum as the value in
+    // the table.
+
+    PRInt32 i;
+    for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
+      PRUint32 len = nsCRT::strlen(kTagUnicodeTable[i]);
+
+      PL_HashTableAdd(gTagTable, kTagUnicodeTable[i],
+                      NS_INT32_TO_PTR(i + 1));
+
+      if (len > sMaxTagNameLength) {
+        sMaxTagNameLength = len;
+      }
+    }
+
+    NS_ASSERTION(sMaxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
+                 "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");
+
 #ifdef DEBUG
     {
-      // let's verify the table...
-      for (PRInt32 index = 0; index < NS_HTML_TAG_MAX; ++index) {
-        nsCAutoString temp1(kTagTable[index]);
-        nsCAutoString temp2(kTagTable[index]);
+      // let's verify that all names in the the table are lowercase...
+      for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
+        nsCAutoString temp1(kTagASCIIDebugTable[i]);
+        nsCAutoString temp2(kTagASCIIDebugTable[i]);
         temp1.ToLowerCase();
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
+
+      // let's verify that all names in the unicode strings above are
+      // correct.
+      for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
+        nsAutoString temp1(kTagUnicodeTable[i]);
+        nsAutoString temp2; temp2.AssignWithConversion(kTagASCIIDebugTable[i]);
+        NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
+      }
     }
-#endif      
-      gTagTable->Init(kTagTable, NS_HTML_TAG_MAX); 
-    }
+#endif
   }
+
+  return NS_OK;
 }
 
+// static
 void
-nsHTMLTags::ReleaseTable(void) 
+nsHTMLTags::ReleaseTable(void)
 {
   if (0 == --gTableRefCount) {
     if (gTagTable) {
-      delete gTagTable;
+      // Nothing to delete/free in this table, just destroy the table.
+
+      PL_HashTableDestroy(gTagTable);
+
       gTagTable = nsnull;
     }
   }
 }
 
-nsHTMLTag 
-nsHTMLTags::LookupTag(const nsACString& aTag)
+// static
+nsHTMLTag
+nsHTMLTags::CaseSensitiveLookupTag(const PRUnichar* aTagName)
 {
   NS_ASSERTION(gTagTable, "no lookup table, needs addref");
-  if (gTagTable) {
-    // table is zero based, but tags are one based
-    nsHTMLTag tag = nsHTMLTag(gTagTable->Lookup(aTag)+1);
-    
-    // hack: this can come out when rickg provides a way for the editor to ask
-    // CanContain() questions without having to first fetch the parsers
-    // internal enum values for a tag name.
-    
-    if (tag == eHTMLTag_unknown) {
-      if(aTag.Equals("__moz_text")) {
-        tag = eHTMLTag_text;
-      }
-      else {
-        tag = eHTMLTag_userdefined;
-      }
+  NS_ASSERTION(aTagName, "null tagname!");
+
+  PRUint32 tag = NS_PTR_TO_INT32(PL_HashTableLookupConst(gTagTable, aTagName));
+
+  return (nsHTMLTag)tag;
+}
+
+// static
+nsHTMLTag
+nsHTMLTags::LookupTag(const nsAReadableString& aTagName)
+{
+  PRUint32 length = aTagName.Length();
+
+  if (length > sMaxTagNameLength) {
+    return eHTMLTag_userdefined;
+  }
+
+  static PRUnichar buf[NS_HTMLTAG_NAME_MAX_LENGTH + 1];
+
+  nsAReadableString::const_iterator iter;
+  PRUint32 i = 0;
+  PRUnichar c;
+
+  aTagName.BeginReading(iter);
+
+  // Fast lowercasing-while-copying of ASCII characters into a
+  // PRUnichar buffer
+
+  while (i < length) {
+    c = *iter;
+
+    if (c <= 'Z' && c >= 'A') {
+      c |= 0x20; // Lowercase the ASCII character.
     }
-    return tag;
-  }  
-  return eHTMLTag_userdefined;
-}
 
-nsHTMLTag 
-nsHTMLTags::LookupTag(const nsAString& aTag)
-{
-  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
-  if (gTagTable) {
-    // table is zero based, but tags are one based
-    nsHTMLTag tag = nsHTMLTag(gTagTable->Lookup(aTag)+1);
-    
-    // hack: this can come out when rickg provides a way for the editor to ask
-    // CanContain() questions without having to first fetch the parsers
-    // internal enum values for a tag name.
-    
-    if (tag == eHTMLTag_unknown) {
-      nsCAutoString theTag; 
-      theTag.AssignWithConversion(aTag);
-      if (theTag.Equals("__moz_text")) {
-        tag = eHTMLTag_text;
-      }
-      else if (theTag.Equals("#text")) {
-        tag = eHTMLTag_text;
-      }
-      else {
-        tag = eHTMLTag_userdefined;
-      }
+    buf[i] = c; // Copy ASCII character.
+
+    ++i;
+    ++iter;
+  }
+
+  buf[i] = 0;
+
+  nsHTMLTag tag = CaseSensitiveLookupTag(buf);
+
+  // hack: this can come out when rickg provides a way for the editor to ask
+  // CanContain() questions without having to first fetch the parsers
+  // internal enum values for a tag name.
+
+  // Hmm, this hack would be faster if we'd put these strings in the
+  // hash table. But maybe it's not worth it...
+
+  if (tag == eHTMLTag_unknown) {
+    // "__moz_text"
+    static const PRUnichar moz_text[] =
+      {'_', '_', 'm', 'o', 'z', '_', 't', 'e', 'x', 't'};
+
+    // "#text"
+    static const PRUnichar text[] =
+      {'#', 't', 'e', 'x', 't'};
+
+    if (nsCRT::strcmp(buf, moz_text) == 0) {
+      tag = eHTMLTag_text;
+    } else if (nsCRT::strcmp(buf, text) == 0) {
+      tag = eHTMLTag_text;
+    } else {
+      tag = eHTMLTag_userdefined;
     }
-    return tag;
-  }  
-  return eHTMLTag_userdefined;
+  }
+
+  return tag;
 }
 
-const nsAFlatCString& 
-nsHTMLTags::GetStringValue(nsHTMLTag aTag)
+// static
+const PRUnichar *
+nsHTMLTags::GetStringValue(nsHTMLTag aEnum)
 {
-  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
-  if (gTagTable) {
-    // table is zero based, but tags are one based
-    return gTagTable->GetStringValue(PRInt32(aTag)-1);
-  } else {
-    static nsDependentCString kNullStr("");
-    return kNullStr;
+  if (aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX) {
+    return nsnull;
   }
-}
 
-const char* 
-nsHTMLTags::GetCStringValue(nsHTMLTag aTag) {
-  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
-  // Note: NS_HTML_TAG_MAX=113
-  if ((eHTMLTag_unknown < aTag) && 
-      (aTag <= NS_HTML_TAG_MAX)) {
-    return kTagTable[PRInt32(aTag)-1];
-  }
-  else {
-    static const char* kNullStr="";
-    return kNullStr;
-  }
+  return kTagUnicodeTable[aEnum - 1];
 }
 
 
 #ifdef NS_DEBUG
-#include <stdio.h>
-#include "nsCRT.h"
+
+// tag table verification class.
 
 class nsTestTagTable {
 public:
    nsTestTagTable() {
-     const char *tag;
+     const PRUnichar *tag;
      nsHTMLTag id;
 
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_TAG_MAX; i++) {
-       tag = kTagTable[i];
-       id = nsHTMLTags::LookupTag(nsCAutoString(tag));
+       tag = kTagUnicodeTable[i];
+       id = nsHTMLTags::LookupTag(nsDependentString(tag));
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
-       const char* check = nsHTMLTags::GetStringValue(id).get();
+       const PRUnichar* check = nsHTMLTags::GetStringValue(id);
        NS_ASSERTION(0 == nsCRT::strcmp(check, tag), "can't map id back to tag");
      }
 
      // Make sure we don't find things that aren't there
-     id = nsHTMLTags::LookupTag(nsCAutoString("@"));
+     id = nsHTMLTags::LookupTag(NS_LITERAL_STRING("@"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-     id = nsHTMLTags::LookupTag(nsCAutoString("zzzzz"));
+     id = nsHTMLTags::LookupTag(NS_LITERAL_STRING("zzzzz"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
-     const nsCAutoString  kNull;
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) 0).get();
-     NS_ASSERTION(kNull.Equals(tag), "found enum 0");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) -1).get();
-     NS_ASSERTION(kNull.Equals(tag), "found enum -1");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1)).get();
-     NS_ASSERTION(kNull.Equals(tag), "found past max enum");
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) 0);
+     NS_ASSERTION(!tag, "found enum 0");
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) -1);
+     NS_ASSERTION(!tag, "found enum -1");
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
+     NS_ASSERTION(!tag, "found past max enum");
+
      nsHTMLTags::ReleaseTable();
    }
 };
-//nsTestTagTable validateTagTable;
+
+nsTestTagTable validateTagTable;
+
 #endif

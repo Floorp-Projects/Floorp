@@ -83,6 +83,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIFormControl.h"
+#include "nsIForm.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -673,18 +674,17 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
   if (SINK_LOG_TEST(gSinkLogModuleInfo,aBit)) {
     char cbuf[40];
     const char* cp;
-    nsAutoString str;
     PRInt32 nt = aNode.GetNodeType();
     NS_ConvertUCS2toUTF8 flat(aNode.GetText());
     if ((nt > PRInt32(eHTMLTag_unknown)) &&
         (nt < PRInt32(eHTMLTag_text)) && mParser) {
       nsCOMPtr<nsIDTD> dtd;
       mParser->GetDTD(getter_AddRefs(dtd));
-      dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType()), str);
-      cp = str.ToCString(cbuf, sizeof(cbuf));
-    } else {
-      cp = flat.get();
+      flat.Assign(dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType())));
     }
+
+    cp = flat.get();
+
     PR_LogPrint("%s: this=%p node='%s' stackPos=%d", aMsg, aThis, cp, aStackPos);
   }
 }
@@ -892,28 +892,29 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   nsresult rv = NS_OK;
 
   // Find/create atom for the tag name
-  nsAutoString tmp;
-  if (eHTMLTag_userdefined == aNodeType) {
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+
+  if (aNodeType == eHTMLTag_userdefined) {
+    nsAutoString tmp;
     tmp.Append(aNode.GetText());
     tmp.ToLowerCase();
+
+    rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
+                                       *getter_AddRefs(nodeInfo));
   }
   else {
     nsCOMPtr<nsIDTD> dtd;
     rv = mParser->GetDTD(getter_AddRefs(dtd));
     if (NS_SUCCEEDED(rv)) {
-      dtd->IntTagToStringTag(aNodeType, tmp);
+      nsDependentString tag(dtd->IntTagToStringTag(aNodeType));
+
+      rv = mNodeInfoManager->GetNodeInfo(tag, nsnull, kNameSpaceID_None,
+                                         *getter_AddRefs(nodeInfo));
     }
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
-                                       *getter_AddRefs(nodeInfo));
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
     // Make the content object
     // XXX why is textarea not a container?
     nsAutoString content;
@@ -932,40 +933,59 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 }
 
 nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aCaseSensitive)
+NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
+                     PRBool aCaseSensitive)
 {
   nsresult rv = NS_OK;
 
+  // Cache this service! The XML content sink uses this method!
+
   nsCOMPtr<nsIParserService> parserService = 
-           do_GetService(kParserServiceCID, &rv);
+    do_GetService(kParserServiceCID, &rv);
 
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString tmpName;
-    aNodeInfo->GetName(tmpName);
+    nsCOMPtr<nsIAtom> name;
+    rv = aNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Find tag in tag table
-    PRInt32 id; 
-    nsAutoString tag;
-    rv = parserService->HTMLStringTagToId(tmpName, &id);
-    if (eHTMLTag_userdefined == nsHTMLTag(id))
-    {
-      tag = tmpName;
-    }
-    else
-    {
-      // Create atom for tag and then create content object
-      rv = parserService->HTMLIdToStringTag(id, tag);
+    PRInt32 id;
+
+    if (aCaseSensitive) {
+      parserService->HTMLCaseSensitiveAtomTagToId(name, &id);
+    } else {
+      parserService->HTMLAtomTagToId(name, &id);
     }
 
-    if (aCaseSensitive && tag != tmpName) 
-    {
-      rv = MakeContentObject(eHTMLTag_unknown, aNodeInfo, nsnull, nsnull, aResult);      
-    }
-    else {
-      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag.get())));
-      nsCOMPtr<nsINodeInfo> newName;
-      aNodeInfo->NameChanged(atom, *getter_AddRefs(newName));
+    if (aCaseSensitive) {
+      rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull, nsnull,
+                             aResult);
+    } else {
+      // Revese map id to name to get the correct character case in
+      // the tag name.
 
-      rv = MakeContentObject(nsHTMLTag(id), newName, nsnull, nsnull, aResult);
+      const PRUnichar *name_str = nsnull;
+      const PRUnichar *tag = nsnull;
+
+      parserService->HTMLIdToStringTag(id, &tag);
+      NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
+
+      name->GetUnicode(&name_str);
+      NS_ASSERTION(name_str, "What? No string in atom?!?");
+
+      nsCOMPtr<nsINodeInfo> kungFuDeathGrip;
+      nsINodeInfo *new_name = aNodeInfo;
+
+      if (nsCRT::strcmp(tag, name_str) != 0) {
+        nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag)));
+
+        rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        new_name = kungFuDeathGrip;
+      }
+
+      rv = MakeContentObject(nsHTMLTag(id), new_name, nsnull, nsnull, aResult);
     }
   }
 
@@ -1726,7 +1746,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-  
+
   // Search for the nearest container on the stack of the
   // specified type
   PRInt32 stackPos = mStackPos-1;

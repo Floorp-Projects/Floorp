@@ -2378,9 +2378,10 @@ void CElementTable::InitializeElements() {
 #ifdef DEBUG
 void CElementTable::DebugDumpGroups(CElement* aTag){
 
-  const char* tag=nsHTMLTags::GetStringValue(aTag->mTag).get();
+  const PRUnichar* uctag=nsHTMLTags::GetStringValue(aTag->mTag);
+
   const char* prefix="     ";
-  printf("\n\nTag: <%s>\n",tag);
+  printf("\n\nTag: <%s>\n", NS_ConvertUCS2toUTF8(uctag).get());
   printf(prefix);
 
   if(aTag->IsContainer()) {
@@ -2432,8 +2433,8 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
       eHTMLTags *theKid=aTag->mIncludeKids;
       printf("+ ");
       while(eHTMLTag_unknown!=*theKid){
-        tag=nsHTMLTags::GetCStringValue(*theKid++);
-        printf("%s ",tag);
+        const PRUnichar *t = nsHTMLTags::GetStringValue(*theKid++);
+        printf("%s ", NS_ConvertUCS2toUTF8(t).get());
       }
     }
 
@@ -2442,8 +2443,8 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
       eHTMLTags *theKid=aTag->mExcludeKids;
       printf("- ");
       while(eHTMLTag_unknown!=*theKid){
-        tag=nsHTMLTags::GetCStringValue(*theKid++);
-        printf("%s ",tag);
+        const PRUnichar *t = nsHTMLTags::GetStringValue(*theKid++);
+        printf("%s ", NS_ConvertUCS2toUTF8(t).get());
       }
     }
 
@@ -2458,9 +2459,9 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
 }
 
 void CElementTable::DebugDumpContainment(CElement* anElement){
-  const char* tag=nsHTMLTags::GetStringValue(anElement->mTag).get();
+  const PRUnichar *uctag = nsHTMLTags::GetStringValue(anElement->mTag);
   const char* prefix="     ";
-  printf("\n\nTag: <%s>\n",tag);
+  printf("\n\nTag: <%s>\n", NS_ConvertUCS2toUTF8(uctag).get());
   printf(prefix);
 
   int count=0;
@@ -2468,8 +2469,8 @@ void CElementTable::DebugDumpContainment(CElement* anElement){
   for(i=0;i<NS_HTML_TAG_MAX;i++){
     CElement* theChild=mElements[i];
     if(anElement->CanContain(theChild,0)){
-      tag=nsHTMLTags::GetCStringValue(theChild->mTag);
-      printf("%s ",tag);
+      const PRUnichar *t = nsHTMLTags::GetStringValue(theChild->mTag);
+      printf("%s ", NS_ConvertUCS2toUTF8(t).get());
       count++;
       if(18==count) {
         count=0;
@@ -2489,8 +2490,8 @@ void CElementTable::DebugDumpInlineElements(const char* aTitle) {
     if(theTag) {
       result=theTag->IsInlineElement(eHTMLTag_unknown);
       if(result) {
-        const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
-        printf("  %s\n",theName);
+        const PRUnichar *t = nsHTMLTags::GetStringValue(theTag->mTag);
+        printf("  %s\n", NS_ConvertUCS2toUTF8(t));
       }
     }
     theTagID++;
@@ -2507,8 +2508,8 @@ void CElementTable::DebugDumpBlockElements(const char* aTitle) {
     if(theTag) {
       result=theTag->IsBlockElement(eHTMLTag_unknown);
       if(result) {
-        const char* theName=nsHTMLTags::GetCStringValue(theTag->mTag);
-        printf("  %s\n",theName);
+        const PRUnichar *theName = nsHTMLTags::GetStringValue(theTag->mTag);
+        printf("  %s\n", NS_ConvertUCS2toUTF8(theName).get());
       }
     }
     theTagID++;

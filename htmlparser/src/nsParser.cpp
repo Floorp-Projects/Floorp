@@ -2156,7 +2156,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
            if ((((char*)aBytes)[i] == 'g') &&
              (i >= 25) && 
              (0 == PL_strncmp("encodin", (char*)(aBytes+i-7), 7 ))) {
-             PRInt32 encStart;
+             PRInt32 encStart = 0;
              char q = 0;
              for (++i; i < aLen; i++) {
                char qi = ((char*)aBytes)[i];
@@ -2386,8 +2386,11 @@ ParserWriteFunc(nsIInputStream* in,
           if (cacheToken) {
             nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken));
             if (cacheDescriptor) {
-              nsresult rv = cacheDescriptor->SetMetaDataElement("charset",
-                                                                NS_ConvertUCS2toUTF8(guess).get());
+#ifdef DEBUG
+              nsresult rv =
+#endif
+                cacheDescriptor->SetMetaDataElement("charset",
+                                                    NS_ConvertUCS2toUTF8(guess).get());
               NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
             }
           }

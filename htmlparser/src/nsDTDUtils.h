@@ -471,7 +471,12 @@ inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)
  * @param   aHasXMLFragment: tells us whether we detect XML in the buffer (based on PI)
  * @return  TRUE if we find HTML
  */
-inline PRBool BufferContainsHTML(nsString& aBuffer,PRBool& aHasXMLFragment){
+
+// This really doesn't need to be inline!
+
+inline PRBool BufferContainsHTML(const nsString& aBuffer,
+                                 PRBool& aHasXMLFragment)
+{
   PRBool result=PR_FALSE;
 
   aHasXMLFragment=PRBool(-1!=aBuffer.Find("<?XML",PR_TRUE,100));
@@ -485,33 +490,57 @@ inline PRBool BufferContainsHTML(nsString& aBuffer,PRBool& aHasXMLFragment){
         theHTMLPos=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theDocTypePos+8,200);
       }
     }
+
     result=PRBool(-1!=theHTMLPos);
   }
   else {
-      //worst case scenario: let's look for a few HTML tags...
-    PRInt32 theCount=0;
-    PRInt32 theLTPos=0;
-    PRInt32 theStartPos=0;
-    nsAutoString  theTagName;
-    PRInt32 theTagCount=0;
+    //worst case scenario: let's look for a few HTML tags...
+    PRInt32 theCount = 0;
+    PRInt32 theTagCount = 0;
 
-    for(theCount=0;theCount<5;theCount++) {
-      theLTPos=aBuffer.Find("<",PR_TRUE,theStartPos,200);
-      if(-1!=theLTPos) {
-        //we found what may be a start tag...
-        PRInt32 theTagEnd=aBuffer.FindCharInSet(" >\"",theLTPos);
-        aBuffer.Mid(theTagName,theLTPos+1,theTagEnd-theLTPos-1);
+    nsAReadableString::const_iterator iter, end;
+    aBuffer.BeginReading(iter);
+    aBuffer.EndReading(end);
 
-        nsHTMLTag theTag=nsHTMLTags::LookupTag(theTagName);
-        if(eHTMLTag_userdefined!=theTag) {
-          theTagCount++;
-        }
-        //now let's see if it's a tag or not...
-        theStartPos=theTagEnd+1;
-      }
-      else break;
+    if (Distance(iter, end) > 200) {
+      end = iter;
+      end.advance(200);
     }
-    result=PRBool(2<=theTagCount); //claim HTML if we find at least 2 real html tags...
+
+    for(theCount = 0; theCount < 5; ++theCount) {
+      if (!FindCharInReadable('<', iter, end)) {
+        break;
+      }
+
+      // we found what may be a start tag...
+
+      ++iter; // step over the '<' character
+
+      nsAReadableString::const_iterator tag_end(iter);
+
+      aBuffer.EndReading(end);
+
+      while (tag_end != end) {
+        const PRUnichar c = *tag_end;
+
+        if (c == ' ' || c == '>' || c == '"') {
+          break;
+        }
+
+        ++tag_end;
+      }
+
+      nsHTMLTag theTag = nsHTMLTags::LookupTag(Substring(iter, tag_end));
+
+      if (theTag != eHTMLTag_userdefined) {
+        ++theTagCount;
+      }
+
+      iter = tag_end;
+    }
+
+    // Claim HTML if we find at least 2 real html tags...
+    result = (2 <= theTagCount);
   }
 
   return result;
@@ -549,7 +578,7 @@ public:
   PRBool     Matches(const nsAString& aTopic);
 
 protected:
-  nsString     mTopic;
+  nsAutoString mTopic; // This will rarely be empty, so make it an auto string
   nsVoidArray* mObservers[NS_HTML_TAG_MAX + 1];
 };
 

@@ -23,7 +23,7 @@
 #include "nsHTMLEntities.h"
 #include "nsElementTable.h"
 
-nsParserService::nsParserService() : mEntries(0) 
+nsParserService::nsParserService() : mEntries(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -37,42 +37,60 @@ nsParserService::~nsParserService()
 }
 
 NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
-  
-NS_IMETHODIMP 
+
+NS_IMETHODIMP
 nsParserService::HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const
 {
-  NS_ENSURE_ARG_POINTER(aAtom);
-    
-  nsAutoString tagName;
-  aAtom->ToString(tagName);
-  *aId = nsHTMLTags::LookupTag(tagName);
- 
-  return NS_OK;
-}
- 
-NS_IMETHODIMP 
-nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
-{
-  *aId = nsHTMLTags::LookupTag(aTag);
+  const PRUnichar *tagName = nsnull;
+  aAtom->GetUnicode(&tagName);
+  NS_ASSERTION(tagName, "Null string in atom!");
+
+  *aId = nsHTMLTags::LookupTag(nsDependentString(tagName));
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsParserService::HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const
+NS_IMETHODIMP
+nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
+                                              PRInt32* aId) const
 {
-  aTag.AssignWithConversion( nsHTMLTags::GetStringValue((nsHTMLTag)aId).get() );
+  const PRUnichar *tagName = nsnull;
+  aAtom->GetUnicode(&tagName);
+  NS_ASSERTION(tagName, "Null string in atom!");
+
+  *aId = nsHTMLTags::CaseSensitiveLookupTag(tagName);
+
   return NS_OK;
 }
-  
-NS_IMETHODIMP 
-nsParserService::HTMLConvertEntityToUnicode(const nsString& aEntity, 
+
+NS_IMETHODIMP
+nsParserService::HTMLStringTagToId(const nsAReadableString &aTagName,
+                                   PRInt32* aId) const
+{
+  *aId = nsHTMLTags::LookupTag(aTagName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsParserService::HTMLIdToStringTag(PRInt32 aId,
+                                   const PRUnichar **aTagName) const
+{
+  *aTagName = nsHTMLTags::GetStringValue((nsHTMLTag)aId);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsParserService::HTMLConvertEntityToUnicode(const nsAReadableString& aEntity,
                                             PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                             nsCString& aEntity) const
 {
@@ -80,25 +98,27 @@ nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
   if (str) {
     aEntity.Assign(str);
   }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::IsContainer(PRInt32 aId, PRBool& aIsContainer) const
 {
   aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)aId);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 {
   if((aId>eHTMLTag_unknown) && (aId<eHTMLTag_userdefined)) {
-    aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       || 
-              (gHTMLElements[aId].IsMemberOf(kBlockEntity)) || 
-              (gHTMLElements[aId].IsMemberOf(kHeading))     || 
-              (gHTMLElements[aId].IsMemberOf(kPreformatted))|| 
-              (gHTMLElements[aId].IsMemberOf(kList))); 
+    aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       ||
+              (gHTMLElements[aId].IsMemberOf(kBlockEntity)) ||
+              (gHTMLElements[aId].IsMemberOf(kHeading))     ||
+              (gHTMLElements[aId].IsMemberOf(kPreformatted))||
+              (gHTMLElements[aId].IsMemberOf(kList)));
   }
   else {
     aIsBlock = PR_FALSE;
@@ -107,19 +127,19 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::RegisterObserver(nsIElementObserver* aObserver,
                                   const nsAString& aTopic,
                                   const eHTMLTags* aTags)
 {
   nsresult result = NS_OK;
   nsObserverEntry* entry = GetEntry(aTopic);
-  
+
   if(!entry) {
     result = CreateEntry(aTopic,&entry);
     NS_ENSURE_SUCCESS(result,result);
   }
-  
+
   while (*aTags) {
     if(*aTags != eHTMLTag_userdefined && *aTags <= NS_HTML_TAG_MAX) {
       entry->AddObserver(aObserver,*aTags);
@@ -130,43 +150,44 @@ nsParserService::RegisterObserver(nsIElementObserver* aObserver,
   return result;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::UnregisterObserver(nsIElementObserver* aObserver,
                                     const nsAString& aTopic)
 {
   PRInt32 count = mEntries.GetSize();
-  
+
   for (PRInt32 i=0; i < count; i++) {
     nsObserverEntry* entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.ObjectAt(i));
     if (entry && entry->Matches(aTopic)) {
       entry->RemoveObserver(aObserver);
     }
   }
-  
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsParserService::GetTopicObservers(const nsAString& aTopic,
                                    nsIObserverEntry** aEntry) {
   nsresult result = NS_OK;
   nsObserverEntry* entry = GetEntry(aTopic);
-  
+
   if (!entry) {
     return NS_ERROR_NULL_POINTER;
   }
-  
+
   NS_ADDREF(*aEntry = entry);
+
   return result;
 }
 
 // XXX This may be more efficient as a HashTable instead of linear search
-nsObserverEntry* 
-nsParserService::GetEntry(const nsAString& aTopic) 
+nsObserverEntry*
+nsParserService::GetEntry(const nsAString& aTopic)
 {
   PRInt32 index = 0;
-  nsObserverEntry* entry = nsnull; 
-  
+  nsObserverEntry* entry = nsnull;
+
   while (entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.ObjectAt(index++))) {
     if (entry->Matches(aTopic)) {
       break;
@@ -180,13 +201,13 @@ nsresult
 nsParserService::CreateEntry(const nsAString& aTopic, nsObserverEntry** aEntry)
 {
   *aEntry = new nsObserverEntry(aTopic);
-  
+
   if (!aEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   NS_ADDREF(*aEntry);
   mEntries.Push(*aEntry);
-  
+
   return NS_OK;
 }
