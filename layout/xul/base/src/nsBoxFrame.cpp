@@ -101,7 +101,6 @@ public:
 public:
     nsBoxFrame* mOuter;
 
-    float mP2t;
     static nsIFrame* mDebugChild;
     void GetValue(const nsSize& a, const nsSize& b, char* value);
     void GetValue(PRInt32 a, PRInt32 b, char* value);
@@ -118,12 +117,14 @@ public:
     static nsIStyleContext* mHorizontalDebugStyle;
     static nsIStyleContext* mVerticalDebugStyle;
     static PRInt32 gDebug;
+    static float mP2t;
 };
 
 nsIStyleContext* nsBoxDebugInner::mHorizontalDebugStyle;
 nsIStyleContext* nsBoxDebugInner::mVerticalDebugStyle;
 
 PRInt32 nsBoxDebugInner::gDebug = 0;
+float nsBoxDebugInner::mP2t = 0;
 
 class nsInfoListImpl: public nsInfoList
 {
@@ -706,6 +707,12 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFra
 nsresult
 nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
+  nsIFrame* incrementalChild;
+  if (aReflowState.reason == eReflowReason_Incremental) {
+      // then get the child we need to flow incrementally
+      aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+  }
+
   aSize.Clear();
 
   // see if the frame Innerements IBox interface
@@ -714,6 +721,17 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
   // if it does ask it for its BoxSize and we are done
   nsIBox* ibox = nsnull;
   if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
+      if (aReflowState.reason == eReflowReason_Incremental) {
+          // then get the child we need to flow incrementally
+          if (incrementalChild == aFrame) {
+              aReflowState.reflowCommand->GetNext(incrementalChild);
+              // dirty the incremental child
+                nsFrameState childState;
+                aFrame->GetFrameState(&childState);
+                childState |= NS_FRAME_IS_DIRTY;
+                aFrame->SetFrameState(childState);
+          }
+      }
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
      aSize.mFlags |= NS_FRAME_IS_BOX;
      // add in the border, padding, width, min, max
@@ -772,7 +790,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
         nsHTMLReflowState state(aReflowState);
         state.availableWidth = NS_INTRINSICSIZE;
         state.availableHeight = NS_INTRINSICSIZE;
-        state.reason = eReflowReason_Resize;
+        //state.reason = eReflowReason_Resize;
 
         nsIFrame* incrementalChild = nsnull;
 
@@ -952,6 +970,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
               {
                 nsHTMLReflowState newState(aReflowState);
                 newState.reason = eReflowReason_StyleChange;
+                newState.reflowCommand = nsnull;
                 #ifdef DEBUG_REFLOW
                   gIndent--;
                 #endif
@@ -964,6 +983,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
               {
                 nsHTMLReflowState newState(aReflowState);
                 newState.reason = eReflowReason_Dirty;
+                newState.reflowCommand = nsnull;
                 #ifdef DEBUG_REFLOW
                   gIndent--;
                 #endif
@@ -976,6 +996,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
           } 
           
         } else {
+            /*
             // ok we are not the target, see if our parent is a box. If its not then we 
             // are the first box so its our responsibility
             // to blow away the caches for each child in the incremental 
@@ -983,10 +1004,12 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
             if (mState & NS_STATE_IS_ROOT) {
                HandleRootBoxReflow(aPresContext, this, aReflowState);
             }            
+        */
+
         }
 
         // then get the child we need to flow incrementally
-        aReflowState.reflowCommand->GetNext(incrementalChild);
+        //aReflowState.reflowCommand->GetNext(incrementalChild);
     }
 
            
@@ -1911,8 +1934,20 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
       aInfo.frame->GetFrameState(&childState);
 
       if (childState & NS_FRAME_FIRST_REFLOW) {
-          NS_ASSERTION(reason != eReflowReason_Incremental,"Error should not be incremental!!");
-          reason = eReflowReason_Initial;
+          if (reason != eReflowReason_Initial)
+          {
+              // if incremental then make sure we send a initial reflow first.
+              if (reason == eReflowReason_Incremental) {
+                  nsHTMLReflowState state(aReflowState);
+                  state.reason = eReflowReason_Initial;
+                  state.reflowCommand = nsnull;
+                  FlowChildAt(childFrame, aPresContext, desiredSize, state, aStatus, aInfo, aX, aY, aMoveFrame, aIncrementalChild, aRedraw, aReason);
+              } else {
+                  // convert to initial if not incremental.
+                  reason = eReflowReason_Initial;
+              }
+
+          }
       } else if (reason == eReflowReason_Initial) {
           reason = eReflowReason_Resize;
       }
@@ -1927,23 +1962,48 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
          // if on child gets bigger the other is affected because it is proprotional to the first.
          // so it might need to be resized. But we don't need to reflow it. If it is already the
          // needed size then we will do nothing. 
-         case eReflowReason_Incremental:
-             if (aIncrementalChild == aInfo.frame) {
-               needsReflow = PR_TRUE;
-               aIncrementalChild = nsnull;
-             } else {
-               reason = eReflowReason_Resize;
-               needsReflow = PR_FALSE;
-             }
-           
-         break;
+         case eReflowReason_Incremental: {
+
+            // if incremental see if the next child in the chain is the child. If so then
+            // we will just let it go down. If not then convert it to a dirty. It will get converted back when 
+            // needed in the case just below this one.
+            nsIFrame* incrementalChild = nsnull;
+            aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+            if (incrementalChild == aInfo.frame) {
+                needsReflow = PR_TRUE;
+                aReflowState.reflowCommand->GetNext(incrementalChild);
+            } else {
+                // create a new state. Make sure we don't null out the
+                // reflow command. This is how we will tell it was a converted incremental.
+                // We will use this later to convert back to a incremental.
+                nsHTMLReflowState state(aReflowState);
+                state.reason = eReflowReason_Dirty;
+                return FlowChildAt(childFrame, aPresContext, desiredSize, state, aStatus, aInfo, aX, aY, aMoveFrame, aIncrementalChild, aRedraw, aReason);
+            }          
+         } break;
          
          // if its dirty then see if the child we want to reflow is dirty. If it is then
          // mark it as needing to be reflowed.
-         case eReflowReason_Dirty:
+         case eReflowReason_Dirty: {
+
+             // sometimes incrementals are converted to dirty. This is done in the case just above this. So lets check
+             // to see if this was converted. If it was it will still have a reflow state.
+             if (aReflowState.reflowCommand) {
+                // it was converted so lets see if the next child is this one. If it is then convert it back and
+                // pass it down.
+                nsIFrame* incrementalChild = nsnull;
+                aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+                if (incrementalChild == aInfo.frame) {
+                     nsHTMLReflowState state(aReflowState);
+                     state.reason = eReflowReason_Incremental;
+                     return FlowChildAt(childFrame, aPresContext, desiredSize, state, aStatus, aInfo, aX, aY, aMoveFrame, aIncrementalChild, aRedraw, aReason);
+                } 
+              }
+ 
               // get the frame state to see if it needs reflow
               needsReflow = (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
-         break;
+
+         } break;
 
          // if the a resize reflow then it doesn't need to be reflowed. Only if the size is different
          // from the new size would we actually do a reflow
@@ -2523,21 +2583,6 @@ nsresult
 nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
                                        nsIPresShell&   aPresShell)
 {
-/*
-  nsCOMPtr<nsIReflowCommand>  reflowCmd;
-  nsresult                    rv;
-  
-  mState |= NS_FRAME_IS_DIRTY;
-  rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                               nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    // Add the reflow command
-    rv = aPresShell.AppendReflowCommand(reflowCmd);
-  }
-
-  return rv;
-  */
-
   // ask out parent to dirty things.
   mState |= NS_FRAME_IS_DIRTY;
   return mParent->ReflowDirtyChild(&aPresShell, this);
@@ -2635,9 +2680,45 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
-  nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
+    nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
 
+    if (aAttribute == nsHTMLAtoms::width ||
+        aAttribute == nsHTMLAtoms::height ||
+        aAttribute == nsHTMLAtoms::align  ||
+        aAttribute == nsHTMLAtoms::valign ||
+        aAttribute == nsXULAtoms::flex ||
+        aAttribute == nsXULAtoms::orient ||
+        aAttribute == nsXULAtoms::autostretch) {
+
+        if (aAttribute == nsXULAtoms::orient || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
+          mInner->mValign = nsBoxFrame::vAlign_Top;
+          mInner->mHalign = nsBoxFrame::hAlign_Left;
+
+          GetInitialVAlignment(mInner->mValign);
+          GetInitialHAlignment(mInner->mHalign);
+  
+          PRBool orient = mState & NS_STATE_IS_HORIZONTAL;
+          GetInitialOrientation(orient); 
+          if (orient)
+                mState |= NS_STATE_IS_HORIZONTAL;
+            else
+                mState &= ~NS_STATE_IS_HORIZONTAL;
+
+
+          PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+          GetInitialAutoStretch(autostretch);
+          if (autostretch)
+                mState |= NS_STATE_AUTO_STRETCH;
+             else
+                mState &= ~NS_STATE_AUTO_STRETCH;
+        }
+
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        GenerateDirtyReflowCommand(aPresContext, *shell);
+    }
+  
   return rv;
 }
 
@@ -2648,6 +2729,13 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
+   nsIFrame* incrementalChild = nsnull;
+
+   if (aReflowState.reason == eReflowReason_Incremental) {
+      // then get the child we need to flow incrementally
+      aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+   }
+
    nsMargin debugInset(0,0,0,0);
    mInner->GetDebugInset(debugInset);
 
@@ -2665,7 +2753,7 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
        {  
         // if a child needs recalculation then ask it for its size. Otherwise
         // just use the size we already have.
-        if (info->mFlags & NS_FRAME_BOX_NEEDS_RECALC)
+        if (info->mFlags & NS_FRAME_BOX_NEEDS_RECALC || info->frame == incrementalChild)
         {
           // see if the child is collapsed
           const nsStyleDisplay* disp;
@@ -2852,6 +2940,65 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
          return;
 
       nsHTMLContainerFrame::PaintChild(aPresContext, aRenderingContext, aDirtyRect, aFrame, aWhichLayer);
+}
+
+void
+nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect&        aDirtyRect,
+                                nsFramePaintLayer    aWhichLayer)
+{
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // Child elements have the opportunity to override the visibility property
+  // of their parent and display even if the parent is hidden
+  PRBool clipState;
+
+  nsRect r(0,0,mRect.width, mRect.height);
+  PRBool hasClipped = PR_FALSE;
+  
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    nsMargin dm(0,0,0,0);
+    mInner->GetDebugInset(dm);
+    nsMargin im(0,0,0,0);
+    GetInset(im);
+    nsMargin border(0,0,0,0);
+    const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    spacing->GetBorderPadding(border);
+    r.Deflate(im);
+    r.Deflate(dm);
+    r.Deflate(border);    
+  }
+
+  nsIFrame* kid = mFrames.FirstChild();
+  while (nsnull != kid) {
+    if (!hasClipped && NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+        // if we haven't already clipped and we should
+        // check to see if the child is in out bounds. If not then
+        // we begin clipping.
+        nsRect cr(0,0,0,0);
+        kid->GetRect(cr);
+    
+        // if our rect does not contain the childs then begin clipping
+        if (!r.Contains(cr)) {
+            aRenderingContext.PushState();
+            aRenderingContext.SetClipRect(r,
+                                          nsClipCombine_kIntersect, clipState);
+            hasClipped = PR_TRUE;
+        }
+    }
+
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
+    kid->GetNextSibling(&kid);
+  }
+
+  if (hasClipped) {
+    aRenderingContext.PopState(clipState);
+  }
 }
 
 void 
