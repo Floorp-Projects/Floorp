@@ -43,6 +43,15 @@ extern "C" {
 
 extern "C" {
 
+#ifdef XP_PC
+DB *
+dbopen(const char *fname, int flags,int mode, DBTYPE type, 
+       const void *openinfo)
+{
+    return NULL;
+}
+#endif
+
 /*  Meta charset is weakest. Only set doc_csid if no http or override */
 void
 INTL_SetCSIDocCSID (INTL_CharSetInfo c, int16 doc_csid)
