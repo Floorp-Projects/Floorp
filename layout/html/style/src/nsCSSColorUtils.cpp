@@ -170,13 +170,9 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
   aResult[0] = NS_RGB(r, g, b);
 
   r = rb + (f1 * (MAX_COLOR - rb) / 100);
-  if (r > 255) r = 255;
   g = gb + (f1 * (MAX_COLOR - gb) / 100);
-  if (g > 255) g = 255;
   b = bb + (f1 * (MAX_COLOR - bb) / 100);
-  if (b > 255) b = 255;
   aResult[1] = NS_RGB(r, g, b);
- 
 }
 
 int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
