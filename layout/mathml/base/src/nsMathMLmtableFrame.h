@@ -23,7 +23,6 @@
 #define nsMathMLmtableFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsTableOuterFrame.h"
 #include "nsMathMLContainerFrame.h"
 
 //
@@ -183,7 +182,7 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
-protected:  
+protected:
   nsMathMLmtdFrame();
   virtual ~nsMathMLmtdFrame();
 
