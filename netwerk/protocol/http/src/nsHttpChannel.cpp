@@ -202,12 +202,8 @@ nsHttpChannel::Init(nsIURI *uri,
         AddStandardRequestHeaders(&mRequestHead.Headers(), caps,
                                   !mConnectionInfo->UsingSSL() &&
                                   mConnectionInfo->UsingHttpProxy());
-    if (NS_FAILED(rv)) return rv;
 
-    // check to see if authorization headers should be included
-    AddAuthorizationHeaders();
-
-    return NS_OK;
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -326,6 +322,9 @@ nsHttpChannel::Connect(PRBool firstTime)
             return NS_ERROR_DOCUMENT_NOT_CACHED;
         }
     }
+
+    // check to see if authorization headers should be included
+    AddAuthorizationHeaders();
 
     // hit the net...
     rv = SetupTransaction();
