@@ -21,10 +21,10 @@
 #include "fmhtml.h"
 #include "odctrl.h"
 #include "intl_csi.h"
-#include "netsdoc.h" //ENDER
-#include "edview.h"  //ENDER
-#include "edt.h"     //ENDER
-extern char * EDT_NEW_DOC_URL; //ENDER
+#include "netsdoc.h" 
+#include "edview.h"  
+#include "edt.h"     
+extern char * EDT_NEW_DOC_URL; 
 
 //	This file is dedicated to form type select one elements
 //		otherwise known as list boxes on windows and
@@ -174,18 +174,19 @@ void CFormHtmlarea::CreateWidget()
 			pDontCare->Initialize(pDontCare->CDCCX::IsOwnDC(), &rect);
 			pDontCare->NormalGetUrl(EDT_NEW_DOC_URL);
 //ADJUST THE SIZE OF THE WINDOW ACCORDING TO ROWS AND COLS EVEN THOUGH THAT IS NOT ACCURATE
-
-			CyaFont	*pMyFont;
 			//	Measure some text.
 			CDC *pDC = m_pWidget->GetDC();
+            CyaFont *pMyFont;
 			if(pDC)	
 			{
+                CDC t_dc;
+                t_dc.CreateCompatibleDC( pDC );
 				CDCCX *pDCCX = VOID2CX(GetContext(), CDCCX);
-				pDCCX->SelectNetscapeFont( pDC->GetSafeHdc(), GetTextAttr(), pMyFont );
+				pDCCX->SelectNetscapeFont( t_dc.GetSafeHdc(), GetTextAttr(), pMyFont );
 				if (pMyFont) 
 				{
-					SetWidgetFont(pDC->GetSafeHdc(), m_pWidget->m_hWnd);
-					GetElement()->text_attr->FE_Data = pMyFont;
+					//SetWidgetFont(pDC->GetSafeHdc(), m_pWidget->m_hWnd);
+					//GetElement()->text_attr->FE_Data = pMyFont;
 					//	Default length is 20
 					//	Default lines is 1
 					int32 lLength = 20;
@@ -219,8 +220,8 @@ void CFormHtmlarea::CreateWidget()
 					//	Move the window.
 					m_pWidget->MoveWindow(1, 1, CASTINT(lWidgetWidth), CASTINT(lWidgetHeight), FALSE);
 
-					pDCCX->ReleaseNetscapeFont( pDC->GetSafeHdc(), pMyFont );
-	                pDCCX->ReleaseContextDC(pDC->GetSafeHdc());
+					pDCCX->ReleaseNetscapeFont( t_dc.GetSafeHdc(), pMyFont );
+	                pDCCX->ReleaseContextDC(t_dc.GetSafeHdc());
 					m_pWidget->ReleaseDC(pDC);
 				}
 				else
