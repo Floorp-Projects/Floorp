@@ -19,7 +19,7 @@ DEPTH=..\..\..
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
-MODULE=ucvja
+MODULE=uconv
 REQUIRES=xpcom uconv
 
 MAKE_OBJ_TYPE = DLL
@@ -42,7 +42,7 @@ CSRCS =				\
 OBJS = \
         $(NULL)
 
-EXPORTS=				\
+EXPORTS= nsUCVJACID.h			\
 	$(NULL)
 
 LINCS=					\
