@@ -115,6 +115,7 @@
 #include "nntpCore.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStreamListenerTee.h"
+#include "nsISocketTransport.h"
 
 #include <time.h>
 
@@ -5223,7 +5224,12 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   m_channelListener = nsnull;
   m_loadGroup = nsnull;
   mCallbacks = nsnull;
-  
+
+  // disable timeout before caching.
+  nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(m_transport);
+  if (strans)
+    strans->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, PR_UINT32_MAX);  
+
   // don't mark ourselves as not busy until we are done cleaning up the connection. it should be the
   // last thing we do.
   SetIsBusy(PR_FALSE);

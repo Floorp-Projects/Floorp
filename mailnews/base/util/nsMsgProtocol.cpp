@@ -367,6 +367,11 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIRequest *request, nsISupports *ct
     rv = m_channelListener->OnStartRequest(this, m_channelContext);
   }
   
+  nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(m_transport);
+
+  if (strans)
+    strans->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, gSocketTimeout);  
+
   NS_ENSURE_SUCCESS(rv, rv);
   return rv;
 }
