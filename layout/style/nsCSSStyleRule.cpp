@@ -818,15 +818,12 @@ class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
 public:
-  CSSImportantRule(nsICSSStyleSheet* aSheet, nsCSSDeclaration* aDeclaration);
+  CSSImportantRule(nsCSSDeclaration* aDeclaration);
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-  // The new mapping function.
+  // nsIStyleRule interface
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -835,14 +832,12 @@ protected:
   virtual ~CSSImportantRule(void);
 
   nsCSSDeclaration*  mDeclaration;
-  nsICSSStyleSheet*  mSheet;
 
-friend class CSSStyleRuleImpl;
+  friend class CSSStyleRuleImpl;
 };
 
-CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsCSSDeclaration* aDeclaration)
-  : mDeclaration(aDeclaration),
-    mSheet(aSheet)
+CSSImportantRule::CSSImportantRule(nsCSSDeclaration* aDeclaration)
+  : mDeclaration(aDeclaration)
 {
 }
 
@@ -852,14 +847,6 @@ CSSImportantRule::~CSSImportantRule(void)
 }
 
 NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
-
-NS_IMETHODIMP
-CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
@@ -1331,7 +1318,6 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
     mDeclaration = nsnull;
   }
   if (nsnull != mImportantRule) {
-    mImportantRule->mSheet = nsnull;
     NS_RELEASE(mImportantRule);
     mImportantRule = nsnull;
   }
@@ -1375,7 +1361,7 @@ nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 {
   if (!mImportantRule && mDeclaration->HasImportantData()) {
-    mImportantRule = new CSSImportantRule(mSheet, mDeclaration);
+    mImportantRule = new CSSImportantRule(mDeclaration);
     NS_IF_ADDREF(mImportantRule);
   }
   NS_IF_ADDREF(mImportantRule);
@@ -1391,11 +1377,7 @@ CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 NS_IMETHODIMP
 CSSStyleRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
-  nsCSSRule::SetStyleSheet(aSheet);
-  if (nsnull != mImportantRule) { // we're responsible for this guy too
-    mImportantRule->mSheet = aSheet;
-  }
-  return NS_OK;
+  return nsCSSRule::SetStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP

@@ -96,7 +96,6 @@ public:
   
 
   // nsIStyleRule 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
   NS_METHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;

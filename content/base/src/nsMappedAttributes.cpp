@@ -181,14 +181,6 @@ nsMappedAttributes::HashValue() const
   return value;
 }
 
-NS_IMETHODIMP
-nsMappedAttributes::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  aSheet = mSheet;
-  NS_IF_ADDREF(aSheet);
-  return NS_OK;
-}
-
 void
 nsMappedAttributes::SetStyleSheet(nsHTMLStyleSheet* aSheet)
 {

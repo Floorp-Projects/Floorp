@@ -66,6 +66,7 @@ public:
 
   NS_IMETHOD GetType(PRInt32& aType) const = 0;
 
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule) = 0;
 
