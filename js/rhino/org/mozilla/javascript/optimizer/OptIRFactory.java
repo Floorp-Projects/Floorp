@@ -60,7 +60,7 @@ public class OptIRFactory extends IRFactory {
                                                       (Node) statements, 
                                                       nameHelper);
         Context cx = Context.getCurrentContext();
-        if (cx.getDebugLevel() > 0)
+        if (cx != null && cx.getDebugLevel() > 0)
             result.setRequiresActivation(true);
         return result;
     }
