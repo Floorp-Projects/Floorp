@@ -891,7 +891,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
 
     //handle <empty/> tags by generating a close tag...
     //added this to fix bug 48351, which contains XHTML and uses empty tags.
-  if(nsHTMLElement::IsContainer(aChildTag)) {
+  if(nsHTMLElement::IsContainer(aChildTag) && aNode.mToken) {  //nullptr test fixes bug 56085
     CStartToken *theToken=NS_STATIC_CAST(CStartToken*,aNode.mToken);
     if(theToken->IsEmpty()){
 
