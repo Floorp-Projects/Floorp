@@ -182,6 +182,7 @@ var DefaultController =
 
 		switch ( command )
 		{
+			case "cmd_close":
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -404,6 +405,9 @@ var DefaultController =
 
 		switch ( command )
 		{
+			case "cmd_close":
+				CloseMailWindow();
+				break;
       case "button_getNewMessages":
 			case "cmd_getNewMessages":
 				MsgGetMessage();
