@@ -39,10 +39,13 @@ XPIDLSRCS	= \
 		nsIPrintOptions.idl \
 		nsIPrintSettings.idl \
 		nsIPrintSettingsService.idl \
+		nsIPrintSession.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-XPIDLSRCS += nsIPrintSettingsX.idl
+XPIDLSRCS += nsIPrintSettingsX.idl \
+		nsIPrintSessionX.idl \
+		$(NULL)
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)

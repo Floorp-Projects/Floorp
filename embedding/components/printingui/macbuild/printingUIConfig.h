@@ -35,7 +35,4 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if TARGET_CARBON
-// We're not using the carbon printing session APIs in gfx
-#define PM_USE_SESSION_APIS 0
-#endif
+// Nothing to do here.

@@ -57,6 +57,7 @@
 #include "nsImageXlib.h"
 #include "nsFontList.h"
 #include "nsPrintOptionsXlib.h"
+#include "nsPrintSession.h"
 
 // objects that just require generic constructors
 
@@ -73,6 +74,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 
 // our custom constructors
 
@@ -183,7 +185,11 @@ static const nsModuleComponentInfo components[] =
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/xlib;1",
     "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorXlibConstructor }
+    nsPrinterEnumeratorXlibConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor }
 };
 
 PR_STATIC_CALLBACK(void)

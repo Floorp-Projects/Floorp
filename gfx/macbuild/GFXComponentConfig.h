@@ -20,7 +20,4 @@
  * Contributor(s): 
  */
 
-#if TARGET_CARBON
-// we can't use the carbon printing session APIs
-#define PM_USE_SESSION_APIS 0
-#endif
+// Nothing to do here.

@@ -49,7 +49,7 @@
  */
 native nsPMPageFormat(PMPageFormat);
 native nsPMPrintSettings(PMPrintSettings);
-
+native nsPMPrintSession(PMPrintSession);
 
 /**
  * Simplified PrintSettings for OSX interface 
@@ -60,18 +60,27 @@ native nsPMPrintSettings(PMPrintSettings);
 
 interface nsIPrintSettingsX : nsISupports
 {
+  /**
+   * nativePrintSession attribute
+   *
+   * Convenience method which gets the nsIPrintSession
+   * and returns its native session object
+   *
+   * Does NOT do PMRetain() on result.
+   */
+  [noscript] readonly attribute nsPMPrintSession nativePrintSession;
 
-  /*
+  /**
    * PMPageFormat and PMPrintSettings attributes
    *
-   * Getter returns a clone of the current data
-   * Setter copies (does not take ownership of) the input
+   * Getter does NOT do PMRetain() on result.
+   * Setter does PMRetain() on parameter.
    */
   [noscript] attribute nsPMPageFormat pMPageFormat;
 
   [noscript] attribute nsPMPrintSettings pMPrintSettings;
 
-  /*
+  /**
    * readPageFormatFromPrefs and writePageFormatToPrefs
    *
    * Read and write a flattened PMPageFormat to/from prefs.

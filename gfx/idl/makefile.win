@@ -35,6 +35,7 @@ XPIDLSRCS =               \
   .\nsIPrintSettings.idl     \
   .\nsIPrintSettingsService.idl     \
   .\nsIPrintSettingsWin.idl     \
+  .\nsIPrintSession.idl     \
   $(NULL)
 
 EXPORTS=                  \
