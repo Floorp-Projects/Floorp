@@ -108,6 +108,7 @@
       </xul:hbox>
     </content>
     <implementation>
+      <field name="_timer">null</field>
       <property name="callback"
                 onset="this.setAttribute('callback', val); return val;"
                 onget="return this.getAttribute('callback');"/>
@@ -116,7 +117,22 @@
                 onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 0;"/>
     </implementation>    
     <handlers>
-      <handler event="input" action="setTimeout(this.callback, this.timeout);"/>
+      <handler event="input">
+        <![CDATA[
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._timer = setTimeout(this.callback, this.timeout);
+        ]]>
+      </handler>
+      <handler event="keypress">
+        <![CDATA[
+          if (event.keyCode == 13) {
+            if (this._timer)
+              clearTimeout(this._timer);
+            eval(this.callback);
+          }
+        ]]>
+      </handler>          
     </handlers>
   </binding>
 
