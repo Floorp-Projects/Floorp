@@ -478,8 +478,11 @@ NS_IMETHODIMP gfxImageFrameWin::GetTimeout(PRInt32 *aTimeout)
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (mTimeout == 0)
-    *aTimeout = 100; // Ensure a minimal time between updates so we don't throttle the UI thread.
+  // Ensure a minimal time between updates so we don't throttle the UI thread.
+  // consider 0 == unspecified and make it fast but not too fast
+  // 100 is compatible with IE and Opera among others
+  if (mTimeout >= 0 && mTimeout < 100)
+    *aTimeout = 100;
   else
     *aTimeout = mTimeout;
   return NS_OK;
