@@ -411,37 +411,36 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 {
 	nsresult rv = NS_OK;
 
-	if (m_editor && m_compFields)
+	if (m_editor && m_compFields && !m_composeHTML)
 	{
+    const char contentType[] = "text/plain";
 		nsAutoString msgBody;
 		PRUnichar *bodyText = NULL;
-    nsString format;
-    PRUint32 flags = 0;
-		if (m_composeHTML)
-			format = "text/html";
-		else
-    {
-      flags = nsIDocumentEncoder::OutputFormatted;
-			format = "text/plain";
-    }
-    m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+    nsString format(contentType);
+    PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 		
-		msgBody = bodyText;
-		delete [] bodyText;
+    rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+		
+    if (NS_SUCCEEDED(rv) && NULL != bodyText)
+    {
+		  msgBody = bodyText;
+      nsAllocator::Free(bodyText);
 
-		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		char *outCString;
-		nsString aCharset = m_compFields->GetCharacterSet();
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, msgBody, &outCString))) 
-		{
-			m_compFields->SetBody(outCString);
-			PR_Free(outCString);
-		}
-		else
-			m_compFields->SetBody(nsAutoCString(msgBody));
+		  // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
+		  char *outCString = NULL;
+      rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
+                                  msgBody.GetUnicode(), &outCString);
+		  if (NS_SUCCEEDED(rv) && NULL != outCString) 
+		  {
+			  m_compFields->SetBody(outCString);
+			  PR_Free(outCString);
+		  }
+		  else
+			  m_compFields->SetBody(nsAutoCString(msgBody));
+    }
 	}
-	
-	rv = _SendMsg(deliverMode, identity, callback);
+
+  rv = _SendMsg(deliverMode, identity, callback);
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);

@@ -1296,14 +1296,9 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   {
     // Convert to entities.
     // If later Editor generates entities then we can remove this.
-    PRBool bSendEntity = PR_FALSE;
-    nsString bodyTextEntity;
-    if (NS_SUCCEEDED(nsMsgI18NConvertToEntity(bodyText, &bodyTextEntity))) {
-      bSendEntity = PR_TRUE;
-    }
-
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, bSendEntity ? bodyTextEntity.GetUnicode() : bodyText, &outCString))) 
-    {
+    char charset[65];
+    nsresult rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), bodyText, &outCString);
+    if (NS_SUCCEEDED(rv)) {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
     }
