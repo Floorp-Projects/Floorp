@@ -192,6 +192,7 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mZoomOnShow(PR_FALSE)
   , mZooming(PR_FALSE)
   , mResizeIsFromUs(PR_FALSE)
+  , mShown(PR_FALSE)
   , mMacEventHandler(nsnull)
 #if !TARGET_CARBON
   , mPhantomScrollbar(nsnull)
@@ -277,8 +278,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   short bottomPinDelta = 0;     // # of pixels to subtract to pin window bottom
   nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
 
+  NS_ASSERTION(!aInitData || aInitData->mWindowType != eWindowType_popup ||
+               !aParent, "Popups should not be hooked into nsIWidget hierarchy");
+
   // build the main native window
-  if (aNativeParent == nsnull)
+  if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup))
   {
     PRBool allOrDefault;
 
@@ -313,7 +317,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         // mAcceptsActivation to false so we don't activate the window
         // when we show it.
         mOffsetParent = aParent;
-        if( !aParent )
+        if( aParent )
           theToolkit = getter_AddRefs(aParent->GetToolkit());
 
         mAcceptsActivation = PR_FALSE;
@@ -794,6 +798,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       ::ShowHide(mWindowPtr, true);
       ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
     }
+    mShown = PR_TRUE;
     if (mZoomOnShow) {
       SetSizeMode(nsSizeMode_Maximized);
       mZoomOnShow = PR_FALSE;
@@ -859,6 +864,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       if ( mWindowPtr ) {
         ::HideWindow(mWindowPtr);
       }
+      mShown = PR_FALSE;
     }
     return NS_OK;
 }
@@ -1047,42 +1053,28 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
   StPortSetter setOurPortForLocalToGlobal ( mWindowPtr );
   
   if (eWindowType_popup == mWindowType) {
-    nsRect  localRect,globalRect;
-
-    // convert to screen coordinates
-    localRect.x = aX;
-    localRect.y = aY;
-    localRect.width = 100;
-    localRect.height = 100; 
-
-    if ( mOffsetParent ) {
-      mOffsetParent->WidgetToScreen(localRect,globalRect);
-      aX=globalRect.x;
-      aY=globalRect.y;
-      
-      // there is a bug on OSX where if we call ::MoveWindow() with the same
-      // coordinates (within a pixel or two) as a window's current location, it will 
-      // move to (0,0,-1,-1). The fix is to not move the window if we're already
-      // there. (radar# 2669004)
+    // there is a bug on OSX where if we call ::MoveWindow() with the same
+    // coordinates (within a pixel or two) as a window's current location, it will 
+    // move to (0,0,-1,-1). The fix is to not move the window if we're already
+    // there. (radar# 2669004)
 #if TARGET_CARBON
-      const PRInt32 kMoveThreshold = 2;
+    const PRInt32 kMoveThreshold = 2;
 #else
-      const PRInt32 kMoveThreshold = 0;
+    const PRInt32 kMoveThreshold = 0;
 #endif
-      Rect currBounds;
-      ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
-      if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
-        ::MoveWindow(mWindowPtr, aX, aY, false);
-        
-        // update userstate to match, if appropriate
-        PRInt32 sizeMode;
-        nsBaseWidget::GetSizeMode ( &sizeMode );
-        if ( sizeMode == nsSizeMode_Normal ) {
-          ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
-          ::SetWindowUserState ( mWindowPtr, &currBounds );
-        }  
+    Rect currBounds;
+    ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
+    if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
+      ::MoveWindow(mWindowPtr, aX, aY, false);
+      
+      // update userstate to match, if appropriate
+      PRInt32 sizeMode;
+      nsBaseWidget::GetSizeMode ( &sizeMode );
+      if ( sizeMode == nsSizeMode_Normal ) {
+        ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
+        ::SetWindowUserState ( mWindowPtr, &currBounds );
       }  
-    }
+    }  
 
     return NS_OK;
   } else if (mWindowMadeHere) {
@@ -1446,6 +1438,13 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     }
   }
   Inherited::Resize(aWidth, aHeight, aRepaint);
+
+  // Make window visible.  Show() will not make a window visible if mBounds are
+  // still empty.  So when resizing a window, we check if it is supposed to be
+  // visible but has yet to be made so.
+  if (mVisible && !mShown)
+    Show(PR_TRUE);
+
   return NS_OK;
 }
 
