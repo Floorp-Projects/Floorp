@@ -107,6 +107,7 @@
 #include "nsIPrincipal.h"
 
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 #include "nsICookieService.h"
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"

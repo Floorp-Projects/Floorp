@@ -167,16 +167,3 @@ interface nsICookieService : nsISupports
    */
   readonly attribute boolean cookieIconIsVisible;
 };
-
-%{ C++
-// nsCookieService CID and ContractID:
-#define NS_COOKIESERVICE_CID \
-{ /* 011C3190-1434-11d6-A618-0010A401EB10 */       \
-    0xc375fa80,                                    \
-    0x150f,                                        \
-    0x11d6,                                        \
-    {0xa6, 0x18, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10} \
-}
-#define NS_COOKIESERVICE_CONTRACTID \
-    "@mozilla.org/cookieService;1"
-%}

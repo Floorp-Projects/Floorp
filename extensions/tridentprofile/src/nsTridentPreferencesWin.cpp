@@ -40,7 +40,7 @@
 #include <windows.h>
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
-#include "nsCCookieManager.h"
+#include "nsNetCID.h"
 #include "nsDebug.h"
 #include "nsDependentString.h"
 #include "nsDirectoryServiceDefs.h"
@@ -51,7 +51,6 @@
 #include "prmem.h"
 #include "prlong.h"
 #include "nsICookieManager2.h"
-#include "nsICookieService.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIPrefService.h"
@@ -450,8 +449,7 @@ nsTridentPreferencesWin::CopyCookies() {
   nsCOMPtr<nsISimpleEnumerator> cookieFiles;
 
   nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
-  nsCOMPtr<nsICookieService> cookieService(do_GetService(NS_COOKIESERVICE_CONTRACTID));
-  if (!cookieManager || !cookieService)
+  if (!cookieManager)
     return NS_ERROR_FAILURE;
 
   // find the cookies directory

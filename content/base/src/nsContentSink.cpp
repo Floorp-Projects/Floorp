@@ -62,6 +62,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsNetCID.h"
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
 #include "nsIServiceManagerUtils.h"

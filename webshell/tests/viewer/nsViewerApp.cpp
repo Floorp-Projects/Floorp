@@ -98,6 +98,7 @@
 #endif
 
 // cookie
+#include "nsNetCID.h"
 #include "nsICookieService.h"
 
 #define DIALOG_FONT      "Helvetica"
