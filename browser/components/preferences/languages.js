@@ -52,19 +52,22 @@ var gLanguagesDialog = {
       if (property[1] == "accept") {
         var abCD = property[0];
         var abCDPairs = abCD.split("-");      // ab[-cd]
-        if (abCDPairs[0]) {
+        var useABCDFormat = abCDPairs.length > 1;
+        var ab = useABCDFormat ? abCDPairs[0] : abCD;
+        var cd = useABCDFormat ? abCDPairs[1] : "";
+        if (ab) {
           var language = region = "";
           try {
-            language = bundleLanguages.getString(abCDPairs[0]);
+            language = bundleLanguages.getString(ab);
           } 
-          catch (e) { };
+          catch (e) { continue; };
           
-          var useABCDFormat = abCDPairs.length > 1;
+          
           if (useABCDFormat) {
             try {
-              region = bundleRegions.getString(abCDPairs[1]);
+              region = bundleRegions.getString(cd);
             }
-            catch (e) { }
+            catch (e) { continue; }
           }
           
           var name = "";
@@ -120,6 +123,8 @@ var gLanguagesDialog = {
     
     var selectedIndex = 0;
     var preference = document.getElementById("intl.accept_languages");
+    if (preference.value == "") 
+      return undefined;
     var languages = preference.value.split(/\s*,\s*/);
     for (var i = 0; i < languages.length; ++i) {
       var name = this._getLanguageName(languages[i]);
@@ -130,7 +135,7 @@ var gLanguagesDialog = {
       if (languages[i] == this._selectedItemID)
         selectedIndex = i;
       this._activeLanguages.appendChild(listitem);
-      listitem.label = name;
+      listitem.setAttribute("label", name);
 
       // Hash this language as an "Active" language so we don't
       // show it in the list that can be added. 
