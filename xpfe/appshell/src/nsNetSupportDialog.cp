@@ -13,6 +13,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
 #include "nsIDOMHTMLInputElement.h"
+
 /* Define Class IDs */
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
