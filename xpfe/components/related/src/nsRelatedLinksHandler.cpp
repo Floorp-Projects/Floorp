@@ -290,21 +290,31 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStre
 
 	if (aLength > 0)
 	{
-		nsString	line;
-		if (mLine)	line += mLine;
-
-		char		c;
-		for (PRUint32 loop=0; loop<aLength; loop++)
+		nsAutoString	line;
+		if (mLine)
 		{
-			PRUint32	count;
-			if (NS_FAILED(rv = aIStream->Read(&c, 1, &count)))
+			line += mLine;
+			delete	[]mLine;
+			mLine = nsnull;
+		}
+
+		char	buffer[257];
+		while (aLength > 0)
+		{
+			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
+			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)))
 			{
 				printf("Related Links datasource read failure.\n");
 				break;
 			}
-
-			if (count != 1)	break;
-			line += c;
+			if (numBytes != count)
+			{
+				printf("Related Links datasource read # of bytes failure.\n");
+				break;
+			}
+			buffer[count] = '\0';
+			line += buffer;
+			aLength -= count;
 		}
 
 		while (PR_TRUE)
@@ -312,18 +322,26 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStre
 			PRInt32 eol = line.FindCharInSet("\r\n");
 			if (eol < 0)
 			{
-				if (mLine)	delete []mLine;
+				if (mLine)
+				{
+					delete []mLine;
+					mLine = nsnull;
+				}
 				mLine = line.ToNewCString();
 				break;
 			}
 
 			nsAutoString	oneLiner("");
-			if (eol > 0)
+			if (eol >= 0)
 			{
 				line.Left(oneLiner, eol);
+				line.Cut(0, eol+1);
 			}
-			line.Cut(0, eol+1);
-			if (mLine)	delete []mLine;
+			if (mLine)
+			{
+				delete []mLine;
+				mLine = nsnull;
+			}
 			mLine = line.ToNewCString();
 			if (oneLiner.Length() < 1)	return(rv);
 
