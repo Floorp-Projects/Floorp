@@ -52,6 +52,9 @@ static PA_AmpEsc PA_AmpEscapes[] = {
 	{"cent", '\242', 4},
 	{"pound", '\243', 5},
 	{"curren", '\244', 6},
+#ifdef XP_WIN
+	{"euro", '\200', 4},
+#endif
 	{"yen", '\245', 3},
 	{"brvbar", '\246', 6},
 	{"sect", '\247', 4},
@@ -175,7 +178,11 @@ static PA_AmpEsc PA_AmpEscapes[] = {
 	{"iexcl", '\301', 5},
 	{"cent", '\242', 4},
 	{"pound", '\243', 5},
+#if 0	/* before MacOS 8.5 0xdb is curren, but it changed to euro in MacOS 8.5 */
 	{"curren", '\333', 6},
+#else
+	{"euro", '\333', 4},
+#endif
 	{"yen", '\264', 3},
 
 	/*
@@ -1355,7 +1362,7 @@ void edt_InitEscapes(int16 /*csid*/, XP_Bool bQuoteHiBits){
         if( ed_escapes[ ch ] == 0 ){
             if ( ch == '&' || ch == '<' || ch == '>'
 				|| (NON_BREAKING_SPACE == ((char) ch))			
-				|| (ch > 128 && bQuoteHiBits ) ) {
+				|| (ch >= 128 && bQuoteHiBits ) ) {
            	    ed_escapes[ ch ] = pEsc;
             }
         }
