@@ -71,16 +71,16 @@ AddStyleSheetTxn::Do()
 
   if (NS_SUCCEEDED(rv) && styleSet)
   {
-    styleSet->AppendOverrideStyleSheet(mSheet);
-
-    nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
     nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
-    nsCOMPtr<nsIDocument> document;
 
-    rv = presShell->GetDocument(getter_AddRefs(document));
+    if (styleSheet)
+    {
+      nsCOMPtr<nsIDocument> document;
+      rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
-      rv = observer->StyleSheetAdded(document, styleSheet);
+      if (NS_SUCCEEDED(rv) && document)
+        document->AddStyleSheet(styleSheet);
+    }
   }
   
   return rv;
@@ -102,7 +102,7 @@ AddStyleSheetTxn::Undo()
 
   if (NS_SUCCEEDED(rv) && styleSet)
   {
-    styleSet->RemoveOverrideStyleSheet(mSheet);
+    styleSet->RemoveDocStyleSheet(mSheet);
 
     nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
     nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
@@ -207,7 +207,7 @@ RemoveStyleSheetTxn::Do()
 
   if (NS_SUCCEEDED(rv) && styleSet)
   {
-    styleSet->RemoveOverrideStyleSheet(mSheet);
+    styleSet->RemoveDocStyleSheet(mSheet);
 
     nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
     nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
@@ -238,16 +238,16 @@ RemoveStyleSheetTxn::Undo()
 
   if (NS_SUCCEEDED(rv) && styleSet)
   {
-    styleSet->AppendOverrideStyleSheet(mSheet);
-
-    nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
     nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
-    nsCOMPtr<nsIDocument> document;
 
-    rv = presShell->GetDocument(getter_AddRefs(document));
+    if (styleSheet)
+    {
+      nsCOMPtr<nsIDocument> document;
+      rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
-      rv = observer->StyleSheetAdded(document, styleSheet);
+      if (NS_SUCCEEDED(rv) && document)
+        document->AddStyleSheet(styleSheet);
+    }
   }
   
   return rv;
