@@ -71,6 +71,8 @@
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
 #include "nsIXULContentSink.h"
+#include "nsIDOMXULElement.h"
+#include "nsIXMLContent.h"
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsParserCIID.h"
@@ -1831,6 +1833,74 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
         // XXX ignore error code?
 
         NS_RELEASE(builder);
+    }
+
+    // Now that the contents have been created, perform broadcaster
+    // hookups if any of the children are observes nodes.
+    PRInt32 childCount;
+    aElement->ChildCount(childCount);
+    for (PRInt32 j = 0; j < childCount; j++)
+    {
+        nsIContent* pChildContent;
+        aElement->ChildAt(j, pChildContent);
+      
+        if (!pChildContent)
+          break;
+
+        nsIAtom* pTag;
+        pChildContent->GetTag(pTag);
+
+        if (!pTag)
+          break;
+
+        nsString tagName;
+        pTag->ToString(tagName);
+
+        if (tagName.EqualsIgnoreCase("observes"))
+        {
+            // Find the node that we're supposed to be
+            // observing and perform the hookup.
+            nsIAtom* pElementAtom = NS_NewAtom("element");
+            nsIAtom* pAttributeAtom = NS_NewAtom("attribute");
+
+            nsString elementValue;
+            nsString attributeValue;
+
+            PRInt32 namespaceID = -1;
+            //nsCOMPtr<nsIXMLContent> pXMLContent(pChildContent);
+            //if (pXMLContent)
+              pChildContent->GetNameSpaceID(namespaceID);
+
+            pChildContent->GetAttribute(namespaceID, 
+                                        pElementAtom,
+                                        elementValue);
+            
+            pChildContent->GetAttribute(namespaceID, 
+                                        pAttributeAtom,
+                                        attributeValue);
+
+            nsIDOMNode* pDOMNode = nsnull;
+            GetElementByID(elementValue, &pDOMNode);
+            
+            if (!pDOMNode)
+              break;
+
+            // We have a DOM node to bind to.  Add a broadcast
+            // listener to that node, but only if it's a XUL node.
+            // XXX: Handle context nodes.
+            nsCOMPtr<nsIDOMNode> pListener(aElement);
+            nsCOMPtr<nsIDOMXULElement> pBroadcaster(pDOMNode);
+            if (pListener)
+            {
+                pBroadcaster->AddBroadcastListener(attributeValue,
+                                                   pListener);
+            }
+
+            NS_RELEASE(pDOMNode);
+        }
+
+        NS_RELEASE(pChildContent);
+        NS_RELEASE(pTag);
     }
 
     return NS_OK;
