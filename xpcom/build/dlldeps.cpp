@@ -111,7 +111,7 @@ void XXXNeverCalled()
     NS_NewOutputStreamReadyEvent(NULL, NULL, NULL);
     NS_AsyncCopy(NULL, NULL, PR_TRUE, PR_TRUE, 0, 0, NULL);
     PL_DHashStubEnumRemove(nsnull, nsnull, nsnull, nsnull);
-    nsIDHashKey::HashKey(nsID());
+    nsIDHashKey::HashKey(&nsID());
     nsFixedSizeAllocator a;
     nsRecyclingAllocator recyclingAllocator(2);
     a.Init(0, 0, 0, 0, 0);
