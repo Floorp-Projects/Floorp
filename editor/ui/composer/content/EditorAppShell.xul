@@ -471,10 +471,10 @@
 
 <popup id="AlignmentWindow" oncreate="OnCreateAlignmentPopup()">
    <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" flex="100%">
-     <html:button class="PopupButton" onclick="opener.EditorAlign('left'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Left.gif"/><html:div>Left</html:div></html:button><html:br/>
-     <html:button class="PopupButton" onclick="opener.EditorAlign('center'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Center.gif"/><html:div>Center</html:div></html:button><html:br/>
-     <html:button class="PopupButton" onclick="opener.EditorAlign('right'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Right.gif"/><html:div>Right</html:div></html:button><html:br/>
-     <html:button class="PopupButton" onclick="opener.EditorAlign('justify'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Justify.gif"/><html:div>Justify</html:div></html:button>
+     <box align="horizontal" flex="100%"><html:button class="PopupButton" onclick="opener.EditorAlign('left'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Left.gif"/><html:div>Left</html:div></html:button><spring flex="100%"/></box>
+     <box align="horizontal" flex="100%"><html:button class="PopupButton" onclick="opener.EditorAlign('center'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Center.gif"/><html:div>Center</html:div></html:button><spring flex="100%"/></box>
+     <box align="horizontal" flex="100%"><html:button class="PopupButton" onclick="opener.EditorAlign('right'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Right.gif"/><html:div>Right</html:div></html:button><spring flex="100%"/></box>
+     <box align="horizontal" flex="100%"><html:button class="PopupButton" onclick="opener.EditorAlign('justify'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Justify.gif"/><html:div>Justify</html:div></html:button></box>
    </window>
 </popup>
 
