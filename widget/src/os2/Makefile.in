@@ -92,7 +92,6 @@ LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 export::
 	-mkdir ./res
-	-cp $(srcdir)/res/*.ico ./res
 	-cp $(srcdir)/res/*.ptr ./res
 
 ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >>$(DEF_FILE)
