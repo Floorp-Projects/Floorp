@@ -30,11 +30,13 @@
 #include "nsDOMCID.h"
 #include "nsIDOMNativeObjectRegistry.h"
 #include "nsIServiceManager.h"
+#include "nsICSSParser.h"
 #include "nsICollection.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
+static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
@@ -211,6 +213,14 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     if (!NS_SUCCEEDED(res)) {
       return res;
     }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kCCSSParserCID)) {
+    // XXX this should really be factored into a style-specific DLL so
+    // that all the HTML, generic layout, and style stuff isn't munged
+    // together.
+    if (NS_FAILED(res = NS_NewCSSParser((nsICSSParser**)&inst)))
+      return res;
     refCounted = PR_TRUE;
   }
   else 
