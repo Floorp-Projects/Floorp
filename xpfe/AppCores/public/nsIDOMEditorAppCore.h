@@ -39,6 +39,8 @@ public:
 
   NS_IMETHOD    Undo()=0;
 
+  NS_IMETHOD    Redo()=0;
+
   NS_IMETHOD    Exit()=0;
 
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
@@ -52,6 +54,7 @@ public:
 #define NS_DECL_IDOMEDITORAPPCORE   \
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    Undo();  \
+  NS_IMETHOD    Redo();  \
   NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
@@ -62,6 +65,7 @@ public:
 #define NS_FORWARD_IDOMEDITORAPPCORE(_to)  \
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue) { return _to##SetAttribute(aAttr, aValue); }  \
   NS_IMETHOD    Undo() { return _to##Undo(); }  \
+  NS_IMETHOD    Redo() { return _to##Redo(); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \

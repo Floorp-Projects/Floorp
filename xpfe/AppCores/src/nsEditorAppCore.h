@@ -58,6 +58,7 @@ class nsEditorAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);
     NS_IMETHOD    Undo();
+    NS_IMETHOD    Redo();
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
