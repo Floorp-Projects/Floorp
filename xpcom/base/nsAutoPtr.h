@@ -64,19 +64,6 @@
 template <class T>
 class nsAutoPtr
   {
-    enum { _force_even_compliant_compilers_to_fail_ = sizeof(T) };
-      /*
-        The declaration above exists specifically to make |nsAutoPtr<T>|
-        _not_ compile with only a forward declaration of |T|.  This
-        should prevent Windows and Mac engineers from breaking Solaris
-        and other compilers that naturally have this behavior.  Thank
-        <law@netscape.com> for inventing this specific trick.
-
-        Of course, if you're using |nsAutoPtr| outside the scope of
-        wanting to compile on Solaris and old GCC, you probably want to
-        remove the enum so you can exploit forward declarations.
-      */
-
     private:
       void**
       begin_assignment()
@@ -504,19 +491,6 @@ operator==( int lhs, const nsAutoPtr<T>& rhs )
 template <class T>
 class nsAutoArrayPtr
   {
-    enum { _force_even_compliant_compilers_to_fail_ = sizeof(T) };
-      /*
-        The declaration above exists specifically to make |nsAutoArrayPtr<T>|
-        _not_ compile with only a forward declaration of |T|.  This
-        should prevent Windows and Mac engineers from breaking Solaris
-        and other compilers that naturally have this behavior.  Thank
-        <law@netscape.com> for inventing this specific trick.
-
-        Of course, if you're using |nsAutoArrayPtr| outside the scope of
-        wanting to compile on Solaris and old GCC, you probably want to
-        remove the enum so you can exploit forward declarations.
-      */
-
     private:
       void**
       begin_assignment()
@@ -945,19 +919,6 @@ operator==( int lhs, const nsAutoArrayPtr<T>& rhs )
 template <class T>
 class nsRefPtr
   {
-    enum { _force_even_compliant_compilers_to_fail_ = sizeof(T) };
-      /*
-        The declaration above exists specifically to make |nsRefPtr<T>|
-        _not_ compile with only a forward declaration of |T|.  This
-        should prevent Windows and Mac engineers from breaking Solaris
-        and other compilers that naturally have this behavior.  Thank
-        <law@netscape.com> for inventing this specific trick.
-
-        Of course, if you're using |nsRefPtr| outside the scope of
-        wanting to compile on Solaris and old GCC, you probably want to
-        remove the enum so you can exploit forward declarations.
-      */
-
     private:
 
       void
