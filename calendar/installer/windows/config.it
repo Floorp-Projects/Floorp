@@ -224,7 +224,7 @@ Message0=Choose the type of Setup you prefer, then click Next.
 ;*** LOCALIZE ME BABY ***
 Description Short=&Standard
 ;*** LOCALIZE ME BABY ***
-Description Long=Browser will be installed with the most common options.
+Description Long=$ProductShortName$ will be installed with the most common options.
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
