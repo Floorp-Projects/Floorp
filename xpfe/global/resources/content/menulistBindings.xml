@@ -15,9 +15,9 @@
       <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
       <xul:image class="menu-dropmarker"/>
     </content>
-	  <handlers>
-      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
-	    <handler event="create">
+    <handlers>
+      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') this.selectedItem = event.target;"/>
+      <handler event="create">
         <![CDATA[
           if (event.target.parentNode == this && this.selectedItem) {
             // Not ready for auto-setting the active child in hierarchies yet.
@@ -36,15 +36,30 @@
             this.setAttribute('sizetopopup', 'true');
             if (!this.value) {
               var arr = this.getElementsByAttribute('selected', 'true');
-              if (arr.length == 1)
+
+              if (!arr.length && this.data)
+                arr = this.getElementsByAttribute('data', this.data);
+
+              if (arr.length)
                 this.selectedItem = arr[0];
-              else this.selectedIndex = 0;          
+              else
+                this.selectedIndex = 0;
             }
           ]]>
         </body>
       </method>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="data" onget="return this.getAttribute('data');">
+        <setter>
+          <![CDATA[
+            var arr = this.getElementsByAttribute('data', val);
+            if (arr.length)
+              this.selectedItem = arr[0];
+            else
+              this.setAttribute('data', val);
+            return val;
+          ]]>
+        </setter>
+      </property>
       <property name="crop" onset="this.setAttribute('crop',val); return val;"
                             onget="return this.getAttribute('crop');"/>
       <property name="src"  onset="this.setAttribute('src',val); return val;"
