@@ -3,6 +3,6 @@ comm.jar:
   content/communicator/downloadmanager/downloadmanager.js
 
 en-US.jar:
-  locale/en-US/communicator/downloadmanager/downloadmanager.ent        (locale/en-US/downloadmanager.ent)
+  locale/en-US/communicator/downloadmanager/downloadmanager.dtd        (locale/en-US/downloadmanager.dtd)
   locale/en-US/communicator/downloadmanager/downloadmanager.properties (locale/en-US/downloadmanager.properties)
 
