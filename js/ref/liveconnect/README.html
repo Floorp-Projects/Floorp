@@ -90,31 +90,47 @@ Use any Java compiler to compile the java source files in the <TT><FONT SIZE=+1>
 directory.<BR>
 <BR></LI>
 </UL>
-<B>Mac OS</B>
-<UL>
-<LI>
-Use CodeWarrior Pro 3 is recommended.&nbsp; CodeWarrior Pro 2 should work
-but has not been tested.&nbsp; The CodeWarrior project file is <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT></LI>
 
-<LI>
-Install Apple's JVM, <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
-SDK 2.0.1ea4</A>.</LI>
+   <B>Mac OS</B>
+   <UL>
+      <LI>Using CodeWarrior Pro 3 is recommended.&nbsp; CodeWarrior
+      Pro 2 should work but has not been tested.&nbsp; The
+      CodeWarrior project files are <TT><FONT
+      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>,
+      <TT><FONT
+      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>,
+      and<TT><FONT SIZE="+1"> js/ref/macbuild/JSRef.mcp</FONT></TT>.
+      
+      <LI>Install Apple's JVM, MRJ 2.0 (or later),and the
+      <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
+      SDK v2.0.1ea4</A>.
+      
+      <LI>Copy the folders CIncludes &amp; Libraries from
+      Interfaces&amp;Libraries to <TT><FONT
+      SIZE="+1">js/ref/liveconnect/macbuild/JavaSession</FONT></TT>.
+      
+      <LI>Build the JavaScript test application, <TT><FONT
+      SIZE="+1">JSRef</FONT></TT>, with <TT><FONT
+      SIZE="+1">js/ref/macbuild/JSRef.mcp</FONT></TT>.
+      
+      <LI>Build the LiveConnect test application, <TT><FONT
+      SIZE="+1">LiveConnectShell</FONT></TT>, with <TT><FONT
+      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>.
+      
+      <LI>Build <TT><FONT SIZE="+1">liveconnect.jar</FONT></TT> with
+      <TT><FONT
+      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>.
+      
+      <LI>Make an alias to <TT><FONT
+      SIZE="+1">liveconnect.jar</FONT></TT> and place it in
+      "<TT><FONT SIZE="+1">{SystemFolder}Extensions:MRJ
+      Libraries:MRJClasses</FONT></TT>".<BR>
+      
+      <BR>
+      
+   
+   </UL>
 
-<LI>
-Copy the folders CIncludes &amp; Libraries from Interfaces&amp;Libraries
-to <TT><FONT SIZE=+1>js/ref/macbuild/JavaSession</FONT></TT>.</LI>
-
-<LI>
-Build the test application <TT><FONT SIZE=+1>JSRef</FONT></TT> with <TT><FONT SIZE=+1>js/ref/macbuild/JSRef.mcp</FONT></TT>.</LI>
-
-<LI>
-Build <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> with <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>.</LI>
-
-<LI>
-Make an alias to <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> and place
-it in "<TT><FONT SIZE=+1>{SystemFolder}Extensions:MRJ Libraries:MRJClasses</FONT></TT>".</LI>
-
-<BR>&nbsp;</UL>
 <B>Unix</B>
 <UL>
 <LI>
