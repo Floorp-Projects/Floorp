@@ -50,6 +50,7 @@ import java.util.ResourceBundle;
 
 import org.mozilla.javascript.xml.XMLObject;
 import org.mozilla.javascript.xml.XMLLib;
+import org.mozilla.javascript.continuations.Continuation;
 
 /**
  * This is the class that implements the runtime.

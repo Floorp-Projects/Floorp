@@ -33,18 +33,32 @@
  * file under either the NPL or the GPL.
  */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.continuations;
+
+import org.mozilla.javascript.*;
 
 public final class Continuation extends IdScriptableObject implements Function
 {
     private static final Object FTAG = new Object();
 
-    Object data;
+    private Object implementation;
 
-    static void init(Context cx, Scriptable scope, boolean sealed)
+    public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         Continuation obj = new Continuation();
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
+    }
+
+    public Object getImplementation()
+    {
+        return implementation;
+    }
+
+    public void initImplementation(Object implementation)
+    {
+        if (implementation == null) throw new IllegalArgumentException();
+        if (this.implementation != null) throw new IllegalStateException();
+        this.implementation = implementation;
     }
 
     public String getClassName()
@@ -63,7 +77,7 @@ public final class Continuation extends IdScriptableObject implements Function
         return Interpreter.restartContinuation(this, cx, scope, args);
     }
 
-    static boolean isContinuationConstructor(IdFunctionObject f)
+    public static boolean isContinuationConstructor(IdFunctionObject f)
     {
         if (f.hasTag(FTAG) && f.methodId() == Id_constructor) {
             return true;

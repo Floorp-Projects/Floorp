@@ -44,6 +44,7 @@ package org.mozilla.javascript;
 import java.io.*;
 
 import org.mozilla.javascript.debug.*;
+import org.mozilla.javascript.continuations.Continuation;
 
 public class Interpreter
 {
@@ -275,7 +276,7 @@ public class Interpreter
 
         ContinuationJump(Continuation c, CallFrame current)
         {
-            this.capturedFrame = (CallFrame)c.data;
+            this.capturedFrame = (CallFrame)c.getImplementation();
             if (this.capturedFrame == null || current == null) {
                 // Continuation and current execution does not share
                 // any frames if there is nothing to capture or
@@ -2169,8 +2170,8 @@ public class Interpreter
         return result;
     }
 
-    static Object restartContinuation(Continuation c, Context cx,
-                                      Scriptable scope, Object[] args)
+    public static Object restartContinuation(Continuation c, Context cx,
+                                             Scriptable scope, Object[] args)
     {
         if (!ScriptRuntime.hasTopCall(cx)) {
             return ScriptRuntime.doTopCall(c, cx, scope, null, args);
@@ -2183,7 +2184,7 @@ public class Interpreter
             arg = args[0];
         }
 
-        CallFrame capturedFrame = (CallFrame)c.data;
+        CallFrame capturedFrame = (CallFrame)c.getImplementation();
         if (capturedFrame == null) {
             // No frames to restart
             return arg;
@@ -3870,7 +3871,7 @@ switch (op) {
             x = x.parentFrame;
         }
 
-        c.data = frame.parentFrame;
+        c.initImplementation(frame.parentFrame);
         frame.stack[stackTop] = c;
     }
 
@@ -4011,5 +4012,4 @@ switch (op) {
             cx.instructionCount = 0;
         }
     }
-
 }
