@@ -147,6 +147,12 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aConte
 	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
 	// we have an error.
 
+	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
+	{
+		// we need to inform our mailbox parser that it's time to start...
+		m_mailboxParser->OnStartBinding(aURL, aContentType);
+
+	}
 	return NS_OK;
 
 }
