@@ -568,6 +568,29 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
+        nsCOMPtr<nsIMsgDatabase> trashDB;
+        rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
+        if (NS_SUCCEEDED(rv))
+        {
+            trashDB->ForceClosed();
+            trashDB = null_nsCOMPtr();
+        }
+        nsCOMPtr<nsIFileSpec> pathSpec;
+        rv = trashFolder->GetPath(getter_AddRefs(pathSpec));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsFileSpec fileSpec;
+            rv = pathSpec->GetFileSpec(&fileSpec);
+            if (NS_SUCCEEDED(rv))
+            {
+                nsLocalFolderSummarySpec summarySpec(fileSpec);
+                if (summarySpec.Exists())
+                    summarySpec.Delete(PR_FALSE);
+            }
+        }
+        
+        rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
+
         NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
             rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
