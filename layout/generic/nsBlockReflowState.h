@@ -44,7 +44,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsITextContent.h"
 #include "nsStyleChangeList.h"
-
+#include "nsISizeOfHandler.h"
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 
@@ -5493,7 +5493,7 @@ nsBlockFrame::VerifyTree() const
 NS_IMETHODIMP
 nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  if (!aResult) {
+  if (!aHandler || !aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -5502,12 +5502,12 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   // Add in size of each line object
   nsLineBox* line = mLines;
   while (line) {
-    sum += sizeof(nsLineBox);
+    aHandler->AddSize(nsLayoutAtoms::lineBox, sizeof(nsLineBox));
     line = line->mNext;
   }
   line = mOverflowLines;
   while (line) {
-    sum += sizeof(nsLineBox);
+    aHandler->AddSize(nsLayoutAtoms::lineBox, sizeof(nsLineBox));
     line = line->mNext;
   }
 
@@ -5516,7 +5516,7 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   while (runs) {
     PRUint32 runSize;
     runs->SizeOf(aHandler, &runSize);
-    sum += runSize;
+    aHandler->AddSize(nsLayoutAtoms::textRun, runSize);
     runs = runs->GetNext();
   }
 
