@@ -2471,7 +2471,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
   if (aLine->IsBlock()) {
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
-    
+
     // We expect blocks to damage any area inside their bounds that is
     // dirty; however, if the frame changes size or position then we
     // need to do some repainting
@@ -2736,6 +2736,9 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       frame->GetNextSibling(&fromLine->mFirstChild);
     }
     else {
+      nsRect combinedArea;
+      fromLine->GetCombinedArea(&combinedArea);
+
       // Free up the fromLine now that it's empty
       // Its bounds might need to be redrawn, though.
       if (aDamageDeletedLines && !fromLine->mBounds.IsEmpty()) {
@@ -2743,6 +2746,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       }
       if (aFromLine.next() != end_lines())
         aFromLine.next()->MarkPreviousMarginDirty();
+      Invalidate(aState.mPresContext, combinedArea);
       aFromContainer.erase(aFromLine);
       aState.FreeLineBox(fromLine);
     }
