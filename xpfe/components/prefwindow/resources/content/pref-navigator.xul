@@ -1,5 +1,4 @@
 <?xml version="1.0"?> 
-
 <!--
    The contents of this file are subject to the Netscape Public
    License Version 1.1 (the "License"); you may not use this file
@@ -22,57 +21,127 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Navigator');"  title="&title.label;">
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Navigator');"  align="horizontal" title="&title.label;">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
-<html:div flex="100%">
-<html:DIV ID="top">
-<html:SPAN ID="lefttext">Navigator</html:SPAN>
-</html:DIV>
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+ <html:div flex="100%">
+	<box id="header" style="width:100%" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div>&rHeader;</html:div>
+		  <spring style="width:5px"/> 
+	</box>
+	
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+			<html:div>&navRadio;</html:div> 
+					</html:legend>	
+		<html:div>
+			<html:input name="starts" type="radio" id="pref:0:int:browser.startup.page" />
+			<html:label for="pref:0:int:browser.startup.page" accesskey="" tabindex="0">
+				&blankRadio;			
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="starts" type="radio" id="pref:1:int:browser.startup.page" />
+			<html:label for="pref:1:int:browser.startup.page" accesskey="" tabindex="0">			
+				&header2.label;
+			</html:label>
+		</html:div>
+		<html:div>
+			<html:input name="starts" type="radio" id="pref:2:int:browser.startup.page" />
+			<html:label for="pref:2:int:browser.startup.page" accesskey="" tabindex="0">			
+				&lastPageRadio;
+			</html:label>
+		</html:div>
+		</html:fieldset>  
+	</box> 
+	
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+						<html:div>&header2.label;</html:div> 
+					</html:legend>
+			<html:div>&clickRadio;</html:div>
+			&location;
+			<html:input name="homepage" type="text"	id="pref:char:browser.startup.homepage" size="30" /> 
+			<html:div>
+				<spring flex="100%"/>
+				<titledbutton name="starts" type="button" value="&useCurrent;" />
+				<titledbutton name="browse" type="button" value="&browseFile;" />
+			</html:div>		
+		</html:fieldset>  
+	</box> 
 
-&navRadio;
-<html:table ID="tableb">
-		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:0:int:browser.startup.page" />&blankRadio;</html:label></html:td>
-		</html:tr>
-		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:1:int:browser.startup.page" val="checked" />&header2.label;</html:label></html:td>
-		</html:tr>
-		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:2:int:browser.startup.page" />&lastPageRadio;</html:label></html:td>
-		</html:tr>
-</html:table>
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+						<html:div>&header3.label;</html:div> 
+					</html:legend>
+			<html:div>&historyPages;</html:div>	
+			&pagesHis;<html:input type="text" value="&histDay;" size="3" />
+			&daysRadio; 
+			<titledbutton name="Clearit" value="&clearHis;" />		
+		</html:fieldset>  
+	</box> 
 
-&header2.label;
-<html:table ID="tableb">
-	<html:tr><html:td>&clickRadio;</html:td></html:tr>
-		<html:tr><html:td>&location;<html:input name="homepage" type="text" value="http://my.netscape.com"	id="pref:string:browser.startup.homepage" size="30" />
-		</html:td></html:tr>
-		<html:tr><html:td><html:input name="starts" type="button" value="&useCurrent;" />
-			<html:input name="browse" type="button" value="&browseFile;" />
-		</html:td></html:tr>
-</html:table>
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+						<html:div>&header4.label;</html:div> 
+					</html:legend>
+					&clearBar; 
+					<titledbutton name="starts" type="button" value="&clearLoc;" />		
+		</html:fieldset>  
+	</box> 
+<!--
+	<html:div>
+		<html:input  type="radio" name="offline" id="pref:0:bool:offline.news.download.use_days" checked="true" />
+		<html:label for="pref:0:bool:offline.news.download.use_days" accesskey="f" tabindex="0">			
+		&fromRadio.label;
+		</html:label> 
+		<html:select  id="pref" idold="pref:1:int:offline.news.download.increments">
+		<html:option>&one.select;</html:option>
+	    <html:option>&two.select;</html:option>
+		<html:option>&oneM.select;</html:option>
+		<html:option>&sixM.select;</html:option>
+		<html:option>&oneY.select;</html:option>
+		</html:select> 
+	</html:div>  
+	<html:div>
+		<html:input  type="radio" name="offline" id="pref:1:bool:offline.news.download.use_days" />
+		<html:label for="pref:1:bool:offline.news.download.use_days" accesskey="s" tabindex="0">			
+		&sinceRadio.label;
+		</html:label>
+		<html:input type="text" size="5" id="pref:30:char:offline.news.download.days" />&daysAgo;
+	</html:div> 
+	</html:p>     
+	  </html:fieldset>  
 
-&header3.label;
-<html:table ID="tableb">
-		<html:tr><html:td>
-			&historyPages;
-		</html:td></html:tr>
-		<html:tr><html:td>
-			&pagesHis;<html:input type="text" value="&histDay;" size="3" />&daysRadio;
-			<html:input name="Clearit" type="button" value="&clearHis;" />
-		</html:td></html:tr>
-</html:table>
+	</box> -->
+<!--
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left"> 
+			<html:div>&Allmsg;</html:div> 
+					</html:legend>
+        <html:div>&offlineMsgs;</html:div> 
+			<box flex="100%"><html:div>
+				<titledbutton value="&select;" align="left"/>
+			</html:div></box>
+		</html:fieldset>
+	</box>  -->
 
 
-&header4.label;
-<html:table ID="tableb">
-		<html:tr><html:td>&clearBar;   
-			<html:input name="starts" type="button" value="&clearLoc;" />
-		</html:td></html:tr>
-</html:table>
 </html:div>
 </window>
+

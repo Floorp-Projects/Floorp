@@ -44,10 +44,8 @@
 			<box align="vertical" style="width: 100%;">
 			&descript;
 			<html:select name="textstyle" size="5" >
-				<html:optgroup>
-			    <html:option value="0" />
-				&aimLaunchSelect.label;
-				</html:optgroup>
+			    <html:option>
+				&aimLaunchSelect.label;</html:option>
 				</html:select> 
 			</box>
 	<box align="vertical">

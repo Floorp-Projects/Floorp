@@ -31,12 +31,71 @@
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&header;</html:SPAN>
-</html:DIV>
+  	<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	</box> 
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+				<html:div></html:div> 
+			</html:legend>
+			<html:div>
+				&encod.select;
+				<html:select>
+					<html:option>&encod1.option;</html:option>
+				</html:select>			
+			</html:div>
+			<html:div>
+				&varFont.select;
+				<html:select >
+					<html:option>&encod1.option;</html:option>
+				</html:select>
+				&size.select;
+				<html:select >
+						<html:option>&varFont.option;</html:option>
+				</html:select>
+			</html:div>
+			<html:div>
+				&fixedFont.Select;
+				<html:select >
+					<html:option>&encod1.option;</html:option>
+				</html:select>
+				&size.select;
+				<html:select >
+						<html:option>&varFont.option;</html:option>
+				</html:select>
+			</html:div>
+	<html:br />
+	<html:div>
+	&header2;
+	</html:div>
+	<html:div>
+	<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />
+		<html:label for="pref:0:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+			&useDefaultFontRadio; 
+		</html:label> 
+	</html:div>	
+	<html:div>
+	<html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" val="checked" />
+		<html:label for="pref:1:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+			&useDocFontRadio;
+		</html:label>
+	</html:div>	
+	<html:div>
+	<html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" val="checked" />
+		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+			&useDocFontsRadio;
+		</html:label>
+	</html:div>	
+		</html:fieldset>
+</box>
 
-
-
+<!--
 <html:table>
 		<html:tr>
 			<html:td>&encod.select;
@@ -93,5 +152,7 @@
 					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" />&useDocFontRadio;</html:label></html:td></html:tr>
 					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" />&useDocFontsRadio;</html:label></html:td></html:tr>
 		</html:table>
+
+-->
 </html:div>
 </window>

@@ -21,8 +21,6 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -31,27 +29,47 @@
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
-<html:div ID="top">
-		<html:SPAN ID="lefttext">&proxiesHeader.label;</html:SPAN>
-</html:div>
+
+  	<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+    	  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	</box>
 
 
-<html:table>
-      &networkHeader.label;
-			<html:tr><html:td><html:label>
-				<html:input name="conntype" type="radio" checked="true" id="pref:3:int:network.proxy.type" />&directTypeRadio.label;
-			</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label>
-				<html:input name="conntype" type="radio" id="pref:1:int:network.proxy.type" />&manualTypeRadio.label;
-			</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label>
-				<html:input name="conntype" type="radio" id="pref:2:int:network.proxy.type" />&autoTypeRadio.label;
-			</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label>&configAutoconfigText.label;
+
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+		   
+		<!--	&networkHeader.label;  Bug in boxes-->
+			<html:div>
+				<html:input type="radio" id="pref:0:int:network.proxy.type" />
+				<html:label for="pref:0:int:network.proxy.type" accesskey="d" tabindex="0">
+				&directTypeRadio.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input type="radio" id="pref:1:int:network.proxy.type" />
+				<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
+				&manualTypeRadio.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input type="radio" id="pref:2:int:network.proxy.type" />
+				<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
+				&autoTypeRadio.label;
+				</html:label>
+				<titledbutton value="&reload.label;" align="left"/>
+			</html:div>
+			<html:div>
+				&configAutoconfigText.label;
 				<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
-			</html:label></html:td></html:tr>
-
- 
-</html:table>
+			</html:div>
+				<spring flex="100%"/><titledbutton value="&view.label;" align="right"/>
+		</html:fieldset>
+	</box>
 </html:div>
 </window>

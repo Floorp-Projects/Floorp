@@ -20,19 +20,17 @@
    
    Contributor(s): 
   -->
-
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-download.dtd" >
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Download');" align="vertical" title="&title.label;">
+        onload="return StartUp('Composer');"  alighn="vertical" title="&title.label;">
 
-<html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
-
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+<html:div flex="100%">
 	<box id="header" style="width:100%" align="horizontal">  
 		  <spring style="width:20px"/>
 		  <html:div style="vertical-align: middle;">
@@ -43,7 +41,7 @@
 	</box>
 	
 	<box align="vertical" flex="100%" style="width: 100%;">
-<!--		<html:fieldset style="width: 100%;">
+		<html:fieldset style="width: 100%;">
 					<html:legend align="left"> 
 			<html:div>&newmes;</html:div> 
 					</html:legend>
@@ -59,61 +57,44 @@
 		&downDateCheck;
 		</html:label>
 	</html:div>
+	<html:p>
 	<html:div>
-		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
-		<html:label for="pref:0:int:offline.news.download.use_days" accesskey="" tabindex="0">			
+		<html:input  type="radio" name="offline" id="pref:0:bool:offline.news.download.use_days" checked="true" />
+		<html:label for="pref:0:bool:offline.news.download.use_days" accesskey="f" tabindex="0">			
 		&fromRadio.label;
-		</html:label>
-	</html:div>
-	<html:div>
-		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
-		<html:label for="pref:0:int:offline.news.download.use_days" accesskey="" tabindex="0">			
-		&fromRadio.label;
-		</html:label>
+		</html:label> 
+		<html:select  id="pref" idold="pref:1:int:offline.news.download.increments">
+		<html:option>&one.select;</html:option>
+	    <html:option>&two.select;</html:option>
+		<html:option>&oneM.select;</html:option>
+		<html:option>&sixM.select;</html:option>
+		<html:option>&oneY.select;</html:option>
+		</html:select> 
 	</html:div>  
-  </html:fieldset> -->
-  </box>  
+	<html:div>
+		<html:input  type="radio" name="offline" id="pref:1:bool:offline.news.download.use_days" />
+		<html:label for="pref:1:bool:offline.news.download.use_days" accesskey="s" tabindex="0">			
+		&sinceRadio.label;
+		</html:label>
+		<html:input type="text" size="5" id="pref:30:char:offline.news.download.days" />&daysAgo;
+	</html:div> 
+	</html:p>
+	  </html:fieldset>
+    </box>  
 
-<!--
-<html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&download;</html:SPAN>
-</html:DIV>
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left"> 
+			<html:div>&Allmsg;</html:div> 
+					</html:legend>
+         <!--   <html:div>&offlineMsgs;</html:div>  -->
+			<box flex="100%"><html:div>
+				<titledbutton value="&select;" align="left"/>
+			</html:div></box>
+		</html:fieldset>
+	</box>
 
-&newmes;
-<html:table>
-	<html:tr><html:td><html:label>
-	<html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />
-	&downOnlyCheck;</html:label></html:td></html:tr>
-	<html:tr><html:td><html:label>
-	<html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />
-	&downDateCheck;</html:label></html:td></html:tr>
-	<html:tr><html:td>
-	    <html:label>
-		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
-		&fromRadio.label;
-		<html:select  id="pref:0:">
-						   <html:OPTION />&one.select;
-		                   <html:OPTION />&two.select;
-		                   <html:OPTION />&oneM.select;
-		                   <html:OPTION />&sixM.select;
-		                   <html:OPTION />&oneY.select;
-		</html:select></html:label></html:td></html:tr>
-
-	<html:tr><html:td><html:label>
-	<html:input type="radio" name="offline" id="pref:1:int:offline.news.download.use_days" />&sinceRadio.label;
-	<html:input type="text" size="5" id="pref:2:browser.use_document_fonts" />&daysAgo;
-	</html:label></html:td></html:tr>
-</html:table>
-
-&Allmsg;
-
-<html:table>
-	<html:tr><html:td>&offlineMsgs;</html:td></html:tr>
-	<html:tr><html:td><html:input  type="button" value="&select;" id="pref:2:offline" /></html:td></html:tr>
-</html:table>
-
--->
 
 </html:div>
-</xul:window>
+</window>
+
