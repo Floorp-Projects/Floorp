@@ -26,7 +26,7 @@ confirm_login();
 print "Content-type: text/html\n\n";
 
 if (! defined $::FORM{'pwd1'}) {
-    PutHeader("Preferences", "Change your password and other preferences",
+    PutHeader("Preferences", "Change your password and<br>other preferences",
               $::COOKIE{'Bugzilla_login'});
 
     my $qacontactpart = "";
