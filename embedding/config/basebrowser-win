@@ -78,6 +78,8 @@ components\editor.xpt
 components\webbrwsr.dll              
 components\webBrowser_core.xpt
 components\webBrowser_setup.xpt
+components\embedcomponents.dll
+components\windowwatcher.xpt
 
 
 ; gfx
