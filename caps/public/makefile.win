@@ -34,8 +34,8 @@ EXPORTS= \
  nsICertPrincipal.h       \
  nsICapsManager.h         \
  nsICodeSourcePrincipal.h \
- nsCapsPublicEnums.h      \
- nsICapsSecurityCallbacks.h
+ nsCapsPublicEnums.h      
+
 
 include <$(DEPTH)/config/rules.mak>
 

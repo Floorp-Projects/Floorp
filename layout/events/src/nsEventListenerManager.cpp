@@ -38,14 +38,11 @@
 #include "nsIScriptEventListener.h"
 #include "nsDOMEventsIIDs.h"
 #include "prmem.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectData.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 
 nsEventListenerManager::nsEventListenerManager() 
 {
@@ -416,20 +413,6 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
                                 nsIAtom *aName, const nsString& aFunc, REFNSIID aIID)
 {
   JSObject *mScriptObject;
-  nsIScriptGlobalObject *global;
-  nsIScriptGlobalObjectData *globalData;
-  JSPrincipals* principals = nsnull;
-
-  global = aContext->GetGlobalObject();
-  if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
-    if (NS_FAILED(globalData->GetPrincipals((void**)&principals))) {
-      NS_RELEASE(global);
-      NS_RELEASE(globalData);
-      return NS_ERROR_FAILURE;
-    }
-    NS_RELEASE(globalData);
-  }
-  NS_IF_RELEASE(global);
   
   if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
     JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
@@ -440,9 +423,8 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
     mName.ToLowerCase(mLowerName);
     mCharName = mLowerName.ToNewCString();
 
-
     if (nsnull != mCharName) {
-      JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, principals, mCharName,
+      JS_CompileUCFunction(mJSContext, mScriptObject, mCharName,
 		           1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
 		           nsnull, 0);
       delete[] mCharName;
