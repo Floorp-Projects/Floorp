@@ -534,10 +534,10 @@ var defaultController =
       case "cmd_outputFormat":
         return composeHTML;
       case "cmd_quoteMessage":
-        try {
-          gMailSession.topmostMsgWindow;
+        var selectedURIs = GetSelectedMessages();
+        if (selectedURIs && selectedURIs.length > 0)
           return true;
-        } catch (ex) { return false; }
+        return false;
 
       //Format Menu
       case "cmd_decreaseFont":
@@ -655,17 +655,24 @@ var defaultController =
 
 function QuoteSelectedMessage()
 {
+  var selectedURIs = GetSelectedMessages();
+  if (selectedURIs)
+    for (i = 0; i < selectedURIs.length; i++)
+      gMsgCompose.quoteMessage(selectedURIs[i]);
+}
+
+function GetSelectedMessages()
+{
   if (gMsgCompose) {
     var mailWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService()
                      .QueryInterface(Components.interfaces.nsIWindowMediator)
                      .getMostRecentWindow("mail:3pane");
     if (mailWindow) {
-      var selectedURIs = mailWindow.GetSelectedMessages();
-      if (selectedURIs)
-        for (i = 0; i < selectedURIs.length; i++)
-          gMsgCompose.quoteMessage(selectedURIs[i]);
+      return mailWindow.GetSelectedMessages();
     }
   }
+
+  return null;
 }
 
 function SetupCommandUpdateHandlers()
@@ -733,6 +740,11 @@ function updateEditItems() {
   goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
+}
+
+function updateOptionItems()
+{
+  goUpdateCommand("cmd_quoteMessage");
 }
 
 var messageComposeOfflineObserver = {
