@@ -42,5 +42,8 @@ Rights Reserved.
 <!ENTITY asIs.label "As is (does not work well with some mail servers)">
 <!ENTITY useMIMEpart1.label "Using the 'quoted printable' MIME encoding">
 <!ENTITY useMIMEpart2.label "(does not work well with some mail or newsgroups readers)">
+<!ENTITY emoticonsAndStructs.label "Emoticons And Structs">
 <!ENTITY emoticons.label "Emoticons">
-<!ENTITY enableEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
+<!ENTITY sructs.label "Structs">
+<!ENTITY convertEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
+<!ENTITY convertStructs.label "When viewing a text message, convert structs to styles.">

@@ -91,10 +91,15 @@
 	</html:fieldset>
 	 <html:fieldset>
                 <html:legend align="left">
-                        <html:div>&emoticons.label;</html:div>
+                        <html:div>&emoticonsAndStructs.label;</html:div>
                 </html:legend>
-		<html:input id="pref:0:bool:mail.enable_emoticons" type="checkbox"/>
-		<html:label for="pref:0:bool:mail.enable_emoticons">&enableEmoticons.label;</html:label>
+		<html:input id="pref:0:bool:mail.convert_emoticons" type="checkbox"/>
+		<html:label for="pref:0:bool:mail.convert_emoticons">&convertEmoticons.label;</html:label>
+                <html:legend align="left">
+                        <html:div>&structs.label;</html:div>
+                </html:legend>
+		<html:input id="pref:0:bool:mail.convert_structs" type="checkbox"/>
+		<html:label for="pref:0:bool:mail.convert_structs">&convertStructs.label;</html:label>
 	</html:fieldset>
 
 </window>
