@@ -87,7 +87,8 @@ const exceptionMsgNames = ["err.notimplemented",
                            "err.invalid.param",
                            "err.subscript.load",
                            "err.no.debugger",
-                           "err.failure"];
+                           "err.failure",
+                           "err.no.stack"];
 
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
@@ -117,6 +118,7 @@ const MSG_WORD_SCOPE       = getMsg("msg.val.scope");
 
 const MSG_VAL_CONSOLE      = getMsg("msg.val.console");
 const MSG_VAL_UNKNOWN      = getMsg("msg.val.unknown");
+const MSG_VAL_NA           = getMsg("msg.val.na");
 const MSG_VAL_OBJECT       = getMsg("msg.val.object");
 const MSG_VAL_EXPR         = getMsg("msg.val.expression");
 
