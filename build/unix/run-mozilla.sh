@@ -239,7 +239,7 @@ moz_debug_program()
                 $debugger $prog ${1+"$@"}
                 ;;
         esac
-        /bin/rm ./mozargs$$
+        /bin/rm /tmp/mozargs$$
     else
         echo "Could not find a debugger on your system." 
     fi
