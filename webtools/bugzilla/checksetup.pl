@@ -1121,7 +1121,8 @@ sub fixPerms {
 
 if ($my_webservergroup) {
     # Funny! getgrname returns the GID if fed with NAME ...
-    my $webservergid = getgrnam($my_webservergroup);
+    my $webservergid = getgrnam($my_webservergroup) 
+        or die("no such group: $my_webservergroup");
     # chown needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
