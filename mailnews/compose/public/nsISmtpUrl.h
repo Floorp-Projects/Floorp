@@ -27,6 +27,8 @@
 
 #include "nsISupports.h"
 
+#define SMTP_PORT	25
+
 /* include all of our event sink interfaces */
 
 /* 16ADF2F1-BBAD-11d2-804E-006008128C4E */
