@@ -94,6 +94,30 @@ sub make_tree_list {
     return @result;
 }
 
+# Check to see if anyone checked in during time slot.
+#   ex.  has_who_list(1);    # Check for checkins in most recent time slot.
+#   ex.  has_who_list(1,5);  # Check range of times.
+sub has_who_list {
+  my ($time1, $time2) = @_;
+
+  if (not defined(@who_check_list)) {
+    # Build a static array of true/false values for each time slot.
+    $who_check_list[$time_count] = 0;
+    my ($t) = 1;
+    for (; $t<=$time_count; $t++) {
+      $who_check_list[$t] = 1 if each %{$who_list->[$t]};
+    }
+  }
+  if ($time2) {
+    for ($ii=$time1; $ii<=$time2; $ii++) {	 
+      return 1 if $who_check_list[$ii]
+    }
+    return 0
+  } else {
+    return $who_check_list[$time1]; 
+  }
+}
+
 sub show_tree_selector {
 
     EmitHtmlHeader("tinderbox");
@@ -145,7 +169,6 @@ $treename = $tree . ($tree2 ne "" ? " and $tree2" : "" );
     EmitHtmlTitleAndHeader("tinderbox: $treename", "tinderbox",
                            "tree: $treename ($now)");
 
-
     print "$script_str\n";
     print "$message_of_day\n";
 
@@ -196,7 +219,7 @@ sub display_build_table {
 }
 
 sub display_build_table_body {
-    local($t);
+    my($t);
 
     $t = 1;
     while( $t <= $time_count ){
@@ -206,11 +229,11 @@ sub display_build_table_body {
 }
 
 sub display_build_table_row {
-    local($t) = @_;
-    local($tt);
+    my ($t) = @_;
+    my ($tt, $hour_color);
     $tt = &print_time($build_time_times->[$t]);
 
-    if( $tree2 ne "" ){
+    if( $tree2 ne "" || $form{nocrap}){
         $qr = "";
         $er = "";
     }
@@ -220,41 +243,49 @@ sub display_build_table_row {
     }
 
     if ($build_time_times->[$t] % 7200 > 3600) {
-        $color = "white";
+        $hour_color = "";
     } else {
-        $color = "beige";
+        $hour_color = " bgcolor=#e7e7e7";
     }
 
+    ($hour) = $tt =~ /(\d\d):/;
+    if ($lasthour == $hour) {
+      $tt =~ s/^.*&nbsp;//;
+    } else {
+      $lasthour = $hour;
+    }
+
+    # Time column
+    # 
     print "<tr align=center>\n";
-    print "<td bgcolor=$color>${qr}\n${tt}${er}\n";
+    print "<td align=right $hour_color>${qr}\n${tt}${er}</td>\n";
 
 
     if( $tree2 ne "" ){
         print "<td align=center bgcolor=beige>\n";
         $qr = &query_ref( $td1, $build_time_times->[$t]);
-        print "${qr}<tt><b>X</b></tt></a>\n";
+        print "${qr}</a></td>\n";
     }
 
-    print "<td align=center>\n";
-
+    print "<td>";
     for $who (sort keys %{$who_list->[$t]} ){
-        #$qr = &query_ref( $td1, $build_time_times->[$t],$build_time_times->[$t-1],$who);
         $qr = &who_menu( $td1, $build_time_times->[$t],$build_time_times->[$t-1],$who);
         print "  ${qr}$who</a>\n";
     }
+    print "</td>";
 
     if( $tree2 ne "" ){
-        print "<td align=cenger bgcolor=beige >\n";
+        print "<td align=center bgcolor=beige >\n";
         $qr = &query_ref( $td2, $build_time_times->[$t]);
-        print "${qr}<tt><b>X</b></tt></a>\n";
+        print "${qr}</a></td>\n";
 
         print "<td align=center>\n";
 
         for $who (sort keys %{$who_list2->[$t]} ){
-            #$qr = &query_ref( $td2, $build_time_times->[$t],$build_time_times->[$t-1],$who);
             $qr = &who_menu( $td2, $build_time_times->[$t],$build_time_times->[$t-1],$who);
             print "  ${qr}$who</a>\n";
         }
+        print "</td>";
     }
     
     $bn = 1;
@@ -275,33 +306,38 @@ sub display_build_table_row {
                 if( $tree2 ne "" ){
                     $buildname =~ s/^[^ ]* //;
                 }
-                $popupbuildname = $buildname; #Added so text in popup isn't whacky
-                $buildname = &url_encode($buildname);
                 $buildtime = $br->{buildtime};
                 $buildtree = $br->{td}->{name};
 
                 print "<tt>\n";
 
+		# Build Note
+		# 
                 if( $hasnote ){
                     print "<a href='' onClick=\"return js_what_menu(event,$noteid,'$logfile','$errorparser','$buildname','$buildtime');\">";
                     print "<img src=star.gif border=0></a>\n";
                 }
-                print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime' " .
-                      "onClick=\"return log_popup(event,'$buildtree','$popupbuildname'," .
-                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime'," .
-                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&fulltext=1'," .
-                      "'addnote.cgi?tree=$buildtree&buildname=$buildname&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser');\">";
 
+		# Build Log
+		# 
+                print "<A HREF='http:// Build Log' ".
+                      "onClick=\"return log_popup(event,$bn,'$logfile','$buildtime');\">";
 
-                print "L</a>\n";
+                print "L</a>";
 
-                #print "Build Summary</a><br>\n";
-
+		# What Changed
+		#
                 if( $br->{previousbuildtime} ){
-                    $qr = &query_ref($br->{td}, $br->{previousbuildtime},$br->{buildtime});
-                    print "$qr\n";
-                    print " C</a>\n";
-                    #print "What Changed</a><br>\n";
+		  my ($previous_br) = $build_table->[$t+$rowspan][$bn];
+		  my ($previous_rowspan) = $previous_br->{rowspan};
+		  if (has_who_list($t+$rowspan,
+				   $t+$rowspan+$previous_rowspan-1)) {
+		    $qr = &query_ref($br->{td}, 
+				     $br->{previousbuildtime},
+				     $br->{buildtime});
+		    print "\n$qr";
+		    print "C</a>";
+		  }
                 }
 
                 if( $br->{binaryname} ne '' ){
@@ -310,35 +346,34 @@ sub display_build_table_row {
                     print " <a href=$binfile>B</a>";
                 }
                 print "</tt>\n";
-
+		print "</td>";
 
             }
         }
         else  {
-            print "<td>&nbsp;\n";
+            print "<td>&nbsp;</td>\n";
         }
         $bn++;
     }
     
-
     print "</tr>\n";
 }
 
 
 sub display_build_table_header {
-    local($i,$nspan);
+    my($i,$nspan);
 
-    print "<TABLE border cellspacing=2>\n";
+#    print "<table border=0 bgcolor='#303030' cellspacing=0 cellpadding=0><tr valign=middle align=center><td>\n";
+    print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
 
     print "<tr align=center>\n";
-    print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>since time</font>";
+    print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>since time</font></td>";
     $nspan = ( $tree2 ne "" ? 4 : 1);
     print "<td colspan=$nspan><font size=-1>Click name to see what they did</font>";
     print "<br><font size=-2><a href=showbuilds.cgi" . make_cgi_args() .
-        "&rebuildguilty=1>Rebuild guilty list</a>";
+        "&rebuildguilty=1>Rebuild guilty list</a></td>";
     #print "<td colspan=$name_count><font size=-1>Burning builds are busted</font>";
     #print "</tr>\n";
-
     
     #print "<tr>\n";
     $i = 1;
@@ -355,34 +390,32 @@ sub display_build_table_header {
         }
         else {
             $bn = "<font face='Arial,Helvetica' size=-2>$bn</font>";
-
         }
 
         if( $t->{isbusted} ){
             if ($form{'nocrap'}) {
-                print "<th rowspan=2 bgcolor=FF0000>$bn";
+                print "<th rowspan=2 bgcolor=FF0000>$bn</th>";
             } else {
                 print "<td rowspan=2 bgcolor=000000 background=1afi003r.gif>";
-                print "<font color=white>$bn</font>";
+                print "<font color=white>$bn</font></td>";
             }
             #print "<img src=reledanim.gif>\n";
         }
         else {
-            print "<th rowspan=2 bgcolor=00ff00>";
-            print "$bn\n";
+            print "<th rowspan=2 bgcolor=00ff00>$bn</th>";
         }
         $i++;
     }
     print "</tr>\n";
 
     print "<tr>\n";
-    print "<b><TH>Build Time\n";
+    print "<b><TH>Build Time</th>\n";
     if( $tree2 ne "" ){
-        print "<TH colspan=2>$td1->{name}\n";
-        print "<TH colspan=2>$td2->{name}\n";
+        print "<TH colspan=2>$td1->{name}</th>\n";
+        print "<TH colspan=2>$td2->{name}</th>\n";
     }
     else {
-        print "<TH>Guilty\n";
+        print "<TH>Guilty</th>\n";
     }
     print "</b></tr>\n";
 
@@ -390,6 +423,7 @@ sub display_build_table_header {
 
 sub display_build_table_footer {
     print "</table>\n";
+#    print "</td></tr></table>";
     print "<a href=showbuilds.cgi?tree=$tree&showall=1>Show more checkin history</a><br><br>\n";
 
     if (open(FOOTER, "<$data_dir/footer.html")) {
@@ -405,34 +439,26 @@ sub display_build_table_footer {
 
 
 sub query_ref {
-    local( $td, $mindate, $maxdate, $who ) = @_;
+    my( $td, $mindate, $maxdate, $who ) = @_;
+    my( $output ) = '';
 
-    return "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate&who=$who>";
+    $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate";
+    $output .= "&who=$who" if $who ne '';
+    $output .= ">";
 }
-
-sub query_ref2 {
-    local( $td, $mindate, $maxdate, $who ) = @_;
-    return "../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate&who=$who";
-}
-
 
 sub who_menu {
-    local( $td, $mindate, $maxdate, $who ) = @_;
+    my( $td, $mindate, $maxdate, $who ) = @_;
     my $treeflag;
-    #$qr="../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate&who=$who";
-    my $e = url_encode($who);
-    $qr = "../registry/who.cgi?email=$e"
-        . "&t0=" . &url_encode("What did $who check into the source tree" )
-        . "&u0=" . &url_encode( &query_ref2($td,$mindate,$maxdate,$who) )
-        . "&t1=" . &url_encode("What has $who been checking in in the last day" )
-        . "&u1=" . &url_encode( &query_ref2($td,$mindate,$maxdate,$who) );
 
-    return "<a href='$qr' onClick=\"return js_who_menu($td->{num},'$e',event,$mindate,$maxdate);\" >";
+    $qr = "http:// checkins for $who";
+
+    return "<a href='$qr' onclick=\"return js_who_menu($td->{num},'$who',event,$mindate,$maxdate);\">";
 }
 
 
 sub tree_open {
-    local($done, $line, $a, $b);
+    my($done, $line, $a, $b);
     open( BID, "<../bonsai/data/$bonsai_tree/batchid") || print "can't open batchid<br>";
     ($a,$b,$bid) = split(/ /,<BID>);
     close( BID );
@@ -454,36 +480,38 @@ sub load_javascript {
 $script_str =<<'ENDJS';
 <script>
 
-
 if( parseInt(navigator.appVersion) < 4 ){
     window.event = 0;
 }
 
-
 function js_who_menu(tree,n,d,mindate,maxdate) {
+    who_link = "../registry/who.cgi?email=" + escape(n)
+        + "&t0=" + escape("Last check-in")
+        + "&u0=" + escape(js_qr(tree,mindate,maxdate,n))
+        + "&t1=" + escape("Check-ins within 24 hours")
+        + "&u1=" + escape(js_qr24(tree,n));
+
     if( parseInt(navigator.appVersion) < 4 ){
-        return true;
+       document.location = who_link;
+       return false;
     }
 
     l = document.layers['popup'];
-    l.src = "../registry/who.cgi?email=" + n  
-        + "&t0=" + escape("Last check-in" )
-        + "&u0=" + escape( js_qr(tree,mindate,maxdate,n) )
-        + "&t1=" + escape("Check-ins within 24 hours" )
-        + "&u1=" + escape( js_qr24(tree,n) );
+    l.src = who_link;
+ENDJS
+    #l.document.write(
+    #    "<table border=1 cellspacing=1><tr><td>" + 
+    #    js_qr(mindate,maxdate,n) + "What did " + n + " <b>check in to the source tree</b>?</a><br>" +
+    #    js_qr24(n) +"What has " + n + " <b>been checking in over the last day</b>?</a> <br>" +
+    #    "<a href=https:#endor.mcom.com/ds/dosearch/endor.mcom.com/uid%3D" +n + "%2Cou%3DPeople%2Co%3DNetscape%20Communications%20Corp.%2Cc%3DUS>" +
+    #        "Who is <b>" + n + "</b> and how do <b>I wake him/her up</b></a>?<br>" +
+    #    "<a href='mailto:" + n + "?subject=Whats up with...'>Send mail to <b>" + n + "</b></a><br>" +
+    #    "<a href=http:#dome/locator/findUser.cgi?email="+n+">Where is <b>"+n+"'s office?</b></a>" +
+    #    "</tr></table>");
+    #l.document.close();
 
-    //l.document.write(
-    //    "<table border=1 cellspacing=1><tr><td>" + 
-    //    js_qr(mindate,maxdate,n) + "What did " + n + " <b>check in to the source tree</b>?</a><br>" +
-    //    js_qr24(n) +"What has " + n + " <b>been checking in over the last day</b>?</a> <br>" +
-    //    "<a href=https://endor.mcom.com/ds/dosearch/endor.mcom.com/uid%3D" +n + "%2Cou%3DPeople%2Co%3DNetscape%20Communications%20Corp.%2Cc%3DUS>" +
-    //        "Who is <b>" + n + "</b> and how do <b>I wake him/her up</b></a>?<br>" +
-    //    "<a href='mailto:" + n + "?subject=Whats up with...'>Send mail to <b>" + n + "</b></a><br>" +
-    //    "<a href=http://dome/locator/findUser.cgi?email="+n+">Where is <b>"+n+"'s office?</b></a>" +
-    //    "</tr></table>");
-    //l.document.close();
-
-    //alert( d.y );
+    #alert( d.y );
+$script_str .=<<'ENDJS';
     l.top = d.target.y - 6;
     l.left = d.target.x - 6;
     if( l.left + l.clipWidth > window.width ){
@@ -507,13 +535,11 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
 
     l.top = d.y-10;
     zz = d.x;
-    //alert( l.clip.right+ " " + (window.innerWidth -30) );
     if( zz + l.clip.right > window.innerWidth ){
         zz = (window.innerWidth-30) - l.clip.right;
         if( zz < 0 ){
             zz = 0;
         }
-        
     }
     l.left = zz;
     l.visibility="show";
@@ -531,14 +557,26 @@ note_array = new Array();
 </layer>
 
 <SCRIPT>
-function log_popup(e,tree,platform,brieflogurl,fulllogurl,commenturl) {
+function log_popup(e,buildindex,logfile,buildtime)
+{
+    tree = eval("tree_b" + buildindex);
+    buildname = eval("name_b" + buildindex);
+    errorparser = eval("error_b" + buildindex);
+
+    urlparams = "tree=" + tree
+           + "&errorparser=" + errorparser
+	   + "&buildname=" + escape(buildname)
+           + "&buildtime=" + buildtime
+           + "&logfile=" + logfile;
+    logurl = "showlog.cgi?" + urlparams;
+    commenturl = "addnote.cgi?" + urlparams;
 
     if( parseInt(navigator.appVersion) < 4 ){
-        return true;
+      document.location = logurl;
+      return false;
     }
 
     q = document.layers["logpopup"];
-
     q.top = e.target.y - 6;
 
     yy = e.target.x;
@@ -547,29 +585,19 @@ function log_popup(e,tree,platform,brieflogurl,fulllogurl,commenturl) {
         if( yy < 0 ){
             yy = 0;
         }
-    
     }
-
     q.left = yy;
-
-
-//    q.left = e.target.x - 6;
-//    if( q.left + q.clipWidth > window.width ){
-//        q.left = window.width - q.clipWidth;
-//    }
-
     q.visibility="show"; 
-    q.document.write("<TABLE BORDER=1><TR><TD><B>" + platform + "--" + tree + "</B><BR>" +
-        "<A HREF=\"" + brieflogurl + "\">View Brief Log</A><BR>" +
-        "<A HREF=\"" + fulllogurl + "\">View Full Log</A><BR>" +
-        "<A HREF=\"" + commenturl + "\">Add a Comment this Log</A><BR>" +
+    q.document.write("<TABLE BORDER=1><TR><TD><B>" + 
+        buildname + "</B><BR>" +
+        "<A HREF=\"" + logurl + "\">View Brief Log</A><BR>" +
+        "<A HREF=\"" + logurl + "&fulltext=1" + "\">View Full Log</A><BR>" +
+        "<A HREF=\"" + commenturl + "\">Add a Comment</A><BR>" +
 	"</TD></TR></TABLE>");
     q.document.close();
     return false;
 }
-
 </SCRIPT>
-
 ENDJS
 
 $script_str .= "
@@ -607,6 +635,20 @@ while( $i < @note_array ){
     $script_str .= "note_array[$i] = \"$s\";\n";
     $i++;
 }
+
+$ii = 1;
+while ($ii <= $name_count) {
+  if (defined($br = $build_table->[1][$ii])) {
+    if ($br != -1) {
+      $bn = $build_name_names->[$ii];
+      $script_str .= "tree_b${ii}='$br->{td}{name}';\n";
+      $script_str .= " name_b${ii}='$bn';\n";
+      $script_str .= "  error_b${ii}='$br->{errorparser}';\n";
+    }
+  }
+  $ii++;
+}
+
 
 $script_str .= "</script>\n";
 
