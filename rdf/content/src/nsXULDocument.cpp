@@ -2321,6 +2321,10 @@ XULDocumentImpl::GetRdf(nsIRDFService** aRDFService)
 NS_IMETHODIMP
 XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
+    NS_PRECONDITION(mRootContent != nsnull, "document contains no content");
+    if (! mRootContent)
+        return NS_ERROR_NOT_INITIALIZED; // XXX right error code?
+
     nsresult rv;
 
     nsAutoString uri(aId);
