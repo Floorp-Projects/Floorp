@@ -303,7 +303,7 @@ LocalStoreImpl::Refresh(PRBool sync)
 	{
 		rv = remote->Refresh(sync);
 	}
-	return(rv);
+	return NS_OK; // XXX Always return OK, even if we couldn't load the file.
 }
 
 nsresult
