@@ -374,7 +374,7 @@ nsSupportsHashtable::~nsSupportsHashtable()
 void*
 nsSupportsHashtable::Put(nsHashKey *aKey, void *aData)
 {
-    nsISupports* element = NS_STATIC_CAST(nsISupports*, aData);
+    nsISupports* element = NS_REINTERPRET_CAST(nsISupports*, aData);
     NS_IF_ADDREF(element);
     return nsHashtable::Put(aKey, aData);
 }
@@ -385,7 +385,7 @@ nsSupportsHashtable::Get(nsHashKey *aKey)
     void* data = nsHashtable::Get(aKey);
     if (!data)
         return nsnull;
-    nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
+    nsISupports* element = NS_REINTERPRET_CAST(nsISupports*, data);
     NS_IF_ADDREF(element);
     return data;
 }
