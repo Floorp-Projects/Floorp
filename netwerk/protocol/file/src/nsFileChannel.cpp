@@ -223,12 +223,18 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
-    return mFileTransport->OpenInputStream(startPosition, readCount, result);
+    rv = mFileTransport->OpenInputStream(startPosition, readCount, result);
+  done:
+    if (NS_FAILED(rv)) {
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -243,12 +249,18 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
-    return mFileTransport->OpenOutputStream(startPosition, result);
+    rv = mFileTransport->OpenOutputStream(startPosition, result);
+  done:
+    if (NS_FAILED(rv)) {
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -293,12 +305,18 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
-    return mFileTransport->AsyncRead(startPosition, readCount, ctxt, tempListener);
+    rv = mFileTransport->AsyncRead(startPosition, readCount, ctxt, tempListener);
+  done:
+    if (NS_FAILED(rv)) {
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -316,12 +334,18 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
-    return mFileTransport->AsyncWrite(fromStream, startPosition, writeCount, ctxt, observer);
+    rv = mFileTransport->AsyncWrite(fromStream, startPosition, writeCount, ctxt, observer);
+  done:
+    if (NS_FAILED(rv)) {
+        // release the transport so that we don't think we're in progress
+        mFileTransport = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
