@@ -302,6 +302,248 @@ static nsresult HasSimpleValue(nsISchemaType * aSchemaType, PRBool * aResult) {
   return NS_OK;
 }
 
+//  Getting the immediate supertype of any type
+static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, nsISchemaType** _retval)
+{
+  PRUint16 typevalue;
+  nsresult rc = aType->GetSchemaType(&typevalue);
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr<nsISchemaType> base;
+  nsAutoString name;
+  switch (typevalue) {
+    case nsISchemaType::SCHEMA_TYPE_COMPLEX:
+    {
+      nsCOMPtr < nsISchemaComplexType > type =
+        do_QueryInterface(aType);
+      rc = type->GetBaseType(getter_AddRefs(base));
+      if (NS_FAILED(rc))
+        return rc;
+      break;
+    }
+    case nsISchemaType::SCHEMA_TYPE_SIMPLE:
+    {
+      nsCOMPtr < nsISchemaSimpleType > type =
+        do_QueryInterface(aType);
+      PRUint16 simpletypevalue;
+      rc = type->GetSimpleType(&simpletypevalue);
+      if (NS_FAILED(rc))
+        return rc;
+      switch (simpletypevalue) {
+        //  Ultimately, this is wrong because in XML types are value spaces
+        //  We have not handled unions and lists.
+        //  A union might be considered a supertype of anything it joins
+        //  but it is the supertype of all types with value spaces it includes.
+        //  SOAP is an attempt to treat XML types as though they were
+        //  data types, which are governed by labels instead of value spaces.
+        //  So two unrelated values may coexist, but we will disallow it
+        //  because the caller probably wants type guarantees, not value
+        //  guarantees.
+        case nsISchemaSimpleType::SIMPLE_TYPE_RESTRICTION:
+        {
+          nsCOMPtr < nsISchemaRestrictionType > simpletype =
+            do_QueryInterface(type);
+          nsCOMPtr < nsISchemaSimpleType > simplebasetype;
+          rc = simpletype->GetBaseType(getter_AddRefs(simplebasetype));
+          if (NS_FAILED(rc))
+            return rc;
+          base = simplebasetype;
+          break;
+        }
+        case nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN:
+        {
+          nsCOMPtr < nsISchemaBuiltinType > builtintype = 
+            do_QueryInterface(type);
+          PRUint16 builtintypevalue;
+          rc = builtintype->GetBuiltinType(&builtintypevalue);
+          if (NS_FAILED(rc))
+            return rc;
+          switch(builtintypevalue) {
+            case nsISchemaBuiltinType::BUILTIN_TYPE_ANYTYPE:  //  Root of all types
+              *_retval = nsnull;
+              return NS_OK;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_STRING:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING:
+              name = kStringSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN:
+              name = kNormalizedStringSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_BYTE:
+              name = kShortSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE:
+              name = kUnsignedShortSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER:
+              name = kDecimalSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER:
+              name = kNonNegativeIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER:
+              name = kNonPositiveIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER:
+              name = kIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER:
+              name = kIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_INT:
+              name = kLongSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT:
+              name = kUnsignedLongSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_LONG:
+              name = kIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG:
+              name = kNonNegativeIntegerSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_SHORT:
+              name = kIntSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT:
+              name = kUnsignedIntSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_TIME:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_DURATION:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_DATE:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_GDAY:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NAME:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NCNAME:
+              name = kNameSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE:
+              name = kTokenSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_ID:
+              name = kNCNameSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_IDREF:
+              name = kNCNameSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_IDREFS:
+              name = kNormalizedStringSchemaType;  //  Really a list...
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITY:
+              name = kNCNameSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_ENTITIES:
+              name = kNormalizedStringSchemaType;  //  Really a list...
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NOTATION:
+//              name = kAnySimpleTypeSchemaType;
+              name = kAnyTypeSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKEN:
+              name = kTokenSchemaType;
+              break;
+            case nsISchemaBuiltinType::BUILTIN_TYPE_NMTOKENS:
+              name = kNormalizedStringSchemaType;  //  Really a list...
+              break;
+          }
+        }
+      }
+    }
+  }
+  if (!base) {
+    if (name.IsEmpty()) {
+      switch (typevalue) {
+        case nsISchemaType::SCHEMA_TYPE_COMPLEX:
+          name = kAnyTypeSchemaType;
+          break;
+        default:
+//          name = kAnySimpleTypeSchemaType;
+          name = kAnyTypeSchemaType;
+      }
+    }
+    nsCOMPtr<nsISchemaCollection> collection;
+    rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
+    if (NS_FAILED(rc))
+      return rc;
+    rc = collection->GetType(name,
+                             nsSOAPUtils::kXSURI,
+                             getter_AddRefs(base));
+//    if (NS_FAILED(rc)) return rc;
+  }
+  *_retval = base;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
 //  Default
 
 NS_IMETHODIMP
@@ -350,27 +592,11 @@ NS_IMETHODIMP
         return rc;
       if (encoder)
         break;
-      PRUint16 typevalue;
-      rc = lookupType->GetSchemaType(&typevalue);
+      nsCOMPtr<nsISchemaType> supertype;
+      rc = GetSupertype(aEncoding, lookupType, getter_AddRefs(supertype));
       if (NS_FAILED(rc))
         return rc;
-      if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-        nsCOMPtr < nsISchemaComplexType > oldtype =
-            do_QueryInterface(lookupType);
-        oldtype->GetBaseType(getter_AddRefs(lookupType));
-      } else if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
-        nsCOMPtr < nsISchemaRestrictionType > oldtype =  //  We should check another type code, but it is too cumbersome
-            do_QueryInterface(lookupType);
-        if (oldtype) {
-          nsCOMPtr < nsISchemaSimpleType > newtype;
-          oldtype->GetBaseType(getter_AddRefs(newtype));
-          lookupType = newtype;
-        }
-        else
-          break;
-      } else {
-        break;
-      }
+      lookupType = supertype;
     }
     while (lookupType);
   }
@@ -1642,10 +1868,6 @@ NS_IMETHODIMP
         if (lookupType == type) {  //  Tick off the located super classes
           type = nsnull;
         }
-        PRUint16 typevalue;
-        rc = lookupType->GetSchemaType(&typevalue);
-        if (NS_FAILED(rc))
-          return rc;
         if (!decoder) {
           nsAutoString schemaType;
           nsAutoString schemaURI;
@@ -1661,24 +1883,11 @@ NS_IMETHODIMP
           if (NS_FAILED(rc))
             return rc;
         }
-        if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-          nsCOMPtr < nsISchemaComplexType > oldType =
-              do_QueryInterface(lookupType);
-          oldType->GetBaseType(getter_AddRefs(lookupType));
-        }
-        else if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
-          nsCOMPtr < nsISchemaRestrictionType > oldtype =  //  We should check another type code, but it is too cumbersome
-              do_QueryInterface(lookupType);
-          if (oldtype) {
-            nsCOMPtr < nsISchemaSimpleType > newtype;
-            oldtype->GetBaseType(getter_AddRefs(newtype));
-            lookupType = newtype;
-          }
-          else
-            break;
-        } else {
-          break;
-        }
+        nsCOMPtr<nsISchemaType> supertype;
+        rc = GetSupertype(aEncoding, lookupType, getter_AddRefs(supertype));
+        if (NS_FAILED(rc))
+          return rc;
+        lookupType = supertype;
       } while (lookupType);
       if (type || subType)  //  If the proper subclass relationships didn't exist, then error return.
         return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_TYPE_SUBCLASS","The type of the element or xsi:type must be a subclass of the required type.");
@@ -2261,7 +2470,7 @@ NS_IMETHODIMP
       if (NS_FAILED(rc))
         return rc;
 //  I believe we still have problem with dual class hierarchies.
-//      rc = ct->GetArrayType(getter_AddRefs(schemaArrayType));
+      rc = ct->GetArrayType(getter_AddRefs(schemaArrayType));
       if (NS_FAILED(rc))
         return rc;
     }
@@ -2333,28 +2542,11 @@ NS_IMETHODIMP
             schemaArrayType = nsnull;
             break;
           }
-          PRUint16 typevalue;
-          rc = lookupType->GetSchemaType(&typevalue);
+          nsCOMPtr<nsISchemaType> supertype;
+          rc = GetSupertype(aEncoding, lookupType, getter_AddRefs(supertype));
           if (NS_FAILED(rc))
             return rc;
-          if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-            nsCOMPtr < nsISchemaComplexType > oldType =
-                do_QueryInterface(lookupType);
-            oldType->GetBaseType(getter_AddRefs(lookupType));
-          }
-          else if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
-            nsCOMPtr < nsISchemaRestrictionType > oldtype =  //  We should check another type code, but it is too cumbersome
-                do_QueryInterface(lookupType);
-            if (oldtype) {
-              nsCOMPtr < nsISchemaSimpleType > newtype;
-              oldtype->GetBaseType(getter_AddRefs(newtype));
-              lookupType = newtype;
-            }
-            else
-              break;
-          } else {
-            break;
-          }
+          lookupType = supertype;
         } while (lookupType);
       }
       if (schemaArrayType)  //  If the proper subclass relationship didn't exist, then error return.
