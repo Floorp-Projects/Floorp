@@ -6002,10 +6002,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
       rv = ConstructFrame(aPresContext, state, aChild, parentFrame, frameItems);
 
-      // Perform special check for diddling around with the frames in
-      // a special inline frame.
-      if (WipeContainingBlock(aPresContext, state, blockContent, parentFrame, frameItems.childList)) {
-        return NS_OK;
+      // XXX Bug 19949
+      // Although select frame are inline we do not want to call
+      // WipeContainingBlock because it will throw away the entire select frame and 
+      // start over which is something we do not want to do
+      //
+      nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(aContainer));
+      if (!selectContent) {
+        // Perform special check for diddling around with the frames in
+        // a special inline frame.
+        if (WipeContainingBlock(aPresContext, state, blockContent, parentFrame, frameItems.childList)) {
+          return NS_OK;
+        }
       }
 
       if (haveFirstLineStyle) {
