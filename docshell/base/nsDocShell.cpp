@@ -179,7 +179,7 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
+   NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(NS_STATIC_CAST(nsIContentViewerContainer*, this),
                                                           doc,
                                                           "view",
                                                           getter_AddRefs(documentViewer)),
@@ -204,7 +204,8 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
    // (4) fire start document load notification
    nsCOMPtr<nsIStreamListener> outStreamListener;
-   NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, 
+   NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, 
+      NS_STATIC_CAST(nsIContentViewerContainer*, this), 
       getter_AddRefs(outStreamListener)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 
@@ -1758,7 +1759,7 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
    nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
    // Now create an instance of the content viewer
    NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(aCommand, aOpenedChannel,
-      loadGroup, aContentType, this /* this should become nsIDocShell*/,
+      loadGroup, aContentType, NS_STATIC_CAST(nsIContentViewerContainer*, this),
       nsnull /*XXXQ Need ExtraInfo???*/,
       aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
 
