@@ -3,9 +3,9 @@
 
 <!DOCTYPE window> 
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
-			xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			xul:onConstruction="Startup()"> 
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+			  onConstruction="Startup()"> 
 
   <html:style>
       #header {
@@ -70,18 +70,6 @@
     }
 	}
 
-  function DoDisableButtons()
-  {
-    // Find buttons in the UI and disable them
-    dump("Browser disabling buttons\n");
-  }
-
-  function DoEnableButtons()
-  {
-    // Find buttons in the UI and enable them
-    dump("Browser enabling buttons\n");
-  }
-
   function EditorBold()
   {
     appCore = XPAppCoresManager.Find("EditorAppCore");  
@@ -93,27 +81,7 @@
     }
   }
 
-  function BrowserForward()
-  {
-    appCore = XPAppCoresManager.Find("EditorAppCore");  
-    if (appCore != null) {
-	    dump("Going Forward\n");
-      appCore.forward();
-    } else {
-      dump("EditorAppCore has not been created!\n");
-    }
-  }
 
-  function EditorNewWindow()
-  {
-    appCore = XPAppCoresManager.Find("EditorAppCore");  
-    if (appCore != null) {
-	    dump("Opening New Window\n");
-      appCore.newWindow();
-    } else {
-      dump("EditorAppCore has not been created!\n");
-    }
-  }
 
   function EditorUndo()
   {
@@ -127,12 +95,7 @@
   }
 
 
-  function BrowserClose()
-  {
-    dump("BrowserClose\n");
-  }
-
-  function BrowserExit()
+  function EditorExit()
   {
     appCore = XPAppCoresManager.Find("EditorAppCore");  
     if (appCore != null) {
@@ -156,138 +119,98 @@
   }
   </html:script>
 
-  <xul:broadcaster id="canGoBack"/>
-  <xul:broadcaster id="canGoForward"/>
-  <xul:broadcaster id="canReload"/>
-  <xul:broadcaster id="canStop"/>
-  <xul:broadcaster id="canPrint"/>
+  <broadcaster id="canGoBack"/>
+  <broadcaster id="canGoForward"/>
+  <broadcaster id="canReload"/>
+  <broadcaster id="canStop"/>
+  <broadcaster id="canPrint"/>
   
-  <xul:menubar>
-    <xul:menu name="File">
-      <xul:menuitem name="New Window" onClick="EditorNewWindow();"/>
-      <xul:menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
-      <xul:separator />
-      <xul:menuitem name="Print Setup" onClick="EditorPrintPreview();"/>
-      <xul:menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
-      <xul:menuitem name="Print" onClick=""/>
-      <xul:separator />
-      <xul:menuitem name="Close" onClick=""/>
-      <xul:menuitem name="Exit" onClick="BrowserExit();"/>
-    </xul:menu>
-    <xul:menu name="Edit">
-      <xul:menuitem name="Undo" onClick="EditorUndo();"/>
-      <xul:separator />
-      <xul:menuitem name="Cut" onClick="EditorCut();"/>
-      <xul:menuitem name="Copy" onClick="EditorCopy();"/>
-      <xul:menuitem name="Paste" onClick="EditorPaste();"/>
-    </xul:menu>
-    <xul:menu name="View">
-      <xul:menuitem name="Hide Composition Toolbar" onClick="BrowserBack();"/>
-      <xul:menuitem name="Hide Format Toolbar" onClick="BrowserForward();" />
-    </xul:menu>
-    <xul:menu name="Insert">
-      <xul:menuitem name="Link..." onClick="MakeDialog();"/>
-      <xul:menuitem name="Target..." onClick="BrowserBack();"/>
-      <xul:menuitem name="Image..." onClick="BrowserBack();"/>
-      <xul:menuitem name="Horizontal Line" onClick="BrowserBack();"/>
-      <xul:menuitem name="Table" onClick="BrowserBack();"/>
-      <xul:menuitem name="HTML Tag..." onClick="BrowserBack();"/>
-      <xul:separator />
-      <xul:menuitem name="Line Break" onClick="BrowserBack();"/>
-      <xul:menuitem name="Break Below Image(s)" onClick="BrowserBack();"/>
-    </xul:menu>
-    <xul:menu name="Format">
-      <xul:menuitem name="Font" onClick="BrowserBack();"/>
-      <xul:menuitem name="Size" onClick="BrowserBack();"/>
-      <xul:menuitem name="Style" onClick="BrowserBack();"/>
-      <xul:menuitem name="Color..." onClick="BrowserBack();"/>
-      <xul:menuitem name="Remove All Style(s)" onClick="BrowserBack();"/>
-      <xul:separator />
-      <xul:menuitem name="Heading" onClick="BrowserBack();"/>
-    </xul:menu>
-    <xul:menu name="Tools">
-      <xul:menuitem name="Spell Check" onClick="BrowserBack();"/>
-    </xul:menu>
-    <xul:menu name="Communicator">
-      <xul:menuitem name="Navigator" onClick="BrowserBack();"/>
-    </xul:menu>
-    <xul:menu name="Help">
-      <xul:menuitem name="About" onClick="BrowserBack();"/>
-    </xul:menu>
+  <menubar>
+    <menu name="File">
+      <menuitem name="New Window" onClick="EditorUndo();"/>
+      <menuitem name="Change Icons" onClick="EditorUndo();"/>
+      <separator />
+      <menuitem name="Print Setup" onClick="EditorPrintPreview();"/>
+      <menuitem name="Print Preview" onClick="EditorPrintPreview();"/>
+      <menuitem name="Print" onClick=""/>
+      <separator />
+      <menuitem name="Close" onClick=""/>
+      <menuitem name="Exit" onClick="EditorExit();"/>
+    </menu>
+    <menu name="Edit">
+      <menuitem name="Undo" onClick="EditorUndo();"/>
+      <separator />
+      <menuitem name="Cut" onClick="EditorCut();"/>
+      <menuitem name="Copy" onClick="EditorCopy();"/>
+      <menuitem name="Paste" onClick="EditorPaste();"/>
+    </menu>
+    <menu name="View">
+      <menuitem name="Hide Composition Toolbar" onClick="EditorUndo();"/>
+      <menuitem name="Hide Format Toolbar" onClick="BrowserForward();" />
+    </menu>
+    <menu name="Insert">
+      <menuitem name="Link..." onClick="EditorUndo();"/>
+      <menuitem name="Target..." onClick="EditorUndo();"/>
+      <menuitem name="Image..." onClick="EditorUndo();"/>
+      <menuitem name="Horizontal Line" onClick="EditorUndo();"/>
+      <menuitem name="Table" onClick="EditorUndo();"/>
+      <menuitem name="HTML Tag..." onClick="EditorUndo();"/>
+      <separator />
+      <menuitem name="Line Break" onClick="EditorUndo();"/>
+      <menuitem name="Break Below Image(s)" onClick="EditorUndo();"/>
+    </menu>
+    <menu name="Format">
+      <menuitem name="Font" onClick="EditorUndo();"/>
+      <menuitem name="Size" onClick="EditorUndo();"/>
+      <menuitem name="Style" onClick="EditorUndo();"/>
+      <menuitem name="Color..." onClick="EditorUndo();"/>
+      <menuitem name="Remove All Style(s)" onClick="EditorUndo();"/>
+      <separator />
+      <menuitem name="Heading" onClick="EditorUndo();"/>
+    </menu>
+    <menu name="Tools">
+      <menuitem name="Spell Check" onClick="EditorUndo();"/>
+    </menu>
+    <menu name="Communicator">
+      <menuitem name="Navigator" onClick="EditorUndo();"/>
+    </menu>
+    <menu name="Help">
+      <menuitem name="About" onClick="EditorUndo();"/>
+    </menu>
 
-  </xul:menubar>
+  </menubar>
   
   <html:div html:id="header">
-  <xul:toolbox>
+  <toolbox>
   
-    <xul:toolbar>
-          <html:button id="cut" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Cut.gif"/>
-          </html:button>
-          <html:button id="copy" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Copy.gif"/>
-          </html:button>
-          <html:button id="paste" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Paste.gif"/>
-          </html:button>
-          <html:button id="Find" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Find.gif"/>
-          </html:button>
-          <html:button id="link" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Link.gif"/>
-          </html:button>
-          <html:button id="target" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Target.gif"/>
-          </html:button>
-          <html:button id="image" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Image.gif"/>
-          </html:button>
-          <html:button id="hline" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_HLine.gif"/>
-          </html:button>
-          <html:button id="table" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Table.gif"/>
-          </html:button>
-          <html:button id="spell" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Spell.gif"/>
-          </html:button>
-    </xul:toolbar>
+    <toolbar>
+	    <titledbutton src="resource:/res/toolbar/ED_Cut.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Copy.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Paste.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Find.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Link.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Target.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Image.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_HLine.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Table.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Spell.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+    </toolbar>
 
-    <xul:toolbar>
-          <html:button id="undo" onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Undo.gif"/>
-          </html:button>
-          <html:button id="bold" onClick="EditorBold()">
-            <html:img src="resource:/res/toolbar/ED_Bold.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Underline.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Indent.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Dedent.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Bullets.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Numbers.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Left.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Center.gif"/>
-          </html:button>
-          <html:button onClick="EditorUndo()">
-            <html:img src="resource:/res/toolbar/ED_Right.gif"/>
-          </html:button>
-    </xul:toolbar>
+    <toolbar>
+	    <titledbutton src="resource:/res/toolbar/ED_Undo.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Bold.gif" align="bottom" value="" onClick="EditorBold()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Underline.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Indent.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Dedent.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Bullets.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Numbers.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Left.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Center.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Right.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+    </toolbar>
 
     
-  </xul:toolbox>
+  </toolbox>
   </html:div>
 
   <html:div html:id="main">
@@ -298,6 +221,6 @@
      <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
   </html:div>
 
-</xul:window>
+</window>
 
 
