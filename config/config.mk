@@ -434,8 +434,6 @@ endif
 endif
 endif
 
-MKDEPENDENCIES	= depend.mk
-
 endif
 
 #

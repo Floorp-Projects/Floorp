@@ -3495,7 +3495,14 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
 fi
 
 dnl ========================================================
+dnl Determine how to handle dependencies
+dnl ========================================================
+MOZ_AUTO_DEPS=1
+MOZ_ARG_DISABLE_BOOL(auto-deps,
+[  --disable-auto-deps     Do not automatically generate dependency info],
+    MOZ_AUTO_DEPS=)
 
+if test -n "$MOZ_AUTO_DEPS"; then
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
 [  --disable-md            Do not use compiler-based dependencies ],
@@ -3509,9 +3516,12 @@ if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
   _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
 fi
+fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
+AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+
 
 MOZ_ARG_DISABLE_BOOL(pedantic,
 [  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],

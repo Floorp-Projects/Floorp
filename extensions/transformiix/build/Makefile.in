@@ -35,7 +35,7 @@ IS_COMPONENT	= 1
 
 
 CPPSRCS = XSLTProcessorModule.cpp
-OBJS =../source/base/ArrayList.o \
+LOBJS =../source/base/ArrayList.o \
   ../source/base/DefaultStringComparator.o \
   ../source/base/Double.o \
   ../source/base/Integer.o \
@@ -123,7 +123,7 @@ OBJS =../source/base/ArrayList.o \
   ../source/xslt/functions/SystemPropertyFunctionCall.o \
   ../source/xslt/util/NodeSorter.o \
   ../source/xslt/util/NodeStack.o \
-  XSLTProcessorModule.o
+  $(NULL)
 
 EXTRA_DSO_LDOPTS += \
   $(MOZ_COMPONENT_LIBS) \

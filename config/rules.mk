@@ -194,6 +194,12 @@ LIBOBJS			:= $(addprefix \", $(OBJS))
 LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
 endif
 
+ifndef MOZ_AUTO_DEPS
+ifneq (,$(OBJS))
+MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
+endif
+endif
+
 ifndef PACKAGE
 PACKAGE			= .
 endif
@@ -416,7 +422,7 @@ endif
 all:: export install
 
 # Do depend as well
-alldep:: export install
+alldep:: export depend install
 
 # Do everything from scratch
 everything:: clean alldep
@@ -799,29 +805,31 @@ $(DLL): $(OBJS) $(EXTRA_LIBS)
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 
+ifdef MOZ_AUTO_DEPS
 ifndef COMPILER_DEPEND
 #
 # Generate dependencies on the fly
 #
-MDDEPFILE = $(MDDEPDIR)/$(<F).pp
+_MDDEPFILE = $(MDDEPDIR)/$(<F).pp
 
-define MAKE_DEPS
+define MAKE_DEPS_AUTO
 if test -d $(@D); then \
 	set -e ; \
-	touch $(MDDEPFILE) && \
-	$(MKDEPEND) -o'.o' -f$(MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
-	mv $(MDDEPFILE) $(MDDEPFILE).old && \
-	cat $(MDDEPFILE).old | sed -e "s|^$(<D)/||g" > $(MDDEPFILE) && rm -f $(MDDEPFILE).old ; \
-	echo "Rebuilding deps for $<"; \
+	touch $(_MDDEPFILE) && \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
+	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(<D)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	echo "Building deps for $<"; \
 fi
-# | sed -e 's%\($*\)\.o[ :]*%\1.o $(MDDEPFILE) : %g' 
 endef
 
 endif # !COMPILER_DEPEND
 
+endif # MOZ_AUTO_DEPS
+
 %: %.c Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -830,7 +838,7 @@ endif
 
 %.o: %.c Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
 else
@@ -853,7 +861,7 @@ moc_%.cpp: %.h Makefile.in
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %: %.cpp Makefile.in
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
@@ -861,12 +869,12 @@ moc_%.cpp: %.h Makefile.in
 #
 %.o: %.cc Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
 %.o: %.cpp Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
@@ -1262,7 +1270,7 @@ endif
 endif
 
 #############################################################################
-# X dependency system
+# Dependency system
 #############################################################################
 ifdef COMPILER_DEPEND
 depend::
@@ -1271,7 +1279,7 @@ depend::
 ifeq ($(GNU_CC)$(GNU_CXX),)
 # Non-GNU compilers
 	@echo "`echo '$(MAKE):'|sed 's/./ /g'`"\
-	'(Compiler-based depend was turned on by "--enable-depend".)' 1>&2
+	'(Compiler-based depend was turned on by "--enable-md".)' 1>&2
 else
 # GNU compilers
 	@space="`echo '$(MAKE): '|sed 's/./ /g'`";\
@@ -1279,7 +1287,8 @@ else
 		it is on by default.' 1>&2; \
 	echo "$$space"'To turn it off, pass --disable-md to configure.' 1>&2
 endif
-else
+
+else # ! COMPILER_DEPEND
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND_BUILTIN):
@@ -1287,7 +1296,36 @@ $(MKDEPEND_BUILTIN):
 	$(MAKE) -C $(MKDEPEND_DIR) mkdepend
 endif
 
-endif # ! COMPILER_DEPEND
+ifndef MOZ_AUTO_DEPS
+
+define MAKE_DEPS_NOAUTO
+	set -e ; \
+	touch $@ && \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
+	mv $@ $@.old && cat $@.old | sed "s|^$(<D)/||g" > $@ && rm -f $@.old
+endef
+
+$(MDDEPDIR)/%.pp: %.c
+	$(MAKE_DEPS_NOAUTO)
+
+$(MDDEPDIR)/%.pp: %.cpp
+	$(MAKE_DEPS_NOAUTO)
+
+ifneq (,$(OBJS))
+depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MDDEPFILES)
+else
+depend:: $(SUBMAKEFILES)
+endif
+	+$(LOOP_OVER_DIRS)
+
+dependclean:: $(SUBMAKEFILES)
+	rm -f $(MDDEPFILES)
+	+$(LOOP_OVER_DIRS)
+
+endif # MOZ_AUTO_DEPS
+
+endif # COMPILER_DEPEND
+
 
 #############################################################################
 # MDDEPDIR is the subdirectory where all the dependency files are placed.
