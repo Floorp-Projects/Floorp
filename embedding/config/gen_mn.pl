@@ -4,16 +4,28 @@
 # Rest of program
 
 # get requirements from the same dir as the script
-use FindBin;
+if ($^O ne "cygwin") {
+# we'll be pulling in some stuff from the script directory
+require FindBin;
+import FindBin;
 push @INC, $FindBin::Bin;
+}
 
 require GenerateManifest;
 import GenerateManifest;
 use Getopt::Long;
 
 # Configuration
-$win32 = ($^O eq "MSWin32") ? 1 : 0; # ActiveState Perl
-$darwin = ($^O eq "darwin") ? 1 : 0; # MacOSX
+$win32 = 0;
+$darwin = 0;
+for ($^O) {
+  if (/((MS)?win32)|cygwin/i) {
+    $win32 = 1;
+  }
+  elsif (/darwin/i) {
+    $darwin = 1;
+  }
+}
 if ($win32) {
   $moz = "$ENV{'MOZ_SRC'}/mozilla";
   if ($ENV{'MOZ_DEBUG'}) {
