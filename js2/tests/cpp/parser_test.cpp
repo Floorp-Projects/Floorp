@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -77,7 +77,7 @@ static bool promptLine(LineReader &inReader, string &s, const char *prompt)
     return inReader.readLine(s) != 0;
 }
 
-static void readEvalPrint(FILE *in, World &world)
+static void readEvalPrint(FILE *in, World &world, Pragma::Flags flags)
 {
     String buffer;
     string line;
@@ -87,7 +87,7 @@ static void readEvalPrint(FILE *in, World &world)
         appendChars(buffer, line.data(), line.size());
         try {
             Arena a;
-            Parser p(world, a, buffer, consoleName);
+            Parser p(world, a, flags, buffer, consoleName);
                 
             if (showTokens) {
                 Lexer &l = p.lexer;
@@ -140,7 +140,7 @@ int main(int , char **)
 {
 #endif
 
-    readEvalPrint(stdin, world);
+    readEvalPrint(stdin, world, Pragma::js2);
     
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
