@@ -28,6 +28,9 @@
 #include "nsString.h"
 #include "nsIDOMMsgAppCore.h"
 #include "nsIDOMWindow.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsRepository.h"
+#include "nsDOMCID.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -317,19 +320,58 @@ static JSFunctionSpec MsgAppCoreMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_FALSE;
-}
+  nsresult result;
+  nsIID classID;
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsIScriptNameSpaceManager* manager;
+  nsIDOMMsgAppCore *nativeThis;
+  nsIScriptObjectOwner *owner = nsnull;
 
+  static NS_DEFINE_IID(kIDOMMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
+
+  result = context->GetNameSpaceManager(&manager);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = manager->LookupName("MsgAppCore", PR_TRUE, classID);
+  NS_RELEASE(manager);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = nsRepository::CreateInstance(classID,
+                                        nsnull,
+                                        kIDOMMsgAppCoreIID,
+                                        (void **)&nativeThis);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  // XXX We should be calling Init() on the instance
+
+  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  owner->SetScriptObject((void *)obj);
+  JS_SetPrivate(cx, obj, nativeThis);
+
+  NS_RELEASE(owner);
+  return JS_TRUE;
+}
 
 //
 // MsgAppCore class initialization
 //
-nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto)
+nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
   JSObject *constructor = nsnull;
-  JSObject *parent_proto = aParentProto;
+  JSObject *parent_proto = nsnull;
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
@@ -339,12 +381,9 @@ nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, J
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-#if 0
     if (NS_OK != NS_InitBaseAppCoreClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
-#endif
-
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
@@ -401,7 +440,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitMsgAppCoreClass(aContext, (void **)&proto, parent)) {
+  if (NS_OK != NS_InitMsgAppCoreClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
