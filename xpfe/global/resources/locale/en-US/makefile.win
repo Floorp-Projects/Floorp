@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) dialogOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) taskbarOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) taskbar.rdf $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetDetectorsOverlay.dtd $(DISTBROWSER)

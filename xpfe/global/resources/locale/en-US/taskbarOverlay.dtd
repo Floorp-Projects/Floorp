@@ -1,14 +1,8 @@
 <!-- taskbar -->
-<!-- LOCALIZATION NOTE  (mozillaButton.label): DONT_TRANSLATE -->
-<!ENTITY  mozillaButton.label "Mozilla">
 <!-- LOCALIZATION NOTE  (shoppingButton.label): DONT_TRANSLATE -->
 <!ENTITY  shoppingButton.label "Shopping">
 <!ENTITY  entertainment.label "Entertainment">
 <!ENTITY  openWinButton.label "Open Windows">
 <!-- taskbar popups -->
-<!-- LOCALIZATION NOTE  (bugzillaButton.label): Do NOT translate "Bugzilla" -->
-<!ENTITY  bugzillaButton.label "Go to Bugzilla">
 <!-- LOCALIZATION NOTE  (tinderboxButton.label): Do NOT translate "Tinderbox" -->
 <!ENTITY  tinderboxButton.label "Look at Tinderbox">
-<!-- LOCALIZATION NOTE  (bonsai.label): Do NOT translate "Bonsai" -->
-<!ENTITY  bonsai.label "Look at Bonsai">
