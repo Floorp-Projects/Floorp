@@ -24,6 +24,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
+#include "nsIDragSessionMac.h"
 #include "nsGUIEvent.h"
 
 #include <LowMem.h>
@@ -76,39 +77,42 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			
 		case kDragTrackingEnterWindow:
 		{
+			printf("DragTracker :: entering window\n");
+
 			// make sure that the drag session knows about this drag
 			nsIDragService* dragService;
 			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                        					nsIDragService::GetIID(),
       	                            					(nsISupports **)&dragService);
-			if ( NS_SUCCEEDED(rv) && dragService )
+			if ( NS_SUCCEEDED(rv) && dragService ) {
 				dragService->StartDragSession();
+				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(dragService) );
+				printf("enter window, Drag ref is %ld\n", theDrag);
+				if ( macSession )
+					macSession->SetDragReference ( theDrag );
+			}
 			
-			printf("DragTracker :: entering window\n");
+			// let gecko know that the mouse has entered the window so it
+			// can start tracking and sending enter/exit events to frames.
+			Point mouseLocGlobal;
+			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
+			geckoWindow->DragEvent ( NS_DRAGDROP_ENTER, mouseLocGlobal, 0L );			
 			break;
 		}
 		
 		case kDragTrackingInWindow:
 		{
-			printf("DragTracker :: tracking window\n");
-
-			// Make into an nsGUIEvent and pass through. This reqires synthesizing
-			// an EventRecord for a mouseMoved event.
-			EventRecord theEvent;
-			theEvent.what = osEvt;
-			theEvent.message = mouseMovedMessage << 24;
-			theEvent.when = ::TickCount();
-			::GetDragMouse ( theDrag, &theEvent.where, nsnull );
+			Point mouseLocGlobal;
+			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
 			short modifiers;
 			::GetDragModifiers ( theDrag, &modifiers, nsnull, nsnull );
-			theEvent.modifiers = modifiers;
 			
 			//¥¥¥set the drag action so the frames know
-			PRInt32 geckoEvent;
+			//PRInt32 geckoEvent;
 			//ComputeDragActionBasedOnModifiers ( modifiers, &geckoEvent );
 			
 			// pass into gecko for handling...
-			geckoWindow->HandleOSEvent ( theEvent );
+			geckoWindow->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal, modifiers );
 			break;
 		}
 		
@@ -120,10 +124,23 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                        					nsIDragService::GetIID(),
       	                            					(nsISupports **)&dragService);
-			if ( NS_SUCCEEDED(rv) && dragService )
+			if ( NS_SUCCEEDED(rv) && dragService ) {
 				dragService->EndDragSession();
+				
+				// clear out the dragRef in the drag session. We are guaranteed that
+				// this will be called _after_ the drop has been processed (if there
+				// is one), so we're not destroying valuable information if the drop
+				// was in our window.
+				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(dragService) );
+				if ( macSession )
+					macSession->SetDragReference ( 0 );
+			}
 			
-			//¥¥¥ do I need to send a drag leave event here?
+			// let gecko know that the mouse has left the window so it
+			// can stop tracking and sending enter/exit events to frames.
+			Point mouseLocGlobal;
+			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
+			geckoWindow->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal, 0L );
 			
 			::HideDragHilite ( theDrag );
 			break;
@@ -147,14 +164,14 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 		return dragNotAcceptedErr;
 
 	OSErr result = noErr;
-	printf("DragReceiveHandler called. We got a drop!!!!\n");
+	printf("DragReceiveHandler called. We got a drop!!!!, DragRef is %ld\n", theDragRef);
 
 	// pass the drop event along to Gecko
 	Point mouseLocGlobal;
 	::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
 	short modifiers;
 	::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
-	geckoWindow->DropOccurred ( mouseLocGlobal, modifiers );
+	geckoWindow->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal, modifiers );
 	
 	// once the event has gone to gecko, check the "canDrop" state in the 
 	// drag session to see what we should return to the OS (drag accepted or not).
@@ -582,16 +599,19 @@ PRBool nsMacWindow::HandleMenuCommand ( EventRecord& aOSEvent, long aMenuResult 
 }
 
 //-------------------------------------------------------------------------
-// Pass notification of drop to Gecko
+// Pass notification of some drag event to Gecko
 //
-// The drag manager has let us know that a drop happened in this window.
-// Pass it along to our event hanlder so Gecko knows about it.
+// The drag manager has let us know that something related to a drag has
+// occurred in this window. It could be any number of things, ranging from 
+// a drop, to a drag enter/leave, or a drag over event. The actual event
+// is passed in |aMessage| and is passed along to our event hanlder so Gecko
+// knows about it.
 //-------------------------------------------------------------------------
-PRBool nsMacWindow::DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers )
+PRBool nsMacWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
 	PRBool retVal;
 	if (mMacEventHandler.get())
-		retVal = mMacEventHandler->DropOccurred(aMouseGlobal, aKeyModifiers);
+		retVal = mMacEventHandler->DragEvent(aMessage, aMouseGlobal, aKeyModifiers);
 	else
 		retVal = PR_FALSE;
 	return retVal;
