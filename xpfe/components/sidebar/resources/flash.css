@@ -17,5 +17,5 @@ treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > tree
 }
 
 treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > titledbutton {
-  list-style-image: url("resource:/res/rdf/document.gif");
+  list-style-image: url("resource:/res/xpinstall/notification.gif");
 }
