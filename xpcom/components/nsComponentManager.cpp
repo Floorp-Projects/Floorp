@@ -23,6 +23,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsCRT.h"
 #include "nsIEnumerator.h"
+#include "nsIModule.h"
 #include "nsHashtableEnumerator.h"
 #include "nsISupportsPrimitives.h"
 
@@ -1081,22 +1082,37 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     // new library can be traced.
     nsTraceRefcnt::LoadLibrarySymbols(aEntry->dll->GetNativePath(), aEntry->dll->GetInstance());
 #endif
+    nsIServiceManager* serviceMgr = NULL;
+    nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    if (NS_FAILED(rv)) return rv;
+
+    // Create the module object and get the factory
+    nsCOMPtr<nsIModule> mobj;
+    rv = aEntry->dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    if (NS_SUCCEEDED(rv))
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+               ("nsComponentManager: %s using nsIModule to get factory.", aEntry->dll->GetNativePath()));
+        rv = mobj->GetFactory(serviceMgr, aEntry->cid, aFactory);
+        return rv;
+    }
+
+#ifndef OBSOLETE_MODULE_LOADING
+    // Try the older OBSOLETE method
     nsFactoryProc proc = (nsFactoryProc) aEntry->dll->FindSymbol("NSGetFactory");
     if (proc != NULL)
     {
         char* className = NULL;
         char* progID = NULL;
-        nsresult rv;
+
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+               ("nsComponentManager: %s using OBSOLETE method NSGetFactory().", aEntry->dll->GetNativePath()));
 
         // XXX dp, warren: deal with this!
 #if 0
         rv = CLSIDToProgID(&aEntry->cid, &className, &progID);
         // if CLSIDToProgID fails, just pass null to NSGetFactory
 #endif
-
-        nsIServiceManager* serviceMgr = NULL;
-        rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-        if (NS_FAILED(rv)) return rv;
 
         rv = proc(serviceMgr, aEntry->cid, className, progID, aFactory);
         if (NS_FAILED(rv)) return rv;
@@ -1107,8 +1123,10 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
             delete[] progID;
         return rv;
     }
+#endif /* OBSOLETE_MODULE_LOADING */
+
     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-           ("nsComponentManager: NSGetFactory entrypoint not found."));
+           ("nsComponentManager: Module entrypoint not found."));
     return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
@@ -1722,33 +1740,66 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     return res;
 }
 
+static nsresult
+nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (!dll || dll->IsLoaded() == PR_FALSE)
+    {
+        return NS_ERROR_INVALID_ARG;
+    }
+    
+    // Get the module object and get the factory
+    nsCOMPtr<nsIModule> mobj;
+    rv = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    if (NS_FAILED(rv))
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+               ("nsComponentManager: Cannot get module object for %s", dll->GetNativePath()));
+        return  rv;
+    }
+
+    for (int trial=0; trial < 2; trial++)
+    {
+        nsrefcnt objsAlive;
+        PRBool canUnload;
+        rv = mobj->CanUnload(serviceMgr, &canUnload, &objsAlive);
+        if (NS_FAILED(rv)) return rv;
+        
+        if (canUnload)
+        {
+            NS_ASSERTION(objsAlive == 0, "Outstanding Object Count not zero before unloading.");
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
+#if 0
+            // XXX dlls aren't counting their outstanding instances correctly
+            // XXX hence, dont unload until this gets enforced.
+            rv = dll->Unload();
+#endif /* 0 */
+            return rv;
+        }
+        else
+        {
+            // XXX see if the factory cache is the only one preventing
+            // XXX the unload.
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: %d objects outstanding for %s",
+                    objsAlive,dll->GetNativePath()));
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: + NOT Unloading %s", dll->GetNativePath()));
+            return NS_ERROR_FAILURE;
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
 static PRBool
 nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure) 
 {
     nsDll *dll = (nsDll *) aData;
     nsIServiceManager* serviceMgr = (nsIServiceManager*)closure;
-    	
-    if (dll && dll->IsLoaded() == PR_TRUE)
-    {
-        nsCanUnloadProc proc = (nsCanUnloadProc) dll->FindSymbol("NSCanUnload");
-        if (proc != NULL) {
-            PRBool canUnload = proc(serviceMgr);
-            if (canUnload == PR_TRUE)
-            {
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                       ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
-#if 0
-                // XXX dlls aren't counting their outstanding instances correctly
-                // XXX hence, dont unload until this gets enforced.
-                dll->Unload();
-#endif /* 0 */
-            }
-            else
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                       ("nsComponentManager: + NOT Unloading \"%s\".", dll->GetNativePath()));
-        }
-    }
-    	
+    nsFreeLibrary(dll, serviceMgr);
     return PR_TRUE;
 }
 
@@ -2027,34 +2078,22 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
         // re-register dll
         if (dll->IsLoaded())
         {
-            // We are screwed. We loaded the old version of the dll
-            // and now we find that the on-disk copy if newer.
-            // The only thing to do would be to ask the dll if it can
-            // unload itself. It can do that if it hasn't created objects
-            // yet.
-            nsCanUnloadProc proc = (nsCanUnloadProc)
-                dll->FindSymbol("NSCanUnload");
-            if (proc != NULL)
+            // We loaded the old version of the dll and now we find that the
+            // on-disk copy if newer. Try to unload the dll.
+            nsIServiceManager* serviceMgr = NULL;
+            nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+            // if getting the serviceMgr failed, we can still pass NULL to FreeLibraries
+            rv = nsFreeLibrary(dll, serviceMgr);
+            if (NS_FAILED(rv))
             {
-                PRBool res = proc(this /*, PR_TRUE*/);
-                if (res)
-                {
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                           ("nsComponentManager: + Unloading \"%s\".",
-                            dll->GetNativePath()));
-                    dll->Unload();
-                }
-                else
-                {
-                    // THIS IS THE WORST SITUATION TO BE IN.
-                    // Dll doesn't want to be unloaded. Cannot re-register
-                    // this dll.
-                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                           ("nsComponentManager: *** Dll already loaded. "
-                            "Cannot unload either. Hence cannot re-register "
-                            "\"%s\". Skipping...", dll->GetNativePath()));
-                    return NS_ERROR_FAILURE;
-                }
+                // THIS IS THE WORST SITUATION TO BE IN.
+                // Dll doesn't want to be unloaded. Cannot re-register
+                // this dll.
+                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                       ("nsComponentManager: *** Dll already loaded. "
+                        "Cannot unload either. Hence cannot re-register "
+                        "\"%s\". Skipping...", dll->GetNativePath()));
+                return rv;
             }
             else {
                 // dll doesn't have a CanUnload proc. Guess it is
@@ -2136,8 +2175,10 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
     // Precondition: dll is not loaded already
     PR_ASSERT(dll->IsLoaded() == PR_FALSE);
 
-    nsresult res = NS_ERROR_FAILURE;
-    	
+    nsIServiceManager* serviceMgr = NULL;
+    nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    if (NS_FAILED(res)) return res;
+
     if (dll->Load() == PR_FALSE)
     {
         // Cannot load. Probably not a dll.
@@ -2154,27 +2195,42 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
                "**************************************************\n",
                dll->GetNativePath(), errorMsg);
 #endif
-        return(NS_ERROR_FAILURE);
+        return NS_ERROR_FAILURE;
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
       ("nsComponentManager: + Loaded \"%s\".", dll->GetNativePath()));
-    	
-    nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
 
-    if (regproc == NULL)
+    // Tell the module to self register
+    nsCOMPtr<nsIModule> mobj;
+    res = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    if (NS_SUCCEEDED(res))
     {
-        res = NS_ERROR_NO_INTERFACE;
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+               ("nsComponentManager: %s using nsIModule to register self.", dll->GetNativePath()));
+        nsCOMPtr<nsIFileSpec> fs;
+        res = dll->GetDllSpec(getter_AddRefs(fs));
+        if (NS_SUCCEEDED(res))
+            res = mobj->RegisterSelf(serviceMgr, fs);
+        else
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+                   ("nsComponentManager: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
+        }
     }
+#ifndef OBSOLETE_MODULE_LOADING
     else
     {
-        // Call the NSRegisterSelfProc to enable dll registration
-        nsIServiceManager* serviceMgr = NULL;
-        res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-        if (NS_SUCCEEDED(res)) {
+        res = NS_ERROR_NO_INTERFACE;
+        nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
+        if (regproc)
+        {
+            // Call the NSRegisterSelfProc to enable dll registration
             res = regproc(serviceMgr, dll->GetPersistentDescriptorString());
         }
     }
+#endif /* OBSOLETE_MODULE_LOADING */
+
     dll->Unload();
     return res;
 }
@@ -2184,30 +2240,47 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
 {
     // Precondition: dll is not loaded
     PR_ASSERT(dll->IsLoaded() == PR_FALSE);
-    	
+
+    nsIServiceManager* serviceMgr = NULL;
+    nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    if (NS_FAILED(res)) return res;
+
     if (dll->Load() == PR_FALSE)
     {
         // Cannot load. Probably not a dll.
         return(NS_ERROR_FAILURE);
     }
     	
-    nsUnregisterProc unregproc =
-        (nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
-    nsresult res = NS_OK;
-    	
-    if (unregproc == NULL)
+    // Tell the module to self register
+    nsCOMPtr<nsIModule> mobj;
+    res = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    if (NS_SUCCEEDED(res))
     {
-        return(NS_ERROR_NO_INTERFACE);
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+               ("nsComponentManager: %s using nsIModule to unregister self.", dll->GetNativePath()));
+        nsCOMPtr<nsIFileSpec> fs;
+        res = dll->GetDllSpec(getter_AddRefs(fs));
+        if (NS_SUCCEEDED(res))
+            res = mobj->UnregisterSelf(serviceMgr, fs);
+        else
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+                   ("nsComponentManager: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
+        }
     }
+#ifndef OBSOLETE_MODULE_LOADING
     else
     {
-        // Call the NSUnregisterSelfProc to enable dll de-registration
-        nsIServiceManager* serviceMgr = NULL;
-        res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-        if (NS_SUCCEEDED(res)) {
+        res = NS_ERROR_NO_INTERFACE;
+        nsUnregisterProc unregproc =
+            (nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
+        if (unregproc)
+        {
+            // Call the NSUnregisterSelfProc to enable dll de-registration
             res = unregproc(serviceMgr, dll->GetPersistentDescriptorString());
         }
     }
+#endif /* OBSOLETE_MODULE_LOADING */
     dll->Unload();
     return res;
 }
