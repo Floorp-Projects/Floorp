@@ -99,6 +99,17 @@
                     <menupopup>
                     </menupopup>
                 </menu>
+                <menu label="&charsetMenuUnicode.label;" accesskey="&charsetMenuUnicode.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserUnicodeCharsetMenuRoot">
+                    <template>
+                        <rule>
+                            <menupopup>
+                            <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                            </menupopup>
+                        </rule>
+                    </template>
+                    <menupopup>
+                    </menupopup>
+                </menu>
                 <menuseparator />
             </menupopup>
         </menu>
@@ -134,7 +145,7 @@
             <menupopup>
             </menupopup>
         </menu>
-        <menu label="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+        <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
                     <menupopup>
@@ -304,6 +315,17 @@
                     </menupopup>
                 </menu>
                 <menu label="&charsetMenuMore5.label;" accesskey="&charsetMenuMore5.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
+                    <template>
+                        <rule>
+                            <menupopup>
+                            <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                            </menupopup>
+                        </rule>
+                    </template>
+                    <menupopup>
+                    </menupopup>
+                </menu>
+                <menu label="&charsetMenuUnicode.label;" accesskey="&charsetMenuUnicode.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserUnicodeCharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>

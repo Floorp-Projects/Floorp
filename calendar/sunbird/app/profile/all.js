@@ -475,6 +475,7 @@ pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties"
 pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.unicode",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector", "chrome://global/locale/intl.properties");
 pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");

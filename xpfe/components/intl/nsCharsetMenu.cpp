@@ -85,6 +85,7 @@ static const char kURINC_BrowserMore2CharsetMenuRoot[] = "NC:BrowserMore2Charset
 static const char kURINC_BrowserMore3CharsetMenuRoot[] = "NC:BrowserMore3CharsetMenuRoot";
 static const char kURINC_BrowserMore4CharsetMenuRoot[] = "NC:BrowserMore4CharsetMenuRoot";
 static const char kURINC_BrowserMore5CharsetMenuRoot[] = "NC:BrowserMore5CharsetMenuRoot";
+static const char kURINC_BrowserUnicodeCharsetMenuRoot[] = "NC:BrowserUnicodeCharsetMenuRoot";
 static const char kURINC_MaileditCharsetMenuRoot[] = "NC:MaileditCharsetMenuRoot";
 static const char kURINC_MailviewCharsetMenuRoot[] = "NC:MailviewCharsetMenuRoot";
 static const char kURINC_ComposerCharsetMenuRoot[] = "NC:ComposerCharsetMenuRoot";
@@ -168,6 +169,7 @@ private:
   static nsIRDFResource * kNC_BrowserMore3CharsetMenuRoot;
   static nsIRDFResource * kNC_BrowserMore4CharsetMenuRoot;
   static nsIRDFResource * kNC_BrowserMore5CharsetMenuRoot;
+  static nsIRDFResource * kNC_BrowserUnicodeCharsetMenuRoot;
   static nsIRDFResource * kNC_MaileditCharsetMenuRoot;
   static nsIRDFResource * kNC_MailviewCharsetMenuRoot;
   static nsIRDFResource * kNC_ComposerCharsetMenuRoot;
@@ -479,6 +481,7 @@ nsIRDFResource * nsCharsetMenu::kNC_BrowserMore2CharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMore3CharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMore4CharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMore5CharsetMenuRoot = NULL;
+nsIRDFResource * nsCharsetMenu::kNC_BrowserUnicodeCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_MaileditCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_MailviewCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_ComposerCharsetMenuRoot = NULL;
@@ -721,6 +724,8 @@ nsresult nsCharsetMenu::Init()
                              &kNC_BrowserMore4CharsetMenuRoot);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserMore5CharsetMenuRoot),
                              &kNC_BrowserMore5CharsetMenuRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_BrowserUnicodeCharsetMenuRoot),
+                             &kNC_BrowserUnicodeCharsetMenuRoot);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_MaileditCharsetMenuRoot),
                              &kNC_MaileditCharsetMenuRoot);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_MailviewCharsetMenuRoot),
@@ -762,6 +767,8 @@ nsresult nsCharsetMenu::Init()
     if (NS_FAILED(res)) goto done;
     res = rdfUtil->MakeSeq(mInner, kNC_BrowserMore5CharsetMenuRoot, NULL);
     if (NS_FAILED(res)) goto done;
+    res = rdfUtil->MakeSeq(mInner, kNC_BrowserUnicodeCharsetMenuRoot, NULL);
+    if (NS_FAILED(res)) goto done;
     res = rdfUtil->MakeSeq(mInner, kNC_MaileditCharsetMenuRoot, NULL);
     if (NS_FAILED(res)) goto done;
     res = rdfUtil->MakeSeq(mInner, kNC_MailviewCharsetMenuRoot, NULL);
@@ -794,6 +801,7 @@ nsresult nsCharsetMenu::Done()
   NS_IF_RELEASE(kNC_BrowserMore3CharsetMenuRoot);
   NS_IF_RELEASE(kNC_BrowserMore4CharsetMenuRoot);
   NS_IF_RELEASE(kNC_BrowserMore5CharsetMenuRoot);
+  NS_IF_RELEASE(kNC_BrowserUnicodeCharsetMenuRoot);
   NS_IF_RELEASE(kNC_MaileditCharsetMenuRoot);
   NS_IF_RELEASE(kNC_MailviewCharsetMenuRoot);
   NS_IF_RELEASE(kNC_ComposerCharsetMenuRoot);
@@ -1236,11 +1244,13 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsCStringArray& aDecs)
   nsCOMPtr<nsIRDFContainer> container3;
   nsCOMPtr<nsIRDFContainer> container4;
   nsCOMPtr<nsIRDFContainer> container5;
+  nsCOMPtr<nsIRDFContainer> containerU;
   const char key1[] = "intl.charsetmenu.browser.more1";
   const char key2[] = "intl.charsetmenu.browser.more2";
   const char key3[] = "intl.charsetmenu.browser.more3";
   const char key4[] = "intl.charsetmenu.browser.more4";
   const char key5[] = "intl.charsetmenu.browser.more5";
+  const char keyU[] = "intl.charsetmenu.browser.unicode";
 
   res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
     getter_AddRefs(container1));
@@ -1266,6 +1276,11 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsCStringArray& aDecs)
     getter_AddRefs(container5));
   if (NS_FAILED(res)) return res;
   AddFromPrefsToMenu(NULL, container5, key5, aDecs, NULL);
+
+  res = NewRDFContainer(mInner, kNC_BrowserUnicodeCharsetMenuRoot, 
+    getter_AddRefs(containerU));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(NULL, containerU, keyU, aDecs, NULL);
 
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMoreSubmenus");
   NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMoreSubmenus");
