@@ -52,14 +52,10 @@
 #include "nsEscape.h"
 
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
-#else
-#include "nsIPostToServer.h"
-#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsISearchService.h"
@@ -122,25 +118,11 @@ public:
 			InternetSearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine);
 	virtual		~InternetSearchDataSourceCallback(void);
 
-#ifdef NECKO
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
 
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
-#else
-	// stream observer
-
-	NS_IMETHOD	OnStartRequest(nsIURI *aURL, const char *aContentType);
-	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	NS_IMETHOD	OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-	// stream listener
-	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                               PRUint32 aLength);
-#endif
 };
 
 
@@ -578,51 +560,6 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 		}
 	}
 	return(rv);
-
-#if 0
-	if ((source == kNC_SearchRoot) || (source == kNC_LastSearchRoot))
-	{
-		if (property == kNC_Child)
-		{
-			if (mInner)
-			{
-				rv = mInner->GetTargets(source, property,tv, targets);
-			}
-			return(rv);
-		}
-		return(NS_RDF_NO_VALUE);
-	}
-	else if (isSearchURI(source))
-	{
-		if (property == kNC_Child)
-		{
-			if (mInner)
-			{
-				rv = mInner->GetTargets(source, property, tv, targets);
-			}
-			PRBool		doNetworkRequest = PR_TRUE;
-			if (NS_SUCCEEDED(rv) && (targets))
-			{
-				// check and see if we already have data for the search in question;
-				// if we do, don't bother doing the search again, otherwise kickstart it
-				PRBool		hasResults = PR_FALSE;
-				if (NS_SUCCEEDED((*targets)->HasMoreElements(&hasResults)) && (hasResults == PR_TRUE))
-				{
-					doNetworkRequest = PR_FALSE;
-				}
-			}
-			BeginSearchRequest(source, doNetworkRequest);
-//			return(rv);
-		}
-		return(NS_RDF_NO_VALUE);
-	}
-	if (mInner)
-	{
-		rv = mInner->GetTargets(source, property, tv, targets);
-	}
-	return NS_NewEmptyEnumerator(targets);
-#endif
-
 }
 
 
@@ -998,29 +935,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 
 	// forget about any previous search sites
 	ClearResultSearchSites();
-#if 0
-	if (mInner)
-	{
-		nsCOMPtr<nsISimpleEnumerator>	arcs;
-		if (NS_SUCCEEDED(rv = mInner->GetTargets(kNC_SearchResultsSitesRoot, kNC_Child, PR_TRUE, getter_AddRefs(arcs))))
-		{
-			PRBool			hasMore = PR_TRUE;
-			while (hasMore == PR_TRUE)
-			{
-				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
-					break;
-				nsCOMPtr<nsISupports>	arc;
-				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
-					break;
-				nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(arc);
-				if (child)
-				{
-					mInner->Unassert(kNC_SearchResultsSitesRoot, kNC_Child, child);
-				}
-			}
-		}
-	}
-#endif
+
 	uri.Cut(0, strlen("internetsearch:"));
 
 	nsVoidArray	*engineArray = new nsVoidArray;
@@ -1227,7 +1142,6 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!searchURL)
 		return(NS_ERROR_NULL_POINTER);
 
-#ifdef	NECKO
 	InternetSearchDataSourceCallback *callback = new InternetSearchDataSourceCallback(mInner, source, engine);
 	if (nsnull != callback)
 	{
@@ -1273,12 +1187,11 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 			else if (method.EqualsIgnoreCase("get"))
 			{
-                // XXX: Null LoadGroup?
+				// XXX: Null LoadGroup?
 				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url, nsnull);
 			}
 		}
 	}
-#endif
 
 	// dispose of any last HTML results page
 	if (mInner)
@@ -1897,11 +1810,7 @@ InternetSearchDataSourceCallback::CreateAnonymousResource(nsCOMPtr<nsIRDFResourc
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 InternetSearchDataSourceCallback::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-InternetSearchDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
-#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -1927,40 +1836,17 @@ InternetSearchDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aCont
 
 
 
-#ifndef NECKO
 NS_IMETHODIMP
-InternetSearchDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
-{
-	return(NS_OK);
-}
-
-
-
-NS_IMETHODIMP
-InternetSearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-	return(NS_OK);
-}
-#endif
-
-
-
-NS_IMETHODIMP
-#ifdef NECKO
 InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
-#else
-InternetSearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
-#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
 	nsresult		rv;
-#ifdef NECKO
+
 	nsCOMPtr<nsIURI> aURL;
 	rv = channel->GetURI(getter_AddRefs(aURL));
 	if (NS_FAILED(rv)) return rv;
-#endif
 
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
 	{
@@ -1974,7 +1860,6 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, 
 #ifdef	DEBUG
 		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
 #endif
-
 		return(NS_OK);
 	}
 
@@ -2203,17 +2088,9 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, 
 		// check to see if this needs to be an absolute URL
 		if (hrefStr[0] == PRUnichar('/'))
 		{
-#ifdef NECKO
 			char *host = nsnull, *protocol = nsnull;
-#else
-			const char	*host = nsnull, *protocol = nsnull;
-#endif
 			aURL->GetHost(&host);
-#ifdef NECKO
 			aURL->GetScheme(&protocol);
-#else
-			aURL->GetProtocol(&protocol);
-#endif
 			if (host && protocol)
 			{
 				nsAutoString	temp;
@@ -2224,10 +2101,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, 
 
 				hrefStr = temp;
 			}
-#ifdef NECKO
 			if (host) nsCRT::free(host);
 			if (protocol) nsCRT::free(protocol);
-#endif
 		}
 		
 		char	*href = hrefStr.ToNewCString();
