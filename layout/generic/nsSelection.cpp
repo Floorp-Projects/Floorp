@@ -169,6 +169,19 @@ static void printRange(nsIDOMRange *aDomRange);
 //#define DEBUG_TABLE_SELECTION 1
 
 
+struct CachedOffsetForFrame {
+  CachedOffsetForFrame()
+  : mCachedFrameOffset(0, 0) // nsPoint ctor
+  , mLastCaretFrame(nsnull)
+  , mLastContentOffset(0)
+  , mCanCacheFrameOffset(PR_FALSE)
+  {}
+
+  nsPoint      mCachedFrameOffset;      // cached frame offset
+  nsIFrame*    mLastCaretFrame;         // store the frame the caret was last drawn in.
+  PRInt32      mLastContentOffset;      // store last content offset
+  PRPackedBool mCanCacheFrameOffset;    // cached frame offset is valid?
+};
 
 class nsTypedSelection : public nsISelection,
                          public nsISelectionPrivate,
@@ -273,6 +286,7 @@ private:
   PRBool mTrueDirection;
   nsCOMPtr<nsIEventQueue> mEventQueue;
   PRBool mScrollEventPosted;
+  CachedOffsetForFrame *mCachedOffsetForFrame;
 };
 
 // Stack-class to turn on/off selection batching for table selection
@@ -4595,6 +4609,7 @@ nsTypedSelection::nsTypedSelection(nsSelection *aList)
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
   mScrollEventPosted = PR_FALSE;
+  mCachedOffsetForFrame = nsnull;
 }
 
 
@@ -4605,6 +4620,7 @@ nsTypedSelection::nsTypedSelection()
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
   mScrollEventPosted = PR_FALSE;
+  mCachedOffsetForFrame = nsnull;
 }
 
 
@@ -4622,6 +4638,8 @@ nsTypedSelection::~nsTypedSelection()
     mEventQueue->RevokeEvents(this);
     mScrollEventPosted = PR_FALSE;
   }
+
+  delete mCachedOffsetForFrame;
 }
 
 
@@ -5322,6 +5340,59 @@ nsTypedSelection::Repaint(nsIPresContext* aPresContext)
     if (NS_FAILED(rv)) {
       return rv;
     }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypedSelection::GetCanCacheFrameOffset(PRBool *aCanCacheFrameOffset)
+{ 
+  NS_ENSURE_ARG_POINTER(aCanCacheFrameOffset);
+
+  if (mCachedOffsetForFrame)
+    *aCanCacheFrameOffset = mCachedOffsetForFrame->mCanCacheFrameOffset;
+  else
+    *aCanCacheFrameOffset = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsTypedSelection::SetCanCacheFrameOffset(PRBool aCanCacheFrameOffset)
+{
+  if (!mCachedOffsetForFrame) {
+    mCachedOffsetForFrame = new CachedOffsetForFrame;
+  }
+
+  mCachedOffsetForFrame->mCanCacheFrameOffset = aCanCacheFrameOffset;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoint& aPoint)
+{
+  if (!mCachedOffsetForFrame) {
+    mCachedOffsetForFrame = new CachedOffsetForFrame;
+  }
+
+  if (mCachedOffsetForFrame->mCanCacheFrameOffset && 
+      (aFrame == mCachedOffsetForFrame->mLastCaretFrame) &&
+      (inOffset == mCachedOffsetForFrame->mLastContentOffset))
+  {
+     // get cached frame offset
+     aPoint = mCachedOffsetForFrame->mCachedFrameOffset;
+  } 
+  else
+  {
+     // recalculate frame offset and cache it
+     GetPointFromOffset(aFrame, inOffset, &aPoint);
+     if (mCachedOffsetForFrame->mCanCacheFrameOffset) {
+       mCachedOffsetForFrame->mCachedFrameOffset = aPoint;
+       mCachedOffsetForFrame->mLastCaretFrame = aFrame;
+       mCachedOffsetForFrame->mLastContentOffset = inOffset; 
+     }
   }
 
   return NS_OK;
@@ -7296,8 +7367,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     // system.
     //
     nsPoint pt;
-
-    result = GetPointFromOffset(frame, nodeOffset, &pt);
+    result = GetCachedFrameOffset(frame, nodeOffset, pt);
 
     if (NS_FAILED(result))
       return result;

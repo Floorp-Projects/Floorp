@@ -92,8 +92,6 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
-, mOptimizeDrawCaret(PR_FALSE)
-, mCachedOffsetValid(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
 , mLastContentOffset(0)
@@ -397,7 +395,6 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
     mLastCaretFrame = nsnull;     // frames are not refcounted.
     mLastCaretView = nsnull;
     mLastContentOffset = 0;
-    mCachedOffsetValid = PR_FALSE;
   }
   
   mDrawn = PR_FALSE;    // assume that the view has been cleared, and ensure
@@ -446,11 +443,6 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaret::SetOptimizeDrawCaret(PRBool aOptimizeDrawCaret)
-{
-  mOptimizeDrawCaret = aOptimizeDrawCaret;
-  return NS_OK;
-}
 
 #ifdef XP_MAC
 #pragma mark -
@@ -772,9 +764,6 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   frameState |= NS_FRAME_EXTERNAL_REFERENCE;
   theFrame->SetFrameState(frameState);
 
-  if (theFrame != mLastCaretFrame || theFrameOffset != mLastContentOffset)
-    mCachedOffsetValid = PR_FALSE;
-
   mLastCaretFrame = theFrame;
   mLastContentOffset = theFrameOffset;
   return PR_TRUE;
@@ -1073,15 +1062,16 @@ void nsCaret::GetCaretRectAndInvert()
 
   if (!mDrawn)
   {
+    nsPoint   framePos(0, 0);
     nsRect    caretRect = frameRect;
+    PRBool    aCanCacheFrameOffset = PR_FALSE;
+    nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+    nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
 
-    // if use cache and cache is ready, apply it, else refresh it
-    if (!mOptimizeDrawCaret || !mCachedOffsetValid) {
-      mLastCaretFrame->GetPointFromOffset(presContext, mRendContext,mLastContentOffset, &mCachedFrameOffset);
-      mCachedOffsetValid = mOptimizeDrawCaret;
-    }
+    // if cache in selection is available, apply it, else refresh it
+    privateSelection->GetCachedFrameOffset(mLastCaretFrame,mLastContentOffset, framePos);
 
-    caretRect += mCachedFrameOffset;
+    caretRect += framePos;
 
     if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
     {
