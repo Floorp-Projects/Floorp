@@ -1609,7 +1609,10 @@ int main(int argc, char **argv)
 		case 'x':  info.useseed = PR_TRUE; break;
 		case 'y':  info.usesigseed = PR_TRUE; break;
 		case 'z':  seedfile  = PL_strdup(optstate->value); break;
-		case '\0': modesToTest[numModesToTest++] = PL_strdup(optstate->value);
+		case '\0': if (optstate->value[0] != '-')
+					   modesToTest[numModesToTest++] = 
+						PL_strdup(optstate->value);
+				   break;
 		default: break;
 		}
 	}
