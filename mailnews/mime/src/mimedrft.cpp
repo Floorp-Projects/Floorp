@@ -240,7 +240,7 @@ CreateTheComposeWindow(nsIMsgCompFields     *compFields,
                        nsMsgEditorType      editorType)
 {
 nsresult            rv;
-MSG_ComposeFormat   format = MSGCOMP_FORMAT_Default;
+MSG_ComposeFormat   format = nsIMsgCompFormat::Default;
 
 #ifdef NS_DEBUG
 printf("RICHIE: Need to do something with the attachment data!!!!\n");
@@ -276,9 +276,9 @@ mime_dump_attachments ( attachmentList );
     return rv; 
   
   if (editorType == nsMsgPlainTextEditor)
-    format = MSGCOMP_FORMAT_PlainText;
+    format = nsIMsgCompFormat::PlainText;
   else if (editorType == nsMsgHTMLEditor)
-    format = MSGCOMP_FORMAT_HTML;
+    format = nsIMsgCompFormat::HTML;
     
   rv = msgComposeService->OpenComposeWindowWithCompFields(nsnull, /* default chrome */
                                                           format, compFields);

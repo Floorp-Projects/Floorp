@@ -37,7 +37,7 @@ static int
 MimeInlineTextPlainClassInitialize(MimeInlineTextPlainClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "class not initialized");
   oclass->parse_begin = MimeInlineTextPlain_parse_begin;
   oclass->parse_line  = MimeInlineTextPlain_parse_line;
   oclass->parse_eof   = MimeInlineTextPlain_parse_eof;
@@ -117,7 +117,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
   int status;
 
-  PR_ASSERT(length > 0);
+  NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
   status = MimeObject_grow_obuffer (obj, (length * 2) + 40);
@@ -148,6 +148,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (status != NS_OK)
     return status;
 
-  PR_ASSERT(*line == 0 || *obj->obuffer);
+  NS_ASSERTION(*line == 0 || *obj->obuffer, "have line or buffer");
   return MimeObject_write(obj, obj->obuffer, PL_strlen(obj->obuffer), PR_TRUE);
 }

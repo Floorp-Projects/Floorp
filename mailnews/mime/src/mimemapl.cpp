@@ -23,6 +23,7 @@
 #include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
+#include "net.h"                /* for APPLICATION_APPLEFILE */
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAppleDouble, MimeMultipartAppleDoubleClass,
@@ -38,7 +39,7 @@ MimeMultipartAppleDoubleClassInitialize(MimeMultipartAppleDoubleClass *clazz)
   MimeObjectClass    *oclass = (MimeObjectClass *)    clazz;
   MimeMultipartClass *mclass = (MimeMultipartClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "mime class not initialized");
   oclass->parse_begin    = MimeMultipartAppleDouble_parse_begin;
   mclass->output_child_p = MimeMultipartAppleDouble_output_child_p;
   return 0;
@@ -65,7 +66,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	{
 	  status = MimeObject_output_init(obj, 0);
 	  if (status < 0) return status;
-	  PR_ASSERT(obj->options->state->first_data_written_p);
+	  NS_ASSERTION(obj->options->state->first_data_written_p, "first data not written");
 	}
 
 #ifdef XP_MAC

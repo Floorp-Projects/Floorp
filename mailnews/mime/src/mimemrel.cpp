@@ -113,6 +113,7 @@
 #include "msgCore.h"
 #include "nsMimeURLUtils.h"
 #include "nsMimeStringResources.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartRelated, MimeMultipartRelatedClass,

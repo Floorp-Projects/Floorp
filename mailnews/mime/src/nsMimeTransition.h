@@ -21,17 +21,16 @@
 
 #include "prtypes.h"
 #include "plstr.h"
-#include "net.h"
 
 /* 
  * This is a transitional file that will help with the various message
  * ID definitions and the functions to retrieve the error string
  */
-
+#if 0
 extern "C" NET_cinfo *
 NET_cinfo_find_type (char *uri);
 
 extern "C" NET_cinfo *
 NET_cinfo_find_info_by_type (char *uri);
-
+#endif
 #endif /* nsMimeTransition_h_ */

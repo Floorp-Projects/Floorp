@@ -27,6 +27,7 @@
 #include "mimebuf.h"
 #include "nsMimeURLUtils.h"
 #include "nsIPref.h"
+#include "net.h" /* for xxx_TYPE_URL */
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 

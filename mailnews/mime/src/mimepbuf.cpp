@@ -19,6 +19,7 @@
 #include "mimepbuf.h"
 #include "mimemoz2.h"
 #include "prmem.h"
+#include "prio.h"
 #include "plstr.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
@@ -78,7 +79,7 @@ MimePartBufferCreate (void)
 void
 MimePartBufferClose (MimePartBufferData *data)
 {
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "MimePartBufferClose: no data");
   if (!data) return;
 
   if (data->file_stream)
@@ -92,7 +93,7 @@ MimePartBufferClose (MimePartBufferData *data)
 void
 MimePartBufferReset (MimePartBufferData *data)
 {
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "MimePartBufferReset: no data");
   if (!data) return;
 
   PR_FREEIF(data->part_buffer);
@@ -116,7 +117,7 @@ MimePartBufferReset (MimePartBufferData *data)
 void
 MimePartBufferDestroy (MimePartBufferData *data)
 {
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "MimePartBufferDestroy: no data");
   if (!data) return;
   MimePartBufferReset (data);
   PR_Free(data);
@@ -129,7 +130,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 {
   int status = 0;
 
-  PR_ASSERT(data && buf && size > 0);
+  NS_ASSERTION(data && buf && size > 0, "MimePartBufferWrite: Bad param");
   if (!data || !buf || size <= 0)
 	return -1;
 
@@ -168,7 +169,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 		return MIME_UNABLE_TO_OPEN_TMP_FILE;
   }
 
-  PR_ASSERT(data->part_buffer || data->file_stream);
+  NS_ASSERTION(data->part_buffer || data->file_stream, "no part_buffer or file_stream");
 
 
   /* If this buf will fit in the memory buffer, put it there.
@@ -224,14 +225,14 @@ MimePartBufferRead (MimePartBufferData *data,
 					void *closure)
 {
   int status = 0;
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "no data");
   if (!data) return -1;
 
   if (data->part_buffer)
 	{
 	  /* Read it out of memory.
 	   */
-	  PR_ASSERT(!data->file_buffer_name && !data->file_stream);
+	  NS_ASSERTION(!data->file_buffer_name && !data->file_stream, "no file_buffer_name or file_stream");
 
 	  status = read_fn(data->part_buffer, data->part_buffer_fp, closure);
 	}
@@ -242,9 +243,9 @@ MimePartBufferRead (MimePartBufferData *data,
 	  char *buf;
 	  PRInt32 buf_size = DISK_BUFFER_SIZE;
 
-	  PR_ASSERT(data->part_buffer_size == 0 && data->part_buffer_fp == 0);
-	  PR_ASSERT(!data->file_stream);
-	  PR_ASSERT(data->file_buffer_name);
+	  NS_ASSERTION(data->part_buffer_size == 0 && data->part_buffer_fp == 0, "buffer size is not null");
+	  NS_ASSERTION(!data->file_stream, "have a filestream when we shouldn't");
+	  NS_ASSERTION(data->file_buffer_name, "no file buffer name");
 	  if (!data->file_buffer_name) return -1;
 
 	  buf = (char *) PR_MALLOC(buf_size);

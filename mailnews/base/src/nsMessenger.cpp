@@ -1679,7 +1679,7 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
             compFields->SetSubject(fwdSubject.ToNewUnicode());
           compFields->SetAttachments(attachments.ToNewUnicode());
           rv = composeService->OpenComposeWindowWithCompFields(nsnull,
-                                     MSGCOMP_FORMAT_Default, compFields);
+                                     nsIMsgCompFormat::Default, compFields);
           break;
       }
       case 1: // forward as inline

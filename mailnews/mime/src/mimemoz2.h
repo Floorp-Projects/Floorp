@@ -39,7 +39,6 @@ extern "C" {
 #endif /* __cplusplus */
 
   
-#include "net.h"
 #include "mimei.h"
 
 #ifdef __cplusplus

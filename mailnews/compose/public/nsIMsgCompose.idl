@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: idl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -29,50 +29,47 @@
 
 
 typedef long MSG_ComposeType;
-%{ C++
-enum
-{
-	MSGCOMP_TYPE_New	= 0,
-	MSGCOMP_TYPE_Reply,
-	MSGCOMP_TYPE_ReplyAll,
-	MSGCOMP_TYPE_ForwardAsAttachment,
-	MSGCOMP_TYPE_ForwardInline
+
+[scriptable, uuid(c7035852-7531-11d3-9a73-006008948010)]
+interface nsIMsgCompType {
+    const long New        = 0;
+    const long Reply      = 1;
+    const long ReplyAll   = 2;
+    const long ForwardAsAttachment = 3;
+    const long ForwardInline = 4;
 };
-%}
+
 
 typedef long MSG_ComposeFormat;
-%{ C++
-enum
-{
-	MSGCOMP_FORMAT_Default	= 0,	//Will use user's preference
-	MSGCOMP_FORMAT_HTML,
-	MSGCOMP_FORMAT_PlainText
+
+[scriptable, uuid(a28325e8-7531-11d3-8f1c-006008948010)]
+interface nsIMsgCompFormat {
+    const long Default   = 0;
+    const long HTML      = 1;
+    const long PlainText = 2;
 };
-%}
 
 typedef long MSG_ComposeSaveType;
-%{ C++
-enum
-{
-	MSGCOMP_SAVETYPE_File	= 0,
-	MSGCOMP_SAVETYPE_Template,
-	MSGCOMP_SAVETYPE_Draft
+
+[scriptable, uuid(6953e50a-7531-11d3-85fe-006008948010)]
+interface nsIMsgCompSaveType {
+    const long File     = 0;
+    const long Template = 1;
+    const long Draft    = 2;
 };
-%}
 
 typedef long MSG_DeliverMode;
-%{ C++
-//#include "nsMsgComposeBE.h"
-enum
-{
-	MSGCOMP_DELIVER_Now				/*= nsMsgDeliverNow,	*/=0,
-	MSGCOMP_DELIVER_Later			/*= nsMsgQueueForLater,	*/=1,
-	MSGCOMP_DELIVER_Save			/*= nsMsgSave,			*/=2,
-	MSGCOMP_DELIVER_SaveAs			/*= nsMsgSaveAs,		*/=3,
-	MSGCOMP_DELIVER_SaveAsDraft		/*= nsMsgSaveAsDraft,	*/=4,
-	MSGCOMP_DELIVER_SaveAsTemplate	/*= nsMsgSaveAsTemplate	*/=5
+
+[scriptable, uuid(f338eba4-7530-11d3-8833-006008948010)]
+interface nsIMsgCompDeliverMode {
+    const long Now = 0;
+    const long Later = 1;
+    const long Save = 2;
+    const long SaveAs = 3;
+    const long SaveAsDraft = 4;
+    const long SaveAsTemplate = 5;
 };
-%}
+
 
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {

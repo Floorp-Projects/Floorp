@@ -34,6 +34,7 @@
  * ID definitions and the functions to retrieve the error string
  */
 
+#if 0
 extern "C" NET_cinfo *
 NET_cinfo_find_type (char *uri)
 {
@@ -45,7 +46,7 @@ NET_cinfo_find_info_by_type (char *uri)
 {
   return NULL;  
 }
-
+#endif
 
 /////////////////////////////////////////////////////////////////////
 // THIS IS ONLY HERE UNTIL I CAN GET THE INTERNAL EMITTER OUT OF

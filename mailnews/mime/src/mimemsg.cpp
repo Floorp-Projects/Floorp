@@ -28,6 +28,7 @@
 #include "prlog.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,

@@ -141,8 +141,6 @@
 #include "nsMsgDeliveryListener.h"
 #endif
 
-#include "net.h" /* should be defined into msgCore.h? */
-
 
 //
 // Some necessary defines...

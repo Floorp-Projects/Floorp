@@ -319,32 +319,41 @@ mime_reformat_date(const char *date, void *stream_closure)
 static char *
 mime_file_type (const char *filename, void *stream_closure)
 {
+#if 0
   NET_cinfo *cinfo = NET_cinfo_find_type ((char *) filename);
   if (!cinfo || !cinfo->type)
     return 0;
   else
     return PL_strdup(cinfo->type);
+#else
+  return 0;
+#endif
 }
 
 static char *
 mime_type_desc(const char *type, void *stream_closure)
 {
+#if 0
   NET_cinfo *cinfo = NET_cinfo_find_info_by_type((char *) type);
   if (!cinfo || !cinfo->desc || !*cinfo->desc)
     return 0;
   else
     return PL_strdup(cinfo->desc);
+#else
+  return 0;
+#endif
 }
 
 
 static char *
 mime_type_icon(const char *type, void *stream_closure)
 {
+#if 0
   NET_cinfo *cinfo = NET_cinfo_find_info_by_type((char *) type);
-
   if (cinfo && cinfo->icon && *cinfo->icon)
     return PL_strdup(cinfo->icon);
-  else if (!PL_strncasecmp(type, "text/", 5))
+#endif
+  if (!PL_strncasecmp(type, "text/", 5))
     return PL_strdup("resource:/res/network/gopher-text.gif");
   else if (!PL_strncasecmp(type, "image/", 6))
     return PL_strdup("resource:/res/network/gopher-image.gif");

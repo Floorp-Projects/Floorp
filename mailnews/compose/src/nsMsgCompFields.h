@@ -21,8 +21,6 @@
 
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
-#include "net.h" /* should be defined into msgCore.h? */
-//#include "intl_csi.h"
 #include "msgcom.h"
 #include "nsMsgHeaderMasks.h"
 

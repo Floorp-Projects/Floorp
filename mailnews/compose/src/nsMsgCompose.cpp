@@ -73,7 +73,7 @@ nsMsgCompose::nsMsgCompose()
 	mQuoteStreamListener=nsnull;
 	m_compFields = new nsMsgCompFields;
 	NS_IF_ADDREF(m_compFields);
-	mType = MSGCOMP_TYPE_New;
+	mType = nsIMsgCompType::New;
 
 	// Get the default charset from pref, use this as a mail charset.
 	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -166,8 +166,8 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 	
 	switch (format)
 	{
-		case MSGCOMP_FORMAT_HTML		: m_composeHTML = PR_TRUE;					break;
-		case MSGCOMP_FORMAT_PlainText	: m_composeHTML = PR_FALSE;					break;
+		case nsIMsgCompFormat::HTML		: m_composeHTML = PR_TRUE;					break;
+		case nsIMsgCompFormat::PlainText	: m_composeHTML = PR_FALSE;					break;
     default							:
       /* ask the identity which compose to use */
       if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
@@ -597,8 +597,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       switch (type)
       {
       default: break;        
-      case MSGCOMP_TYPE_Reply : 
-      case MSGCOMP_TYPE_ReplyAll:
+      case nsIMsgCompType::Reply : 
+      case nsIMsgCompType::ReplyAll:
         {
           mQuotingToFollow = PR_TRUE;
           // get an original charset, used for a label, UTF-8 is used for the internal processing
@@ -621,7 +621,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
               PR_Free(aCString);
             }
           
-            if (type == MSGCOMP_TYPE_ReplyAll)
+            if (type == nsIMsgCompType::ReplyAll)
             {
               nsString cString, dString;
               message->GetRecipients(&cString);
@@ -646,8 +646,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           
             break;
         }
-      case MSGCOMP_TYPE_ForwardAsAttachment:
-      case MSGCOMP_TYPE_ForwardInline:
+      case nsIMsgCompType::ForwardAsAttachment:
+      case nsIMsgCompType::ForwardInline:
         {
           mQuotingToFollow = PR_TRUE;
         
@@ -665,7 +665,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
         
           // Setup quoting callbacks for later...
           mQuoteURI = originalMsgURI;
-          if (type == MSGCOMP_TYPE_ForwardAsAttachment)
+          if (type == nsIMsgCompType::ForwardAsAttachment)
           {
             mWhatHolder = 0;
           }
@@ -804,7 +804,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
   {
   	MSG_ComposeType type = mComposeObj->GetMessageType();
 
-  	if (mHeaders && (type == MSGCOMP_TYPE_Reply || type == MSGCOMP_TYPE_ReplyAll))
+  	if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll))
   	{
 		nsIMsgCompFields *compFields = nsnull;
 		mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
@@ -847,14 +847,14 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
 			if (! newgroups.IsEmpty())
 			{
 				compFields->SetNewsgroups(newgroups.GetUnicode());
-				if (type == MSGCOMP_TYPE_Reply)
+				if (type == nsIMsgCompType::Reply)
 					compFields->SetTo(&emptyUnichar);
 			}
 
 			if (! followUpTo.IsEmpty())
 			{
 				compFields->SetNewsgroups(followUpTo.GetUnicode());
-				if (type == MSGCOMP_TYPE_Reply)
+				if (type == nsIMsgCompType::Reply)
 					compFields->SetTo(&emptyUnichar);
 			}
 			
