@@ -624,7 +624,11 @@ nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 NS_LAYOUT PRInt32
 nsIPresShell::GetVerifyReflowFlags()
 {
+#ifdef NS_DEBUG
   return gVerifyReflowFlags;
+#else
+  return 0;
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -1407,12 +1411,14 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
   ExitReflowLock(PR_TRUE);
   // if the proper flag is set, VerifyReflow now
+#ifdef NS_DEBUG
   if (GetVerifyReflowEnable() && (VERIFY_REFLOW_DURING_RESIZE_REFLOW & gVerifyReflowFlags))
   {
     mInVerifyReflow = PR_TRUE;
     PRBool ok = VerifyIncrementalReflow();
     mInVerifyReflow = PR_FALSE;
   }
+#endif
   
   return NS_OK; //XXX this needs to be real. MMP
 }
