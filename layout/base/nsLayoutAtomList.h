@@ -136,6 +136,7 @@ LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")  // nsSize*
 LAYOUT_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
 LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
+LAYOUT_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsPlaceholder*
 LAYOUT_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 LAYOUT_ATOM(spaceManagerProperty, "SpaceManagerProperty")      // the space manager for a block
 LAYOUT_ATOM(tableBCProperty, "TableBCProperty")                // table border collapsing info (e.g. damage area, table border widths)
