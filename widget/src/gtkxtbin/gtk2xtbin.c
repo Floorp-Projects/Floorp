@@ -274,6 +274,9 @@ gtk_xtbin_realize (GtkWidget *widget)
   xtbin->xtwindow = XtWindow(xtbin->xtclient.child_widget);
 
   gdk_flush();
+
+  /* now that we have created the xt client, add it to the socket. */
+  gtk_socket_steal(GTK_SOCKET(widget), xtbin->xtwindow);
 }
 
 
