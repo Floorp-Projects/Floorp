@@ -227,8 +227,6 @@ protected:
   // Timeout Functions
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
   void RunTimeout(nsTimeoutImpl *aTimeout);
-  void DropTimeout(nsTimeoutImpl *aTimeout, nsIScriptContext* aContext=nsnull);
-  void HoldTimeout(nsTimeoutImpl *aTimeout);
   nsresult ClearTimeoutOrInterval();
   void ClearAllTimeouts();
   void InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
@@ -289,12 +287,11 @@ protected:
   nsTimeoutImpl*                mRunningTimeout;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  PRPackedBool                  mTimeoutsWereCleared;
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
-  PRTime                        mLastMouseButtonAction;
   PRPackedBool                  mFullScreen;
+  PRTime                        mLastMouseButtonAction;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
 
@@ -338,25 +335,31 @@ protected:
  * Timeout struct that holds information about each JavaScript
  * timeout.
  */
-struct nsTimeoutImpl {
-  nsTimeoutImpl() {
+struct nsTimeoutImpl
+{
+  nsTimeoutImpl()
+  {
     memset(this, 0, sizeof(*this));
 
     MOZ_COUNT_CTOR(nsTimeoutImpl);
   }
 
-  ~nsTimeoutImpl() {
+  ~nsTimeoutImpl()
+  {
     MOZ_COUNT_DTOR(nsTimeoutImpl);
   }
 
-  PRInt32             ref_count;      /* reference count to shared usage */
+  void Release(nsIScriptContext* aContext);
+  void AddRef();
+
   GlobalWindowImpl    *window;        /* window for which this timeout fires */
   JSString            *expr;          /* the JS expression to evaluate */
   JSObject            *funobj;        /* or function to call, if !expr */
   nsCOMPtr<nsITimer>  timer;          /* The actual timer object */
   jsval               *argv;          /* function actual arguments */
   PRUint16            argc;           /* and argument count */
-  PRUint16            spare;          /* alignment padding */
+  PRPackedBool        cleared;        /* True if the timeout was cleared */
+  PRPackedBool        spare;          /* alignment padding */
   PRUint32            public_id;      /* Returned as value of setTimeout() */
   PRInt32             interval;       /* Non-zero if repetitive timeout */
   PRInt64             when;           /* nominal time to run this timeout */
@@ -367,6 +370,9 @@ struct nsTimeoutImpl {
   PRUint32            firingDepth;    /* stack depth at which timeout is
                                          firing */
   nsTimeoutImpl       *next;
+
+private:
+  PRInt32             mRefCnt;        /* reference count for shared usage */
 };
 
 //*****************************************************************************
