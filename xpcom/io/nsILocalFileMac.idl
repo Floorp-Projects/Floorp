@@ -100,6 +100,24 @@ interface nsILocalFileMac : nsILocalFile
     *
     */
     void initToAppWithCreatorCode(in OSType aAppCreator);
+
+    /**
+    * getCFURL
+    *
+    * Returns the CFURLRef of the file object. The caller is
+    * responsible for calling CFRelease() on it.
+    *
+    * NOTE: Observes the state of the followLinks attribute.
+    * If the file object is an alias and followLinks is TRUE, returns
+    * the target of the alias. If followLinks is FALSE, returns
+    * the unresolved alias file.
+    *
+    * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
+    *
+    * @return
+    *  
+    */ 
+    CFURLRef getCFURL();
  
     /**
     * getFSRef

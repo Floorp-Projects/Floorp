@@ -1643,6 +1643,32 @@ NS_IMETHODIMP nsLocalFile::InitToAppWithCreatorCode(OSType aAppCreator)
   return InitWithFSRef(&fsRef);
 }
 
+/* CFURLRef getCFURL (); */
+NS_IMETHODIMP nsLocalFile::GetCFURL(CFURLRef *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  
+  FSRef fsRef;
+  nsresult rv = GetFSRefInternal(fsRef);
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = ::CFURLCreateFromFSRef(NULL, &fsRef);
+  }
+  else {
+    nsCAutoString path;
+    rv = GetPathInternal(path);
+    if (NS_FAILED(rv))
+      return rv;
+    CFStringRef pathAsCFString;
+    pathAsCFString = ::CFStringCreateWithCString(nsnull, path.get(), kCFStringEncodingUTF8);
+    if (!pathAsCFString)
+      return NS_ERROR_FAILURE;
+    *_retval = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString, kCFURLPOSIXPathStyle, PR_FALSE);
+    ::CFRelease(pathAsCFString);
+  }
+  return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
 /* FSRef getFSRef (); */
 NS_IMETHODIMP nsLocalFile::GetFSRef(FSRef *_retval)
 {
