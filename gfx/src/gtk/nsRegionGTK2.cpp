@@ -280,7 +280,7 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
 
   // allocate space for our return values
   retval = (nsRegionRectSet *)
-    nsMemory::Alloc(sizeof(nsRegionRectSet) *
+    nsMemory::Alloc(sizeof(nsRegionRectSet) +
                     (sizeof(nsRegionRect) * (nrects - 1)));
   if (!retval)
     return NS_ERROR_FAILURE;
