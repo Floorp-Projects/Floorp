@@ -43,7 +43,6 @@
 
 /* forward declare classes from JavaScript::ICG */
 namespace JavaScript {
-    class StringAtom;
 namespace ICG {
     class ICodeModule;
 } /* namespace ICG */
@@ -56,6 +55,7 @@ namespace JSTypes {
     class JSObject;
     class JSArray;
     class JSFunction;
+    class JSString;
     
     /**
      * All JavaScript data types.
@@ -75,7 +75,7 @@ namespace JSTypes {
             JSObject* object;
             JSArray* array;
             JSFunction *function;
-            String *string;
+            JSString *string;
         };
         
         enum {
@@ -94,23 +94,23 @@ namespace JSTypes {
         explicit JSValue(JSObject* object) : object(object), tag(object_tag) {}
         explicit JSValue(JSArray* array) : array(array), tag(array_tag) {}
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
-        explicit JSValue(String* string) : string(string), tag(string_tag) {}
+        explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
         
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
         JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
-        String*& operator=(String* string)              { return (tag = string_tag, this->string = string); }
+        JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         
-        bool isString()                                 { return (tag == string_tag); }
-        bool isNumber()                                 { return ((tag == f64_tag) || (tag == i32_tag)); }
+        bool isString() const                           { return (tag == string_tag); }
+        bool isNumber() const                           { return ((tag == f64_tag) || (tag == i32_tag)); }
 
-        JSValue *toString()                             { if (isString()) return this; else return valueToString(this); }
-        JSValue *toNumber()                             { if (isNumber()) return this; else return valueToNumber(this); }
+        JSValue toString()                              { return (isString() ? *this : valueToString(*this)); }
+        JSValue toNumber()                              { return (isNumber() ? *this : valueToNumber(*this)); }
 
-        static JSValue *valueToString(JSValue *v);
-        static JSValue *valueToNumber(JSValue *v);
+        static JSValue valueToString(const JSValue& value);
+        static JSValue valueToNumber(const JSValue& value);
 
         int operator==(const JSValue& value) const;
     };
@@ -266,6 +266,16 @@ namespace JSTypes {
         JSValue value;
     };
     
+    /**
+     * Garbage collectable UNICODE string.
+     */
+    class JSString : public std::basic_string<char16, std::char_traits<char16>, gc_allocator<char16> >, public gc_base {
+    public:
+        JSString() {}
+        explicit JSString(const String* str);
+        explicit JSString(const char* str);
+    };
+
     /**
      * Provides a set of nested scopes. 
      */

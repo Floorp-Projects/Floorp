@@ -72,10 +72,10 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::object_tag:
     case JSValue::array_tag:
     case JSValue::function_tag:
-        printFormat(stdOut, "0x%08X", value.object);
+        printFormat(f, "0x%08X", value.object);
         break;
     case JSValue::string_tag:
-        f << *value.string;
+        printString(f, value.string->begin(), value.string->end());
         break;
     default:
         f << "undefined";
@@ -85,16 +85,16 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
 }
 
 
-JSValue *JSValue::valueToString(JSValue *v) // can assume v is not a string
+JSValue JSValue::valueToString(const JSValue& value) // can assume value is not a string
 {
     char *chrp;
     char buf[dtosStandardBufferSize];
-    switch (v->tag) {
+    switch (value.tag) {
     case JSValue::i32_tag:
-        chrp = doubleToStr(buf, dtosStandardBufferSize, v->i32, dtosStandard, 0);
+        chrp = doubleToStr(buf, dtosStandardBufferSize, value.i32, dtosStandard, 0);
         break;
     case JSValue::f64_tag:
-        chrp = doubleToStr(buf, dtosStandardBufferSize, v->f64, dtosStandard, 0);
+        chrp = doubleToStr(buf, dtosStandardBufferSize, value.f64, dtosStandard, 0);
         break;
     case JSValue::object_tag:
         chrp = "object";
@@ -106,27 +106,26 @@ JSValue *JSValue::valueToString(JSValue *v) // can assume v is not a string
         chrp = "function";
         break;
     case JSValue::string_tag:
-        return v;
+        return value;
     default:
         chrp = "undefined";
         break;
     }
-    return new JSValue(new String(widenCString(chrp)));
+    return JSValue(new JSString(chrp));
 }
 
-JSValue *JSValue::valueToNumber(JSValue *v)// can assume v is not a number
+JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not a number
 {
-    switch (v->tag) {
+    switch (value.tag) {
     case JSValue::i32_tag:
     case JSValue::f64_tag:
-        return v;
+        return value;
     case JSValue::string_tag: 
         {
-            int length = v->string->length();
-            const char16 *s = v->string->c_str();
+            JSString* str = value.string;
             const char16 *numEnd;
-	        double d = stringToDouble(s, s + length, numEnd);
-            return new JSValue(d);
+	        double d = stringToDouble(str->begin(), str->end(), numEnd);
+            return JSValue(d);
         }
     case JSValue::object_tag:
     case JSValue::array_tag:
@@ -134,9 +133,22 @@ JSValue *JSValue::valueToNumber(JSValue *v)// can assume v is not a number
     default:
         break;
     }
-    return new JSValue();
+    return kUndefinedValue;
 }
 
+JSString::JSString(const String* str)
+{
+    size_t n = str->size();
+    resize(n);
+    traits_type::copy(begin(), str->begin(), n);
+}
+
+JSString::JSString(const char* str)
+{
+    size_t n = ::strlen(str);
+    resize(n);
+    std::transform(str, str + n, begin(), JavaScript::widen);
+}
 
 } /* namespace JSTypes */    
 } /* namespace JavaScript */
