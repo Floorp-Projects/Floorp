@@ -48,6 +48,7 @@
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
+#include "nsIJSRuntimeService.h"
 
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
@@ -605,9 +606,16 @@ main(int argc, char **argv)
 
     SetupRegistry();
 
-    rt = JS_NewRuntime(8L * 1024L * 1024L);
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    // get the JSRuntime from the runtime svc, if possible
+    if (NS_FAILED(rv) ||
+        NS_FAILED(rtsvc->GetRuntime(&rt))) {
+        rtsvc = NULL;
+        rt = JS_NewRuntime(8L * 1024L * 1024L);
+    }
     if (!rt)
         return 1;
+
     jscontext = JS_NewContext(rt, 8192);
     if (!jscontext)
         return 1;
@@ -653,8 +661,11 @@ main(int argc, char **argv)
     xpc->AbandonJSContext(jscontext);
     NS_RELEASE(xpc);
     JS_DestroyContext(jscontext);
-    JS_DestroyRuntime(rt);
-    JS_ShutDown();
+    if (!rtsvc) {
+        /* no runtime service, so we have to handle shutdown */
+        JS_DestroyRuntime(rt);
+        JS_ShutDown();
+    }
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
