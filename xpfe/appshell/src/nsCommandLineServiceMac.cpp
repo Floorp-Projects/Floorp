@@ -62,6 +62,7 @@
 #include "jsapi.h"
 #include "nsReadableUtils.h"
 #include "nsICloseAllWindows.h"
+#include "nsIPrefService.h"
 
 #include "nsAEEventHandling.h"
 
@@ -303,11 +304,29 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
   rv = NS_GetURLSpecFromFile(inFile, specBuf);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-  nsAutoString urlString;
-  CopyASCIItoUCS2(specBuf, urlString);    
-  rv = OpenWindow( "chrome://navigator/content", urlString.get() );
+  
+  return OpenURL(specBuf.get());
+}
+
+OSErr nsMacCommandLine::OpenURL(const char* aURL)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+
+  nsXPIDLCString browserURL;
+  if (NS_SUCCEEDED(rv))
+    rv = prefBranch->GetCharPref("browser.chromeURL", getter_Copies(browserURL));
+  
+  if (NS_FAILED(rv)) {
+    NS_WARNING("browser.chromeURL not supplied! How is the app supposed to know what the main window is?");
+    browserURL.Assign("chrome://navigator/content/navigator.xul");
+  }
+     
+  rv = OpenWindow(browserURL.get(), NS_ConvertASCIItoUCS2(aURL).get());
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
+    
   return noErr;
 }
 
@@ -357,13 +376,7 @@ OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 {
   OSErr err = errAEEventNotHandled;
   if (mStartedUp)
-  {
-    nsresult rv;
-    rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
-    if (NS_FAILED(rv))
-      return err;
-        err = noErr;  // we handled it
-  }
+    return OpenURL(url);
   else {
     err = AddToCommandLine("-url");
     if (err == noErr)
