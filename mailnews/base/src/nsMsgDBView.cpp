@@ -667,8 +667,8 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
       (numSelected > 1 && mNumSelectedRows > 1)) && mOfflineMsgSelected == offlineMsgSelected)
   {
 
-  }
-  else if (mCommandUpdater) // o.t. push an updated
+  } // don't update commands if we're removing rows, unless it was the last row.
+  else if (mCommandUpdater && (!mRemovingRow || GetSize() == 0)) // o.t. push an updated
   {
     mCommandUpdater->UpdateCommandStatus();
   }
