@@ -39,6 +39,7 @@
 #ifndef nsFontMetricsPS_h__
 #define nsFontMetricsPS_h__
 
+#include "gfx-config.h"
 #include "nsIFontMetrics.h"
 #include "nsAFMObject.h"
 #include "nsFont.h"

@@ -36,6 +36,8 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "gfx-config.h"
  
 /* PostScript/Xprint print modules do not support more than one object
  * instance because they use global vars which cannot be shared between

@@ -28,6 +28,8 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  * 10/09/2000       IPLabs Linux Team      True Unicode glyps support added.
  */
+
+#include "gfx-config.h"
  
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #define PR_LOGGING 1

@@ -24,6 +24,7 @@
 #ifndef nsFreeType_h__
 #define nsFreeType_h__
 
+#include "gfx-config.h"
 #if (defined(MOZ_ENABLE_FREETYPE2))
 
 #include "nspr.h"

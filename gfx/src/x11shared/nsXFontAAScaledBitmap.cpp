@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <X11/Xatom.h>
+#include "gfx-config.h"
 #include "nscore.h"
 #include "nsXFontAAScaledBitmap.h"
 #include "nsRenderingContextGTK.h"

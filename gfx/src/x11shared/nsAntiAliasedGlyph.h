@@ -2,6 +2,7 @@
 #ifndef NSANTIALIASEDGLYPH_H
 #define NSANTIALIASEDGLYPH_H
 
+#include "gfx-config.h"
 #include "nscore.h"
 
 #ifdef MOZ_ENABLE_FREETYPE2

@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfx-config.h"
 #include "nsFT2FontCatalog.h"
 #include "nsFontDebug.h"
 

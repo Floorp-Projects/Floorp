@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfx-config.h"
 #include "nsFontMetricsPS.h"
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"

@@ -120,6 +120,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
 
 LOCAL_INCLUDES	+= \
+		-I../.. \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		-I$(srcdir)/../shared \

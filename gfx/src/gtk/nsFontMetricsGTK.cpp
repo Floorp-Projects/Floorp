@@ -43,6 +43,7 @@
 #define ENABLE_X_FONT_BANNING 1
 
 #include <sys/types.h>
+#include "gfx-config.h"
 #include "nscore.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsGTK.h"

@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfx-config.h"
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 #include "nsCOMPtr.h"
