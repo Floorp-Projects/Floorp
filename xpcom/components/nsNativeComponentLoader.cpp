@@ -365,7 +365,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     // Get the module object
     nsCOMPtr<nsIModule> mobj;
     /* XXXshaver cheat and use the global component manager */
-    rv = dll->GetModule(nsComponentManagerImpl::gComponentManager,
+    rv = dll->GetModule(NS_STATIC_CAST(nsIComponentManager*, nsComponentManagerImpl::gComponentManager),
                         getter_AddRefs(mobj));
     if (NS_SUCCEEDED(rv))
         {

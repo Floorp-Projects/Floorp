@@ -290,7 +290,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
 
 }
 
-NS_IMPL_ISUPPORTS(nsComponentManagerImpl, NS_GET_IID(nsIComponentManager));
+NS_IMPL_ISUPPORTS2(nsComponentManagerImpl, nsIComponentManager, nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
