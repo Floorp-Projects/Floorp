@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.20 $ 
-# $Date: 2002/04/27 04:11:36 $ 
+# $Revision: 1.21 $ 
+# $Date: 2002/04/27 04:20:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -374,7 +374,7 @@ sub HTML_status_page {
                     "linktxt"=>"Show current status", 
                     "href"=>$status_page_url,
                    ).
-  "<br><p>\n\n";
+  "<br><p>\n\n".
   HTMLPopUp::Link(
                   "linktxt"=>"Administrate this tree ($tree)",
                   "href"=>("$FileStructure::URLS{'admintree'}".
@@ -389,7 +389,7 @@ sub HTML_status_page {
                              "\?".
                              "tree=$tree"),
                    ).
-  "<br>\n".
+  "<br>\n";
 
   $out .= HTMLPopUp::page_header('title'=>"Tinderbox Status Page tree: $tree", 
                                  'refresh'=>$REFRESH_TIME);
