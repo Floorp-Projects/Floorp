@@ -422,9 +422,8 @@ int main(int argc, char **argv)
 	World world;
   #if 0
     testICG(world);
-  #else
-	readEvalPrint(std::cin, world);
   #endif
+	readEvalPrint(std::cin, world);
     return 0;
 
     //return ProcessArgs(argv + 1, argc - 1);
