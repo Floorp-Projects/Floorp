@@ -103,9 +103,6 @@ nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result) {
     nsresult rv;
 
-    // All gopher URLs are absolute by definition
-    NS_ASSERTION(!aBaseURI, "base url passed into gopher protocol handler");
-
     nsCOMPtr<nsIStandardURL> url;
     rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
                                             NS_GET_IID(nsIStandardURL),

@@ -316,6 +316,11 @@ nsGopherChannel::GetContentType(char* *aContentType)
 {
     if (!aContentType) return NS_ERROR_NULL_POINTER;
 
+    if (!mContentType.IsEmpty()) {
+        *aContentType = ToNewCString(mContentType);
+        return NS_OK;
+    }
+
     switch(mType) {
     case '0':
         *aContentType = nsCRT::strdup(TEXT_HTML);
@@ -376,9 +381,8 @@ nsGopherChannel::GetContentType(char* *aContentType)
 NS_IMETHODIMP
 nsGopherChannel::SetContentType(const char *aContentType)
 {
-    //It doesn't make sense to set the content-type on this type
-    // of channel...
-    return NS_ERROR_FAILURE;
+    mContentType.Assign(aContentType);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
