@@ -51,7 +51,7 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" xbl:inherits="handleCtrlPageUpDown"
+      <xul:tabbox flex="1" xbl:inherits="handleCtrlPageUpDown" eventnode="document"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
@@ -493,12 +493,7 @@
             }
 
             function setFocus(element) {
-              if (document.commandDispatcher.focusedElement && 
-                  document.commandDispatcher.focusedElement.parentNode == 
-                  this.mCurrentTab.parentNode) {
-                // The focus is on a tab in the same tab panel
-                return;  // If focus was on a tab, switching tabs focuses the new tab
-              }
+               Components.lookupMethod(element, "focus").call(element);
             }
             
             var whatToFocus = window.content;
@@ -1355,6 +1350,7 @@
         <![CDATA[
           this.mCurrentBrowser = this.mPanelContainer.firstChild;
           this.mCurrentTab = this.mTabContainer.firstChild;
+          this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
         ]]>
       </constructor>
 
