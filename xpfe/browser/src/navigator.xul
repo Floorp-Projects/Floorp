@@ -178,6 +178,16 @@
     }
   }
 
+  function BrowserPrint()
+  {
+    // Borrowing this method to show how to 
+    // dynamically change icons
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      appCore.print();
+    }
+  }
+
   function BrowserSetDocumentCharacterSet(aCharset)
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
@@ -367,9 +377,9 @@
 	      <menuitem name="Synchronize..." onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Print Setup" onclick=""/>
+      <menuitem name="Print Setup" onclick=";"/>
       <menuitem name="Print Preview" onclick=""/>
-      <menuitem name="Print" onclick=""/>
+      <menuitem name="Print" onclick="BrowserPrint()"/>
       <separator />
       <menuitem name="Close" onclick="BrowserClose();"/>
       <menuitem name="Quit" onclick="BrowserExit();"/>
