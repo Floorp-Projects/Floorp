@@ -288,7 +288,10 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
   *aImageFrame = nsnull;
 
   nsIFrame* frame = GetPrimaryFrame(PR_TRUE);
-  CallQueryInterface(frame, aImageFrame);
+
+  if (frame) {
+    CallQueryInterface(frame, aImageFrame);
+  }
 
   return NS_OK;
 }
