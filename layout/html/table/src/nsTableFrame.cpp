@@ -39,7 +39,7 @@
 #include "nsVoidArray.h"
 #include "prinrval.h"
 #include "nsIPtr.h"
-
+#include "nsIView.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -285,14 +285,14 @@ void nsTableFrame::RecalcLayoutData()
         // Check to see if the cell data represents the top,left
         // corner of a a table cell
 
-        // Check to see if cell the represents a left edge cell
+        // Check to see if cell the represents a top edge cell
         if (row == 0)
           above = nsnull;
         else
         {
           cellData = cellMap->GetCellAt(row-1,col);
           if (cellData != nsnull)
-            above = cellData->mCell;
+            above = cellData->mRealCell->mCell;
 
           // Does the cell data point to the same cell?
           // If it is, then continue
@@ -300,14 +300,14 @@ void nsTableFrame::RecalcLayoutData()
             continue;
         }           
 
-        // Check to see if cell the represents a top edge cell
+        // Check to see if cell the represents a left edge cell
         if (col == 0)
           left = nsnull;
         else
         {
           cellData = cellMap->GetCellAt(row,col-1);
           if (cellData != nsnull)
-            left = cellData->mCell;
+            left = cellData->mRealCell->mCell;
 
           if (left != nsnull && left == cell)
             continue;
@@ -405,7 +405,8 @@ void nsTableFrame::RecalcLayoutData()
         }
         
         nsCellLayoutData* cellLayoutData = FindCellLayoutData(cell); 
-        cellLayoutData->RecalcLayoutData(this,boundaryCells);
+        if (cellLayoutData != nsnull)
+          cellLayoutData->RecalcLayoutData(this,boundaryCells);
       }
     }
   }
@@ -569,8 +570,11 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
 
   nsIContent* c = mContent;
   NS_ASSERTION(nsnull != c, "null content");
-  ((nsTablePart *)c)->GetMaxColumns();  // as a side effect, does important initialization
+  nsTablePart* table = (nsTablePart*)c;
 
+  // Ensure the cell map
+  table->EnsureCellMap();
+  
   nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); // availSize is the space available at any given time in the process
   nsSize maxSize(0, 0);       // maxSize is the size of the largest child so far in the process
   nsSize kidMaxSize(0,0);
@@ -695,6 +699,9 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       break;
     }
   }
+
+  // Recalculate Layout Dependencies
+  RecalcLayoutData();
 
   if (nsnull != prevKidFrame) {
     NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
@@ -1643,6 +1650,10 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
      
     kidFrame->GetContent((nsIContent*&)(kid.AssignRef()));  // kid: REFCNT++
     NS_ASSERTION(kid.IsNotNull(), "bad kid");
+
+    nscoord topInnerMargin = 0;
+    nscoord bottomInnerMargin = 0;
+
     if (kid->GetType() == nsITableContent::kTableRowGroupType)
     {
       /* Step 1:  set the row height to the height of the tallest cell,
@@ -1661,13 +1672,25 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
          
         rowGroupFrame->ChildAt(rowIndex, (nsIFrame*&)rowFrame);
         NS_ASSERTION(nsnull != rowFrame, "bad row frame");
-        rowHeights[rowIndex] = rowFrame->GetTallestChild();
+
+        nscoord maxCellHeight       = rowFrame->GetTallestChild();
+        nscoord maxCellTopMargin    = rowFrame->GetChildMaxTopMargin();
+        nscoord maxCellBottomMargin = rowFrame->GetChildMaxBottomMargin();
+        nscoord maxRowHeight = maxCellHeight + maxCellTopMargin + maxCellBottomMargin;
+
+        rowHeights[rowIndex] = maxRowHeight;
+    
+        if (rowIndex == 0)
+          topInnerMargin = maxCellTopMargin;
+        if (rowIndex+1 == numRows)
+          bottomInnerMargin = maxCellBottomMargin;
+
 
         nsSize  rowFrameSize;
 
         rowFrame->GetSize(rowFrameSize);
-        rowFrame->SizeTo(rowFrameSize.width, rowHeights[rowIndex]);
-        rowGroupHeight += rowHeights[rowIndex];
+        rowFrame->SizeTo(rowFrameSize.width, maxRowHeight);
+        rowGroupHeight += maxRowHeight;
         // resize all the cells based on the rowHeight
         PRInt32 numCells;
 
@@ -1685,7 +1708,7 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
             nsSize  cellFrameSize;
 
             cellFrame->GetSize(cellFrameSize);
-            cellFrame->SizeTo(cellFrameSize.width, rowHeights[rowIndex]);
+            cellFrame->SizeTo(cellFrameSize.width, maxCellHeight);
             // Realign cell content based on new height
             cellFrame->VerticallyAlignChild(aPresContext);
           }
@@ -1731,9 +1754,12 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
           if (1<rowSpan)
           { // found a cell with rowspan > 1, determine it's height
             if (gsDebug==PR_TRUE) printf("  cell[%d,%d] has a rowspan = %d\n", rowIndex, cellIndex, rowSpan);
-            PRInt32 heightOfRowsSpanned = 0;
+            
+            nscoord heightOfRowsSpanned = 0;
             for (PRInt32 i=0; i<rowSpan; i++)
               heightOfRowsSpanned += rowHeights[i+rowIndex];
+            
+            heightOfRowsSpanned -= topInnerMargin + bottomInnerMargin;
 
             /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
             nsSize  cellFrameSize;
@@ -2176,6 +2202,26 @@ NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
+NS_METHOD nsTableFrame::GetCellMarginData(nsIFrame* aKidFrame, nsMargin& aMargin)
+{
+  nsresult result = NS_ERROR_NOT_INITIALIZED;
+
+  nsIContent* content = nsnull;
+  aKidFrame->GetContent(content);
+
+  if (nsnull != content)
+  {
+    nsTableCell*      cell = (nsTableCell*)content;
+
+    nsCellLayoutData* layoutData = GetCellLayoutData(cell);
+    if (layoutData)
+      result = layoutData->GetMargin(aMargin);
+    NS_RELEASE(content);
+  }
+
+  return result;
+}
+
 /* ---------- static methods ---------- */
 
 nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
@@ -2225,6 +2271,43 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
     }
 */
 
+// For Debugging ONLY
+NS_METHOD nsTableFrame::MoveTo(nscoord aX, nscoord aY)
+{
+  if ((aX != mRect.x) || (aY != mRect.y)) {
+    mRect.x = aX;
+    mRect.y = aY;
 
+    nsIView* view;
+    GetView(view);
 
+    // Let the view know
+    if (nsnull != view) {
+      // Position view relative to it's parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      view->SetPosition(origin.x, origin.y);
+      NS_IF_RELEASE(parentWithView);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD nsTableFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+{
+  mRect.width = aWidth;
+  mRect.height = aHeight;
+
+  nsIView* view;
+  GetView(view);
+
+  // Let the view know
+  if (nsnull != view) {
+    view->SetDimensions(aWidth, aHeight);
+  }
+  return NS_OK;
+}
 

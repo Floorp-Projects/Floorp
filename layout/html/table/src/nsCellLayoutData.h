@@ -127,6 +127,10 @@ public:
   void RecalcLayoutData(nsTableFrame* aTableFrame,
                         nsVoidArray*  aBoundaryCells[4]);
 
+  
+  NS_IMETHOD GetMargin(nsMargin& aMargin);
+  
+
 
 private:
 #if 0 // these come on line when we do character-based cell content alignment
@@ -142,6 +146,7 @@ private:
   nsReflowMetrics           mDesiredSize;
   nsSize                    mMaxElementSize;
 
+  nsresult                  mCalculated;
   nsMargin                  mMargin;
   nsIFrame*                 mBorderFrame[4];  // the frame whose border is used
 };

@@ -21,6 +21,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
+class  nsTableFrame;
 struct RowReflowState;
 
 /**
@@ -99,11 +100,16 @@ public:
   void ResetMaxChildHeight();
 
   /** set mTallestCell to max(mTallestCell, aChildHeight) */ 
-  void SetMaxChildHeight(PRInt32 aChildHeight);
+  void SetMaxChildHeight(nscoord aChildHeight, nscoord aCellTopMargin, nscoord aCellBottomMargin);
 
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
-  PRInt32 GetTallestChild() const;
+  nscoord GetTallestChild() const;
+  nscoord GetChildMaxTopMargin() const;
+  nscoord GetChildMaxBottomMargin() const;
 
+  // For DEBUGGING Purposes Only
+  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
+  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
 
 protected:
 
@@ -164,8 +170,9 @@ protected:
 
 
 private:
-  PRInt32 mTallestCell; // not my height, but the height of my tallest child
-
+  nscoord  mTallestCell;          // not my height, but the height of my tallest child
+  nscoord  mCellMaxTopMargin;
+  nscoord  mCellMaxBottomMargin;
 };
 
 #endif
