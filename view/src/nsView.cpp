@@ -332,7 +332,15 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
           kid->GetWidget(widget);
           hasWidget = (widget != nsnull);
-          NS_IF_RELEASE(widget);
+          if (nsnull != widget)
+          {
+            void *thing;
+            thing = widget->GetNativeData(NS_NATIVE_WIDGET);
+            NS_RELEASE(widget);
+
+            if (nsnull == thing)
+              hasWidget = PR_FALSE;
+          }
           if (!hasWidget)
           {
             nsRect kidRect;
@@ -1139,14 +1147,21 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
 
   if (NS_OK == LoadWidget(aWindowIID))
   {
-    if (aNative)
-      mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-    else
+    PRBool usewidgets;
+
+    dx->SupportsNativeWidgets(usewidgets);
+
+    if (PR_TRUE == usewidgets)
     {
-      nsIWidget *parent;
-      GetOffsetFromWidget(nsnull, nsnull, parent);
-      mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-      NS_IF_RELEASE(parent);
+      if (aNative)
+        mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+      else
+      {
+        nsIWidget *parent;
+        GetOffsetFromWidget(nsnull, nsnull, parent);
+        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        NS_IF_RELEASE(parent);
+      }
     }
   }
 

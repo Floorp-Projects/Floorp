@@ -68,6 +68,8 @@ public:
   virtual void Show() = 0;
 
   virtual void Hide() = 0;
+
+  NS_IMETHOD Print(void) = 0;
 };
 
 #endif /* nsIContentViewer_h___ */

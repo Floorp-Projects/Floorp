@@ -444,6 +444,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_THREE_COLUMN:
     ShowPrintPreview(aID);
     break;
+
+  case VIEWER_PRINT:
+    DoPrint();
+    break;
   }
 
   return nsEventStatus_eIgnore;
@@ -1905,6 +1909,19 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
       }
       NS_RELEASE(cv);
     }
+  }
+}
+
+void nsBrowserWindow::DoPrint(void)
+{
+  nsIContentViewer *viewer = nsnull;
+
+  mWebShell->GetContentViewer(viewer);
+
+  if (nsnull != viewer)
+  {
+    viewer->Print();
+    NS_RELEASE(viewer);
   }
 }
 

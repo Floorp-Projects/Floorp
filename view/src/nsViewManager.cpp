@@ -517,42 +517,45 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     // Get the parent view
     widgetView->GetParent(widgetView);
   } while (nsnull != widgetView);
-  NS_ASSERTION(nsnull != widgetView, "no widget");
+//  NS_ASSERTION(nsnull != widgetView, "no widget");  this assertion not valid for printing...MMP
 
-  // Convert damage rect to coordinate space of containing view with
-  // a widget
-  // XXX Consolidate this code with the code above...
-  if (aView != widgetView)
+  if (nsnull != widgetView)
   {
-    do
+    // Convert damage rect to coordinate space of containing view with
+    // a widget
+    // XXX Consolidate this code with the code above...
+    if (aView != widgetView)
     {
-      par->GetPosition(&x, &y);
-      trect.x += x;
-      trect.y += y;
+      do
+      {
+        par->GetPosition(&x, &y);
+        trect.x += x;
+        trect.y += y;
 
-      par->GetParent(par);
+        par->GetParent(par);
+      }
+      while ((nsnull != par) && (par != widgetView));
     }
-    while ((nsnull != par) && (par != widgetView));
-  }
 
-  // Add this rect to the widgetView's dirty region.
-  AddRectToDirtyRegion(widgetView, trect);
+    // Add this rect to the widgetView's dirty region.
+    AddRectToDirtyRegion(widgetView, trect);
 
-  // See if we should do an immediate refresh or wait
-  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
-  {
-    Composite();
-    // XXX Composite() should return the top-most view that's dirty so
-    // we don't have to always use the root window...
-    mRootWindow->Update();
-  }
-  // or if a sync paint is allowed and it's time for the compositor to
-  // do a refresh
-  else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
-  {
-    PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-    if (deltams > (1000 / (PRInt32)mFrameRate))
+    // See if we should do an immediate refresh or wait
+    if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+    {
       Composite();
+      // XXX Composite() should return the top-most view that's dirty so
+      // we don't have to always use the root window...
+      mRootWindow->Update();
+    }
+    // or if a sync paint is allowed and it's time for the compositor to
+    // do a refresh
+    else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
+    {
+      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+      if (deltams > (1000 / (PRInt32)mFrameRate))
+        Composite();
+    }
   }
 
   return NS_OK;
@@ -1311,3 +1314,40 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager :: Display(void)
+{
+  nsRect              wrect;
+  nsIRenderingContext *localcx = nsnull;
+  nsDrawingSurface    ds = nsnull;
+  nsRect              trect;
+
+  if (PR_FALSE == mRefreshEnabled)
+    return NS_OK;
+
+  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+
+  mPainting = PR_TRUE;
+
+  mContext->CreateRenderingContext(localcx);
+
+  //couldn't get rendering context. this is ok if at startup
+  if (nsnull == localcx)
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  mRootView->GetBounds(trect);
+
+  PRBool  result;
+
+  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+
+  // Paint the view. The clipping rect was set above set don't clip again.
+  mRootView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+
+  NS_RELEASE(localcx);
+
+  mPainting = PR_FALSE;
+
+  return NS_OK;
+}

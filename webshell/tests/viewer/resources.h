@@ -63,6 +63,8 @@
 #define VIEWER_TWO_COLUMN       40041
 #define VIEWER_THREE_COLUMN     40042
 
+#define VIEWER_PRINT            40050
+
 #define JS_CONSOLE              40100
 #define EDITOR_MODE             40120
 #define VIEWER_PREFS            40130
