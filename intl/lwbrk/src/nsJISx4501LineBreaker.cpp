@@ -166,6 +166,18 @@ static PRUint16 gPair[MAX_CLASSES] = {
 #define GETCLASSFROMTABLE(t, l) ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f)
 
 
+
+
+#define IS_HALFWIDTH_IN_JISx4501_CLASS3(u) (\
+  ((0xff70 >= (u)) && ((u) >= 0xff76))|| \
+  ( 0xff79 == (u)) || \
+  ( 0xff82 == (u)) || \
+  ( 0xff94 == (u)) || \
+  ( 0xff95 == (u)) || \
+  ( 0xff96 == (u)) || \
+  ( 0xff9c == (u))    \
+)
+
 PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
 {
    PRUint16 h = u & 0xFF00;
@@ -177,15 +189,15 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
    {
      c = GETCLASSFROMTABLE(gLBClass00, l);
    } 
-   else if( 0x0020 == h)
+   else if( 0x2000 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass20, l);
    } 
-   else if( 0x0021 == h)
+   else if( 0x2100 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass21, l);
    } 
-   else if( 0x0030 == h)
+   else if( 0x3000 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass30, l);
    } else if (( ( 0x3200 <= h) && ( h <= 0x33ff) ) ||
@@ -194,6 +206,32 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
              )
    { 
      c = 5; // CJK charcter, Han, and Han Compatability
+   } else if( 0xff00 == h)
+   {
+     if( l < 0x0060) // Fullwidth ASCII variant 
+     {
+       c = GETCLASSFROMTABLE(gLBClass00, (l+0x20));
+     } else if (l < 0x00a0) {
+       switch (l)
+       {
+         case 0x61: c = GetClass(0x3002); break;
+         case 0x62: c = GetClass(0x300c); break;
+         case 0x63: c = GetClass(0x300d); break;
+         case 0x64: c = GetClass(0x3001); break;
+         case 0x65: c = GetClass(0x30fb); break;
+         case 0x9e: c = GetClass(0x309b); break;
+         case 0x9f: c = GetClass(0x309c); break;
+         default:
+           if(IS_HALFWIDTH_IN_JISx4501_CLASS3(u))
+              c = 1; // jis x4501 class 3
+           else
+              c = 5; // jis x4501 class 11
+           break;
+       };
+       // Halfwidth Katakana variants
+     } else {
+       c = 8; // Halfwidth Hangul variants 
+     }
    } else {
      c = 8; // others 
    }
@@ -299,7 +337,7 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Next(
   if( aPos > aLen )
      return NS_ERROR_ILLEGAL_VALUE;
 
-  if((aPos + 1) < aLen)
+  if((aPos + 1) > aLen)
   {
      *oNext = aLen;
      *oNeedMoreText = PR_TRUE;
@@ -329,7 +367,7 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Next(
      }
 
      if(GetPair(c1, c2)) {
-       *oNext = cur + 1;
+       *oNext = cur ;
        *oNeedMoreText = PR_FALSE;
        return NS_OK;
      }
