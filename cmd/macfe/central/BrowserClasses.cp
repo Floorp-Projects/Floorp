@@ -119,7 +119,6 @@
 	#include "CProxyPane.h"
 	#include "CProxyCaption.h"
 	#include "PopupBox.h"
-	#include "CPersonalToolbarTable.h"
 	#include "CNavCenterWindow.h"
 	#include "CNavCenterContextMenuAtt.h"
 	#include "CNavCenterTitle.h"
@@ -304,7 +303,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CSwatchBrokerView);
 	RegisterClass_(CToolbarDragBar);
 	RegisterClass_(CToolbarPatternBevelView);
-	RegisterClass_(CPersonalToolbarTable);
 	
 	RegisterClass_(CTSMEditField);
 	
