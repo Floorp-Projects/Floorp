@@ -109,7 +109,7 @@ tab:hover:active {
 /* ..... selected state ..... */
 
 tab[selected="true"],
-tab:hover:active[selected="true"] {
+tab[selected="true"]:hover:active {
   -moz-border-top-colors: #000000 #DFE2E6 #D0D7DD;
   -moz-border-right-colors: #000000 #BAC2CD #C1C9D3;
   -moz-border-bottom-colors: transparent;
@@ -165,5 +165,3 @@ tab:focus {
   border-top: 1px solid #000000;
   border-bottom: none;
 }
-
-

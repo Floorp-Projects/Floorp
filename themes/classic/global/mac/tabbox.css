@@ -65,24 +65,24 @@ tab:hover:active > .tab-image-right {
 
 
 /* when a tab is selected this is how it should look */
-tab:hover:active[selected="true"] {
+tab[selected="true"]:hover:active {
 	color			: #000000;
 }
 
 tab[selected="true"] > .tab-image-left,
-tab:hover:active[selected="true"] > .tab-image-left { 
+tab[selected="true"]:hover:active > .tab-image-left {
   background		: url(chrome://global/skin/tabbox/tab-select-left.gif) no-repeat;
 }
 
 tab[selected="true"] > .tab-image-middle,
-tab:hover:active[selected="true"] > .tab-image-middle { 
+tab[selected="true"]:hover:active > .tab-image-middle {
   background-color: #EEEEEE;
   -moz-border-top-colors: #000000 #CCCCCC #FFFFFF;
   -moz-border-bottom-colors: #EEEEEE;
 }
 
 tab[selected="true"] > .tab-image-right,
-tab:hover:active[selected="true"] > .tab-image-right { 
+tab[selected="true"]:hover:active > .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-select-right.gif) no-repeat;
 }
 
@@ -158,19 +158,19 @@ tabs {
 /* when a tab is selected this is how it should look */
 
 .tab-bottom[selected="true"] > .tab-image-left,
-.tab-bottom:hover:active[selected="true"] > .tab-image-left { 
+.tab-bottom[selected="true"]:hover:active > .tab-image-left {
   background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-left.gif) no-repeat;
 }
 
 .tab-bottom[selected="true"] > .tab-image-middle,
-.tab-bottom:hover:active[selected="true"] > .tab-image-middle { 
+.tab-bottom[selected="true"]:hover:active > .tab-image-middle {
   background-color: #EEEEEE;
   -moz-border-top-colors: #EEEEEE;
   -moz-border-bottom-colors: #000000 #CCCCCC #FFFFFF;
 }
 
 .tab-bottom[selected="true"] > .tab-image-right,
-.tab-bottom:hover:active[selected="true"] > .tab-image-right { 
+.tab-bottom[selected="true"]:hover:active > .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-right.gif) no-repeat;
 }
 
@@ -256,4 +256,3 @@ tabpanels {
   padding: 5px;
   background-color		: #EEEEEE;
 }
-

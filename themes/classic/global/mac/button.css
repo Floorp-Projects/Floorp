@@ -98,7 +98,7 @@ button[default="true"] {
   -moz-border-radius: 3px;
 }
 
-button:hover:active[default="true"],
+button[default="true"]:hover:active,
 button[open="true"][default="true"],
 button[checked="true"][default="true"] {
   -moz-border-top-colors: #000000 #CCCCCC #AAAAAA #000000 #454545 #555555;
