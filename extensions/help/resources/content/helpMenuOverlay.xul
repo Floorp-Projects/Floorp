@@ -6,12 +6,14 @@
 ]>
 
 <overlay id="helpMenuID"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
   <menupopup id="helpPopup">
-    <menuitem label="&helpContents.label;" accesskey="&helpContents.accesskey;" position="1" id="help"
-      oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />   
-  
+    <menuitem label="&helpContents.label;" 
+      accesskey="&helpContents.accesskey;" 
+      position="1" id="help"
+      oncommand="openHelp();" />   
   </menupopup>
   
 </overlay>

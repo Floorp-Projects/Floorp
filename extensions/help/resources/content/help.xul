@@ -20,7 +20,6 @@
 
 <window id="help"
    windowtype="mozilla:help"
-   xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="640"
    height="650"
@@ -87,7 +86,7 @@
   <!-- button bar -->
   <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
     <toolbar id="helpToolbar" class="toolbar-primary"
-        tooltiptext="The Help Toolbar"
+        tooltiptext="&toolbar.tooltip;"
         tbalign="stretch" persist="collapsed">
 
         <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"
@@ -123,8 +122,10 @@
              label="&searchtab.label;" oncommand="showPanel('help-search-panel')"/>
              <vbox id="help-search-panel" hidden="true" flex="1">
                 <hbox>
-                  <label value="&searchbtn.label;" align="end" flex="0"/>
-                  <textbox id="findText" flex="1"/>
+                  <textbox id="findText" 
+                     flex="1" 
+                     onkeydown="if (event.keyCode == KeyEvent.DOM_VK_ENTER || event.keyCode == KeyEvent.DOM_VK_RETURN) doFind();"/>
+
                   <button id="findButton" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
                 </hbox>
                 <tree id="help-search-tree"
@@ -165,7 +166,10 @@
 
                  <treecols>
                     <treecol id="ResultsColumn" flex="1"
-                             hideheader="true" primary="true"/>
+                             hideheader="true" primary="true"
+                             sortActive="true"
+                             sortDirection="ascending"
+                             sort="?name"/>
                  </treecols>
           </tree>
        </vbox>
@@ -216,7 +220,7 @@
          </tree>
 
          <button id="help-index-btn" class="box-texttab texttab-sidebar"
-            label="&indextab.label;"  oncommand="showPanel('help-index-tree')"/>
+            label="&indextab.label;"  oncommand="showPanel('help-index-tree');displayIndex();"/>
 
          <tree id="help-index-tree" flex="1"
                datasources="rdf:null" hidecolumnpicker="true" hidden="true"
@@ -307,10 +311,7 @@
             <treecols>
                <treecol id="GlossaryNameColumn" flex="1"
                   hideheader="true"
-                  primary="true"
-                  sortActive="true"
-                  sortDirection="ascending"
-                  sort="?name"/>
+                  primary="true"/>
             </treecols>
          </tree>
 

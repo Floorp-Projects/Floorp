@@ -32,6 +32,7 @@ var helpGlossaryPanel;
 const NC = "http://home.netscape.com/NC-rdf#";
 const SN = "rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const XML = "http://www.w3.org/XML/1998/namespace#"
+const MAX_LEVEL = 40; // maximum depth of recursion in search datasources.
 
 // Resources
 var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -63,11 +64,13 @@ var helpBaseURI;
 const defaultHelpFile = "chrome://help/locale/mozillahelp.rdf";
 // Set from nc:defaulttopic. It is used when the requested uri has no topic specified. 
 var defaultTopic = "welcome"; 
+var searchDatasources = "rdf:null";
+var searchDS = null;
 
 const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7; 
 
 // This function is called by dialogs/windows that want to display context-sensitive help
-// These dialogs/windows should include scrip chrome://help/content/contectHelp.js
+// These dialogs/windows should include the script chrome://help/content/contextHelp.js
 function displayTopic(topic) {
   if (!topic)
     topic = defaultTopic;
@@ -167,6 +170,12 @@ function loadHelpRDF() {
 
         var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
         datasources = normalizeLinks(helpBaseURI, datasources);
+        // cache additional datsources to augment search datasources.
+        if (panelID == "search") {
+          searchDatasources = datasources;
+          datasources = "rdf:null"; // but don't try to display them yet!
+        }  
+
         // cache toc datasources for use by ID lookup.
         var tree = document.getElementById("help-" + panelID + "-tree");
         tree.setAttribute("datasources", datasources);
@@ -185,7 +194,7 @@ function loadHelpRDF() {
 }
 function loadDatabases(compositeDatabase, datasources) {
   var ds = datasources.split(/\s+/);
-  for (var i=0; i < ds.length; i++) {
+  for (var i=0; i < ds.length; ++i) {
     if (ds[i] == "rdf:null" || ds[i] == "")
       continue;
     try {  
@@ -207,7 +216,7 @@ function normalizeLinks(helpBaseURI, links) {
   var ls = links.split(/\s+/);
   if (ls.length == 0)
     return links;
-  for (var i=0; i < ls.length; i++) {
+  for (var i=0; i < ls.length; ++i) {
     if (ls[i] == "")
       continue;
     if (ls[i].substr(0,7) != "chrome:" && ls[i].substr(0,4) != "rdf:") 
@@ -228,7 +237,7 @@ function getLink(ID) {
       return null;
     var tocDatasources = tocTree.getAttribute("datasources");
   var ds = tocDatasources.split(/\s+/);
-  for (var i=0; i < ds.length; i++) {
+  for (var i=0; i < ds.length; ++i) {
     if (ds[i] == "rdf:null" || ds[i] == "")
       continue;
     try {
@@ -253,37 +262,6 @@ function getLink(ID) {
 // Called by contextHelp.js to determine if this window is displaying the requested help file.
 function getHelpFileURI() {
   return helpFileURI;
-}
-
-// select the item in the tree called "Dialog Help" if the window was loaded from a dialog
-function setContext() {
-  var items = document.getElementsByAttribute("helplink", "chrome://help/locale/context_help.html");
-  if (items.length) {
-     var tree = document.getElementById("help-toc-tree");
-     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
-  }
-}
-
-function selectTOC(link_attr) {
-  var items = document.getElementsByAttribute("helplink", link_attr);
-  if (items.length) {
-     openTwistyTo(items[0]);
-     var tree = document.getElementById("help-toc-tree");
-     try { tree.selectItem(items[0].parentNode.parentNode); } catch(ex) { dump("can't select in toc: " + ex + "\n"); }
-  } 
-}
-
-// open parent nodes for the selected node
-// until you get to the top of the tree
-function openTwistyTo(selectedURINode)
-{
-  var parent = selectedURINode.parentNode;
-  var tree = document.getElementById("help-toc-tree");
-  if (parent == tree)
-    return;
- 
-  parent.setAttribute("open", "true");
-  openTwistyTo(parent);
 }
 
 
@@ -513,7 +491,7 @@ function onselect_loadURI(tree, columnName) {
 
 /** Search properties nsISupportsArray for an nsIAtom which starts with the given property name. **/
 function getPropertyValue(properties, propName) {
-  for (var i=0; i< properties.Count(); i++) {
+  for (var i=0; i< properties.Count(); ++i) {
     var atom = properties.GetElementAt(i).QueryInterface(Components.interfaces.nsIAtom);
     var atomValue = atom.GetUnicode();
     if (atomValue.substr(0, propName.length) == propName)
@@ -531,23 +509,24 @@ function doFind() {
 
   // split search string into separate terms and compile into regexp's
   RE = findText.value.split(/\s+/);
-  for (var i=0; i < RE.length; i++) {
+  for (var i=0; i < RE.length; ++i) {
     if (RE[i] == "")
       continue;
-    RE[i] = new RegExp(RE[i], "i");
+    RE[i] = new RegExp(RE[i].substring(0, RE[i].length-1) +"\w?", "i");
   }
 
+  // search TOC
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
   var tree = document.getElementById("help-toc-tree");
   var sourceDS = tree.database;
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
-  // search index.
-  tree = document.getElementById("help-index-tree");
-  sourceDS = tree.database;
-  if (!sourceDS) // If the index has never been displayed this will be null (sigh!).
-    sourceDS = loadCompositeDS(tree.datasources);
-  doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
+  // search additional search datasources                                       
+  if (searchDatasources != "rdf:null") {
+    if (!searchDS)
+      searchDS = loadCompositeDS(searchDatasources);
+    doFindOnDatasource(resultsDS, searchDS, RDF_ROOT, 0);
+  }
 
   // search glossary.
   tree = document.getElementById("help-glossary-tree");
@@ -570,6 +549,15 @@ function clearDatabases(compositeDataSource) {
 }
 
 function doFindOnDatasource(resultsDS, sourceDS, resource, level) {
+  if (level > MAX_LEVEL) {
+    try {
+      log("Recursive reference to resource: " + resource.Value + ".");
+    }
+    catch (e) {
+      log("Recursive reference to unknown resource.");
+    }
+    return;
+  }
   // find all SUBHEADING children of current resource.
   var targets = sourceDS.GetTargets(resource, NC_SUBHEADINGS, true);
   while (targets.hasMoreElements()) {
@@ -618,7 +606,7 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
 }
 
 function isMatch(text) {
-  for (var i=0; i < RE.length; i++ ) {
+  for (var i=0; i < RE.length; ++i ) {
     if (!RE[i].test(text))
       return false;
   }
@@ -631,7 +619,7 @@ function loadCompositeDS(datasources) {
       .createInstance(Components.interfaces.nsIRDFCompositeDataSource);
   
   var ds = datasources.split(/\s+/);
-  for (var i=0; i < ds.length; i++) {
+  for (var i=0; i < ds.length; ++i) {
     if (ds[i] == "rdf:null" || ds[i] == "")
       continue;
     try {  
@@ -666,4 +654,19 @@ function getLiteralValue(literal, defaultValue) {
 // Write debug string to javascript console.
 function log(aText) {
   CONSOLE_SERVICE.logStringMessage(aText);
+}
+
+
+//INDEX OPENING FUNCTION -- called in oncommand for index pane
+// iterate over all the items in the outliner;
+// open the ones at the top-level (i.e., expose the headings underneath
+// the letters in the list.
+function displayIndex() {
+    var outliner = document.getElementById("help-index-outliner");
+    var oview = outliner.outlinerBoxObject.view;    
+    for ( i = 0; i < 500; ++i ) {
+      if ( !oview.isContainerOpen(i) && oview.getLevel(i) == 0 ) {
+        oview.toggleOpenState(i);
+      }
+    }
 }

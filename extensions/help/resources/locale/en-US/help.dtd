@@ -20,6 +20,6 @@
 <!ENTITY glossarytab.label  "Glossary">
 <!ENTITY glossname.label    "Name">
 <!-- added IO 2/7/01 -->
-<!ENTITY gobtn.label        "Go">
+<!ENTITY gobtn.label        "Search">
 <!ENTITY name.label	    "Item">
 
