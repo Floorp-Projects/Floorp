@@ -94,18 +94,26 @@ public:
   nsresult Init();
   static PRBool SingleSignonEnabled();
 
-  static nsresult Register(nsIComponentManager* aCompMgr,
-                           nsIFile* aPath,
-                           const char* aRegistryLocation,
-                           const char* aComponentType,
-                           const nsModuleComponentInfo* aInfo);
+  static NS_METHOD Register(nsIComponentManager* aCompMgr,
+                            nsIFile* aPath,
+                            const char* aRegistryLocation,
+                            const char* aComponentType,
+                            const nsModuleComponentInfo* aInfo);
 
-  static nsresult Unregister(nsIComponentManager* aCompMgr,
-                             nsIFile* aPath,
-                             const char* aRegistryLocation,
-                             const nsModuleComponentInfo* aInfo);
+  static NS_METHOD Unregister(nsIComponentManager* aCompMgr,
+                              nsIFile* aPath,
+                              const char* aRegistryLocation,
+                              const nsModuleComponentInfo* aInfo);
 
   static void Shutdown();
+
+
+  static nsresult DecryptData(const nsAString& aData, nsAString& aPlaintext);
+  static nsresult EncryptData(const nsAString& aPlaintext,
+                              nsACString& aEncrypted);
+  static nsresult EncryptDataUCS2(const nsAString& aPlaintext,
+                                  nsAString& aEncrypted);
+
 
 protected:
   void ReadSignonFile();
@@ -140,12 +148,6 @@ protected:
   static PLDHashOperator PR_CALLBACK BuildRejectArrayEnumerator(const nsACString& aKey,
                                                                 PRInt32 aEntry,
                                                                 void* aUserData);
-
-  static nsresult DecryptData(const nsAString& aData, nsAString& aPlaintext);
-  static nsresult EncryptData(const nsAString& aPlaintext,
-                              nsACString& aEncrypted);
-  static nsresult EncryptDataUCS2(const nsAString& aPlaintext,
-                                  nsAString& aEncrypted);
 
   static void EnsureDecoderRing();
 

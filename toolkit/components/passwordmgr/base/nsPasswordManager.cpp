@@ -232,7 +232,7 @@ nsPasswordManager::SingleSignonEnabled()
   return sRememberPasswords;
 }
 
-/* static */ nsresult
+/* static */ NS_METHOD
 nsPasswordManager::Register(nsIComponentManager* aCompMgr,
                             nsIFile* aPath,
                             const char* aRegistryLocation,
@@ -258,7 +258,7 @@ nsPasswordManager::Register(nsIComponentManager* aCompMgr,
   return NS_OK;
 }
 
-/* static */ nsresult
+/* static */ NS_METHOD
 nsPasswordManager::Unregister(nsIComponentManager* aCompMgr,
                               nsIFile* aPath,
                               const char* aRegistryLocation,
