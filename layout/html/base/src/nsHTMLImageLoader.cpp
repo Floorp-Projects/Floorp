@@ -81,7 +81,12 @@ nsHTMLImageLoader::GetImage()
 void
 nsHTMLImageLoader::GetNaturalImageSize(PRUint32* naturalWidth, PRUint32* naturalHeight)
 { 
-//
+  *naturalWidth = 0;
+  *naturalHeight = 0;
+  if (mImageLoader) {
+    mImageLoader->GetNaturalImageSize(naturalWidth, naturalHeight);
+  }
+  
 }
 
 void
