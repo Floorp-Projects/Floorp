@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.22 $ $Date: 2002/01/11 00:41:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.23 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -1026,3 +1026,15 @@ nssTrustDomain_GetCertsFromCache
     return rvArray;
 }
 
+NSS_IMPLEMENT void
+nssTrustDomain_DumpCacheInfo
+(
+  NSSTrustDomain *td,
+  void (* cert_dump_iter)(const void *, void *, void *),
+  void *arg
+)
+{
+    PZ_Lock(td->cache->lock);
+    nssHash_Iterate(td->cache->issuerAndSN, cert_dump_iter, arg);
+    PZ_Unlock(td->cache->lock);
+}

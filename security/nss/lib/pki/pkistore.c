@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.4 $ $Date: 2002/01/10 14:34:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.5 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -679,5 +679,18 @@ nssHash_CreateCertificate
                           nss_certificate_hash, 
                           nss_compare_certs, 
                           PL_CompareValues);
+}
+
+NSS_IMPLEMENT void
+nssCertificateStore_DumpStoreInfo
+(
+  nssCertificateStore *store,
+  void (* cert_dump_iter)(const void *, void *, void *),
+  void *arg
+)
+{
+    PZ_Lock(store->lock);
+    nssHash_Iterate(store->issuer_and_serial, cert_dump_iter, arg);
+    PZ_Unlock(store->lock);
 }
 

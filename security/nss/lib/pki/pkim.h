@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.13 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.14 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -319,6 +319,14 @@ NSS_EXTERN PRTime
 NSSTime_GetPRTime
 (
   NSSTime *time
+);
+
+NSS_EXTERN void
+nssTrustDomain_DumpCacheInfo
+(
+  NSSTrustDomain *td,
+  void (* cert_dump_iter)(const void *, void *, void *),
+  void *arg
 );
 
 PR_END_EXTERN_C

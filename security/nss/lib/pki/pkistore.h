@@ -35,7 +35,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.1 $ $Date: 2001/12/14 17:32:21 $ $Name:  $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.2 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -163,6 +163,14 @@ nssCertificateStore_FindSMIMEProfileForCertificate
 (
   nssCertificateStore *store,
   NSSCertificate *cert
+);
+
+NSS_EXTERN void
+nssCertificateStore_DumpStoreInfo
+(
+  nssCertificateStore *store,
+  void (* cert_dump_iter)(const void *, void *, void *),
+  void *arg
 );
 
 PR_END_EXTERN_C
