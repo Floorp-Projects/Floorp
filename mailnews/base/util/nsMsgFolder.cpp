@@ -1493,8 +1493,10 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
                  "something wrong with nsString");
 	//We only want to add this after the first time around.
 	if(path.Length() > 0)
+	{
 		path += sep;
-
+		path += PR_GetDirectorySeparator();
+	}
     // the first time around the separator is special because
     // the root mail folder doesn't end with .sbd
     sep = sbdSep;
