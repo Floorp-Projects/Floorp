@@ -27,6 +27,9 @@
 #include "CHyperTreeFlexTable.h"
 #include "Netscape_constants.h"
 #include "URDFUtilities.h"
+#include "CRDFToolbarItem.h"
+#include "CRDFToolbar.h"
+
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
@@ -80,13 +83,32 @@ CNavCenterContextMenuAttachment :: BuildMenu ( )
 } // BuildMenu
 
 
+
+//
+// PruneMenu
+//
+// Override to not do anything, since HT already prunes the list for us. The return
+// value is used as the default item, and we don't care about a default (as long as
+// this value is > 0).
+//
+UInt16
+CNavCenterContextMenuAttachment :: PruneMenu ( LMenu* /*inMenu*/ )
+{
+	return 1;
+
+} // PruneMenu
+
+
+#pragma mark -
+
+
 //
 // NewHTContextMenuCursor
 //
 // Create the HT context menu cursor that is appropriate for this tree view
 //
 HT_Cursor
-CNavCenterContextMenuAttachment :: NewHTContextMenuCursor ( )
+CTreeViewContextMenuAttachment :: NewHTContextMenuCursor ( )
 {
 	PRBool clickInBackground = PR_TRUE;
 	CHyperTreeFlexTable* table = dynamic_cast<CHyperTreeFlexTable*>(mOwnerHost);
@@ -112,16 +134,62 @@ CNavCenterContextMenuAttachment :: NewHTContextMenuCursor ( )
 } // NewHTContextMenuCursor
 
 
-//
-// PruneMenu
-//
-// Override to not do anything, since HT already prunes the list for us. The return
-// value is used as the default item, and we don't care about a default (as long as
-// this value is > 0).
-//
-UInt16
-CNavCenterContextMenuAttachment :: PruneMenu ( LMenu* /*inMenu*/ )
-{
-	return 1;
+#pragma mark -
 
-} // PruneMenu
+
+//
+// NewHTContextMenuCursor
+//
+// Create the HT context menu cursor that is appropriate for this button. HT uses the
+// selection to provide the correct context menu, so even though it sounds totally weird
+// and is a hack, set the selection of the view to the button clicked on.
+//
+HT_Cursor
+CToolbarButtonContextMenuAttachment :: NewHTContextMenuCursor ( )
+{
+	HT_Resource buttonNode = NULL;
+	HT_View buttonView = NULL;
+	CRDFToolbarItem* button = dynamic_cast<CRDFToolbarItem*>(mOwnerHost);
+	Assert_(button != NULL);
+	if ( button ) {
+		buttonNode = button->HTNode();
+		buttonView = HT_GetView(buttonNode);
+		Assert_(buttonView != NULL);
+		
+		URDFUtilities::StHTEventMasking noEvents(HT_GetPane(buttonView), HT_EVENT_NO_NOTIFICATION_MASK);
+		HT_SetSelectedView(HT_GetPane(buttonView), buttonView);
+		HT_SetSelection(buttonNode);
+	}
+	
+	return HT_NewContextualMenuCursor ( buttonView, PR_FALSE, PR_FALSE );
+	
+} // NewHTContextMenuCursor
+
+
+#pragma mark -
+
+
+//
+// NewHTContextMenuCursor
+//
+// Create the HT context menu cursor that is appropriate for this toolbar. We
+// have to make sure the selection is empty so HT gives us the right context menu.
+//
+HT_Cursor
+CToolbarContextMenuAttachment :: NewHTContextMenuCursor ( )
+{
+	HT_View toolbarView = NULL;
+	CRDFToolbar* bar = dynamic_cast<CRDFToolbar*>(mOwnerHost);
+	Assert_(bar != NULL);
+	if ( bar ) {
+		toolbarView = bar->HTView();
+		Assert_(toolbarView != NULL);
+		
+		URDFUtilities::StHTEventMasking noEvents(HT_GetPane(toolbarView), HT_EVENT_NO_NOTIFICATION_MASK);
+		HT_SetSelectedView(HT_GetPane(toolbarView), toolbarView);
+		HT_SetSelectionAll(toolbarView, PR_FALSE);
+	}
+	
+	return HT_NewContextualMenuCursor ( toolbarView, PR_FALSE, PR_TRUE );
+	
+} // NewHTContextMenuCursor

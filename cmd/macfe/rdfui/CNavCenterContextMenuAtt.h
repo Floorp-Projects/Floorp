@@ -23,7 +23,13 @@
 //
 // ¥ CNavCenterContextMenuAttachment
 //		A version of the contextual menu attachment that generates the menu from the
-//		RDF backend.
+//		RDF backend. This class is virtual.
+// ¥ CTreeViewContextMenuAttchment
+//		Generates the menu assuming the parent is a CHyperTreeFlexTable (tree view)
+// ¥ CToolbarButtonContetxMenuAttachment
+//		Generates the menu assuming the parent is a toolbar button
+// ¥ CToolbarContetxMenuAttachment
+//		Generates the menu assuming the parent is a toolbar
 //
 
 #pragma once
@@ -34,17 +40,59 @@
 
 class CNavCenterContextMenuAttachment : public CContextMenuAttachment
 {
-public:
-	enum { class_ID = 'NCxM' } ;
-	
-	CNavCenterContextMenuAttachment(LStream* inStream) : CContextMenuAttachment(inStream) { };
+public:	
+	CNavCenterContextMenuAttachment(LStream* inStream) : CContextMenuAttachment(inStream) { }
+	CNavCenterContextMenuAttachment(ResIDT inMenuID, ResIDT inTextTraitsID) 
+		: CContextMenuAttachment(inMenuID, inTextTraitsID) { }
 	virtual	~CNavCenterContextMenuAttachment() { };
 
 protected:	
 
-	virtual HT_Cursor NewHTContextMenuCursor ( ) ; 
+	virtual HT_Cursor NewHTContextMenuCursor ( ) = 0; 
 	virtual CommandT ConvertHTCommandToPPCommand ( HT_MenuCmd inCmd ) ;
 	virtual LMenu* BuildMenu ( ) ;
 	virtual UInt16 PruneMenu ( LMenu* inMenu ) ;
 
 }; // CNavCenterContextMenuAttachment
+
+
+class CTreeViewContextMenuAttachment : public CNavCenterContextMenuAttachment
+{
+public:
+	enum { class_ID = 'NCxM' } ;		// exact naming due to historical reasons.
+
+	CTreeViewContextMenuAttachment(LStream* inStream) : CNavCenterContextMenuAttachment(inStream) { };
+	virtual	~CTreeViewContextMenuAttachment() { };
+
+protected:	
+	virtual HT_Cursor NewHTContextMenuCursor ( ) ;
+
+}; // CTreeViewContextMenuAttachment
+
+
+class CToolbarButtonContextMenuAttachment : public CNavCenterContextMenuAttachment
+{
+public:
+	enum { class_ID = 'TBxM' } ;
+	
+	CToolbarButtonContextMenuAttachment() : CNavCenterContextMenuAttachment(5000, 0) { }
+	virtual	~CToolbarButtonContextMenuAttachment() { };
+
+protected:	
+	virtual HT_Cursor NewHTContextMenuCursor ( ) ;
+
+}; // CToolbarButtonContextMenuAttachment
+
+
+class CToolbarContextMenuAttachment : public CNavCenterContextMenuAttachment
+{
+public:
+	enum { class_ID = 'TlxM' } ;
+	
+	CToolbarContextMenuAttachment() : CNavCenterContextMenuAttachment(5000, 0) { }
+	virtual	~CToolbarContextMenuAttachment() { };
+
+protected:	
+	virtual HT_Cursor NewHTContextMenuCursor ( ) ;
+
+}; // CToolbarContextMenuAttachment
