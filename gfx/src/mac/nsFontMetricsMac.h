@@ -60,6 +60,7 @@ public:
   static void SetFont(const nsFont& aFont, nsIDeviceContext* aContext);
 
 protected:
+	short							mFontNum;
   nscoord           mHeight;
   nscoord           mAscent;
   nscoord           mDescent;
