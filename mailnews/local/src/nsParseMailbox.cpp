@@ -62,8 +62,12 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		const char	*fileName;
 		runningUrl->GetFile(&fileName);
 		if (fileName)
-		{	
+		{
+#if defined(XP_MAC)
+			nsFileSpec dbName((nsFilePath(fileName)));
+#else
 			nsFileSpec dbName(fileName);
+#endif
 
 			nsIMsgDatabase * mailDB = nsnull;
 			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDB);
