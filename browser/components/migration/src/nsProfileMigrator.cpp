@@ -69,13 +69,23 @@ nsProfileMigrator::Migrate()
 
   nsresult rv = NS_OK;
   if (mMigrator && mSourceKey) {
-    if (!needsActiveProfile)
-      rv = OpenMigrationWizard();
-    else {
-      nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-      rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
+    PRBool sourceExists;
+    mMigrator->GetSourceExists(&sourceExists);
+
+    if (sourceExists) {
+      if (!needsActiveProfile)
+        rv = OpenMigrationWizard();
+      else {
+        nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+        rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
+      }
     }
+    else
+      rv = NS_ERROR_FILE_NOT_FOUND; // No data was found to import.
   }
+  else 
+    rv = NS_ERROR_FILE_NOT_FOUND; // No migrator could be found.
+
   return rv;
 }
 

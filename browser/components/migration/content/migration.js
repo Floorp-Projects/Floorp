@@ -3,7 +3,7 @@ const kProfileMigratorContractIDPrefix = "@mozilla.org/profile/migrator;1?app=br
 
 var MigrationWizard = {
   _source: "",                  // Source Profile Migrator ContractID suffix
-  _itemsFlags: kIMig.ALL,       // Selected Import Data Sources (32-bit bitfield)
+  _itemsFlags: kIMig.ALL,       // Selected Import Data Sources (16-bit bitfield)
   _selectedProfile: null,       // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
@@ -143,7 +143,7 @@ var MigrationWizard = {
     var bundle = document.getElementById("bundle");
     
     var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
-    for (var i = 0; i < 32; ++i) {
+    for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var checkbox = document.createElement("checkbox");
@@ -185,6 +185,10 @@ var MigrationWizard = {
     this._wiz.getButton("cancel").disabled = true;
     this._wiz.getButton("back").disabled = true;
     this._wiz.getButton("next").disabled = true;
+    
+    // When automigrating, show all of the data that can be received from this source.
+    if (this._autoMigrate)
+      this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
 
     this._listItems("migratingItems");
     setTimeout(this.onMigratingMigrate, 0, this);
@@ -203,13 +207,20 @@ var MigrationWizard = {
     
     var bundle = document.getElementById("bundle");
     var itemID;
-    for (var i = 0; i < 32; ++i) {
+    for (var i = 0; i < 16; ++i) {
       var itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var label = document.createElement("label");
         label.id = itemID + "_migrated";
-        label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
-        items.appendChild(label);
+        try {
+          label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
+          items.appendChild(label);
+        }
+        catch (e) {
+          // if the block above throws, we've enumerated all the import data types we
+          // currently support and are now just wasting time, break. 
+          break;
+        }
       }
     }
   },
@@ -236,7 +247,8 @@ var MigrationWizard = {
       dump("*** done\n");
       if (this._autoMigrate) {
         // We're done now.
-        window.close();
+        this._wiz.advance();
+        setTimeout("close()", 5000);
       }
       else {
         var nextButton = this._wiz.getButton("next");

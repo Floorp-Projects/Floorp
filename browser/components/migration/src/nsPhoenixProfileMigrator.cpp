@@ -83,7 +83,7 @@ nsPhoenixProfileMigrator::~nsPhoenixProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsPhoenixProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsPhoenixProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -125,7 +125,7 @@ nsPhoenixProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
 NS_IMETHODIMP
 nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                          PRBool aReplace, 
-                                         PRUint32* aResult)
+                                         PRUint16* aResult)
 {
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);

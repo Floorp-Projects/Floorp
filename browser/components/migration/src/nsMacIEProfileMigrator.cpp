@@ -62,7 +62,7 @@ nsMacIEProfileMigrator::~nsMacIEProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsMacIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsMacIEProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -76,7 +76,7 @@ nsMacIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnicha
 NS_IMETHODIMP
 nsMacIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                        PRBool aReplace,
-                                       PRUint32* aResult)
+                                       PRUint16* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

@@ -62,7 +62,7 @@ nsOmniWebProfileMigrator::~nsOmniWebProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsOmniWebProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsOmniWebProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -76,7 +76,7 @@ nsOmniWebProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
 NS_IMETHODIMP
 nsOmniWebProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                          PRBool aReplace,
-                                         PRUint32* aResult)
+                                         PRUint16* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

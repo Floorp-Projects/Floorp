@@ -84,7 +84,7 @@ nsSeamonkeyProfileMigrator::~nsSeamonkeyProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsSeamonkeyProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -120,7 +120,7 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
 NS_IMETHODIMP
 nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                            PRBool aReplace, 
-                                           PRUint32* aResult)
+                                           PRUint16* aResult)
 {
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
