@@ -1671,7 +1671,7 @@ nsHTMLEditRules::IsMailCite(nsIDOMNode *node)
     typeAttrVal.ToLowerCase();
     if (NS_SUCCEEDED(res))
     {
-      if (typeAttrVal == "cite")
+      if (typeAttrVal.Equals("cite", PR_TRUE, 4))
         return PR_TRUE;
     }
   }
