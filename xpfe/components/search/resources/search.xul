@@ -5,7 +5,7 @@
 
 <!DOCTYPE window
 [
-<!ENTITY window.title.label          "Smart Search">
+<!ENTITY window.title.label          "Search">
 <!ENTITY find.title.label            "Search Bookmarks/History">
 <!ENTITY internet.title.label        "Search the Internet">
 <!ENTITY mailnews.title.label        "Search Mail/News">
