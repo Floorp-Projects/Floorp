@@ -346,13 +346,13 @@ nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
 #endif
     if(theExpatState) {
       mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
-#ifdef DEBUG
+#ifdef DEBUG_nisheeth
 	  printf("Using Expat for parsing XML...\n");
 #endif
     }      
     else {
       mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
-#ifdef DEBUG
+#ifdef DEBUG_nisheeth
 	  printf("Using internal parser for parsing XML...\n");
 #endif
     }
