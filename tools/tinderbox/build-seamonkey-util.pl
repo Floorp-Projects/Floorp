@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.31 $ ';
+$::UtilsVersion = '$Revision: 1.32 $ ';
 
 package TinderUtils;
 
@@ -581,6 +581,14 @@ sub BuildIt {
         print_log "current dir is -- " . $ENV{HOST} . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
         
+		# System id
+		print_log "uname -a = " . `uname -a`;
+
+		# Print out redhat version if we have it.
+		if (-e "/etc/redhat-release") {
+		  print_log `cat /etc/redhat-release`;
+		}
+
         PrintEnv();
         
 		# Make sure we have client.mk
