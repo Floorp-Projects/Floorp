@@ -2702,9 +2702,14 @@ void nsImapProtocol::FetchTryChunking(const char * messageIds,
              startByte, sizeToFetch,
              part);
       startByte += sizeToFetch;
-      PRUint32 newMsgSize = GetServerStateParser().SizeOfMostRecentMessage();
-      if (newMsgSize > 0 && newMsgSize != downloadSize)
-        downloadSize = newMsgSize;
+      // adjust the message size based on rfc822 size, if we're fetching
+      // the whole message, and not just a mime part.
+      if (whatToFetch != kMIMEPart)
+      {
+        PRUint32 newMsgSize = GetServerStateParser().SizeOfMostRecentMessage();
+        if (newMsgSize > 0 && newMsgSize != downloadSize)
+          downloadSize = newMsgSize;
+      }
     }
 
     // Only abort the stream if this is a normal message download
