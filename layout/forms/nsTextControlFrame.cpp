@@ -698,7 +698,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       const nsStyleColor*   sbColor   = (const nsStyleColor*)scrollbarStyle->GetStyleData(eStyleStruct_Color);
       srect.SetRect(mRect.width-scrollbarScaledWidth-(2*onePixel), mRect.height-scrollbarScaledHeight-(onePixel*2), scrollbarScaledWidth, scrollbarScaledHeight);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, srect, *sbColor, 0, 0);
+                                      aDirtyRect, srect, *sbColor, *spacing, 0, 0);
     }
 
 

@@ -44,7 +44,7 @@ nsLeafFrame::Paint(nsIPresContext& aPresContext,
         mStyleContext->GetStyleData(eStyleStruct_Spacing);
       nsRect rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor, 0, 0);
+                                      aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, 0);
     }

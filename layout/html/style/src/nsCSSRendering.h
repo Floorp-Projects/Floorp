@@ -29,14 +29,14 @@ public:
    * for borders. aSkipSides is a bitmask of the sides to skip
    * when rendering. If 0 then no sides are skipped.
    *
-   * Both aDirtyRect and aBounds are in the local coordinate space
+   * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
   static void PaintBorder(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
-                          const nsRect& aBounds,
+                          const nsRect& aBorderArea,
                           const nsStyleSpacing& aStyle,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0);
@@ -49,14 +49,14 @@ public:
    * for borders. aSkipSides is a bitmask of the sides to skip
    * when rendering. If 0 then no sides are skipped.
    *
-   * Both aDirtyRect and aBounds are in the local coordinate space
+   * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
   static void PaintBorderEdges(nsIPresContext& aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                nsIFrame* aForFrame,
                                const nsRect& aDirtyRect,
-                               const nsRect& aBounds,
+                               const nsRect& aBorderArea,
                                nsBorderEdges * aBorderEdges,
                                PRIntn aSkipSides,
                                nsRect* aGap = 0);
@@ -66,15 +66,16 @@ public:
    * Render the background for an element using css rendering rules
    * for backgrounds.
    *
-   * Both aDirtyRect and aBounds are in the local coordinate space
+   * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
   static void PaintBackground(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
-                              const nsRect& aBounds,
+                              const nsRect& aBorderArea,
                               const nsStyleColor& aColor,
+                              const nsStyleSpacing& aStyle,
                               nscoord aDX,
                               nscoord aDY);
 

@@ -2212,7 +2212,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, 0, 0);
+                                      aDirtyRect, rect, *color, *spacing, 0, 0);
       PRIntn skipSides = GetSkipSides();
       if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
       {

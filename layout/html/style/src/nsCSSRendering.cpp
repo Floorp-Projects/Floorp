@@ -1335,7 +1335,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
-                                 const nsRect& aBounds,
+                                 const nsRect& aBorderArea,
                                  const nsStyleSpacing& aStyle,
                                  PRIntn aSkipSides,
                                  nsRect* aGap)
@@ -1356,7 +1356,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   if (0 == border.bottom) aSkipSides |= (1 << NS_SIDE_BOTTOM);
   if (0 == border.left) aSkipSides |= (1 << NS_SIDE_LEFT);
 
-  nsRect inside(aBounds);
+  nsRect inside(aBorderArea);
   nsRect outside(inside);
   outside.Deflate(border);
  
@@ -1414,7 +1414,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
-                                      const nsRect& aBounds,
+                                      const nsRect& aBorderArea,
                                       nsBorderEdges * aBorderEdges,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
@@ -1435,7 +1435,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     aSkipSides |= (1 << NS_SIDE_LEFT);
 
   // Draw any dashed or dotted segments separately
-  DrawDashedSegments(aRenderingContext, aBounds, aBorderEdges, aSkipSides, aGap);
+  DrawDashedSegments(aRenderingContext, aBorderArea, aBorderEdges, aSkipSides, aGap);
 
   // Draw all the other sides
   nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
@@ -1447,10 +1447,10 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(i));
-      nscoord y = aBounds.y;
+      nscoord y = aBorderArea.y;
       if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are bottom-aligned
         y += aBorderEdges->mMaxBorderWidth.top - borderEdge->mWidth;
-      nsRect inside(x, y, borderEdge->mLength, aBounds.height);
+      nsRect inside(x, y, borderEdge->mLength, aBorderArea.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
       nsMargin outsideMargin(0, borderEdge->mWidth, 0, 0);
@@ -1469,8 +1469,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(i));
-      nscoord x = aBounds.x + (aBorderEdges->mMaxBorderWidth.left - borderEdge->mWidth);
-      nsRect inside(x, y, aBounds.width, borderEdge->mLength);
+      nscoord x = aBorderArea.x + (aBorderEdges->mMaxBorderWidth.left - borderEdge->mWidth);
+      nsRect inside(x, y, aBorderArea.width, borderEdge->mLength);
       y += borderEdge->mLength;
       nsRect outside(inside);
       nsMargin outsideMargin(borderEdge->mWidth, 0, 0, 0);
@@ -1490,10 +1490,10 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(i));
-      nscoord y = aBounds.y;
+      nscoord y = aBorderArea.y;
       if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are top-aligned
         y -= (aBorderEdges->mMaxBorderWidth.bottom - borderEdge->mWidth);
-      nsRect inside(x, y, borderEdge->mLength, aBounds.height);
+      nsRect inside(x, y, borderEdge->mLength, aBorderArea.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
       nsMargin outsideMargin(0, 0, 0, borderEdge->mWidth);
@@ -1516,14 +1516,14 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       nscoord width;
       if (PR_TRUE==aBorderEdges->mOutsideEdge)
       {
-        width = aBounds.width - aBorderEdges->mMaxBorderWidth.right;
+        width = aBorderArea.width - aBorderEdges->mMaxBorderWidth.right;
         width += borderEdge->mWidth;
       }
 	    else
       {
-        width = aBounds.width;
+        width = aBorderArea.width;
       }
-      nsRect inside(aBounds.x, y, width, borderEdge->mLength);
+      nsRect inside(aBorderArea.x, y, width, borderEdge->mLength);
       y += borderEdge->mLength;
       nsRect outside(inside);
       nsMargin outsideMargin(0, 0, (borderEdge->mWidth), 0);
@@ -1623,8 +1623,9 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
-                                const nsRect& aBounds,
+                                const nsRect& aBorderArea,
                                 const nsStyleColor& aColor,
+                                const nsStyleSpacing& aSpacing,
                                 nscoord aDX,
                                 nscoord aDY)
 {
@@ -1647,7 +1648,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       // Redraw will happen later
       if (!transparentBG) {
         aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(aBounds);
+        aRenderingContext.FillRect(aBorderArea);
       }
       return;
     }
@@ -1671,6 +1672,23 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       return;
     }
 
+    // Background images are tiled over the 'content' and 'padding' areas
+    // only (not the 'border' area)
+    nsRect    paddingArea(aBorderArea);
+    nsMargin  border;
+
+    aSpacing.GetBorder(border);
+    paddingArea.Deflate(border);
+
+    // The actual dirty rect is the intersection of the padding area and the
+    // dirty rect we were given
+    nsRect  dirtyRect;
+
+    if (!dirtyRect.IntersectRect(paddingArea, aDirtyRect)) {
+      // Nothing to paint
+      return;
+    }
+
     // Based on the repeat setting, compute how many tiles we should
     // lay down for each axis. The value computed is the maximum based
     // on the dirty rect before accounting for the background-position.
@@ -1684,73 +1702,74 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_X:
-      xDistance = aDirtyRect.width;
+      xDistance = dirtyRect.width;
       yDistance = tileHeight;
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_Y:
       xDistance = tileWidth;
-      yDistance = aDirtyRect.height;
+      yDistance = dirtyRect.height;
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
-      xDistance = aDirtyRect.width;
-      yDistance = aDirtyRect.height;
+      xDistance = dirtyRect.width;
+      yDistance = dirtyRect.height;
       break;
     }
+
+    // The background color is rendered over the 'border' 'padding' and
+    // 'content' areas
     if (needBackgroundColor) {
       aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(aBounds);
+      aRenderingContext.FillRect(aBorderArea);
     }
 
-    // Compute the anchor point, relative to the bounding box
-    // (aBounds) where the background image rendering should
-    // begin. When tiling, the anchor coordinate values will be
-    // negative offsets from aBounds origin.
+    // Compute the anchor point, relative to the padding area where the
+    // background image rendering should begin. When tiling, the anchor
+    // coordinate values will be negative offsets from the padding area
     nsPoint anchor;
-    ComputeBackgroundAnchorPoint(aColor, aBounds,
+    ComputeBackgroundAnchorPoint(aColor, paddingArea,
                                  tileWidth, tileHeight, anchor);
 
-    // Setup clipping so that rendering doesn't leak out of the dirty rect
+    // Setup clipping so that rendering doesn't leak out of the computed
+    // dirty rect
     PRBool clipState;
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect,
+    aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect,
                                   clipState);
 
     // Compute the x and y starting points and limits for tiling
     nscoord x0, x1;
     if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
-      // When tiling in the x direction, adjust the starting position
-      // of the tile to account for the aDirtyRect.x. When tiling in
-      // x, the anchor.x value will be a negative value used to adjust
-      // the starting coordinate.
-      x0 = (aDirtyRect.x / tileWidth) * tileWidth + anchor.x;
+      // When tiling in the x direction, adjust the starting position of the
+      // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
+      // will be a negative value used to adjust the starting coordinate.
+      x0 = (dirtyRect.x / tileWidth) * tileWidth + anchor.x;
       x1 = x0 + xDistance + tileWidth;
       if (0 != anchor.x) {
         x1 += tileWidth;
       }
     }
     else {
-      // When tiling is off in x, anchor.x is relative to aBounds.x
-      x0 = aBounds.x + anchor.x;
+      // When tiling is off in x, anchor.x is relative to padding area
+      x0 = paddingArea.x + anchor.x;
       x1 = x0 + tileWidth;
     }
 
     nscoord y0, y1;
     if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
-      // When tiling in the y direction, adjust the starting position
-      // of the tile to account for the aDirtyRect.y. When tiling in
-      // y, the anchor.y value will be a negative value used to adjust
-      // the starting coordinate.
-      y0 = (aDirtyRect.y / tileHeight) * tileHeight + anchor.y;
+      // When tiling in the y direction, adjust the starting position of the
+      // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
+      // will be a negative value used to adjust the starting coordinate.
+      y0 = (dirtyRect.y / tileHeight) * tileHeight + anchor.y;
       y1 = y0 + yDistance + tileHeight;
       if (0 != anchor.y) {
         y1 += tileHeight;
       }
     }
     else {
-      // When tiling is off in y, anchor.y is relative to aBounds.y
-      y0 = aBounds.y + anchor.y;
+      // When tiling is off in y, anchor.y is relative to padding area
+      y0 = paddingArea.y + anchor.y;
       y1 = y0 + tileHeight;
     }
 
@@ -1764,13 +1783,16 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
     // Restore clipping
     aRenderingContext.PopState(clipState);
+
   } else {
+    // See if there's a background color specified. The background color
+    // is rendered over the 'border' 'padding' and 'content' areas
     if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
       // XXX This step can be avoided if we have an image and it doesn't
       // have any transparent pixels, and the image is tiled in both
       // the x and the y
       aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(aBounds);
+      aRenderingContext.FillRect(aBorderArea);
     }
   }
 }
