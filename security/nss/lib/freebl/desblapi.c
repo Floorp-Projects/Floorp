@@ -97,7 +97,7 @@ DES_EDE3_ECB(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 static void 
 DES_CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
-    BYTE * bufend = in + len;
+    const BYTE * bufend = in + len;
     HALF  vec[2];
 
     while (in != bufend) {
@@ -114,7 +114,7 @@ DES_CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 static void 
 DES_CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
-    BYTE * bufend;
+    const BYTE * bufend;
     HALF oldciphertext[2];
     HALF plaintext    [2];
 
@@ -134,7 +134,7 @@ DES_CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 static void 
 DES_EDE3CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
-    BYTE * bufend = in + len;
+    const BYTE * bufend = in + len;
     HALF  vec[2];
 
     while (in != bufend) {
@@ -153,7 +153,7 @@ DES_EDE3CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 static void 
 DES_EDE3CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
-    BYTE * bufend;
+    const BYTE * bufend;
     HALF oldciphertext[2];
     HALF plaintext    [2];
 
