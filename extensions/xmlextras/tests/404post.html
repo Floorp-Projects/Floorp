@@ -1,5 +1,5 @@
 <html>
-<head><title>Synchronized POST test</title>
+<head><title>POST test</title>
 <style type="text/css">
 .box {
   display: box;
@@ -15,19 +15,23 @@ pre {
 }
 </style>
 <script type="text/javascript">
-function execute() 
+const WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
+
+// You can only create the text string if you can bybass security, like in chrome
+var sendPlainTextData = false;
+
+var x;
+if (!sendPlainTextData) {
+  x = document.implementation.createDocument("", "test", null);
+  x.documentElement.appendChild(document.createElement("Foo"));
+  x.documentElement.appendChild(document.createElement("Bar"));
+  x.documentElement.firstChild.appendChild(document.createTextNode("My Stuff\nYeah"));
+}
+
+var p = new XMLHttpRequest();
+
+function myfunc(e)
 {
-  var x = document.implementation.createDocument("", "test", null);
-  x.documentElement.appendChild(document.createTextNode("Foo"));
-  x.documentElement.appendChild(x.createElementNS("http://www.w3.org/1999/xhtml","h1"));
-  x.documentElement.lastChild.appendChild(document.createTextNode("My Document Header"));
-  x.documentElement.lastChild.setAttributeNS("http://www.w3.org/1999/xhtml","id","id1")
-
-  var p = new XMLHttpRequest();
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-  p.open("POST", "http://green/cgi-bin/echo_xml.cgi", false);
-  p.send(x);
-
   document.getElementById("id1").firstChild.nodeValue = p.responseText;
   if (p.responseXML) {
     var s = new XMLSerializer();
@@ -39,13 +43,30 @@ function execute()
   document.getElementById("id4").firstChild.nodeValue = p.status;
   document.getElementById("id5").firstChild.nodeValue = p.statusText;
   document.getElementById("id6").firstChild.nodeValue = p.readyState;
+  var eventProperties;
+  for (prop in e) {
+    eventProperties += prop + " : '" + e[prop] + "'\n";
+  }
+  document.getElementById("id7").firstChild.nodeValue = 
+    "Event object: " + e + "\n" +
+    "Event properties:\n" + eventProperties;
 }
 
-setTimeout(execute,0); // Enable the rest of this document to load before executing
+p.onload = myfunc;
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+p.open("POST", "http://green/cgi-bin/this.handler.does.not.exist.xgfrsjfrsgdfr.cgi");
+
+if (!sendPlainTextData) {
+  p.send(x);
+} else {
+  var mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+  mystr.data = "Heikki's data";
+  p.send(mystr);
+}
 </script>
 </head>
 <body>
-<h1>Synchronized POST test</h1>
+<h1>POST test</h1>
 
 <div class="box"><span class="boxheader">responseText</span>
 <pre id="id1">@@No result@@</pre>
@@ -64,6 +85,9 @@ setTimeout(execute,0); // Enable the rest of this document to load before execut
 </div>
 <div class="box"><span class="boxheader">readyState</span>
 <pre id="id6">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">Event information</span>
+<pre id="id7">@@No result@@</pre>
 </div>
 
 </body>

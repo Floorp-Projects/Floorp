@@ -25,21 +25,37 @@ try {
 // In Mozilla, you can only create the text string if you can bybass security, like in chrome
 var sendPlainTextData = false;
 
+var docsize = 400; // the document has docsize*2+1 elements
 var x;
 if (!sendPlainTextData) {
   try {
     x = document.implementation.createDocument("", "test", null);
-    x.documentElement.appendChild(document.createElement("Foo"));
-    x.documentElement.appendChild(document.createElement("Bar"));
-    x.documentElement.firstChild.appendChild(document.createTextNode("My Stuff\nYeah"));
+    var i;
+    for (i = 0; i < docsize; i++) {
+      var fooElement = document.createElement("Foo");
+      fooElement.appendChild(document.createTextNode("My Stuff\nYeah"));
+      x.documentElement.appendChild(fooElement);
+      x.documentElement.appendChild(document.createElement("Bar"));
+    }
   } catch (e) {
     x = new ActiveXObject("Msxml2.DOMDocument");
-    x.loadXML("<?xml version='1.0'?>\n<test><foo>My Stuff\nYeah</foo><bar/></test>");
+    var str = "<?xml version='1.0'?>\n<test>";
+    var i;
+    for (i = 0; i < docsize; i++) {
+      str += "<Foo>My Stuff\nYeah</Foo><Bar/>";
+    }
+    str += "</test>";
+    x.loadXML(str);
   }
 }
 
+var interactiveCount = 0;
+
 function myfunc()
 {
+  if (p.readyState == 3) {
+    interactiveCount++;
+  }
   //alert("myfunc readyState=" + p.readyState);
   //if (p.readyState == 2) {
   //  alert(p.getAllResponseHeaders());
@@ -48,9 +64,9 @@ function myfunc()
   if (p.readyState != 4)
     return;
 
-  var str;
-
-  if (!sendPlainTextData) {
+  document.getElementById("id1").firstChild.nodeValue = p.responseText;
+  if (p.responseXML) {
+    var str;
     try {
       var s = new XMLSerializer();
       var d = p.responseXML;
@@ -58,15 +74,13 @@ function myfunc()
     } catch (e) {
       str = "@@TODO@@";
     }
-  } else {
-    str = p.responseText;
+    document.getElementById("id2").firstChild.nodeValue = str;
   }
-  document.getElementById("id1").firstChild.nodeValue = p.responseText;
-  document.getElementById("id2").firstChild.nodeValue = str;
   document.getElementById("id3").firstChild.nodeValue = p.getAllResponseHeaders();
   document.getElementById("id4").firstChild.nodeValue = p.status;
   document.getElementById("id5").firstChild.nodeValue = p.statusText;
   document.getElementById("id6").firstChild.nodeValue = p.readyState;
+  document.getElementById("id7").firstChild.nodeValue = interactiveCount;
 }
 
 // p.onload would also work in Mozilla
@@ -121,6 +135,9 @@ if (!sendPlainTextData) {
 </div>
 <div class="box"><span class="boxheader">readyState</span>
 <pre id="id6">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader"># of times onreadystatechanged handler called with INTERACTIVE status</span>
+<pre id="id7">@@No result@@</pre>
 </div>
 
 </body>
