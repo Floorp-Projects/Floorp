@@ -167,6 +167,7 @@
 <!ENTITY addressBookCmd.commandkey "2">
 <!ENTITY accountManagerCmd.label "Account Settings...">
 <!ENTITY accountManagerCmd.accesskey "c">
+<!ENTITY accountManagerCmdUnix.accesskey "e">
 <!ENTITY preferencesCmd.label "Options...">
 <!ENTITY preferencesCmd.key "O">
 <!ENTITY preferencesCmd.accesskey "O">

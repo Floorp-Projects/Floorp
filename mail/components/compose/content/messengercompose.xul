@@ -324,7 +324,7 @@
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
           <menuseparator id="prefSep"/>
-          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
+          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" label="&preferencesCmdUnix.label;" accesskey="&preferencesCmdUnix.accesskey;"
                     oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
 #endif

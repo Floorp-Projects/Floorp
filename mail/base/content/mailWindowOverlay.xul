@@ -1173,7 +1173,7 @@
                 observes="cmd_properties"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
+      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" oncommand="MsgAccountManager(null);"/>
       <menuitem id="menu_preferences" oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
 #endif
 #endif
