@@ -148,37 +148,46 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
     return NS_OK;
   }
 
-  while (e->IsDone() == NS_COMFALSE) {
+  for ( ; e->IsDone() == NS_COMFALSE; e->Next()) {
     rv = e->CurrentItem(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIInterfaceInfo> if_info(do_QueryInterface(entry));
 
-    PRUint16 constant_count = 0, parent_constant_count = 0;
+    NS_ASSERTION(if_info, "Interface info not an nsIInterfaceInfo!");
 
-    if (if_info) {
-      rv = if_info->GetConstantCount(&constant_count);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // With the InterfaceInfo system it is actually cheaper to get the 
+    // interface name than to get the count of constants. The former is 
+    // always cached. The latter might require loading an xpt file!
+
+    nsXPIDLCString if_name;
+
+    rv = if_info->GetName(getter_Copies(if_name));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (nsCRT::strncmp(if_name.get(), NS_DOM_INTERFACE_PREFIX,
+                       nsCRT::strlen(NS_DOM_INTERFACE_PREFIX))) {
+      continue;
+    }
+
+    PRUint16 constant_count = 0;
+
+    rv = if_info->GetConstantCount(&constant_count);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (constant_count) {
+      PRUint16 parent_constant_count = 0;
 
       nsCOMPtr<nsIInterfaceInfo> parent_info;
 
       if_info->GetParent(getter_AddRefs(parent_info));
 
       if (parent_info) {
-        parent_info->GetConstantCount(&parent_constant_count);
+        rv = parent_info->GetConstantCount(&parent_constant_count);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-    } else {
-      NS_WARNING("Interface info not an nsIInterfaceInfo!");
-    }
 
-    if (constant_count && constant_count != parent_constant_count) {
-      nsXPIDLCString if_name;
-
-      rv = if_info->GetName(getter_Copies(if_name));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!nsCRT::strncmp(if_name.get(), NS_DOM_INTERFACE_PREFIX,
-                          nsCRT::strlen(NS_DOM_INTERFACE_PREFIX))) {
+      if (constant_count != parent_constant_count) {
         nsGlobalNameStruct *s = new nsGlobalNameStruct;
         NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
@@ -194,8 +203,6 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
         mGlobalNames.Put(&key, s);
       }
     }
-
-    e->Next();
   }
 
   return rv;
