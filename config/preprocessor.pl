@@ -57,7 +57,8 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
         push(@includes, $1);
     } elsif (/^-E$/os) { 
         foreach (keys %ENV) {
-            $stack->define($_, $ENV{$_});
+            # define all variables that have valid names
+            $stack->define($_, $ENV{$_}) unless m/\W/;
         }
     } elsif (/^-d$/os) { 
         $stack->{'dependencies'} = 1;
