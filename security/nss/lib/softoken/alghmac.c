@@ -34,7 +34,7 @@
 #include "sechash.h"
 #include "secport.h"
 #include "alghmac.h"
-/*#include "secoid.h"*/
+#include "secerr.h"
 
 #define HMAC_PAD_SIZE 64
 
