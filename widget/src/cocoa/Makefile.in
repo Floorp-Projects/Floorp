@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
           appshell \
           intl \
           mimetype \
+		  unicharutil \
 		  $(NULL)
 
 GFX_LCPPSRCS = \
@@ -94,6 +95,7 @@ export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
 	$(INSTALL) $^ .
 
 EXTRA_DSO_LDOPTS += \
+		$(MOZ_UNICHARUTIL_LIBS) \
                 $(DIST)/lib/libxpwidgets_s.a \
                 $(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
