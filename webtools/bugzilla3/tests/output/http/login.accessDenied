@@ -1,0 +1,21 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+<set variable="title" value="Access Denied">
+<set variable="response" value="403 Access Denied">
+  <include href="template.html.header"/>
+</set></set></set>
+
+<text><![CDATA[
+  <p>
+   You do not have sufficient privileges. If you think you should,
+   please contact the administrator.
+  </p>
+]]></text>
+
+<text><![CDATA[  <pre>]]><br/></text>
+<text escape="html"><include href="debug.dumpVars"/><br/></text>
+<text><![CDATA[  </pre>]]></text>
+
+<include href="template.html.footer"/>
+</text>

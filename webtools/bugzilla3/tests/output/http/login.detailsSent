@@ -1,0 +1,22 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+<set variable="title" value="Details Sent">
+  <include href="template.html.header"/>
+</set></set></set>
+
+<text><![CDATA[
+  <p>
+   Your password has been sent. Once you have received it you may XXX
+   continue what you were doing XXX. <!-- XXX need to regenerate
+   either a submit button or a link, depending on whether the original
+   request was a POST or a GET. -->
+  </p>
+]]></text>
+
+<text><![CDATA[  <pre>]]><br/></text>
+<text escape="html"><include href="debug.dumpVars"/><br/></text>
+<text><![CDATA[  </pre>]]></text>
+
+<include href="template.html.footer"/>
+</text>
