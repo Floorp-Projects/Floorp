@@ -309,6 +309,7 @@ var gExtensionsViewController = {
       
     cmd_options: function ()
     {
+      if (!gExtensionsView.selected) return;
       var optionsURL = gExtensionsView.selected.getAttribute("optionsURL");
       if (optionsURL != "")
         openDialog(optionsURL, "", "chrome,modal");
@@ -396,7 +397,7 @@ var gExtensionsViewController = {
     
     cmd_update: function ()
     { 
-      var id = stripPrefix(gExtensionsView.selected.id);
+      var id = gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null;
       var itemType = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
       var items = gExtensionManager.getItemList(id, itemType, { });
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
@@ -438,56 +439,16 @@ var gExtensionsViewController = {
         gExtensionManager.uninstallTheme(stripPrefix(selectedID));
       
       gExtensionsView.selected = document.getElementById(nextElement);
-
-#if ANNOYING_ASS_ALERTS
-      // Show an alert message telling the user they need to restart for the
-      // action to take effect.
-      message = extensionsStrings.getFormattedString("restartBeforeUninstallMessage", 
-                                                     [gExtensionsView.selected.getAttribute("name"),
-                                                      brandStrings.getString("brandShortName")]);
-
-      promptSvc.alert(window, extensionsStrings.getString("restartBeforeUninstallTitle"), message);
-#endif
     },
     
     cmd_disable: function ()
     {
       gExtensionManager.disableExtension(stripPrefix(gExtensionsView.selected.id));
-
-#if ANNOYING_ASS_ALERTS
-      // Show an alert message telling the user they need to restart for the
-      // action to take effect.
-      var extensionsStrings = document.getElementById("extensionsStrings");
-      var brandStrings = document.getElementById("brandStrings");
-
-      var message = extensionsStrings.getFormattedString("restartBeforeDisableMessage", 
-                                                         [gExtensionsView.selected.getAttribute("name"),
-                                                         brandStrings.getString("brandShortName")]);
-
-      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-      promptSvc.alert(window, extensionsStrings.getString("restartBeforeDisableTitle"), message);
-#endif
     },
     
     cmd_enable: function ()
     {
       gExtensionManager.enableExtension(stripPrefix(gExtensionsView.selected.id));
-
-#if ANNOYING_ASS_ALERTS
-      // Show an alert message telling the user they need to restart for the
-      // action to take effect.
-      var extensionsStrings = document.getElementById("extensionsStrings");
-      var brandStrings = document.getElementById("brandStrings");
-
-      var message = extensionsStrings.getFormattedString("restartBeforeEnableMessage", 
-                                                         [gExtensionsView.selected.getAttribute("name"),
-                                                         brandStrings.getString("brandShortName")]);
-
-      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-      promptSvc.alert(window, extensionsStrings.getString("restartBeforeEnableTitle"), message);
-#endif
     },
   }
 };

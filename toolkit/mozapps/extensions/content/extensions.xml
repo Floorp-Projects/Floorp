@@ -37,8 +37,10 @@
 # ***** END LICENSE BLOCK *****
 
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd" >
+  %brandDTD;
   %extensionsDTD;
 ]>
 
@@ -83,5 +85,109 @@
     </implementation>
   </binding>
   
+  <binding id="extension-tobedisabled" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.toBeDisabled.label;
+          </xul:description>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="extension-tobeenabled" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.toBeEnabled.label;
+          </xul:description>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="extension-tobeinstalled" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.toBeInstalled.label;
+          </xul:description>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="extension-tobeuninstalled" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.toBeUninstalled.label;
+          </xul:description>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
 </bindings>
 

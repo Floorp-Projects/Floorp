@@ -1084,14 +1084,14 @@ nsExtensionManager.prototype = {
       var currAppID = pref.getCharPref(PREF_EM_APP_ID);
       var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion,
                                                    nsIUpdateItem.TYPE_ADDON);
-
       if (items.length > 0) {
         for (var i = 0; i < items.length; ++i) {
           // Now disable the extension so it won't hurt anything. 
-          this.disableExtension(items[i].id);
-          // XXXben - this is going to fail on themes - if we discover
-          //          a theme in this list we need to select the default
-          //          theme. 
+          var itemType = getItemType(this._ds._getResourceForItem(items[i].id).Value);
+          if (itemType == nsIUpdateItem.TYPE_EXTENSION)
+            this.disableExtension(items[i].id);
+          else (itemType == nsIUpdateItem.TYPE_THEME) ;
+            // XXXben need to deselect theme and reselect default.
         }
         var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                                 .getService(Components.interfaces.nsIUpdateService);
@@ -1104,8 +1104,8 @@ nsExtensionManager.prototype = {
     }
     
     // Now update the last app version so we don't do this checking 
-    // again.
-    pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+    // again. goats
+    // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     
     return rv;
   },
@@ -1244,9 +1244,19 @@ nsExtensionManager.prototype = {
     this._ensureDS();
     var extensionID = this.canInstallItem(ds);
     if (extensionID) {
-      this._ds.setItemProperty(extensionID, this._ds._emR("toBeInstalled"),
-                               this._ds._emL("true"), installProfile,
-                               nsIUpdateItem.TYPE_EXTENSION);
+      // Clear any "disabled" flags that may have been set by the mismatch 
+      // checking code at startup.
+      var props = { toBeDisabled  : null,
+                    disabled      : null,
+                    toBeInstalled : this._ds._emL("true"),
+                    name          : this.getManifestProperty(ds, "name"),
+                    version       : this.getManifestProperty(ds, "version") };
+      for (var p in props) {
+        this._ds.setItemProperty(extensionID, this._ds._emR(p),
+                                 props[p], installProfile,
+                                 nsIUpdateItem.TYPE_EXTENSION);
+      }
+
       // Then we stage the extension's XPI into a temporary directory so we 
       // can extract them after the next restart. 
       this._stageExtensionXPI(zipReader, extensionID, installProfile);
@@ -1279,6 +1289,15 @@ nsExtensionManager.prototype = {
       return idLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
     return null;
+  },
+  
+  getManifestProperty: function (aDataSource, aProperty)
+  {
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    var manifestRoot = rdf.GetResource("urn:mozilla:install-manifest");
+    var arc = rdf.GetResource(EM_NS(aProperty));
+    return aDataSource.GetTarget(manifestRoot, arc, true);
   },
   
   _stageExtensionXPI: function (aZipReader, aExtensionID, aInstallProfile)
@@ -1323,6 +1342,9 @@ nsExtensionManager.prototype = {
     var isProfile = this._ds.isProfileItem(aExtensionID);
     this._extUninstaller.uninstall(aExtensionID, isProfile);
 
+    // Clean the extension resource
+    this._ds.removeItemMetadata(aExtensionID, nsIUpdateItem.TYPE_EXTENSION);
+    
     // Update the Defaults Manifest
     this._writeDefaults();
 
@@ -1733,7 +1755,7 @@ nsExtensionsDataSource.prototype = {
     for (var i = 0; i < roots.length; ++i) {    
       var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                           .createInstance(Components.interfaces.nsIRDFContainer);
-      ctr.Init(this, this._rdf.GetResource(roots[i]));
+      ctr.Init(this._composite, this._rdf.GetResource(roots[i]));
       
       var elements = ctr.GetElements();
       while (elements.hasMoreElements()) {
@@ -1743,9 +1765,9 @@ nsExtensionsDataSource.prototype = {
           var id = stripPrefix(e.Value, itemType);
           var item = Components.classes["@mozilla.org/updates/item;1"]
                               .createInstance(Components.interfaces.nsIUpdateItem);
-          item.init(id, this.getItemProperty(id, "version"),
-                    this.getItemProperty(id, "name"),
-                    -1, "", "", this.getItemProperty(id, "updateURL"), 
+          item.init(id, this._getItemProperty(e, "version"),
+                    this._getItemProperty(e, "name"),
+                    -1, "", "", this._getItemProperty(e, "updateURL"), 
                     itemType);
           items.push(item);
         }
@@ -1874,8 +1896,13 @@ nsExtensionsDataSource.prototype = {
       dump("*** getItemProperty failing for lack of an item. This means _getResourceForItem \
                 failed to locate a resource for aItemID (" + aItemID + ")\n");
     }
+    var val = this._getItemProperty(item, aProperty);
+  },
+  
+  _getItemProperty: function (aItemResource, aProperty)
+  {
     try {
-      return this.GetTarget(item, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      return this.GetTarget(aItemResource, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
     catch (e) {}
     return "";
@@ -2019,9 +2046,6 @@ nsExtensionsDataSource.prototype = {
     // extension's resource, otherwise we'll think it's a global extension.
     var isProfile = this.isProfileItem(aExtensionID);
     
-    // Clean the extension resource
-    this.removeItemMetadata(aExtensionID, nsIUpdateItem.TYPE_EXTENSION);
-    
     this.setItemProperty(aExtensionID, this._emR("toBeUninstalled"), 
                          this._emL("true"), isProfile, 
                          nsIUpdateItem.TYPE_EXTENSION);
@@ -2078,6 +2102,7 @@ nsExtensionsDataSource.prototype = {
                                 .getService(Components.interfaces.nsIProperties);
     var extensionsFile  = getFile(getDirKey(aProfile), 
                                   [DIR_EXTENSIONS, FILE_EXTENSIONS]);
+    dumpFile(extensionsFile);
     
     // If the file does not exist at the current location, copy the default
     // version over so we can access the various roots. 
