@@ -159,6 +159,7 @@ nsGridRowGroupLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
     }
   }
 
+
   return rv;
 }
 

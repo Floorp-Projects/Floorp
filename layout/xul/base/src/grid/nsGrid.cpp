@@ -646,6 +646,64 @@ nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
 }
 
 /**
+ * The first and last rows can be affected by <rows> tags with borders or margin
+ * gets first and last rows and their indexes.
+ * If it fails because there are no rows then:
+ * FirstRow is nsnull
+ * LastRow is nsnull
+ * aFirstIndex = -1
+ * aLastIndex = -1
+ */
+void
+nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState, 
+                          PRInt32& aFirstIndex, 
+                          PRInt32& aLastIndex, 
+                          nsGridRow*& aFirstRow,
+                          nsGridRow*& aLastRow,
+                          PRBool aIsHorizontal)
+{
+  aFirstRow = nsnull;
+  aLastRow = nsnull;
+  aFirstIndex = -1;
+  aLastIndex = -1;
+
+  PRInt32 count = GetRowCount(aIsHorizontal);
+
+  if (count == 0)
+    return;
+
+
+  // We could have collapsed columns either before or after our index.
+  // they should not count. So if we are the 5th row and the first 4 are
+  // collaped we become the first row. Or if we are the 9th row and
+  // 10 up to the last row are collapsed we then become the last.
+
+  // see if we are first
+  PRInt32 i;
+  for (i=0; i < count; i++)
+  {
+     nsGridRow* row = GetRowAt(i,aIsHorizontal);
+     if (!row->IsCollapsed(aState)) {
+       aFirstIndex = i;
+       aFirstRow = row;
+       break;
+     }
+  }
+
+  // see if we are last
+  for (i=count-1; i >= 0; i--)
+  {
+     nsGridRow* row = GetRowAt(i,aIsHorizontal);
+     if (!row->IsCollapsed(aState)) {
+       aLastIndex = i;
+       aLastRow = row;
+       break;
+     }
+
+  }
+}
+
+/**
  * A row can have a top and bottom offset. Usually this is just the top and bottom border/padding.
  * However if the row is the first or last it could be affected by the fact a column or columns could
  * have a top or bottom margin. 
@@ -664,7 +722,6 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
     aBottom = row->mBottom;
     return;
   }
-  PRInt32 lastRow = GetRowCount(aIsHorizontal)-1;
 
   // first get the rows top and bottom border and padding
   nsIBox* box = row->GetBox();
@@ -681,19 +738,26 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   // borders padding and insets into account
   if (box && !row->mIsBogus)
   {
-     box->GetInset(inset);
+     PRBool isCollapsed = PR_FALSE;
+     box->IsCollapsed(aState, isCollapsed);
 
-     // get real border and padding. GetBorderAndPadding
-     // is redefined on nsGridRowLeafFrame. If we called it here
-     // we would be in finite recurson.
-     box->GetBorder(border);
-     box->GetPadding(padding);
+     if (!isCollapsed) 
+     {
 
-     totalBorderPadding += inset; 
-     totalBorderPadding += border;
-     totalBorderPadding += padding;
+       box->GetInset(inset);
 
-     box->GetMargin(margin);
+       // get real border and padding. GetBorderAndPadding
+       // is redefined on nsGridRowLeafFrame. If we called it here
+       // we would be in finite recurson.
+       box->GetBorder(border);
+       box->GetPadding(padding);
+
+       totalBorderPadding += inset; 
+       totalBorderPadding += border;
+       totalBorderPadding += padding;
+
+       box->GetMargin(margin);
+     }
 
      // if we are the first or last row
      // take into account <rows> tags around us
@@ -726,7 +790,13 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
 
   // If we are the last row then get the largest bottom border/padding in 
   // our columns. If thats larger than the rows bottom border/padding use it.
-  if (lastRow >= 0 && (aIndex == 0 || aIndex == lastRow)) {
+  PRInt32 firstIndex = 0;
+  PRInt32 lastIndex = 0;
+  nsGridRow* firstRow = nsnull;
+  nsGridRow* lastRow = nsnull;
+  GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, aIsHorizontal);
+
+  if (aIndex == firstIndex || aIndex == lastIndex) {
     nscoord maxTop = 0;
     nscoord maxBottom = 0;
 
@@ -770,7 +840,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
         nscoord bottom;
 
         // pick the largest top margin
-        if (aIndex == 0) {
+        if (aIndex == firstIndex) {
           if (aIsHorizontal) {
             top = totalChildBorderPadding.top;
           } else {
@@ -781,7 +851,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
         } 
 
         // pick the largest bottom margin
-        if (aIndex == lastRow) {
+        if (aIndex == lastIndex) {
           if (aIsHorizontal) {
             bottom = totalChildBorderPadding.bottom;
           } else {
@@ -795,14 +865,14 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
     
       // If the biggest top border/padding the columns is larger than this rows top border/padding
       // the use it.
-      if (aIndex == 0) {
+      if (aIndex == firstIndex) {
         if (maxTop > (row->mTop + row->mTopMargin))
           row->mTop = maxTop - row->mTopMargin;
       }
 
       // If the biggest bottom border/padding the columns is larger than this rows bottom border/padding
       // the use it.
-      if (aIndex == lastRow) {
+      if (aIndex == lastIndex) {
         if (maxBottom > (row->mBottom + row->mBottomMargin))
           row->mBottom = maxBottom - row->mBottomMargin;
       }
@@ -811,6 +881,19 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   
   aTop    = row->mTop;
   aBottom = row->mBottom;
+}
+
+PRBool
+nsGrid::CheckCollapsed(nsBoxLayoutState& aState, nsGridRow* aRow, nscoord& aSize, nscoord& aNewSize)
+{
+    if (aRow->IsCollapsed(aState))
+    {
+      aSize = 0;
+      aNewSize = 0;
+      return PR_TRUE;
+    }
+    
+    return PR_FALSE;
 }
 
 /**
@@ -825,6 +908,9 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
+  if (CheckCollapsed(aState, row, row->mPref, aSize))
+      return NS_OK;
+
   if (row->IsPrefSet()) 
   {
     aSize = row->mPref;
@@ -834,7 +920,8 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
   nsIBox* box = row->mBox;
 
   // set in CSS?
-  if (box) {
+  if (box) 
+  {
     nsSize cssSize;
     cssSize.width = -1;
     cssSize.height = -1;
@@ -862,7 +949,8 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
   {
      nsSize size(0,0);
      nsIBox* box = row->GetBox();
-     if (box) {
+     if (box) 
+     {
        box->GetPrefSize(aState, size);
        nsBox::AddMargin(box, size);
        nsStackLayout::AddOffset(aState, box, size);
@@ -916,6 +1004,9 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
   RebuildIfNeeded();
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
+
+  if (CheckCollapsed(aState, row, row->mMin, aSize))
+      return NS_OK;
 
   if (row->IsMinSet()) 
   {
@@ -1006,6 +1097,9 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
   RebuildIfNeeded();
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
+
+  if (CheckCollapsed(aState, row, row->mMax, aSize))
+     return NS_OK;
 
   if (row->IsMaxSet()) 
   {

@@ -55,18 +55,19 @@ class nsGridRow
 {
 public:
    nsGridRow();
-   virtual ~nsGridRow();
+   ~nsGridRow();
    
-   virtual void Init(nsIBox* aBox, PRBool aIsBogus);
-   virtual void MarkDirty(nsBoxLayoutState& aState);
+   void Init(nsIBox* aBox, PRBool aIsBogus);
+   void MarkDirty(nsBoxLayoutState& aState);
 
 // accessors
-   virtual nsIBox* GetBox()   { return mBox;          }
-   virtual PRBool IsPrefSet() { return (mPref != -1); }
-   virtual PRBool IsMinSet()  { return (mMin  != -1); }
-   virtual PRBool IsMaxSet()  { return (mMax  != -1); } 
-   virtual PRBool IsFlexSet() { return (mFlex != -1); }
-   virtual PRBool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
+   nsIBox* GetBox()   { return mBox;          }
+   PRBool IsPrefSet() { return (mPref != -1); }
+   PRBool IsMinSet()  { return (mMin  != -1); }
+   PRBool IsMaxSet()  { return (mMax  != -1); } 
+   PRBool IsFlexSet() { return (mFlex != -1); }
+   PRBool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
+   PRBool IsCollapsed(nsBoxLayoutState& aState);
 
 public:
 
