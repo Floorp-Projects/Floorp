@@ -469,7 +469,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         PRBool dirtyChildren = PR_FALSE;           
         child->IsDirty(dirty);
         child->HasDirtyChildren(dirtyChildren);
-        if (!(dirty || dirtyChildren) && aState.GetLayoutReason() != nsBoxLayoutState::Initial)
+        if (!(dirty || dirtyChildren) && aState.LayoutReason() != nsBoxLayoutState::Initial)
           layout = PR_FALSE;
       }
 
@@ -1117,7 +1117,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 {  
 
  // float p2t;
- // aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+ // aState.PresContext()->GetScaledPixelsToTwips(&p2t);
   //nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   PRInt32 sizeRemaining            = aGivenSize;

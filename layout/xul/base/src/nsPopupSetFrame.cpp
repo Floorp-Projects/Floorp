@@ -254,7 +254,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
       nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
       if (scrollframe) {
         nsIScrollableFrame::nsScrollPref pref;
-        scrollframe->GetScrollPreference(aState.GetPresContext(), &pref);
+        scrollframe->GetScrollPreference(aState.PresContext(), &pref);
 
         if (pref == nsIScrollableFrame::Auto)  
         {
@@ -339,7 +339,7 @@ nsPopupSetFrame::RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aSt
   // Sync up the view.
   if (aEntry && aEntry->mElementContent) {
     nsIFrame* frameToSyncTo = nsnull;
-    nsIPresContext* presContext = aState.GetPresContext();
+    nsIPresContext* presContext = aState.PresContext();
     presContext->PresShell()->GetPrimaryFrameFor(aEntry->mElementContent,
                                                  &frameToSyncTo );
     ((nsMenuPopupFrame*)(aEntry->mPopupFrame))->SyncViewWithFrame(presContext, 

@@ -196,7 +196,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   body->GetChildBox(&box);
 
   // if the reason is resize or initial we must relayout.
-  PRBool relayout = (aState.GetLayoutReason() == nsBoxLayoutState::Resize || aState.GetLayoutReason() == nsBoxLayoutState::Initial);
+  PRBool relayout = (aState.LayoutReason() == nsBoxLayoutState::Resize || aState.LayoutReason() == nsBoxLayoutState::Initial);
   nscoord rowHeight = body->GetRowHeightTwips();
 
   while (box) {

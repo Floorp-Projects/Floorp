@@ -1985,7 +1985,7 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (collapsed)
     return NS_OK;
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
   nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);

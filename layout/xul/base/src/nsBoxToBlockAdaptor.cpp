@@ -274,8 +274,7 @@ nsBoxToBlockAdaptor::SetIncludeOverflow(PRBool aInclude)
 
 static PRBool
 UseHTMLReflowConstraints(nsBoxToBlockAdaptor* aAdaptor, nsBoxLayoutState& aState) {
-  nsSize constrainedSize;
-  aState.GetScrolledBlockSizeConstraint(constrainedSize);
+  nsSize constrainedSize = aState.ScrolledBlockSizeConstraint();
   if (constrainedSize.width < 0 || constrainedSize.height < 0) {
     return PR_FALSE;
   }
@@ -318,7 +317,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
   nsresult rv = NS_OK;
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   if (reflowState) {
-    nsIPresContext* presContext = aState.GetPresContext();
+    nsIPresContext* presContext = aState.PresContext();
     nsReflowStatus status = NS_FRAME_COMPLETE;
     nsHTMLReflowMetrics desiredSize(PR_FALSE);
     nsReflowReason reason;
@@ -359,8 +358,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
       rect.height = NS_UNCONSTRAINEDSIZE;
     }
     if (useHTMLConstraints) {
-      nsSize constrained;
-      aState.GetScrolledBlockSizeConstraint(constrained);
+      nsSize constrained = aState.ScrolledBlockSizeConstraint();
       rect.width = constrained.width;
       rect.height = constrained.height;
     }
@@ -609,7 +607,7 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
   GetBounds(ourRect);
 
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
   nsReflowStatus status = NS_FRAME_COMPLETE;
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
   nsresult rv = NS_OK;
@@ -943,8 +941,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     if (mLastSize.width != aDesiredSize.width || mLastSize.height != aDesiredSize.height)
        changedSize = PR_TRUE;
   
-    PRUint32 layoutFlags;
-    aState.GetLayoutFlags(layoutFlags);
+    PRUint32 layoutFlags = aState.LayoutFlags();
     nsContainerFrame::FinishReflowChild(mFrame, aPresContext, &reflowState,
                                         aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);
   } else {

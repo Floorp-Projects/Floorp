@@ -289,10 +289,9 @@ nsDeckFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
 NS_IMETHODIMP
 nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  // Make sure we tweek the state so it does not resize our children.
+  // Make sure we tweak the state so it does not resize our children.
   // We will do that.
-  PRUint32 oldFlags = 0;
-  aState.GetLayoutFlags(oldFlags);
+  PRUint32 oldFlags = aState.LayoutFlags();
   aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
 
   // do a normal layout
@@ -307,9 +306,9 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
   {
     // make collapsed children not show up
     if (count == mIndex) 
-      ShowBox(aState.GetPresContext(), box);
+      ShowBox(aState.PresContext(), box);
     else
-      HideBox(aState.GetPresContext(), box);
+      HideBox(aState.PresContext(), box);
 
     nsresult rv2 = box->GetNextBox(&box);
     NS_ASSERTION(NS_SUCCEEDED(rv2), "failed to get next child");
