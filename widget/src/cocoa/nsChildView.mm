@@ -2520,8 +2520,11 @@ nsChildView::Idle()
   // if the command and alt keys are held down, initiate hand scrolling
   if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
     [self startHandScroll: theEvent];
-    return;	// do not pass this mousedown event to gecko
+    // change focus to this view (normally the gecko event would cause this)
+    [self becomeFirstResponder];
+    return;                     // do not pass this mousedown event to gecko
   }
+  
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
   geckoEvent.nativeMsg = nsnull;
