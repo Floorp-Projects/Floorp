@@ -225,6 +225,9 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
     mViewManager->SetRootWindow(mWindow);
   }
 
+  //set frame rate to 25 fps
+  mViewManager->SetFrameRate(25);
+
   return rv;
 }
 

@@ -106,7 +106,7 @@ protected:
   // mWindow is a convenience pointer to the widget functionalities.
   // mWindow is not AddRef'ed or Released otherwise we'll create a circulare
   // refcount and the view will never go away
-  nsISupports		*mInnerWindow;
+  nsISupports		    *mInnerWindow;
   nsIWidget         *mWindow;
 
   //XXX should there be pointers to last child so backward walking is fast?
@@ -120,6 +120,7 @@ protected:
   nsViewClip        mClip;
   nsTransform2D     *mXForm;
   float             mOpacity;
+  PRBool            mDying;
 };
 
 #endif
