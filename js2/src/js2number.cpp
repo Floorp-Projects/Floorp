@@ -98,9 +98,6 @@ namespace MetaData {
 
     void initNumberObject(JS2Metadata *meta)
     {
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(meta->publicNamespace);
-
         meta->numberClass->construct = Number_Constructor;
         meta->numberClass->call = Number_Call;
 
@@ -121,7 +118,7 @@ namespace MetaData {
         for (i = 0; i < N_CONSTANTS_COUNT; i++)
         {
             Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(NumberObjectConstants[i].value), true);
-            meta->defineLocalMember(meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            meta->defineLocalMember(meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         }
         meta->env->removeTopFrame();
 

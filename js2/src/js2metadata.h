@@ -724,7 +724,7 @@ private:
 
 class JS2Class : public NonWithFrame {
 public:
-    JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
+    JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name);
 
     const String *getName()                     { return typeofString; }
         
@@ -1340,7 +1340,7 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     LocalMember *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal);
-    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList &namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
+    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
     InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,
                                                                     InstanceMember *m, size_t pos);
@@ -1425,6 +1425,7 @@ public:
     JS2Class *booleanClass;
     JS2Class *generalNumberClass;
     JS2Class *numberClass;
+    JS2Class *integerClass;
     JS2Class *characterClass;
     JS2Class *stringClass;
     JS2Class *namespaceClass;

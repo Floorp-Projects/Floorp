@@ -302,15 +302,12 @@ void initMathObject(JS2Metadata *meta)
         { "SQRT1_2",M_SQRT1_2 }
     };
 
-    NamespaceList publicNamespaceList;
-    publicNamespaceList.push_back(meta->publicNamespace);
-    
     uint32 i;
     meta->env->addFrame(meta->mathClass);
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
     {
         Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
     }
     meta->env->removeTopFrame();
 
@@ -343,7 +340,7 @@ void initMathObject(JS2Metadata *meta)
         FunctionInstance *callInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
         Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
         // XXX add 'length' as a dynamic property of the method
         meta->createDynamicProperty(callInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);

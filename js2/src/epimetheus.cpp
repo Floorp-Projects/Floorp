@@ -257,6 +257,11 @@ void printLocalBindings(LocalBindingMap *lMap, ValueList *frameSlots)
             stdOut << "\t" << *(ns.first->name) << "::" << lbe->name;
             LocalMember *m = checked_cast<LocalMember *>(ns.second->content);
             switch (m->memberKind) {
+            case Member::ForbiddenMember:
+                {
+                    stdOut << " forbidden\n";
+                }
+                break;
             case Member::DynamicVariableMember:
                 {
                     DynamicVariable *dv = checked_cast<DynamicVariable *>(m);
