@@ -74,6 +74,7 @@ helpmessage : FORCE
 	@echo 'Targets include:'
 	@echo '\tall - make jars, examples'
 	@echo '\tjars - make js.jar, jstools.jar'
+	@echo '\tfast - quick-and-dirty "make jars", for development'
 	@echo '\texamples - build the .class files in the examples directory'
 	@echo '\tcheck - perform checks on the source.'
 	@echo '\tclean - remove intermediate files'
@@ -87,11 +88,19 @@ all : jars examples
 
 jars : $(JARS)
 
+fast : fast_$(JS_JAR) $(JSTOOLS_JAR)
+
 # Always call the sub-Makefile - which may decide that the jar is up to date.
 $(JS_JAR) : FORCE
 	$(MAKE) -f $(JS_DIR)/Makefile JAR=$(@) $(EXPORTS) \
 		PATH_PREFIX=$(JS_DIR) \
 		CLASSPATH=.
+
+fast_$(JS_JAR) :
+	$(MAKE) -f $(JS_DIR)/Makefile JAR=$(JS_JAR) $(EXPORTS) \
+		PATH_PREFIX=$(JS_DIR) \
+		CLASSPATH=. \
+		fast
 
 $(JSTOOLS_JAR) : $(JS_JAR) $(JSDEBUG_JAR) FORCE
 	$(MAKE) -f $(JSTOOLS_DIR)/Makefile JAR=$(@) $(EXPORTS) \

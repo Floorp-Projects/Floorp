@@ -115,6 +115,10 @@ CLASSES = $(PATH_PREFIX)/*.class $(PATH_PREFIX)/regexp/*.class
 # same thing with RESOURCES.)
 TLCLASS = $(CLASSDIR)/$(PATH_PREFIX)/*.class
 
+# An empty file, used mainly for timestamp/dependency purposes by 
+# "fast" builds
+FASTTARGET=$(CLASSDIR)/.lastbuild
+
 
 $(JAR) : $(TLCLASS) $(CLASSDIR)/$(RESOURCES)
 	cd $(CLASSDIR) ; \
@@ -122,11 +126,31 @@ $(JAR) : $(TLCLASS) $(CLASSDIR)/$(RESOURCES)
 
 $(TLCLASS) : $(SOURCES)
 	- mkdir -p $(CLASSDIR)
+	echo "" > $(FASTTARGET)
 	$(JAVAC) $(JFLAGS) -d $(CLASSDIR) $(SOURCES)
 
 $(CLASSDIR)/$(RESOURCES) : $(RESOURCES)
 	- mkdir -p $(CLASSDIR)/$(RESOURCEDIR)
 	cp $(RESOURCES) $(CLASSDIR)/$(RESOURCEDIR)
+
+# Since the jar file is a target for regular builds, "fast" builds use a 
+# dummy file, updated before each compilation to provide a timestamp.
+# Even so, using a dummy file is far from foolproof, so we still need 
+# the regular build. 
+
+fast: $(FASTTARGET)
+
+# So that we recompile only the files that have changed, we pretend 
+# the only real dependencies are the source files, and recopy the 
+# resources every time.  Right now (14 Jun 99), the only resource is 
+# Messages.properties, so it's a small price to pay.
+$(FASTTARGET) : $(SOURCES)
+	- mkdir -p $(CLASSDIR)/$(RESOURCEDIR)
+	cp $(RESOURCES) $(CLASSDIR)/$(RESOURCEDIR)
+	echo "" > $(FASTTARGET)
+	$(JAVAC) $(JFLAGS) -d $(CLASSDIR) $(?)
+	cd $(CLASSDIR) ; \
+		jar cf ../$(JAR) $(CLASSES) $(RESOURCES)
 
 clean : 
 	- cd $(CLASSDIR) && rm $(CLASSES) $(RESOURCES)
