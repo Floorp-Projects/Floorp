@@ -173,7 +173,10 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // We need to begin a document now, because the client is entitled at
   // this point to do stuff like create fonts, which required the PS to
   // be associated with a DC which has been DEVESC_STARTDOC'd.
-  BeginDocument(nsnull);
+
+  // Commenting out for now - we'll see what people say about the effects
+  // This line causes us not to print on Lexmark printers
+//  BeginDocument(nsnull);
 #endif
 
   return NS_OK;
