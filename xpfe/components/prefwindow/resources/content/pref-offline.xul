@@ -42,6 +42,27 @@
   <![CDATA[
     var _elementIDs = ["offlineStartupstate", "whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
   ]]>
+    
+  function Startup()
+  {
+    var aCheckbox = document.getElementById("offlineCompactFolder");
+    var aField = document.getElementById("offlineCompactFolderMin");
+    if(aCheckbox.checked)
+        aField.setAttribute("disabled", "true");
+    else
+        aField.removeAttribute("disabled");
+    
+  }
+
+  function enableField(aCheckbox, aNodeID) 
+  { 
+     var aField = document.getElementById(aNodeID); 
+     if (aCheckbox.checked) 
+         aField.setAttribute("disabled", "true"); 
+     else 
+         aField.removeAttribute("disabled"); 
+  } 
+
   </script>
 
 <hbox class="box-smallheader" id="OfflineHeader" title="&boxHeader;"/>
@@ -83,8 +104,9 @@
     <label value="&Diskspace;"/>	    
     <hbox align="center">
         <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
-            pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"/> 
-        <textbox id="offlineCompactFolderMin" size="5" value="100" 
+            pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"
+            oncommand="enableField(this,'offlineCompactFolderMin');"/> 
+        <textbox id="offlineCompactFolderMin" size="5" value="100"
             pref="true" preftype="int" prefstring="mail.purge_threshhold" prefattribute="value"/>
         <text class="label" value="&kb.label;"/>
     </hbox>
