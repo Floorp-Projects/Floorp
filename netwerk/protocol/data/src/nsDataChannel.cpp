@@ -158,12 +158,13 @@ nsDataChannel::ParseData() {
         mContentType = buffer;
         ToLowerCase(mContentType);
 
-        char *charset = PL_strcasestr(semiColon + 1, "charset=");
-        if (charset)
-            mContentCharset = charset + sizeof("charset=") - 1;
+        if (semiColon) {
+            char *charset = PL_strcasestr(semiColon + 1, "charset=");
+            if (charset)
+                mContentCharset = charset + sizeof("charset=") - 1;
 
-        if (semiColon)
             *semiColon = ';';
+        }
     }
     mContentType.StripWhitespace();
     mContentCharset.StripWhitespace();
