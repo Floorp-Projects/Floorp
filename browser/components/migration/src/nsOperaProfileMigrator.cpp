@@ -382,10 +382,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
       lastSectionName = transform->sectionName;
 
     if (transform->type == _OPM(COLOR)) {
-      char* colorString = (char*)malloc(sizeof(char) * 8);
-      if (!colorString)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+      char* colorString = nsnull;
       nsresult rv = ParseColor(parser, lastSectionName, &colorString);
       if (NS_SUCCEEDED(rv)) {
         transform->stringValue = colorString;
@@ -393,7 +390,8 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         transform->prefHasValue = PR_TRUE;
         transform->prefSetterFunc(transform, branch);
       }
-      nsCRT::free(colorString);
+      if (colorString)
+        nsCRT::free(colorString);
     }
     else {
       char* val = nsnull;
@@ -421,7 +419,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
       }
     }
   }
-
+  
   // Copy Proxy Settings
   CopyProxySettings(parser, branch);
 
@@ -433,7 +431,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
 
   delete parser;
   parser = nsnull;
-
+  
   return NS_OK;
 }
 
@@ -513,11 +511,18 @@ nsOperaProfileMigrator::GetInteger(nsINIParser* aParser,
 nsresult
 nsOperaProfileMigrator::ParseColor(nsINIParser* aParser, char* aSectionName, char** aResult)
 {
+  nsresult rv;
   PRInt32 r, g, b;
 
-  GetInteger(aParser, aSectionName, "Red", &r);
-  GetInteger(aParser, aSectionName, "Green", &g);
-  GetInteger(aParser, aSectionName, "Blue", &b);
+  rv |= GetInteger(aParser, aSectionName, "Red", &r);
+  rv |= GetInteger(aParser, aSectionName, "Green", &g);
+  rv |= GetInteger(aParser, aSectionName, "Blue", &b);
+  if (NS_FAILED(rv)) 
+    return NS_OK; // This Preference has no value. Bail now before we get in trouble.
+
+  *aResult = (char*)malloc(sizeof(char) * 8);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   sprintf(*aResult, "#%02X%02X%02X", r, g, b);
 
