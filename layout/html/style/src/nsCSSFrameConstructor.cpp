@@ -3323,7 +3323,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
     NS_NewFloatingItemWrapperFrame(&newFrame);
 
     // Initialize the frame
-    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+    newFrame->Init(*aPresContext, aContent, aState.mFloatedItems.containingBlock,
+                   aStyleContext, nsnull);
 
     // See if we need to create a view
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
