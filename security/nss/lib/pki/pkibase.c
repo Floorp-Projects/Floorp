@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.24 $ $Date: 2005/01/20 02:25:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.25 $ $Date: 2005/03/04 04:32:04 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -428,7 +428,7 @@ NSS_IMPLEMENT NSSCertificate *
 nssCertificateArray_FindBestCertificate (
   NSSCertificate **certs, 
   NSSTime *timeOpt,
-  NSSUsage *usage,
+  const NSSUsage *usage,
   NSSPolicies *policiesOpt
 )
 {

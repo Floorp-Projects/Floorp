@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.85 $ $Date: 2005/01/20 02:25:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.86 $ $Date: 2005/03/04 04:32:04 $";
 #endif /* DEBUG */
 
 /*
@@ -393,39 +393,39 @@ nss3certificate_isNewerThan(nssDecodedCert *dc, nssDecodedCert *cmpdc)
 
 /* CERT_FilterCertListByUsage */
 static PRBool
-nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
+nss3certificate_matchUsage(nssDecodedCert *dc, const NSSUsage *usage)
 {
+    CERTCertificate *cc;
+    unsigned int requiredKeyUsage = 0;
+    unsigned int requiredCertType = 0;
     SECStatus secrv;
-    unsigned int requiredKeyUsage;
-    unsigned int requiredCertType;
-    unsigned int certType;
     PRBool match;
-    CERTCertificate *cc = (CERTCertificate *)dc->data;
-    SECCertUsage secUsage = usage->nss3usage;
-    PRBool ca = usage->nss3lookingForCA;
+    PRBool ca;
 
     /* This is for NSS 3.3 functions that do not specify a usage */
     if (usage->anyUsage) {
 	return PR_TRUE;
     }
-    secrv = CERT_KeyUsageAndTypeForCertUsage(secUsage, ca,
+    ca = usage->nss3lookingForCA;
+    secrv = CERT_KeyUsageAndTypeForCertUsage(usage->nss3usage, ca,
                                              &requiredKeyUsage,
                                              &requiredCertType);
     if (secrv != SECSuccess) {
 	return PR_FALSE;
     }
-    match = PR_TRUE;
+    cc = (CERTCertificate *)dc->data;
     secrv = CERT_CheckKeyUsage(cc, requiredKeyUsage);
-    if (secrv != SECSuccess) {
-	match = PR_FALSE;
-    }
-    if (ca) {
-	(void)CERT_IsCACert(cc, &certType);
-    } else {
-	certType = cc->nsCertType;
-    }
-    if (!(certType & requiredCertType)) {
-	match = PR_FALSE;
+    match = (PRBool)(secrv == SECSuccess);
+    if (match) {
+	unsigned int certType = 0;
+	if (ca) {
+	    (void)CERT_IsCACert(cc, &certType);
+	} else {
+	    certType = cc->nsCertType;
+	}
+	if (!(certType & requiredCertType)) {
+	    match = PR_FALSE;
+	}
     }
     return match;
 }
