@@ -88,14 +88,12 @@ dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
-# The use of LIB_PREFIX for OS/2 VA builds is inconsistent 
-# due to bug 114748, so use _NSS_LIB_PREFIX instead
 libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
 ifeq ($(OS_ARCH),WINNT)
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)dbm$(MOZ_BITS).$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)dbm$(MOZ_BITS).$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 else
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin

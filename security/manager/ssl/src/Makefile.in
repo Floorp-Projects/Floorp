@@ -115,7 +115,7 @@ SOFTOKEN3_LIB = $(LIB_PREFIX)softokn3$(DLL_SUFFIX)
 endif
 
 EXTRA_LIBS = \
-    $(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
     $(DIST)/lib/$(SMIME3_LIB) \
     $(DIST)/lib/$(SSL3_LIB) \
     $(DIST)/lib/$(NSS3_LIB) \
