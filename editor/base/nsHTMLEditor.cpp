@@ -617,9 +617,13 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
       }
     }
     else  // normal typing
-    {  
-      nsAutoString key(character);
-      return TypedText(key, eTypedText);
+    {
+      if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) 
+      && (PR_FALSE==isShift) && (PR_FALSE==metaKey))
+      {
+        nsAutoString key(character);
+        return TypedText(key, eTypedText);
+      }
     }
   }
   return NS_ERROR_FAILURE;

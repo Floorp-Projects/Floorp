@@ -168,11 +168,7 @@ protected:
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
-#if 1
     BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
-#else
-   BOOL                    OnChar(UINT aVirtualKeyCode);
-#endif
 
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
@@ -254,10 +250,8 @@ protected:
 
   PRBool  mIsInMouseCapture;
 
-#if 1
 	BOOL		mHaveDBCSLeadByte;
 	unsigned char mDBCSLeadByte;
-#endif
 
     // Drag & Drop
     nsNativeDragTarget * mNativeDragTarget;

@@ -372,7 +372,7 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		  				theModifiers |= controlKey;
 		  			if (keyEvent->isAlt)
 		  				theModifiers |= optionKey;
-		  			if (keyEvent->isCommand)
+		  			if (keyEvent->isMeta)
 		  				theModifiers |= cmdKey;
 		  		}
 	  			PrimitiveKeyDown(theChar, theModifiers);

@@ -1978,9 +1978,7 @@ nsEnderKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
-#ifdef XP_MAC
-    uiEvent->GetMetaKey(&(event.isCommand)); 
-#endif
+    uiEvent->GetMetaKey(&(event.isMeta));
 
     nsIEventStateManager *manager=nsnull;
     result = mContext->GetEventStateManager(&manager);
@@ -2034,9 +2032,7 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
-#ifdef XP_MAC
-    uiEvent->GetMetaKey(&(event.isCommand)); 
-#endif
+    uiEvent->GetMetaKey(&(event.isMeta));
 
 
     nsIEventStateManager *manager=nsnull;
@@ -2091,9 +2087,7 @@ nsEnderKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
-#ifdef XP_MAC
-    uiEvent->GetMetaKey(&(event.isCommand)); 
-#endif
+    uiEvent->GetMetaKey(&(event.isMeta));
 
 
     nsIEventStateManager *manager=nsnull;
@@ -2226,9 +2220,7 @@ nsEnderMouseListener::MouseDown(nsIDOMEvent* aEvent)
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
-#ifdef XP_MAC
-    uiEvent->GetMetaKey(&(event.isCommand)); 
-#endif
+    uiEvent->GetMetaKey(&(event.isMeta));
     PRUint16 clickCount;
     uiEvent->GetClickcount(&clickCount);
     NS_ASSERTION(clickCount>0 && clickCount<3, "bad click count");

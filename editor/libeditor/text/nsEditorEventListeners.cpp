@@ -160,10 +160,6 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsAutoString key;
-  PRUint32     charCode;
-  PRUint32     keyCode;
-
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aKeyEvent);
   if (!uiEvent) 
@@ -171,11 +167,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     //non-key event passed to keydown.  bad things.
     return NS_OK;
   }
-   //
-   // look at the keyCode if it is return or backspace, process it
-   //   we handle these two special characters here because it makes windows integration
-   //   eaiser
-   //
 
   PRBool keyProcessed;
   // we should check a flag here to see if we should be using built-in key bindings
@@ -184,24 +175,15 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   ProcessShortCutKeys(aKeyEvent, keyProcessed);
   if (PR_FALSE==keyProcessed)
   {
-    PRBool ctrlKey, altKey, metaKey;
-    uiEvent->GetCtrlKey(&ctrlKey);
-    uiEvent->GetAltKey(&altKey);
-    uiEvent->GetMetaKey(&metaKey);
+    PRUint32     keyCode;
     uiEvent->GetKeyCode(&keyCode);
-    uiEvent->GetCharCode(&charCode);
-
-#ifdef BLOCK_META_FOR_SOME_REASON
-    if (metaKey)
-      return NS_OK;   // don't consume
-#endif
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
 
     // if there is no charCode, then it's a key that doesn't map to a character,
     // so look for special keys using keyCode
-    if (0==charCode)
+    if (0 != keyCode)
     {
       if (nsIDOMUIEvent::DOM_VK_BACK==keyCode) 
       {
@@ -217,9 +199,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }   
       if (nsIDOMUIEvent::DOM_VK_TAB==keyCode)
       {
-        if (metaKey || altKey)  // why block option-tab?
-          return NS_OK;   // don't consume
-
         PRUint32 flags=0;
         mEditor->GetFlags(&flags);
         if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
@@ -248,16 +227,16 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
     }
     
-    if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey))
-    {
+#if 0    
       // XXX: this must change.  DOM_VK_tab must be handled here, not in keyDown
       if (nsIDOMUIEvent::DOM_VK_TAB==keyCode) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
       }
-      htmlEditor->EditorKeyPress(uiEvent);
-      ScrollSelectionIntoView();
-    }
+#endif
+
+    htmlEditor->EditorKeyPress(uiEvent);
+    ScrollSelectionIntoView();
   }
   else
     ScrollSelectionIntoView();
@@ -267,18 +246,12 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 }
 
 
-/* these includes are for debug only.  this module should never instantiate it's own transactions */
-#include "SplitElementTxn.h"
-#include "TransactionFactory.h"
-
 nsresult
 nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
 {
   aProcessed=PR_FALSE;
-  PRUint32 keyCode;
-  PRBool isShift;
+  PRUint32 charCode;
   PRBool ctrlKey;
-  PRBool altKey;
 
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aKeyEvent);
@@ -287,11 +260,8 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(uiEvent->GetCharCode(&keyCode)) && 
-//  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
-      NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) ) 
+  if (NS_SUCCEEDED(uiEvent->GetCharCode(&charCode)) && 
+      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) ) 
   {
 #ifdef XP_MAC
     // hack to make Mac work for hard-coded keybindings
@@ -300,7 +270,8 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     // (even though the control key might also be pressed)
     PRBool isMetaKey;
     if (NS_SUCCEEDED(uiEvent->GetMetaKey(&isMetaKey)) && PR_TRUE==isMetaKey) {
-      ctrlKey = PR_TRUE;
+      ctrlKey = !ctrlKey; /* if controlKey is pressed, we shouldn't execute code below */
+                          /* if it's not set and cmdKey is, then we should proceed to code below */
     }
 #endif
     
@@ -309,10 +280,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     } 
     // swallow all control keys
     // XXX: please please please get these mappings from an external source!
-    switch (keyCode)
+    switch (charCode)
     {
       // XXX: hard-coded select all
-      case nsIDOMUIEvent::DOM_VK_A:
       case (PRUint32)('a'):
         if (PR_TRUE==ctrlKey)
         {
@@ -322,158 +292,34 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded cut
-      case nsIDOMUIEvent::DOM_VK_X:
       case (PRUint32)('x'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
             mEditor->Cut();
         }
-        else if (PR_TRUE==altKey)
-        {
-          aProcessed=PR_TRUE;
-          nsAutoString output;
-          nsresult res = NS_ERROR_FAILURE;
-          nsAutoString format;
-          if (isShift)
-            format = "text/plain";
-          else
-            format = "text/html";
-          res = mEditor->OutputToString(output, format,
-                                        nsIDocumentEncoder::OutputFormatted);
-          if (NS_SUCCEEDED(res))
-          {
-            char* buf = output.ToNewCString();
-            if (buf)
-            {
-              puts(buf);
-              nsCRT::free(buf);
-            }
-          }
-        }
         break;
 
       // XXX: hard-coded copy
-      case nsIDOMUIEvent::DOM_VK_C:
       case (PRUint32)('c'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
             mEditor->Copy();
         }
-        else if (PR_TRUE==altKey)
-        {
-          printf("Getting number of columns\n");
-          aProcessed=PR_TRUE;
-          nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-          if (mailEditor)
-          {
-             PRInt32 wrap;
-             if (NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-               printf("Currently wrapping to %d\n", wrap);
-             else
-               printf("GetBodyWrapWidth returned an error\n");               
-          }
-        }
         break;
-
-      case nsIDOMUIEvent::DOM_VK_OPEN_BRACKET:
-        // hard coded "Decrease wrap size"
-        if (PR_TRUE==altKey)
-        {
-           nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-           if (mailEditor)
-           {
-             aProcessed=PR_TRUE;
-             PRInt32 wrap;
-             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-             {
-               printf("GetBodyWrapWidth returned an error\n");
-               break;
-             }
-             mailEditor->SetBodyWrapWidth(wrap - 5);
-             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-             {
-               printf("Second GetBodyWrapWidth returned an error\n");
-               break;
-             }
-             else printf("Now wrapping to %d\n", wrap);
-           }
-        }
-        break;
-
-      case nsIDOMUIEvent::DOM_VK_CLOSE_BRACKET:
-        // hard coded "Increase wrap size"
-        if (PR_TRUE==altKey)
-        {
-           nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-           if (mailEditor)
-           {
-             aProcessed=PR_TRUE;
-             PRInt32 wrap;
-             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-             {
-               printf("GetBodyWrapWidth returned an error\n");
-               break;
-             }
-             mailEditor->SetBodyWrapWidth(wrap + 5);
-             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-             {
-               printf("Second GetBodyWrapWidth returned an error\n");
-               break;
-             }
-             else printf("Now wrapping to %d\n", wrap);
-           }
-        }
-        break;
-
-      // Hard coded "No wrap" or "wrap to window size"
-      case nsIDOMUIEvent::DOM_VK_BACK_SLASH:
-      {
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIEditorMailSupport> mailEditor =
-            do_QueryInterface(mEditor);
-          if (mailEditor)
-          {
-            aProcessed=PR_TRUE;
-            mailEditor->SetBodyWrapWidth(0);
-          }
-        }
-        else if (PR_TRUE==altKey)
-        {
-          nsCOMPtr<nsIEditorMailSupport> mailEditor =
-            do_QueryInterface(mEditor);
-          if (mailEditor)
-          {
-            aProcessed=PR_TRUE;
-            mailEditor->SetBodyWrapWidth(-1);
-          }
-        }
-      }
 
       // XXX: hard-coded paste
-      case nsIDOMUIEvent::DOM_VK_V:
       case (PRUint32)('v'):
         if (PR_TRUE==ctrlKey)
         {
           printf("control-v\n");
           if (mEditor)
-          {
-            if (altKey)
-            {
-              nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-              if (mailEditor)
-                mailEditor->PasteAsQuotation();
-            }
-            else
               mEditor->Paste();
-          }
         }
         break;
 
       // XXX: hard-coded undo
-      case nsIDOMUIEvent::DOM_VK_Z:
       case (PRUint32)('z'):
         if (PR_TRUE==ctrlKey)
         {
@@ -483,7 +329,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded redo
-      case nsIDOMUIEvent::DOM_VK_Y:
       case (PRUint32)('y'):
         if (PR_TRUE==ctrlKey)
         {
@@ -491,324 +336,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             mEditor->Redo(1);
         }
         break;
-
-      // hard-coded ChangeTextAttributes test -- italics
-      case nsIDOMUIEvent::DOM_VK_I:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
-            htmlEditor->GetInlineProperty(nsIEditProperty::i, nsnull, nsnull, first, any, all);
-            if (PR_FALSE==first) {
-              htmlEditor->SetInlineProperty(nsIEditProperty::i, nsnull, nsnull);
-            }
-            else {
-              htmlEditor->RemoveInlineProperty(nsIEditProperty::i, nsnull);
-            }
-          }
-        }
-
-      // Hardcoded Insert Arbitrary HTML
-        else if (PR_TRUE==altKey)
-        {
-          aProcessed=PR_TRUE;
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            nsAutoString nsstr ("This is <b>bold <em>and emphasized</em></b> text");
-            htmlEditor->InsertHTML(nsstr);
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- bold
-      case nsIDOMUIEvent::DOM_VK_B:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
-            htmlEditor->GetInlineProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
-            if (PR_FALSE==first) {
-              htmlEditor->SetInlineProperty(nsIEditProperty::b, nsnull, nsnull);
-            }
-            else {
-              htmlEditor->RemoveInlineProperty(nsIEditProperty::b, nsnull);
-            }
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- underline
-      case nsIDOMUIEvent::DOM_VK_U:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
-            htmlEditor->GetInlineProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
-            if (PR_FALSE==first) {
-              htmlEditor->SetInlineProperty(nsIEditProperty::u, nsnull, nsnull);
-            }
-            else {
-              htmlEditor->RemoveInlineProperty(nsIEditProperty::u, nsnull);
-            }
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- font color red
-      case nsIDOMUIEvent::DOM_VK_1:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
-            nsAutoString color = "COLOR";
-            nsAutoString value = "red";
-            htmlEditor->GetInlineProperty(nsIEditProperty::font, &color, &value, first, any, all);
-            if (!all) {
-              htmlEditor->SetInlineProperty(nsIEditProperty::font, &color, &value);
-            }
-            else {
-              printf("NOOP: all selected text is already red\n");
-            }
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- remove font color
-      case nsIDOMUIEvent::DOM_VK_2:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
-            nsAutoString color = "COLOR";
-            htmlEditor->GetInlineProperty(nsIEditProperty::font, &color, nsnull, first, any, all);
-            if (any) {
-              htmlEditor->RemoveInlineProperty(nsIEditProperty::font, &color);
-            }
-            else {
-              printf("NOOP: no color set\n");
-            }
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- font size +2
-      case nsIDOMUIEvent::DOM_VK_3:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            //PRBool any = PR_FALSE;
-            //PRBool all = PR_FALSE;
-            //PRBool first = PR_FALSE;
-            nsAutoString prop = "SIZE";
-            nsAutoString value = "+2";
-            htmlEditor->SetInlineProperty(nsIEditProperty::font, &prop, &value);
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- font size -2
-      case nsIDOMUIEvent::DOM_VK_4:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            //PRBool any = PR_FALSE;
-            //PRBool all = PR_FALSE;
-            //PRBool first = PR_FALSE;
-            nsAutoString prop = "SIZE";
-            nsAutoString value = "-2";
-            htmlEditor->SetInlineProperty(nsIEditProperty::font, &prop, &value);
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- font face helvetica
-      case nsIDOMUIEvent::DOM_VK_5:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            //PRBool any = PR_FALSE;
-            //PRBool all = PR_FALSE;
-            //PRBool first = PR_FALSE;
-            nsAutoString prop = "FACE";
-            nsAutoString value = "helvetica";
-            htmlEditor->SetInlineProperty(nsIEditProperty::font, &prop, &value);
-          }
-        }
-        break;
-
-      // hard-coded ChangeTextAttributes test -- font face times
-      case nsIDOMUIEvent::DOM_VK_6:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            // XXX: move this logic down into texteditor rules delegate
-            //      should just call mEditor->ChangeTextProperty(prop)
-            //PRBool any = PR_FALSE;
-            //PRBool all = PR_FALSE;
-            //PRBool first = PR_FALSE;
-            nsAutoString prop = "FACE";
-            nsAutoString value = "times";
-            htmlEditor->SetInlineProperty(nsIEditProperty::font, &prop, &value);
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- transform block H1
-      case nsIDOMUIEvent::DOM_VK_7:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor) 
-          {
-            nsAutoString tag;
-            nsIEditProperty::h1->ToString(tag);
-            htmlEditor->ReplaceBlockParent(tag);
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- transform block H2
-      case nsIDOMUIEvent::DOM_VK_8:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor) 
-          {
-            nsAutoString tag;
-            nsIEditProperty::h2->ToString(tag);
-            htmlEditor->ReplaceBlockParent(tag);
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- normal
-      case nsIDOMUIEvent::DOM_VK_9:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor) {
-            htmlEditor->RemoveParagraphStyle();
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- GetPargraphTags
-      case nsIDOMUIEvent::DOM_VK_0:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          {
-            printf("testing GetPargraphTags\n");
-            nsStringArray tagList;
-            nsresult result = htmlEditor->GetParagraphTags(&tagList);
-            if (NS_SUCCEEDED(result))
-            {
-              PRInt32 count = tagList.Count();
-              PRInt32 i;
-              for (i=0; i<count; i++)
-              {
-                nsString *tag = tagList.StringAt(i);
-                char *tagCString = tag->ToNewCString();
-                printf("%s ", tagCString);
-                nsCRT::free(tagCString);
-              }
-              printf("\n");
-            }
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- block blockquote (indent)
-      case nsIDOMUIEvent::DOM_VK_COMMA:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor)
-          {
-            nsAutoString tag;
-            nsIEditProperty::blockquote->ToString(tag);
-            htmlEditor->AddBlockParent(tag);
-          }
-        }
-        break;
-
-      // hard-coded change structure test -- un-BlockQuote
-      case nsIDOMUIEvent::DOM_VK_PERIOD:
-        if (PR_TRUE==ctrlKey)
-        {
-          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-          if (htmlEditor) 
-          {
-            nsAutoString tag;
-            nsIEditProperty::blockquote->ToString(tag);
-            htmlEditor->RemoveParent(tag);
-          }
-        }
-        break;
-
-
-#ifdef NS_DEBUG
-      // hard-coded Text Editor Unit Test
-      case nsIDOMUIEvent::DOM_VK_T:
-        if (PR_TRUE==ctrlKey)
-        {
-          if (mEditor)
-          {
-            PRInt32  numTests, numFailed;
-            // the unit tests are only exposed through nsIEditor
-            nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-            if (editor)
-               editor->DebugUnitTests(&numTests, &numFailed);
-          }
-        }
-        break;
-#endif
-
     }
   }
   return NS_OK;

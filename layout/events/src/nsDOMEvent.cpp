@@ -441,11 +441,7 @@ NS_METHOD nsDOMEvent::GetShiftKey(PRBool* aIsDown)
 
 NS_METHOD nsDOMEvent::GetMetaKey(PRBool* aIsDown)
 {
-  #ifdef XP_MAC
-  *aIsDown = ((nsInputEvent*)mEvent)->isCommand;
-  #else
-  *aIsDown = ((nsInputEvent*)mEvent)->isControl;
-  #endif
+  *aIsDown = ((nsInputEvent*)mEvent)->isMeta;
   return NS_OK;
 }
 

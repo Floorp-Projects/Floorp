@@ -136,7 +136,7 @@ nsresult nsKeyBindMgr::ProcessKeyEvent(
 	          do {
 	            // Test Command attribute
 	            #ifdef XP_MAC
-	              if (theEvent.isCommand && (modCommand != "true"))
+	              if (theEvent.isMeta && (modCommand != "true"))
 	                break;
 	            #else
 	              if (theEvent.isControl && (modCommand != "true"))

@@ -252,13 +252,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
         mCurrentTargetContent = mCurrentFocus;
         NS_ADDREF(mCurrentTargetContent);
       }
-
-      if (aEvent->message == NS_KEY_PRESS) {
-        nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-        if (keyEvent->isControl) {
-          keyEvent->charCode += 64;
-        }
-      }
     }
     break;
   }
@@ -485,7 +478,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
-  case NS_KEY_DOWN:
+  case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
       switch(((nsKeyEvent*)aEvent)->keyCode) {
         case NS_VK_TAB:
@@ -540,22 +533,20 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             }
           }
           break;
-      }
-    }
-    break;
-  case NS_KEY_PRESS:
-    if (nsEventStatus_eConsumeNoDefault != aStatus) {
-      //Handle key commands from keys with char representation here, not on KeyDown
-      nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-
-      //Spacebar
-      if (keyEvent->charCode == 0x20) {
-        if (!mCurrentFocus) {
-          nsIScrollableView* sv = GetNearestScrollingView(aView);
-          if (sv) {
-            sv->ScrollByPages(1);
+      case 0: /* check charcode since keycode is 0 */
+        {
+        //Spacebar
+          nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+          if (keyEvent->charCode == 0x20) {
+            if (!mCurrentFocus) {
+              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              if (sv) {
+                sv->ScrollByPages(1);
+              }
+            }
           }
         }
+        break;
       }
     }
   }

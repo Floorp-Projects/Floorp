@@ -411,7 +411,7 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	geckoEvent.isShift = ((aKeyModifiers & shiftKey) != 0);
 	geckoEvent.isControl = ((aKeyModifiers & controlKey) != 0);
 	geckoEvent.isAlt = ((aKeyModifiers & optionKey) != 0);
-	geckoEvent.isCommand = ((aKeyModifiers & cmdKey) != 0);
+	geckoEvent.isMeta = ((aKeyModifiers & cmdKey) != 0);
 
 	// nsMouseEvent
 	geckoEvent.clickCount = 1;
@@ -575,7 +575,9 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 		case kDownArrowKeyCode:			raptorKeyCode = NS_VK_DOWN;           break;
 
 		default:
-		
+				if ((eventModifiers & controlKey) != 0)
+				  charCode += 64;
+	  	
 				// if we haven't gotten the key code already, look at the char code
 				switch (charCode)
 				{
@@ -648,13 +650,31 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
 	aKeyEvent.isShift			= ((aOSEvent.modifiers & shiftKey) != 0);
 	aKeyEvent.isControl		= ((aOSEvent.modifiers & controlKey) != 0);
 	aKeyEvent.isAlt				= ((aOSEvent.modifiers & optionKey) != 0);
-	aKeyEvent.isCommand		= ((aOSEvent.modifiers & cmdKey) != 0);
+	aKeyEvent.isMeta		= ((aOSEvent.modifiers & cmdKey) != 0);
 	
 	//
 	// nsKeyEvent parts
 	//
-	if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+	if (message == NS_KEY_PRESS 
+	&& !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
 	{
+	  if ( aKeyEvent.isControl )
+	  {
+	    aKeyEvent.charCode = (aOSEvent.message & charCodeMask);
+	    if ( aKeyEvent.charCode <= 26 )
+	    {
+	      if ( aKeyEvent.isShift )
+	        aKeyEvent.charCode += 'A';
+	      else
+	        aKeyEvent.charCode += 'a';
+	    }
+	  }
+	  else
+ 	  if ( !aKeyEvent.isMeta)
+    {
+      aKeyEvent.isShift = aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
+    }
+    
     aKeyEvent.keyCode	= 0;
     aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
 	  NS_ASSERTION(0 != aKeyEvent.charCode, "nsMacEventHandler::InitializeKeyEvent: ConvertKeyEventToUnicode returned 0.");
@@ -1226,7 +1246,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	aMouseEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
 	aMouseEvent.isControl	= ((aOSEvent.modifiers & controlKey) != 0);
 	aMouseEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
-	aMouseEvent.isCommand	= ((aOSEvent.modifiers & cmdKey) != 0);
+	aMouseEvent.isMeta	= ((aOSEvent.modifiers & cmdKey) != 0);
 
 	// nsMouseEvent
 	aMouseEvent.clickCount = sLastClickCount;

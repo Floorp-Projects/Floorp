@@ -496,7 +496,17 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 					    ((isControl && (modControl==0)) ||
 					    (!isControl && (modControl==1))))
 					{
+#ifndef XP_MAC
+					   // Temp hack. we should remove this
+					   // after XUL can spec which key for keybinding
+					   if((isControl && (modCommand==0)) || 
+					      (!isControl && (modCommand==1)))
+                                           {
+                                             break;
+                                           } 
+#else
 					  break;
+#endif
 					}
 					//printf("Passed command/ctrl test \n"); // this leaks   
 

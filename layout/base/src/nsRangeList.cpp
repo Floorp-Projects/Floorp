@@ -850,7 +850,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
   STATUS_CHECK_RETURN_MACRO();
 
   nsresult result = NS_ERROR_FAILURE;
-  if (NS_KEY_DOWN == aGuiEvent->message) {
+  if (NS_KEY_PRESS == aGuiEvent->message) {
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     switch (keyEvent->keyCode)
     {
