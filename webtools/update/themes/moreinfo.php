@@ -312,28 +312,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<p class="first">
 
         <?php
-        //Categories
-        $sql = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' ORDER BY `CatName` ASC";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            $num_results = mysql_num_rows($sql_result); $i=0;
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $categories .= $row["CatName"];
-                if ($num_results < $i ) {
-                    $categories .= ", ";
-                }
-            }
-        ?>
-    
-
-
-        <?php
         echo"$description"; 
         if ($notes) {
             echo"<br><br>$notes\n";
-        }
-        if ($categories) {
-            echo" (Categories: $categories)";
         }
         ?>
         </p>
@@ -444,7 +425,28 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
 		<h3>Theme Details</h3>
 		<ul>
-		<li><?php echo"$datestring"; // Last Updated: September 11, 2004 5:38am ?>
+        <?php
+        //Categories
+        $sql = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' ORDER BY `CatName` ASC";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+            $num_results = mysql_num_rows($sql_result); $i=0;
+
+            if ($num_results=="1") {
+                $categories = "Category: ";
+            } else {
+                $categories = "Categories: ";
+            }
+
+            while ($row = mysql_fetch_array($sql_result)) {
+                $i++;
+                $categories .= $row["CatName"];
+                if ($num_results > $i ) {
+                    $categories .= ", ";
+                }
+            }
+        ?>
+        <li><?php if ($categories) { echo"$categories"; } ?></li>
+		<li><?php echo"$datestring"; // Last Updated: September 11, 2004 5:38am ?></li>
 		<li>Total Downloads: <?php echo"$downloadcount"; ?> &nbsp;&#8212;&nbsp; Downloads this Week: <?php echo"$populardownloads"; ?></li>
 		<li>See <a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=releases"; ?>">all previous releases</a> of this theme.</li>
         <?php
