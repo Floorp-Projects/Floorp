@@ -482,11 +482,11 @@ nsBrowserAppCore::WalletSamples() {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserAppCore::WalletQuickFillin() {
+nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserAppCore::WalletSafeFillin() {
+nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*) {
   return NS_OK;
 }
 #endif
