@@ -41,6 +41,8 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DSTANDALONE_REGISTRY
 
+LOCAL_INCLUDES = -I$(srcdir)/../src
+
 export:: $(MODULES_LIBREG_SRC_CSRCS)
 	$(INSTALL) $^ .
 
