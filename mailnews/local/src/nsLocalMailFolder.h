@@ -120,7 +120,7 @@ protected:
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
-	nsresult nsMsgLocalMailFolder::GetDatabase();
+	nsresult GetDatabase();
 
 
 protected:
