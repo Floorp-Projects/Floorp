@@ -160,6 +160,8 @@ BOOL CWizardMachineApp::InitInstance()
 	argc = --i;
 
 	char tempini[MAX_SIZE];
+	char *TempKey;
+	TempKey = (char *) malloc (MAX_SIZE);
 	CString iniFile;
 	CString action;
 	CString DefaultIni = Root + "WizardMachine.ini";
@@ -178,6 +180,25 @@ BOOL CWizardMachineApp::InitInstance()
 		if (!strcmp(argv[i], "-p"))
 			action = argv[i+1];
 	}
+
+	GetPrivateProfileString("Default", NULL, "", TempKey, MAX_SIZE, DefaultIni);
+	char *TempKeyValue;
+	TempKeyValue = (char*)malloc(MAX_SIZE);
+	CString checkNull=TempKey;
+	int TempKeyLen =0;
+	while(!(checkNull.IsEmpty()))
+	{
+		TempKeyLen = strlen(TempKey);
+		GetPrivateProfileString("Default", TempKey, "",TempKeyValue , MAX_SIZE, DefaultIni);
+		WIDGET* wDefaultKey = SetGlobal(TempKey,TempKeyValue);
+		if (wDefaultKey)
+		wDefaultKey->cached = TRUE;
+		char * tmpini = TempKey + TempKeyLen +1;
+		TempKey = tmpini;
+		checkNull=TempKey;
+	}
+	free(TempKeyValue);
+
 #if 0
 	//GlobalFree(argv);
 	if ((iniFile.IsEmpty()) || (iniFile.GetLength() < 5) || (iniFile.Right(4) != ".ini"))
