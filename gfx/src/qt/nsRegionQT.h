@@ -79,6 +79,9 @@ private:
 
 private:
     QRegion  mRegion;
+#ifdef DEBUG
+    PRUint32 mID;
+#endif
 };
 
 #endif  // nsRegionQT_h___ 

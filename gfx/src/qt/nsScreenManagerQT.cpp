@@ -40,19 +40,20 @@
 #include "nsScreenManagerQT.h"
 #include "nsScreenQT.h"
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gSMCount = 0;
 PRUint32 gSMID = 0;
 #endif
 
 nsScreenManagerQT::nsScreenManagerQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gSMCount++;
   mID = gSMID++;
-  printf("JCG: nsScreenManagerQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gSMCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsScreenManagerQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gSMCount));
 #endif
   NS_INIT_ISUPPORTS();
 
@@ -64,9 +65,10 @@ nsScreenManagerQT::nsScreenManagerQT()
 
 nsScreenManagerQT::~nsScreenManagerQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gSMCount--;
-  printf("JCG: nsScreenManagerQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gSMCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsScreenManagerQT DTOR (%p) ID: %d, Count: %d\n", this, mID, gSMCount));
 #endif
   // nothing to see here.
 }

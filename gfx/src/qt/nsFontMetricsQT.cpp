@@ -59,17 +59,12 @@
 #include <qfont.h>
 #include <qfontdatabase.h>
 
+#include "qtlog.h"
+
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
-#undef NOISY_FONTS
-//JCG #define NOISY_FONTS 1
-#undef REALLY_NOISY_FONTS
-//JCG #define REALLY_NOISY_FONTS 1
-
-//JCG #define DBG_JCG 1
-
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gQFontCount = 0;
 PRUint32 gQFontID = 0;
 
@@ -606,10 +601,12 @@ static void ParseFontPref(nsCAutoString &aPrefValue,QString &aFontName,
 
 nsFontMetricsQT::nsFontMetricsQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gFontMetricsCount++;
   mID = gFontMetricsID++;
-  printf("JCG: nsFontMetricsQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gFontMetricsCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsFontMetricsQT CTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gFontMetricsCount));
 #endif
   NS_INIT_ISUPPORTS();
   gFontMetricsQTCount++;
@@ -637,9 +634,11 @@ nsFontMetricsQT::nsFontMetricsQT()
 
 nsFontMetricsQT::~nsFontMetricsQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gFontMetricsCount--;
-  printf("JCG: nsFontMetricsQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gFontMetricsCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsFontMetricsQT DTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gFontMetricsCount));
 #endif
   if (nsnull != mFont) {
     delete mFont;
@@ -696,13 +695,8 @@ IsASCIIFontName(const nsString &aName)
 static PRBool
 FontEnumCallback(const nsString &aFamily,PRBool aGeneric,void *aData)
 {
-#ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
-  printf("font = '");
-  fputs(NS_LossyConvertUCS2toASCII(aFamily).get(), stdout);
-  printf("'\n");
-#endif
-#endif
+  PR_LOG(gQTLogModule, QT_EXTRA_FONTS,
+      ("font = '%s'\n", NS_LossyConvertUCS2toASCII(aFamily).get()));
  
   if (!IsASCIIFontName(aFamily)) {
     return PR_TRUE; // skip and continue
@@ -1122,12 +1116,8 @@ nsFontMetricsQT::LoadFont(QString &aName, const QString &aCharSet, PRUnichar aCh
       charSetInfo = &Unknown;
     }
     else {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-      printf("cannot find charset %s-%s\n",aName.latin1(),
-             aCharSet.latin1());
-#endif
-#endif
+      PR_LOG(gQTLogModule, QT_FONTS, ("cannot find charset %s-%s\n",
+             aName.latin1(), aCharSet.latin1()));
       return nsnull;
     }
   }
@@ -1146,12 +1136,8 @@ nsFontMetricsQT::LoadFont(QString &aName, const QString &aCharSet, PRUnichar aCh
          = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
                                             &charSetInfo->mCharsetAtom);
         if (NS_FAILED(res)) {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-        printf("=== cannot get Charset Atom for %s\n",
-               charSetInfo->mCharSet);
-#endif
-#endif
+          PR_LOG(gQTLogModule, QT_FONTS, ("=== cannot get Charset Atom for %s\n",
+                 charSetInfo->mCharSet));
           return nsnull;
         }
       }
@@ -1160,12 +1146,8 @@ nsFontMetricsQT::LoadFont(QString &aName, const QString &aCharSet, PRUnichar aCh
          = gCharSetManager->GetCharsetLangGroup(charSetInfo->mCharsetAtom,
                                                 &charSetInfo->mLangGroup);
         if (NS_FAILED(res)) {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-          printf("=== cannot get lang group for %s\n",
-                 charSetInfo->mCharSet);
-#endif
-#endif
+          PR_LOG(gQTLogModule, QT_FONTS, ("=== cannot get lang group for %s\n",
+                 charSetInfo->mCharSet));
           return nsnull;
         }
       }
@@ -1650,10 +1632,11 @@ nsFontQT::nsFontQT()
  
 nsFontQT::nsFontQT(QFont *aQFont)
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gQFontCount++;
   mID = gQFontID++;
-  printf("JCG: nsFontQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gQFontCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsFontQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gQFontCount));
 #endif
   MOZ_COUNT_CTOR(nsFontQT);
   mFont = aQFont;
@@ -1663,9 +1646,10 @@ nsFontQT::nsFontQT(QFont *aQFont)
  
 nsFontQT::~nsFontQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gQFontCount--;
-  printf("JCG: nsFontQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gQFontCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsFontQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gQFontCount));
 #endif
   MOZ_COUNT_DTOR(nsFontQT);
   if (mFont) {

@@ -48,11 +48,11 @@
 #include <qstring.h>
 #include "prmem.h"
 
+#include "qtlog.h"
+
 static NS_DEFINE_IID(kRenderingContextIID,NS_IRENDERING_CONTEXT_IID);
 
-//JCG #define DBG_JCG 1
-
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gRCCount = 0;
 PRUint32 gRCID = 0;
 
@@ -79,10 +79,11 @@ private:
 
 GraphicsState::GraphicsState()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gGSCount++;
   mID = gGSID++;
-  printf("JCG: GraphicsState CTOR (%p) ID: %d, Count: %d\n",this,mID,gGSCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("GraphicsState CTOR (%p) ID: %d, Count: %d\n", this, mID, gGSCount));
 #endif
   mMatrix      = nsnull;
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
@@ -94,9 +95,10 @@ GraphicsState::GraphicsState()
 
 GraphicsState::~GraphicsState()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gGSCount--;
-  printf("JCG: GraphicsState DTOR (%p) ID: %d, Count: %d\n",this,mID,gGSCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("GraphicsState DTOR (%p) ID: %d, Count: %d\n", this, mID, gGSCount));
 #endif
 }
 
@@ -106,10 +108,11 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsRenderingContextQT::nsRenderingContextQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gRCCount++;
   mID = gRCID++;
-  printf("JCG: nsRenderingContextQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gRCCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsRenderingContextQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gRCCount));
 #endif
   NS_INIT_ISUPPORTS();
 
@@ -136,9 +139,10 @@ nsRenderingContextQT::nsRenderingContextQT()
 
 nsRenderingContextQT::~nsRenderingContextQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gRCCount--;
-  printf("JCG: nsRenderingContextQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gRCCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsRenderingContextQT DTOR (%p) ID: %d, Count: %d\n", this, mID, gRCCount));
 #endif
   // Destroy the State Machine
   if (nsnull != mStateCache) {
@@ -1216,7 +1220,7 @@ nsRenderingContextQT::GetTextDimensions(const char*       aString,
                                         nsTextDimensions& aLastWordDimensions,
                                         PRInt32*          aFontID)
 {
-    printf("nsRenderingContextQT::GetTextDimensions SORRY\n");
+    NS_NOTREACHED("nsRenderingContextQT::GetTextDimensions not implemented\n");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
@@ -1230,7 +1234,7 @@ nsRenderingContextQT::GetTextDimensions(const PRUnichar*  aString,
                                         nsTextDimensions& aLastWordDimensions,
                                         PRInt32*          aFontID)
 {
-    printf("nsRenderingContextQT::GetTextDimensions SORRY\n");
+    NS_NOTREACHED("nsRenderingContextQT::GetTextDimensions not implemented\n");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

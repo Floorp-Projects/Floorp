@@ -42,19 +42,20 @@
 #include <qcolor.h>
 #include <qapplication.h>
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gScreenCount = 0;
 PRUint32 gScreenID = 0;
 #endif
 
 nsScreenQT::nsScreenQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gScreenCount++;
   mID = gScreenID++;
-  printf("JCG: nsScreenQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gScreenCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsScreenQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gScreenCount));
 #endif
   NS_INIT_ISUPPORTS();
   // nothing else to do. I guess we could cache a bunch of information
@@ -64,9 +65,10 @@ nsScreenQT::nsScreenQT()
 
 nsScreenQT::~nsScreenQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gScreenCount--;
-  printf("JCG: nsScreenQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gScreenCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsScreenQT DTOR (%p) ID: %d, Count: %d\n", this, mID, gScreenCount));
 #endif
   // nothing to see here.
 }

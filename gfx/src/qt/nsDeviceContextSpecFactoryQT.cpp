@@ -44,9 +44,9 @@
 #include "plstr.h"
 #include <qapplication.h>
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gDCSpecFactoryCount = 0;
 PRUint32 gDCSpecFactoryID = 0;
 #endif
@@ -57,10 +57,12 @@ PRUint32 gDCSpecFactoryID = 0;
  */
 nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDCSpecFactoryCount++;
   mID = gDCSpecFactoryID++;
-  printf("JCG: nsDeviceContextSpecFactoryQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecFactoryCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDeviceContextSpecFactoryQT CTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDCSpecFactoryCount));
 #endif
    NS_INIT_ISUPPORTS();
 }
@@ -71,9 +73,11 @@ nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
  */
 nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDCSpecFactoryCount--;
-  printf("JCG: nsDeviceContextSpecFactoryQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecFactoryCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDeviceContextSpecFactoryQT DTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDCSpecFactoryCount));
 #endif
 }
 

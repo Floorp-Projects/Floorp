@@ -41,9 +41,9 @@
 #include "nsRenderingContextQT.h"
 #include <qpaintdevicemetrics.h>
 
-//JCG #define DBG_JCG 1
+#include "qtlog.h"
 
-#ifdef DBG_JCG
+#ifdef DEBUG
 PRUint32 gDSCount = 0;
 PRUint32 gDSID = 0;
 #endif
@@ -52,10 +52,12 @@ NS_IMPL_ISUPPORTS2(nsDrawingSurfaceQT, nsIDrawingSurface, nsIDrawingSurfaceQT)
 
 nsDrawingSurfaceQT::nsDrawingSurfaceQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDSCount++;
   mID = gDSID++;
-  printf("JCG: nsDrawingSurfaceQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDSCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDrawingSurfaceQT CTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDSCount));
 #endif
 
   NS_INIT_ISUPPORTS();
@@ -86,9 +88,11 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
 
 nsDrawingSurfaceQT::~nsDrawingSurfaceQT()
 {
-#ifdef DBG_JCG
+#ifdef DEBUG
   gDSCount--;
-  printf("JCG: nsDrawingSurfaceQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDSCount);
+  PR_LOG(gQTLogModule, QT_BASIC,
+      ("nsDrawingSurfaceQT DTOR (%p) ID: %d, Count: %d\n",
+       this, mID, gDSCount));
 #endif
 
   if (mGC && mGC->isActive()) {
@@ -130,7 +134,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Lock(PRInt32 aX,PRInt32 aY,
     mLockFlags  = aFlags;
 
     if (mImage.isNull())
-    	mImage = mPixmap->convertToImage();
+      mImage = mPixmap->convertToImage();
 
     *aBits = mImage.bits();
     *aStride = mImage.bytesPerLine();
@@ -188,6 +192,8 @@ NS_IMETHODIMP nsDrawingSurfaceQT::GetPixelFormat(nsPixelFormat *aFormat)
 NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPaintDevice *aPaintDevice, 
                                        QPainter *aGC)
 {
+    PR_LOG(gQTLogModule, QT_BASIC, ("[%p] nsDrawingSurface::Init\n", this));
+    NS_ASSERTION(aPaintDevice, "need paint dev.");
     QPaintDeviceMetrics qMetrics(aPaintDevice);
     mGC = aGC;
  
@@ -210,6 +216,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPainter *aGC,
                                        PRUint32 aHeight, 
                                        PRUint32 aFlags)
 {
+  PR_LOG(gQTLogModule, QT_BASIC, ("[%p] nsDrawingSurface::Init\n", this));
   if (nsnull == aGC || aWidth <= 0 || aHeight <= 0) {
     return NS_ERROR_FAILURE;
   }
@@ -220,6 +227,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPainter *aGC,
  
   mPixmap = new QPixmap(mWidth, mHeight, mDepth);
   mPaintDevice = mPixmap;
+  NS_ASSERTION(mPaintDevice, "this better not fail");
 
   mIsOffscreen = PR_TRUE;
 
@@ -231,6 +239,7 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPainter *aGC,
 
 NS_IMETHODIMP nsDrawingSurfaceQT::CommonInit()
 {
+  PR_LOG(gQTLogModule, QT_BASIC, ("[%p] nsDrawingSurface::CommonInit\n", this));
   if (nsnull  == mGC || nsnull == mPaintDevice) {
     return NS_ERROR_FAILURE;
   }
@@ -248,5 +257,7 @@ QPainter* nsDrawingSurfaceQT::GetGC()
 
 QPaintDevice* nsDrawingSurfaceQT::GetPaintDevice()
 {
+    PR_LOG(gQTLogModule, QT_BASIC, ("[%p] nsDrawingSurfaceQt::GetPaintDevice\n", this));
+    NS_ASSERTION(mPaintDevice, "No paint device! Something will probably crash soon.");
     return mPaintDevice;
 }

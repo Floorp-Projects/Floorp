@@ -123,8 +123,12 @@ protected:
     virtual ~nsDeviceContextSpecQT();
 
 protected:
-    UnixPrData mPrData;	
+    UnixPrData mPrData;
     nsCOMPtr<nsIPrintSettings> mPrintSettings;
+#ifdef DEBUG
+private:
+    PRUint32 mID;
+#endif
 };
 
 #endif
