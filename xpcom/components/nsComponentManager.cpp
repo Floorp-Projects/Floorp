@@ -48,6 +48,7 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIComponentLoader.h"
 #include "nsIEnumerator.h"
@@ -152,7 +153,7 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr
     nsXPIDLCString value;
     nsCOMPtr<nsIComponentManager> compMgr;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
+        do_GetService(kCategoryManagerCID, &status);
     
     if (NS_FAILED(status)) goto error;
     
@@ -193,7 +194,7 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr) co
     nsresult status;
     nsXPIDLCString value;
     nsCOMPtr<nsICategoryManager> catman = 
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
+        do_GetService(kCategoryManagerCID, &status);
     if (NS_FAILED(status)) goto error;
     if (!mCategory || !mEntry) {
         // when categories have defaults, use that for null mEntry
@@ -988,9 +989,9 @@ nsComponentManagerImpl::ReadPersistentRegistry()
     // populate Category Manager. need to get this early so that we don't get 
     // skipped by 'goto out'
     nsCOMPtr<nsICategoryManager> catman;
-    nsresult rv = GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID, 
-                                         NS_GET_IID(nsICategoryManager), 
-                                         getter_AddRefs(catman));    
+    nsresult rv = GetService(kCategoryManagerCID, 
+                             NS_GET_IID(nsICategoryManager), 
+                             getter_AddRefs(catman));    
     if (NS_FAILED(rv))
         return rv;
 
@@ -3005,10 +3006,14 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     else 
     {
         // Do default components directory
-        nsCOMPtr<nsIProperties> directoryService = 
-            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
+
+        nsCOMPtr<nsIProperties> directoryService;
+        nsDirectoryService::Create(nsnull, 
+                                   NS_GET_IID(nsIProperties), 
+                                   getter_AddRefs(directoryService));  
+    
+        if (!directoryService) 
+            return NS_ERROR_FAILURE;
 
         rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
                                    NS_GET_IID(nsIFile), 

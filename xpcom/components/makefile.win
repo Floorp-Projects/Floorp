@@ -47,7 +47,6 @@ EXPORTS =                         \
         $(NULL)                 
 
 XPIDLSRCS =               \
-        .\nsICategoryHandler.idl \
         .\nsICategoryManager.idl \
         .\nsIClassInfo.idl \
         .\nsIComponentLoader.idl \

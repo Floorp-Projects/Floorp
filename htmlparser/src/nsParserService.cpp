@@ -23,6 +23,7 @@
 #include "nsHTMLEntities.h"
 #include "nsElementTable.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 
 nsParserService::nsParserService() : mEntries(0)
 {

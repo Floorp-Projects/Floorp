@@ -339,7 +339,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
             *result = mNext;        // might return nsnull
             NS_IF_ADDREF(*result);
-            
+
             mNext = nsnull;
             return NS_OK;
         }
@@ -1128,28 +1128,30 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
             nsCOMPtr<nsIFile> file;
             iterator->GetNext(getter_AddRefs(item));
             file = do_QueryInterface(item);
-            PRBool isDir, isLink;
+            if (file)
+            {    
+                PRBool isDir, isLink;
             
-            file->IsDirectory(&isDir);
-            file->IsSymlink(&isLink);
-
-            if (move)
-            {
-                if (followSymlinks)
-                    return NS_ERROR_FAILURE;
-
-                rv = file->MoveToNative(target, nsCString());
-                NS_ENSURE_SUCCESS(rv,rv);
-            }
-            else
-            {   
-                if (followSymlinks)
-                    rv = file->CopyToFollowingLinksNative(target, nsCString());
-                else
-                    rv = file->CopyToNative(target, nsCString());
-                NS_ENSURE_SUCCESS(rv,rv);
-            }
+                file->IsDirectory(&isDir);
+                file->IsSymlink(&isLink);
+                
+                if (move)
+                {
+                    if (followSymlinks)
+                        return NS_ERROR_FAILURE;
                     
+                    rv = file->MoveToNative(target, nsCString());
+                    NS_ENSURE_SUCCESS(rv,rv);
+                }
+                else
+                {   
+                    if (followSymlinks)
+                        rv = file->CopyToFollowingLinksNative(target, nsCString());
+                    else
+                        rv = file->CopyToNative(target, nsCString());
+                    NS_ENSURE_SUCCESS(rv,rv);
+                }
+            }
             iterator->HasMoreElements(&more);
         }
         // we've finished moving all the children of this directory
@@ -1267,8 +1269,8 @@ nsLocalFile::Remove(PRBool recursive)
                 nsCOMPtr<nsIFile> file;
                 iterator->GetNext(getter_AddRefs(item));
                 file = do_QueryInterface(item);
-    
-                file->Remove(recursive);
+                if (file)
+                    file->Remove(recursive);
                 
                 iterator->HasMoreElements(&more);
             }

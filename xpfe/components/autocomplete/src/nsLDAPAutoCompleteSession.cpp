@@ -46,6 +46,7 @@
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;

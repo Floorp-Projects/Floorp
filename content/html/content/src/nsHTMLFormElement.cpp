@@ -68,6 +68,7 @@
 #include "nsIURI.h"
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsRange.h"

@@ -1,4 +1,4 @@
-/* -*- Mode: idl; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -35,15 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
 
-[scriptable, uuid(9c1af822-1dd1-11b2-b8ce-a1d231c7953f)]
-interface nsICategoryHandler : nsISupports
-{
-    /**
-     * Get the entry for the given category's tag.
-     * @param category The name of the category ("protocol")
-     * @param entry The entry you're looking for ("http")
-     */
-    string getCategoryEntry(in string category, in string entry);
-};
+#define NS_CATEGORYMANAGER_CLASSNAME     "Category Manager"
+
+/* 16d222a6-1dd2-11b2-b693-f38b02c021b2 */
+#define NS_CATEGORYMANAGER_CID \
+{ 0x16d222a6, 0x1dd2, 0x11b2, \
+  {0xb6, 0x93, 0xf3, 0x8b, 0x02, 0xc0, 0x21, 0xb2} }
+
+

@@ -1,4 +1,3 @@
-nsICategoryHandler.idl
 nsICategoryManager.idl
 nsIClassInfo.idl
 nsIComponentLoader.idl
