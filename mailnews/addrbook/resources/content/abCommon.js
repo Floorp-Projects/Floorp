@@ -15,7 +15,7 @@ function GetAddressBooksAndURIs(abArray, uriArray)
 	var tree = document.getElementById('dirTree');
 	if ( tree )
 	{
-		var body = tree.getElementById('dirTreeBody')
+		var body = document.getElementById('dirTreeBody')
 
 		if ( body )
 		{

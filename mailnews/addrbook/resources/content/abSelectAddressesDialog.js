@@ -170,7 +170,7 @@ function RemoveSelectedFromBucket()
 	var bucketTree = document.getElementById("addressBucket");
 	if ( bucketTree )
 	{
-		var body = bucketTree.getElementById("bucketBody");
+		var body = document.getElementById("bucketBody");
 		
 		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
 		{
