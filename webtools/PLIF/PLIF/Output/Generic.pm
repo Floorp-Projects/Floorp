@@ -126,7 +126,7 @@ sub getString {
     my $expander = $self->app->getService("string.expander.named.$name");
     if (not defined($expander)) {
         $expander = $self->app->getService("string.expander.$type");
-        $self->assert($expander, 1, 'Could not find a string expander.');
+        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
     }
     return $expander->expand($self->app, $self, $session, $self->actualProtocol, $string, $data);
 }
