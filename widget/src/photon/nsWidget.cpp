@@ -840,35 +840,41 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::InvalidateRegion  isSync=<%d>\n",aIsSynchronous));
+  //printf("nsWidget::InvalidateRegion  isSync=<%d> mWidget=<%p> mUpdateArea=<%p> IsRealized=<%d> \n",aIsSynchronous, mWidget, mUpdateArea, PtWidgetIsRealized(mWidget) ); 
 
+  if (!PtWidgetIsRealized(mWidget))
+  {
+	return NS_OK;  
+  }
+  
   nsRegionRectSet *regionRectSet = nsnull;
-  PhRect_t extent;
-  PhArea_t area;
-  nsRect           temp_rect;
+  PhRect_t        extent;
+  PhArea_t        area;
+  nsRect          temp_rect;
+  PRUint32        len;
+  PRUint32        i;
 
   mUpdateArea->Union(*aRegion);
-
   if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
   {
     return NS_ERROR_FAILURE;
   }
 
-//  mUpdateArea->Union(*aRegion);
-
-  PRUint32 len;
-  PRUint32 i;
-
   PtWidgetArea( mWidget, &area ); // parent coords
+  //printf("nsWidget::InvalidateRegion mWidget=<%p> area=<%d,%d,%d,%d>\n", mWidget, area.pos.x, area.pos.y, area.size.w, area.size.h);
   if (PtWidgetIsClass(mWidget, PtWindow))
   {
+    printf("nsWidget::InvalidateRegion mWidget=<%p> is a PtWindow\n");
 	area.pos.x = area.pos.y = 0;  
   }
   
   len = regionRectSet->mRectsLen;
-
   for (i=0;i<len;++i)
   {
     nsRegionRect *r = &(regionRectSet->mRects[i]);
+
+    //printf("nsWidget::InvalidateRegion r=<%d,%d,%d,%d>\n",r->x, r->y, r->width, r->height );
+
     temp_rect.SetRect(r->x, r->y, r->width, r->height);
 	  
     extent.ul.x = temp_rect.x + area.pos.x; // convert widget coords to parent
@@ -876,14 +882,24 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
     extent.lr.x = extent.ul.x + temp_rect.width - 1;
     extent.lr.y = extent.ul.y + temp_rect.height - 1;
 		
-   //printf("nsWidget::InvalidateRegion damaging widget=<%p> %d rect=<%d,%d,%d,%d>\n", mWidget, i,
-   //  extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y);
-
-    PtDamageExtent( mWidget, &extent );
+    //printf("nsWidget::InvalidateRegion damaging widget=<%p> %d rect=<%d,%d,%d,%d>\n", mWidget, i,extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y);
+#if 0
+      PtDamageExtent( mWidget, &extent );
+#else
+       if (aIsSynchronous)
+        {
+          UpdateWidgetDamage();
+        }
+        else
+        {
+          QueueWidgetDamage();
+        }
+#endif
   }
 
   // drop the const.. whats the right thing to do here?
   ((nsIRegion*)aRegion)->FreeRects(regionRectSet);
+
   ((nsIRegion*)aRegion)->SetTo(0,0,0,0);
 
   return NS_OK;
