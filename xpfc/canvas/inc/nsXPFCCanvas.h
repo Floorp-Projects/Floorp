@@ -236,6 +236,7 @@ public:
   NS_IMETHOD_(PRBool)   IsOverSplittableRegion(nsPoint& aPoint) ;
   NS_IMETHOD_(nsCursor) GetCursor(void) ;
   NS_IMETHOD_(void)     SetCursor(nsCursor aCursor) ;
+  NS_IMETHOD_(nsCursor) GetDefaultCursor(nsPoint& aPoint) ;
   NS_IMETHOD_(nsSplittableOrientation)     GetSplittableOrientation(nsPoint& aPoint) ;
 
   // nsIImageRequestObserver

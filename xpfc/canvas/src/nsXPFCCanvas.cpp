@@ -1956,22 +1956,15 @@ nsCursor nsXPFCCanvas::GetCursor()
   return (GetWidget()->GetCursor());
 }
 
-void nsXPFCCanvas::SetCursor(nsCursor aCursor)
+nsCursor nsXPFCCanvas::GetDefaultCursor(nsPoint& aPoint)
 {
-  GetWidget()->SetCursor(aCursor);
-}
-
-nsEventStatus nsXPFCCanvas::OnMouseMove(nsGUIEvent *aEvent)
-{
-  nsPoint pt = ((nsEvent*)aEvent)->point;
-
   nsCursor cursor = eCursor_standard;
 
   if (IsSplittable() == PR_TRUE)
   {
-    if (IsOverSplittableRegion(pt) == PR_TRUE)
+    if (IsOverSplittableRegion(aPoint) == PR_TRUE)
     {
-      nsSplittableOrientation orientation = GetSplittableOrientation(pt) ;
+      nsSplittableOrientation orientation = GetSplittableOrientation(aPoint) ;
 
       switch(orientation)
       {
@@ -1987,19 +1980,34 @@ nsEventStatus nsXPFCCanvas::OnMouseMove(nsGUIEvent *aEvent)
     }
   } 
 
-  SetCursor(cursor);
+  return (cursor);
+}
+
+void nsXPFCCanvas::SetCursor(nsCursor aCursor)
+{
+  GetWidget()->SetCursor(aCursor);
+}
+
+nsEventStatus nsXPFCCanvas::OnMouseMove(nsGUIEvent *aEvent)
+{
+
+  SetCursor(GetDefaultCursor(((nsEvent*)aEvent)->point));
+
   return (DefaultProcessing(aEvent));
 }
 
 nsEventStatus nsXPFCCanvas::OnMouseEnter(nsGUIEvent *aEvent)
 {  
-  SetCursor(eCursor_standard);
+
+  SetCursor(GetDefaultCursor(((nsEvent*)aEvent)->point));
+
   return (DefaultProcessing(aEvent));
 }
 
 nsEventStatus nsXPFCCanvas::OnMouseExit(nsGUIEvent *aEvent)
 {  
-  SetCursor(eCursor_standard);
+  SetCursor(GetDefaultCursor(((nsEvent*)aEvent)->point));
+
   return (DefaultProcessing(aEvent));
 }
 
