@@ -333,13 +333,11 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mLayers);
-  if (nsnull != mAttrStyleSheet) {
+  if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mAttrStyleSheet);
   }
-  if (nsnull != mStyleAttrStyleSheet) {
+  if (mStyleAttrStyleSheet) {
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
-    NS_RELEASE(mStyleAttrStyleSheet);
   }
   NS_IF_RELEASE(mBaseURL);
   if (nsnull != mBaseTarget) {
@@ -455,11 +453,11 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
       //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
       result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID, nsnull,
                                                   NS_GET_IID(nsIHTMLStyleSheet),
-                                                  (void**)&mAttrStyleSheet);
+                                                  getter_AddRefs(mAttrStyleSheet));
       if (NS_SUCCEEDED(result)) {
         result = mAttrStyleSheet->Init(aURL, this);
         if (NS_FAILED(result)) {
-          NS_RELEASE(mAttrStyleSheet);
+          mAttrStyleSheet = nsnull;
         }
       }
     }
@@ -470,7 +468,8 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
       AddStyleSheet(mAttrStyleSheet, 0); // tell the world about our new style sheet
 
       if (!mStyleAttrStyleSheet) {
-        result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+        result = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet),
+                                         aURL, this);
       }
       else {
         result = mStyleAttrStyleSheet->Reset(aURL);
@@ -1198,34 +1197,32 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
 NS_IMETHODIMP
 nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mAttrStyleSheet;
-  if (nsnull == mAttrStyleSheet) {
+  if (!mAttrStyleSheet) {
     return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
   }
-  else {
-    NS_ADDREF(mAttrStyleSheet);
-  }
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mStyleAttrStyleSheet;
-  if (nsnull == mStyleAttrStyleSheet) {
+  if (!mStyleAttrStyleSheet) {
     return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
   }
-  else {
-    NS_ADDREF(mStyleAttrStyleSheet);
-  }
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1234,19 +1231,19 @@ void
 nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   if (aSheet == mAttrStyleSheet) {  // always first
-    mStyleSheets.InsertElementAt(aSheet, 0);
+    mStyleSheets.InsertObjectAt(aSheet, 0);
   }
   else if (aSheet == mStyleAttrStyleSheet) {  // always last
-    mStyleSheets.AppendElement(aSheet);
+    mStyleSheets.AppendObject(aSheet);
   }
   else {
     if (mStyleSheets.Count() != 0 &&
-        mStyleAttrStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+        mStyleAttrStyleSheet == mStyleSheets.ObjectAt(mStyleSheets.Count() - 1)) {
       // keep attr sheet last
-      mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+      mStyleSheets.InsertObjectAt(aSheet, mStyleSheets.Count() - 1);
     }
     else {
-      mStyleSheets.AppendElement(aSheet);
+      mStyleSheets.AppendObject(aSheet);
     }
   }
 }
@@ -1254,7 +1251,7 @@ nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 void
 nsHTMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
-  mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset one for the attr style sheet
+  mStyleSheets.InsertObjectAt(aSheet, aIndex + 1); // offset one for the attr style sheet
 }
 
 NS_IMETHODIMP
@@ -2435,9 +2432,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     }
 
     // Remove the root from the childlist
-    if (mChildren) {
-      mChildren->RemoveElement(root);
-    }
+    mChildren.RemoveObject(root);
 
     mRootContent = nsnull;
   }
@@ -2462,7 +2457,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     // frames for the root element and the scrollbars work as expected
     // (since the document in the root element was never set to null)
 
-    mChildren->AppendElement(root);
+    mChildren.AppendObject(root);
     mRootContent = root;
   }
 
@@ -3073,7 +3068,7 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
     result = body->GetALink(aAlinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nscolor color;
     result = mAttrStyleSheet->GetActiveLinkColor(color);
     if (NS_OK == result) {
@@ -3096,7 +3091,7 @@ nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
     result = body->SetALink(aAlinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nsHTMLValue value;
   
     if (nsGenericHTMLElement::ParseColor(aAlinkColor, this, value)) {
@@ -3119,7 +3114,7 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
     result = body->GetLink(aLinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nscolor color;
     result = mAttrStyleSheet->GetLinkColor(color);
     if (NS_OK == result) {
@@ -3142,7 +3137,7 @@ nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
     result = body->SetLink(aLinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nsHTMLValue value;
     if (nsGenericHTMLElement::ParseColor(aLinkColor, this, value)) {
       mAttrStyleSheet->SetLinkColor(value.GetColorValue());
@@ -3164,7 +3159,7 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
     result = body->GetVLink(aVlinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nscolor color;
     result = mAttrStyleSheet->GetVisitedLinkColor(color);
     if (NS_OK == result) {
@@ -3187,7 +3182,7 @@ nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
     result = body->SetVLink(aVlinkColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
+  else if (mAttrStyleSheet) {
     nsHTMLValue value;
     if (nsGenericHTMLElement::ParseColor(aVlinkColor, this, value)) {
       mAttrStyleSheet->SetVisitedLinkColor(value.GetColorValue());

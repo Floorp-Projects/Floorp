@@ -51,6 +51,8 @@
 #include "nsIRDFService.h"
 #include "pldhash.h"
 #include "nsIHttpChannel.h"
+#include "nsIHTMLCSSStyleSheet.h"
+#include "nsIHTMLStyleSheet.h"
 
 // Document.Write() related
 #include "nsIWyciwygChannel.h"
@@ -60,8 +62,6 @@
 
 class nsBaseContentList;
 class nsContentList;
-class nsIHTMLStyleSheet;
-class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class nsICSSLoader;
 class nsIURI;
@@ -228,8 +228,8 @@ protected:
 
   nsresult BaseResetToURI(nsIURI* aURI);
 
-  nsIHTMLStyleSheet*    mAttrStyleSheet;
-  nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
+  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
+  nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
   nsIURI*     mBaseURL;
   nsString*   mBaseTarget;
   nsString*   mLastModified;
