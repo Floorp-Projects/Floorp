@@ -307,6 +307,10 @@ nsXULPrototypeDocument::GetScriptObject(nsIScriptContext *aContext, void **aObje
         JS_SetParent(cx, mScriptObject, nsnull);
 
         JS_AddNamedRoot(cx, &mScriptObject, "nsXULPrototypeDocument::mScriptObject");
+
+        // We need standard classes, in particular RegExp, to compile JS.
+        if (!JS_InitStandardClasses(cx, mScriptObject))
+            return NS_ERROR_FAILURE;
     }
     *aObject = mScriptObject;
     return NS_OK;
