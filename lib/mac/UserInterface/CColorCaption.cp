@@ -111,7 +111,8 @@ CChameleonBroadcastCaption :: CChameleonBroadcastCaption ( LStream* inStream )
 void
 CChameleonBroadcastCaption :: ClickSelf ( const SMouseDownEvent & inEvent )
 {
-	BroadcastMessage ( mMessage );
+	if ( ! ::WaitMouseMoved(inEvent.macEvent.where) )
+		BroadcastMessage ( mMessage );
 	
 } // ClickSelf
 
