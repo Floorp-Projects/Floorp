@@ -4498,6 +4498,19 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 #ifdef DEBUG_IME
 	printf("OnIMEComposition\n");
 #endif
+  // for bug #60050
+  // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
+  // mode before it send WM_IME_STARTCOMPOSITION.
+
+  if (mIMEIsComposing != PR_TRUE)
+  {
+    if(!mIMECompString)
+      mIMECompString = new nsCAutoString();
+
+    if(!mIMECompUnicode)
+      mIMECompUnicode = new nsAutoString();
+  }
+
   NS_ASSERTION( mIMECompString, "mIMECompString is null");
   NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
   if((nsnull == mIMECompString) || (nsnull == mIMECompUnicode))
