@@ -23,7 +23,7 @@ Rights Reserved.
 <!ENTITY unsubscribeButton.label      "Unsubscribe">
 <!ENTITY refreshButton.label          "Refresh">
 <!ENTITY stopButton.label             "Stop">
-<!ENTITY server.label                 "Server:">
+<!ENTITY server.label                 "Account:">
 <!ENTITY subscribedHeader.label       "Subscribe">
 <!ENTITY messagesHeader.label         "Messages">
 <!ENTITY namefield.label              "Show items that contain:">

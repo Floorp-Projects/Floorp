@@ -65,7 +65,9 @@ Rights Reserved.
           
           <rows>
             <row>
-              <text class="label" value="&server.label;" for="serverMenu"/>
+              <hbox pack="end">
+                <text class="label" value="&server.label;" for="serverMenu"/>
+              </hbox>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
                         datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                         containment="http://home.netscape.com/NC-rdf#child"
