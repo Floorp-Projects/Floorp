@@ -1077,9 +1077,9 @@ AC_Wrapup(nsTableFrame* aTableFrame,
 
 void
 AC_Increase(PRInt32     aNumAutoCols,
-             nsColInfo** aColInfo,
-             PRInt32     aDivisor,
-             PRInt32&    aAvailWidth)
+            nsColInfo** aColInfo,
+            PRInt32     aDivisor,
+            PRInt32&    aAvailWidth)
 {
   for (PRInt32 i = 0; i < aNumAutoCols; i++) {
     if ((aAvailWidth <= 0) || (aDivisor <= 0)) {
@@ -1087,12 +1087,15 @@ AC_Increase(PRInt32     aNumAutoCols,
     }
     float percent = ((float)aColInfo[i]->mMaxWidth) / (float)aDivisor;
     aDivisor -= aColInfo[i]->mMaxWidth;
-    nscoord addition = PR_MIN(aAvailWidth, NSToCoordRound(((float)(aAvailWidth)) * percent));
-    addition = PR_MIN(addition, aColInfo[i]->mMaxWidth - aColInfo[i]->mWidth);
-    // don't let the total additions exceed what is available
-    if (i == aNumAutoCols - 1) {
-      addition = PR_MIN(addition, aAvailWidth);
+    nscoord addition = NSToCoordRound(((float)(aAvailWidth)) * percent);
+    // if its the last col, try to give what's left to it
+    if ((i == aNumAutoCols - 1) && (addition < aAvailWidth)) {
+      addition = aAvailWidth;
     }
+    // don't let the addition exceed what is available to add
+    addition = PR_MIN(addition, aAvailWidth);
+    // don't go over the col max
+    addition = PR_MIN(addition, aColInfo[i]->mMaxWidth - aColInfo[i]->mWidth);
     aColInfo[i]->mWidth += addition;
     aAvailWidth -= addition;
   }
@@ -1100,9 +1103,9 @@ AC_Increase(PRInt32     aNumAutoCols,
 
 void
 AC_Decrease(PRInt32     aNumAutoCols,
-             nsColInfo** aColInfo,
-             PRInt32     aDivisor,
-             PRInt32&    aExcess)
+            nsColInfo** aColInfo,
+            PRInt32     aDivisor,
+            PRInt32&    aExcess)
 {
   for (PRInt32 i = 0; i < aNumAutoCols; i++) {
     if ((aExcess <= 0) || (aDivisor <= 0)) {
@@ -1110,18 +1113,19 @@ AC_Decrease(PRInt32     aNumAutoCols,
     }
     float percent = ((float)aColInfo[i]->mMaxWidth) / (float)aDivisor;
     aDivisor -= aColInfo[i]->mMaxWidth;
-    nscoord reduction = PR_MIN(aExcess, NSToCoordRound(((float)(aExcess)) * percent));
-    // don't go over the col min
-    reduction = PR_MIN(reduction, aColInfo[i]->mWidth - aColInfo[i]->mMinWidth);
-    // don't let the total reductions exceed what is available
-    if (i == aNumAutoCols - 1) {
-      reduction = PR_MIN(reduction, aExcess);
+    nscoord reduction = NSToCoordRound(((float)(aExcess)) * percent);
+    // if its the last col, try to remove the remaining excess from it
+    if ((i == aNumAutoCols - 1) && (reduction < aExcess)) {
+      reduction = aExcess;
     }
+    // don't let the reduction exceed what is available to reduce
+    reduction = PR_MIN(reduction, aExcess);
+    // don't go under the col min
+    reduction = PR_MIN(reduction, aColInfo[i]->mWidth - aColInfo[i]->mMinWidth);
     aColInfo[i]->mWidth -= reduction;
     aExcess -= reduction;
   }
 }
-
 
 void 
 AC_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
