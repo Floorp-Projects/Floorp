@@ -28,8 +28,9 @@
 #include "nsIURL.h"
 #include "nsRepository.h"
 #include "nsString.h"
+#include "pratom.h"
 
-extern "C" PRInt32 gLockCount = 0;
+static PRInt32 gLockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
@@ -44,7 +45,7 @@ class nsStringBundle : public nsISupports
 {
 public:
   nsStringBundle(nsIURL* aURL, nsILocale* aLocale, nsresult* aResult);
-  ~nsStringBundle();
+  virtual ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
 
@@ -130,6 +131,13 @@ nsStringBundleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
 NS_IMETHODIMP
 nsStringBundleFactory::LockFactory(PRBool aLock)
 {
+  if (aLock) {
+    PR_AtomicIncrement(&gLockCount);
+  }
+  else {
+    PR_AtomicDecrement(&gLockCount);
+  }
+
   return NS_OK;
 }
 
