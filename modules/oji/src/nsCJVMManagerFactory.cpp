@@ -35,8 +35,6 @@ nsIFactory  *nsCJVMManagerFactory::m_pNSIFactory = NULL;
 nsIServiceManager  *g_pNSIServiceManager = NULL;
 
 
-
-
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NSGetFactory:
  * Provides entry point to liveconnect dll.
@@ -49,11 +47,11 @@ NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
     if (!aClass.Equals(kCJVMManagerCID)) {
         return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
     }
-    nsCJVMManagerFactory* pCJVMManagerFactory = new nsCJVMManagerFactory();
-    if (pCJVMManagerFactory == NULL)
+    nsCJVMManagerFactory* factory = new nsCJVMManagerFactory();
+    if (factory == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    pCJVMManagerFactory->AddRef();
-    *aFactory = pCJVMManagerFactory;
+    factory->AddRef();
+    *aFactory = factory;
     res = servMgr->QueryInterface(kIServiceManagerIID, (void**)&g_pNSIServiceManager);
     if ((NS_OK == res) && (nsnull != g_pNSIServiceManager))
     {
@@ -69,12 +67,10 @@ NSCanUnload(void)
 }
 
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports 
 
+#if 1
 NS_METHOD
 nsCJVMManagerFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
@@ -93,7 +89,9 @@ nsCJVMManagerFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_IMPL_ADDREF(nsCJVMManagerFactory)
 NS_IMPL_RELEASE(nsCJVMManagerFactory)
-
+#else
+NS_IMPL_ISUPPORTS(nsCJVMManagerFactory, kIFactoryIID)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsIFactory:
@@ -101,19 +99,19 @@ NS_IMPL_RELEASE(nsCJVMManagerFactory)
 NS_METHOD
 nsCJVMManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-   nsJVMManager *pNSJVMManager = NULL;
-   *aResult  = NULL;
-   
-   if (aOuter && !aIID.Equals(kISupportsIID))
-       return NS_NOINTERFACE;   // XXX right error?
-   pNSJVMManager = new nsJVMManager(aOuter);
-   if (pNSJVMManager->QueryInterface(aIID,
-                            (void**)aResult) != NS_OK) {
-       // then we're trying get a interface other than nsISupports and
-       // nsICapsManager
-       return NS_ERROR_FAILURE;
-   }
-   return NS_OK;
+	*aResult  = NULL;
+
+	if (aOuter && !aIID.Equals(kISupportsIID))
+		return NS_NOINTERFACE;   // XXX right error?
+
+	nsresult res = NS_ERROR_OUT_OF_MEMORY;  
+	nsJVMManager *manager = new nsJVMManager(aOuter);
+	if (manager != NULL) {
+		res = manager->QueryInterface(aIID, (void**)aResult);
+		if (res != NS_OK)
+			delete manager;
+	}
+	return res;
 }
 
 NS_METHOD
@@ -129,12 +127,15 @@ nsCJVMManagerFactory::LockFactory(PRBool aLock)
 
 nsCJVMManagerFactory::nsCJVMManagerFactory(void)
 {
+      NS_INIT_REFCNT();
+
+// this code is totally bogus in the new service manager world.
+#if 0
       if( m_pNSIFactory != NULL)
       {
          return;
       }
 
-      NS_INIT_REFCNT();
       nsresult     err         = NS_OK;
       NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
@@ -145,16 +146,19 @@ nsCJVMManagerFactory::nsCJVMManagerFactory(void)
          nsRepository::RegisterFactory(kCJVMManagerCID, m_pNSIFactory,
                                      PR_FALSE);
       }
+#endif
 }
 
 nsCJVMManagerFactory::~nsCJVMManagerFactory()
 {
+// this code is totally wrong. we're in a destructor, and whatever our reference count is our object is going
+// away.
+#if 0
     if(mRefCnt == 0)
     {
       NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
       nsRepository::UnregisterFactory(kCJVMManagerCID, (nsIFactory *)m_pNSIFactory);
       
     }
+#endif
 }
-
-
