@@ -107,11 +107,10 @@ public:
 	
 protected:
   nscolor 							mCurrentColor ;
-  nsTransform2D		  		*mTMatrix;		// transform that all the graphics drawn here will obey
+  nsTransform2D		  		*mTMatrix;					// transform that all the graphics drawn here will obey
   float             		mP2T;
-  nsDrawingSurfaceMac		mRenderingSurface;  // Can be a BackBuffer if Selected in
-  nsDrawingSurfaceMac		mFrontBuffer;
-  nsDrawingSurfaceMac		mCurrentSurface;
+  nsDrawingSurfaceMac		mRenderingSurface;  // main drawing surface,Can be a BackBuffer if Selected in
+  nsDrawingSurfaceMac		mFrontBuffer;				// current buffer to draw into
   nsIDeviceContext			*mContext;
   nsIFontMetrics				*mFontMetrics;
   nsIFontCache					*mFontCache;

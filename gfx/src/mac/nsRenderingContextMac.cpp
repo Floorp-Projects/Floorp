@@ -32,7 +32,7 @@ DrawString();  DrawText for cstrings
 
 #include <math.h>
 #include "nspr.h"
-
+#include <QDOffscreen.h>
 #include "nsRegionMac.h"
 #include "nsGfxCIID.h"
 
@@ -94,8 +94,7 @@ nsRenderingContextMac :: nsRenderingContextMac()
   //mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
-  mFrontBuffer = nsnull ;
-  mRenderingSurface = nsnull ;
+  mRenderingSurface = nsnull ;        
   mCurrentColor = NS_RGB(255,255,255);
   mTMatrix = nsnull;
   mP2T = 1.0f;
@@ -158,7 +157,6 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWi
 
 
   mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
-	mCurrentSurface = mRenderingSurface;  
   mFrontBuffer = mRenderingSurface;
   
   mMainRegion = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
@@ -201,16 +199,8 @@ nsresult nsRenderingContextMac :: CommonInit()
 
 nsresult nsRenderingContextMac :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-
-/*  if (mFrontBuffer == mRenderingSurface) {
-    XGCValues values;
-    mFrontBuffer->gc = ::XCreateGC(mRenderingSurface->display,
-				   mRenderingSurface->drawable,
-				   nsnull, &values);
-  }
-  
-  mRenderingSurface = (nsDrawingSurfaceMac *) aSurface;  */
-  return NS_OK;
+	mRenderingSurface = (nsDrawingSurfaceMac)aSurface;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -431,10 +421,6 @@ Rect	cliprect;
 
 //------------------------------------------------------------------------
 
-
-
-//------------------------------------------------------------------------
-
 PRBool nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
 nsRect 			rect;
@@ -489,7 +475,7 @@ RGBColor	thecolor;
 GrafPtr		curport;
 
 	GetPort(&curport);
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	thecolor.red = NS_GET_R(aColor)<<8;
 	thecolor.green = NS_GET_G(aColor)<<8;
 	thecolor.blue = NS_GET_B(aColor)<<8;
@@ -577,54 +563,33 @@ nsTransform2D * nsRenderingContextMac :: GetCurrentTransform()
 
 nsDrawingSurface nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds)
 {
-/*
+PRUint32	depth;
+GWorldPtr	theoff;
+Rect			bounds;
+QDErr			myerr;
+
   // Must make sure this code never gets called when nsRenderingSurface is nsnull
-  PRUint32 depth = DefaultDepth(mRenderingSurface->display,
-				DefaultScreen(mRenderingSurface->display));
-  Pixmap p;
+  mContext->GetDepth(depth);
+  if(aBounds!=nsnull)
+  	::SetRect(&bounds,aBounds->x,aBounds->y,aBounds->x+aBounds->width,aBounds->height);
+  else
+  	::SetRect(&bounds,0,0,2,2);
+  myerr = ::NewGWorld(&theoff,depth,&bounds,0,0,0);
   
-  if (aBounds != nsnull) 
-  	{
-    p  = ::XCreatePixmap(mRenderingSurface->display,
-			 mRenderingSurface->drawable,
-			 aBounds->width, aBounds->height, depth);
-  	} 
- 	else 
- 		{
-    p  = ::XCreatePixmap(mRenderingSurface->display,
-			 mRenderingSurface->drawable,
-			 2, 2, depth);
-  	}
-
-  nsDrawingSurfaceMac * surface = new nsDrawingSurfaceMac();
-
-  surface->drawable = p ;
-  surface->display  = mRenderingSurface->display;
-  surface->gc       = mFrontBuffer->gc;
-  surface->visual   = mRenderingSurface->visual;
-  surface->depth    = mRenderingSurface->depth;
-
-  return ((nsDrawingSurface)surface);
-*/
-  return nsnull;
+  return theoff;  
 }
 
 //------------------------------------------------------------------------
 
 void nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
-/*
-  nsDrawingSurfaceMac * surface = (nsDrawingSurfaceMac *) aDS;
+GWorldPtr	theoff;
 
-  // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceMac
-  ::XFreePixmap(surface->display, surface->drawable);
-
-  //XXX greg, this seems bad. MMP
-    if (mRenderingSurface == surface)
-      mRenderingSurface = nsnull;
-
-  delete aDS;
-*/
+	theoff = (GWorldPtr)aDS;
+	DisposeGWorld(theoff);
+	
+  if (mRenderingSurface == (GrafPtr)theoff)
+    mRenderingSurface = nsnull;
 }
 
 //------------------------------------------------------------------------
@@ -634,7 +599,7 @@ void nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	::SetClip(mMainRegion);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
@@ -665,10 +630,8 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-
-	SetPort(mCurrentSurface);
 	::SetRect(&therect,x,y,x+w,y+h);
 	::FrameRect(&therect);
 
@@ -694,7 +657,7 @@ Rect		therect;
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	::SetRect(&therect,aX,aY,aX+aWidth,aY+aHeight);
 	::PaintRect(&therect);
   
@@ -708,7 +671,7 @@ PRUint32 		i ;
 PolyHandle	thepoly;
 PRInt32			x,y;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	thepoly = ::OpenPoly();
 	
 	x = aPoints[0].x;
@@ -735,7 +698,7 @@ PRUint32 		i ;
 PolyHandle	thepoly;
 PRInt32			x,y;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	thepoly = ::OpenPoly();
 	
 	x = aPoints[0].x;
@@ -773,7 +736,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::FrameOval(&therect);
@@ -798,7 +761,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::PaintOval(&therect);
@@ -825,7 +788,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
@@ -853,7 +816,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
@@ -868,23 +831,22 @@ void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
 PRInt32 x = aX;
 PRInt32 y = aY;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
-  {
+  	{
   	nscoord ascent = 0;
   	mFontMetrics->GetMaxAscent(ascent);
   	y += ascent;
-  }
+  	}
 
   mTMatrix->TransformCoord(&x,&y);
 	
 	::MoveTo(x,y);
 	DrawText(aString,0,aLength);
 
-
   if (mFontMetrics)
-  {
+  	{
     const nsFont* font;
     mFontMetrics->GetFont(font);
     PRUint8 deco = font->decorations;
@@ -893,7 +855,7 @@ PRInt32 y = aY;
       DrawLine(aX, aY, aX + aWidth, aY);
 
     if (deco & NS_FONT_DECORATION_UNDERLINE)
-    {
+    	{
       nscoord ascent = 0;
       nscoord descent = 0;
       mFontMetrics->GetMaxAscent(ascent);
@@ -901,15 +863,15 @@ PRInt32 y = aY;
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
-    }
+    	}
 
     if (deco & NS_FONT_DECORATION_LINE_THROUGH)
-    {
+    	{
       nscoord height = 0;
       mFontMetrics->GetHeight(height);
 
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
-    }
+    	}
   }
 
 }
@@ -923,19 +885,20 @@ void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLen
 PRInt32 x = aX;
 PRInt32 y = aY;
 
-	SetPort(mCurrentSurface);
+	SetPort(mRenderingSurface);
 	
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
-  {
+  	{
   	nscoord ascent = 0;
   	mFontMetrics->GetMaxAscent(ascent);
     y += ascent;
-	}
+		}
   mTMatrix->TransformCoord(&x, &y);
 
+
 	::MoveTo(x,y);
-	DrawText(aString,0,aLength);
+	DrawText(aString,0,2*aLength);
 
   if (mFontMetrics)
   {
@@ -952,6 +915,8 @@ PRInt32 y = aY;
       nscoord descent = 0;
       mFontMetrics->GetMaxDescent(ascent);
       mFontMetrics->GetMaxAscent(descent);
+
+
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
