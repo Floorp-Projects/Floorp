@@ -411,6 +411,27 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
+/*
+This takes an NSURL to a local file, and if that file is a file that contains
+a URL we want and isn't the content itself, we return the URL it contains.
+Otherwise, we return the URL we originally got. Right now this supports .url and
+.webloc files.
+*/
++(NSURL*) decodeLocalFileURL:(NSURL*)url
+{  
+  NSString *urlPathString = [url path];
+  if ([[urlPathString pathExtension] isEqualToString:@"url"]) {
+    NSString *decodedURL = [MainController urlStringFromIEURLFile:urlPathString];
+    if (decodedURL)
+      url = [NSURL URLWithString:decodedURL];
+  }
+  else if ([[urlPathString pathExtension] isEqualToString:@"webloc"]) {
+    NSString *decodedURL = [MainController urlStringFromWebloc:urlPathString];
+    if (decodedURL)
+      url = [NSURL URLWithString:decodedURL];
+  }
+  return url;
+}
 
 +(BOOL) isBlankURL:(NSString*)inURL
 {
@@ -481,6 +502,7 @@ const int kReuseWindowOnAE = 2;
     NSArray* array = [NSArray arrayWithObjects: @"htm",@"html",@"shtml",@"xhtml",@"xml",
                                                 @"txt",@"text",
                                                 @"gif",@"jpg",@"jpeg",@"png",@"bmp",
+                                                @"webloc",@"url",
                                                 nil];
     int result = [openPanel runModalForTypes: array];
     if (result == NSOKButton) {
@@ -489,6 +511,7 @@ const int kReuseWindowOnAE = 2;
             return;
         NSURL* url = [urlArray objectAtIndex: 0];
         [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
+        url = [MainController decodeLocalFileURL:url];
         BrowserWindowController* browserController = [self getMainWindowBrowserController];
         if (browserController)
           [browserController loadURL:[url absoluteString] referrer:nil activate:YES allowPopups:NO];
@@ -952,8 +975,8 @@ const int kReuseWindowOnAE = 2;
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-  [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString] andReferrer:nil];
-  
+  NSURL* urlToOpen = [MainController decodeLocalFileURL:[NSURL fileURLWithPath:filename]];
+  [self openNewWindowOrTabWithURL:[urlToOpen absoluteString] andReferrer:nil];
   return YES;    
 }
 
