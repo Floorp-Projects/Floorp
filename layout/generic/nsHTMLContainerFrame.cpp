@@ -35,9 +35,10 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLBase.h"
 #include "nsScrollFrame.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsViewsCID.h"
 #include "nsIReflowCommand.h"
 
 NS_DEF_PTR(nsIStyleContext);
@@ -263,44 +264,8 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
   return rv;
 }
 
-nsresult
-nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
-{
-  if (nsnull == mPrevInFlow) {
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-                 ("nsHTMLContainerFrame::ProcessInitialReflow: display=%d",
-                  display->mDisplay));
-    if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
-      // This container is a list-item container. Therefore it needs a
-      // bullet content object.
-      nsIHTMLContent* bullet;
-      nsresult rv = NS_NewHTMLBullet(&bullet);
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      // Insert the bullet. Do not allow an incremental reflow operation
-      // to occur.
-      mContent->InsertChildAt(bullet, 0, PR_FALSE);
-    }
-  }
-
-  return NS_OK;
-}
-
-PRBool
-nsHTMLContainerFrame::DeleteNextInFlowsFor(nsIPresContext& aPresContext,
-                                           nsIFrame* aChild)
-{
-  // XXX get rid of this sillyness
-  NS_NOTREACHED("subclass should've overriden this!");
-  return PR_TRUE;
-}
-
 nsPlaceholderFrame*
-nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
+nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame)
 {
   nsIContent* content;
@@ -312,9 +277,234 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
 
   // Let the placeholder share the same style context as the floated element
   nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
-  placeholder->SetStyleContext(aPresContext, kidSC);
+  aFloatedFrame->GetStyleContext(&aPresContext, kidSC);
+  placeholder->SetStyleContext(&aPresContext, kidSC);
   NS_RELEASE(kidSC);
   
   return placeholder;
+}
+
+/**
+ * Create a next-in-flow for aFrame. Will return the newly created
+ * frame in aNextInFlowResult <b>if and only if</b> a new frame is
+ * created; otherwise nsnull is returned in aNextInFlowResult.
+ */
+nsresult
+nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
+                                       nsIFrame* aOuterFrame,
+                                       nsIFrame* aFrame,
+                                       nsIFrame*& aNextInFlowResult)
+{
+  aNextInFlowResult = nsnull;
+
+  nsIFrame* nextInFlow;
+  aFrame->GetNextInFlow(nextInFlow);
+  if (nsnull == nextInFlow) {
+    // Create a continuation frame for the child frame and insert it
+    // into our lines child list.
+    nsIFrame* nextFrame;
+    aFrame->GetNextSibling(nextFrame);
+    nsIStyleContext* kidSC;
+    aFrame->GetStyleContext(&aPresContext, kidSC);
+    aFrame->CreateContinuingFrame(aPresContext, aOuterFrame,
+                                  kidSC, nextInFlow);
+    NS_RELEASE(kidSC);
+    if (nsnull == nextInFlow) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aFrame->SetNextSibling(nextInFlow);
+    nextInFlow->SetNextSibling(nextFrame);
+
+    NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
+       ("nsInlineReflow::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
+        aFrame, nextInFlow));
+
+    aNextInFlowResult = nextInFlow;
+  }
+  return NS_OK;
+}
+
+// Walk the new frames and check if there are any elements that need
+// wrapping. For floating frames we create a placeholder frame to wrap
+// around the original frame. In addition, if the floating object
+// needs a body frame, provide that too.
+
+// For placeholder frames we...
+
+// For frames that require scrolling we...
+
+nsresult
+nsHTMLContainerFrame::WrapFrames(nsIPresContext& aPresContext,
+                                 nsIFrame* aPrevFrame, nsIFrame* aNewFrame)
+{
+  nsresult rv = NS_OK;
+
+  nsIFrame* frame = aNewFrame;
+  while (nsnull != frame) {
+    const nsStyleDisplay* display;
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+    // See if the element wants to be floated
+    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+      // Create a placeholder frame that will serve as the anchor point.
+      nsPlaceholderFrame* placeholder =
+        CreatePlaceholderFrame(aPresContext, frame);
+      if (nsnull == placeholder) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // Remove the floated element from the flow, and replace it with
+      // the placeholder frame
+      if (nsnull == aPrevFrame) {
+        mFirstChild = placeholder;
+      } else {
+        aPrevFrame->SetNextSibling(placeholder);
+      }
+      nsIFrame* nextSibling;
+      frame->GetNextSibling(nextSibling);
+      placeholder->SetNextSibling(nextSibling);
+      frame->SetNextSibling(nsnull);
+
+      // If the floated element can contain children then wrap it in a
+      // BODY frame before floating it
+      nsIContent* content;
+      PRBool isContainer;
+      frame->GetContent(content);
+      if (nsnull != content) {
+        content->CanContainChildren(isContainer);
+        if (isContainer) {
+          // Wrap the floated element in a BODY frame.
+          nsIFrame* wrapperFrame;
+          rv = NS_NewBodyFrame(content, this, wrapperFrame);
+          if (NS_OK != rv) {
+            return rv;
+          }
+    
+          // The body wrapper frame gets the original style context,
+          // and the floated frame gets a pseudo style context
+          nsIStyleContext*  kidStyle;
+          frame->GetStyleContext(&aPresContext, kidStyle);
+          wrapperFrame->SetStyleContext(&aPresContext, kidStyle);
+          NS_RELEASE(kidStyle);
+
+          nsIStyleContext* pseudoStyle;
+          pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
+                                                                  wrapperFrame);
+          frame->SetStyleContext(&aPresContext, pseudoStyle);
+          NS_RELEASE(pseudoStyle);
+    
+          // Init the body frame
+          wrapperFrame->Init(aPresContext, frame);
+
+          // Bind the wrapper frame to the placeholder
+          placeholder->SetAnchoredItem(wrapperFrame);
+        }
+        NS_RELEASE(content);
+      }
+
+      frame = placeholder;
+    }
+
+    // Remember the previous frame
+    aPrevFrame = frame;
+    frame->GetNextSibling(frame);
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
+                                         nsIFrame* aFrame,
+                                         nsIStyleContext* aStyleContext,
+                                         PRBool aForce)
+{
+  nsIView* view;
+  aFrame->GetView(view);
+  if (nsnull == view) {
+    // We don't yet have a view; see if we need a view
+
+    // See if the opacity is not the same as the geometric parent
+    // frames opacity.
+    if (!aForce) {
+      nsIFrame* parent;
+      aFrame->GetGeometricParent(parent);
+      if (nsnull != parent) {
+        // Get my nsStyleColor
+        const nsStyleColor* myColor = (const nsStyleColor*)
+          aStyleContext->GetStyleData(eStyleStruct_Color);
+
+        // Get parent's nsStyleColor
+        const nsStyleColor* parentColor;
+        parent->GetStyleData(eStyleStruct_Color,
+                             (const nsStyleStruct*&)parentColor);
+
+        // If the opacities are different then I need a view
+        if (myColor->mOpacity != parentColor->mOpacity) {
+          NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+            ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g parentOpacity=%g",
+             aFrame, myColor->mOpacity, parentColor->mOpacity));
+          aForce = PR_TRUE;
+        }
+      }
+    }
+
+    // See if the frame is being relatively positioned
+    if (!aForce) {
+      const nsStylePosition* position = (const nsStylePosition*)
+        aStyleContext->GetStyleData(eStyleStruct_Position);
+      if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
+           aFrame));
+        aForce = PR_TRUE;
+      }
+    }
+
+    if (aForce) {
+      // Create a view
+      nsIFrame* parent;
+      nsIView*  view;
+
+      aFrame->GetParentWithView(parent);
+      NS_ASSERTION(parent, "GetParentWithView failed");
+      nsIView* parView;
+   
+      parent->GetView(parView);
+      NS_ASSERTION(parView, "no parent with view");
+
+      // Create a view
+      static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+      static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
+      nsresult result = nsRepository::CreateInstance(kViewCID, 
+                                                     nsnull, 
+                                                     kIViewIID, 
+                                                     (void **)&view);
+      if (NS_OK == result) {
+        nsIView*        rootView = parView;
+        nsIViewManager* viewManager;
+        rootView->GetViewManager(viewManager);
+
+        // Initialize the view
+        NS_ASSERTION(nsnull != viewManager, "null view manager");
+
+        nsRect bounds;
+        aFrame->GetRect(bounds);
+        view->Init(viewManager, bounds, rootView);
+        viewManager->InsertChild(rootView, view, 0);
+
+        NS_RELEASE(viewManager);
+      }
+
+      // Remember our view
+      aFrame->SetView(view);
+
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",
+         aFrame));
+      return result;
+    }
+  }
+  return NS_OK;
 }
