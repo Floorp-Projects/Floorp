@@ -28,23 +28,28 @@
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContent.h"
+#include "nsILinkHandler.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
+#include "nsIStyleContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
+#include "nsIURL.h"
+#include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
 
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
-#include "prprf.h"
-
+#include "nsCSSBlockFrame.h"
+#include "nsCSSInlineFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "prprf.h"
 
 // XXX todo: add in missing out-of-memory checks
 
@@ -1019,83 +1024,6 @@ nsHTMLGenericContent::HandleDOMEvent(nsIPresContext& aPresContext,
     }
     aDOMEvent = nsnull;
   }
-
-  if (NS_OK == ret && nsEventStatus_eIgnore == aEventStatus) {
-    switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      if (mTag == nsHTMLAtoms::a) {
-        nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->SetActiveLink(mContent);
-          NS_RELEASE(stateManager);
-        }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
-      }
-      break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      if (mTag == nsHTMLAtoms::a) {
-        nsIEventStateManager *stateManager;
-        nsIContent *activeLink;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->GetActiveLink(&activeLink);
-          NS_RELEASE(stateManager);
-        }
-
-        if (activeLink == mContent) {
-          nsEventStatus status;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
-
-          if (nsEventStatus_eConsumeNoDefault != status) {
-            nsAutoString base, href, target;
-            GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-            GetAttribute(nsString("href"), href);
-            GetAttribute(nsString("target"), target);
-            if (target.Length() == 0) {
-              GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
-            }
-//XXX            TriggerLink(aPresContext, base, href, target, PR_TRUE);
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
-          }
-        }
-      }
-      break;
-
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      // XXX Bring up a contextual menu provided by the application
-      break;
-
-    case NS_MOUSE_ENTER:
-    //mouse enter doesn't work yet.  Use move until then.
-      if (mTag == nsHTMLAtoms::a) {
-        nsAutoString base, href, target;
-        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-        GetAttribute(nsString("href"), href);
-        GetAttribute(nsString("target"), target);
-        if (target.Length() == 0) {
-          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
-        }
-//XXX        TriggerLink(aPresContext, base, href, target, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
-      }
-      break;
-
-      // XXX this doesn't seem to do anything yet
-    case NS_MOUSE_EXIT:
-      if (mTag == nsHTMLAtoms::a) {
-        nsAutoString empty;
-//XXX        TriggerLink(aPresContext, empty, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
-      }
-      break;
-
-    default:
-      break;
-    }
-  }
   return ret;
 }
 
@@ -1396,18 +1324,20 @@ nsHTMLGenericContent::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
-//  fprintf(out, " RefCount=%d<\n", mRefCnt);
+  nsrefcnt r = mContent->AddRef() - 1;
+  mContent->Release();
+  fprintf(out, " refcount=%d<", r);
 
   if (mContent->CanContainChildren()) {
+    fputs("\n", out);
     PRInt32 kids = mContent->ChildCount();
     for (index = 0; index < kids; index++) {
       nsIContent* kid = mContent->ChildAt(index);
       kid->List(out, aIndent + 1);
       NS_RELEASE(kid);
     }
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
   }
-
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
   fputs(">\n", out);
 }
 
@@ -1502,13 +1432,44 @@ nsHTMLGenericContent::CreateFrame(nsIPresContext*  aPresContext,
 {
   nsIFrame* frame = nsnull;
   nsresult rv = NS_OK;
+
+  // Handle specific frame types
   if (mTag == nsHTMLAtoms::hr) {
     rv = NS_NewHRFrame(mContent, aParentFrame, frame);
   }
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    // When there is no explicit frame to create, assume it's a
+    // container and let style dictate the rest.
+    const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+    // Use style to choose what kind of frame to create
+    nsresult rv;
+    switch (styleDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_BLOCK:
+    case NS_STYLE_DISPLAY_LIST_ITEM:
+      rv = NS_NewCSSBlockFrame(&frame, mContent, aParentFrame);
+      break;
+
+    case NS_STYLE_DISPLAY_INLINE:
+      rv = NS_NewCSSInlineFrame(&frame, mContent, aParentFrame);
+      break;
+
+    default:
+      // Create an empty frame for holding content that is not being
+      // reflowed.
+      rv = nsFrame::NewFrame(&frame, mContent, aParentFrame);
+      break;
+    }
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
+
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return NS_OK;
@@ -1821,6 +1782,46 @@ nsHTMLGenericContent::ParseValue(const nsString& aString, PRInt32 aMin,
   return PR_FALSE;
 }
 
+void
+nsHTMLGenericContent::TriggerLink(nsIPresContext& aPresContext,
+                                  const nsString& aBase,
+                                  const nsString& aURLSpec,
+                                  const nsString& aTargetSpec,
+                                  PRBool aClick)
+{
+  nsILinkHandler* handler;
+  if (NS_OK == aPresContext.GetLinkHandler(&handler) && (nsnull != handler)) {
+    // Resolve url to an absolute url
+    nsIURL* docURL = nsnull;
+    nsIDocument* doc;
+    if (NS_OK == GetDocument(doc)) {
+      docURL = doc->GetDocumentURL();
+      NS_RELEASE(doc);
+    }
+
+    nsAutoString absURLSpec;
+    if (aURLSpec.Length() > 0) {
+      nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
+    }
+    else {
+      absURLSpec = aURLSpec;
+    }
+
+    if (nsnull != docURL) {
+      NS_RELEASE(docURL);
+    }
+
+    // Now pass on absolute url to the click handler
+    if (aClick) {
+      handler->OnLinkClick(nsnull, absURLSpec, aTargetSpec);
+    }
+    else {
+      handler->OnOverLink(nsnull, absURLSpec, aTargetSpec);
+    }
+    NS_RELEASE(handler);
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsHTMLGenericLeafContent::nsHTMLGenericLeafContent()
@@ -1906,5 +1907,398 @@ nsresult
 nsHTMLGenericLeafContent::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsHTMLGenericContainerContent::nsHTMLGenericContainerContent()
+{
+}
+
+nsHTMLGenericContainerContent::~nsHTMLGenericContainerContent()
+{
+  PRInt32 n = mChildren.Count();
+  for (PRInt32 i = 0; i < n; i++) {
+    nsIContent* kid = (nsIContent*) mChildren.ElementAt(i);
+    NS_RELEASE(kid);
+  }
+//  if (nsnull != mChildNodes) {
+//    mChildNodes->ReleaseContent();
+//    NS_RELEASE(mChildNodes);
+//  }
+}
+
+nsresult
+nsHTMLGenericContainerContent:: CopyInnerTo(nsIHTMLContent* aSrcContent,
+                                            nsHTMLGenericContainerContent* aDst)
+{
+  aDst->mContent = aSrcContent;
+  // XXX should the node's document be set?
+  // XXX copy attributes not yet impelemented
+  // XXX deep copy?
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::Equals(nsIDOMNode* aNode, PRBool aDeep,
+                                      PRBool* aReturn)
+{
+  // XXX not yet implemented
+  *aReturn = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+    *aChildNodes = nsnull;
+    return NS_OK;
+//  NS_PRECONDITION(nsnull != aChildNodes, "null pointer");
+//  if (nsnull == mChildNodes) {
+//    mChildNodes = new nsDOMNodeList(this);
+//    NS_ADDREF(mChildNodes);
+//  }
+//  *aChildNodes = mChildNodes;
+//  NS_ADDREF(mChildNodes);
+//  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::GetHasChildNodes(PRBool* aReturn)
+{
+  if (0 != mChildren.Count()) {
+    *aReturn = PR_TRUE;
+  } 
+  else {
+    *aReturn = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::GetFirstChild(nsIDOMNode** aNode)
+{
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(0);
+  if (nsnull != child) {
+    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+    return res;
+  }
+  aNode = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::GetLastChild(nsIDOMNode** aNode)
+{
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(mChildren.Count()-1);
+  if (nsnull != child) {
+    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+    return res;
+  }
+  aNode = nsnull;
+  return NS_OK;
+}
+
+static void
+SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
+{
+  PRInt32 i, n;
+  n = aContent->ChildCount();
+  for (i = 0; i < n; i++) {
+    nsIContent* child = aContent->ChildAt(i);
+    if (nsnull != child) {
+      child->SetDocument(aDocument);
+      SetDocumentInChildrenOf(child, aDocument);
+    }
+  }
+}
+
+// XXX It's possible that newChild has already been inserted in the
+// tree; if this is the case then we need to remove it from where it
+// was before placing it in it's new home
+
+nsresult
+nsHTMLGenericContainerContent::InsertBefore(nsIDOMNode* aNewChild,
+                                            nsIDOMNode* aRefChild,
+                                            nsIDOMNode** aReturn)
+{
+  if (nsnull == aNewChild) {
+    *aReturn = nsnull;
+    return NS_OK;/* XXX wrong error value */
+  }
+
+  // Get the nsIContent interface for the new content
+  nsIContent* newContent = nsnull;
+  nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+  NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
+  if (NS_OK == res) {
+    if (nsnull == aRefChild) {
+      // Append the new child to the end
+      SetDocumentInChildrenOf(newContent, mDocument);
+      res = AppendChildTo(newContent, PR_TRUE);
+    }
+    else {
+      // Get the index of where to insert the new child
+      nsIContent* refContent = nsnull;
+      res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+      NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+      if (NS_OK == res) {
+        PRInt32 pos = IndexOf(refContent);
+        if (pos >= 0) {
+          SetDocumentInChildrenOf(newContent, mDocument);
+          res = InsertChildAt(newContent, pos, PR_TRUE);
+        }
+        NS_RELEASE(refContent);
+      }
+    }
+    NS_RELEASE(newContent);
+
+    *aReturn = aNewChild;
+    NS_ADDREF(aNewChild);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  return res;
+}
+
+nsresult
+nsHTMLGenericContainerContent::ReplaceChild(nsIDOMNode* aNewChild,
+                                            nsIDOMNode* aOldChild,
+                                            nsIDOMNode** aReturn)
+{
+  nsIContent* content = nsnull;
+  *aReturn = nsnull;
+  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
+  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  if (NS_OK == res) {
+    PRInt32 pos = IndexOf(content);
+    if (pos >= 0) {
+      nsIContent* newContent = nsnull;
+      nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+      NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+      if (NS_OK == res) {
+        res = ReplaceChildAt(newContent, pos, PR_TRUE);
+        NS_RELEASE(newContent);
+      }
+      *aReturn = aOldChild;
+      NS_ADDREF(aOldChild);
+    }
+    NS_RELEASE(content);
+  }
+  
+  return res;
+}
+
+nsresult
+nsHTMLGenericContainerContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  nsIContent* content = nsnull;
+  *aReturn = nsnull;
+  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
+  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  if (NS_OK == res) {
+    PRInt32 pos = IndexOf(content);
+    if (pos >= 0) {
+      res = RemoveChildAt(pos, PR_TRUE);
+      *aReturn = aOldChild;
+      NS_ADDREF(aOldChild);
+    }
+    NS_RELEASE(content);
+  }
+
+  return res;
+}
+
+nsresult
+nsHTMLGenericContainerContent::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  return InsertBefore(aNewChild, nsnull, aReturn);
+}
+
+nsresult
+nsHTMLGenericContainerContent::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  return NS_OK;
+}
+
+void
+nsHTMLGenericContainerContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {
+    nsAutoString name;
+    mTag->ToString(name);
+    aConverter.BeginContainer(name);
+  }
+
+  // Add all attributes to the convert
+  if (nsnull != mAttributes) 
+  {
+    nsISupportsArray* attrs;
+    nsresult rv = NS_NewISupportsArray(&attrs);
+    if (NS_OK == rv) 
+    {
+      mAttributes->GetAllAttributeNames(attrs);
+      PRInt32 i, n = attrs->Count();
+      nsAutoString name, value;
+      for (i = 0; i < n; i++) 
+      {
+        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
+        atom->ToString(name);
+
+        value.Truncate();
+        GetAttribute(name, value);
+        
+        aConverter.AddHTMLAttribute(name,value);
+      }
+      NS_RELEASE(attrs);
+    }
+  }
+}
+
+void
+nsHTMLGenericContainerContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
+{
+}
+
+void
+nsHTMLGenericContainerContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {
+    nsAutoString name;
+    mTag->ToString(name);
+    aConverter.EndContainer(name);
+  }
+}
+
+void
+nsHTMLGenericContainerContent::Compact()
+{
+  mChildren.Compact();
+}
+
+PRBool
+nsHTMLGenericContainerContent::CanContainChildren() const
+{
+  return PR_TRUE;
+}
+
+PRInt32
+nsHTMLGenericContainerContent::ChildCount() const
+{
+  return mChildren.Count();
+}
+
+nsIContent*
+nsHTMLGenericContainerContent::ChildAt(PRInt32 aIndex) const
+{
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(aIndex);
+  if (nsnull != child) {
+    NS_ADDREF(child);
+  }
+  return child;
+}
+
+PRInt32
+nsHTMLGenericContainerContent::IndexOf(nsIContent* aPossibleChild) const
+{
+  NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
+  return mChildren.IndexOf(aPossibleChild);
+}
+
+nsresult
+nsHTMLGenericContainerContent::InsertChildAt(nsIContent* aKid,
+                                             PRInt32 aIndex,
+                                             PRBool aNotify)
+{
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(mContent);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
+        doc->ContentInserted(mContent, aKid, aIndex);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::ReplaceChildAt(nsIContent* aKid,
+                                              PRInt32 aIndex,
+                                              PRBool aNotify)
+{
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
+  PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(mContent);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
+        doc->ContentReplaced(mContent, oldKid, aKid, aIndex);
+      }
+    }
+    oldKid->SetDocument(nsnull);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+{
+  NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
+  PRBool rv = mChildren.AppendElement(aKid);
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(mContent);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
+        doc->ContentAppended(mContent);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLGenericContainerContent::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+{
+  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
+  if (nsnull != oldKid ) {
+    nsIDocument* doc = mDocument;
+    if (aNotify) {
+      if (nsnull != doc) {
+        doc->ContentWillBeRemoved(mContent, oldKid, aIndex);
+      }
+    }
+    PRBool rv = mChildren.RemoveElementAt(aIndex);
+    if (aNotify) {
+      if (nsnull != doc) {
+        doc->ContentHasBeenRemoved(mContent, oldKid, aIndex);
+      }
+    }
+    oldKid->SetDocument(nsnull);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+  }
+
   return NS_OK;
 }
