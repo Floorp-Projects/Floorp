@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorhtmlforms_s 
+LIBRARY_NAME=layouthtmlforms_s 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 

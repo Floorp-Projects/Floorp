@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 
-LIBRARY_NAME=raptorlayout_s 
+LIBRARY_NAME=layoutbase_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
@@ -29,112 +29,51 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 
 CPPSRCS =				\
 	nsAutoCopy.cpp			\
-	nsCommentNode.cpp		\
-	nsGenericElement.cpp		\
-	nsGenericDOMDataNode.cpp	\
-	nsGenericDOMNodeList.cpp	\
-	nsContentList.cpp		\
-	nsContentIterator.cpp		\
-	nsContentPolicy.cpp \
 	nsCopySupport.cpp   \
-	nsDocument.cpp			\
-	nsDocumentEncoder.cpp		\
-	nsDocumentFragment.cpp		\
-	nsDocumentViewer.cpp		\
-	nsDOMAttribute.cpp		\
-	nsDOMAttributeMap.cpp		\
-	nsDOMDocumentType.cpp		\
 	nsFrameImageLoader.cpp		\
 	nsFrameList.cpp                 \
 	nsFrameTraversal.cpp            \
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
-	nsGeneratedIterator.cpp		\
-	nsNameSpaceManager.cpp		\
-	nsNodeInfo.cpp			\
-	nsNodeInfoManager.cpp		\
 	nsPresContext.cpp		\
 	nsPresState.cpp			\
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
-	nsStyleContext.cpp		\
 	nsStyleChangeList.cpp		\
-	nsStyleCoord.cpp		\
-	nsStyleSet.cpp			\
-	nsTextFragment.cpp		\
-	nsSelection.cpp			\
 	nsLayoutAtoms.cpp		\
 	nsLayoutDebugger.cpp		\
 	nsLayoutUtils.cpp		\
 	nsCaret.cpp			\
-	nsRange.cpp			\
-	nsTextContentChangeData.cpp	\
-	nsTextNode.cpp			\
 	nsLayoutHistoryState.cpp	\
-	nsXMLContentSerializer.cpp	\
-	nsHTMLContentSerializer.cpp	\
-	nsPlainTextSerializer.cpp	\
 	$(NULL)
 
 MODULE=raptor 
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsAutoCopy.obj		\
-	.\$(OBJDIR)\nsCommentNode.obj		\
-	.\$(OBJDIR)\nsGenericDOMDataNode.obj	\
-	.\$(OBJDIR)\nsGenericDOMNodeList.obj	\
-	.\$(OBJDIR)\nsGenericElement.obj 	\
-	.\$(OBJDIR)\nsContentList.obj 	 	\
-	.\$(OBJDIR)\nsContentIterator.obj 	\
-	.\$(OBJDIR)\nsContentPolicy.obj         \
 	.\$(OBJDIR)\nsCopySupport.obj         \
-	.\$(OBJDIR)\nsDocument.obj		\
-	.\$(OBJDIR)\nsDocumentEncoder.obj	\
-	.\$(OBJDIR)\nsDocumentFragment.obj	\
-	.\$(OBJDIR)\nsDocumentViewer.obj	\
-	.\$(OBJDIR)\nsDOMAttribute.obj		\
-	.\$(OBJDIR)\nsDOMAttributeMap.obj	\
-	.\$(OBJDIR)\nsDOMDocumentType.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
 	.\$(OBJDIR)\nsFrameList.obj		\
 	.\$(OBJDIR)\nsFrameTraversal.obj        \
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
-	.\$(OBJDIR)\nsGeneratedIterator.obj 	\
-	.\$(OBJDIR)\nsNameSpaceManager.obj	\
-	.\$(OBJDIR)\nsNodeInfo.obj		\
-	.\$(OBJDIR)\nsNodeInfoManager.obj	\
 	.\$(OBJDIR)\nsPresContext.obj		\
 	.\$(OBJDIR)\nsPresState.obj		\
 	.\$(OBJDIR)\nsPrintContext.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
-	.\$(OBJDIR)\nsStyleContext.obj		\
 	.\$(OBJDIR)\nsStyleChangeList.obj	\
-	.\$(OBJDIR)\nsStyleCoord.obj		\
-	.\$(OBJDIR)\nsStyleSet.obj		\
-	.\$(OBJDIR)\nsTextFragment.obj		\
-	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
 	.\$(OBJDIR)\nsLayoutUtils.obj		\
 	.\$(OBJDIR)\nsCaret.obj			\
-	.\$(OBJDIR)\nsRange.obj			\
-	.\$(OBJDIR)\nsTextContentChangeData.obj	\
-	.\$(OBJDIR)\nsTextNode.obj		\
 	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
-	.\$(OBJDIR)\nsXMLContentSerializer.obj	\
-	.\$(OBJDIR)\nsHTMLContentSerializer.obj	\
-	.\$(OBJDIR)\nsPlainTextSerializer.obj   \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\style\src \
+LINCS=-I..\..\html\base\src -I..\..\html\style\src \
     -I..\..\xul\base\src -I..\..\xul\content\src \
-    -I..\..\events\src \
-    -I$(PUBLIC)\lwbrk -I$(PUBLIC)\plugin
+    -I..\..\events\src
 
 LCFLAGS = \
         $(LCFLAGS) \

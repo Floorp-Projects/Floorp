@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsMathMLAtoms.h"
+#include "nsLayoutCID.h"
 
 static const char kMathMLNameSpace[] = "http://www.w3.org/1998/Math/MathML";
 
@@ -42,11 +43,20 @@ void nsMathMLAtoms::AddRefAtoms() {
     /* MathML Atoms registers the MathML name space ID because it's a convenient
        place to do this, if you don't want a permanent, "well-known" ID.
     */
-    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager)))
+    NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
+    nsCOMPtr<nsINameSpaceManager> nsmgr =
+      do_CreateInstance(kNameSpaceManagerCID);
+
+    if (nsmgr) {
 //    gNameSpaceManager->CreateRootNameSpace(namespace);
-      gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kMathMLNameSpace), nameSpaceID);
-    else
+      nsmgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kMathMLNameSpace),
+			       nameSpaceID);
+
+      gNameSpaceManager = nsmgr;
+      NS_ADDREF(gNameSpaceManager);
+    } else {
       NS_ASSERTION(0, "failed to create MathML atoms namespace manager");
+    }
 
     // now register the atoms
 #define MATHML_ATOM(_name, _value) _name = NS_NewAtom(_value);

@@ -57,6 +57,11 @@
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsINodeInfo.h"
+#include "nsIAnonymousContent.h"
+
+#include "nsContentCID.h"
+static NS_DEFINE_IID(kAnonymousElementCID, NS_ANONYMOUSCONTENT_CID);
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -260,7 +265,46 @@ NS_INTERFACE_MAP_BEGIN(nsSplitterFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
+static nsresult CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsIContent **aNewNode)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+  NS_ENSURE_ARG_POINTER(aNewNode);
+  *aNewNode = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content(do_CreateInstance(kAnonymousElementCID,&rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDocument> doc;
+  rv = aParent->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+  rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceId,
+                               *getter_AddRefs(nodeInfo));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIAnonymousContent> anon(do_QueryInterface(content,&rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = anon->Init(nodeInfo);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aNewNode = content.get();
+  NS_ADDREF(*aNewNode);
+
+  return NS_OK;
+}
 
 /**
  * Anonymous interface
@@ -281,16 +325,16 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     {
         // create a spring
         nsCOMPtr<nsIContent> content;
-        NS_CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, content);
+        CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, getter_AddRefs(content));
         content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
 
         // a grippy
-        NS_CreateAnonymousNode(mContent, nsXULAtoms::grippy, nsXULAtoms::nameSpaceID, content);
+        CreateAnonymousNode(mContent, nsXULAtoms::grippy, nsXULAtoms::nameSpaceID, getter_AddRefs(content));
         aAnonymousChildren.AppendElement(content);
 
         // create a spring
-        NS_CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, content);
+        CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, getter_AddRefs(content));
         content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
      }

@@ -29,135 +29,7 @@
 
 #include "nsScrollbarFrame.h"
 #include "nsScrollbarButtonFrame.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
-#include "nsISupportsArray.h"
-#include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
-#include "nsIXMLContent.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsIDOMElement.h"
-#include "nsXMLElement.h"
-#include "nsIStyledContent.h"
-#include "nsIStyleRule.h"
-#include "nsHTMLValue.h"
-#include "nsIAnonymousContent.h"
 #include "nsIView.h"
-
-
-class AnonymousElement : public nsXMLElement, public nsIAnonymousContent
-{
-public:
-  AnonymousElement() {}
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-};
-
-#if 0
-NS_IMETHODIMP
-AnonymousElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-  return this->nsXMLElement::SizeOf(aSizer, aResult);
-}
-#endif
-
-NS_IMETHODIMP
-AnonymousElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                              nsEvent* aEvent,
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus* aEventStatus)
-{
-  /*
-  // if our parent is not anonymous then we don't want to bubble the event
-  // so lets set our parent in nsnull to prevent it. Then we will set it
-  // back.
-  nsIContent* parent = nsnull;
-  GetParent(parent);
-
-  nsCOMPtr<nsIAnonymousContent> anonymousParent(do_QueryInterface(parent));
-
-
-  if (!anonymousParent) 
-    SetParent(nsnull);
-*/
-
-  nsresult rv = nsXMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                             aFlags, aEventStatus);
-
-  /*
-  if (!anonymousParent)
-    SetParent(parent);
-*/
-  return rv;
-}
-
-NS_IMPL_ADDREF_INHERITED(AnonymousElement, nsXMLElement)
-NS_IMPL_RELEASE_INHERITED(AnonymousElement, nsXMLElement)
-
-//
-// QueryInterface
-//
-
-NS_INTERFACE_MAP_BEGIN(AnonymousElement)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContent)
-NS_INTERFACE_MAP_END_INHERITING(nsXMLElement)
-
-
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
-{
-    NS_ENSURE_ARG_POINTER(aParent);
-
-    // create the xml element
-    //NS_NewXMLElement(getter_AddRefs(content), aTag);
-
-    nsCOMPtr<nsIDocument> doc;
-    aParent->GetDocument(*getter_AddRefs(doc));
-
-    nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
-
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceId,
-                                 *getter_AddRefs(nodeInfo));
-
-    nsXMLElement *content = new AnonymousElement();
-
-    if (!content)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = content->Init(nodeInfo);
-
-    if (NS_FAILED(rv)) {
-      delete content;
-
-      return rv;
-    }
-
-    aNewNode = content;
-
-  /*
-    nsCOMPtr<nsIDocument> document;
-    aParent->GetDocument(*getter_AddRefs(document));
-
-    nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
-    nsCOMPtr<nsIDOMElement> element;
-    nsString name;
-    aTag->ToString(name);
-    domDocument->CreateElement(name, getter_AddRefs(element));
-    aNewNode = do_QueryInterface(element);
-*/
-
-    return NS_OK;
-}
 
 
 //
@@ -180,7 +52,6 @@ NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   return NS_OK;
   
 } // NS_NewScrollbarFrame
-
 
 //
 // QueryInterface

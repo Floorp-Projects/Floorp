@@ -40,6 +40,8 @@ class nsIDocument;
 
 class nsIHTMLStyleSheet : public nsIStyleSheet {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_STYLE_SHEET_IID)
+
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument) = 0;
   NS_IMETHOD Reset(nsIURI* aURL) = 0;
   NS_IMETHOD GetLinkColor(nscolor& aColor) = 0;

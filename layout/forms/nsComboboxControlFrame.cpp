@@ -60,7 +60,10 @@
 #include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
-
+#include "nsIElementFactory.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
 
@@ -2159,8 +2162,8 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
 
   // Add a child text content node for the label
-  nsCOMPtr<nsIContent> labelContent;
-  nsresult result = NS_NewTextNode(getter_AddRefs(labelContent));
+  nsresult result;
+  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
   nsAutoString value; value.AssignWithConversion("X");
   if (NS_SUCCEEDED(result) && labelContent) {
     // set the value of the text node
@@ -2185,11 +2188,17 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     aChildList.AppendElement(labelContent);
 
     // create button which drops the list down
-    nsCOMPtr<nsIHTMLContent> btnContent;
-    result = NS_NewHTMLInputElement(getter_AddRefs(btnContent), nodeInfo);
-    if (NS_SUCCEEDED(result) && btnContent) {
-      btnContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
-      aChildList.AppendElement(btnContent);
+    nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID));
+    if (ef) {
+      nsCOMPtr<nsIContent> content;
+      result = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
+      if (NS_SUCCEEDED(result)) {
+        nsCOMPtr<nsIHTMLContent> btnContent(do_QueryInterface(content));
+        if (btnContent) {
+          btnContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
+          aChildList.AppendElement(btnContent);
+        }
+      }      
     }
   }
 

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorhtmldoc_s 
+LIBRARY_NAME=layouthtmldoc_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
@@ -30,28 +30,13 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS=					\
-	nsHTMLContentSink.cpp			\
-	nsHTMLDocument.cpp			\
-	nsHTMLFragmentContentSink.cpp		\
 	nsFrameFrame.cpp				\
 	nsFrameSetFrame.cpp			\
-	nsImageDocument.cpp			\
-	nsMarkupDocument.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
-	.\$(OBJDIR)\nsHTMLContentSink.obj	\
-	.\$(OBJDIR)\nsHTMLDocument.obj		\
-	.\$(OBJDIR)\nsHTMLFragmentContentSink.obj	\
 	.\$(OBJDIR)\nsFrameFrame.obj		\
 	.\$(OBJDIR)\nsFrameSetFrame.obj		\
-	.\$(OBJDIR)\nsImageDocument.obj		\
-	.\$(OBJDIR)\nsMarkupDocument.obj	\
-	$(NULL)
-
-EXPORTS =					\
-	nsIHTMLDocument.h			\
-	nsIHTMLContentContainer.h		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \

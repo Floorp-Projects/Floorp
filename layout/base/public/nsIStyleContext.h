@@ -36,12 +36,20 @@
 #include "nsIStyleSet.h"
 #include "nsCOMPtr.h"
 #include "nsILanguageAtom.h"
+#include "nsIFrame.h"
 
 class nsISizeOfHandler;
 
 class nsIFrame;
 class nsIPresContext;
 class nsISupportsArray;
+class nsIStyleContext;
+
+
+inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
+                         PRUint8 aSpacing,
+                         const nscoord* aEnumTable, PRInt32 aNumEnums,
+                         nsMargin& aResult);
 
 
 #define SHARE_STYLECONTEXTS
@@ -49,8 +57,13 @@ class nsISupportsArray;
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleFont : public nsStyleStruct {
-  nsStyleFont(void);
-  ~nsStyleFont(void);
+  nsStyleFont(void)
+    : mFont(nsnull, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+            NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 0),
+      mFixedFont(nsnull, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                 NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 0)
+    {}
+  ~nsStyleFont(void) {};
 
   nsFont  mFont;        // [inherited]
   nsFont  mFixedFont;   // [inherited]
@@ -62,8 +75,8 @@ protected:
 };
 
 struct nsStyleColor : public nsStyleStruct {
-  nsStyleColor(void);
-  ~nsStyleColor(void);
+  nsStyleColor(void) {}
+  ~nsStyleColor(void) {}
 
   nscolor mColor;                 // [inherited]
  
@@ -86,16 +99,39 @@ struct nsStyleColor : public nsStyleStruct {
 };
 
 
+#define BORDER_COLOR_DEFINED  0x80  
+#define BORDER_COLOR_SPECIAL  0x40  
+#define BORDER_STYLE_MASK     0x3F
+
+#define NS_SPACING_MARGIN   0
+#define NS_SPACING_PADDING  1
+#define NS_SPACING_BORDER   2
+
+
 struct nsStyleMargin: public nsStyleStruct {
-  nsStyleMargin(void);
-  ~nsStyleMargin(void);
+  nsStyleMargin(void) {};
+  ~nsStyleMargin(void) {};
 
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
 
-  PRBool GetMargin(nsMargin& aMargin) const;
+  PRBool GetMargin(nsMargin& aMargin) const
+  {
+    if (mHasCachedMargin) {
+      aMargin = mCachedMargin;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
 
-// XXX this is a deprecated method
-  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
+  // XXX this is a deprecated method
+  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const
+  {
+    if (mHasCachedMargin) {
+      aMargin = mCachedMargin;
+    } else {
+      CalcSidesFor(aFrame, mMargin, NS_SPACING_MARGIN, nsnull, 0, aMargin);
+    }
+  }
 
 protected:
   PRPackedBool  mHasCachedMargin;
@@ -104,15 +140,29 @@ protected:
 
 
 struct nsStylePadding: public nsStyleStruct {
-  nsStylePadding(void);
-  ~nsStylePadding(void);
+  nsStylePadding(void) {};
+  ~nsStylePadding(void) {};
 
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
 
-  PRBool GetPadding(nsMargin& aPadding) const;
+  PRBool GetPadding(nsMargin& aPadding) const
+  {
+    if (mHasCachedPadding) {
+      aPadding = mCachedPadding;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
 
-// XXX this is a deprecated method
-  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
+  // XXX this is a deprecated method
+  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
+  {
+    if (mHasCachedPadding) {
+      aPadding = mCachedPadding;
+    } else {
+      CalcSidesFor(aFrame, mPadding, NS_SPACING_PADDING, nsnull, 0, aPadding);
+    }
+  }
 
 protected:
   PRPackedBool  mHasCachedPadding;
@@ -121,24 +171,76 @@ protected:
 
 
 struct nsStyleBorder: public nsStyleStruct {
-  nsStyleBorder(void);
-  ~nsStyleBorder(void);
+  nsStyleBorder(void) {};
+  ~nsStyleBorder(void) {};
 
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
   nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
 
-  PRBool GetBorder(nsMargin& aBorder) const;
+  PRBool GetBorder(nsMargin& aBorder) const
+  {
+    if (mHasCachedBorder) {
+      aBorder = mCachedBorder;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
 
-  PRUint8 GetBorderStyle(PRUint8 aSide) const; 
-  void    SetBorderStyle(PRUint8 aSide, PRUint8 aStyle); 
-  PRBool  GetBorderColor(PRUint8 aSide, nscolor& aColor) const;   // PR_FALSE means TRANSPARENT
-  void    SetBorderColor(PRUint8 aSide, nscolor aColor); 
-  void    SetBorderTransparent(PRUint8 aSide); 
-  void    UnsetBorderColor(PRUint8 aSide);
+  PRUint8 GetBorderStyle(PRUint8 aSide) const
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    return (mBorderStyle[aSide] & BORDER_STYLE_MASK); 
+  }
 
-// XXX these are deprecated methods
-  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
+  void SetBorderStyle(PRUint8 aSide, PRUint8 aStyle)
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    mBorderStyle[aSide] &= ~BORDER_STYLE_MASK; 
+    mBorderStyle[aSide] |= (aStyle & BORDER_STYLE_MASK);
+
+  }
+
+  // PR_FALSE means TRANSPARENT 
+  PRBool GetBorderColor(PRUint8 aSide, nscolor& aColor) const
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    if ((mBorderStyle[aSide] & BORDER_COLOR_SPECIAL) == 0) {
+      aColor = mBorderColor[aSide]; 
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  void SetBorderColor(PRUint8 aSide, nscolor aColor) 
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    mBorderColor[aSide] = aColor; 
+    mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
+    mBorderStyle[aSide] |= BORDER_COLOR_DEFINED; 
+  }
+
+  void SetBorderTransparent(PRUint8 aSide)
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    mBorderStyle[aSide] |= (BORDER_COLOR_DEFINED | BORDER_COLOR_SPECIAL); 
+  }
+
+  void UnsetBorderColor(PRUint8 aSide)
+  {
+    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
+    mBorderStyle[aSide] &= BORDER_STYLE_MASK; 
+  }
+
+  // XXX these are deprecated methods
+  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
+  {
+    if (mHasCachedBorder) {
+      aBorder = mCachedBorder;
+    } else {
+      CalcSidesFor(aFrame, mBorder, NS_SPACING_BORDER, mBorderWidths, 3, aBorder);
+    }
+  }
 
 protected:
   PRPackedBool  mHasCachedBorder;
@@ -146,15 +248,29 @@ protected:
 
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] 
+
+  // XXX remove with deprecated methods
+  nscoord       mBorderWidths[3];
 };
 
 
 struct nsStyleBorderPadding: public nsStyleStruct {
-  nsStyleBorderPadding(void);
-  ~nsStyleBorderPadding(void);
+  nsStyleBorderPadding(void) { mHasCachedBorderPadding = PR_FALSE; };
+  ~nsStyleBorderPadding(void) {};
 
-  PRBool GetBorderPadding(nsMargin& aBorderPadding) const;
-  void   SetBorderPadding(nsMargin aBorderPadding);
+  PRBool GetBorderPadding(nsMargin& aBorderPadding) const {
+    if (mHasCachedBorderPadding) {
+      aBorderPadding = mCachedBorderPadding;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  void SetBorderPadding(nsMargin aBorderPadding) {
+    mCachedBorderPadding = aBorderPadding;
+    mHasCachedBorderPadding = PR_TRUE;
+  }
+
 protected:
   nsMargin      mCachedBorderPadding;
   PRPackedBool  mHasCachedBorderPadding;
@@ -162,21 +278,55 @@ protected:
 
 
 struct nsStyleOutline: public nsStyleStruct {
-  nsStyleOutline(void);
-  ~nsStyleOutline(void);
+  nsStyleOutline(void) {};
+  ~nsStyleOutline(void) {};
 
   nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
-  PRBool  GetOutlineWidth(nscoord& aWidth) const; // PR_TRUE if pre-computed
-  PRUint8 GetOutlineStyle(void) const;
-  void    SetOutlineStyle(PRUint8 aStyle);
-  PRBool  GetOutlineColor(nscolor& aColor) const; // PR_FALSE means INVERT
-  void    SetOutlineColor(nscolor aColor); 
-  void    SetOutlineInvert(void); 
+  PRBool GetOutlineWidth(nscoord& aWidth) const
+  {
+    if (mHasCachedOutline) {
+      aWidth = mCachedOutlineWidth;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
 
+  PRUint8 GetOutlineStyle(void) const
+  {
+    return (mOutlineStyle & BORDER_STYLE_MASK);
+  }
+
+  void SetOutlineStyle(PRUint8 aStyle)
+  {
+    mOutlineStyle &= ~BORDER_STYLE_MASK;
+    mOutlineStyle |= (aStyle & BORDER_STYLE_MASK);
+  }
+
+  // PR_FALSE means INVERT 
+  PRBool GetOutlineColor(nscolor& aColor) const
+  {
+    if ((mOutlineStyle & BORDER_COLOR_SPECIAL) == 0) {
+      aColor = mOutlineColor;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  void SetOutlineColor(nscolor aColor)
+  {
+    mOutlineColor = aColor;
+    mOutlineStyle &= ~BORDER_COLOR_SPECIAL;
+    mOutlineStyle |= BORDER_COLOR_DEFINED;
+  }
+
+  void SetOutlineInvert(void)
+  {
+    mOutlineStyle |= (BORDER_COLOR_DEFINED | BORDER_COLOR_SPECIAL);
+  }
 
 protected:
   PRPackedBool  mHasCachedOutline;
@@ -184,6 +334,9 @@ protected:
 
   PRUint8       mOutlineStyle;    // [reset] See nsStyleConsts.h
   nscolor       mOutlineColor;    // [reset] 
+
+  // XXX remove with deprecated methods
+  nscoord       mBorderWidths[3];
 };
 
 
@@ -241,8 +394,8 @@ struct nsStyleText : public nsStyleStruct {
 };
 
 struct nsStyleDisplay : public nsStyleStruct {
-  nsStyleDisplay(void);
-  ~nsStyleDisplay(void);
+  nsStyleDisplay(void) {};
+  ~nsStyleDisplay(void) {};
 
   PRUint8 mDirection;           // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
@@ -322,31 +475,157 @@ struct nsStyleCounterData {
   PRInt32   mValue;
 };
 
+
+#define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
+
 struct nsStyleContent: public nsStyleStruct {
   nsStyleContent(void);
   ~nsStyleContent(void);
 
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
-  nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const;
-  nsresult  AllocateContents(PRUint32 aCount);
-  nsresult  SetContentAt(PRUint32 aIndex, nsStyleContentType aType, const nsString& aContent);
+  nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const {
+    if (aIndex < mContentCount) {
+      aType = mContents[aIndex].mType;
+      aContent = mContents[aIndex].mContent;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsresult  AllocateContents(PRUint32 aCount) {
+    if (aCount != mContentCount) {
+      DELETE_ARRAY_IF(mContents);
+      if (aCount) {
+        mContents = new nsStyleContentData[aCount];
+        if (! mContents) {
+          mContentCount = 0;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mContentCount = aCount;
+    }
+    return NS_OK;
+  }
+
+  nsresult  SetContentAt(PRUint32 aIndex, nsStyleContentType aType, const nsString& aContent) {
+    if (aIndex < mContentCount) {
+      mContents[aIndex].mType = aType;
+      if (aType < eStyleContentType_OpenQuote) {
+        mContents[aIndex].mContent = aContent;
+      }
+      else {
+        mContents[aIndex].mContent.Truncate();
+      }
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   PRUint32  CounterIncrementCount(void) const { return mIncrementCount; }  // [reset]
-  nsresult  GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const;
-  nsresult  AllocateCounterIncrements(PRUint32 aCount);
-  nsresult  SetCounterIncrementAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aIncrement);
+  nsresult  GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const {
+    if (aIndex < mIncrementCount) {
+      aCounter = mIncrements[aIndex].mCounter;
+      aIncrement = mIncrements[aIndex].mValue;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsresult  AllocateCounterIncrements(PRUint32 aCount) {
+    if (aCount != mIncrementCount) {
+      DELETE_ARRAY_IF(mIncrements);
+      if (aCount) {
+        mIncrements = new nsStyleCounterData[aCount];
+        if (! mIncrements) {
+          mIncrementCount = 0;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mIncrementCount = aCount;
+    }
+    return NS_OK;
+  }
+
+  nsresult  SetCounterIncrementAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aIncrement) {
+    if (aIndex < mIncrementCount) {
+      mIncrements[aIndex].mCounter = aCounter;
+      mIncrements[aIndex].mValue = aIncrement;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   PRUint32  CounterResetCount(void) const { return mResetCount; }  // [reset]
-  nsresult  GetCounterResetAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aValue) const;
-  nsresult  AllocateCounterResets(PRUint32 aCount);
-  nsresult  SetCounterResetAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aValue);
+  nsresult  GetCounterResetAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aValue) const {
+    if (aIndex < mResetCount) {
+      aCounter = mResets[aIndex].mCounter;
+      aValue = mResets[aIndex].mValue;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsresult  AllocateCounterResets(PRUint32 aCount) {
+    if (aCount != mResetCount) {
+      DELETE_ARRAY_IF(mResets);
+      if (aCount) {
+        mResets = new nsStyleCounterData[aCount];
+        if (! mResets) {
+          mResetCount = 0;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mResetCount = aCount;
+    }
+    return NS_OK;
+  }
+
+  nsresult  SetCounterResetAt(PRUint32 aIndex, const nsString& aCounter, PRInt32 aValue) {
+    if (aIndex < mResetCount) {
+      mResets[aIndex].mCounter = aCounter;
+      mResets[aIndex].mValue = aValue;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsStyleCoord  mMarkerOffset;  // [reset]
 
   PRUint32  QuotesCount(void) const { return mQuotesCount; } // [inherited]
-  nsresult  GetQuotesAt(PRUint32 aIndex, nsString& aOpen, nsString& aClose) const;
-  nsresult  AllocateQuotes(PRUint32 aCount);
-  nsresult  SetQuotesAt(PRUint32 aIndex, const nsString& aOpen, const nsString& aClose);
+  nsresult  GetQuotesAt(PRUint32 aIndex, nsString& aOpen, nsString& aClose) const {
+    if (aIndex < mQuotesCount) {
+      aIndex *= 2;
+      aOpen = mQuotes[aIndex];
+      aClose = mQuotes[++aIndex];
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsresult  AllocateQuotes(PRUint32 aCount) {
+    if (aCount != mQuotesCount) {
+      DELETE_ARRAY_IF(mQuotes);
+      if (aCount) {
+        mQuotes = new nsString[aCount * 2];
+        if (! mQuotes) {
+          mQuotesCount = 0;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mQuotesCount = aCount;
+    }
+    return NS_OK;
+  }
+
+  nsresult  SetQuotesAt(PRUint32 aIndex, const nsString& aOpen, const nsString& aClose) {
+    if (aIndex < mQuotesCount) {
+      aIndex *= 2;
+      mQuotes[aIndex] = aOpen;
+      mQuotes[++aIndex] = aClose;
+      return NS_OK;
+    }
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
 protected:
   PRUint32            mContentCount;
@@ -508,6 +787,128 @@ public:
   virtual void    CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const = 0;
 };
 
+
+// XXX this is here to support deprecated calc spacing methods only
+inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord, 
+                           PRUint8 aSpacing, PRUint8 aSide,
+                           const nscoord* aEnumTable, PRInt32 aNumEnums)
+{
+  nscoord result = 0;
+
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Auto:
+      // Auto margins are handled by layout
+      break;
+
+    case eStyleUnit_Inherit:
+      nsIFrame* parentFrame;
+      aFrame->GetParent(&parentFrame);  // XXX may not be direct parent...
+      if (nsnull != parentFrame) {
+        nsIStyleContext* parentContext;
+        parentFrame->GetStyleContext(&parentContext);
+        if (nsnull != parentContext) {
+          nsMargin  parentSpacing;
+          switch (aSpacing) {
+            case NS_SPACING_MARGIN:
+              {
+                const nsStyleMargin* parentMargin = (const nsStyleMargin*)parentContext->GetStyleData(eStyleStruct_Margin);
+                parentMargin->CalcMarginFor(parentFrame, parentSpacing);  
+              }
+
+              break;
+            case NS_SPACING_PADDING:
+              {
+                const nsStylePadding* parentPadding = (const nsStylePadding*)parentContext->GetStyleData(eStyleStruct_Padding);
+                parentPadding->CalcPaddingFor(parentFrame, parentSpacing);  
+              }
+
+              break;
+            case NS_SPACING_BORDER:
+              {
+                const nsStyleBorder* parentBorder = (const nsStyleBorder*)parentContext->GetStyleData(eStyleStruct_Border);
+                parentBorder->CalcBorderFor(parentFrame, parentSpacing);  
+              }
+
+              break;
+          }
+          switch (aSide) {
+            case NS_SIDE_LEFT:    result = parentSpacing.left;   break;
+            case NS_SIDE_TOP:     result = parentSpacing.top;    break;
+            case NS_SIDE_RIGHT:   result = parentSpacing.right;  break;
+            case NS_SIDE_BOTTOM:  result = parentSpacing.bottom; break;
+          }
+          NS_RELEASE(parentContext);
+        }
+      }
+      break;
+
+    case eStyleUnit_Percent:
+      {
+        nscoord baseWidth = 0;
+        PRBool  isBase = PR_FALSE;
+        nsIFrame* frame;
+        aFrame->GetParent(&frame);
+        while (nsnull != frame) {
+          frame->IsPercentageBase(isBase);
+          if (isBase) {
+            nsSize  size;
+            frame->GetSize(size);
+            baseWidth = size.width; // not really width, need to subtract out padding...
+            break;
+          }
+          frame->GetParent(&frame);
+        }
+        result = (nscoord)((float)baseWidth * aCoord.GetPercentValue());
+      }
+      break;
+
+    case eStyleUnit_Coord:
+      result = aCoord.GetCoordValue();
+      break;
+
+    case eStyleUnit_Enumerated:
+      if (nsnull != aEnumTable) {
+        PRInt32 value = aCoord.GetIntValue();
+        if ((0 <= value) && (value < aNumEnums)) {
+          return aEnumTable[aCoord.GetIntValue()];
+        }
+      }
+      break;
+
+    case eStyleUnit_Null:
+    case eStyleUnit_Normal:
+    case eStyleUnit_Integer:
+    case eStyleUnit_Proportional:
+    default:
+      result = 0;
+      break;
+  }
+  if ((NS_SPACING_PADDING == aSpacing) || (NS_SPACING_BORDER == aSpacing)) {
+    if (result < 0) {
+      result = 0;
+    }
+  }
+  return result;
+}
+
+inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
+                         PRUint8 aSpacing, 
+                         const nscoord* aEnumTable, PRInt32 aNumEnums,
+                         nsMargin& aResult)
+{
+  nsStyleCoord  coord;
+
+  aResult.left = CalcSideFor(aFrame, aSides.GetLeft(coord), aSpacing, NS_SIDE_LEFT,
+                             aEnumTable, aNumEnums);
+  aResult.top = CalcSideFor(aFrame, aSides.GetTop(coord), aSpacing, NS_SIDE_TOP,
+                            aEnumTable, aNumEnums);
+  aResult.right = CalcSideFor(aFrame, aSides.GetRight(coord), aSpacing, NS_SIDE_RIGHT,
+                              aEnumTable, aNumEnums);
+  aResult.bottom = CalcSideFor(aFrame, aSides.GetBottom(coord), aSpacing, NS_SIDE_BOTTOM,
+                               aEnumTable, aNumEnums);
+}
+
+
 // this is private to nsStyleSet, don't call it
 extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
@@ -515,5 +916,6 @@ extern NS_LAYOUT nsresult
                      nsIAtom* aPseudoType,
                      nsISupportsArray* aRules,
                      nsIPresContext* aPresContext);
+
 
 #endif /* nsIStyleContext_h___ */

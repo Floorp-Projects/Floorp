@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsSVGAtoms.h"
+#include "nsLayoutCID.h"
 
 static const char kSVGNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.svg";
 
@@ -45,8 +46,17 @@ void nsSVGAtoms::AddRefAtoms() {
     /* SVG Atoms registers the SVG name space ID because it's a convenient
        place to do this, if you don't want a permanent, "well-known" ID.
     */
-    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
-      gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kSVGNameSpace), nameSpaceID);
+
+    NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
+    nsCOMPtr<nsINameSpaceManager> nsmgr =
+      do_CreateInstance(kNameSpaceManagerCID);
+
+    if (nsmgr) {
+      nsmgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kSVGNameSpace),
+                               nameSpaceID);
+
+      gNameSpaceManager = nsmgr;
+      NS_ADDREF(gNameSpaceManager);
     } else {
       NS_ASSERTION(0, "failed to create SVG atoms namespace manager");
     }

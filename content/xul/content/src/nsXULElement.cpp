@@ -101,6 +101,7 @@
 #include "nsIXULTemplateBuilder.h"
 #include "nsIXBLService.h"
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"

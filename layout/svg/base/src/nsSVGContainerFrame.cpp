@@ -36,7 +36,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIPresShell.h"
-#include "nsGenericHTMLElement.h"
 #include "nsCSSRendering.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"

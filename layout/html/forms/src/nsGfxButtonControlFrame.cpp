@@ -27,6 +27,8 @@
 #include "nsFormControlFrame.h"
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
 // Saving PresState
 #include "nsIPresState.h"
@@ -395,8 +397,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   // Add a child text content node for the label
-  nsCOMPtr<nsIContent> labelContent;
-  result = NS_NewTextNode(getter_AddRefs(labelContent));
+  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
   if (NS_SUCCEEDED(result) && labelContent) {
     // set the value of the text node and add it to the child list
     mTextContent = do_QueryInterface(labelContent, &result);

@@ -22,6 +22,7 @@
 #ifndef nsCSSFrameConstructor_h___
 #define nsCSSFrameConstructor_h___
 
+#include "nsICSSFrameConstructor.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nslayout.h"
 #include "nsIPresContext.h"
@@ -44,7 +45,7 @@ class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
 class nsIXBLService;
 
-class nsCSSFrameConstructor : public nsIStyleFrameConstruction {
+class nsCSSFrameConstructor : public nsIStyleFrameConstruction, public nsICSSFrameConstructor {
 public:
   nsCSSFrameConstructor(void);
   virtual ~nsCSSFrameConstructor(void);
@@ -57,6 +58,7 @@ private:
 public:
   NS_DECL_ISUPPORTS
 
+  // nsICSSFrameConstructor
   NS_IMETHOD Init(nsIDocument* aDocument);
 
   // nsIStyleFrameConstruction API

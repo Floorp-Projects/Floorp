@@ -41,11 +41,6 @@ void XXXNeverCalled()
   NS_NewGalleyContext(&cx);
   NS_NewPrintPreviewContext(&cx);
   NS_NewPrintContext(&px);
-  nsIStyleSet* ss;
-  NS_NewStyleSet(&ss);
-  nsIDocument* doc;
-  NS_NewHTMLDocument(&doc);
-  NS_NewImageDocument(&doc);
   nsIFrame* f;
   NS_NewTextFrame(ps, &f);
   NS_NewInlineFrame(ps, &f);
@@ -58,7 +53,4 @@ void XXXNeverCalled()
   NS_NewCanvasFrame(ps, &f);
   NS_NewScrollFrame(ps, &f);
   NS_NewSimplePageSequenceFrame(ps, &f);
-  nsINameSpaceManager* nsm;
-  NS_NewNameSpaceManager(&nsm);
-  NS_CreateHTMLElement(nsnull, nsnull);
 }

@@ -44,7 +44,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsEventStateManager.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsIStyleContext.h"
@@ -73,6 +72,8 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 }
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kEventStateManagerCID, NS_EVENTSTATEMANAGER_CID);
 
 nsPresContext::nsPresContext()
   : mDefaultFont("serif", NS_FONT_STYLE_NORMAL,
@@ -1270,8 +1271,9 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
   }
 
   if (!mEventManager) {
-    nsresult rv = NS_NewEventStateManager(getter_AddRefs(mEventManager));
-    if (NS_OK != rv) {
+    nsresult rv;
+    mEventManager = do_CreateInstance(kEventStateManagerCID,&rv);
+    if (NS_FAILED(rv)) {
       return rv;
     }
   }

@@ -60,7 +60,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
-#include "nsRange.h"
+#include "nsIDOMRange.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -69,7 +69,11 @@
 #include "nsMimeTypes.h"
 
 #include "nsObjectFrame.h"
+#include "nsIObjectFrame.h"
 
+#include "nsContentCID.h"
+static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
+  
 /* X headers suck */
 #ifdef KeyPress
 #undef KeyPress
@@ -247,7 +251,44 @@ nsObjectFrame::~nsObjectFrame()
 
 }
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_IMETHODIMP
+nsObjectFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  *aInstancePtr = nsnull;
+
+#ifdef DEBUG
+  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIFrameDebug*,this);
+    return NS_OK;
+  }
+#endif
+
+  if (aIID.Equals(NS_GET_IID(nsIObjectFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*,this);
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIFrame*,this);
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIObjectFrame*,this);
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::AddRef(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::Release(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
+
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
@@ -1429,20 +1470,6 @@ NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-// TODO: put this in a header file.
-extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
-
-nsresult
-NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance)
-{
-  if(aFrame == nsnull)
-    return NS_ERROR_NULL_POINTER;
-
-    // TODO: any way to determine this cast is safe?
-    nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, aFrame);
-    return objectFrame->GetPluginInstance(aPluginInstance);
-}
-
 //plugin instance owner
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
@@ -1612,7 +1639,7 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
     return NS_OK;                                                        
   }
   
-  if (aIID.Equals(kISupportsIID))
+  if (aIID.Equals(NS_GET_IID(nsISupports)))
   {
     *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginTagInfo *)this));
     AddRef();
@@ -1980,9 +2007,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
         if (NS_FAILED(rv))
             return rv;
 
-        nsCOMPtr<nsIDOMRange> range(new nsRange);
-        if (!range)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
+        if (NS_FAILED(rv))
+            return rv;
 
         rv = range->SelectNode(node);
         if (NS_FAILED(rv))

@@ -22,7 +22,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptormathmlbase_s 
+LIBRARY_NAME=layoutmathmlbase_s 
 MODULE=raptor 
 
 DEFINES= -DWIN32_LEAN_AND_MEAN

@@ -48,19 +48,13 @@ endif
 EXPORTS		= nsLayoutCID.h $(BUILD_DATE)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libgkevents_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlforms_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxsldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxbl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 

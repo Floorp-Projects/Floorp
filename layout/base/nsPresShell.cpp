@@ -135,6 +135,10 @@
 // SubShell map
 #include "nsDST.h"
 
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
+static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
+
 // supporting bugs 31816, 20760, 22963
 // define USE_OVERRIDE to put prefs in as an override stylesheet
 // otherwise they go in as a Backstop stylesheets
@@ -1813,7 +1817,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
   NS_ASSERTION(mPrefStyleSheet==nsnull, "prefStyleSheet already exists");
   nsresult result = NS_OK;
 
-  result = NS_NewCSSStyleSheet(&mPrefStyleSheet);
+  result = nsComponentManager::CreateInstance(kCSSStyleSheetCID,nsnull,NS_GET_IID(nsICSSStyleSheet),(void**)&mPrefStyleSheet);
   if (NS_SUCCEEDED(result)) {
     NS_ASSERTION(mPrefStyleSheet, "null but no error");
     nsCOMPtr<nsIURI> uri;
@@ -3608,7 +3612,7 @@ PresShell::DoCopy()
   rv = nsCopySupport::HTMLCopy(sel, doc, nsIClipboard::kGlobalClipboard);
   if (NS_FAILED(rv))
     return rv;
-  
+
   // Now that we have copied, update the Paste menu item
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   doc->GetScriptGlobalObject(getter_AddRefs(globalObject));  
@@ -5170,8 +5174,8 @@ PresShell::SetReflowEventStatus(PRBool aPending)
 nsresult
 PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
 {
-  nsIStyleSet* clone;
-  nsresult rv = NS_NewStyleSet(&clone);
+  nsresult rv;
+  nsCOMPtr<nsIStyleSet> clone(do_CreateInstance(kStyleSetCID,&rv));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5206,7 +5210,8 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
       NS_RELEASE(ss);
     }
   }
-  *aResult = clone;
+  *aResult = clone.get();
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 

@@ -22,10 +22,8 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
-#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsString.h"
@@ -56,11 +54,6 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
 
 void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval* argument);
 
-
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIInstallVersionIID, NS_IDOMINSTALLVERSION_IID);
 
 //
 // InstallVersion property ids
@@ -132,15 +125,10 @@ GetInstallVersionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
   }
-  else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
-  }
 
-  return PR_TRUE;
+  return JS_TRUE;
 }
 
 /***********************************************************************/
@@ -223,15 +211,10 @@ SetInstallVersionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
   }
-  else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
-  }
 
-  return PR_TRUE;
+  return JS_TRUE;
 }
 
 
@@ -241,7 +224,20 @@ SetInstallVersionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeInstallVersion(JSContext *cx, JSObject *obj)
 {
-  nsJSUtils::nsGenericFinalize(cx, obj);
+  nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
+
+  if (nsnull != nativeThis) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), 
+                                            (void**)&owner)) {
+      owner->SetScriptObject(nsnull);
+      NS_RELEASE(owner);
+    }
+    
+    // The addref was part of JSObject construction
+    NS_RELEASE(nativeThis);
+  }
 }
 
 
@@ -251,7 +247,7 @@ FinalizeInstallVersion(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateInstallVersion(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+  return JS_TRUE;
 }
 
 
@@ -261,7 +257,7 @@ EnumerateInstallVersion(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveInstallVersion(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+  return JS_TRUE;
 }
 
 
@@ -283,7 +279,11 @@ InstallVersionInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   if (argc == 1) 
   {
-      nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    JSString *jsstring;
+    if ((jsstring = JS_ValueToString(cx, argv[0])) != nsnull) {
+      b0.Assign(NS_REINTERPRET_CAST(const PRUnichar*,
+                                    JS_GetStringChars(jsstring)));
+    }
   }
   else 
   {
@@ -321,7 +321,13 @@ InstallVersionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_FALSE;
     }
 
-    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+    JSString *jsstring =
+      JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
+                                                  nativeRet.GetUnicode()),
+                          nativeRet.Length());
+
+    // set the return value
+    *rval = STRING_TO_JSVAL(jsstring);
   }
   else {
     JS_ReportError(cx, "Function toString requires 0 parameters");
@@ -402,7 +408,7 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
         nsCOMPtr<nsIDOMInstallVersion> versionObj;
 
         if(JS_FALSE == ConvertJSValToObj(getter_AddRefs(versionObj),
-                                         kIInstallVersionIID,
+                                         NS_GET_IID(nsIDOMInstallVersion),
                                          NS_ConvertASCIItoUCS2("InstallVersion"),
                                          cx,
                                          argv[0]))
@@ -506,17 +512,17 @@ InstallVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   nsIDOMInstallVersion *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
 
-  static NS_DEFINE_IID(kIDOMInstallVersionIID, NS_IDOMINSTALLVERSION_IID);
   static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
   result = nsRepository::CreateInstance(kInstallVersion_CID,
                                         nsnull,
-                                        kIDOMInstallVersionIID,
+                                        NS_GET_IID(nsIDOMInstallVersion),
                                         (void **)&nativeThis);
   if (NS_OK != result) return JS_FALSE;
 
             
-  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  result = nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
+                                      (void **)&owner);
   if (NS_OK != result) {
     NS_RELEASE(nativeThis);
     return JS_FALSE;
@@ -616,7 +622,8 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext
   if (nsnull == aParent) {
     parent = nsnull;
   }
-  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+  else if (NS_OK == aParent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
+                                            (void**)&owner)) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
       NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
@@ -631,7 +638,7 @@ extern "C" NS_DOM nsresult NS_NewScriptInstallVersion(nsIScriptContext *aContext
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIInstallVersionIID, (void **)&aInstallVersion);
+  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallVersion), (void **)&aInstallVersion);
   if (NS_OK != result) {
     return result;
   }

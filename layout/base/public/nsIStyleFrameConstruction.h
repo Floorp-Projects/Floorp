@@ -47,6 +47,8 @@ class nsILayoutHistoryState;
   */
 class nsIStyleFrameConstruction : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_FRAME_CONSTRUCTION_IID)
+
   /**
     * Create frames for the root content element and its child content.
     *

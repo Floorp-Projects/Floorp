@@ -28,20 +28,17 @@
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsIPresShell.h"
+#include "nsIPresState.h"
 #include "nsIPresContext.h"
-#include "nsISelection.h"
+#include "nsIPrintContext.h"
 #include "nsIFrameUtil.h"
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
-#include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsIHTMLCSSStyleSheet.h"
-#include "nsICSSLoader.h"
 #include "nsIDOMRange.h"
-#include "nsIContentIterator.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -51,69 +48,34 @@
 #include "nsIElementFactory.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
-#include "nsIFrameSelection.h"
-#include "nsIDOMDOMImplementation.h"
-#include "nsIPrivateDOMImplementation.h"
-
-#include "nsIXBLService.h"
-#include "nsIBindingManager.h"
 
 #include "nsIBoxObject.h"
 
 #include "nsIAutoCopy.h"
-#include "nsContentPolicyUtils.h"
-
-#include "nsXMLContentSerializer.h"
-#include "nsHTMLContentSerializer.h"
-#include "nsPlainTextSerializer.h"
 
 #include "nsINodeInfo.h"
-#include "nsIComputedDOMStyle.h"
+#include "nsIFrameTraversal.h"
+#include "nsICSSFrameConstructor.h"
 
 class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
-static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
-static NS_DEFINE_CID(kXMLElementFactoryCID, NS_XML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
-static NS_DEFINE_IID(kCSSParserCID,     NS_CSSPARSER_CID);
-static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kHTMLCSSStyleSheetCID, NS_HTML_CSS_STYLESHEET_CID);
-static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
-static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
-static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
-
-static NS_DEFINE_CID(kSelectionCID, NS_SELECTION_CID);
-static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static NS_DEFINE_IID(kDOMSelectionCID, NS_DOMSELECTION_CID);
-
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
-static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kGeneratedContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
-static NS_DEFINE_IID(kGeneratedSubtreeIteratorCID, NS_GENERATEDSUBTREEITERATOR_CID);
-static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
+static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
+static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
-static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+static NS_DEFINE_CID(kCSSFrameConstructorCID, NS_CSSFRAMECONSTRUCTOR_CID);
 static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
-static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
-static NS_DEFINE_CID(kHTMLCopyTextEncoderCID, NS_HTMLCOPY_TEXT_ENCODER_CID);
-
-static NS_DEFINE_CID(kXMLContentSerializerCID, NS_XMLCONTENTSERIALIZER_CID);
-static NS_DEFINE_CID(kHTMLContentSerializerCID, NS_HTMLCONTENTSERIALIZER_CID);
-static NS_DEFINE_CID(kPlainTextSerializerCID, NS_PLAINTEXTSERIALIZER_CID);
-
-static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
-static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
 static NS_DEFINE_CID(kBoxObjectCID, NS_BOXOBJECT_CID);
 static NS_DEFINE_CID(kTreeBoxObjectCID, NS_TREEBOXOBJECT_CID);
@@ -124,35 +86,13 @@ static NS_DEFINE_CID(kBrowserBoxObjectCID, NS_BROWSERBOXOBJECT_CID);
 static NS_DEFINE_CID(kEditorBoxObjectCID, NS_EDITORBOXOBJECT_CID);
 static NS_DEFINE_CID(kIFrameBoxObjectCID, NS_IFRAMEBOXOBJECT_CID);
 
-static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
-static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
-static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
-
-
-extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
-extern nsresult NS_NewDomSelection(nsISelection** aResult);
-extern nsresult NS_NewRange(nsIDOMRange** aResult);
-extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
-extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
-extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
-extern nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 #ifdef NS_DEBUG
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
-extern nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
-extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
-
-extern nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
-extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
-
-extern nsresult NS_NewXBLService(nsIXBLService** aResult);
-
-extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 
 extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
@@ -163,11 +103,16 @@ extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 
-extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
-
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
-extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
+extern nsresult NS_NewGalleyContext(nsIPresContext** aResult);
+
+extern nsresult NS_NewPresShell(nsIPresShell** aResult);
+extern nsresult NS_NewPresState(nsIPresState** aResult);
+extern nsresult NS_NewPrintContext(nsIPrintContext** aResult);
+
+extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
 
 //----------------------------------------------------------------------
 
@@ -221,47 +166,10 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   // XXX ClassID check happens here
-  if (mClassID.Equals(kHTMLDocumentCID)) {
-    res = NS_NewHTMLDocument((nsIDocument **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLDocument", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kXMLDocumentCID)) {
-    res = NS_NewXMLDocument((nsIDocument **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewXMLDocument", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kImageDocumentCID)) {
-    res = NS_NewImageDocument((nsIDocument **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewImageDocument", res);
-      return res;
-    }
-  }
 #if 1
 // XXX replace these with nsIElementFactory calls
-  else if (mClassID.Equals(kHTMLImageElementCID)) {
-    // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
-    res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsnull);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLImageElement", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kHTMLOptionElementCID)) {
-    // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
-    res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsnull);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLOptionElement", res);
-      return res;
-    }
-  }
 // XXX why the heck is this exported???? bad bad bad bad
-  else if (mClassID.Equals(kPresShellCID)) {
+  if (mClassID.Equals(kPresShellCID)) {
     res = NS_NewPresShell((nsIPresShell**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewPresShell", res);
@@ -269,101 +177,24 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
   }
 #endif
-  else if (mClassID.Equals(kFrameSelectionCID)) {
-    res = NS_NewSelection((nsIFrameSelection**)&inst);
+  else if (mClassID.Equals(kPresStateCID)) {
+    res = NS_NewPresState((nsIPresState**) &inst);
     if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewSelection", res);
+      LOG_NEW_FAILURE("NS_NewPresState", res);
       return res;
     }
   }
-  else if (mClassID.Equals(kDOMSelectionCID)) {
-    res = NS_NewDomSelection((nsISelection**)&inst);
+  else if (mClassID.Equals(kFrameTraversalCID)) {
+    res = NS_CreateFrameTraversal((nsIFrameTraversal**)&inst);
     if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewDomSelection", res);
+      LOG_NEW_FAILURE("NS_CreateFrameTraversal", res);
       return res;
     }
   }
-  else if (mClassID.Equals(kRangeCID)) {
-    res = NS_NewRange((nsIDOMRange **)&inst);
+  else if (mClassID.Equals(kCSSFrameConstructorCID)) {
+    res = NS_CreateCSSFrameConstructor((nsICSSFrameConstructor**)&inst);
     if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewRange", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kContentIteratorCID)) {
-    res = NS_NewContentIterator((nsIContentIterator **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewContentIterator", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kGeneratedContentIteratorCID)) {
-    res = NS_NewGenRegularIterator((nsIContentIterator **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewGenRegularIterator", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kSubtreeIteratorCID)) {
-    res = NS_NewContentSubtreeIterator((nsIContentIterator **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewContentSubtreeIterator", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kGeneratedSubtreeIteratorCID)) {
-    res = NS_NewGenSubtreeIterator((nsIContentIterator **)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewGenSubtreeIterator", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kCSSParserCID)) {
-    res = NS_NewCSSParser((nsICSSParser**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewCSSParser", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kHTMLStyleSheetCID)) {
-    res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLStyleSheet", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kHTMLCSSStyleSheetCID)) {
-    res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLCSSStyleSheet", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kCSSLoaderCID)) {
-    res = NS_NewCSSLoader((nsICSSLoader**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewCSSLoader", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kTextNodeCID)) {
-    res = NS_NewTextNode((nsIContent**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewTextNode", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kNameSpaceManagerCID)) {
-    res = NS_NewNameSpaceManager((nsINameSpaceManager**)&inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewNameSpaceManager", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kEventListenerManagerCID)) {
-    res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewEventListenerManager", res);
+      LOG_NEW_FAILURE("NS_CreateCSSFrameConstructor", res);
       return res;
     }
   }
@@ -371,6 +202,20 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewPrintPreviewContext((nsIPresContext**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewPrintPreviewContext", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kPrintContextCID)) {
+    res = NS_NewPrintContext((nsIPrintContext**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewPrintContext", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kGalleyContextCID)) {
+    res = NS_NewGalleyContext((nsIPresContext**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewGalleyContext", res);
       return res;
     }
   }
@@ -397,69 +242,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
   }
 #endif
-  else if (mClassID.Equals(kHTMLElementFactoryCID)) {
-    res = NS_NewHTMLElementFactory((nsIElementFactory**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kXMLElementFactoryCID)) {
-    res = NS_NewXMLElementFactory((nsIElementFactory**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewXMLElementFactory", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kTextEncoderCID)) {
-    res = NS_NewTextEncoder((nsIDocumentEncoder**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewTextEncoder", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kHTMLCopyTextEncoderCID)) {
-    res = NS_NewHTMLCopyTextEncoder((nsIDocumentEncoder**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLCopyTextEncoder", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kXMLContentSerializerCID)) {
-    res = NS_NewXMLContentSerializer((nsIContentSerializer**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewXMLContentSerializer", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kHTMLContentSerializerCID)) {
-    res = NS_NewHTMLContentSerializer((nsIContentSerializer**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewHTMLContentSerializer", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kPlainTextSerializerCID)) {
-    res = NS_NewPlainTextSerializer((nsIContentSerializer**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewPlainTextSerializer", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kXBLServiceCID)) {
-    res = NS_NewXBLService((nsIXBLService**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewXBLService", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kBindingManagerCID)) {
-    res = NS_NewBindingManager((nsIBindingManager**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewBindingManager", res);
-      return res;
-    }
-  }
   else if (mClassID.Equals(kBoxObjectCID)) {
     res = NS_NewBoxObject((nsIBoxObject**) &inst);
     if (NS_FAILED(res)) {
@@ -509,38 +291,10 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
-  else if (mClassID.Equals(kNodeInfoManagerCID)) {
-    res = NS_NewNodeInfoManager((nsINodeInfoManager**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewNodeInfoManager", res);
-      return res;
-    }
-  }
   else if (mClassID.Equals(kAutoCopyServiceCID)) {
     res = NS_NewAutoCopyService((nsIAutoCopyService**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewAutoCopyService", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kDOMImplementationCID)) {
-    res = NS_NewDOMImplementation((nsIDOMDOMImplementation**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewDOMImplementation", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kContentPolicyCID)) {
-    res = NS_NewContentPolicy((nsIContentPolicy**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewContentPolicy", res);
-      return res;
-    }
-  }
-  else if (mClassID.Equals(kComputedDOMStyleCID)) {
-    res = NS_NewComputedDOMStyle((nsIComputedDOMStyle**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewComputedDOMStyle", res);
       return res;
     }
   }

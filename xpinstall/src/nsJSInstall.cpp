@@ -21,7 +21,6 @@
  */
 
 #include "jsapi.h"
-#include "nsJSUtils.h"
 #include "nsJSFile.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"

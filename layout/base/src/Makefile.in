@@ -33,51 +33,23 @@ REQUIRES	= xpcom dom widget view locale timer htmlparser js webshell necko caps 
 CPPSRCS		= \
 		nsAutoCopy.cpp \
 		nsCaret.cpp \
-		nsCommentNode.cpp \
-		nsContentIterator.cpp \
-		nsContentList.cpp \
-		nsContentPolicy.cpp \
 		nsCopySupport.cpp \
-		nsDocument.cpp \
-		nsDocumentEncoder.cpp \
-		nsDocumentFragment.cpp \
-		nsDocumentViewer.cpp \
-		nsDOMAttribute.cpp \
-		nsDOMAttributeMap.cpp \
-		nsDOMDocumentType.cpp \
 		nsFrameImageLoader.cpp \
 		nsFrameList.cpp \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \
 		nsGalleyContext.cpp \
-		nsGeneratedIterator.cpp \
-		nsGenericDOMDataNode.cpp \
-		nsGenericDOMNodeList.cpp \
-		nsGenericElement.cpp \
 		nsLayoutAtoms.cpp \
 		nsLayoutDebugger.cpp \
 		nsLayoutUtils.cpp \
-		nsNameSpaceManager.cpp \
-		nsNodeInfo.cpp \
-		nsNodeInfoManager.cpp \
 		nsPresContext.cpp \
 		nsPresState.cpp \
 		nsPrintContext.cpp \
 		nsPrintPreviewContext.cpp \
-		nsRange.cpp \
-		nsSelection.cpp \
 		nsSpaceManager.cpp \
 		nsStyleChangeList.cpp \
 		nsStyleCoord.cpp \
-		nsStyleContext.cpp \
-		nsStyleSet.cpp \
-		nsTextContentChangeData.cpp \
-		nsTextFragment.cpp \
-		nsTextNode.cpp \
 		nsLayoutHistoryState.cpp \
-		nsXMLContentSerializer.cpp \
-		nsHTMLContentSerializer.cpp \
-		nsPlainTextSerializer.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

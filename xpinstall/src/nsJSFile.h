@@ -24,7 +24,6 @@
 #define __NS_JSFILE_H__
 
 #include "jsapi.h"
-#include "nsJSUtils.h"
 #include "nscore.h"
 
 

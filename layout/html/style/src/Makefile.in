@@ -33,47 +33,15 @@ REQUIRES	= xpcom dom widget timer caps editor locale js view necko webshell pref
 CPPSRCS		= \
 		nsCSSAtoms.cpp \
 		nsCSSKeywords.cpp \
-		nsCSSDeclaration.cpp \
 		nsCSSFrameConstructor.cpp \
-		nsCSSLoader.cpp \
-		nsCSSParser.cpp \
 		nsCSSProps.cpp \
 		nsCSSRendering.cpp \
-		nsCSSScanner.cpp \
-		nsCSSRule.cpp \
-		nsCSSStyleRule.cpp \
-		nsCSSRules.cpp \
-		nsCSSStyleSheet.cpp \
-		nsCSSValue.cpp \
-		nsDOMCSSDeclaration.cpp \
-		nsHTMLAttributes.cpp \
-		nsHTMLStyleSheet.cpp \
-		nsHTMLCSSStyleSheet.cpp \
-		nsHTMLValue.cpp \
 		nsStyleUtil.cpp \
-		nsComputedDOMStyle.cpp \
-		nsROCSSPrimitiveValue.cpp \
 		$(NULL)
 
 EXPORTS		= \
-		nsDOMCSSDeclaration.h \
-		nsCSSKeywords.h \
-		nsCSSKeywordList.h \
-		nsCSSProps.h \
-		nsCSSPropList.h \
-		nsCSSValue.h \
-		nsICSSStyleRuleProcessor.h \
-		nsICSSRule.h \
-		nsICSSGroupRule.h \
-		nsICSSStyleRule.h \
-		nsICSSCharsetRule.h \
-		nsICSSImportRule.h \
-		nsICSSMediaRule.h \
-		nsICSSNameSpaceRule.h \
-		nsICSSDeclaration.h \
-		nsHTMLValue.h \
-		nsIHTMLCSSStyleSheet.h \
 		nsIHTMLStyleSheet.h \
+		nsICSSFrameConstructor.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -29,15 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 
 EXPORTS		= \
-		nsCSSAtoms.h \
-		nsCSSAtomList.h \
-		nsICSSLoader.h \
-		nsICSSParser.h \
-		nsICSSPseudoComparator.h \
-		nsICSSStyleSheet.h \
 		nsStyleUtil.h \
-		nsICSSLoaderObserver.h \
-		nsIComputedDOMStyle.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

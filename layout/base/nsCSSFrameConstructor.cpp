@@ -37,7 +37,6 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
-#include "nsIHTMLTableCellElement.h"
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsHTMLIIDs.h"
@@ -80,6 +79,13 @@
 #include "nsBoxLayoutState.h"
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
+#include "nsIElementFactory.h"
+#include "nsContentCID.h"
+
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
+static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
@@ -859,6 +865,22 @@ PRBool GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
   return haveCaption;
 }
 
+nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  nsCSSFrameConstructor *c = new nsCSSFrameConstructor();
+  if (!c)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(c);
+  nsresult rv = c->QueryInterface(NS_GET_IID(nsICSSFrameConstructor),(void**)aResult);
+  NS_RELEASE(c);
+
+  return rv;
+}
+
 nsCSSFrameConstructor::nsCSSFrameConstructor(void)
   : nsIStyleFrameConstruction(),
     mDocument(nsnull),
@@ -886,7 +908,7 @@ nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
 {
 }
 
-NS_IMPL_ISUPPORTS(nsCSSFrameConstructor, kIStyleFrameConstructionIID);
+NS_IMPL_ISUPPORTS2(nsCSSFrameConstructor, nsIStyleFrameConstruction,nsICSSFrameConstructor);
 
 NS_IMETHODIMP 
 nsCSSFrameConstructor::Init(nsIDocument* aDocument)
@@ -1268,8 +1290,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   aPresContext->GetShell(getter_AddRefs(shell));
 
   if (eStyleContentType_URL == type) {
-    nsIHTMLContent* imageContent;
-    
     // Create an HTML image content object, and set the SRC.
     // XXX Check if it's an image type we can handle...
 
@@ -1281,7 +1301,16 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
                        *getter_AddRefs(nodeInfo));
 
-    NS_NewHTMLImageElement(&imageContent, nodeInfo);
+    nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIContent> content;
+    rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHTMLContent> imageContent(do_QueryInterface(content,&rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     imageContent->SetHTMLAttribute(nsHTMLAtoms::src, contentString, PR_FALSE);
 
     // Set aContent as the parent content and set the document object. This
@@ -1293,7 +1322,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nsIFrame* imageFrame;
     NS_NewImageFrame(shell, &imageFrame);
     imageFrame->Init(aPresContext, imageContent, aParentFrame, aStyleContext, nsnull);
-    NS_RELEASE(imageContent);
   
     // Return the image frame
     *aFrame = imageFrame;
@@ -1326,10 +1354,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
         // Creates the content and frame and return if successful
         nsresult rv = NS_ERROR_FAILURE;
         if (nsnull != attrName) {
-          nsCOMPtr<nsIContent> content;
           nsIFrame*   textFrame = nsnull;
-          NS_NewAttributeContent(getter_AddRefs(content));
-          if (nsnull != content) {
+          nsCOMPtr<nsIContent> content(do_CreateInstance(kAttributeContentCID));
+          if (content) {
             nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
             if (attrContent) {
               attrContent->Init(aContent, attrNameSpace, attrName);  
@@ -1394,11 +1421,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
 
     // Create a text content node
-    nsIContent* textContent = nsnull;
     nsIDOMCharacterData*  domData;
     nsIFrame*             textFrame = nsnull;
-    
-    NS_NewTextNode(&textContent);
+
+    nsCOMPtr<nsIContent> textContent(do_CreateInstance(kTextNodeCID));
+
     if (textContent) {
       // Set the text
       textContent->QueryInterface(NS_GET_IID(nsIDOMCharacterData), (void**)&domData);
@@ -1413,8 +1440,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
       // Create a text frame and initialize it
       NS_NewTextFrame(shell, &textFrame);
       textFrame->Init(aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
-  
-      NS_RELEASE(textContent);
     }
   
     // Return the text frame
@@ -9946,6 +9971,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
                                                nsIFrame*        aParentFrame,
                                                nsIFrame*&       aFrame)
 {
+  nsresult rv;
   nsAutoString  altText;
 
   // Initialize OUT parameter
@@ -9957,8 +9983,9 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   GetAlternateTextFor(aContent, tag, altText);
 
   // Create a text content element for the alternate text
-  nsCOMPtr<nsIContent> altTextContent;
-  NS_NewTextNode(getter_AddRefs(altTextContent));
+  nsCOMPtr<nsIContent> altTextContent(do_CreateInstance(kTextNodeCID,&rv));
+  if (NS_FAILED(rv))
+    return rv;
 
   // Set the content's text
   nsIDOMCharacterData* domData;
