@@ -975,7 +975,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIFrame* aOldFrame)
 {
   nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&aPresShell, aOldFrame, &insertionPoint);
+  GetInsertionPoint(&aPresShell, this, aOldFrame, &insertionPoint);
   if (insertionPoint)
     return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
 
@@ -1004,9 +1004,21 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aFrameList)
 {
    nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&aPresShell, aFrameList, &insertionPoint);
-   if (insertionPoint)
-     return insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+   GetInsertionPoint(&aPresShell, this, aFrameList, &insertionPoint);
+   if (insertionPoint) {
+     // First insert the frames.
+     nsresult rv = insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+     
+     // Now reparent the style contexts to keep the frames in sync.
+     nsIFrame* walkit = aFrameList;
+     nsCOMPtr<nsIStyleContext> styleContext;
+     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
+     while (walkit) {
+       aPresContext->ReParentStyleContext(walkit, styleContext);
+       walkit->GetNextSibling(&walkit);
+     }
+     return rv;
+   }
 
    SanityCheck(mFrames);
 
@@ -1043,9 +1055,21 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aFrameList)
 {
    nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&aPresShell, aFrameList, &insertionPoint);
-   if (insertionPoint)
-     return insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+   GetInsertionPoint(&aPresShell, this, aFrameList, &insertionPoint);
+   if (insertionPoint) {
+     // First append the frames.
+     nsresult rv = insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+
+     // Now reparent the style contexts to keep the frames in sync.
+     nsIFrame* walkit = aFrameList;
+     nsCOMPtr<nsIStyleContext> styleContext;
+     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
+     while (walkit) {
+       aPresContext->ReParentStyleContext(walkit, styleContext);
+       walkit->GetNextSibling(&walkit);
+     }
+     return rv;
+   }
 
    SanityCheck(mFrames);
 
@@ -1687,13 +1711,16 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 void
-nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame** aResult)
+nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)
 {
   *aResult = nsnull;
-  if (!mContent)
+
+  nsCOMPtr<nsIContent> content;
+  aParent->GetContent(getter_AddRefs(content));
+  if (!content)
     return;
   nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
+  content->GetDocument(*getter_AddRefs(document));
   if (!document)
     return;
   nsCOMPtr<nsIBindingManager> bindingManager;
@@ -1705,28 +1732,33 @@ nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame**
   if (aChild) {
     nsCOMPtr<nsIContent> currContent;
     aChild->GetContent(getter_AddRefs(currContent));
-    bindingManager->GetInsertionPoint(mContent, currContent, getter_AddRefs(insertionElement));
+    bindingManager->GetInsertionPoint(content, currContent, getter_AddRefs(insertionElement));
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);
       if (frame) {
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-        *aResult = frame;
+
+        nsIFrame* nestedPoint = nsnull;
+        GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+        *aResult = nestedPoint ? nestedPoint : frame;
       }
       return;
     }
   }
   else {
     PRBool dummy;
-    bindingManager->GetSingleInsertionPoint(mContent, getter_AddRefs(insertionElement), &dummy);
+    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &dummy);
     if (insertionElement) {
       aShell->GetPrimaryFrameFor(insertionElement, &frame);
       if (frame) {
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-        *aResult = frame;
+        nsIFrame* nestedPoint = nsnull;
+        GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+        *aResult = nestedPoint ? nestedPoint : frame;
       }
       return;
     }

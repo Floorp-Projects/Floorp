@@ -31,6 +31,11 @@ interface nsIBoxObject : nsISupports
 {
   attribute nsIBoxLayoutManager layoutManager;
   attribute nsIBoxPaintManager paintManager;
+
+  readonly attribute long x;
+  readonly attribute long y;
+  readonly attribute long width;
+  readonly attribute long height;
 };
 
 %{C++

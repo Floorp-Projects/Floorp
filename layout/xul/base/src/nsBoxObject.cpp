@@ -27,6 +27,11 @@
 #include "nsIBoxPaintManager.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIStyleContext.h"
+#include "nsIFrame.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 // None so far.
@@ -109,6 +114,153 @@ nsBoxObject::GetFrame()
   if (mPresShell)
     mPresShell->GetPrimaryFrameFor(mContent, &frame);
   return frame;
+}
+
+nsresult 
+nsBoxObject::GetOffsetRect(nsRect& aRect)
+{
+  nsresult res = NS_OK;
+
+  aRect.x = aRect.y = 0;
+  aRect.Empty();
+ 
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+
+  if (doc) {
+    // Get Presentation shell 0
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+
+    if(presShell) {
+      // Flush all pending notifications so that our frames are uptodate
+      presShell->FlushPendingNotifications();
+
+      // Get the Frame for our content
+      nsIFrame* frame = nsnull;
+      presShell->GetPrimaryFrameFor(mContent, &frame);
+      if(frame != nsnull) {
+        // Get its origin
+        nsPoint origin;
+        frame->GetOrigin(origin);
+
+        // Get the union of all rectangles in this and continuation frames
+        nsRect rcFrame;
+        nsIFrame* next = frame;
+        do {
+          nsRect rect;
+          next->GetRect(rect);
+          rcFrame.UnionRect(rcFrame, rect);
+          next->GetNextInFlow(&next);
+        } while (nsnull != next);
+        
+
+        // Find the frame parent whose content's tagName either matches 
+        // the tagName passed in or is the document element.
+        nsCOMPtr<nsIContent> docElement = getter_AddRefs(doc->GetRootContent());
+        nsIFrame* parent = frame;
+        nsCOMPtr<nsIContent> parentContent;
+        frame->GetParent(&parent);
+        while (parent) {
+          parent->GetContent(getter_AddRefs(parentContent));
+          if (parentContent) {
+            // If we've hit the document element, break here
+            if (parentContent.get() == docElement.get()) {
+              break;
+            }
+          }
+
+          // Add the parent's origin to our own to get to the
+          // right coordinate system
+          nsPoint parentOrigin;
+          parent->GetOrigin(parentOrigin);
+          origin += parentOrigin;
+
+          parent->GetParent(&parent);
+        }
+  
+        // For the origin, add in the border for the frame
+        const nsStyleSpacing* spacing;
+        nsStyleCoord coord;
+        frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        if (spacing) {
+          if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+            origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
+          }
+          if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+            origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
+          }
+        }
+
+        // And subtract out the border for the parent
+        if (parent) {
+          const nsStyleSpacing* parentSpacing;
+          parent->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)parentSpacing);
+          if (parentSpacing) {
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetLeftUnit()) {
+              origin.x -= parentSpacing->mBorder.GetLeft(coord).GetCoordValue();
+            }
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetTopUnit()) {
+              origin.y -= parentSpacing->mBorder.GetTop(coord).GetCoordValue();
+            }
+          }
+        }
+
+        // Get the Presentation Context from the Shell
+        nsCOMPtr<nsIPresContext> context;
+        presShell->GetPresContext(getter_AddRefs(context));
+       
+        if(context) {
+          // Get the scale from that Presentation Context
+          float scale;
+          context->GetTwipsToPixels(&scale);
+              
+          // Convert to pixels using that scale
+          aRect.x = NSTwipsToIntPixels(origin.x, scale);
+          aRect.y = NSTwipsToIntPixels(origin.y, scale);
+          aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
+          aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
+        }
+      }
+    }
+  }
+ 
+  return res;
+}  
+
+NS_IMETHODIMP
+nsBoxObject::GetX(PRInt32* aResult)
+{
+  nsRect rect;
+  GetOffsetRect(rect);
+  *aResult = rect.x;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBoxObject::GetY(PRInt32* aResult)
+{
+  nsRect rect;
+  GetOffsetRect(rect);
+  *aResult = rect.y;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetWidth(PRInt32* aResult)
+{
+  nsRect rect;
+  GetOffsetRect(rect);
+  *aResult = rect.width;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBoxObject::GetHeight(PRInt32* aResult)
+{
+  nsRect rect;
+  GetOffsetRect(rect);
+  *aResult = rect.height;
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

@@ -28,6 +28,7 @@
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
 class nsIFrame;
+struct nsRect;
 
 class nsBoxObject : public nsIBoxObject, public nsPIBoxObject
 {
@@ -43,6 +44,7 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
 
   virtual nsIFrame* GetFrame();
+  nsresult GetOffsetRect(nsRect& aRect);
 
 // MEMBER VARIABLES
 protected: 
