@@ -42,6 +42,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
 
+PRBool nsAppShell::DieAppShellDie = PR_FALSE;
 
 // For debugging.
 static char *event_names[] = {
@@ -197,7 +198,7 @@ nsresult nsAppShell::Run()
     max_fd = queue_fd + 1;
   }
   // process events.
-  while (1) {
+  while (DieAppShellDie == PR_FALSE) {
     XEvent          event;
     struct timeval  cur_time;
     struct timeval *cur_time_ptr;
@@ -281,6 +282,7 @@ nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 
 NS_METHOD nsAppShell::Exit()
 {
+  DieAppShellDie = PR_TRUE;
   return NS_OK;
 }
 
