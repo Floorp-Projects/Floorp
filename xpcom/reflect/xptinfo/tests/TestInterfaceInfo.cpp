@@ -36,9 +36,9 @@
 
 int main (int argc, char **argv) {
     int i;
-    nsIID *iid1, *iid2, *iid3, *iid4, *iid5, *iid6;
-    char *name1, *name2, *name3, *name4, *name5, *name6;
-    nsIInterfaceInfo *info1, *info2, *info3, *info4, *info5, *info6;;
+    nsIID *iid1, *iid2, *iid3;
+    char *name1, *name2, *name3;
+    nsIInterfaceInfo *info2, *info3, *info4, *info5;
 
     nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
 
@@ -88,13 +88,12 @@ int main (int argc, char **argv) {
     const nsXPTMethodInfo *mi;
     for (i = 0; i < methodcount; i++) {
         info5->GetMethodInfo(i, &mi);
-        char *methodname;
         fprintf(stderr, "method %d, name %s\n", i, mi->GetName());
     }
 
     // 7 is GetServiceWithListener, which has juicy params.
     info5->GetMethodInfo(7, &mi);
-    uint8 paramcount = mi->GetParamCount();
+//    uint8 paramcount = mi->GetParamCount();
 
     nsXPTParamInfo param2 = mi->GetParam(2);
     // should be IID for nsIShutdownListener
