@@ -75,7 +75,7 @@ interface nsILDAPConnection : nsISupports
      * @exception NS_ERROR_FAILURE              
      * @exception NS_ERROR_UNEXPECTED           internal error
      */
-    void init(in string aHost, in short aPort, in boolean aSSL,
+    void init(in string aHost, in long aPort, in boolean aSSL,
               in AUTF8String aBindName, 
               in nsILDAPMessageListener aMessageListener,
               in nsISupports aClosure);

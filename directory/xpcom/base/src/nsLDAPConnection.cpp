@@ -164,7 +164,7 @@ nsLDAPConnection::Release(void)
 
 
 NS_IMETHODIMP
-nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
+nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
                        const nsACString& aBindName, 
                        nsILDAPMessageListener *aMessageListener,
                        nsISupports *aClosure)
