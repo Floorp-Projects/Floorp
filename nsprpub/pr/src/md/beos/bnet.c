@@ -585,13 +585,18 @@ retry:
 
         if( fd->secret->nonblocking && ((err == EAGAIN) || (err == EINPROGRESS))) {
             PR_Lock(_connectLock);
-            connectList[connectCount].osfd = osfd;
-            memcpy(&connectList[connectCount].addr, addr, addrlen);
-            connectList[connectCount].addrlen = addrlen;
-            connectList[connectCount].timeout = timeout;
-            connectCount++;
-            PR_Unlock(_connectLock);
-            _PR_MD_MAP_CONNECT_ERROR(err);
+            if (connectCount < sizeof(connectList)/sizeof(connectList[0])) {
+                connectList[connectCount].osfd = osfd;
+                memcpy(&connectList[connectCount].addr, addr, addrlen);
+                connectList[connectCount].addrlen = addrlen;
+                connectList[connectCount].timeout = timeout;
+                connectCount++;
+                PR_Unlock(_connectLock);
+                _PR_MD_MAP_CONNECT_ERROR(err);
+            } else {
+                PR_Unlock(_connectLock);
+                PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+            }
             return rv;
         }
 #else /* BONE_VERSION */
