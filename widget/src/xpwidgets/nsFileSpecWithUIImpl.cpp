@@ -34,35 +34,9 @@
 #undef NS_FILE_FAILURE
 #define NS_FILE_FAILURE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES,(0xFFFF))
 
-NS_IMPL_ADDREF(nsFileSpecWithUIImpl)
-NS_IMPL_RELEASE(nsFileSpecWithUIImpl)
+NS_IMPL_ISUPPORTS2(nsFileSpecWithUIImpl, nsIFileSpecWithUI, nsIFileSpec)
 
-NS_IMETHODIMP nsFileSpecWithUIImpl::QueryInterface(REFNSIID aIID, 
-                                                   void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  static NS_DEFINE_IID(kClassIID, nsCOMTypeInfo<nsIFileSpecWithUI>::GetIID());
-  if (aIID.Equals(kClassIID))
-    *aInstancePtr = (void*) this;
-  else if (aIID.Equals(nsCOMTypeInfo<nsIFileSpec>::GetIID()))
-    *aInstancePtr = (void*) this;
-  else if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    *aInstancePtr = (void*) ((nsISupports*)this);
-
-  if (*aInstancePtr)
-  {
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
 #include "nsIComponentManager.h"
 

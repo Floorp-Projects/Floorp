@@ -44,18 +44,6 @@
 
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
-static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
-
-
 NS_WIDGET nsresult 
 NS_CreateButton(nsISupports* aParent, 
 								nsIButton* aButton, 
@@ -65,10 +53,10 @@ NS_CreateButton(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget;
-	if (NS_OK == aButton->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aButton->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -90,10 +78,10 @@ NS_CreateCheckButton(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
  	nsIWidget* 	widget;
-	if (NS_OK == aCheckButton->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aCheckButton->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -117,10 +105,10 @@ NS_CreateRadioButton( nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
  	nsIWidget* 	widget;
-	if (NS_OK == aRadioButton->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aRadioButton->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -141,10 +129,10 @@ NS_CreateLabel( nsISupports* aParent,
 									const nsFont* aFont)
 {
 	nsIWidget* parent = nsnull;
-	if (NS_OK == aParent->QueryInterface(kIWidgetIID,(void**)&parent))
+	if (NS_OK == aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent))
 	{
 		nsIWidget* 	widget;
-		if (NS_OK == aLabel->QueryInterface(kIWidgetIID,(void**)&widget)) {
+		if (NS_OK == aLabel->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  	widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  	widget->Show(PR_TRUE);
       if (aFont != nsnull)
@@ -167,10 +155,10 @@ NS_CreateTextAreaWidget(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -179,7 +167,7 @@ NS_CreateTextAreaWidget(nsISupports* aParent,
 	}
   else
   {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
+    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
   }
 
 	if (aParent)
@@ -197,10 +185,10 @@ NS_CreateTextWidget(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -209,7 +197,7 @@ NS_CreateTextWidget(nsISupports* aParent,
 	}
   else
   {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
+    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
   }
 
 	if (aParent)
@@ -228,17 +216,17 @@ NS_CreateScrollBar(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     NS_IF_RELEASE(widget);
 	}
   else
   {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
+    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
   }
 
 	if (aParent)
@@ -256,10 +244,10 @@ NS_CreateListBox(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -268,7 +256,7 @@ NS_CreateListBox(nsISupports* aParent,
 	}
   else
   {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
+    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
   }
 
 	if (aParent)
@@ -287,10 +275,10 @@ NS_CreateComboBox(nsISupports* aParent,
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
     if (aFont != nsnull)
@@ -299,7 +287,7 @@ NS_CreateComboBox(nsISupports* aParent,
 	}
   else
   {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
+    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
   }
 
 	if (aParent)
@@ -313,7 +301,7 @@ NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
 {
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Show(aShow);
 	  NS_IF_RELEASE(widget);
 	}
@@ -326,7 +314,7 @@ NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
 {
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Move(aX,aY);
 	  NS_IF_RELEASE(widget);
 	}
@@ -338,7 +326,7 @@ NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 {
 	void* 			result = nsnull;
 	nsIWidget* 	widget;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget))
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget))
 	{
 		widget->Enable(aEnable);
 		NS_RELEASE(widget);
@@ -352,7 +340,7 @@ NS_SetFocusToWidget(nsISupports* aWidget)
 {
 
   nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->SetFocus();
 	  NS_IF_RELEASE(widget);
 	}
@@ -365,7 +353,7 @@ NS_GetWidgetNativeData(nsISupports* aWidget, void** aNativeData)
 {
 	void* 			result = nsnull;
 	nsIWidget* 	widget;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget))
+	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget))
 	{
 		result = widget->GetNativeData(NS_NATIVE_WIDGET);
 		NS_RELEASE(widget);

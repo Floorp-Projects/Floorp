@@ -60,38 +60,35 @@
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCPopUp,         NS_POPUP_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
-static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCContextMenu,   NS_CONTEXTMENU_CID);
-static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
+static NS_DEFINE_CID(kCWindow,        NS_WINDOW_CID);
+static NS_DEFINE_CID(kCPopUp,         NS_POPUP_CID);
+static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
+static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
+static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
+static NS_DEFINE_CID(kCCombobox,      NS_COMBOBOX_CID);
+static NS_DEFINE_CID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kCListbox,       NS_LISTBOX_CID);
+static NS_DEFINE_CID(kCRadioButton,   NS_RADIOBUTTON_CID);
+static NS_DEFINE_CID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
+static NS_DEFINE_CID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
+static NS_DEFINE_CID(kCTextArea,      NS_TEXTAREA_CID);
+static NS_DEFINE_CID(kCTextField,     NS_TEXTFIELD_CID);
+static NS_DEFINE_CID(kCAppShell,      NS_APPSHELL_CID);
+static NS_DEFINE_CID(kCToolkit,       NS_TOOLKIT_CID);
+static NS_DEFINE_CID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kCLabel,         NS_LABEL_CID);
+static NS_DEFINE_CID(kCMenuBar,       NS_MENUBAR_CID);
+static NS_DEFINE_CID(kCMenu,          NS_MENU_CID);
+static NS_DEFINE_CID(kCMenuItem,      NS_MENUITEM_CID);
+static NS_DEFINE_CID(kCContextMenu,   NS_CONTEXTMENU_CID);
+static NS_DEFINE_CID(kCPopUpMenu,     NS_POPUPMENU_CID);
 
 // Drag and Drop/Clipboard
-static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
+static NS_DEFINE_CID(kCDataFlavor,    NS_DATAFLAVOR_CID);
+static NS_DEFINE_CID(kCClipboard,     NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCTransferable,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_CID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
 
 // Sound services (just Beep for now)
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
@@ -139,30 +136,7 @@ nsWidgetFactory::~nsWidgetFactory()
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
-                                         void **aInstancePtr)   
-{   
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kIFactoryIID)) {
-    *aInstancePtr = (void*)(nsWidgetFactory*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsWidgetFactory*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}   
-
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
+NS_IMPL_ISUPPORTS1(nsWidgetFactory, nsIFactory)
 
 //-------------------------------------------------------------------------
 //
@@ -319,5 +293,5 @@ NSGetFactory(nsISupports* serviceMgr,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+    return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
 }

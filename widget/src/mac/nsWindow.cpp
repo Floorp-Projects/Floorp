@@ -160,20 +160,10 @@ nsWindow::~nsWindow()
 
 NS_IMPL_ADDREF(nsWindow);
 NS_IMPL_RELEASE(nsWindow);
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	if (NULL == aInstancePtr) {
-	    return NS_ERROR_NULL_POINTER;
-	}
 
-	if (aIID.Equals(nsIKBStateControl::GetIID())) {
-	    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
-	    AddRef();
-	    return NS_OK;
-	}
-
-	return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIKBStateControl)
+NS_INTERFACE_MAP_END_INHERITING(nsBaseWidget)
 
 //-------------------------------------------------------------------------
 //

@@ -145,25 +145,9 @@ nsTextAreaWidget::~nsTextAreaWidget()
 		WEDispose(mTE_Data);
 }
 
-/**-------------------------------------------------------------------------------
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @update  dc 08/31/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- */ 
-nsresult nsTextAreaWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
-
-	if (aIID.Equals(kITextAreaWidgetIID)) {
-		AddRef();
-		*aInstancePtr = (void**)(nsITextAreaWidget*)this;
-		return NS_OK;
-	}
-
-	return nsWindow::QueryInterface(aIID, aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsTextAreaWidget)
+  NS_INTERFACE_MAP_ENTRY(nsITextAreaWidget)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 //-------------------------------------------------------------------------
 //

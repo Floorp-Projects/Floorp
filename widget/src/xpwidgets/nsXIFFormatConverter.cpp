@@ -53,7 +53,7 @@
 #include "nsPrimitiveHelpers.h"
 
 
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);  // don't panic. NS_PARSER_IID just has the wrong name.
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);  // don't panic. NS_PARSER_IID just has the wrong name.
 
 NS_IMPL_ADDREF(nsXIFFormatConverter)
 NS_IMPL_RELEASE(nsXIFFormatConverter)

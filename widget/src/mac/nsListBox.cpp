@@ -135,28 +135,10 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-	static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-	static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-
-	if (aIID.Equals(kInsListBoxIID)) {
-		*aInstancePtr = (void*) ((nsIListBox*)this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-	else if (aIID.Equals(kInsListWidgetIID)) {
-		*aInstancePtr = (void*) ((nsIListWidget*)this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-
-	return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsListBox)
+  NS_INTERFACE_MAP_ENTRY(nsIListBox)
+  NS_INTERFACE_MAP_ENTRY(nsIListWidget)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 //-------------------------------------------------------------------------
 //

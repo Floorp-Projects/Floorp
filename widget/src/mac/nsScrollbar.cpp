@@ -87,28 +87,9 @@ nsScrollbar::~nsScrollbar()
 {
 }
 
-/**-------------------------------------------------------------------------------
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @update  dc 08/31/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- */ 
-nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	if (nsnull == aInstancePtr) {
-			return NS_ERROR_NULL_POINTER;
-	}
-
-	static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
-	if (aIID.Equals(kIScrollbarIID)) {
-			*aInstancePtr = (void*) ((nsIScrollbar*)this);
-			AddRef();
-			return NS_OK;
-	}
-
-	return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsScrollbar)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbar)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 /**-------------------------------------------------------------------------------
  * ScrollActionProc Callback for TrackControl

@@ -65,12 +65,6 @@ extern PRInt16 gCurrentMenuDepth;
 #include "nsMenu.h"				// need to get APPLE_MENU_HACK macro
 // #endif
 
-// IIDs
-static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
@@ -84,34 +78,7 @@ void InstallDefProc(
   Ptr dpAddr);
   
 //-------------------------------------------------------------------------
-nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuBarIID)) {                                         
-    *aInstancePtr = (void*) ((nsIMenuBar*) this);                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)(nsIMenuBar*) this);                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
-}
-
-NS_IMPL_ADDREF(nsMenuBar)
-NS_IMPL_RELEASE(nsMenuBar)
+NS_IMPL_ISUPPORTS2(nsMenuBar, nsIMenuBar, nsIMenuListener)
 
 //-------------------------------------------------------------------------
 //
@@ -128,7 +95,7 @@ nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   for (int i = mMenuVoidArray.Count(); i > 0; --i)
   {
     nsIMenuListener * menuListener = nsnull;
-    ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
     if(menuListener){
       eventStatus = menuListener->MenuItemSelected(aMenuEvent);
       NS_RELEASE(menuListener);
@@ -146,10 +113,10 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   nsIMenuListener * menuListener = nsnull;
-  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
   //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
   if (gPreviousMenuStack[gPreviousMenuStack.Count() - 1])
-    ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
     
   if (menuListener) {
     //TODO: MenuSelected is the right thing to call...
@@ -162,7 +129,7 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
     // If it's the help menu, gPreviousMenuStack won't be accurate so we need to get the listener a different way 
     // We'll do it the old fashioned way of looping through and finding it
     for (int i = mMenuVoidArray.Count(); i > 0; --i) {
-      ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+      ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
 	  if (menuListener) {
         //TODO: MenuSelected is the right thing to call...
 	    //eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -259,14 +226,14 @@ nsEventStatus nsMenuBar::MenuConstruct(
 		}
     
     nsresult rv;
-    //nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    //nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
     //if (NS_OK == rv) {
       //if (nsnull != pnsMenuBar) {
         pnsMenuBar->Create(aParentWindow);
       
         // set pnsMenuBar as a nsMenuListener on aParentWindow
         nsCOMPtr<nsIMenuListener> menuListener;
-        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+        pnsMenuBar->QueryInterface(NS_GET_IID(nsIMenuListener), getter_AddRefs(menuListener));
         aParentWindow->AddMenuListener(menuListener);
          
         //nsCOMPtr<nsIDOMNode> menuNode;
@@ -289,11 +256,11 @@ nsEventStatus nsMenuBar::MenuConstruct(
               
                 // Create nsMenu
                 nsIMenu * pnsMenu = nsnull;
-                rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+                rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
                 if (NS_OK == rv) {
                   // Call Create
                   nsISupports * supports = nsnull;
-                  pnsMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
+                  pnsMenuBar->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
                   pnsMenu->Create(supports, menuName);
                   NS_RELEASE(supports);
 
@@ -444,7 +411,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
   // XXX add to internal data structure
   nsISupports * supports = nsnull;
-  aMenu->QueryInterface(kISupportsIID, (void**)&supports);
+  aMenu->QueryInterface(NS_GET_IID(nsISupports), (void**)&supports);
   if(supports){
     mMenuVoidArray.AppendElement( supports );
   }
@@ -494,7 +461,7 @@ NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
   } 
   
   nsIMenu * menu = nsnull;
-  supports->QueryInterface(kISupportsIID, (void**)&menu);
+  supports->QueryInterface(NS_GET_IID(nsISupports), (void**)&menu);
   aMenu = menu;
 
   return NS_OK;

@@ -34,41 +34,8 @@
 
 #include "nsStringUtil.h"
 
-static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-
 //-------------------------------------------------------------------------
-nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuItemIID)) {                                         
-    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
-}
-
-NS_IMPL_ADDREF(nsMenuItem)
-NS_IMPL_RELEASE(nsMenuItem)
+NS_IMPL_ISUPPORTS2(nsMenuItem, nsIMenuItem, nsIMenuListener)
 
 //-------------------------------------------------------------------------
 //
@@ -168,7 +135,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   // Bump the ref count on the parent, since it gets released unconditionally..
   NS_ADDREF(parent);
   while (1) {
-    if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
+    if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenu),(void**)&menu)) {
       NS_RELEASE(parent);
       if (NS_OK != menu->GetParent(parent)) {
         NS_RELEASE(menu);
@@ -176,7 +143,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       }
       NS_RELEASE(menu);
 
-    } else if (NS_OK == parent->QueryInterface(kIPopUpMenuIID,(void**)&popup)) {
+    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIPopUpMenu),(void**)&popup)) {
       if (NS_OK != popup->GetParent(widget)) {
         widget =  nsnull;
       } 
@@ -184,7 +151,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       NS_RELEASE(popup);
       return widget;
 
-    } else if (NS_OK == parent->QueryInterface(kIMenuBarIID,(void**)&menuBar)) {
+    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenuBar),(void**)&menuBar)) {
       if (NS_OK != menuBar->GetParent(widget)) {
         widget =  nsnull;
       } 
