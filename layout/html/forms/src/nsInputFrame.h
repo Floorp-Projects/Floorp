@@ -91,7 +91,7 @@ public:
   // nsLeafFrame overrides
 
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
-  NS_METHOD SizeTo(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
   /** 
     * Respond to a gui event
@@ -172,6 +172,8 @@ public:
   static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
                              PRInt32 aNumChars, nsSize& aSize);
 
+  static PRInt32 gScrollBarWidth;
+
 protected:
 
   virtual ~nsInputFrame();
@@ -203,16 +205,16 @@ protected:
    /**
     * Get the width and height of this control based on CSS 
     * @param aPresContext the presentation context
-    * @param aMaxSize the maximum size that this frame can have
     * @param aSize the size that this frame wants, set by this method. values of -1 
     * for aSize.width or aSize.height indicate unset values.
     */
-  void GetStyleSize(nsIPresContext& aContext, const nsSize& aMaxSize, nsSize& aSize);
+  void GetStyleSize(nsIPresContext& aContext, nsSize& aSize);
 
   nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
                       nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
   nsMouseState mLastMouseState;
+  nsSize mWidgetSize;
 };
 
 #endif
