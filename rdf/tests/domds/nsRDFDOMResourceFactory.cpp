@@ -40,7 +40,8 @@ public:
 
 private:
       // weak reference to DOM node
-    nsWeakPtr mNode;
+      //nsWeakPtr mNode;
+      nsCOMPtr<nsIDOMNode> mNode;
 };
 
 nsRDFDOMViewerElement::nsRDFDOMViewerElement()
@@ -57,7 +58,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerEl
 NS_IMETHODIMP
 nsRDFDOMViewerElement::SetNode(nsIDOMNode* node)
 {
-  mNode = getter_AddRefs(NS_GetWeakReference(node));
+  mNode = node;
   return NS_OK;
 }
 
@@ -65,9 +66,15 @@ NS_IMETHODIMP
 nsRDFDOMViewerElement::GetNode(nsIDOMNode** node)
 {
   if (!node) return NS_ERROR_NULL_POINTER;
-  
-  nsresult rv =
-      mNode->QueryReferent(NS_GET_IID(nsIDOMNode), (void **)node);
+
+  nsresult rv = NS_OK;
+  if (mNode) {
+      *node = mNode;
+      NS_ADDREF(*node);
+  }
+  else {
+      *node = nsnull;
+  }
   return rv;
 }
   
