@@ -54,6 +54,7 @@
 #include "nspr.h"
 #include "plstr.h"
 #include <ctype.h>
+#include "nsCRT.h"
 
 /******************************************************************************************
   MODULE NOTES:
@@ -677,8 +678,8 @@ PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRB
           // can't do case conversion on characters out of our range
           if (aIgnoreCase && c1<128 && c2<128) {
 
-              c1 = tolower(char(c1));
-              c2 = tolower(char(c2));
+              c1 = nsCRT::ToLower(char(c1));
+              c2 = nsCRT::ToLower(char(c2));
             
               if (c1 == c2) continue;
           }
