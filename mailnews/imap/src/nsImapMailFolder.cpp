@@ -603,6 +603,17 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	return rv;
 }
     
+NS_IMETHODIMP nsImapMailFolder::List()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+	if (NS_FAILED(rv)) 
+		return rv;
+	rv = imapService->ListFolder(m_eventQueue, this, nsnull, nsnull);
+
+	return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
 {
     nsCOMPtr<nsISupportsArray> folders;
@@ -1138,7 +1149,13 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &isTrashFolder);
     if (NS_SUCCEEDED(rv) && isTrashFolder)
     {
-        return StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
+        rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
+		if (NS_SUCCEEDED(rv))
+		{
+            if (mDatabase) 
+                mDatabase->DeleteMessages(&srcKeyArray,NULL);
+			return rv;
+		}
     }
     else
     {
@@ -1965,7 +1982,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
                 nsCString msgIds;
                 
                 AllocateUidStringFromKeyArray(keysToFlag, msgIds);
-                imapService->AddMessageFlags(m_eventQueue, this, nsnull,
+                imapService->AddMessageFlags(m_eventQueue, this, this,
                                              nsnull, msgIds, flags, PR_TRUE);
             }
             else
@@ -1973,7 +1990,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
                 nsCString msgIds;
                 
                 AllocateUidStringFromKeyArray(keysToFlag, msgIds);
-                imapService->SubtractMessageFlags(m_eventQueue, this, nsnull,
+                imapService->SubtractMessageFlags(m_eventQueue, this, this,
                                                   nsnull, msgIds, flags,
                                                   PR_TRUE);
             }

@@ -201,6 +201,26 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, MimePartsOnDemand,
                        "mime_parts_on_demand");
 
 NS_IMETHODIMP
+nsImapIncomingServer::GetIsAOLServer(PRBool *aBool)
+{
+	if (!aBool)
+		return NS_ERROR_NULL_POINTER;
+	*aBool = ((m_capability & kAOLImapCapability) != 0);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetIsAOLServer(PRBool aBool)
+{
+	if (aBool)
+		m_capability |= kAOLImapCapability;
+	else
+		m_capability &= ~kAOLImapCapability;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQueue,
                                                   nsIImapUrl* aImapUrl,
                                                   nsISupports* aConsumer)
@@ -537,6 +557,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 {
 	nsresult rv;
     PRBool found = PR_FALSE;
+	PRBool haveParent = PR_FALSE;
     nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
     nsCOMPtr<nsIMsgFolder> aFolder;
  
@@ -554,16 +575,20 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	GetHostName(getter_Copies(hostName));
 	uri.Append(hostName);
 
-#if 0    
     PRInt32 leafPos = folderName.RFindChar('/');
+
+    nsCAutoString parentName(folderName);
+	nsCAutoString parentUri(uri);
+
     if (leafPos > 0)
-    {
-        uri.Append('/');
-        nsAutoString parentName(folderName);
+	{
+		// If there is a hierarchy, there is a parent.
+		// Don't strip off slash if it's the first character
         parentName.Truncate(leafPos);
-        uri.Append(parentName);
-    }
-#endif 
+		haveParent = PR_TRUE;
+		parentUri.Append('/');
+		parentUri.Append(parentName);
+	}
 
 	nsCOMPtr<nsIFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -585,12 +610,26 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
 	uri.Append('/');
 	uri.Append(folderPath);
+
 	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
 
 	if (child)
 		found = PR_TRUE;
     if (!found)
     {
+		// trying to find/discover the parent
+		if (haveParent)
+		{											
+			nsCOMPtr <nsIMsgFolder> parent;
+			a_nsIFolder->GetChildWithURI(parentUri, PR_TRUE, getter_AddRefs(parent));
+			if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
+			{
+				PossibleImapMailbox(parentName, hierarchyDelimiter,kNoselect |		// be defensive
+											((boxFlags &	// only inherit certain flags from the child
+											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox))));
+			}
+		}
+
         hostFolder->CreateClientSubfolderInfo(folderPath);
 		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
     }
@@ -748,14 +787,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 				// Only if there are subfolders and at least one of them is verified do we want
 				// to refresh that folder's flags, because it won't be going away.
 				currentImapFolder->SetExplicitlyVerify(PR_FALSE);
-#if 0
-				char *url = CreateIMAPListFolderURL(hostName, currentFolder->GetOnlineName(), currentFolder->GetOnlineHierarchySeparator());
-				if (url)
-				{
-					MSG_UrlQueue::AddUrlToPane(url, NULL, currentContext->imapURLPane);
-					XP_FREE(url);
-				}
-#endif
+				currentImapFolder->List();
 			}
 			else
 			{

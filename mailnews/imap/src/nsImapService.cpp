@@ -1585,6 +1585,49 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapService::ListFolder(nsIEventQueue* aClientEventQueue,
+                                nsIMsgFolder* aImapMailFolder,
+                                nsIUrlListener* aUrlListener,
+                                nsIURI** aURL)
+{
+    NS_ASSERTION(aClientEventQueue && aImapMailFolder ,
+                 "Oops ... [RenameLeaf] null pointers");
+    if (!aClientEventQueue || !aImapMailFolder)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
+    nsresult rv;
+
+	PRUnichar hierarchySeparator = '/';
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            urlSpec.Append("/listfolder>");
+            urlSpec.Append(hierarchySeparator);
+            if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
+			{
+                urlSpec.Append((const char *) folderName);
+				rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+				if (NS_SUCCEEDED(rv))
+					rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+														 nsnull,
+														 aURL);
+			}
+        } // if (NS_SUCCEEDED(rv))
+    } // if (NS_SUCCEEDED(rv) && imapUrl)
+    return rv;
+}
+
+
 #ifdef HAVE_PORT
 
 /* fetching the headers of RFC822 messages */

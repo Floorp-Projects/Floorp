@@ -178,6 +178,11 @@ public:
                           const char* leafName,
                           nsIUrlListener* urlListener,
                           nsIURI** url);
+
+	NS_IMETHOD ListFolder(nsIEventQueue* aClientEventQueue,
+                                nsIMsgFolder* aImapMailFolder,
+                                nsIUrlListener* aUrlListener,
+                                nsIURI** aURL);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

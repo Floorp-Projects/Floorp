@@ -110,7 +110,8 @@ typedef enum {
 	kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64
 											login */
 	kUidplusCapability = 0x00002000,	/* RFC 2359 UIDPLUS extension */
-	kLiteralPlusCapability = 0x00004000 /* RFC 2088 LITERAL+ extension */
+	kLiteralPlusCapability = 0x00004000, /* RFC 2088 LITERAL+ extension */
+	kAOLImapCapability = 0x00008000 /* aol imap extensions */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 

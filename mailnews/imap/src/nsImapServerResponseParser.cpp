@@ -1104,7 +1104,7 @@ void nsImapServerResponseParser::msg_fetch()
 				}
 			}
 		}
-		else if (!PL_strcasecmp(fNextToken, "RFC822.SIZE"))
+		else if (!PL_strcasecmp(fNextToken, "RFC822.SIZE") || !PL_strcasecmp(fNextToken, "XAOL-SIZE"))
 		{
 			fNextToken = GetNextToken();
 			if (ContinueParse())
@@ -1707,6 +1707,8 @@ void nsImapServerResponseParser::capability_data()
 				fCapabilityFlag |= kUidplusCapability;
 			else if (! PL_strcasecmp(fNextToken, "LITERAL+"))
 				fCapabilityFlag |= kLiteralPlusCapability;
+			else if (! PL_strcasecmp(fNextToken, "XAOL-OPTION"))
+				fCapabilityFlag |= kAOLImapCapability;
 		}
 	} while (fNextToken && 
 			 !at_end_of_line() &&
