@@ -285,6 +285,12 @@ netwerk/base/Makefile
 netwerk/base/public/Makefile
 netwerk/base/src/Makefile
 netwerk/build/Makefile
+netwerk/cache/build/Makefile.in
+netwerk/cache/filecache/Makefile.in
+netwerk/cache/Makefile.in
+netwerk/cache/memcache/Makefile.in
+netwerk/cache/mgr/Makefile.in
+netwerk/cache/public/Makefile.in
 netwerk/dns/Makefile
 netwerk/dns/public/Makefile
 netwerk/dns/src/Makefile
