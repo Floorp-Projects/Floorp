@@ -143,7 +143,7 @@ class nsXXXBufferHandle
             mStorageStart(aStorageStart),
             mStorageEnd(aStorageEnd)
         {
-          this->mFlags |= kIsStorageDefinedSeparately;
+          this->mFlags |= this->kIsStorageDefinedSeparately;
         }
 
       void          StorageStart( CharT* aNewStorageStart )       { mStorageStart = aNewStorageStart; }
