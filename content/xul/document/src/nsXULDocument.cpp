@@ -1885,10 +1885,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     nsresult rv;
 
     // 1. Remove any children from the document.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-
-    PRUint32 count =
-        xulcontent ? xulcontent->PeekChildCount() : aElement->GetChildCount();
+    PRUint32 count = aElement->GetChildCount();
 
     while (count-- > 0) {
         rv = RemoveSubtreeFromDocument(aElement->GetChildAt(count));
