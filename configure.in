@@ -37,10 +37,11 @@ AC_PREREQ(2.12)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-AC_PREFIX_DEFAULT(`pwd`/dist)
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
+MOZILLA_VERSION='0.9.6+'
+AC_SUBST(MOZILLA_VERSION)
 
 dnl ========================================================
 dnl =
