@@ -365,7 +365,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 
   if (!aInWord && !isWhitespace &&
       (NS_STYLE_TEXT_TRANSFORM_CAPITALIZE == mTextTransform)) {
-    PRInt32 n = aWordLenResult;
+    PRInt32 n = wordLen;
     PRUnichar* bp = mBuffer;
     for (; --n >= 0; bp++) {
       PRUnichar ch = *bp;
