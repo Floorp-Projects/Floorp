@@ -909,7 +909,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
       mWnd = ::CreateDialogIndirectParam(nsToolkit::mDllInstance,
                                          &templ.t,
                                          parent,
-                                         DummyDialogProc,
+                                         (DLGPROC)DummyDialogProc,
                                          NULL);
     } else {
       mWnd = ::CreateWindowEx(extendedStyle,
