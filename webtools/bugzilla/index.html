@@ -76,11 +76,23 @@ But it all boils down to a choice of:
 <a href="createaccount.cgi">Open a new Bugzilla account</a><br>
 <a href="relogin.cgi">Forget the currently stored login</a><br>
 <a href="userprefs.cgi">Change password or user preferences</a><br>
-<FORM METHOD=GET ACTION="show_bug.cgi">
-<INPUT TYPE=SUBMIT VALUE="Find"> bug # <INPUT NAME=id SIZE=6></FORM>
-<SCRIPT LANGUAGE="JavaScript">
-document.forms[0].id.focus()
-</SCRIPT>
+<p>
+<script language="JavaScript" src="localconfig.js"></script>
+<script language="JavaScript" src="quicksearch.js"></script>
+
+<form name="f" action="show_bug.cgi" method="get"
+      onsubmit="QuickSearch(); return false;"> 
+  Enter a bug # or some search terms:<br>
+  <input type="text" name="id">
+  <input type="submit" value="Show">
+  <a href="quicksearch.html">[Help]</a>
+</form>
+
+<script>
+<!--
+document.forms['f'].id.focus();
+//-->
+</script>
 
 </BODY>
 </HTML>
