@@ -38,6 +38,7 @@ CPPSRCS=                     \
 	nsMsgIdentity.cpp		 \
 	nsJSMsgAppCore.cpp		\
 	nsMsgAppCore.cpp		\
+	nsCopyMessageStreamListener.cpp \
 	$(NULL)
 
 
@@ -54,6 +55,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgIdentity.obj		\
 	.\$(OBJDIR)\nsMsgAppCore.obj		\
 	.\$(OBJDIR)\nsJSMsgAppCore.obj		\
+	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
 	$(NULL)
 
 

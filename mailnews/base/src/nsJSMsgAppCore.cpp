@@ -288,6 +288,7 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   JSBool rBool = JS_FALSE;
 	nsIDOMNodeList *nodeList;
 	nsIDOMXULTreeElement *tree;
+	nsIDOMXULElement *srcFolder;
 	const nsString typeName;
 
   *rval = JSVAL_NULL;
@@ -297,21 +298,27 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 3) {
 		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&tree,
-																			nsIDOMXULTreeElement::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[0]);
+									nsIDOMXULTreeElement::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&srcFolder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
 
 		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&nodeList,
-																			nsIDOMNodeList::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[1]);
+									nsIDOMNodeList::GetIID(),
+									typeName,
+									cx,
+									argv[2]);
 
 		
-    if (!rBool || NS_OK != nativeThis->DeleteMessage(tree, nodeList)) {
+    if (!rBool || NS_OK != nativeThis->DeleteMessage(tree, srcFolder, nodeList)) {
       return JS_FALSE;
     }
 
@@ -320,7 +327,7 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function DeleteMessage requires 1 parameters");
+    JS_ReportError(cx, "Function DeleteMessage requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -391,9 +398,6 @@ MsgAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-      nsIDOMNodeList *nodeList;
-      nsIDOMXULTreeElement *tree;
-  nsISupports *nativeRet;
       const nsString typeName;
 
   *rval = JSVAL_NULL;
@@ -410,6 +414,80 @@ MsgAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   return JS_TRUE;
 }
+
+static nsresult CopyMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
+							 PRBool isMove)
+{
+
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIDOMNodeList *messages;
+	nsIDOMXULElement *srcFolder, *dstFolder;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return NS_OK;
+  }
+
+  if (argc >= 3) {
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&srcFolder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&dstFolder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&messages,
+									nsIDOMNodeList::GetIID(),
+									typeName,
+									cx,
+									argv[2]);
+
+		
+    if (!rBool || NS_OK != nativeThis->CopyMessages(srcFolder, dstFolder, messages, PR_FALSE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+		NS_RELEASE(messages);
+		NS_RELEASE(srcFolder);
+		NS_RELEASE(dstFolder);
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function CopyMessages requires 3 parameters");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreCopyMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+	if(NS_SUCCEEDED(CopyMessages(cx, obj, argc, argv, rval, PR_FALSE)))
+		return JS_TRUE;
+	else
+		return JS_FALSE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreMoveMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+	if(NS_SUCCEEDED(CopyMessages(cx, obj, argc, argv, rval, PR_TRUE)))
+		return JS_TRUE;
+	else
+		return JS_FALSE;
+}
+
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -446,9 +524,11 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"Open3PaneWindow",          MsgAppCoreOpen3PaneWindow,     0},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
-  {"DeleteMessage",          MsgAppCoreDeleteMessage,     2},
+  {"DeleteMessage",          MsgAppCoreDeleteMessage,     3},
   {"GetRDFResourceForMessage",    MsgAppCoreGetRDFResourceForMessage,     2},
   {"exit",				MsgAppCoreExit, 0},
+  {"CopyMessages",		MsgAppCoreCopyMessages, 3},
+  {"MoveMessages",		MsgAppCoreMoveMessages, 3},
   {0}
 };
 

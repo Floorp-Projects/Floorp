@@ -45,6 +45,7 @@
 #include "nsFileSpec.h"
 
 #include "nsIMessage.h"
+#include "nsIMsgFolder.h"
 #include "nsIPop3Service.h"
 
 #include "nsIDOMXULTreeElement.h"
@@ -55,6 +56,9 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
+
+#include "nsCopyMessageStreamListener.h"
+#include "nsICopyMessageListener.h"
 
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -94,7 +98,9 @@ public:
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
-  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList);
+  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
+  NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *folderElement, nsIDOMNodeList *nodeList,
+						  PRBool isMove);
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
@@ -543,12 +549,19 @@ nsMsgAppCore::OpenURL(const char * url)
 }
 
 NS_IMETHODIMP
-nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList)
+nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
 	nsIRDFCompositeDataSource *database;
-	nsISupportsArray *resourceArray;
+	nsISupportsArray *resourceArray, *folderArray;
+	nsIRDFResource *resource;
+	nsIMsgFolder *srcFolder;
 
+	if(NS_FAILED(rv = srcFolderElement->GetResource(&resource)))
+		return rv;
+
+	if(NS_FAILED(rv = resource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&srcFolder)))
+		return rv;
 
 	if(NS_FAILED(rv = tree->GetDatabase(&database)))
 		return rv;
@@ -556,6 +569,13 @@ nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList
 	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
 		return rv;
 
+	if(NS_FAILED(NS_NewISupportsArray(&folderArray)))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	folderArray->AppendElement(srcFolder);
+	
 	nsIRDFService* gRDFService = nsnull;
 	nsIRDFResource* deleteResource;
 	rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -565,13 +585,71 @@ nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList
 	{
 		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Delete", &deleteResource)))
 		{
-			rv = database->DoCommand(resourceArray, deleteResource, nsnull);
+			rv = database->DoCommand(folderArray, deleteResource, resourceArray);
 			NS_RELEASE(deleteResource);
 		}
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 	}
 
 	NS_RELEASE(database);
+	NS_RELEASE(resourceArray);
+	NS_RELEASE(resource);
+	NS_RELEASE(srcFolder);
+	NS_RELEASE(folderArray);
+	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement,
+						   nsIDOMNodeList *nodeList, PRBool isMove)
+{
+	nsresult rv;
+	nsIRDFResource *srcResource, *dstResource;
+	nsICopyMessageListener *dstFolder;
+	nsIMsgFolder *srcFolder;
+	nsISupportsArray *resourceArray;
+
+	if(NS_FAILED(rv = dstFolderElement->GetResource(&dstResource)))
+		return rv;
+
+	if(NS_FAILED(rv = dstResource->QueryInterface(nsICopyMessageListener::GetIID(), (void**)&dstFolder)))
+		return rv;
+
+	if(NS_FAILED(rv = srcFolderElement->GetResource(&srcResource)))
+		return rv;
+
+	if(NS_FAILED(rv = srcResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&srcFolder)))
+		return rv;
+
+	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
+		return rv;
+
+	//Call the mailbox service to copy first message.  In the future we should call CopyMessages.
+	//And even more in the future we need to distinguish between the different types of URI's, i.e.
+	//local, imap, and news, and call the appropriate copy function.
+
+	if(resourceArray->Count() > 0)
+	{
+		nsIRDFResource * firstMessage = (nsIRDFResource*)resourceArray->ElementAt(0);
+		char *uri;
+		firstMessage->GetValue(&uri);
+		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
+
+		nsIMailboxService * mailboxService = nsnull;
+		nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+		if (NS_SUCCEEDED(rv) && mailboxService)
+		{
+			nsIURL * url = nsnull;
+			mailboxService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
+
+			nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+		}
+	}
+
+	NS_RELEASE(srcResource);
+	NS_RELEASE(srcFolder);
+	NS_RELEASE(dstResource);
+	NS_RELEASE(dstFolder);
 	NS_RELEASE(resourceArray);
 	return rv;
 }
