@@ -828,6 +828,41 @@ sub MakeResourceAliases()
 
 
 #//--------------------------------------------------------------------------------------------------
+#// Make library aliases
+#//--------------------------------------------------------------------------------------------------
+
+sub MakeLibAliases()
+{
+	my($dist_dir) = _getDistDirectory();
+
+	local(*F);
+	my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
+	if (open(F, $filepath)) {
+		$appath = <F>;
+		close(F);
+
+		#// WasteLib
+		my($wastelibpath) = $appath;
+		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
+		print ("Making alias for $wastelibpath\n");
+		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
+
+		#// ProfilerLib
+		if ($main::DEBUG)
+		{
+			my($profilerlibpath) = $appath;
+			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
+			print ("Making alias for $profilerlibpath\n");
+			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
+		}
+	}
+	else {
+		print STDERR "Can't find $filepath\n";
+	}
+}
+
+
+#//--------------------------------------------------------------------------------------------------
 #// Build NGLayout
 #//--------------------------------------------------------------------------------------------------
 
@@ -841,25 +876,6 @@ sub BuildLayoutProjects()
 	my($dist_dir) = _getDistDirectory();
 	
 
-	
-	#//
-	#// Make WasteLib alias
-	#//
-	local(*F);
-	my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
-	if (open(F, $filepath)) {
-		$appath = <F>;
-		close(F);
-		#// beard: use pattern substitution to generate path to WasteLib. (thanks gordon!)
-		$appath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
-		my($wastelibpath) = $appath;
-		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
-	}
-	else {
-		print STDERR "Can't find $filepath\n";
-	}
-
-	
 	#//
 	#// Build Layout projects
 	#//
@@ -1025,12 +1041,13 @@ sub BuildProjects()
 	# activate CodeWarrior
 	ActivateApplication('CWIE');
 
+	MakeResourceAliases();
+	MakeLibAliases();
 	BuildStubs();
 	BuildCommonProjects();
 	BuildInternationalProjects();
 	BuildLayoutProjects();
 	BuildEditorProjects();
-	MakeResourceAliases();
 	BuildViewerProjects();
 	BuildXPAppProjects();
 	BuildMailNewsProjects();
