@@ -176,7 +176,12 @@ function GET(url, filename)
                                    "nsIFileOutputStream");
     outstream.init(file, 0x02 | 0x08, 0644, 0);
 
-    davSvc.getToOutputStream(new Resource(url), outstream,
+    var buffered = 
+      createInstance("@mozilla.org/network/buffered-output-stream;1",
+                     "nsIBufferedOutputStream");
+
+    buffered.init(outstream, 64 * 1024);
+    davSvc.getToOutputStream(new Resource(url), buffered,
                              new OperationListener());
     runEventPump();
 }

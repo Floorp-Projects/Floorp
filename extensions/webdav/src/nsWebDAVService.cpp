@@ -186,9 +186,13 @@ nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
     channel->SetRequestMethod(NS_LITERAL_CSTRING("PROPFIND"));
 
     // XXX I wonder how many compilers this will break...
-    const nsACString &depthValue = withDepth ? NS_LITERAL_CSTRING("1") :
-        NS_LITERAL_CSTRING("0");
-    channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"), depthValue, false);
+    if (withDepth) {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
+                                  NS_LITERAL_CSTRING("1"), false);
+    } else {
+        channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
+                                  NS_LITERAL_CSTRING("0"), false);
+    }
 
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
@@ -454,12 +458,12 @@ nsWebDAVService::GetToOutputStream(nsIWebDAVResource *resource,
                                    nsIOutputStream *stream,
                                    nsIWebDAVOperationListener *listener)
 {
+    nsCOMPtr<nsIRequestObserver> getObserver;
     nsresult rv;
 
-    nsCOMPtr<nsIRequestObserver> getObserver =
-        NS_WD_NewGetOperationRequestObserver(resource, listener);
-    if (!getObserver)
-        return NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_WD_NewGetOperationRequestObserver(resource, listener,
+                                              getter_AddRefs(getObserver));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> streamListener;
     rv = NS_NewSimpleStreamListener(getter_AddRefs(streamListener),
@@ -487,11 +491,10 @@ nsWebDAVService::Put(nsIWebDAVResourceWithData *resource,
     rv = uploadChannel->SetUploadStream(stream, contentType, -1);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> streamListener =
-        NS_WD_NewPutOperationStreamListener(resource, listener);
-
-    if (!streamListener)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIStreamListener> streamListener;
+    rv = NS_WD_NewPutOperationStreamListener(resource, listener,
+                                             getter_AddRefs(streamListener));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("PUT"));
 

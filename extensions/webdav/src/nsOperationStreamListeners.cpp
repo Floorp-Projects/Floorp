@@ -46,29 +46,33 @@
 class OperationStreamListener : public nsIStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-  enum OperationMode {
-    PUT, GET
-  };
-
-  OperationStreamListener(nsIWebDAVResource *resource,
-                          nsIWebDAVOperationListener *listener,
-                          OperationMode mode) :
-    mResource(resource), mListener(listener), mMode(mode) { }
-  virtual ~OperationStreamListener() { }
-
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    
+    enum OperationMode {
+        PUT, GET
+    };
+    
+    OperationStreamListener(nsIWebDAVResource *resource,
+                            nsIWebDAVOperationListener *listener,
+                            OperationMode mode) :
+        mResource(resource), mListener(listener), mMode(mode) { }
+    virtual ~OperationStreamListener() { }
+    
 protected:
-
-  nsCOMPtr<nsIWebDAVResource>          mResource;
-  nsCOMPtr<nsIWebDAVOperationListener> mListener;
-  OperationMode                        mMode;
-
+    nsCOMPtr<nsIWebDAVResource>          mResource;
+    nsCOMPtr<nsIWebDAVOperationListener> mListener;
+    OperationMode                        mMode;
 };
 
-NS_IMPL_ISUPPORTS1(OperationStreamListener, nsIStreamListener);
+NS_IMPL_ADDREF(OperationStreamListener)
+NS_IMPL_RELEASE(OperationStreamListener)
+NS_INTERFACE_MAP_BEGIN(OperationStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 OperationStreamListener::OnStartRequest(nsIRequest *aRequest,
@@ -82,15 +86,15 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
                                        nsISupports *aContext,
                                        nsresult aStatusCode)
 {
-  switch (mMode) {
-  case PUT:
-    mListener->OnPutResult(aStatusCode, mResource);
-    break;
-  case GET:
-    mListener->OnGetResult(aStatusCode, mResource);
-    break;
-  }
-  return NS_OK;
+    switch (mMode) {
+    case PUT:
+        mListener->OnPutResult(aStatusCode, mResource);
+        break;
+    case GET:
+        mListener->OnGetResult(aStatusCode, mResource);
+        break;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -99,25 +103,32 @@ OperationStreamListener::OnDataAvailable(nsIRequest *aRequest,
                                          nsIInputStream *aInputStream,
                                          PRUint32 offset, PRUint32 count)
 {
-  aRequest->Cancel(NS_BINDING_ABORTED);
-  return NS_BINDING_ABORTED;
+    aRequest->Cancel(NS_BINDING_ABORTED);
+    return NS_BINDING_ABORTED;
 }
 
-nsIStreamListener *
+nsresult
 NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
-                                    nsIWebDAVOperationListener *listener)
+                                    nsIWebDAVOperationListener *listener,
+                                    nsIStreamListener **streamListener)
 {
-  nsCOMPtr<nsIStreamListener> osl = 
-  return new OperationStreamListener(resource, listener,
-                                     OperationStreamListener::PUT);
+    nsCOMPtr<nsIRequestObserver> osl = 
+        new OperationStreamListener(resource, listener,
+                                    OperationStreamListener::PUT);
+    if (!osl)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return CallQueryInterface(osl, streamListener);
 }
 
-nsIRequestObserver *
+nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
-                                     nsIWebDAVOperationListener *listener)
+                                     nsIWebDAVOperationListener *listener,
+                                     nsIRequestObserver **observer)
 {
-  nsCOMPtr<nsIRequestObserver> osl = 
-    do_QueryInterface(new OperationStreamListener(resource, listener,
-                                                  OperationStreamListener::GET));
-  return osl.get();
+    nsCOMPtr<nsIRequestObserver> osl = 
+        new OperationStreamListener(resource, listener,
+                                    OperationStreamListener::GET);
+    if (!osl)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return CallQueryInterface(osl, observer);
 }

@@ -71,6 +71,12 @@ interface nsIWebDAVService : nsISupports
     void get(in nsIWebDAVResource resource,
              in nsIStreamListener listener);
 
+    /*
+     * GET the resource and stick it in the provided OutputStream.
+     * Your output stream must be buffered, or we will fail miserably.
+     * I would check that for you and provide a buffered wrapper automatically,
+     * but there is no way to check if one is needed!
+     */
     void getToOutputStream(in nsIWebDAVResource resource,
                            in nsIOutputStream stream,
                            in nsIWebDAVOperationListener listener);

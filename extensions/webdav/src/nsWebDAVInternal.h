@@ -58,13 +58,15 @@ NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsIWebDAVMetadataListener *listener,
                                 PRBool isPropname);
 
-nsIStreamListener *
+nsresult
 NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
-                                    nsIWebDAVOperationListener *listener);
+                                    nsIWebDAVOperationListener *listener,
+                                    nsIStreamListener **streamListener);
 
-nsIRequestObserver *
+nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
-                                     nsIWebDAVOperationListener *listener);
+                                     nsIWebDAVOperationListener *listener,
+                                     nsIRequestObserver **observer);
 
 nsresult
 NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
