@@ -44,13 +44,13 @@ public:
   NS_IMETHOD  EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const = 0;
 
   /*
-   * The next two methods (DeleteStyleRuleAt and InsertStyleRuleAt)
+   * The next two methods (DeleteStyleRuleAt and InsertStyleRulesAt)
    * should never be called unless you have first called WillDirty()
    * on the parent stylesheet.  After they are called, DidDirty()
    * needs to be called on the sheet
    */
   NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex) = 0;
-  NS_IMETHOD  InsertStyleRuleAt(PRUint32 aIndex, nsICSSRule* aRule) = 0;
+  NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules) = 0;
 
    
 };

@@ -156,13 +156,14 @@ public:
 
   NS_IMETHOD ParseRule(nsAReadableString& aRule,
                        nsIURI*            aBaseURL,
-                       nsIStyleRule**     aResult);
+                       nsISupportsArray** aResult);
 
   NS_IMETHOD GetCharset(/*out*/nsAWritableString &aCharsetDest) const;
     // sets the out-param to the current charset, as set by SetCharset
   NS_IMETHOD SetCharset(/*in*/ const nsAReadableString &aCharsetSrc);
     // NOTE: SetCharset expects the charset to be the preferred charset
     //       and it just records the string exactly as passed in (no alias resolution)
+  void AppendRule(nsICSSRule* aRule);
 
 protected:
   nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI);
@@ -182,20 +183,20 @@ protected:
 
   PRBool PushGroup(nsICSSGroupRule* aRule);
   void PopGroup(void);
-  void AppendRule(nsICSSRule* aRule);
 
-  PRBool ParseRuleSet(PRInt32& aErrorCode, nsIStyleRule** aResult = nsnull);
-  PRBool ParseAtRule(PRInt32& aErrorCode, nsIStyleRule** aResult = nsnull);
-  PRBool ParseCharsetRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
-  PRBool ParseImportRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
+  PRBool ParseRuleSet(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseAtRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseCharsetRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseImportRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool GatherMedia(PRInt32& aErrorCode, nsString& aMedia, nsISupportsArray* aMediaAtoms);
-  PRBool ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, nsIStyleRule** aResult);
-  PRBool ParseMediaRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
-  PRBool ParseNameSpaceRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
+  PRBool ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseMediaRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseNameSpaceRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPrefix, 
-                          const nsString& aURLSpec, nsIStyleRule** aResult);
-  PRBool ParseFontFaceRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
-  PRBool ParsePageRule(PRInt32& aErrorCode, nsIStyleRule** aResult);
+                          const nsString& aURLSpec, RuleAppendFunc aAppendFunc,
+                          void* aProcessData);
+  PRBool ParseFontFaceRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParsePageRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
 
   void ParseIDSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
                          PRInt32& aParsingStatus, PRInt32& aErrorCode);
@@ -329,6 +330,18 @@ protected:
   void    SetParsingCompoundProperty(PRBool aBool) {mParsingCompoundProperty = aBool;};
   PRBool  IsParsingCompoundProperty(void) {return mParsingCompoundProperty;};
 };
+
+PR_STATIC_CALLBACK(void) AppendRuleToArray(nsICSSRule* aRule, void* aArray)
+{
+  nsISupportsArray* arr = (nsISupportsArray*) aArray;
+  arr->AppendElement(aRule);
+}
+
+PR_STATIC_CALLBACK(void) AppendRuleToSheet(nsICSSRule* aRule, void* aParser)
+{
+  CSSParserImpl* parser = (CSSParserImpl*) aParser;
+  parser->AppendRule(aRule);
+}
 
 NS_HTML nsresult
 NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
@@ -566,11 +579,11 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
       continue; // legal here only
     }
     if (eCSSToken_AtKeyword == tk->mType) {
-      ParseAtRule(errorCode);
+      ParseAtRule(errorCode, AppendRuleToSheet, this);
       continue;
     }
     UngetToken();
-    if (ParseRuleSet(errorCode)) {
+    if (ParseRuleSet(errorCode, AppendRuleToSheet, this)) {
       mSection = eCSSSection_General;
     }
   }
@@ -684,42 +697,49 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
 NS_IMETHODIMP
 CSSParserImpl::ParseRule(nsAReadableString& aRule,
                          nsIURI*            aBaseURL,
-                         nsIStyleRule**     aResult)
+                         nsISupportsArray** aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nsnull;
-  
+
   nsString* str = new nsString(aRule);
   if (nsnull == str) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsCOMPtr<nsIUnicharInputStream> input = nsnull;
   nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input), str);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     delete str;
     return rv;
   }
 
   rv = InitScanner(input, aBaseURL);
-  if (! NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mSection = eCSSSection_Charset; // callers are responsible for rejecting invalid rules.  Maybe pass in the previous rule to this method?
+  rv = NS_NewISupportsArray(aResult);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  mSection = eCSSSection_Charset; // callers are responsible for rejecting invalid rules.
   PRInt32 errorCode = NS_OK;
 
   nsCSSToken* tk = &mToken;
   // Get first non-whitespace token
   if (!GetToken(errorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED(
+      NS_LITERAL_STRING("Whitespace-only string given to be parsed as rule."));
     OUTPUT_ERROR();
   } else if (eCSSToken_AtKeyword == tk->mType) {
-    ParseAtRule(errorCode, aResult);    
+    ParseAtRule(errorCode, AppendRuleToArray, *aResult);    
   }
   else {
     UngetToken();
-    ParseRuleSet(errorCode, aResult);
+    ParseRuleSet(errorCode, AppendRuleToArray, *aResult);
   }
+  OUTPUT_ERROR();
   ReleaseScanner();
   return NS_OK;
 }
@@ -837,43 +857,44 @@ PRBool CSSParserImpl::SkipAtRule(PRInt32& aErrorCode)
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc,
+                                  void* aData)
 {
   if ((mSection <= eCSSSection_Charset) && 
       (mToken.mIdent.EqualsIgnoreCase("charset"))) {
-    if (ParseCharsetRule(aErrorCode, aResult)) {
+    if (ParseCharsetRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_Import;  // only one charset allowed
       return PR_TRUE;
     }
   }
   if ((mSection <= eCSSSection_Import) && 
       mToken.mIdent.EqualsIgnoreCase("import")) {
-    if (ParseImportRule(aErrorCode, aResult)) {
+    if (ParseImportRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_Import;
       return PR_TRUE;
     }
   }
   if ((mSection <= eCSSSection_NameSpace) && 
       mToken.mIdent.EqualsIgnoreCase("namespace")) {
-    if (ParseNameSpaceRule(aErrorCode, aResult)) {
+    if (ParseNameSpaceRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_NameSpace;
       return PR_TRUE;
     }
   }
   if (mToken.mIdent.EqualsIgnoreCase("media")) {
-    if (ParseMediaRule(aErrorCode, aResult)) {
+    if (ParseMediaRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
     }
   }
   if (mToken.mIdent.EqualsIgnoreCase("font-face")) {
-    if (ParseFontFaceRule(aErrorCode, aResult)) {
+    if (ParseFontFaceRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
     }
   }
   if (mToken.mIdent.EqualsIgnoreCase("page")) {
-    if (ParsePageRule(aErrorCode, aResult)) {
+    if (ParsePageRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
     }
@@ -886,7 +907,8 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
   return SkipAtRule(aErrorCode);
 }
 
-PRBool CSSParserImpl::ParseCharsetRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseCharsetRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc,
+                                       void* aData)
 {
   // XXX not yet implemented
   return PR_FALSE;
@@ -961,7 +983,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia,
 }
 
 // Parse a CSS2 import rule: "@import STRING | URL [medium [, mdeium]]"
-PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
     REPORT_UNEXPECTED_EOF();
@@ -974,7 +996,7 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode, nsIStyleRule** aResul
     url = mToken.mIdent;
     if (GatherMedia(aErrorCode, media, nsnull)) {
       if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-        ProcessImport(aErrorCode, url, media, aResult);
+        ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
         return PR_TRUE;
       }
     }
@@ -988,7 +1010,7 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode, nsIStyleRule** aResul
           if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
             if (GatherMedia(aErrorCode, media, nsnull)) {
               if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-                ProcessImport(aErrorCode, url, media, aResult);
+                ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
                 return PR_TRUE;
               }
             }
@@ -1004,19 +1026,14 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode, nsIStyleRule** aResul
 }
 
 
-PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, RuleAppendFunc aAppendFunc, void* aData)
 {
   nsCOMPtr<nsICSSImportRule> rule;
-  NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
-  if (rule) {
-    if (aResult) { // someone wants this rule
-      *aResult = rule;
-      NS_ADDREF(*aResult);
-    }
-    else {
-      AppendRule(rule);
-    }
+  aErrorCode = NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
+  if (NS_FAILED(aErrorCode)) {
+    return PR_FALSE;
   }
+  (*aAppendFunc)(rule, aData);
 
   if (mChildLoader) {
     // XXX probably need a way to encode unicode junk for the part of
@@ -1042,7 +1059,8 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
 }
 
 // Parse a CSS2 media rule: "@media medium [, medium] { ... }"
-PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc,
+                                     void* aData)
 {
   nsAutoString  mediaStr;
   nsCOMPtr<nsISupportsArray> media;
@@ -1075,22 +1093,15 @@ PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode, nsIStyleRule** aResult
                 continue;
               }
               UngetToken();
-              ParseRuleSet(aErrorCode);
+              ParseRuleSet(aErrorCode, AppendRuleToSheet, this);
             }
             PopGroup();
 
             if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
-              if (aResult) { // someone wants this rule
-                rule->SetMedia(media);
-                *aResult = rule;
-                NS_ADDREF(*aResult);
-              }
-              else {
-                //  Append first, so when we do SetMedia() the rule
-                //  knows what its stylesheet is.
-                AppendRule(rule);
-                rule->SetMedia(media);
-              }
+              //  Append first, so when we do SetMedia() the rule
+              //  knows what its stylesheet is.
+              (*aAppendFunc)(rule, aData);
+              rule->SetMedia(media);
               return PR_TRUE;
             }
             mSection = holdSection;
@@ -1107,7 +1118,9 @@ PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode, nsIStyleRule** aResult
 }
 
 // Parse a CSS3 namespace rule: "@namespace [prefix] STRING | URL;"
-PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode,
+                                         RuleAppendFunc aAppendFunc,
+                                         void* aData)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
     REPORT_UNEXPECTED_EOF();
@@ -1129,7 +1142,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode, nsIStyleRule** aRe
   if (eCSSToken_String == mToken.mType) {
     url = mToken.mIdent;
     if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-      ProcessNameSpace(aErrorCode, prefix, url, aResult);
+      ProcessNameSpace(aErrorCode, prefix, url, aAppendFunc, aData);
       return PR_TRUE;
     }
   }
@@ -1141,7 +1154,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode, nsIStyleRule** aRe
           url = mToken.mIdent;
           if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
             if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-              ProcessNameSpace(aErrorCode, prefix, url, aResult);
+              ProcessNameSpace(aErrorCode, prefix, url, aAppendFunc, aData);
               return PR_TRUE;
             }
           }
@@ -1156,7 +1169,8 @@ PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode, nsIStyleRule** aRe
 }
 
 PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPrefix, 
-                                       const nsString& aURLSpec, nsIStyleRule** aResult)
+                                       const nsString& aURLSpec, RuleAppendFunc aAppendFunc,
+                                       void* aData)
 {
   PRBool result = PR_FALSE;
 
@@ -1169,27 +1183,21 @@ PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPre
 
   NS_NewCSSNameSpaceRule(getter_AddRefs(rule), prefix, aURLSpec);
   if (rule) {
-    if (aResult) { // someone wants this rule
-      *aResult = rule;
-      NS_ADDREF(*aResult);
-    }
-    else {
-      AppendRule(rule);
-      NS_IF_RELEASE(mNameSpace);
-      mSheet->GetNameSpace(mNameSpace);
-    }
+    (*aAppendFunc)(rule, aData);
+    NS_IF_RELEASE(mNameSpace);
+    mSheet->GetNameSpace(mNameSpace);
   }
 
   return result;
 }
 
-PRBool CSSParserImpl::ParseFontFaceRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseFontFaceRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
   // XXX not yet implemented
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParsePageRule(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParsePageRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
   // XXX not yet implemented
   return PR_FALSE;
@@ -1313,7 +1321,7 @@ void CSSParserImpl::AppendRule(nsICSSRule* aRule)
   }
 }
 
-PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode, nsIStyleRule** aResult)
+PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
   // First get the list of selectors for the rule
   SelectorList* slist = nsnull;
@@ -1361,13 +1369,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode, nsIStyleRule** aResult)
       rule->SetDeclaration(declaration);
       rule->SetWeight(list->mWeight);
 //      rule->List();
-      if (aResult) { // someone wants this rule back; don't append it
-        *aResult = rule;
-        NS_ADDREF(*aResult);
-      }
-      else {
-        AppendRule(rule);
-      }
+      (*aAppendFunc)(rule, aData);
       NS_RELEASE(rule);
     }
 

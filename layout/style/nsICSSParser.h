@@ -31,10 +31,15 @@ class nsIUnicharInputStream;
 class nsIURI;
 class nsICSSDeclaration;
 class nsICSSLoader;
+class nsICSSRule;
+class nsISupportsArray;
 
 #define NS_ICSS_PARSER_IID    \
 { 0xcc9c0610, 0x968c, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+
+// Rule processing function
+typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
 
 // Interface to the css parser.
 class nsICSSParser : public nsISupports {
@@ -77,7 +82,7 @@ public:
 
   NS_IMETHOD ParseRule(nsAReadableString& aRule,
                        nsIURI*            aBaseURL,
-                       nsIStyleRule**     aResult) = 0;
+                       nsISupportsArray** aResult) = 0;
   
   // Charset management method:
   //  Set the charset before calling any of the Parse emthods if you want the 
