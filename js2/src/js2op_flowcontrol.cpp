@@ -75,3 +75,41 @@
             push(top());
         }
         break;
+
+        // Get the first enumerable property from the object
+        // and save it's 'state' on the stack. Push true/false
+        // for whether that was succesful.
+    case eFirst:
+        {
+            a = pop();
+            b = toObject(a);
+            ForIteratorObject *fi = new ForIteratorObject(b);
+            push(OBJECT_TO_JS2VAL(fi));
+            push(BOOLEAN_TO_JS2VAL(fi->first()));
+        }
+        break;
+
+        // Increment the enumeration 'state' on the stack. 
+        // Push true/false for whether that was succesful.
+    case eNext:
+        {
+            a = top();
+            ASSERT(JS2VAL_IS_OBJECT(a));
+            JS2Object *obj = JS2VAL_TO_OBJECT(a);
+            ASSERT(obj->kind == ForIteratorKind);
+            ForIteratorObject *fi = checked_cast<ForIteratorObject *>(obj);
+            push(BOOLEAN_TO_JS2VAL(fi->next()));
+        }
+        break;
+
+        // Extract the current value of the iterator
+    case eForValue:
+        {
+            a = top();
+            ASSERT(JS2VAL_IS_OBJECT(a));
+            JS2Object *obj = JS2VAL_TO_OBJECT(a);
+            ASSERT(obj->kind == ForIteratorKind);
+            ForIteratorObject *fi = checked_cast<ForIteratorObject *>(obj);
+            push(fi->value(this));
+        }
+        break;

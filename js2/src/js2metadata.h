@@ -60,6 +60,7 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern void initMathObject(JS2Metadata *meta);
+extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
@@ -84,7 +85,9 @@ enum ObjectKind {
     FixedInstanceKind,
     DynamicInstanceKind,
     MultinameKind,
-    MethodClosureKind
+    MethodClosureKind,
+
+    ForIteratorKind
 };
 
 class PondScum {
@@ -567,6 +570,25 @@ public:
     REState     *mRegExp;
 };
 
+// A helper class for 'for..in' statements
+class ForIteratorObject : public JS2Object {
+public:
+    ForIteratorObject(js2val obj) : JS2Object(ForIteratorKind), objValue(obj), dMap(NULL) { }
+
+    bool first();
+    bool next();
+
+    js2val value(JS2Engine *engine);
+
+    js2val objValue;
+
+    virtual void markChildren()     { GCMARKVALUE(objValue); }
+
+private:
+    DynamicPropertyIterator it;
+    DynamicPropertyMap *dMap;
+};
+
 // A METHODCLOSURE tuple describes an instance method with a bound this value.
 class MethodClosure : public JS2Object {
 public:
@@ -902,6 +924,8 @@ public:
     bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
     bool deleteStaticMember(StaticMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
+
+    void addGlobalObjectFunction(char *name, NativeCode *code);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);

@@ -33,24 +33,6 @@
 */
 
 
-    case eNewObject: // XXX in js2op_literal instead?
-        {
-            uint16 argCount = BytecodeContainer::getShort(pc);
-            pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
-            for (uint16 i = 0; i < argCount; i++) {
-                a = pop();
-                ASSERT(JS2VAL_IS_STRING(a));
-                String *name = JS2VAL_TO_STRING(a);
-                const StringAtom &nameAtom = meta->world.identifiers[*name];
-                b = pop();
-                const DynamicPropertyMap::value_type e(nameAtom, b);
-                pInst->dynamicProperties.insert(e);
-            }
-            push(OBJECT_TO_JS2VAL(pInst));
-        }
-        break;
-
     case eNew:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
@@ -93,9 +75,11 @@
                 if (!fWrap->code)
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
-                if (fWrap->code) {
-                    push(fWrap->code(meta, a, base(argCount - 1), argCount));
+                if (fWrap->code) {  // native code, pass pointer to argument base
+                    a = fWrap->code(meta, a, base(argCount - 1), argCount);
                     meta->env.removeTopFrame();
+                    pop(argCount + 2);
+                    push(a);
                 }
             }
             else
@@ -112,12 +96,15 @@
                 meta->env.addFrame(meta->objectType(mc->thisObject));
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    push(fWrap->code(meta, mc->thisObject, base(argCount - 1), argCount));
+                    a = fWrap->code(meta, mc->thisObject, base(argCount - 1), argCount);
                     meta->env.removeTopFrame();
                     meta->env.removeTopFrame();
+                    pop(argCount + 2);
+                    push(a);
                 }
             }
-            // XXX Remove the arguments from the stack (important that they're tracked for gc in any mechanism)
+            // XXX Remove the arguments from the stack, (native calls have done this already)
+            // (important that they're tracked for gc in any mechanism)
         }
         break;
 

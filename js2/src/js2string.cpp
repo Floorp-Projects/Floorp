@@ -57,8 +57,10 @@ namespace JavaScript {
 namespace MetaData {
 
 
-js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
+    // XXX GC might happen after the new StringInstance, but before the
+    // object gets rooted somewhere - this is a general problem...
     js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
 

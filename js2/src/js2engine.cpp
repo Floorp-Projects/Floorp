@@ -253,6 +253,17 @@ namespace MetaData {
         return allocNumber(toFloat64(x));
     }
 
+    // x is not an Object, it needs to be wrapped in one
+    js2val JS2Engine::convertValueToObject(js2val x)
+    {
+        if (JS2VAL_IS_UNDEFINED(x) || JS2VAL_IS_NULL(x) || JS2VAL_IS_SPECIALREF(x))
+            meta->reportError(Exception::typeError, "Can't convert to Object", errorPos());
+        if (JS2VAL_IS_STRING(x))
+            return String_Constructor(meta, JS2VAL_NULL, &x, 1);
+        // XXX need more
+        return OBJECT_TO_JS2VAL(new PrototypeInstance(meta->objectClass->prototype, meta->objectClass));
+    }
+    
     // x is a Number, validate that it has no fractional component
     int64 JS2Engine::checkInteger(js2val x)
     {
@@ -528,6 +539,14 @@ namespace MetaData {
         case eNew:          // pop the class or function, push the new instance
             return 0;
 
+        case eFirst:        // pop object, push iterator helper
+            return 1;       // and push boolean result value
+        case eNext:         // leave iterator helper
+            return 1;       // and push boolean result value
+        case eForValue:     // leave the iterator helper
+            return 1;       // and push iteration value
+
+
         case eLexicalPostInc:
         case eLexicalPostDec:
         case eLexicalPreInc:
@@ -647,6 +666,43 @@ namespace MetaData {
         JS2Object::mark(object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
+    }
+
+    // XXX Only scanning dynamic properties
+    bool ForIteratorObject::first()
+    {
+        if (JS2VAL_IS_NULL(objValue))
+            return false;
+        JS2Object *obj = JS2VAL_TO_OBJECT(objValue);
+        dMap = NULL;
+        if (obj->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        else
+        if (obj->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+        else
+            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+        if (dMap) {
+            it = dMap->begin();
+            return (it != dMap->end());
+        }
+        else
+            return false;
+    }
+
+    bool ForIteratorObject::next()
+    {
+        if (dMap) {
+            it++;
+            return (it != dMap->end());
+        }
+        else
+            return false;
+    }
+
+    js2val ForIteratorObject::value(JS2Engine *engine)
+    { 
+        return engine->allocString(it->first);
     }
 
 }

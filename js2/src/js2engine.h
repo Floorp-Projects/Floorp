@@ -81,7 +81,14 @@ enum JS2Op {
     eNewObject,         // <argCount:u16>
 
     eThrow,
-    eTry,
+    eTry,               // <finally displacement:s32> <catch displacement:s32>
+    eCallFinally,       // <branch displacement:s32>
+    eReturnFinally,
+    eHandler,
+
+    eFirst,
+    eNext,
+    eForValue,
 
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
@@ -112,9 +119,6 @@ enum JS2Op {
     ePopv,
     ePop,
     eDup,
-    eCallFinally,       // <branch displacement:s32>
-    eReturnFinally,
-    eHandler,
 
     eLexicalPostInc,    // <multiname index:u16>
     eLexicalPostDec,    // <multiname index:u16>
@@ -161,6 +165,7 @@ public:
     bool convertValueToBoolean(js2val x);
     int32 convertValueToInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
+    js2val convertValueToObject(js2val x);
 
     const String *toString(js2val x){ if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
@@ -168,6 +173,7 @@ public:
     js2val toGeneralNumber(js2val x){ if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     int32 toInteger(js2val x)       { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
+    js2val toObject(js2val x)       { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
@@ -256,6 +262,7 @@ public:
     js2val top()                { return *(sp - 1); }
     js2val top(int argCount)    { return *(sp - (1 + argCount)); }
     js2val *base(int argCount)  { return (sp - (1 + argCount)); }
+    void pop(int n)             { sp -= n; ASSERT(sp > execStack); }
 
     void mark();
 

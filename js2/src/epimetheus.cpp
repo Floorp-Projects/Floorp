@@ -199,9 +199,18 @@ static bool processArgs(int argc, char **argv, int *result)
     return doInteractive;
 }
 
+using namespace MetaData;
+
+js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+{
+    for (uint32 i = 0; i < argc; i++) {
+        stdOut << *metadata->engine->toString(argv[i]) << '\n';
+    }
+    return JS2VAL_UNDEFINED;
+}
+
 } /* namespace Shell */
 } /* namespace JavaScript */
-
 
 int main(int argc, char **argv)
 {
@@ -215,6 +224,7 @@ int main(int argc, char **argv)
 #endif
 
     metadata = new MetaData::JS2Metadata(world);
+    metadata->addGlobalObjectFunction("print", print);
 
 
     try {

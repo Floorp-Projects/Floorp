@@ -142,6 +142,8 @@ namespace MetaData {
                 ValidateStmt(cxt, env, i->stmt2);
             }
             break;
+        case StmtNode::ForIn:
+            // XXX need to validate that first expression is a single binding ?
         case StmtNode::For:
             {
                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
@@ -645,6 +647,68 @@ namespace MetaData {
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bCon->emitBranch(eBranch, *g->tgtID, p->pos);
+            }
+            break;
+        case StmtNode::ForIn:
+/*
+            iterator = get_first_property_of(object) [eFirst]
+            //
+            // pushes iterator object on stack, returns true/false
+            //
+            if (false) --> break;
+            top:
+                v <-- iterator.value  // v is the thing specified by for ('v' in object) ...
+                <statement body>
+            continue:
+                //
+                // expect iterator object on top of stack
+                // increment it. Returns true/false
+                //
+                iterator = get_next_property_of(object, iterator) [eNext]
+                if (true) --> top;
+            break:
+                // want stack cleared of iterator at this point
+*/
+            {
+                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                Reference *v;
+                if (f->initializer->getKind() == StmtNode::Var) {
+                    VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
+                    VariableBinding *vb = vs->bindings;
+                    v = new LexicalReference(vb->name, cxt.strict);
+                }
+                else {
+                    if (f->initializer->getKind() == StmtNode::expression) {
+                        ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
+                        v = EvalExprNode(env, phase, e->expr);
+                        if (v == NULL)
+                            reportError(Exception::semanticError, "for..in needs an lValue", p->pos);
+                    }
+                    else
+                        NOT_REACHED("what else??");
+                }            
+
+                f->breakLabelID = bCon->getLabel();
+                f->continueLabelID = bCon->getLabel();
+                BytecodeContainer::LabelID loopTop = bCon->getLabel();
+
+                Reference *r = EvalExprNode(env, phase, f->expr2);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eFirst, p->pos);
+                bCon->emitBranch(eBranchFalse, f->breakLabelID, p->pos);
+
+                bCon->setLabel(loopTop);
+                targetList.push_back(p);
+                bCon->emitOp(eForValue, p->pos);
+                v->emitWriteBytecode(bCon, p->pos);
+                bCon->emitOp(ePop, p->pos);     // clear iterator value from stack
+                EvalStmt(env, phase, f->stmt);
+                targetList.pop_back();
+                bCon->setLabel(f->continueLabelID);
+                bCon->emitOp(eNext, p->pos);
+                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                bCon->setLabel(f->breakLabelID);
+                bCon->emitOp(ePop, p->pos);
             }
             break;
         case StmtNode::For:
@@ -1806,7 +1870,8 @@ doUnary:
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    EvalExprNode(env, phase, args->value);
+                    Reference *r = EvalExprNode(env, phase, args->value);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
                 }
@@ -1822,7 +1887,8 @@ doUnary:
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    EvalExprNode(env, phase, args->value);
+                    Reference *r = EvalExprNode(env, phase, args->value);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
                 }
@@ -2393,6 +2459,13 @@ doUnary:
         return thatValue;
     }
 
+    void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
+    {
+        FixedInstance *fInst = new FixedInstance(functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code);
+        writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+    }
+
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
 
     JS2Metadata::JS2Metadata(World &world) :
@@ -2434,7 +2507,7 @@ doUnary:
 
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
-// XXX Or make this a static class members?
+// XXX Or make this a static class member?
         FixedInstance *fInst = new FixedInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(&world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);

@@ -33,57 +33,78 @@
 */
 
 
-        case eNumber: 
-            {
-                pushNumber(BytecodeContainer::getFloat64(pc));
-                pc += sizeof(float64);
+    case eNumber: 
+        {
+            pushNumber(BytecodeContainer::getFloat64(pc));
+            pc += sizeof(float64);
+        }
+        break;
+
+    case eUInt64: 
+        {
+            pushULong(BytecodeContainer::getUInt64(pc));
+            pc += sizeof(uint64);
+        }
+        break;
+
+    case eInt64: 
+        {
+            pushLong(BytecodeContainer::getInt64(pc));
+            pc += sizeof(int64);
+        }
+        break;
+
+    case eTrue: 
+        {
+	    push(JS2VAL_TRUE);
+	}
+	break;
+
+    case eFalse: 
+        {
+	    push(JS2VAL_FALSE);
+	}
+	break;
+
+    case eString: 
+        {
+            push(STRING_TO_JS2VAL(allocString(BytecodeContainer::getString(pc))));
+            pc += sizeof(String *);
+        }
+        break;
+
+    case eNull: 
+        {
+	    push(JS2VAL_NULL);
+	}
+	break;
+
+    case eThis: // XXX literal?
+        {
+            a = meta->env.findThis(true);
+            if (JS2VAL_IS_INACCESSIBLE(a))
+                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
+            push(a);
+        }
+        break;
+
+    case eNewObject:
+        {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
+            PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
+            baseVal = OBJECT_TO_JS2VAL(pInst);
+            for (uint16 i = 0; i < argCount; i++) {
+                a = pop();
+                ASSERT(JS2VAL_IS_STRING(a));
+                String *name = JS2VAL_TO_STRING(a);
+                const StringAtom &nameAtom = meta->world.identifiers[*name];
+                b = pop();
+                const DynamicPropertyMap::value_type e(nameAtom, b);
+                pInst->dynamicProperties.insert(e);
             }
-            break;
+            push(baseVal);
+            baseVal = JS2VAL_VOID;
+        }
+        break;
 
-        case eUInt64: 
-            {
-                pushULong(BytecodeContainer::getUInt64(pc));
-                pc += sizeof(uint64);
-            }
-            break;
-
-        case eInt64: 
-            {
-                pushLong(BytecodeContainer::getInt64(pc));
-                pc += sizeof(int64);
-            }
-            break;
-
-        case eTrue: 
-            {
-	        push(JS2VAL_TRUE);
-	    }
-	    break;
-
-        case eFalse: 
-            {
-	        push(JS2VAL_FALSE);
-	    }
-	    break;
-
-        case eString: 
-            {
-                push(STRING_TO_JS2VAL(allocString(BytecodeContainer::getString(pc))));
-                pc += sizeof(String *);
-            }
-            break;
-
-        case eNull: 
-            {
-	        push(JS2VAL_NULL);
-	    }
-	    break;
-
-        case eThis: // XXX literal?
-            {
-                a = meta->env.findThis(true);
-                if (JS2VAL_IS_INACCESSIBLE(a))
-                    meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
-                push(a);
-            }
-            break;
