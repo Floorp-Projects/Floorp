@@ -401,15 +401,6 @@ NS_IMETHODIMP nsBrowserWindow::SetFocus()
    return NS_OK;
 }
 
-NS_IMETHODIMP nsBrowserWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-                                              PRBool aForward,
-                                              PRBool* aTookFocus)
-{
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsBrowserWindow::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
@@ -2088,12 +2079,6 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
       }
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
-{
   return NS_OK;
 }
 

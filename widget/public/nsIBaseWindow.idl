@@ -186,21 +186,6 @@ interface nsIBaseWindow : nsISupports
 	*/
 	void setFocus();
 
-	/* This is called when focus is available for the taking because of 
-	tabbing through an object.  In any case this is called on an object to 
-	allow it to take focus if it desires.  If the aCurrentFocus object is
-	the object being called, then the object being called should offer focus to
-	it's parent.  If the aCurrentFocus is a child of the object being called,
-	the object being called should set the focus to the next sibling to the
-	aCurrentFocus object.  Otherwise it should take focus for itself.  If the
-	object being called can not take focus for itself it should offer focus to
-	it's parent.  Note an object should not take focus for itself by giving it
-	to a child.  In most cases this function is being called because the child
-	is trying to give up focus. */
-	void focusAvailable(in nsIBaseWindow aCurrentFocus,
-                      in boolean aForward,
-                      out boolean aTookFocus);
-
 	/*
 	Title of the window.
 	*/

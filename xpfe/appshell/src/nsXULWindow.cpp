@@ -618,13 +618,6 @@ NS_IMETHODIMP nsXULWindow::SetFocus()
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-                                          PRBool aForward,
-                                          PRBool* aTookFocus)
-{
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsXULWindow::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);

@@ -39,6 +39,8 @@
 #include "prlog.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEventStateManager.h"
+#include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULDocument.h"
@@ -111,6 +113,16 @@ nsFocusController::SetFocusedElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 {
+  if (aWindow && (mCurrentWindow != aWindow)) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+    if (sgo) {
+      nsCOMPtr<nsIDocShell> docShell;
+      sgo->GetDocShell(getter_AddRefs(docShell));
+      nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(docShell);
+      if (basewin)
+        basewin->SetFocus();
+    }
+  }
   mCurrentWindow = aWindow;
   return NS_OK;
 }
@@ -217,7 +229,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   presContext->GetEventStateManager(getter_AddRefs(esm));
   if (esm)
     // Make this ESM shift the focus per our instructions.
-    esm->MoveFocus(aForward, content); 
+    esm->ShiftFocus(aForward, content);
 
   return NS_OK;
 }

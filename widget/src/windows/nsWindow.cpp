@@ -2463,6 +2463,9 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
   } 
+  else if (mIsControlDown && aVirtualKeyCode == NS_VK_TAB) {
+    DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB);
+  }
   else if (mIsControlDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
     DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0);
   }

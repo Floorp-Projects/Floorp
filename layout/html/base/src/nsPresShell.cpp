@@ -792,6 +792,29 @@ DummyLayoutRequest::Cancel(nsresult status)
 }
 
 // ----------------------------------------------------------------------------
+//   A generic nsDSTNodeFunctor to look for a specific value in the map
+
+class nsSearchEnumerator : public nsDSTNodeFunctor
+{
+public:
+  nsSearchEnumerator(void* aTargetValue)
+    : mTargetValue(aTargetValue) { 
+    mResultKey = nsnull;
+  }
+  
+  void operator() (void* aKey, void* aValue) {
+    if (aValue == mTargetValue)
+      mResultKey = aKey;
+  }
+  
+  void* GetResult() { return mResultKey; }
+
+private:
+  void* mResultKey;
+  void* mTargetValue;
+};
+
+// ----------------------------------------------------------------------------
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
@@ -856,6 +879,8 @@ public:
                             nsISupports** aResult) const;
   NS_IMETHOD SetSubShellFor(nsIContent*  aContent,
                             nsISupports* aSubShell);
+  NS_IMETHOD FindContentForShell(nsISupports* aSubShell,
+                                 nsIContent** aContent) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
@@ -5334,6 +5359,24 @@ PresShell::SetSubShellFor(nsIContent*  aContent,
   return NS_OK;
 }
   
+NS_IMETHODIMP
+PresShell::FindContentForShell(nsISupports* aSubShell,
+                               nsIContent** aContent) const
+{
+  NS_ENSURE_ARG_POINTER(aSubShell);
+  NS_ENSURE_ARG_POINTER(aContent);
+  *aContent = nsnull;
+  
+  if (!mSubShellMap)
+    return NS_OK;
+  
+  nsSearchEnumerator enumerator(NS_STATIC_CAST(void*, aSubShell));
+  mSubShellMap->Enumerate(enumerator);
+  *aContent = NS_STATIC_CAST(nsIContent*, enumerator.GetResult());
+  NS_IF_ADDREF(*aContent);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,

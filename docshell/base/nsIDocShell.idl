@@ -199,13 +199,6 @@ interface nsIDocShell : nsISupports
   attribute boolean allowSubframes;
 
   /**
-   * Attribute stating whether the document itself should come before
-   * its focusable content in tab traversal (the default is for the document
-   * to be focused last).
-   */
-  attribute boolean focusDocBeforeContent;
-
-  /**
    * Attribute stating whether or not images should be loaded.
    */
   attribute boolean allowImages;
@@ -262,6 +255,13 @@ interface nsIDocShell : nsISupports
 	 * Tells the docshell whether the canvas should have focus
 	*/
 	attribute boolean canvasHasFocus;
+
+  /*
+   * Tells the docshell to offer focus to its tree owner.
+   * This is currently only necessary for embedding chrome.
+   */
+  void tabToTreeOwner(in boolean forward,
+                      out boolean tookFocus);
 
   /**
    * Current busy state for DocShell

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIEventStateManager.h"
 #include "nsEventStateManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -74,6 +73,7 @@
 #include "nsIEnumerator.h"
 #include "nsFrameTraversal.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 
@@ -101,16 +101,9 @@
 
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLFrameSetElement.h"
-#include "nsIDOMHTMLFrameElement.h"
-#include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
+#include "nsIInterfaceRequestorUtils.h"
 
-#ifdef DEBUG_rods
+#if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
 
@@ -742,7 +735,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
             //Its hard to say what HTML4 wants us to do in all cases.  So for now we'll settle for
             //A) Set focus
-            ChangeFocus(content, nsnull, PR_TRUE);
+            ChangeFocus(content);
 
             nsresult rv = getPrefService();
             PRBool activate = PR_TRUE;
@@ -1457,9 +1450,8 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
 
   /* now find the content node in our parent docshell's document that corresponds
      to our docshell */
-  nsCOMPtr<nsIContent> frameContent = getter_AddRefs(FindContentForDocShell(pPresShell, 
-                                                                            rootContent,
-                                                                            ourDS));
+  nsCOMPtr<nsIContent> frameContent;
+  pPresShell->FindContentForShell(ourDS, getter_AddRefs(frameContent));
   if (!frameContent) return NS_ERROR_FAILURE;
 
   /*
@@ -1539,7 +1531,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
 
         if (newFocus && currFrame)
-          ChangeFocus(newFocus, currFrame, PR_TRUE);
+          ChangeFocus(newFocus);
         else if (!suppressBlur) {
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         }
@@ -2530,19 +2522,12 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aTargetFrame, PRBool aSetFocus)
+nsEventStateManager::ChangeFocus(nsIContent* aFocusContent)
 {
   aFocusContent->SetFocus(mPresContext);
   MoveCaretToFocus();
 
   return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsEventStateManager::MoveFocus(PRBool aDirection, nsIContent* aRoot)
-{
-  ShiftFocus(aDirection, aRoot);
-  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -2593,256 +2578,210 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
     }
   }
 }
-
-static void 
-PrintDocTree(nsIDocShellTreeNode * aParentNode)
-{
-  NS_ASSERTION(aParentNode, "Pointer is null!");
-
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aParentNode));
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  item->GetParent(getter_AddRefs(parentItem));
-  while (parentItem) {
-    nsCOMPtr<nsIDocShellTreeItem>tmp;
-    parentItem->GetParent(getter_AddRefs(tmp));
-    if (!tmp) {
-      break;
-    }
-    parentItem = tmp;
-  }
-
-  if (!parentItem) {
-    parentItem = do_QueryInterface(aParentNode);
-  }
-
-  if (parentItem) {
-    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentItem));
-    PrintDocTree(parentAsNode, 0);
-  }
-}
 #endif // end debug helpers
 
-void
-nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
+NS_IMETHODIMP
+nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  if (mPresContext) {
-    nsCOMPtr<nsISupports> pcContainer;
-    mPresContext->GetContainer(getter_AddRefs(pcContainer));
-    if (pcContainer)
-      docShell = do_QueryInterface(pcContainer);
-  }
-
 #ifdef DEBUG_DOCSHELL_FOCUS
-  printf("ShiftFocus DocShell %p   Doc: %p\n", docshell.get(), mDocument);
+  printf("[%p] ShiftFocus: forward=%d, aStart=%p, mCurrentFocus=%p\n",
+         this, forward, aStart, mCurrentFocus);
 #endif
-
-  // Indicates whether the document itself (i.e. no content) has focus
-  PRBool docHasFocus = PR_FALSE;
-
-  if (nsnull == mPresContext) {
-    return;
-  }
-
+  NS_ASSERTION(mPresContext, "no pres context");
   EnsureDocument(mPresContext);
-  if (nsnull == mDocument) {
-    return;
-  }
-
-  // Figure out what type of document we are
-  eDocType docType;
-  FigureOutKindOfDoc(mDocument, &docType);
-#ifdef DEBUG_DOCSHELL_FOCUS
-  printf("Doc Type is [%s]\n", gDocTypeNames[docType]);
-#endif
-  
-  if (aRoot) {
-    NS_IF_RELEASE(mCurrentFocus);
-    mCurrentFocus = aRoot;
-    NS_ADDREF(mCurrentFocus);
-    //mCurrentTabIndex = forward ? 1 : 0;
-    // for frames this needs to be set to 0
-    // otherwise it doesn't look for the next content correctly
-    //if (docType == eFrame) {
-      mCurrentTabIndex = 0;
-    //}
-  }
-  else if (nsnull == mCurrentFocus) {
-    mDocument->GetRootContent(&mCurrentFocus);
-    if (nsnull == mCurrentFocus) {
-      return;
-    }
-    mCurrentTabIndex = forward ? 1 : 0;
-    docHasFocus = PR_TRUE;
-  }
-
-  nsIFrame* primaryFrame = nsnull;
-  nsCOMPtr<nsIPresShell> shell;
-  if (mPresContext) {
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell){
-      if (mBrowseWithCaret) {
-        nsCOMPtr<nsIContent> caretFocus;
-        PRUint32 caretOffset;
-        GetCaretLocation(getter_AddRefs(caretFocus), &primaryFrame, &caretOffset);
-      }
-      else {
-        shell->GetPrimaryFrameFor(mCurrentFocus, &primaryFrame);
-        if (docHasFocus) {
-          // so if we are going backwards then find the last piece of content
-          // and and look backwards for the last focusable content
-          if (!forward) {
-            nsCOMPtr<nsIContent> lastContent = getter_AddRefs(GetLastContent(docShell));
-            nsCOMPtr<nsIDOMHTMLIFrameElement> iframe(do_QueryInterface(lastContent));
-            if (iframe) {
-              if (FocusWithinHTMLIFrameDoc(lastContent, forward)) {
-                return;
-              }
-            }
-            shell->GetPrimaryFrameFor(lastContent, &primaryFrame);
-          }
-        }
-      }
-    }
-  }
-
-  PRBool doFocusAvailDocShells = PR_FALSE;
-  nsCOMPtr<nsIContent> next;
-  PRBool hadDocFocus = docHasFocus;
+  NS_ASSERTION(mDocument, "no document");
 
   nsCOMPtr<nsIContent> rootContent;
   mDocument->GetRootContent(getter_AddRefs(rootContent));
 
-  // Check here to see if the HTMLFrame wants to do anything special
-  // with the focus. i.e. like focusing a docshell child, or if it
-  // is the last frame in the frameset, it will pass it on to the Chrome
-  if (docType == eFrame && aRoot == nsnull) {
-    if (FocusWithinHTMLFrameDoc(aRoot, shell, forward, doFocusAvailDocShells)) {
-      return;
-    } else if (docHasFocus) {
-      // If we are starting at the top of the document
-      // first check to see if there is a tabbable index to go to
-      //
-      // GetNextTabbableIndexContent may change the value mCurrentTabIndex
-      // so we remember it here and reset it back if it didn't find anything
-      PRInt32 currentTabIndex = mCurrentTabIndex;
-      GetNextTabbableIndexContent(rootContent, forward, PR_TRUE, getter_AddRefs(next));
-      if (!next) {
-        mCurrentTabIndex = currentTabIndex;
-      }
+  nsCOMPtr<nsISupports> pcContainer;
+  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  NS_ASSERTION(pcContainer, "no container for presContext");
+  
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(pcContainer);
+  PRBool docHasFocus = PR_FALSE;
 
-      // frames are document first, then content
-      // so this allows us to call GetNextTabbableContent below
-      docHasFocus = PR_FALSE; 
+  // allowWrapAround specifies whether shift+tab (when focus is null)
+  // will start at the end of the document (such as when we're coming 
+  // from an unfocused state), or pop out to the parent document
+  // (such as when we have "canvas focus")
+  PRBool allowWrapAround = PR_FALSE;
+
+  if (aStart) {
+    NS_IF_RELEASE(mCurrentFocus);
+    mCurrentFocus = aStart;
+    NS_ADDREF(mCurrentFocus);
+
+    nsAutoString tabIndexStr;
+    mCurrentFocus->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+    if (!tabIndexStr.IsEmpty()) {
+      PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
+      if (NS_SUCCEEDED(ec))
+        mCurrentTabIndex = tabIndexVal;
+    }
+  } else if (!mCurrentFocus && !mBrowseWithCaret) {
+    // mCurrentFocus is ambiguous for determining whether
+    // we're in document-focus mode, because it's nulled out
+    // when the document is blurred, and it's also nulled out
+    // when the document/canvas has focus.
+    //
+    // So, use the docshell focus state to disambiguate.
+
+    docShell->GetHasFocus(&docHasFocus);
+    if (forward) {
+      mCurrentFocus = rootContent;
+      NS_IF_ADDREF(mCurrentFocus);
+      mCurrentTabIndex = 1;
+    } else if (!docHasFocus) {
+      // Only wrap around from the end if we're coming from an
+      // unfocused state.  By not setting curFocusFrame, we will
+      // cause GetNextTabbableContent to start over at the beginning/end.
+
+      allowWrapAround = PR_TRUE;
+      mCurrentTabIndex = 0;
     }
   }
 
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
 
-  PRBool docFocusFirst = PR_FALSE;
-  if (docShell)
-    docShell->GetFocusDocBeforeContent(&docFocusFirst);
+  nsIFrame* curFocusFrame = nsnull;
 
-  //Get the next tab item.  This takes tabIndex into account
-  if ((docFocusFirst || !docHasFocus) && !next)
-    GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
-  
-  //Either no tabbable items or the end of the document
-  if (!next) {
+  if (mBrowseWithCaret) {
+    nsCOMPtr<nsIContent> caretContent;
+    PRUint32 caretOffset;
+    GetCaretLocation(getter_AddRefs(caretContent), &curFocusFrame, &caretOffset);
+  } else if (!allowWrapAround && mCurrentFocus)
+    presShell->GetPrimaryFrameFor(mCurrentFocus, &curFocusFrame);
 
-    // If we've reached the end of the content in this document, we
-    // focus the document itself before leaving.
+  nsCOMPtr<nsIContent> nextFocus;
+  if (forward || !docHasFocus)
+    GetNextTabbableContent(rootContent, curFocusFrame, forward,
+                           getter_AddRefs(nextFocus));
 
-    // Only do this if we're not in document-before-content focus mode
+  if (nextFocus) {
 
-    if (docType == eChrome) {
-      // if we're a chrome document, act as if the doc has already been
-      // focused, so we will go back to the beginning.
-      docHasFocus = PR_TRUE;
-    } else if (!docHasFocus && !doFocusAvailDocShells && !docFocusFirst) {
-      PRBool focusDoc = PR_TRUE;
+    // Check to see if the next focused element has a subshell.
+    // This is the case for an IFRAME or FRAME element.  If it
+    // does, we send focus into the subshell.
 
-      nsCOMPtr<nsIDocShell> docShell;
-      nsCOMPtr<nsIDocShell> parentDS;
-      if (NS_SUCCEEDED(GetDocShellsFromDoc(mDocument, getter_AddRefs(docShell), getter_AddRefs(parentDS)))) {
-        if (docType == eFrame) {
-          if (FocusAfterHTMLFrameDoc(docShell, parentDS, forward)) {
-            return;
-          }
-        } else if (docType == eIFrame) {
-          if (FocusAfterHTMLIFrameDoc(docShell, parentDS, forward, focusDoc)) {
-            return;
-          }
-        }
+    nsCOMPtr<nsISupports> shellObject;
+    presShell->GetSubShellFor(nextFocus, getter_AddRefs(shellObject));
+    if (shellObject) {
+      nsCOMPtr<nsIDocShell> subShell = do_QueryInterface(shellObject);
+      if (subShell) {
+        SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+
+        nsIFrame* nextFocusFrame = nsnull;
+        presShell->GetPrimaryFrameFor(nextFocus, &nextFocusFrame);
+        presShell->ScrollFrameIntoView(nextFocusFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
+                                       NS_PRESSHELL_SCROLL_ANYWHERE);
+        TabIntoDocument(subShell, forward);
       }
-
-      // IFrame may or may not want the current document focused
-      if (focusDoc) {
-        nsCOMPtr<nsIScriptGlobalObject> sgo;
-        mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
-        nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
-        if (domwin) {
-          SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-          if (NS_SUCCEEDED(domwin->Focus()))
-            return;
-        }
-      }
-    }
-
-    PRBool focusTaken = PR_FALSE;
-    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
-    //Offer focus upwards to allow shifting focus to UI controls
-    nsCOMPtr<nsISupports> container;
-    mPresContext->GetContainer(getter_AddRefs(container));
-    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(container));
-    if (docShellAsWin) {
-      docShellAsWin->FocusAvailable(docShellAsWin, forward, &focusTaken);
+    } else {
+      // there is no subshell, so just focus nextFocus
 #ifdef DEBUG_DOCSHELL_FOCUS
-      nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
-      PrintDocTree(node);
+      printf("focusing next focusable content: %p\n", nextFocus.get());
 #endif
-    }
+      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      presShell->GetPrimaryFrameFor(nextFocus, &mCurrentTarget);
+      ChangeFocus(nextFocus);
       
-    //No one took focus and we're not already at the top of the doc
-    //so calling ShiftFocus will start at the top of the doc again.
-    if (!focusTaken && !docHasFocus) {
-      ShiftFocus(forward);
+      NS_IF_RELEASE(mCurrentFocus);
+      mCurrentFocus = nextFocus;
+      NS_ADDREF(mCurrentFocus);
+
+      if (docHasFocus)
+        docShell->SetCanvasHasFocus(PR_FALSE);
+      else
+        docShell->SetHasFocus(PR_TRUE);
+    }
+  } else {
+    
+    // If we're going backwards past the first content,
+    // focus the document.
+    
+    PRBool focusDocument;
+    PRInt32 itemType;
+    nsCOMPtr<nsIDocShellTreeItem> shellItem = do_QueryInterface(docShell);
+    shellItem->GetItemType(&itemType);
+    if (itemType == nsIDocShellTreeItem::typeChrome)
+      focusDocument = PR_FALSE;
+    else {
+      // Check for a frameset document
+      focusDocument = !(IsFrameSetDoc(docShell));
     }
 
-    return;
-  } else {
-    // The "next" piece of content to be focused is an IFrame,
-    // so we need to "walk" into the new HTMLIFrame docShell
-    nsCOMPtr<nsIDOMHTMLIFrameElement> iframe(do_QueryInterface(next));
-    if (iframe) {
-      if (FocusWithinHTMLIFrameDoc(next, forward)) {
-        return;
+    if (!forward && !docHasFocus && focusDocument) {
+#ifdef DEBUG_DOCSHELL_FOCUS
+      printf("Focusing document\n");
+#endif
+      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      docShell->SetHasFocus(PR_TRUE);
+      docShell->SetCanvasHasFocus(PR_TRUE);
+    } else {
+      // If there's nothing left to focus in this document,
+      // pop out to our parent document, and have it shift focus
+      // in the same direction starting at the content element
+      // corresponding to our docshell.
+      
+      nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(pcContainer);
+      nsCOMPtr<nsIDocShellTreeItem> treeParent;
+      treeItem->GetParent(getter_AddRefs(treeParent));
+      if (treeParent) {
+        nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(treeParent);
+        if (parentDS) {
+          nsCOMPtr<nsIPresShell> parentShell;
+          parentDS->GetPresShell(getter_AddRefs(parentShell));
+          
+          nsCOMPtr<nsIContent> shellContent;
+          parentShell->FindContentForShell(docShell, getter_AddRefs(shellContent));
+          
+          nsCOMPtr<nsIPresContext> parentPC;
+          parentShell->GetPresContext(getter_AddRefs(parentPC));
+          
+          nsCOMPtr<nsIEventStateManager> parentESM;
+          parentPC->GetEventStateManager(getter_AddRefs(parentESM));
+          
+          SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+
+#ifdef DEBUG_DOCSHELL_FOCUS
+          printf("popping out focus to parent docshell\n");
+#endif
+
+          parentESM->ShiftFocus(forward, shellContent);
+        }
+      } else {
+        PRBool tookFocus = PR_FALSE;
+        nsCOMPtr<nsIDocShell> subShell = do_QueryInterface(pcContainer);
+        if (subShell)
+          subShell->TabToTreeOwner(forward, &tookFocus);
+        
+#ifdef DEBUG_DOCSHEL_FOCUS
+        printf("offered focus to tree owner, tookFocus=%d\n",
+               tookFocus);
+#endif
+
+        if (tookFocus) {
+          SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+          docShell->SetHasFocus(PR_FALSE);
+        } else {
+          // there is nowhere else to send the focus, so
+          // refocus ourself.
+
+#ifdef DEBUG_DOCSHELL_FOCUS
+          printf("wrapping around within this document\n");
+#endif
+
+          NS_IF_RELEASE(mCurrentFocus);
+          docShell->SetHasFocus(PR_FALSE);
+          ShiftFocus(forward);
+        }
       }
     }
   }
 
-#ifdef DEBUG_DOCSHELL_FOCUS
-  printf("Shift Focus to Content: %p\n", next.get());
-#endif
-
-  // Now we need to get the content node's frame and reset 
-  // the mCurrentTarget target.  Otherwise the focus
-  // code will be slightly out of sync (with regards to
-  // focusing widgets within the current target)
-  if (shell)
-    shell->GetPrimaryFrameFor(next, &mCurrentTarget);
-  
-  ChangeFocus(next, mCurrentTarget, PR_TRUE);
-
-  NS_IF_RELEASE(mCurrentFocus);
-  mCurrentFocus = next;
-  NS_IF_ADDREF(mCurrentFocus);
-
-  if (docShell)
-    docShell->SetCanvasHasFocus(PR_FALSE);
-
-  if (hadDocFocus)
-    ForceUpdate(docShell);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3027,7 +2966,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                     map->ChildAt(index, *getter_AddRefs(childArea));
                     if (childArea.get() == mCurrentFocus) {
                       nsAutoString tabIndexStr;
-                      childArea->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                      childArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
                       PRInt32 val = 0;
                       if (!tabIndexStr.IsEmpty()) {
                         PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
@@ -3052,7 +2991,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
                     //Got the map area, check its tabindex.
                     nsAutoString tabIndexStr;
-                    childArea->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                    childArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
                     PRInt32 val = 0;
                     if (!tabIndexStr.IsEmpty()) {
                       PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
@@ -3079,10 +3018,10 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           disabled = PR_FALSE;
         }
         else if (nsHTMLAtoms::iframe==tag.get()) {
-          nsCOMPtr<nsIDOMHTMLIFrameElement> iframe(do_QueryInterface(child));
-          if (iframe) {
-            disabled = PR_FALSE;
-          }
+          disabled = PR_FALSE;
+        } 
+        else if (nsHTMLAtoms::frame==tag.get()) {
+          disabled = PR_FALSE;
         }
       }
       else {
@@ -3145,7 +3084,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
       
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
@@ -3163,7 +3102,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
       
       nsAutoString tabIndexStr;
-      child->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_OK == ec) {
         if ((mCurrentTabIndex==0 && val > tabIndex) ||
@@ -3174,29 +3113,6 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
     }
   }
   return tabIndex;
-}
-
-NS_IMETHODIMP 
-nsEventStateManager::GetNextTabbableIndexContent(nsIContent* aRootContent, 
-                                                 PRBool forward, 
-                                                 PRBool aStartOver,
-                                                 nsIContent** aResult)
-{
-  if (forward) {
-    if (aStartOver) {
-      mCurrentTabIndex = 0;
-    }
-    mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
-    if (mCurrentTabIndex > 0) {
-      return GetNextTabbableContent(aRootContent, nsnull, forward, aResult);
-    }
-  } else {
-    nsCOMPtr<nsIContent> lastContent = getter_AddRefs(GetLastContent(aRootContent));
-    if (lastContent) {
-      MoveFocus(PR_FALSE, lastContent);
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3222,38 +3138,6 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 
   *aFrame = mCurrentTarget;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventStateManager::HasPositiveTabIndex(nsIContent* aContent, 
-                                         PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aContent);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_FALSE;
-
-  nsAutoString tabIndexStr;
-  aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-  if (!tabIndexStr.IsEmpty()) {
-    PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
-    if (NS_SUCCEEDED(ec)) {
-      if (tabIndexVal > 0) {
-        *aResult = PR_TRUE;
-        return NS_OK;
-      }
-    }
-  }
-
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
-    if (NS_SUCCEEDED(HasPositiveTabIndex(child, aResult))) {
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3757,7 +3641,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     }
     
     nsAutoString tabIndex;
-    aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndex);
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
     if (NS_OK == ec) {
       mCurrentTabIndex = val;
@@ -4117,7 +4001,7 @@ nsresult nsEventStateManager::MoveFocusToCaret()
       // Add more focusable tags here later if necessary ... 
       if (nsHTMLAtoms::a == tag.get()) {
         // We are on a link, so change focus to it.
-        ChangeFocus(caretContent, caretFrame, PR_TRUE);
+        ChangeFocus(caretContent);
         break;
       }
       // Get the parent
@@ -4215,674 +4099,293 @@ nsresult nsEventStateManager::EnsureCaretVisible(nsIPresShell* aPresShell, nsICo
 
 //----------------------------------------
 // Returns PR_TRUE if this doc contains a frameset
-PRBool 
-nsEventStateManager::IsFrameSetDoc(nsIContent* aContent)
+PRBool
+nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
 {
-  NS_ASSERTION(aContent, "Pointer is null!");
+  NS_ASSERTION(aDocShell, "docshell is null");
+  PRBool isFrameSet = PR_FALSE;
 
-  if (!aContent) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIDOMHTMLFrameSetElement> frameSet = do_QueryInterface(aContent);
-  if (frameSet) {
-    return PR_TRUE;
-  }
-
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
-    if (IsFrameSetDoc(child)) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-//----------------------------------------
-// This method finds the content node in the parent document
-// corresponds to the docshell
-nsIContent* 
-nsEventStateManager::FindContentForDocShell(nsIPresShell* aPresShell,
-                                            nsIContent*   aContent,
-                                            nsIDocShell*  aDocShell)
-{
-  NS_ASSERTION(aPresShell, "Pointer is null!");
-  NS_ASSERTION(aDocShell,  "Pointer is null!");
-  NS_ASSERTION(aContent,   "Pointer is null!");
-
-  nsCOMPtr<nsISupports> supps;
-  aPresShell->GetSubShellFor(aContent, getter_AddRefs(supps));
-  if (supps) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(supps));
-    if (docShell.get() == aDocShell) {
-      NS_ADDREF(aContent);
-      return aContent;
-    }
-  }
-
-  // walk children content
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
-    nsIContent* foundContent = FindContentForDocShell(aPresShell, child, aDocShell);
-    if (foundContent != nsnull) {
-      return foundContent;
-    }
-  }
-  return nsnull;
-}
-
-//----------------------------------------
-// This method checks to see if the Content node
-// (that is a HTMLFrame, is the last one
-PRBool 
-nsEventStateManager::IsLastFrameInFrameSet(nsIContent* aLastFrameContent)
-{
-  NS_ASSERTION(aLastFrameContent, "Pointer is null!");
-
-  nsCOMPtr<nsIContent> parent;
-  aLastFrameContent->GetParent(*getter_AddRefs(parent));
-  NS_ASSERTION(parent, "parent is null!");
-
-  PRInt32 count;
-  parent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsCOMPtr<nsIContent> child;
-    parent->ChildAt(i, *getter_AddRefs(child));
-    if (child.get() == aLastFrameContent && i == count-1) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-
-//----------------------------------------
-// Identifies the type of document it is
-NS_IMETHODIMP 
-nsEventStateManager::FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType)
-{
-  NS_ENSURE_ARG_POINTER(aDoc);
-  NS_ENSURE_ARG_POINTER(aDocType);
-
-  *aDocType = eChrome;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aDoc->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupports> pcContainer;
-  presContext->GetContainer(getter_AddRefs(pcContainer));
-  if (!pcContainer) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-  printf("FigureOutKindOfDoc DocShell %p   Doc: %p\n", docShell.get(), aDoc);
-#endif
-
-  // Make sure this document is "content" and not "chrome"
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
-  if (!treeItem) return NS_ERROR_FAILURE;
-
-  PRInt32 type;
-  treeItem->GetItemType(&type);
-  if (type != nsIDocShellTreeItem::typeContent) {
-    return NS_OK;
-  }
-  *aDocType = eGenericContent;
-
-  // See if we are a frame set
-  nsCOMPtr<nsIContent> rootContent;
-  aDoc->GetRootContent(getter_AddRefs(rootContent));
-  if (IsFrameSetDoc(rootContent)) {
-    *aDocType = eFrameSet;
-    return NS_OK;
-  }
-
-  // So we know we the docShell is content and it isn't
-  // a FrameSet, so let's get the parent's doc to see if we 
-  // are a FrameSet-Frame or an IFrame
-
-  // Get Parent Doc
-  nsCOMPtr<nsIDocShellTreeItem> treeItemParent;
-  treeItem->GetParent(getter_AddRefs(treeItemParent));
-  if (!treeItemParent) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(treeItemParent);
-  if (!parentDS) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  parentDS->GetPresShell(getter_AddRefs(parentPresShell));
-  if (!parentPresShell) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> parentDoc;
-  parentPresShell->GetDocument(getter_AddRefs(parentDoc));
-  if (!parentDoc) return NS_ERROR_FAILURE;
-
-  parentDoc->GetRootContent(getter_AddRefs(rootContent));
-
-  nsCOMPtr<nsIContent> content = getter_AddRefs(FindContentForDocShell(parentPresShell, rootContent, docShell));
-
-  // Is it a FrameSet Frame?
-  nsCOMPtr<nsIDOMHTMLFrameElement> frameSetFrame = do_QueryInterface(content);
-  if (frameSetFrame) {
-    *aDocType = eFrame;
-    return NS_OK;
-  }
-
-  // Is it an IFrame/
-  nsCOMPtr<nsIDOMHTMLIFrameElement> iframe = do_QueryInterface(content);
-  if (iframe) {
-    *aDocType = eIFrame;
-    return NS_OK;
-  }
-  // Generic Content gets here
-  return NS_OK;
-}
-
-//-------------------------------------------------------
-// This method gets the DocShells for the document and 
-// its parent
-nsresult 
-nsEventStateManager::GetDocShellsFromDoc(nsIDocument* aDocument, 
-                                         nsIDocShell** aDocShell, 
-                                         nsIDocShell** aParentDS)
-{
-  NS_ASSERTION(aDocument, "Pointer is null!");
-  NS_ASSERTION(aDocShell,  "Pointer is null!");
-  NS_ASSERTION(aParentDS,  "Pointer is null!");
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aDocument->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISupports> pcContainer;
-  presContext->GetContainer(getter_AddRefs(pcContainer));
-  if (!pcContainer) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
-  if (!docshell) return NS_ERROR_FAILURE;
-
-  *aDocShell = docshell.get();
-  NS_ADDREF(*aDocShell);
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docshell));
-  if (!treeItem) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShellTreeItem> treeItemParent;
-  treeItem->GetParent(getter_AddRefs(treeItemParent));
-  if (!treeItemParent) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(treeItemParent));
-  if (!parentDS) return NS_ERROR_FAILURE;
-
-  *aParentDS = parentDS.get();
-  NS_ADDREF(*aParentDS);
-  return NS_OK;
-}
-
-//-------------------------------------------------------
-// This method refreshes a docshell
-void 
-nsEventStateManager::ForceUpdate(nsIDocShell* aDocShell)
-{
-  NS_ASSERTION(aDocShell, "Pointer is null!");
-
+  // a frameset element will always be the immediate child
+  // of the root content (the HTML tag)
   nsCOMPtr<nsIPresShell> presShell;
   aDocShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) return;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  aDocShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) return;
-
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
-  if (!vm) return;
-
-  vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-  printf("ForceUpdate - DS: %p ********************************************\n", aDocShell);
-#endif
-}
-
-//-------------------------------------------------------
-// This method will find the next DocShell within Parent
-nsIDocShell* 
-nsEventStateManager::GetNextDocShell(nsIDocShell* aParentDS, nsIDocShell* aCurrentDS, PRBool aForward)
-{
-  NS_ASSERTION(aParentDS, "Pointer is null!");
-  NS_ASSERTION(aCurrentDS, "Pointer is null!");
-
-  nsCOMPtr<nsIDocShellTreeNode> parentTreeNode(do_QueryInterface(aParentDS));
-  if (!parentTreeNode) return nsnull;
-
-  PRInt32 count;
-  parentTreeNode->GetChildCount(&count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    parentTreeNode->GetChildAt(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDocShell> ds = do_QueryInterface(child);
-    if (ds.get() == aCurrentDS) {
-      i += aForward?1:-1;
-      if (i > -1 && i < count) {
-        parentTreeNode->GetChildAt(i, getter_AddRefs(child));
-        ds = do_QueryInterface(child);
-        nsIDocShell* fndDocShell = ds.get();
-        NS_ADDREF(fndDocShell);
-        return fndDocShell;
-      }
-      return nsnull;
-    }
-  }
-  return nsnull;
-}
-
-//-------------------------------------------------------
-// This method will find a DocShell that corresponds to 
-// a content node in a parent document
-nsIDocShell* 
-nsEventStateManager::GetDocShellFromContent(nsIDocShell* aParentDocShell, nsIContent* aContent)
-{
-  NS_ASSERTION(aParentDocShell, "Pointer is null!");
-  NS_ASSERTION(aContent, "Pointer is null!");
-
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  aParentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
-  nsCOMPtr<nsISupports> supports;
-  parentPresShell->GetSubShellFor(aContent, getter_AddRefs(supports));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
-  if (docShell) {
-    nsIDocShell* ds = docShell.get();
-    NS_ADDREF(ds);
-    return ds;
-  }
-  return nsnull;
-}
-
-//-------------------------------------------------------
-// This method will get the very last content object 
-// when given aRootContent node
-nsIContent*
-nsEventStateManager::GetLastContent(nsIContent* aRootContent)
-{
-  if (aRootContent == nsnull) {
-    return nsnull;
-  }
-
-  PRInt32 count;
-  aRootContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
-  aRootContent->ChildAt(count-1, *getter_AddRefs(child));
-  nsIContent* last = GetLastContent(child);
-  return last;
-}
-
-
-//-------------------------------------------------------
-// This method will get the very last content object in
-// in a DocShell
-nsIContent*
-nsEventStateManager::GetLastContent(nsIDocShell* aDocShell)
-{
-  NS_ASSERTION(aDocShell, "Pointer is null!");
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aDocShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) return nsnull;
-
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
-  if (!doc) return nsnull;
-
-  nsCOMPtr<nsIContent> rootContent;
-  doc->GetRootContent(getter_AddRefs(rootContent));
-  if (!rootContent) return nsnull;
-
-  nsIContent* last = nsnull;
-  nsCOMPtr<nsIContent> parent = rootContent;
-  PRInt32 count;
-  parent->ChildCount(count);
-  while (count > 0) {
-    nsCOMPtr<nsIContent> child;
-    parent->ChildAt(count-1, *getter_AddRefs(child));
-    child->ChildCount(count);
-    parent = child;
-    last = child.get();
-  }
-  NS_IF_ADDREF(last);
-  return last;
-}
-
-//-------------------------------------------------------
-// This method will get the "next" Frame in a FrameSet (forward or backwards)
-// and if one doesn't exist, then focus the next docshell AFTER
-// the FrameSet
-PRBool
-nsEventStateManager::FocusAfterHTMLFrameDoc(nsIDocShell* aDocShell, 
-                                           nsIDocShell* aParentDocShell, 
-                                           PRBool       aForward)
-{
-  // neither of should ever be null, but just in case
-  if (aDocShell == nsnull || aParentDocShell == nsnull) {
-    return PR_FALSE;
-  }
-
-  // Try to get the next DocShell
-  nsCOMPtr<nsIDocShell> nextDocShell = getter_AddRefs(GetNextDocShell(aParentDocShell, aDocShell, aForward));
-  if (nextDocShell) {
-    // unset focus in current doc
-    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
-    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(nextDocShell));
-    if (NS_SUCCEEDED(baseWin->SetFocus())) {
-#ifdef DEBUG_DOCSHELL_FOCUS
-      printf("Focused DS: %p ********************************************\n", nextDocShell.get());
-#endif
-      return PR_TRUE;
-    }
-  } else {
-    // ok, since the we are a HTMLFrame and parent is a FrameSet
-    // then we will get the parent of the FrameSet and try to 
-    // find the next aDocShell
-    nsCOMPtr<nsIDocShell> oldDocShell = aDocShell;
-
-    // unset focus in current doc
-    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
-    nsCOMPtr<nsIDocShellTreeItem> parentItem(do_QueryInterface(aParentDocShell));
-    if (!parentItem) return PR_FALSE;
-
-    nsCOMPtr<nsIDocShell> ds  = aDocShell;
-    nsCOMPtr<nsIDocShell> pDS = aParentDocShell;
-    nsCOMPtr<nsIDocShellTreeItem> parentParentItem;
-    parentItem->GetParent(getter_AddRefs(parentParentItem));
-    if (parentParentItem) {
-      ds = aParentDocShell;
-      pDS = do_QueryInterface(parentParentItem);
-    }
-    PRBool focusTaken;
-    // it was the last one in the Frame
-    //Offer focus upwards to allow shifting focus to UI controls
-    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(ds));
-    nsCOMPtr<nsIBaseWindow> parentDocShellAsWin(do_QueryInterface(pDS));
-    if (docShellAsWin && parentDocShellAsWin) {
-      parentDocShellAsWin->FocusAvailable(docShellAsWin, aForward, &focusTaken);
-      if (focusTaken) {
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------
-// This methods finds the content object in the parent document that 
-// corresponds to the aDocShell.
-// Then the parent doc is asked to find the next "focusable" item
-// AFTER this IFrame.
-PRBool
-nsEventStateManager::FocusAfterHTMLIFrameDoc(nsIDocShell* aDocShell, 
-                                             nsIDocShell* aParentDocShell, 
-                                             PRBool       aForward,
-                                             PRBool&      aFocusDoc)
-{
-  NS_ASSERTION(aDocShell, "Pointer is null!");
-  NS_ASSERTION(aParentDocShell, "Pointer is null!");
-
-  // Make sure this IFrame is inside a Content Doc
-  nsCOMPtr<nsIDocShellTreeItem> parentItem(do_QueryInterface(aParentDocShell));
-  if (!parentItem) return PR_FALSE;
-
-  PRInt32 type;
-  parentItem->GetItemType(&type);
-  if (type == nsIDocShellTreeItem::typeContent) {
-
-    // remove focus from any items in doc
-    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
-    // Go find the root content object for the parent document
-    // so we can find the content that corresponds to this docshell
-    nsCOMPtr<nsIPresShell> parentPresShell;
-    aParentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
-    if (!parentPresShell) return PR_FALSE;
-
-    nsCOMPtr<nsIDocument> parentDoc;
-    parentPresShell->GetDocument(getter_AddRefs(parentDoc));
-    if (!parentDoc) return PR_FALSE;
-
-    nsCOMPtr<nsIPresContext> parentPresContext;
-    aParentDocShell->GetPresContext(getter_AddRefs(parentPresContext));
-    if (!parentPresContext) return PR_FALSE;
-
-    nsCOMPtr<nsIContent> rootContent;
-    parentDoc->GetRootContent(getter_AddRefs(rootContent));
-    if (!rootContent) return PR_FALSE;
-
-    // Now that we have the Root Content for the Parent Doc
-    // we can look for the the content object that corresponds to this DocShell
-    nsCOMPtr<nsIContent> focusedContent = getter_AddRefs(FindContentForDocShell(parentPresShell, rootContent, aDocShell));
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-    printf("For Child DocShell %p shifting focus to content %p in parent DocShell %p\n", 
-            aDocShell, focusedContent.get(), aParentDocShell);
-#endif
-
-    nsCOMPtr<nsIEventStateManager> esm;
-    parentPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (!esm) return PR_FALSE;
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-    printf("PDS: %p  Pres %p  EM %p  Doc %p\n", aParentDocShell, 
-           parentPresShell.get(), esm.get(), parentDoc.get());
-#endif
-
-    // So we use that Content node in the Parent Doc 
-    // to focus the very next object
-    if (focusedContent) {
-      esm->MoveFocus(aForward, focusedContent);
-    }
-    nsCOMPtr<nsIContent> newFocusedContent;
-    esm->GetFocusedContent(getter_AddRefs(newFocusedContent));
-
-    /*nsCOMPtr<nsIContent> next;
-    nsIFrame* primaryFrame = nsnull;
-    parentPresShell->GetPrimaryFrameFor(focusedContent, &primaryFrame);
-    if (primaryFrame) {
-      esm->GetNextTabbableContent(rootContent, primaryFrame, aForward, getter_AddRefs(next));
-    }*/
-
-    if (newFocusedContent) {
-      // Now, give focus to the DOM Window
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
-      parentDoc->GetScriptGlobalObject(getter_AddRefs(sgo));
-      if (!sgo) return PR_FALSE;
-
-      nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
-      if (domwin && NS_SUCCEEDED(domwin->Focus())) {
-        aParentDocShell->SetCanvasHasFocus(PR_FALSE);
-        return PR_TRUE;
-      }
-    } else {
-      return PR_TRUE;
-    }
-
-    // tell the outside NOT to focus the document
-    // because it found something to focus
-    aFocusDoc = PR_FALSE;
-  }
-  return PR_FALSE;
-}
-
-//------------------------------------------------------------------
-// This method is checking for two things:
-//
-// 1) To see if the currently focused content has a docshell
-//    and if it does we focus it
-//
-// 2) Check to see if this frame is the last frame in the frameset
-//    and if it is then we want the parent to focus the next piece of
-//    content, which means it should move on to the Chrome
-PRBool
-nsEventStateManager::FocusWithinHTMLFrameDoc(nsIContent*   aRootContent,
-                                             nsIPresShell* aPresShell,
-                                             PRBool        aForward,
-                                             PRBool&       aDoFocusAvailDocShells)
-{
-  NS_ASSERTION(aPresShell, "Pointer is null!");
-
-  if (mCurrentFocus == nsnull) return PR_FALSE;
-
-  if (aRootContent == nsnull) {
-    if (aPresShell) {
-      // See if the currently focused item has a DocShell (like an IFrame)
-      //  and then give it focus
-      nsCOMPtr<nsISupports> supports;
-      aPresShell->GetSubShellFor(mCurrentFocus, getter_AddRefs(supports));
-      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
-      if (docShell) {
-        nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(docShell));
-        if (NS_SUCCEEDED(baseWin->SetFocus())) {
-#ifdef DEBUG_DOCSHELL_FOCUS
-          printf("Focused DS: %p ********************************************\n", docShell.get());
-#endif
-          return PR_TRUE;
-        }
-      }
-    }
-  } else {
-    // Ok, the root content has been set so we need to go find the content
-    // in the parent's doc that represents this DocShell
-    nsCOMPtr<nsIDocShell> docShell;
-    nsCOMPtr<nsIDocShell> parentDS;
-
-    if (NS_SUCCEEDED(GetDocShellsFromDoc(mDocument, getter_AddRefs(docShell), getter_AddRefs(parentDS)))) {
-      nsCOMPtr<nsIPresShell> parentPresShell;
-      parentDS->GetPresShell(getter_AddRefs(parentPresShell));
-      if (!parentPresShell) return PR_FALSE;
-
-      nsCOMPtr<nsIDocument> parentDoc;
-      parentPresShell->GetDocument(getter_AddRefs(parentDoc));
-      if (!parentDoc) return PR_FALSE;
-
+  if (presShell) {
+    nsCOMPtr<nsIDocument> doc;
+    presShell->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
+    if (htmlDoc) {
       nsCOMPtr<nsIContent> rootContent;
-      parentDoc->GetRootContent(getter_AddRefs(rootContent));
-      if (!rootContent) return PR_FALSE;
-
-      // Look up the content
-      nsCOMPtr<nsIContent> focusedContent = getter_AddRefs(FindContentForDocShell(parentPresShell, rootContent, docShell));
-
-      // Now check to see if the focused piece of content that represents
-      // the current DocShell is the last frame in the frameset
-      if (focusedContent && IsLastFrameInFrameSet(focusedContent)) {
-        aDoFocusAvailDocShells = PR_TRUE;
-
-        PRBool focusTaken = PR_FALSE;
-        SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
-        // Now let the parent doc find the next focusable DocShell
-        // and in this case the focus will move on out of the frameset
-        nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(docShell));
-        nsCOMPtr<nsIBaseWindow> parentDocShellAsWin(do_QueryInterface(parentDS));
-        if (docShellAsWin) {
-          parentDocShellAsWin->FocusAvailable(docShellAsWin, aForward, &focusTaken);
-          if (focusTaken) {
-            return PR_TRUE;
+      doc->GetRootContent(getter_AddRefs(rootContent));
+      if (rootContent) {
+        PRInt32 childCount;
+        rootContent->ChildCount(childCount);
+        for (PRInt32 i = 0; i < childCount; ++i) {
+          nsCOMPtr<nsIContent> childContent;
+          rootContent->ChildAt(i, *getter_AddRefs(childContent));
+          nsCOMPtr<nsIAtom> childTag;
+          childContent->GetTag(*getter_AddRefs(childTag));
+          if (childTag == nsHTMLAtoms::frameset) {
+            isFrameSet = PR_TRUE;
+            break;
           }
         }
       }
     }
   }
-  return PR_FALSE;
+
+  return isFrameSet;
 }
 
-//------------------------------------------------------------------
-// This method finds the 
+//----------------------------------------
+// Returns PR_TRUE if this doc is an IFRAME
+
 PRBool
-nsEventStateManager::FocusWithinHTMLIFrameDoc(nsIContent* aNextContent, PRBool aForward)
+nsEventStateManager::IsIFrameDoc(nsIDocShell* aDocShell)
 {
-  NS_ASSERTION(aNextContent, "Pointer is null!");
+  NS_ASSERTION(aDocShell, "docshell is null");
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(aDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+  treeItem->GetParent(getter_AddRefs(parentItem));
+  if (!parentItem)
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentItem);
+  nsCOMPtr<nsIPresShell> parentShell;
+  parentDS->GetPresShell(getter_AddRefs(parentShell));
+  NS_ASSERTION(parentShell, "presshell is null");
+  
+  nsCOMPtr<nsIContent> docContent;
+  parentShell->FindContentForShell(aDocShell, getter_AddRefs(docContent));
+  if (!docContent)
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIAtom> tag;
+  docContent->GetTag(*getter_AddRefs(tag));
+  return (tag == nsHTMLAtoms::iframe);
+}
 
-  // Begin by finding the DocShell for this document
-  // and the DocShell for the IFrame content
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  if (!docShell) return PR_FALSE;
+//-------------------------------------------------------
+// Return PR_TRUE if the docshell is visible
 
-  // Here we find the DocShell that correpsonds to the IFrame
-  nsCOMPtr<nsIDocShell> newDocShell = getter_AddRefs(GetDocShellFromContent(docShell, aNextContent));
-  if (newDocShell) {
-    nsCOMPtr<nsIBaseWindow> newDocShellAsWin(do_QueryInterface(newDocShell));
-    if (newDocShellAsWin) {
-      // Clear focus in current document
-      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+PRBool
+nsEventStateManager::IsShellVisible(nsIDocShell* aShell)
+{
+  NS_ASSERTION(aShell, "docshell is null");
 
-      // set focus in IFrame
-      if (NS_SUCCEEDED(newDocShellAsWin->SetFocus())) {
-        // Now if we are reversing through the document then
-        // we need to find the last piece of content in the IFrame document
-        if (!aForward) {
-          nsCOMPtr<nsIPresContext> presContext;
-          newDocShell->GetPresContext(getter_AddRefs(presContext));
-          if (!presContext) return PR_FALSE;
+  nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(aShell);
+  if (!basewin)
+    return PR_TRUE;
+  
+  PRBool isVisible = PR_TRUE;
+  basewin->GetVisibility(&isVisible);
 
-          nsCOMPtr<nsIEventStateManager> esm;
-          presContext->GetEventStateManager(getter_AddRefs(esm));
-          if (!esm) return PR_FALSE;
+  // We should be doing some additional checks here so that
+  // we don't tab into hidden tabs of tabbrowser.  -bryner
 
-          nsCOMPtr<nsIContent> lastContent = getter_AddRefs(GetLastContent(newDocShell));
-          if (lastContent) {
-            esm->MoveFocus(PR_FALSE, lastContent);
-          }
-        }
-        return PR_TRUE;
+  return isVisible;
+}
+
+//------------------------------------------------
+// This method should be called when tab or F6/ctrl-tab
+// traversal wants to focus a new document.  It will focus
+// the docshell, traverse into the document if this type 
+// of document does not get document focus (i.e. framsets 
+// and chrome), and update the canvas focus state on the docshell.
+
+void
+nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
+                                     PRBool aForward)
+{
+  NS_ASSERTION(aDocShell, "null docshell");
+  nsCOMPtr<nsIDOMWindowInternal> domwin = do_GetInterface(aDocShell);
+  if (domwin)
+    domwin->Focus();
+
+  PRInt32 itemType;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(aDocShell);
+  treeItem->GetItemType(&itemType);
+
+  PRBool focusDocument;
+  if (!aForward || (itemType == nsIDocShellTreeItem::typeChrome))
+    focusDocument = PR_FALSE;
+  else {
+    // Check for a frameset document
+    focusDocument = !(IsFrameSetDoc(aDocShell));
+  }
+
+  if (focusDocument) {
+    // make sure we're in view
+    aDocShell->SetCanvasHasFocus(PR_TRUE);
+  }
+  else {
+    aDocShell->SetHasFocus(PR_FALSE);
+
+    nsCOMPtr<nsIPresContext> pc;
+    aDocShell->GetPresContext(getter_AddRefs(pc));
+    if (pc) {
+      nsCOMPtr<nsIEventStateManager> docESM;
+      pc->GetEventStateManager(getter_AddRefs(docESM));
+      if (docESM) {
+        // clear out any existing focus state
+        docESM->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+        // now focus the first (or last) focusable content
+        docESM->ShiftFocus(aForward, nsnull);
       }
     }
   }
-  return PR_FALSE;
+}
+
+void
+nsEventStateManager::GetLastChildDocShell(nsIDocShellTreeItem* aItem,
+                                          nsIDocShellTreeItem** aResult)
+{
+  NS_ASSERTION(aItem, "null docshell");
+  NS_ASSERTION(aResult, "null out pointer");
+  
+  nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(aItem);
+  while (1) {
+    nsCOMPtr<nsIDocShellTreeNode> curNode = do_QueryInterface(curItem);
+    PRInt32 childCount = 0;
+    curNode->GetChildCount(&childCount);
+    if (!childCount) {
+      *aResult = curItem;
+      NS_ADDREF(*aResult);
+      return;
+    }
+    
+    curNode->GetChildAt(childCount - 1, getter_AddRefs(curItem));
+  }
+}
+
+void
+nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
+                                     nsIDocShellTreeItem** aResult)
+{
+  NS_ASSERTION(aNode, "null docshell");
+  NS_ASSERTION(aResult, "null out pointer");
+  
+  aNode->GetChildAt(0, aResult);
+  if (*aResult)
+    return;
+  
+  nsCOMPtr<nsIDocShellTreeNode> curNode = aNode;
+  while (curNode) {
+    nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(curNode);
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    curItem->GetParent(getter_AddRefs(parentItem));
+    if (!parentItem) {
+      *aResult = nsnull;
+      return;
+    }
+    
+    PRInt32 childOffset = 0;
+    curItem->GetChildOffset(&childOffset);
+    nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
+    parentNode->GetChildAt(childOffset+1, aResult);
+    if (*aResult)
+      return;
+    
+    curNode = do_QueryInterface(parentItem);
+  }
+}
+
+void
+nsEventStateManager::GetPrevDocShell(nsIDocShellTreeNode* aNode,
+                                     nsIDocShellTreeItem** aResult)
+{
+  NS_ASSERTION(aNode, "null docshell");
+  NS_ASSERTION(aResult, "null out pointer");
+  
+  nsCOMPtr<nsIDocShellTreeNode> curNode = aNode;
+  nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(curNode);
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+
+  curItem->GetParent(getter_AddRefs(parentItem));
+  if (!parentItem) {
+    *aResult = nsnull;
+    return;
+  }
+  
+  PRInt32 childOffset = 0;
+  curItem->GetChildOffset(&childOffset);
+  if (childOffset) {
+    nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
+    parentNode->GetChildAt(childOffset - 1, getter_AddRefs(curItem));
+    
+    // get the last child recursively of this node
+    while (1) {
+      PRInt32 childCount = 0;
+      curNode = do_QueryInterface(curItem);
+      curNode->GetChildCount(&childCount);
+      if (!childCount)
+        break;
+      
+      curNode->GetChildAt(childCount - 1, getter_AddRefs(curItem));
+    }
+    
+    *aResult = curItem;
+    NS_ADDREF(*aResult);
+    return;
+  }
+  
+  *aResult = parentItem;
+  NS_ADDREF(*aResult);
+  return;
 }
 
 //-------------------------------------------------
 // Traversal by document/DocShell only
-// this does not inclide any content inside the doc
+// this does not include any content inside the doc
 // or IFrames
 void
-nsEventStateManager::ShiftFocusByDoc(PRBool aForward, nsIContent* aRoot)
+nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
 {
-  // Figure out what type of document we are
-  eDocType docType;
-  FigureOutKindOfDoc(mDocument, &docType);
+  // Note that we use the docshell tree here instead of iteratively calling
+  // ShiftFocus.  The docshell tree should be kept in depth-first frame tree
+  // order, the same as we use for tabbing, so the effect should be the same,
+  // but this is much faster.
+  
+  NS_ASSERTION(mPresContext, "no prescontext");
 
-#ifdef DEBUG_DOCSHELL_FOCUS
-  printf("Doc Type is [%s]\n", gDocTypeNames[docType]);
-#endif
+  nsCOMPtr<nsISupports> pcContainer;
+  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsIDocShellTreeNode> curNode = do_QueryInterface(pcContainer);
+  
+  // perform a depth first search (preorder) of the docshell tree
+  // looking for an HTML Frame or a chrome document
+  
+  nsCOMPtr<nsIDocShellTreeItem> nextItem;
+  nsCOMPtr<nsIDocShell> nextShell;
+  do {
+    if (aForward) {
+      GetNextDocShell(curNode, getter_AddRefs(nextItem));
+      if (!nextItem) {
+        nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(pcContainer);
+        // wrap around to the beginning, which is the top of the tree
+        curItem->GetRootTreeItem(getter_AddRefs(nextItem));
+      }
+    }
+    else {
+      GetPrevDocShell(curNode, getter_AddRefs(nextItem));
+      if (!nextItem) {
+        nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(pcContainer);
+        // wrap around to the end, which is the last node in the tree
+        nsCOMPtr<nsIDocShellTreeItem> rootItem;
+        curItem->GetRootTreeItem(getter_AddRefs(rootItem));
+        GetLastChildDocShell(rootItem, getter_AddRefs(nextItem));
+      }
+    }
 
-  if (docType == eChrome) {
-    ShiftFocus(aForward, aRoot);
-    return;
+    curNode = do_QueryInterface(nextItem);
+    nextShell = do_QueryInterface(nextItem);
+  } while (IsFrameSetDoc(nextShell) || IsIFrameDoc(nextShell) || !IsShellVisible(nextShell));
+
+  if (nextShell) {
+    // NOTE: always tab forward into the document, this ensures that we
+    // focus the document itself, not its last focusable content.
+    // chrome documents will get their first focusable content focused.
+    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    TabIntoDocument(nextShell, PR_TRUE);
   }
-
-  if (docType == eFrame) {
-    nsCOMPtr<nsIDocShell> docShell;
-    nsCOMPtr<nsIDocShell> parentDS;
-    if (NS_SUCCEEDED(GetDocShellsFromDoc(mDocument, getter_AddRefs(docShell), getter_AddRefs(parentDS)))) {
-      // Try to focus the Next Frame in the FrameSet
-      // if there is none then focus the next Chrome Doc
-      FocusAfterHTMLFrameDoc(docShell, parentDS, aForward);
-    } 
-  }
-
 }
 

@@ -166,7 +166,6 @@ public:
 
 protected:
   virtual PRIntn GetSkipSides() const;
-  void DrawDottedRect(nsIRenderingContext& aRenderingContext, nsRect& aRect);
 
   // Data members
   PRPackedBool             mDoPaintFocus;
@@ -381,26 +380,6 @@ CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
-void
-CanvasFrame::DrawDottedRect(nsIRenderingContext& aRenderingContext, nsRect& aRect)
-{
-#ifdef DEBUG_CANVAS_FOCUS
-  printf("** DrawDottedRect: %d,%d,%d,%d\n",aRect.x, aRect.y, aRect.width, aRect.height);
-#endif
-
-  aRenderingContext.DrawLine(aRect.x, aRect.y, 
-                             aRect.x+aRect.width, aRect.y);
-  aRenderingContext.DrawLine(aRect.x+aRect.width, aRect.y, 
-                             aRect.x+aRect.width, aRect.y+aRect.height);
-  aRenderingContext.DrawLine(aRect.x+aRect.width, aRect.y+aRect.height, 
-                             aRect.x, aRect.y+aRect.height);
-  aRenderingContext.DrawLine(aRect.x, aRect.y+aRect.height, 
-                             aRect.x, aRect.y);
-  aRenderingContext.DrawLine(aRect.x, aRect.y+aRect.height, 
-                             aRect.x, aRect.y);
-}
- 
-
 NS_IMETHODIMP
 CanvasFrame::Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -438,7 +417,6 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
     if (mDoPaintFocus) {
-      aRenderingContext.PushState();
       PRBool clipEmpty;
       nsRect focusRect;
       GetRect(focusRect);
@@ -469,29 +447,37 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
             scrollableView->GetClipView(&clippedView);
             nsRect vcr;
             clippedView->GetBounds(vcr);
+            focusRect.width = vcr.width;
             focusRect.height = vcr.height;
             nscoord x,y;
             scrollableView->GetScrollPosition(x, y);
             focusRect.x += x;
             focusRect.y += y;
           }
-          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-          aRenderingContext.SetColor(NS_RGB(0,0,0));
 
+          nsStyleOutline outlineStyle(aPresContext);
+          outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
+          outlineStyle.SetOutlineInvert();
+          
           float p2t;
           aPresContext->GetPixelsToTwips(&p2t);
+          // XXX the CSS border for links is specified as 2px, but it
+          // is only drawn as 1px.  Match this here.
           nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-          focusRect.width  -= onePixel;
-          focusRect.height -= onePixel;
+          nsRect borderInside(focusRect.x + onePixel,
+                              focusRect.y + onePixel,
+                              focusRect.width - 2 * onePixel,
+                              focusRect.height - 2 * onePixel);
 
-          DrawDottedRect(aRenderingContext, focusRect);
-
-          focusRect.Deflate(onePixel, onePixel);
-          DrawDottedRect(aRenderingContext, focusRect);
+          nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
+                                          focusRect, nsnull,
+                                          nsnull, &outlineStyle,
+                                          PR_TRUE, focusRect,
+                                          borderInside, 0, 
+                                          nsnull);
         }
       }
-      aRenderingContext.PopState(clipEmpty);
     }
   }
   return rv;

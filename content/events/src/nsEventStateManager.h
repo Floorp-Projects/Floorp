@@ -54,6 +54,8 @@ class nsIPresShell;
 class nsITreeFrame;
 class nsIFrameSelection;
 class nsIDocShell;
+class nsIDocShellTreeNode;
+class nsIDocShellTreeItem;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #ifdef XP_MAC
@@ -128,9 +130,7 @@ public:
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault);
 
-  NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot);
-
-  NS_IMETHOD FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType);
+  NS_IMETHOD ShiftFocus(PRBool forward, nsIContent* aStart=nsnull);
 
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
@@ -138,15 +138,8 @@ protected:
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
-  void ShiftFocus(PRBool forward, nsIContent* aRoot=nsnull);
+  PRBool ChangeFocus(nsIContent* aFocus);
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, nsIContent** aResult);
-  NS_IMETHOD GetNextTabbableIndexContent(nsIContent* aRootContent, 
-                                         PRBool forward, 
-                                         PRBool aStartOver,
-                                         nsIContent** aResult);
-  NS_IMETHOD HasPositiveTabIndex(nsIContent* aContent, 
-                                 PRBool* aResult);
 
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
@@ -159,21 +152,17 @@ protected:
   // DocShell Focus Traversal Methods
   //---------------------------------------------
 
-  void   ShiftFocusByDoc(PRBool forward, nsIContent* aRoot=nsnull);
-  PRBool FocusAfterHTMLFrameDoc(nsIDocShell* aDocShell, nsIDocShell* aParentDocShell, PRBool aForward);
-  PRBool FocusAfterHTMLIFrameDoc(nsIDocShell* aDocShell, nsIDocShell* aParentDocShell, PRBool aForward, PRBool& aFocusDoc);
-  PRBool FocusWithinHTMLFrameDoc(nsIContent*   aRootContent, nsIPresShell* aPresShell, PRBool aForward, PRBool& aDoFocusAvailDocShells);
-  PRBool FocusWithinHTMLIFrameDoc(nsIContent* aNextContent, PRBool aForward);
-  nsIContent* GetLastContent(nsIDocShell* aDocShell);
-  nsIContent* GetLastContent(nsIContent* aRootContent);
-  nsIDocShell* GetDocShellFromContent(nsIDocShell* aParentDocShell, nsIContent* aContent);
-  nsIDocShell* GetNextDocShell(nsIDocShell* aParentDS, nsIDocShell* aCurrentDS, PRBool aForward);
-  void ForceUpdate(nsIDocShell* aDocShell);
-  nsresult GetDocShellsFromDoc(nsIDocument* aDocument, nsIDocShell** aDocShell, nsIDocShell** aParentDS);
-  PRBool IsLastFrameInFrameSet(nsIContent* aLastFrameContent);
-  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell* aDocShell);
-  PRBool IsFrameSetDoc(nsIContent* aContent);
-
+  void TabIntoDocument(nsIDocShell* aDocShell, PRBool aForward);
+  void ShiftFocusByDoc(PRBool forward);
+  PRBool IsFrameSetDoc(nsIDocShell* aDocShell);
+  PRBool IsIFrameDoc(nsIDocShell* aDocShell);
+  PRBool IsShellVisible(nsIDocShell* aShell);
+  void GetLastChildDocShell(nsIDocShellTreeItem* aItem,
+                            nsIDocShellTreeItem** aResult);
+  void GetNextDocShell(nsIDocShellTreeNode* aNode,
+                       nsIDocShellTreeItem** aResult);
+  void GetPrevDocShell(nsIDocShellTreeNode* aNode,
+                       nsIDocShellTreeItem** aResult);
 
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
@@ -255,7 +244,7 @@ protected:
 
   static PRUint32 mInstanceCount;
 
-  // For mousewheel preferences handling
+  // For preferences handling
   nsCOMPtr<nsIPref> mPrefService;
   PRBool m_haveShutdown;
 

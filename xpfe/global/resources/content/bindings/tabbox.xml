@@ -15,6 +15,19 @@
     <content orient="vertical"/>
 
     <implementation>
+      <property name="handleCtrlTab">
+        <setter>
+        <![CDATA[
+          this.setAttribute("handleCtrlTab", "true");
+        ]]>
+        </setter>
+        <getter>
+        <![CDATA[
+          return (this.getAttribute("handleCtrlTab") != "false");
+        ]]>
+        </getter>
+      </property>
+
       <property name="_tabs">
         <getter>
         <![CDATA[
@@ -78,15 +91,19 @@
     <handlers>
       <handler event="keypress" keycode="vk_tab" modifiers="control">
         <![CDATA[
-         if (this._tabs)
+         if (this._tabs && this.handleCtrlTab) {
            this._tabs.advanceSelectedTab(1);
+           event.preventDefault();
+         }
          ]]>
       </handler>
       
       <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
         <![CDATA[
-         if (this._tabs)
+         if (this._tabs && this.handleCtrlTab) {
            this._tabs.advanceSelectedTab(-1);
+           event.preventDefault();
+         }
          ]]>
       </handler>
     </handlers>
@@ -196,10 +213,20 @@
         <parameter name="aDir"/>
         <body>
         <![CDATA[
-          var next = this.selectedItem[aDir == -1 ? "previousSibling" : "nextSibling"];
-          if (next && !next.getAttribute("hidden")) {
+          var startTab = this.selectedItem;
+          var next = startTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+
+          while (next != startTab && (!next || next.getAttribute("hidden"))) {
+            if (next && next.getAttribute("hidden"))
+              next = next[aDir == -1 ? "previousSibling" : "nextSibling"];
+            if (!next)
+              next = aDir == 1 ? this.childNodes[0] : this.childNodes[this.childNodes.length - 1];
+          }
+
+          if (next && next != startTab) {
             this.selectedItem = next;
             next.focus();
+            document.commandDispatcher.advanceFocusIntoSubtree(next);
           }
         ]]>
         </body>

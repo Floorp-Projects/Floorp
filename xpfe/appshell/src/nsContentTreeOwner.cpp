@@ -533,13 +533,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetFocus()
    return mXULWindow->SetFocus();
 }
 
-NS_IMETHODIMP nsContentTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus,
-                                                 PRBool aForward,
-                                                 PRBool* aTookFocus)
-{
-   return mXULWindow->FocusAvailable(aCurrentFocus, aForward, aTookFocus);
-}
-
 NS_IMETHODIMP nsContentTreeOwner::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);

@@ -45,7 +45,10 @@ bindings, binding, content, member, triple {
 checkbox,
 colorpicker[type="button"],
 menulist,
-outliner {
+outliner,
+browser,
+editor,
+iframe {
   -moz-user-focus: normal;
 }
 
