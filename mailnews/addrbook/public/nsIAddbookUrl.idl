@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIURI.idl"
+#include "nsIAbCard.idl"
+
+[scriptable, uuid(6EB9D874-01AA-11d4-8FBE-000064657374)]
+
+interface nsIAddbookUrlOperation 
+{ 
+    const long InvalidUrl = 0; 
+    const long PrintIndividual = 1; 
+    const long PrintAddressBook = 2;
+    const long ImportCards = 3;
+    const long ImportMailingLists = 4;
+    const long ExportCards = 5;
+    const long AddToAddressBook = 6;
+    const long ExportTitle = 7;
+    const long ImportTitle = 8; 
+};
+
+interface nsIAddbookUrl : nsIURI {
+
+	/////////////////////////////////////////////////////////////////////////////// 
+	// Addbook parse specific getters
+	// Not sure if this will be used by the outside world, but if it is, at
+	// least its here
+	///////////////////////////////////////////////////////////////////////////////
+
+  // So what does the user want to do with this particular URL 
+  long                      GetAddbookOperation();
+  nsIAbCard                 GetAbCard();
+
+
+};
