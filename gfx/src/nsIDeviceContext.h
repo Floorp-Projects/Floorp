@@ -29,7 +29,9 @@ class nsIView;
 class nsIFontMetrics;
 class nsIWidget;
 class nsIDeviceContextSpec;
+
 struct nsFont;
+struct nsColor;
 
 //a cross platform way of specifying a native device context
 typedef void * nsNativeDeviceContext;
@@ -48,6 +50,48 @@ struct nsPaletteInfo {
   PRUint8       numReserved;  // number of reserved palette entries
   nsPalette     palette;      // native palette handle
 };
+
+/**
+ *
+ *
+ */
+  typedef enum {
+    // Colors
+    eSystemAttr_Color_WindowBackground,
+    eSystemAttr_Color_WindowForeground,
+    eSystemAttr_Color_WidgetBackground,
+    eSystemAttr_Color_WidgetForeground,
+    eSystemAttr_Color_WidgetSelectBackground,
+    eSystemAttr_Color_WidgetSelectForeground,
+    eSystemAttr_Color_Widget3DHighlight,
+    eSystemAttr_Color_Widget3DShadow,
+    eSystemAttr_Color_TextBackground,
+    eSystemAttr_Color_TextForeground,
+    eSystemAttr_Color_TextSelectBackground,
+    eSystemAttr_Color_TextSelectForeground,
+    // Size
+    eSystemAttr_Size_WindowTitleHeight,
+    eSystemAttr_Size_WindowBorderWidth,
+    eSystemAttr_Size_WindowBorderHeight,
+    eSystemAttr_Size_Widget3DBorder,
+    eSystemAttr_Size_ScrollbarHeight,
+    eSystemAttr_Size_ScrollbarWidth,
+    // Fonts
+    eSystemAttr_Font_Caption,
+    eSystemAttr_Font_Icon,
+    eSystemAttr_Font_Menu,
+    eSystemAttr_Font_MessageBox,
+    eSystemAttr_Font_SmallCaption,
+    eSystemAttr_Font_StatusBar,
+    eSystemAttr_Font_Tooltips,
+    eSystemAttr_Font_Widget
+  } nsSystemAttrID;
+
+  typedef union {
+    PRUint32   mSize;
+    nscolor  * mColor;
+    nsFont   * mFont;
+  } SystemAttrStruct;
 
 /**
  * Constants identifying pre-defined icons.
@@ -195,6 +239,15 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
 
   /**
+   * Get the width of a vertical scroll bar and the height
+   * of a horizontal scrollbar in application units.
+   * @param anID The snum of the type of information you want back
+   * @param aInfo out parameter for the system data
+   * @return error status
+   */
+  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const = 0;
+
+  /**
    * Get the nsIFontMetrics that describe the properties of
    * an nsFont.
    * @param aFont font description to obtain metrics for
@@ -253,7 +306,7 @@ public:
    * Return the image lib color space that's appropriate for this rendering
    * context.
    *
-   * You must call IL_ReleaseColorSpace() when you're done using the color space.
+   * You must call IL_ReleaseSystemSpace() when you're done using the color space.
    */
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
 

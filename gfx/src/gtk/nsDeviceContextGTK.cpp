@@ -107,6 +107,90 @@ NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &a
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+{
+  nsresult status = NS_OK;
+  GtkStyle *style = gtk_style_new();  // get the default styles
+
+  switch (anID) {
+    //---------
+    // Colors
+    //---------
+    case eSystemAttr_Color_WindowBackground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_WindowForeground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_WidgetBackground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_WidgetForeground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_WidgetSelectBackground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
+        break;
+    case eSystemAttr_Color_WidgetSelectForeground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
+        break;
+    case eSystemAttr_Color_Widget3DHighlight:
+        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eSystemAttr_Color_Widget3DShadow:
+        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
+        break;
+    case eSystemAttr_Color_TextBackground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_TextForeground: 
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+        break;
+    case eSystemAttr_Color_TextSelectBackground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
+        aColor;
+    case eSystemAttr_Color_TextSelectForeground:
+        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_SELECTED]);
+        break;
+    //---------
+    // Size
+    //---------
+    case eSystemAttr_Size_ScrollbarHeight : 
+        aInfo->mSize = 15;
+        break;
+    case eSystemAttr_Size_ScrollbarWidth : 
+        aInfo->mSize = 15;
+        break;
+    case eSystemAttr_Size_WindowTitleHeight:
+        aInfo->mSize = 0;
+        break;
+    case eSystemAttr_Size_WindowBorderWidth:
+        aInfo->mSize = style->klass->xthickness;
+        break;
+    case eSystemAttr_Size_WindowBorderHeight:
+        aInfo->mSize = style->klass->ythickness;
+        break;
+    case eSystemAttr_Size_Widget3DBorder:
+        aInfo->mSize = 4;
+        break;
+    //---------
+    // Fonts
+    //---------
+    case eSystemAttr_Font_Caption : 
+    case eSystemAttr_Font_Icon : 
+    case eSystemAttr_Font_Menu : 
+    case eSystemAttr_Font_MessageBox : 
+    case eSystemAttr_Font_SmallCaption : 
+    case eSystemAttr_Font_StatusBar : 
+    case eSystemAttr_Font_Tooltips : 
+      status = NS_ERROR_FAILURE;
+      break;
+  } // switch 
+  gtk_style_unref(style);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContext, 
                                                     nsDrawingSurface &aSurface)
 {

@@ -175,6 +175,178 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont) 
+{
+  NONCLIENTMETRICS ncm;
+
+  memset(&ncm, sizeof(NONCLIENTMETRICS), 0);
+  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+
+  BOOL status = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 
+                                     sizeof(NONCLIENTMETRICS),  
+                                     (PVOID)&ncm, 
+                                     0);
+  if (!status) {
+    return NS_ERROR_FAILURE;
+  }
+
+  LOGFONT * logFont = NULL;
+  switch (anID) {
+    case eSystemAttr_Font_Caption : 
+      logFont = &ncm.lfCaptionFont;
+      break;
+
+    case eSystemAttr_Font_Icon : 
+      logFont = &ncm.lfSmCaptionFont; // XXX this may not be right
+      break;
+
+    case eSystemAttr_Font_Menu : 
+      logFont = &ncm.lfMenuFont;
+      break;
+
+    case eSystemAttr_Font_MessageBox : 
+      logFont = &ncm.lfMessageFont; // XXX this may not be right
+      break;
+
+    case eSystemAttr_Font_SmallCaption : 
+      logFont = &ncm.lfSmCaptionFont; // XXX this may not be right
+      break;
+
+    case eSystemAttr_Font_StatusBar : 
+    case eSystemAttr_Font_Tooltips : 
+      logFont = &ncm.lfStatusFont;
+      break;
+
+    case eSystemAttr_Font_Widget:
+      break;
+  } // switch 
+
+  if (nsnull == logFont) {
+    return NS_ERROR_FAILURE;
+  }
+
+  
+  aFont->name = logFont->lfFaceName;
+
+  // Do Style
+  aFont->style = NS_FONT_STYLE_NORMAL;
+  if (logFont->lfItalic) {
+    aFont->decorations &= NS_FONT_STYLE_ITALIC;
+  }
+  // XXX What about oblique?
+
+
+  aFont->variant = 0;
+
+  // Do Weight
+  aFont->weight = (logFont->lfWeight == FW_BOLD?NS_FONT_WEIGHT_BOLD:NS_FONT_WEIGHT_NORMAL);
+
+  // Do decorations
+  aFont->decorations = NS_FONT_DECORATION_NONE;
+  if (logFont->lfUnderline) {
+    aFont->decorations &= NS_FONT_DECORATION_UNDERLINE;
+  }
+  if (logFont->lfStrikeOut) {
+    aFont->decorations &= NS_FONT_DECORATION_LINE_THROUGH;
+  }
+
+  // Do Size
+  aFont->size = logFont->lfHeight * -1;
+
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+{
+  nsresult status = NS_OK;
+
+  switch (anID) {
+    //---------
+    // Colors
+    //---------
+    case eSystemAttr_Color_WindowBackground:
+        *aInfo->mColor = ::GetSysColor(COLOR_WINDOW);
+        break;
+    case eSystemAttr_Color_WindowForeground:
+        *aInfo->mColor = ::GetSysColor(COLOR_WINDOWTEXT);
+        break;
+    case eSystemAttr_Color_WidgetBackground:
+        *aInfo->mColor = ::GetSysColor(COLOR_BTNFACE);
+        break;
+    case eSystemAttr_Color_WidgetForeground:
+        *aInfo->mColor = ::GetSysColor(COLOR_BTNTEXT);
+        break;
+    case eSystemAttr_Color_WidgetSelectBackground:
+        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHT);
+        break;
+    case eSystemAttr_Color_WidgetSelectForeground:
+        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
+        break;
+    case eSystemAttr_Color_Widget3DHighlight:
+        *aInfo->mColor = ::GetSysColor(COLOR_BTNHIGHLIGHT);
+        break;
+    case eSystemAttr_Color_Widget3DShadow:
+        *aInfo->mColor = ::GetSysColor(COLOR_BTNSHADOW);
+        break;
+    case eSystemAttr_Color_TextBackground:
+        *aInfo->mColor = ::GetSysColor(COLOR_WINDOW);
+        break;
+    case eSystemAttr_Color_TextForeground:
+        *aInfo->mColor = ::GetSysColor(COLOR_WINDOWTEXT);
+        break;
+    case eSystemAttr_Color_TextSelectBackground:
+        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHT);
+        break;
+    case eSystemAttr_Color_TextSelectForeground:
+        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
+        break;
+    //---------
+    // Size
+    //---------
+    case eSystemAttr_Size_ScrollbarHeight : 
+        aInfo->mSize = ::GetSystemMetrics(SM_CXHSCROLL);
+        break;
+    case eSystemAttr_Size_ScrollbarWidth : 
+        aInfo->mSize = ::GetSystemMetrics(SM_CXVSCROLL);
+        break;
+    case eSystemAttr_Size_WindowTitleHeight:
+        aInfo->mSize = ::GetSystemMetrics(SM_CYCAPTION);
+        break;
+    case eSystemAttr_Size_WindowBorderWidth:
+        aInfo->mSize = ::GetSystemMetrics(SM_CXFRAME);
+        break;
+    case eSystemAttr_Size_WindowBorderHeight:
+        aInfo->mSize = ::GetSystemMetrics(SM_CYFRAME);
+        break;
+    case eSystemAttr_Size_Widget3DBorder:
+        aInfo->mSize = ::GetSystemMetrics(SM_CXEDGE);
+        break;
+    //---------
+    // Fonts
+    //---------
+    case eSystemAttr_Font_Caption : 
+    case eSystemAttr_Font_Icon : 
+    case eSystemAttr_Font_Menu : 
+    case eSystemAttr_Font_MessageBox : 
+    case eSystemAttr_Font_SmallCaption : 
+    case eSystemAttr_Font_StatusBar : 
+    case eSystemAttr_Font_Tooltips : 
+      status = GetSysFontInfo(mDC, anID, aInfo->mFont);
+      break;
+    case eSystemAttr_Font_Widget:
+
+      aInfo->mFont->name        = "Arial";
+      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
+      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
+      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+      aInfo->mFont->size        = 204;
+      break;
+  } // switch 
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   if (NULL == mSurface) {
