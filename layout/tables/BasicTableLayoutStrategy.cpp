@@ -1793,11 +1793,15 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
           return PR_FALSE; // XXX add cases where table has coord width
         }
       }
-      if ((colFrame->GetWidth(FIX_ADJ) > 0) && (colFrame->GetWidth(FIX) <= 0)) {
+      nscoord colFix = colFrame->GetWidth(FIX);
+      if ((colFrame->GetWidth(FIX_ADJ) > 0) && (colFix <= 0)) {
         if (desChanged) {
           return PR_FALSE; // its unfortunate that the balancing algorithms cause this
-                          // XXX add cases where table has coord width
+                           // XXX add cases where table has coord width
         }
+      }
+      if ((colFix > 0) && (desChanged) && (cellDes < aPrevCellDes) && (aPrevCellDes == colFix)) {
+        return PR_FALSE; 
       }
     }
     else { // the column width is not constrained
