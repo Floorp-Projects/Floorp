@@ -130,6 +130,8 @@ public:
                          PRUint32&       aAcutalContentOffset,
                          PRInt32&        aOffset);
 
+  NS_IMETHOD SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
+  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
   // nsIHTMLReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -148,10 +150,10 @@ public:
     PRBool mEmptySelection;
   };
 
-  void ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
+/*  void ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
                             nsIDocument* aDocument,
                             PRInt32* aIndicies, PRInt32 aTextLength,
-                            SelectionInfo& aResult);
+                            SelectionInfo& aResult);*/
 
   struct TextStyle {
     const nsStyleFont* mFont;
@@ -297,6 +299,9 @@ protected:
   PRUint32 mFlags;
   PRInt32 mColumn;
   nscoord mComputedWidth;
+
+  PRInt32 mSelectionOffset;//<0 =0 >mContentLength = mContentLength
+  PRInt32 mSelectionEnd; //-1 == all
 };
 
 // Flag information used by rendering code. This information is
@@ -569,13 +574,13 @@ TextFrame::Paint(nsIPresContext& aPresContext,
  * mStartOffset is set to zero and mEndOffset is set to aTextLength and
  * mEmptySelection is set to false.
  */
+#if 0
 void
 TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
                                 nsIDocument* aDocument,
                                 PRInt32* aIndicies, PRInt32 aTextLength,
                                 SelectionInfo& aResult)
 {
-#if 0
 //DEBUG MJUDGE  HERE IS WHERE THE WORK IS
   // Assume, for now, that the selection misses this section of
   // content completely.
@@ -668,8 +673,8 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
   NS_IF_RELEASE(startContent);
   NS_IF_RELEASE(endContent);
   NS_RELEASE(selection);
-#endif //0
 }
+#endif //0
 
 #define XP_IS_SPACE_W XP_IS_SPACE
 
@@ -903,7 +908,6 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   nsIDocument* doc = shell->GetDocument();
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
-  displaySelection = PR_FALSE;
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -926,7 +930,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection) {
+    if (!displaySelection || !mSelected) {
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
@@ -934,56 +938,72 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
-      SelectionInfo si;
-      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
+/*      SelectionInfo si;
+      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);*/
 
       nscoord textWidth;
-      if (si.mEmptySelection) {
+      if (mSelectionOffset < 0)
+        mSelectionOffset = 0;
+      if (mSelectionEnd < 0)
+        mSelectionEnd = mContentLength;
+      if (mSelectionOffset >= mContentLength)
+        mSelectionOffset = mContentLength;
+      PRInt32 selectionEnd = mSelectionEnd;
+      PRInt32 selectionOffset = mSelectionOffset;
+      if (mSelectionEnd < mSelectionOffset)
+      {
+        selectionEnd = mSelectionOffset;
+        selectionOffset = mSelectionEnd;
+      }
+
+      if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
-        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+//        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
       }
-      else {
+      else 
+      {
         nscoord x = dx;
 
-        if (0 != si.mStartOffset) {
+        if (selectionOffset) {
           // Render first (unselected) section
-          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset),
+          aRenderingContext.GetWidth(text, PRUint32(selectionOffset),//si.mStartOffset),
                                      textWidth);
-          aRenderingContext.DrawString(text, si.mStartOffset,
+          aRenderingContext.DrawString(text, selectionOffset,
                                        x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
           x += textWidth;
         }
-        PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
+        PRInt32 secondLen = selectionEnd - selectionOffset; 
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          aRenderingContext.GetWidth(text + si.mStartOffset,
+          aRenderingContext.GetWidth(text + selectionOffset,
                                      PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
           aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
           aRenderingContext.SetColor(aTextStyle.mSelectionTextColor);
-          aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
-                                       x, dy, textWidth);
+          aRenderingContext.DrawString(text + selectionOffset,
+                                        secondLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
           aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           x += textWidth;
         }
-        if (textLength != si.mEndOffset) {
-          PRInt32 thirdLen = textLength - si.mEndOffset;
+        if (textLength != selectionEnd) {
+          PRInt32 thirdLen = textLength - selectionEnd;
 
           // Render third (unselected) section
-          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen),
+          aRenderingContext.GetWidth(text + selectionEnd, PRUint32(thirdLen),
                                      textWidth);
-          aRenderingContext.DrawString(text + si.mEndOffset,
+          aRenderingContext.DrawString(text + selectionEnd,
                                        thirdLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                                x, dy, textWidth);
@@ -1260,7 +1280,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
     }
     else {
       SelectionInfo si;
-      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
+//      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
 
       nscoord textWidth;
       if (si.mEmptySelection) {
@@ -1382,7 +1402,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
     }
     else {
       SelectionInfo si;
-      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
+//      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
 
       nscoord textWidth;
       if (si.mEmptySelection) {
@@ -1487,6 +1507,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
   PRInt32 range = aEndInx - aStartInx;
   if (range == 1) {
     aIndex   = aStartInx + aBaseInx;
+    acx->GetWidth(aText, aIndex, aTextWidth);
     return PR_TRUE;
   }
   PRInt32 inx = aStartInx + (range / 2);
@@ -1505,8 +1526,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
     }
   } else {
     aTextWidth = fullWidth;
-    PRInt32 end = aEndInx - inx;
-    if (BinarySearchForPosition(acx, aText+inx, fullWidth, aBaseInx+inx, 0, end, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(acx, aText, aBaseWidth, aBaseInx, inx, aEndInx, aCursorPos, aIndex, aTextWidth)) {
       return PR_TRUE;
     }
   }
@@ -1559,7 +1579,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   PRInt32 index;
   PRInt32 textWidth;
   PRUnichar* text = paintBuf;
-  PRBool found = BinarySearchForPosition(aRendContext, text, 0, 0, 0,
+  nsPoint origin;
+  GetOrigin(origin);
+  PRBool found = BinarySearchForPosition(aRendContext, text, origin.x, 0, 0,
                                          PRInt32(textLength),
                                          PRInt32(aEvent->point.x),
                                          index, textWidth);
@@ -1568,7 +1590,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     aRendContext->GetWidth(text[index], charWidth);
     charWidth /= 2;
 
-    if (PRInt32(aEvent->point.x) > textWidth+charWidth) {
+    if (PRInt32(aEvent->point.x) - origin.x > textWidth+charWidth) {
       index++;
     }
 
@@ -1577,7 +1599,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     PRInt32* ptr = ip;
     for (j=0;j<=PRInt32(mContentLength);j++) {
       if (*ptr == index+mContentOffset) {
-        offset = j+mContentOffset;
+        offset = j;//+mContentOffset;
         break;
       }
       ptr++;
@@ -1592,9 +1614,44 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     delete [] paintBuf;
   }
 
-  aAcutalContentOffset = ((TextFrame *)aNewFrame)->mContentOffset;
-  aOffset = offset;
+  aAcutalContentOffset = offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  aOffset = index;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
+{
+  if (aSelected){
+    if (aBeginOffset < 0)
+      aBeginOffset = 0;
+    if (aEndOffset < 0)
+      aEndOffset = mContentLength;
+    if ((PRInt32)aBeginOffset >= mContentLength)
+      aBeginOffset = mContentLength;
+    if (mSelectionOffset != aBeginOffset || mSelectionEnd != aEndOffset) {
+      mSelectionOffset = aBeginOffset;
+      mSelectionEnd = aEndOffset;
+      //nsRect  damageRect;
+      //GetRect(damageRect);
+      //ForceDrawFrame(this);
+      mSelected = aSelected;
+      aForceRedraw = PR_TRUE;
+    }
+  }
+  return nsFrame::SetSelected(aSelected, aBeginOffset, aEndOffset, aForceRedraw);
+}
+
+NS_IMETHODIMP
+TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset)
+{
+  if (!aSelected || !aBeginOffset || !aEndOffset || !aBeginContentOffset)
+    return NS_ERROR_NULL_POINTER;
+  *aBeginOffset = mSelectionOffset;
+  *aEndOffset = mSelectionEnd;
+  *aSelected = mSelected;
+  *aBeginContentOffset = mContentOffset;
   return NS_OK;
 }
 
@@ -1892,6 +1949,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   mContentOffset = startingOffset;
   mContentLength = offset - startingOffset;
 
+  //go to selection and ask if we are selected here. and where!!
+  //MJUDGE
   nsReflowStatus rs = (offset == contentLength)
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;

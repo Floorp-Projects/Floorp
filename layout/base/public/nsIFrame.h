@@ -439,6 +439,10 @@ public:
 
   NS_IMETHOD  VerifyTree() const = 0;
 
+  NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw) = 0;
+
+  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
+
   static NS_LAYOUT nsIListFilter * GetFilter(nsString *aFilterName);
 
   /**

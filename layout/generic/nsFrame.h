@@ -190,6 +190,8 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
+  NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
+  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
 
   // nsIHTMLReflow
   //@{
@@ -345,11 +347,11 @@ protected:
   nsIFrame*        mGeometricParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
+  PRBool           mSelected;
 
   ///////////////////////////////////
   // Important Selection Variables
   ///////////////////////////////////
-  static nsIFrame * mCurrentFrame;
   static PRBool     mDoingSelection;
   static PRBool     mDidDrag;
   static PRInt32    mStartPos;
@@ -360,7 +362,6 @@ protected:
 
 private:
   nsIView*         mView;  // must use accessor member functions
-
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);

@@ -302,7 +302,6 @@ protected:
   virtual ~nsDocument(); 
   nsresult Init();
 
-  nsICollection * mSelection;
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURL* mDocumentURL;

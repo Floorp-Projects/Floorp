@@ -20,7 +20,7 @@
 
 #include "nsISupports.h"
 #include "nsIFrame.h"
-   
+#include "nsIFocusTracker.h"   
 
 // IID for the nsISelection interface
 #define NS_ISELECTION_IID      \
@@ -40,6 +40,18 @@ public:
    *  @param aFrame is the frame that MAY handle the event
    */
   virtual nsresult HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
+
+  /** TakeFocus will take the focus to the new frame at the new offset and 
+   *  will either extend the selection from the old anchor, or replace the old anchor.
+   *  the old anchor and focus position may also be used to deselect things
+   *  @param aTracker  we need a focus tracker to get the old focus ect.
+   *  @param aFrame is the frame that wants the focus
+   *  @param aOffset is the offset in the aFrame that will get the focus point
+   *  @param aContentOffset is the offset in the node of the aFrame that is reflected be aOffset
+   *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
+   */
+  virtual nsresult TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRUint32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
+
 };
 
 
