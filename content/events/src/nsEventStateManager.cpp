@@ -1664,7 +1664,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   nsIScrollableView* scrollView = nsnull;
   PRBool passToParent = PR_TRUE;
 
-  while (scrollFrame && passToParent) {
+  for( ; scrollFrame && passToParent; scrollFrame = scrollFrame->GetParent()) {
     // Check whether the frame wants to provide us with a scrollable view.
     scrollView = nsnull;
     nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(scrollFrame);
@@ -1672,7 +1672,13 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       scrollView = svp->GetScrollableView();
     }
     if (!scrollView) {
-      scrollFrame = scrollFrame->GetParent();
+      continue;
+    }
+
+    nsPresContext::ScrollbarStyles ss =
+      nsLayoutUtils::ScrollbarStylesOfView(scrollView);
+    if (NS_STYLE_OVERFLOW_HIDDEN ==
+        (aScrollHorizontal ? ss.mHorizontal : ss.mVertical)) {
       continue;
     }
     
@@ -1715,8 +1721,6 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         }
       }
     }
-
-    scrollFrame = scrollFrame->GetParent();
   }
 
   if (!passToParent && scrollView) {
