@@ -97,6 +97,7 @@ nsContextMenu::nsContextMenu()
   mDOMElement     = nsnull;
   mWebShell       = nsnull;
   mConstructed    = false;
+  mAlignment      = "topleft";
 }
 
 //-------------------------------------------------------------------------
@@ -129,6 +130,8 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignmen
         mParentWindow = parent;
 	  }
   }
+
+  mAlignment = anAlignment;
 
   mMenu = CreatePopupMenu();
   return NS_OK;
@@ -397,9 +400,21 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   HWND pWnd = (HWND)mParentWindow->GetNativeData(NS_NATIVE_WIDGET);
 
   // Track the menu
+  UINT alignFlags = TPM_LEFTALIGN | TPM_TOPALIGN;
+  if (mAlignment == "topright") {
+    alignFlags = TPM_RIGHTALIGN | TPM_TOPALIGN;
+  }
+  else if (mAlignment == "bottomleft") {
+    alignFlags = TPM_BOTTOMALIGN | TPM_LEFTALIGN;
+  }
+  else if (mAlignment == "bottomright") {
+    alignFlags = TPM_BOTTOMALIGN | TPM_RIGHTALIGN;
+  }
+  alignFlags |= TPM_RETURNCMD;
+
   PRInt32 identifier = ::TrackPopupMenu(
 	  mMenu, 
-	  TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD, 
+	  alignFlags, 
 	  mX, mY, 0, pWnd, NULL);
 
   if (identifier > 0) {

@@ -128,6 +128,8 @@ protected:
   nsIWebShell   * mWebShell;
   bool            mConstructed;
 
+  nsString        mAlignment;
+
   PRInt32         mX;
   PRInt32         mY;
 };
