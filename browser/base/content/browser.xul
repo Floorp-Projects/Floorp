@@ -291,7 +291,7 @@ Contributor(s):
     <menuitem id="context-forward"
               label="&forwardCmd.label;"
               accesskey="&forwardCmd.accesskey;"
-              oncommand="Browser:Forward"/>
+              command="Browser:Forward"/>
     <menuitem id="context-reload"
               label="&reloadCmd.label;"
               accesskey="&reloadCmd.accesskey;"
