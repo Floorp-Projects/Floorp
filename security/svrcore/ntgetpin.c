@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1996
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,12 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/******************************************************
+/***********************************************************
  *
- *  ntgetpin.c - Prompts for the key
- *  database passphrase.
+ *  ntgetpin.c - Prompts for the key database passphrase.
  *
- ******************************************************/
+ ***********************************************************/
 
 #if defined( WIN32 ) 
 

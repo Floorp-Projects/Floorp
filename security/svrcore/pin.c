@@ -1,7 +1,4 @@
-/*
- * pin.c - SVRCORE module implementing PK11 pin callback support
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,6 +33,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * pin.c - SVRCORE module implementing PK11 pin callback support
+ */
 
 #include <svrcore.h>
 
