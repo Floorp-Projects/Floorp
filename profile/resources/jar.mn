@@ -1,6 +1,4 @@
 comm.jar:
-        content/communicator/profile/confirmMigration.js	(content/confirmMigration.js)
-	content/communicator/profile/confirmMigration.xul	(content/confirmMigration.xul)
 	content/communicator/profile/createProfileWizard.js	(content/createProfileWizard.js)
 	content/communicator/profile/createProfileWizard.xul	(content/createProfileWizard.xul)
 	content/communicator/profile/migrateAllProfile.xul	(content/migrateAllProfile.xul)
@@ -11,7 +9,6 @@ comm.jar:
 	content/communicator/profile/selectLang.xul	(content/selectLang.xul)
 
 en-US.jar:
-	locale/en-US/communicator/profile/confirmMigration.dtd        (locale/en-US/confirmMigration.dtd)
 	locale/en-US/communicator/profile/createProfileWizard.dtd	(locale/en-US/createProfileWizard.dtd)
 	locale/en-US/communicator/profile/migration.properties	(locale/en-US/migration.properties)
 	locale/en-US/communicator/profile/profileManager.properties	(locale/en-US/profileManager.properties)

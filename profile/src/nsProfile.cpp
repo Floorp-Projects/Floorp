@@ -111,7 +111,6 @@
 #define PROFILE_MANAGER_URL            "chrome://communicator/content/profile/profileSelection.xul?manage=true"
 #define PROFILE_MANAGER_CMD_LINE_ARG   "-ProfileManager"
 #define PROFILE_WIZARD_URL             "chrome://communicator/content/profile/createProfileWizard.xul"
-#define CONFIRM_AUTOMIGRATE_URL        "chrome://communicator/content/profile/confirmMigration.xul"
 #define PROFILE_WIZARD_CMD_LINE_ARG    "-ProfileWizard"
 #define INSTALLER_CMD_LINE_ARG         "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG    "-CreateProfile"
