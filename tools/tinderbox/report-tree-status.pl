@@ -5,14 +5,14 @@
 # Graph tree-open status, via tbox graph server.
 #
 
-# Send data to graph server via HTTP.
-require "reportdata.pl";
-
-use Sys::Hostname;  # for ::hostname()
-
 # Location of this file.  Make sure that hand-runs and crontab-runs
 # of this script read/write the same data.
 my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";  
+
+# Send data to graph server via HTTP.
+require "$script_dir/reportdata.pl";
+
+use Sys::Hostname;  # for ::hostname()
 
 my $sheriff_string;
 
