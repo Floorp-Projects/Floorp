@@ -171,6 +171,7 @@ net_RemoveSocketToHashTable(URL_Struct* URL_s)
   nsSockStub_unlock();
 }
 
+extern "C" {
 PUBLIC PRFileDesc *
 NET_GetSocketToHashTable(URL_Struct_* URL_s) 
 {
@@ -182,7 +183,9 @@ NET_GetSocketToHashTable(URL_Struct_* URL_s)
   SockStubConData * cd = (SockStubConData *)ce->con_data;
   return cd->sock;
 }
+}
 
+extern "C" {
 PUBLIC int32
 NET_FreeSocket(URL_Struct_* URL_s) 
 {
@@ -200,6 +203,7 @@ NET_FreeSocket(URL_Struct_* URL_s)
   cd->next_state = SOCKSTUB_DONE;
  
   return STATUS (net_ProcessSockStub(ce));
+}
 }
 
 /* begins the connect process
