@@ -308,4 +308,26 @@ file:///s|/mozilla/layout/html/tests/table/marvin/x_tr_valign_baseline.xml
 file:///s|/mozilla/layout/html/tests/table/marvin/x_tr_id.xml
 file:///s|/mozilla/layout/html/tests/table/marvin/x_tr_class.xml
 file:///s|/mozilla/layout/html/tests/table/marvin/x_tr_style.xml
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table-row-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table-column-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table-row.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table-column.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_simple-table-cell.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table-row-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table-column-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table-row.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table-column.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_position-table-cell.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_layers-show.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_layers-hide.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table-row-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table-column-group.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table-row.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table-column.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_border-table-cell.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_layers-opacity.html
+file:///s|/mozilla/layout/html/tests/table/marvin/backgr_fixed-bg.html
 
