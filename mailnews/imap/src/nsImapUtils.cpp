@@ -54,7 +54,7 @@ nsGetImapServer(const char* username, const char* hostname,
     if (NS_FAILED(rv)) return rv;
 
     *aResult = server;
-    NS_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult);
 
     return rv;
 }
