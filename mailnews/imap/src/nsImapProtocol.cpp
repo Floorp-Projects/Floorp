@@ -3253,7 +3253,7 @@ PRBool
 nsImapProtocol::GetSubscribingNow()
 {
     // ***** code me *****
-    return PR_TRUE;// ***** for now
+    return PR_FALSE;// ***** for now
 }
 
 void
@@ -4143,8 +4143,8 @@ void nsImapProtocol::FindMailboxesIfNecessary()
     if (NS_SUCCEEDED(rv) && !foundMailboxesAlready &&
 		(imapAction != nsIImapUrl::nsImapBiff) &&
 		(imapAction != nsIImapUrl::nsImapDiscoverAllBoxesUrl) &&
-		(imapAction != nsIImapUrl::nsImapUpgradeToSubscription) /* &&
-		!GetSubscribingNow() */)
+		(imapAction != nsIImapUrl::nsImapUpgradeToSubscription) &&
+		!GetSubscribingNow())
     {
 		DiscoverMailboxList();
 
@@ -4580,6 +4580,39 @@ void nsImapProtocol::Copy(nsString2 &messageList,
     PR_FREEIF( escapedDestination);
 }
 
+void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
+                                       PRInt32 depth)
+{
+	NS_ASSERTION (depth >= 0, 
+                  "Oops ... depth must be equal or greater than 0");
+	if (depth < 0) return;
+
+	nsString2 truncatedPrefix (onlineMailboxPrefix, eOneByte);
+    PRUnichar slash = '/';
+	if (truncatedPrefix.Last() == slash)
+        truncatedPrefix.SetLength(truncatedPrefix.Length()-1);
+		
+    char *utf7ListArg = 
+        CreateUtf7ConvertedString(truncatedPrefix.GetBuffer(),TRUE);
+    if (utf7ListArg)
+    {
+        nsString2 pattern(utf7ListArg, eOneByte);
+        nsString2 suffix(eOneByte);
+        int count = 0;
+        char separator = 0;
+        m_runningUrl->GetOnlineSubDirSeparator(&separator);
+        suffix = separator;
+        suffix += '%';
+        
+        while (count < depth)
+        {
+            pattern += suffix;
+            count++;
+            List(pattern.GetBuffer(), FALSE);
+        }
+        PR_Free(utf7ListArg);
+    }
+}
 
 void nsImapProtocol::ProcessAuthenticatedStateURL()
 {
@@ -4626,14 +4659,14 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 			OnAppendMsgFromFile();
 			break;
 		case nsIImapUrl::nsImapDiscoverAllBoxesUrl:
-#ifdef UNREADY_CODE
-			PR_ASSERT(!GetSubscribingNow());	// should not get here from subscribe UI
+			NS_ASSERTION (!GetSubscribingNow(),
+                      "Oops ... should not get here from subscribe UI");
 			DiscoverMailboxList();
-#endif
 			break;
 		case nsIImapUrl::nsImapDiscoverAllAndSubscribedBoxesUrl:
-#ifdef UNREADY_CODE
-			PR_ASSERT(GetSubscribingNow());
+			NS_ASSERTION (GetSubscribingNow(), 
+                          "Oops ... should not get here");
+#if NOT_YET
 			DiscoverAllAndSubscribedBoxes();
 #endif
 			break;
@@ -4642,28 +4675,32 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 			OnCreateFolder(sourceMailbox);
 			break;
 		case nsIImapUrl::nsImapDiscoverChildrenUrl:
-#ifdef UNREADY_CODE
-            char *canonicalParent = fCurrentUrl->CreateServerSourceFolderPathString();
+        {
+            char *canonicalParent = nsnull;
+            m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
             if (canonicalParent)
             {
 				NthLevelChildList(canonicalParent, 2);
                 PR_Free(canonicalParent);
             }
-#endif
 			break;
+        }
 		case nsIImapUrl::nsImapDiscoverLevelChildrenUrl:
-#ifdef UNREADY_CODE
-            char *canonicalParent = fCurrentUrl->CreateServerSourceFolderPathString();
-			int depth = fCurrentUrl->GetChildDiscoveryDepth();
+        {
+            char *canonicalParent = nsnull;
+            m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
+			PRInt32 depth = 0;
+            m_runningUrl->GetChildDiscoveryDepth(&depth);
    			if (canonicalParent)
 			{
 				NthLevelChildList(canonicalParent, depth);
-				if (GetServerStateParser().LastCommandSuccessful())
-					ChildDiscoverySucceeded();
-				XP_FREE(canonicalParent);
+				if (GetServerStateParser().LastCommandSuccessful() &&
+                    m_imapMailFolderSink)
+					m_imapMailFolderSink->ChildDiscoverySucceeded(this);
+				PR_Free(canonicalParent);
 			}
-#endif
 			break;
+        }
 		case nsIImapUrl::nsImapSubscribe:
 			sourceMailbox = OnCreateServerSourceFolderPathString();
 			OnSubscribe(sourceMailbox); // used to be called subscribe

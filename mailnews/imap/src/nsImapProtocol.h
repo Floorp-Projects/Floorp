@@ -406,6 +406,7 @@ private:
 	PRBool FolderNeedsACLInitialized(const char *folderName);
 	void DiscoverMailboxList();
 	void MailboxDiscoveryFinished();
+    void NthLevelChildList(const char *onlineMailboxPrefix, PRInt32 depth);
 	void Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
 	void List(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
 
