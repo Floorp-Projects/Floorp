@@ -1160,12 +1160,34 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   {
     nsFormControlFrame::RegUnRegAccessKey(nsnull, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+    nsCOMPtr<nsIHTMLContent> htmlContent;
+    nsString value;
+    if (mContent)
+    {
+      htmlContent = do_QueryInterface(mContent);
+      if (htmlContent) 
+      {
+        nsHTMLValue htmlValue;
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+            htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, htmlValue)) 
+        {
+          if (eHTMLUnit_String == htmlValue.GetUnit()) 
+          {
+            htmlValue.GetStringValue(value);
+          }
+        }
+      }
+    }
+    if (value.Length())
+    {
+        SetTextControlFrameState(value);
+    }        
   }
 
 //get margins
   // Figure out if we are doing Quirks or Standard
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+  aPresContext->GetCompatibilityMode(&mode); 
 
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
