@@ -82,6 +82,7 @@ public:
   NS_IMETHOD IsHelpMenu(PRBool* aIsHelp);
   
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   

@@ -90,6 +90,7 @@ public:
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);
 
   NS_IMETHOD SetDOMNode(nsIDOMNode * menuNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** menuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * menuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
 

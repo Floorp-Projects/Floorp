@@ -835,6 +835,16 @@ NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * menuNode)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetDOMNode(nsIDOMNode ** menuNode)
+{
+  if(menuNode) {
+    *menuNode = mDOMNode;
+    NS_IF_ADDREF(menuNode);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * menuElement)
 {
   mDOMElement = menuElement;
