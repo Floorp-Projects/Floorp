@@ -26,9 +26,6 @@ NO_CAFE=1
 
 include <$(DEPTH)\config\config.mak>
 
-# for compatibility
-include <$(DEPTH)\java\config\localdefs.mak>
-
 JDIRS = org\mozilla\dom \
 	org\mozilla\dom\events \
 	org\mozilla\dom\util \
