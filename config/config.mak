@@ -283,6 +283,13 @@ CFLAGS=$(CFLAGS) -DMOZ_SVG
 CFLAGS=$(CFLAGS) -DMOZ_REFLOW_PERF -DMOZ_REFLOW_PERF_DSP
 !endif
 
+!ifdef MOZ_NEW_CACHE
+CFLAGS=$(CFLAGS) -DMOZ_NEW_CACHE
+!endif
+
+!ifdef USE_IMG2
+CFLAGS=$(CFLAGS) -DUSE_IMG2
+!endif
 
 #//-----------------------------------------------------------------------
 #//
