@@ -37,6 +37,6 @@ if (!@row) {
     print "Please hit back and try again.\n";
     exit;
 }
-print qq{Content-type: $row[0]"; \n\n$row[1]};
+print qq{Content-type: $row[0]\n\n$row[1]};
 
     
