@@ -17,54 +17,38 @@
 
 DEPTH=..\..\..
 
+IGNORE_MANIFEST=1
+
+MODULE=mozbrwsr
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=raptor 
 
+DLLNAME	      = mozbrwsr
+DLL1NAME      = mozbrwsr
+PDBFILE	      = $(DLLNAME).pdb
+MAPFILE	      = $(DLLNAME).map
+DLL	          =.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE = DLL
+
+LINCS = \
+	-I$(PUBLIC)/xpcom \
+	-I$(PUBLIC)/dom \
+	$(NULL)
+
+LLIBS	= \
+	$(LIBNSPR) \
+	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\js3250.lib \
+	$(NULL)
+
+OBJS =	\
+	.\$(OBJDIR)\nsBrowserInstance.obj \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-# Define this so nobody can screw it up.
-DISTRES=$(DIST)\bin\res\samples
-
-install::
-	$(MAKE_INSTALL) status.xul $(DISTRES)
-	$(MAKE_INSTALL) toolbar.xml $(DISTRES)
-	$(MAKE_INSTALL) downloadProgress.xul $(DISTRES)
-	$(MAKE_INSTALL) downloadProgress.css $(DISTRES)
-	$(MAKE_INSTALL) navigator-mozillazine0.css $(DISTRES)
-	$(MAKE_INSTALL) navigator-test1.xul $(DISTRES)
-	$(MAKE_INSTALL) navigator-goofy.css $(DISTRES)
-	$(MAKE_INSTALL) navigator-shiny.css $(DISTRES)
-	$(MAKE_INSTALL) raindrops_light.gif $(DISTRES)
-	$(MAKE_INSTALL) skindemo.xul $(DISTRES)
-	$(MAKE_INSTALL) DumpDOM.js $(DISTRES)
-	$(MAKE_INSTALL) onerror.js $(DISTRES)
-	$(MAKE_INSTALL) lessCols.gif $(DISTRES)
-	$(MAKE_INSTALL) lessCols_mo.gif $(DISTRES)
-	$(MAKE_INSTALL) lessCols_dis.gif $(DISTRES)
-	$(MAKE_INSTALL) moreCols.gif $(DISTRES)
-	$(MAKE_INSTALL) moreCols_mo.gif $(DISTRES)
-	$(MAKE_INSTALL) moreCols_dis.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollUp.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollUp_mo.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollUp_dis.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollDown.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollDown_mo.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollDown_dis.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollThumb.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollThumb_mo.gif $(DISTRES)
-	$(MAKE_INSTALL) scrollThumb_dis.gif $(DISTRES)
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DISTRES)\downloadProgress.xul
-	rm -f $(DISTRES)\downloadProgress.css
-	rm -f $(DISTRES)\navigator-mozillazine0.css
-	rm -f $(DISTRES)\navigator-test1.xul
-	rm -f $(DISTRES)\navigator-goofy.css
-	rm -f $(DISTRES)\navigator-shiny.css
-	rm -f $(DISTRES)\raindrops_light.gif
-	rm -f $(DISTRES)\status.xul
-	rm -f $(DISTRES)\DumpDOM.js
-	
+    rm -f $(DIST)\bin\components\$(DLLNAME).dll
