@@ -365,8 +365,8 @@ public:
    */
   PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
-  PRInt32 RFind(const nsAFlatString& aString, PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const PRUnichar* aString,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const nsAFlatString& aString, PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const PRUnichar* aString,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
 
   /**
