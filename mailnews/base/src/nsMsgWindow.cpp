@@ -154,13 +154,16 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
 
   nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
 
-	if(rootShell)
-	{
-		rootShell->SetParentURIContentListener(nsnull);
-		mRootDocShellWeak = nsnull;
-		mMessageWindowDocShellWeak = nsnull;
-	}
+  if(rootShell)
+  {
+    rootShell->SetParentURIContentListener(nsnull);
+    mRootDocShellWeak = nsnull;
+    mMessageWindowDocShellWeak = nsnull;
+  }
 
+
+  // in case nsMsgWindow leaks, make sure other stuff doesn't leak.
+  mTransactionManager = nsnull;
   return NS_OK;
 }
 
