@@ -191,15 +191,16 @@ private:
 
     SocketEventQ  mEventQ;
     PRLock       *mEventQLock;
-    PRBool        mServicingEventQ;
 
     //-------------------------------------------------------------------------
     // socket lists (socket thread only)
     //
     // only "active" sockets are on the poll list.  the active list is kept
-    // in sync with the poll list such that the index of a socket on the poll
-    // list matches its index on the active socket list.  as a result the first
-    // element of the active socket list is always null.
+    // in sync with the poll list such that:
+    //
+    //   mActiveList[k].mFD == mPollList[k+1].fd
+    //
+    // where k=0,1,2,...
     //-------------------------------------------------------------------------
 
     struct SocketContext
@@ -208,30 +209,19 @@ private:
         nsASocketHandler *mHandler;
     };
 
-    SocketContext mActiveList [ NS_SOCKET_MAX_COUNT + 1 ];
-    SocketContext mIdleList   [ NS_SOCKET_MAX_COUNT     ];
+    SocketContext mActiveList [ NS_SOCKET_MAX_COUNT ];
+    SocketContext mIdleList   [ NS_SOCKET_MAX_COUNT ];
 
     PRUint32 mActiveCount;
     PRUint32 mIdleCount;
 
-    nsresult DetachSocket_Internal(SocketContext *);
+    nsresult DetachSocket(SocketContext *);
     nsresult AddToIdleList(SocketContext *);
     nsresult AddToPollList(SocketContext *);
     void RemoveFromIdleList(SocketContext *);
     void RemoveFromPollList(SocketContext *);
-
-    nsresult MoveToIdleList(SocketContext *sock)
-    {
-        nsresult rv = AddToIdleList(sock);
-        RemoveFromPollList(sock);
-        return rv;
-    }
-    nsresult MoveToPollList(SocketContext *sock)
-    {
-        nsresult rv = AddToPollList(sock);
-        RemoveFromIdleList(sock);
-        return rv;
-    }
+    void MoveToIdleList(SocketContext *sock);
+    void MoveToPollList(SocketContext *sock);
     
     // returns PR_FALSE to stop processing the main loop
     PRBool ServiceEventQ();
@@ -239,13 +229,13 @@ private:
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
     //
-    // first element of the poll list is the "NSPR pollable event"
+    // first element of the poll list is mThreadEvent (or null if the pollable
+    // event cannot be created).
     //-------------------------------------------------------------------------
 
     PRPollDesc mPollList[ NS_SOCKET_MAX_COUNT + 1 ];
 
-    PRUint32 PollCount() { return mActiveCount + 1; }
-    PRInt32  Poll(); // calls PR_Poll
+    PRInt32 Poll(); // calls PR_Poll
 
     //-------------------------------------------------------------------------
     // mHostDB maps host:port -> nsHostEntry
