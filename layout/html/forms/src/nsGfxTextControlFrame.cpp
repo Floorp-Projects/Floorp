@@ -927,6 +927,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
     aStatus = NS_FRAME_COMPLETE;
   } else {
+#if 0 // this is the right way
     // Quirks mode will NOT obey CSS border and padding
     // GetDesiredSize calculates the size without CSS borders
     // the nsLeafFrame::Reflow will add in the borders
@@ -949,6 +950,14 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       }
     }
     aStatus = NS_FRAME_COMPLETE;
+#else  // this is the old way
+   if (eCompatibility_NavQuirks == mode) {                        
+       GetDesiredSize(&aPresContext, aReflowState, aMetrics);      
+       aStatus = NS_FRAME_COMPLETE;
+     } else {                                                                    
+       rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+     }
+#endif
     // Now resize the widget if there is one, in this case it is 
     // the webshell for the editor
     if (!mDidInit) {
