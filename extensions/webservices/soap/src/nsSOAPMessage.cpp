@@ -385,11 +385,17 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
   int count = 0;
   int length = 0;
   nsCOMPtr<nsIDOMElement> element;
-  nsresult rv = GetHeader(getter_AddRefs(element));
+  nsresult rv = GetBody(getter_AddRefs(element));
   if (NS_FAILED(rv)) return rv;
+  if (!element) return NS_ERROR_ILLEGAL_VALUE;
   nsCOMPtr<nsIDOMElement> next;
   nsCOMPtr<nsISOAPParameter> param;
   nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
+  if (aDocumentStyle) {
+    element = next;
+    if (!element) return NS_ERROR_ILLEGAL_VALUE;
+    nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
+  }
   while (next) {
     if (length == count) {
       length = length ? 2 * length : 10;
