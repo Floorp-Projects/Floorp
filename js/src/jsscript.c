@@ -249,13 +249,10 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 XDRAtom1(JSXDRState *xdr, JSAtomListElement *ale)
 {
-    uint32 type;
     jsval value;
 
-    if (xdr->mode == JSXDR_ENCODE) {
-	type = JSVAL_TAG(ATOM_KEY(ale->atom));
+    if (xdr->mode == JSXDR_ENCODE)
 	value = ATOM_KEY(ale->atom);
-    }
 
     if (!JS_XDRUint32(xdr, &ale->index) ||
 	!JS_XDRValue(xdr, &value))
@@ -274,6 +271,7 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 {
     uint32 length;
     uintN i;
+    JSBool ok;
 
     if (xdr->mode == JSXDR_ENCODE)
 	length = map->length;
@@ -303,12 +301,12 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 	    al.count++;
 	    al.list = ale;
 	}
-	if (!js_InitAtomMap(cx, map, &al)) {
-	    JS_ARENA_RELEASE(&cx->tempPool, mark);
-	    return JS_FALSE;
-	}
-	JS_ARENA_RELEASE(&cx->tempPool, mark);
-    } else if (xdr->mode == JSXDR_ENCODE) {
+        ok = js_InitAtomMap(cx, map, &al);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
+        return ok;
+    }
+
+    if (xdr->mode == JSXDR_ENCODE) {
 	JSAtomListElement ale;
 
 	for (i = 0; i < map->length; i++) {
