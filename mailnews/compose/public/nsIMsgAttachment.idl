@@ -74,7 +74,7 @@ interface nsIMsgAttachment : nsISupports {
    * contentType attribute
    *
    * @Specify the content-type of the attachment
-   * @If ommitted, it will be determined base on either the url or the content of the file.
+   * @If ommitted, it will be determined base on either the name, the url or the content of the file.
    */
   attribute string    contentType;
 

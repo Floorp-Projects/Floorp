@@ -94,6 +94,7 @@
 #include "nsILoadGroup.h"
 #include "nsMsgSendReport.h"
 #include "nsMsgSimulateError.h"
+#include "nsNetCID.h"
 
 
 // use these macros to define a class IID for our component. Our object currently 
@@ -2119,11 +2120,31 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
           if (NS_SUCCEEDED(rv) && mimeFinder) 
           {
-            char *fileExt = nsMsgGetExtensionFromFileURL(NS_ConvertASCIItoUCS2(url));
-            if (fileExt)
-            mimeFinder->GetTypeFromExtension(fileExt, &(m_attachments[newLoc].m_type));
+            nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+            nsXPIDLCString fileExt;
+            if (fileUrl)
+            {
+              //First try using the real file name
+              rv = fileUrl->SetFileName(m_attachments[newLoc].m_real_name);
+              if (NS_SUCCEEDED(rv))
+              {
+                rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+                if (NS_SUCCEEDED(rv))
+                  mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
+              }
 
-            PR_FREEIF(fileExt);
+              //Then try using the url if we still haven't figured out the content type
+              if ((!m_attachments[newLoc].m_type) ||  (!*m_attachments[newLoc].m_type))
+              {
+                rv = fileUrl->SetSpec(url.get());
+                if (NS_SUCCEEDED(rv))
+                {
+                  rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+                  if (NS_SUCCEEDED(rv))
+                    mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
+                }
+              }
+            }
           }
         }
 

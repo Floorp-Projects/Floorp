@@ -2832,33 +2832,31 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // Once we get here, we need to figure out if we have the correct file
   // type for the editor.
   //
-  nsFileURL sigFilePath(testSpec);
-  char    *fileExt = nsMsgGetExtensionFromFileURL(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, sigFilePath)));
-  
-  if ( (fileExt) && (*fileExt) )
+  nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+  if (fileUrl)
+  {
+    fileUrl->SetFilePath(sigNativePath);
+    nsXPIDLCString fileExt;
+    rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+    if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
   {
     // Now, most importantly, we need to figure out what the content type is for
     // this signature...if we can't, we assume text
     rv = NS_OK;
-    char      *sigContentType = nsnull;
+      nsXPIDLCString sigContentType;
     nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && mimeFinder && fileExt) 
-    {
-      mimeFinder->GetTypeFromExtension(fileExt, &(sigContentType));
-      PR_FREEIF(fileExt);
-    }
+      if (NS_SUCCEEDED(rv) && mimeFinder) 
+        mimeFinder->GetTypeFromExtension(fileExt.get(), getter_Copies(sigContentType));
   
-    if (sigContentType)
+      if (!sigContentType.IsEmpty())
     {
-      imageSig = (!PL_strncasecmp(sigContentType, "image/", 6));
+        imageSig = (!PL_strncasecmp(sigContentType.get(), "image/", 6));
       if (!imageSig)
-        htmlSig = (!PL_strcasecmp(sigContentType, TEXT_HTML));
+          htmlSig = (!PL_strcasecmp(sigContentType.get(), TEXT_HTML));
     }
     else
-      htmlSig = ( (!PL_strcasecmp(fileExt, "HTM")) || (!PL_strcasecmp(fileExt, "HTML")) );
-
-    PR_FREEIF(fileExt);
-    PR_FREEIF(sigContentType);
+        htmlSig = ( (!PL_strcasecmp(fileExt.get(), "HTM")) || (!PL_strcasecmp(fileExt.get(), "HTML")) );
+    }
   }
 
   static const char      htmlBreak[] = "<BR>";

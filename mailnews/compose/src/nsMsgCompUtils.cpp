@@ -1963,49 +1963,6 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 }
 
 //
-// Find an extension in a URL
-char *
-nsMsgGetExtensionFromFileURL(nsString aUrl)
-{
-  char *url = nsnull;
-  char *rightDot = nsnull;
-  char *rightSlash = nsnull;
-
-  if (aUrl.IsEmpty())
-    return nsnull;
-
-  url = ToNewCString(aUrl);
-  if (!url)
-    goto ERROR_OUT;
-
-  rightDot = PL_strrchr(url, '.');
-  if (!rightDot)
-    goto ERROR_OUT;
-
-  rightSlash  = PL_strrchr(url, '/');
-  if (!rightSlash)
-    rightSlash = PL_strrchr(url, '\\');
-   
-  if (!rightSlash)
-    goto ERROR_OUT;
-
-  if (rightDot > rightSlash)
-  {
-    if (rightDot+1 == '\0')
-      goto ERROR_OUT;
-
-    char *retVal = PL_strdup(rightDot + 1);
-    PR_FREEIF(url);
-    return retVal;
-  }
-
-ERROR_OUT:
-  if (url)
-  nsMemory::Free(url);
-  return nsnull;
-}
-
-//
 // Convert an nsString buffer to plain text...
 //
 #include "nsIParser.h"
