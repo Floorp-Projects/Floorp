@@ -2467,9 +2467,13 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 
 //~~~
 #ifdef XP_WIN
-		nsPluginEvent pluginEvent;
-		PRBool eventHandled = PR_FALSE;
-		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+	nsPluginEvent pluginEvent;
+  nsPluginPort* pluginPort = GetPluginPort();
+  pluginEvent.event = 0x000F; //!!! This is bad, but is it better to include <windows.h> for WM_PAINT only?
+  pluginEvent.wParam = (uint32)pluginPort;
+  pluginEvent.lParam = nsnull;
+	PRBool eventHandled = PR_FALSE;
+	mInstance->HandleEvent(&pluginEvent, &eventHandled);
 #endif
 }
 
