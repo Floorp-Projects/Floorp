@@ -58,6 +58,7 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorhtmltable_s	\
 	-lraptorxmldoc_s	\
 	-lraptorxmlcontent_s	\
+	-lraptorxulbase_s	\
 	-lraptorxulcontent_s	\
 	-lraptorlayout_s        \
 	-lraptorevents_s	\
