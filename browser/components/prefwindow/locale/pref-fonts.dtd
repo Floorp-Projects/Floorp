@@ -102,13 +102,9 @@
 <!ENTITY  visitedLinkColor.label          "Visited Links:">
 <!ENTITY  visitedLinkColor.accesskey      "v">
 <!-- LOCALIZATION NOTE (someProvColors): This is the start of a sentence and will be followed by the following radio buttons. -->
-<!ENTITY  someProvColors                  "When a web page provides its own colors and background">
-<!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
-<!ENTITY  alwaysUseDocumentColors.label   "Always use the colors and background specified by the web page">
-<!ENTITY  alwaysUseDocumentColors.accesskey "a">
+<!ENTITY  alwaysUseMyColors.label         "Always use my chosen colors, ignoring those specified by web sites.">
+<!ENTITY  alwaysUseMyColors.accesskey     "A">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
-<!ENTITY  useMyColors.label               "Use my chosen colors, ignoring the colors and background image specified">
-<!ENTITY  useMyColors.accesskey           "i">
 <!ENTITY  viewsource                      "View Source Window">
 <!ENTITY  syntaxHighlight.label           "Enable syntax highlighting">
 <!ENTITY  syntaxHighlight.accesskey       "e">
