@@ -83,7 +83,6 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleContext.h"
