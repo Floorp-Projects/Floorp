@@ -416,7 +416,6 @@ alpha*-*-linux*)
     ;;
 
 *-openvms*) 
-    DLL_SUFFIX="exe"
     if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
 	dnl Hack...
 	CROSS_COMPILE=1
