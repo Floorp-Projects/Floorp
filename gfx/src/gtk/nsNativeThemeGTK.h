@@ -98,6 +98,7 @@ protected:
   void EnsureHandleBoxWidget();
   void EnsureTooltipWidget();
   void EnsureFrameWidget();
+  void EnsureProgressBarWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;

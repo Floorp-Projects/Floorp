@@ -56,6 +56,7 @@ extern GtkWidget* gDropdownButtonWidget;
 extern GtkWidget* gHandleBoxWidget;
 extern GtkWidget* gFrameWidget;
 extern GtkWidget* gProtoWindow;
+extern GtkWidget* gProgressWidget;
 extern GtkTooltips* gTooltipWidget;
 
 GtkStateType
@@ -390,3 +391,22 @@ moz_gtk_frame_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                    gFrameWidget, "frame", rect->x, rect->y, rect->width,
                    rect->height);
 }
+
+void
+moz_gtk_progressbar_paint(GdkWindow* window, GtkStyle* style,
+                          GdkRectangle* rect, GdkRectangle* cliprect)
+{
+  gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                cliprect, gProgressWidget, "trough", rect->x, rect->y,
+                rect->width, rect->height);
+}
+
+void
+moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
+                             GdkRectangle* rect, GdkRectangle* cliprect)
+{
+  gtk_paint_box(style, window, GTK_STATE_PRELIGHT, GTK_SHADOW_OUT,
+                cliprect, gProgressWidget, "bar", rect->x, rect->y,
+                rect->width, rect->height);
+}
+

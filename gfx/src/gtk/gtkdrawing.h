@@ -115,6 +115,14 @@ void
 moz_gtk_frame_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                     GdkRectangle* cliprect);
 
+void
+moz_gtk_progressbar_paint(GdkWindow* window, GtkStyle* style,
+                          GdkRectangle* rect, GdkRectangle* cliprect);
+
+void
+moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
+                             GdkRectangle* rect, GdkRectangle* cliprect);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
