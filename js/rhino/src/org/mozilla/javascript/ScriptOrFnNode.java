@@ -46,27 +46,18 @@ public class ScriptOrFnNode extends Node {
     public final String getSourceName() { return sourceName; }
 
     public final void setSourceName(String sourceName) {
-        // One time action
-        if (sourceName == null || this.sourceName != null)
-            Context.codeBug();
         this.sourceName = sourceName;
     }
 
     public final String getEncodedSource() { return encodedSource; }
 
     public final void setEncodedSource(String encodedSource) {
-        // One time action
-        if (encodedSource == null || this.encodedSource != null)
-            Context.codeBug();
         this.encodedSource = encodedSource;
     }
 
     public final String getOriginalSource() { return originalSource; }
 
     public final void setOriginalSource(String originalSource) {
-        // One time action
-        if (originalSource == null || this.originalSource != null)
-            Context.codeBug();
         this.originalSource = originalSource;
     }
 
