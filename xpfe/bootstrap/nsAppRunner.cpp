@@ -600,6 +600,37 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     return rv;
 }
 
+
+static void	InitCachePrefs()
+{
+	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return; 
+		
+	// If the pref is already set don't do anything
+	nsCOMPtr<nsIFileSpec> cacheSubDir;
+	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( cacheSubDir )  );
+	if ( NS_SUCCEEDED( rv ) && cacheSubDir.get() )
+		return;	
+
+// Set up the new pref
+	rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
+	if(NS_FAILED(rv))
+	      return;
+	nsCOMPtr<nsIFileSpec> spec( dont_AddRef(  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50) ));
+	    
+	rv = cacheSubDir->FromFileSpec(spec);
+	if(NS_FAILED(rv))      return  ;
+		
+		rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
+		if(NS_FAILED(rv))
+	      return;
+	prefs->SetFilePref( CACHE_DIR_PREF ,cacheSubDir, PR_FALSE );
+	return;
+}
+
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
 	nsresult rv;
@@ -820,6 +851,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   if ( NS_SUCCEEDED(rv) )
       walletService->WALLET_FetchFromNetCenter();
 
+	InitCachePrefs();
   // Start main event loop
   rv = appShell->Run();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
