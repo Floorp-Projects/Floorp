@@ -29,7 +29,7 @@ CPPSRCS = \
 	TestFactory.cpp	\
 	$(NULL)
 
-INCLUDES=-I$(srcdir)/../src -I$(DIST)/include
+INCLUDES=-I$(srcdir)/../public -I$(DIST)/include
 
 ifndef NO_SHARED_LIB
 DIRS = dynamic 
