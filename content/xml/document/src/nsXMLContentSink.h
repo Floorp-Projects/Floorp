@@ -120,20 +120,19 @@ protected:
   void StartLayout();
 
   nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
-  nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent,PRBool aIsHTML);
+  nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
-  nsresult ProcessStartSCRIPTTag(PRUint32 aLineNo);
-  nsresult ProcessEndSCRIPTTag();
+  nsresult ProcessEndSCRIPTTag(nsIContent* aContent);
 
   virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
                                  PRUint32 aAttsCount, 
                                  PRInt32 aNameSpaceID, 
                                  nsIAtom* aTagName) { return PR_TRUE; }
-  virtual nsresult CreateElement(const PRUnichar** aAtts, 
-                                 PRUint32 aAttsCount, 
-                                 PRInt32 aNameSpaceID, 
-                                 nsINodeInfo* aNodeInfo, 
-                                 nsIContent** aResult);
+  virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
+                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                 nsIContent** aResult, PRBool* aAppendContent);
+
+  virtual nsresult CloseElement(nsIContent* aContent, PRBool* aAppendContent);
 
   virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                              PRBool* aDidFlush=nsnull);
@@ -150,13 +149,12 @@ protected:
   nsIContent* PopContent();
 
 
-  nsresult ProcessBASETag();
-  nsresult ProcessMETATag();
-  nsresult ProcessLINKTag();
+  nsresult ProcessBASETag(nsIContent* aContent);
+  nsresult ProcessMETATag(nsIContent* aContent);
   nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
-                             nsIHTMLContent* aContent);
+                             nsIContent* aContent);
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData);
+  nsresult ProcessLink(nsIContent* aElement, const nsAString& aLinkData);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
@@ -204,13 +202,11 @@ protected:
   PRPackedBool mPrettyPrintXML;
   PRPackedBool mPrettyPrintHasSpecialRoot;
   PRPackedBool mPrettyPrintHasFactoredElements;
+  PRPackedBool mHasProcessedBase;
 
   nsCOMPtr<nsISupportsArray>          mContentStack;
   nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;
   nsCOMPtr<nsITransformMediator>      mXSLTransformMediator;
-  nsCOMPtr<nsIHTMLContent>            mBaseElement;
-  nsCOMPtr<nsIHTMLContent>            mMetaElement;
-  nsCOMPtr<nsIHTMLContent>            mLinkElement;
 };
 
 #endif // nsXMLContentSink_h__
