@@ -103,7 +103,7 @@ TREX_XPFC_DIR           = mozilla/xpfc
 TREX_TREX_BRANCH        = 
 TREX_TREX_DIR           = mozilla/calendar
 
-LIBNLS_BRANCH           = -r libnls_v3_Normandy
+LIBNLS_BRANCH           = -r libnls_v3_zulu_branch
 LIBNLS_DIR              = ns/modules/libnls
 
 # $(MOZ_TOP)/LICENSE
