@@ -107,8 +107,10 @@ public:
 
   virtual PRBool          OnPaint(nsPaintEvent &event);
   virtual PRBool          OnResize(nsSizeEvent &event);
+  virtual PRBool          OnDeleteWindow(void);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool          DispatchKeyEvent(nsKeyEvent &aKeyEvent);
+  virtual PRBool          DispatchDestroyEvent(void);
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
   void                     SetVisibility(int aState); // using the X constants here
@@ -119,6 +121,12 @@ public:
   static nsresult         SetXlibWindowCallback(nsXlibWindowCallback *aCallback);
   static nsresult         XWindowCreated(Window aWindow);
   static nsresult         XWindowDestroyed(Window aWindow);
+
+  // these are for the wm protocols
+  static Atom   WMDeleteWindow;
+  static Atom   WMTakeFocus;
+  static Atom   WMSaveYourself;
+  static PRBool WMProtocolsInitialized;
 
 protected:
 
@@ -142,6 +150,9 @@ protected:
   static void  DeleteWindowCallback(Window aWindow);
   static       nsHashtable *window_list;
   static       nsXlibWindowCallback *mWindowCallback;
+
+  // set up our wm hints
+  void          SetUpWMHints(void);
 
   // here's how we add children
   // there's no geometry information here because that should be in the mBounds
