@@ -57,7 +57,7 @@ toolbargrippy[tbgrippy-collapsed="true"]
 
 .toolbargrippy-twisty-collapsed
   {
-    list-style-image      : url("chrome://global/skin/toolbargrippy-twisty-collapsed.gif");
+    list-style-image      : url("chrome://global/skin/tbg-twisty-collapsed.gif");
     margin-left           : 2px;
   }
 
@@ -65,7 +65,7 @@ toolbargrippy[tbgrippy-collapsed="true"]
 .toolbargrippy-texture-collapsed
   {
     margin                : 2px 1px 1px 5px;
-    background-image      : url("chrome://global/skin/toolbargrippy-texture-collapsed.gif");
+    background-image      : url("chrome://global/skin/tbg-texture-collapsed.gif");
     background-position   : 0% 50%;
     background-repeat     : repeat-x;
   } 
