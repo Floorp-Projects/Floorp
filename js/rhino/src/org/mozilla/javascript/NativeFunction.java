@@ -106,8 +106,6 @@ public class NativeFunction extends ScriptableObject implements Function {
      * foo instanceof Foo;  // true<br>
      * </code>
      *
-     * <p>This operator has been proposed to ECMA.
-     *
      * @param instance The value that appeared on the LHS of the instanceof
      *              operator
      * @return true if the "prototype" property of "this" appears in
