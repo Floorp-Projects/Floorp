@@ -88,6 +88,7 @@ public:
   morkNext*  GetListTail() const { return mList_Tail; }
 
   mork_bool IsListEmpty() const { return ( mList_Head == 0 ); }
+  mork_bool HasListMembers() const { return ( mList_Head != 0 ); }
   
 public:
   morkList(); // : mList_Head( 0 ), mList_Tail( 0 ) { }
