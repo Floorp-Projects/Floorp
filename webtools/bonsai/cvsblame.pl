@@ -40,6 +40,7 @@ $debug = 0;
 
 1;
 
+
 sub cvsblame_init {
     # Use default formatting options if none supplied
     if (!$opt_A && !$opt_a && !$opt_d && !$opt_v) {
