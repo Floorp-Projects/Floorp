@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.32 $ 
-# $Date: 2002/05/07 20:03:22 $ 
+# $Revision: 1.33 $ 
+# $Date: 2002/05/10 22:41:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -108,6 +108,7 @@ sub set_static_vars {
   $SECONDS_PER_MINUTE = (60);
   $SECONDS_PER_HOUR = (60*$SECONDS_PER_MINUTE);
   $SECONDS_PER_DAY = (24*$SECONDS_PER_HOUR);
+  $SECONDS_PER_WEEK = (7*$SECONDS_PER_DAY);
   $SECONDS_PER_MONTH = (30*$SECONDS_PER_DAY);
   $SECONDS_PER_YEAR = (365*$SECONDS_PER_DAY);
 
