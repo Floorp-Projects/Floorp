@@ -67,7 +67,10 @@ if ("$fileformat" ne "jar" &&
 
 my $zipmoveopt = "";
 if ("$fileformat" eq "jar") {
-    $zipmoveopt = "-m";
+    $zipmoveopt = "-m -0";
+}
+if ("$fileformat" eq "both") {
+    $zipmoveopt = "-0";
 }
 
 my $nofilelocks = 0;
