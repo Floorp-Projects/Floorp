@@ -337,7 +337,7 @@ nsLayoutDLF::CreateInstanceForDocument(nsISupports* aContainer,
     docv->SetUAStyleSheet(nsLayoutDLF::GetUAStyleSheet());
 
     // Bind the document to the Content Viewer
-    rv = docv->BindToDocument(aDocument, aCommand);
+    rv = docv->LoadStart(aDocument);
     *aDocViewerResult = docv;
     NS_IF_ADDREF(*aDocViewerResult);
   } while (PR_FALSE);
@@ -393,7 +393,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
       break;
 
     // Bind the document to the Content Viewer
-    rv = docv->BindToDocument(doc, aCommand);
+    rv = docv->LoadStart(doc);
     *aDocViewer = docv;
     NS_IF_ADDREF(*aDocViewer);
   } while (PR_FALSE);
@@ -484,7 +484,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
     /*
      * Bind the document to the Content Viewer...
      */
-    rv = docv->BindToDocument(doc, aCommand);
+    rv = docv->LoadStart(doc);
     *aDocViewer = docv;
     NS_IF_ADDREF(*aDocViewer);
   }
@@ -509,7 +509,7 @@ nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
     if ( NS_FAILED(status = CreateRDFDocument(aExtraInfo, address_of(doc), address_of(docv))) )
       break;
 
-    if ( NS_FAILED(status = docv->BindToDocument(doc, aCommand)) )
+    if ( NS_FAILED(status = docv->LoadStart(doc)) )
       break;
 
     *aDocViewer = docv;

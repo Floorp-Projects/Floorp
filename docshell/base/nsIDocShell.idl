@@ -136,6 +136,12 @@ interface nsIDocShell : nsISupports
   void stopLoad();
 
   /**
+   * Reset state to a new content model within the current document and the document
+   * viewer.  Called by the document before initiating an out of band document.write().
+   */
+  void prepareForNewContentModel();
+
+  /**
    * Presentation context for the currently loaded document.  This may be null.
    */
   [noscript] readonly attribute nsIPresContext presContext;

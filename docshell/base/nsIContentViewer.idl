@@ -22,11 +22,11 @@ interface nsIContentViewer : nsISupports
                        in nsIDeviceContextPtr aDeviceContext,
                        [const] in nsRectRef aBounds);
 
-  void bindToDocument(in nsISupports aDoc, in string aCommand);
-
   attribute nsISupports container;
 
+  void loadStart(in nsISupports aDoc);
   void loadComplete(in unsigned long aStatus);
+
   void destroy();
   void stop();
 

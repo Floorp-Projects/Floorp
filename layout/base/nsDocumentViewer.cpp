@@ -365,9 +365,9 @@ public:
   NS_IMETHOD Init(nsIWidget* aParentWidget,
                   nsIDeviceContext* aDeviceContext,
                   const nsRect& aBounds);
-  NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
+  NS_IMETHOD LoadStart(nsISupports* aDoc);
   NS_IMETHOD LoadComplete(nsresult aStatus);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
@@ -505,6 +505,8 @@ private:
                                PrintObject*     aPOect,
                                PRUint32         aDelay);
   void     StopPagePrintTimer();
+
+  void PrepareToStartLoad(void);
 
 protected:
   // IMPORTANT: The ownership implicit in the following member
@@ -801,12 +803,15 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 DocumentViewerImpl::DocumentViewerImpl()
 {
   NS_INIT_ISUPPORTS();
+  PrepareToStartLoad();
+}
+
+void DocumentViewerImpl::PrepareToStartLoad() {
   mEnableRendering  = PR_TRUE;
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
   mPrt              = nsnull;
   mIsPrinting       = PR_FALSE;
-  
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
@@ -815,9 +820,7 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   NS_INIT_ISUPPORTS();
   mHintCharsetSource = kCharsetUninitialized;
   mAllowPlugins      = PR_TRUE;
-  mEnableRendering   = PR_TRUE;
-  mPrt               = nsnull;
-  mIsPrinting        = PR_FALSE;
+  PrepareToStartLoad();
 }
 
 NS_IMPL_ISUPPORTS5(DocumentViewerImpl,
@@ -864,18 +867,27 @@ DocumentViewerImpl::~DocumentViewerImpl()
  * This method is called by the Document Loader once a document has
  * been created for a particular data stream...  The content viewer
  * must cache this document for later use when Init(...) is called.
+ *
+ * This method is also called when an out of band document.write() happens.
+ * In that case, the document passed in is the same as the previous document.
  */
 NS_IMETHODIMP
-DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
+DocumentViewerImpl::LoadStart(nsISupports *aDoc)
 {
-  NS_PRECONDITION(!mDocument, "Viewer is already bound to a document!");
-
 #ifdef NOISY_VIEWER
-  printf("DocumentViewerImpl::BindToDocument\n");
+  printf("DocumentViewerImpl::LoadStart\n");
 #endif
 
   nsresult rv;
-  mDocument = do_QueryInterface(aDoc,&rv);
+  if (!mDocument) {
+    mDocument = do_QueryInterface(aDoc,&rv);
+  }
+  else if (mDocument == aDoc) {
+    // Reset the document viewer's state back to what it was 
+    // when the document load started.
+    PrepareToStartLoad();
+  }
+
   return rv;
 }
 
@@ -3839,8 +3851,8 @@ DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
   viewer->SetUAStyleSheet(mUAStyleSheet);
 
   // Bind the new viewer to the old document
-  nsresult rv = viewer->BindToDocument(mDocument, "create");/* XXX verb? */
-
+  nsresult rv = viewer->LoadStart(mDocument);
+  
   aResult = viewer;
 
   return rv;

@@ -303,7 +303,6 @@ protected:
     nsPoint                    mCurrentScrollbarPref; // this document only
     nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
     PRUint32                   mLoadType;
-    PRBool                     mInitialPageLoad;
     PRBool                     mAllowPlugins;
     PRBool                     mAllowJavascript;
     PRBool                     mAllowMetaRedirects;

@@ -111,6 +111,7 @@
 #include "nsHTMLParts.h" //for createelementNS
 #include "nsIJSContextStack.h"
 #include "nsContentUtils.h"
+#include "nsIDocumentViewer.h"
 
 #include "nsContentCID.h"
 #include "nsIPrompt.h"
@@ -211,6 +212,7 @@ nsHTMLDocument::nsHTMLDocument()
   mParser = nsnull;
   mDTDMode = eDTDMode_quirks;  
   mCSSLoader = nsnull;
+  mDocWriteDummyRequest = nsnull;
 
   mBodyContent = nsnull;
   mForms = nsnull;
@@ -375,6 +377,9 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
       }
     }
   }
+
+  NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::Reset() - dummy doc write request still exists!");
+  mDocWriteDummyRequest = nsnull;
 
   return result;
 }
@@ -2054,13 +2059,14 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
 nsresult
 nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 {
+  nsCOMPtr<nsIDocShell> docshell;
+
   // If we already have a parser we ignore the document.open call.
   if (mParser)
     return NS_OK;
 
   // Stop current loads targetted at the window this document is in.
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDocShell> docshell;
     mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
 
     if (docshell) {
@@ -2076,6 +2082,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
   result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
+
   if (NS_FAILED(result)) return result;
 
   //Before we reset the doc notify the globalwindow of the change.
@@ -2189,6 +2196,21 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     }
   }
 
+  // Prepare the docshell and the document viewer for the impending out of band document.write()
+  if (docshell) {
+    docshell->PrepareForNewContentModel();
+    nsCOMPtr<nsIContentViewer> cv;
+    docshell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv);
+    if (docViewer) {
+      docViewer->LoadStart(NS_STATIC_CAST(nsIHTMLDocument *, this));
+    }
+  }
+
+  // Add a doc write dummy request into the document load group
+  NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::OpenCommon(): doc write dummy request exists!");
+  AddDocWriteDummyRequest();
+
   return result;
 }
 
@@ -2260,6 +2282,27 @@ nsHTMLDocument::Close()
     mWriteLevel--;
     mIsWriting = 0;
     NS_IF_RELEASE(mParser);
+
+    // XXX Make sure that all the document.written content is reflowed.
+    // We should remove this call once we change nsHTMLDocument::OpenCommon() so that it
+    // completely destroys the earlier document's content and frame hierarchy.  Right now,
+    // it re-uses the earlier document's root content object and corresponding frame objects.
+    // These re-used frame objects think that they have already been reflowed, so they drop
+    // initial reflows.  For certain cases of document.written content, like a frameset document,
+    // the dropping of the initial reflow means that we end up in document.close() without
+    // appended any reflow commands to the reflow queue and, consequently, without adding the
+    // dummy layout request to the load group.  Since the dummy layout request is not added to
+    // the load group, the onload handler of the frameset fires before the frames get reflowed
+    // and loaded.  That is the long explanation for why we need this one line of code here!
+    FlushPendingNotifications();
+
+    // Remove the doc write dummy request from the document load group
+    // that we added in OpenCommon().  If all other requests between
+    // document.open() and document.close() have completed, then this
+    // method should cause the firing of an onload event.
+    NS_ASSERTION(mDocWriteDummyRequest, "nsHTMLDocument::Close(): Trying to remove non-existent doc write dummy request!");  
+    RemoveDocWriteDummyRequest();
+    NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::Close(): Doc write dummy request could not be removed!");  
   }
 
   return NS_OK;
@@ -3507,3 +3550,159 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+//
+// DocWriteDummyRequest
+//
+//   This is a dummy request implementation that is used to make sure that
+//   the onload event fires for document.writes that occur after the document
+//   has finished loading.  Since such document.writes() blow away the old document
+//   we need some way to generate document load notifications for the content that
+//   is document.written.  The addition and removal of the dummy request generates
+//   the appropriate load notifications which bubble up through a chain of observers
+//   till the document viewer's LoadComplete() method which fires the onLoad event.
+//
+
+class DocWriteDummyRequest : public nsIChannel
+{
+protected:
+  DocWriteDummyRequest();
+  virtual ~DocWriteDummyRequest();
+
+  static PRInt32 gRefCnt;
+
+  nsCOMPtr<nsIURI> mURI;
+  nsLoadFlags mLoadFlags;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
+
+public:
+  static nsresult
+  Create(nsIRequest** aResult);
+
+  NS_DECL_ISUPPORTS
+
+	// nsIRequest
+  NS_IMETHOD GetName(PRUnichar* *result) { 
+    *result = ToNewUnicode(NS_LITERAL_STRING("about:dummy-doc-write-request"));
+    return NS_OK;
+  }
+  NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
+  NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
+  NS_IMETHOD Cancel(nsresult status);
+  NS_IMETHOD Suspend(void) { return NS_OK; }
+  NS_IMETHOD Resume(void)  { return NS_OK; }
+
+ 	// nsIChannel
+  NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = mURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
+  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { mURI = aOriginalURI; return NS_OK; }
+  NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = mURI; NS_ADDREF(*aURI); return NS_OK; }
+  NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
+  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
+  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = mLoadFlags; return NS_OK; }
+  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { mLoadFlags = aLoadFlags; return NS_OK; }
+  NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
+  NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
+  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
+  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
+  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
+  NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; } 
+  NS_IMETHOD SetContentType(const char * aContentType) { return NS_OK; } 
+  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
+  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
+
+};
+
+PRInt32 DocWriteDummyRequest::gRefCnt;
+
+NS_IMPL_ADDREF(DocWriteDummyRequest);
+NS_IMPL_RELEASE(DocWriteDummyRequest);
+NS_IMPL_QUERY_INTERFACE2(DocWriteDummyRequest, nsIRequest, nsIChannel);
+
+nsresult
+DocWriteDummyRequest::Create(nsIRequest** aResult)
+{
+  DocWriteDummyRequest* request = new DocWriteDummyRequest();
+  if (!request)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  return request->QueryInterface(NS_GET_IID(nsIRequest), (void**) aResult); 
+}
+
+
+DocWriteDummyRequest::DocWriteDummyRequest()
+{
+  NS_INIT_REFCNT();
+
+  gRefCnt++;
+  mLoadGroup = nsnull;
+  mLoadFlags = 0;
+  mURI = nsnull;
+}
+
+
+DocWriteDummyRequest::~DocWriteDummyRequest()
+{
+  gRefCnt--;
+}
+
+NS_IMETHODIMP
+DocWriteDummyRequest::Cancel(nsresult status)
+{
+  // XXX To be implemented?
+  return NS_OK;
+}
+
+// ----------------------------------------------------------------------------
+
+nsresult
+nsHTMLDocument::AddDocWriteDummyRequest(void)
+{ 
+  nsresult rv = NS_OK;
+
+  rv = DocWriteDummyRequest::Create(getter_AddRefs(mDocWriteDummyRequest));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+
+  rv = GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_FAILED(rv)) return rv;
+
+  if (loadGroup) {
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(mDocWriteDummyRequest));
+    rv = channel->SetLoadGroup(loadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    nsLoadFlags loadFlags = 0;
+    channel->GetLoadFlags(&loadFlags);
+    loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
+    channel->SetLoadFlags(loadFlags);
+
+    channel->SetOriginalURI(mDocumentURL);
+
+    rv = loadGroup->AddRequest(mDocWriteDummyRequest, nsnull);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLDocument::RemoveDocWriteDummyRequest(void)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  rv = GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_FAILED(rv)) return rv;
+
+  if (loadGroup && mDocWriteDummyRequest) {
+    rv = loadGroup->RemoveRequest(mDocWriteDummyRequest, nsnull, NS_OK);
+    if (NS_FAILED(rv)) return rv;
+
+    mDocWriteDummyRequest = nsnull;
+  }
+
+  return rv;
+}
