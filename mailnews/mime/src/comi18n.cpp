@@ -501,8 +501,11 @@ process_lastline:
           linelen = 1;
           if (foldingonly) {
             pUTF8Head = nsnull;
-            if (*pUTF8 == ' ' || *pUTF8 == TAB)
+            if (*pUTF8 == ' ' || *pUTF8 == TAB) {
               ++pUTF8;
+              if (!*pUTF8)
+                return 0;
+            }
           }
         }
         else {
