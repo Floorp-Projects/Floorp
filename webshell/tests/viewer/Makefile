@@ -19,32 +19,60 @@ DEPTH=../../..
 
 include $(DEPTH)/config/config.mk
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+
+	TOOLKIT_GFX_LIB     = -lgfxgtk
+	TOOLKIT_WIDGET_LIB  = -lwidgetgtk
+	TOOLKIT_BASE_LIB    = -lgmbasegtk
+
+	TOOLKIT_CFLAGS = \
+		-DWIDGET_DLL=\"libwidgetgtk.so\" \
+		-DGFXWIN_DLL=\"libgfxgtk.so\"
+
+	TOOLKIT_CPPSRCS = \
+		nsGTKMain.cpp \
+		nsGTKMenu.cpp
+
+	TOOLKIT_INCLUDES = $(shell gtk-config --cflags)
+
+else
+
+	TOOLKIT_GFX_LIB        = -lgfxmotif
+	TOOLKIT_WIDGET_LIB     = -lwidgetmotif
+	TOOLKIT_BASE_LIB = -lgmbasemotif
+
+	TOOLKIT_CFLAGS = \
+		-DWIDGET_DLL=\"libwidgetmotif.so\" \
+		-DGFXWIN_DLL=\"libgfxmotif.so\"
+
+	TOOLKIT_CPPSRCS = \
+			nsMotifMenu.cpp \
+			nsUnixMain.cpp
+
+endif
+
 CPPSRCS = \
+	$(TOOLKIT_CPPSRCS) \
 	nsBrowserWindow.cpp     \
 	nsEditorMode.cpp        \
 	nsEditorInterfaces.cpp  \
-	nsMotifMenu.cpp         \
 	nsSetupRegistry.cpp     \
-	nsUnixMain.cpp          \
 	nsViewerApp.cpp         \
 	nsWebCrawler.cpp        \
 	nsStubs.cpp             \
 	$(NULL)
 
-INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
-	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref -I$(PUBLIC)/network -I$(PUBLIC)/xp
+INCLUDES += \
+			-I$(PUBLIC)/raptor \
+			-I$(PUBLIC)/xpcom \
+			-I$(PUBLIC)/dom \
+			-I$(PUBLIC)/netlib \
+			-I$(PUBLIC)/js \
+			-I$(PUBLIC)/pref \
+			-I$(PUBLIC)/network \
+			-I$(PUBLIC)/xp
 
 OBJS    = $(CPPSRCS:.cpp=.o)
-
-ifeq ($(USE_NGLAYOUT_GTK),1)
-	GFX_LIB    = -lgfxgtk
-	WIDGET_LIB = -lwidgetgtk
-	BASE_DSO_FLAGS = -lgmbasegtk
-else
-	GFX_LIB    = -lgfxmotif
-	WIDGET_LIB = -lwidgetmotif
-	BASE_DSO_FLAGS = -lgmbasemotif
-endif
 
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
@@ -56,12 +84,12 @@ EX_LIBS = \
 	-lpng \
 	-lpref \
 	-lraptorbase \
-	$(WIDGET_LIB) \
+	$(TOOLKIT_WIDGET_LIB) \
 	-lraptorgfx \
-	$(GFX_LIB) \
+	$(TOOLKIT_GFX_LIB) \
 	-lraptorhtml \
 	$(DIST)/lib/libraptorhtmlforms_s.a \
-	$(BASE_DSO_FLAGS) \
+	$(TOOLKIT_BASE_LIB) \
 	-lraptorhtmlpars \
 	-lraptorview \
 	-lreg \
