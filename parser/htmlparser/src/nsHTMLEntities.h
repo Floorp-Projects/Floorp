@@ -35,7 +35,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsHTMLEntites_h___
+#ifndef nsHTMLEntities_h___
 #define nsHTMLEntities_h___
 
 #include "nsString.h"
