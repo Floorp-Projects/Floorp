@@ -1546,10 +1546,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     // This forces UA sheets to be UTF-8.  We should really look for
     // @charset rules here via ReadSegments on the raw stream...
 
-    // 8092 is a nice magic number that happens to be what a lot of
+    // 8192 is a nice magic number that happens to be what a lot of
     // other things use for buffer sizes.
     rv = converterStream->Init(stream, NS_LITERAL_STRING("UTF-8").get(),
-                               8092, PR_TRUE);
+                               8192, PR_TRUE);
     
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to initialize converter stream"));
