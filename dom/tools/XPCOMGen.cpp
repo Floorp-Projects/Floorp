@@ -59,6 +59,7 @@ static const char *kParamStr = "%s a%s";
 static const char *kDelimiterStr = ", ";
 static const char *kReturnStr = "%s%s aReturn";
 static const char *kClassEpilogStr = "};\n\n";
+static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
 static const char *kNewObjStr = "extern \"C\" NS_DOM NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
@@ -75,12 +76,15 @@ XPCOMGen::~XPCOMGen()
 void     
 XPCOMGen::Generate(char *aFileName, 
                    char *aOutputDirName,
-                   IdlSpecification &aSpec)
+                   IdlSpecification &aSpec,
+                   int aIsGlobal)
 {
   if (!OpenFile(aFileName, aOutputDirName, kFilePrefix, kFileSuffix)) {
       throw new CantOpenFileException(aFileName);
   }
   
+  mIsGlobal = aIsGlobal;
+
   GenerateNPL();
   GenerateIfdef(aSpec);
   GenerateIncludes(aSpec);
@@ -307,7 +311,12 @@ XPCOMGen::GenerateEpilog(IdlSpecification &aSpec)
   ofstream *file = GetFile();
   char *iface_name = iface->GetName();
 
-  sprintf(buf, kInitClassStr, iface_name);
+  if (mIsGlobal) {
+    sprintf(buf, kGlobalInitClassStr, iface_name);
+  }
+  else {
+    sprintf(buf, kInitClassStr, iface_name);
+  }
   *file << buf;
   
   sprintf(buf, kNewObjStr, iface_name, iface_name);

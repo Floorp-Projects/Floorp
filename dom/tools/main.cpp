@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
   int gen_xpcom = 0;
   int gen_js = 0;
   int gen_idl = 0;
+  int is_global = 0;
   int op_dir = 0;
   int op_dir_arg;
 
@@ -54,6 +55,9 @@ int main(int argc, char *argv[])
           break;
         case 'p':
           gen_idl = 1;
+          break;
+        case 'g':
+          is_global = 1;
           break;
       }
       ++arg_cnt;
@@ -104,7 +108,7 @@ int main(int argc, char *argv[])
         cout << "Generating XPCOM headers for " << argv[i] << ".\n";
        try {
           xpcomgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
-                             *specification);
+                             *specification, is_global);
         }
         catch(CantOpenFileException &exc) {
           cout << exc;
@@ -121,7 +125,7 @@ int main(int argc, char *argv[])
         cout << "Generating JavaScript stubs for " << argv[i] << ".\n";
         try {
           jsgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
-                             *specification);
+                          *specification, is_global);
         }
         catch(CantOpenFileException &exc) {
           cout << exc;

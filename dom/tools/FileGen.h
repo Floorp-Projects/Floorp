@@ -34,7 +34,7 @@ public:
     FileGen();
     ~FileGen();
     virtual void    Generate(char *aFileName, char *aOutputDirName, 
-                             IdlSpecification &aSpec)=0;
+                             IdlSpecification &aSpec, int aIsGlobal)=0;
 
 protected:
     void            GenerateNPL();
