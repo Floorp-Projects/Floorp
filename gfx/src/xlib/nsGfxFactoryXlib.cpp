@@ -196,4 +196,4 @@ nsGfxXlibModuleDtor(nsIModule *self)
      nsRenderingContextXlib::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxXlibModule", components, nsGfxXlibModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxXlibModule, components, nsGfxXlibModuleDtor)
