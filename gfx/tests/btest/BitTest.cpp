@@ -329,7 +329,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
   //dstdc = (HDC)aBlender->GetDstDS();
 
-  aBlender->RestoreImage(dstdc);
+//  aBlender->RestoreImage(dstdc);
 
   // this takes the Destination DC and copies the information into aImage
   tb1 = CreateCompatibleBitmap(dstdc,3,3);
@@ -525,7 +525,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
   //dstdc = (HDC)aBlender->GetDstDS();
 
   //result = aBlender->Blend(aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);gSrcdc
-  result = aBlender->Blend(aSX,aSY,aWidth,aHeight,srcdc,dstdc,0, 0,aBlendAmount,aBuff);
+  result = aBlender->Blend(aSX,aSY,aWidth,aHeight,srcdc,dstdc,0, 0,aBlendAmount);
   if(result == NS_OK)
     {
     // this takes the Destination DC and copies the information into aImage
