@@ -63,6 +63,7 @@ nsObserverList::nsObserverList()
 nsObserverList::~nsObserverList(void)
 {
     PR_DestroyLock(mLock);
+    NS_IF_RELEASE(mObserverList);
 }
 
 

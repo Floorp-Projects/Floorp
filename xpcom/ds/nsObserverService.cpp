@@ -87,6 +87,14 @@ nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverSe
     return NS_OK;
 }
 
+static PRBool
+ReleaseObserverList(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsIObserverList* observerList = NS_STATIC_CAST(nsIObserverList*, aData);
+    NS_RELEASE(observerList);
+    return PR_TRUE;
+}
+
 nsresult nsObserverService::GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList)
 {
     if (anObserverList == NULL)
@@ -95,7 +103,9 @@ nsresult nsObserverService::GetObserverList(const nsString& aTopic, nsIObserverL
     }
 	
 	if(mObserverTopicTable == NULL) {
-        mObserverTopicTable = new nsHashtable(256, PR_TRUE);
+        mObserverTopicTable = new nsObjectHashtable(nsnull, nsnull,   // should never be cloned
+                                                    ReleaseObserverList, nsnull,
+                                                    256, PR_TRUE);
         if (mObserverTopicTable == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
