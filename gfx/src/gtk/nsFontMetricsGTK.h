@@ -37,9 +37,6 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
-#define FONT_SWITCHING
-#ifdef FONT_SWITCHING
-
 #ifdef ADD_GLYPH
 #undef ADD_GLYPH
 #endif
@@ -78,8 +75,6 @@ struct nsFontStretch;
 struct nsFontFamily;
 typedef struct nsFontSearch nsFontSearch;
 
-#endif /* FONT_SWITCHING */
-
 class nsFontMetricsGTK : public nsIFontMetrics
 {
 public:
@@ -110,8 +105,6 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   
   virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
-
-#ifdef FONT_SWITCHING
 
   nsFontGTK*  FindFont(PRUnichar aChar);
   void        FindGenericFont(nsFontSearch* aSearch);
@@ -151,8 +144,6 @@ public:
   int               mTriedAllGenerics;
   nsCOMPtr<nsIAtom> mLangGroup;
 
-#endif /* FONT_SWITCHING */
-
 protected:
   char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
@@ -177,13 +168,9 @@ protected:
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
 
-#ifdef FONT_SWITCHING
-
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
-
-#endif /* FONT_SWITCHING */
 };
 
 class nsFontEnumeratorGTK : public nsIFontEnumerator

@@ -1088,10 +1088,6 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 }
 
 
-
-
-#ifdef FONT_SWITCHING
-
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
@@ -1111,29 +1107,6 @@ nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
   return GetWidth(&aC, 1, aWidth, aFontID);
 }
 
-#else /* FONT_SWITCHING */
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
-{
-  gint rawWidth = gdk_char_width(mCurrentFont, aC); 
-  aWidth = NSToCoordRound(rawWidth * mP2T);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
-                                PRInt32* aFontID)
-{
-  gint rawWidth = gdk_char_width_wc(mCurrentFont, (GdkWChar)aC); 
-  aWidth = NSToCoordRound(rawWidth * mP2T);
-  if (nsnull != aFontID)
-    *aFontID = 0;
-  return NS_OK;
-}
-
-#endif /* FONT_SWITCHING */
-
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(const nsString& aString,
                                 nscoord& aWidth, PRInt32* aFontID)
@@ -1146,8 +1119,6 @@ nsRenderingContextGTK::GetWidth(const char* aString, nscoord& aWidth)
 {
   return GetWidth(aString, strlen(aString), aWidth);
 }
-
-#ifdef FONT_SWITCHING
 
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
@@ -1220,64 +1191,6 @@ FoundFont:
 
   return NS_OK;
 }
-
-#else /* FONT_SWITCHING */
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
-                                nscoord& aWidth)
-{
-  if (0 == aLength) {
-    aWidth = 0;
-  }
-  else {
-    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-    gint rawWidth = gdk_text_width (mCurrentFont, aString, aLength);
-    aWidth = NSToCoordRound(rawWidth * mP2T);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                                nscoord& aWidth, PRInt32* aFontID)
-{
-  if (0 == aLength) {
-    aWidth = 0;
-  }
-  else {
-    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-
-    // Make the temporary buffer larger if needed.
-    if (nsnull == mDrawStringBuf) {
-      mDrawStringBuf = new GdkWChar[aLength];
-      mDrawStringSize = aLength;
-    }
-    else {
-      if (mDrawStringSize < aLength) {
-        delete [] mDrawStringBuf;
-        mDrawStringBuf = new GdkWChar[aLength];
-        mDrawStringSize = aLength;
-      }
-    }
-
-    // Translate the unicode data into GdkWChar's
-    GdkWChar* xc = mDrawStringBuf;
-    GdkWChar* end = xc + aLength;
-    while (xc < end) {
-      *xc++ = (GdkWChar) *aString++;
-    }
-
-    gint rawWidth = gdk_text_width_wc(mCurrentFont, mDrawStringBuf, aLength);
-    aWidth = NSToCoordRound(rawWidth * mP2T);
-  }
-  if (nsnull != aFontID)
-    *aFontID = 0;
-
-  return NS_OK;
-}
-
-#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
@@ -1358,8 +1271,6 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
 
   return NS_OK;
 }
-
-#ifdef FONT_SWITCHING
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
@@ -1455,76 +1366,6 @@ FoundFont:
 
   return NS_OK;
 }
-
-#else /* FONT_SWITCHING */
-
-NS_IMETHODIMP
-nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
-{
-  if (0 != aLength) {
-    g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
-    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-
-    nscoord x = aX;
-    nscoord y = aY;
-
-    // Substract xFontStruct ascent since drawing specifies baseline
-    if (mFontMetrics) {
-      mFontMetrics->GetMaxAscent(y);
-      y += aY;
-    }
-
-    UpdateGC();
-
-    if (nsnull != aSpacing) {
-      // Render the string, one character at a time...
-      const PRUnichar* end = aString + aLength;
-      while (aString < end) {
-        GdkWChar ch = (GdkWChar) *aString++;
-        nscoord xx = x;
-        nscoord yy = y;
-        mTMatrix->TransformCoord(&xx, &yy);
-        ::gdk_draw_text_wc(mSurface->GetDrawable(), mCurrentFont,
-                           mGC,
-                           xx, yy, &ch, 1);
-        x += *aSpacing++;
-      }
-    }
-    else {
-      // Make the temporary buffer larger if needed.
-      if (nsnull == mDrawStringBuf) {
-        mDrawStringBuf = new GdkWChar[aLength];
-        mDrawStringSize = aLength;
-      }
-      else {
-        if (mDrawStringSize < aLength) {
-          delete [] mDrawStringBuf;
-          mDrawStringBuf = new GdkWChar[aLength];
-          mDrawStringSize = aLength;
-        }
-      }
-
-      // Translate the unicode data into GdkWChar's
-      GdkWChar* xc = mDrawStringBuf;
-      GdkWChar* end = xc + aLength;
-      while (xc < end) {
-        *xc++ = (GdkWChar) *aString++;
-      }
-
-      mTMatrix->TransformCoord(&x, &y);
-      ::gdk_draw_text_wc (mSurface->GetDrawable(), mCurrentFont,
-                          mGC,
-                          x, y, mDrawStringBuf, aLength);
-    }
-  }
-  return NS_OK;
-}
-
-#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const nsString& aString,
@@ -1718,7 +1559,6 @@ NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 *
 }
 
 #ifdef MOZ_MATHML
-#ifdef FONT_SWITCHING
 
 NS_IMETHODIMP
 nsRenderingContextGTK::GetBoundingMetrics(const char*        aString, 
@@ -1822,5 +1662,4 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
 
   return NS_OK;
 }
-#endif /* FONT_SWITCHING */
 #endif /* MOZ_MATHML */
