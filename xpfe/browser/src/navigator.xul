@@ -521,7 +521,7 @@
     </toolbar>
 
 	<toolbar  id="persbar" onclick="OpenBookmarkURL(event.target)" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
-	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Homer" 
+	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Home" 
 				onclick="BrowserHome()"/>
 	<titledbutton src="resource:/res/toolbar/TB_Netscape.gif" align="right" value="Netscape" 
 				onclick="window.frames[0].location.href='http://my.netscape.com'"/>
