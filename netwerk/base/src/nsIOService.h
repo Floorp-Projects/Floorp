@@ -65,11 +65,11 @@ public:
     nsresult Init();
 
 protected:
-    nsString2   mAppName;
-    nsString2   mAppCodeName;
-    nsString2   mAppVersion;
-    nsString2   mAppLanguage;
-    nsString2   mAppPlatform;
+    nsString2   *mAppName;
+    nsString2   *mAppCodeName;
+    nsString2   *mAppVersion;
+    nsString2   *mAppLanguage;
+    nsString2   *mAppPlatform;
 };
 
 #endif // nsIOService_h__
