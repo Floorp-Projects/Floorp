@@ -300,8 +300,144 @@
     <para>Once you've run a search, you can save it as a Saved Search, which 
     appears in the page footer.</para>
 
-    <para>Highly advanced querying is done using Boolean Charts. See the
-    Boolean Charts help link on the Search page for more information.</para>
+    <section id="boolean">
+      <title>Boolean Charts</title>
+      <para>
+        Highly advanced querying is done using Boolean Charts.
+      </para>
+      <para>
+        The boolean charts further restrict the set of results
+        returned by a query. It is possible to search for bugs
+        based on elaborate combinations of critera.
+      </para>
+      <para>
+        The simplest boolean searches have only one term. These searches
+        permit the selected left <emphasis>field</emphasis>
+        to be compared using a
+        selectable <emphasis>operator</emphasis> to a
+        specified <emphasis>value.</emphasis>
+        Using the "And," "Or," and "Add Another Boolean Chart" buttons, 
+        additonal terms can be included in the query, further
+        altering the list of bugs returned by the query.
+      </para>
+      <para>
+        There are three fields in each row of a boolean search. 
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            <emphasis>Field:</emphasis>
+            the items being searched 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>Operator:</emphasis>
+            the comparison operator 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            <emphasis>Value:</emphasis>
+            the value to which the field is being compared
+          </para>
+        </listitem>
+      </itemizedlist>
+      <section id="pronouns">
+        <title>Pronoun Substitution</title>
+        <para>
+          Sometimes, a query needs to compare a field containing
+          a user's ID (such as ReportedBy) with 
+          a user's ID (such as the user running the query or the user
+          to whom each bug is assigned). When the operator is either 
+          "equals" or "notequals", the value can be "%reporter%", 
+          "%assignee%", "%qacontact%", or "%user%."  The user pronoun
+          referes to the user who is executing the query or, in the case
+          of whining reports, the user who will be the recipient
+          of the report. The reporter, assignee, and qacontact
+          pronouns refer to the corresponding fields in the bug.
+        </para>
+      </section>
+      <section id="negation">
+        <title>Negation</title>
+        <para>
+          At first glance, negation seems redundant. Rather than
+          searching for
+          <blockquote>
+            <para>
+              NOT("summary" "contains the string" "foo"),
+            </para>
+          </blockquote>
+          one could search for 
+          <blockquote>
+            <para>
+              ("summary" "does not contain the string" "foo").
+            </para>
+          </blockquote>
+          However, the search 
+          <blockquote>
+            <para>
+              ("CC" "does not contain the string" "@mozilla.org")
+            </para>
+          </blockquote>
+          would find every bug where anyone on the CC list did not contain 
+          "@mozilla.org" while
+          <blockquote>
+            <para>
+              NOT("CC" "contains the string" "@mozilla.org")
+            </para>
+          </blockquote>
+          would find every bug where there was nobody on the CC list who
+          did contain the string. Similarly, the use of negation also permits
+          complex expressions to be built using terms OR'd together and then
+          negated. Negation permits queries such as
+          <blockquote>
+            <para>
+              NOT(("product" "equals" "update") OR 
+            ("component" "equals" "Documentation"))
+            </para>
+          </blockquote>
+          to find bugs that are neither 
+          in the update product or in the documentation component or
+          <blockquote>
+            <para>
+              NOT(("commenter" "equals" "%assignee%") OR 
+              ("component" "equals" "Documentation"))
+            </para>
+          </blockquote>
+          to find non-documentation
+          bugs on which the assignee has never commented.
+        </para>
+      </section>
+      <section id="multiplecharts">
+        <title>Multiple Charts</title>
+        <para>
+          The terms within a single row of a boolean chart are all
+          constraints on a single piece of data. If you are looking for
+          a bug that has two different people cc'd on it, then you need 
+          to use two boolean charts. A search for
+          <blockquote>
+            <para>
+              ("cc" "contains the string" "foo@") AND
+              ("cc" "contains the string" "@mozilla.org")
+            </para>
+          </blockquote>
+          would return only bugs with "foo@mozilla.org" on the cc list.
+          If you wanted bugs where there is someone on the cc list
+          containing "foo@" and someone else containing "@mozilla.org",
+          then you would need two boolean charts.
+          <blockquote>
+            <para>
+              First chart: ("cc" "contains the string" "foo@")
+            </para>
+            <para>
+              Second chart: ("cc" "contains the string" "@mozilla.org")
+            </para>
+          </blockquote>
+          The bugs listed will be only the bugs where ALL the charts are true.
+        </para>
+      </section>
+    </section>
   </section>
 
   <section id="list">
