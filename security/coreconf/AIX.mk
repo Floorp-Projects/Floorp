@@ -65,7 +65,7 @@ CPU_ARCH	= rs6000
 RANLIB		= ranlib
 
 OS_CFLAGS	= -DAIX -DSYSV
-ifeq ($(CC),xlC_r)
+ifndef NS_USE_GCC
 	OS_CFLAGS += -qarch=com
 endif
 
