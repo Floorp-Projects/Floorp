@@ -2686,6 +2686,7 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	if (NS_FAILED(rv)) return rv;
 
 	mDirty = PR_TRUE;
+	Flush();
 
 	return(NS_OK);
 }
