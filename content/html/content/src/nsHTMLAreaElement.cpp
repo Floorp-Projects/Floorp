@@ -83,7 +83,7 @@ public:
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
   NS_IMETHOD SetLinkState(nsLinkState aState);
-  NS_IMETHOD GetHrefUTF8(char** aBuf);
+  NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -140,12 +140,12 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLAreaElement::nsHTMLAreaElement()
   : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefUTF8
+  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLAreaElement::~nsHTMLAreaElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefUTF8
+  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement) 
@@ -273,14 +273,14 @@ nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLAreaElement::GetHref(nsAString& aValue)
 {
-  char *buf;
-  nsresult rv = GetHrefUTF8(&buf);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetHrefURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
-  if (buf) {
-    aValue.Assign(NS_ConvertASCIItoUCS2(buf));
-    nsCRT::free(buf);
+  if (uri) {
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    CopyUTF8toUTF16(spec, aValue);
   }
-  // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
   return NS_OK;
 }
 
@@ -571,7 +571,7 @@ nsHTMLAreaElement::SetLinkState(nsLinkState aState)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetHrefUTF8(char** aBuf)
+nsHTMLAreaElement::GetHrefURI(nsIURI** aURI)
 {
-  return GetHrefUTF8ForAnchors(aBuf);
+  return GetHrefURIForAnchors(aURI);
 }

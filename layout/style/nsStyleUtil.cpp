@@ -595,15 +595,14 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
         // if there is no link, then this anchor is not really a linkpseudo.
         // bug=23209
 
-        nsXPIDLCString href;
-        link->GetHrefUTF8(getter_Copies(href));
+        nsCOMPtr<nsIURI> hrefURI;
+        link->GetHrefURI(getter_AddRefs(hrefURI));
 
-        if (href) {
-          nsILinkHandler *linkHandler = nsnull;
-          aPresContext->GetLinkHandler(&linkHandler);
+        if (hrefURI) {
+          nsCOMPtr<nsILinkHandler> linkHandler;
+          aPresContext->GetLinkHandler(getter_AddRefs(linkHandler));
           if (linkHandler) {
-            linkHandler->GetLinkState(href, linkState);
-            NS_RELEASE(linkHandler);
+            linkHandler->GetLinkState(hrefURI, linkState);
           }
           else {
             // no link handler?  then all links are unvisited
@@ -665,16 +664,14 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
           }
         }
 
-        // convert here, rather than twice in NS_MakeAbsoluteURI and
-        // back again
-        nsCAutoString absHREF;
-        (void) NS_MakeAbsoluteURI(absHREF, NS_ConvertUCS2toUTF8(val), baseURI);
+        nsCOMPtr<nsIURI> absURI;
+        // XXX should we make sure to get the right charset off the document?
+        (void) NS_NewURI(getter_AddRefs(absURI), val, nsnull, baseURI);
 
-        nsILinkHandler *linkHandler = nsnull;
-        aPresContext->GetLinkHandler(&linkHandler);
+        nsCOMPtr<nsILinkHandler> linkHandler;
+        aPresContext->GetLinkHandler(getter_AddRefs(linkHandler));
         if (linkHandler) {
-          linkHandler->GetLinkState(absHREF, *aState);
-          NS_RELEASE(linkHandler);
+          linkHandler->GetLinkState(absURI, *aState);
         }
         else {
           // no link handler?  then all links are unvisited

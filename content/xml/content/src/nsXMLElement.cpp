@@ -40,8 +40,10 @@
 #include "nsXMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLUtils.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
+#include "nsNetUtil.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocShell.h"
 #include "nsIEventStateManager.h"
@@ -97,10 +99,12 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 
 nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
 {
+  nsHTMLUtils::AddRef();  // for NS_NewURIWithDocumentCharset
 }
 
 nsXMLElement::~nsXMLElement()
 {
+  nsHTMLUtils::Release();  // for NS_NewURIWithDocumentCharset
 }
 
 
@@ -143,17 +147,6 @@ NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 
-static inline nsresult MakeURI(const nsACString &aSpec, nsIURI *aBase, nsIURI **aURI)
-{
-  nsresult rv;
-  static NS_DEFINE_CID(ioServCID,NS_IOSERVICE_CID);
-  nsCOMPtr<nsIIOService> service(do_GetService(ioServCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return service->NewURI(aSpec,nsnull,aBase,aURI);
-}
-
 NS_IMETHODIMP
 nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 {
@@ -176,14 +169,12 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // The complex looking if above is to make sure that we do not erroneously
         // think a value of "./this:that" would have a scheme of "./that"
 
-        NS_ConvertUCS2toUTF8 str(value);
-
-        rv = MakeURI(str, nsnull, aURI);
+        rv = NS_NewURIWithDocumentCharset(aURI, value, mDocument, nsnull);
         if (NS_FAILED(rv))
           break;
 
         if (!base.IsEmpty()) { // XXXdarin base is always empty
-          CopyUTF16toUTF8(base, str);
+          NS_ConvertUTF16toUTF8 str(base);
           nsCAutoString resolvedStr;
           rv = (*aURI)->Resolve(str, resolvedStr);
           if (NS_FAILED(rv)) break;
@@ -224,7 +215,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
       } else {
-        rv = MakeURI(NS_ConvertUCS2toUTF8(base), docBase, aURI);
+        rv = NS_NewURIWithDocumentCharset(aURI, base, mDocument, docBase);
       }
     }
 
@@ -319,15 +310,13 @@ static nsresult DocShellToPresContext(nsIDocShell *aShell,
 }
 
 
-static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAString& aURI,
-                             nsIURI **aAbsURI)
+static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
+                             nsIDocument* aDocument, nsIURI **aAbsURI)
 {
-  NS_ConvertUCS2toUTF8 str(aURI);
-
   *aAbsURI = nsnull;
 
   nsresult rv;
-  rv = MakeURI(str, aBaseURI, aAbsURI);
+  rv = NS_NewURIWithDocumentCharset(aAbsURI, aSpec, aDocument, aBaseURI);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -449,12 +438,12 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
                                                 value);
         if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
           nsCOMPtr<nsIURI> uri;
-          rv = CheckLoadURI(base,value,getter_AddRefs(uri));
+          rv = CheckLoadURI(value, base, mDocument, getter_AddRefs(uri));
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIPresContext> pc;
-            rv = DocShellToPresContext(aShell,getter_AddRefs(pc));
+            rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
-              rv = TriggerLink(pc, verb, base, value,
+              rv = TriggerLink(pc, verb, base, uri,
                                NS_LITERAL_STRING(""), PR_TRUE);
 
               return SpecialAutoLoadReturn(rv,verb);
@@ -506,7 +495,6 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
             break;  // let the click go through so we can handle it in JS/XUL
           }
           nsAutoString show, href, target;
-          nsIURI* baseURL = nsnull;
           nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
           nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                              nsHTMLAtoms::href,
@@ -539,12 +527,16 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
             verb = eLinkVerb_Embed;
           }
 
-          GetXMLBaseURI(&baseURL);
+          nsCOMPtr<nsIURI> baseURL;
+          GetXMLBaseURI(getter_AddRefs(baseURL));
+          nsCOMPtr<nsIURI> uri;
+          ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,
+                                             mDocument, baseURL);
+          if (NS_SUCCEEDED(ret)) {
+            ret = TriggerLink(aPresContext, verb, baseURL, uri, target,
+                              PR_TRUE);
+          }
 
-          ret = TriggerLink(aPresContext, verb, baseURL, href, target,
-                            PR_TRUE);
-
-          NS_IF_RELEASE(baseURL);
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
       }
@@ -586,7 +578,6 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_ENTER_SYNTH:
       {
         nsAutoString href, target;
-        nsIURI* baseURL = nsnull;
         nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                            nsHTMLAtoms::href,
                                            href);
@@ -595,12 +586,17 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           break;
         }
 
-        GetXMLBaseURI(&baseURL);
+        nsCOMPtr<nsIURI> baseURL;
+        GetXMLBaseURI(getter_AddRefs(baseURL));
 
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
-                          target, PR_FALSE);
+        nsCOMPtr<nsIURI> uri;
+        ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,
+                                           mDocument, baseURL);
+        if (NS_SUCCEEDED(ret)) {
+          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, uri,
+                            target, PR_FALSE);
+        }
         
-        NS_IF_RELEASE(baseURL);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;

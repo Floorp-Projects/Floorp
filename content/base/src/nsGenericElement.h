@@ -535,19 +535,22 @@ public:
                                   const nsAString& aValue);
 
   /**
-   * Load a link, putting together the proper URL from the pieces given.
+   * Trigger a link with uri aLinkURI.  If aClick is false, this triggers a
+   * mouseover on the link, otherwise it triggers a load, after doing a
+   * security check.
    * @param aPresContext the pres context.
    * @param aVerb how the link will be loaded (replace page, new window, etc.)
-   * @param aBaseURL the base URL to start with (content.baseURL, may be null)
-   * @param aURLSpec the URL of the link (may be relative)
-   * @param aTargetSpec the target (like target=, may be null)
+   * @param aOriginURI the URI the request originates from.  Used as the origin
+   *        uri for a CheckLoadURI call. 
+   * @param aLinkURI the URI of the link
+   * @param aTargetSpec the target (like target=, may be empty)
    * @param aClick whether this was a click or not (if false, it assumes you
    *        just hovered over the link)
    */
   nsresult TriggerLink(nsIPresContext* aPresContext,
                        nsLinkVerb aVerb,
-                       nsIURI* aBaseURL,
-                       const nsAString& aURLSpec,
+                       nsIURI* aOriginURI,
+                       nsIURI* aLinkURI,
                        const nsAFlatString& aTargetSpec,
                        PRBool aClick);
   /**

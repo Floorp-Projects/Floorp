@@ -168,7 +168,7 @@ public:
 
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
-                        nsAString& aUrl);
+                        nsIURI** aURI);
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
@@ -204,12 +204,12 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLStyleElement::nsHTMLStyleElement()
 {
-  nsHTMLUtils::AddRef(); // for GetHrefUTF8ForAnchors
+  nsHTMLUtils::AddRef(); // for GetHrefURIForAnchors
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefUTF8ForAnchors
+  nsHTMLUtils::Release(); // for GetHrefURIForAnchors
 }
 
 
@@ -314,9 +314,9 @@ nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
 
 void
 nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
-                                     nsAString& aUrl)
+                                     nsIURI** aURI)
 {
-  aUrl.Truncate();
+  *aURI = nsnull;
   *aIsInline = !HasAttr(kNameSpaceID_None, nsHTMLAtoms::src);
   if (*aIsInline) {
     return;
@@ -328,12 +328,7 @@ nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
     return;
   }
 
-  char *buf;
-  GetHrefUTF8ForAnchors(&buf);
-  if (buf) {
-    aUrl.Assign(NS_ConvertUTF8toUCS2(buf));
-    nsCRT::free(buf);
-  }
+  GetHrefURIForAnchors(aURI);
   return;
 }
 

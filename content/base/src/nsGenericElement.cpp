@@ -3115,29 +3115,16 @@ nsGenericElement::LeaveLink(nsIPresContext* aPresContext)
 nsresult
 nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
-                              nsIURI* aBaseURL,
-                              const nsAString& aURLSpec,
+                              nsIURI* aOriginURI,
+                              nsIURI* aLinkURI,
                               const nsAFlatString& aTargetSpec,
                               PRBool aClick)
 {
+  NS_PRECONDITION(aLinkURI, "No link URI");
   nsCOMPtr<nsILinkHandler> handler;
   nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
   if (NS_FAILED(rv) || !handler) return rv;
 
-  // Resolve url to an absolute url
-  nsCOMPtr<nsIURI> targetURI;
-  nsCAutoString docCharset;
-  if (mDocument &&
-      NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset))) {
-    rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec,
-                   docCharset.get(), aBaseURL);
-  } else {
-    rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec, nsnull, aBaseURL);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Now pass on absolute url to the click handler
   if (aClick) {
     nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
@@ -3145,17 +3132,15 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       proceed =
-        securityManager->CheckLoadURI(aBaseURL, targetURI,
+        securityManager->CheckLoadURI(aOriginURI, aLinkURI,
                                       nsIScriptSecurityManager::STANDARD);
 
     // Only pass off the click event if the script security manager
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
-      handler->OnLinkClick(this, aVerb, targetURI,
-                           aTargetSpec.get());
+      handler->OnLinkClick(this, aVerb, aLinkURI, aTargetSpec.get());
   } else {
-    handler->OnOverLink(this, targetURI,
-                        aTargetSpec.get());
+    handler->OnOverLink(this, aLinkURI, aTargetSpec.get());
   }
   return rv;
 }

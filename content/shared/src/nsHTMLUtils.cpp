@@ -58,49 +58,21 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsresult
-NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
-                              const nsString& aSpec,
-                              nsIDocument* aDocument,
-                              nsIURI* aBaseURI,
-                              nsIIOService* aIOService,
-                              nsICharsetConverterManager* aConvMgr)
+NS_NewURIWithDocumentCharset(nsIURI** aResult,
+                             const nsString& aSpec,
+                             nsIDocument* aDocument,
+                             nsIURI* aBaseURI)
 {
-  // Initialize aResult in case of tragedy
-  aResult.Truncate();
-
-  // Sanity
-  NS_PRECONDITION(aBaseURI != nsnull, "no base URI");
-  if (! aBaseURI)
-    return NS_ERROR_FAILURE;
-
-  // This gets the relative spec after gyrating it through all the
-  // necessary encodings and escaping.
-
-  if (IsASCII(aSpec)) {
-    // If it's ASCII, then just copy the characters
-    return aBaseURI->Resolve(NS_LossyConvertUCS2toASCII(aSpec), aResult);
-  }
-
-  nsCOMPtr<nsIURI> absURI;
-  nsresult rv;
-
-  nsCAutoString originCharset; // XXX why store charset as UCS2?
+  NS_PRECONDITION(aResult, "Null out param");
+  NS_PRECONDITION(aBaseURI, "Must have a base URI");
+  
+  nsCAutoString originCharset;
   if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
     originCharset.Truncate();
 
-  // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32-LE,
-  // UTF-32LE, UTF-32BE (yet?). Truncate it and leave it to default (UTF-8)
-  if (originCharset[0] == 'U' &&
-      originCharset[1] == 'T' &&
-      originCharset[2] == 'F')
-    originCharset.Truncate();
-
-  rv = nsHTMLUtils::IOService->NewURI(NS_ConvertUCS2toUTF8(aSpec),
-                                      originCharset.get(),
-                                      aBaseURI, getter_AddRefs(absURI));
-  if (NS_FAILED(rv)) return rv; 
-
-  return absURI->GetSpec(aResult);
+  return nsHTMLUtils::IOService->NewURI(NS_ConvertUCS2toUTF8(aSpec),
+                                        originCharset.get(),
+                                        aBaseURI, aResult);
 }
 
 

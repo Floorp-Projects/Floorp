@@ -42,6 +42,8 @@
 #include "nsISupports.h"
 #include "nsILinkHandler.h" // definition of nsLinkState
 
+class nsIURI;
+
 // IID for the nsILink interface
 #define NS_ILINK_IID    \
 { 0xa904ac22, 0x28fa, 0x4812,  \
@@ -76,18 +78,14 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState) = 0;
 
   /**
-    * Get a pointer to the UTF-8 encoded canonical URL (i.e., fully
-    * resolved to the base URL) that this link element points to.  The
-    * buffer returned has been allocated for and should be deleted by
-    * the caller.
+    * Get a pointer to the fully href URI (fully resolved and canonicalized,
+    * since it's an nsIURI object).
     *
-    * @param aBuf [out] A pointer to be filled in with a pointer to a
-    *             null-terminated string containing the canonical URL.
-    *             If the element has no HREF attribute, it is set to
-    *             nsnull.
-    * @return NS_OK if the out pointer is filled in
+    * @param aURI [out] A pointer to be filled in with a pointer to the URI
+    *             If the element has no HREF attribute, it is set to nsnull.
+    * @return NS_OK if the out pointer is filled in (possibly with nsnull)
     */
-  NS_IMETHOD GetHrefUTF8(char** aBuf) = 0;
+  NS_IMETHOD GetHrefURI(nsIURI** aURI) = 0;
 
 };
 
