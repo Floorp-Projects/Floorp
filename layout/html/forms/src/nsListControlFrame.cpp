@@ -3057,7 +3057,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
 
   nsresult rv         = NS_ERROR_FAILURE; 
-  PRUint32 code       = 0;
+  PRUint32 keycode    = 0;
   PRUint32 numOptions = 0;
   PRBool isControl    = PR_FALSE;
   PRBool isShift      = PR_FALSE;
@@ -3068,10 +3068,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   if (keyEvent) {
     //uiEvent->GetCharCode(&code);
     //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
-    keyEvent->GetKeyCode(&code);
-    if (code == 0) {
-      keyEvent->GetCharCode(&code);
-    }
+    keyEvent->GetKeyCode(&keycode);
 #ifdef DO_REFLOW_DEBUG
     if (code >= 32) {
       REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
@@ -3142,7 +3139,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // default processing checks to see if the pressed the first 
   //   letter of an item in the list and advances to it
 
-  switch (code) {
+  switch (keycode) {
 
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_LEFT: {
@@ -3213,13 +3210,33 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       newIndex = mEndSelectionIndex;
       } break;
   
+#if defined(XP_WIN) || defined(XP_OS2)
+    case nsIDOMKeyEvent::DOM_VK_F4: {
+      if (IsInDropDownMode() == PR_TRUE) {
+        PRBool isDroppedDown;
+        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        mComboboxFrame->ShowDropDown(!isDroppedDown);
+        aKeyEvent->PreventDefault();
+
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+        if (nsevent) {
+          nsevent->PreventCapture();
+          nsevent->PreventBubble();
+        }
+      }
+      } break;
+#endif
+
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
       if (isControl) {
         return NS_OK;
       }
 
-      code = (PRUint32)nsCRT::ToLower((char)code);
+      PRUint32 charcode = 0;
+      keyEvent->GetCharCode(&charcode);
+      charcode = (PRUint32)nsCRT::ToLower((char)charcode);
       PRInt32 selectedIndex;
       GetSelectedIndex(&selectedIndex);
       if (selectedIndex == kNothingSelected) {
@@ -3237,7 +3254,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
           if (NS_OK == optionElement->GetText(text)) {
             ToLowerCase(text);
             PRUnichar firstChar = text.CharAt(0);
-            if (firstChar == (PRUnichar)code) {
+            if (firstChar == (PRUnichar)charcode) {
               PRBool wasChanged = PerformSelection(selectedIndex,
                                                    isShift, isControl);
               if (wasChanged) {
@@ -3261,7 +3278,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
     // If you hold control, no key will actually do anything except space.
-    if (isControl && code != nsIDOMKeyEvent::DOM_VK_SPACE) {
+    if (isControl && keycode != nsIDOMKeyEvent::DOM_VK_SPACE) {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
       ScrollToIndex(newIndex);
