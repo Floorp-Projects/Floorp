@@ -42,6 +42,7 @@ typedef struct
     XtWidgetProc			layout_pixmap;		/* layout_pixmap		*/
     XfeExposeProc			draw_pixmap;		/* draw_pixmap			*/
     XfeExposeProc			draw_raise_border;	/* draw_raise_border	*/
+    XfeExposeProc			draw_underline;		/* draw_underline		*/
 	XtTimerCallbackProc		arm_timeout;		/* arm_timeout			*/
     XtPointer				extension;			/* Extension			*/
 } XfeButtonClassPart;
@@ -87,7 +88,6 @@ typedef struct _XfeButtonPart
     Pixmap				insensitive_pixmap_mask;/* Insens pixmap mask	*/
     Pixmap				pixmap_mask;			/* Pixmap mask			*/
 
-
     /* Arm resources */
     Boolean				armed;					/* Armed ?				*/
     Pixel				arm_background;			/* Arm background		*/
@@ -110,6 +110,9 @@ typedef struct _XfeButtonPart
     unsigned char		button_trigger;			/* Button trigger		*/
 	Boolean				emulate_motif;			/* Emulate motif		*/
     Dimension			spacing;				/* Spacing				*/
+
+    /* Underline resources */
+    Dimension			underline_thickness;	/* Underline thickness	*/
 
 	/* Cursor resources */
     Cursor				transparent_cursor;		/* Transparent cursor	*/
@@ -168,6 +171,12 @@ _XfeButtonDrawPixmap			(Widget			w,
 /*----------------------------------------------------------------------*/
 extern void
 _XfeButtonDrawRaiseBorder		(Widget			w,
+								 XEvent *		event,
+								 Region			region,
+								 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeButtonDrawUnderline			(Widget			w,
 								 XEvent *		event,
 								 Region			region,
 								 XRectangle *	clip_rect);

@@ -296,9 +296,10 @@ XfeDrawMotifArrow(Display *		dpy,
 
 	if (swap) 
 	{
-		GC tmp_gc = bottom_gc;
-		bottom_gc = top_gc;
-		top_gc = tmp_gc;
+		_XfeSwap(bottom_gc,top_gc,GC);
+/* 		GC tmp_gc = bottom_gc; */
+/* 		bottom_gc = top_gc; */
+/* 		top_gc = tmp_gc; */
 	}
 	
 	_XmDrawArrow(dpy,d,

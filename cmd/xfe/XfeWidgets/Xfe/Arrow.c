@@ -278,6 +278,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
 		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
     },

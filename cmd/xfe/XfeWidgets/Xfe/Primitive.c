@@ -173,6 +173,10 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) XfeDEFAULT_BUFFER_TYPE
 	},
+    /*
+     * I just realized this resource is misnamed.  It should be 
+     * XmNpretendInsensitive. doh...
+     */
 	{ 
 		XmNpretendSensitive,
 		XmCPretendSensitive,

@@ -413,6 +413,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
 		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
     },
@@ -659,6 +660,9 @@ LayoutComponents(Widget w)
 static void
 DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 {
+  /* Invoke draw_selection method */
+	_XfeLabelDrawSelection(w,event,region,clip_rect);
+
 	/* Invoke draw_string method */
 	_XfeLabelDrawString(w,event,region,clip_rect);
 
@@ -668,6 +672,9 @@ DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 	/* Invoke draw_border method */
 	_XfeButtonDrawRaiseBorder(w,event,region,clip_rect);
 
+	/* Invoke draw_underline method */
+	_XfeButtonDrawUnderline(w,event,region,clip_rect);
+    
 	/* Draw Cascade Arrow */
 	DrawCascadeArrow(w,event,region,clip_rect);
 }

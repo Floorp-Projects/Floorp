@@ -116,6 +116,7 @@ typedef int	XfeBitGravityType;
 #define XfeInheritChangeManaged				((XtWidgetProc)			_XtInherit)
 #define XfeInheritChildIsLayable			((XfeChildFunc)			_XtInherit)
 #define XfeInheritClickTimeout				((XtTimerCallbackProc)	_XtInherit)
+#define XfeInheritCountLayableChildren		((Boolean)				_XtInherit)
 #define XfeInheritDeleteChild				((XfeChildFunc)			_XtInherit)
 #define XfeInheritDescendantDragEnd			((XfeOrientedProc)		_XtInherit)
 #define XfeInheritDescendantDragMotion		((XfeOrientedProc)		_XtInherit)
@@ -135,6 +136,7 @@ typedef int	XfeBitGravityType;
 #define XfeInheritDrawShadow				((XfeExposeProc)		_XtInherit)
 #define XfeInheritDrawString				((XfeExposeProc)		_XtInherit)
 #define XfeInheritDrawTitleShadow			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawUnderline				((XfeExposeProc)		_XtInherit)
 #define XfeInheritEnter						((XfeOrientedProc)		_XtInherit)
 #define XfeInheritGetBackgroundGC			((XfeGetGCFunc)			_XtInherit)
 #define XfeInheritGetLabelGC				((XfeGetGCFunc)			_XtInherit)
@@ -153,7 +155,6 @@ typedef int	XfeBitGravityType;
 #define XfeInheritMotion					((XfeOrientedProc)		_XtInherit)
 #define XfeInheritPreferredGeometry			((XfeGeometryProc)		_XtInherit)
 #define XfeInheritToggleSelection			((XtWidgetProc)			_XtInherit)
-#define XfeInheritCountLayableChildren		((Boolean)				_XtInherit)
 #define XfeInheritUpdateRect				((XtWidgetProc)			_XtInherit)
 
 /*----------------------------------------------------------------------*/

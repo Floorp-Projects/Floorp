@@ -65,6 +65,8 @@ XfeMin((_bp)->pixmap_rect.width,(_lp)->label_rect.width)
 #define MIN_COMP_HEIGHT(_lp,_bp) \
 XfeMin((bp)->pixmap_rect.height,(_lp)->label_rect.height)
 
+#define UNDERLINE_SPACING 1
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Core class methods													*/
@@ -104,6 +106,7 @@ static GC	GetLabelGC			(Widget);
 static void	LayoutPixmap		(Widget);
 static void	DrawPixmap			(Widget,XEvent *,Region,XRectangle *);
 static void	DrawRaiseBorder		(Widget,XEvent *,Region,XRectangle *);
+static void	DrawUnderline		(Widget,XEvent *,Region,XRectangle *);
 static void	ArmTimeout			(XtPointer,XtIntervalId *);
 
 /*----------------------------------------------------------------------*/
@@ -379,6 +382,15 @@ static XtResource resources[] =
 		(XtPointer) True
     },
 
+	{ 
+		XmNunderlineThickness,
+		XmCUnderlineThickness,
+		XmRHorizontalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeButtonRec , xfe_button . underline_thickness),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
 
     /* Misc resources */
     { 
@@ -511,6 +523,13 @@ static XmSyntheticResource syn_resources[] =
 		_XmToHorizontalPixels 
     },
     { 
+		XmNunderlineThickness,
+		sizeof(Dimension),
+		XtOffsetOf(XfeButtonRec , xfe_button . underline_thickness),
+		_XmFromHorizontalPixels,
+		_XmToHorizontalPixels 
+    },
+    { 
 		XmNspacing,
 		sizeof(Dimension),
 		XtOffsetOf(XfeButtonRec , xfe_button . spacing),
@@ -620,6 +639,7 @@ _XFE_WIDGET_CLASS_RECORD(button,Button) =
 		LayoutPixmap,							/* layout_pixmap		*/
 		DrawPixmap,								/* draw_pixmap			*/
 		DrawRaiseBorder,						/* draw_raise_border	*/
+		DrawUnderline,							/* draw_underline		*/
 		ArmTimeout,								/* arm_timeout			*/
 		NULL,									/* extension            */
     },
@@ -693,6 +713,9 @@ ClassPartInit(WidgetClass wc)
 
 	_XfeResolve(cc,sc,xfe_button_class,draw_raise_border,
 				XfeInheritDrawRaiseBorder);
+
+	_XfeResolve(cc,sc,xfe_button_class,draw_underline,
+				XfeInheritDrawUnderline);
 
 	_XfeResolve(cc,sc,xfe_button_class,arm_timeout,XfeInheritArmTimeout);
 }
@@ -1179,6 +1202,40 @@ PreferredGeometry(Widget w,Dimension *width,Dimension *height)
 		
 		break;
     }
+
+	/* Include the underline thickness if needed */
+	if ((bp->underline_thickness > 0) && 
+		(bp->button_layout != XmBUTTON_PIXMAP_ONLY))
+	{
+		Dimension underline_height = 
+			bp->underline_thickness + 
+			UNDERLINE_SPACING;
+
+		if (bp->button_layout == XmBUTTON_LABEL_ON_BOTTOM ||
+			bp->button_layout == XmBUTTON_LABEL_ON_TOP ||
+			bp->button_layout == XmBUTTON_LABEL_ONLY)
+		{
+			*height += underline_height;
+		}
+		else if (bp->button_layout == XmBUTTON_LABEL_ON_LEFT ||
+				 bp->button_layout == XmBUTTON_LABEL_ON_RIGHT)
+		{
+			/* Obtain the difference in height for the pixmap and label */
+			int height_difference = 
+				(int) bp->pixmap_rect.height - 
+				(int) lp->label_rect.height;
+			
+			/* Pixmap is taller.  We might have space for the underline */
+			if (height_difference > 0)
+			{
+				/* Not enough.  Add the extra needed space to the height */
+				if (height_difference < underline_height)
+				{
+					*height += (underline_height - height_difference);
+				}
+			}
+		}
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1230,6 +1287,9 @@ DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 
 	/* Invoke draw_raise_border method */
 	_XfeButtonDrawRaiseBorder(w,event,region,clip_rect);
+
+	/* Invoke draw_underline method */
+	_XfeButtonDrawUnderline(w,event,region,clip_rect);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1575,7 +1635,7 @@ DrawRaiseBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 {
     XfeButtonPart *	bp = _XfeButtonPart(w);
 
-	/* Make sure the thickness of the raise border ain't */
+	/* Make sure the thickness of the raise border ain't 0 */
 	if (bp->raise_border_thickness == 0)
 	{
 		return;
@@ -1626,6 +1686,44 @@ DrawRaiseBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 							 
 						 bp->raise_border_thickness);
 	}
+}
+/*----------------------------------------------------------------------*/
+static void
+DrawUnderline(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
+{
+    XfeButtonPart *		bp = _XfeButtonPart(w);
+    XfeLabelPart *		lp = _XfeLabelPart(w);
+	GC					underline_gc = NULL;
+
+	/* Make sure there is a label to underline */
+	if (bp->button_layout == XmBUTTON_PIXMAP_ONLY)
+	{
+		return;
+	}
+
+	/* Make sure the underline thickness ain't 0 */
+	if (bp->underline_thickness == 0)
+	{
+		return;
+	}
+
+	underline_gc = _XfeLabelGetLabelGC(w);
+	
+	assert( underline_gc != NULL );
+
+	XFillRectangle(XtDisplay(w),_XfePrimitiveDrawable(w),
+
+				   underline_gc,
+
+				   lp->label_rect.x,
+
+				   lp->label_rect.y + 
+				   lp->label_rect.height + 
+				   UNDERLINE_SPACING,
+
+				   lp->label_rect.width,
+
+				   bp->underline_thickness);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1791,6 +1889,13 @@ StringLayoutLabelOnly(Widget w)
 	
 	/* Layout vertically centred */
 	lp->label_rect.y = (_XfeHeight(w) - lp->label_rect.height) / 2;
+
+	/* Subtract the underline thickness if needed */
+	if (bp->underline_thickness > 0)
+	{
+		lp->label_rect.y -= 
+			((bp->underline_thickness + UNDERLINE_SPACING) / 2);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1831,6 +1936,12 @@ StringLayoutLabelOnBottom(Widget w)
 		_XfeOffsetBottom(w) - 
 		lp->label_rect.height -
 		RAISE_OFFSET(bp);
+
+	/* Subtract the underline thickness if needed */
+	if (bp->underline_thickness > 0)
+	{
+		lp->label_rect.y -= (bp->underline_thickness + UNDERLINE_SPACING);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1879,6 +1990,12 @@ StringLayoutLabelOnLeft(Widget w)
 
 	lp->label_rect.y = (_XfeHeight(w) - lp->label_rect.height) / 2;
 	
+	/* Subtract the underline thickness if needed */
+	if (bp->underline_thickness > 0)
+	{
+		lp->label_rect.y -= 
+			((bp->underline_thickness + UNDERLINE_SPACING) / 2);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1894,6 +2011,13 @@ StringLayoutLabelOnRight(Widget w)
 		RAISE_OFFSET(bp);
 
 	lp->label_rect.y = (_XfeHeight(w) - lp->label_rect.height) / 2;
+
+	/* Subtract the underline thickness if needed */
+	if (bp->underline_thickness > 0)
+	{
+		lp->label_rect.y -= 
+			((bp->underline_thickness + UNDERLINE_SPACING) / 2);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -2056,6 +2180,20 @@ _XfeButtonDrawRaiseBorder(Widget		w,
 	if (bc->xfe_button_class.draw_raise_border)
 	{
 		(*bc->xfe_button_class.draw_raise_border)(w,event,region,clip_rect);
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+_XfeButtonDrawUnderline(Widget			w,
+						XEvent *		event,
+						Region			region,
+						XRectangle *	clip_rect)
+{
+	XfeButtonWidgetClass bc = (XfeButtonWidgetClass) XtClass(w);
+
+	if (bc->xfe_button_class.draw_underline)
+	{
+		(*bc->xfe_button_class.draw_underline)(w,event,region,clip_rect);
 	}
 }
 /*----------------------------------------------------------------------*/
