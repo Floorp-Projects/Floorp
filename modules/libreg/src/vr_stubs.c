@@ -272,7 +272,7 @@ extern void vr_findGlobalRegName()
             err = FSpGetFullPath(&regSpec, &pathLen, &thePath);
             if (err == noErr && thePath)
             {
-            #ifdef STANDALONE_REGISTRY
+            #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 globalRegName = XP_STRDUP(*(char**)thePath);
             #else
                 /* Since we're now using NSPR, this HAS to be a unix path! */
