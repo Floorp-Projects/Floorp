@@ -54,9 +54,6 @@ public:
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
 
-	// No-op
-	NS_IMETHOD Open() { return NS_OK; };
-
     // nsIRunnable methods:
     NS_IMETHOD Run(void);
 

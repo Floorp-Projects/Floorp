@@ -87,9 +87,5 @@ interface nsIChannel : nsIRequest
                     in nsIEventQueue eventQueue,
                     in nsIStreamObserver observer);
 
-	/**
-	 * Open call that makes the final connection 
-	 */
-	void Open();
 };
 
