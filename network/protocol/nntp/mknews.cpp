@@ -16,6 +16,11 @@
  * Reserved.
  */
 
+/*
+ * NNTP protocol implementation. Maintains some state and sends most
+ * data to messenger backend.
+ */
+
 /* Please leave outside of ifdef for windows precompiled headers */
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 extern "C" {
@@ -66,6 +71,7 @@ extern "C" {
 #define XPCOM_NEWSPARSE
 #define XPCOM_NEWSHOST
 #define XPCOM_NEWSGROUP
+#define XPCOM_OFFLINE
 
 #ifdef XPCOM_XOVER
 #include "nsIMsgXOVERParser.h"
@@ -82,6 +88,13 @@ extern "C" {
 #ifdef XPCOM_NEWSGROUP
 #include "nsIMsgNewsgroup.h"
 #endif
+
+#ifdef XPCOM_OFFLINE
+#include "nsIMsgOfflineNewsState.h"
+#endif
+
+#include "nsIMsgRFC822Parser.h"
+#include "nsMsgRFC822Parser.h"  /* for the factory */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
@@ -491,7 +504,11 @@ typedef struct _NewsConData {
 										reopening it.  */
 	char *command_specific_data;
 	char *current_search;
+#ifdef XPCOM_OFFLINE
+    nsIMsgOfflineNewsState *offline_state;
+#else
 	void *offlineState;				/* offline news state machine for article retrieval */
+#endif
 	XP_Bool articleIsOffline;
 	int previous_response_code;
 
@@ -671,7 +688,12 @@ net_display_html_error_state (ActiveEntry *ce)
 
                 char *group_name;
                 cd->newsgroup->GetName(&group_name);
-				PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", urlScheme, cd->control_con->hostname, group_name, XP_GetString(MK_MSG_EXPIRE_NEWS_ARTICLES));
+				PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE,
+                            "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n",
+                            urlScheme,
+                            cd->control_con->hostname,
+                            group_name,
+                            XP_GetString(MK_MSG_EXPIRE_NEWS_ARTICLES));
                 PR_Free(group_name);
 				PUTSTRING(cd->output_buffer);
 			  }
@@ -3568,11 +3590,22 @@ net_do_cancel (ActiveEntry *ce)
   if (!MSG_QueryNewsExtension(cd->host, "CANCELCHK"))
 #endif
   {
-	char *us = MSG_ExtractRFC822AddressMailboxes (from);
-	char *them = MSG_ExtractRFC822AddressMailboxes (old_from);
-	XP_Bool ok = (us && them && !PL_strcasecmp (us, them));
-	FREEIF(us);
-	FREEIF(them);
+    nsIMsgRFC822Parser *parser;
+    nsresult rv;
+    PRBool ok = FALSE;
+
+    rv = NS_NewRFC822Parser(&parser);
+    if (NS_SUCCEEDED(rv)) {
+      char *us, *them;
+      nsresult rv1 = parser->ExtractRFC822AddressMailboxes(from, &us);
+      nsresult rv2 = parser->ExtractRFC822AddressMailboxes(old_from, &them);
+      ok = (NS_SUCCEEDED(rv1) &&
+            NS_SUCCEEDED(rv2) &&
+            !PL_strcasecmp(us, them));
+      if (NS_SUCCEEDED(rv1)) PR_Free(us);
+      if (NS_SUCCEEDED(rv2)) PR_Free(them);
+      NS_RELEASE(parser);
+    }
 	if (!ok)
 	  {
 		status = MK_NNTP_CANCEL_DISALLOWED;
@@ -4909,13 +4942,13 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 
   if (cd->type_wanted == ARTICLE_WANTED)
   {
-		const char *group = 0;
 		uint32 number = 0;
 #ifdef XPCOM_NEWSGROUP
         nsresult rv;
         PRBool articleIsOffline;
         rv =cd->newsgroup->IsOfflineArticle(number,&articleIsOffline);
 #else
+		const char *group = 0;
 		XP_Bool articleIsOffline = MSG_IsOfflineArticle (cd->pane, cd->path, &group, &number);
 #endif
 		if (NET_IsOffline() || (NS_SUCCEEDED(rv) && articleIsOffline))
@@ -4931,10 +4964,19 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 			if (!articleIsOffline)
 				ce->format_out = CLEAR_CACHE_BIT(ce->format_out);
 			NET_SetCallNetlibAllTheTime(ce->window_id,"mknews");
+#ifdef XPCOM_OFFLINE
+            rv = NS_NewOfflineNewState(&cd->offline_state,
+                                       cd->newsgroup, number);
+#else
 			MSG_StartOfflineRetrieval(cd->pane, group, number, &cd->offlineState);
+#endif
 		}
   }
+#ifdef XPCOM_OFFLINE
+  if (cd->offline_state)
+#else
   if (cd->offlineState)
+#endif
 	  goto FAIL;	/* we don't need to do any of this connection stuff */
 
   /* check for established connection and use it if available
@@ -5098,7 +5140,8 @@ NET_ProcessOfflineNews(ActiveEntry *ce, NewsConData *cd)
 {
 	int32 read_size = 0;
 	int status;
-
+    nsresult rv;
+    
     cd->pause_for_read  = TRUE;
 
 	if (cd->stream)
@@ -5124,9 +5167,13 @@ NET_ProcessOfflineNews(ActiveEntry *ce, NewsConData *cd)
 		return(0);  /* wait until we are ready to write */
 	else
 		read_size = MIN(read_size, NET_Socket_Buffer_Size);
-
+#ifdef XPCOM_OFFLINE
+    rv = cd->offline_state->Process(&NET_Socket_Buffer, read_size, &status);
+    if (NS_SUCCEEDED(rv) && status > 0)
+#else
 	status = MSG_ProcessOfflineNews(cd->offlineState, NET_Socket_Buffer, read_size);
 	if(status > 0)
+#endif
 	{
 		ce->bytes_received += status;
 		FE_GraphProgress(ce->window_id, ce->URL_s,
@@ -5166,7 +5213,11 @@ net_ProcessNews (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 
+#ifdef XPCOM_OFFLINE
+    if (cd->offline_state != NULL)
+#else
 	if (cd->offlineState != NULL)
+#endif
 	{
 		return NET_ProcessOfflineNews(ce, cd);
 	}
@@ -5835,9 +5886,20 @@ MODULE_PRIVATE int
 NET_InterruptNews(ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
-
+    nsresult rv;
+#ifdef XPCOM_OFFLINE
+    if (cd->offline_state != NULL) {
+      int status;
+      rv = cd->offline_state->Interrupt(&status);
+      if (NS_SUCCEEDED(rv))
+        return status;
+      else
+        return -1;              /* ??? */
+    }
+#else
 	if (cd->offlineState != NULL)
 		return MSG_InterruptOfflineNews(cd->offlineState);
+#endif
 
     cd->next_state = NNTP_ERROR;
     ce->status = MK_INTERRUPTED;
