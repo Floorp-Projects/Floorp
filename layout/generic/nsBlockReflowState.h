@@ -1011,7 +1011,7 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 {
   while (nsnull != aRuns) {
     aRuns->List(out, aIndent);
-    aRuns = aRuns->mNext;
+    aRuns = aRuns->GetNext();
   }
 }
 
