@@ -2355,19 +2355,16 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
     result = aDocument->GetBaseURL(getter_AddRefs(docBaseURL));
   }
 
-  *aBaseURL = docBaseURL;
-
   if (eHTMLUnit_String == aBaseHref.GetUnit()) {
     nsAutoString baseHref;
     aBaseHref.GetStringValue(baseHref);
     baseHref.Trim(" \t\n\r");
 
-    nsCOMPtr<nsIURI> url;
-    result = NS_NewURI(getter_AddRefs(url), baseHref, nsnull, docBaseURL);
-
-    *aBaseURL = url;
+    *aBaseURL = nsnull;
+    return NS_NewURI(aBaseURL, baseHref, nsnull, docBaseURL);
   }
 
+  *aBaseURL = docBaseURL;
   NS_IF_ADDREF(*aBaseURL);
   return result;
 }
