@@ -2848,8 +2848,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     }
 
     //*aRetValue = result;
-
-    return result;
+    if (mWnd) {
+      return result;
+    }
+    else {
+      //Events which caused mWnd destruction and aren't consumed
+      //will crash during the Windows default processing.
+      return PR_TRUE;
+    }
 }
 
 
