@@ -721,7 +721,17 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     if (NS_SUCCEEDED(rv) && pEventQService)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
       getter_AddRefs(eventQ));
-    rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
+    nsCOMPtr <nsIURI> url;
+    rv = imapService->SelectFolder(eventQ, this, this, msgWindow, getter_AddRefs(url));
+    if (url && m_urlListener)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(url);
+      if (mailnewsUrl)
+      {
+        mailnewsUrl->RegisterListener(m_urlListener);
+        m_urlListener = nsnull;
+      }
+    }
     switch (rv)
     {
       case NS_MSG_ERROR_OFFLINE:
