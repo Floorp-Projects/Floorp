@@ -16,8 +16,6 @@
 	pages = new Object();
 	pages[0] = "resource:/res/profile/content1.xul";
 	pages[1] = "resource:/res/profile/content2.xul";
-	pages[2] = "resource:/res/profile/content3.xul";
-	pages[3] = "resource:/res/profile/content4.xul";
 
 	function BrowserLoadURL(func)
 	{
@@ -28,7 +26,7 @@
 		}
 
 		if (func == "Next") {
-			if (count != 3) {
+			if (count != 1) {
 				count = count + 1;
 			}
 		}
@@ -36,7 +34,7 @@
 		parent.frames[0].commit();
 		parent.frames[0].location.replace( pages[count] );
 
-		if (count == 3) {
+		if (count == 1) {
 			parent.count = count;
 			parent.frames[1].location.replace("resource:/res/profile/navigationFinish.xul");
 		}
@@ -45,9 +43,9 @@
 
 	function SetValue(name, value)
 	{
-		dump("Set Value");
-		dump("name: "+name+"\n");
-		dump("value: "+value+"\n");
+		//dump("Set Value");
+		//dump("name: "+name+"\n");
+		//dump("value: "+value+"\n");
 	}
 
 </html:script>
