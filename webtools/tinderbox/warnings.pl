@@ -328,6 +328,38 @@ sub build_blame {
   }
 }
 
+sub print_summary_table
+{
+  my ($who_list_ref, $who_count_hash_ref) = @_;
+  my $num_whos = $#{$who_list_ref};
+
+  # Summary Table (name, count)
+  #
+  use POSIX;
+  print "<table border=0 cellpadding=1 cellspacing=0 bgcolor=#ededed>\n";
+  my $num_columns = 6;
+  my $num_rows = ceil($num_whos / $num_columns);
+  for (my $ii=0; $ii < $num_rows; $ii++) {
+    print "<tr>";
+    for (my $jj=0; $jj < $num_columns; $jj++) {
+      my $index = $ii + $jj * $num_rows;
+      next if $index > $num_whos;
+      my $name = $who_list_ref->[$index];
+      my $count = $who_count_hash_ref->{$name};
+      next if $count == 0;
+      warn "$ii\t$jj\t$index\t$name\t$count\n";
+      $name =~ s/%.*//;
+      print "  " x $jj;
+      print "<td><a href='#$name'>$name</a>";
+      print "</td><td>";
+      print "$count";
+      print "</td><td>&nbsp;</td>\n";
+    }
+    print "</tr>\n";
+  }
+  print "</table><p>\n";
+}
+
 sub print_html_by_who {
   my ($fh, $br) = @_;
   my ($buildname, $buildtime) = ($br->{buildname}, $br->{buildtime});
@@ -355,33 +387,11 @@ sub print_html_by_who {
 __END_HEADER
   for $who (sort { $who_count{$b} <=> $who_count{$a}
                    || $a cmp $b } keys %who_count) {
+    next if $who_count{$who} == 0;
     push @who_list, $who;
   }
-
-  # Summary Table (name, count)
-  #
-  use POSIX;
-  print "<table border=0 cellpadding=1 cellspacing=0 bgcolor=#ededed>\n";
-  my $num_columns = 6;
-  my $num_rows = ceil($#who_list / $num_columns);
-  for (my $ii=0; $ii < $num_rows; $ii++) {
-    print "<tr>";
-    for (my $jj=0; $jj < $num_columns; $jj++) {
-      my $index = $ii + $jj * $num_rows;
-      next if $index > $#who_list;
-      my $name = $who_list[$index];
-      my $count = $who_count{$name};
-      next if $count == 0;
-      $name =~ s/%.*//;
-      print "  " x $jj;
-      print "<td><a href='#$name'>$name</a>";
-      print "</td><td>";
-      print "$count";
-      print "</td><td>&nbsp;</td>\n";
-    }
-    print "</tr>\n";
-  }
-  print "</table><p>\n";
+  print_summary_table(\@who_list, \%who_count);
+  #print_summary_table([sort @who_list], \%who_count);
 
   # Count Unblamed warnings
   #
