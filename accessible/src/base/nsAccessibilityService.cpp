@@ -899,9 +899,8 @@ nsAccessibilityService::CreateXULTextBoxAccessible(nsIDOMNode *aNode, nsIAccessi
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  // The XUL text field accessible inherits some, but not all behavior 
-  // from the HTML widget
-  *_retval = new nsXULTextFieldAccessible(aNode, weakShell);
+  *_retval = new nsXULTextFieldAccessibleWrap(aNode, weakShell);
+
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 

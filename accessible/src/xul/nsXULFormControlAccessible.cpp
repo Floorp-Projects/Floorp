@@ -404,8 +404,9 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULGroupboxAccessible::GetState(PRUint32 *_retval)
 {
-  // Groupbox doesn't support any states!
-  *_retval = 0;
+  // Groupbox doesn't support focusable state!
+  nsAccessible::GetState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -641,6 +642,11 @@ nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakRef
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 {
+  PRUint32 state;
+  GetState(&state);
+  if (state & STATE_PROTECTED)    // Don't return password text!
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
   if (textBox) {
     return textBox->GetValue(aValue);

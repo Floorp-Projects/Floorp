@@ -39,6 +39,10 @@
 
 #include "nsIDOMElement.h"
 #include "nsXULFormControlAccessibleWrap.h"
+#include "nsIFrame.h"
+#include "nsIPresShell.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMXULTextboxElement.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULProgressMeterAccessibleWrap, nsXULProgressMeterAccessible, nsIAccessibleValue)
 
@@ -94,4 +98,59 @@ NS_IMETHODIMP nsXULProgressMeterAccessibleWrap::SetCurrentValue(double aValue, P
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED2(nsXULTextFieldAccessibleWrap, nsXULTextFieldAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
+nsXULTextFieldAccessibleWrap::nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsXULTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
+{ 
+  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(aNode));
+  NS_ASSERTION(textBox, "Not a XUL textbox!");
+  if (!textBox)
+    return;
+
+  nsCOMPtr<nsIDOMHTMLInputElement> inputField;
+  textBox->GetInputField(getter_AddRefs(inputField));
+  if (!inputField)
+    return;
+
+  mTextNode = inputField;
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  if (!shell)
+    return;
+
+  nsIFrame* frame = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(inputField));
+  shell->GetPrimaryFrameFor(content, &frame);
+
+  if (!frame)
+    return;
+
+  nsITextControlFrame *textFrame;
+  frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
+  if (textFrame) {
+    nsCOMPtr<nsIEditor> editor;
+    textFrame->GetEditor(getter_AddRefs(editor));
+    SetEditor(editor);
+  } 
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetRole(PRUint32 *aRole)
+{
+  PRUint32 state = 0;
+
+  nsresult rv = GetState(&state);
+  if (NS_SUCCEEDED(rv) && (state & STATE_PROTECTED))
+    *aRole = ROLE_PASSWORD_TEXT;
+  else
+    *aRole = ROLE_TEXT;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessibleWrap::Shutdown()
+{
+  nsAccessibleEditableText::ShutdownEditor();
+  return nsXULTextFieldAccessible::Shutdown();
 }
