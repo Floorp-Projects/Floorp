@@ -40,7 +40,6 @@
         persist="width height" windowtype="irc:chatzilla">
 
 <script src="chrome://global/content/strres.js"/>
-<script src="chrome://navigator/content/tooltip.js"/>
 <script src="chrome://global/content/nsJSSupportsUtils.js"/>
 <script src="chrome://global/content/nsJSComponentManager.js"/>
 <script src="chrome://global/content/nsUserSettings.js"/>
