@@ -28,7 +28,6 @@ install::
 	$(MAKE_INSTALL) editcard.xul 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) addressbook.js 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) selectaddress.xul 	$(DIST)\bin\chrome\addressbook\content\default
-	$(MAKE_INSTALL) selectaddress.html 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) addressbucket.xul 	$(DIST)\bin\chrome\addressbook\content\default
 
 clobber::
@@ -40,7 +39,6 @@ clobber::
 	rm -f $(DIST)\chrome\addressbook\content\default\editcard.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\addressbook.js
 	rm -f $(DIST)\chrome\addressbook\content\default\selectaddress.xul
-	rm -f $(DIST)\chrome\addressbook\content\default\selectaddress.html
 	rm -f $(DIST)\chrome\addressbook\content\default\addressbucket.xul
 
 
