@@ -471,10 +471,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
     GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
-    // Flush reflows and invalidates to eliminate flicker when both a reflow
-    // and visual change occur in an event callback. See bug  #36849
-    // XXXbz eeeew.  Why not fix viewmanager to flush reflows before painting??
-    FlushPendingEvents(aPresContext);
     break;
   case NS_MOUSE_EXIT:
     GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
@@ -1514,10 +1510,11 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       StopTrackingDragGesture();
     }
-  }
 
-  // Now flush all pending notifications.
-  FlushPendingEvents(aPresContext);
+    // Now flush all pending notifications, for better responsiveness
+    // while dragging.
+    FlushPendingEvents(aPresContext);
+  }
 } // GenerateDragGesture
 
 nsresult
@@ -2838,7 +2835,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
   //reset mCurretTargetContent to what it was
   mCurrentTargetContent = targetBeforeEvent;
 
-  // Now flush all pending notifications.
+  // Now flush all pending notifications, for better responsiveness.
   FlushPendingEvents(aPresContext);
 }
 
@@ -4429,12 +4426,7 @@ nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    // This is not flushing _Display because of the mess that is bug 36849
-    shell->FlushPendingNotifications(Flush_Layout);
-    nsIViewManager* viewManager = shell->GetViewManager();
-    if (viewManager) {
-      viewManager->FlushPendingInvalidates();
-    }
+    shell->FlushPendingNotifications(Flush_Display);
   }
 }
 

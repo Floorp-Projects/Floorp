@@ -62,6 +62,7 @@
 #include "nsInt64.h"
 #include "nsScrollPortView.h"
 #include "nsHashtable.h"
+#include "nsCOMArray.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -427,8 +428,7 @@ static PRBool IsViewVisible(nsView *aView)
   // Find out if the root view is visible by asking the view observer
   // (this won't be needed anymore if we link view trees across chrome /
   // content boundaries in DocumentViewerImpl::MakeWindow).
-  nsCOMPtr<nsIViewObserver> vo;
-  aView->GetViewManager()->GetViewObserver(*getter_AddRefs(vo));
+  nsIViewObserver* vo = aView->GetViewManager()->GetViewObserver();
   return vo && vo->IsVisible();
 }
 
@@ -482,7 +482,7 @@ nsViewManager::nsViewManager()
   // assumed to be cleared here.
   mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
   mAllowDoubleBuffering = PR_TRUE; 
-  mHasPendingInvalidates = PR_FALSE;
+  mHasPendingUpdates = PR_FALSE;
   mRecursiveRefreshPending = PR_FALSE;
   mUpdateBatchFlags = 0;
 }
@@ -1696,7 +1696,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
     // Don't let dirtyRegion grow beyond 8 rects
     dirtyRegion->SimplifyOutward(8);
     nsViewManager* rootVM = RootViewManager();
-    rootVM->mHasPendingInvalidates = PR_TRUE;
+    rootVM->mHasPendingUpdates = PR_TRUE;
     rootVM->IncrementUpdateCount();
     return;
     // this should only happen at the top level, and this result
@@ -1940,6 +1940,22 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             UpdateView(view, NS_VMREFRESH_NO_SYNC);
           } else {
             //NS_ASSERTION(IsViewVisible(view), "painting an invisible view");
+
+            // Just notify our own view observer that we're about to paint
+            // XXXbz do we need to notify other view observers for viewmanagers
+            // in our tree?
+            nsIViewObserver* observer = GetViewObserver();
+            if (observer) {
+              // Do an update view batch, and make sure we don't process those
+              // invalidates right now.  Note that the observer may try to
+              // reenter this code from inside WillPaint() by trying to do a
+              // synchronous paint, but since refresh will be disabled it won't
+              // be able to do the paint.  We should really sort out the rules
+              // on our synch painting api....
+              BeginUpdateViewBatch();
+              observer->WillPaint();
+              EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+            }
             Refresh(view, event->renderingContext, region,
                     NS_VMREFRESH_DOUBLE_BUFFER);
           }
@@ -2007,9 +2023,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     case NS_SYSCOLORCHANGED:
       {
+        // Hold a refcount to the observer. The continued existence of the observer will
+        // delay deletion of this view hierarchy should the event want to cause its
+        // destruction in, say, some JavaScript event handler.
         nsView *view = nsView::GetViewFor(aEvent->widget);
-        nsCOMPtr<nsIViewObserver> obs;
-        GetViewObserver(*getter_AddRefs(obs));
+        nsCOMPtr<nsIViewObserver> obs = GetViewObserver();
         if (obs) {
           PRBool handled;
           obs->HandleEvent(view, aEvent, aStatus, PR_TRUE, handled);
@@ -2344,8 +2362,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   // Hold a refcount to the observer. The continued existence of the observer will
   // delay deletion of this view hierarchy should the event want to cause its
   // destruction in, say, some JavaScript event handler.
-  nsCOMPtr<nsIViewObserver> obs;
-  GetViewObserver(*getter_AddRefs(obs));
+  nsCOMPtr<nsIViewObserver> obs = GetViewObserver();
 
   // accessibility events and key events are dispatched directly to the focused view
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT
@@ -2361,7 +2378,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   }
     
   nsAutoVoidArray targetViews;
-  nsAutoVoidArray heldRefCountsToOtherVMs;
+  nsCOMArray<nsIViewObserver> heldRefCountsToOtherVMs;
 
   // In fact, we only need to take this expensive path when the event is a mouse event ... riiiight?
   PLArenaPool displayArena;
@@ -2377,10 +2394,9 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
     nsView* v = element->mView;
     nsViewManager* vVM = v->GetViewManager();
     if (vVM != this) {
-      nsIViewObserver* vobs = nsnull;
-      vVM->GetViewObserver(vobs);
-      if (nsnull != vobs) {
-        heldRefCountsToOtherVMs.AppendElement(vobs);
+      nsIViewObserver* vobs = vVM->GetViewObserver();
+      if (vobs) {
+        heldRefCountsToOtherVMs.AppendObject(vobs);
       }
     }
   }
@@ -2406,8 +2422,10 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
           obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
       } else {
-        nsCOMPtr<nsIViewObserver> vobs;
-        vVM->GetViewObserver(*getter_AddRefs(vobs));
+        // Hold a refcount to the observer. The continued existence of the observer will
+        // delay deletion of this view hierarchy should the event want to cause its
+        // destruction in, say, some JavaScript event handler.
+        nsCOMPtr<nsIViewObserver> vobs = GetViewObserver();
         if (vobs) {
           vobs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
@@ -2426,12 +2444,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
-
-  // release death grips
-  for (i = 0; i < heldRefCountsToOtherVMs.Count(); i++) {
-    nsIViewObserver* element = NS_STATIC_CAST(nsIViewObserver*, heldRefCountsToOtherVMs.ElementAt(i));
-    NS_RELEASE(element);
-  }  
 
   return status;
 }
@@ -3294,14 +3306,12 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
   // nested batching can combine IMMEDIATE with DEFERRED. Favour
   // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-    ProcessPendingUpdates(mRootView);
-    mHasPendingInvalidates = PR_FALSE;
+    FlushPendingInvalidates();
     Composite();
   } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
     PostInvalidateEvent();
   } else { // NO_SYNC
-    ProcessPendingUpdates(mRootView);
-    mHasPendingInvalidates = PR_FALSE;
+    FlushPendingInvalidates();
   }
 
   return NS_OK;
@@ -4146,18 +4156,53 @@ nsViewManager::IsPainting(PRBool& aIsPainting)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsViewManager::FlushPendingInvalidates()
 {
-  if (!IsRootVM()) {
-    return RootViewManager()->FlushPendingInvalidates();
-  }
+  NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!\n");
+  NS_ASSERTION(mUpdateBatchCnt == 0, "Must not be in an update batch!");
+  // XXXbz this is probably not quite OK yet, if callers can explicitly
+  // DisableRefresh while we have an event posted.
+  // NS_ASSERTION(mRefreshEnabled, "How did we get here?");
+
+  // Let all the view observers of all viewmanagers in this tree know that
+  // we're about to "paint" (this lets them get in their invalidates now so
+  // we don't go through two invalidate-processing cycles).
+  NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
+
+  // Disable refresh while we notify our view observers, so that if they do
+  // vie w update batches we don't reenter this code and so that we batch
+  // all of them together.  We don't use
+  // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
+  // exact code, but we want the effect of a single big update batch.
+  PRBool refreshEnabled = mRefreshEnabled;
+  mRefreshEnabled = PR_FALSE;
+  ++mUpdateBatchCnt;
   
-  if (mHasPendingInvalidates) {
-    ProcessPendingUpdates(mRootView);
-    mHasPendingInvalidates = PR_FALSE;
+  PRInt32 index;
+  for (index = 0; index < mVMCount; index++) {
+    nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
+    if (vm->RootViewManager() == this) {
+      // One of our kids
+      nsIViewObserver* observer = vm->GetViewObserver();
+      if (observer) {
+        observer->WillPaint();
+        NS_ASSERTION(mUpdateBatchCnt == 1, "Observer did not end view batch?");
+      }
+    }
   }
-  return NS_OK;
+
+  --mUpdateBatchCnt;
+  // Someone could have called EnableRefresh on us from inside WillPaint().
+  // Only reset the old mRefreshEnabled value if the current value is false.
+  if (!mRefreshEnabled) {
+    mRefreshEnabled = refreshEnabled;
+  }
+
+  if (mHasPendingUpdates) {
+    ProcessPendingUpdates(mRootView);
+    mHasPendingUpdates = PR_FALSE;
+  }
 }
 
 void

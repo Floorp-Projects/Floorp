@@ -240,7 +240,6 @@ public:
  
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
-  NS_IMETHOD FlushPendingInvalidates();
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
@@ -268,9 +267,10 @@ public:
 
 protected:
   virtual ~nsViewManager();
-  void ProcessPendingUpdates(nsView *aView);
 
 private:
+  void FlushPendingInvalidates();
+  void ProcessPendingUpdates(nsView *aView);
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
@@ -471,6 +471,11 @@ public: // NOT in nsIViewManager, so private to the view module
 
   PRBool IsRefreshEnabled() { return RootViewManager()->mRefreshEnabled; }
 
+  nsIViewObserver* GetViewObserver() { return mObserver; }
+
+  // Call this when you need to let the viewmanager know that it now has
+  // pending updates.
+  void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = PR_TRUE; }
 private:
   nsIDeviceContext  *mContext;
   float             mTwipsToPixels;
@@ -512,7 +517,7 @@ private:
   // Use IsPainting() and SetPainting() to access mPainting.
   PRPackedBool      mPainting;
   PRPackedBool      mRecursiveRefreshPending;
-  PRPackedBool      mHasPendingInvalidates;
+  PRPackedBool      mHasPendingUpdates;
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers

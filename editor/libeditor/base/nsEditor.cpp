@@ -4381,8 +4381,10 @@ nsresult nsEditor::EndUpdateViewBatch()
     {
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
+      // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
+      // the reflows we caused will get processed before the invalidates.
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
-        updateFlag = NS_VMREFRESH_NO_SYNC;
+        updateFlag = NS_VMREFRESH_DEFERRED;
 
       mViewManager->EndUpdateViewBatch(updateFlag);
     }
