@@ -136,7 +136,7 @@ JSJ_NewHashTable(JSUint32 n, JSJHashFunction keyHash,
     memset(ht, 0, sizeof *ht);
     ht->shift = JSJ_HASH_BITS - n;
     n = 1 << n;
-#if defined(XP_PC) && !defined(_WIN32)
+#if (defined(XP_WIN) || defined(XP_OS2)) && !defined(_WIN32)
     if (n > 16000) {
         (*allocOps->freeTable)(allocPriv, ht);
         return 0;
@@ -235,7 +235,7 @@ JSJ_HashTableRawAdd(JSJHashTable *ht, JSJHashEntry **hep,
 #endif
         ht->shift--;
         oldbuckets = ht->buckets;
-#if defined(XP_PC) && !defined(_WIN32)
+#if (defined(XP_WIN) || defined(XP_OS2)) && !defined(_WIN32)
         if (2 * n > 16000)
             return 0;
 #endif  /* WIN16 */

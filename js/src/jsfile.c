@@ -45,7 +45,7 @@
 #   define FILESEPARATOR2        '\0'
 #   define CURRENT_DIR          "HARD DISK:Desktop Folder"
 /*  TODO: #include <???> */
-#elif defined(XP_PC) || defined(XP_OS2)
+#elif defined(XP_WIN) || defined(XP_OS2)
 #   include <direct.h>
 #   include <io.h>
 #   include <sys/types.h>
