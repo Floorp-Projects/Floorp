@@ -748,9 +748,7 @@ nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
 
   // align
   GetAttribute(nsHTMLAtoms::align, value);
-  if (value.GetUnit() != eHTMLUnit_Null) {
-    NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
-
+  if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
     nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
     switch (value.GetIntValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -766,14 +764,14 @@ nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   // cellpadding
   nsStyleTable* tableStyle=nsnull;
   GetAttribute(nsHTMLAtoms::cellpadding, value);
-  if (value.GetUnit() != eHTMLUnit_Null) {
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
     tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
     tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
   }
 
   // cellspacing  (reuses tableStyle if already resolved)
   GetAttribute(nsHTMLAtoms::cellspacing, value);
-  if (value.GetUnit() != eHTMLUnit_Null) {
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
     if (nsnull==tableStyle)
       tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
     tableStyle->mCellSpacing.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
