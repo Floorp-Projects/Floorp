@@ -22,7 +22,11 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= softupdt zlib
+REQUIRES	= softupdt
+
+ifndef MOZ_NATIVE_ZLIB
+REQUIRES	+= zlib
+endif
 
 CSRCS		= nsdiff.c crc32.c
 
