@@ -89,12 +89,6 @@ menulist[editable] {
   -moz-user-focus: ignore;
 }
 
-treecol,
-treerows,
-radio {
-  -moz-user-focus: none;
-}
-
 /******** window & page ******/
 
 window, 
@@ -445,10 +439,6 @@ listbox {
   height: 200px;
 }
 
-listhead, listrows, listboxbody {
-  -moz-user-focus: none;
-}
-
 listhead {
   -moz-box-orient: vertical;
 }
@@ -496,7 +486,6 @@ treecol.treecol-image {
 tree > treechildren {
   display: -moz-box;
   -moz-binding: url("chrome://global/content/bindings/tree.xml#treebody");
-  -moz-user-focus: none;
   -moz-user-select: none;
   -moz-box-flex: 1;
 }
