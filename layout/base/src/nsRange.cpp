@@ -118,7 +118,15 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 
 
 // Utility routine to detect if a content node is completely contained in a range
-PRBool IsNodeInsideRange(nsIContent* aNode, nsIDOMRange* aRange)
+// If outNodeBefore is returned true, then the node starts before the range does.
+// If outNodeAfter is returned true, then the node ends after the range does.
+// Note that both of the above might be true.
+// If neither are true, the node is contained inside of the range.
+// XXX - callers responsibility to ensure node in same doc as range!
+nsresult CompareNodeToRange(nsIContent* aNode, 
+                        nsIDOMRange* aRange,
+                        PRBool *outNodeBefore,
+                        PRBool *outNodeAfter)
 {
   // create a pair of dom points that expresses location of node:
   //     NODE(start), NODE(end)
@@ -127,7 +135,26 @@ PRBool IsNodeInsideRange(nsIContent* aNode, nsIDOMRange* aRange)
   // if (RANGE(start) <= NODE(start))  and (RANGE(end) => NODE(end))
   // then the Node is contained (completely) by the Range.
   
-  if (!aNode) return false;
+  if (!aNode) 
+    return NS_ERROR_NULL_POINTER;
+  if (!aRange) 
+    return NS_ERROR_NULL_POINTER;
+  if (!outNodeBefore) 
+    return NS_ERROR_NULL_POINTER;
+  if (!outNodeAfter) 
+    return NS_ERROR_NULL_POINTER;
+  
+  PRBool isPositioned;
+  nsresult err = ((nsRange*)aRange)->GetIsPositioned(&isPositioned);
+  // Why do I have to cast above?  Because GetIsPositioned() is
+  // mysteriously missing from the nsIDOMRange interface.  dunno why.
+
+  if (!NS_SUCCEEDED(err))
+    return err;
+    
+  if (!isPositioned) 
+    return NS_ERROR_UNEXPECTED; 
+  
   nsCOMPtr<nsIDOMNode> parent, rangeStartParent, rangeEndParent;
   PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
   
@@ -147,19 +174,20 @@ PRBool IsNodeInsideRange(nsIContent* aNode, nsIDOMRange* aRange)
   if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
     return false;
 
-
+  *outNodeBefore = false;
+  *outNodeAfter = false;
+  
   // is RANGE(start) <= NODE(start) ?
   PRInt32 comp = ComparePoints(rangeStartParent, rangeStartOffset, parent, nodeStart);
   if (comp > 0)
-    return false; // range start is after node start
+    *outNodeBefore = true; // range start is after node start
     
   // is RANGE(end) >= NODE(end) ?
   comp = ComparePoints(rangeEndParent, rangeEndOffset, parent, nodeEnd);
   if (comp < 0)
-    return false; // range end is before node end
+    *outNodeAfter = true; // range end is before node end
     
-  // if we got here then the node is contained in the range
-  return true;
+  return NS_OK;
 }
 
 
