@@ -2639,7 +2639,7 @@ dnl =========================================================
 dnl = Calendar
 dnl =========================================================
 if test "$MOZ_CALENDAR"; then
-    AC_CHECK_LIB(ical, icalproperty_new_location, [],
+    AC_CHECK_LIB(ical, icalproperty_new_location, [_dummy=foo],
         AC_MSG_ERROR([Calendar requires libical]))
 fi
 
