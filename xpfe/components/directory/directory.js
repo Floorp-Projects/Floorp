@@ -63,13 +63,14 @@ function Init()
 
     // Note: Add the HTTPIndex datasource into the tree
     var tree = document.getElementById('tree');
+    tree.database.AddDataSource(HTTPIndex.DataSource);
 
     // Note: set encoding BEFORE setting "ref" (important!)
     var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
     if (RDF)    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     if (RDF)
     {
-        var httpDS = RDF.GetDataSource("rdf:httpindex");
+        var httpDS = HTTPIndex.DataSource;
         if (httpDS) httpDS = httpDS.QueryInterface(Components.interfaces.nsIHTTPIndex);
         if (httpDS)
         {
