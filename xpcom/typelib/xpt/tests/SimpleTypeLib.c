@@ -123,8 +123,6 @@ main(int argc, char **argv)
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
     TRY("NewState (ENCODE)", state);
     
-    XPT_SetDataOffset(state, header_sz);
-    
     ok = XPT_MakeCursor(state, XPT_HEADER, header_sz, cursor);
     TRY("MakeCursor", ok);
 

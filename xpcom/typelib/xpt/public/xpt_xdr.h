@@ -188,16 +188,6 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
     if (already)                                                              \
         return PR_TRUE;                                                       \
 
-#define XPT_ALLOC(addrp, new_curs, XPTType, localp)                           \
-    if (mode == XPT_DECODE) {                                                 \
-        *addrp = localp = PR_NEWZAP(XPTType);                                 \
-        if (!localp ||                                                        \
-            !XPT_SetAddrForOffset(&new_curs, localp))                         \
-            return PR_FALSE;                                                  \
-    } else {                                                                  \
-        localp = *addrp;                                                      \
-    }
-
 #define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already,            \
                      XPTType, localp)                                         \
   {                                                                           \

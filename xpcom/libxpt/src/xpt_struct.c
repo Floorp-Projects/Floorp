@@ -128,6 +128,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
         /* IDEs appear after header, including annotations */
         ide_offset = XPT_SizeOfHeader(*headerp) + 1; /* one-based offset */
         header->data_pool = XPT_SizeOfHeaderBlock(*headerp);
+        XPT_SetDataOffset(cursor->state, header->data_pool);
     }
 
     for (i = 0; i < 16; i++) {
@@ -184,8 +185,8 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 XPTInterfaceDescriptor *descriptor)
 {
     XPT_COPY_IID(ide->iid, *iid);
-    ide->name = strdup(name);
-    ide->namespace = strdup(namespace);
+    ide->name = name ? strdup(name) : NULL; /* what good is it w/o a name? */
+    ide->namespace = namespace ? strdup(namespace) : NULL;
     ide->interface_descriptor = descriptor;
     return PR_TRUE;
 }
@@ -303,6 +304,24 @@ XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
     return NULL;
 }
 
+PRBool
+XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num)
+{
+    XPTMethodDescriptor *old = id->method_descriptors, *new;
+
+    /* XXX should grow in chunks to minimize realloc overhead */
+    new = PR_REALLOC(old,
+                     (id->num_methods + num) * sizeof(XPTMethodDescriptor));
+    if (!new)
+        return PR_FALSE;
+
+    memset(id->method_descriptors + id->num_methods, 0,
+           sizeof(XPTMethodDescriptor) * num);
+    id->method_descriptors = new;
+    id->num_methods += num;
+    return PR_TRUE;
+}
+
 uint32
 XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td)
 {
@@ -387,6 +406,10 @@ XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
         *idp = id;
     } else {
         id = *idp;
+        if (!id) {
+            id_sz = 0;
+            return XPT_Do32(outer, &id_sz);
+        }
         id_sz = XPT_SizeOfInterfaceDescriptor(id);
     }
 
@@ -395,6 +418,10 @@ XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
 
     if (!XPT_Do32(outer, &cursor->offset))
         goto error;
+    if (mode == XPT_DECODE && !cursor->offset) {
+        *idp = NULL;
+        return PR_TRUE;
+    }
     if(!XPT_DoInterfaceDirectoryEntryIndex(cursor, &id->parent_interface) ||
        !XPT_Do16(cursor, &id->num_methods)) {
         goto error;
