@@ -3386,17 +3386,17 @@ MOZ_ARG_ENABLE_BOOL(crypto,
 
 dnl ========================================================
 dnl =
-dnl = --enable-jsd
+dnl = --disable-jsd
 dnl =
 dnl = JS Debugger XPCOM component (js/jsd)
 dnl = 
 dnl ========================================================
 
-MOZ_JSDEBUGGER=
+MOZ_JSDEBUGGER=1
 
 MOZ_ARG_ENABLE_BOOL(jsd,
-[  --enable-jsd            Enable JavaScript debug library],
-   MOZ_JSDEBUGGER=1)
+[  --disable-jsd            Disable JavaScript debug library],
+   MOZ_JSDEBUGGER=)
 
 dnl ========================================================
 dnl =
@@ -3409,8 +3409,8 @@ dnl ========================================================
 dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
-MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman ctl" 
+MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix venkman"
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin ctl" 
 
 dnl Check if Thai Rendering Extension needs to be enabled
 if test -n "$SUNCTL"; then
