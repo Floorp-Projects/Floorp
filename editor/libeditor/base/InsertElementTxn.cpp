@@ -18,6 +18,7 @@
 
 #include "InsertElementTxn.h"
 #include "nsIDOMSelection.h"
+#include "nsIContent.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_TRUE;
@@ -54,8 +55,13 @@ InsertElementTxn::~InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::Do(void)
 {
-  if (gNoisy) { printf("%p Do Insert Element of %p into parent %p at offset %d\n", 
-                       this, mNode, mParent, mOffset); }
+  if (gNoisy) 
+  { 
+    nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
+    nsCOMPtr<nsIContent>parentAsContent = do_QueryInterface(mParent);
+    printf("%p Do Insert Element of %p into parent %p at offset %d\n", 
+                       this, nodeAsContent.get(), parentAsContent.get(), mOffset); 
+  }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 
