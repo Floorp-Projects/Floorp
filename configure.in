@@ -1792,7 +1792,17 @@ case $target in
 	;;
 esac
 AC_CHECK_LIB(m, atan)
-AC_CHECK_LIB(dl, dlopen)
+
+dnl We don't want to link with libdl even if it's present on OS X, since
+dnl it's not used and not part of the default installation.
+
+case $target in
+*-darwin*)
+	;;
+*)
+	AC_CHECK_LIB(dl, dlopen)
+	;;
+esac
 if test ! "$GNU_CXX"; then
 
     case $target in
