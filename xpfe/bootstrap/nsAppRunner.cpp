@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
       if (NS_SUCCEEDED(rv))
       {
         if (cmdResult && (strcmp("1",cmdResult)==0))
-          urlstr = "resource:/res/samples/mailshell.xul";
+          urlstr = "resource:/res/mailnews/messenger/mailshell.xul";
       }
     }
     if (nsnull == urlstr)
