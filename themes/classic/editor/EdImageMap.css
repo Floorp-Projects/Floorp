@@ -46,6 +46,10 @@ toolbar#toolbox button.tool {
   color: inherit;
 }
 
+toolbar.toolbox > toolbargrippy {
+  visibility: collapse;
+}
+
 #pointerButton {
   list-style-image:url("chrome://editor/skin/images/Map_pointerTool.gif");
 }

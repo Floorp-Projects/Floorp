@@ -80,6 +80,67 @@ menubar > .toolbar-holder {
   border-left: 1px solid #EEF4FC;
 }  
 
+/* ::::: toolbargrippy ::::: */
+ 
+toolbargrippy {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-box-pack: end;
+  -moz-box-direction: reverse;
+  border-top: 1px solid #EEF0F3;
+  border-right: 1px solid #86929E;
+  border-bottom: 1px solid #86929E;
+  border-left: 1px solid #EEF0F3;
+  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow.gif");
+}
+
+toolbargrippy:hover:active {
+  border-color: #67737E;
+  background-color: #9DA9B6;
+  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow-act.gif");
+}
+
+.toolbargrippy-arrow {
+  margin: 0px 1px 3px 1px;
+  width: 8px;
+  height: 5px;
+}
+
+/* ::::: menubar grippy ::::: */
+
+menubar > toolbargrippy { 
+  border-top: 1px solid #EBF4FF;
+  border-right: 1px solid #B9BFC7;
+  border-bottom: 1px solid #B9BFC7;
+  border-left: 1px solid #F4FAFF;
+  background-color: #DDE3EB;
+  list-style-image: url("chrome://global/skin/toolbar/mbgrip-arrow.gif");
+} 
+
+/* ::::: collapsed toolbargrippy and tray ::::: */
+  
+toolbargrippy[tbgrippy-collapsed="true"] {
+  -moz-box-orient: horizontal;
+  -moz-box-pack: start;
+  -moz-box-direction: normal;
+  width: 40px;
+  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow-clps.gif");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-arrow {
+  margin: 1px 0px 1px 3px;
+  width: 5px;
+  height: 8px;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-arrow {
+  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow-clps-act.gif");
+}
+
+.collapsed-tray-holder {
+  background-color: #C7D0D9;
+}
+
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator { 

@@ -60,6 +60,10 @@ domi-panel[disabled="true"] > .viewer-pane-box-1 {
   display: none;   
 }
 
+.viewer-pane-header > toolbargrippy {
+  display: none;
+}
+
 .viewer-pane-toolbox {
   border-top: none;
   border-bottom: none;
