@@ -1248,4 +1248,11 @@ sub Fix_BonsaiLink {
      return $bonsai_path;
 }
 
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
+
 1;

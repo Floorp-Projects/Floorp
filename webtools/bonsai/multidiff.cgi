@@ -27,7 +27,6 @@
 
 use strict;
 
-require 'CGI.pl';
 require 'globals.pl';
 
 $|=1;
