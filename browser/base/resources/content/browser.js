@@ -2030,8 +2030,6 @@ function SidebarShow() {
 
   // for older profiles: 
   sidebar_box.setAttribute('hidden', 'false'); 
-  if (sidebar_splitter.getAttribute('state') == 'collapsed')
-    sidebar_splitter.removeAttribute('state');
   sidebar_splitter.removeAttribute('hidden');
   persist_width();
   window._content.focus();
@@ -2052,23 +2050,6 @@ function sidebar_is_hidden() {
   return sidebar_box.getAttribute('hidden') == 'true';
 }
 
-function sidebar_is_collapsed() {
-  var sidebar_splitter = document.getElementById('splitterSidebar');
-  return (sidebar_splitter &&
-          sidebar_splitter.getAttribute('state') == 'collapsed');
-}
-
-function SidebarExpandCollapse() {
-  var sidebar_splitter = document.getElementById('splitterSidebar');
-  var sidebar_box = document.getElementById('boxSidebar');
-  if (sidebar_splitter.getAttribute('state') == 'collapsed') {
-    sidebar_splitter.removeAttribute('state');
-    sidebar_box.setAttribute('hidden', 'false');
-  } else {
-    sidebar_splitter.setAttribute('state', 'collapsed');
-    sidebar_box.setAttribute('hidden', 'true');
-  }
-}
 function persist_width() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the width change has commited.
@@ -2082,11 +2063,6 @@ function SidebarFinishClick() {
   // timeout. The timeout makes sure the width is written to disk after
   // the sidebar-box gets the newly dragged width.
   setTimeout("persist_width()",100);
-}
-
-// SidebarCleanUpExpandCollapse() - Respond to grippy click.
-function SidebarCleanUpExpandCollapse() {
-  setTimeout("document.persist('boxSidebar', 'hidden');",100);
 }
 
 function UpdateInternetSearchResults(event)
