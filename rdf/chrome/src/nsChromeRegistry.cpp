@@ -2691,18 +2691,53 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
 
     if (path.Equals(chromeLocType)) {
       // location is a (full) path. convert it to an URL.
-      nsFileSpec chromeFile(chromeLocation);
-      nsFileURL file(chromeFile);
-      chromeURL = file.GetURLString();
-      if (chromeFile.IsFile()) {
-        // path points to a file. must be a jar file. convert to a jar url.
+
+      /* this is some convoluted shit... this creates a file, inits it with
+       * the path parsed above (chromeLocation), makes a url, and inits it
+       * with the file created. the purpose of this is just to have the
+       * canonical url of the stupid thing.
+       */
+      nsCOMPtr<nsILocalFile> chromeFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
+        return rv;
+      rv = chromeFile->InitWithPath(chromeLocation);
+      if (NS_FAILED(rv))
+        return rv;
+      nsCOMPtr<nsIFileURL> chromeFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
+      if (NS_FAILED(rv))
+        return rv;
+      rv = chromeFileURL->SetFile(chromeFile);
+      if (NS_FAILED(rv))
+        return rv;
+
+      /* xpidl strings aren't unified with strings, so this fu is necessary.
+       * all we want here is the canonical url, found using GetSpec.
+       */
+      nsXPIDLCString chromeURLfoopy;
+      rv = chromeFileURL->GetSpec(getter_Copies(chromeURLfoopy));
+      if (NS_FAILED(rv))
+        return rv;
+      chromeURL = chromeURLfoopy;
+
+      /* if we're a file, we must be a jar file. do appropriate string munging.
+       * otherwise, the string we got from GetSpec is fine.
+       */
+      PRBool isFile;
+      rv = chromeFile->IsFile(&isFile);
+      if (NS_FAILED(rv))
+        return rv;
+
+      if (isFile) {
         fileURL = "jar:";
         fileURL += chromeURL;
         fileURL += "!/";
         chromeURL = fileURL;
       }
-    } else // not "path". assume "url".
+    }
+    else {
+      // not "path". assume "url".
       chromeURL = chromeLocation;
+    }
 
     // process the line
     if (skin.Equals(chromeType)) {
