@@ -454,6 +454,9 @@ const PRInt32 nsCSSProps::kOverflowKTable[] = {
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
+  eCSSKeyword__moz_scrollbars_none, NS_STYLE_OVERFLOW_SCROLLBARS_NONE,
+  eCSSKeyword__moz_scrollbars_horizontal, NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL,
+  eCSSKeyword__moz_scrollbars_vertical, NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL,
   -1,-1
 };
 
