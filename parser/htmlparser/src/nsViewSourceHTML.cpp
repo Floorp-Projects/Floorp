@@ -308,7 +308,8 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
 eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+  if(aContentType.Equals(kPlainTextContentType) ||
+     aContentType.Equals(kTextCSSContentType)) {
     result=eValidDetect;
   }
   else if(aCommand.Equals(kViewSourceCommand)) {

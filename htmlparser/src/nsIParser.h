@@ -271,5 +271,6 @@ const PRUnichar kNullCh           = '\0';
 #define kXIFTextContentType   "text/xif"
 #define kPlainTextContentType "text/plain"
 #define kViewSourceCommand    "view-source"
+#define kTextCSSContentType   "text/css"
 
 #endif 
