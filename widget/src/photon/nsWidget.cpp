@@ -611,6 +611,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   	}
   else if( aParent ) {
     parentWidget = (PtWidget_t*) (aParent->GetNativeData(NS_NATIVE_WIDGET));
+		mListenForResizes = aInitData ? aInitData->mListenForResizes : PR_FALSE;
   	}
 
   mBounds = aRect;
