@@ -252,7 +252,6 @@
       <field name="_startY">null</field>
       <field name="_clientX">null</field>
       <field name="_clientY">null</field>
-      <field name="_linkElt">null</field>
 
       <property name="mStrBundle">
         <getter>
@@ -459,7 +458,7 @@
               this._autoScrollMarkerImage.style.display = 'none';  // seems to avoid blocking when autoscroll is initited during pageload
               this._autoScrollMarkerImage.parentNode.removeChild(this._autoScrollMarkerImage);
             }
-           this._autoScrollMarkerImage = null;
+            this._autoScrollMarkerImage = null;
          ]]>
        </body>
      </method>
@@ -499,6 +498,51 @@
          ]]>
        </body>
      </method>
+     <method name="showAutoscrollMarker">
+       <parameter name="evt"/>
+       <body>
+         <![CDATA[
+           var scrollCursor  = new Array("move", "n-resize", "e-resize");
+           var docBox = this._clientFrameDoc.getBoxObjectFor(this._clientFrameDoc.documentElement);
+           var left = evt.screenX - docBox.screenX;
+           var top = evt.screenY - docBox.screenY;
+           
+           
+           var documentWidth = docBox.width;
+           var documentHeight = docBox.height;
+           var windowWidth = window.innerWidth;
+           var windowHeight = window.innerHeight;
+           var scrollType = 0;
+           if (windowHeight < documentHeight && windowWidth >= documentWidth)
+             scrollType = 1;
+           else if (windowHeight >= documentHeight && windowWidth < documentWidth)
+             scrollType = 2;
+     
+           var imageWidth = 28;
+           var imageHeight = 28;
+           
+           // marker
+           var el = this._clientFrameDoc.createElementNS("http://www.w3.org/1999/xhtml", "img");
+           
+           var scrollImages  = new Array("chrome://global/skin/arrow/autoscroll_all.png",
+                                         "chrome://global/skin/arrow/autoscroll_v.png",
+                                         "chrome://global/skin/arrow/autoscroll_h.png");
+           
+           el.src = scrollImages[scrollType];         
+           el.style.position = "fixed";
+           el.style.left = left - imageWidth / 2 + "px";
+           el.style.top = top - imageHeight / 2 + "px";
+           el.style.width = imageWidth + "px";
+           el.style.height = imageHeight + "px";
+           el.style.cursor = scrollCursor[scrollType];
+           
+           this._clientFrameBody.appendChild(el);
+           
+           this._autoScrollMarkerImage = el;
+         ]]>
+       </body>
+     </method>
+
     </implementation>
 
     <handlers>
@@ -552,12 +596,8 @@
         <![CDATA[
           if (!this._snapOn)
             this.stopScroll();
-
-          if (this._linkElt) {
-            var evt = document.createEvent("MouseEvents");
-            evt.initMouseEvent('click', false, false, null, 1, 0, 0, 0, 0, true, event.altKey, event.shiftKey, event.metaKey, 0, null );
-            this._linkElt.dispatchEvent(evt);
-          }
+          else
+            this.showAutoscrollMarker(event);
         ]]>        
       </handler>
       <handler event="mousedown" button="1">
@@ -571,46 +611,6 @@
             this._hasScrolled = true;
             if (!this.isLink(event.originalTarget))
               this._snapOn = true;
-            else
-              this._linkElt = event.originalTarget;
-
-            var scrollCursor  = new Array("move", "n-resize", "e-resize");
-            var docBox = this._clientFrameDoc.getBoxObjectFor(this._clientFrameDoc.documentElement);
-            var left = event.screenX - docBox.screenX;
-            var top = event.screenY - docBox.screenY;
-            
-           
-            var documentWidth = docBox.width;
-            var documentHeight = docBox.height;
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
-            var scrollType = 0;
-            if (windowHeight < documentHeight && windowWidth >= documentWidth)
-              scrollType = 1;
-            else if (windowHeight >= documentHeight && windowWidth < documentWidth)
-              scrollType = 2;
-
-            var imageWidth = 28;
-            var imageHeight = 28;
-          
-            // marker
-            var el = this._clientFrameDoc.createElementNS("http://www.w3.org/1999/xhtml", "img");
-          
-            var scrollImages  = new Array("chrome://global/skin/arrow/autoscroll_all.png",
-                                          "chrome://global/skin/arrow/autoscroll_v.png",
-                                          "chrome://global/skin/arrow/autoscroll_h.png");
-          
-            el.src = scrollImages[scrollType];         
-            el.style.position = "fixed";
-            el.style.left = left - imageWidth / 2 + "px";
-            el.style.top = top - imageHeight / 2 + "px";
-            el.style.width = imageWidth + "px";
-            el.style.height = imageHeight + "px";
-            el.style.cursor = scrollCursor[scrollType];
-          
-            this._clientFrameBody.appendChild(el);
-          
-            this._autoScrollMarkerImage = el;
 
             window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
           }
@@ -627,10 +627,11 @@
             var x = this._clientX - this._startX;
             var y = this._clientY - this._startY;
         
-            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) || (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
+            if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) || (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP)) {
               this._snapOn = false;
-            else
-              this._linkElt = null;
+              if (!this._autoScrollMarkerImage)
+                this.showAutoscrollMarker(event);
+            }
           }
         ]]>
       </handler>
