@@ -695,11 +695,15 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
+    // Get the content type, if possible, to see if it's a cached XUL
+    // load. We explicitly ignore failure at this point, because
+    // certain hacks (cough, the directory viewer) need to be able to
+    // StartDocumentLoad() before the channel's content type has been
+    // detected.
     nsXPIDLCString contentType;
-    rv = aChannel->GetContentType(getter_Copies(contentType));
-    if (NS_FAILED(rv)) return rv;
+    (void) aChannel->GetContentType(getter_Copies(contentType));
 
-    if (PL_strcmp("text/cached-xul", (const char*) contentType) == 0) {
+    if (contentType && PL_strcmp(contentType, "text/cached-xul") == 0) {
         // Look in the chrome cache: we've got this puppy loaded
         // already.
         nsCOMPtr<nsIXULPrototypeDocument> proto;
