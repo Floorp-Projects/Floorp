@@ -41,6 +41,7 @@
 #define MESSAGE2 "The XmNmenuBar widget cannot be changed."
 #define MESSAGE3 "The XmNtoolBox widget cannot be changed."
 #define MESSAGE4 "The XmNdashBoard widget cannot be changed."
+#define	MESSAGE5 "The same widget occurs in more than one view position."
 
 #define IS_MENU_BAR(w)		(_XfeIsAlive(w) && XmIsRowColumn(w))
 #define IS_TOOL_BOX(w)		(_XfeIsAlive(w) && XfeIsToolBox(w))
@@ -458,6 +459,14 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
     XfeChromePart *		np = _XfeChromePart(nw);
     XfeChromePart *		op = _XfeChromePart(ow);
+    int					i, j;
+    static size_t	    viewOffsets[] = {
+		XtOffsetOf(XfeChromePart , center_view),
+		XtOffsetOf(XfeChromePart , top_view),
+		XtOffsetOf(XfeChromePart , bottom_view),
+		XtOffsetOf(XfeChromePart , left_view),
+		XtOffsetOf(XfeChromePart , right_view),
+    };
 
 	/* spacing */
 	if (np->spacing != op->spacing)
@@ -489,23 +498,50 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeWarning(nw,MESSAGE4);
 	}
 
-	/* center_view */
-	if (np->center_view != op->center_view)
-	{
-		_XfemConfigFlags(nw) |= XfeConfigLayout;
-	}
+    /* check the views */
 
-	/* top_view */
-	if (np->top_view != op->top_view)
-	{
-		_XfemConfigFlags(nw) |= XfeConfigLayout;
-	}
+#define	WidgetAtOffset(str, offs)	(*(Widget*)((char*)(str) + (offs)))
 
-	/* bottom_view */
-	if (np->bottom_view != op->bottom_view)
-	{
-		_XfemConfigFlags(nw) |= XfeConfigLayout;
-	}
+    for (i = 0; i < XtNumber(viewOffsets); i++)
+    {
+        Widget newWidget = WidgetAtOffset(np, viewOffsets[i]);
+        if (newWidget != WidgetAtOffset(op, viewOffsets[i]))
+        {
+            /* widget at postion i was changed */
+
+            _XfemConfigFlags(nw) |= XfeConfigLayout;
+
+            for (j = 0; j < XtNumber(viewOffsets); j++)
+            {
+                if (j == i)
+                {
+                    continue;
+                }
+
+                if (newWidget != NULL &&
+                    newWidget == WidgetAtOffset(np, viewOffsets[j]))
+                {
+                    /*
+                     * The new widget for element position i is also
+                     * present in position j.
+                     *
+                     * If there's a change at position j, this is an
+                     * error.  If position j was not changed, silently
+                     * move the widget from position j to i.
+                     */
+
+                    if (newWidget != WidgetAtOffset(op, viewOffsets[j]))
+                    {
+                        _XfeWarning(nw, MESSAGE5);
+                    }
+
+                    WidgetAtOffset(np, viewOffsets[j]) = NULL;
+                }
+            }
+        }
+    }
+
+#undef	WidgetAtOffset
 
     return _XfeManagerChainSetValues(ow,rw,nw,xfeChromeWidgetClass);
 }
