@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+not/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vi:tw=2:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
@@ -119,12 +119,9 @@ typedef unsigned long HMTX;
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID,  NS_PLATFORMCHARSET_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
+#include "nsIStringBundle.h"
 
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID)
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
