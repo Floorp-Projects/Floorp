@@ -262,7 +262,7 @@ InspectorApp.prototype =
     var idx = this.getSelectedSearchIndex();
     var el = this.mCurrentSearch.viewItemAt(idx);
 
-    aWindow.title = this.mCurrentSearch.getItemDescription(idx);
+    aWindow.document.title = this.mCurrentSearch.getItemDescription(idx);
     aWindow.document.getElementById("bxCenter").appendChild(el);
   },
 

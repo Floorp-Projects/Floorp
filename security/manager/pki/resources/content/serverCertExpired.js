@@ -51,8 +51,7 @@ function onLoad()
   pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
-  var title = dialogParams.GetString(2);
-  window.title = title;
+  document.title = dialogParams.GetString(2);
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var message1 = dialogParams.GetString(1);
   
