@@ -672,7 +672,7 @@ nsJARChannel::GetContentType(char* *aContentType)
         if (fileName != nsnull) {
             PRInt32 len = nsCRT::strlen(fileName);
             const char* ext = nsnull;
-            for (PRInt32 i = len; i >= 0; i--) {
+            for (PRInt32 i = len-1; i >= 0; i--) {
                 if (fileName[i] == '.') {
                     ext = &fileName[i + 1];
                     break;
@@ -688,7 +688,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             else 
                 rv = NS_ERROR_OUT_OF_MEMORY;
 		
-            delete []fileName;
+            nsCRT::free(fileName);
         } 
         else {
             rv = NS_ERROR_FAILURE;
