@@ -6,11 +6,7 @@
 #define __gen_nsINNTPNewsgroupList_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
+#include "nsrootidl.h" /* interface nsrootidl */
 
 /* starting interface:    nsINNTPNewsgroupList */
 
@@ -33,7 +29,7 @@ class nsINNTPNewsgroupList : public nsISupports {
   /* void InitXOVER (in long first_message, in long last_message); */
   NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message) = 0;
 
-  /* void ProcessXOVER (in string line, out long status); */
+  /* void ProcessXOVERLINE (in string line, out unsigned long status); */
   NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 *status) = 0;
 
   /* void ProcessNonXOVER (in string line); */
@@ -42,19 +38,14 @@ class nsINNTPNewsgroupList : public nsISupports {
   /* void ResetXOVER (); */
   NS_IMETHOD ResetXOVER() = 0;
 
-  /* void FinishXOVER (in long status, out long newstatus); */
+  /* void FinishXOVERLINE (in long status, out long newstatus); */
   NS_IMETHOD FinishXOVERLINE(PRInt32 status, PRInt32 *newstatus) = 0;
 
   /* void ClearXOVERState (); */
   NS_IMETHOD ClearXOVERState() = 0;
 
   /* string GetGroupName (); */
-  NS_IMETHOD GetGroupName(char **retval) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPNewsgroupList *priv);
-#endif
+  NS_IMETHOD GetGroupName(char **_retval) = 0;
 };
 
 #endif /* __gen_nsINNTPNewsgroupList_h__ */

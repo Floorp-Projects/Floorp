@@ -24,6 +24,7 @@ XPIDLSRCS= \
 	.\nsINNTPCategory.idl \
 	.\nsINNTPCategoryContainer.idl \
 	.\nsINNTPNewsgroup.idl \
+	.\nsINNTPNewsgroupList.idl \
 	.\nsINntpIncomingServer.idl \
 	$(NULL)
 

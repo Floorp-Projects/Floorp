@@ -51,7 +51,7 @@ interface nsINNTPNewsgroupList : nsISupports {
   */
   /* the XOVER Sink should maintain the ListNewsGroupState */
   void InitXOVER(in long first_message, in long last_message);  
-  void ProcessXOVERLINE(in string line, out long status);
+  void ProcessXOVERLINE(in string line, out unsigned long status);
   void ProcessNonXOVER(in string line);
   void ResetXOVER();
   void FinishXOVERLINE(in long status, out long newstatus);

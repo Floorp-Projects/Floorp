@@ -108,7 +108,7 @@ public:
   NS_IMETHOD ProcessNonXOVER(const char *line);
   NS_IMETHOD FinishXOVERLINE(int status, int *newstatus);
   NS_IMETHOD ClearXOVERState();
-  NS_IMETHOD GetGroupName(char **retval);
+  NS_IMETHOD GetGroupName(char **_retval);
 
     
 private:
@@ -266,7 +266,7 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
                 newsDBFactory = nsnull;
                 return rv;
         }
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         else {
             printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
         }
@@ -450,7 +450,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 
                     rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &m_maxArticles);
                     if (NS_FAILED(rv)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
                         printf("get pref of PREF_NEWS_MAX_ARTICLES failed\n");
 #endif
                         m_maxArticles = 0;
@@ -464,7 +464,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 
 						rv = prefs->GetBoolPref(PREF_NEWS_MARK_OLD_READ, &markOldRead);
                         if (NS_FAILED(rv)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
                             printf("get pref of PREF_NEWS_MARK_OLD_READ failed\n");
 #endif                           
                         }
@@ -484,7 +484,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				*first = *last - maxextra + 1;
 		}
 	}
-#if defined(DEBUG_bienvenu) || defined(DEBUG_sspitzer)
+#ifdef DEBUG_NEWS
 	printf("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",first_possible, last_possible, *first, *last, maxextra);
 #endif
 	m_firstMsgToDownload = *first;
@@ -656,7 +656,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   if (next) *next++ = 0
 
 	GET_TOKEN ();
-#ifdef DEBUG_sspitzer											/* message number */
+#ifdef DEBUG_NEWS											/* message number */
 	printf("message number = %d\n", atol(line));
 #endif
 	*message_number = atol(line);
@@ -688,7 +688,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 			(void)newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
 		}
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("subject = %s\n",subject);
 #endif
 		newMsgHdr->SetSubject(subject);
@@ -715,7 +715,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	
 	// no reason to store milliseconds, since they aren't specified
 	if (PR_SUCCESS == status) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("date = %s, %d\n", line, resDate);
 #endif
 		newMsgHdr->SetDate(resDate);		/* date */
@@ -724,7 +724,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
   GET_TOKEN ();											/* message id */
   if (line) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("message id = %s\n", line);
 #endif
 	char *strippedId = line;
@@ -742,7 +742,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
   GET_TOKEN ();											/* references */
   if (line) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("references = %s\n",line);
 #endif
 	newMsgHdr->SetReferences(line);
@@ -753,7 +753,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	PRUint32 msgSize = 0;
 	msgSize = (line) ? atol (line) : 0;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("bytes = %d\n", msgSize);
 #endif
 	newMsgHdr->SetMessageSize(msgSize);
@@ -763,7 +763,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   if (line) {
 	PRUint32 numLines = 0;
 	numLines = line ? atol (line) : 0;
-#ifdef DEBUG_sspitzer	
+#ifdef DEBUG_NEWS	
 	printf("lines = %d\n", numLines);
 #endif
 	newMsgHdr->SetLineCount(numLines);
@@ -910,7 +910,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 
 	if (m_newsDB)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("committing summary file changes\n");
 #endif
 		m_newsDB->Commit(kSessionCommit);
@@ -1010,10 +1010,15 @@ nsNNTPNewsgroupList::ClearXOVERState()
 }
 
 nsresult
-nsNNTPNewsgroupList::GetGroupName(char **retval)
+nsNNTPNewsgroupList::GetGroupName(char **_retval)
 {
-	*retval = m_groupName;
-	return NS_OK;
+	if (_retval) {
+		*_retval = m_groupName;
+		return NS_OK;
+	}
+	else {
+		return NS_ERROR_NULL_POINTER;
+	}
 }
 
 extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
