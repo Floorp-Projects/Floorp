@@ -52,14 +52,14 @@ REQUIRES        = xpcom \
                   xuldoc \
                   $(NULL)
 
-# MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1
-ifdef MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
+ifdef MOZ_PLAINTEXT_EDITOR_ONLY
 # We're only building the Core PlainText Editor Source so just include
 # the plain text registration file.
 CPPSRCS = nsTextEditorReg.cpp
 SHARED_LIBRARY_LIBS = $(NULL)
 
 else
+# We're building both plain and html editing
 CPPSRCS = nsEditorRegistration.cpp
 SHARED_LIBRARY_LIBS = \
 		../html/libhtmleditor_s.$(LIB_SUFFIX)      \

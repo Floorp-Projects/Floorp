@@ -26,7 +26,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base text html build
+ifdef MOZ_PLAINTEXT_EDITOR_ONLY
+HTML_DIR	= 
+else
+HTML_DIR	= html
+endif
+
+DIRS		= base text $(HTML_DIR) build
+
 
 include $(topsrcdir)/config/rules.mk
 
