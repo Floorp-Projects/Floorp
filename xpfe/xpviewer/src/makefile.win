@@ -55,9 +55,9 @@ LINCS=	\
   -I$(PUBLIC)\editor \
 !endif
   -I$(PUBLIC)\pref \
-ifdef MOZ_FULLCIRCLE
+!ifdef MOZ_FULLCIRCLE
   -I$(PUBLIC)\fullsoft \
-endif
+!endif
   $(NULL)
 
 MYLIBS=                         \
@@ -77,9 +77,9 @@ MYLIBS=                         \
  $(DIST)\lib\ender.lib          \
 !endif
  comdlg32.lib                   \
-ifdef MOZ_FULLCIRCLE
+!ifdef MOZ_FULLCIRCLE
  $(DIST)\lib\fullsoft.lib \
-endif
+!endif
  $(NULL)
 
 LLIBS= $(MYLIBS)                \
