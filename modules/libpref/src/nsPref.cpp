@@ -39,6 +39,8 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
+#include "nsVoidArray.h"
+
 #include "pratom.h"
 #include "prefapi.h"
 #include "nsIFactory.h"
@@ -987,8 +989,7 @@ NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **li
 
 struct EnumerateData {
     const char *parent;
-    PrefEnumerationFunc callback;
-    void *arg;
+    nsVoidArray *pref_list;
 };
 
 PR_STATIC_CALLBACK(PRIntn)
@@ -996,19 +997,32 @@ pref_enumChild(PLHashEntry *he, int i, void *arg)
 {
     EnumerateData *d = (EnumerateData *) arg;
     if (PL_strncmp((char*)he->key, d->parent, PL_strlen(d->parent)) == 0) {
-        (*d->callback)((char*)he->key, d->arg);
+        d->pref_list->AppendElement((void *)he->key);
     }
     return HT_ENUMERATE_NEXT;
 }
 
 NS_IMETHODIMP
 nsPref::EnumerateChildren(const char *parent, PrefEnumerationFunc callback, void *arg) 
-{   
+{
+    // this will contain a list of all the pref name strings
+    // allocate on the stack for speed
+    nsAutoVoidArray prefArray;
+
     EnumerateData ed;
     ed.parent = parent;
-    ed.callback = callback;
-    ed.arg = arg;
+    ed.pref_list = &prefArray;
     PL_HashTableEnumerateEntries(gHashTable, pref_enumChild, &ed);
+
+    // now that we've built up the list, run the callback on
+    // all the matching elements
+    PRInt32 numPrefs = prefArray.Count();
+    PRInt32 i;
+    for (i=0; i < numPrefs; i++) {
+        char *prefName = (char *)prefArray.ElementAt(i);
+        (*callback)((char*)prefName, arg);
+    }
+    
     return NS_OK;
 }
 
