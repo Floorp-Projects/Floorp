@@ -635,6 +635,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
           (clazz != (MimeObjectClass *)&mimeInlineTextHTMLClass) &&
           (clazz != (MimeObjectClass *)&mimeInlineTextRichtextClass) &&
           (clazz != (MimeObjectClass *)&mimeInlineTextEnrichedClass) &&
+          (clazz != (MimeObjectClass *)&mimeMessageClass) &&
           (clazz != (MimeObjectClass *)&mimeInlineImageClass) )
       clazz = (MimeObjectClass *)&mimeExternalObjectClass;
   }

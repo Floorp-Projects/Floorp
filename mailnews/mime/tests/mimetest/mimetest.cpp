@@ -244,8 +244,8 @@ ConsoleOutputStreamListener::DoIndent()
   if (mIndentCount <= 1)
     return NS_OK;
 
-  for (PRUint32 j=0; j<(PRUint32) ((mIndentCount-1)*TAB_SPACES); j++)
-    PR_Write(PR_GetSpecialFD(PR_StandardOutput), " ", 1);
+  //for (PRUint32 j=0; j<(PRUint32) ((mIndentCount-1)*TAB_SPACES); j++)
+  //  PR_Write(PR_GetSpecialFD(PR_StandardOutput), " ", 1);
   return NS_OK;
 }
 
@@ -408,6 +408,9 @@ FixURL(char *url)
     if (*ptr == '\\')
       *ptr = '/';
 
+    if (*ptr == ':')
+      *ptr = '|';
+
     ++ptr;
   }
 }
@@ -563,7 +566,7 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   
   // Create an nsIURI object needed for stream IO...
   PR_snprintf(newURL, sizeof(newURL), "file:///%s", filename);
-  FixURL(newURL);
+  FixURL(newURL + 5);
   if (NS_FAILED(NewURI(&theURI, newURL)))
   {
     printf("Unable to open input file\n");

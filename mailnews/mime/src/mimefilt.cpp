@@ -273,8 +273,6 @@ test(FILE *in, FILE *out,
   opt->rfc1522_conversion_fn= 0;
   opt->reformat_date_fn		= 0;
   opt->file_type_fn			= test_file_type;
-  opt->type_description_fn	= 0;
-  opt->type_icon_name_fn	= test_type_icon;
   opt->stream_closure		= out;
 
   opt->image_begin			= test_image_begin;

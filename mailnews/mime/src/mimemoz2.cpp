@@ -32,6 +32,7 @@
 #include "mimemrel.h"
 #include "mimemalt.h"
 #include "mimebuf.h"
+#include "mimemapl.h"
 #include "edt.h"
 #include "mimerosetta.h"
 #include "proto.h"
@@ -226,7 +227,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach)
   //
   if (!aAttach->real_name || *aAttach->real_name == 0)
   {
-    nsString  newAttachName = "attach";
+    nsString  newAttachName = "attachment";
     nsresult  rv = NS_OK;
     NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && mimeFinder) 
@@ -278,6 +279,11 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
       return NS_OK;
+
+    // If this is a child of an AppleDouble handler, these are subparts of a single file (ugh!)
+    // So don't add them to the attachment list!
+    if ( (child->parent) && (mime_typep(child->parent, (MimeObjectClass *) &mimeMultipartAppleDoubleClass)) )
+      continue;
 
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
@@ -509,52 +515,20 @@ mime_reformat_date(const char *date, void *stream_closure)
 static char *
 mime_file_type (const char *filename, void *stream_closure)
 {
-#if 0
-  NET_cinfo *cinfo = NET_cinfo_find_type ((char *) filename);
-  if (!cinfo || !cinfo->type)
-    return 0;
-  else
-    return nsCRT::strdup(cinfo->type);
-#else
-  return 0;
-#endif
-}
+  char        *retType = nsnull;
+  char        *ext = nsnull;
+  nsresult    rv;
 
-static char *
-mime_type_desc(const char *type, void *stream_closure)
-{
-#if 0
-  NET_cinfo *cinfo = NET_cinfo_find_info_by_type((char *) type);
-  if (!cinfo || !cinfo->desc || !*cinfo->desc)
-    return 0;
-  else
-    return nsCRT::strdup(cinfo->desc);
-#else
-  return 0;
-#endif
-}
+  ext = PL_strrchr(filename, '.');
+  if (ext)
+  {
+    ext++;
+    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && mimeFinder) 
+      mimeFinder->GetTypeFromExtension(ext, &retType);
+  }
 
-// RICHIE - need to replace this with the new service from Judson!
-static char *
-mime_type_icon(const char *type, void *stream_closure)
-{
-#if 0
-  NET_cinfo *cinfo = NET_cinfo_find_info_by_type((char *) type);
-  if (cinfo && cinfo->icon && *cinfo->icon)
-    return nsCRT::strdup(cinfo->icon);
-#endif
-  if (!nsCRT::strncasecmp(type, "text/", 5))
-    return nsCRT::strdup("resource:/res/network/gopher-text.gif");
-  else if (!nsCRT::strncasecmp(type, "image/", 6))
-    return nsCRT::strdup("resource:/res/network/gopher-image.gif");
-  else if (!nsCRT::strncasecmp(type, "audio/", 6))
-    return nsCRT::strdup("resource:/res/network/gopher-sound.gif");
-  else if (!nsCRT::strncasecmp(type, "video/", 6))
-    return nsCRT::strdup("resource:/res/network/gopher-movie.gif");
-  else if (!nsCRT::strncasecmp(type, "application/", 12))
-    return nsCRT::strdup("resource:/res/network/gopher-binary.gif");
-  else
-    return nsCRT::strdup("internal-gopher-unknown.gif");
+  return retType;
 }
 
 static int
@@ -1298,8 +1272,6 @@ mime_bridge_create_display_stream(
   msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
   msd->options->reformat_date_fn      = mime_reformat_date;
   msd->options->file_type_fn          = mime_file_type;
-  msd->options->type_description_fn   = mime_type_desc;
-  msd->options->type_icon_name_fn     = mime_type_icon;
   msd->options->stream_closure        = msd;
   msd->options->passwd_prompt_fn      = 0;
   
