@@ -27,6 +27,11 @@
 #include "nsError.h"
 #include "nsString2.h"
 
+// workaround for bug 30927
+#ifdef ERROR
+#undef ERROR
+#endif
+
 class nsISupports;
 class nsIDOMNode;
 struct PRLogModuleInfo;
