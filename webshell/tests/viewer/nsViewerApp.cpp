@@ -673,7 +673,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
     mStartURL.AssignWithConversion(argv[i]);
 #if defined(XP_UNIX) || defined(XP_BEOS)
     if (argv[i][0] == '/') {
-      mStartURL.Insert("file:", 0);
+      mStartURL.InsertWithConversion("file:", 0);
     }
 #endif
   }
