@@ -62,6 +62,15 @@ nsAbDirProperty::nsAbDirProperty(void)
 
 nsAbDirProperty::~nsAbDirProperty(void)
 {
+  if (m_AddressList) {
+    PRUint32 count;
+    nsresult rv;
+    rv = m_AddressList->Count(&count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    PRInt32 i;
+    for (i = count - 1; i >= 0; i--)
+      m_AddressList->RemoveElementAt(i);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsAbDirProperty,nsIAbDirectory)

@@ -56,10 +56,11 @@
 
 nsAbMDBDirProperty::nsAbMDBDirProperty(void)
 {
+  m_dbRowID = 0;
 }
 
 nsAbMDBDirProperty::~nsAbMDBDirProperty(void)
-{
+{ 
 }
 
 
@@ -109,7 +110,6 @@ NS_IMETHODIMP nsAbMDBDirProperty::AddMailListToDirectory(nsIAbDirectory *mailLis
 /* add addresses to the mailing list */
 NS_IMETHODIMP nsAbMDBDirProperty::AddAddressToList(nsIAbCard *card)
 {
-
 	if (!m_AddressList)
 		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
 	PRUint32 i, count;
