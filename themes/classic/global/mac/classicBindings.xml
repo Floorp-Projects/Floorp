@@ -147,7 +147,7 @@
     </content>
   </binding>
 
-  <binding id="tab">
+  <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
     <content>
       <xul:spring class="tab-image-left" inherits="selected"/>
       <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected">
@@ -158,7 +158,7 @@
     </content>
   </binding>
 
-  <binding id="tabbox" extends="xul:box">
+  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
     <content>
       <xul:spring class="tab-border-top-left-cap"/>
 	  <xul:spring class="tab-border-top-left"/>
