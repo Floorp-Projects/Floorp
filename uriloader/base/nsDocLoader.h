@@ -38,6 +38,7 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIHTTPEventSink.h"
 #include "nsCOMPtr.h"
 
 struct nsChannelInfo;
@@ -51,7 +52,8 @@ class nsDocLoaderImpl : public nsIDocumentLoader,
                         public nsSupportsWeakReference,
                         public nsIProgressEventSink,
                         public nsIWebProgress,
-                        public nsIInterfaceRequestor
+                        public nsIInterfaceRequestor,
+                        public nsIHTTPEventSink
 {
 public:
 
@@ -73,6 +75,7 @@ public:
     NS_DECL_NSIWEBPROGRESS
 
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIHTTPEVENTSINK
 
     // Implementation specific methods...
 protected:
