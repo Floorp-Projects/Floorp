@@ -219,6 +219,7 @@
 <!ENTITY xptk8Cmd.label "Beep">
 <!ENTITY xptk9Cmd.label "Sound">
 <!ENTITY xptk10Cmd.label "XP Menus">
+<!ENTITY xptk11Cmd.label "Color Picker">
 
 <!-- L10n BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY strresCmd.label "StringBundle Test">
