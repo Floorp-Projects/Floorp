@@ -285,7 +285,7 @@
 
 <popup id="backtooltip">
  <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="80" height="15">
+   width="80" height="15" style="border: thin solid black">
    Get Back, JoJo
  </window>
 </popup>
