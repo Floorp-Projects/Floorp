@@ -185,7 +185,7 @@ Rights Reserved.
 <!ENTITY viewCustomView.label "Customize...">
 <!ENTITY viewCustomView.accesskey "C">
 <!ENTITY threads.label "Threads">
-<!ENTITY threads.accesskey "T">
+<!ENTITY threads.accesskey "e">
 <!ENTITY allMsgsCmd.label "All">
 <!ENTITY allMsgsCmd.accesskey "A">
 <!ENTITY expandOrCollapseMenu.label "Expand/Collapse">
