@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.26 2002/02/27 04:40:17 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.27 2002/03/22 22:48:02 ian.mcgreer%sun.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1473,7 +1473,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
 #define HANDLE_ERR(rv, len) \
     if (rv != len) { \
 	if (rv < 0) { \
-	    if (blocking \
+	    if (!blocking \
 		&& (PR_GetError() == PR_WOULD_BLOCK_ERROR) \
 		&& (sent > 0)) { \
 		return sent; \
@@ -1482,7 +1482,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
 	    } \
 	} \
 	/* Only a nonblocking socket can have partial sends */ \
-	PR_ASSERT(blocking); \
+	PR_ASSERT(!blocking); \
 	return sent; \
     } 
 #define SEND(bfr, len) \
