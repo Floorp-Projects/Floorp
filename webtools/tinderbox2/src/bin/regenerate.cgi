@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/05/01 02:46:13 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/05/01 02:47:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -60,7 +60,6 @@ use FileStructure;
 
     my ($tree) = $form{'tree'};
 
-    $tree = 'SeaMonkey';
     $url = (
             FileStructure::get_filename($tree, 'tree_URL').
             '/'.
