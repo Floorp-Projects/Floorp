@@ -259,6 +259,18 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:
   padding: 0;
 }
 
+/* ::::: directory pane adjustments ::::: */
+
+#abDirTreeHeaderContainer {
+  border-top: 1px solid ThreeDHighlight;
+}
+
+#abDirTreeHeader {
+  height: 29px;
+  border-bottom: none;
+  border-top: none;
+}
+
 /* ::::: directory pane icons ::::: */
 
 treechildren::-moz-tree-image(DirCol) {
@@ -285,7 +297,13 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 
 /* ::::: splitters ::::: */
 
-#dirTree-splitter,
+#dirTree-splitter {
+  border-top: 1px solid ThreeDHighlight;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
 #results-splitter {
   border: none;
   min-height: 5px;
@@ -382,7 +400,7 @@ html|p {
 /* ::::: Search Bar  ::::: */
 
 #searchBox {
-  border-top: 1px solid transparent;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid transparent;
+  border-top: 1px solid ThreeDHighlight;
+  height: 30px;
+  min-height: 30px;
 }
