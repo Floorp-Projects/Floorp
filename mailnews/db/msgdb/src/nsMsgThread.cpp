@@ -319,7 +319,7 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 
 	//Get key from row
 	mdbOid outOid;
-	nsMsgKey key;
+	nsMsgKey key=0;
 	if (resultRow->GetOid(m_mdbDB->GetEnv(), &outOid) == NS_OK)
 		key = outOid.mOid_Id;
 
@@ -645,7 +645,7 @@ PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 
 NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
 {
-	nsresult rv;
+	nsresult rv=NS_OK;          // XXX or should this default to an error?
 	mResultHdr = nsnull;
 	if (mThreadParentKey == nsMsgKey_None)
 	{
@@ -778,7 +778,7 @@ nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **resul
 {
 	PRUint32 numChildren;
 	PRUint32 childIndex = 0;
-	nsresult rv;
+	nsresult rv = NS_OK;        // XXX or should this default to an error?
 
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
