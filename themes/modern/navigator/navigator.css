@@ -61,11 +61,11 @@ toolbox {
   -moz-image-region: rect(0 41px 38px 0);
 }
 
-#back-button[buttonover="true"] {
+#back-button:hover {
   -moz-image-region: rect(0 83px 38px 42px);
 }
 
-#back-button[buttondown="true"] {
+#back-button:hover:active {
   -moz-image-region: rect(0 125px 38px 84px);
 }
 
@@ -77,11 +77,11 @@ toolbox {
   -moz-image-region: rect(39px 41px 77px 0);
 }
 
-#forward-button[buttonover="true"] {
+#forward-button:hover {
   -moz-image-region: rect(39px 83px 77px 42px);
 }
 
-#forward-button[buttondown="true"] {
+#forward-button:hover:active {
   -moz-image-region: rect(39px 125px 77px 84px);
 }
 
@@ -126,11 +126,11 @@ toolbox {
   -moz-image-region: rect(0 49px 33px 0);
 }
 
-#print-button[buttonover="true"] {
+#print-button:hover {
   -moz-image-region: rect(0 99px 33px 50px);
 }
 
-#print-button[buttondown="true"] {
+#print-button:hover:active {
   -moz-image-region: rect(0 149px 33px 100px);
 }
 
@@ -186,11 +186,11 @@ toolbox {
   -moz-image-region: rect(0 19px 19px 0);
 }
 
-#back-button[buttonover="true"][toolbarmode="small"] {
+#back-button[toolbarmode="small"]:hover {
   -moz-image-region: rect(0 38px 19px 19px);
 }
 
-#back-button[buttondown="true"][toolbarmode="small"] {
+#back-button[toolbarmode="small"]:hover:active {
   -moz-image-region: rect(0 57px 19px 38px);
 }
 
@@ -202,11 +202,11 @@ toolbox {
   -moz-image-region: rect(19px 19px 38px 0);
 }
 
-#forward-button[buttonover="true"][toolbarmode="small"] {
+#forward-button[toolbarmode="small"]:hover {
   -moz-image-region: rect(19px 38px 38px 19px);
 }
 
-#forward-button[buttondown="true"][toolbarmode="small"] {
+#forward-button[toolbarmode="small"]:hover:active {
   -moz-image-region: rect(19px 57px 38px 38px);
 }
 
@@ -218,11 +218,11 @@ toolbox {
   -moz-image-region: rect(38px 19px 57px 0);
 }
   
-#reload-button:hover[toolbarmode="small"] {
+#reload-button[toolbarmode="small"]:hover {
   -moz-image-region: rect(38px 38px 57px 19px);
 }
 
-#reload-button:hover:active[toolbarmode="small"] {
+#reload-button[toolbarmode="small"]:hover:active {
   -moz-image-region: rect(38px 57px 57px 38px);
 }
 
@@ -234,11 +234,11 @@ toolbox {
   -moz-image-region: rect(57px 19px 76px 0);
 } 
 
-#stop-button:hover[toolbarmode="small"] {
+#stop-button[toolbarmode="small"]:hover {
   -moz-image-region: rect(57px 38px 76px 19px);
 } 
 
-#stop-button:hover:active[toolbarmode="small"] {
+#stop-button[toolbarmode="small"]:hover:active {
   -moz-image-region: rect(57px 57px 76px 38px);
 } 
 

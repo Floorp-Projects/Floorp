@@ -47,11 +47,11 @@
   -moz-image-region: rect(0px 19px 20px 0px);
 }
 
-#helpBackButton[buttonover="true"] {
+#helpBackButton:hover {
   -moz-image-region: rect(0px 38px 20px 19px);
 }
 
-#helpBackButton[buttondown="true"] {
+#helpBackButton:hover:active {
   -moz-image-region: rect(0px 57px 20px 38px);
 }
 
@@ -63,11 +63,11 @@
   -moz-image-region: rect(20px 19px 40px 0px);
 }
 
-#helpForwardButton[buttonover="true"] {
+#helpForwardButton:hover {
   -moz-image-region: rect(20px 38px 40px 19px);
 }
 
-#helpForwardButton[buttondown="true"] {
+#helpForwardButton:hover:active {
   -moz-image-region: rect(20px 57px 40px 38px);
 }
 
@@ -80,11 +80,11 @@
   -moz-image-region: rect(0px 23px 21px 0px);
 }
 
-#print[buttonover="true"] {
+#print:hover {
   -moz-image-region: rect(0px 46px 21px 23px);
 }
 
-#print[buttondown="true"] {
+#print:hover:active {
   -moz-image-region: rect(0px 69px 21px 46px);
 }
 
