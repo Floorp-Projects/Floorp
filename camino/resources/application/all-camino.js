@@ -84,3 +84,12 @@ pref("accessibility.typeaheadfind.autostart", false);
 
 // image resizing
 pref("browser.enable_automatic_image_resizing", true);
+
+// enable horizontal scroll by shift+wheel
+pref("mousewheel.horizscroll.withshiftkey.action", 0);
+pref("mousewheel.horizscroll.withshiftkey.numlines", 1);
+pref("mousewheel.horizscroll.withshiftkey.sysnumline", true);
+
+// make history scrolling with option go the standard way
+pref("mousewheel.horizscroll.withaltkey.action", 2);
+pref("mousewheel.horizscroll.withaltkey.numlines", 1);
