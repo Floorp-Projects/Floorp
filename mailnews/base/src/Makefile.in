@@ -123,6 +123,10 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS		+= nsMessengerOS2Integration.cpp 
 endif
 
+ifdef MOZ_THUNDERBIRD
+CPPSRCS		+= nsMsgContentPolicy.cpp 
+endif
+
 EXPORTS		= \
 		nsMsgBaseCID.h \
 		nsMessenger.h \
@@ -151,6 +155,10 @@ EXPORTS		= \
 		nsMsgProgress.h \
 		nsMessengerContentHandler.h \
 		$(NULL)
+
+ifdef MOZ_THUNDERBIRD
+EXPORTS		+= nsMsgContentPolicy.h 
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
