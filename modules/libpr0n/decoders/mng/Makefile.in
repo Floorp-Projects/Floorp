@@ -44,7 +44,9 @@ REQUIRES	= string \
 
 CPPSRCS		= nsMNGDecoder.cpp nsMNGFactory.cpp imgContainerMNG.cpp
 
-EXTRA_DSO_LDOPTS = $(MNG_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
+EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
+		$(MNG_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
