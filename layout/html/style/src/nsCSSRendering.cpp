@@ -2641,7 +2641,7 @@ FindElementBackground(nsPresContext* aPresContext,
 
   // We should only look at the <html> background if we're in an HTML document
   nsIDocument* document = content->GetOwnerDoc();
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(document);
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
   if (!htmlDoc)
     return PR_TRUE;
 
