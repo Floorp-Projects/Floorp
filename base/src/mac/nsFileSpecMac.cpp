@@ -778,6 +778,7 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 void nsFileSpec::operator += (const char* inRelativePath)
 //----------------------------------------------------------------------------------------
 {
+	mPath.SetToEmpty();
 	long dirID;
 	Boolean isDirectory;
 	mError = NS_FILE_RESULT(::FSpGetDirectoryID(&mSpec, &dirID, &isDirectory));
@@ -1156,8 +1157,10 @@ OSErr nsDirectoryIterator::SetToIndex()
 	dipb->ioDrDirID = currentSpec.parID;
 	dipb->ioNamePtr = objectName;
 	OSErr err = PBGetCatInfoSync(&cipb);
+	FSSpec temp;
 	if (err == noErr)
-		err = FSMakeFSSpec(currentSpec.vRefNum, currentSpec.parID, objectName, &currentSpec);
+		err = FSMakeFSSpec(currentSpec.vRefNum, currentSpec.parID, objectName, &temp);
+	currentSpec = temp; // use the operator: it clears the string cache etc.
 	mExists = err == noErr;
 	return err;
 } // nsDirectoryIterator::SetToIndex()
