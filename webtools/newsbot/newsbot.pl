@@ -91,8 +91,10 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
         $summary = $summary . $_ while (defined($_ = $IO->getline));
         $IO->close;
         if ( $entity->parts(0)->head->mime_type =~ /text\/plain/ ) {
-             $summary =~ s/</&lt;/g;
-             $summary =~ s/>/&gt;/g;
+             # line beginning with -- is a signature seperator. Delete the sig
+             $summary =~ s/^--.*//ms;
+             $summary =~ s/</&lt;/mg;
+             $summary =~ s/>/&gt;/mg;
              $summary =~ s/(http:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/(ftp:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/&lt;(([\S])+@([\S])+)&gt;/&lt;<A HREF=\"mailto:$1\">$1<\/A>&gt;/mg;
