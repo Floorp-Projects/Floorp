@@ -9335,14 +9335,12 @@ copyMoveRDFLink (HT_Resource dropTarget, HT_Resource dropObject)
 HT_DropAction
 copyMoveRDFLinkAtPos (HT_Resource dropx, HT_Resource dropObject, PRBool before)
 {
-	HT_Resource		origin;
-	HT_Resource		dropTarget;
+	HT_Resource		child, origin, dropTarget, prev;
 	RDF			db;
-	RDF_Resource		old;
-	RDF_Resource		parent;
-	RDF_Resource		obj;
+	RDF_Resource		old, parent, obj, posResource;
 	PRBool			moveAction;
-	char			*name;
+	char			*name, *id, *pos, posString[16];
+	uint32			itemNum, itemPos=0;
 
 	if (dropx == NULL)	return(DROP_NOT_ALLOWED);
 	if (dropObject == NULL)	return(DROP_NOT_ALLOWED);
@@ -9390,8 +9388,52 @@ copyMoveRDFLinkAtPos (HT_Resource dropx, HT_Resource dropObject, PRBool before)
 	{
 		RDF_Unassert(db, obj, gCoreVocab->RDF_parent, old, RDF_RESOURCE_TYPE);
 	}
-	nlocalStoreUnassert(gLocalStore, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
+/*	nlocalStoreUnassert(gLocalStore, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
 	nlocalStoreAddChildAt(gLocalStore, parent, dropx->node, obj, before);
+*/
+	if (!RDF_HasAssertion(db, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE, PR_TRUE))
+	{
+		RDF_Assert(db, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
+	}
+
+	/* renumber item positions, leaving an open slot for the node being added */
+	if ((id = PR_smprintf("pos(%s)", resourceID(parent))) != NULL)
+	{
+		posResource = RDF_GetResource(db, id, PR_TRUE);
+		itemNum = 1;
+		child = dropTarget->child;
+		while (child != NULL)
+		{
+			pos = nlocalStoreGetSlotValue(gLocalStore, child->node, posResource, RDF_STRING_TYPE, PR_FALSE, PR_TRUE);
+			if (pos != NULL)
+			{
+				nlocalStoreUnassert(gLocalStore, child->node, posResource, pos, RDF_STRING_TYPE);
+				freeMem(pos);
+			}
+			if ((child == dropx) && (before))
+			{
+				itemPos = itemNum++;
+				sprintf(posString, "%lu", itemNum++);
+				nlocalStoreAssert(gLocalStore, child->node, posResource, posString, RDF_STRING_TYPE, PR_TRUE);
+			}
+			else if ((prev == dropx) && (!before))
+			{
+				sprintf(posString, "%lu", itemNum++);
+				nlocalStoreAssert(gLocalStore, child->node, posResource, posString, RDF_STRING_TYPE, PR_TRUE);
+				itemPos = itemNum++;
+			}
+			else if (child->node != obj)
+			{
+				sprintf(posString, "%lu", itemNum++);
+				nlocalStoreAssert(gLocalStore, child->node, posResource, posString, RDF_STRING_TYPE, PR_TRUE);
+			}			
+			prev = child;
+			child = child->next;
+		}	
+		sprintf(posString, "%lu", (itemPos > 0) ? itemPos : dropx->parent->numChildren + 1);
+		nlocalStoreAssert(gLocalStore, obj, posResource, posString, RDF_STRING_TYPE, PR_TRUE);
+		XP_FREE(id);
+	}
 	return COPY_MOVE_LINK;      
 }
 

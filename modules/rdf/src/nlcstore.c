@@ -360,9 +360,9 @@ nlocalStoreGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s,
     if (nas == NULL) break;
     if (type == valueTypeOfAs(nas)) {
       if (type == RDF_STRING_TYPE) {
-	ans = copyString(dataOfDBMAs(nas));
+	ans = copyString((char *)dataOfDBMAs(nas));
       } else if (type == RDF_RESOURCE_TYPE) {
-	ans = RDF_GetResource(NULL, dataOfDBMAs(nas), true);
+	ans = RDF_GetResource(NULL, (char *)dataOfDBMAs(nas), true);
       } else if (type == RDF_INT_TYPE) {
         /* ans = dataOfDBMAs(nas); */
         memcpy((char*)&ans, dataOfDBMAs(nas), sizeof(uint32));
@@ -423,7 +423,7 @@ nlocalStoreNextValue (RDFT rdf, RDF_Cursor c)
     if (nas == NULL) break;
     if ((c->tv == tvOfAs(nas)) && (c->type == valueTypeOfAs(nas))) {
       if (c->type == RDF_RESOURCE_TYPE) {
-        RDF_Resource nu = RDF_GetResource(NULL, dataOfDBMAs(nas), 1);
+        RDF_Resource nu = RDF_GetResource(NULL, (char *)dataOfDBMAs(nas), 1);
 
         if (nu  && startsWith("http:", resourceID(nu)) && strstr(resourceID(nu), ".rdf")) {
           RDFL rl = rdf->rdf;

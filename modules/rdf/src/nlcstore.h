@@ -51,13 +51,20 @@
 
 extern	int		RDF_PERSONAL_TOOLBAR_NAME;
 
+#ifdef	XP_MAC
+#pragma options align=packed
+#endif
+
 typedef struct _DBMAsStruct {
   uint8 size[3];
-  char tag;
-  char data[1]; /* me & the compiler man, we're like _this_ */
+  uint8 tag;
+  uint8 data[1]; /* me & the compiler man, we're like _this_ */
 } DBMAsStruct;
-
 typedef DBMAsStruct* DBMAs;
+
+#ifdef	XP_MAC
+#pragma options align=reset
+#endif
 
 typedef struct _DBMRDFStruct {
   DB *propDB;
@@ -67,11 +74,11 @@ typedef struct _DBMRDFStruct {
 } *DBMRDF;
 
 
-#define dataOfDBMAs(dbmas) ((dbmas)->data)
+#define dataOfDBMAs(dbmas) (((char *)dbmas) + 4)
 #define dbmasSize(dbmas) ((size_t)(((1 << 16) * dbmas->size[0]) + ((1 << 8) * dbmas->size[1]) + dbmas->size[2]))
-#define nthdbmas(data, n) ((DBMAs)((char*)data + n))
-#define valueTypeOfAs(nas) (RDF_ValueType) (((DBMAs)(nas))->tag & 0x0F)
-#define tvOfAs(nas) ((PRBool)((nas->tag & 0x10) != 0))
+#define nthdbmas(data, n) ((DBMAs)(((char *)data) + n))
+#define valueTypeOfAs(nas) (RDF_ValueType) ((*(((uint8 *)(nas)) + 3)) & 0x0F)
+#define tvOfAs(nas) ((PRBool)(((*((uint8 *)(nas) + 3)) & 0x10) != 0))
 #define valueEqual(type, v1, v2) (((type == RDF_RESOURCE_TYPE) && stringEquals((char*)v1, resourceID((RDF_Resource)v2))) || \
 	  ((type == RDF_INT_TYPE) && (compareUnalignedUINT32Ptrs(v1,v2))) || \
 	  ((type == RDF_STRING_TYPE) && stringEquals((char*)v1, (char*)v2)))
