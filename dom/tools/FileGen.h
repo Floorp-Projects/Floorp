@@ -40,7 +40,7 @@ class IdlFunction;
 class FileGen {
 public:
     FileGen();
-    ~FileGen();
+    virtual ~FileGen();
     virtual void    Generate(char *aFileName, char *aOutputDirName, 
                              IdlSpecification &aSpec, int aIsGlobal)=0;
 

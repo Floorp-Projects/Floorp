@@ -36,7 +36,7 @@ class IdlAttribute;
 class JSStubGen : public FileGen {
 public:
      JSStubGen();
-     ~JSStubGen();
+     virtual ~JSStubGen();
 
      virtual void     Generate(char *aFileName, char *aOutputDirName, 
                                IdlSpecification &aSpec, int aIsGlobal);

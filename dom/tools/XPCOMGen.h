@@ -35,7 +35,7 @@ class IdlFunction;
 class XPCOMGen : public FileGen {
 public:
      XPCOMGen();
-     ~XPCOMGen();
+     virtual ~XPCOMGen();
 
      virtual void     Generate(char *aFileName, char *aOutputDirName, 
                                IdlSpecification &aSpec, int aIsGlobal);
