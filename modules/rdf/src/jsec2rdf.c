@@ -82,7 +82,7 @@ RDFJSec_NextPrincipal(RDF_Cursor c)
 RDF_Error
 RDFJSec_ReleaseCursor(RDF_Cursor c)
 {
-  RDF_Error	err;
+  RDF_Error	err = 0;
   if (c != NULL) {
     err = RDF_DisposeCursor(c);
   }

@@ -467,7 +467,7 @@ nlocalStoreDisposeCursor (RDFT rdf, RDF_Cursor c)
 DBMAs
 makeAsBlock (void* v, RDF_ValueType type, PRBool tv,  size_t *size)
 {
-  size_t vsize;
+  size_t vsize=0;
   DBMAs ans;
   int rem = 0;
 /*

@@ -503,7 +503,7 @@ NPL_WriteReady(NET_StreamClass *stream)
 int
 NPL_Write(NET_StreamClass *stream, const unsigned char *str, int32 len)
 {
-    int ret;
+    int ret=0;
     URL_Struct *urls = (URL_Struct *)stream->data_object;
     np_stream *newstream = np_get_stream(urls);	
 
@@ -2610,7 +2610,7 @@ np_setwindow(np_instance *instance, NPWindow *appWin)
 	 */
 	NPEmbeddedApp* app;
 	np_data* ndata;
-	LO_EmbedStruct* lo_struct;
+	LO_EmbedStruct* lo_struct=NULL;
 	
 	if (instance)
 	{

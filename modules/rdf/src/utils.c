@@ -815,7 +815,7 @@ CookieGetNextValue(RDFT rdf, RDF_Cursor c)
 RDF_Error
 CookieDisposeCursor(RDFT rdf, RDF_Cursor c)
 {
-	RDF_Error	err;
+	RDF_Error	err=0;
 
 	if (c != NULL)
 	{
