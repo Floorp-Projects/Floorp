@@ -44,11 +44,6 @@ input[type=image] {
   border: 2px solid blue;
 }
 
-/* border when focused -- only change style to dotted */
-input[type=image]:focus {
-  border-style: dotted;
-}
-
 /* border when disabled -- only change color to gray */
 input[type=image][disabled] {
   border-color: GrayText;
