@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.4 1998/06/16 00:51:27 jwz Exp $
+# $Id: Common.pm,v 1.5 1998/06/16 00:57:48 jwz Exp $
 
 package LXR::Common;
 
@@ -191,19 +191,16 @@ sub markupfile {
 		
 	    } elsif ($btype eq 'include') { 
 		# Include directive
-		$frag =~ s#\"(.*)\"#
-		    '"'.&fileref($1, $virtp.$1).'"'#e;
-		$frag =~ s#&lt;(.*)&gt;#
-		    "&lt;".&fileref
-			($1, 
-			 $Conf->mappath($Conf->incprefix."/$1")).
-			     "&gt;"#e;
+                $frag =~ s#(\")(.*)(\")#
+                    $1.&fileref($2, $virtp.$2).$3#e;
+                $frag =~ s#(\0<)(.*)(\0>)#
+                    $1.
+                    &fileref($2, $Conf->mappath($Conf->incprefix."/$2")).
+                    $3#e;
 	    } else {
 		# Code
 		$frag =~ s#(^|[^a-zA-Z_\#0-9])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
-		    "$1".(defined($xref{$2}) ?
-			  &idref($2,$2) :
-			  "$2")#ge;
+                    $1.(defined($xref{$2}) ? &idref($2,$2) : $2)#ge;
 	    }
 
 	    &htmlquote($frag);
@@ -226,7 +223,7 @@ sub markupfile {
 	    &SimpleParse::untabify($_);
 	    &markspecials($_);
 	    &htmlquote($_);
-	    s/^N:\s+(.*)/<hr>\n<h3>$1<\/h3>/gm;
+            s/^N:\s+(.*)/<strong>$1<\/strong>/gm;
 	    s/^(E:\s+)(\S+@\S+)/$1<a href=\"mailto:$2\">$2<\/a>/gm;
 	    s/^(W:\s+)(.*)/$1<a href=\"$2\">$2<\/a>/gm;
 #	    &$outfun("<a name=\"L$.\"><\/a>".$_);
@@ -313,7 +310,7 @@ sub init {
 	print("\n");
     } else {
         print("Content-Type: text/html; charset=iso-8859-1\n");
-	print("\n");
+        print("\n");
     }
     
     
