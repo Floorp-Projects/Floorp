@@ -74,10 +74,10 @@ interface nsIMsgMessageService : nsISupports {
 	 // url listener in order to figure out when the operation is done.
 	 // aMessageURI--> uri representing the message to spool out to disk.
 	 // aFile - the file you want the message saved to
-	 // aAppendToFile --> usually FALSE. Set to TRUE if you want the msg
+	 // aGenerateDummyEnvelope --> usually FALSE. Set to TRUE if you want the msg
 	 //					  appended at the end of the file. 
      ///////////////////////////////////////////////////////////////////
 %}
-	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aAppendToFile, 
+	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aGenerateDummyEnvelope, 
 							in nsIUrlListener aUrlListener, out nsIURI aURL);
 };

@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIURL.idl"
 
+interface nsIFileSpec;
 interface nsIUrlListener;
 interface nsIMsgStatusFeedback;
 interface nsIMsgIncomingServer;
@@ -53,13 +54,18 @@ interface nsIMsgMailNewsUrl : nsIURL {
 
 //////////////////////////////////////////////////////////////////////////////////
 // This is a very small interface which I'm grouping with the mailnewsUrl interface.
-// Several url types (mailbox, imap, nntp) have urls which can be have URI 
-// equivalents. We want to provide the app the ability to get the URI for the 
+// Several url types (mailbox, imap, nntp) have similar properties because they can
+// represent mail messages. For instance, these urls can be have URI 
+// equivalents which represent a message. 
+// We want to provide the app the ability to get the URI for the 
 // url. This URI to URL mapping doesn't exist for all mailnews urls...hence I'm
 // grouping it into a separate interface...
 //////////////////////////////////////////////////////////////////////////////////
 
 [scriptable, uuid(02338DD2-E7B9-11d2-8070-006008128C4E)]
-interface nsIMsgUriUrl : nsISupports {
+interface nsIMsgMessageUrl : nsISupports {
 	void GetURI(out string aURI); 
+	// used by imap, pop and nntp in order to implement save message to disk
+	attribute nsIFileSpec messageFile;
+	attribute boolean AddDummyEnvelope;	
 };
