@@ -17,7 +17,6 @@
  */
 #include "nsCodebasePrincipal.h"
 #include "nsJSPrincipals.h"
-#include "xp.h"
 #include "plstr.h"
 
 PR_STATIC_CALLBACK(void *) 

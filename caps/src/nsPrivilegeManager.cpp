@@ -49,7 +49,6 @@ static JSec_Principal RDF_CreatePrincipal(nsPrincipal *prin);
 #endif /* ENABLE_RDF */
 
 PR_BEGIN_EXTERN_C
-#include "xp.h"
 #include "prefapi.h"
 
 PRBool
@@ -144,31 +143,31 @@ nsPrivilegeManager::FindPrivilege(char * privStr)
 {
 	PRInt16 privState; 
 	PRInt16 privDuration;
-	if (XP_STRCMP(privStr, "allowed in scope") == 0) {
+	if (PL_strcmp(privStr, "allowed in scope") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Allowed;
 		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
-	} else if (XP_STRCMP(privStr, "allowed in session") == 0) {
+	} else if (PL_strcmp(privStr, "allowed in session") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Allowed;
 		privDuration = nsIPrivilege::PrivilegeDuration_Session;
-	} else if (XP_STRCMP(privStr, "allowed forever") == 0) {
+	} else if (PL_strcmp(privStr, "allowed forever") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Allowed;
 		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
-	} else if (XP_STRCMP(privStr, "forbidden forever") == 0) {
+	} else if (PL_strcmp(privStr, "forbidden forever") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Forbidden;
 		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
-	} else if (XP_STRCMP(privStr, "forbidden in session") == 0) {
+	} else if (PL_strcmp(privStr, "forbidden in session") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Forbidden;
 		privDuration = nsIPrivilege::PrivilegeDuration_Session;
-	} else if (XP_STRCMP(privStr, "forbidden in scope") == 0) {
+	} else if (PL_strcmp(privStr, "forbidden in scope") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Forbidden;
 		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
-	} else if (XP_STRCMP(privStr, "blank forever") == 0) {
+	} else if (PL_strcmp(privStr, "blank forever") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Blank;
 		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
-	} else if (XP_STRCMP(privStr, "blank in session") == 0) {
+	} else if (PL_strcmp(privStr, "blank in session") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Blank;
 		privDuration = nsIPrivilege::PrivilegeDuration_Session;
-	} else if (XP_STRCMP(privStr, "blank in scope") == 0) {
+	} else if (PL_strcmp(privStr, "blank in scope") == 0) {
 		privState = nsIPrivilege::PrivilegeState_Blank;
 		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
 	} else {
