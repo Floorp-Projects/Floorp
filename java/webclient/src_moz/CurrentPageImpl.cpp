@@ -45,6 +45,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
     nsresult rv;
 
     rv = initContext->docShell->GetPresShell(getter_AddRefs(presShell));
+    // PENDING() should this be done using an nsActionEvent subclass?
 
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kHistoryWebShellError;
