@@ -575,6 +575,14 @@ SECItem *
 PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
 
 /**********************************************************************
+ * Functions to manage secmod flags
+ **********************************************************************/
+PK11DefaultArrayEntry * PK11_GetDefaultArray(int *);
+SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *, PK11DefaultArrayEntry *,
+							PRBool );
+
+
+/**********************************************************************
  * New fucntions which are already depricated....
  **********************************************************************/
 SECItem *

@@ -5023,8 +5023,23 @@ finish:
 PK11SymKey*
 PK11_CopySymKeyForSigning(PK11SymKey *originalKey, CK_MECHANISM_TYPE mech)
 {
-    return pk11_CopyToSlot(PK11_GetSlotFromKey(originalKey), mech, CKA_SIGN,
-			originalKey);
+    CK_RV crv;
+    CK_ATTRIBUTE setTemplate;
+    CK_BBOOL ckTrue = CK_TRUE; 
+    PK11SlotInfo *slot = originalKey->slot;
+
+    /* first just try to set this key up for signing */
+    PK11_SETATTRS(&setTemplate, CKA_SIGN, &ckTrue, sizeof(ckTrue));
+    pk11_EnterKeyMonitor(originalKey);
+    crv = PK11_GETTAB(slot)-> C_SetAttributeValue(originalKey->session, 
+				originalKey->objectID, &setTemplate, 1);
+    pk11_ExitKeyMonitor(originalKey);
+    if (crv == CKR_OK) {
+	return PK11_ReferenceSymKey(originalKey);
+    }
+
+    /* nope, doesn't like it, use the pk11 copy object command */
+    return pk11_CopyToSlot(slot, mech, CKA_SIGN, originalKey);
 }
 
 char *
