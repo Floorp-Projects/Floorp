@@ -801,6 +801,23 @@ void CStandardFlexTable::ClickSelf(const SMouseDownEvent &inMouseDown)
 //
 // DoInlineEditing
 //
+// Perform the necessary setup for inline editing of a row's main text and then show the edit field.
+// This version of the routine is public and does not require any external knowledge of table internals
+// besides the cell that we should edit. Most of the work is done by calling the routine below
+//
+void
+CStandardFlexTable::DoInlineEditing ( const STableCell &inCell )
+{
+	Rect textRect;
+	GetHiliteTextRect ( inCell.row, textRect );
+	DoInlineEditing ( inCell, textRect );
+	
+} // DoInlineEditing
+
+
+//
+// DoInlineEditing
+//
 // Perform the necessary setup for inline editing of a row's main text and then show the edit field
 //
 void
