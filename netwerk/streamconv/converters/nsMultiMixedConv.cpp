@@ -31,10 +31,12 @@
 #include "nsIByteArrayInputStream.h"
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsMultiMixedConv,
                               nsIStreamConverter, 
 							  nsIStreamListener,
-                              nsIRequestObserver);
+                              nsIRequestObserver,
+                              nsIByteRangeRequest, 
+                              nsIChannel);
 
 
 // nsIStreamConverter implementation
@@ -85,7 +87,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     rv = inStr->Read(buffer, bufLen, &read);
     if (NS_FAILED(rv) || read == 0) return rv;
     NS_ASSERTION(read == bufLen, "poor data size assumption");
-
+    
     if (mBufLen) {
 		// incorporate any buffered data into the parsing
         char *tmp = (char*)nsMemory::Alloc(mBufLen + bufLen);
@@ -103,6 +105,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         mBufLen = 0;
     }
 
+    char *cursor = buffer;
+
     if (mFirstOnData) {
         // this is the first OnData() for this request. some servers
         // don't bother sending a token in the first "part." This is
@@ -111,28 +115,30 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         mFirstOnData = PR_FALSE;
         NS_ASSERTION(!mBufLen, "this is our first time through, we can't have buffered data");
         const char * token = mToken;
+           
+        PushOverLine(cursor, bufLen);
 
         if (bufLen < mTokenLen+2) {
             // we don't have enough data yet to make this comparison.
             // skip this check, and try again the next time OnData()
             // is called.
             mFirstOnData = PR_TRUE;
-        } else if (!PL_strnstr(buffer, token, mTokenLen+2)) {
+        } else if (!PL_strnstr(cursor, token, mTokenLen+2)) {
             bufLen = read + mTokenLen + 1;
             char *tmp = (char*)nsMemory::Alloc(bufLen);
             if (!tmp) {
-                nsMemory::Free(buffer);
+                nsMemory::Free(cursor);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             nsCRT::memcpy(tmp, token, mTokenLen);
             nsCRT::memcpy(tmp+mTokenLen, "\n", 1);
-            nsCRT::memcpy(tmp+mTokenLen+1, buffer, read);
-            nsMemory::Free(buffer);
+            nsCRT::memcpy(tmp+mTokenLen+1, cursor, read);
+            nsMemory::Free(cursor);
             buffer = tmp;
         }
     }
 
-    char *cursor = buffer, *token = nsnull;
+    char *token = nsnull;
 
     if (mProcessingHeaders) {
         // we were not able to process all the headers
@@ -149,7 +155,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         }
     }
 
-    PRInt8 tokenLinefeed = 1;
+    PRInt32 tokenLinefeed = 1;
     while ( (token = FindToken(cursor, bufLen)) ) {
 
         if (*(token+mTokenLen+1) == '-') {
@@ -283,8 +289,8 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     boundaryString.Trim(" \"");
 
     mToken = boundaryString.get();
-    if (!mToken) return NS_ERROR_OUT_OF_MEMORY;
     mTokenLen = boundaryString.Length();
+    
     return NS_OK;
 }
 
@@ -315,6 +321,28 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 }
 
 
+NS_IMETHODIMP 
+nsMultiMixedConv::GetIsByteRangeRequest(PRBool *aIsByteRangeRequest)
+{
+    *aIsByteRangeRequest = mIsByteRangeRequest;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsMultiMixedConv::GetStartRange(PRInt32 *aStartRange)
+{
+    *aStartRange = mByteRangeStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMultiMixedConv::GetEndRange(PRInt32 *aEndRange)
+{
+    *aEndRange = mByteRangeEnd;
+    return NS_OK;
+}
+
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
     NS_INIT_ISUPPORTS();
@@ -324,6 +352,9 @@ nsMultiMixedConv::nsMultiMixedConv() {
     mBuffer             = nsnull;
     mBufLen             = 0;
     mProcessingHeaders  = PR_FALSE;
+    mByteRangeStart     = 0;
+    mByteRangeEnd       = 0;
+    mIsByteRangeRequest = PR_FALSE;
 }
 
 nsMultiMixedConv::~nsMultiMixedConv() {
@@ -384,7 +415,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     // Let's start off the load. NOTE: we don't forward on the channel passed
     // into our OnDataAvailable() as it's the root channel for the raw stream.
-    return mFinalListener->OnStartRequest(mPartChannel, mContext);
+    return mFinalListener->OnStartRequest(this, mContext);
 }
 
 
@@ -393,7 +424,7 @@ nsMultiMixedConv::SendStop(nsresult aStatus) {
     
     nsresult rv = NS_OK;
     if (mPartChannel) {
-        rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus);
+        rv = mFinalListener->OnStopRequest(this, mContext, aStatus);
         // don't check for failure here, we need to remove the channel from 
         // the loadgroup.
 
@@ -435,12 +466,12 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     rv = inStream->Available(&len);
     if (NS_FAILED(rv)) return rv;
 
-    return mFinalListener->OnDataAvailable(mPartChannel, mContext, inStream, 0, len);
+    return mFinalListener->OnDataAvailable(this, mContext, inStream, 0, len);
 }
 
-PRInt8 
+PRInt32
 nsMultiMixedConv::PushOverLine(char *&aPtr, PRUint32 &aLen) {
-    PRInt8 chars = 0;
+    PRInt32 chars = 0;
     if (*aPtr == nsCRT::CR || *aPtr == nsCRT::LF) {
         if (aPtr[1] == nsCRT::LF)
             chars++;
@@ -459,7 +490,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     char *cursor = aPtr, *newLine = nsnull;
     PRUint32 cursorLen = aLen;
     PRBool done = PR_FALSE;
-    PRUint8 lineFeedIncrement = 1;
+    PRUint32 lineFeedIncrement = 1;
 
     while ( (cursorLen > 0) 
             && (newLine = PL_strchr(cursor, nsCRT::LF)) ) {
@@ -494,11 +525,11 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             headerVal.CompressWhitespace();
 
             // examine header
-            if (headerStr.Equals("content-type")) {
+            if (headerStr.EqualsIgnoreCase("content-type")) {
                 mContentType = headerVal;
-            } else if (headerStr.Equals("content-length")) {
+            } else if (headerStr.EqualsIgnoreCase("content-length")) {
                 mContentLength = atoi(headerVal.get());
-            } else if (headerStr.Equals("set-cookie")) {
+            } else if (headerStr.EqualsIgnoreCase("set-cookie")) {
                 // setting headers on the HTTP channel
                 // causes HTTP to notify, again if necessary,
                 // it's header observers.
@@ -507,6 +538,36 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                     rv = httpChannel->SetResponseHeader(headerStr, headerVal);
                     if (NS_FAILED(rv)) return rv;
                 }
+            } else if (headerStr.EqualsIgnoreCase("content-range")) {
+                // something like: Content-range: bytes 7000-7999/8000
+                char* tmpPtr;
+
+                tmpPtr = PL_strchr(colon + 1, '/');
+                if (tmpPtr) 
+                    *tmpPtr = '\0';
+
+                // pass the bytes-unit and the SP
+                char *range = PL_strchr(colon + 2, ' ');
+
+                if (!range)
+                    return NS_ERROR_FAILURE;
+
+                if (range[0] == '*'){
+                    mByteRangeStart = mByteRangeEnd = 0;
+                }
+                else {
+                    tmpPtr = PL_strchr(range, '-');
+                    if (!tmpPtr)
+                        return NS_ERROR_FAILURE;
+                    
+                    tmpPtr[0] = '\0';
+                    
+                    mByteRangeStart = atoi(range);
+                    tmpPtr++;
+                    mByteRangeEnd = atoi(tmpPtr);
+                }
+
+                mIsByteRangeRequest = PR_TRUE;
             }
         }
         *newLine = tmpChar;
@@ -528,7 +589,7 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
     const char *token = mToken;
     char *cur = aCursor;
 
-	NS_ASSERTION(token && aCursor && *token, "bad data");
+    NS_ASSERTION(token && aCursor && *token, "bad data");
 
     if( mTokenLen > aLen ) return nsnull;
 
