@@ -49,6 +49,7 @@ LINCS= \
         -I$(PUBLIC)\plugin \
         -I$(PUBLIC)\java \
         -I$(PUBLIC)\netlib \
+        -I$(PUBLIC)\oji \
         $(NULL)
 
 
