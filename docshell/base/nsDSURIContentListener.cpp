@@ -92,16 +92,76 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURIL
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
+NS_IMETHODIMP nsDSURIContentListener::IsPreferred(const char* aContentType,
    nsURILoadCommand aCommand, const char* aWindowTarget, char ** aDesiredContentType, PRBool* aCanHandle)
 {
    NS_ENSURE_ARG_POINTER(aCanHandle);
    NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
-   *aDesiredContentType = nsnull;
+   // the docshell has no idea if it is the preferred content provider or not.
+   // It needs to ask it's parent if it is the preferred content handler or not...
 
-   *aCanHandle = PR_TRUE;  // Always say true and let DoContent decide.
+   if(mParentContentListener)
+      return mParentContentListener->IsPreferred(aContentType, aCommand, 
+         aWindowTarget, aDesiredContentType, aCanHandle);
+   else
+     *aCanHandle = PR_FALSE;
+
    return NS_OK;
+}
+
+NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
+   nsURILoadCommand aCommand, const char* aWindowTarget, char ** aDesiredContentType, PRBool* aCanHandleContent)
+{
+   NS_ENSURE_ARG_POINTER(aCanHandleContent);
+   NS_ENSURE_ARG_POINTER(aDesiredContentType);
+  
+   // this implementation should be the same for all webshell's so no need to pass it up the chain...
+  // although I suspect if aWindowTarget has a value, we will need to pass it up the chain in order to find
+  // the desired window target.
+
+  // a webshell can handle the following types. Eventually I think we want to get this information
+  // from the registry and in addition, we want to
+  //    incoming Type                     Preferred type
+  //      text/html
+  //      text/xul
+  //      text/rdf
+  //      text/xml
+  //      text/css
+  //      image/gif
+  //      image/jpeg
+  //      image/png
+  //      image/tiff
+  //      application/http-index-format
+  //      message/rfc822                    text/xul 
+
+  if (aContentType)
+  {
+     // (1) list all content types we want to  be the primary handler for....
+     // and suggest a desired content type if appropriate...
+     if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
+       || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+       || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+       || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+       || nsCRT::strcasecmp(aContentType, "text/css") == 0
+       || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+       || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+       || nsCRT::strcasecmp(aContentType, "image/png") == 0
+       || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+       || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
+       *aCanHandleContent = PR_TRUE;
+     
+    if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+    {
+      *aCanHandleContent = PR_TRUE;
+      *aDesiredContentType = nsCRT::strdup("text/html");      
+    }
+  }
+  else
+    *aCanHandleContent = PR_FALSE;
+
+  // we may need to ask the plugin manager for this webshell if it can handle the content type too...
+  return NS_OK;
 }
 
 NS_IMETHODIMP

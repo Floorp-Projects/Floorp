@@ -209,6 +209,17 @@ ImageConsumer::SetLoadCookie(nsISupports * aLoadCookie)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+ImageConsumer::IsPreferred(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  return CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                          aDesiredContentType, aCanHandleContent);
+}
 
 NS_IMETHODIMP 
 ImageConsumer::CanHandleContent(const char * aContentType,
