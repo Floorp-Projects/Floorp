@@ -1,0 +1,35 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTri()"> 
+
+<html:h1>TriStateCheckbox Test 1</html:h1>
+
+<html:script>
+
+function setTri()
+{
+  var tsbox = document.getElementById("tristate");
+  tsbox.setAttribute("value", "2");
+}
+
+</html:script>
+
+<html:h3>
+This is a tri-state checkbox test. The first checkbox should only act like a
+normal two-state checkbox. The last one should behave like a tri-state.
+</html:h3>
+
+<html:hr/>
+
+<tristatecheckbox></tristatecheckbox>Dual state<html:br/>
+
+<tristatecheckbox id="tristate"></tristatecheckbox>Tri state baby!<html:br/>
+
+<html:button onclick="setTri()">Click Me To Set TriState</html:button>
+
+</window>
