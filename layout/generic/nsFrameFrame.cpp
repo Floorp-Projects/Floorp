@@ -550,8 +550,21 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Place and size the child
-  FinishReflowChild(firstChild, aPresContext, nsnull, 
+  FinishReflowChild(firstChild, aPresContext, nsnull,
                     kidMetrics, offset.x, offset.y, 0);
+
+  // Determine if we need to repaint our border
+  CheckInvalidateBorder(aPresContext, aDesiredSize, aReflowState);
+
+  {
+    // Invalidate the frame
+    nsRect frameRect;
+    GetRect(frameRect);
+    nsRect rect(0, 0, frameRect.width, frameRect.height);
+    if (!rect.IsEmpty()) {
+      Invalidate(aPresContext, rect, PR_FALSE);
+    }
+  }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
@@ -876,9 +889,9 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
                              PRUint32             aFlags)
 {
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x,
-  //aDirtyRect.y, aDirtyRect.width, aDirtyRect.height); if there is
-  //not web shell paint based on our background color, otherwise let
-  //the web shell paint the sub document
+  //aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  // if there is not web shell paint based on our background color, otherwise
+  // let the web shell paint the sub document
 
   // isPaginated is a temporary fix for Bug 75737 and this should all
   // be fixed correctly by Bug 75739

@@ -43,6 +43,8 @@ class nsAbsoluteFrame;
 class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
+struct nsHTMLReflowMetrics;
+struct nsHTMLReflowState;
 
 // Some macros for container classes to do sanity checking on
 // width/height/x/y values computed during reflow.
@@ -98,11 +100,23 @@ public:
                                     nsIFrame*       aChildFrame,
                                     nsIFrame*       aOldParentFrame,
                                     nsIFrame*       aNewParentFrame);
-  
+
   static nsresult ReparentFrameViewList(nsIPresContext* aPresContext,
                                         nsIFrame*       aChildFrameList,
                                         nsIFrame*       aOldParentFrame,
                                         nsIFrame*       aNewParentFrame);
+
+  /**
+   * Helper method to invalidate portions of a standard container frame if the
+   * reflow state indicates that they have changed (specifically border and
+   * padding).
+   * @param aPresContext the presentation context
+   * @param aDesiredSize the new size of the frame
+   * @param aReflowState the reflow that was just done on this frame
+   */
+  void CheckInvalidateBorder(nsIPresContext*          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState);
 
 protected:
   virtual PRIntn GetSkipSides() const = 0;
