@@ -161,6 +161,16 @@
       <field name="mContextTab">
         null
       </field>
+      <field name="_keyEventHandler" readonly="true">
+      <![CDATA[({
+        tabbrowser: this,
+        handleEvent: function handleEvent(aEvent) {
+          if (aEvent.ctrlKey && aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
+            this.tabbrowser.mTabBox.handleCtrlPageUpDown)
+          this.tabbrowser.removeCurrentTab();
+        }
+      })]]>
+      </field>
 
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
@@ -1533,6 +1543,7 @@
         <![CDATA[
           this.mCurrentBrowser = this.mPanelContainer.firstChild;
           this.mCurrentTab = this.mTabContainer.firstChild;
+          document.addEventListener("keypress", this._keyEventHandler, false);
           this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
         ]]>
       </constructor>
@@ -1546,6 +1557,7 @@
             this.mTabListeners[i] = null;
             this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
           }
+          document.removeEventListener("keypress", this._keyEventHandler, false);
         ]]>
       </destructor>
     </implementation>
@@ -1554,13 +1566,6 @@
       <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
 
       <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
-
-      <handler event="keypress" modifiers="control" keycode="VK_F4">
-        <![CDATA[
-          if (this.mTabBox.handleCtrlPageUpDown)
-            this.removeCurrentTab();
-        ]]>
-      </handler>
 
       <handler event="DOMWindowClose">
         <![CDATA[
