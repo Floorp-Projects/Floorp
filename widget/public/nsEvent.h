@@ -79,5 +79,6 @@ struct nsMenuEvent;
 
 struct nsTextEventReply;
 struct nsReconversionEventReply;
+struct nsQueryCaretRectEventReply;
 
 #endif // nsEvent_h__

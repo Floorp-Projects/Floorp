@@ -146,6 +146,7 @@ public:
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aReconvertionEvent);
+  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aQueryCaretRectEvent);
 /*END implementations of textevent handler interface*/
 
 protected:

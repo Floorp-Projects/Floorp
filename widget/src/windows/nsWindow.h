@@ -452,6 +452,7 @@ protected:
   BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);
   BOOL                    OnIMEStartComposition();
   BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
+  BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
   void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode, nsCString* aStrAnsi);
 
@@ -508,6 +509,7 @@ protected:
 
   // For describing composing frame
   static RECT*      sIMECompCharPos;
+  static PRInt32    sIMECaretHeight;
 
   nsSize        mLastSize;
   static        nsWindow* gCurrentWindow;

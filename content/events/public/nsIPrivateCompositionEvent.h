@@ -41,18 +41,19 @@
 #include "nsEvent.h"
 #include "nsISupports.h"
 
-// {ECF6BEF1-5F0C-11d3-9EB3-0060089FE59B}
+// {889792DC-22D8-4d1a-AC3D-58AD7DEBA17B}
 #define NS_IPRIVATECOMPOSITIONEVENT_IID	\
-{ 0xecf6bef1, 0x5f0c, 0x11d3, \
-{ 0x9e, 0xb3, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
+{ 0x889792dc, 0x22d8, 0x4d1a, \
+{ 0xac, 0x3d, 0x58, 0xad, 0x7d, 0xeb, 0xa1, 0x7b }}
 
 class nsIPrivateCompositionEvent : public nsISupports {
 
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
 
-	NS_IMETHOD GetCompositionReply(struct nsTextEventReply** aReply) = 0;
-    NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply) = 0;
+  NS_IMETHOD GetCompositionReply(struct nsTextEventReply** aReply) = 0;
+  NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply) = 0;
+  NS_IMETHOD GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply) = 0;
 };
 
 #endif // nsIPrivateCompositionEvent_h__

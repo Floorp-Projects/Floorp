@@ -929,7 +929,7 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
   var editor = GetCurrentEditor();
   try {
     var imeEditor = editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
-    imeEditor.ForceCompositionEnd();
+    imeEditor.forceCompositionEnd();
     } catch (e) {}
 
   var isLocalFile = false;

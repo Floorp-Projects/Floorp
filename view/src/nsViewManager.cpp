@@ -2174,6 +2174,12 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width,t2p);
             ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height,t2p);
           }
+          if(aEvent->message==NS_QUERYCARETRECT) {
+            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.x=NSTwipsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.x,t2p);
+            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.y=NSTwipsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.y,t2p);
+            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.width=NSTwipsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.width,t2p);
+            ((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.height=NSTwipsToIntPixels(((nsQueryCaretRectEvent*)aEvent)->theReply.mCaretRect.height,t2p);
+          }
         }
     
         break;
