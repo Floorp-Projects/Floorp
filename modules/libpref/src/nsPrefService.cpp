@@ -94,16 +94,11 @@ static nsIJSRuntimeService* gJSRuntimeService = nsnull; // owning reference
 nsPrefService::nsPrefService()
 : mCurrentFile(nsnull),
   mErrorOpeningUserPrefs(PR_FALSE)
-{
-  nsPrefBranch *rootBranch;
-
-  rootBranch = new nsPrefBranch("", PR_FALSE); 
-  mRootBranch = (nsIPrefBranch *)rootBranch;
-  
 #if MOZ_PROFILESHARING
-  mCurrentSharedFile = nsnull;
-  mErrorOpeningSharedUserPrefs = PR_FALSE;
+  , mErrorOpeningSharedUserPrefs(PR_FALSE)
+  , mCurrentSharedFile(nsnull)
 #endif
+{
 }
 
 nsPrefService::~nsPrefService()
@@ -142,6 +137,12 @@ NS_INTERFACE_MAP_END
 
 nsresult nsPrefService::Init()
 {
+  nsPrefBranch *rootBranch = new nsPrefBranch("", PR_FALSE); 
+  if (!rootBranch)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mRootBranch = (nsIPrefBranch *)rootBranch;
+  
   nsXPIDLCString lockFileName;
   nsresult rv;
 
@@ -264,8 +265,10 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
   if ((nsnull != aPrefRoot) && (*aPrefRoot != '\0')) {
     // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
     nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, PR_FALSE);
+    if (!prefBranch)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = prefBranch->QueryInterface(NS_GET_IID(nsIPrefBranch), (void **)_retval);
+    rv = CallQueryInterface(prefBranch, _retval);
   } else {
     // special case caching the default root
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mRootBranch, &rv);
@@ -283,8 +286,10 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 
   // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
   nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, PR_TRUE);
+  if (!prefBranch)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = prefBranch->QueryInterface(NS_GET_IID(nsIPrefBranch), (void **)_retval);
+  rv = CallQueryInterface(prefBranch, _retval);
   return rv;
 }
 
