@@ -45,7 +45,6 @@
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 
 // XXX for IsEmptyLine
 #include "nsTextFragment.h"
@@ -86,6 +85,10 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 //----------------------------------------------------------------------
 
 // Debugging support code
+
+#ifdef DEBUG
+static PRBool gShowDirtyLines = PR_FALSE;
+#endif
 
 #ifdef NOISY_INCREMENTAL_REFLOW
 static PRInt32 gNoiseIndent;
@@ -926,6 +929,9 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
+  if (nsnull != mNextSibling) {
+    fprintf(out, " next=%p", mNextSibling);
+  }
 
   // Output the flow linkage
   if (nsnull != mPrevInFlow) {
@@ -943,7 +949,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mFlags) {
     fprintf(out, " [flags=%x]", mFlags);
   }
-  fputs("<\n", out);
+  fprintf(out, " sc=%p<\n", mStyleContext);
   aIndent++;
 
   // Output the lines
@@ -1128,6 +1134,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       case nsIReflowCommand::FrameAppended:
       case nsIReflowCommand::FrameInserted:
       case nsIReflowCommand::FrameRemoved:
+        NS_NOTREACHED("invalid reflow command");
         break;
       case nsIReflowCommand::StyleChanged:
         rv = PrepareStyleChangedReflow(state);
@@ -1188,6 +1195,16 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
+
+#ifdef DEBUG
+  if (gShowDirtyLines && (eReflowReason_Resize == aReflowState.reason)) {
+    nsLineBox* line = mLines;
+    while (nsnull != line) {
+      line->ClearWasDirty();
+      line = line->mNext;
+    }
+  }
+#endif
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
@@ -1588,8 +1605,14 @@ nsresult
 nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
 {
   UpdateBulletPosition();
-  // XXX temporary
-  return PrepareResizeReflow(aState);
+
+  // Mark everything dirty
+  nsLineBox* line = mLines;
+  while (nsnull != line) {
+    line->MarkDirty();
+    line = line->mNext;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1907,6 +1930,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          PRBool* aKeepReflowGoing)
 {
   nsresult rv = NS_OK;
+
+#ifdef DEBUG
+  aLine->MarkWasDirty();
+#endif
 
   // If the line is empty then first pull a frame into it so that we
   // know what kind of line it is (block or inline).
@@ -2655,6 +2682,10 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                                 availWidth, availHeight,
                                 impactedByFloaters,
                                 PR_FALSE /*XXX isTopOfPage*/);
+    if ((0 == lineLayout->GetLineNumber()) &&
+        (NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState)) {
+      lineLayout->SetFirstLetterStyleOK(PR_TRUE);
+    }
 
     // Reflow the frames that are already on the line first
     PRUint8 lineReflowStatus = LINE_REFLOW_OK;
@@ -2773,6 +2804,12 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   // If it's currently ok to be reflowing in first-letter style then
   // we must be about to reflow a frame that has first-letter style.
   PRBool reflowingFirstLetter = aState.mLineLayout->GetFirstLetterStyleOK();
+#ifdef NOISY_FIRST_LETTER
+  ListTag(stdout);
+  printf(": reflowing ");
+  nsFrame::ListTag(stdout, aFrame);
+  printf(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
+#endif
 
   // Reflow the inline frame
   nsLineLayout* lineLayout = aState.mLineLayout;
@@ -2868,14 +2905,25 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       return rv;
     }
 
-    PRBool needSplit = PR_FALSE;
-    if (!reflowingFirstLetter) {
-      needSplit = PR_TRUE;
-    }
-    else {
+    // If we are reflowing the first letter frame then don't split the
+    // line and don't stop the line reflow...
+    PRBool splitLine = !reflowingFirstLetter;
+    if (reflowingFirstLetter) {
+      if (aLine->IsFirstLine()) {
+        splitLine = PR_TRUE;
+      }
+      else {
+        nsIAtom* frameType;
+        if (NS_SUCCEEDED(aFrame->GetFrameType(&frameType)) && frameType) {
+          if (frameType == nsLayoutAtoms::inlineFrame) {
+            splitLine = PR_TRUE;
+          }
+          NS_RELEASE(frameType);
+        }
+      }
     }
 
-    if (needSplit) {
+    if (splitLine) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
       aFrame->GetNextSibling(&aFrame);
@@ -2883,6 +2931,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FAILED(rv)) {
         return rv;
       }
+
       // Mark next line dirty in case SplitLine didn't end up
       // pushing any frames.
       nsLineBox* next = aLine->mNext;
@@ -3400,6 +3449,59 @@ nsBlockFrame::LastChild()
   return nsnull;
 }
 
+#if 0
+nsresult
+nsBlockFrame::WrapFrameInFirstLetterFrame(nsIPresContext* aPresContext)
+{
+  nsLineBox* line = mLines;
+  if (!line || line->IsBlock()) {
+    return NS_OK;
+  }
+  NS_ASSERTION(line->mChildCount > 0, "bad line count");
+
+  nsresult rv = NS_OK;
+  if (line->IsFirstLine()) {
+    // Delegate wrapping to the line frame
+  }
+  else if (line->mFirstChild) {
+    // Examine first frame on the line. If its text, then 
+    nsIFrame* frame = line->mFirstChild;
+    nsIAtom* frameType;
+    frame->GetFrameType(&frameType);
+    if (frameType) {
+      if (frameType == nsLayoutAtoms::textFrame) {
+        // Time to rap. badda boom. :-)
+        nsIFrame* newFrame;
+        rv = NS_NewFirstLetterFrame(&newFrame);
+        if (NS_SUCCEEDED(rv)) {
+          // Give text frame to the new frame and then splice in the
+          // first-letter frame in its place.
+          nsIFrame* nextSib;
+          frame->GetNextSibling(&nextSib);
+          frame->SetNextSibling(nsnull);
+          line->mFirstChild = newFrame;
+          line->MarkDirty();
+
+          // Initialize the first-letter-frame.
+          rv = newFrame->Init(*aPresContext, mContent, this,
+                              GetFirstLetterStyle(aPresContext), nsnull);
+          newFrame->SetInitialChildList(*aPresContext, nsnull, frame);
+
+          // See if the first-letter-frame should be floating, and if
+          // it is then create a placeholder for it.
+        }
+      }
+      else if (frameType == nsLayoutAtoms::inlineFrame) {
+        // Delegate wrapping to the inline frame
+      }
+      NS_RELEASE(frameType);
+    }
+  }
+
+  return rv;
+}
+#endif
+
 nsresult
 nsBlockFrame::WrapFramesInFirstLineFrame(nsIPresContext* aPresContext)
 {
@@ -3738,6 +3840,13 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     // We just added one or more frame(s) to the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
+#if 0
+  if ((NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState) &&
+      (nsnull != mLines) && !mLines->IsBlock()) {
+    // We just added one or more frame(s) to the first line.
+    WrapFrameInFirstLetterFrame(aPresContext);
+  }
+#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
@@ -4124,6 +4233,13 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     // removed a block that preceeded the first line.
     WrapFramesInFirstLineFrame(aPresContext);
   }
+#if 0
+  if ((NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState) &&
+      (nsnull != mLines) && !mLines->IsBlock()) {
+    // We just added one or more frame(s) to the first line.
+    WrapFrameInFirstLetterFrame(aPresContext);
+  }
+#endif
 
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
@@ -4913,6 +5029,14 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
                    aWhichLayer);
         kid->GetNextSibling(&kid);
       }
+#ifdef DEBUG
+      if (gShowDirtyLines) {
+        if (line->WasDirty()) {
+          aRenderingContext.SetColor(NS_RGB(128, 255, 128));
+          aRenderingContext.DrawRect(line->mBounds);
+        }
+      }
+#endif
     }
 #ifdef NOISY_DAMAGE_REPAIR
     else {
@@ -5055,6 +5179,16 @@ nsBlockFrame::Init(nsIPresContext&  aPresContext,
 }
 
 nsIStyleContext*
+nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
+{
+  nsIStyleContext* fls;
+  aPresContext->ProbePseudoStyleContextFor(mContent,
+                                           nsHTMLAtoms::firstLetterPseudo,
+                                           mStyleContext, PR_FALSE, &fls);
+  return fls;
+}
+
+nsIStyleContext*
 nsBlockFrame::GetFirstLineStyle(nsIPresContext* aPresContext)
 {
   nsIStyleContext* fls;
@@ -5077,20 +5211,29 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
   else {
 
     // Lookup up the two pseudo style contexts
-    nsIStyleContext* firstLineStyle = nsnull;
     if (nsnull == mPrevInFlow) {
-      firstLineStyle = GetFirstLineStyle(&aPresContext);
+      nsIStyleContext* firstLetterStyle = GetFirstLetterStyle(&aPresContext);
+      if (nsnull != firstLetterStyle) {
+        mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
+#ifdef NOISY_FIRST_LETTER
+        ListTag(stdout);
+        printf(": first-letter style found\n");
+#endif
+        NS_RELEASE(firstLetterStyle);
+      }
+
+      nsIStyleContext* firstLineStyle = GetFirstLineStyle(&aPresContext);
       if (nsnull != firstLineStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LINE_STYLE;
 #ifdef NOISY_FIRST_LINE
         ListTag(stdout);
         printf(": first-line style found\n");
 #endif
+        NS_RELEASE(firstLineStyle);
       }
     }
 
     rv = AddFrames(&aPresContext, aChildList, nsnull);
-    NS_IF_RELEASE(firstLineStyle);
     if (NS_FAILED(rv)) {
       return rv;
     }
