@@ -193,7 +193,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kPixmapUpdate:
-    if ((mImage == nsnull) && (nsnull != aImage)) {
+    if ((nsnull == mImage) && (nsnull != aImage)) {
       mImage = aImage;
       NS_ADDREF(aImage);
     }
@@ -210,10 +210,20 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kImageComplete:
-    // We expect to have gotten at least one pixmap update...
+    // We expect to have gotten at least one pixmap update.
+#if 0
+    // XXX Not true. Damn image library...
     NS_ASSERTION((nsnull != mImage) &&
                  (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY),
                  "unexpected notification order");
+#else
+    if ((nsnull == mImage) && (nsnull != aImage)) {
+      mImage = aImage;
+      NS_ADDREF(aImage);
+      mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
+      DamageRepairFrame(nsnull);
+    }
+#endif
     break;
 
   case nsImageNotification_kFrameComplete:
