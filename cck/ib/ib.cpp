@@ -759,12 +759,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 		fclose(f);
 	}
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||");
 
 	// Put all the extracted files back into their new XPI homes
 	ReplaceXPIFiles();
 
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||");
 
 	// Copy remaining default installer files into config
 	// preserving any existing files that we created already
@@ -815,19 +815,19 @@ int StartIB(CString parms, WIDGET *curWidget)
 	}
 
 	// Didn't work...
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||");
 
 	invisible();
 	
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 
 	AddThirdParty();
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
 
 	ReplaceINIFile();
 
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 
 	SetCurrentDirectory(olddir);
 	CString TargetDir = GetGlobal("Root");
@@ -835,7 +835,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString MozBrowser = GetBrowser();
 //	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||");
+	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	newprog.DestroyWindow();
 	return TRUE;
 
