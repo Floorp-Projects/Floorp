@@ -289,14 +289,13 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
   }
   if (!value.IsEmpty()) {
     if (!mChild) {      
-      nsIContent* content;
+      nsCOMPtr<nsITextContent> content;
 
-      result = NS_NewTextNode(&content);
+      result = NS_NewTextNode(getter_AddRefs(content));
       if (NS_OK != result) {
         return result;
       }
       result = content->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&mChild);
-      NS_RELEASE(content);
     }
     mChild->SetData(value);
     result = mChild->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
