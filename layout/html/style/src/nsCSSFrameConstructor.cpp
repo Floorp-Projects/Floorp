@@ -3368,10 +3368,17 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           
           shell->GetPrimaryFrameFor(parentItem, &prevSibling);
           prevSibling->GetParent(&parentFrame);
+          // XXX: Optimize for the lazy frame instantiation case. Need to bail
+          // if our frame isn't visible
         }
-
-        // XXX: Optimize for the lazy frame instantiation case. Need to bail
-        // if our frame isn't visible
+        else
+        {
+          // No previous or next sibling so treat this like an appended frame.
+          // XXX This won't always be true if there's auto-generated before/after
+          // content
+          isAppend = PR_TRUE;
+          shell->GetPrimaryFrameFor(aContainer, &parentFrame);
+        }      
       }
       else {
 #endif // INCLUDE_XUL
