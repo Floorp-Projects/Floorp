@@ -724,6 +724,7 @@
                     <observes element="Browser:OnStopBinding" attribute="url" onchange="onStopBinding()"/>			
                     -->
                 </html:div>
+Build ID: 00000000
           </html:td>
           
           <html:td id="statusbar-indicator" class="statusbar-indicator" style="display:none;background-color:yellow;font-family:sans-serif;font-size:8pt;border-top:2px solid yellow;">
