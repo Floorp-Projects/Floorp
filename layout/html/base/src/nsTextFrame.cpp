@@ -2036,7 +2036,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
         //reusing wordBufMem
         PRInt32 i;
         for (i = 0;i <= mContentLength; i ++){
-          if (ip[i] == aContentOffset){ //reverse mapping
+          if (ip[i] >= aContentOffset){ //reverse mapping
               aContentOffset = i + mContentOffset;
               break;
           }
