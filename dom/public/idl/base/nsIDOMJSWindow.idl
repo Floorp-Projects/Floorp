@@ -53,6 +53,14 @@ interface nsIDOMJSWindow : nsISupports
   long                      setTimeout();
   long                      setInterval();
 
+  /**
+   * These methods take one optional argument that's the timer ID to
+   * clear. Often in existing code these methods are passed undefined,
+   * which is a nop so we need to support that as well.
+   */
+  void                      clearTimeout();
+  void                      clearInterval();
+
   // This method is here for backwards compatibility with 4.x only,
   // it's implementation is a no-op
   void                      setResizable(in boolean resizable);
