@@ -16,6 +16,7 @@ PRIVATE_EXPORTS = \
 	nsLayer.h \
 	nsLayerCollection.h \
     nsCoreCIID.h \
+    nsCalendarUser.h \
 	$(NULL)
 
 MODULE = trex

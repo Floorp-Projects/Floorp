@@ -400,11 +400,11 @@ nsIImageRequest * nsXPFCCanvas :: RequestImage(nsString aUrl)
 
     nsIImageRequest * request ;
 
-    nscolor bgcolor = NS_RGB(0, 0, 0);
+    //nscolor bgcolor = NS_RGB(0, 0, 0);
 
     request = mImageGroup->GetImage(url,
                                    (nsIImageRequestObserver *)this,
-                                   &bgcolor,
+                                   nsnull,//&bgcolor,
                                    mBounds.width,
                                    mBounds.height, 
                                    0);

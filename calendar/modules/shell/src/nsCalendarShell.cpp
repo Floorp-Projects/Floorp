@@ -50,6 +50,7 @@
 
 #include "nsCoreCIID.h"
 #include "nsLayer.h"
+#include "nsCalUser.h"
 
 /* for CAPI to work in general form */
 #include "nsCapiCallbackReader.h"

@@ -13,6 +13,7 @@ DEPTH = ../../../..
 EXPORTS = \
 	nsILayer.h \
 	nsILayerCollection.h \
+    nsICalendarUser.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
