@@ -446,17 +446,17 @@ AC_CHECK_LIB(Xmu, XmuLookupString,,
 res=`echo :$MOZ_FE | grep -c " x"`
 if [ test $res != 0 ]; then
     if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
-	AC_CHECK_LIB(Xpm, XpmWriteFileFromImage,,
-	    [MISSING_X="$MISSING_X -lXpm"], -lX11)
+	AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, FE_X_LIBS="-lXpm $FE_X_LIBS", 
+	    [MISSING_MOTIF="-lXpm $MISSING_MOTIF"], -lX11)
     fi
     if [ test "$MOTIF_VERSION" = "2.1" ]; then
 	AC_CHECK_LIB(Xp, XpGetPrinterList, 
 	    FE_X_LIBS="-lXp $FE_X_LIBS",
-	    [MISSING_X="$MISSING_X -lXp"], -lX11)
+	    [MISSING_MOTIF="-lXp $MISSING_MOTIF"], -lX11)
     fi
 
-    if [ test "$MOTIF_STATIC_LIB" = "unknown" -a "$MOTIF_DYNAMIC_LIB" = "unknown" ]; then
-	AC_ERROR("Cannot find neither dynamic nor static motif libraries")
+    if [ test "$MOTIF_STATIC_LIB" = "unknown" && test "$MOTIF_DYNAMIC_LIB" = "unknown" ]; then
+	AC_ERROR("Cannot find neither dynamic nor static motif libraries.")
     fi
 
     # Get rid of offending error values
@@ -472,17 +472,27 @@ if [ test $res != 0 ]; then
 	MOTIF_STATIC_FLAGS=
     fi
 
+    if test "$MOTIF_INCLUDE_DIR" = "unknown"; then
+	MOTIF_INCLUDE_DIR=
+    fi
+
     AC_ARG_WITH(static-motif,
     [  --with-static-motif     link motif statically if possible],
 	sysstaticmotif=$withval)
 
     if [ test "$sysstaticmotif" != "yes" ]; then
-    	AC_CHECK_LIB(Xm, XmStringCreate, FE_X_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $FE_X_LIBS",
-	    [MISSING_MOTIF=1], $MOTIF_DYNAMIC_PATHS $FE_X_LIBS -lX11)
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    FE_X_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $FE_X_LIBS",
+	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
+	    $MOTIF_DYNAMIC_PATHS $FE_X_LIBS -lX11)
     else
-    	AC_CHECK_LIB(Xm, XmStringCreate, FE_X_LIBS="$MOTIF_STATIC_FLAGS $FE_X_LIBS",
-	    [MISSING_MOTIF=1], $FE_X_LIBS -lX11)
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    FE_X_LIBS="$MOTIF_STATIC_FLAGS $FE_X_LIBS",
+	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
+	    $FE_X_LIBS -lX11)
     fi
+
+    FE_X_CFLAGS="$MOTIF_INCLUDES"
 fi
 
 res=`echo :$MOZ_FE | grep -c " qt"`
@@ -589,11 +599,16 @@ AC_CHECK_LIB(plds21, PL_VectorAdd, NSPR_LIBS="-lplds21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
 LDFLAGS=$_SAVE_LDFLAGS
 
+if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
+    NSPR_CFLAGS="-I${NSPR_DIR}/include"
+    NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
+fi
+
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
 AC_SUBST(SYSTEM_ZLIB)
 
-AC_SUBST(NSPR_DIR)
+AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
 AC_SUBST(CFLAGS)
@@ -602,13 +617,13 @@ AC_SUBST(LIBS)
 
 dnl Check for missing components
 if [ test "$MISSING_X" != "" ]; then
-   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_X.]);
+   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_X ]);
 fi
 
 res=`echo :$MOZ_FE | grep -c " x"`
 if [ test $res != 0 ]; then
     if [ test "$MISSING_MOTIF" != "" ]; then 
-	AC_MSG_ERROR([ Could not find standard motif libraries.]);
+	AC_MSG_ERROR([ Could not the following libraries needed for xfe: $MISSING_MOTIF ]);
     else
 	FE_X_MAKEFILES="
 cmd/xfe/Makefile
