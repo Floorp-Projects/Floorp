@@ -191,14 +191,6 @@ function ComposeUnload(calledFromExit)
 	//...and what's about the editor appcore, how can we release it?
 }
 
-function ComposeExit()
-{
-	dump("\nComposeExit from XUL\n");
-
-	//editor appcore knows how to shutdown the application, just use it...
-	window.editorShell.Exit();
-}
-
 function SetDocumentCharacterSet(aCharset)
 {
 	dump("SetDocumentCharacterSet Callback!\n");
