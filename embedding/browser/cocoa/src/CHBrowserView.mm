@@ -570,9 +570,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     nsAutoString urlStr;
     location->GetHref(urlStr);
 #warning fix me
-    nsCAutoString urlCStr; urlCStr.AssignWithConversion(urlStr);
     nsCOMPtr<nsIURI> url;
-    nsresult rv = NS_NewURI(getter_AddRefs(url), urlCStr.get());
+    nsresult rv = NS_NewURI(getter_AddRefs(url), urlStr);
     if (NS_FAILED(rv))
         return;
     
