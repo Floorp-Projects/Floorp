@@ -19,6 +19,8 @@ DEPTH=../..
 
 include $(DEPTH)/config/config.mk
 
+CFLAGS += -DUSE_NSREG 
+
 CPPSRCS = \
 	RegFactory.cpp \
 	TestFactory.cpp	\
@@ -27,8 +29,6 @@ CPPSRCS = \
 INCLUDES=-I../src -I$(DIST)/include
 
 DIRS = dynamic 
-
-OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
         $(DIST)/bin/libreg.$(DLL_SUFFIX)	\
@@ -44,10 +44,6 @@ NON_DIRS = $(PROGS)
 TARGETS = $(NON_DIRS)
 
 include $(DEPTH)/config/rules.mk
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -DUSE_NSREG -c $*.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
