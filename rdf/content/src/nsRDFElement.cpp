@@ -304,7 +304,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
         NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-        kIdAtom        = NS_NewAtom("ID");
+        kIdAtom        = NS_NewAtom("id");
         kContainerAtom = NS_NewAtom("container");
 
         rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
@@ -1440,94 +1440,125 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     nsresult rv;
+
+    // If they're changing the identity of this object, then we need to re-hash 
+    // it into the document's resource-to-element map.
+    //
+    // XXX Changing the object's identity is a big deal: we actually need to
+    // toss the kids and recreate them. We don't do that here.
+    if (mDocument && aName == kIdAtom) { // XXX regardless of namespace
+      nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
+      NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
+      if (rdfDoc) {
+        nsCOMPtr<nsIRDFResource> resource;
+        if (NS_SUCCEEDED(rv = GetResource(getter_AddRefs(resource)))) {
+          if (NS_FAILED(rv = rdfDoc->RemoveElementForResource(resource, this))) {
+            NS_ERROR("unable to remove element from map");
+            return rv;
+          }
+        }
+      }
+    }
+
+    // XXX need to check if they're changing an event handler: if so, then we need
+    // to unhook the old one.
+    
     nsGenericAttribute* attr;
     PRBool successful = PR_FALSE;
     PRInt32 index;
     PRInt32 count = mAttributes->Count();
-    for (index = 0; index < count; index++) {
+    while (index < count) {
         attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
-        if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName)) {
-            attr->mValue = aValue;
-            rv = NS_OK;
-            successful = PR_TRUE;
+        if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName))
             break;
-        }
     }
-    
-    if (index >= count) { // didn't find it
+
+    if (index < count) {
+        attr->mValue = aValue;
+    }
+    else { // didn't find it
         attr = new nsGenericAttribute(aNameSpaceID, aName, aValue);
-        if (nsnull != attr) {
-            mAttributes->AppendElement(attr);
-            rv = NS_OK;
-            successful = PR_TRUE;
-        }
+        if (! attr)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        mAttributes->AppendElement(attr);
     }
 
-    // XUL Only. Check for event handlers and notify broadcast listeners.
-    if (successful) {
-        
-      
-        // Check for event handlers
-        nsString attributeName;
-        aName->ToString(attributeName);
+    // XXX Changing the object's identity is a big deal: we actually need to
+    // toss the kids and recreate them. We don't do that here.
+    if (mDocument && aName == kIdAtom) { // XXX regardless of namespace
+      nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
+      NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
+      if (rdfDoc) {
+        nsCOMPtr<nsIRDFResource> resource;
+        if (NS_SUCCEEDED(rv = GetResource(getter_AddRefs(resource)))) {
+          if (NS_FAILED(rv = rdfDoc->AddElementForResource(resource, this))) {
+            NS_ERROR("unable to remove element from map");
+            return rv;
+          }
+        }
+      }
+    }
 
-        if (attributeName.EqualsIgnoreCase("onclick") ||
-            attributeName.EqualsIgnoreCase("ondblclick") ||
-            attributeName.EqualsIgnoreCase("onmousedown") ||
-            attributeName.EqualsIgnoreCase("onmouseup") ||
-            attributeName.EqualsIgnoreCase("onmouseover") ||
-            attributeName.EqualsIgnoreCase("onmouseout"))
-            AddScriptEventListener(aName, aValue, kIDOMMouseListenerIID);
-        else if (attributeName.EqualsIgnoreCase("onkeydown") ||
-                 attributeName.EqualsIgnoreCase("onkeyup") ||
-                 attributeName.EqualsIgnoreCase("onkeypress"))
-            AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
-        else if (attributeName.EqualsIgnoreCase("onmousemove"))
-            AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
-        else if (attributeName.EqualsIgnoreCase("onload"))
-            AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
-        else if (attributeName.EqualsIgnoreCase("onunload") ||
-                 attributeName.EqualsIgnoreCase("onabort") ||
-                 attributeName.EqualsIgnoreCase("onerror"))
-            AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
-        else if (attributeName.EqualsIgnoreCase("onfocus") ||
-                 attributeName.EqualsIgnoreCase("onblur"))
-            AddScriptEventListener(aName, aValue, kIDOMFocusListenerIID);
-        else if (attributeName.EqualsIgnoreCase("onsubmit") ||
-                 attributeName.EqualsIgnoreCase("onreset") ||
-                 attributeName.EqualsIgnoreCase("onchange"))
-            AddScriptEventListener(aName, aValue, kIDOMFormListenerIID);
-        else if (attributeName.EqualsIgnoreCase("onpaint"))
-            AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
+    // Check for event handlers
+    nsString attributeName;
+    aName->ToString(attributeName);
 
-        // Notify any broadcasters that are listening to this node.
-        count = mBroadcastListeners.Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
-            nsString aString;
-            aName->ToString(aString);
-            if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
-                // Set the attribute in the broadcast listener.
-                nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
-                if (contentNode) {
-                    
-                    // If the namespace of the attribute and the namespace of the
-                    // tag are identical, then use the namespace of the listener's tag.
-                    // This allows you to do things like set xul:disabled on a xul tag
-                    // and have an html tag be annotated with an html:disabled instead.
-                    
-                    PRInt32 thisNameSpaceID, listenerNameSpaceID;
-                    GetNameSpaceID(thisNameSpaceID);
-                    contentNode->GetNameSpaceID(listenerNameSpaceID);
+    if (attributeName.EqualsIgnoreCase("onclick") ||
+        attributeName.EqualsIgnoreCase("ondblclick") ||
+        attributeName.EqualsIgnoreCase("onmousedown") ||
+        attributeName.EqualsIgnoreCase("onmouseup") ||
+        attributeName.EqualsIgnoreCase("onmouseover") ||
+        attributeName.EqualsIgnoreCase("onmouseout"))
+        AddScriptEventListener(aName, aValue, kIDOMMouseListenerIID);
+    else if (attributeName.EqualsIgnoreCase("onkeydown") ||
+             attributeName.EqualsIgnoreCase("onkeyup") ||
+             attributeName.EqualsIgnoreCase("onkeypress"))
+        AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
+    else if (attributeName.EqualsIgnoreCase("onmousemove"))
+        AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
+    else if (attributeName.EqualsIgnoreCase("onload"))
+        AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
+    else if (attributeName.EqualsIgnoreCase("onunload") ||
+             attributeName.EqualsIgnoreCase("onabort") ||
+             attributeName.EqualsIgnoreCase("onerror"))
+        AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
+    else if (attributeName.EqualsIgnoreCase("onfocus") ||
+             attributeName.EqualsIgnoreCase("onblur"))
+        AddScriptEventListener(aName, aValue, kIDOMFocusListenerIID);
+    else if (attributeName.EqualsIgnoreCase("onsubmit") ||
+             attributeName.EqualsIgnoreCase("onreset") ||
+             attributeName.EqualsIgnoreCase("onchange"))
+        AddScriptEventListener(aName, aValue, kIDOMFormListenerIID);
+    else if (attributeName.EqualsIgnoreCase("onpaint"))
+        AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
 
-                    if (aNameSpaceID == thisNameSpaceID)
-                        contentNode->SetAttribute(listenerNameSpaceID, aName, aValue, aNotify);
-                    else contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
-                }
+    // Notify any broadcasters that are listening to this node.
+    count = mBroadcastListeners.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+        XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+        nsString aString;
+        aName->ToString(aString);
+        if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
+            // Set the attribute in the broadcast listener.
+            nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
+            if (contentNode) {
+                
+                // If the namespace of the attribute and the namespace of the
+                // tag are identical, then use the namespace of the listener's tag.
+                // This allows you to do things like set xul:disabled on a xul tag
+                // and have an html tag be annotated with an html:disabled instead.
+                
+                PRInt32 thisNameSpaceID, listenerNameSpaceID;
+                GetNameSpaceID(thisNameSpaceID);
+                contentNode->GetNameSpaceID(listenerNameSpaceID);
+
+                if (aNameSpaceID == thisNameSpaceID)
+                    contentNode->SetAttribute(listenerNameSpaceID, aName, aValue, aNotify);
+                else contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
             }
         }
     }
-    // End XUL Only Code
 
     if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
         mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);

@@ -108,7 +108,7 @@ RDFHTMLBuilderImpl::RDFHTMLBuilderImpl(void)
 	NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
-        kIdAtom = NS_NewAtom("ID");
+        kIdAtom = NS_NewAtom("id");
     }
 }
 
