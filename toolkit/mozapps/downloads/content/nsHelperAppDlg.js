@@ -444,9 +444,10 @@ nsUnknownContentTypeDialog.prototype = {
 
       // We don't let users open .exe files or random binary data directly 
       // from the browser at the moment because of security concerns. 
+      var openWithDefaultOK = this.openWithDefaultOK();
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
-      if (mimeType == "application/octet-stream" ||
-          mimeType == "application/x-msdownload") {
+      if ((mimeType == "application/octet-stream" ||
+           mimeType == "application/x-msdownload") && !openWithDefaultOK) {
         this.dialogElement("open").disabled = true;
         var openHandler = this.dialogElement("openHandler");
         openHandler.disabled = true;
@@ -486,7 +487,7 @@ nsUnknownContentTypeDialog.prototype = {
       }
       
       // If we don't have a "default app" then disable that choice.
-      if (!this.openWithDefaultOK()) {
+      if (!openWithDefaultOK) {
         var useDefault = this.dialogElement("defaultHandler");
         var isSelected = useDefault.selected;
         
