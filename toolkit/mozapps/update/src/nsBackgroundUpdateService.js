@@ -263,19 +263,19 @@ nsUpdateService.prototype = {
   get appUpdateVersion()
   {
     return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEVERSION, 
-                                      Components.interfaces.nsISupportsString).data;
+                                      Components.interfaces.nsIPrefLocalizedString).data;
   },
   
   get appUpdateDescription()
   {
     return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, 
-                                      Components.interfaces.nsISupportsString).data;
+                                      Components.interfaces.nsIPrefLocalizedString).data;
   },
   
   get appUpdateURL()
   {
     return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEURL, 
-                                      Components.interfaces.nsISupportsString).data;
+                                      Components.interfaces.nsIPrefLocalizedString).data;
   },
   
   /////////////////////////////////////////////////////////////////////////////

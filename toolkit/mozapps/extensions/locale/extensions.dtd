@@ -43,3 +43,12 @@
 <!ENTITY extensionItem.toBeEnabled.label      "This item will be enabled after you restart &brandShortName;.">
 <!ENTITY extensionItem.toBeInstalled.label    "This item will be installed after you restart &brandShortName;.">
 <!ENTITY extensionItem.toBeUninstalled.label  "This item will be uninstalled after you restart &brandShortName;.">
+
+<!ENTITY getMoreExtensions.label          "Get More Extensions">
+<!ENTITY getMoreExtensions.tooltip        "Get More Extensions from update.mozilla.org">
+<!ENTITY getMoreThemes.label              "Get More Themes">
+<!ENTITY getMoreThemes.tooltip            "Get More Themes from update.mozilla.org">
+
+<!ENTITY previewNoThemeSelected.label     "No Theme Selected">
+<!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image.">
+

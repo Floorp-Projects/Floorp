@@ -118,79 +118,106 @@
   
   <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
-  <view id="extensionsView" flex="1" style="overflow: auto;"
-        datasources="rdf:null" persist="last-selected"
-        ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-        ondblclick="gExtensionsViewController.doCommand('cmd_options');">
-    <template>
-      <rule>
-        <conditions>
-          <content uri="?uri"/>
-          <member container="?uri" child="?extension"/>
-          <triple subject="?extension"
-                  predicate="http://www.mozilla.org/2004/em-rdf#name"
-                  object="?name"/>
-          <triple subject="?extension"
-                  predicate="http://www.mozilla.org/2004/em-rdf#version"
-                  object="?version"/>
-        </conditions>
-        <bindings>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#creator"
-                   object="?creator"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#iconURL"
-                   object="?icon"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#optionsURL"
-                   object="?options-url"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#aboutURL"
-                   object="?about-url"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#updateURL"
-                   object="?update-url"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#disabled"
-                   object="?disabled"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#homepageURL"
-                   object="?homepage-url"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#description"
-                   object="?description"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#locked"
-                   object="?locked"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#toBeInstalled"
-                   object="?toBeInstalled"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#toBeUninstalled"
-                   object="?toBeUninstalled"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#toBeEnabled"
-                   object="?toBeEnabled"/>
-          <binding subject="?extension"
-                   predicate="http://www.mozilla.org/2004/em-rdf#toBeDisabled"
-                   object="?toBeDisabled"/>
-        </bindings>            
-        <action>
-          <extension uri="?extension" context="extensionContextMenu"
-                     image="?icon" name="?name" version="?version" 
-                     description="?description" creator="?creator"
-                     disabled="?disabled" locked="?locked" 
-                     optionsURL="?options-url" homepageURL="?homepage-url"
-                     aboutURL="?about-url" updateURL="?update-url"
-                     toBeInstalled="?toBeInstalled" toBeUninstalled="?toBeUninstalled"
-                     toBeEnabled="?toBeEnabled" toBeDisabled="?toBeDisabled"/>
-        </action>
-      </rule>
-    </template>
-  </view> 
+  <hbox flex="1">
+    <view id="extensionsView" flex="3" style="overflow: auto;"
+          datasources="rdf:null" persist="last-selected"
+          ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+          ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+          ondblclick="onViewDoubleClick();">
+      <template>
+        <rule>
+          <conditions>
+            <content uri="?uri"/>
+            <member container="?uri" child="?extension"/>
+            <triple subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#name"
+                    object="?name"/>
+            <triple subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#version"
+                    object="?version"/>
+          </conditions>
+          <bindings>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#creator"
+                    object="?creator"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#iconURL"
+                    object="?icon"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#previewImage"
+                    object="?previewImage"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#optionsURL"
+                    object="?options-url"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#aboutURL"
+                    object="?about-url"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#updateURL"
+                    object="?update-url"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#disabled"
+                    object="?disabled"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#homepageURL"
+                    object="?homepage-url"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#description"
+                    object="?description"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#locked"
+                    object="?locked"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#toBeInstalled"
+                    object="?toBeInstalled"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#toBeUninstalled"
+                    object="?toBeUninstalled"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#toBeEnabled"
+                    object="?toBeEnabled"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#toBeDisabled"
+                    object="?toBeDisabled"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#itemType"
+                    object="?itemType"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#internalName"
+                    object="?internalName"/>
+          </bindings>            
+          <action>
+            <extension uri="?extension" context="extensionContextMenu"
+                       image="?icon" name="?name" version="?version" 
+                       description="?description" creator="?creator"
+                       disabled="?disabled" locked="?locked" 
+                       optionsURL="?options-url" homepageURL="?homepage-url"
+                       aboutURL="?about-url" updateURL="?update-url"
+                       previewImage="?previewImage" internalName="?internalName"
+                       toBeInstalled="?toBeInstalled" toBeUninstalled="?toBeUninstalled"
+                       toBeEnabled="?toBeEnabled" toBeDisabled="?toBeDisabled"
+                       itemType="?itemType"/>
+          </action>
+        </rule>
+      </template>
+    </view> 
+    <vbox id="themePreviewArea" class="themePreviewArea" hidden="true" flex="5">
+      <deck id="previewImageDeck" flex="1">
+        <vbox id="noThemeSelected" pack="center" align="center">
+          <label class="previewText">&previewNoThemeSelected.label;</label>
+        </vbox>
+        <vbox id="noPreviewImage" pack="center" align="center">
+          <label class="previewText">&previewNoPreviewImage.label;</label>
+        </vbox>
+        <vbox id="previewImageContainer" pack="center" align="center"
+              style="overflow: auto;">
+          <image id="previewImage"/>
+        </vbox>
+      </deck>
+    </vbox>
+  </hbox>
   <hbox>
-    <hbox id="commandBar" flex="1">
+    <hbox id="commandBar" flex="1" align="center">
       <button id="uninstallButton" 
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
               command="cmd_uninstall"/>
@@ -198,6 +225,12 @@
       <button id="updateButton" 
               label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
               command="cmd_update"/>
+      <label id="getMore" onclick="openURL(gGetMoreURL);"
+             valuethemes="&getMoreThemes.label;"
+             valueextensions="&getMoreExtensions.label;"
+             tooltiptextthemes="&getMoreThemes.tooltip;"
+             tooltiptextextensions="&getMoreExtensions.tooltip;"
+             flex="1" crop="right" align="right"/>
     </hbox>
     
     <resizer id="windowResizer" dir="bottomright"/>

@@ -51,6 +51,7 @@ classic.jar:
   skin/classic/mozapps/extensions/placeholder.gif               (extensions/skin/placeholder.gif)
   skin/classic/mozapps/extensions/viewWatermarkExtensions.png   (extensions/skin/viewWatermarkExtensions.png)
   skin/classic/mozapps/extensions/viewWatermarkThemes.png       (extensions/skin/viewWatermarkThemes.png)
+  skin/classic/mozapps/extensions/themeGeneric.png              (extensions/skin/themeGeneric.png)
   skin/classic/mozapps/update/update.css                        (update/skin/update.css)
   skin/classic/mozapps/update/warning.gif                       (update/skin/warning.gif)
   skin/classic/mozapps/update/icon32.png                        (update/skin/icon32.png)
@@ -60,4 +61,4 @@ classic.jar:
   skin/classic/mozapps/shared/itemFader.png                     (shared/skin/itemFader.png)
   skin/classic/mozapps/shared/itemSelected.png                  (shared/skin/itemSelected.png)
   skin/classic/mozapps/contents.rdf                             (contents-skin.rdf)
-
+  icon.png                                                      (update/skin/icon32.png)

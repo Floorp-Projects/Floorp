@@ -14,27 +14,22 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = {641d8d09-7dda-4850-8228-ac0ab65e2ac9} {972ce4c6-7e08-4474-a285-3208198ce6fd}
-
 include $(topsrcdir)/config/rules.mk
 
 FILES := \
-	Extensions.rdf \
+	install.rdf \
 	$(NULL)
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
 libs::
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/extensions
-	$(INSTALL) $(srcdir)/"installed-extensions.txt" $(DIST)/bin/defaults/profile/extensions
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}
  
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/extensions
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/"installed-extensions.txt" $(DESTDIR)$(mozappdir)/defaults/profile/extensions
+	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}

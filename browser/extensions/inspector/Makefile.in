@@ -28,5 +28,3 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(srcdir)/install.rdf $(DIST)/bin/Extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}
