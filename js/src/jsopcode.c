@@ -2433,12 +2433,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_XMLNAME:
               case JSOP_XMLTAGEXPR:
               case JSOP_XMLELTEXPR:
-              case JSOP_FILTER:
               case JSOP_TOXML:
               case JSOP_TOXMLLIST:
               case JSOP_FOREACH:
+              case JSOP_FILTER:
                 /* Conversion and prefix ops do nothing in the decompiler. */
                 todo = -2;
+                break;
+
+              case JSOP_ENDFILTER:
+                rval = POP_STR();
+                lval = POP_STR();
+                todo = Sprint(&ss->sprinter, "%s.(%s)", lval, rval);
                 break;
 
               case JSOP_DESCENDANTS:

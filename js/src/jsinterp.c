@@ -1303,7 +1303,7 @@ have_fun:
             frame.scopeChain = funobj;
 #endif
         }
-        ok = js_Interpret(cx, &v);
+        ok = js_Interpret(cx, script->code, &v);
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;
@@ -1513,7 +1513,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
      * Use frame.rval, not result, so the last result stays rooted across any
      * GC activations nested within this js_Interpret.
      */
-    ok = js_Interpret(cx, &frame.rval);
+    ok = js_Interpret(cx, script->code, &frame.rval);
     *result = frame.rval;
 
     if (hookData) {
@@ -1774,7 +1774,7 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 #define MAX_INLINE_CALL_COUNT 1000
 
 JSBool
-js_Interpret(JSContext *cx, jsval *result)
+js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
     JSRuntime *rt;
     JSStackFrame *fp;
@@ -1788,7 +1788,7 @@ js_Interpret(JSContext *cx, jsval *result)
     jsint depth, len;
     jsval *sp, *newsp;
     void *mark;
-    jsbytecode *pc, *pc2, *endpc;
+    jsbytecode *endpc, *pc2;
     JSOp op, op2;
     const JSCodeSpec *cs;
     JSAtom *atom;
@@ -1876,11 +1876,6 @@ js_Interpret(JSContext *cx, jsval *result)
 
     LOAD_INTERRUPT_HANDLER(rt);
 
-    pc = script->code;
-    endpc = pc + script->length;
-    depth = (jsint) script->depth;
-    len = -1;
-
     /* Check for too much js_Interpret nesting, or too deep a C stack. */
     if (++cx->interpLevel == MAX_INTERP_LEVEL ||
         !JS_CHECK_STACK_SIZE(cx, stackDummy)) {
@@ -1892,6 +1887,7 @@ js_Interpret(JSContext *cx, jsval *result)
     /*
      * Allocate operand and pc stack slots for the script's worst-case depth.
      */
+    depth = (jsint) script->depth;
     newsp = js_AllocRawStack(cx, (uintN)(2 * depth), &mark);
     if (!newsp) {
         ok = JS_FALSE;
@@ -1901,6 +1897,7 @@ js_Interpret(JSContext *cx, jsval *result)
     fp->spbase = sp;
     SAVE_SP(fp);
 
+    endpc = script->code + script->length;
     while (pc < endpc) {
         fp->pc = pc;
         op = (JSOp) *pc;
@@ -5141,12 +5138,15 @@ js_Interpret(JSContext *cx, jsval *result)
             VALUE_TO_OBJECT(cx, lval, obj);
             len = GET_JUMP_OFFSET(pc);
             SAVE_SP(fp);
-            ok = js_FilterXMLList(cx, obj, pc + cs->length, len - cs->length,
-                                  &rval);
+            ok = js_FilterXMLList(cx, obj, pc + cs->length, &rval);
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
             break;
+
+          case JSOP_ENDFILTER:
+            *result = POP_OPND();
+            goto out;
 
           case JSOP_TOXML:
             rval = FETCH_OPND(-1);

@@ -42,6 +42,8 @@
 #include "jsstddef.h"
 #include "jspubtd.h"
 
+extern const char js_AnyName_str[];
+extern const char js_AttributeName_str[];
 extern const char js_isXMLName_str[];
 extern const char js_Namespace_str[];
 extern const char js_QName_str[];
@@ -178,7 +180,6 @@ struct JSXML {
             JSXMLArray  attrs;
         } elem;
         JSString        *value;
-        jsdouble        align;
     } u;
 
     /* Don't add anything after u -- see js_NewXML for why. */
@@ -300,8 +301,7 @@ extern JSBool
 js_DeleteXMLListElements(JSContext *cx, JSObject *listobj);
 
 extern JSBool
-js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, uint32 len,
-                 jsval *vp);
+js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp);
 
 extern JSObject *
 js_ValueToXMLObject(JSContext *cx, jsval v);
