@@ -284,29 +284,28 @@ public:
   NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
 
   /** return the row span of a cell, taking into account row span magic at the bottom
-    * of a table.
+    * of a table. The row span equals the number of rows spanned by aCell starting at
+    * aStartRowIndex, and can be smaller if aStartRowIndex is greater than the row
+    * index in which aCell originates.
     *
-    * @param aRowIndex  the row from which to measure effective row span
-    * @param aCell      the cell
+    * @param aStartRowIndex the cell
+    * @param aCell          the cell
     *
     * @return  the row span, correcting for row spans that extend beyond the bottom
     *          of the table.
     */
-  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
-  virtual PRInt32  GetEffectiveRowSpan(nsTableCellFrame *aCell);
+  virtual PRInt32  GetEffectiveRowSpan(PRInt32                 aStartRowIndex,
+                                       const nsTableCellFrame& aCell) const;
+  virtual PRInt32  GetEffectiveRowSpan(const nsTableCellFrame& aCell) const;
 
   /** return the col span of a cell, taking into account col span magic at the edge
     * of a table.
     *
-    * @param aColIndex  the column from which to measure effective col span
     * @param aCell      the cell
     *
     * @return  the col span, correcting for col spans that extend beyond the edge
     *          of the table.
     */
-  virtual PRInt32  GetEffectiveColSpan(PRInt32                 aColIndex, 
-                                       const nsTableCellFrame& aCell) const;
-
   virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell) const;
 
   /** return the value of the COLS attribute, adjusted for the 
@@ -764,9 +763,6 @@ public: /* ----- Cell Map public methods ----- */
   /** returns the number of columns in this table after redundant columns have been removed 
     */
   virtual PRInt32 GetColCount();
-
-  PRInt32 GetRowSpan(nsTableCellFrame& aCellFrame);
-  PRInt32 GetColSpan(nsTableCellFrame& aCellFrame);
 
   /** return the column frame at colIndex.
     * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range

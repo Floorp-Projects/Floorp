@@ -73,10 +73,10 @@ protected:
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
 #define ROW_SPAN_OFFSET  0x0000FFF8 // the row offset to the data containing the original cell
-#define COL_SPAN         0x00010010 // there is a col span
-#define COL_SPAN_0       0x00020010 // the col span is 0
-#define OVERLAP          0x00040010 // there is a row span and col span but no by same cell
-#define COL_SPAN_OFFSET  0xFFF80010 // the col offset to the data containing the original cell
+#define COL_SPAN         0x00010000 // there is a col span
+#define COL_SPAN_0       0x00020000 // the col span is 0
+#define OVERLAP          0x00040000 // there is a row span and col span but no by same cell
+#define COL_SPAN_OFFSET  0xFFF80000 // the col offset to the data containing the original cell
 #define ROW_SPAN_SHIFT   3          // num bits to shift to get right justified col span
 #define COL_SPAN_SHIFT   19         // num bits to shift to get right justified col span
 
@@ -115,10 +115,10 @@ inline void CellData::SetZeroRowSpan(PRBool aIsZeroSpan)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aIsZeroSpan) {
-      mBits |= ROW_SPAN;
+      mBits |= ROW_SPAN_0;
     }
     else {
-      mBits &= ~ROW_SPAN;
+      mBits &= ~ROW_SPAN_0;
     }
   }
 }
@@ -156,10 +156,10 @@ inline void CellData::SetZeroColSpan(PRBool aIsZeroSpan)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aIsZeroSpan) {
-      mBits |= COL_SPAN;
+      mBits |= COL_SPAN_0;
     }
     else {
-      mBits &= ~COL_SPAN;
+      mBits &= ~COL_SPAN_0;
     }
   }
 }
