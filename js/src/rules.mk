@@ -19,6 +19,7 @@
 # Rights Reserved.
 # 
 # Contributor(s):
+#       Michael Ang <mang@subcarrier.org>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU Public License (the "GPL"), in which case the
@@ -31,6 +32,10 @@
 # the provisions above, a recipient may use your version of this
 # file under either the NPL or the GPL.
 # 
+
+#
+# JSRef GNUmake makefile rules
+#
 
 ifdef USE_MSVC
 LIB_OBJS  = $(addprefix $(OBJDIR)/, $(LIB_CFILES:.c=.obj))
@@ -62,6 +67,12 @@ $(OBJDIR)/%: %.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(CFLAGS) $*.c $(LDFLAGS)
 
+# This rule must come before the rule with no dep on header
+$(OBJDIR)/%.o: %.c %.h
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) $*.c
+
+
 $(OBJDIR)/%.o: %.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -c $(CFLAGS) $*.c
@@ -70,7 +81,11 @@ $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) $*.s
 
-# windows only
+# This rule must come before rule with no dep on header
+$(OBJDIR)/%.obj: %.c %.h
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.c
+
 $(OBJDIR)/%.obj: %.c
 	@$(MAKE_OBJDIR)
 	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.c
