@@ -768,8 +768,31 @@ NS_IMETHODIMP
 nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
                                         nsISchemaType    **aType)
 {
+  NS_ENSURE_ARG_POINTER(aType);
   *aType = nsnull;
-  return NS_OK;
+
+  nsAutoString schemaTypeName;
+  nsAutoString schemaTypePrefix;
+  nsCOMPtr<nsIDOMNode> boundNode;
+
+  aControl->GetBoundNode(getter_AddRefs(boundNode));
+  NS_ENSURE_TRUE(boundNode, NS_ERROR_FAILURE);
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(boundNode, schemaTypeName, 
+                                                 schemaTypePrefix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the namespace url from the prefix
+  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString schemaTypeNamespace;
+  rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXFormsSchemaValidator validator;
+  nsCOMPtr<nsISchema> schema = do_QueryInterface(mSchemas);
+  validator.LoadSchema(schema);
+  return validator.GetType(schemaTypeName, schemaTypeNamespace, aType);
 }
 
 NS_IMETHODIMP
@@ -856,32 +879,18 @@ NS_IMETHODIMP
 nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  nsresult rv;
-
-  nsAutoString typeAttribute;
-  nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(aInstanceNode, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                           NS_LITERAL_STRING("type"), typeAttribute);
-
-  // split type (ns:type) into namespace and type.
-  PRInt32 separator = typeAttribute.FindChar(':');
-  if ((separator == kNotFound) || ((PRUint32) separator == typeAttribute.Length()))
-    return NS_ERROR_UNEXPECTED;
-  // xxx send error to console
 
   nsAutoString schemaTypeName;
   nsAutoString schemaTypePrefix;
-  nsAutoString schemaTypeNamespace;
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceNode, schemaTypeName, 
+                                                 schemaTypePrefix);
 
-  schemaTypePrefix.Assign(Substring(typeAttribute, 0, separator));
-  schemaTypeName.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
 
   // get the namespace url from the prefix
   nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoString schemaTypeNamespace;
   rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
   NS_ENSURE_SUCCESS(rv, rv);
 

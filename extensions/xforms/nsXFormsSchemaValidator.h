@@ -49,6 +49,9 @@ public:
   PRBool ValidateString(const nsAString & aValue, const nsAString & aType,
     const nsAString & aNamespace);
   PRBool Validate(nsIDOMNode* aElement);
+  PRBool GetType(const nsAString & aType, const nsAString & aNamespace,
+                 nsISchemaType **aSchemaType);
+    
 
 protected:
   nsCOMPtr<nsISchemaValidator> mSchemaValidator;

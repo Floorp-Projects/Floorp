@@ -7,4 +7,5 @@ interface nsISchemaValidator : nsISupports {
   void loadSchema(in nsISchema aSchema);
   boolean validate(in nsIDOMNode aElement);
   boolean validateString(in AString aValue, in AString aType, in AString aNamespace);
+  nsISchemaType getType(in AString aType, in AString aNamespace);
 };

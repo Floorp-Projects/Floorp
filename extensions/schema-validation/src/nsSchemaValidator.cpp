@@ -246,9 +246,9 @@ NS_IMETHODIMP nsSchemaValidator::Validate(nsIDOMNode* aElement, PRBool *aResult)
 /*
   Returns the nsISchemaType for a given value/type/namespace pair.
 */
-nsresult nsSchemaValidator::GetType(const nsAString & aType,
-                                    const nsAString & aNamespace,
-                                    nsISchemaType ** aSchemaType)
+NS_IMETHODIMP nsSchemaValidator::GetType(const nsAString & aType,
+                                         const nsAString & aNamespace,
+                                         nsISchemaType ** aSchemaType)
 {
   nsresult rv;
 

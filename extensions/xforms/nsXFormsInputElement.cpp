@@ -214,7 +214,7 @@ nsXFormsInputElement::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsInputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 {
-  nsXFormsControlStub::WillSetAttribute(aName, aValue);
+  nsXFormsControlStub::AttributeSet(aName, aValue);
   
   if (aName == nsXFormsAtoms::incremental)
     mIncremental = aValue.EqualsLiteral("true");
@@ -235,7 +235,12 @@ nsXFormsInputElement::HandleDefault(nsIDOMEvent *aEvent,
   
   nsAutoString type;
   aEvent->GetType(type);
-  if (type.EqualsLiteral("keyup"))
+
+  // Seems like too big of a hassle for too little gain to also check if we are 
+  // a checkbox in addition to checking for the click.  Plus, other input types
+  // like a date picker for input controls bound to a xsi:date type might
+  // need click updates, too.
+  if (type.EqualsLiteral("keyup") || type.EqualsLiteral("click"))
     UpdateInstanceData();
 
   return NS_OK;
@@ -282,7 +287,15 @@ nsXFormsInputElement::UpdateInstanceData()
     if (mType == eType_Input && type.EqualsLiteral("checkbox")) {
       PRBool checked;
       input->GetChecked(&checked);
-      value.AssignASCII(checked ? "1" : "0", 1);
+      // XXX we've got a problem here.  Since UpdateInstanceData can be called
+      // due to a blur event, as it stands now we could be changing the instance
+      // data values even if the user didn't click on the checkbox, but instead
+      // was just tabbing through the form.
+      if(checked) {
+        value.Append(NS_LITERAL_STRING("true"));
+      } else { 
+        value.Append(NS_LITERAL_STRING("false"));
+      }
     } else {
       input->GetValue(value);
     }
@@ -345,6 +358,10 @@ nsXFormsInputElement::Refresh()
 
         input->SetChecked(text.EqualsLiteral("true") ||
                            text.EqualsLiteral("1"));
+
+        // other xforms processors default to incremental update in this case,
+        // so we should, too.
+        mIncremental = PR_TRUE;
       } else {
         input->RemoveAttribute(NS_LITERAL_STRING("type"));
         input->SetValue(text);

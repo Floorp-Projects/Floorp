@@ -77,3 +77,11 @@ PRBool nsXFormsSchemaValidator::Validate(nsIDOMNode* aElement)
   return isValid;
 }
 
+PRBool nsXFormsSchemaValidator::GetType(const nsAString & aType,
+  const nsAString & aNamespace, nsISchemaType **aSchemaType)
+{
+  NS_ENSURE_TRUE(mSchemaValidator, PR_FALSE);
+  nsresult rv = mSchemaValidator->GetType(aType, aNamespace, aSchemaType);
+
+  return( NS_SUCCEEDED(rv) );
+}

@@ -337,6 +337,14 @@ public:
                                                      nsIModelElementPrivate *aModel,
                                                      nsIDOMNode  **aInstanceNode);
 
+  /** 
+   * This function takes an instance data node, finds the type bound to it, and
+   * returns the seperated out type (integer) and namespace prefix (xsd).
+   */
+  static NS_HIDDEN_(nsresult) ParseTypeFromNode(nsIDOMNode *aInstanceData,
+                                                nsAString  &aType,
+                                                nsAString  &aNSPrefix);
+
 };
 
 #endif

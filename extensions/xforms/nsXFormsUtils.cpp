@@ -1014,3 +1014,31 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
 
   return NS_OK;
 }
+
+/* static */ nsresult
+nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData, 
+                                 nsAString &aType, nsAString &aNSPrefix)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(aInstanceData, &rv);
+  NS_ENSURE_TRUE(nodeElem, NS_ERROR_FAILURE);
+
+  // right now type is stored as an attribute on the instance node.  In the
+  // future it will be a property.
+  nsAutoString typeAttribute;
+  nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                           NS_LITERAL_STRING("type"), typeAttribute);
+
+  // split type (ns:type) into namespace and type.
+  PRInt32 separator = typeAttribute.FindChar(':');
+  if ((separator == kNotFound) || 
+      ((PRUint32) separator == typeAttribute.Length())) {
+    return NS_ERROR_UNEXPECTED;
+  // xxx send error to console
+  }
+
+  aNSPrefix.Assign(Substring(typeAttribute, 0, separator));
+  aType.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
+
+  return NS_OK;
+}

@@ -118,10 +118,6 @@ public:
 private:
   ~nsSchemaValidator();
 
-  nsresult GetType(const nsAString & aType,
-                   const nsAString & aNamespace,
-                   nsISchemaType **aSchemaType);
-
   // methods dealing with simpletypes
   nsresult ValidateSimpletype(const nsAString & aNodeValue, nsISchemaSimpleType *aSchemaSimpleType, PRBool *aResult);
   nsresult ValidateRestrictionSimpletype(const nsAString & aNodeValue, nsISchemaSimpleType *aSchemaSimpleType, PRBool *aResult);
