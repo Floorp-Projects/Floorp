@@ -61,14 +61,15 @@ struct nsDiskCacheEntry;
  *      2 = 1k block file
  *      3 = 4k block file
  *
- *  eFileSizeMask note:  Files larger than 64 Mb have zero size stored in the
+ *  eFileSizeMask note:  Files larger than 64 MiB have zero size stored in the
  *                       location.  The file itself must be examined to determine
- *                       its actual size.
+ *                       its actual size.  (XXX This is broken in places -darin)
  *
  *****************************************************************************/
 
 #define BLOCK_SIZE_FOR_INDEX(index)  ((index) ? (256 << (2 * ((index) - 1))) : 0)
-#define kSeparateFile   0
+#define kSeparateFile      0
+#define kMaxDataFileSize   0x4000000   // 64 MiB
 
 class nsDiskCacheRecord {
 
