@@ -951,7 +951,8 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
     if (!request) return rv;
     nsCOMPtr<imgIContainer> container;
     rv = request->GetImage(getter_AddRefs(container));
-    if (!request) return rv;
+    if (!container)
+      return NS_ERROR_FAILURE;
     
     // get the current frame, which holds the image data
     container->GetCurrentFrame(getter_AddRefs(gfxFrame));
