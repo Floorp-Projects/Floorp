@@ -721,7 +721,7 @@ PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
     }
     return;
   }
-  Permission_AddHost((char*)host.get(), permission, type, PR_TRUE);
+  Permission_AddHost(ToNewCString(host), permission, type, PR_TRUE);
 }
 
 PUBLIC void
