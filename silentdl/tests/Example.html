@@ -1,24 +1,42 @@
 <html>
 <head>
-<title> AppProcesses Test Page</title>
+<title> SilentDownload Test Page</title>
 
 <SCRIPT LANGUAGE="JavaScript">
 <!--
-	var appCore = AppProcessesManager.Find("MailAppCore");
+	var task = SilentDownloadManager.Find("Silent Download Task 1");
 
-	if (appCore==null)
+	if (task==null)
 	{
-		dump("\nAppProcess: Process Not Found - New Process");
+		alert("\nSD: Task Not Found - New Task");
 
 
-		appCore = new MailProcess();
-		if (appCore == null) {
-		  dump("\nnAppProcess: Process was null");
-		} else {
-		  appCore.Init("MailAppCore");
-		  dump("\nnAppProcess: Process was created");
-		}
+		task = new SilentDownloadTask();
+		
+		task.Init(	"Silent Download Task 1", 
+					"http://grok/u/dougt/silentdl/tests/sol.exe", 
+					"http://warp/u/dougt/silentdl/tests/sol.html");
+	
 	}
+
+
+	switch (task.state)
+	{
+		case SilentDownloadTask.SDL_NOT_INITED:
+		case SilentDownloadTask.SDL_NOT_ADDED:
+		case SilentDownloadTask.SDL_STARTED:
+		case SilentDownloadTask.SDL_SUSPENDED:
+		case SilentDownloadTask.SDL_DOWNLOADING_NOW:
+		case SilentDownloadTask.SDL_ERROR:
+			break;
+
+		case SilentDownloadTask.SDL_COMPLETED:
+			alert("\nSD: Task Complete");
+
+			break;
+	}
+
+
 
 // -->
 </SCRIPT>
