@@ -1810,6 +1810,7 @@ nsHTMLEditor::Align(const nsString& aAlignType)
 }
 
 
+
 NS_IMETHODIMP
 nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {

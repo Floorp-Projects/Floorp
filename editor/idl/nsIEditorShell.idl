@@ -87,12 +87,24 @@ interface nsIEditorShell : nsISupports
    *          without changing the disk file associated with the doc.
    *          This would correspond to a 'Save Copy As' menu command
    *          (currently not in our UI)
+   *  return value
+   *          true if file was really saved.
+   *          false if there is some problem with saving or user
+   *          executed "Cancel" when prompted for a filename to save
    */  
-  void SaveDocument(in boolean saveAs, in boolean saveCopy);
+  PRBool SaveDocument(in boolean saveAs, in boolean saveCopy);
+  
+  /** These are for simpler access and we ignore if user Cancels*/
   /** This is SaveDocument(false, false) */
   void Save();
   /** This is SaveDocument(true, false) */
   void SaveAs();
+  /** Check if current document has changes and prompt to save if it does.
+   *  return value:
+   *         false ONLY if user executed "Cancel" in the SaveAs dialog
+   *         true if no changes in doc, or file was saved successfully
+   */
+  PRBool  CheckAndSaveDocument();
 
   void CloseWindow();
   void Print();

@@ -160,9 +160,6 @@ nsHTMLEditor::DeleteTable()
       return NS_ERROR_FAILURE;
 
     // Place selection just before the table
-    // This is correct by selection rules, but doesn't work 
-    //  now (8/4/99) because the caret system needs to be smarter
-    //  when locating selection in non-text nodes
     nsCOMPtr<nsIDOMSelection>selection;
     res = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res) || !selection)

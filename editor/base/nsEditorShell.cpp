@@ -61,6 +61,7 @@
 #include "nsFileSpec.h"
 #include "nsIDOMToolkitCore.h"
 #include "nsIFindComponent.h"
+#include "nsIPrompt.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -87,6 +88,7 @@
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
+#include "nsINetSupportDialogService.h"
 
 ///////////////////////////////////////
 
@@ -103,6 +105,7 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kCNetSupportDialogCID,     NS_NETSUPPORTDIALOG_CID);
 
 /* Define Interface IDs */
 #ifdef NECKO
@@ -1000,11 +1003,46 @@ nsEditorShell::Open()
 
 }
 
+NS_IMETHODIMP    
+nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+  nsCOMPtr<nsIDOMDocument> theDoc;
+  nsresult rv = GetEditorDocument(getter_AddRefs(theDoc));
+  if (NS_SUCCEEDED(rv) && theDoc)
+  {
+    nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc);
+    if (diskDoc)
+    {
+      PRInt32  modCount = 0;
+      diskDoc->GetModCount(&modCount);
+
+      // Return true unless user cancels an action
+      *_retval = PR_TRUE;
+
+      if (modCount > 0)
+      {
+        // Ask user if they want to save current changes
+        nsString saveFileQuestion = GetString("SaveFilePrompt");
+        // TODO: THIS DIALOG SHOULD HAVE A CANCEL BUTTON AS WELL
+        if (Confirm(saveFileQuestion))
+        {
+          // Either save to existing file or prompt for name (as for SaveAs)
+          rv = SaveDocument(PR_FALSE, PR_FALSE, _retval);
+        }
+      }
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP 
-nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy)
+nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 {
   nsresult  res = NS_NOINTERFACE;
-  
+  *_retval = PR_FALSE;
+
   switch (mEditorType)
   {
     case ePlainTextEditorType:
@@ -1030,12 +1068,30 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy)
   
         if (mustShowFileDialog)
         {
+          // Check if the document has a title and prompt for one if missing
+          nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
+          if (document)
+          {
+            nsString const *title = document->GetDocumentTitle();
+            if (title)
+            {
+              if (title->Length() == 0)
+              {
+                nsString message = GetString("NeedDocTitle");
+                Alert(message);
+                // TODO: Popup a simple dialog and set the title
+                // Note that this involves inserting a <title> tag 
+                //  with a text nodechild in the <head> area of the document.
+                // (I.e., nsIDocument has no "SetDocumentTitle()" SHOULD IT?)
+              }
+            }
+          }
+
           nsCOMPtr<nsIFileWidget>  fileWidget;
           res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
           if (NS_SUCCEEDED(res) && fileWidget)
           {
-            nsAutoString  promptString;
-            GetString("SaveDocumentAs", promptString);
+            nsAutoString  promptString = GetString("SaveDocumentAs");
 
 	          nsString* titles = nsnull;
 	          nsString* filters = nsnull;
@@ -1059,8 +1115,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy)
 	          nextTitle = titles;
 	          nextFilter = filters;
             // The names of the file types are localizable
-            GetString("HTMLFiles", HTMLFiles);
-            GetString("TextFiles", TextFiles);
+            HTMLFiles = GetString("HTMLFiles");
+            TextFiles = GetString("TextFiles");
 		        if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
               goto SkipFilters;
                 
@@ -1076,8 +1132,10 @@ SkipFilters:
 	          delete [] filters;
 
             if (dialogResult == nsFileDlgResults_Cancel)
+            {
+              // Note that *_retval = PR_FALSE at this point
               return NS_OK;
-        
+            }
             replacing = (dialogResult == nsFileDlgResults_Replace);
           }
           else
@@ -1093,8 +1151,11 @@ SkipFilters:
         res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIEditor::eSaveFileHTML);
         if (NS_FAILED(res))
         {
-          // show some error dialog?
-          NS_WARNING("Saving file failed");
+          nsString message = GetString("SaveFileFailed");
+          Alert(message);
+        } else {
+          // File was saved successfully
+          *_retval = PR_TRUE;
         }
       }
       break;
@@ -1106,42 +1167,35 @@ SkipFilters:
 }
 
 // These are for convenience so the params to SaveDocument aren't as opaque in the UI
+// We ignore the result that tells us if user Canceled and action
 NS_IMETHODIMP
 nsEditorShell::Save()
 {
   // Params: SaveAs, SavingCopy
-  return SaveDocument(PR_FALSE, PR_FALSE);
+  PRBool result;
+  return SaveDocument(PR_FALSE, PR_FALSE, &result);
 }
 
 NS_IMETHODIMP    
 nsEditorShell::SaveAs()
 {
   // Params: SaveAs, SavingCopy
-  return SaveDocument(PR_TRUE, PR_FALSE);
+  PRBool result;
+  return SaveDocument(PR_TRUE, PR_FALSE, &result);
 }
 
 NS_IMETHODIMP    
 nsEditorShell::CloseWindow()
 {
   nsresult rv = NS_OK;
+  PRBool result;
+  rv = CheckAndSaveDocument(&result);
   
-  nsCOMPtr<nsIDOMDocument>  theDoc;
-  if (NS_SUCCEEDED(GetEditorDocument(getter_AddRefs(theDoc))) && theDoc)
-  {
-     nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc);
-    if (diskDoc)
-    {
-      PRInt32  modCount = 0;
-      diskDoc->GetModCount(&modCount);
-    
-      if (modCount > 0)
-      {
-        // Show the Save/Dont save dialog, somehow.
-      
-      }
-    }
+  // Don't close the window if there was an error saving file or 
+  //   user canceled an action along the way
+  if (NS_SUCCEEDED(rv) && result)
     mWebShellWin->Close();
-  }
+
   return rv;
 }
 
@@ -1154,19 +1208,26 @@ nsEditorShell::Print()
 NS_IMETHODIMP    
 nsEditorShell::Exit()
 {  
-  nsIAppShellService* appShell = nsnull;
+  PRBool result;
+  nsresult rv = CheckAndSaveDocument(&result);
+  // Don't shutdown if there was an error saving file or 
+  //   user canceled an action along the way
+  if (NS_SUCCEEDED(rv) && result)
+  {
+    nsIAppShellService* appShell = nsnull;
 
-  /*
-   * Create the Application Shell instance...
-   */
-  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                             nsIAppShellService::GetIID(),
-                                             (nsISupports**)&appShell);
-  if (NS_SUCCEEDED(rv)) {
-    appShell->Shutdown();
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  } 
-  return NS_OK;
+    /*
+     * Create the Application Shell instance...
+     */
+    rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                               nsIAppShellService::GetIID(),
+                                               (nsISupports**)&appShell);
+    if (NS_SUCCEEDED(rv)) {
+      appShell->Shutdown();
+      nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+    } 
+  }
+  return NS_OK; //Why not return rv?
 }
 
 NS_IMETHODIMP
@@ -1184,19 +1245,17 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
-  nsAutoString HTMLTitle;
-  nsresult res = GetString("OpenHTMLFile", HTMLTitle);
+  nsAutoString HTMLTitle = GetString("OpenHTMLFile");
 
   // An empty string should just result in "Open" for the dialog
   nsAutoString title;
-  if (NS_SUCCEEDED(res) && htmlFilter)
+  if (htmlFilter)
   {
     title = HTMLTitle;
   } else {
-    nsAutoString ImageTitle;
-    res = GetString("SelectImageFile", ImageTitle);
+    nsAutoString ImageTitle = GetString("SelectImageFile");
 
-    if (NS_SUCCEEDED(res) && imgFilter)
+    if (ImageTitle.Length() > 0 && imgFilter)
       title = ImageTitle;
   }
 
@@ -1204,11 +1263,10 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
   nsFileSpec aDisplayDirectory;
 
-  res = nsComponentManager::CreateInstance(kCFileWidgetCID,
-	                             				     nsnull,
-					                                 nsIFileWidget::GetIID(),
-                            					     (void**)&fileWidget);
-
+  nsresult res = nsComponentManager::CreateInstance(kCFileWidgetCID,
+                                                    nsnull,
+                                                    nsIFileWidget::GetIID(),
+                                                    (void**)&fileWidget);
   if (NS_SUCCEEDED(res))
   {
     nsFileDlgResults dialogResult;
@@ -1647,11 +1705,17 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
   }
 }
 
+static nsString *ptmpString = 0;
+
 // Use this version within the shell:
-NS_IMETHODIMP 
-nsEditorShell::GetString(const nsString& name, nsString& value)
+nsString
+nsEditorShell::GetString(const nsString& name)
 {
-  value = "";
+  // Initialize upon first use to avoid static constructor
+  if (!ptmpString)
+    ptmpString = new nsString();
+
+  *ptmpString = "";
   if (mStringBundle && (name != ""))
   {
     const PRUnichar *ptrtmp = name.GetUnicode();
@@ -1659,10 +1723,38 @@ nsEditorShell::GetString(const nsString& name, nsString& value)
     nsresult res = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
     // Never fail, just return an empty string    
     if (NS_SUCCEEDED(res))
-      value = ptrv;
-    return NS_OK;
+      *ptmpString = ptrv;
   }
-  return NS_ERROR_NOT_INITIALIZED;
+  return *ptmpString;
+}
+
+// Utility to bring up a Yes/No dialog. TODO: WE NEED A CANCEL BUTTON FOR FILE SAVE PROMPT!!!
+PRBool    
+nsEditorShell::Confirm(const nsString& aQuestion)
+{
+  nsresult res;
+  PRBool   result = PR_FALSE;
+
+  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &res);  
+  if (NS_FAILED(res))
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  
+  if (!dialog)
+    return NS_ERROR_FAILURE;
+
+  res = dialog->ConfirmYN(aQuestion.GetUnicode(), &result);
+  return result;
+}
+
+void    
+nsEditorShell::Alert(const nsString& aMsg)
+{
+  nsresult res;
+  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &res);  
+  if (NS_SUCCEEDED(res) && dialog)
+  {
+    res = dialog->Alert(aMsg.GetUnicode());
+  }
 }
 
 NS_IMETHODIMP
