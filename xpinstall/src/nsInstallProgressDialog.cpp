@@ -216,7 +216,7 @@ nsInstallProgressDialog::Open()
     {
         // Open "progress" dialog.
         nsIURI *url;
-        char * urlStr = "resource:/res/xpinstall/progress.xul";
+        char * urlStr = "chrome://xpinstall/content/progress.xul";
         rv = NS_NewURI( &url, urlStr );
         
         if ( NS_SUCCEEDED(rv) ) 
