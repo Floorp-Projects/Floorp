@@ -104,6 +104,22 @@
         ]]>
         </body>
       </method>
+
+      <method name="_handleClick">
+        <body>
+        <![CDATA[
+          if (!this.disabled &&
+              (this.autoCheck || !this.hasAttribute("autoCheck"))) {
+
+            if (this.type == "checkbox") {
+              this.checked = !this.checked;
+            } else if (this.type == "radio") {
+              this.checked = true;
+            }
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -111,29 +127,8 @@
            because any external oncommand handlers might get called before ours,
            and then they would see the incorrect value of checked. Additionally
            a command attribute would redirect the command events anyway.-->
-      <handler event="click" button="0">
-      <![CDATA[
-        if (this.autoCheck || !this.hasAttribute("autoCheck")) {
-          if (this.type == "checkbox") {
-            this.checked = !this.checked;
-          } else if (this.type == "radio") {
-            this.checked = true;
-          }
-        }
-      ]]>
-      </handler>
-
-      <handler event="keypress" key=" ">
-      <![CDATA[
-        if (this.autoCheck || !this.hasAttribute("autoCheck")) {
-          if (this.type == "checkbox") {
-            this.checked = !this.checked;
-          } else if (this.type == "radio") {
-            this.checked = true;
-          }
-        }
-      ]]>
-      </handler>
+      <handler event="click" button="0" action="this._handleClick();"/>
+      <handler event="keypress" key=" " action="this._handleClick();"/>
 
       <handler event="keypress">
       <![CDATA[
