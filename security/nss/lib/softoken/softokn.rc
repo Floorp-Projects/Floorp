@@ -34,7 +34,7 @@
 #include "nss.h"
 #include <winver.h>
 
-#define MY_LIBNAME "softoken"
+#define MY_LIBNAME "softokn"
 #ifdef MOZ_CLIENT
 #define MY_FILEDESCRIPTION "NSS Builtin Crypto PKCS #11 Library for Clients"
 #else
