@@ -43,7 +43,13 @@ typedef PRUint32 nscolor;
 
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
+// This accepts only 3, 6 or 9 digits
 extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aBuf, nscolor* aResult);
+
+// Translate a hex string to a color. Return true if it parses ok,
+// otherwise return false.
+// This version accepts 1 to 9 digits (missing digits are 0)
+extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const char* aBuf, nscolor* aResult);
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.

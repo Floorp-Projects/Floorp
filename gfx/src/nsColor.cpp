@@ -20,16 +20,19 @@
 #include "nsColor.h"
 #include "nsColorNames.h"
 
-static int ComponentValue(const char* aColorSpec, int dpc)
+static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
 {
   int component = 0;
-  while (--dpc >= 0) {
-    char ch = *aColorSpec++;
-    if ((ch >= '0') && (ch <= '9')) {
-      component = component*16 + (ch - '0');
-    } else {
-      // "ch&7" handles lower and uppercase hex alphabetics
-      component = component*16 + (ch & 7) + 9;
+  if (((1 + color) * dpc) <= aLen) {
+    aColorSpec += (color * dpc);
+    while (--dpc >= 0) {
+      char ch = *aColorSpec++;
+      if ((ch >= '0') && (ch <= '9')) {
+        component = component*16 + (ch - '0');
+      } else {
+        // "ch&7" handles lower and uppercase hex alphabetics
+        component = component*16 + (ch & 7) + 9;
+      }
     }
   }
   return component;
@@ -39,7 +42,7 @@ static int ComponentValue(const char* aColorSpec, int dpc)
 // bina's original code. However, it is pickyer with respect to what a
 // legal color is and will only return true for perfectly legal color
 // values.
-extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
+static PRBool HexToRGB(const char* aColorSpec, PRBool aStrict, nscolor* aResult)
 {
   NS_PRECONDITION(nsnull != aColorSpec, "null ptr");
   if (nsnull == aColorSpec) {
@@ -51,7 +54,8 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
   }
 
   int nameLen = PL_strlen(aColorSpec);
-  if ((nameLen == 3) || (nameLen == 6) || (nameLen == 9)) {
+  if (((PR_TRUE == aStrict) && ((nameLen == 3) || (nameLen == 6) || (nameLen == 9))) ||
+      ((0 < nameLen) && (nameLen < 10))) {
     // Make sure the digits are legal
     for (int i = 0; i < nameLen; i++) {
       char ch = aColorSpec[i];
@@ -66,12 +70,12 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
     }
 
     // Convert the ascii to binary
-    int dpc = nameLen / 3;
+    int dpc = (nameLen / 3) + (((nameLen % 3) != 0) ? 1 : 0);
 
     // Translate components from hex to binary
-    int r = ComponentValue(aColorSpec, dpc);
-    int g = ComponentValue(aColorSpec + dpc, dpc);
-    int b = ComponentValue(aColorSpec + dpc*2, dpc);
+    int r = ComponentValue(aColorSpec, nameLen, 0, dpc);
+    int g = ComponentValue(aColorSpec, nameLen, 1, dpc);
+    int b = ComponentValue(aColorSpec, nameLen, 2, dpc);
     if (dpc == 1) {
       // Scale single digit component to an 8 bit value. Replicate the
       // single digit to compute the new value.
@@ -95,6 +99,16 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
 
   // Improperly formatted color value
   return PR_FALSE;
+}
+
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
+{
+  return HexToRGB(aColorSpec, PR_TRUE, aResult);
+}
+
+extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const char* aColorSpec, nscolor* aResult)
+{
+  return HexToRGB(aColorSpec, PR_FALSE, aResult);
 }
 
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aColorName, nscolor* aResult)
