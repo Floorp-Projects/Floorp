@@ -93,8 +93,16 @@ wait_for_text              (GtkClipboard *clipboard);
 static Bool
 checkEventProc(Display *display, XEvent *event, XPointer arg);
 
+struct retrieval_context
+{
+    PRBool   completed;
+    void    *data;
+
+    retrieval_context() : completed(PR_FALSE), data(nsnull) { }
+};
+
 static void
-wait_for_retrieval(GtkClipboard *clipboard, void **transferData);
+wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *transferData);
 
 static void
 clipboard_contents_received(GtkClipboard     *clipboard,
@@ -788,9 +796,9 @@ checkEventProc(Display *display, XEvent *event, XPointer arg)
 static const int kClipboardTimeout = 500000;
 
 static void
-wait_for_retrieval(GtkClipboard *clipboard, void **transferData)
+wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
 {
-    if (*transferData)  // the request completed synchronously
+    if (r_context->completed)  // the request completed synchronously
         return;
 
     Display *xDisplay = GDK_DISPLAY();
@@ -827,7 +835,7 @@ wait_for_retrieval(GtkClipboard *clipboard, void **transferData)
             else
                 DispatchPropertyNotifyEvent(context.cbWidget, &xevent);
 
-            if (*transferData)
+            if (r_context->completed)
                 return;
         }
 
@@ -846,22 +854,24 @@ clipboard_contents_received(GtkClipboard     *clipboard,
                             GtkSelectionData *selection_data,
                             gpointer          data)
 {
-    GtkSelectionData **sel_copy = NS_STATIC_CAST(GtkSelectionData **, data);
+    retrieval_context *context = NS_STATIC_CAST(retrieval_context *, data);
+    context->completed = PR_TRUE;
+
     if (selection_data->length >= 0)
-        *sel_copy = gtk_selection_data_copy(selection_data);
+        context->data = gtk_selection_data_copy(selection_data);
 }
 
 
 static GtkSelectionData *
 wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
 {
-    GtkSelectionData *selection_data = NULL;
+    retrieval_context context;
     gtk_clipboard_request_contents(clipboard, target,
                                    clipboard_contents_received,
-                                   &selection_data);
+                                   &context);
 
-    wait_for_retrieval(clipboard, (void **) &selection_data);
-    return selection_data;
+    wait_for_retrieval(clipboard, &context);
+    return NS_STATIC_CAST(GtkSelectionData *, context.data);
 }
 
 static void
@@ -869,16 +879,17 @@ clipboard_text_received(GtkClipboard *clipboard,
                         const gchar  *text,
                         gpointer      data)
 {
-    gchar **text_copy = NS_STATIC_CAST(gchar **, data);
-    *text_copy = g_strdup(text);
+    retrieval_context *context = NS_STATIC_CAST(retrieval_context *, data);
+    context->completed = PR_TRUE;
+    context->data = g_strdup(text);
 }
 
 static gchar *
 wait_for_text(GtkClipboard *clipboard)
 {
-    gchar *text = NULL;
-    gtk_clipboard_request_text(clipboard, clipboard_text_received, &text);
+    retrieval_context context;
+    gtk_clipboard_request_text(clipboard, clipboard_text_received, &context);
 
-    wait_for_retrieval(clipboard, (void **) &text);
-    return text;
+    wait_for_retrieval(clipboard, &context);
+    return NS_STATIC_CAST(gchar *, context.data);
 }
