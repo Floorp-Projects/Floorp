@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
+#include "nsIContent.h"
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsAccessible)
 
