@@ -1,4 +1,5 @@
   var appCore = null;
+  var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
 
@@ -660,16 +661,12 @@
 
   function DoPreferences()
   {
-    var prefsCore = XPAppCoresManager.Find("PrefsCore");
-    if (!prefsCore) {
-      prefsCore = new PrefsCore();
-      if (prefsCore) {
-        prefsCore.Init("PrefsCore");
-      }
-    }
-    if (prefsCore) {
-      prefsCore.ShowWindow(window);
-    }
+    if (!prefwindow)
+    {
+    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+	}
+    prefwindow.Init("navigator.js");
+    prefwindow.ShowWindow(window);
   }
 
   function BrowserViewSource()
