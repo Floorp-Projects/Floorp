@@ -3,8 +3,6 @@
 <!ENTITY  extension.label                       "Extension:">
 <!ENTITY  mimetype.label                        "MIME Type:">
 <!ENTITY  mimetype.accesskey                    "m">
-<!ENTITY  outgoingDefault.label                 "Use this MIME as the outgoing type for these file extensions">
-<!ENTITY  outgoingDefault.accesskey             "d">
 
 <!ENTITY  handledby.label                       "Handled By">
 
