@@ -316,8 +316,11 @@ mozSqlService::GetConnection(nsIRDFResource* aAlias, mozISqlConnection **_retval
 
     weakRef = do_GetWeakReference(conn);
 
-    if (! mConnectionCache)
+    if (! mConnectionCache) {
       mConnectionCache = new nsSupportsHashtable(16);
+      if (! mConnectionCache)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     mConnectionCache->Put(&key, weakRef);
 
     NS_ADDREF(*_retval = conn);
