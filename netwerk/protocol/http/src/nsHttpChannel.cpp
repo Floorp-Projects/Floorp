@@ -1731,12 +1731,8 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
-    // set redirect status
-    mStatus = NS_BINDING_REDIRECTED;
-
-    // close down this transaction (null if processing a cached redirect)
-    if (mTransaction)
-        gHttpHandler->CancelTransaction(mTransaction, NS_BINDING_REDIRECTED);
+    // close down this channel
+    Cancel(NS_BINDING_REDIRECTED);
     
     // disconnect from our listener
     mListener = 0;
@@ -3177,7 +3173,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         return rv;
     }
 
-    return NS_BASE_STREAM_CLOSED;
+    return NS_ERROR_ABORT;
 }
 
 //-----------------------------------------------------------------------------
