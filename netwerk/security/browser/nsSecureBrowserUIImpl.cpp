@@ -394,7 +394,7 @@ nsSecureBrowserObserver::IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool* va
 
 	if (!aURL)
 		return NS_ERROR_NULL_POINTER;
-#if DEBUG
+#if DEBUG_dougt
 	char* string;
 	aURL->GetSpec(&string);
 	printf("[ensuring channel]: %s\n", string);
