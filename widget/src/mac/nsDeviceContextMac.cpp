@@ -58,8 +58,7 @@ GDHandle			thegd;
 PixMapHandle	thepix;
 double				pix_inch;
 
-
-  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
+  // NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
 	// this is a windowptr, or grafptr, native to macintosh only
 	mSurface = aNativeWidget;
