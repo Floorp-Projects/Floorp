@@ -29,7 +29,6 @@ NS_DEF_PTR(nsIWebShellWindow);
 			nsCOMPtr_as_found*					201
 			raw													214
 			nsIPtr_optimized						137 + 196
-			nsIPtr01										168 + 196
 			nsIPtr											220 + 196
 
 		Macintosh:
@@ -40,7 +39,6 @@ NS_DEF_PTR(nsIWebShellWindow);
 			nsCOMPtr_as_found						344		(1.1467)
 			raw													388		(1.2933)
 			nsIPtr_optimized						400		(1.3333)
-			nsIPtr01										464		(1.5467)
 			nsIPtr											564		(1.8800)
 
 	*/
@@ -157,19 +155,20 @@ Test06_nsCOMPtr00( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 		nsresult status;
 		nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject = do_QueryInterface(aDOMWindow, &status);
 
-		nsIWebShell* temp0;
+		nsIWebShell* temp0 = 0;
 		if ( scriptGlobalObject )
 			scriptGlobalObject->GetWebShell(&temp0);
 		nsCOMPtr<nsIWebShell> webShell = dont_AddRef(temp0);
 
+		nsIWebShell* temp1 = 0;
 		if ( webShell )
-			status = webShell->GetRootWebShellEvenIfChrome(temp0);
-		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp0);
+			status = webShell->GetRootWebShellEvenIfChrome(temp1);
+		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp1);
 
-		nsIWebShellContainer* temp1;
+		nsIWebShellContainer* temp2 = 0;
 		if ( rootWebShell )
-			status = rootWebShell->GetContainer(temp1);
-		nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp1);
+			status = rootWebShell->GetContainer(temp2);
+		nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp2);
 
 		if ( webShellContainer )
 			status = webShellContainer->QueryInterface(nsIWebShellWindow::GetIID(), (void**)aWebShellWindow);
@@ -189,19 +188,20 @@ Test06_nsCOMPtr_optimized( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>
 		nsresult status;
 		nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject = do_QueryInterface(aDOMWindow, &status);
 
-		nsIWebShell* temp0;
+		nsIWebShell* temp0 = 0;
 		if ( scriptGlobalObject )
 			scriptGlobalObject->GetWebShell(&temp0);
 		nsCOMPtr<nsIWebShell> webShell = dont_AddRef(temp0);
 
+		nsIWebShell* temp1 = 0;
 		if ( webShell )
-			status = webShell->GetRootWebShellEvenIfChrome(temp0);
-		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp0);
+			status = webShell->GetRootWebShellEvenIfChrome(temp1);
+		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp1);
 
-		nsIWebShellContainer* temp1;
+		nsIWebShellContainer* temp2 = 0;
 		if ( rootWebShell )
-			status = rootWebShell->GetContainer(temp1);
-		nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp1);
+			status = rootWebShell->GetContainer(temp2);
+		nsCOMPtr<nsIWebShellContainer> webShellContainer = dont_AddRef(temp2);
 		(*aWebShellWindow) = do_QueryInterface(webShellContainer, &status);
 
 //		return status;
@@ -310,38 +310,6 @@ Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 	}
 
 void // nsresult
-Test06_nsIPtr01( nsIDOMWindow* aDOMWindow, nsIWebShellWindowPtr* aWebShellWindow )
-		// m464, w168
-	{
-//		if ( !aDOMWindow )
-//			return NS_ERROR_NULL_POINTER;
-
-		nsIScriptGlobalObject* temp0;
-		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, (void**)&temp0);
-		nsIScriptGlobalObjectPtr scriptGlobalObject = temp0;
-
-		nsIWebShell* temp1;
-		if ( scriptGlobalObject.IsNotNull() )
-			scriptGlobalObject->GetWebShell(&temp1);
-		nsIWebShellPtr webShell = temp1;
-
-		if ( webShell.IsNotNull() )
-			status = webShell->GetRootWebShellEvenIfChrome(temp1);
-		nsIWebShellPtr rootWebShell;
-
-		nsIWebShellContainer* temp2;
-		if ( rootWebShell.IsNotNull() )
-			status = rootWebShell->GetContainer(temp2);
-		nsIWebShellContainerPtr webShellContainer = temp2;
-
-		if ( webShellContainer.IsNotNull() )
-			status = webShellContainer->QueryInterface(kIWebShellWindowIID, aWebShellWindow->Query());
-		else
-			(*aWebShellWindow) = 0;
-
-//		return status;
-	}
-void // nsresult
 Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m400, w137
 	{
@@ -352,19 +320,20 @@ Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShell
 		nsresult status = aDOMWindow->QueryInterface(kIScriptGlobalObjectIID, (void**)&temp0);
 		nsIScriptGlobalObjectPtr scriptGlobalObject = temp0;
 
-		nsIWebShell* temp1;
+		nsIWebShell* temp1 = 0;
 		if ( scriptGlobalObject.IsNotNull() )
 			scriptGlobalObject->GetWebShell(&temp1);
 		nsIWebShellPtr webShell = temp1;
 
+		nsIWebShell* temp2 = 0;
 		if ( webShell.IsNotNull() )
-			status = webShell->GetRootWebShellEvenIfChrome(temp1);
-		nsIWebShellPtr rootWebShell;
+			status = webShell->GetRootWebShellEvenIfChrome(temp2);
+		nsIWebShellPtr rootWebShell = temp2;
 
-		nsIWebShellContainer* temp2;
+		nsIWebShellContainer* temp3 = 0;
 		if ( rootWebShell.IsNotNull() )
-			status = rootWebShell->GetContainer(temp2);
-		nsIWebShellContainerPtr webShellContainer = temp2;
+			status = rootWebShell->GetContainer(temp3);
+		nsIWebShellContainerPtr webShellContainer = temp3;
 
 		if ( webShellContainer.IsNotNull() )
 			status = webShellContainer->QueryInterface(kIWebShellWindowIID, (void**)aWebShellWindow);
