@@ -83,7 +83,7 @@ WinRegSetRootKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->setRootKey(b0))
+    if(NS_OK != nativeThis->SetRootKey(b0))
     {
       return JS_FALSE;
     }
@@ -127,7 +127,7 @@ WinRegCreateKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->createKey(b0, b1, &nativeRet))
+    if(NS_OK != nativeThis->CreateKey(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -167,7 +167,7 @@ WinRegDeleteKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->deleteKey(b0, &nativeRet))
+    if(NS_OK != nativeThis->DeleteKey(b0, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -211,7 +211,7 @@ WinRegDeleteValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->deleteValue(b0, b1, &nativeRet))
+    if(NS_OK != nativeThis->DeleteValue(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -257,7 +257,7 @@ WinRegSetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
 
-    if(NS_OK != nativeThis->setValueString(b0, b1, b2, &nativeRet))
+    if(NS_OK != nativeThis->SetValueString(b0, b1, b2, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -300,7 +300,7 @@ WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->getValueString(b0, b1, &nativeRet))
+    if(NS_OK != nativeThis->GetValueString(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -357,7 +357,7 @@ WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
       return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->setValueNumber(b0, b1, ib2, &nativeRet))
+    if(NS_OK != nativeThis->SetValueNumber(b0, b1, ib2, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -400,7 +400,7 @@ WinRegGetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->getValueNumber(b0, b1, &nativeRet))
+    if(NS_OK != nativeThis->GetValueNumber(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -449,7 +449,7 @@ WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     // A way needs to be figured out to convert the JSVAL to this object type
 //    ConvertJSValToStr(b2, cx, argv[2]);
 
-//    if(NS_OK != nativeThis->setValue(b0, b1, b2, &nativeRet))
+//    if(NS_OK != nativeThis->SetValue(b0, b1, b2, &nativeRet))
 //    {
 //      return JS_FALSE;
 //    }
@@ -492,7 +492,7 @@ WinRegGetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->getValue(b0, b1, &nativeRet))
+    if(NS_OK != nativeThis->GetValue(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -529,7 +529,7 @@ WinRegInstallObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   //  public int installObject ();
 
-  nativeRet = nativeThis->installObject();
+  nativeRet = nativeThis->InstallObject();
 
   *rval = INT_TO_JSVAL(nativeRet);
   return JS_TRUE;

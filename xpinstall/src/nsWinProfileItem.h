@@ -65,10 +65,10 @@ public:
 private:
   
   /* Private Fields */
-  nsWinProfile* profile;     // initiating profile object
-  nsString*     section;     // Name of section
-  nsString*     key;         // Name of key
-  nsString*     value;       // data to write
+  nsWinProfile* mProfile;     // initiating profile object
+  nsString*     mSection;     // Name of section
+  nsString*     mKey;         // Name of key
+  nsString*     mValue;       // data to write
   
   /* Private Methods */
  

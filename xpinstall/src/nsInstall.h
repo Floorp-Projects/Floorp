@@ -132,6 +132,8 @@ class nsInstall
             EXTRACTION_FAILED           = -225,
             FILENAME_ALREADY_USED       = -226,
             ABORT_INSTALL               = -227,
+            
+            OUT_OF_MEMORY               = -299,
 
             GESTALT_UNKNOWN_ERR         = -5550,
             GESTALT_INVALID_ARGUMENT    = -5551,

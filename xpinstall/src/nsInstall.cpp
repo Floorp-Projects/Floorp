@@ -290,6 +290,12 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     nsVector *paths = new nsVector();
     
+    if (paths == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
+
     result = ExtractDirEntries(aJarSource, paths);
     if (result != nsInstall::SUCCESS)
     {
@@ -328,6 +334,12 @@ nsInstall::AddDirectory(const nsString& aRegName,
                                 aForceMode,
                                 &result);
         
+        if (ie == nsnull)
+        {
+            *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+                return NS_OK;
+        }
+
         if (result == nsInstall::SUCCESS)
         {
             result = ScheduleForInstall( ie );
@@ -456,6 +468,12 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                             tempTargetName, 
                             aForceMode, 
                             &errcode );
+    
+    if (ie == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+            return NS_OK;
+    }
 
     if (errcode == nsInstall::SUCCESS) 
     {
@@ -545,6 +563,13 @@ nsInstall::DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)
     }
     
     nsInstallDelete* id = new nsInstallDelete(this, "", qualifiedRegName, &result);
+    
+    if (id == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
+
     if (result == nsInstall::SUCCESS) 
     {
         result = ScheduleForInstall( id );
@@ -567,6 +592,12 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
     }
    
     nsInstallDelete* id = new nsInstallDelete(this, aFolder, aRelativeFileName, &result);
+
+    if (id == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
 
     if (result == nsInstall::SUCCESS) 
     {
@@ -604,6 +635,12 @@ nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* a
     }
    
     nsInstallExecute* ie = new nsInstallExecute(this, aJarSource, aArgs, &result);
+    
+    if (ie == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
 
     if (result == nsInstall::SUCCESS) 
     {
@@ -783,7 +820,9 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
         *aFolder  = new nsString(nsfsDir.GetNativePathCString());
     }
 
-    delete [] componentCString;
+    if (componentCString)
+        delete [] componentCString;
+    
     return NS_OK;
 }
 
@@ -800,11 +839,14 @@ nsInstall::GetFolder(const nsString& targetFolder, const nsString& aSubdirectory
     *aFolder = nsnull;
 
     spec = new nsInstallFolder(targetFolder, aSubdirectory);   
-       
-    nsString dirString;
-    spec->GetDirectoryPath(dirString);
+    
+    if (spec != nsnull)
+    {
+        nsString dirString;
+        spec->GetDirectoryPath(dirString);
 
-    *aFolder = new nsString(dirString);
+        *aFolder = new nsString(dirString);
+    }
     return NS_OK;    
 }
 
@@ -824,22 +866,24 @@ nsInstall::GetLastError(PRInt32* aReturn)
 PRInt32    
 nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn)
 {
+    *aReturn = JSVAL_NULL;
+
 #ifdef _WINDOWS
     JSObject*     winProfileObject;
     nsWinProfile* nativeWinProfileObject = new nsWinProfile(this, aFolder, aFile);
+    
+    if (nativeWinProfileObject == nsnull)
+        return NS_OK;
+    
     JSObject*     winProfilePrototype    = this->RetrieveWinProfilePrototype();
-
+    
     winProfileObject = JS_NewObject(jscontext, WinProfileClass, winProfilePrototype, NULL);
     if(winProfileObject == NULL)
-    {
-      return PR_FALSE;
-    }
-
+        return NS_OK;
+    
     JS_SetPrivate(jscontext, winProfileObject, nativeWinProfileObject);
 
     *aReturn = OBJECT_TO_JSVAL(winProfileObject);
-#else
-    *aReturn = JSVAL_NULL;
 #endif /* _WINDOWS */
 
     return NS_OK;
@@ -848,22 +892,24 @@ nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, JSConte
 PRInt32    
 nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn)
 {
+    *aReturn = JSVAL_NULL;
+
 #ifdef _WINDOWS
     JSObject* winRegObject;
     nsWinReg* nativeWinRegObject = new nsWinReg(this);
+    
+    if (nativeWinRegObject == nsnull)
+        return NS_OK;
+
     JSObject* winRegPrototype    = this->RetrieveWinRegPrototype();
 
     winRegObject = JS_NewObject(jscontext, WinRegClass, winRegPrototype, NULL);
     if(winRegObject == NULL)
-    {
-      return PR_FALSE;
-    }
-
+        return NS_OK;
+ 
     JS_SetPrivate(jscontext, winRegObject, nativeWinRegObject);
 
     *aReturn = OBJECT_TO_JSVAL(winRegObject);
-#else
-    *aReturn = JSVAL_NULL;
 #endif /* _WINDOWS */
 
     return NS_OK;
@@ -1034,6 +1080,11 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
                                              aTargetName,
                                              &result);
     
+    if (ip == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
 
     if (result == nsInstall::SUCCESS) 
     {
@@ -1070,6 +1121,12 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 {
     char szRegPackagePath[MAXREGPATHLEN];
     char* szRegPackageName = aRegistryPackageName.ToNewCString();
+    
+    if (szRegPackageName == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_FALSE;
+    }
 
     *szRegPackagePath = '0';
     *aReturn   = nsInstall::SUCCESS;
@@ -1109,10 +1166,22 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         delete mVersionInfo;
 
     mVersionInfo    = new nsInstallVersion();
+    if (mVersionInfo == nsnull)
+    {
+        *aReturn = nsInstall::OUT_OF_MEMORY;
+        return nsInstall::OUT_OF_MEMORY;
+    }
+
     mVersionInfo->Init(aVersion);
 
     mInstalledFiles = new nsVector();
     mPatchList      = new nsHashtable();
+    
+    if (mInstalledFiles == nsnull || mPatchList == nsnull)
+    {
+        *aReturn = nsInstall::OUT_OF_MEMORY;
+        return nsInstall::OUT_OF_MEMORY;
+    }
 
     /* this function should also check security!!! */
     *aReturn = OpenJARFile();
@@ -1156,6 +1225,12 @@ nsInstall::Uninstall(const nsString& aRegistryPackageName, PRInt32* aReturn)
                                                      qualifiedPackageName,
                                                      &result );
 
+    if (ie == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
+    
     if (result == nsInstall::SUCCESS) 
     {
         result = ScheduleForInstall( ie );
@@ -1196,6 +1271,12 @@ nsInstall::FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_CREATE, aTarget, aReturn);
 
+  if (ifop == nsnull)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+  
   if (*aReturn == nsInstall::SUCCESS) 
   {
       *aReturn = ScheduleForInstall( ifop );
@@ -1226,6 +1307,12 @@ nsInstall::FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_REMOVE, aTarget, aFlags, aReturn);
 
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
   if (*aReturn == nsInstall::SUCCESS) 
   {
       *aReturn = ScheduleForInstall( ifop );
@@ -1245,6 +1332,12 @@ PRInt32
 nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, aSrc, aTarget, aReturn);
+
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
 
   if (*aReturn == nsInstall::SUCCESS) 
   {
@@ -1266,6 +1359,12 @@ nsInstall::FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_COPY, aSrc, aTarget, aReturn);
 
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
   if (*aReturn == nsInstall::SUCCESS) 
   {
       *aReturn = ScheduleForInstall( ifop );
@@ -1286,6 +1385,12 @@ nsInstall::FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_DELETE, aTarget, aFlags, aReturn);
 
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
   if (*aReturn == nsInstall::SUCCESS) 
   {
       *aReturn = ScheduleForInstall( ifop );
@@ -1305,6 +1410,12 @@ PRInt32
 nsInstall::FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, aTarget, aParams, aReturn);
+
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
 
   if (*aReturn == nsInstall::SUCCESS) 
   {
@@ -1381,6 +1492,12 @@ nsInstall::FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_MOVE, aSrc, aTarget, aReturn);
 
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
   if (*aReturn == nsInstall::SUCCESS) 
   {
       *aReturn = ScheduleForInstall( ifop );
@@ -1400,6 +1517,12 @@ PRInt32
 nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, aSrc, aTarget, aReturn);
+
+  if (ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
 
   if (*aReturn == nsInstall::SUCCESS) 
   {
@@ -1798,11 +1921,17 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
         tempFile.MakeUnique();
 
         extractHereSpec = new nsFileSpec(tempFile);
+
+        if (extractHereSpec == nsnull)
+            return nsInstall::OUT_OF_MEMORY;
     }
     else
     {
         // extract to the final destination.
         extractHereSpec = new nsFileSpec(*aSuggestedName);
+        if (extractHereSpec == nsnull)
+            return nsInstall::OUT_OF_MEMORY;
+
         extractHereSpec->MakeUnique();
     }
 

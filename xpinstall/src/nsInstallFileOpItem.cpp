@@ -30,15 +30,19 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj       = aInstallObj;
+	*aReturn = NS_OK;
+    
+    mIObj       = aInstallObj;
 	mCommand    = aCommand;
 	mFlags      = aFlags;
 	mSrc        = nsnull;
-  mParams     = nsnull;
-	mTarget     = new nsFileSpec(aTarget);
-  mStrTarget  = nsnull;
+    mParams     = nsnull;
+	mStrTarget  = nsnull;
 
-  *aReturn = NS_OK;
+    mTarget     = new nsFileSpec(aTarget);
+    
+    if (mTarget == nsnull)
+        *aReturn = nsInstall::OUT_OF_MEMORY;
 }
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -48,15 +52,19 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj       = aInstallObj;
+	*aReturn = NS_OK;
+    
+    mIObj       = aInstallObj;
 	mCommand    = aCommand;
 	mFlags      = 0;
-	mSrc        = new nsFileSpec(aSrc);
-  mParams     = nsnull;
-	mTarget     = new nsFileSpec(aTarget);
-  mStrTarget  = nsnull;
-
-  *aReturn = NS_OK;
+	mParams     = nsnull;
+	mStrTarget  = nsnull;
+    
+    mSrc        = new nsFileSpec(aSrc);
+    mTarget     = new nsFileSpec(aTarget);
+    
+    if (mTarget == nsnull  || mSrc == nsnull)
+        *aReturn = nsInstall::OUT_OF_MEMORY;
 }
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -65,15 +73,20 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj       = aInstallObj;
+	*aReturn = NS_OK;
+    
+    mIObj       = aInstallObj;
 	mCommand    = aCommand;
 	mFlags      = 0;
 	mSrc        = nsnull;
-  mParams     = nsnull;
-	mTarget     = new nsFileSpec(aTarget);
-  mStrTarget  = nsnull;
+    mParams     = nsnull;
+	mStrTarget  = nsnull;
+    
+    mTarget     = new nsFileSpec(aTarget);
 
-  *aReturn = NS_OK;
+    if (mTarget == nsnull)
+        *aReturn = nsInstall::OUT_OF_MEMORY;
+
 }
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -83,34 +96,36 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj       = aInstallObj;
+    *aReturn = NS_OK;
+    mIObj       = aInstallObj;
 	mCommand    = aCommand;
 	mFlags      = 0;
 
-  switch(mCommand)
-  {
-    case NS_FOP_DIR_RENAME:
-    case NS_FOP_FILE_RENAME:
-    	mSrc        = new nsFileSpec(a1);
-	    mTarget     = nsnull;
-      mParams     = nsnull;
-      mStrTarget  = new nsString(a2);
-      break;
-    case NS_FOP_FILE_EXECUTE:
-    	mSrc        = nsnull;
-	    mTarget     = new nsFileSpec(a1);
-      mParams     = new nsString(a2);
-      mStrTarget  = nsnull;
-      break;
-    default:
-    	mSrc        = nsnull;
-	    mTarget     = new nsFileSpec(a1);
-      mParams     = new nsString(a2);
-      mStrTarget  = nsnull;
-      break;
-  }
+    switch(mCommand)
+    {
+        case NS_FOP_DIR_RENAME:
+        case NS_FOP_FILE_RENAME:
+    	    mSrc        = new nsFileSpec(a1);
+	        mTarget     = nsnull;
+            mParams     = nsnull;
+            mStrTarget  = new nsString(a2);
+        
+            if (mSrc == nsnull || mStrTarget == nsnull)
+                *aReturn = nsInstall::OUT_OF_MEMORY;
+            
+            break;
 
-  *aReturn = NS_OK;
+        case NS_FOP_FILE_EXECUTE:
+        default:
+    	    mSrc        = nsnull;
+	        mTarget     = new nsFileSpec(a1);
+            mParams     = new nsString(a2);
+            mStrTarget  = nsnull;
+
+            if (mTarget == nsnull || mParams == nsnull)
+                *aReturn = nsInstall::OUT_OF_MEMORY;
+            break;
+    }
 }
 
 nsInstallFileOpItem::~nsInstallFileOpItem()
@@ -175,7 +190,7 @@ float nsInstallFileOpItem::GetInstallOrder()
 
 char* nsInstallFileOpItem::toString()
 {
-	nsString result;
+  nsString result;
   char*    resultCString;
 
   switch(mCommand)
@@ -287,7 +302,9 @@ nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget)
   char* szTarget = aTarget->ToNewCString();
 
   aSrc->Rename(szTarget);
-  delete [] szTarget;
+  
+  if (szTarget)
+    delete [] szTarget;
 
   return NS_OK;
 }
@@ -326,7 +343,9 @@ nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
   char* szTarget = aTarget->ToNewCString();
 
   aSrc->Rename(szTarget);
-  delete [] szTarget;
+  
+  if (szTarget)
+    delete [] szTarget;
 
   return NS_OK;
 }

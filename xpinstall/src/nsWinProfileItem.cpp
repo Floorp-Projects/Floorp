@@ -26,49 +26,55 @@
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
                                    nsString sectionName,
                                    nsString keyName,
-                                   nsString val) : nsInstallObject(profileObj->installObject())
+                                   nsString val) : nsInstallObject(profileObj->InstallObject())
 {
-  profile = profileObj;
-  section = new nsString(sectionName);
-  key     = new nsString(keyName);
-  value   = new nsString(val);
+  mProfile = profileObj;
+  mSection = new nsString(sectionName);
+  mKey     = new nsString(keyName);
+  mValue   = new nsString(val);
 }
 
 nsWinProfileItem::~nsWinProfileItem()
 {
-  delete profile;
-  delete section;
-  delete key;
-  delete value;
+  delete mProfile;  // <--  is this the correct thing to do here?? FIX
+  if (mSection) delete mSection;
+  if (mKey)     delete mKey;
+  if (mValue)   delete mValue;
 }
 
 PRInt32 nsWinProfileItem::Complete()
 {
-	profile->finalWriteString(*section, *key, *value);
-	return NS_OK;
+	if (mProfile) 
+        mProfile->FinalWriteString(*mSection, *mKey, *mValue);
+	
+    return NS_OK;
 }
   
 float nsWinProfileItem::GetInstallOrder()
 {
-	return 4;
+	return 4;  // <--- what is this magic number??  FIX
 }
 
 char* nsWinProfileItem::toString()
 {
   char*     resultCString;
-  nsString* result;
-  nsString* filename = new nsString(*profile->getFilename());
+  
+  nsString* filename = new nsString(*mProfile->GetFilename());
+  nsString* result = new nsString("Write ");
 
-  result = new nsString("Write ");
+  if (filename == nsnull || result == nsnull)
+      return nsnull;
+
   result->Append(*filename);
   result->Append(": [");
-  result->Append(*section);
+  result->Append(*mSection);
   result->Append("] ");
-  result->Append(*key);
+  result->Append(*mKey);
   result->Append("=");
-  result->Append(*value);
+  result->Append(*mValue);
 
   resultCString = result->ToNewCString();
+  
   delete result;
   delete filename;
 
@@ -92,7 +98,7 @@ PRInt32 nsWinProfileItem::Prepare()
 PRBool 
 nsWinProfileItem::CanUninstall()
 {
-    return FALSE;
+    return PR_FALSE;
 }
 
 /* RegisterPackageNode
@@ -102,6 +108,6 @@ nsWinProfileItem::CanUninstall()
 PRBool
 nsWinProfileItem::RegisterPackageNode()
 {
-    return TRUE;
+    return PR_TRUE;
 }
 
