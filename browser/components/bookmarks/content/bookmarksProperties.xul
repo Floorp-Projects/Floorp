@@ -53,13 +53,13 @@
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksProperties.js"/>
  
-  <tabbox>
-    <tabs>
-      <tab label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
+  <tabbox id="bmPropsTabbox">
+    <tabs id="bmPropsTabs">
+      <tab id="GeneralTab" label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
       <tab id="ScheduleTab" label="&schedule.label;" accesskey="&schedule.accesskey;"/>
       <tab id="NotifyTab" label="&notification.label;" accesskey="&notification.accesskey;"/>
     </tabs>
-    <tabpanels>
+    <tabpanels id="bmPropsTabpanel">
       <vbox>
         <vbox id="description-box" hidden="true">
           <separator class="thin"/>                                               
