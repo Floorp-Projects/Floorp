@@ -41,6 +41,13 @@ CPPSRCS =				\
 
 DEFINES += -D_IMPL_NS_DOM
 
+# nsJSCSS2Properties.cpp has problems compiling under Neutrino gcc 2.8.1 
+# with the optimize flag turned on so this makes sure its turned off.
+# sorry for this hack please complain to Jerry.Kirk@Nexwarecorp.com
+ifeq ($(TARGET_OS),nto)
+DEFINES += -O0
+endif
+
 MODULE=dom
 
 REQUIRES = xpcom raptor dom js netlib
