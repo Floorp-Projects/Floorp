@@ -505,7 +505,7 @@ DateFormater.prototype.formatInterval = function( startDateTime, endDateTime, is
                                       this.makeRange(this.getFormatedTime(startDateTime),
                                                      this.getFormatedTime(endDateTime))))
              // range across different days
-             : this.makeRange(this.formatDateTime(startDateTime) +
+             : this.makeRange(this.formatDateTime(startDateTime),
                               this.formatDateTime(endDateTime))));
 }
 
