@@ -2565,7 +2565,25 @@ NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 key
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *resultFlags)
+{
+	PRInt32 index;
 
+	imapMessageFlagsType flags = -1;
+	flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &index);
+	if (*foundIt)
+		*resultFlags = flags;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapProtocol::GetSupportedUserFlags(PRUint16 *supportedFlags)
+{
+	if (!supportedFlags)
+		return NS_ERROR_NULL_POINTER;
+
+	*supportedFlags = m_flagState.GetSupportedUserFlags();
+	return NS_OK;
+}
 void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
 {
 //   	PastPasswordCheckEvent();

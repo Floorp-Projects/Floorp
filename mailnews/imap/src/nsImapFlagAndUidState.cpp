@@ -33,10 +33,13 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex, PRU
 {
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
+
+    PR_CEnterMonitor(this);
 	if (zeroBasedIndex < fNumberOfMessagesAdded)
 		*result = fUids[zeroBasedIndex];
 	else
 		*result = -1;	// so that value is non-zero and we don't ask for bad msgs
+    PR_CExitMonitor(this);
 	return NS_OK;
 }
 
@@ -102,8 +105,10 @@ nsImapFlagAndUidState::SetSupportedUserFlags(uint16 flags)
 
 void nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
 {
+    PR_CEnterMonitor(this);
 	if (!howManyLeft)
 		fNumberOfMessagesAdded = fNumberDeleted = 0;		// used space is still here
+    PR_CExitMonitor(this);
 }
 
 
@@ -115,6 +120,8 @@ void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 index)
 	
 	if ((PRUint32) fNumberOfMessagesAdded < index)
 		return;
+
+    PR_CEnterMonitor(this);
 	index--;
 	fNumberOfMessagesAdded--;
 	if (fFlags[index] & kImapMsgDeletedFlag)	// see if we already had counted this one as deleted
@@ -124,12 +131,14 @@ void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 index)
 		fUids.SetAt(counter, fUids[counter + 1]);
 		fFlags[counter] = fFlags[counter + 1];
 	}
+    PR_CExitMonitor(this);
 }
 
 
 	// adds to sorted list.  protects against duplicates and going past fNumberOfMessageSlotsAllocated  
 void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags)
 {
+    PR_CEnterMonitor(this);
 	// make sure there is room for this pair
 	if (fNumberOfMessagesAdded >= fNumberOfMessageSlotsAllocated)
 	{
@@ -146,6 +155,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 		fNumberOfMessagesAdded++;
 		if (flags & kImapMsgDeletedFlag)
 			fNumberDeleted++;
+	    PR_CExitMonitor(this);
 		return;
 	}
 	
@@ -178,6 +188,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 			fNumberDeleted++;
 		fFlags[insertionIndex] = flags;
 	}
+    PR_CExitMonitor(this);
 }
 
 	
@@ -226,6 +237,8 @@ PRBool nsImapFlagAndUidState::IsLastMessageUnseen()
 
 imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx)
 {
+    PR_CEnterMonitor(this);
+
 	PRInt32 index = 0;
 	PRInt32 hi = fNumberOfMessagesAdded - 1;
 	PRInt32 lo = 0;
@@ -241,6 +254,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 			
 			*foundIt = TRUE;
 			*ndx = index;
+		    PR_CExitMonitor(this);
 			return returnFlags;
 		}
 		if (fUids[index] > (PRUint32) uid)
@@ -254,6 +268,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 	if (index < 0)
 		index = 0;
 	*ndx = index;
+    PR_CExitMonitor(this);
 	return 0;
 }
 

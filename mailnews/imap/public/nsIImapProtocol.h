@@ -69,6 +69,9 @@ public:
 
 	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount) = 0;
 	NS_IMETHOD NotifyBodysToDownload(PRUint32 *keys, PRUint32 keyCount) = 0;
+	// methods to get data from the imap parser flag state.
+	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags) = 0;
+	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */

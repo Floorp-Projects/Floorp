@@ -270,6 +270,7 @@ protected:
 	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
 	nsParseMailMessageState *m_msgParser ;
 	nsMsgKey			m_curMsgUid;
+	PRInt32			m_nextMessageByteLength;
 	nsIMsgDatabase * m_mailDB ;
 	PRBool	    m_runTestHarness;
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false when the url finishes...
@@ -281,6 +282,7 @@ protected:
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
 	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
 	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch, mailbox_spec *boxSpec);
+	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe);
 
 };
 
@@ -707,6 +709,8 @@ NS_IMETHODIMP nsIMAP4TestDriver::SetupHeaderParseStream(nsIImapProtocol* aProtoc
                                StreamInfo* aStreamInfo)
 {
     printf("**** nsIMAP4TestDriver::SetupHeaderParseStream\r\n");
+
+	m_nextMessageByteLength = aStreamInfo->size;
 	if (!m_msgParser)
 	{
 		m_msgParser = new nsParseMailMessageState;
@@ -758,9 +762,10 @@ NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtoc
 NS_IMETHODIMP nsIMAP4TestDriver::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol)
 {
     printf("**** nsIMAP4TestDriver::NormalEndHeaderParseStream\r\n");
-	if (m_msgParser)
+	if (m_msgParser && m_msgParser->m_newMsgHdr)
 	{
 		m_msgParser->m_newMsgHdr->SetMessageKey(m_curMsgUid);
+		TweakHeaderFlags(aProtocol, m_msgParser->m_newMsgHdr);
 		// here we need to tweak flags from uid state..
 		m_mailDB->AddNewHdrToDB(m_msgParser->m_newMsgHdr, PR_TRUE);
 		m_msgParser->FinishHeader();
@@ -777,7 +782,73 @@ NS_IMETHODIMP nsIMAP4TestDriver::AbortHeaderParseStream(nsIImapProtocol* aProtoc
     return NS_OK;
 }
 
-    
+void nsIMAP4TestDriver::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe)
+{
+	if (m_mailDB && aProtocol && tweakMe)
+	{
+		tweakMe->SetMessageKey(m_curMsgUid);
+		tweakMe->SetMessageSize(m_nextMessageByteLength);
+		
+		PRBool foundIt = FALSE;
+		imapMessageFlagsType imap_flags;
+		nsresult res = aProtocol->GetFlagsForUID(m_curMsgUid, &foundIt, &imap_flags);
+		if (NS_SUCCEEDED(res) && foundIt)
+		{
+			// make a mask and clear these message flags
+			PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED;
+			PRUint32 dbHdrFlags;
+
+			tweakMe->GetFlags(&dbHdrFlags);
+			tweakMe->AndFlags(~mask, &dbHdrFlags);
+			
+			// set the new value for these flags
+			PRUint32 newFlags = 0;
+			if (imap_flags & kImapMsgSeenFlag)
+				newFlags |= MSG_FLAG_READ;
+			else // if (imap_flags & kImapMsgRecentFlag)
+				newFlags |= MSG_FLAG_NEW;
+
+			// Okay here is the MDN needed logic (if DNT header seen):
+			/* if server support user defined flag:
+					MDNSent flag set => clear kMDNNeeded flag
+					MDNSent flag not set => do nothing, leave kMDNNeeded on
+			   else if 
+					not MSG_FLAG_NEW => clear kMDNNeeded flag
+					MSG_FLAG_NEW => do nothing, leave kMDNNeeded on
+			 */
+			PRUint16 userFlags;
+			nsresult res = aProtocol->GetSupportedUserFlags(&userFlags);
+			if (NS_SUCCEEDED(res) && (userFlags & (kImapMsgSupportUserFlag |
+													  kImapMsgSupportMDNSentFlag)))
+			{
+				if (imap_flags & kImapMsgMDNSentFlag)
+				{
+					newFlags |= MSG_FLAG_MDN_REPORT_SENT;
+					if (dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
+						tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
+				}
+			}
+			else
+			{
+				if (!(imap_flags & kImapMsgRecentFlag) && 
+					dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
+					tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
+			}
+
+			if (imap_flags & kImapMsgAnsweredFlag)
+				newFlags |= MSG_FLAG_REPLIED;
+			if (imap_flags & kImapMsgFlaggedFlag)
+				newFlags |= MSG_FLAG_MARKED;
+			if (imap_flags & kImapMsgDeletedFlag)
+				newFlags |= MSG_FLAG_IMAP_DELETED;
+			if (imap_flags & kImapMsgForwardedFlag)
+				newFlags |= MSG_FLAG_FORWARDED;
+
+			if (newFlags)
+				tweakMe->OrFlags(newFlags, &dbHdrFlags);
+		}
+	}
+}    
     
     // nsIImapMessageSink support
 NS_IMETHODIMP
