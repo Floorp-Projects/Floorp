@@ -38,6 +38,7 @@
 	class="color-dialog profile"
 	title="&windowtitle.label;"
   align="vertical"
+  onclose="onExit();"
   onload="StartUp();"> 
       
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
