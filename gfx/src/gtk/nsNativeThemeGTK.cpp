@@ -505,8 +505,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
