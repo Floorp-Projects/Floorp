@@ -1062,6 +1062,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           nsCOMPtr<nsIMsgFolder> newTrashFolder;
           rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
           if (NS_SUCCEEDED(rv) && newTrashFolder) {
+            nsCOMPtr <nsIMsgLocalMailFolder> localTrash = do_QueryInterface(newTrashFolder);
+            if (localTrash)
+              localTrash->RefreshSizeOnDisk();
             newTrashFolder->SetDBTransferInfo(transferInfo);
             // update the summary totals so the front end will
             // show the right thing for the new trash folder

@@ -1925,7 +1925,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
     // update the folder size so we won't reparse.
     UpdateDBFolderInfo(destMailDB);
     if (destIFolder != nsnull)
-      destIFolder->SummaryChanged();
+      destIFolder->UpdateSummaryTotals(PR_TRUE);
     
     destMailDB->Commit(nsMsgDBCommitType::kLargeCommit);
   }  
