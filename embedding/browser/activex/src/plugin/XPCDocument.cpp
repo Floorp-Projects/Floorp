@@ -844,7 +844,7 @@ END_COM_MAP()
                                            url.get(),   // url
                                            1,           // line no
                                            nsnull,
-                                           result,
+                                           &result,
                                            nsnull);
 
         if (NS_FAILED(rv))

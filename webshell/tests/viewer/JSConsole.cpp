@@ -910,7 +910,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                                                       nsnull,
                                                       0,
                                                       nsnull,
-                                                      returnValue,
+                                                      &returnValue,
                                                       &isUndefined))) {
                 // output the result in the edit area
                 CHAR result[128];
