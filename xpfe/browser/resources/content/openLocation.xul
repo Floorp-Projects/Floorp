@@ -29,7 +29,7 @@ Contributor(s): ______________________________________. -->
 <window
          xmlns:html="http://www.w3.org/TR/REC-html40"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-         title="Open File or Location"
+         title="&caption.label;"
          onload="onLoad()"
          class="dialog"
          align="vertical"> 
