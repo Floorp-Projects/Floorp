@@ -84,8 +84,9 @@ What kind of file is this?
     if ($mimetype eq "other") {
         $mimetype = $::FORM{'othertype'};
     }
-    if ($mimetype !~ m@^(\w|-|\+|\.)+/(\w|-|\+|\.)+$@) {
-        PuntTryAgain("You must select a legal mime type.  '<tt>$mimetype</tt>' simply will not do.");
+    if ($mimetype !~ m@^(\w|-|\+|\.)+/(\w|-|\+|\.)+(;.*)?$@) {
+        PuntTryAgain("You must select a legal mime type.  '<tt>" .
+        html_quote($mimetype) . "</tt>' simply will not do.");
     }
     SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) values ($id," .
             SqlQuote($::FILENAME{'data'}) . ", " . SqlQuote($desc) . ", " .
