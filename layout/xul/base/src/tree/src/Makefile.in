@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
 		  webshell \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -44,7 +44,6 @@
 
 #include "jspubtd.h"
 #include "nsAString.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
@@ -56,6 +55,7 @@
 
 class nsIXPConnect;
 class nsIContent;
+class nsIDOMNode;
 class nsIDocument;
 class nsIDocShell;
 class nsINameSpaceManager;
@@ -68,9 +68,10 @@ class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
 class nsIPrefBranch;
-class nsIPref;
 class nsIImage;
 class nsIImageLoadingContent;
+class nsIDOMHTMLFormElement;
+class nsIDOMDocument;
 
 class nsContentUtils
 {
