@@ -4,6 +4,11 @@ TransforMiiX (TM)
 
 Build 20000523
 
+-- Added fix from Marc Schefer regarding OR expressions
+   - If the left hand expression was false...the right
+     hand expression was not evaluated (which should
+     only happen if the expression is an AND expr).
+
 -- Added support for document() function
    - implemented by Olivier Gerardin
    - The second argument to the function is not yet supported
