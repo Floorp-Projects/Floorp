@@ -535,10 +535,10 @@ int HaveDecodedRow(
           ++rowBufIndex;
         }
         for (int i=0; i<aDuplicateCount; i++) {
-          decoder->mImageFrame->SetImageData(decoder->mRGBLine,
-                                             bpr, (aRowNumber+i)*bpr);
           decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine,
                                              abpr, (aRowNumber+i)*abpr);
+          decoder->mImageFrame->SetImageData(decoder->mRGBLine,
+                                             bpr, (aRowNumber+i)*bpr);
         }
       }
       break;
