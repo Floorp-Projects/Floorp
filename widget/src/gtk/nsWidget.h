@@ -419,9 +419,7 @@ private:
   //
   // Keep track of the last widget being "dragged"
   //
-public:
   static nsWidget *sButtonMotionTarget;
-private:
   static gint sButtonMotionRootX;
   static gint sButtonMotionRootY;
   static gint sButtonMotionWidgetX;
