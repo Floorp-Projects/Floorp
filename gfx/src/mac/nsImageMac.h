@@ -94,6 +94,8 @@ public:
   NS_IMETHOD ConvertToPICT ( PicHandle* outPicture ) ;
   NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) ;
   
+  NS_IMETHOD GetPixMap ( PixMap** outPixMap ) ;
+  
 protected:
 		
 	static OSErr			CreatePixMap(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, CTabHandle aColorTable,

@@ -75,8 +75,7 @@ static int PR_CALLBACK BeginGIF(
   void*    aClientData,
   PRUint32 aLogicalScreenWidth, 
   PRUint32 aLogicalScreenHeight,
-  GIF_RGB* aBackgroundRGB,
-  GIF_RGB* aTransparencyChromaKey);
+  PRUint8  aBackgroundRGBIndex);
   
 static int PR_CALLBACK HaveDecodedRow(
   void* aClientData,

@@ -210,8 +210,7 @@ int BeginGIF(
   void*    aClientData,
   PRUint32 aLogicalScreenWidth, 
   PRUint32 aLogicalScreenHeight,
-  GIF_RGB* aBackgroundRGB,
-  GIF_RGB* aTransparencyChromaKey)
+  PRUint8  aBackgroundRGBIndex)
 {
   // copy GIF info into imagelib structs
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
@@ -233,6 +232,10 @@ int EndGIF(
     int      aAnimationLoopCount)
 {
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
+  if (decoder->mObserver) {
+    decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImageContainer);
+    decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+  }
   
   decoder->mImageContainer->SetLoopCount(aAnimationLoopCount);
   decoder->mImageContainer->DecodingComplete();
@@ -283,6 +286,7 @@ int EndImageFrame(
   if (decoder->mObserver)
     decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
 
+  decoder->mImageFrame = nsnull;
   return 0;
 }
   
@@ -293,11 +297,6 @@ int EndImageFrame(
 int HaveImageAll(
   void* aClientData)
 {
-  nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
-  if (decoder->mObserver) {
-    decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImageContainer);
-    decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
-  }
   return 0;
 }
 
