@@ -60,12 +60,14 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
   {
-	  nsCAutoString cName;
-    result = icService->GetString(nsIInternetConfigService::eICString_RealName, cName);
+	  char* cName;
+    result = icService->GetString(nsIInternetConfigService::eICString_RealName, &cName);
     if ( NS_SUCCEEDED ( result ) )
     {
   	  nsString fullName;
-      *aFullname = ToNewUnicode(cName);
+  	  fullName.AssignWithConversion( cName );
+  	  nsMemory::Free( cName );
+      *aFullname = ToNewUnicode(fullName);
     }
   }
   return result;
@@ -79,11 +81,7 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
   {
-    nsCAutoString tempString;
-    result = icService->GetString(nsIInternetConfigService::eICString_Email, tempString);
-    if (NS_SUCCEEDED(result))
-      *aEmailAddress = ToNewCString(tempString);  
-
+    result = icService->GetString(nsIInternetConfigService::eICString_Email, aEmailAddress);
   }
   return result;
 }
@@ -93,14 +91,16 @@ nsUserInfo::GetUsername(char * *aUsername)
 {
   *aUsername = nsnull;
   
-  nsCAutoString   tempString;
+  char* cString;
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
-    rv = icService->GetString(nsIInternetConfigService::eICString_Email, tempString);
+    rv = icService->GetString(nsIInternetConfigService::eICString_Email, &cString);
 
 	if ( NS_FAILED( rv ) ) return rv;
 	
+  nsCAutoString   tempString(cString);
+  nsMemory::Free( cString );
   const char*     atString = "@";
   PRInt32         atOffset = tempString.Find(atString);
   if (atOffset != kNotFound)
@@ -114,12 +114,14 @@ NS_IMETHODIMP
 nsUserInfo::GetDomain(char * *aDomain)
 {
   *aDomain = nsnull;
-  nsCAutoString   tempString;
+  char* cString;
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
-    rv = icService->GetString(nsIInternetConfigService::eICString_Email, tempString);
+    rv = icService->GetString(nsIInternetConfigService::eICString_Email, &cString);
 	if ( NS_FAILED( rv ) ) return rv;
+  nsCAutoString   tempString( cString);
+  nsMemory::Free( cString );
   const char*     atString = "@";
   PRInt32         atOffset = tempString.Find(atString);
   if (atOffset != kNotFound)
