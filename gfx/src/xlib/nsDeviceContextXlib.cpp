@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -105,7 +107,11 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 void
 nsDeviceContextXlib::CommonInit(void)
 {
-  static nscoord dpi = 100;
+  // FIXME: PeterH
+  // This was set to 100 dpi, then later on in the function is was changed
+  // to a default of 96dpi IF we had a preference component. We need to 
+  // find a way to get the actual server dpi for a comparison ala GTK.
+  static nscoord dpi = 96;
   static int initialized = 0;
 
   if (!initialized) {
@@ -129,8 +135,9 @@ nsDeviceContextXlib::CommonInit(void)
     }
   }
 
-  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
+	// Do extra rounding (based on GTK). KenF
+	mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(72)) / float(dpi)));
+  	mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
 

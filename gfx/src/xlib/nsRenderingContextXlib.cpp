@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -28,6 +30,8 @@
 #include "prmem.h"
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
 
@@ -105,6 +109,7 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
   NS_IF_RELEASE(mContext);
 }
 
+#if 0
 nsresult
 nsRenderingContextXlib::QueryInterface(const nsIID&  aIID, void** aInstancePtr)
 {
@@ -133,6 +138,7 @@ nsRenderingContextXlib::QueryInterface(const nsIID&  aIID, void** aInstancePtr)
 
 NS_IMPL_ADDREF(nsRenderingContextXlib)
 NS_IMPL_RELEASE(nsRenderingContextXlib)
+#endif
 
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
@@ -658,6 +664,8 @@ nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  nscoord diffX, diffY;
+
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawLine()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface)
     return NS_ERROR_FAILURE;
@@ -665,8 +673,18 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
   
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
+  }
+
   ::XDrawLine(mDisplay, mRenderingSurface->GetDrawable(),
-              mRenderingSurface->GetGC(), aX0, aY0, aX1, aY1);
+              mRenderingSurface->GetGC(), aX0, aY0, aX1 - diffX, aY1 - diffY);
 
   return NS_OK;
 }
@@ -1079,8 +1097,14 @@ nsRenderingContextXlib::GetWidth(const char* aString, PRUint32 aLength, nscoord&
     aWidth = 0;
   }
   else {
-    // XXX fix this...
-    int rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength / 2);
+   
+    int rawWidth;
+
+    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
+      rawWidth = XTextWidth(mCurrentFont, (char *)aString, aLength);
+    else
+      rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength / 2);
+
     aWidth = NSToCoordRound(rawWidth * mP2T);
   }  
   return NS_OK;
@@ -1138,6 +1162,7 @@ FoundFont:
   }
   if (nsnull != aFontID)
     *aFontID = 0;
+
 
   return NS_OK;
 }
@@ -1408,6 +1433,26 @@ nsRenderingContextXlib::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoor
   return NS_OK;
 }
 #endif
+
+// this method of DrawTile is not implemented in nsRenderingContextImpl
+
+NS_IMETHODIMP
+nsRenderingContextXlib::DrawTile(nsIImage *aImage,
+                                nscoord aSrcXOffset, nscoord aSrcYOffset,
+                                const nsRect &aTileRect)
+{
+  nsRect tileRect(aTileRect);
+  nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
+  mTMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
+                           &srcRect.height);
+  mTMatrix->TransformCoord(&tileRect.x, &tileRect.y,
+                           &tileRect.width, &tileRect.height);
+
+  if((tileRect.width > 0) && (tileRect.height > 0))
+    ((nsImageXlib*)aImage)->DrawTile(*this, mRenderingSurface, srcRect.width, srcRect.height, tileRect);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,

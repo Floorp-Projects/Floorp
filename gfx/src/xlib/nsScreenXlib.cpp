@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
 #include "nsScreenXlib.h"

@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Quy Tonthat <quy@igelaus.com.au>
  */
 
 #include "xp_core.h"
@@ -464,12 +466,17 @@ void nsFontMetricsXlib::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  mAscent = nscoord(mFontHandle->ascent * f);
-  mDescent = nscoord(mFontHandle->descent * f);
-  mMaxAscent = nscoord(mFontHandle->ascent * f) ;
-  mMaxDescent = nscoord(mFontHandle->descent * f);
+  mAscent = nscoord(mFontHandle->max_bounds.ascent * f);
+  mDescent = nscoord(mFontHandle->max_bounds.descent * f);
+  mMaxAscent = nscoord(mFontHandle->max_bounds.ascent * f) ;
+  mMaxDescent = nscoord(mFontHandle->max_bounds.descent * f);
 
-  mHeight = nscoord((mFontHandle->ascent + mFontHandle->descent) * f);
+  mHeight = nscoord((mFontHandle->max_bounds.ascent +
+                     mFontHandle->max_bounds.descent) * f);
+
+  // Until we know what mEmHeight does, we will just set it to mHeight FIXME
+  mEmHeight = mHeight;
+
   mMaxAdvance = nscoord(mFontHandle->max_bounds.width * f);
 
   // 56% of ascent, best guess for non-true type
@@ -2353,7 +2360,7 @@ nsFontMetricsXlib::FindGenericFont(nsFontSearch* aSearch)
   char name[128];
   if (mLangGroup) {
     nsAutoString pref = prefix;
-    pref.Append('.');
+    pref.AppendWithConversion('.');
     const PRUnichar* langGroup = nsnull;
     mLangGroup->GetUnicode(&langGroup);
     pref.Append(langGroup);

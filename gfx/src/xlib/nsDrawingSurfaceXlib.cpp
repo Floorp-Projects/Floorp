@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Smith <david@igelaus.com.au>
  */
 
 #include "nsDrawingSurfaceXlib.h"
@@ -88,6 +89,10 @@ nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
   if (mImage) {
     XDestroyImage(mImage);
   }
+
+  // We are freeing the GC here now [See nsWidget::CreateGC()]
+  if (mGC)
+    XFreeGC(mDisplay, mGC);
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDrawingSurfaceXlib, kIDrawingSurfaceIID)
@@ -108,8 +113,15 @@ nsDrawingSurfaceXlib::Init(Display * aDisplay,
   mScreen = aScreen;
   mVisual = aVisual;
   mDepth = aDepth;
+  // We Ignore the GC we are given, cos it is bad. [See nsWidget::CreateGC()]
+#if 0
   mGC = aGC;
+#endif
   mDrawable = aDrawable;
+
+  // Create a new GC
+  mGC = XCreateGC(mDisplay, mDrawable, 0, NULL);
+
   mIsOffscreen = PR_FALSE;
   return NS_OK;
 }
@@ -128,7 +140,11 @@ nsDrawingSurfaceXlib::Init (Display * aDisplay,
   mScreen = aScreen;
   mVisual = aVisual;
   mDepth = aDepth;
+  // We Ignore the GC we are given, cos it is bad. [See nsWidget::Create()]
+#if 0
   mGC = aGC;
+#endif
+
   mWidth = aWidth;
   mHeight = aHeight;
   mLockFlags = aFlags;
@@ -140,6 +156,9 @@ nsDrawingSurfaceXlib::Init (Display * aDisplay,
                             mWidth, 
                             mHeight, 
                             mDepth);
+  // Create a new GC
+  mGC = XCreateGC(mDisplay, mDrawable, 0, NULL);
+
   return NS_OK;
 }
 
@@ -155,6 +174,12 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
     NS_ASSERTION(0, "nested lock attempt");
     return NS_ERROR_FAILURE;
   }
+  if (aWidth == 0 || aHeight == 0)
+  {
+    NS_ASSERTION(0, "Width or Height is 0");
+    return NS_ERROR_FAILURE;
+  }
+
   mLocked = PR_TRUE;
 
   mLockX = aX;
@@ -172,7 +197,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
   *aBits = mImage->data;
   
   *aWidthBytes = mImage->bytes_per_line;
-  *aStride = mImage->bitmap_pad;
+  *aStride = mImage->bytes_per_line;
 
   return NS_OK;
 }

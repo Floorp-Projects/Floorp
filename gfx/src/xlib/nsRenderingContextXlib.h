@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
  */
 
 #ifndef nsRenderingContextXlib_h___
@@ -168,8 +169,8 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   // in nsRenderingContextImpl
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight);
-  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX, nscoord aY, const nsRect&);
 #endif
+  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX, nscoord aY, const nsRect&);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
