@@ -1074,7 +1074,8 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
 
 #define SALT_SIZE 8
 #define TABLE_SIZE 36
-#define SALT_EXTENSION ".slt"
+
+NS_NAMED_LITERAL_CSTRING(kSaltExtensionCString, ".slt");
 
 const char table[] = 
 	{ 'a','b','c','d','e','f','g','h','i','j',
@@ -1132,9 +1133,9 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
 	 	if (NS_SUCCEEDED(rv) && (const char *)leafName) {
 		  PRUint32 length = nsCRT::strlen((const char *)leafName);
 		  // check if the filename is the right length, len("xxxxxxxx.slt")
-		  if (length == (SALT_SIZE + nsCRT::strlen(SALT_EXTENSION))) {
+		  if (length == (SALT_SIZE + kSaltExtensionCString.Length())) {
 			// check that the filename ends with ".slt"
-			if (nsCRT::strncmp((const char *)leafName + SALT_SIZE, SALT_EXTENSION, nsCRT::strlen(SALT_EXTENSION)) == 0) {
+			if (nsCRT::strncmp((const char *)leafName + SALT_SIZE, kSaltExtensionCString.get(), kSaltExtensionCString.Length()) == 0) {
 			  // found a salt directory, use it
 			  rv = aDir->Append((const char *)leafName);
 			  return rv;
@@ -1160,7 +1161,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   for (i=0;i<SALT_SIZE;i++) {
   	saltStr.Append(table[rand()%TABLE_SIZE]);
   }
-  saltStr.Append(SALT_EXTENSION);
+  saltStr.Append(kSaltExtensionCString);
 #ifdef DEBUG_profile_verbose
   printf("directory name: %s\n",(const char *)saltStr);
 #endif
@@ -1179,6 +1180,57 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   return NS_OK;
 }
 
+nsresult nsProfile::ShouldDeleteProfileParentDir(nsIFile *profileDir, PRBool *isSalted)
+{
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(isSalted);
+    *isSalted = PR_FALSE;
+    
+    // 1. The name of the profile dir has to end in ".slt"
+    nsXPIDLCString leafName;
+    rv = profileDir->GetLeafName(getter_Copies(leafName));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool endsWithSalt = PR_FALSE;    
+    nsLiteralCString leafNameString(leafName.get());
+    if (leafNameString.Length() >= kSaltExtensionCString.Length())
+    {
+        nsReadingIterator<char> stringEnd;
+        leafNameString.EndReading(stringEnd);
+
+        nsReadingIterator<char> stringStart = stringEnd;
+        stringStart.advance( -(NS_STATIC_CAST(PRInt32, kSaltExtensionCString.Length())) );
+
+        endsWithSalt = kSaltExtensionCString.Equals(Substring(stringStart, stringEnd));
+    }
+    if (!endsWithSalt)
+        return NS_OK;
+    
+    // 2. The profile dir has to be its parent's only child.    
+    nsCOMPtr<nsIFile> parentDir;
+    rv = profileDir->GetParent(getter_AddRefs(parentDir));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool hasMore;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = parentDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+    
+    PRInt32 numChildren = 0;
+    rv = dirIterator->HasMoreElements(&hasMore);
+    
+    while (NS_SUCCEEDED(rv) && hasMore && numChildren <= 1) {
+        nsCOMPtr<nsIFile> child;
+        rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(child));    
+        if (NS_SUCCEEDED(rv))
+            ++numChildren;
+        rv = dirIterator->HasMoreElements(&hasMore);
+    }
+    if (NS_SUCCEEDED(rv) && numChildren == 1)
+        *isSalted = PR_TRUE;
+    
+    return NS_OK;
+}
 
 /*
  * Setters
@@ -1351,26 +1403,6 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     return NS_OK;
 }	
 
-// Delete all user directories associated with the a profile
-// A FileSpec of the profile's directory is taken as input param
-nsresult nsProfile::DeleteUserDirectories(nsIFile *profileDir)
-{
-    NS_ENSURE_ARG(profileDir);
-    nsresult rv;
-
-#if defined(DEBUG_profile_verbose)
-    printf("ProfileManager : DeleteUserDirectories\n");
-#endif
-
-    PRBool exists;
-    rv = profileDir->Exists(&exists);
-    if (NS_FAILED(rv)) return rv;
-    
-    if (exists)
-        rv = profileDir->Delete(PR_TRUE);
-    
-    return rv;
-}
 
 // Rename a old profile to new profile.
 // Copies all the keys from old profile to new profile.
@@ -1491,21 +1523,41 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
 
     nsresult rv = NS_OK;
  
-    rv = ForgetCurrentProfile();
-    if (NS_FAILED(rv)) return rv;
+    nsXPIDLString currProfile;
+    rv = GetCurrentProfile(getter_Copies(currProfile));
+    if (NS_SUCCEEDED(rv) && !nsCRT::strcmp(profileName, currProfile)) {
+        rv = ForgetCurrentProfile();
+        if (NS_FAILED(rv)) return rv;
+    }
     
     // If user asks for it, delete profile directory
     if (canDeleteFiles) {
-        nsFileSpec profileDirSpec;
-        
+    
         nsCOMPtr<nsIFile> profileDir;
         rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
         if (NS_FAILED(rv)) return rv;
         
-        nsCOMPtr<nsILocalFile> localProfileDir(do_QueryInterface(profileDir));
-        if (!localProfileDir) return NS_ERROR_FAILURE;
-        rv = DeleteUserDirectories(localProfileDir);
+        PRBool exists;
+        rv = profileDir->Exists(&exists);
         if (NS_FAILED(rv)) return rv;
+        
+        if (exists) {
+
+            // The profile dir may be located inside a salted dir.
+            // If so, according to ShouldDeleteProfileParentDir,
+            // delete the parent dir as well.
+            
+            nsCOMPtr<nsIFile> dirToDelete(profileDir);
+            PRBool isSalted;
+            rv = ShouldDeleteProfileParentDir(profileDir, &isSalted);
+            if (NS_SUCCEEDED(rv) && isSalted) {
+                nsCOMPtr<nsIFile> parentDir;
+                rv = profileDir->GetParent(getter_AddRefs(parentDir));
+                if (NS_SUCCEEDED(rv))
+                    dirToDelete = parentDir;
+            }
+            rv = dirToDelete->Delete(PR_TRUE);
+        }
     }
 
     // Remove the subtree from the registry.
