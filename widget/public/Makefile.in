@@ -67,6 +67,8 @@ XPIDLSRCS	= \
 		nsIToolkit.idl \
 		nsISound.idl \
 		nsITransferable.idl \
+		nsIClipboardDragDropHooks.idl \
+		nsIClipboardDragDropHookList.idl \
 		nsIDragSession.idl \
 		nsIDragService.idl \
 		nsIDragTracker.idl \
