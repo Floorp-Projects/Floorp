@@ -132,6 +132,8 @@ private:
 
   nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
+  PRBool GetProviderCount(const nsCString& aProviderType, nsIRDFDataSource* aDataSource);
+
 protected:
   PRBool mInstallInitialized;
   PRBool mProfileInitialized;

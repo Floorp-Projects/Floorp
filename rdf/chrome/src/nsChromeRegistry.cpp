@@ -537,10 +537,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     }
   } 
 
-  finalURL += package;
-  finalURL += "/";
-  finalURL += provider;
-  finalURL += "/";
   finalURL += remaining;
 
   *aResult = nsXPIDLCString::Copy(finalURL);
@@ -1733,7 +1729,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 {
   // XXX don't allow local chrome overrides of install chrome!
 #ifdef DEBUG
-  printf("***** Chrome Registration: Installing %s at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
+  printf("*** Chrome Registration of %s: Checking for contents.rdf (or obsolete manifest.rdf) at %s\n", (const char*)aProviderType, (const char*)aBaseURL);
 #endif
 
   // Load the data source found at the base URL.
@@ -1749,12 +1745,52 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 
   // We need to read this synchronously.
   nsCAutoString key(aBaseURL);
-  key += "manifest.rdf";
- 
-  (void)remote->Init(key);      // ignore failure here
-  rv = remote->Refresh(PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  key += "contents.rdf";
+  remote->Init(key);
+  remote->Refresh(PR_TRUE);
+  
+  PRBool skinCount = GetProviderCount(nsCAutoString("skin"), dataSource);
+  PRBool localeCount = GetProviderCount(nsCAutoString("locale"), dataSource);
+  PRBool packageCount = GetProviderCount(nsCAutoString("package"), dataSource);
+    
+  PRBool appendPackage = PR_FALSE;
+  PRBool appendProvider = PR_FALSE;
+  PRBool appendProviderName = PR_FALSE;
 
+  if (skinCount == 0 && localeCount == 0 && packageCount == 0) {
+    // Try the old-style manifest.rdf instead
+    key = aBaseURL;
+    key += "manifest.rdf";
+    (void)remote->Init(key);      // ignore failure here
+    rv = remote->Refresh(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    appendPackage = PR_TRUE;
+    appendProvider = PR_TRUE;
+    NS_WARNING("Using old-style manifest.rdf.  Please update to contents.rdf.");
+  }
+  else { 
+    if ((skinCount > 1 && aProviderType.Equals("skin")) ||
+        (localeCount > 1 && aProviderType.Equals("locale")))
+      appendProviderName = PR_TRUE;
+
+    if (!appendProviderName && packageCount > 1) {
+      appendPackage = PR_TRUE;
+    }
+
+    if (aProviderType.Equals("skin")) {
+      if (!appendProviderName && (localeCount == 1 || packageCount != 0))
+        appendProvider = PR_TRUE;
+    }
+    else if (aProviderType.Equals("locale")) {
+      if (!appendProviderName && (skinCount == 1 || packageCount != 0))
+        appendProvider = PR_TRUE;
+    }
+    else {
+      // Package install.
+      if (localeCount == 1 || skinCount == 1)
+        appendProvider = PR_TRUE;
+    }
+  }
 
   // Load the install data source that we wish to manipulate.
   nsCOMPtr<nsIRDFDataSource> installSource;
@@ -1779,12 +1815,6 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   else locstr.AssignWithConversion("install");
   nsCOMPtr<nsIRDFLiteral> locLiteral;
   rv = mRDFService->GetLiteral(locstr.GetUnicode(), getter_AddRefs(locLiteral));
-  if (NS_FAILED(rv)) return rv;
-
-  // Get the literal for our base URL.
-  nsAutoString unistr;unistr.AssignWithConversion(aBaseURL);
-  nsCOMPtr<nsIRDFLiteral> baseLiteral;
-  rv = mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
   if (NS_FAILED(rv)) return rv;
 
   // Get the literal for our script access.
@@ -1827,6 +1857,30 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
       
       if (aProviderType.Equals("package") && !val.Equals("urn:mozilla:package:root")) {
         // Add arcs for the base url and loctype
+        // Get the value of the base literal.
+        nsCAutoString baseURL(aBaseURL);
+        
+        // Peel off the package.
+        const char* val2;
+        rv = resource->GetValueConst(&val2);
+        if (NS_FAILED(rv)) return rv;
+        nsCAutoString value2(val2);
+        PRInt32 index = value2.RFind(":");
+        nsCAutoString packageName;
+        value2.Right(packageName, value2.Length() - index - 1);
+        
+        if (appendPackage) {
+          baseURL += packageName;
+          baseURL += "/";
+        }
+        if (appendProvider) {
+          baseURL += "content/";
+        }
+        
+        nsAutoString unistr;unistr.AssignWithConversion(baseURL);
+        nsCOMPtr<nsIRDFLiteral> baseLiteral;
+        mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
+  
         rv = nsChromeRegistry::UpdateArc(installSource, resource, mBaseURL, baseLiteral, aRemove);
         if (NS_FAILED(rv)) return rv;
         rv = nsChromeRegistry::UpdateArc(installSource, resource, mLocType, locLiteral, aRemove);
@@ -1903,6 +1957,42 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
             if (NS_FAILED(rv)) return rv;
             nsCOMPtr<nsIRDFResource> entry(do_QueryInterface(supp));
             if (entry) {
+              // Get the value of the base literal.
+              nsCAutoString baseURL(aBaseURL);
+              
+              // Peel off the package and the provider.
+              const char* val2;
+              rv = entry->GetValueConst(&val2);
+              if (NS_FAILED(rv)) return rv;
+              nsCAutoString value2(val2);
+              PRInt32 index = value2.RFind(":");
+              nsCAutoString packageName;
+              value2.Right(packageName, value2.Length() - index - 1);
+              nsCAutoString remainder;
+              value2.Left(remainder, index);
+
+              nsCAutoString providerName;
+              index = remainder.RFind(":");
+              remainder.Right(providerName, remainder.Length() - index - 1);
+
+              // Append them to the base literal and tack on a final slash.
+              if (appendProviderName) {
+                baseURL += providerName;
+                baseURL += "/";
+              }
+              if (appendPackage) {
+                baseURL += packageName;
+                baseURL += "/";
+              }
+              if (appendProvider) {
+                baseURL += aProviderType;
+                baseURL += "/";
+              }
+              
+              nsAutoString unistr;unistr.AssignWithConversion(baseURL);
+              nsCOMPtr<nsIRDFLiteral> baseLiteral;
+              mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
+  
               rv = nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
               if (NS_FAILED(rv)) return rv;
               if (aProviderType.Equals(nsCAutoString("skin")) && !aAllowScripts) {
@@ -1911,16 +2001,9 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
               }
               
               // Now set up the package arc.
-              const char* val2;
-              rv = entry->GetValueConst(&val2);
-              if (NS_FAILED(rv)) return rv;
-              nsCAutoString value2(val2);
-              PRInt32 index = value2.RFind(":");
               if (index != -1) {
                 // Peel off the package name.
-                nsCAutoString packageName;
-                value2.Right(packageName, value2.Length() - index - 1);
-
+                
                 nsCAutoString resourceName("urn:mozilla:package:");
                 resourceName += packageName;
                 nsCOMPtr<nsIRDFResource> packageResource;
@@ -2596,6 +2679,37 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       ++aBuffer;
   }
   return rv;
+}
+
+PRBool 
+nsChromeRegistry::GetProviderCount(const nsCString& aProviderType, nsIRDFDataSource* aDataSource)
+{
+  nsresult rv;
+
+  nsCAutoString rootStr("urn:mozilla:");
+  rootStr += aProviderType;
+  rootStr += ":root";
+
+  // obtain the provider root resource
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource(rootStr, getter_AddRefs(resource));
+  if (NS_FAILED(rv))
+    return 0;
+
+  // wrap it in a container
+  nsCOMPtr<nsIRDFContainer> container;
+  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_FAILED(rv)) return 0;
+
+  rv = container->Init(aDataSource, resource);
+  if (NS_FAILED(rv)) return 0;
+
+  PRInt32 count;
+  container->GetCount(&count);
+  return count;
 }
 
 //////////////////////////////////////////////////////////////////////
