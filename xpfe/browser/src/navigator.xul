@@ -415,7 +415,7 @@
     }
   }
 
-  function WalletSafeFillin()
+  function WalletSafeFillin(window.frames[0].frames[1])
   {
     if (appCore != null) {
       dump("Wallet Safe Fillin\n");
@@ -425,7 +425,7 @@
     }
   }
 
-  function WalletQuickFillin()
+  function WalletQuickFillin(window.frames[0].frames[1])
   {
     if (appCore != null) {
       dump("Wallet Quick Fillin\n");

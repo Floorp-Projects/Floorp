@@ -401,16 +401,21 @@ nsBrowserAppCore::WalletEditor()
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::WalletSafeFillin()
+nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin)
 {
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
   nsIPresShell* shell;
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
-  mWebShell->FindChildWithName(nsAutoString("content").GetUnicode(), *getter_AddRefs(webcontent));
-  nsCOMPtr<nsIWebShell> webcontent2; 
-  webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
-  shell = GetPresShellFor(webcontent2);
 
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin); 
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+
+  shell = GetPresShellFor(webcontent);
   nsIWalletService *walletservice;
   nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
@@ -431,16 +436,21 @@ nsBrowserAppCore::WalletSafeFillin()
 #include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
-nsBrowserAppCore::WalletQuickFillin()
+nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
 {
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
   nsIPresShell* shell;
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
-  mWebShell->FindChildWithName(nsAutoString("content").GetUnicode(), *getter_AddRefs(webcontent));
-  nsCOMPtr<nsIWebShell> webcontent2; 
-  webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
-  shell = GetPresShellFor(webcontent2);
 
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin); 
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+
+  shell = GetPresShellFor(webcontent);
   nsIWalletService *walletservice;
   nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
