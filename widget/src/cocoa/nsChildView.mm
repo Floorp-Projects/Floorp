@@ -2447,6 +2447,17 @@ nsChildView::Idle()
   }
 }
 
+//
+// -wantsDefaultClipping
+//
+// A panther-only method, allows us to turn off setting up the clip region
+// before each drawRect. We already clip within gecko.
+//
+- (BOOL)wantsDefaultClipping
+{
+  return NO;
+}
+
 #if USE_CLICK_HOLD_CONTEXTMENU
 //
 // -clickHoldCallback:
