@@ -2,11 +2,14 @@
 # This is a list of local files which get copied to the mozilla:dist:idl directory
 #
 
+nsIAppShell.idl
 nsIFileSpecWithUI.idl
 nsISound.idl
+nsIToolkit.idl
 nsITransferable.idl
 nsIDragSession.idl
 nsIDragService.idl
 nsIFormatConverter.idl
 nsIClipboard.idl
 nsIClipboardOwner.idl
+nsIRollupListener.idl

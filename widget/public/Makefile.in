@@ -51,9 +51,7 @@ EXPORTS		= \
 		nsIMouseListener.h \
 		nsIEventListener.h \
 		nsIMenuListener.h \
-		nsIToolkit.h \
 		nsWidgetsCID.h \
-		nsIAppShell.h \
 		nsILookAndFeel.h \
 		nsILabel.h \
 		nsIMenuBar.h \
@@ -64,11 +62,12 @@ EXPORTS		= \
 		nsIFontSizeIterator.h \
 		nsIFontRetrieverService.h \
 		nsIContextMenu.h \
-    nsIRollupListener.h \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIAppShell.idl \
 		nsIFileSpecWithUI.idl \
+		nsIToolkit.idl \
 		nsISound.idl \
 		nsITransferable.idl \
 		nsIDragSession.idl \
@@ -76,6 +75,7 @@ XPIDLSRCS	= \
 		nsIFormatConverter.idl \
 		nsIClipboard.idl \
 		nsIClipboardOwner.idl \
+		nsIRollupListener.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
