@@ -1251,18 +1251,18 @@ void nsImapServerResponseParser::msg_fetch()
 			envelope_data(); 
 		}
 		else if (!PL_strcasecmp(fNextToken, "INTERNALDATE"))
-                {
-                  fDownloadingHeaders = PR_TRUE; // we only request internal date while downloading headers
-                  if (!bNeedEndMessageDownload)
-                    BeginMessageDownload(MESSAGE_RFC822);
-         	  bNeedEndMessageDownload = PR_TRUE;
+		{
+			fDownloadingHeaders = PR_TRUE; // we only request internal date while downloading headers
+			if (!bNeedEndMessageDownload)
+				BeginMessageDownload(MESSAGE_RFC822);
+			bNeedEndMessageDownload = PR_TRUE;
 			internal_date(); 
-                }
+		}
 		else if (!PL_strcasecmp(fNextToken, "XAOL-ENVELOPE"))
 		{
 			fDownloadingHeaders = PR_TRUE;
-                        if (!bNeedEndMessageDownload)
-      BeginMessageDownload(MESSAGE_RFC822);
+      if (!bNeedEndMessageDownload)
+				BeginMessageDownload(MESSAGE_RFC822);
 			bNeedEndMessageDownload = PR_TRUE;
 			xaolenvelope_data();
 		}
@@ -1415,7 +1415,19 @@ void nsImapServerResponseParser::xaolenvelope_data()
 			fNextToken = GetNextToken();
 			if (ContinueParse())
 			{
-				nsCAutoString fromLine("From: ");
+				nsCAutoString fromLine;
+        if (!strcmp(GetSelectedMailboxName(), "Sent Items"))
+				{
+					// xaol envelope switches the From with the To, so we switch them back and
+					// create a fake from line From: user@aol.com
+					fromLine.Append("To: ");
+					nsCAutoString fakeFromLine(NS_LITERAL_CSTRING("From: ") + nsDependentCString(fServerConnection.GetImapUserName()) + NS_LITERAL_CSTRING("@aol.com"));
+					fServerConnection.HandleMessageDownLoadLine(fakeFromLine.get(), PR_FALSE);
+				}
+				else
+				{
+					fromLine.Append("From: ");
+				}
 				parse_address(fromLine);
 				fServerConnection.HandleMessageDownLoadLine(fromLine.get(), PR_FALSE);
 				if (ContinueParse())

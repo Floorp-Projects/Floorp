@@ -2898,14 +2898,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
             headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
 
           if (aolImapServer)
-          {
-            // we're not going to use the envelope command on Sent Items because it 
-            // replaces sender with recipient.
-            if (strcmp(GetServerStateParser().GetSelectedMailboxName(), "Sent Items"))
-              what = strdup(" XAOL-ENVELOPE INTERNALDATE)");
-            else
-              what = strdup(" BODY.PEEK[HEADER.FIELDS (From To Subject)] INTERNALDATE)");
-          }
+            what = strdup(" XAOL-ENVELOPE INTERNALDATE)");
           else if (gUseEnvelopeCmd)
             what = PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
           else
