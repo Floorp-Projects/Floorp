@@ -34,6 +34,10 @@
 
 class nsIDOMWindow;
 
+// Define USE_ASYNC_READ in order to implement stream transfer using AsyncRead
+// (and synchronous file writes) versus AsyncWrite.
+#define USE_ASYNC_READ
+
 // Implementation of the stream transfer operation interface.
 //
 // Ownership model:  Objects of this class are created, via operator new, in
@@ -45,7 +49,11 @@ class nsIDOMWindow;
 class nsStreamXferOp : public nsIStreamTransferOperation,
                        public nsIInterfaceRequestor,
                        public nsIProgressEventSink,
+#ifdef USE_ASYNC_READ
+                       public nsIStreamListener {
+#else
                        public nsIStreamObserver {
+#endif
 public:
     // ctor/dtor
     nsStreamXferOp( nsIChannel *source, nsIFileSpec *target );
@@ -64,6 +72,11 @@ public:
 
     // nsIProgressEventSink methods:
     NS_DECL_NSIPROGRESSEVENTSINK
+
+#ifdef USE_ASYNC_READ
+    // nsIStreamListener methods:
+    NS_DECL_NSISTREAMLISTENER
+#endif
 
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER

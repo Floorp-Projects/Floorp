@@ -48,7 +48,11 @@
 #define DEBUG_PRINTF (void)
 #endif
 
+#ifdef USE_ASYNC_READ
+NS_IMPL_ISUPPORTS5(nsStreamXferOp, nsIStreamListener, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
+#else
 NS_IMPL_ISUPPORTS4(nsStreamXferOp, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
+#endif
 
 // ctor - save arguments in data members.
 nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target ) 
@@ -170,6 +174,13 @@ nsStreamXferOp::Start( void ) {
                 }
     
                 if ( NS_SUCCEEDED( rv ) ) {
+#ifdef USE_ASYNC_READ
+                    // Read the input channel (with ourself as the listener).
+                    rv = mInputChannel->AsyncRead( 0, -1, 0, this );
+                    if ( NS_FAILED( rv ) ) {
+                        this->OnError( kOpAsyncRead, rv );
+                    }
+#else // USE_ASYNC_READ
                     // reset the channel's interface requestor so we receive status
                     // notifications.
                     rv = mInputChannel->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor*,this));
@@ -192,6 +203,7 @@ nsStreamXferOp::Start( void ) {
                     if ( NS_FAILED( rv ) ) {
                         this->OnError( kOpAsyncWrite, rv );
                     }
+#endif // USE_ASYNC_READ
                 } else {
                     this->OnError( kOpCreateTransport, rv );
                     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -264,9 +276,81 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
                   (int)(void*)channel, (int)(void*)aContext );
 #endif
 
+#ifdef USE_ASYNC_READ
+    // Open output stream.
+    rv = mOutputChannel->OpenOutputStream( 0, getter_AddRefs( mOutputStream ) );
+
+    if ( NS_FAILED( rv ) ) {
+        // Give up all hope.
+        this->OnError( kOpOpenOutputStream, rv );
+        this->Stop();
+    }
+#endif // USE_ASYNC_READ
+
     return rv;
 }
 
+#ifdef USE_ASYNC_READ
+// Process the data by writing it to the output channel.
+NS_IMETHODIMP
+nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
+                                 nsISupports    *aContext,
+                                 nsIInputStream *aIStream,
+                                 PRUint32        offset,
+                                 PRUint32        aLength ) {
+    nsresult rv = NS_OK;
+
+    if ( mOutputStream ) {
+        // Write the data to the output stream.
+        // Read a buffer full till aLength bytes have been processed.
+        char buffer[ 8192 ];
+        unsigned long bytesRemaining = aLength;
+        while ( bytesRemaining ) {
+            unsigned int bytesRead;
+            // Read a buffer full or the number remaining (whichever is smaller).
+            rv = aIStream->Read( buffer,
+                                 PR_MIN( sizeof( buffer ), bytesRemaining ),
+                                 &bytesRead );
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Write the bytes just read to the output stream.
+                unsigned int bytesWritten;
+                rv = mOutputStream->Write( buffer, bytesRead, &bytesWritten );
+                if ( NS_SUCCEEDED( rv ) && bytesWritten == bytesRead ) {
+                    // All bytes written OK.
+                    bytesRemaining -= bytesWritten;
+                } else {
+                    // Something is wrong.
+                    if ( NS_SUCCEEDED( rv ) ) {
+                        // Not all bytes were written for some strange reason.
+                        rv = NS_ERROR_FAILURE;
+                    }
+                    this->OnError( kOpWrite, rv );
+                }
+            } else {
+                this->OnError( kOpRead, rv );
+            }
+        }
+    } else {
+        rv = NS_ERROR_NOT_INITIALIZED;
+        this->OnError( 0, rv );
+    }
+
+    if ( NS_FAILED( rv ) ) {
+        // Oh dear.  close up shop.
+        this->Stop();
+    } else {
+        // Fake OnProgress.
+        mBytesProcessed += aLength;
+        if ( mContentLength == 0 && channel ) {
+            // Get content length from input channel.
+            channel->GetContentLength( &mContentLength );
+        }
+        this->OnProgress( mOutputChannel, 0, mBytesProcessed, mContentLength );
+    }
+
+    return rv;
+}
+#endif // USE_ASYNC_READ
 
 // As an event sink getter, we get ourself.
 NS_IMETHODIMP

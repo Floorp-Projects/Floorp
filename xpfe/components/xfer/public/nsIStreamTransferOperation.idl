@@ -55,4 +55,5 @@ interface nsIStreamTransferOperation : nsISupports {
     const unsigned long kOpOutputCancel     = 9;
     const unsigned long kOpRead             = 10;
     const unsigned long kOpCreateFile       = 11;
+    const unsigned long kOpAsyncRead        = 12;
 };
