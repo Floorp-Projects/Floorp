@@ -41,17 +41,31 @@ LDAPSDK_SNAPSHOT = 19991122E
 endif
 endif
 
+# Compute LDAPSDK location
+# - To use USE_LOCAL_LDAPSDK copy the correct version to your tree
+# - This will be mozilla/security for MOZILLA_SECURITY_BUILD=1
 ifdef USE_LOCAL_LDAPSDK
-LDAPSDKDIST = $(CORE_DEPTH)/ldapsdk/$(PLATFORM)
+LDAPSDK_LOC = $(CORE_DEPTH)/ldapsdk
 else
 ifeq ($(OS_ARCH), WINNT)
-LDAPSDK_BUILD_DIST = \\\\IRIDIUM/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)/WINNT$(OS_RELEASE)$(OBJDIR_TAG).OBJ
-LDAPSDK_RELEASE_DIST = \\\\IRIDIUM/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)/WINNT$(OS_RELEASE)$(OBJDIR_TAG).OBJ
-LDAPSDKDIST = $(LDAPSDK_BUILD_DIST)
+LDAPSDK_LOC = \\\\IRIDIUM/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)
 else
-LDAPSDKDIST = /share/builds/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)/$(PLATFORM)
+LDAPSDK_LOC = /share/builds/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)
 endif
 endif
+
+# Compute LDAPSDK_PLATFORM
+#  - on WINNT force the platform to a WINNT directory, since that is what
+#  - is release by the ldapsdk team.  This allows an OS_TARGET of WIN95 while
+#  - building on WINNT
+ifeq ($(OS_ARCH), WINNT)
+LDAPSDK_PLATFORM = WINNT$(OS_RELEASE)$(OBJDIR_TAG).OBJ
+else
+LDAPSDK_PLATFORM = $(PLATFORM)
+endif
+
+LDAPSDKDIST = $(LDAPSDK_LOC)/$(LDAPSDK_PLATFORM)
+
 endif
 
 ifneq ($(OS_ARCH), WINNT)
