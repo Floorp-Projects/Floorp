@@ -44,6 +44,10 @@ DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(MOZ_BUILD_ROOT)/dist
 DEFAULT_GMAKE_FLAGS += DIST=$(MOZ_BUILD_ROOT)/dist
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+DEFAULT_GMAKE_FLAGS += BUILD_TREE=$(MOZ_BUILD_ROOT)
+endif
 ifndef MOZ_DEBUG
 DEFAULT_GMAKE_FLAGS += BUILD_OPT=1
 endif
@@ -67,24 +71,15 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_NSS_AUTOCONF
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 
 depend dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
 install::
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-	if test ! -d $(MOZ_BUILD_ROOT)/security/nss; then                   \
-		cp -r $(topsrcdir)/security/nss $(MOZ_BUILD_ROOT)/security; \
-	fi;
-	if test ! -d $(MOZ_BUILD_ROOT)/security/coreconf; then              \
-		cp -r $(topsrcdir)/security/coreconf $(MOZ_BUILD_ROOT)/security; \
-	fi;
-endif
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
 	cd $(DIST)/lib; cp -f libmozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
-	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifneq ($(OS_TEST),i86pc)
@@ -98,16 +93,7 @@ endif
 clean clobber clobber_all realclean distclean::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
-ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
-else
-	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
-		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \
-	fi;
-	if test -d $(MOZ_BUILD_ROOT)/security/coreconf; then    \
-		rm -rf $(MOZ_BUILD_ROOT)/security/coreconf;     \
-	fi;
-endif
+	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
+	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 
 endif # MOZ_NSS_AUTOCONF
