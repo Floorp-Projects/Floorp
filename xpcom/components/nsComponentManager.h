@@ -79,7 +79,7 @@ protected:
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
-    nsresult UnloadLibraries(nsIServiceManager *servmgr);
+    nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
 
     // The following functions are the only ones that operate on the persistent
     // registry

@@ -256,7 +256,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
         delete mFactories;
 
     // Unload libraries
-    UnloadLibraries(NULL);
+    UnloadLibraries(NULL, NS_Shutdown);
 
     // Release Progid hash tables
     if (mProgIDs)
@@ -1892,19 +1892,20 @@ CanUnload_enumerate(nsHashKey *key, void *aData, void *aClosure)
     return PR_TRUE;
 }
 
+// XXX Need to pass in aWhen and servicemanager
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
 {
     nsIServiceManager* serviceMgr = NULL;
     nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
     if (NS_FAILED(rv)) return rv;
-    rv = UnloadLibraries(serviceMgr);
+    rv = UnloadLibraries(serviceMgr, NS_Timer); // XXX when
     return rv;
 }
 
 // Private implementation of unloading libraries
 nsresult
-nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr)
+nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 aWhen)
 {
     nsresult rv = NS_OK;
 
@@ -1916,13 +1917,13 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr)
     // UnloadAll the loaders
     /* iterate over all known loaders and ask them to autoregister. */
     struct CanUnload_closure closure;
-    closure.when = NS_Timer;
+    closure.when = aWhen;
     closure.status = NS_OK;
     closure.native = mNativeComponentLoader;
     mLoaders->Enumerate(CanUnload_enumerate, &closure);
 
     // UnloadAll the native loader
-    rv = mNativeComponentLoader->UnloadAll(NS_Timer);
+    rv = mNativeComponentLoader->UnloadAll(aWhen);
 
     PR_ExitMonitor(mMon);
 
