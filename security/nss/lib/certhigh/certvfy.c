@@ -645,7 +645,7 @@ static SECStatus
 cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     PRBool checkSig, PRBool* sigerror,
                      SECCertUsage certUsage, int64 t, void *wincx,
-                     CERTVerifyLog *log, PRBool doCRL, PRBool* revoked)
+                     CERTVerifyLog *log, PRBool* revoked)
 {
     SECTrustType trustType;
     CERTBasicConstraints basicConstraint;
@@ -864,26 +864,23 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	 * point
 	 */
 	/* check revoked list (issuer) */
-        if (PR_TRUE == doCRL) {
-            rv = SEC_CheckCRL(handle, subjectCert, issuerCert, t, wincx);
-            if (rv == SECFailure) {
-                if (revoked) {
-                    *revoked = PR_TRUE;
-                }
-                LOG_ERROR_OR_EXIT(log,subjectCert,count,0);
-            } else if (rv == SECWouldBlock) {
-                /* We found something fishy, so we intend to issue an
-                 * error to the user, but the user may wish to continue
-                 * processing, in which case we better make sure nothing
-                 * worse has happened... so keep cranking the loop */
-                rvFinal = SECFailure;
-                if (revoked) {
-                    *revoked = PR_TRUE;
-                }
-                LOG_ERROR(log,subjectCert,count,0);
+        rv = SEC_CheckCRL(handle, subjectCert, issuerCert, t, wincx);
+        if (rv == SECFailure) {
+            if (revoked) {
+                *revoked = PR_TRUE;
             }
+            LOG_ERROR_OR_EXIT(log,subjectCert,count,0);
+        } else if (rv == SECWouldBlock) {
+            /* We found something fishy, so we intend to issue an
+             * error to the user, but the user may wish to continue
+             * processing, in which case we better make sure nothing
+             * worse has happened... so keep cranking the loop */
+            rvFinal = SECFailure;
+            if (revoked) {
+                *revoked = PR_TRUE;
+            }
+            LOG_ERROR(log,subjectCert,count,0);
         }
-
 
 	if ( issuerCert->trust ) {
 	    /*
@@ -999,7 +996,7 @@ CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     void *wincx, CERTVerifyLog *log)
 {
     return cert_VerifyCertChain(handle, cert, checkSig, NULL, certUsage, t,
-			 wincx, log, PR_TRUE, NULL);
+			 wincx, log, NULL);
 }
 
 /*
@@ -1223,7 +1220,6 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool       allowOverride;
     SECCertTimeValidity validity;
     CERTStatusConfig *statusConfig;
-    PRBool checkedChain = PR_FALSE;
     PRInt32 i;
     SECCertUsage certUsage = 0;
     PRBool checkedOCSP = PR_FALSE;
@@ -1412,12 +1408,10 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
             INVALID_USAGE();
         }
 
-        /* only check CRL and signature for the first usage check */
         rv = cert_VerifyCertChain(handle, cert,
-            (PR_TRUE == checkedChain) ? PR_FALSE : checkSig, &sigerror,
+            checkSig, &sigerror,
             certUsage, t, wincx, log,
-            (PR_TRUE ==  checkedChain) ? PR_FALSE : PR_TRUE, &revoked);
-        checkedChain = PR_TRUE;
+            &revoked);
 
         if (rv != SECSuccess) {
             /* EXIT_IF_NOT_LOGGING(log); XXX ???? */
