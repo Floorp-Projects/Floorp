@@ -1766,17 +1766,26 @@ nsMsgComposeAndSend::GetBodyFromEditor()
            getter_Copies(outCString), getter_Copies(fallbackCharset));
 
       if (NS_ERROR_UENC_NOMAPPING == rv) {
-        PRBool sendInUTF8;
-        nsCOMPtr<nsIPrompt> prompt;
-        GetDefaultPrompt(getter_AddRefs(prompt));
-        rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND,
-                                         &sendInUTF8);
-        if (!sendInUTF8) {
-          Recycle(bodyText);
-          return NS_ERROR_MSG_MULTILINGUAL_SEND;
+        PRBool needToCheckCharset;
+        mCompFields->GetNeedToCheckCharset(&needToCheckCharset);
+        printf("need to check charset=%d\n", needToCheckCharset);
+        if (needToCheckCharset) {
+          nsCOMPtr<nsIPrompt> prompt;
+          GetDefaultPrompt(getter_AddRefs(prompt));
+          PRInt32 answer = nsMsgAskAboutUncoveredCharacters(prompt);
+          switch (answer) {
+            case 0 : // convert to UTF-8
+              CopyUTF16toUTF8(bodyText, outCString);
+              mCompFields->SetCharacterSet("UTF-8"); // tag as UTF-8
+              break; 
+            case 1 : // send anyway 
+              break;
+            case 2 : // return to the editor
+            default :
+              Recycle(bodyText);
+              return NS_ERROR_MSG_MULTILINGUAL_SEND;
+          }
         }
-        CopyUTF16toUTF8(bodyText, outCString);
-        mCompFields->SetCharacterSet("UTF-8"); // tag as UTF-8
       }
       // re-label to the fallback charset
       else if (fallbackCharset)
@@ -2993,6 +3002,10 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   fields->GetSecurityInfo(getter_AddRefs(secInfo));
 
   mCompFields->SetSecurityInfo(secInfo);
+
+  PRBool needToCheckCharset;
+  fields->GetNeedToCheckCharset(&needToCheckCharset);
+  mCompFields->SetNeedToCheckCharset(needToCheckCharset);
 
   // Check the fields for legitimacy...
   //

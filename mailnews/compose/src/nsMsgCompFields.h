@@ -179,6 +179,7 @@ protected:
   PRBool      m_bodyIsAsciiOnly;
   PRInt32     m_receiptHeaderType;        /* receipt header type */
   nsCString   m_DefaultCharacterSet;
+  PRBool      m_needToCheckCharset;
 
   nsCOMPtr<nsISupports> mSecureCompFields;
 };

@@ -986,13 +986,22 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
         // charset. ask whether to convert to UTF-8 or go back to reset
         // charset with a wider repertoire. (bug 233361) (if not mapi blind send)
         if (NS_ERROR_UENC_NOMAPPING == rv && m_editor) {
-          PRBool sendInUTF8;
-          rv = nsMsgAskBooleanQuestionByID(prompt,
-               NS_ERROR_MSG_MULTILINGUAL_SEND, &sendInUTF8);
-          if (!sendInUTF8) 
-            return NS_ERROR_MSG_MULTILINGUAL_SEND;
-          CopyUTF16toUTF8(msgBody.get(), outCString);
-          m_compFields->SetCharacterSet("UTF-8");
+          PRBool needToCheckCharset;
+          m_compFields->GetNeedToCheckCharset(&needToCheckCharset);
+          if (needToCheckCharset) {
+            PRInt32 answer = nsMsgAskAboutUncoveredCharacters(prompt);
+            switch (answer) {
+              case 0 : // convert to UTF-8
+                CopyUTF16toUTF8(msgBody.get(), outCString);
+                m_compFields->SetCharacterSet("UTF-8");
+                break; 
+              case 1 : // send anyway 
+                break;
+              case 2 : // return to the editor
+              default :
+                return NS_ERROR_MSG_MULTILINGUAL_SEND;
+            }
+          }
         }
         // re-label to the fallback charset
         else if (fallbackCharset)

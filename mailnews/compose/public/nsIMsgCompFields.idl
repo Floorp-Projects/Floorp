@@ -41,7 +41,7 @@
 #include "nsISupportsArray.idl"
 
 
-[scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
+[scriptable, uuid(ABEFCAD2-47E9-4363-A3AA-8A76E7D96CE4)]
 interface nsIMsgCompFields : nsISupports {
 
   attribute AString from;
@@ -107,6 +107,14 @@ interface nsIMsgCompFields : nsISupports {
 
   // Check if the composing mail headers can be converted to a mail charset.
   boolean checkCharsetConversion(out string fallbackCharset);
+
+  /** 
+   * Indicates whether we need to check if the current |DocumentCharset|
+   * can represent all the characters in the message body. It should be
+   * initialized to true and set to false when 'Send Anyway' is selected
+   * by a user. (bug 249530)
+   */
+  attribute boolean needToCheckCharset; 
 
   attribute nsISupports securityInfo;
 };

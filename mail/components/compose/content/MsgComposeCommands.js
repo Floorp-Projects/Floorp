@@ -1822,9 +1822,24 @@ function GenericSendMessage( msgType )
         {
           var dlgTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
           var dlgText = sComposeMsgsBundle.getString("12553");  // NS_ERROR_MSG_MULTILINGUAL_SEND
-          if (!gPromptService.confirm(window, dlgTitle, dlgText))
-            return;
-          fallbackCharset.value = "UTF-8";
+          var result3 = gPromptService.confirmEx(window, dlgTitle, dlgText,
+              (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+              (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_1) +
+              (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_2),
+              sComposeMsgsBundle.getString('sendInUTF8'), 
+              sComposeMsgsBundle.getString('sendAnyway'),
+              null, null, {value:0}); 
+          switch(result3)
+          {
+            case 0: 
+              fallbackCharset.value = "UTF-8";
+              break;
+            case 1:  // send anyway
+              msgCompFields.needToCheckCharset = false;
+              break;
+            case 2:  // cancel
+              return;
+          }
         }
         if (fallbackCharset && 
             fallbackCharset.value && fallbackCharset.value != "")

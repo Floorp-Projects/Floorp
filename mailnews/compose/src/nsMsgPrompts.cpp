@@ -152,3 +152,59 @@ nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBo
 
   return NS_OK;
 }     
+
+// returns 0 (send in UTF-8) in case of error
+PRInt32
+nsMsgAskAboutUncoveredCharacters(nsIPrompt * aPrompt)
+{
+  PRInt32 result;
+  nsCOMPtr<nsIPrompt> dialog = aPrompt;
+
+  if (!dialog)
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+  }
+
+  NS_ENSURE_TRUE(dialog, 0);
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  NS_ENSURE_TRUE(bundleService, 0);
+
+  nsCOMPtr<nsIStringBundle> composeBundle;
+  bundleService->CreateBundle("chrome://messenger/locale/messengercompose/"
+                              "composeMsgs.properties",
+                               getter_AddRefs(composeBundle));
+  NS_ENSURE_TRUE(composeBundle, 0);
+
+  nsXPIDLString title;
+  nsXPIDLString msg;
+  nsXPIDLString button0;
+  nsXPIDLString button1;
+
+  composeBundle->
+    GetStringFromName(NS_LITERAL_STRING("initErrorDlogTitle").get(),
+                      getter_Copies(title));
+  composeBundle->
+    GetStringFromID(NS_ERROR_GET_CODE(NS_ERROR_MSG_MULTILINGUAL_SEND),
+                    getter_Copies(msg));
+  composeBundle->
+    GetStringFromName(NS_LITERAL_STRING("sendInUTF8").get(),
+                      getter_Copies(button0));
+  composeBundle->
+    GetStringFromName(NS_LITERAL_STRING("sendAnyway").get(),
+                      getter_Copies(button1));
+
+  nsresult rv = dialog->
+    ConfirmEx(title, msg, 
+              nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0 +
+              nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1 +
+              nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_2 +
+              nsIPrompt::BUTTON_POS_0_DEFAULT,
+              button0, button1, nsnull, nsnull, 0, &result);
+
+  NS_ENSURE_SUCCESS(rv, 0);
+  return result;
+}

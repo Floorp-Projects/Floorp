@@ -69,6 +69,7 @@ nsMsgCompFields::nsMsgCompFields()
   m_returnReceipt = PR_FALSE;
   m_receiptHeaderType = nsIMsgMdnGenerator::eDntType;
   m_bodyIsAsciiOnly = PR_FALSE;
+  m_needToCheckCharset = PR_TRUE;
 
   // Get the default charset from pref, use this as a mail charset.
   nsXPIDLString charset;
@@ -775,5 +776,18 @@ NS_IMETHODIMP nsMsgCompFields::CheckCharsetConversion(char **fallbackCharset, PR
   *_retval = nsMsgI18Ncheck_data_in_charset_range(GetCharacterSet(), NS_ConvertUTF8toUCS2(headers.get()).get(),
                                                   fallbackCharset);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetNeedToCheckCharset(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = m_needToCheckCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::SetNeedToCheckCharset(PRBool aCheck)
+{
+  m_needToCheckCharset = aCheck;
   return NS_OK;
 }

@@ -49,5 +49,6 @@ nsresult      nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID, const 
 nsresult      nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg, const PRUnichar * windowTitle = nsnull);
 nsresult      nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer, const PRUnichar * windowTitle = nsnull);
 nsresult      nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer, const PRUnichar * windowTitle = nsnull);
+PRInt32       nsMsgAskAboutUncoveredCharacters(nsIPrompt * aPrompt);
 
 #endif /* _nsMsgPrompts_H_ */
