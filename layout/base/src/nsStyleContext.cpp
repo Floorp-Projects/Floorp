@@ -1888,6 +1888,9 @@ void StyleContextImpl::ForceUnique(void)
 
 void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
 {
+  if (mFont.mFlags & NS_STYLE_FONT_USE_FIXED) {
+    mFont.mFont = mFont.mFixedFont;
+  }
   mSpacing.RecalcData(aPresContext, mColor.mColor);
 }
 
