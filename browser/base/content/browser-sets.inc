@@ -248,12 +248,10 @@
 
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
 #ifdef XP_WIN
-# Ctrl+I is conventially mapped to Info on MacOS X, thus it should not be 
-# overridden for other purposes there. 
+# Cmd+I is conventially mapped to Info on MacOS X, thus it should not be overridden for other purposes there.
     <key id="viewBookmarksSidebarKb" key="&manBookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
-#else
-    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
+    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 #ifdef XP_MACOSX
