@@ -1141,7 +1141,8 @@ NS_IMETHODIMP nsTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell):nsStackFrame(aShell)
+nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell)
+  : nsStackFrame(aShell)
 {
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;
@@ -2189,7 +2190,8 @@ NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIA
     else if (nsHTMLAtoms::select == aName && mSelCon)
     {
       // select all the text
-      SelectAllContents();
+      if (mEditor)
+        mEditor->SelectAll();
     }
     mIsProcessing = PR_FALSE;
   }
@@ -2238,178 +2240,77 @@ nsTextControlFrame::GetTextLength(PRInt32* aTextLength)
   return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
-nsTextControlFrame::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
-{
-  if (!mEditor)
-    return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMElement> rootElement;
-  mEditor->GetRootElement(getter_AddRefs(rootElement));
-  *aFirstTextNode = nsnull;
-  
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-  if (!rootNode) return NS_ERROR_FAILURE;
-  
-  // for a text widget, the text of the document is in a single
-  // text node under the body. Let's make sure that's true.
-  nsCOMPtr<nsIDOMNodeList> childNodesList;
-  rootNode->GetChildNodes(getter_AddRefs(childNodesList));
-  if (!childNodesList)
-  {
-    NS_WARNING("rootNode has no text node list");
-    return NS_ERROR_FAILURE;
-  }
-
-  PRUint32 numChildNodes = 0;
-  childNodesList->GetLength(&numChildNodes);
-
-  nsCOMPtr<nsIDOMNode> firstChild;
-  nsresult rv = rootNode->GetFirstChild(getter_AddRefs(firstChild));
-  if (NS_FAILED(rv)) return rv;
-  if (!firstChild) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMCharacterData> charDataNode = do_QueryInterface(firstChild, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_ADDREF(*aFirstTextNode = charDataNode);
-  return NS_OK;
-}
-
-
-nsresult
-nsTextControlFrame::SelectAllContents()
-{
-  nsresult rv;
-  
-  if (IsSingleLineTextControl())
-  {
-    rv = SetSelectionRange(0, eSelectToEnd);
-  }
-  else
-  {
-    // we have to select all
-    if (!mEditor)
-      return NS_ERROR_NOT_INITIALIZED;
-    NS_ASSERTION(mEditor, "Should have an editor here");    
-    rv = mEditor->SelectAll();
-  }
-
-  return rv;
-}
-
-
 nsresult
 nsTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
-  NS_ASSERTION(IsSingleLineTextControl() || IsTextArea(), "Should only call this on a single line input");
-  NS_ASSERTION(mEditor, "Should have an editor here");
-  NS_ASSERTION(mTextSelImpl,"selection not found!");
+  NS_ASSERTION(aSelStart <= aSelEnd, "Invalid selection offsets!");
 
-  nsCOMPtr<nsIDOMCharacterData> firstTextNode;
-  nsresult rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
-  if (NS_FAILED(rv) || !firstTextNode)
-  {
-    // probably an empty document. not an error
-    return NS_OK;
+  if (aSelStart > aSelEnd)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startOffset, endOffset;
+
+  // Calculate the selection start point.
+
+  nsresult rv = OffsetToDOMPoint(aSelStart, getter_AddRefs(startNode), &startOffset);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aSelStart == aSelEnd) {
+    // Collapsed selection, so start and end are the same!
+    endNode   = startNode;
+    endOffset = startOffset;
   }
-  
-  nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode, &rv);
-  if (!firstNode) return rv;
-  
-  // constrain the selection to this node
-  PRUint32 nodeLengthU;
-  firstTextNode->GetLength(&nodeLengthU);
-  PRInt32 nodeLength = (PRInt32)nodeLengthU;
-    
+  else {
+    // Selection isn't collapsed so we have to calculate
+    // the end point too.
+
+    rv = OffsetToDOMPoint(aSelEnd, getter_AddRefs(endNode), &endOffset);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Create a new range to represent the new selection.
+  // Note that we use a new range to avoid having to do
+  // isIncreasing checks to avoid possible errors.
+
+  nsCOMPtr<nsIDOMRange> range;
+
+  range = do_CreateInstance(kRangeCID);
+  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+
+  rv = range->SetStart(startNode, startOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = range->SetEnd(endNode, endOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the selection, clear it and add the new range to it!
+
   nsCOMPtr<nsISelection> selection;
-  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
-  if (!selection) return NS_ERROR_FAILURE;
+  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  // are we setting both start and end?
-  if (aSelStart != eIgnoreSelect && aSelEnd != eIgnoreSelect)
-  {
-    if (aSelStart == eSelectToEnd || aSelStart > nodeLength)
-      aSelStart = nodeLength;
-    if (aSelStart < 0)
-      aSelStart = 0;
+  rv = selection->RemoveAllRanges();  
 
-    if (aSelEnd == eSelectToEnd || aSelEnd > nodeLength)
-      aSelEnd = nodeLength;
-    if (aSelEnd < 0)
-      aSelEnd = 0;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // remove existing ranges
-    selection->RemoveAllRanges();  
-
-    nsCOMPtr<nsIDOMRange> selectionRange(do_CreateInstance(kRangeCID,&rv));
-    if (NS_FAILED(rv)) 
-      return rv;
-    
-    selectionRange->SetStart(firstTextNode, aSelStart);
-    selectionRange->SetEnd(firstTextNode, aSelEnd);
-    
-    selection->AddRange(selectionRange);
-  }
-  else    // we're setting either start or end but not both
-  {
-    // does a range exist?
-    nsCOMPtr<nsIDOMRange> firstRange;
-    selection->GetRangeAt(0, getter_AddRefs(firstRange));
-    PRBool mustAdd = PR_FALSE;
-    PRInt32 selStart = 0, selEnd = 0;
-
-    if (firstRange)
-    {
-     firstRange->GetStartOffset(&selStart);
-     firstRange->GetEndOffset(&selEnd);
-    }
-    else
-    {
-      // no range. Make a new one.
-      firstRange = do_CreateInstance(kRangeCID,&rv);
-      if (NS_FAILED(rv)) 
-        return rv;
-      mustAdd = PR_TRUE;
-    }
-    
-    if (aSelStart == eSelectToEnd)
-      selStart = nodeLength;
-    else if (aSelStart != eIgnoreSelect)
-      selStart = aSelStart;
-
-    if (aSelEnd == eSelectToEnd)
-      selEnd = nodeLength;
-    else if (aSelEnd != eIgnoreSelect)
-      selEnd = aSelEnd;
-    
-    // swap them
-    if (selEnd < selStart)
-    {
-      PRInt32 temp = selStart;
-      selStart = selEnd;
-      selEnd = temp;
-    }
-    
-    firstRange->SetStart(firstTextNode, selStart);
-    firstRange->SetEnd(firstTextNode, selEnd);
-    if (mustAdd)  
-      selection->AddRange(firstRange);
-  }
-
-  return NS_OK;
+  return selection->AddRange(range);
 }
 
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
-  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
   
-  // make sure we have an editor
-  if (!mEditor) 
-    return NS_ERROR_NOT_INITIALIZED;
-  
+  if (aSelStart > aSelEnd) {
+    // Simulate what we'd see SetSelectionStart() was called, followed
+    // by a SetSelectionEnd().
+
+    aSelStart   = aSelEnd;
+  }
+
   return SetSelectionEndPoints(aSelStart, aSelEnd);
 }
 
@@ -2417,122 +2318,266 @@ nsTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
 
-  // make sure we have an editor
-  if (!mEditor) 
-    return NS_ERROR_NOT_INITIALIZED;
+  PRInt32 selStart = 0, selEnd = 0; 
+
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aSelectionStart > selEnd) {
+    // Collapse to the new start point.
+    selEnd = aSelectionStart; 
+  }
+
+  selStart = aSelectionStart;
   
-  return SetSelectionEndPoints(aSelectionStart, eIgnoreSelect);
+  return SetSelectionEndPoints(selStart, selEnd);
 }
 
 NS_IMETHODIMP
 nsTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
-
-  // make sure we have an editor
-  if (!mEditor) 
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
   
-  return SetSelectionEndPoints(eIgnoreSelect, aSelectionEnd);
+  PRInt32 selStart = 0, selEnd = 0; 
+
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aSelectionEnd < selStart) {
+    // Collapse to the new end point.
+    selStart = aSelectionEnd; 
+  }
+
+  selEnd = aSelectionEnd;
+  
+  return SetSelectionEndPoints(selStart, selEnd);
 }
 
+nsresult
+nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
+                                     PRInt32 aNodeOffset,
+                                     PRInt32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aNode && aResult);
+
+  *aResult = 0;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  mEditor->GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+
+  nsresult rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+
+  PRUint32 length = 0;
+  rv = nodeList->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!length || aNodeOffset < 0)
+    return NS_OK;
+
+  PRInt32 i, textOffset = 0;
+
+  for (i = 0; i < length; i++) {
+    if (rootNode == aNode && i == aNodeOffset) {
+      *aResult = textOffset;
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMNode> item;
+    rv = nodeList->Item(i, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(item));
+
+    if (domText) {
+      PRUint32 textLength = 0;
+
+      rv = domText->GetLength(&textLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (item == aNode) {
+        NS_ASSERTION((aNodeOffset >= 0 && aNodeOffset <= textLength),
+                     "Invalid aNodeOffset!");
+        *aResult = textOffset + aNodeOffset;
+        return NS_OK;
+      }
+
+      textOffset += textLength;
+    }
+    else {
+      // Must be a BR node, count it as a newline.
+
+      ++textOffset;
+    }
+  }
+
+  NS_ASSERTION((aNode == rootNode && aNodeOffset == length),
+               "Invalide node offset!");
+
+  *aResult = textOffset;
+  
+  return NS_OK;
+}
+
+nsresult
+nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
+                                     nsIDOMNode** aResult,
+                                     PRInt32* aPosition)
+{
+  NS_ENSURE_ARG_POINTER(aResult && aPosition);
+
+  *aResult = nsnull;
+  *aPosition = 0;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  mEditor->GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+
+  nsresult rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+
+  PRUint32 length = 0;
+
+  rv = nodeList->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!length || aOffset < 0) {
+    *aPosition = 0;
+    *aResult = rootNode;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  }
+
+  PRInt32 textOffset = 0;
+  PRUint32 lastIndex = length - 1;
+
+  for (PRUint32 i=0; i<length; i++) {
+    nsCOMPtr<nsIDOMNode> item;
+    rv = nodeList->Item(i, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(item));
+
+    if (domText) {
+      PRUint32 textLength = 0;
+
+      rv = domText->GetLength(&textLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Check if aOffset falls within this range.
+      if (aOffset >= textOffset && aOffset <= textOffset+(PRInt32)textLength) {
+        *aPosition = aOffset - textOffset;
+        *aResult = item;
+        NS_ADDREF(*aResult);
+        return NS_OK;
+      }
+
+      textOffset += textLength;
+
+      // If there aren't any more siblings after this text node,
+      // return the point at the end of this text node!
+
+      if (i == lastIndex) {
+        *aPosition = textLength;
+        *aResult = item;
+        NS_ADDREF(*aResult);
+        return NS_OK;
+      }
+    }
+    else {
+      // Must be a BR node, count it as a newline.
+
+      if (aOffset == textOffset || i == lastIndex) {
+        // We've found the correct position, or aOffset takes us
+        // beyond the last child under rootNode, just return the point
+        // under rootNode that is in front of this br.
+
+        *aPosition = i;
+        *aResult = rootNode;
+        NS_ADDREF(*aResult);
+        return NS_OK;
+      }
+
+      ++textOffset;
+    }
+  }
+
+  NS_ASSERTION(0, "We should never get here!");
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
 {
-    NS_ENSURE_ARG_POINTER((aSelectionStart && aSelectionEnd));
+  // make sure we have an editor
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_INITIALIZED);
 
-    // make sure we have an editor
-    if (!mEditor) 
-      return NS_ERROR_NOT_INITIALIZED;
+  *aSelectionStart = 0;
+  *aSelectionEnd = 0;
 
-    *aSelectionStart = 0;
-    *aSelectionEnd = 0;
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsISelection> selection;
-    mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
-    if (!selection) return NS_ERROR_FAILURE;
+  PRInt32 numRanges = 0;
+  selection->GetRangeCount(&numRanges);
 
-    // we should have only zero or one range
-    PRInt32 numRanges = 0;
-    selection->GetRangeCount(&numRanges);
-    if (numRanges > 1)
-    {
-      NS_ASSERTION(0, "Found more than on range in GetSelectionRange");
-    }
-  
-    if (numRanges != 0)
-    {
-      nsCOMPtr<nsIDOMRange> firstRange;
-      selection->GetRangeAt(0, getter_AddRefs(firstRange));
-      if (!firstRange) 
-        return NS_ERROR_FAILURE;
-
-      if (IsSingleLineTextControl() || IsTextArea())
-      {
-        firstRange->GetStartOffset(aSelectionStart);
-        firstRange->GetEndOffset(aSelectionEnd);
-      }
-      else//multiline
-      {
-        //mContent = parent. iterate over each child. 
-        //when text nodes are reached add text length. 
-        //if you find range-startoffset,startnode then mark aSelecitonStart
-        nsresult rv = NS_ERROR_FAILURE;
-        nsCOMPtr<nsIDOMNode> contentNode;
-        nsCOMPtr<nsIDOMNode> curNode;
-        contentNode = do_QueryInterface(mContent);
-        if (!contentNode || NS_FAILED(rv = contentNode->GetFirstChild(getter_AddRefs(curNode))) || !curNode)
-          return rv;
-        nsCOMPtr<nsIDOMNode> startParent;
-        nsCOMPtr<nsIDOMNode> endParent;
-        PRInt32 startOffset;
-        PRInt32 endOffset;
-
-        firstRange->GetStartContainer(getter_AddRefs(startParent));
-        firstRange->GetStartOffset(&startOffset);
-        firstRange->GetEndContainer(getter_AddRefs(endParent));
-        firstRange->GetEndOffset(&endOffset);
-
-        PRInt32 currentTextOffset = 0;
-        
-        while(curNode)
-        {
-          nsCOMPtr<nsIDOMText> domText;
-          domText = do_QueryInterface(curNode);
-          if (contentNode == startParent)
-          {
-            if (domText)
-              *aSelectionStart = currentTextOffset + startOffset;
-            else
-              *aSelectionStart = currentTextOffset;
-          }
-          if (curNode == endParent)
-          {
-            if (domText)
-              *aSelectionEnd = currentTextOffset + endOffset;
-            else
-              *aSelectionEnd = currentTextOffset;
-            break;
-          }
-          if (domText)
-          {
-            PRUint32 length;
-            if (NS_SUCCEEDED(domText->GetLength(&length)))
-              currentTextOffset += length;
-          }
-          else
-            ++currentTextOffset;
-        }
-        if (!curNode) //something went very wrong...
-        {
-          *aSelectionEnd = *aSelectionStart;//couldnt find the end
-        }
-      }
-    }
+  if (numRanges < 1)
     return NS_OK;
+
+  // We only operate on the first range in the selection!
+
+  nsCOMPtr<nsIDOMRange> firstRange;
+  rv = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startOffset = 0, endOffset = 0;
+
+  // Get the start point of the range.
+
+  rv = firstRange->GetStartContainer(getter_AddRefs(startNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
+
+  rv = firstRange->GetStartOffset(&startOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the end point of the range.
+
+  rv = firstRange->GetEndContainer(getter_AddRefs(endNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
+
+  rv = firstRange->GetEndOffset(&endOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert the start point to a selection offset.
+
+  rv = DOMPointToOffset(startNode, startOffset, aSelectionStart);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert the end point to a selection offset.
+
+  return DOMPointToOffset(endNode, endOffset, aSelectionEnd);
 }
 
 
@@ -3120,5 +3165,3 @@ nsTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
   return nsStackFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     
 }
-
-

@@ -212,6 +212,8 @@ public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(PRBool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
   nsresult InitFocusedValue();
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
+  nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
 protected:
 
@@ -289,13 +291,6 @@ protected:
 
 private:
   //helper methods
-  enum {
-    eIgnoreSelect = -2,
-    eSelectToEnd  = -1  
-  };
-
-  NS_IMETHODIMP GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode);
-  nsresult SelectAllContents();
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
   
 private:
