@@ -37,7 +37,7 @@ interface nsIDocShellContainer : nsISupports
 	The current number of DocShells which are immediate children of the 
 	current DocShell.
 	*/
-	attribute long childCount;
+	readonly attribute long childCount;
 
 	/*
 	Add a new child DocShell.  Adds to the end of the list.
