@@ -18,7 +18,7 @@
 #ifndef nsScrollFrame_h___
 #define nsScrollFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 
 extern nsresult NS_NewScrollFrame(nsIFrame**  aInstancePtrResult,
                                   nsIContent* aContent,
