@@ -32,11 +32,11 @@ dnl Set this define to make fixes w/o breaking anything else
 AC_DEFINE(USE_AUTOCONF)
 AC_DEFINE(MOZILLA_CLIENT)
 
-d=`pwd`
-if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
-    AC_ERROR(Building in the srcdir is not supported! Please build from a separate objdir.)
-fi
-unset d
+dnl d=`pwd`
+dnl if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
+dnl     AC_ERROR(Building in the srcdir is not supported! Please build from a separate objdir.)
+dnl fi
+dnl unset d
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
