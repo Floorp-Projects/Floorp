@@ -83,6 +83,10 @@ public:
         , mMsgOffset(0)
         , mMsgComplete(PR_FALSE)
         { }
+    ipcMessage(const nsID &target, const char *data, PRUint32 dataLen)
+        : mNext(NULL)
+        , mMsgOffset(0)
+        { Init(target, data, dataLen); }
    ~ipcMessage();
 
     //

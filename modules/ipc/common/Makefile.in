@@ -55,6 +55,7 @@ REQUIRES	= \
 CPPSRCS		= \
 			ipcMessage.cpp \
 			ipcMessageQ.cpp \
+			ipcMessagePrimitives.cpp \
 			ipcm.cpp
 
 EXPORTS     = \

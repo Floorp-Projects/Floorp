@@ -39,6 +39,7 @@
 #define ipcm_h__
 
 #include "ipcMessage.h"
+#include "ipcMessagePrimitives.h"
 
 //
 // IPCM (IPC Manager) protocol support
@@ -47,12 +48,20 @@
 extern const nsID IPCM_TARGET;
 
 enum {
-    IPCM_MSG_PING,
-    IPCM_MSG_CNAME,
-    IPCM_MSG_CENUM,
-    IPCM_MSG_CLIST,
-    IPCM_MSG_FWD,
-    IPCM_MSG_UNKNOWN // unknown message type
+    IPCM_MSG_TYPE_PING,
+    IPCM_MSG_TYPE_ERROR,
+    IPCM_MSG_TYPE_CLIENT_HELLO,
+    IPCM_MSG_TYPE_CLIENT_ID,
+    IPCM_MSG_TYPE_CLIENT_INFO,
+    IPCM_MSG_TYPE_CLIENT_ADD_NAME,
+    IPCM_MSG_TYPE_CLIENT_DEL_NAME,
+    IPCM_MSG_TYPE_CLIENT_ADD_TARGET,
+    IPCM_MSG_TYPE_CLIENT_DEL_TARGET,
+    IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME,
+    IPCM_MSG_TYPE_QUERY_CLIENT_INFO,
+    IPCM_MSG_TYPE_QUERY_FAILED,
+    IPCM_MSG_TYPE_FORWARD,
+    IPCM_MSG_TYPE_UNKNOWN // unknown message type
 };
 
 //
@@ -66,109 +75,141 @@ int IPCM_GetMsgType(const ipcMessage *msg);
 //       adds no additional member variables.  operator new should be used
 //       to allocate one of the IPCM helper classes, e.g.:
 //         
-//          ipcMessage *msg = new ipcmMessageCNAME("foo");
+//          ipcMessage *msg = new ipcmMessageClientHello("foo");
 //
 //       given an arbitrary ipcMessage, it can be parsed using logic similar
 //       to the following:
 //
-//          ipcMessage *msg = ...
-//          if (strcmp(msg->Topic(), "ipcm") == 0) {
-//             if (IPCM_GetMsgType(msg) == IPCM_MSG_CNAME) {
-//                ipcmMessageCNAME *cnameMsg = (ipcmMessageCNAME *) msg;
-//                printf("client name: %s\n", cnameMsg->ClientName());
-//             }
+//          void func(const ipcMessage *unknown)
+//          {
+//            if (unknown->Topic().Equals(IPCM_TARGET)) {
+//              if (IPCM_GetMsgType(unknown) == IPCM_MSG_TYPE_CLIENT_ID) {
+//                ipcMessageCast<ipcmMessageClientID> msg(unknown);
+//                printf("Client ID: %u\n", msg->ClientID());
+//              }
+//            }
 //          }
 //
 //       in other words, these classes are very very lightweight.
 //
 
 //
-// IPCM_MSG_PING
+// IPCM_MSG_TYPE_PING
 //
 // this message may be sent from either the client or the daemon.
 //
-class ipcmMessagePING : public ipcMessage
+class ipcmMessagePing : public ipcMessage_DWORD
 {
 public:
-    static const char MSG_TYPE;
+    static const PRUint32 MSG_TYPE;
 
-    ipcmMessagePING();
+    ipcmMessagePing()
+        : ipcMessage_DWORD(IPCM_TARGET, MSG_TYPE) {}
 };
 
 //
-// IPCM_MSG_CNAME
+// IPCM_MSG_TYPE_ERROR
 //
-// this message is sent from a client to specify its name.
+// thie message may be sent from the daemon in response to a query.
 //
-class ipcmMessageCNAME : public ipcMessage
+class ipcmMessageError : public ipcMessage_DWORD_DWORD
 {
 public:
-    static const char MSG_TYPE;
+    static const PRUint32 MSG_TYPE;
 
-    ipcmMessageCNAME(const char *cName);
+    ipcmMessageError(PRUint32 reason)
+        : ipcMessage_DWORD_DWORD(IPCM_TARGET, MSG_TYPE, reason) {}
 
-    //
-    // extracts the "client name"
-    //
-    const char *ClientName() const;
+    PRUint32 Reason() const { return Second(); }
 };
 
 //
-// IPCM_MSG_CENUM
+// IPCM_MSG_TYPE_CLIENT_HELLO
 //
-// this message is sent from a client to request a CLIST response.
+// this message is always the first message sent from a client to register
+// itself with the daemon.  the daemon responds to this message by sending
+// the client a CLIENT_ID message informing the client of its client ID.
 //
-class ipcmMessageCENUM : public ipcMessage
+// XXX may want to pass other information here.
+//
+class ipcmMessageClientHello : public ipcMessage_DWORD_STR
 {
 public:
-    static const char MSG_TYPE;
+    static const PRUint32 MSG_TYPE;
 
-    ipcmMessageCENUM();
+    ipcmMessageClientHello(const char *primaryName)
+        : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, primaryName) {}
+
+    const char *PrimaryName() const { return Second(); }
 };
 
 //
-// IPCM_MSG_CLIST
+// IPCM_MSG_TYPE_CLIENT_ID
 //
-// this message is sent from the daemon in response to a CENUM request.  the
-// message contains the list of clients by name.
+// this message is sent from the daemon to identify a client's ID.
 //
-class ipcmMessageCLIST : public ipcMessage
+class ipcmMessageClientID : public ipcMessage_DWORD_DWORD
 {
 public:
-    static const char MSG_TYPE;
+    static const PRUint32 MSG_TYPE;
 
-    ipcmMessageCLIST(const char *clientNames[], PRUint32 numClients);
+    ipcmMessageClientID(PRUint32 clientID)
+        : ipcMessage_DWORD_DWORD(IPCM_TARGET, MSG_TYPE, clientID) {}
 
-    //
-    // extracts the next client name from the message.  if null is passed in, then
-    // the first client name in the list is returned.  null is returned if there
-    // aren't anymore client names.  (the returned client name acts as an iterator.)
-    //
-    const char *NextClientName(const char *clientName = NULL) const;
+    PRUint32 ClientID() const { return Second(); }
 };
 
 //
-// IPCM_MSG_FWD
+// IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME
+//
+// this message is sent from a client to the daemon to request the ID of the
+// client corresponding to the given name or alias.  in response the daemon
+// will either send a CLIENT_ID or ERROR message.
+//
+class ipcmMessageQueryClientByName : public ipcMessage_DWORD_STR
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageQueryClientByName(const char *name)
+        : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, name) {}
+
+    const char *Name() const { return Second(); }
+};
+
+//
+// IPCM_MSG_TYPE_FORWARD
 //
 // this message is only sent from the client to the daemon.  the daemon
 // will forward the contained message to the specified client.
 //
-class ipcmMessageFWD : public ipcMessage
+class ipcmMessageForward : public ipcMessage
 {
 public:
-    static const char MSG_TYPE;
-
-    ipcmMessageFWD(const char *destClient, const ipcMessage *destMsg);
+    static const PRUint32 MSG_TYPE;
 
     //
-    // extracts the "destination client name"
+    // params:
+    //   clientID - the client to which the message should be forwarded
+    //   target   - the message target
+    //   data     - the message data
+    //   dataLen  - the message data length
     //
-    const char *DestClient() const;
+    ipcmMessageForward(PRUint32 clientID,
+                       const nsID &target,
+                       const char *data,
+                       PRUint32 dataLen);
 
     //
-    // extracts (a copy of) the "destination message"
+    // set inner message data, constrained to the data length passed
+    // to this class's constructor.
     //
-    PRStatus DestMessage(ipcMessage *destMsg) const;
+    void SetInnerData(PRUint32 offset, const char *data, PRUint32 dataLen);
+
+    PRUint32    DestClientID() const;
+    const nsID &InnerTarget() const;
+    const char *InnerData() const;
+    PRUint32    InnerDataLen() const;
 };
 
 #endif // !ipcm_h__

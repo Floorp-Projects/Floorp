@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "plstr.h"
+
 #include "ipcConfig.h"
 #include "ipcService.h"
-#include "plstr.h"
+#include "ipcm.h"
 
 static PRBool PR_CALLBACK
 ipcReleaseMessageObserver(nsHashKey *aKey, void *aData, void* aClosure)
@@ -158,14 +160,19 @@ ipcService::SendMessage(PRUint32 clientID,
 {
     NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
 
-    if (clientID != 0)
-        return NS_ERROR_NOT_IMPLEMENTED;
+    if (target.Equals(IPCM_TARGET)) {
+        NS_ERROR("do not try to talk to the IPCM target directly");
+        return NS_ERROR_INVALID_ARG;
+    }
 
-    ipcMessage *msg = new ipcMessage();
+    ipcMessage *msg;
+    if (clientID)
+        msg = new ipcmMessageForward(clientID, target, data, dataLen);
+    else
+        msg = new ipcMessage(target, data, dataLen);
+
     if (!msg)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    msg->Init(target, data, dataLen);
 
     mTransport->SendMsg(msg);
     return NS_OK;
