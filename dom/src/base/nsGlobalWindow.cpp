@@ -405,7 +405,7 @@ GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
   mContext = aContext;
 
   if (mContext) {
-    if (GetParentInternal()) {
+    if (IsFrame()) {
       // This window is a [i]frame, don't bother GC'ing when the
       // frame's context is destroyed since a GC will happen when the
       // frameset or host document is destroyed anyway.
@@ -1573,20 +1573,12 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
    * prevent setting window.innerWidth by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-  docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-
-  // It's only valid to access this from a top window. Doesn't work from
-  // sub-frames.
-  if (docShellParent)
-    return NS_OK; // Silent failure
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -1632,20 +1624,12 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
    * prevent setting window.innerHeight by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-  docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-
-  // It's only valid to access this from a top window. Doesn't work from
-  // sub-frames.
-  if (docShellParent)
-    return NS_OK; // Silent failure
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -2619,7 +2603,7 @@ GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -2644,7 +2628,7 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -3476,10 +3460,7 @@ nsCloseEvent::PostCloseEvent()
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
-  nsCOMPtr<nsIDOMWindow> parent;
-  GetParent(getter_AddRefs(parent));
-
-  if (parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
+  if (IsFrame()) {
     // window.close() is called on a frame in a frameset, such calls
     // are ignored.
 
