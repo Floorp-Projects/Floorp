@@ -249,6 +249,7 @@ nsXULElement::nsXULElement()
       mDocument(nsnull),
       mParent(nsnull),
       mChildren(nsnull),
+      mScriptObject(nsnull),
       mLazyState(0),
       mSlots(nsnull)
 {
@@ -1351,8 +1352,8 @@ nsXULElement::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID&
 NS_IMETHODIMP
 nsXULElement::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-    if (ListenerManager()) {
-        ListenerManager()->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    if (mListenerManager) {
+        mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -1378,10 +1379,10 @@ NS_IMETHODIMP
 nsXULElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                                     PRBool aUseCapture)
 {
-  if (ListenerManager()) {
+  if (mListenerManager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-    ListenerManager()->RemoveEventListenerByType(aListener, aType, flags);
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1390,23 +1391,17 @@ nsXULElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aL
 NS_IMETHODIMP
 nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
-    if (ListenerManager()) {
-        *aResult = ListenerManager();
-        NS_ADDREF(*aResult);
-        return NS_OK;
+    if (! mListenerManager) {
+        nsresult rv;
+
+        rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
+                                                nsnull,
+                                                kIEventListenerManagerIID,
+                                                getter_AddRefs(mListenerManager));
+        if (NS_FAILED(rv)) return rv;
     }
-    nsresult rv;
 
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                            nsnull,
-                                            kIEventListenerManagerIID,
-                                            getter_AddRefs(mSlots->mListenerManager));
-    if (NS_FAILED(rv)) return rv;
-
-    *aResult = ListenerManager();
+    *aResult = mListenerManager;
     NS_ADDREF(*aResult);
     return NS_OK;
 }
@@ -1430,10 +1425,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
     nsresult rv = NS_OK;
 
-    if (! ScriptObject()) {
-        rv = EnsureSlots();
-        if (NS_FAILED(rv)) return rv;
-
+    if (! mScriptObject) {
         nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
@@ -1448,7 +1440,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             fn = NS_NewScriptXULElement;
         }
 
-        rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &(mSlots->mScriptObject));
+        rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
 
         NS_RELEASE(global);
 
@@ -1462,26 +1454,22 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             if (tag.Length() >= PRInt32(sizeof buf))
                 p = (char *)nsAllocator::Alloc(tag.Length() + 1);
 
-            aContext->AddNamedReference((void*) &(mSlots->mScriptObject), mSlots->mScriptObject, buf);
+            aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
 
             if (p != buf)
                 nsCRT::free(p);
         }
     }
 
-    *aScriptObject = ScriptObject();
+    *aScriptObject = mScriptObject;
     return rv;
 }
 
 NS_IMETHODIMP 
 nsXULElement::SetScriptObject(void *aScriptObject)
 {
-    nsresult rv;
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
     // XXX Drop reference to previous object if there was one?
-    mSlots->mScriptObject = aScriptObject;
+    mScriptObject = aScriptObject;
     return NS_OK;
 }
 
@@ -1578,13 +1566,12 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     if (mDocument) {
         // Release the named reference to the script object so it can
         // be garbage collected.
-        if (ScriptObject()) {
+        if (mScriptObject) {
             nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
             if (nsnull != owner) {
                 nsIScriptContext *context;
                 if (NS_OK == owner->GetScriptContext(&context)) {
-                    context->RemoveReference((void*) &(mSlots->mScriptObject),
-                                             mSlots->mScriptObject);
+                    context->RemoveReference((void*) &mScriptObject, mScriptObject);
 
                     NS_RELEASE(context);
                 }
@@ -1597,7 +1584,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
     if (mDocument) {
         // Add a named reference to the script object.
-        if (ScriptObject()) {
+        if (mScriptObject) {
             nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
             if (nsnull != owner) {
                 nsIScriptContext *context;
@@ -1610,7 +1597,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                     if (tag.Length() >= PRInt32(sizeof buf))
                         p = (char *)nsAllocator::Alloc(tag.Length() + 1);
 
-                    context->AddNamedReference((void*) &(mSlots->mScriptObject), mSlots->mScriptObject, buf);
+                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
 
                     if (p != buf)
                         nsCRT::free(p);
@@ -2573,9 +2560,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext& aPresContext,
     
 
     //Local handling stage
-    if (ListenerManager() && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         aEvent->flags = aFlags;
-        ListenerManager()->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
     }
 
     //Bubbling stage
@@ -3505,12 +3492,23 @@ nsXULElement::EnsureSlots()
     for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* proto = &(mPrototype->mAttributes[i]);
 
-        // It's safe for us to call SetAttribute() now, because we
-        // won't re-enter. Plus, this saves us the hassle of copying
-        // all the crappy logic in SetAttribute() yet another time.
-        rv = SetAttribute(proto->mNameSpaceID, proto->mName, proto->mValue, PR_FALSE);
+        // Create a CBufDescriptor to avoid copying the attribute's
+        // value just to set it.
+        nsXULAttribute* attr;
+        rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
+                                    proto->mNameSpaceID,
+                                    proto->mName,
+                                    proto->mValue,
+                                    &attr);
+
         if (NS_FAILED(rv)) return rv;
+
+        // transfer ownership of the nsXULAttribute object
+        mSlots->mAttributes->AppendElement(attr);
     }
+
+    mSlots->mAttributes->SetClassList(mPrototype->mClassList);
+    mSlots->mAttributes->SetInlineStyleRule(mPrototype->mInlineStyleRule);
 
     return NS_OK;
 }
@@ -3523,7 +3521,6 @@ nsXULElement::EnsureSlots()
 nsXULElement::Slots::Slots(nsXULElement* aElement)
     : mElement(aElement),
       mNameSpaceID(0),
-      mScriptObject(nsnull),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
       mAttributes(nsnull),

@@ -634,6 +634,12 @@ nsXULAttributes::HasClass(nsIAtom* aClass) const
     return nsClassList::HasClass(mClassList, aClass) ? NS_OK : NS_COMFALSE;
 }
 
+nsresult nsXULAttributes::SetClassList(nsClassList* aClassList)
+{
+    mClassList = aClassList;
+    return NS_OK;
+}
+
 nsresult nsXULAttributes::UpdateClassList(const nsString& aValue)
 {
     return nsClassList::ParseClasses(&mClassList, aValue);
@@ -644,32 +650,33 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsString& aValu
     if (aValue == "")
     {
       // XXX: Removing the rule. Is this sufficient?
-      NS_IF_RELEASE(mStyleRule);
       mStyleRule = nsnull;
       return NS_OK;
     }
 
-    nsICSSParser* css;
+    nsCOMPtr<nsICSSParser> css;
     nsresult result = nsComponentManager::CreateInstance(kCSSParserCID,
                                                          nsnull,
                                                          kICSSParserIID,
-                                                         (void**)&css);
+                                                         getter_AddRefs(css));
     if (NS_OK != result) {
       return result;
     }
 
-    nsIStyleRule* rule;
-    result = css->ParseDeclarations(aValue, aDocURL, rule);
-    //NS_IF_RELEASE(docURL);
+    nsCOMPtr<nsIStyleRule> rule;
+    result = css->ParseDeclarations(aValue, aDocURL, *getter_AddRefs(rule));
     
-    if ((NS_OK == result) && (nsnull != rule)) {
-      mStyleRule = rule; //Addrefed already during parse, so don't need to addref again.
-      //result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
+    if ((NS_OK == result) && rule) {
+      mStyleRule = rule;
     }
-    //else {
-    //  result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
-    //}
-    NS_RELEASE(css);
+
+    return NS_OK;
+}
+
+
+nsresult nsXULAttributes::SetInlineStyleRule(nsIStyleRule* aRule)
+{
+    mStyleRule = aRule;
     return NS_OK;
 }
 
