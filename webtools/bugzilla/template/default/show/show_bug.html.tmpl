@@ -96,7 +96,7 @@
         <select name="component">
           [% FOREACH x = component_ %]
             <option value="[% x %]"
-              [% " selected" IF x == bug.component_ %]>[% x %]</option>
+              [% " selected" IF x == bug.component %]>[% x %]</option>
           [% END %]
         </select>
       </td>
