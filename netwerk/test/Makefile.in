@@ -31,6 +31,7 @@ MODULE		= test_necko
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  pref \
 		  util \
 		  $(NULL)
 
@@ -52,6 +53,7 @@ CPPSRCS		= \
 		TestBlockingSocket.cpp \
 		TestDNS.cpp \
 		TestIOThreads.cpp \
+		TestCookie.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
