@@ -3,7 +3,22 @@ package	MozJar;
 
 require 5.004;
 
+=head1 NAME
 
+B<MozJar> - Routines for creating and managing jar files in MacPerl.
+
+=head1 SYNOPSIS
+
+   use MozJar;
+
+   CreateJarFile("$chrome_dir:communicator", "$chrome_dir:communicator.jar");
+
+=head1 DESCRIPTION
+
+B<MozJar> is a utility module that uses Archive::Zip (which in turn requires
+Compress::Zlib) to create jar files.
+
+=cut
 use strict;
 use Archive::Zip;
 
@@ -58,6 +73,15 @@ sub _addDirToJar($$$$)
         }
     }
 }
+
+=head2 Creating jar files - C<CreateJarFile($srcdir, $jarpath, $compress)>
+
+Call C<CreateJarFile()> to make a new jar file at the location specified by
+C<$jarpath>, into which will be stored the files and directories under C<$srcdir>.
+
+The file and directory paths inside the jar file are created relative to C<$srcdir>.
+
+=cut
 
 sub CreateJarFile($$)
 {
