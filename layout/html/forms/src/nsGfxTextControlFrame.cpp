@@ -192,8 +192,8 @@ nsGfxTextControlFrame::InitTextControl()
 nsGfxTextControlFrame::nsGfxTextControlFrame()
 : mWebShell(0), mCreatingViewer(PR_FALSE),
   mTempObserver(0), mDocObserver(0), 
-  mDummyFrame(0), mNeedsStyleInit(PR_TRUE),
   mIsProcessing(PR_FALSE),
+  mDummyFrame(0), mNeedsStyleInit(PR_TRUE),
   mDummyInitialized(PR_FALSE) // DUMMY
 {
 }
@@ -924,7 +924,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       GetDesiredSize(&aPresContext, aReflowState, aMetrics);
       aStatus = NS_FRAME_COMPLETE;
     } else {
-      nsresult rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+      rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
     }
     // Now resize the widget if there is one, in this case it is 
     // the webshell for the editor
