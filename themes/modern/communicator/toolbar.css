@@ -73,6 +73,16 @@
   display: none;
 }
 
+.toolbarbutton-1[buttonstyle="text"] > stack > .toolbarbutton-menubutton-dropmarker {
+  margin: 0px 2px 0px 38px !important;
+}
+
+.toolbarbutton-1[buttonstyle="text"] > stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-text,
+.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-text {
+  margin: 5px 0px !important;
+}
+
 /* ::::: toolbargrippy ::::: */
  
 .toolbar-primary-grippy { 
@@ -113,4 +123,3 @@
   width: 18px;
   background: none;
 }
-

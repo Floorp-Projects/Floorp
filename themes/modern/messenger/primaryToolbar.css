@@ -71,6 +71,10 @@
   -moz-image-region: rect(102px 199px 135px 150px) !important;
 } 
 
+#button-getmsg[buttonstyle="text"] > stack > .toolbarbutton-menubutton-dropmarker {
+  margin: 0px 2px 0px 55px !important;
+}
+
 #button-newmsg {
   -moz-image-region: rect(170px 49px 203px 0);
 }
@@ -263,6 +267,7 @@
   -moz-border-bottom-colors: #000000;
   background-color: #C7BC8F;
 }
+
 
 #junkIcon {
   list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");

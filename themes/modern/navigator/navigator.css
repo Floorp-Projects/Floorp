@@ -146,7 +146,6 @@ toolbox {
   display: -moz-box;
 }
 
-/* Hides text below the above buttons */
 .toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
   > .toolbarbutton-text,
 .toolbarbutton-1 > .toolbarbutton-text {
@@ -157,6 +156,23 @@ toolbox {
   > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
   display: inline !important;
+}
+
+#forward-button[buttonstyle="text"] > stack > .toolbarbutton-menubutton-dropmarker {
+  margin: 0px 2px 0px 56px !important;
+}
+
+.toolbarbutton-1[buttonstyle="text"] > stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-text,
+.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-text {
+  display: -moz-box !important;
+  margin-top: 10px !important;
+}
+
+.toolbarbutton-1[buttonstyle="text"] > stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-icon,
+.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-icon {
+  display: none !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */
@@ -372,6 +388,23 @@ toolbox {
   -moz-border-radius: 3px;
   padding: 0px 3px;
   min-width: 0px;
+}
+
+#nav-bar-inner[buttonstyle="text"] {  
+  margin: 2px 0px 2px 5px;
+  border: 0px;
+}
+
+#search-button[buttonstyle="text"] {
+  margin-right: 0px;
+}
+
+#search-button[buttonstyle="text"] > .button-box > .button-icon {
+  display: none;
+}
+
+#search-button[buttonstyle="pictures"] > .button-box > .button-text {
+  display: none;
 }
 
 /* ::::: urlbar - the url textbox ::::: */

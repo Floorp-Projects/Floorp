@@ -82,6 +82,10 @@
   display: none;
 }
 
+.toolbarbutton-1[buttonstyle="text"] {
+  min-width: 46px;
+}
+
 .toolbarbutton-text[buttonstyle="pictures"],
 .toolbarbutton-icon[buttonstyle="text"] {
   display: none;
