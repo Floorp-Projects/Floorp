@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= xre components skin/win
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS	+= content/mac skin/mac
+DIRS	+= skin/mac
 endif
 
 CHROME_DEPS	= locale/build.dtd content/buildconfig.html
