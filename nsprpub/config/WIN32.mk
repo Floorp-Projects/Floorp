@@ -51,6 +51,7 @@ LINK = link
 AR = lib -NOLOGO -OUT:"$@"
 RANLIB = echo
 BSDECHO = echo
+STRIP = echo
 NSINSTALL = nsinstall
 INSTALL	= $(NSINSTALL)
 define MAKE_OBJDIR

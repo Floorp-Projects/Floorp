@@ -71,6 +71,7 @@ AR = wlib -q $@
 RC = wrc.exe /r /dWIN16=1 /bt=windows
 RANLIB = echo
 BSDECHO = echo
+STRIP = echo
 NSINSTALL = nsinstall
 INSTALL	= $(NSINSTALL)
 MAKE_OBJDIR = mkdir $(OBJDIR)
