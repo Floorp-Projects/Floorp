@@ -45,6 +45,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   mGIFStruct = nsnull;
 
   mAlphaLine = nsnull;
+  mRGBLine = nsnull;
   mBackgroundRGBIndex = 0;
 
   mCurrentRow = -1;
@@ -58,6 +59,9 @@ nsGIFDecoder2::~nsGIFDecoder2(void)
 {
   if (mAlphaLine)
     nsMemory::Free(mAlphaLine);
+
+  if (mRGBLine)
+    nsMemory::Free(mRGBLine);
 
   if (mGIFStruct) {
     gif_destroy(mGIFStruct);
@@ -378,7 +382,6 @@ int HaveImageAll(
 int HaveDecodedRow(
   void* aClientData,
   PRUint8* aRowBufPtr,   // Pointer to single scanline temporary buffer
-  PRUint8* aRGBrowBufPtr,// Pointer to temporary storage for dithering/mapping
   int aXOffset,          // With respect to GIF logical screen origin
   int aLength,           // Length of the row?
   int aRowNumber,        // Row number?
@@ -418,10 +421,10 @@ int HaveDecodedRow(
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
 
+    decoder->mRGBLine = (PRUint8 *)nsMemory::Realloc(decoder->mRGBLine, bpr);
+
     if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
-      if (decoder->mAlphaLine)
-        nsMemory::Free(decoder->mAlphaLine);
-      decoder->mAlphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
+      decoder->mAlphaLine = (PRUint8 *)nsMemory::Realloc(decoder->mAlphaLine, abpr);
     }
   } else {
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
@@ -456,7 +459,7 @@ int HaveDecodedRow(
       cmap = decoder->mGIFStruct->local_colormap;
     }
 
-    PRUint8* rgbRowIndex = aRGBrowBufPtr;
+    PRUint8* rgbRowIndex = decoder->mRGBLine;
     PRUint8* rowBufIndex = aRowBufPtr;
         
     switch (format) {
@@ -473,7 +476,7 @@ int HaveDecodedRow(
         }
 
         for (int i=0; i<aDuplicateCount; i++)
-          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+          decoder->mImageFrame->SetImageData(decoder->mRGBLine,
                                              bpr, (aRowNumber+i)*bpr);
       }
       break;
@@ -487,7 +490,7 @@ int HaveDecodedRow(
         }
 
         for (int i=0; i<aDuplicateCount; i++)
-          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+          decoder->mImageFrame->SetImageData(decoder->mRGBLine,
                                              bpr, (aRowNumber+i)*bpr);
       }
       break;
@@ -502,7 +505,7 @@ int HaveDecodedRow(
             decoder->mImageFrame->SetTransparentColor(transColor);
         }
 
-        memset(aRGBrowBufPtr, 0, bpr);
+        memset(decoder->mRGBLine, 0, bpr);
         memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
@@ -531,7 +534,7 @@ int HaveDecodedRow(
           ++rowBufIndex;
         }
         for (int i=0; i<aDuplicateCount; i++) {
-          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+          decoder->mImageFrame->SetImageData(decoder->mRGBLine,
                                              bpr, (aRowNumber+i)*bpr);
           decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine,
                                              abpr, (aRowNumber+i)*abpr);

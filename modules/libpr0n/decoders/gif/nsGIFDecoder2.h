@@ -70,6 +70,7 @@ public:
   gif_struct *mGIFStruct;
   
   PRUint8 *mAlphaLine;
+  PRUint8 *mRGBLine;
   PRUint8 mBackgroundRGBIndex;
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
@@ -85,7 +86,6 @@ static int PR_CALLBACK BeginGIF(
 static int PR_CALLBACK HaveDecodedRow(
   void* aClientData,
   PRUint8* aRowBufPtr,   // Pointer to single scanline temporary buffer
-  PRUint8* aRGBrowBufPtr,// Pointer to temporary storage for dithering/mapping
   int aXOffset,          // With respect to GIF logical screen origin
   int aLength,           // Length of the row?
   int aRow,              // Row number?

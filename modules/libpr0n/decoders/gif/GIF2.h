@@ -131,7 +131,6 @@ typedef struct gif_struct {
     int (PR_CALLBACK* GIFCallback_HaveDecodedRow)(
       void* aClientData,
       PRUint8* aRowBufPtr,   /* Pointer to single scanline temporary buffer */
-      PRUint8* aRGBrowBufPtr,/* Pointer to temporary storage for dithering/mapping */
       int aXOffset,          /* With respect to GIF logical screen origin */
       int aLength,           /* Length of the row? */
       int aRow,              /* Row number? */
@@ -171,7 +170,6 @@ typedef struct gif_struct {
     int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
     PRUintn rows_remaining;        /* Rows remaining to be output */
     PRUintn irow;                  /* Current output row, starting at zero */
-    PRUint8 *rgbrow;              /* Temporary storage for dithering/mapping */
     PRUint8 *rowbuf;              /* Single scanline temporary buffer */
     PRUint8 *rowend;              /* Pointer to end of rowbuf */
     PRUint8 *rowp;                /* Current output pointer */
@@ -257,7 +255,6 @@ PRBool GIFInit(
   int (*PR_CALLBACK GIFCallback_HaveDecodedRow)(
     void* aClientData,
     PRUint8* aRowBufPtr,   /* Pointer to single scanline temporary buffer */
-    PRUint8* aRGBrowBufPtr,/* Pointer to temporary storage for dithering/mapping */
     int aXOffset,          /* With respect to GIF logical screen origin */
     int aLength,           /* Length of the row? */
     int aRow,              /* Row number? */
