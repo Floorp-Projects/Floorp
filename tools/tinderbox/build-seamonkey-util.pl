@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.264 $ ';
+$::UtilsVersion = '$Revision: 1.265 $ ';
 
 package TinderUtils;
 
@@ -1626,7 +1626,10 @@ sub run_all_tests {
 
       # Set status, in case create profile failed.
       if ($cp_result) {
-        if (not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
+        # We should check $cp_result->{exit_value} too, except
+        # semi-single-profile landing made 0 the success value (which is
+        # good), so we now have inconsistent expected results.
+        if (not $cp_result->{timed_out}) {
           $test_result = "success";
         } else {
           $test_result = "testfailed";
