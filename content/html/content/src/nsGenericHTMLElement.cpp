@@ -1220,8 +1220,9 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  nsHTMLValue value;
-  nsresult result = GetHTMLAttribute(aAttribute, value);
+  const nsHTMLValue*  value;
+  nsresult  result = mAttributes ? mAttributes->GetAttribute(aAttribute, &value) :
+                     NS_CONTENT_ATTR_NOT_THERE;
 
   char cbuf[20];
   nscolor color;
@@ -1233,14 +1234,14 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     }
     // Try subclass conversion routine first
     if (NS_CONTENT_ATTR_HAS_VALUE ==
-        htmlContent->AttributeToString(aAttribute, value, aResult)) {
+        htmlContent->AttributeToString(aAttribute, *value, aResult)) {
       NS_RELEASE(htmlContent);
       return result;
     }
     NS_RELEASE(htmlContent);
 
     // Provide default conversions for most everything
-    switch (value.GetUnit()) {
+    switch (value->GetUnit()) {
     case eHTMLUnit_Null:
     case eHTMLUnit_Empty:
       aResult.Truncate();
@@ -1248,27 +1249,27 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 
     case eHTMLUnit_String:
     case eHTMLUnit_ColorName:
-      value.GetStringValue(aResult);
+      value->GetStringValue(aResult);
       break;
 
     case eHTMLUnit_Integer:
       aResult.Truncate();
-      aResult.Append(value.GetIntValue(), 10);
+      aResult.Append(value->GetIntValue(), 10);
       break;
 
     case eHTMLUnit_Pixel:
       aResult.Truncate();
-      aResult.Append(value.GetPixelValue(), 10);
+      aResult.Append(value->GetPixelValue(), 10);
       break;
 
     case eHTMLUnit_Percent:
       aResult.Truncate();
-      aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
+      aResult.Append(PRInt32(value->GetPercentValue() * 100.0f), 10);
       aResult.Append('%');
       break;
 
     case eHTMLUnit_Color:
-      color = nscolor(value.GetColorValue());
+      color = nscolor(value->GetColorValue());
       PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
                   NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
       aResult.Truncate();
@@ -1282,6 +1283,7 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       break;
     }
   }
+
   return result;
 }
 
