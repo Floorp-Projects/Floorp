@@ -142,8 +142,10 @@ char* nsFileSpec::GetLeafName() const
 #ifndef XP_MACOSX
     return mPath.GetLeaf('/');
 #else
-    nsAutoString nameInNFC;
     char *name = mPath.GetLeaf('/');
+    if (!name || !*name)
+        return name;
+    nsAutoString nameInNFC;
     CopyUTF8toUTF16NFC(nsDependentCString(name), nameInNFC);
     nsCRT::free(name);
     return nsCRT::strdup(NS_ConvertUTF16toUTF8(nameInNFC).get());
