@@ -27,36 +27,21 @@
 #include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsICmdLineService.h"
-
-
-/* XXX TODO fix this */
+#include "nsProfileAccess.h"
 
 #define _MAX_LENGTH             256
-#define _MAX_NUM_PROFILES       50     
 
 class nsProfile: public nsIProfile
 {
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROFILE
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIPROFILE
 
 private:
-  nsCOMPtr <nsIRegistry> m_reg;
+	nsresult ProcessArgs(nsICmdLineService *service,
+					   PRBool *profileDirSet,
+					   nsCString & profileURLStr);
+	nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
 
-  nsresult ProcessArgs(nsICmdLineService *service,
-                       PRBool *profileDirSet,
-                       nsCString & profileURLStr);
-  nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
-  nsresult OpenRegistry();
-  nsresult CloseRegistry();
-
-  char mNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  char mProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  PRInt32 mCount;
-  PRInt32 mNumProfiles;
-  PRInt32 mNumOldProfiles;
-  char mOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
-  char mOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH];
-    
 public:
 	nsProfile();
 	virtual ~nsProfile();
@@ -64,7 +49,7 @@ public:
 	nsresult RenameProfileDir(const char *newProfileName);
 
 	// Creates associated user directories on the creation of a new profile
-    	nsresult CreateUserDirectories(const nsFileSpec& profileDir);
+    nsresult CreateUserDirectories(const nsFileSpec& profileDir);
 
 	// Deletes associated user directories
 	nsresult DeleteUserDirectories(const nsFileSpec& profileDir);
@@ -72,12 +57,7 @@ public:
 	// Copies all the registry keys from old profile to new profile
 	nsresult CopyRegKey(const char *oldProfile, const char *newProfile);
 
-	// Fills the global array mProfiles by enumerating registry entries
-	nsresult GetAllProfiles();
-
-	nsresult UpdateMozProfileRegistry();
-
-	// Fix the version differences by modifying the dir name entries
-	nsresult FixRegEntries();
+	// Routine that frees the memory allocated to temp profile struct
+	void FreeProfileStruct(ProfileStruct* aProfile);
 };
 
