@@ -449,7 +449,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
       nsCAutoString relPath;
       docURL->GetSpec(relPath);
       if (!relPath.IsEmpty()) {
-        href = NS_ConvertUTF8toUCS2(relPath);
+        CopyUTF8toUTF16(relPath, href);
 
         // If re-using the same URL, chop off old query string (bug 25330)
         PRInt32 queryStart = href.FindChar('?');

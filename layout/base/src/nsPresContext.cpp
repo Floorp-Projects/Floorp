@@ -309,7 +309,10 @@ nsPresContext::GetFontPreferences()
 
   // get font.minimum-size.[langGroup]
   PRInt32 size;
-  pref.Assign("font.minimum-size."); pref.Append(NS_ConvertUCS2toUTF8(langGroup));
+
+  pref.Assign("font.minimum-size.");
+  AppendUTF16toUTF8(langGroup, pref);
+
   rv = mPrefs->GetIntPref(pref.get(), &size);
   if (NS_SUCCEEDED(rv)) {
     if (unit == eUnit_px) {
@@ -324,7 +327,7 @@ nsPresContext::GetFontPreferences()
   nsCAutoString generic_dot_langGroup;
   for (PRInt32 eType = eDefaultFont_Variable; eType < eDefaultFont_COUNT; ++eType) {
     generic_dot_langGroup.Assign(kGenericFont[eType]);
-    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
+    AppendUTF16toUTF8(langGroup, generic_dot_langGroup);
 
     nsFont* font;
     switch (eType) {
@@ -395,9 +398,10 @@ nsPresContext::GetFontPreferences()
     }
 
 #ifdef DEBUG_rbs
-    nsCAutoString family(NS_ConvertUCS2toUTF8(font->name));
     printf("%s Family-list:%s size:%d sizeAdjust:%.2f\n",
-            generic_dot_langGroup.get(), family.get(), font->size, font->sizeAdjust);
+            generic_dot_langGroup.get(),
+           NS_ConvertUCS2toUTF8(font->name).get(), font->size,
+           font->sizeAdjust);
 #endif
   }
 }
