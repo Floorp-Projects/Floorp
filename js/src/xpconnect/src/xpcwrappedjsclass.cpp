@@ -36,7 +36,7 @@
 
 #include "xpcprivate.h"
 
-static const char* XPC_QUERY_INTERFACE_STR = "QueryInterface";
+const char XPC_QUERY_INTERFACE_STR[] = "QueryInterface";
 
 NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -145,33 +145,43 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 JSObject*
 nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID)
 {
+// XXX disable code to make us run the current JSContext until DOM
+// JS_GetContextPrivate usage is fixed
+//    AutoPushCompatibleJSContext autoContext(GetJSContext());
+//    JSContext* cx = autoContext.GetJSContext();
     JSContext* cx = GetJSContext();
+
     JSObject* id;
     jsval retval;
     JSObject* retObj;
     JSBool success = JS_FALSE;
+    jsid funid;
+    jsval fun;
 
-    if(!cx)
+    if(!cx || !mXPCContext)
         return nsnull;
 
-    id = xpc_NewIDObject(cx, aIID);
+    // check upfront for the existence of the function property
+    funid = mXPCContext->GetStringID(XPCContext::IDX_QUERY_INTERFACE_STRING);
+    if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
+        return nsnull;
 
+    jsval e;
+    JSBool hadExpection = JS_GetPendingException(cx, &e);
+    JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
+    id = xpc_NewIDObject(cx, aIID);
     if(id)
     {
-        jsval e;
-        JSBool hadExpection = JS_GetPendingException(cx, &e);
-        JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
-        success = JS_CallFunctionName(cx, jsobj, XPC_QUERY_INTERFACE_STR,
-                                      1, args, &retval);
-        if(success)
-            success = JS_ValueToObject(cx, retval, &retObj);
-        JS_SetErrorReporter(cx, older);
-        if(hadExpection)
-            JS_SetPendingException(cx, e);
-        else
-            JS_ClearPendingException(cx);
+        success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, &retval);
     }
+    if(success)
+        success = JS_ValueToObject(cx, retval, &retObj);
+    JS_SetErrorReporter(cx, older);
+    if(hadExpection)
+        JS_SetPendingException(cx, e);
+    else
+        JS_ClearPendingException(cx);
 
     return success ? retObj : nsnull;
 }
@@ -451,7 +461,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     nsresult pending_result = NS_OK;
     JSErrorReporter older;
     JSBool success;
+// XXX disable code to make us run the current JSContext until DOM
+// JS_GetContextPrivate usage is fixed
+//    AutoPushCompatibleJSContext autoContext(GetJSContext());
+//    JSContext* cx = autoContext.GetJSContext();
     JSContext* cx = GetJSContext();
+
     JSBool readyToDoTheCall = JS_FALSE;
     nsID* conditional_iid = nsnull;
     JSBool iidIsOwned = JS_FALSE;
@@ -596,7 +611,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         if(param.IsOut())
         {
             // create an 'out' object
-            JSObject* out_obj = NewOutObject();
+            JSObject* out_obj = NewOutObject(cx);
             if(param.IsIn())
             {
                 if(!OBJ_SET_PROPERTY(cx, out_obj, 
@@ -1019,9 +1034,9 @@ nsXPCWrappedJSClass::GetInterfaceName()
 }
 
 JSObject*
-nsXPCWrappedJSClass::NewOutObject()
+nsXPCWrappedJSClass::NewOutObject(JSContext* cx)
 {
-    return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, nsnull, nsnull);
+    return JS_NewObject(cx, &WrappedJSOutArg_class, nsnull, nsnull);
 }
 
 void

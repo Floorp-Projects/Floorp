@@ -37,11 +37,12 @@
 #include "xpcprivate.h"
 
 const char* XPCContext::mStrings[] = {
-    "constructor",    // IDX_CONSTRUCTOR
-    "toString",       // IDX_TO_STRING
-    "lastResult",     // IDX_LAST_RESULT
-    "returnCode",     // IDX_RETURN_CODE
-    XPC_VAL_STR       // IDX_VAL_STRING
+    "constructor",          // IDX_CONSTRUCTOR
+    "toString",             // IDX_TO_STRING
+    "lastResult",           // IDX_LAST_RESULT
+    "returnCode",           // IDX_RETURN_CODE
+    XPC_VAL_STR,            // IDX_VAL_STRING
+    XPC_QUERY_INTERFACE_STR // IDX_QUERY_INTERFACE_STRING
 };
 
 // static

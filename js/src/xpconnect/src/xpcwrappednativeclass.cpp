@@ -279,6 +279,79 @@ nsXPCWrappedNativeClass::LookupMemberByID(jsid id) const
     return nsnull;
 }
 
+#ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
+void 
+nsXPCWrappedNativeClass::HandlePossibleNameCaseError(jsid id)
+{
+    jsval val;
+    JSString* oldJSStr;
+    JSString* newJSStr;
+    PRUnichar* oldStr;
+    PRUnichar* newStr;
+    jsid newID;
+    const XPCNativeMemberDescriptor* desc;
+    JSContext* cx = GetJSContext();
+
+    if(!cx)
+        return;
+
+    if(JS_IdToValue(cx, id, &val) &&
+       JSVAL_IS_STRING(val) &&
+       nsnull != (oldJSStr = JSVAL_TO_STRING(val)) &&
+       nsnull != (oldStr = (PRUnichar*) JS_GetStringChars(oldJSStr)) &&
+       oldStr[0] != 0 &&
+       nsCRT::IsUpper(oldStr[0]) &&
+       nsnull != (newStr = nsCRT::strdup(oldStr)))
+    {
+        newStr[0] = nsCRT::ToLower(newStr[0]);
+        newJSStr = JS_NewUCStringCopyZ(cx, (const jschar*)newStr);
+        nsCRT::free(newStr);
+        if(newJSStr && 
+           JS_ValueToId(cx, STRING_TO_JSVAL(newJSStr), &newID) && 
+           newID &&
+           nsnull != (desc = LookupMemberByID(newID)))
+        {
+            // found it!
+            const char* ifaceName = GetInterfaceName();
+            const char* goodName = JS_GetStringBytes(newJSStr);
+            const char* badName = JS_GetStringBytes(oldJSStr);
+            char* locationStr = nsnull;
+
+            nsCOMPtr<nsXPCException> e = 
+                nsXPCException::NewException("", NS_OK, nsnull, nsnull);
+
+            nsCOMPtr<nsIJSStackFrameLocation> loc = nsnull;
+            if(e)
+            {
+                nsresult rv;
+                rv = e->GetLocation(getter_AddRefs(loc));
+                if(NS_SUCCEEDED(rv) && loc)
+                {
+                    rv = loc->ToString(&locationStr);
+                    if(NS_FAILED(rv))
+                        locationStr = nsnull;
+                }
+            }
+                        
+            if(locationStr && ifaceName && goodName && badName )
+            {
+                printf("**************************************************\n"
+                       "ERROR: JS code at [%s]\n"
+                       "tried to access nonexistent property called\n"
+                       "\'%s\' on interface of type \'%s\'.\n"
+                       "That interface does however have a property called\n"
+                       "\'%s\'. Did you mean to access that lowercase property?\n"
+                       "Please fix the JS code as appropriate.\n"
+                       "**************************************************\n",
+                        locationStr, badName, ifaceName, goodName);
+            }
+            if(locationStr)
+                nsAllocator::Free(locationStr);
+        }
+    }
+}        
+#endif
+
 const char*
 nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) const
 {
