@@ -541,6 +541,7 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
 
         break;
       }
+      case nsMsgSearchAttrib::HasAttachmentStatus:
       case nsMsgSearchAttrib::MsgStatus:
         err = aTerm->MatchStatus (msgFlags, &result);
         break;

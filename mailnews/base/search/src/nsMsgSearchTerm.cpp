@@ -99,6 +99,7 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     // the old style.  see bug #179803
     {nsMsgSearchAttrib::Sender,     "from in ab"}, 
     {nsMsgSearchAttrib::JunkStatus, "junk status"},
+    {nsMsgSearchAttrib::HasAttachmentStatus, "has attachment status"},
 };
 
 // Take a string which starts off with an attribute
@@ -184,7 +185,6 @@ nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
 	}
 	// we no longer return invalid attribute. If we cannot find the string in the table, 
 	// then it is an arbitrary header. Return success regardless if found or not
-//	return (found) ? SearchError_Success : SearchError_InvalidAttribute;
 	return NS_OK;
 }
 
@@ -458,6 +458,11 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 			outputStr.AppendWithConversion(priority);
 			break;
 		}
+                case nsMsgSearchAttrib::HasAttachmentStatus:
+                {
+                    outputStr.Append("true");  // don't need anything here, really
+                    break;
+                }
 		default:
 			NS_ASSERTION(PR_FALSE, "trying to output invalid attribute");
 			break;
@@ -543,6 +548,9 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
     case nsMsgSearchAttrib::JunkStatus:
       m_value.u.junkStatus = atoi(inStream); // only if we read from disk, right?
       break;
+    case nsMsgSearchAttrib::HasAttachmentStatus:
+      m_value.u.msgStatus = MSG_FLAG_ATTACHMENT;
+      break; // this should always be true.
 		default:
 			NS_ASSERTION(PR_FALSE, "invalid attribute parsing search term value");
 			break;
@@ -1301,7 +1309,7 @@ nsresult nsMsgSearchTerm::MatchStatus(PRUint32 statusToMatch, PRBool *pResult)
 		break;
 	default:
 		rv = NS_ERROR_FAILURE;
-		NS_ASSERTION(PR_FALSE, "invalid compare op for msg status");
+    NS_ERROR("invalid compare op for msg status");
 	}
 
   *pResult = matches;
@@ -1572,6 +1580,7 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 	case nsMsgSearchAttrib::Date:
         err = src->GetDate(&dst->u.date);
 		break;
+        case nsMsgSearchAttrib::HasAttachmentStatus:
 	case nsMsgSearchAttrib::MsgStatus:
         err = src->GetStatus(&dst->u.msgStatus);
 		break;

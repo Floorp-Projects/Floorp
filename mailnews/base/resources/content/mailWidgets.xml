@@ -655,7 +655,7 @@
   <!-- searchvalue - a widget which dynamically changes it's user interface
        depending on what type of data it's supposed to be showing
        currently handles arbitrary text entry, and menulists for 
-       priority, status, junk status and addressbook
+       priority, status, junk status, hasAttachment status, and addressbook
   -->
   <binding id="searchvalue" name="searchValue">
     <content>
@@ -704,6 +704,11 @@
           <xul:menuitem value="0" stringTag="unknown" class="search-value-menuitem"/>
           <xul:menuitem value="1" stringTag="notjunk" class="search-value-menuitem"/>
           <xul:menuitem value="2" stringTag="junk" class="search-value-menuitem"/>
+        </xul:menupopup>
+      </xul:menulist>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="0" stringTag="hasAttachments" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
     </content>
@@ -797,6 +802,9 @@
             else if (val == Components.interfaces.nsMsgSearchAttrib.JunkStatus) {
               this.setAttribute("selectedIndex", "6");
             }
+            else if (val == Components.interfaces.nsMsgSearchAttrib.HasAttachmentStatus) {
+              this.setAttribute("selectedIndex", "7");
+            }
             else {
               // a normal text field
               this.setAttribute("selectedIndex", "0");
@@ -853,6 +861,12 @@
             if (junkStatus.length > 0) 
               children[6].selectedItem = junkStatus[0];
           }
+          else if (attrib == nsMsgSearchAttrib.HasAttachmentStatus) {
+            var hasAttachmentStatus =
+              children[7].getElementsByAttribute("value", val.hasAttachmentStatus);
+            if (hasAttachmentStatus.length > 0) 
+              children[7].selectedItem = hasAttachmentStatus[0];
+          }
           else 
             children[0].value = val.str;
           return val;
@@ -872,7 +886,7 @@
                searchValue.priority = children[1].selectedItem.value;
             }
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
-               searchValue.status = children[2].selectedItem.value;
+               searchValue.status = children[2].value;
             else if (searchAttribute == nsMsgSearchAttrib.AgeInDays)
                searchValue.age = children[0].value;
             else if (searchAttribute == nsMsgSearchAttrib.Date)
@@ -890,6 +904,8 @@
                searchValue.junkStatus = children[6].value;
             else if (searchAttribute == nsMsgSearchAttrib.Size)
                searchValue.size = children[0].value;
+            else if (searchAttribute == nsMsgSearchAttrib.HasAttachmentStatus)
+               searchValue.status = 0x10000000;  // 0x10000000 is MSG_FLAG_ATTACHMENT;
             else
                searchValue.str = children[0].value;
           ]]>
@@ -976,6 +992,8 @@
 
         // initialize the junk status picker
         this.initialize(document.getAnonymousNodes(this)[6], bundle);
+        // initialize the has attachment status picker
+        this.initialize(document.getAnonymousNodes(this)[7], bundle);
       ]]>
       </constructor>
     </implementation>
