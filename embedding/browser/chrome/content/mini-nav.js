@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+
 var appCore = null;
 var locationFld = null;
 var commandHandler = null;
@@ -38,7 +40,6 @@ nsCommandHandler.prototype =
         return this;
       }
       throw Components.results.NS_NOINTERFACE;
-      return null;
     },
 
     exec : function(command, params)
@@ -63,7 +64,6 @@ nsXULBrowserWindow.prototype =
     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
       return this;
     throw Components.results.NS_NOINTERFACE;
-    return null;
     },
   setJSStatus : function(status)
     {
@@ -103,17 +103,27 @@ function MiniNavStartup()
   dump("*** MiniNavStartup\n");
   window.XULBrowserWindow = new nsXULBrowserWindow();
 
-  // Create the browser instance component.
-  createBrowserInstance();
+  var succeeded = false;
+  var webNavigation = getWebNavigation();
+  try {
+    // Create the browser instance component.
+    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
+                        .createInstance(Components.interfaces.nsIBrowserInstance);
 
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                             .createInstance(Components.interfaces.nsISHistory);
+    succeeded = true;
+  } catch (e) {
+  }
 
-  window._content.appCore= appCore;
-  if (appCore == null) {
+  if (!succeeded) {
     // Give up.
+    dump("Error creating browser instance\n");
     window.close();
   }
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
+  _content.appCore = appCore;
 
   // create the embedding command handler
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -137,14 +147,14 @@ function MiniNavShutdown()
     appCore.close();
 }
 
-function createBrowserInstance()
+function getBrowser()
 {
-  appCore = Components
-      .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
-      .createInstance( Components.interfaces.nsIBrowserInstance );
-  if ( !appCore ) {
-      alert( "Error creating browser instance\n" );
-  }
+  return document.getElementById("content");
+}
+
+function getWebNavigation()
+{
+  return getBrowser().webNavigation;
 }
 
 function CHExecTest()
@@ -196,12 +206,16 @@ function SetMenuItemAttr( id, attr, val )
   }
 }
 
+function loadURI(uri)
+{
+  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
+}
 
 function BrowserLoadURL()
 {
   dump("browserloadurl: " + gURLBar.value + '\n');
   try {
-    appCore.loadUrl(gURLBar.value);
+    loadURI(gURLBar.value);
   }
   catch(e) {
   }
@@ -209,21 +223,21 @@ function BrowserLoadURL()
 
 function BrowserBack()
 {
-  appCore.back();
+  getWebNavigation().goBack();
 }
 
 function BrowserForward()
 {
-  appCore.forward();
+  getWebNavigation().goForward();
 }
 
 function BrowserStop()
 {
-  appCore.stop();
+  getWebNavigation().stop();
 }
 
 function BrowserReload()
 {
-  appCore.reload(0);
+  getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
