@@ -19,69 +19,74 @@
 #
 # Contributor(s): 
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= samples
-
-XPDIST		= $(DIST)
+DIRS = samples
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINNT)
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
+endif
+
 export::
-	$(INSTALL) $(XPDIST)/idl/nsISupports.idl ./idl
-	$(INSTALL) $(XPDIST)/idl/nsrootidl.idl ./idl
+	$(INSTALL) $(DIST)/idl/nsISupports.idl ./idl
+	$(INSTALL) $(DIST)/idl/nsrootidl.idl ./idl
 
-	$(INSTALL) $(XPDIST)/include/plugin/npapi.h ./include
-	$(INSTALL) $(XPDIST)/include/plugin/npupp.h ./include
+	$(INSTALL) $(DIST)/include/plugin/npapi.h ./include
+	$(INSTALL) $(DIST)/include/plugin/npupp.h ./include
 
-	$(INSTALL) $(XPDIST)/include/java/jni.h ./include
-	$(INSTALL) $(XPDIST)/include/java/jni_md.h ./include
-	$(INSTALL) $(XPDIST)/include/java/jri.h ./include
-	$(INSTALL) $(XPDIST)/include/java/jri_md.h ./include
-	$(INSTALL) $(XPDIST)/include/java/jritypes.h ./include
+	$(INSTALL) $(DIST)/include/java/jni.h ./include
+	$(INSTALL) $(DIST)/include/java/jni_md.h ./include
+	$(INSTALL) $(DIST)/include/java/jri.h ./include
+	$(INSTALL) $(DIST)/include/java/jri_md.h ./include
+	$(INSTALL) $(DIST)/include/java/jritypes.h ./include
 
-	$(INSTALL) $(XPDIST)/include/xpcom/nsCom.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsComObsolete.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsComponentManagerUtils.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsCOMPtr.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nscore.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsDebug.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsError.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIClassInfo.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIComponentManager.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsID.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIFactory.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIMemory.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIProgrammingLanguage.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIServiceManager.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIServiceManagerObsolete.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIServiceManagerUtils.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupports.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupportsBase.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupportsImpl.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupportsObsolete.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupportsUtils.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsrootidl.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsTraceRefcnt.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsXPCOM.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIComponentManagerObsolete.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsComponentManagerObsolete.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsCom.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsComObsolete.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsComponentManagerUtils.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsCOMPtr.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nscore.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsDebug.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsError.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIClassInfo.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIComponentManager.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsID.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIFactory.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIMemory.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIProgrammingLanguage.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManager.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManagerObsolete.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManagerUtils.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsISupports.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsISupportsBase.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsISupportsImpl.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsISupportsObsolete.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsISupportsUtils.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsrootidl.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsTraceRefcnt.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsXPCOM.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsXPCOMCID.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsIComponentManagerObsolete.h ./include
+	$(INSTALL) $(DIST)/include/xpcom/nsComponentManagerObsolete.h ./include
 
-	$(INSTALL) $(XPDIST)/include/nspr/pratom.h ./include
-	$(INSTALL) $(XPDIST)/include/nspr/prcpucfg.h ./include
-	$(INSTALL) $(XPDIST)/include/nspr/prlock.h ./include
-	$(INSTALL) $(XPDIST)/include/nspr/prlong.h ./include
-	$(INSTALL) $(XPDIST)/include/nspr/prtime.h ./include
-	$(INSTALL) $(XPDIST)/include/nspr/prtypes.h ./include
+	$(INSTALL) $(DIST)/include/nspr/pratom.h ./include
+	$(INSTALL) $(DIST)/include/nspr/prcpucfg.h ./include
+	$(INSTALL) $(DIST)/include/nspr/prlock.h ./include
+	$(INSTALL) $(DIST)/include/nspr/prlong.h ./include
+	$(INSTALL) $(DIST)/include/nspr/prtime.h ./include
+	$(INSTALL) $(DIST)/include/nspr/prtypes.h ./include
 
-	$(INSTALL) $(DIST)/bin/regxpcom ./bin
-	$(INSTALL) $(DIST)/bin/xpidl ./bin
-	$(INSTALL) $(DIST)/bin/xpt_dump ./bin
+	$(INSTALL) $(DIST)/bin/regxpcom$(PROG_SUFFIX) ./bin
+	$(INSTALL) $(DIST)/bin/xpidl$(PROG_SUFFIX) ./bin
+	$(INSTALL) $(DIST)/bin/xpt_dump$(PROG_SUFFIX) ./bin
 
 clobber::
 	$(RM) -r bin idl include
