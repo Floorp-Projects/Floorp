@@ -17,6 +17,7 @@ nsINameSpace.h
 nsINameSpaceManager.h
 nsINodeInfo.h
 nsIPrivateDOMImplementation.h
+nsIRangeUtils.h
 nsIStyledContent.h
 nsIStyleRule.h
 nsIStyleRuleProcessor.h

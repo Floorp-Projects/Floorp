@@ -316,6 +316,7 @@ static Components gComponents[] = {
   { "Dom selection", NS_DOMSELECTION_CID, nsnull, },
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
   { "Range", NS_RANGE_CID, nsnull, },
+  { "Range Utils", NS_RANGEUTILS_CID, nsnull, },
   { "Content iterator", NS_CONTENTITERATOR_CID, nsnull, },
   { "Generated Content iterator", NS_GENERATEDCONTENTITERATOR_CID, nsnull, },
   { "Generated Subtree iterator", NS_GENERATEDSUBTREEITERATOR_CID, nsnull, },
