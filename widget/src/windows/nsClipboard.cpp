@@ -104,9 +104,13 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = CF_UNICODETEXT;
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0)
     format = CF_DIB;
-  else if (strcmp(aMimeStr, kFileMime) == 0)
+  else if (strcmp(aMimeStr, kFileMime) == 0 || 
+           strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
-  else if (strcmp(aMimeStr, kURLMime) == 0)
+  else if (strcmp(aMimeStr, kURLMime) == 0 || 
+           strcmp(aMimeStr, kURLDataMime) == 0 || 
+           strcmp(aMimeStr, kURLDescriptionMime) == 0 || 
+           strcmp(aMimeStr, kFilePromiseURLMime) == 0)
     format = CF_UNICODETEXT;
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
@@ -213,6 +217,24 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         FORMATETC imageFE;
         SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(flavorStr, &imageFE);      
+      }
+      else if ( strcmp(flavorStr, kFilePromiseMime) == 0 ) {
+         // if we're a file promise flavor, also register the 
+         // CFSTR_PREFERREDDROPEFFECT format.  The data object
+         // returns a value of DROPEFFECTS_MOVE to the drop target
+         // when it asks for the value of this format.  This causes
+         // the file to be moved from the temporary location instead
+         // of being copied.  The right thing to do here is to call
+         // SetData() on the data object and set the value of this format
+         // to DROPEFFECTS_MOVE on this particular data object.  But,
+         // since all the other clipboard formats follow the model of setting
+         // data on the data object only when the drop object calls GetData(),
+         // I am leaving this format's value hard coded in the data object.
+         // We can change this if other consumers of this format get added to this
+         // codebase and they need different values.
+        FORMATETC shortcutFE;
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kFilePromiseMime, &shortcutFE);
       }
     }
   }

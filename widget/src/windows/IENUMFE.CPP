@@ -102,6 +102,36 @@ void CEnumFormatEtc::AddFE(LPFORMATETC aFE)
   mFEList[mNumFEs++] = *aFE;
 }
 
+//----------------------------------------------------
+bool CEnumFormatEtc::InsertFEAt(LPFORMATETC aFE, ULONG aIndex)
+{
+  if (NULL==aFE || aIndex >= mNumFEs) return FALSE;
+
+  UINT i;
+  if (mNumFEs == mMaxNumFEs) {
+    // Grow the list.  Just growing by 1 for now.  If this becomes a perf
+    // bottleneck we should grow in larger chunks.
+    LPFORMATETC newFEList = (LPFORMATETC) new FORMATETC[(UINT) mNumFEs + 1];
+    for (i = 0; i < mNumFEs - 1; ++i) {
+      newFEList[i] = mFEList[i];
+    }
+    delete [] mFEList;
+    mFEList = newFEList;
+    ++mMaxNumFEs;
+  }  
+  
+  // XXX This insert loop should really be a memmove() call but
+  // this code is easier to read so sticking with this unless
+  // we find that this method is a performance bottleneck.  
+  for (i = mNumFEs; i > aIndex; --i) {
+    mFEList[i] = mFEList[i - 1];
+  }
+  mFEList[aIndex] = *aFE;
+  ++mNumFEs;
+
+  return TRUE;
+}
+
 /*
  * CEnumFormatEtc::QueryInterface
  * CEnumFormatEtc::AddRef

@@ -82,6 +82,7 @@ class CEnumFormatEtc : public IEnumFORMATETC
 
         // Extra Methods
         void AddFE(LPFORMATETC);
+        bool InsertFEAt(LPFORMATETC, ULONG);
     };
 
 

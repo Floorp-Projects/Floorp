@@ -46,6 +46,7 @@
 
 //#include "Ddforw.h"
 #include "nsString.h"
+#include "nsILocalFile.h"
 
 #define MAX_FORMATS 32
 
@@ -141,6 +142,7 @@ class nsDataObj : public IDataObject
 		virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
 		virtual HRESULT GetText ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
+		virtual HRESULT GetFile ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM& aSTG );
 		virtual HRESULT GetBitmap ( const nsACString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
 		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
 		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
@@ -149,6 +151,7 @@ class nsDataObj : public IDataObject
     virtual HRESULT ExtractUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG );
    
 		virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
 		virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
@@ -180,6 +183,7 @@ class nsDataObj : public IDataObject
     CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
                                       // nsDataObj owns and ref counts CEnumFormatEtc,
 
+    nsCOMPtr<nsILocalFile> mCachedTempFile;
 };
 
 
