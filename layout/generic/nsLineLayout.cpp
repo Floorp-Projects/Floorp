@@ -2250,14 +2250,20 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // However, this is not propagated outwards, since (in compatibility
     // mode) we don't want big line heights for things like
     // <p><font size="-1">Text</font></p>
+
+    // Don't count the first frame if it's only whitespace.  (Somehow
+    // the last frame, if whitespace, is already ignored.  So we're not
+    // quite compatible with Nav4.x, but it's probably good that we're
+    // ignoring the last frame.  Still, I wonder where the code is
+    // that's doing it.)  See bug 134580.
+    PRUint32 flag = preMode ? PFD_ISTEXTFRAME : PFD_ISNONWHITESPACETEXTFRAME;
     zeroEffectiveSpanBox = PR_TRUE;
-    PerFrameData* pfd = psd->mFirstFrame;
-    while (nsnull != pfd) {
-      if (preMode?pfd->GetFlag(PFD_ISTEXTFRAME):pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
+    for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
+      if (pfd->GetFlag(flag)) {
         zeroEffectiveSpanBox = PR_FALSE;
         break;
       }
-      pfd = pfd->mNext;
+      flag = PFD_ISTEXTFRAME;
     }
   }
   psd->mZeroEffectiveSpanBox = zeroEffectiveSpanBox;
@@ -3037,6 +3043,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 #ifdef IBMBIDI
   if (remainingWidth + aLineBounds.x > 0) {
 #else
+  // XXXldb What if it's less than 0??
   if (remainingWidth > 0) {
 #endif
     nscoord dx = 0;
