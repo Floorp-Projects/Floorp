@@ -47,3 +47,6 @@ ifeq ($(CPU_ARCH),alpha)
 
 OS_CFLAGS += -mieee
 endif
+
+# Use the editline library to provide line-editing support.
+JS_EDITLINE = 1

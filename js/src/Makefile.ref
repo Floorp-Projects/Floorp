@@ -68,6 +68,20 @@ CFLAGS += $(PERLCFLAGS)
 LDFLAGS += $(PERLLDFLAGS)
 endif
 
+#
+# Line editing support.
+#
+ifdef JS_READLINE
+DEFINES += -DEDITLINE
+PROG_LIBS += -lreadline
+else
+ifdef JS_EDITLINE
+PREDIRS += editline
+DEFINES += -DEDITLINE
+PROG_LIBS += -Leditline/$(OBJDIR) -ledit
+endif
+endif
+
 # For purify
 PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
                   $(INCLUDES) $(XCFLAGS)
@@ -218,12 +232,14 @@ $(PROGRAM): $(PROG_OBJS) $(LIBRARY) fdlibm/$(OBJDIR)/$(FDLIBM_LIBRARY)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
 else
 $(PROGRAM): $(PROG_OBJS) $(LIBRARY) fdlibm/$(OBJDIR)/$(FDLIBM_LIBRARY)
-	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS) \
+	    $(PROG_LIBS)
 endif
 
 $(PROGRAM).pure: $(PROG_OBJS) $(LIBRARY)
 	purify $(PUREFLAGS) \
-	    $(CC) -o $@ $(PURE_OS_CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS)
+	    $(CC) -o $@ $(PURE_OS_CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) \
+		$(OTHER_LIBS) $(PROG_LIBS)
 
 ifndef PREBUILT_CPUCFG
 $(HFILES) $(CFILES): $(OBJDIR)/jsautocfg.h
