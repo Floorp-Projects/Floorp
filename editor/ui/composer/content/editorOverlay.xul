@@ -725,7 +725,7 @@
                  tooltiptext="&anchorToolbarCmd.tooltip;"/>
 
   <!-- Formatting toolbar items. "value" are HTML tagnames, don't translate -->
-  <menulist class="toolbar-focustarget" id="ParagraphSelect" 
+  <menulist class="toolbar-focustarget" id="ParagraphSelect" observes="cmd_renderedHTMLEnabler"
     tooltiptext="&ParagraphSelect.tooltip;" crop="right">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
     <menupopup id="ParagraphPopup" oncommand="doStatefulCommand('cmd_paragraphState', event.target.value)">
@@ -743,7 +743,8 @@
   </menulist>
 
   <!-- "value" are HTML tagnames, don't translate -->
-  <menulist class="toolbar-focustarget" id="FontFaceSelect" tooltiptext="&FontFaceSelect.tooltip;" crop="right">
+  <menulist class="toolbar-focustarget" id="FontFaceSelect" observes="cmd_renderedHTMLEnabler"
+    tooltiptext="&FontFaceSelect.tooltip;" crop="right">
     <observes element="cmd_fontFace" attribute="state" onbroadcast="onFontFaceChange(this.parentNode, 'cmd_fontFace')"/>
     <menupopup id="FontFacePopup" oncommand="doStatefulCommand('cmd_fontFace', event.target.value)">
       <menuitem label="&fontVarWidth.label;"      value=""/>
