@@ -51,6 +51,7 @@ class nsIWebBrowserFind;
 class nsIEventSink;
 class nsIDragHelperService;
 class nsIPrintSettings;
+class nsIURI;
 
 
 // Protocol implemented by anyone interested in progress
@@ -73,7 +74,8 @@ class nsIPrintSettings;
 // Called when a tooltip should be shown or hidden
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
-
+// Called when a popup is blocked
+- (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite;
 @end
 
 typedef enum {

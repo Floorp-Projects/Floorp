@@ -113,7 +113,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     mListenersAttached = NO;
     mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
     mProgress = 0.0;
-    
+    mBlockedSites = nsnull;
+
     BOOL gotPref;
     BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_plugins" withSuccess:&gotPref];
     if (gotPref && !pluginsEnabled)
@@ -148,6 +149,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   [mToolTip release];
   [mTitle release];
   [mTabTitle release];
+  
+  NS_IF_RELEASE(mBlockedSites);
   
   [super dealloc];
 }
@@ -255,6 +258,9 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
         selector:@selector(offlineModeChanged:)
         name:kOfflineNotificationName
         object:nil];
+
+  // update the blocked popup indicator
+  [mWindowController showPopupBlocked:(mBlockedSites != nil)];
         
   // Update the URL bar, but only if the user hasn't put something of their
   // own in there.
@@ -336,6 +342,9 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   mLoadingStatusString = [NSLocalizedString(@"TabLoading", @"") retain];
   [mStatus setStringValue:mLoadingStatusString];
 
+  NS_IF_RELEASE(mBlockedSites);
+  [mWindowController showPopupBlocked:NO];
+  
   mProgress = 0.0;
   mIsBusy = YES;
   
@@ -572,6 +581,23 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 - (void)onHideTooltip
 {
   [mToolTip closeToolTip];
+}
+
+//
+// - onPopupBlocked:fromSite:
+//
+// Called when gecko blocks a popup, telling us who it came from. Currently, we
+// don't do anything with the blocked URI, but we have it just in case.
+//
+- (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite
+{
+  // lazily instantiate.
+  if ( !mBlockedSites )
+    NS_NewISupportsArray(&mBlockedSites);
+  if ( mBlockedSites ) {
+    mBlockedSites->AppendElement(inSite);
+    [mWindowController showPopupBlocked:YES];
+  }
 }
 
 // Called when a context menu should be shown.
@@ -857,5 +883,12 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   return [[self getBrowserView] currentCharset];
 }
 
+- (void)getBlockedSites:(nsISupportsArray**)outSites
+{
+  if ( !outSites )
+    return;
+  *outSites = mBlockedSites;
+  NS_IF_ADDREF(*outSites);
+}
 
 @end

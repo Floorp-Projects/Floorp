@@ -79,6 +79,7 @@
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
 #include "nsIBrowserHistory.h"
+#include "nsIPermissionManager.h"
 
 #include <QuickTime/QuickTime.h>
 
@@ -161,6 +162,52 @@ static NSArray* sToolbarDefaults = nil;
 @end
 //////////////////////////////////////
 
+#pragma mark -
+
+//
+// IconPopUpCell
+//
+// A popup cell that displays only an icon with no border, yet retains the
+// behaviors of a popup menu. It's amazing you can't get this w/out having
+// to subclass, but *shrug*.
+//
+@interface IconPopUpCell : NSPopUpButtonCell
+{
+@private
+  NSImage* fImage;
+  NSRect fSrcRect;      // rect cached for drawing, same size as image
+}
+- (id)initWithImage:(NSImage *)inImage;
+@end
+
+@implementation IconPopUpCell
+
+- (id)initWithImage:(NSImage *)inImage
+{
+  if ( (self = [super initTextCell:@"" pullsDown:YES]) )
+  {
+    fImage = [inImage retain];
+    fSrcRect = NSMakeRect(0,0,0,0);
+    fSrcRect.size = [fImage size];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [fImage release];
+}
+
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+  [fImage setFlipped:[controlView isFlipped]];
+  cellFrame.size = fSrcRect.size;                  // don't scale
+  [fImage drawInRect:cellFrame fromRect:fSrcRect operation:NSCompositeSourceOver fraction:1.0];
+}
+
+@end
+
+#pragma mark -
 
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
@@ -358,6 +405,7 @@ static NSArray* sToolbarDefaults = nil;
   //  [mSidebarBrowserView windowClosed];
 
   [mProgress release];
+  [mPopupBlocked release];
   [mSearchBar release];
   [self stopThrobber];
   [mThrobberImages release];
@@ -387,13 +435,18 @@ static NSArray* sToolbarDefaults = nil;
       mProgress = nil;
       mStatus = nil;
       mLock = nil;
+      mPopupBlocked = nil;
     }
     else {
       // Retain with a single extra refcount. This allows us to remove
       // the progress meter from its superview without having to worry
       // about retaining and releasing it. Cache the superview of the
       // progress. Dynamically fetch the superview so as not to burden
-      // someone rearranging the nib with this detail.
+      // someone rearranging the nib with this detail. Note that this
+      // needs to be in a subview from the status bar because if the
+      // window resizes while it is hidden, its position wouldn't get updated.
+      // Having it in a separate view that stays visible (and is thus
+      // involved in the layout process) solves this.
       [mProgress retain];
       mProgressSuperview = [mProgress superview];
       
@@ -402,6 +455,26 @@ static NSArray* sToolbarDefaults = nil;
       // (radar 2194819), we need to make the text area opaque.
       [mStatus setBackgroundColor:[NSColor windowBackgroundColor]];
       [mStatus setDrawsBackground:YES];
+      
+      // create a new cell for our popup blocker item that draws just an image
+      // yet still retains the functionality of a popdown menu. Like the progress
+      // meter above, we retain so we can hide with impunity and grab its superview.
+      // However, unlike the progress meter, this doesn't need to be in a subview from
+      // the status bar because it is in a fixed position on the LHS.
+      [mPopupBlocked retain];
+      NSMenu* savedMenu = [mPopupBlocked menu];     // must cache this before replacing cell
+      IconPopUpCell* iconCell = [[[IconPopUpCell alloc] initWithImage:[NSImage imageNamed:@"popup-blocked"]] autorelease];
+      [mPopupBlocked setCell:iconCell];
+      //[iconCell setPreferredEdge:NSMinYEdge];
+      [iconCell setMenu:savedMenu];
+      [iconCell setBordered:NO];
+      mPopupBlockSuperview = [mPopupBlocked superview];
+      [self showPopupBlocked:NO];
+      
+      // register for notifications so we can populate the popup blocker menu
+      // right before it's displayed.
+      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildPopupBlockerMenu:)
+                                              name:NSPopUpButtonCellWillPopUpNotification object:nil];
     }
 
     // Set up the toolbar's search text field
@@ -2220,6 +2293,128 @@ static NSArray* sToolbarDefaults = nil;
   [mProgress removeFromSuperview];
 }
 
+// 
+// - showPopupBlocked:
+//
+// Show/hide the image of the blocked-popup indicator
+//
+- (void)showPopupBlocked:(BOOL)inBlocked
+{
+  if ( inBlocked && ![mPopupBlocked window] ) {       // told to show, currently hidden
+    [mPopupBlockSuperview addSubview:mPopupBlocked];
+  }
+  else if ( !inBlocked && [mPopupBlocked window] ) {  // told to hide, currently visible                               
+    [mPopupBlocked removeFromSuperview];
+  }
+}
+
+//
+// buildPopupBlockerMenu:
+//
+// Called by the notification center right before the menu will be displayed. This
+// allows us the opportunity to populate its contents from the list of sites
+// in the block list.
+//
+- (void)buildPopupBlockerMenu:(NSNotification*)notifier
+{
+  const long kSeparatorTag = -1;
+  NSPopUpButton* popup = [notifier object];
+  
+  // clear out existing menu. loop until we hit our special tag
+  NSMenu* menu = [popup menu];
+  int numItemsToDelete = [popup indexOfItemWithTag:kSeparatorTag];
+  for ( int i = 0; i < numItemsToDelete; ++i ) 
+    [popup removeItemAtIndex:0];
+    
+  // the first item will get swallowed by the popup
+  [popup insertItemWithTitle:@"" atIndex:0];
+  
+  // fill in new menu
+  nsCOMPtr<nsISupportsArray> blockedSites;
+  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
+  PRUint32 siteCount = 0;
+  blockedSites->Count(&siteCount);
+  for ( PRUint32 i = 0; i < siteCount; ++i ) {
+    nsCOMPtr<nsISupports> genericURI = dont_AddRef(blockedSites->ElementAt(i));
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(genericURI);
+    if ( uri ) {
+      // extract the host
+      nsCAutoString host;
+      uri->GetHost(host);
+      NSString* hostString = [NSString stringWithCString:host.get()];
+      
+      // create a new menu item and set its tag to the position in the menu so
+      // the action can know which site we want to unblock. Insert it at |i+1|
+      // because we had to pad with one item above, but set the tag to |i| because
+      // that's the index in the array.
+      const PRUint32 insertAt = i + 1;
+      NSString* itemTitle = [NSString stringWithFormat:NSLocalizedString(@"Unblock %@", @"Unblock %@"), hostString];
+      [popup insertItemWithTitle:itemTitle atIndex:insertAt];
+      NSMenuItem* currItem = [popup itemAtIndex:insertAt];
+      [currItem setAction:@selector(unblockSite:)];
+      [currItem setTarget:self];
+      [currItem setTag:i];
+    }
+  }
+}
+
+//
+// unblockSite:
+//
+// Called in response to an item in the unblock popup menu being selected to
+// add a particular site to the popup whitelist. We assume that the tag of
+// the sender is the index into the blocked sites array stores in the browser 
+// wrapper to get the nsURI.
+//
+- (IBAction)unblockSite:(id)sender
+{
+  nsCOMPtr<nsISupportsArray> blockedSites;
+  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
+
+  // get the tag from the sender and use that as the index into the list
+  long tag = [sender tag];
+  if ( tag >= 0 ) {
+    nsCOMPtr<nsISupports> genUri = dont_AddRef(blockedSites->ElementAt(tag));
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
+
+    nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
+    pm->Add(uri, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);
+  }
+}
+
+//
+// - unblockAllSites:
+//
+// Called in response to the menu item from the unblock popup. Loop over all
+// the items in the blocked sites array in the browser wrapper and add them
+// to the whitelist.
+//
+- (IBAction)unblockAllSites:(id)sender
+{
+  nsCOMPtr<nsISupportsArray> blockedSites;
+  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
+  nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
+
+  PRUint32 count = 0;
+  blockedSites->Count(&count);
+  for ( PRUint32 i = 0; i < count; ++i ) {
+    nsCOMPtr<nsISupports> genUri = dont_AddRef(blockedSites->ElementAt(i));
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
+    pm->Add(uri, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);   
+  }
+}
+
+//
+// -configurePopupBlocking
+//
+// Show the web features pref panel where the user can do things to configure
+// popup blocking
+//
+- (IBAction)configurePopupBlocking:(id)sender
+{
+  [[NSApp delegate] displayPreferencesWindow:self];
+  [[[NSApp delegate] preferencesController] selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.webfeatures"];
+}
 
 //
 // updateLock:

@@ -177,6 +177,12 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
+    
+    // register the CHBrowserListener as an event listener for popup-blocking events
+    nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(rec);
+    if ( eventTarget )
+      rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMPopupBlocked"), 
+                                          NS_STATIC_CAST(nsIDOMEventListener*, _listener), PR_FALSE);
   }
   return self;
 }

@@ -173,7 +173,7 @@ const int kReuseWindowOnAE = 2;
   // initialize if we haven't already.
   [self preferenceManager];
   
-	[self setupStartpage];
+  [self setupStartpage];
 
   // register our app components with the embed layer
   unsigned int numComps = 0;

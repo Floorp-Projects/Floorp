@@ -841,6 +841,7 @@
 				3003B8A4044514B600B85BF3,
 				3003B8A5044514B600B85BF3,
 				3003B8AD044514E300B85BF3,
+				3FAD95550461E43700A80005,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1390,6 +1391,24 @@
 			settings = {
 			};
 		};
+		3F8D26DE0471ED0F00A80005 = {
+			fileRef = 3FAD95540461E43700A80005;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FAD95540461E43700A80005 = {
+			isa = PBXFileReference;
+			name = "popup-blocked.png";
+			path = "resources/images/chrome/popup-blocked.png";
+			refType = 2;
+		};
+		3FAD95550461E43700A80005 = {
+			fileRef = 3FAD95540461E43700A80005;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -1921,6 +1940,7 @@
 				F557149E023B46BF010001CA,
 				F540BD1A029ED15301026D5D,
 				F540BD1C029ED17901026D5D,
+				3FAD95540461E43700A80005,
 				F5A112C902DF270F01026D5D,
 				F55B6BF402EF1F7E01026D5D,
 				F583E3B503B8204901A80166,
@@ -7930,6 +7950,7 @@
 				3003B8A9044514B600B85BF3,
 				3003B8AA044514B600B85BF3,
 				3003B8AE044514E300B85BF3,
+				3F8D26DE0471ED0F00A80005,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

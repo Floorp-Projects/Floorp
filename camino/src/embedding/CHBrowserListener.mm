@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMPopupBlockedEvent.h"
 
 #import "CHBrowserView.h"
 
@@ -70,7 +71,7 @@ CHBrowserListener::~CHBrowserListener()
   [mContainer release];
 }
 
-NS_IMPL_ISUPPORTS9(CHBrowserListener,
+NS_IMPL_ISUPPORTS10(CHBrowserListener,
                    nsIInterfaceRequestor,
                    nsIWebBrowserChrome,
                    nsIWindowCreator,
@@ -79,6 +80,7 @@ NS_IMPL_ISUPPORTS9(CHBrowserListener,
                    nsIWebProgressListener,
                    nsISupportsWeakReference,
                    nsIContextMenuListener,
+                   nsIDOMEventListener,
                    nsITooltipListener)
 
 // Implementation of nsIInterfaceRequestor
@@ -325,9 +327,6 @@ CHBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 c
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
   {
     NSRect frame = [window frame];
-    
-    float newWidth  = (float)cx;
-    float newHeight = (float)cy;
     
     // should we allow resizes larger than the screen, or smaller
     // than some min size here?
@@ -624,5 +623,18 @@ CHBrowserListener::SetContainer(id <CHBrowserContainer> aContainer)
   [mContainer autorelease];
   mContainer = aContainer;
   [mContainer retain];
+}
+
+NS_IMETHODIMP
+CHBrowserListener::HandleEvent(nsIDOMEvent *event)
+{
+  nsCOMPtr<nsIDOMPopupBlockedEvent> blockEvent = do_QueryInterface(event);
+  if ( blockEvent ) {
+    nsCOMPtr<nsIURI> blockedURI, blockedSite;
+    blockEvent->GetPopupWindowURI(getter_AddRefs(blockedURI));
+    blockEvent->GetRequestingWindowURI(getter_AddRefs(blockedSite));
+    [mContainer onPopupBlocked:blockedURI fromSite:blockedSite];
+  }
+  return NS_OK;
 }
 

@@ -17,6 +17,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWindowCreator.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
@@ -30,6 +31,7 @@ class CHBrowserListener : public nsSupportsWeakReference,
                                public nsIEmbeddingSiteWindow2,
                                public nsIWebProgressListener,
                                public nsIContextMenuListener,
+                               public nsIDOMEventListener,
                                public nsITooltipListener
 {
 public:
@@ -45,6 +47,7 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSICONTEXTMENULISTENER
   NS_DECL_NSITOOLTIPLISTENER
+  NS_DECL_NSIDOMEVENTLISTENER
     
   void AddListener(id <CHBrowserListener> aListener);
   void RemoveListener(id <CHBrowserListener> aListener);

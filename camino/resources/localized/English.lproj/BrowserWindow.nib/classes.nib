@@ -90,6 +90,7 @@
                 closeCurrentTab = id; 
                 closeOtherTabs = id; 
                 closeSendersTab = id; 
+                configurePopupBlocking = id; 
                 copyImage = id; 
                 copyImageLocation = id; 
                 copyLinkLocation = id; 
@@ -127,6 +128,8 @@
                 stop = id; 
                 toggleBookmarkManager = id; 
                 toggleSidebar = id; 
+                unblockAllSites = id; 
+                unblockSite = id; 
                 viewOnlyThisImage = id; 
                 viewPageSource = id; 
                 viewSource = id; 
@@ -154,6 +157,7 @@
                 mLock = NSImageView; 
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarksToolbar; 
+                mPopupBlocked = NSButton; 
                 mProgress = NSProgressIndicator; 
                 mProxyIcon = PageProxyIcon; 
                 mSearchBar = SearchTextField; 

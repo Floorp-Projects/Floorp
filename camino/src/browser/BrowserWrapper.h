@@ -42,6 +42,8 @@
 @class ToolTip;
 @class AutoCompleteTextField;
 
+class nsISupportsArray;
+
 @interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
   AutoCompleteTextField*    mUrlbar;
@@ -62,6 +64,9 @@
   NSString*                 mTitle;
     // the title we use for the tab. This differs for mTitle when the tab is loading
   NSString*                 mTabTitle;
+    // array of sites that have blocked popups. If nil, no sites are blocked. Cleared
+    // after each new page.
+  nsISupportsArray*         mBlockedSites;     // STRONG
 
   CHBrowserView*            mBrowserView;
   NSString*                 mDefaultStatusString;
@@ -91,6 +96,8 @@
 - (void)windowClosed;
 
 - (NSString*)getCurrentURLSpec;
+
+- (void)getBlockedSites:(nsISupportsArray**)outSites;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate;
 - (void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
