@@ -71,8 +71,10 @@ public:
   virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
   virtual void  SetClipRect(nsRect* aClipRect)           { mClipRect = *aClipRect; }
 
+  static void SetDateTimeStr(PRUnichar * aDateTimeStr);
+
   // This is class is now responsible for freeing the memory
-  static void SetPageNumberFormat(PRUnichar * aFormatStr);
+  static void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
 
 protected:
   nsPageFrame();
@@ -95,19 +97,32 @@ protected:
                         const nsString&      sStr,
                         const nsRect&        aRect,
                         nscoord              aHeight,
-                        PRBool               aUseHalfThePage = PR_TRUE);
+                        nscoord              aWidth);
 
+  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+                        nsIFrame *           aFrame,
+                        nsHeaderFooterEnum   aHeaderFooter,
+                        PRInt32              aJust,
+                        const nsString&      aStr1,
+                        const nsString&      aStr2,
+                        const nsString&      aStr3,
+                        const nsRect&        aRect,
+                        nscoord              aHeight);
+
+  void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
   PRInt32     mPageNum;
   PRInt32     mTotNumPages;
   nsMargin    mMargin;
-  nsFont *    mHeadFootFont;
 
   PRPackedBool mSupressHF;
   nsRect       mClipRect;
 
+  static PRUnichar * mDateTimeStr;
+  static nsFont *    mHeadFootFont;
   static PRUnichar * mPageNumFormat;
+  static PRUnichar * mPageNumAndTotalsFormat;
 
 };
 

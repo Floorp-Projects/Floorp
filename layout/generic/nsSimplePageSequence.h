@@ -41,6 +41,11 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer);
+
   // nsIPageSequenceFrame
   NS_IMETHOD  Print(nsIPresContext*         aPresContext,
                     nsIPrintOptions*        aPrintOptions,
@@ -85,6 +90,9 @@ protected:
   nsresult CreateContinuingPageFrame(nsIPresContext* aPresContext,
                                      nsIFrame*       aPageFrame,
                                      nsIFrame**      aContinuingFrame);
+
+  void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, PRBool aPageNumOnly);
+
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 

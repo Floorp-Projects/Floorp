@@ -36,22 +36,20 @@
 // for page number localization formatting
 #include "nsTextFormatter.h"
 
-// DateTime Includes
-#include "nsDateTimeFormatCID.h"
-#include "nsIDateTimeFormat.h"
-#include "nsIServiceManager.h"
-#include "nsILocale.h"
-#include "nsLocaleCID.h"
-#include "nsILocaleService.h"
-
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-
 // Temporary
 #include "nsIFontMetrics.h"
 
-// tstaic data members
+// Print Options
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
+// static data members
+PRUnichar * nsPageFrame::mDateTimeStr   = nsnull;
+nsFont *    nsPageFrame::mHeadFootFont  = nsnull;
 PRUnichar * nsPageFrame::mPageNumFormat = nsnull;
+PRUnichar * nsPageFrame::mPageNumAndTotalsFormat = nsnull;
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
 #define DEBUG_PRINTING
@@ -87,7 +85,6 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 nsPageFrame::nsPageFrame() :
-  mHeadFootFont(nsnull),
   mSupressHF(PR_FALSE),
   mClipRect(-1, -1, -1, -1)
 
@@ -95,16 +92,37 @@ nsPageFrame::nsPageFrame() :
 #ifdef NS_DEBUG
   mDebugFD = stdout;
 #endif
+  nsresult rv;
+  mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
+
+  if (mHeadFootFont == nsnull) {
+    mHeadFootFont = new nsFont("serif", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
+                               NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
+  }
+  // now get the default font form the print options
+  mPrintOptions->GetDefaultFont(*mHeadFootFont);
 }
 
 nsPageFrame::~nsPageFrame()
 {
-  if (mHeadFootFont) 
+  if (mHeadFootFont != nsnull) {
     delete mHeadFootFont;
+    mHeadFootFont = nsnull;
+  }
+
+  if (mDateTimeStr) {
+    nsMemory::Free(mDateTimeStr);
+    mDateTimeStr = nsnull;
+  }
 
   if (mPageNumFormat) {
     nsMemory::Free(mPageNumFormat);
     mPageNumFormat = nsnull;
+  }
+
+  if (mPageNumAndTotalsFormat) {
+    nsMemory::Free(mPageNumAndTotalsFormat);
+    mPageNumAndTotalsFormat = nsnull;
   }
 }
 
@@ -236,6 +254,116 @@ nsPageFrame::IsPercentageBase(PRBool& aBase) const
 }
 
 //------------------------------------------------------------------------------
+// helper function for converting from char * to unichar
+static PRUnichar *
+GetUStr(const char * aCStr)
+{
+  nsAutoString str;
+  str.AssignWithConversion(aCStr);
+  return str.ToNewUnicode();
+}
+
+// replace the &<code> with the value, but if the value is empty
+// set the string to zero length
+static void
+SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUStr)
+{
+  nsAutoString str;
+  str = aUStr;
+  if (str.Length() == 0) {
+    aStr.SetLength(0);
+  } else {
+    aStr.ReplaceSubstring(aUKey, aUStr);
+  }
+}
+// done with static helper functions
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+void 
+nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
+{
+
+  aNewStr = aStr;
+
+  // Search to see if the &D code is in the string 
+  // then subst in the current date/time
+  PRUnichar * kDate = GetUStr("&D");
+  if (kDate != nsnull) {
+    if (aStr.Find(kDate) > -1) {
+      if (mDateTimeStr != nsnull) {
+        aNewStr.ReplaceSubstring(kDate, mDateTimeStr);
+      } else {
+        nsAutoString empty;
+        PRUnichar * uEmpty = empty.ToNewUnicode();
+        aNewStr.ReplaceSubstring(kDate, uEmpty);
+        nsMemory::Free(uEmpty);
+      }
+      nsMemory::Free(kDate);
+      return;
+    }
+    nsMemory::Free(kDate);
+  }
+
+  // NOTE: Must search for &PT before searching for &P
+  //
+  // Search to see if the "page number and page" total code are in the string
+  // and replace the page number and page total code with the actual values
+  PRUnichar * kPage = GetUStr("&PT");
+  if (kPage != nsnull) {
+    if (aStr.Find(kPage) > -1) {
+      PRUnichar * uStr = nsTextFormatter::smprintf(mPageNumAndTotalsFormat, mPageNum, mTotNumPages);
+      aNewStr.ReplaceSubstring(kPage, uStr);
+      nsMemory::Free(uStr);
+      nsMemory::Free(kPage);
+      return;
+    }
+    nsMemory::Free(kPage);
+  }
+
+  // Search to see if the page number code is in the string
+  // and replace the page number code with the actual values
+  kPage = GetUStr("&P");
+  if (kPage != nsnull) {
+    if (aStr.Find(kPage) > -1) {
+      PRUnichar * uStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum);
+      aNewStr.ReplaceSubstring(kPage, uStr);
+      nsMemory::Free(uStr);
+      nsMemory::Free(kPage);
+      return;
+    }
+    nsMemory::Free(kPage);
+  }
+
+  PRUnichar * kTitle = GetUStr("&T");
+  if (kTitle != nsnull) {
+    if (aStr.Find(kTitle) > -1) {
+      PRUnichar * uTitle;
+      mPrintOptions->GetTitle(&uTitle);   // creates memory
+      SubstValueForCode(aNewStr, kTitle, uTitle);
+      nsMemory::Free(uTitle);
+      nsMemory::Free(kTitle);
+      return;
+    }
+    nsMemory::Free(kTitle);
+  }
+
+  PRUnichar * kDocURL = GetUStr("&U");
+  if (kDocURL != nsnull) {
+    if (aStr.Find(kDocURL) > -1) {
+      PRUnichar * uDocURL;
+      mPrintOptions->GetDocURL(&uDocURL);   // creates memory
+      SubstValueForCode(aNewStr, kDocURL, uDocURL);
+      nsMemory::Free(uDocURL);
+      nsMemory::Free(kDocURL);
+      return;
+    }
+    nsMemory::Free(kDocURL);
+  }
+}
+
+
+//------------------------------------------------------------------------------
 nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext, 
                                   const nsRect&        aRect, 
                                   PRInt32              aJust,
@@ -277,10 +405,49 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nsIFrame *           aFrame,
                               nsHeaderFooterEnum   aHeaderFooter,
                               PRInt32              aJust,
+                              const nsString&      aStr1,
+                              const nsString&      aStr2,
+                              const nsString&      aStr3,
+                              const nsRect&        aRect,
+                              nscoord              aHeight)
+{
+  PRInt32 numStrs = 0;
+  if (!aStr1.IsEmpty()) numStrs++;
+  if (!aStr2.IsEmpty()) numStrs++;
+  if (!aStr3.IsEmpty()) numStrs++;
+
+  nscoord strSpace = aRect.width / numStrs;
+  if (numStrs == 0) return;
+
+  if (!aStr1.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustLeft, aStr1, aRect, aHeight, strSpace);
+  }
+  if (!aStr2.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustCenter, aStr2, aRect, aHeight, strSpace);
+  }
+  if (!aStr3.IsEmpty()) {
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustRight, aStr3, aRect, aHeight, strSpace);
+  }
+}
+
+//------------------------------------------------------------------------------
+// Draw a Header or footer text lrft,right or center justified
+// @parm aRenderingContext - rendering content ot draw into
+// @parm aHeaderFooter - indicates whether it is a header or footer
+// @parm aJust - indicates the justification of the text
+// @parm aStr - The string to be drawn
+// @parm aRect - the rect of the page
+// @parm aHeight - the height of the text
+// @parm aWidth - available width for any one of the strings
+void
+nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+                              nsIFrame *           aFrame,
+                              nsHeaderFooterEnum   aHeaderFooter,
+                              PRInt32              aJust,
                               const nsString&      aStr,
                               const nsRect&        aRect,
                               nscoord              aHeight,
-                              PRBool               aUseHalfThePage)
+                              nscoord              aWidth)
 {
 
   // first make sure we have a vaild string and that the height of the
@@ -289,16 +456,15 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
       ((aHeaderFooter == eHeader && aHeight < mMargin.top) ||
        (aHeaderFooter == eFooter && aHeight < mMargin.bottom))) {
     // measure the width of the text
-    nsString str = aStr;
+    nsAutoString str;
+    ProcessSpecialCodes(aStr, str);
+
     PRInt32 width;
     aRenderingContext.GetWidth(str, width);
     PRBool addEllipse = PR_FALSE;
-    nscoord halfWidth = aRect.width;
-    if (aUseHalfThePage) {
-      halfWidth /= 2;
-    }
+
     // trim the text and add the elipses if it won't fit
-    while (width >= halfWidth && str.Length() > 1) {
+    while (width >= aWidth && str.Length() > 1) {
       str.SetLength(str.Length()-1);
       aRenderingContext.GetWidth(str, width);
       addEllipse = PR_TRUE;
@@ -347,8 +513,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     PRINT_DEBUG_MSG2(" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer");
     PRINT_DEBUG_MSG2(" JST: %s ", justStr);
     PRINT_DEBUG_MSG3(" x,y: %d,%d", x, y);
-    PRINT_DEBUG_MSG2(" Hgt: %d ", aHeight);
-    PRINT_DEBUG_MSG2(" Half: %s\n", aUseHalfThePage?"Yes":"No");
+    PRINT_DEBUG_MSG2(" Hgt: %d \n", aHeight);
 #endif
   }
 }
@@ -362,6 +527,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
                    PRUint32             aFlags)
 {
   aRenderingContext.PushState();
+  aRenderingContext.SetColor(NS_RGB(255,255,255));
+
+  nsRect rect;
   PRBool clipEmpty;
   if (mClipRect.width != -1 || mClipRect.height != -1) {
 #ifdef DEBUG_PRINTING
@@ -372,6 +540,16 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mClipRect.x = 0;
     mClipRect.y = 0;
     aRenderingContext.SetClipRect(mClipRect, nsClipCombine_kReplace, clipEmpty);
+    rect = mClipRect;
+  } else {
+    rect = mRect;
+  }
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    rect.x = 0;
+    rect.y = 0;
+    aRenderingContext.FillRect(rect);
   }
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
@@ -388,7 +566,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     // get the current margin
     mPrintOptions->GetMarginInTwips(mMargin);
 
-    nsRect  rect(0,0,mRect.width, mRect.height);
+    nsRect rect(0,0,mRect.width, mRect.height);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     // XXX Paint a one-pixel border around the page so it's easy to see where
@@ -401,10 +579,11 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
     fprintf(mDebugFD, "PageFr::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
 #endif
+
     // use the whole page
     rect.width  += mMargin.left + mMargin.right;
     rect.x      -= mMargin.left;
-
+    
     aRenderingContext.SetFont(*mHeadFootFont);
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
@@ -419,76 +598,25 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
       fontMet->GetHeight(visibleHeight);
     }
 
-    // get the print options bits so we can figure out all the 
-    // the extra pieces of text that need to be drawn
-    PRInt32 printOptBits;
-    mPrintOptions->GetPrintOptionsBits(&printOptBits);
+    // print document headers and footers
+    PRUnichar * headers[3];
+    mPrintOptions->GetHeaderStrLeft(&headers[0]);   // creates memory
+    mPrintOptions->GetHeaderStrCenter(&headers[1]); // creates memory
+    mPrintOptions->GetHeaderStrRight(&headers[2]);  // creates memory
+    DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, 
+                     nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
+                     rect, visibleHeight);
+    PRInt32 i;
+    for (i=0;i<3;i++) nsMemory::Free(headers[i]);
 
-    // print page numbers
-    if (printOptBits & nsIPrintOptions::kOptPrintPageNums && mPageNumFormat != nsnull) {
-      PRInt16 justify = nsIPrintOptions::kJustLeft;
-      mPrintOptions->GetPageNumJust(&justify);
-
-      PRUnichar *  valStr;
-      // print page number totals "x of x"
-      if (printOptBits & nsIPrintOptions::kOptPrintPageTotal) {
-        valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum, mTotNumPages);
-      } else {
-        valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum);
-      }
-      nsAutoString pageNoStr(valStr);
-      nsMemory::Free(valStr);
-      DrawHeaderFooter(aRenderingContext, this, eFooter, justify, pageNoStr, rect, visibleHeight);
-    }
-
-    // print localized date
-    if (printOptBits & nsIPrintOptions::kOptPrintDatePrinted) {
-      // Get Locale for Formating DateTime
-      nsCOMPtr<nsILocale> locale; 
-      nsCOMPtr<nsILocaleService> localeSvc = 
-               do_GetService(kLocaleServiceCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-
-        rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
-        if (NS_SUCCEEDED(rv) && locale) {
-          nsCOMPtr<nsIDateTimeFormat> dateTime;
-          rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                                 NULL,
-                                                 NS_GET_IID(nsIDateTimeFormat),
-                                                 (void**) getter_AddRefs(dateTime));
-       
-          if (NS_SUCCEEDED(rv)) {
-            nsAutoString dateString;
-            time_t ltime;
-            time( &ltime );
-            rv = dateTime->FormatTime(locale, kDateFormatShort, kTimeFormatNoSeconds, ltime, dateString);
-            if (NS_SUCCEEDED(rv)) {
-              DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, dateString, rect, visibleHeight);
-            }
-          }
-        }
-      }
-    }
-
-
-    PRBool usingHalfThePage = (printOptBits & nsIPrintOptions::kOptPrintDocTitle) && 
-                              (printOptBits & nsIPrintOptions::kOptPrintDocLoc);
-        
-    // print document title
-    PRUnichar * title;
-    mPrintOptions->GetTitle(&title); // creates memory
-    if (title != nsnull && (printOptBits & nsIPrintOptions::kOptPrintDocTitle)) {
-      DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, nsAutoString(title), rect, visibleHeight, usingHalfThePage);
-      nsMemory::Free(title);
-    }
-
-    // print document URL
-    PRUnichar * url;
-    mPrintOptions->GetDocURL(&url);
-    if ((nsnull != url) && (printOptBits & nsIPrintOptions::kOptPrintDocLoc)) {
-      DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustRight, nsAutoString(url), rect, visibleHeight, usingHalfThePage);
-      nsMemory::Free(url);
-    }
+    PRUnichar * footers[3];
+    mPrintOptions->GetFooterStrLeft(&footers[0]);   // creates memory
+    mPrintOptions->GetFooterStrCenter(&footers[1]); // creates memory
+    mPrintOptions->GetFooterStrRight(&footers[2]);  // creates memory
+    DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, 
+                     nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
+                     rect, visibleHeight);
+    for (i=0;i<3;i++) nsMemory::Free(footers[i]);
 
   }
 
@@ -521,12 +649,31 @@ nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages)
 
 //------------------------------------------------------------------------------
 void
-nsPageFrame::SetPageNumberFormat(PRUnichar * aFormatStr)
+nsPageFrame::SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly)
 { 
   NS_ASSERTION(aFormatStr != nsnull, "Format string cannot be null!");
 
-  if (mPageNumFormat != nsnull) {
-    nsMemory::Free(mPageNumFormat);
+  if (aForPageNumOnly) {
+    if (mPageNumFormat != nsnull) {
+      nsMemory::Free(mPageNumFormat);
+    }
+    mPageNumFormat = aFormatStr;
+  } else {
+    if (mPageNumAndTotalsFormat != nsnull) {
+      nsMemory::Free(mPageNumAndTotalsFormat);
+    }
+    mPageNumAndTotalsFormat = aFormatStr;
   }
-  mPageNumFormat = aFormatStr;
+}
+
+//------------------------------------------------------------------------------
+void
+nsPageFrame::SetDateTimeStr(PRUnichar * aDateTimeStr)
+{ 
+  NS_ASSERTION(aDateTimeStr != nsnull, "DateTime string cannot be null!");
+
+  if (mDateTimeStr != nsnull) {
+    nsMemory::Free(mDateTimeStr);
+  }
+  mDateTimeStr = aDateTimeStr;
 }

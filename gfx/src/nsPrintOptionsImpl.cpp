@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -77,12 +77,12 @@ const char * kMarginRight     = "print.print_margin_right";
 // Prefs for Print Options
 const char * kPrintEvenPages  = "print.print_evenpages";
 const char * kPrintOddPages   = "print.print_oddpages";
-const char * kPrintDocTitle   = "print.print_doctitle";
-const char * kPrintDocLoc     = "print.print_doclocation";
-const char * kPageNums        = "print.print_pagenumbers";
-const char * kPageNumsJust    = "print.print_pagenumjust";
-const char * kPrintPageTotals = "print.print_pagetotals";
-const char * kPrintDate       = "print.print_date";
+const char * kPrintHeaderStr1 = "print.print_headerleft";
+const char * kPrintHeaderStr2 = "print.print_headercenter";
+const char * kPrintHeaderStr3 = "print.print_headerright";
+const char * kPrintFooterStr1 = "print.print_footerleft";
+const char * kPrintFooterStr2 = "print.print_footercenter";
+const char * kPrintFooterStr3 = "print.print_footerright";
 
 // Additional Prefs
 const char * kPrintReversed   = "print.print_reversed";
@@ -105,7 +105,7 @@ const char * kLeftJust   = "left";
 const char * kCenterJust = "center";
 const char * kRightJust  = "right";
 
-#define form_properties "chrome://communicator/locale/printing.properties"
+nsFont* nsPrintOptions::mDefaultFont = nsnull;
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
@@ -123,7 +123,6 @@ nsPrintOptions::nsPrintOptions() :
   mPrintToFile(PR_FALSE),
   mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
-  mPageNumJust(kJustLeft),
   mIsCancelled(PR_FALSE),
   mPrintPageDelay(500),
   mPrintSilent(PR_FALSE)
@@ -134,18 +133,21 @@ nsPrintOptions::nsPrintOptions() :
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
 
-  mPrintOptions = kOptPrintOddPages    |
-                  kOptPrintEvenPages   |
-                  kOptPrintDocTitle    |
-                  kOptPrintDocLoc      |
-                  kOptPrintPageNums    |
-                  kOptPrintPageTotal   |
-                  kOptPrintDatePrinted;
+  mPrintOptions = kOptPrintOddPages | kOptPrintEvenPages;
 
-  mDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-                             NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
+  if (mDefaultFont == nsnull) {
+    mDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
+                               NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
+  }
+
+  mHeaderStrs[0].AssignWithConversion("&T");
+  mHeaderStrs[2].AssignWithConversion("&U");
+
+  mFooterStrs[0].AssignWithConversion("&P"); // Use &P (Page Num Only) or &PT (Page Num of Page Total)
+  mFooterStrs[2].AssignWithConversion("&D");
 
   ReadPrefs();
+
 }
 
 /** ---------------------------------------------------
@@ -156,6 +158,7 @@ nsPrintOptions::~nsPrintOptions()
 {
   if (mDefaultFont != nsnull) {
     delete mDefaultFont;
+    mDefaultFont = nsnull;
   }
 }
 
@@ -288,13 +291,13 @@ nsPrintOptions::ReadPrefs()
 
     ReadBitFieldPref(prefs, kPrintEvenPages,  kOptPrintEvenPages);
     ReadBitFieldPref(prefs, kPrintOddPages,   kOptPrintOddPages);
-    ReadBitFieldPref(prefs, kPrintDocTitle,   kOptPrintDocTitle);
-    ReadBitFieldPref(prefs, kPrintDocLoc,     kOptPrintDocLoc);
-    ReadBitFieldPref(prefs, kPageNums,        kOptPrintPageNums);
-    ReadBitFieldPref(prefs, kPrintPageTotals, kOptPrintPageTotal);
-    ReadBitFieldPref(prefs, kPrintDate,       kOptPrintDatePrinted);
 
-    ReadJustification(prefs, kPageNumsJust, mPageNumJust, kJustLeft);
+    ReadPrefString(prefs, kPrintHeaderStr1, mHeaderStrs[0]);
+    ReadPrefString(prefs, kPrintHeaderStr2, mHeaderStrs[1]);
+    ReadPrefString(prefs, kPrintHeaderStr3, mHeaderStrs[2]);
+    ReadPrefString(prefs, kPrintFooterStr1, mFooterStrs[0]);
+    ReadPrefString(prefs, kPrintFooterStr2, mFooterStrs[1]);
+    ReadPrefString(prefs, kPrintFooterStr3, mFooterStrs[2]);
 
     // Read Additional XP Prefs
     prefs->GetBoolPref(kPrintReversed,   &mPrintReversed);
@@ -327,13 +330,13 @@ nsPrintOptions::WritePrefs()
 
     WriteBitFieldPref(prefs, kPrintEvenPages,  kOptPrintEvenPages);
     WriteBitFieldPref(prefs, kPrintOddPages,   kOptPrintOddPages);
-    WriteBitFieldPref(prefs, kPrintDocTitle,   kOptPrintDocTitle);
-    WriteBitFieldPref(prefs, kPrintDocLoc,     kOptPrintDocLoc);
-    WriteBitFieldPref(prefs, kPageNums,        kOptPrintPageNums);
-    WriteBitFieldPref(prefs, kPrintPageTotals, kOptPrintPageTotal);
-    WriteBitFieldPref(prefs, kPrintDate,       kOptPrintDatePrinted);
 
-    WriteJustification(prefs, kPageNumsJust, mPageNumJust);
+    WritePrefString(prefs, kPrintHeaderStr1, mHeaderStrs[0]);
+    WritePrefString(prefs, kPrintHeaderStr2, mHeaderStrs[1]);
+    WritePrefString(prefs, kPrintHeaderStr3, mHeaderStrs[2]);
+    WritePrefString(prefs, kPrintFooterStr1, mFooterStrs[0]);
+    WritePrefString(prefs, kPrintFooterStr2, mFooterStrs[1]);
+    WritePrefString(prefs, kPrintFooterStr3, mFooterStrs[2]);
 
     // Write Additional XP Prefs
     prefs->SetBoolPref(kPrintReversed,    mPrintReversed);
@@ -544,19 +547,6 @@ NS_IMETHODIMP nsPrintOptions::SetPrintRange(PRInt16 aPrintRange)
   return NS_OK;
 }
 
-/* attribute long pageNumJust; */
-NS_IMETHODIMP nsPrintOptions::GetPageNumJust(PRInt16 *aPageNumJust)
-{
-  NS_ENSURE_ARG_POINTER(aPageNumJust);
-  *aPageNumJust = mPageNumJust;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetPageNumJust(PRInt16 aPageNumJust)
-{
-  mPageNumJust = aPageNumJust;
-  return NS_OK;
-}
-
 /* attribute wstring docTitle; */
 NS_IMETHODIMP nsPrintOptions::GetTitle(PRUnichar * *aTitle)
 {
@@ -584,6 +574,114 @@ NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
   mURL = aDocURL;
   return NS_OK;
 }
+
+/* attribute wstring docTitle; */
+nsresult 
+nsPrintOptions::GetMarginStrs(PRUnichar * *aTitle, 
+                              nsHeaderFooterEnum aType, 
+                              PRInt16 aJust)
+{
+  NS_ENSURE_ARG_POINTER(aTitle);
+  *aTitle = nsnull;
+  if (aType == eHeader) {
+    switch (aJust) {
+      case kJustLeft:   *aTitle = mHeaderStrs[0].ToNewUnicode();break;
+      case kJustCenter: *aTitle = mHeaderStrs[1].ToNewUnicode();break;
+      case kJustRight:  *aTitle = mHeaderStrs[2].ToNewUnicode();break;
+    } //switch
+  } else {
+    switch (aJust) {
+      case kJustLeft:   *aTitle = mFooterStrs[0].ToNewUnicode();break;
+      case kJustCenter: *aTitle = mFooterStrs[1].ToNewUnicode();break;
+      case kJustRight:  *aTitle = mFooterStrs[2].ToNewUnicode();break;
+    } //switch
+  }
+  return NS_OK;
+}
+
+nsresult
+nsPrintOptions::SetMarginStrs(const PRUnichar * aTitle, 
+                              nsHeaderFooterEnum aType, 
+                              PRInt16 aJust)
+{
+  NS_ENSURE_ARG_POINTER(aTitle);
+  if (aType == eHeader) {
+    switch (aJust) {
+      case kJustLeft:   mHeaderStrs[0] = aTitle;break;
+      case kJustCenter: mHeaderStrs[1] = aTitle;break;
+      case kJustRight:  mHeaderStrs[2] = aTitle;break;
+    } //switch
+  } else {
+    switch (aJust) {
+      case kJustLeft:   mFooterStrs[0] = aTitle;break;
+      case kJustCenter: mFooterStrs[1] = aTitle;break;
+      case kJustRight:  mFooterStrs[2] = aTitle;break;
+    } //switch
+  }
+  return NS_OK;
+}
+
+/* attribute wstring Header String Left */
+NS_IMETHODIMP nsPrintOptions::GetHeaderStrLeft(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eHeader, kJustLeft);
+}
+NS_IMETHODIMP nsPrintOptions::SetHeaderStrLeft(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eHeader, kJustLeft);
+}
+
+/* attribute wstring Header String Center */
+NS_IMETHODIMP nsPrintOptions::GetHeaderStrCenter(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eHeader, kJustCenter);
+}
+NS_IMETHODIMP nsPrintOptions::SetHeaderStrCenter(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eHeader, kJustCenter);
+}
+
+/* attribute wstring Header String Right */
+NS_IMETHODIMP nsPrintOptions::GetHeaderStrRight(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eHeader, kJustRight);
+}
+NS_IMETHODIMP nsPrintOptions::SetHeaderStrRight(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eHeader, kJustRight);
+}
+
+
+/* attribute wstring Footer String Left */
+NS_IMETHODIMP nsPrintOptions::GetFooterStrLeft(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eFooter, kJustLeft);
+}
+NS_IMETHODIMP nsPrintOptions::SetFooterStrLeft(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eFooter, kJustLeft);
+}
+
+/* attribute wstring Footer String Center */
+NS_IMETHODIMP nsPrintOptions::GetFooterStrCenter(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eFooter, kJustCenter);
+}
+NS_IMETHODIMP nsPrintOptions::SetFooterStrCenter(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eFooter, kJustCenter);
+}
+
+/* attribute wstring Footer String Right */
+NS_IMETHODIMP nsPrintOptions::GetFooterStrRight(PRUnichar * *aTitle)
+{
+  return GetMarginStrs(aTitle, eFooter, kJustRight);
+}
+NS_IMETHODIMP nsPrintOptions::SetFooterStrRight(const PRUnichar * aTitle)
+{
+  return SetMarginStrs(aTitle, eFooter, kJustRight);
+}
+
 
 /* attribute boolean isPrintFrame; */
 NS_IMETHODIMP nsPrintOptions::GetHowToEnableFrameUI(PRInt16 *aHowToEnableFrameUI)
