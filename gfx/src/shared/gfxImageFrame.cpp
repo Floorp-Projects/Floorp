@@ -28,7 +28,7 @@
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
-  mTimeout(0),
+  mTimeout(-1),
   mInitalized(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
@@ -59,6 +59,8 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   mFormat = aFormat;
 
   mImage = do_CreateInstance("@mozilla.org/gfx/image;1");
+
+  NS_ASSERTION(mImage, "creation of image failed");
 
   gfx_depth depth = 24;
   nsMaskRequirements maskReq;
@@ -91,6 +93,9 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   }
 
   mImage->Init(aWidth, aHeight, depth, maskReq);
+
+  mImage->SetNaturalWidth(aWidth);
+  mImage->SetNaturalHeight(aHeight);
 
   return NS_OK;
 }
@@ -186,7 +191,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBitsLength = mImage->GetBytesPix();
+  *aBitsLength = mImage->GetLineStride() * mSize.height;
   return NS_OK;
 }
 
@@ -197,7 +202,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aData = mImage->GetBits();
-  *length = mImage->GetBytesPix() * mSize.height;
+  *length = mImage->GetLineStride() * mSize.height;
 
   return NS_OK;
 }
@@ -208,13 +213,24 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
+  PRInt32 row_stride = mImage->GetLineStride();
+
   PRUint8 *imgData = mImage->GetBits();
-  PRInt32 imgLen = mImage->GetBytesPix();
+  PRInt32 imgLen = row_stride * mSize.height;
 
   if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData)
     return NS_ERROR_FAILURE;
 
-  memcpy(imgData + aOffset, aData, aLength);
+  PRInt32 newOffset = ((mSize.height - 1) * row_stride) - aOffset;
+
+  memcpy(imgData + newOffset, aData, aLength);
+
+  PRInt32 row = (aOffset / row_stride);
+  mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
+
+  PRInt32 numnewrows = (aLength / row_stride);
+  nsRect r(0, row, mSize.width, numnewrows);
+  mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
   return NS_OK;
 }
@@ -257,13 +273,23 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
   if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
+  PRInt32 row_stride = mImage->GetAlphaLineStride();
+
   PRUint8 *alphaData = mImage->GetAlphaBits();
-  PRInt32 alphaLen = mImage->GetAlphaLineStride() * mSize.height;
+  PRInt32 alphaLen = row_stride * mSize.height;
 
   if (((aOffset + (PRInt32)aLength) > alphaLen) || !alphaData)
     return NS_ERROR_FAILURE;
 
-  memcpy(alphaData + aOffset, aData, aLength);
+  PRInt32 offset;
+#ifdef XP_PC
+  offset = ((mSize.height - 1) * row_stride) - aOffset;
+#else
+  offset = aOffset;
+#endif
+
+  memcpy(alphaData + offset, aData, aLength);
+
   return NS_OK;
 }
 
