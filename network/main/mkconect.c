@@ -65,6 +65,10 @@
 
 #include "timing.h"
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#include "progress.h"
+#endif
+
 #ifdef XP_UNIX
 /* #### WARNING, this is duplicated in mksockrw.c
  */
@@ -779,7 +783,11 @@ net_FindAddress (const char *host_ptr,
 			char *msg = PR_smprintf(XP_GetString(XP_PROGRESS_LOOKUPHOST), host_port);
 
 			if(msg) {
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+                PM_Status(window_id, NULL, msg);
+#else
         		NET_Progress(window_id, msg);
+#endif
 				PR_Free(msg);
 			  }
 
@@ -886,7 +894,11 @@ net_start_first_connect(const char   *host,
       {
         PR_snprintf(buf, (len+10)*sizeof(char),
                 XP_GetString(XP_PROGRESS_CONTACTHOST), host);
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Status(window_id, NULL, buf);
+#else
         NET_Progress(window_id, buf);
+#endif
         FREE(buf);
       }
 
@@ -1175,7 +1187,11 @@ HG28879
 				  {
 					PR_snprintf(buf, (len+10)*sizeof(char),
 							XP_GetString(XP_PROGRESS_UNABLELOCATE), prefSocksHost);
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+                    PM_Status(window_id, NULL, buf);
+#else
 					NET_Progress(window_id, buf);
+#endif
 					FREE(buf);
 				  }
 
@@ -1240,7 +1256,11 @@ HG71089
               {
                 PR_snprintf(buf, (len+10)*sizeof(char),
                         XP_GetString(XP_PROGRESS_UNABLELOCATE), host);
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+                PM_Status(window_id, NULL, buf);
+#else
                 NET_Progress(window_id, buf);
+#endif
                 FREE(buf);
               }
         }
@@ -1370,7 +1390,11 @@ NET_FinishConnect (CONST char   *url,
               	  {
                 	PR_snprintf(buf, (len+10)*sizeof(char),
                         	XP_GetString(XP_PROGRESS_UNABLELOCATE), host);
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+                    PM_Status(window_id, NULL, buf);
+#else
                 	NET_Progress(window_id, buf);
+#endif
                 	FREE(buf);
               	  }
         	}

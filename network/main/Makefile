@@ -71,6 +71,10 @@ ifdef MOZ_MAIL_NEWS
 REQUIRES += mailbxurl nntpurl pop3url
 endif
 
+ifdef MOZ_SMOOTH_PROGRESS
+REQUIRES += progress
+endif
+
 include $(DEPTH)/config/rules.mk
 
 TEST_LIBS	= $(LIBRARY) \
