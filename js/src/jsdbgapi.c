@@ -784,7 +784,6 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     uint32 i, n;
     JSPropertyDesc *pd;
     JSScopeProperty *sprop;
-    jsval state;
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if (!OBJ_IS_NATIVE(obj) || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
