@@ -12,6 +12,46 @@
 //
 // Created by
 //     Andreas Franke <afranke@mathweb.org>
+//
+// Contributors:
+//     Stephen Lee <slee@uk.bnsmc.com>
+
+// variable below should be initialised according to whether
+// browser is IE 5.0 or earlier, but should be false for IE 5.5
+
+var is_IE5=(navigator.appVersion.search(/MSIE 5.0/g)>0);
+
+// Bodge to get round IE5 not understanding "undefined", "shift" and "unshift"
+
+var no_result=is_IE5?"---":undefined;
+
+function do_unshift(l, s) {
+  if(is_IE5) {
+    l.length = l.length + 1;
+    for (var i=l.length-1; i>0; i--) {
+      l[i] = l[i-1];
+    }
+    l[0] = s;
+    return l.length;
+  }
+  else {
+    return l.unshift(s);
+  }
+}
+
+function do_shift(l) {
+  if(is_IE5) {
+    var l0=l[0];
+    for (var i=0; i<l.length-1; i++) {
+      l[i] = l[i+1];
+    }
+    l.length = l.length - 1;
+    return l0;
+  }
+  else {
+    return l.shift();
+  }
+}
 
 function go_to (url) {
   document.location.href = url;
@@ -19,7 +59,7 @@ function go_to (url) {
 }
 
 function map(l, f) {
-    l1 = new Array();
+    var l1 = new Array();
     for (var i=0; i<l.length; i++) {
         l1[i] = f(l[i]);
     }
@@ -38,7 +78,7 @@ function member(s, l) {
 
 function add(s, l) {
     if (! member(s, l)) {
-        l.unshift(s);
+        do_unshift(l,s);
     }
 }
 
@@ -141,7 +181,7 @@ function findIndex(array,value) {
 function mapField(fieldname) {
     var i = findIndex(f1,fieldname);
     if (i >= 0) return f2[i];
-    return undefined;
+    return no_result;
 } 
 
 // `keywords' is defined externally
@@ -165,14 +205,14 @@ function is_severity(str) {
 // `product_exceptions' is defined externally
 
 function match_product(str) {
-    s = str.toLowerCase();
+    var s = str.toLowerCase();
     return (s.length > 2) && (! member(s,product_exceptions));
 }
 
 // `component_exceptions are defined externally
 
 function match_component(str) {
-    s = str.toLowerCase();
+    var s = str.toLowerCase();
     return (s.length > 2) && (! member(s,component_exceptions));
 }
 
@@ -222,39 +262,34 @@ function make_query_URL(url, input, searchLong) {
     status_and_resolution = "";
     charts = "";
 
-    var searchURL = url; //bugzilla + "buglist.cgi";
-    var abort = false;
+    // declare all variables used in this function
     
-    // escape everything between quotes: "foo bar" --> "foo%20bar"
-    var parts = input.split('"');
-    if ((parts.length % 2) != 1) {
-        alert('Unterminated quote');
-        abort = true;
-        return undefined;      
-    }
-    for (var i=1; i<parts.length; i+=2) {
-        parts[i] = escape(parts[i]);
-    }
-    var input2 = parts.join('"');
+    var searchURL = url;  // bugzilla + "buglist.cgi" (or "query.cgi")
+    var abort = false;    // global flag, checked upon return
+   
+    var i,j,k,l;          // index counters used in 'for' loops
+    var parts,input2;     // escape "quoted" parts of input
 
-    // abort if there are still brackets
-    if (input2.match(/[(]|[\)]/)) {
-        alert('Brackets (...) are not supported.\n' + 
-              'Use quotes "..." for values that contain special characters.');
-        abort = true;
-        return undefined;
-    }
+    var word;                  // array of words 
+                               //  (space-separated parts of input2)
+    var alternative;           // array of parts of an element of 'word'
+                               //  (separated by '|', sometimes by comma)
+    var comma_separated_words; // array of parts of an element of 'alternative'
+    var w;                     // current element of one of these arrays:
+                               //  word, alternative, comma_separated_words
+    
+    var w0;               // first element of 'word'
+    var prefixes;         // comma-separated parts of w0 
+                          //  (prefixes of status/resolution values)
 
-    // translate " AND "," OR "," NOT " to space,comma,dash
-    input2 = input2.replace(/[\s]+AND[\s]+/g," ");
-    input2 = input2.replace(/[\s]+OR[\s]+/g,"|");
-    input2 = input2.replace(/[\s]+NOT[\s]+/g," -");
+    var expr;             // used for 'priority' support
+    var n,separator;      // used for 'votes' support
+ 
+    var colon_separated_parts, fields,values,field;
+                          // used for generic fields:values notation
 
-    // now split into words at space positions
-    var word = input2.split(/[\s]+/);
-
-    // determine bug_status and resolution 
-    // the first word may contain relevant info
+    var chart,and,or;     // counters used in add_chart
+    var negation;         // boolean flag used in add_chart
 
     // `statuses_open' and `statuses_resolved' are defined externally
     var statusOpen     = statuses_open;
@@ -264,6 +299,37 @@ function make_query_URL(url, input, searchLong) {
     // `resolutions' is defined externally
     var bug_status = statusOpen.slice().reverse(); //reverse is just cosmetic
     var resolution = new Array();
+    
+    // escape everything between quotes: "foo bar" --> "foo%20bar"
+    parts = input.split('"');
+    if ((parts.length % 2) != 1) {
+        alert('Unterminated quote');
+        abort = true;
+        return no_result;      
+    }
+    for (i=1; i<parts.length; i+=2) {
+        parts[i] = escape(parts[i]);
+    }
+    input2 = parts.join('"');
+
+    // abort if there are still brackets
+    if (input2.match(/[(]|[\)]/)) {
+        alert('Brackets (...) are not supported.\n' + 
+              'Use quotes "..." for values that contain special characters.');
+        abort = true;
+        return no_result;
+    }
+
+    // translate " AND "," OR "," NOT " to space,comma,dash
+    input2 = input2.replace(/[\s]+AND[\s]+/g," ");
+    input2 = input2.replace(/[\s]+OR[\s]+/g,"|");
+    input2 = input2.replace(/[\s]+NOT[\s]+/g," -");
+
+    // now split into words at space positions
+    word = input2.split(/[\s]+/);
+
+    // determine bug_status and resolution 
+    // the first word may contain relevant info
 
     // This function matches the given prefixes against the given statuses and
     // resolutions. Matched statuses are added to bug_status, matched 
@@ -292,24 +358,24 @@ function make_query_URL(url, input, searchLong) {
     if (word[0] == "ALL") {
         // special case: search for bugs regardless of status
         addAll(statusResolved,bug_status);
-        word.shift();
+        do_shift(word);
     } else if (word[0] == "OPEN") {
         // special case: search for open bugs only
-        word.shift();
+        do_shift(word);
     } else if (word[0].match("^[+][A-Z]+(,[A-Z]+)*$")) {
         // e.g. +DUP,FIX 
-        w0 = word.shift();
+        w0 = do_shift(word);
         prefixes = w0.substring(1).split(",");
         if (! matchPrefixes(prefixes,statusResolved,resolutions)) {
-            word.unshift(w0);
+            do_unshift(word,w0);
         }
     } else if (word[0].match("^[A-Z]+(,[A-Z]+)*$")) {
         // e.g. NEW,ASSI,REOP,FIX
         bug_status = new Array(); // reset
-        w0 = word.shift();        
+        w0 = do_shift(word);
         prefixes = w0.split(",");
         if (! matchPrefixes(prefixes,statusAll,resolutions)) {
-            word.unshift(w0);
+            do_unshift(word,w0);
             bug_status = statusOpen.reverse(); //reset to default bug_status
         }
     } else {
@@ -320,7 +386,7 @@ function make_query_URL(url, input, searchLong) {
     }
     if (resolution.length > 0) {
         resolution = resolution.reverse();
-        resolution.unshift("---");
+        do_unshift(resolution,"---");
         addAll(statusResolved,bug_status);
     }
     bug_status = bug_status.reverse();
@@ -336,11 +402,11 @@ function make_query_URL(url, input, searchLong) {
                               
     // end of bug_status & resolution stuff
 
-    var chart = 0;
-    var and   = 0;
-    var or    = 0;
+    chart = 0;
+    and   = 0;
+    or    = 0;
 
-    var negation = false;
+    negation = false;
 
     function negate_comparison_type(type) {
         switch(type) {
@@ -351,6 +417,7 @@ function make_query_URL(url, input, searchLong) {
                 // e.g. "greaterthan" 
                 alert("Can't negate comparison type: `" + type + "'");
                 abort = true;
+                return "dummy";
         }
     }
 
@@ -379,7 +446,7 @@ function make_query_URL(url, input, searchLong) {
         }
     }
 
-    for (var i=0; i<word.length; i++, chart++) {
+    for (i=0; i<word.length; i++, chart++) {
 
         w = word[i];
         
@@ -392,7 +459,7 @@ function make_query_URL(url, input, searchLong) {
         switch (w[0]) {
             case "+":
                 alternative = w.substring(1).split(/[|,]/);
-                for (var j=0; j<alternative.length; j++)
+                for (j=0; j<alternative.length; j++)
                     add_chart("short_desc","substring",alternative[j]);
                 break;
             case "#":
@@ -403,14 +470,14 @@ function make_query_URL(url, input, searchLong) {
                 break;
             case ":":
                 alternative = w.substring(1).split(",");
-                for ( var j=0; j<alternative.length; j++) {
+                for (j=0; j<alternative.length; j++) {
                     add_chart("product","substring",alternative[j]);
                     add_chart("component","substring",alternative[j]);
                 }
                 break;
             case "@":
                 alternative = w.substring(1).split(",");
-                for ( var j=0; j<alternative.length; j++)
+                for (j=0; j<alternative.length; j++)
                     add_chart("assigned_to","substring",alternative[j]);
                 break;
             case "[":
@@ -422,7 +489,7 @@ function make_query_URL(url, input, searchLong) {
                 break;
             default:
                 alternative=w.split("|");
-                for (var j=0; j<alternative.length; j++) {
+                for (j=0; j<alternative.length; j++) {
 
                     w=alternative[j];
 
@@ -434,18 +501,18 @@ function make_query_URL(url, input, searchLong) {
                     }
                     // generic field1,field2,field3:value1,value2 notation
                     if (w.match("^[^:]+[:][^:\/][^:]*$")) {
-                        parts = w.split(":");
-                        fields = parts[0].split(/[,]+/);
-                        values = parts[1].split(/[,]+/);
-                        for (var k=0; k<fields.length; k++) {
+                        colon_separated_parts = w.split(":");
+                        fields = colon_separated_parts[0].split(/[,]+/);
+                        values = colon_separated_parts[1].split(/[,]+/);
+                        for (k=0; k<fields.length; k++) {
                             field = mapField(fields[k]);
-                            if (field == undefined) {
+                            if (field == no_result) {
                                 alert("`"+fields[k]+"'"+
                                       " is not a valid field name.");
                                 abort = true;
-                                return undefined;
+                                return no_result;
                             } else {
-                                 for (var l=0; l<values.length; l++) {
+                                 for (l=0; l<values.length; l++) {
                                      add_chart(field,"substring",values[l]);
                                  }
                             }  
@@ -453,7 +520,7 @@ function make_query_URL(url, input, searchLong) {
                         continue;
                     }
                     comma_separated_words=w.split(/[,]+/);
-                    for (var k=0; k<comma_separated_words.length; k++) {
+                    for (k=0; k<comma_separated_words.length; k++) {
                         w=comma_separated_words[k];
 
                         // platform
@@ -531,7 +598,7 @@ function make_query_URL(url, input, searchLong) {
     if (abort == false) {
         return searchURL;
     } else {
-        return undefined;
+        return no_result;
     }
 }
 
@@ -542,7 +609,7 @@ function unique_id () {
 function ShowURL(mode) {
     var input = document.f.id.value;
     var searchURL = make_query_URL(bugzilla+"buglist.cgi", input, false);
-    if (searchURL != undefined) {
+    if (searchURL != no_result) {
         var pieces = searchURL.replace(/[\?]/g,"\n?").replace(/[\&]/g,"\n&");
         if (mode == "alert") {
             alert(pieces);
@@ -601,7 +668,7 @@ function Search(url, input, searchLong) {
         return;
     }
     var searchURL = make_query_URL(url, inputstring, searchLong);
-    if (searchURL != undefined) {
+    if (searchURL != no_result) {
         go_to(searchURL);
          //window.open(searchURL, "other" );
     } else {
