@@ -20,6 +20,7 @@
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
 #include "nsEditorEventListeners.h"
+#include "nsInsertHTMLTxn.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMDocument.h"
@@ -45,6 +46,8 @@
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
+
+static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
 
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_IID(kIEditorIID,     NS_IEDITOR_IID);
@@ -376,37 +379,30 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 
 NS_IMETHODIMP nsHTMLEditor::Insert(nsString& aInputString)
 {
+  nsresult res;
+
   nsEditor::BeginTransaction();
 
   nsEditor::DeleteSelection(nsIEditor::eDoNothing);
 
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(res) && selection)
+  // Make the transaction for insert html:
+  nsInsertHTMLTxn* insertHTMLTxn = 0;
+  res = TransactionFactory::GetNewTransaction(kInsertHTMLTxnIID,
+                                              (EditTxn **)&insertHTMLTxn);
+  if (NS_SUCCEEDED(res))
   {
-    // Get the first NSRange in the selection:
-    nsCOMPtr<nsIDOMRange> domrange;
-    res = selection->GetRangeAt(0, getter_AddRefs(domrange));
+    res = insertHTMLTxn->Init(aInputString, this);
     if (NS_SUCCEEDED(res))
-    {
-      nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(domrange));
-      if (nsrange)
-      {
-#ifdef DEBUG_akkana
-  char* str = aInputString.ToNewCString();
-  printf("Calling nsIDOMNSRange::InsertFragment(%s)\n", str);
-  delete[] str;
-#endif /* DEBUG_akkana */
-        res = nsrange->InsertFragment(aInputString);
-        // XXX NOTE: this part isn't going through the transaction manager!
-      }
-    }
+      res = Do(insertHTMLTxn);
+
+    // XXX How is it that we don't have to release the transaction?
   }
 
   nsEditor::EndTransaction();
 
   if (!NS_SUCCEEDED(res))
     printf("Couldn't insert html: error was %d\n", res);
+
   return res;
 }
 

@@ -30,7 +30,7 @@
 {0x86, 0xdb, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
- * A transaction that deletes a single element
+ * A transaction that inserts a single element
  */
 class InsertElementTxn : public EditTxn
 {

@@ -16,42 +16,39 @@
  * Reserved.
  */
 
-#ifndef InsertElementTxn_h__
-#define InsertElementTxn_h__
+#ifndef nsInsertHTMLTxn_h__
+#define nsInsertHTMLTxn_h__
 
 #include "EditTxn.h"
 #include "nsIEditor.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
 
-#define INSERT_ELEMENT_TXN_IID \
-{/* b5762440-cbb0-11d2-86db-000064657374 */ \
-0xb5762440, 0xcbb0, 0x11d2, \
-{0x86, 0xdb, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
+#define NS_INSERT_HTML_TXN_IID \
+{/* a6cf90fd-15b3-11d2-932e-00805f8add3 */ \
+0xa6cf90fc, 0x15b3, 0x11d2, \
+{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} };
 
 /**
- * A transaction that inserts a single element
+ * A transaction that inserts a string of html source
  */
-class InsertElementTxn : public EditTxn
+class nsInsertHTMLTxn : public EditTxn
 {
 public:
 
   /** initialize the transaction.
-    * @param aNode   the node to insert
-    * @param aParent the node to insert into
-    * @param aOffset the offset in aParent to insert aNode
+    * @param aSrc     the source for the HTML to insert
+    * @param aEditor  the editor in which to do the work
     */
-  NS_IMETHOD Init(nsIDOMNode *aNode,
-                  nsIDOMNode *aParent,
-                  PRInt32     aOffset,
-                  nsIEditor  *aEditor);
+  NS_IMETHOD Init(nsString& aSrc,
+                  nsIEditor *aEditor);
 
 private:
-  InsertElementTxn();
+  nsInsertHTMLTxn();
 
 public:
 
-  virtual ~InsertElementTxn();
+  virtual ~nsInsertHTMLTxn();
 
   NS_IMETHOD Do(void);
 
@@ -67,17 +64,14 @@ public:
 
 protected:
   
-  /** the element to delete */
-  nsCOMPtr<nsIDOMNode> mNode;
+  /** the html to insert */
+  nsString mSrc;
 
-  /** the node into which the new node will be inserted */
-  nsCOMPtr<nsIDOMNode> mParent;
+  /** the range representing the inserted fragment */
+  nsCOMPtr<nsIDOMRange> mRange;
 
   /** the editor for this transaction */
   nsCOMPtr<nsIEditor> mEditor;
-
-  /** the index in mParent for the new node */
-  PRInt32 mOffset;
 
   friend class TransactionFactory;
 
