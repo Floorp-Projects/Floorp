@@ -629,7 +629,7 @@ String& String::subString(Int32 start, Int32 end, String& dest) const
 
 /**
  * Instantiate a new character buffer (remembering the null terminator) and pass
- * it to toChar(char*).
+ * it to toCharArray(char*).
 **/
 char* String::toCharArray() const
 {
@@ -643,21 +643,11 @@ char* String::toCharArray() const
  * the resultant character array in the buffer provided by the caller. A
  * null terminator will be placed at the end of the array, make sure
  * space has been provided.
- * Use ( nsString::GetUnicode() ) to retreive the nsString's buffer, then
- * copy it to dest.
+ * Use ( nsString::ToCString() ) to retrieve the nsString's buffer.
 **/
 char* String::toCharArray(char* dest) const
 {
-  Int32 copyLoop;
-  Int32 strLength = ptrNSString->Length();
-  const char* strBuffer = ptrNSString->GetBuffer();
-
-  for (copyLoop=0;copyLoop<strLength;copyLoop++)
-    dest[copyLoop] = strBuffer[copyLoop];
-
-  //Place a NULL terminator at the end of the character buffer
-  dest[copyLoop] = 0;
-
+  ptrNSString->ToCString(dest, nsCRT::strlen(dest));
   return dest;
 }
 
