@@ -97,6 +97,7 @@ dbtest_cleanup()
 {
   html "</TABLE><BR>" 
   cd ${QADIR}
+  chmod a+rw $RONLY_DIR
   . common/cleanup.sh
 }
 
