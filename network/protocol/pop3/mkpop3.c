@@ -52,8 +52,6 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 #include "mkpop3.h"
 #include "xp_hash.h"
 #include "merrors.h"
-/*#include "msgcom.h"
-#include "msgnet.h" */
 #include "secnav.h"
 #include  "ssl.h"
 #include "prio.h"
@@ -3825,40 +3823,13 @@ net_MBoxLoad (ActiveEntry * ce)
       cd->mbox = getPopMBox(db);
       cd->status = 1; 
       cd->buff = XP_ALLOC(100000);
-	 memset(cd->buff, '\0', 100000);
-     fseek(cd->mbox, cd->offset, SEEK_SET); 
-     
-     while (fgets(cd->buff, 100000, cd->mbox)) {
-       cd->offset = ftell(cd->mbox);
-       if (startsWith("From ", cd->buff) || startsWith("Content-Length:", cd->buff) || 
-           startsWith("\n", cd->buff) || startsWith("\r", cd->buff)) break;
-       if (startsWith("Content-Type:", cd->buff)) {
-         char* enc = strchr(&cd->buff[13], ';');
-         char* mt  = XP_ALLOC(50);
-         memset(mt, '\0', 50);
-		  if (enc) {
-			memcpy(mt, &cd->buff[14], enc-&cd->buff[14]);
-		  } else {
-			int n = 0;
-			while ((cd->buff[14+n] != ' ') && (cd->buff[14+n] != '\n') && (cd->buff[14+n] != '\r')) {
-              mt[n] = cd->buff[14+n];
-              n++;
-			}
-		  }
-          /* need libmime */
-          StrAllocCopy(ce->URL_s->content_type, normalizeMTs(mt));
-          mimeTypeSet = 1;
-          
-       } 
-	  memset(cd->buff, '\0', 100000);
-	  fseek(cd->mbox, cd->offset, SEEK_SET); 
-     }
-     if (!mimeTypeSet) StrAllocCopy(ce->URL_s->content_type, TEXT_PLAIN);
-     cd->stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
-     ce->con_data = cd;
-     
-     XP_FREE(mbox);
-     return net_ProcessMBox(ce);
+      memset(cd->buff, '\0', 100000);
+      fseek(cd->mbox, cd->offset, SEEK_SET); 
+      StrAllocCopy(ce->URL_s->content_type, MESSAGE_RFC822);
+      cd->stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
+      ce->con_data = cd;      
+      XP_FREE(mbox);
+      return net_ProcessMBox(ce);
     }
 }
 
