@@ -34,7 +34,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.4 2004/01/16 05:36:08 nelsonb%netscape.com Exp $
+ * $Id: polcyxtn.c,v 1.5 2004/01/23 22:50:01 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -178,7 +178,7 @@ CERT_DecodeCertificatePoliciesExtension(SECItem *extnValue)
 	policyInfo = *policyInfos;
 	policyInfo->oid = SECOID_FindOIDTag(&policyInfo->policyID);
 	policyQualifiers = policyInfo->policyQualifiers;
-	while ( *policyQualifiers != NULL ) {
+	while ( policyQualifiers != NULL && *policyQualifiers != NULL ) {
 	    policyQualifier = *policyQualifiers;
 	    policyQualifier->oid =
 		SECOID_FindOIDTag(&policyQualifier->qualifierID);
@@ -416,7 +416,7 @@ CERT_GetCertCommentString(CERTCertificate *cert)
 	if ( (*policyInfos)->oid == SEC_OID_VERISIGN_USER_NOTICES ) {
 	    policyQualifiers = (*policyInfos)->policyQualifiers;
 	    /* search through the policy qualifiers looking for user notice */
-	    while ( *policyQualifiers != NULL ) {
+	    while ( policyQualifiers != NULL && *policyQualifiers != NULL ) {
 		qualifier = *policyQualifiers;
 		if ( qualifier->oid == SEC_OID_PKIX_USER_NOTICE_QUALIFIER ) {
 		    retstring =
