@@ -172,7 +172,31 @@ public:
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
 
+  /** Overloaded new operator. Initializes the memory to 0. 
+   *  Relies on a recycler to perform the allocation, 
+   *  optionally from a pool.
+   */
+  void* operator new(size_t sz);
+
+  /** Overloaded delete operator. Relies on a recycler to either
+    * recycle the object or call the global delete operator, as needed.
+    */
+  void operator delete(void* aPtr);
+
 protected:
+
+  nsDOMEvent() {}; // private constructor for pool, not for general use
+
+  /** event pool used as a simple recycler for objects of this class */
+  static nsDOMEvent gEventPool;
+
+  /** bit to say whether the event pool is in use or not.
+    * note that it would be trivial to make this a bitmap if we ever
+    * wanted to increase the size of the pool from one.  But with our
+    * current usage pattern, we almost never have more than a single
+    * nsDOMEvent active in memory at a time under normal circumstances.
+    */
+  static PRBool gEventPoolInUse;
 
   //Internal helper funcs
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
