@@ -229,10 +229,9 @@ StyleRulesViewer.prototype =
       return;
     }
 
-    this.mPropsBoxObject.beginUpdateBatch();
     var style = this.getSelectedRule().style;
     style.setProperty(propName.value, propValue.value, "");
-    this.mPropsBoxObject.endUpdateBatch();
+    this.mPropsBoxObject.invalidate();
   },
   
   cmdEditSelectedProperty: function()
@@ -260,11 +259,10 @@ StyleRulesViewer.prototype =
 
   cmdDeleteSelectedProperty: function()
   {
-    this.mPropsBoxObject.beginUpdateBatch();
     var style = this.getSelectedRule().style;
     var propname = this.getSelectedProp();
     style.removeProperty(propname);
-    this.mPropsBoxObject.endUpdateBatch();
+    this.mPropsBoxObject.invalidate();
   },
 
   cmdToggleSelectedImportant: function()
