@@ -25,8 +25,12 @@ use strict;
 
 use lib qw(.);
 
-use Bug;
 require "CGI.pl";
+
+use vars qw($userid %COOKIE);
+
+use Bug;
+
 $::lockcount = 0;
 
 unless ( Param("move-enabled") ) {

@@ -26,8 +26,7 @@ use strict;
 use DBI;
 use RelationSet;
 use vars qw($unconfirmedstate $legal_keywords);
-require "globals.pl";
-require "CGI.pl";
+
 package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;

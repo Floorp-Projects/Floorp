@@ -27,8 +27,7 @@
 
 use strict;
 
-require "globals.pl";
-require "CGI.pl";
+# The caller MUST require CGI.pl and globals.pl before using this
 
 use vars qw($userid $usergroupset);
 

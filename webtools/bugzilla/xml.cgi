@@ -26,10 +26,11 @@ use strict;
 
 use lib qw(.);
 
-use Bug;
 require "CGI.pl";
 
-use vars qw($template $vars);
+use Bug;
+
+use vars qw($template $vars $userid %COOKIE);
 
 ConnectToDatabase();
 quietly_check_login();
