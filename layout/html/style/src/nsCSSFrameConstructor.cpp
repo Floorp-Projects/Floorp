@@ -1921,7 +1921,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     if (docElemIsTable) {
       nsIFrame* tableFrame;
       ConstructDocElementTableFrame(aPresContext, aDocElement, aParentFrame, tableFrame);
-      presShell->SetPrimaryFrameFor(aDocElement, tableFrame);  // add mapping from content->frame
       mInitialContainingBlock = tableFrame;
       aNewFrame = tableFrame;
       return NS_OK;
@@ -1931,7 +1930,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     nsIFrame* areaFrame;
     NS_NewAreaFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
-    presShell->SetPrimaryFrameFor(aDocElement, areaFrame);  // add mapping from content->frame
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
 
@@ -1989,7 +1987,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     if (docElemIsTable) {
       nsIFrame* tableFrame;
       ConstructDocElementTableFrame(aPresContext, aDocElement, parFrame, tableFrame);
-      presShell->SetPrimaryFrameFor(aDocElement, tableFrame);  // add mapping from content->frame
       mInitialContainingBlock = tableFrame;
       aNewFrame = tableFrame;
       return NS_OK;
@@ -2001,9 +1998,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     // flag that says that this is the body...
     NS_NewDocumentElementFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
-    // Add a mapping from content object to frame. The primary frame is the scroll
-    // frame, because it contains the area frame
-    presShell->SetPrimaryFrameFor(aDocElement, scrollFrame ? scrollFrame : areaFrame);
 
     if (scrollFrame) {
       // If the document element is scrollable, then it needs a view. Otherwise,
@@ -2075,6 +2069,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     aNewFrame = scrollFrame ? scrollFrame : areaFrame;
   }
 
+  // Add a mapping from content object to frame
+  presShell->SetPrimaryFrameFor(aDocElement, aNewFrame);
   return NS_OK;
 }
 
@@ -4458,10 +4454,16 @@ IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
   return PR_FALSE;
 }
 
+// Called to delete a frame subtree. Two important things happen:
+// 1. for each frame in the subtree we remove the mapping from the
+//    content object to its frame
+// 2. for child frames that have been moved out of the flow we delete
+//    the out-of-flow frame as well
 static nsresult
-DeleteOutOfFlowChildFrames(nsIPresContext* aPresContext,
-                           nsIFrame*       aRemovedFrame,
-                           nsIFrame*       aFrame)
+DeletingFrameSubtree(nsIPresContext* aPresContext,
+                     nsIPresShell*   aPresShell,
+                     nsIFrame*       aRemovedFrame,
+                     nsIFrame*       aFrame)
 {
   // Recursively walk aFrame's child frames looking for placeholder frames
   nsIFrame* childFrame;
@@ -4478,19 +4480,23 @@ DeleteOutOfFlowChildFrames(nsIPresContext* aPresContext,
     if (isPlaceholder) {
       // Get the out-of-flow frame
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
+      NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-      // Find and delete any of its out-of-flow frames
-      DeleteOutOfFlowChildFrames(aPresContext, aRemovedFrame, outOfFlowFrame);
+      // Remove the mapping from the content object to its frame
+      nsCOMPtr<nsIContent> content;
+      outOfFlowFrame->GetContent(getter_AddRefs(content));
+      aPresShell->SetPrimaryFrameFor(content, nsnull);
+
+      // Find and delete any of its out-of-flow frames, and remove the mapping
+      // from content object to frame
+      DeletingFrameSubtree(aPresContext, aPresShell, aRemovedFrame, outOfFlowFrame);
       
       // Don't delete the out-of-flow frame if aRemovedFrame is one of its
       // ancestor frames, because when aRemovedFrame is deleted it will delete
       // its child frames including this out-of-flow frame
       if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
-        nsIPresShell* presShell;
-        aPresContext->GetShell(&presShell);
-
         // Remove the mapping from the out-of-flow frame to its placeholder
-        presShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
+        aPresShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
 
         // Get the out-of-flow frame's parent
         nsIFrame* parentFrame;
@@ -4501,13 +4507,12 @@ DeleteOutOfFlowChildFrames(nsIPresContext* aPresContext,
         GetChildListNameFor(parentFrame, outOfFlowFrame, &listName);
 
         // Ask the parent to delete the out-of-flow frame
-        parentFrame->RemoveFrame(*aPresContext, *presShell, listName, outOfFlowFrame);
+        parentFrame->RemoveFrame(*aPresContext, *aPresShell, listName, outOfFlowFrame);
         NS_IF_RELEASE(listName);
-        NS_RELEASE(presShell);
       }
 
     } else {
-      DeleteOutOfFlowChildFrames(aPresContext, aRemovedFrame, childFrame);
+      DeletingFrameSubtree(aPresContext, aPresShell, aRemovedFrame, childFrame);
     }
 
     // Get the next sibling child frame
@@ -4527,14 +4532,18 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   aPresContext->GetShell(getter_AddRefs(shell));
   nsresult      rv = NS_OK;
 
-  // Find the child frame
+  // Find the child frame that maps the content
   nsIFrame* childFrame;
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
-  if (nsnull != childFrame) {
+  if (childFrame) {
+    // Remove the mapping from content object to frame
+    shell->SetPrimaryFrameFor(aChild, nsnull);
+
     // If the frame has any child frames that have been moved out of the
-    // flow, then delete them as well
-    DeleteOutOfFlowChildFrames(aPresContext, childFrame, childFrame);
+    // flow, then delete them as well. Also remove the mapping from the
+    // content object to its frame
+    DeletingFrameSubtree(aPresContext, shell, childFrame, childFrame);
 
     // See if the child frame is a floating frame
     const nsStyleDisplay* display;
@@ -5763,6 +5772,92 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   NS_IF_RELEASE(content);
   NS_IF_RELEASE(frameType);
   return rv;
+}
+
+// Helper function that searches the immediate child frames for a frame that
+// maps the specified text content object
+static nsIFrame*
+FindFrameWithTextContent(nsIFrame* aFrame, nsIContent* aContent)
+{
+  NS_ASSERTION(aFrame, "No frame to search!");
+  if (!aFrame) {
+    return nsnull;   
+  }
+
+  // Get aFrame's content object
+  nsCOMPtr<nsIContent>  frameContent;
+  aFrame->GetContent(getter_AddRefs(frameContent));
+
+  // Because text is anonymous and can't be moved out of the flow,
+  // we only need to search the principal child list
+  nsIFrame* kidFrame;
+  aFrame->FirstChild(nsnull, &kidFrame);
+  while (kidFrame) {
+    nsCOMPtr<nsIContent>  kidContent;
+
+    // See if the frame points to the same content object
+    kidFrame->GetContent(getter_AddRefs(kidContent));
+    if (kidContent == aContent) {
+      return kidFrame;
+    }
+
+    // Search the immediate children only, but if the child frame maps
+    // the same content as its parent then we need to search its child
+    // frames, too
+    if (kidContent == frameContent) {
+      nsIFrame* matchingFrame = FindFrameWithTextContent(kidFrame, aContent);
+
+      if (matchingFrame) {
+        return matchingFrame;
+      }
+    }
+
+    // Get the next sibling frame
+    kidFrame->GetNextSibling(&kidFrame);
+  }
+
+  return nsnull;
+}
+
+// Request to find the primary frame associated with a given content object.
+// This is typically called by the pres shell when there is no mapping in
+// the pres shell hash table
+NS_IMETHODIMP
+nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext* aPresContext,
+                                           nsIContent*     aContent,
+                                           nsIFrame**      aFrame)
+{
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+
+  // The only content objects that we don't add a mapping to the hash table
+  // for are text content objects, because they're anonymous
+  if (nsLayoutAtoms::textTagName == tag) {
+    nsCOMPtr<nsIContent>   parentContent;
+    nsCOMPtr<nsIPresShell> presShell;
+    nsIFrame*              parentFrame;
+
+    // Get the frame that corresponds to the text node's parent content,
+    // and search its child frames
+    aContent->GetParent(*getter_AddRefs(parentContent));
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->GetPrimaryFrameFor(parentContent, &parentFrame);
+
+    if (parentFrame) {
+      *aFrame = FindFrameWithTextContent(parentFrame, aContent);
+    } else {
+      *aFrame = nsnull;
+    }
+
+  } else {
+    // There is no frame that maps the given content object
+    *aFrame = nsnull;
+  }
+
+  if (!*aFrame) {
+    NS_WARNING("no frame for content object");
+  }
+  return NS_OK;
 }
 
 nsresult
