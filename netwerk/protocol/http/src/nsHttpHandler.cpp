@@ -1198,7 +1198,7 @@ nsHttpHandler::InitUserAgentComponents()
         }
     }
 #elif defined (XP_MACOSX)
-    mOscpu.Adopt(nsCRT::strdup("PPC Mac OS X"));
+    mOscpu.Adopt(nsCRT::strdup("PPC Mac OS X Mach-O"));
 #elif defined (XP_MAC)
     long version;
     if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
