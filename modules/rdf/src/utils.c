@@ -487,6 +487,8 @@ makeResourceName (RDF_Resource node)
 
 PRBool IsUTF8String(const char* utf8)
 {
+	if(NULL == utf8)
+		return TRUE;
 	return IsUTF8Text(utf8, strlen(utf8));
 }
 PRBool IsUTF8Text(const char* utf8, int32 len)
