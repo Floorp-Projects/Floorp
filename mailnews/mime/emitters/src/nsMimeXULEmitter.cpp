@@ -525,22 +525,14 @@ nsMimeXULEmitter::Complete()
 nsresult
 nsMimeXULEmitter::DumpAttachmentMenu()
 {
+  nsresult rv;
+
   if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
     return NS_OK;
 
-  // RICHIE SHERRY - Hard coded string...evil...need to use string bundle when they work on
-  //                 non UI threads.
-  char  *i18nString = nsnull;
-  nsresult rv;
-
-  if (mAttachArray->Count() == 1)
-    i18nString = "Attachment";
-  else
-    i18nString = "Attachments";
-
   char *buttonXUL = PR_smprintf(
-                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d %s\" align=\"right\" class=\"popup\" popup=\"attachmentPopup\"/>", 
-                      mAttachArray->Count(), i18nString);
+                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d\" align=\"right\"/>", 
+                      mAttachArray->Count());
 
   if ( (!buttonXUL) || (!*buttonXUL) )
     return NS_OK;
@@ -554,16 +546,18 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   // Now we can finally write out the attachment information...  
   if (mAttachArray->Count() > 0)
   {
-    UtilityWriteCRLF("<popup id=\"attachmentPopup\">");
-    UtilityWriteCRLF("<menu>");
     PRInt32     i;
-    
+    UtilityWriteCRLF("<menubar name=\"attachment-menubar\">");
+    UtilityWriteCRLF("<menu name=\"attachment-menu\">");
+    UtilityWriteCRLF(buttonXUL);
+    UtilityWriteCRLF("<menupopup>");    
+
     for (i=0; i<mAttachArray->Count(); i++)
     {
       attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
       if (!attachInfo)
         continue;
-
+      
       UtilityWrite("<menuitem value=\"");
       UtilityWrite(attachInfo->displayName);
       UtilityWrite("\" oncommand=\"OpenAttachURL('");
@@ -577,10 +571,11 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       {
         UtilityWrite(attachInfo->urlSpec);
       }
+
       UtilityWrite("','");
       UtilityWrite(attachInfo->displayName);
       UtilityWrite("','");
-
+      
       nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
       if (NS_SUCCEEDED(rv))
         rv = messageUrl->GetURI(&urlString);
@@ -592,65 +587,11 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       }
       UtilityWriteCRLF("' );\"  />");
     }
+    UtilityWriteCRLF("</menupopup>");
     UtilityWriteCRLF("</menu>");
-    UtilityWriteCRLF("</popup>");
+    
+    UtilityWriteCRLF("</menubar>");
   }
-
-#if 1
-
-	// **** jefft - this is a temporary implementation
-  if (mAttachArray->Count() > 0)
-  {
-	  PRInt32     i;
-
-	  UtilityWriteCRLF("<menubar>");
-
-	  UtilityWriteCRLF("<menu value=\"Save Attachment(s)\">");
-	  UtilityWriteCRLF("<menupopup>");
-
-	  for (i=0; i<mAttachArray->Count(); i++)
-	  {
-		  attachmentInfoType *attachInfo = (attachmentInfoType
-											*)mAttachArray->ElementAt(i);
-		  if (!attachInfo)
-			  continue;
-		  
-		  UtilityWrite("<menuitem value=\"");
-		  UtilityWrite(attachInfo->displayName);
-		  UtilityWrite("\" oncommand=\"OpenAttachURL('");
-          escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
-          if (escapedUrl)
-          {
-            UtilityWrite(escapedUrl);
-            nsCRT::free(escapedUrl);
-          }
-          else
-          {
-            UtilityWrite(attachInfo->urlSpec);
-          }
-          UtilityWrite("','");
-          UtilityWrite(attachInfo->displayName);
-          UtilityWrite("','");
-          
-          nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
-          if (NS_SUCCEEDED(rv))
-            rv = messageUrl->GetURI(&urlString);
-          if (NS_SUCCEEDED(rv) && urlString)
-          {
-            UtilityWrite(urlString);
-            nsCRT::free(urlString);
-            urlString = nsnull;
-          }
-		  UtilityWriteCRLF("' );\"  />");
-	  }
-	  UtilityWriteCRLF("</menupopup>");
-	  UtilityWriteCRLF("</menu>");
-
-	  UtilityWriteCRLF("</menubar>");
-  }
-
-#endif
-  UtilityWriteCRLF(buttonXUL);
 
   UtilityWriteCRLF("</box>");
   PR_FREEIF(buttonXUL);

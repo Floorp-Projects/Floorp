@@ -11,6 +11,9 @@ box[name=header-part1]      { background-color: #EFEFEF; border: 0px solid #EFEF
 box[name=header-part2]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 box[name=header-part3]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 
+menubar[name=attachment-menubar]  { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
+menu[name=attachment-menu]        { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
+
 /**************************************************
  * These are all the headers that are displayed
  * for the normal header display. This is accomplished
