@@ -668,8 +668,11 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
       /* Special-case Croatian and Serbian, which have the same LANG_ID on
          Windows, but have been split into separate ISO-639-2 codes */
       if (lang_id == LANG_CROATIAN) {
-        locale.AssignLiteral((sublang_id == SUBLANG_DEFAULT) ?
-                             CROATIAN_ISO_CODE : SERBIAN_ISO_CODE);
+        if (sublang_id == SUBLANG_DEFAULT) {
+          locale.AssignLiteral(CROATIAN_ISO_CODE);
+        } else {
+          locale.AssignLiteral(SERBIAN_ISO_CODE);
+        }
       } else {
         locale.AssignASCII(iso_list[i].iso_code);
       }
