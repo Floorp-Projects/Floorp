@@ -9,6 +9,7 @@
 		title="&accountManagerTitle.label;"
         width="600" height="420"
         align="vertical"
+        class="dialog"
         onload="onLoad(event);">
 
     <html:script src="chrome://messenger/content/AccountManager.js"/>
