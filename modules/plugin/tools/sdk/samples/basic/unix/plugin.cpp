@@ -62,9 +62,12 @@ void NS_PluginShutdown()
 //
 // construction and destruction of our plugin instance object
 //
-nsPluginInstanceBase * NS_NewPluginInstance(NPP aInstance)
+nsPluginInstanceBase * NS_NewPluginInstance(nsPluginCreateData * aCreateDataStruct)
 {
-  nsPluginInstance * plugin = new nsPluginInstance(aInstance);
+  if(!aCreateDataStruct)
+    return NULL;
+
+  nsPluginInstance * plugin = new nsPluginInstance(aCreateDataStruct->instance);
   return plugin;
 }
 
