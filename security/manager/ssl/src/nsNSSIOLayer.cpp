@@ -1513,7 +1513,7 @@ SECStatus cert_DecodeScopeOfUseEntries(PRArenaPool* arena, SECItem* extData,
      */
     for (i = 0; i < *numEntries; i++) {
         (*entries)[i]->constraint = 
-            cert_DecodeGeneralName(arena, &((*entries)[i]->derConstraint), 
+            CERT_DecodeGeneralName(arena, &((*entries)[i]->derConstraint), 
                                    NULL);
         if ((*entries)[i]->derPort.data != NULL) {
             (*entries)[i]->port = 
