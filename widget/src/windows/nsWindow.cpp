@@ -427,7 +427,7 @@ NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsBaseWidget()
+nsWindow::nsWindow() : nsBaseWidget(), mRootAccessible(NULL)
 {
     NS_INIT_REFCNT();
     mWnd                = 0;
@@ -507,6 +507,9 @@ UINT nsWindow::gCurrentKeyboardCP = 0;
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  if (mRootAccessible)
+    mRootAccessible->Release();
+
   mIsDestroying = PR_TRUE;
   if (gCurrentWindow == this) {
     gCurrentWindow = nsnull;
@@ -3364,8 +3367,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           if (acc) 
           {
             HWND wnd = GetWindowHandle();
-            IAccessible* pAcc = new Accessible(acc, wnd); // ref is 0            
-            LRESULT lAcc = LresultFromObject(IID_IAccessible, wParam, pAcc); // ref 1
+            if (!mRootAccessible) {
+               mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
+               mRootAccessible->AddRef();
+            }
+            LRESULT lAcc = LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
             *aRetValue = lAcc;
             return PR_TRUE; // yes we handled it.
           }
@@ -3525,8 +3531,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       return PR_TRUE;
     }
 }
-
-
 
 //-------------------------------------------------------------------------
 //

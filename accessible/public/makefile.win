@@ -27,6 +27,8 @@ XPIDLSRCS =               \
   .\nsIAccessibilityService.idl \
   .\nsIAccessible.idl \
   .\nsIMutableAccessible.idl \
+  .\nsIAccessibleEventReceiver.idl \
+  .\nsIAccessibleEventListener.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

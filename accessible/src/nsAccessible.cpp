@@ -287,8 +287,8 @@ void nsFrameTreeWalker::GetAccessible(nsIFrame* aFrame, nsCOMPtr<nsIAccessible>&
   if (!aAccessible)
     aAccessible = do_QueryInterface(aContent);
 
- // if (aAccessible)
- //   printf("Found accessible!\n");
+  if (aAccessible)
+    printf("Found accessible!\n");
 }
 
 PRBool nsFrameTreeWalker::IsSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
@@ -700,21 +700,70 @@ NS_IMETHODIMP nsAccessible::AccNavigateUp(nsIAccessible **_retval) { return NS_O
 NS_IMETHODIMP nsAccessible::AccNavigateDown(nsIAccessible **_retval) { return NS_OK;  }
 
 
-
   /* void addSelection (); */
-NS_IMETHODIMP nsAccessible::AccAddSelection(void) { return NS_OK;  }
+NS_IMETHODIMP nsAccessible::AccAddSelection(void) 
+{ 
+  // delegate
+  if (mAccessible) {
+    nsresult rv = mAccessible->AccAddSelection();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_FAILURE;  
+}
 
   /* void removeSelection (); */
-NS_IMETHODIMP nsAccessible::AccRemoveSelection(void) { return NS_OK;  }
+NS_IMETHODIMP nsAccessible::AccRemoveSelection(void) 
+{ 
+  // delegate
+  if (mAccessible) {
+    nsresult rv = mAccessible->AccRemoveSelection();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_FAILURE;  
+}
 
   /* void extendSelection (); */
-NS_IMETHODIMP nsAccessible::AccExtendSelection(void) { return NS_OK;  }
+NS_IMETHODIMP nsAccessible::AccExtendSelection(void) 
+{ 
+  // delegate
+  if (mAccessible) {
+    nsresult rv = mAccessible->AccExtendSelection();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_FAILURE;  
+}
 
   /* void takeSelection (); */
-NS_IMETHODIMP nsAccessible::AccTakeSelection(void) { return NS_OK;  }
+NS_IMETHODIMP nsAccessible::AccTakeSelection(void) 
+{ 
+  // delegate
+  if (mAccessible) {
+    nsresult rv = mAccessible->AccTakeSelection();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_FAILURE;  
+}
 
   /* void takeFocus (); */
-NS_IMETHODIMP nsAccessible::AccTakeFocus(void) { return NS_OK;  }
+NS_IMETHODIMP nsAccessible::AccTakeFocus(void) 
+{ 
+  // delegate
+  if (mAccessible) {
+    nsresult rv = mAccessible->AccTakeFocus();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_FAILURE;  
+}
 
   /* void doDefaultAction (); */
 NS_IMETHODIMP nsAccessible::AccDoDefaultAction(void) 

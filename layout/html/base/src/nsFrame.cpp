@@ -807,7 +807,7 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
            nsISupports* f = (nsISupports*)(nsIFrame*)this;
            nsIAccessible* acc;
            accService->CreateRootAccessible(aPresContext,mParent ? f : nsnull,&acc);
-           ((nsAccessibleEvent*)aEvent)->accessible = acc;
+           NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
          }
       //}
     }

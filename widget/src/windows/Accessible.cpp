@@ -27,6 +27,7 @@
 #include "nsWindow.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsIAccessibleEventReceiver.h"
 
 //#define DEBUG_LEAKS
 
@@ -56,6 +57,8 @@ Accessible::Accessible(nsIAccessible* aAcc, HWND aWnd)
   mAccessible = aAcc;
   mWnd = aWnd;
 	m_cRef	        = 0;
+  mCachedIndex = 0;
+  mCachedChild = NULL;
 
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", ++gAccessibles);
@@ -284,7 +287,13 @@ STDMETHODIMP Accessible::get_accRole(
    else if (role.EqualsIgnoreCase("push button"))
       pvarRole->lVal = ROLE_SYSTEM_PUSHBUTTON;
    else if (role.EqualsIgnoreCase("radio button"))
-      pvarRole->lVal = ROLE_SYSTEM_RADIOBUTTON;
+      pvarRole->lVal = ROLE_SYSTEM_PUSHBUTTON;
+   else if (role.EqualsIgnoreCase("indicator"))  
+      pvarRole->lVal = ROLE_SYSTEM_INDICATOR;
+   else if (role.EqualsIgnoreCase("check box"))
+     pvarRole->lVal = ROLE_SYSTEM_CHECKBUTTON;
+   else if (role.EqualsIgnoreCase("scrollbar"))
+     pvarRole->lVal = ROLE_SYSTEM_SCROLLBAR;
    else if (role.EqualsIgnoreCase("slider"))
       pvarRole->lVal = ROLE_SYSTEM_SLIDER;
    else if (role.EqualsIgnoreCase("client"))
@@ -315,6 +324,7 @@ STDMETHODIMP Accessible::get_accState(
    nsresult rv = a->GetAccState(&state);
    if (NS_FAILED(rv))
      return S_FALSE;
+
    pvarState->lVal = state;
 
    return S_OK;
@@ -366,13 +376,41 @@ STDMETHODIMP Accessible::get_accDefaultAction(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
-  return NULL;
+  *pszDefaultAction = NULL;
+  nsCOMPtr<nsIAccessible> a;
+  GetNSAccessibleFor(varChild,a);
+  if (a) {
+     nsXPIDLString name;
+     nsresult rv = a->GetAccDefaultAction(getter_Copies(name));
+     if (NS_FAILED(rv))
+        return S_FALSE;
+
+     *pszDefaultAction = ::SysAllocString(name.get());
+  }
+
+  return S_OK;
 }
 
 STDMETHODIMP Accessible::accSelect( 
       /* [in] */ long flagsSelect,
       /* [optional][in] */ VARIANT varChild)
 {
+  // currently only handle focus and selection
+  if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
+  {
+    if (flagsSelect & SELFLAG_TAKEFOCUS)
+      mAccessible->AccTakeFocus();
+
+    if (flagsSelect & SELFLAG_TAKESELECTION)
+      mAccessible->AccTakeSelection();
+
+    if (flagsSelect & SELFLAG_REMOVESELECTION)
+      mAccessible->AccRemoveSelection();
+
+
+    return S_OK;
+  }
+
   return S_FALSE;
 }
 
@@ -543,28 +581,132 @@ STDMETHODIMP Accessible::Invoke(DISPID dispIdMember, REFIID riid,
 
 void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
 {
-  if (varChild.lVal == CHILDID_SELF) 
+  // if its us real easy
+  if (varChild.lVal == CHILDID_SELF) {
     aAcc = mAccessible;
-  else {
-    long count = 1;
-    nsCOMPtr<nsIAccessible> a;
+  } else if (mCachedChild && varChild.lVal == mCachedIndex+1) {
+    // if the cachedIndex is not self and the if its the one right
+    // before the one we want to get. Then just ask it for its next.
     nsCOMPtr<nsIAccessible> next;
-    mAccessible->GetAccFirstChild(getter_AddRefs(a));
-    while(a) 
+    mCachedChild->GetAccNextSibling(getter_AddRefs(next));
+    if (next) {
+      mCachedIndex++;
+      mCachedChild = next;
+    }
+
+    aAcc = next;
+    return;
+
+  } else {
+    // if the cachedindex is not the one right before we have to start at the begining
+    nsCOMPtr<nsIAccessible> a;
+    mAccessible->GetAccFirstChild(getter_AddRefs(mCachedChild));
+    mCachedIndex = 1;
+    while(mCachedChild) 
     {
-      if (varChild.lVal == count)
+      if (varChild.lVal == mCachedIndex)
       {
-         aAcc = a;
+         aAcc = mCachedChild;
          return;
       }
 
-      a->GetAccNextSibling(getter_AddRefs(next));
-      a = next;
-      count++;
+      mCachedChild->GetAccNextSibling(getter_AddRefs(a));
+      mCachedChild = a;
+      mCachedIndex++;
     }
 
     aAcc = nsnull;
   }  
 }
+
+//----- Root Accessible -----
+
+NS_IMPL_QUERY_INTERFACE1(RootAccessible, nsIAccessibleEventListener)
+
+NS_IMETHODIMP_(nsrefcnt) 
+RootAccessible::AddRef(void)
+{
+  return Accessible::AddRef();
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+RootAccessible::Release(void)
+{
+  return Accessible::Release();
+}
+
+RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):Accessible(aAcc,aWnd)
+
+{
+    mListCount = 0;
+    mNextId = -1;
+    mNextPos = 0;
+
+    nsCOMPtr<nsIAccessibleEventReceiver> r = do_QueryInterface(mAccessible);
+    if (r) 
+      r->AddAccessibleEventListener(this);
+}
+
+RootAccessible::~RootAccessible()
+{
+    nsCOMPtr<nsIAccessibleEventReceiver> r = do_QueryInterface(mAccessible);
+    if (r) 
+      r->RemoveAccessibleEventListener(this);
+
+    // free up accessibles
+    for (int i=0; i < mListCount; i++)
+      mList[i].mAccessible = nsnull;
+}
+
+void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
+{
+  aAcc = nsnull;
+  Accessible::GetNSAccessibleFor(varChild, aAcc);
+
+  if (aAcc)
+    return;
+
+  for (int i=0; i < mListCount; i++)
+  {
+    if (varChild.lVal == mList[i].mId) {
+        aAcc = mList[i].mAccessible;
+        return;
+    }
+  }    
+}
+
+NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
+{
+  // print focus event!!
+  printf("Focus Changed!!!\n");
+
+  // get the id for the accessible
+  PRInt32 id = GetIdFor(aAccessible);
+
+  // notify the window system
+  NotifyWinEvent(aEvent, mWnd, OBJID_CLIENT, id);
+  
+
+  return NS_OK;
+}
+
+PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
+{
+  // max of 99999 ids can be generated
+  if (mNextId < -99999)
+    mNextId = -1;
+  
+  // Lets make one and add it to the list
+  mList[mNextPos].mId = mNextId;
+  mList[mNextPos].mAccessible = aAccessible;
+
+  mNextId--;
+  mNextPos++;
+  if (mListCount < MAX_LIST_SIZE)
+    mListCount++;
+
+  return mNextId+1;
+}
+
 #endif
 #endif

@@ -24,23 +24,46 @@
 #define _nsRootAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsIAccessibleEventReceiver.h"
+#include "nsIAccessibleEventListener.h"
+#include "nsIDOMFocusListener.h"
 
-class nsRootAccessible : public nsAccessible
+class nsRootAccessible : public nsAccessible,
+                         public nsIAccessibleEventReceiver,
+                         public nsIDOMFocusListener
+
 {
   
-	public:
-		nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame = nsnull);
-		virtual ~nsRootAccessible();
+  NS_DECL_ISUPPORTS_INHERITED
+
+  public:
+    nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame = nsnull);
+    virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
     NS_IMETHOD GetAccName(PRUnichar * *aAccName);
     NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
     NS_IMETHOD GetAccRole(PRUnichar * *aAccRole);
 
+    // ----- nsIAccessibleEventReceiver ------
+
+    NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
+    NS_IMETHOD RemoveAccessibleEventListener(nsIAccessibleEventListener *aListener);
+
+    // ----- nsIDOMEventListener --------
+    virtual nsresult HandleEvent(nsIDOMEvent* anEvent);
+    virtual nsresult Focus(nsIDOMEvent* aEvent);
+    virtual nsresult Blur(nsIDOMEvent* aEvent);
+
 protected:
   virtual nsIFrame* GetFrame();
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIWeakReference* aShell);
- /// nsIFrame* mFrame;
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell);
+
+  // not a com pointer. We don't own the listener
+  // it is the callers responsibility to remove the listener
+  // otherwise we will get into circular referencing problems
+  nsIAccessibleEventListener* mListener;
+  nsCOMPtr<nsIContent> mCurrentFocus;
 };
 
 

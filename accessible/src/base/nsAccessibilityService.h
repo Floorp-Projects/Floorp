@@ -27,6 +27,9 @@
 #define __nsAccessibilityService_h__
 
 #include "nsIAccessibilityService.h"
+class nsIFrame;
+class nsIPresShell;
+class nsIDOMNode;
 
 class nsAccessibilityService : public nsIAccessibilityService
 {
@@ -41,6 +44,9 @@ public:
   virtual ~nsAccessibilityService();
 
 public:
+
+private:
+  NS_IMETHOD GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIPresShell** aShell, nsIDOMNode** aContent);
 
 };
 

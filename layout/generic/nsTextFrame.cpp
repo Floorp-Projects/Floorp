@@ -68,7 +68,7 @@
 #include "nsIAccessible.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
-#include "nsIMutableAccessible.h"
+//#include "nsIMutableAccessible.h"
 
 #ifdef IBMBIDI
 #include "nsBidiFrames.h"
@@ -776,6 +776,11 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
+       nsIAccessible* acc = nsnull;
+       accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
+       *aInstancePtrResult = acc;
+
+    /*
      nsIMutableAccessible* acc = nsnull;
      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent); 
 
@@ -802,6 +807,8 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
      acc->SetRole(NS_LITERAL_STRING("text").get());
      acc->SetIsLeaf(PR_TRUE);
      *aInstancePtrResult = acc;
+     */
+
      return NS_OK;
     }
     return NS_ERROR_FAILURE;

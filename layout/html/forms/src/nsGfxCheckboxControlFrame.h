@@ -32,9 +32,13 @@
 
 class nsGfxCheckboxControlFrame : public nsFormControlFrame,
                                   public nsIStatefulFrame,
-                                  public nsICheckboxControlFrame
+                                  public nsICheckboxControlFrame//,
+                                  //public nsIAccessible
 {
 public:
+
+  //NS_DECL_NSIACCESSIBLE
+
   nsGfxCheckboxControlFrame();
   virtual ~nsGfxCheckboxControlFrame();
   
@@ -94,6 +98,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 #endif
+
+  NS_IMETHOD GetChecked(PRBool* aIsChecked) { *aIsChecked = (GetCheckboxState() == eOn); return NS_OK; }
+  NS_IMETHOD SetChecked(nsIPresContext* aPresContext, PRBool aIsChecked) { SetCheckboxState(aPresContext, aIsChecked ? eOn : eOff); return NS_OK; }
 
 protected:
 
