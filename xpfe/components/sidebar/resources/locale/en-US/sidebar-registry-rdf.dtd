@@ -10,6 +10,7 @@
 <!ENTITY sidebar.panel.travel.label              "Travel">
 <!ENTITY sidebar.panel.search.label              "Search">
 <!ENTITY sidebar.panel.memberdirectory.label     "Member Directory">
+<!-- LOCALIZATION NOTE sidebar.panel.netcenter.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.panel.netcenter.label           "Netcenter">
 <!ENTITY sidebar.panel.newsedge.label            "Top Stories">
 <!ENTITY sidebar.panel.addressbook.label         "Addressbook">
@@ -18,9 +19,12 @@
 <!ENTITY sidebar.panel.calculator.label          "Calculator">
 <!ENTITY sidebar.panel.calendar.label            "Calendar">
 <!ENTITY sidebar.panel.delivery.label            "Delivery">
+<!-- LOCALIZATION NOTE sidebar.panel.fishcam.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.panel.fishcam.label             "Fishcam">
 <!ENTITY sidebar.panel.localevent.label          "Local Events">
 <!ENTITY sidebar.panel.localmovie.label          "Local Movies">
 <!ENTITY sidebar.panel.maps.label                "Maps">
+<!-- LOCALIZATION NOTE  sidebar.panel.netcenterservices.label: Do NOT localize "Netcenter"  -->
 <!ENTITY sidebar.panel.netcenterservices.label   "Netcenter Services">
+<!-- LOCALIZATION NOTE sidebar.panel.netscape.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.panel.netscape.label            "Netscape">

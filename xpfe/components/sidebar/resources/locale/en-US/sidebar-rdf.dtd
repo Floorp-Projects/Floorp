@@ -2,6 +2,6 @@
 
 <!ENTITY sidebar.whats-related.label  "What's Related">
 <!ENTITY sidebar.alerts.label         "Alerts">
-<!-- LOCALIZATION NOTE  sidebar.tinderbox.label: Do NOT localize the term "Tinderbox"  -->
+<!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.tinderbox.label      "Tinderbox">
 <!ENTITY sidebar.bookmarks.label      "Bookmarks">
