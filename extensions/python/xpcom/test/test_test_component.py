@@ -30,6 +30,13 @@ contractid = "Python.TestComponent"
 really_big_string = "This is really repetitive!" * 10000
 really_big_wstring = u"This is really repetitive!" * 10000
 
+# Exception raised when a -ve integer is converted to an unsigned C integer
+# (via an extension module).  This changed in Python 2.2
+if sys.hexversion > 0x02010000:
+    UnsignedMismatchException = TypeError
+else:
+    UnsignedMismatchException = OverflowError
+
 def print_error(error):
     print error
     global num_errors
@@ -149,7 +156,7 @@ def test_base_interface(c):
     test_attribute(c, "ulong_long_value", 8, 9)
     test_attribute(c, "ulong_long_value", 8, 0)
     test_attribute_failure(c, "ulong_long_value", "boo", ValueError)
-    test_attribute_failure(c, "ulong_long_value", -1, OverflowError) # can't convert negative value to unsigned long)
+    test_attribute_failure(c, "ulong_long_value", -1, UnsignedMismatchException) # can't convert negative value to unsigned long)
     
     test_attribute(c, "float_value", 9.0, 10.2)
     test_attribute(c, "float_value", 9.0, 0)
@@ -308,6 +315,8 @@ def test_derived_interface(c, test_flat = 0):
 
     val = "Hello\0there"
     test_method(c.UpOctetArray, (val,), val.upper())
+    test_method(c.UpOctetArray, (unicode(val),), val.upper())
+    # Passing Unicode objects here used to cause us grief.
     test_method(c.UpOctetArray2, (val,), val.upper())
 
     test_method(c.CheckInterfaceArray, ((c, c),), 1)
