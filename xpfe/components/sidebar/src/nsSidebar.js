@@ -155,8 +155,8 @@ function (aTitle, aContentURL, aCustomizeURL)
         }
     }
     catch (e) {
-        titleMessage = "Add Panel to My Sidebar";
-        dialogMessage = "Add the panel'" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
+        titleMessage = "Add Tab to My Sidebar";
+        dialogMessage = "Add the Tab '" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
     var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
