@@ -459,6 +459,7 @@ public:
 
   nsINameSpace*         mNameSpace;
   PRInt32               mDefaultNameSpaceID;
+  nsHashtable           mRelevantAttributes;
 
   static nsIIOService*  gIOService;
   static nsrefcnt       gRefcnt;
@@ -517,6 +518,15 @@ public:
 
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
+
+
+  // If changing the given attribute cannot affect style context, aAffects
+  // will be PR_FALSE on return.
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects);
+
+  // Find attributes in selector for rule, for use with AttributeAffectsStyle
+  NS_IMETHOD CheckRuleForAttributes(nsICSSRule* aRule);
 
   // XXX do these belong here or are they generic?
   NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);
@@ -1090,7 +1100,8 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mURL(nsnull),
     mOrderedRules(nsnull),
     mNameSpace(nsnull),
-    mDefaultNameSpaceID(kNameSpaceID_None)
+    mDefaultNameSpaceID(kNameSpaceID_None),
+    mRelevantAttributes()
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
   if (gRefcnt++ == 0) {
@@ -1117,12 +1128,24 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
+static PRBool
+CopyRelevantAttributes(nsHashKey *aAttrKey, void *aAtom, void *aTable)
+{
+  nsHashtable *table = NS_STATIC_CAST(nsHashtable *, aTable);
+  AtomKey *key =  NS_STATIC_CAST(AtomKey *, aAttrKey);
+  table->Put(key, key->mAtom);
+  // we don't need to addref the atom here, because we're also copying the
+  // rules when we clone, and that will add a ref for us
+  return PR_TRUE;
+}
+
 CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
                                        nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(aCopy.mURL),
     mNameSpace(nsnull),
-    mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID)
+    mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID),
+    mRelevantAttributes()
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
   if (gRefcnt++ == 0) {
@@ -1144,6 +1167,8 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
   else {
     mOrderedRules = nsnull;
   }
+  aCopy.mRelevantAttributes.Enumerate(CopyRelevantAttributes,
+                                      &mRelevantAttributes);
   RebuildNameSpaces();
 }
 
@@ -1841,6 +1866,21 @@ CSSStyleSheetImpl::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
+CSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
+                                         nsIContent *aContent,
+                                         PRBool &aAffects)
+{
+  AtomKey key(aAttribute);
+  aAffects = !!mInner->mRelevantAttributes.Get(&key);
+  for (CSSStyleSheetImpl *child = mFirstChild;
+       child && !aAffects;
+       child = child->mNext) {
+    child->AttributeAffectsStyle(aAttribute, aContent, aAffects);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
@@ -1859,6 +1899,8 @@ CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
       if (nsICSSRule::NAMESPACE_RULE == type) {
         // no api to prepend a namespace (ugh), release old ones and re-create them all
         mInner->RebuildNameSpaces();
+      } else {
+        CheckRuleForAttributes(aRule);
       }
     }
   }
@@ -1906,10 +1948,57 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
             mInner->mNameSpace = newNameSpace; // takes ref
           }
         }
+      } else {
+        CheckRuleForAttributes(aRule);
       }
+        
     }
   }
   return NS_OK;
+}
+
+static PRBool
+CheckRuleForAttributesEnum(nsISupports *aRule, void *aData)
+{
+  nsICSSRule *rule = NS_STATIC_CAST(nsICSSRule *, aRule);
+  CSSStyleSheetImpl *sheet = NS_STATIC_CAST(CSSStyleSheetImpl *, aData);
+  return NS_SUCCEEDED(sheet->CheckRuleForAttributes(rule));
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
+{
+  PRInt32 ruleType;
+  aRule->GetType(ruleType);
+  switch (ruleType) {
+    case nsICSSRule::MEDIA_RULE: {
+      nsICSSMediaRule *mediaRule = (nsICSSMediaRule *)aRule;
+      return mediaRule->EnumerateRulesForwards(CheckRuleForAttributesEnum,
+                                               (void *)this);
+    }
+    case nsICSSRule::STYLE_RULE: {
+      nsICSSStyleRule *styleRule = NS_STATIC_CAST(nsICSSStyleRule *, aRule);
+      nsCSSSelector *iter;
+      for (iter = styleRule->FirstSelector(); iter; iter = iter->mNext) {
+        nsAttrSelector *sel;
+        for (sel = iter->mAttrList; sel; sel = sel->mNext) {
+          /* store it in this sheet's attributes-that-matter table */
+          /* XXX store tag name too, but handle collisions */
+#ifdef DEBUG_shaver_off
+          nsAutoString str;
+          sel->mAttr->ToString(str);
+          char * chars = str.ToNewCString();
+          fprintf(stderr, "[%s@%p]", chars, this);
+          nsAllocator::Free(chars);
+#endif
+          AtomKey key(sel->mAttr);
+          mInner->mRelevantAttributes.Put(&key, sel->mAttr);
+        }
+      }
+    } /* fall-through */
+    default:
+      return NS_OK;
+  }
 }
 
 NS_IMETHODIMP

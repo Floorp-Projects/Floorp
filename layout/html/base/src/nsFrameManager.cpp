@@ -235,6 +235,8 @@ public:
                                    nsStyleChangeList& aChangeList,
                                    PRInt32 aMinChange,
                                    PRInt32& aTopLevelChange);
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects);
 
   NS_IMETHOD CaptureFrameState(nsIPresContext*        aPresContext,
                                nsIFrame*              aFrame,
@@ -1386,6 +1388,12 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                    PRBool &aAffects)
+{
+  return mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
+}
 
 static nsresult
 CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)

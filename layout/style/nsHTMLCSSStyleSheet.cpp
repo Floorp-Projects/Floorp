@@ -367,6 +367,10 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
+  // If changing the given attribute cannot affect style context, aAffects
+  // will be PR_FALSE on return.
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects);
 private: 
   // These are not supported and are not implemented! 
   HTMLCSSStyleSheetImpl(const HTMLCSSStyleSheetImpl& aCopy); 
@@ -759,6 +763,16 @@ void HTMLCSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
     tag = getter_AddRefs(NS_NewAtom("FirstLetterRule"));
     aSizeOfHandler->AddSize(tag,localSize);
   }
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
+                                             nsIContent *aContent,
+                                             PRBool &aAffects)
+{
+  // XXX can attributes affect rules in these?
+  aAffects = PR_FALSE;
+  return NS_OK;
 }
 
 // XXX For backwards compatibility and convenience

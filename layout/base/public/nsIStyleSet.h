@@ -186,6 +186,11 @@ public:
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
   virtual void ResetUniqueStyleItems(void) = 0;
 
+  // If changing the given attribute cannot affect style context, aAffects
+  // will be PR_FALSE on return.
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects) = 0;
+
 #ifdef DEBUG_SC_SHARING
   // add and remove from the cache of all contexts
   NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext) = 0;

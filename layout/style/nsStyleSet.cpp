@@ -191,6 +191,9 @@ public:
   NS_DECL_NSITIMERECORDER
 #endif
 
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects);
+
 private:
   // These are not supported and are not implemented!
   StyleSetImpl(const StyleSetImpl& aCopy);
@@ -1352,6 +1355,46 @@ void StyleSetImpl::ResetUniqueStyleItems(void)
 {
   UNIQUE_STYLE_ITEMS(uniqueItems);
   uniqueItems->Clear();  
+}
+
+struct AttributeContentPair {
+  nsIAtom *attribute;
+  nsIContent *content;
+};
+
+static PRBool
+EnumAffectsStyle(nsISupports *aElement, void *aData)
+{
+  nsIStyleSheet *sheet = NS_STATIC_CAST(nsIStyleSheet *, aElement);
+  AttributeContentPair *pair = (AttributeContentPair *)aData;
+  PRBool affects;
+  if (NS_FAILED(sheet->AttributeAffectsStyle(pair->attribute, pair->content,
+                                             affects)) || affects)
+    return PR_FALSE;            // stop checking
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                    PRBool &aAffects)
+{
+  AttributeContentPair pair;
+  pair.attribute = aAttribute;
+  pair.content = aContent;
+
+  /* check until we find a sheet that will be affected */
+  if ((mDocSheets && !mDocSheets->EnumerateForwards(EnumAffectsStyle, &pair)) ||
+      (mOverrideSheets && !mOverrideSheets->EnumerateForwards(EnumAffectsStyle,
+                                                              &pair)) ||
+      (mBackstopSheets && !mBackstopSheets->EnumerateForwards(EnumAffectsStyle,
+                                                              &pair))) {
+    aAffects = PR_TRUE;
+  } else {
+    aAffects = PR_FALSE;
+  }
+
+  return NS_OK;
 }
 
 /******************************************************************************
