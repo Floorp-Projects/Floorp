@@ -58,6 +58,7 @@
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
+#include "nsIMIMEInfo.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 
@@ -123,13 +124,12 @@ protected:
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
   nsresult GetDownloadState(DownloadState* aState);
   nsresult SetDownloadState(DownloadState aState);
-  nsresult SetOpeningWith(const PRUnichar* aOpeningWith);
+  nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
   nsresult SetStartTime(PRInt64 aStartTime);
 private:
   nsDownloadManager* mDownloadManager;
 
   nsString mDisplayName;
-  nsString mOpeningWith;
 
   nsCOMPtr<nsILocalFile> mTarget;
   nsCOMPtr<nsIURI> mSource;
@@ -139,6 +139,7 @@ private:
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
   nsCOMPtr<nsIObserver> mObserver;
+  nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
   DownloadState mDownloadState;
 
   PRInt32 mPercentComplete;

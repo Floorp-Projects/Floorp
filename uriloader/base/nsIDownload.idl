@@ -43,6 +43,7 @@ interface nsILocalFile;
 interface nsIObserver;
 interface nsIWebBrowserPersist;
 interface nsIWebProgressListener;
+interface nsIMIMEInfo;
 
 [scriptable, uuid(06cb92f2-1dd2-11b2-95f2-96dfdfb804a1)]
 interface nsIDownload : nsISupports {
@@ -56,6 +57,10 @@ interface nsIDownload : nsISupports {
      *
      * @param aDisplayName The user-readable description of the download.
      *
+     * @param aMIMEInfo The MIME info associated with the download file,
+     *                  including MIME type and helper app when appropriate.
+     *                  This parameter is optional.
+     *
      * @param aPersist The "persist" used to transfer the download.  If set,
      *                 the manager will set its listener to the download item
      *                 and use it for cancellation.  If not set, the client
@@ -67,7 +72,7 @@ interface nsIDownload : nsISupports {
     void init(in nsIURI aSource,
               in nsILocalFile aTarget,
               in wstring aDisplayName,
-              in wstring openingWith,
+              in nsIMIMEInfo aMIMEInfo,
               in long long startTime,
               in nsIWebBrowserPersist aPersist);
 
@@ -107,10 +112,11 @@ interface nsIDownload : nsISupports {
     readonly attribute long long startTime;
     
     /**
-     * Set this attribute to indicate that the download will be
-     * opened with a helper application upon completion.
+     * Optional. If set, it will contain the download's relevant MIME information.
+     * This includes it's MIME Type, helper app, and whether that helper should be
+     * executed.
      */
-    readonly attribute wstring openingWith;
+    readonly attribute nsIMIMEInfo MIMEInfo;
 
     /**
      * Optional; downloading information is passed to this listener and used to

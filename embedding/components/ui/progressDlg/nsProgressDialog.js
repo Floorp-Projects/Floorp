@@ -62,7 +62,7 @@ function nsProgressDialog() {
     this.strings      = new Array;
     this.mSource      = null;
     this.mTarget      = null;
-    this.mApp         = null;
+    this.mMIMEInfo    = null;
     this.mDialog      = null;
     this.mDisplayName = null;
     this.mPaused      = null;
@@ -85,7 +85,8 @@ nsProgressDialog.prototype = {
     dialogFeatures: "chrome,titlebar,minimizable=yes",
 
     // getters/setters
-    get saving()            { return this.openingWith == null || this.openingWith == ""; },
+    get saving()            { return this.MIMEInfo == null ||
+			      this.MIMEInfo.preferredAction == Components.interfaces.nsIMIMEInfo.saveToDisk; },
     get parent()            { return this.mParent; },
     set parent(newval)      { return this.mParent = newval; },
     get operation()         { return this.mOperation; },
@@ -106,8 +107,8 @@ nsProgressDialog.prototype = {
     set source(newval)      { return this.mSource = newval; },
     get target()            { return this.mTarget; },
     set target(newval)      { return this.mTarget = newval; },
-    get openingWith()       { return this.mApp; },
-    set openingWith(newval) { return this.mApp = newval; },
+    get MIMEInfo()          { return this.mMIMEInfo; },
+    set MIMEInfo(newval)    { return this.mMIMEInfo = newval; },
     get dialog()            { return this.mDialog; },
     set dialog(newval)      { return this.mDialog = newval; },
     get displayName()       { return this.mDisplayName; },
@@ -145,11 +146,11 @@ nsProgressDialog.prototype = {
                                      this );
     },
     
-    init: function( aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aOperation ) {
+    init: function( aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aOperation ) {
       this.source = aSource;
       this.target = aTarget;
       this.displayName = aDisplayName;
-      this.openingWith = aOpeningWith;
+      this.MIMEInfo = aMIMEInfo;
       if ( aStartTime ) {
           this.startTime = aStartTime;
       }
@@ -364,15 +365,20 @@ nsProgressDialog.prototype = {
             // Put proper label on source field.
             this.setValue( "sourceLabel", this.getString( "openingSource" ) );
 
-            // Target is the "opening with" application.  Hide if empty.
-            if ( this.openingWith.length == 0 ) {
-                this.hide( "targetRow" );
-            } else {
-                // Use the "with:" label.
-                this.setValue( "targetLabel", this.getString( "openingTarget" ) );
-                // Name of application.
-                this.setValue( "target", this.openingWith );
-            }
+            // Target is the "preferred" application.  Hide if empty.
+	    if ( this.MIMEInfo && this.MIMEInfo.preferredApplicationHandler ) {
+                var appName = this.MIMEInfo.preferredApplicationHandler.leafName;
+                if ( appName == null || appName.length == 0 ) {
+                    this.hide( "targetRow" );
+                } else {
+                    // Use the "with:" label.
+                    this.setValue( "targetLabel", this.getString( "openingTarget" ) );
+                    // Name of application.
+                    this.setValue( "target", appName );
+                }
+           } else {
+               this.hide( "targetRow" );
+           }
         } else {
             // Target is the destination file.
             this.setValue( "target", this.target.path );

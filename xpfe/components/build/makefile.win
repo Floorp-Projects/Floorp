@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  related \
 		  urlbarhistory \
 		  uriloader \
+		  mimetype \
 		  mozldap \
 		  webbrowserpersist \
 		  appshell \

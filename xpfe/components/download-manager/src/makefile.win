@@ -25,12 +25,13 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  uriloader \
+		  mimetype \
 		  necko \
-      progressDlg \
+		  progressDlg \
 		  intl \
-      windowwatcher \
+		  windowwatcher \
 		  webbrowserpersist \
-      appshell \
+		  appshell \
 		  dom \
 		  $(NULL)
 
