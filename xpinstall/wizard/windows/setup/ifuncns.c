@@ -421,7 +421,8 @@ HRESULT ProcessCreateDirectory(DWORD dwTiming)
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       DecriptString(szDestination, szBuf);
-      CreateDirectoriesAll(szBuf);
+      AppendBackSlash(szDestination, sizeof(szDestination));
+      CreateDirectoriesAll(szDestination);
     }
 
     ++dwIndex;
