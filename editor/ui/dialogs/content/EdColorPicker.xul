@@ -53,7 +53,7 @@
   </box>
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
-    onclick="SelectColor();"/>
+    onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
   <box valign="middle" autostretch="never">
     <text class="label" value="&palette.label;"/>

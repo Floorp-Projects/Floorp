@@ -155,7 +155,7 @@ function ChangePalette(palette)
 
 function SelectColor()
 {
-  var color = dialog.ColorPicker.getAttribute("color");
+  var color = dialog.ColorPicker.color;
   if (color.length > 0)
   {
     SetCurrentColor(color);
