@@ -60,6 +60,7 @@ var messagesBox = null;
 var accountCentralBox = null;
 var gSearchBox = null;
 var gAccountCentralLoaded = false;
+var gFakeAccountPageLoaded = false;
 var gPaneConfig = null;
 //End progress and Status variables
 
@@ -510,6 +511,7 @@ function HideAccountCentral()
         switch (gPaneConfig)
         {
             case 0:
+                window.frames["accountCentralPane"].location = "about:blank";
                 accountCentralBox.setAttribute("collapsed", "true");
                 gSearchBox.removeAttribute("collapsed");
                 messagesBox.removeAttribute("collapsed");
@@ -517,6 +519,7 @@ function HideAccountCentral()
                 break;
 
             case 1:
+                window.frames["accountCentralPane"].location = "about:blank";
                 accountCentralBox.setAttribute("collapsed", "true");
                 var messagePaneBox = document.getElementById("messagepanebox");
                 messagePaneBox.removeAttribute("collapsed");

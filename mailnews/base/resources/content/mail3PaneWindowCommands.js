@@ -47,6 +47,9 @@ var FolderPaneController =
 
 	isCommandEnabled: function(command)
 	{
+    if (IsFakeAccount()) 
+      return false;
+
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -56,40 +59,41 @@ var FolderPaneController =
 				return false;
 			case "cmd_delete":
 			case "button_delete":
-				if ( command == "cmd_delete" )
-					goSetMenuValue(command, 'valueFolder');
-                                var folderTree = GetFolderTree();
-                                var startIndex = {};
-                                var endIndex = {};
-                                folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-                                if (startIndex.value >= 0) {
-                                        var canDeleteThisFolder;
-					var specialFolder = null;
-					var isServer = null;
-					var serverType = null;
-					try {
-                                                var folderResource = GetFolderResource(folderTree, startIndex.value);
-                                                specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
-                                                isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
-                                                serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
-                                                if (serverType == "nntp") {
-			     	                        if ( command == "cmd_delete" ) {
-					                        goSetMenuValue(command, 'valueNewsgroup');
-				    	                        goSetAccessKey(command, 'valueNewsgroupAccessKey');
-                                                        }
-                                                }
-					}
-					catch (ex) {
-						//dump("specialFolder failure: " + ex + "\n");
-					}
-                                        if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
-                                                canDeleteThisFolder = false;
-                                        else
-                                                canDeleteThisFolder = true;
-                                        return canDeleteThisFolder && isCommandEnabled(command);
-                                }
-				else
-					return false;
+			if ( command == "cmd_delete" )
+				goSetMenuValue(command, 'valueFolder');
+      var folderTree = GetFolderTree();
+      var startIndex = {};
+      var endIndex = {};
+      folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+      if (startIndex.value >= 0) {
+        var canDeleteThisFolder;
+				var specialFolder = null;
+				var isServer = null;
+				var serverType = null;
+				try {
+          var folderResource = GetFolderResource(folderTree, startIndex.value);
+          specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
+          isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
+          serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
+          if (serverType == "nntp") {
+			     	if ( command == "cmd_delete" ) {
+					      goSetMenuValue(command, 'valueNewsgroup');
+				    	  goSetAccessKey(command, 'valueNewsgroupAccessKey');
+            }
+          }
+				}
+				catch (ex) {
+					//dump("specialFolder failure: " + ex + "\n");
+				} 
+        if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
+          canDeleteThisFolder = false;
+        else
+          canDeleteThisFolder = true;
+        return canDeleteThisFolder && isCommandEnabled(command);
+      }
+			else
+				return false;
+
 			default:
 				return false;
 		}
@@ -281,7 +285,10 @@ var DefaultController =
     var enabled = new Object();
     enabled.value = false;
     var checkStatus = new Object();
-    
+
+    if (IsFakeAccount()) 
+      return false;
+
     // note, all commands that get fired on a single key need to check MailAreaHasFocus() as well
     switch ( command )
     {
@@ -1082,4 +1089,15 @@ function isCommandEnabled(cmd)
     return folder.isCommandEnabled(cmd);
 
 }
+
+function IsFakeAccount() {
+  try {
+    var folderResource = GetSelectedFolderResource();
+    return (folderResource.Value == "http://home.netscape.com/NC-rdf#PageTitleFakeAccount");
+  }
+  catch(ex) {
+  }
+  return false;
+}
+
 

@@ -68,7 +68,6 @@ var gHaveLoadedMessage;
 
 var gDisplayStartupPage = false;
 
-
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) { },
@@ -1053,9 +1052,13 @@ function GetSelectedMsgFolders()
         folderTree.treeBoxObject.selection.getRangeAt(i, startIndex, endIndex);
         for (var j = startIndex.value; j <= endIndex.value; j++)
         {
-            var msgFolder = GetFolderResource(folderTree, j).QueryInterface(Components.interfaces.nsIMsgFolder);
+          var folderResource = GetFolderResource(folderTree, j); 
+          if (folderResource.Value != "http://home.netscape.com/NC-rdf#PageTitleFakeAccount") {
+            var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
             if(msgFolder)
-                folderArray[k++] = msgFolder;
+              folderArray[k++] = msgFolder;
+          }
         }
     }
 

@@ -59,6 +59,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIPrefService.h"
 
 // turn this on to see useful output
 #undef DEBUG_amds
@@ -72,6 +73,7 @@
 #define NC_RDF_PAGETITLE_DISKSPACE            NC_RDF_PAGETITLE_PREFIX "DiskSpace"
 #define NC_RDF_PAGETITLE_ADDRESSING           NC_RDF_PAGETITLE_PREFIX "Addressing"
 #define NC_RDF_PAGETITLE_SMTP                 NC_RDF_PAGETITLE_PREFIX "SMTP"
+#define NC_RDF_PAGETITLE_FAKEACCOUNT          NC_RDF_PAGETITLE_PREFIX "FakeAccount"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
 
 
@@ -120,6 +122,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleDiskSpace=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAddressing=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleFakeAccount=nsnull;
 
 // common literals
 nsIRDFLiteral* nsMsgAccountManagerDataSource::kTrueLiteral = nsnull;
@@ -171,6 +174,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADDRESSING, &kNC_PageTitleAddressing);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_FAKEACCOUNT, &kNC_PageTitleFakeAccount);
       
       getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
 
@@ -214,6 +218,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_PageTitleAddressing);
       NS_IF_RELEASE(kNC_PageTitleAdvanced);
       NS_IF_RELEASE(kNC_PageTitleSMTP);
+      NS_IF_RELEASE(kNC_PageTitleFakeAccount);
       NS_IF_RELEASE(kTrueLiteral);
       
       NS_IF_RELEASE(kNC_AccountRoot);
@@ -284,8 +289,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
                                          nsIRDFNode **target)
 {
   nsresult rv;
-  
-  
+    
+
   rv = NS_RDF_NO_VALUE;
 
   nsAutoString str;
@@ -319,6 +324,24 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       else if (source == kNC_PageTitleSMTP)
           mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-smtp").get(),
                                            getter_Copies(pageTitle));
+
+      else if (source == kNC_PageTitleFakeAccount) {
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        if (NS_SUCCEEDED(rv))
+          rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+        PRBool showFakeAccount;
+        rv = prefBranch->GetBoolPref("mailnews.fakeaccount.show", &showFakeAccount);
+        if (showFakeAccount) {
+          nsCOMPtr<nsIStringBundleService> strBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+          if (NS_FAILED(rv)) return rv;
+          rv = strBundleService->CreateBundle("chrome://messenger/locale/fakeAccount.properties",
+                                               getter_AddRefs(mStringBundle));
+          if (NS_SUCCEEDED(rv))
+              mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-fake-account").get(), 
+                                               getter_Copies(pageTitle));
+        }
+      }
 
       else {
           // if it's a server, use the pretty name
@@ -499,6 +522,10 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       if (canGetMessages(server))
           str = NS_LITERAL_STRING("true");
   }
+  else if (property == kNC_PageTitleFakeAccount) {
+    if (source == kNC_PageTitleFakeAccount)
+      str = NS_LITERAL_STRING("true");
+  }
   if (!str.IsEmpty())
     rv = createNode(str.get(), target, getRDFService());
 
@@ -582,6 +609,9 @@ nsMsgAccountManagerDataSource::createRootResources(nsIRDFResource *property,
         // for the "settings" arc, we also want to do an SMTP tag
         if (property == kNC_Settings) {
             aNodeArray->AppendElement(kNC_PageTitleSMTP);
+        } 
+        else if (property == kNC_Child && IsFakeAccountRequired()) {
+            aNodeArray->AppendElement(kNC_PageTitleFakeAccount);
         }
     }
 
@@ -1140,6 +1170,13 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
   
   NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_TRUE, PR_FALSE);
   NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_TRUE, PR_FALSE);
+
+  PRBool fakeAccountServer;
+  IsIncomingServerForFakeAccount(aServer, &fakeAccountServer);
+
+  if (fakeAccountServer)
+    NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
+  
   return NS_OK;
 }
 
@@ -1147,7 +1184,6 @@ NS_IMETHODIMP
 nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
 {
   nsresult rv;
-  
   
   nsCOMPtr<nsIFolder> serverFolder;
   rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
@@ -1160,6 +1196,7 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
   
   NotifyObservers(kNC_AccountRoot, kNC_Child, serverResource, PR_FALSE, PR_FALSE);
   NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_FALSE, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -1242,3 +1279,75 @@ nsMsgAccountManagerDataSource::OnItemIntPropertyChanged(nsISupports *, nsIAtom *
     return NS_OK;
 }
 
+PRBool
+nsMsgAccountManagerDataSource::IsFakeAccountRequired()
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  if (NS_SUCCEEDED(rv))
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+
+  PRBool showFakeAccount;
+  rv = prefBranch->GetBoolPref("mailnews.fakeaccount.show", &showFakeAccount);
+
+  if (!showFakeAccount)
+    return PR_FALSE;
+
+  nsXPIDLCString fakeHostName;
+  rv = GetFakeAccountHostName(getter_Copies(fakeHostName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIMsgAccountManager> accountManager  = do_QueryReferent(mAccountManager);
+  if (!accountManager) 
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+
+  if (!fakeHostName.IsEmpty()) {
+    rv = accountManager->FindServer("",fakeHostName.get(),"", getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv) && server)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::IsIncomingServerForFakeAccount(nsIMsgIncomingServer* aServer, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aServer);
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  nsresult rv;
+  nsXPIDLCString fakeAccountHostName;
+  rv = GetFakeAccountHostName(getter_Copies(fakeAccountHostName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (fakeAccountHostName.IsEmpty()) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsXPIDLCString hostname;
+  rv = aServer->GetHostName(getter_Copies(hostname));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  *aResult = (strcmp(hostname.get(), fakeAccountHostName) == 0);
+  return NS_OK;
+}
+
+
+nsresult
+nsMsgAccountManagerDataSource::GetFakeAccountHostName(char **aHostName)
+{
+  NS_ENSURE_ARG_POINTER(aHostName);
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  if (NS_SUCCEEDED(rv))
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  rv = prefBranch->GetCharPref("mailnews.fakeaccount.server", aHostName);
+
+  return NS_OK;
+}

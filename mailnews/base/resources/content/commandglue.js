@@ -192,6 +192,11 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
       HideAccountCentral();
   }
 
+  if (gFakeAccountPageLoaded)
+  {
+      HideFakeAccountPage();
+  }
+
   gCurrentLoadingFolderURI = uri;
   gNextMessageAfterDelete = null; // forget what message to select, if any
 
@@ -728,6 +733,8 @@ function FolderPaneSelectionChange()
 
     if (gAccountCentralLoaded)
       UpdateMailToolbar("gAccountCentralLoaded");
+    else if (gFakeAccountPageLoaded)
+      UpdateMailToolbar("gFakeAccountPageLoaded");
     else {
       document.getElementById('advancedButton').setAttribute("disabled" , !(IsCanSearchMessagesEnabled()));
       ClearMessagePane();
