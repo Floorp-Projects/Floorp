@@ -1,6 +1,0 @@
-<!-- 1.0@bugzilla.org -->
-[% PerformSubsts(Param('footerhtml')) %]
-
-</body>
-</html>
-
