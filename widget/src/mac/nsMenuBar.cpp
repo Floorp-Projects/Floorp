@@ -19,6 +19,7 @@
 #include "nsMenuBar.h"
 #include "nsIMenu.h"
 #include "nsIWidget.h"
+#include "nsISupports.h"
 
 #include "nsString.h"
 #include "nsStringUtil.h"
@@ -28,16 +29,57 @@
 #include <TextUtils.h>
 #endif
 
-static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
-NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuBarIID)) {                                         
+    *aInstancePtr = (void*) ((nsIMenuBar*) this);                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) ((nsISupports*)(nsIMenuBar*) this);                     
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenuBar)
+NS_IMPL_RELEASE(nsMenuBar)
 
 //-------------------------------------------------------------------------
 //
 // nsMenuListener interface
 //
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuSelected(const nsGUIEvent & aMenuEvent)
+nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  // Dispatch menu event
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+  for (int i = mMenuVoidArray.Count(); i >= 0; i--)
+  {
+    nsIMenuListener * menuListener = nsnull;
+    ((nsIMenu*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    eventStatus = menuListener->MenuSelected(aMenuEvent);
+    //NS_RELEASE(menuListener);
+    if(nsEventStatus_eIgnore != eventStatus)
+      return eventStatus;
+  }
+  
   return nsEventStatus_eIgnore;
 }
 
@@ -50,7 +92,6 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
   mNumMenus = 0;
-  //mMenuVoidArray;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
   

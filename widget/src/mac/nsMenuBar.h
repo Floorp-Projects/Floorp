@@ -33,13 +33,13 @@ class nsMenuBar : public nsIMenuBar, public nsIMenuListener
 {
 
 public:
+  NS_DECL_ISUPPORTS
+  
+  // nsIMenuListener interface
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  
   nsMenuBar();
   virtual ~nsMenuBar();
-
-  // nsIMenuListener interface
-  nsEventStatus MenuSelected(const nsGUIEvent & aMenuEvent);
-  
-  NS_DECL_ISUPPORTS
 
   
   NS_IMETHOD Create(nsIWidget * aParent);
