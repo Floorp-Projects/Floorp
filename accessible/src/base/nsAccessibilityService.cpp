@@ -104,10 +104,12 @@
 nsAccessibilityService::nsAccessibilityService()
 {
   NS_INIT_REFCNT();
+  nsLayoutAtoms::AddRefAtoms();
 }
 
 nsAccessibilityService::~nsAccessibilityService()
 {
+  nsLayoutAtoms::ReleaseAtoms();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);

@@ -63,7 +63,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMNSHTMLSelectElement.h"
-#include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIAccessibilityService.h"
@@ -122,7 +121,6 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull
     shell->GetDocument(getter_AddRefs(mDocument));
     mDOMNode = do_QueryInterface(mDocument);
   }
-  nsLayoutAtoms::AddRefAtoms();
   ++gInstanceCount;
 #ifdef DEBUG_LEAKS
   printf("=====> %d nsRootAccessible's %x\n", gInstanceCount, (PRUint32)this); 
@@ -140,7 +138,6 @@ nsRootAccessible::~nsRootAccessible()
   printf("======> %d nsRootAccessible's %x\n", gInstanceCount, (PRUint32)this); 
 #endif
 
-  nsLayoutAtoms::ReleaseAtoms();
   RemoveAccessibleEventListener();
   if (mScrollablePresShells)
     delete mScrollablePresShells;
