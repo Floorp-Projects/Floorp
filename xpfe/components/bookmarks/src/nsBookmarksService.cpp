@@ -3633,7 +3633,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 		nsAutoString	literalString;
 		if (NS_SUCCEEDED(rv = GetTextForNode(node, literalString)))
 		{
-			char		*attribute = literalString.ToNewCString();
+			char		*attribute = literalString.ToNewUTF8String();
 			if (nsnull != attribute)
 			{
 				if (isFirst == PR_FALSE)
