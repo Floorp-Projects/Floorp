@@ -244,7 +244,6 @@
       <field name="_clientFrameDoc">null</field>
       <field name="_clientFrameBody">null</field>
       <field name="_isScrolling">false</field>
-      <field name="_hasScrolled">false</field>
       <field name="_autoScrollMarkerImage">null</field>
       <field name="_snapOn">false</field>
       <field name="_scrollCount">0</field>
@@ -252,6 +251,7 @@
       <field name="_startY">null</field>
       <field name="_clientX">null</field>
       <field name="_clientY">null</field>
+      <field name="_f">false</field>
 
       <property name="mStrBundle">
         <getter>
@@ -596,8 +596,13 @@
         <![CDATA[
           if (!this._snapOn)
             this.stopScroll();
-          else
+          else {
+            if (this._f) {
+              this._f = false;
+              return;
+            }
             this.showAutoscrollMarker(event);
+          }
         ]]>        
       </handler>
       <handler event="mousedown" button="1">
@@ -608,14 +613,16 @@
             this._clientFrameDoc = event.originalTarget.ownerDocument;
             this._clientFrameBody = (this._clientFrameDoc.getElementsByTagName('body')[0]) ? this._clientFrameDoc.getElementsByTagName('body')[0] : this._clientFrameDoc.getElementsByTagName('*')[0];
             this._isScrolling = true;
-            this._hasScrolled = true;
             if (!this.isLink(event.originalTarget))
               this._snapOn = true;
 
             window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
           }
-          else if (this._hasScrolled)
+          else {
+            if (event.originalTarget == this._autoScrollMarkerImage)
+              this._f = true;
             stopScroll();
+          }
         ]]>
       </handler>
       <handler event="mousemove">
