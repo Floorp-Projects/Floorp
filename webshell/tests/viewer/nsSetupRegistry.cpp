@@ -58,107 +58,103 @@
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-
-#ifdef XP_PC
 #include "nsIProfile.h"
-#endif
-
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
 
-#include "nsSpecialSystemDirectory.h"	// For exe dir
+#include "nsSpecialSystemDirectory.h"    // For exe dir
 #include "prprf.h"
 #include "prmem.h"
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#define WIDGET_DLL "raptorwidget.dll"
-#define GFXWIN_DLL "raptorgfxwin.dll"
-#define VIEW_DLL   "raptorview.dll"
-#define WEB_DLL    "raptorweb.dll"
-#define PLUGIN_DLL "raptorplugin.dll"
-#define PREF_DLL   "xppref32.dll"
-#define PARSER_DLL "raptorhtmlpars.dll"
-#define DOM_DLL    "jsdom.dll"
-#define LAYOUT_DLL "raptorhtml.dll"
-#define NETLIB_DLL "netlib.dll"
-#define EDITOR_DLL "ender.dll"
-#define RDF_DLL    "rdf.dll"
-#define CAPS_DLL   "caps.dll"
-#define LIVECONNECT_DLL    "jsj3250.dll"
-#define OJI_DLL    "oji.dll"
-#define UCONV_DLL    "uconv.dll"
-#define UCVLATIN_DLL "ucvlatin.dll"
-#define UCVJA_DLL    "ucvja.dll"
-#define UCVJA2_DLL   "ucvja2.dll"
-#define STRRES_DLL   "strres.dll"
-#define UNICHARUTIL_DLL   "unicharutil.dll"
-#define BASE_DLL   "raptorbase.dll"
-#define NSLOCALE_DLL "nslocale.dll"
-#define LWBRK_DLL "lwbrk.dll"
-#define PROFILE_DLL "xpprofile32.dll"
+    #define XPCOM_DLL  "xpcom32.dll"
+    #define WIDGET_DLL "raptorwidget.dll"
+    #define GFXWIN_DLL "raptorgfxwin.dll"
+    #define VIEW_DLL   "raptorview.dll"
+    #define WEB_DLL    "raptorweb.dll"
+    #define PLUGIN_DLL "raptorplugin.dll"
+    #define PREF_DLL   "xppref32.dll"
+    #define PARSER_DLL "raptorhtmlpars.dll"
+    #define DOM_DLL    "jsdom.dll"
+    #define LAYOUT_DLL "raptorhtml.dll"
+    #define NETLIB_DLL "netlib.dll"
+    #define EDITOR_DLL "ender.dll"
+    #define RDF_DLL    "rdf.dll"
+    #define CAPS_DLL   "caps.dll"
+    #define LIVECONNECT_DLL    "jsj3250.dll"
+    #define OJI_DLL    "oji.dll"
+    #define UCONV_DLL    "uconv.dll"
+    #define UCVLATIN_DLL "ucvlatin.dll"
+    #define UCVJA_DLL    "ucvja.dll"
+    #define UCVJA2_DLL   "ucvja2.dll"
+    #define STRRES_DLL   "strres.dll"
+    #define UNICHARUTIL_DLL   "unicharutil.dll"
+    #define BASE_DLL   "raptorbase.dll"
+    #define NSLOCALE_DLL "nslocale.dll"
+    #define LWBRK_DLL "lwbrk.dll"
+    #define PROFILE_DLL "xpprofile32.dll"
+#elif defined(XP_MAC)
+    #define XPCOM_DLL   "XPCOM_DLL"
+    #define WIDGET_DLL    "WIDGET_DLL"
+    #define GFXWIN_DLL    "GFXWIN_DLL"
+    #define VIEW_DLL        "VIEW_DLL"
+    #define WEB_DLL            "WEB_DLL"
+    #define PLUGIN_DLL    "PLUGIN_DLL"
+    #define CAPS_DLL    "CAPS_DLL"
+    #define LIVECONNECT_DLL "LIVECONNECT_DLL"
+    #define OJI_DLL        "OJI_DLL"
+    #define PREF_DLL        "PREF_DLL"
+    #define PARSER_DLL    "PARSER_DLL"
+    #define DOM_DLL        "DOM_DLL"
+    #define LAYOUT_DLL    "LAYOUT_DLL"
+    #define NETLIB_DLL    "NETLIB_DLL"
+    #define EDITOR_DLL    "ENDER_DLL"
+    #define RDF_DLL            "RDF_DLL"
+    #define UCONV_DLL    "UCONV_DLL"
+    #define UCVLATIN_DLL "UCVLATIN_DLL"
+    #define UCVJA_DLL    "UCVJA_DLL"
+    #define UCVJA2_DLL   "UCVJA2_DLL"
+    #define STRRES_DLL   "STRRES_DLL"
+    #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
+    #define BASE_DLL   "base.shlb"
+    #define NSLOCALE_DLL "NSLOCALE_DLL"
+    #define LWBRK_DLL "LWBRK_DLL"
+    #define PROFILE_DLL "PROFILE_DLL"
 #else
-#ifdef XP_MAC
-#define XPCOM_DLL   "XPCOM_DLL"
-#define WIDGET_DLL	"WIDGET_DLL"
-#define GFXWIN_DLL	"GFXWIN_DLL"
-#define VIEW_DLL		"VIEW_DLL"
-#define WEB_DLL			"WEB_DLL"
-#define PLUGIN_DLL	"PLUGIN_DLL"
-#define CAPS_DLL	"CAPS_DLL"
-#define LIVECONNECT_DLL "LIVECONNECT_DLL"
-#define OJI_DLL		"OJI_DLL"
-#define PREF_DLL		"PREF_DLL"
-#define PARSER_DLL	"PARSER_DLL"
-#define DOM_DLL    	"DOM_DLL"
-#define LAYOUT_DLL	"LAYOUT_DLL"
-#define NETLIB_DLL	"NETLIB_DLL"
-#define EDITOR_DLL	"ENDER_DLL"
-#define RDF_DLL			"RDF_DLL"
-#define UCONV_DLL    "UCONV_DLL"
-#define UCVLATIN_DLL "UCVLATIN_DLL"
-#define UCVJA_DLL    "UCVJA_DLL"
-#define UCVJA2_DLL   "UCVJA2_DLL"
-#define STRRES_DLL   "STRRES_DLL"
-#define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
-#define BASE_DLL   "base.shlb"
-#define NSLOCALE_DLL "NSLOCALE_DLL"
-#define LWBRK_DLL "LWBRK_DLL"
-#else
-#define XPCOM_DLL  "libxpcom.so"
-/** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
-  * reason, the cflags value doesn't get defined, use gtk, 
-  * since that is the default.
- **/
-#ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetgtk.so"
-#endif
-#ifndef GFXWIN_DLL
-#define GFXWIN_DLL "libgfxgtk.so"
-#endif
-#define VIEW_DLL   "libraptorview.so"
-#define WEB_DLL    "libraptorwebwidget.so"
-#define PLUGIN_DLL "libraptorplugin.so"
-#define CAPS_DLL   "libcaps.so"
-#define LIVECONNECT_DLL "libliveconnect.so"
-#define OJI_DLL    "liboji.so"
-#define PREF_DLL   "libpref.so"
-#define PARSER_DLL "libraptorhtmlpars.so"
-#define DOM_DLL    "libjsdom.so"
-#define LAYOUT_DLL "libraptorhtml.so"
-#define NETLIB_DLL "libnetlib.so"
-#define EDITOR_DLL "libender.so"
-#define RDF_DLL    "librdf.so"
-#define UCONV_DLL    "libuconv.so"
-#define UCVLATIN_DLL "libucvlatin.so"
-#define UCVJA_DLL    "libucvja.so"
-#define UCVJA2_DLL   "libucvja2.so"
-#define STRRES_DLL   "libstrres.so"
-#define UNICHARUTIL_DLL   "libunicharutil.so"
-#define BASE_DLL     "libraptorbase.so"
-#define NSLOCALE_DLL "libnslocale.so"
-#define LWBRK_DLL "liblwbrk.so"
-#endif
+    #define XPCOM_DLL  "libxpcom.so"
+    /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
+      * reason, the cflags value doesn't get defined, use gtk, 
+      * since that is the default.
+     **/
+    #ifndef WIDGET_DLL
+    #define WIDGET_DLL "libwidgetgtk.so"
+    #endif
+    #ifndef GFXWIN_DLL
+    #define GFXWIN_DLL "libgfxgtk.so"
+    #endif
+    #define VIEW_DLL   "libraptorview.so"
+    #define WEB_DLL    "libraptorwebwidget.so"
+    #define PLUGIN_DLL "libraptorplugin.so"
+    #define CAPS_DLL   "libcaps.so"
+    #define LIVECONNECT_DLL "libliveconnect.so"
+    #define OJI_DLL    "liboji.so"
+    #define PREF_DLL   "libpref.so"
+    #define PARSER_DLL "libraptorhtmlpars.so"
+    #define DOM_DLL    "libjsdom.so"
+    #define LAYOUT_DLL "libraptorhtml.so"
+    #define NETLIB_DLL "libnetlib.so"
+    #define EDITOR_DLL "libender.so"
+    #define RDF_DLL    "librdf.so"
+    #define UCONV_DLL    "libuconv.so"
+    #define UCVLATIN_DLL "libucvlatin.so"
+    #define UCVJA_DLL    "libucvja.so"
+    #define UCVJA2_DLL   "libucvja2.so"
+    #define STRRES_DLL   "libstrres.so"
+    #define UNICHARUTIL_DLL   "libunicharutil.so"
+    #define BASE_DLL     "libraptorbase.so"
+    #define NSLOCALE_DLL "libnslocale.so"
+    #define LWBRK_DLL "liblwbrk.so"
+    #define PROFILE_DLL "libprofile.so"
 #endif
 
 // Class ID's
@@ -212,7 +208,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 
-#ifdef XP_PC
+#if defined(NS_USING_PROFILES)
 static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
 #endif
 
@@ -229,7 +225,7 @@ static NS_DEFINE_IID(kCDragTargetCID,        NS_DRAGTARGET_CID);
 static NS_DEFINE_IID(kCDraggedObjectCID,     NS_DRAGGEDOBJECT_CID);
 #endif
 
-#if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
+#if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
 #if defined(XP_MAC) || defined (XP_UNIX)
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -253,7 +249,7 @@ static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,     NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 static NS_DEFINE_CID(kRangeCID,                 NS_RANGE_CID);
-static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
+static NS_DEFINE_CID(kRangeListCID,                NS_RANGELIST_CID);
 static NS_DEFINE_IID(kContentIteratorCID,       NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID,       NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
@@ -297,21 +293,21 @@ NS_SetupRegistry()
   if (componentsDir != NULL)
   {
 #ifdef XP_PC
-	  /* The PC version of the directory from filePath is of the form
-	   *	/y|/moz/mozilla/dist/bin/components
-	   * We need to remove the initial / and change the | to :
-	   * for all this to work with NSPR.	  
-	   */
+      /* The PC version of the directory from filePath is of the form
+       *    /y|/moz/mozilla/dist/bin/components
+       * We need to remove the initial / and change the | to :
+       * for all this to work with NSPR.      
+       */
 #endif /* XP_PC */
-	  printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
 
 #ifdef XP_MAC
-	  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 #else
-	  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
-#endif	/* XP_MAC */
-	  // XXX Look for user specific components
-	  // XXX UNIX: ~/.mozilla/components
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
+#endif    /* XP_MAC */
+      // XXX Look for user specific components
+      // XXX UNIX: ~/.mozilla/components
   }
 
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
@@ -364,11 +360,11 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kObserverServiceCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
 
-#ifdef XP_PC
+#if defined(NS_USING_PROFILES)
   nsComponentManager::RegisterComponent(kProfileCID, NULL, NULL, PROFILE_DLL, PR_FALSE, PR_FALSE);
 #endif
 
-#if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
+#if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
 #if defined(XP_MAC) || defined (XP_UNIX)
   nsComponentManager::RegisterComponent(kRDFBookMarkDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCompositeDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
@@ -403,8 +399,8 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kHTMLCSSStyleSheetCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kTextNodeCID,       NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSelectionCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRangeCID,		    NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRangeListCID,		NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kRangeCID,            NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kRangeListCID,        NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kContentIteratorCID,NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSubtreeIteratorCID,NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kFrameUtilCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
