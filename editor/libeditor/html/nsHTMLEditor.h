@@ -223,7 +223,9 @@ public:
   /* ------------ nsIEditorMailSupport methods -------------- */
 
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsAString & aQuotedText, nsIDOMNode **aNodeInserted);
+  NS_IMETHOD InsertTextWithQuotations(const nsAString & aQuotedText);
+  NS_IMETHOD InsertAsQuotation(const nsAString & aQuotedText,
+                               nsIDOMNode **aNodeInserted);
   NS_IMETHOD PasteAsCitedQuotation(const nsAString & aCitation,
                                    PRInt32 aSelectionType);
   NS_IMETHOD InsertAsCitedQuotation(const nsAString & aQuotedText,
@@ -625,7 +627,18 @@ protected:
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
+
+  /** Insert a string as quoted text,
+    * replacing the selected text (if any).
+    * @param aQuotedText     The string to insert.
+    * @param aAddCites       Whether to prepend extra ">" to each line
+    *                        (usually true, unless those characters
+    *                        have already been added.)
+    * @return aNodeInserted  The node spanning the insertion, if applicable.
+    *                        If aAddCites is false, this will be null.
+    */
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString & aQuotedText,
+                                        PRBool aAddCites,
                                         nsIDOMNode **aNodeInserted);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)

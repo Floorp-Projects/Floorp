@@ -61,8 +61,20 @@ interface nsIEditorMailSupport : nsISupports
     */
   nsIDOMNode insertAsQuotation(in AString aQuotedText);
 
+  /**
+   * Inserts a plaintext string at the current location,
+   * with special processing for lines beginning with ">",
+   * which will be treated as mail quotes and inserted
+   * as plaintext quoted blocks.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+   void insertTextWithQuotations(in DOMString aStringToInsert);
+
   /** Paste a string as quoted text,
-    * as a quotation (whose representation is dependant on the editor type),
+    * whose representation is dependant on the editor type,
     * replacing the selected text (if any)
     * @param aCitation    The "mid" URL of the source message
     * @param aSelectionType Text or html?
