@@ -85,7 +85,7 @@ function onTreeResort (e, view)
     
     var obo = view.tree;
     obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
-    if (row.value == -1)
+    if (rowIndex.value == -1)
       return;
 
     var prop;
