@@ -61,7 +61,8 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\lwbrk \
       -I$(PUBLIC)\unicharutil \
       -I$(PUBLIC)\intl \
-      -I$(PUBLIC)\caps
+      -I$(PUBLIC)\caps \
+		-I..\..\docshell\base
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = gkweb
@@ -76,6 +77,7 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the dll
 LLIBS=				\
+ $(DIST)\lib\basedocshell_s.lib      \
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\timer_s.lib \
