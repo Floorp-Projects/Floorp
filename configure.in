@@ -3539,9 +3539,9 @@ MOZ_ARG_DISABLE_BOOL(md,
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
-  MDDEPDIR='.deps'
   _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
 fi
+MDDEPDIR='.deps'
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
 

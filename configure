@@ -11514,9 +11514,9 @@ fi
 
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
-  MDDEPDIR='.deps'
   _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
 fi
+MDDEPDIR='.deps'
 
 
 

@@ -180,7 +180,7 @@ TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LI
 endif
 
 ifndef OBJS
-OBJS			= $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o)
+OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o))
 endif
 
 ifndef HOST_OBJS
@@ -316,11 +316,9 @@ endif
 # MAKE_DIRS: List of directories to build while looping over directories.
 MAKE_DIRS		=
 
-ifdef COMPILER_DEPEND
-ifdef OBJS
+ifneq (,$(OBJS))
 MAKE_DIRS		+= $(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
-endif
 endif
 
 ifneq ($(XPIDLSRCS),)
@@ -418,10 +416,13 @@ endif
 all:: export install
 
 # Do depend as well
-alldep:: export depend libs install
+alldep:: export install
 
 # Do everything from scratch
 everything:: clean alldep
+
+# Add dummy depend target for tinderboxes
+depend::
 
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
@@ -504,7 +505,7 @@ ifdef DIRS
 	done
 endif
 
-export:: $(SUBMAKEFILES) $(MAKE_DIRS)
+export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN)
 	+$(LOOP_OVER_DIRS)
 
 ##############################################
@@ -791,8 +792,29 @@ $(DLL): $(OBJS) $(EXTRA_LIBS)
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 
-%: %.c
+ifndef COMPILER_DEPEND
+#
+# Generate dependencies on the fly
+#
+MDDEPFILE = $(MDDEPDIR)/$(<F).pp
+
+define MAKE_DEPS
+if test -d $(@D); then \
+	set -e ; \
+	touch $(MDDEPFILE) && \
+	$(MKDEPEND) -o'.o' -f$(MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
+	mv $(MDDEPFILE) $(MDDEPFILE).old && \
+	cat $(MDDEPFILE).old | sed -e "s|^$(<D)/||g" > $(MDDEPFILE) && rm -f $(MDDEPFILE).old ; \
+	echo "Rebuilding deps for $<"; \
+fi
+# | sed -e 's%\($*\)\.o[ :]*%\1.o $(MDDEPFILE) : %g' 
+endef
+
+endif # !COMPILER_DEPEND
+
+%: %.c Makefile.in
 	$(REPORT_BUILD)
+	@$(MAKE_DEPS)
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -801,6 +823,7 @@ endif
 
 %.o: %.c Makefile.in
 	$(REPORT_BUILD)
+	@$(MAKE_DEPS)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
 else
@@ -822,7 +845,8 @@ moc_%.cpp: %.h
 %.o: %.S
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-%: %.cpp
+%: %.cpp Makefile.in
+	@$(MAKE_DEPS)
 	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
@@ -830,10 +854,12 @@ moc_%.cpp: %.h
 #
 %.o: %.cc
 	$(REPORT_BUILD)
+	@$(MAKE_DEPS)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
 %.o: %.cpp
 	$(REPORT_BUILD)
+	@$(MAKE_DEPS)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
@@ -1249,18 +1275,6 @@ else
 	echo "$$space"'To turn it off, pass --disable-md to configure.' 1>&2
 endif
 else
-$(MKDEPENDENCIES)::
-	touch $(MKDEPENDENCIES)
-ifneq ($(OS_ARCH),OpenVMS)
-	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
-	@mv $(MKDEPENDENCIES) depend.mk.old && cat depend.mk.old | sed "s|^$(srcdir)/||g" > $(MKDEPENDENCIES) && rm -f depend.mk.old
-else
-# OpenVMS can't handle long lines, so make it shorter
-	@ln -s $(srcdir) VMSs
-	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix VMSs/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
-	@mv $(MKDEPENDENCIES) depend.mk.old && cat depend.mk.old | sed "s|^VMSs/||g" | sed "s| VMSs/| $(srcdir)/|g" > $(MKDEPENDENCIES) && rm -f depend.mk.old
-	@rm VMSs
-endif
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND):
@@ -1274,25 +1288,9 @@ else
 MKDEPEND_BUILTIN	=
 endif
 
-ifdef OBJS
-depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
-else
-depend:: $(SUBMAKEFILES)
-endif
-	+$(LOOP_OVER_DIRS)
-
-dependclean:: $(SUBMAKEFILES)
-	rm -f $(MKDEPENDENCIES)
-	+$(LOOP_OVER_DIRS)
-
--include depend.mk
-
 endif # ! COMPILER_DEPEND
 
 #############################################################################
-# Yet another depend system: -MD (configure switch: --enable-md)
-ifdef COMPILER_DEPEND
-ifdef OBJS
 # MDDEPDIR is the subdirectory where all the dependency files are placed.
 #   This uses a make rule (instead of a macro) to support parallel
 #   builds (-jN). If this were done in the LOOP_OVER_DIRS macro, two
@@ -1301,9 +1299,10 @@ ifdef OBJS
 $(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-MDDEPEND_FILES		:= $(wildcard $(MDDEPDIR)/*.pp)
+ifneq (,$(OBJS))
+MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
-ifdef MDDEPEND_FILES
+ifneq (,$(MDDEPEND_FILES))
 ifdef PERL
 # The script mddepend.pl checks the dependencies and writes to stdout
 # one rule to force out-of-date objects. For example,
@@ -1318,7 +1317,7 @@ else
 include $(MDDEPEND_FILES)
 endif
 endif
-endif
+
 endif
 #############################################################################
 
