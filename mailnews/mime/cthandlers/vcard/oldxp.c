@@ -162,6 +162,7 @@ XP_OpenDir(const char * name, XP_FileType type)
     return NULL;
 }
 
+#ifndef XP_UNIX
 PUBLIC void 
 XP_CloseDir(XP_Dir dir)
 {
@@ -174,6 +175,7 @@ XP_ReadDir(XP_Dir dir)
     MOZ_FUNCTION_STUB;
     return NULL;
 }
+#endif
 
 PUBLIC int 
 XP_FileRemove(const char * name, XP_FileType type)
