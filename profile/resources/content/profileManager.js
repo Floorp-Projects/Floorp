@@ -25,6 +25,7 @@
 var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
                                                           "nsICommonDialogs");
 var bundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
+var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 var profileManagerMode = "selection";
 var set = null;
 
@@ -57,6 +58,7 @@ function RenameProfile()
     // migrate if the user wants to
     var lString = bundle.GetStringFromName("migratebeforerename");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    lString = lString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
     var title = bundle.GetStringFromName("migratetitle");
     if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
@@ -67,7 +69,8 @@ function RenameProfile()
     var oldName = selected.getAttribute("rowName");
     var result = { };
     var dialogTitle = bundle.GetStringFromName("renameprofiletitle");
-    var msg = bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB");
+    var msg = bundle.GetStringFromName("renameProfilePrompt");
+    msg = msg.replace(/%oldProfileName%/gi, oldName);
     while (1) {
       var rv = commonDialogService.Prompt(window, dialogTitle, msg, oldName, result);
       if (rv) {
@@ -122,6 +125,7 @@ function ConfirmDelete()
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
     var lString = bundle.GetStringFromName("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    lString = lString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
     var title = bundle.GetStringFromName("deletetitle");
     if (commonDialogService.Confirm(window, title, lString)) {
       profile.deleteProfile( name, false );

@@ -158,7 +158,9 @@ function onStart()
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     var lString = bundle.GetStringFromName("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    lString = lString.replace(/%brandShortName%/gi, brandBundle.GetStringFromName("brandShortName"));
     var title = bundle.GetStringFromName("migratetitle");   
+    
     if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
@@ -262,6 +264,7 @@ function SetUpOKCancelButtons()
   
   try {
     okButtonString = bundle.GetStringFromName("startButton");
+    okButtonString = okButtonString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
     cancelButtonString = bundle.GetStringFromName("exitButton");
   } catch (e) {
     okButtonString = "Start Yah";
