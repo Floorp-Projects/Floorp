@@ -164,7 +164,17 @@ void CnsIHttpChannelTests::RunAllTests()
 
 	// see nsIRequestObserver->OnStartRequest for Successful response tests
 	CnsIChannelTests *channelObj = new CnsIChannelTests(qaWebBrowser, qaBrowserImpl);
+	if (!channelObj)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetChannelObject not run.", 1);
+	   return;
+	}
 	theChannel = channelObj->GetChannelObject(theSpec);
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. AsyncOpenTest not run.", 1);
+	   return;
+	}
 	channelObj->AsyncOpenTest(theChannel, 1);
 	QAOutput("\n");
 }
@@ -175,6 +185,11 @@ void  CnsIHttpChannelTests::SetRequestMethodTest(nsIHttpChannel *theHttpChannel,
 { 
 	// SetRequestMethod
 	// try "GET", "PUT", "HEAD", or "POST"
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetRequestMethodTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->SetRequestMethod(nsDependentCString(requestType));
 	RvTestResult(rv, "SetRequestMethod()", displayMode);
 	RvTestResultDlg(rv, "SetRequestMethod() test", true);
@@ -185,6 +200,12 @@ void  CnsIHttpChannelTests::GetRequestMethodTest(nsIHttpChannel *theHttpChannel,
 {
 	// GetRequestMethod
 	nsCAutoString method;
+
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetRequestMethodTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetRequestMethod(method);
 	RvTestResult(rv, "GetRequestMethod()", displayMode);
 	RvTestResultDlg(rv, "GetRequestMethod() test");
@@ -200,6 +221,11 @@ void CnsIHttpChannelTests::SetReferrerTest(nsIHttpChannel *theHttpChannel,
 	nsCAutoString theSpec;
 	theSpec = theUrl;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetReferrerTest failed.", displayMode);
+	   return;
+	}
 	NS_NewURI(getter_AddRefs(theURI), theSpec);
 	if (!theURI) 	
 	   QAOutput("Didn't get URI object. Test failed.", 2);
@@ -214,6 +240,11 @@ void CnsIHttpChannelTests::GetReferrerTest(nsIHttpChannel *theHttpChannel,
 	// GetReferrer
 	nsCAutoString theSpec;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetReferrerTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetReferrer(getter_AddRefs(theURI));
 	RvTestResult(rv, "GetReferrer()", displayMode);
 	RvTestResultDlg(rv, "GetReferrer() test");
@@ -233,6 +264,11 @@ void  CnsIHttpChannelTests::SetRequestHeaderTest(nsIHttpChannel *theHttpChannel,
 	// SetRequestHeader
 	// try {"Content-Type","text/xml"}, {"Content-Length", 10000}, and
 	//     {"Accept"), NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetRequestHeaderTest failed.", displayMode);
+	   return;
+	}
     rv = theHttpChannel->SetRequestHeader(nsDependentCString(requestType),
                                          nsDependentCString(headerVal),
                                          PR_FALSE);
@@ -247,6 +283,12 @@ void  CnsIHttpChannelTests::GetRequestHeaderTest(nsIHttpChannel *theHttpChannel,
 	// GetRequestHeader
 	nsCAutoString header;
 	// could be set to "referrer"
+
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetRequestHeaderTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetRequestHeader(nsDependentCString(requestType), header);
 	RvTestResult(rv, "GetRequestHeader()", displayMode);
 	RvTestResultDlg(rv, "GetRequestHeader() test");
@@ -257,6 +299,11 @@ void  CnsIHttpChannelTests::VisitRequestHeadersTest(nsIHttpChannel *theHttpChann
 												    PRInt16 displayMode)
 {
 	// visitRequestHeaders()
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. VisitRequestHeadersTest failed.", displayMode);
+	   return;
+	}
 	HeaderVisitor *theVisitor = new HeaderVisitor();
 	if (!theVisitor)
 	   QAOutput("Didn't get nsIHttpHeaderVisitor object. Test failed.", displayMode);
@@ -270,6 +317,11 @@ void  CnsIHttpChannelTests::SetAllowPipeliningTest(nsIHttpChannel *theHttpChanne
 											   PRBool mAllowPipelining,
 											   PRInt16 displayMode)
 {
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetAllowPipeliningTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->SetAllowPipelining(mAllowPipelining);
 	RvTestResult(rv, "SetAllowPipelining()", displayMode);
 	RvTestResultDlg(rv, "SetAllowPipelining() test");
@@ -284,6 +336,11 @@ void  CnsIHttpChannelTests::GetAllowPipeliningTest(nsIHttpChannel *theHttpChanne
 {
 	PRBool mAllowPipelining;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetAllowPipeliningTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetAllowPipelining(&mAllowPipelining);
 	RvTestResult(rv, "GetAllowPipelining()", displayMode);
 	RvTestResultDlg(rv, "GetAllowPipelining() test");
@@ -294,6 +351,11 @@ void  CnsIHttpChannelTests::SetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 												   PRUint32 mRedirectionLimit,
 												   PRInt16 displayMode)
 {
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetRedirectionLimitTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->SetRedirectionLimit(mRedirectionLimit);
 	RvTestResult(rv, "SetRedirectionLimit()", displayMode);
 	RvTestResultDlg(rv, "SetRedirectionLimit() test");
@@ -304,6 +366,11 @@ void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 {
 	PRUint32 mRedirectionLimit;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetRedirectionLimitTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetRedirectionLimit(&mRedirectionLimit);
 	RvTestResult(rv, "GetRedirectionLimit()", displayMode);
 	RvTestResultDlg(rv, "GetRedirectionLimit() test");
@@ -336,6 +403,11 @@ void CnsIHttpChannelTests::GetResponseStatusTest(nsIHttpChannel *theHttpChannel,
 {
 	PRUint32 mResponseStatus;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetResponseStatusTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetResponseStatus(&mResponseStatus);
 	RvTestResult(rv, "GetResponseStatus()", displayMode);
 	FormatAndPrintOutput("GetResponseStatus value = ", mResponseStatus, displayMode);
@@ -346,6 +418,11 @@ void CnsIHttpChannelTests::GetResponseStatusTextTest(nsIHttpChannel *theHttpChan
 {
 	nsCAutoString mText;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetResponseStatusTextTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetResponseStatusText(mText);
 	RvTestResult(rv, "GetResponseStatusText()", displayMode);
 	FormatAndPrintOutput("GetResponseStatusText = ", mText, displayMode);
@@ -357,6 +434,11 @@ void CnsIHttpChannelTests::GetRequestSucceededTest(nsIHttpChannel *theHttpChanne
 {
 	PRBool mRequest;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetRequestSucceededTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetRequestSucceeded(&mRequest);
 	RvTestResult(rv, "GetRequestSucceeded()", displayMode);
 	FormatAndPrintOutput("GetRequestSucceeded = ", mRequest, displayMode);
@@ -368,6 +450,11 @@ void CnsIHttpChannelTests::GetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 {
 	nsCAutoString mResponse;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. GetResponseHeaderTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->GetResponseHeader(nsDependentCString(responseType), mResponse);
 	RvTestResult(rv, "GetResponseHeader()", displayMode);
 	FormatAndPrintOutput("GetResponseHeader = ", mResponse, displayMode);
@@ -378,7 +465,12 @@ void CnsIHttpChannelTests::SetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 												 const char * responseType,
 												 const char * value,
 												 PRBool merge, PRInt16 displayMode)
-{															// Refresh
+{
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. SetResponseHeaderTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->SetResponseHeader(nsDependentCString(responseType),
                                            nsDependentCString(value), merge);
 	RvTestResult(rv, "SetResponseHeader()", displayMode);
@@ -389,6 +481,11 @@ void CnsIHttpChannelTests::SetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 void CnsIHttpChannelTests::VisitResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 												   PRInt16 displayMode)
 {
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. VisitResponseHeaderTest failed.", displayMode);
+	   return;
+	}
 	// visitResponseHeaders()
 	HeaderVisitor *theVisitor = new HeaderVisitor();
 	if (!theVisitor)
@@ -403,6 +500,11 @@ void CnsIHttpChannelTests::IsNoStoreResponseTest(nsIHttpChannel *theHttpChannel,
 {
 	PRBool mNoResponse;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. IsNoStoreResponseTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->IsNoStoreResponse(&mNoResponse);
 	RvTestResult(rv, "IsNoStoreResponse()", displayMode);
 	FormatAndPrintOutput("IsNoStoreResponse = ", mNoResponse, displayMode);
@@ -413,6 +515,11 @@ void CnsIHttpChannelTests::IsNoCacheResponseTest(nsIHttpChannel *theHttpChannel,
 {
 	PRBool mNoResponse;
 
+	if (!theHttpChannel)
+	{
+	   QAOutput("Didn't get nsIHttpChannel object. IsNoCacheResponseTest failed.", displayMode);
+	   return;
+	}
 	rv = theHttpChannel->IsNoCacheResponse(&mNoResponse);
 	RvTestResult(rv, "IsNoCacheResponse()", displayMode);
 	FormatAndPrintOutput("IsNoCacheResponse = ", mNoResponse, displayMode);

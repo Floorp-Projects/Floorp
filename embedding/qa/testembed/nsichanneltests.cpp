@@ -125,6 +125,11 @@ nsIURI * CnsIChannelTests::GetURIObject(nsCAutoString theSpec)
 void CnsIChannelTests::SetOriginalURITest(nsIChannel *theChannel, nsCAutoString theSpec,
 										  PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. SetOriginalURITest failed.", 2);
+	   return;
+	}
 	theURI = GetURIObject(theSpec);
 	rv = theChannel->SetOriginalURI(theURI);
 	RvTestResult(rv, "SetOriginalURITest", displayMode);
@@ -136,6 +141,11 @@ void CnsIChannelTests::SetOriginalURITest(nsIChannel *theChannel, nsCAutoString 
 
 void CnsIChannelTests::GetOriginalURITest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. GetOriginalURITest failed.", 2);
+	   return;
+	}
 	rv = theChannel->GetOriginalURI(getter_AddRefs(theURI));
 	RvTestResult(rv, "GetOriginalURITest", displayMode);
 	if (displayMode == 1)
@@ -150,6 +160,11 @@ void CnsIChannelTests::GetOriginalURITest(nsIChannel *theChannel, PRInt16 displa
 
 void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. GetURITest failed.", 2);
+	   return;
+	}
 	rv = theChannel->GetURI(getter_AddRefs(theURI));
 	RvTestResult(rv, "GetURITest", displayMode);
 	if (displayMode == 1)
@@ -164,6 +179,11 @@ void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
 
 void CnsIChannelTests::SetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. SetOwnerTest failed.", 2);
+	   return;
+	}
 	theSupports = do_QueryInterface(qaWebBrowser);
 	rv = theChannel->SetOwner(theChannel);
 	RvTestResult(rv, "SetOwner", displayMode);
@@ -175,6 +195,11 @@ void CnsIChannelTests::SetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 
 void CnsIChannelTests::GetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. GetOwnerTest failed.", 2);
+	   return;
+	}
 	rv = theChannel->GetOwner(getter_AddRefs(theSupports));
 	RvTestResult(rv, "GetOwner", displayMode);
 	if (displayMode == 1)
@@ -185,6 +210,11 @@ void CnsIChannelTests::GetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 
 void CnsIChannelTests::SetNotificationsTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. SetNotificationsTest failed.", 2);
+	   return;
+	}
 	if (!qaWebBrowser)
 	{
 	   QAOutput("Didn't get nsIWebBrowser object. SetNotificationsTest failed.", displayMode);
@@ -201,6 +231,11 @@ void CnsIChannelTests::SetNotificationsTest(nsIChannel *theChannel, PRInt16 disp
 
 void CnsIChannelTests::GetNotificationsTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get Channel object. GetNotificationsTest failed.", 2);
+	   return;
+	}
 	rv = theChannel->GetNotificationCallbacks(getter_AddRefs(theIRequestor));
 	RvTestResult(rv, "GetNotificationCallbacks", displayMode);
 	if (displayMode == 1)
@@ -211,12 +246,12 @@ void CnsIChannelTests::GetNotificationsTest(nsIChannel *theChannel, PRInt16 disp
 
 void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	theSupports = do_QueryInterface(qaWebBrowser);
 	if (!theChannel)
 	{
 	   QAOutput("Didn't get nsIChannel object. GetSecurityInfoTest failed.", displayMode);
 	   return;
 	}
+	theSupports = do_QueryInterface(qaWebBrowser);
 	rv = theChannel->GetSecurityInfo(getter_AddRefs(theSupports));	
 	RvTestResult(rv, "GetSecurityInfo", displayMode);
 	if (!theSupports)
@@ -225,6 +260,11 @@ void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displ
 
 void CnsIChannelTests::SetContentTypeTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. SetContentTypeTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
 	RvTestResult(rv, "SetContentType", displayMode);	
 }
@@ -233,6 +273,11 @@ void CnsIChannelTests::GetContentTypeTest(nsIChannel *theChannel, PRInt16 displa
 {
 	nsCAutoString contentType;
 
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. GetContentTypeTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->GetContentType(contentType);
 	RvTestResult(rv, "GetContentType", displayMode);
 	FormatAndPrintOutput("the content type = ", contentType, displayMode);
@@ -242,6 +287,11 @@ void CnsIChannelTests::SetContentCharsetTest(nsIChannel *theChannel, PRInt16 dis
 {
 	nsCAutoString charsetType;
 
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. SetContentCharsetTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->SetContentCharset(NS_LITERAL_CSTRING("ISO-8859-1"));
 	RvTestResult(rv, "SetContentCharset", displayMode);
 }
@@ -250,6 +300,11 @@ void CnsIChannelTests::GetContentCharsetTest(nsIChannel *theChannel, PRInt16 dis
 {
 	nsCAutoString charsetType;
 
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. GetContentCharsetTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->GetContentCharset(charsetType);
 	RvTestResult(rv, "GetContentCharset", displayMode);
 	FormatAndPrintOutput("the charset type = ", charsetType, displayMode);
@@ -260,6 +315,12 @@ void CnsIChannelTests::SetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 	PRInt32 contentLength;
 
 	contentLength = 10000;
+
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. SetContentLengthTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->SetContentLength(contentLength);
 	RvTestResult(rv, "SetContentLength", displayMode);
 }
@@ -268,6 +329,11 @@ void CnsIChannelTests::GetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 {
 	PRInt32 contentLength;
 
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. GetContentLengthTest failed.", displayMode);
+	   return;
+	}
 	rv = theChannel->GetContentLength(&contentLength);
 	RvTestResult(rv, "GetContentLength", displayMode);
 	FormatAndPrintOutput("the content length = ", contentLength, displayMode);
@@ -275,6 +341,11 @@ void CnsIChannelTests::GetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 
 void CnsIChannelTests::OpenTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. OpenTest failed.", displayMode);
+	   return;
+	}
 	rv =  theChannel->Open(getter_AddRefs(theInputStream));
 	RvTestResult(rv, "OpenTest", displayMode);
 	if (!theInputStream)
@@ -286,7 +357,11 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
 	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
+	if (!theChannel)
+	{
+	   QAOutput("Didn't get nsIChannel object. AsyncOpenTest failed.", displayMode);
+	   return;
+	}
 	if (!listener) {
 	   QAOutput("Didn't get the stream listener object. AsyncOpenTest failed.", displayMode);
 	   return;

@@ -552,10 +552,10 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 		obj->PostAsyncTests(channel, 1);
 	}
 	else if (!obj && ctxt)
-		QAOutput("No object to run PostAsyncTests().", 1);
+		QAOutput("No object to run PostAsyncTests() for nsIChannel.", 1);
 
 	if (!httpObj)
-		QAOutput("No object to run GetResponseStatusTest().", 1);
+		QAOutput("No object to run CallResponseTests() for nsIHttpChannel.", 1);
 	else
 	{
 		QAOutput("  nsIHttpChannel response tests:");
