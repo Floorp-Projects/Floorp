@@ -59,12 +59,6 @@ include $(topsrcdir)/config/rules.mk
 #MOZ_COPY_ALL_JARS	= 1
 #### END OF TESTING LINES
 
-# The cc compiler on OSF1 V4 cannot handle icondata.c (runs out of
-# swap space) unless we give the -oldc option.
-ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4)
-CFLAGS		+= -oldc
-endif
-
 # See comment in icondata.c for why this is necessary.
 DEFINES		+= -DXFE
 
