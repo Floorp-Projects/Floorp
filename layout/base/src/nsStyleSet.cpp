@@ -85,6 +85,7 @@ public:
   virtual void RemoveBackstopStyleSheet(nsIStyleSheet* aSheet);
   virtual PRInt32 GetNumberOfBackstopStyleSheets();
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex);
+  virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets);
 
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
@@ -558,6 +559,15 @@ nsIStyleSheet* StyleSetImpl::GetBackstopStyleSheetAt(PRInt32 aIndex)
     sheet = (nsIStyleSheet*)mBackstopSheets->ElementAt(aIndex);
   }
   return sheet;
+}
+
+void
+StyleSetImpl::ReplaceBackstopStyleSheets(nsISupportsArray* aNewBackstopSheets)
+{
+  ClearRuleProcessors();
+  NS_IF_RELEASE(mBackstopSheets);
+  mBackstopSheets = aNewBackstopSheets;
+  NS_IF_ADDREF(mBackstopSheets);
 }
 
 struct RulesMatchingData {

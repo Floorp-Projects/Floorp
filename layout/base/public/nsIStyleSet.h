@@ -38,6 +38,7 @@ class nsIFrameManager;
 
 #include "nsVoidArray.h"
 class nsISizeOfHandler;
+class nsISupportsArray;
 
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SET_IID     \
@@ -72,6 +73,7 @@ public:
   virtual void RemoveBackstopStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual PRInt32 GetNumberOfBackstopStyleSheets() = 0;
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
+  virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
 
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,

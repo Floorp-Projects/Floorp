@@ -71,6 +71,8 @@
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
+#include "nsGFXCIID.h"
+#include "nsIImageManager.h"
 #include "prio.h"
 
 static char kChromePrefix[] = "chrome://";
@@ -82,6 +84,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
+static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
 class nsChromeRegistry;
 
@@ -977,7 +980,26 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     }
   }
 
+  // Flush the image cache.
+  NS_WITH_SERVICE(nsIImageManager, imageManager, kImageManagerCID, &rv);
+  if (imageManager)
+    imageManager->FlushCache();
+
   return NS_OK;
+}
+
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+  nsresult rv;
+  nsXPIDLCString protocol;
+  rv = aURI->GetScheme(getter_Copies(protocol));
+  if (NS_SUCCEEDED(rv)) {
+    if (PL_strcmp(protocol, "chrome") == 0) {
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
@@ -994,7 +1016,43 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 
   nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(domDocument);
   if (xulDoc) {
-		
+    // Deal with the backstop sheets first.
+    PRInt32 shellCount = document->GetNumberOfShells();
+    for (PRInt32 k = 0; k < shellCount; k++) {
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(k));
+      if (shell) {
+        nsCOMPtr<nsIStyleSet> styleSet;
+        shell->GetStyleSet(getter_AddRefs(styleSet));
+        if (styleSet) {
+          // Reload only the chrome URL backstop style sheets.
+          nsCOMPtr<nsISupportsArray> backstops;
+          NS_NewISupportsArray(getter_AddRefs(backstops));
+
+          nsCOMPtr<nsISupportsArray> newBackstopSheets;
+          NS_NewISupportsArray(getter_AddRefs(newBackstopSheets));
+
+          PRInt32 bc = styleSet->GetNumberOfBackstopStyleSheets();
+          for (PRInt32 l = 0; l < bc; l++) {
+            nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetBackstopStyleSheetAt(l));
+            nsCOMPtr<nsIURI> uri;
+				    sheet->GetURL(*getter_AddRefs(uri));
+
+            if (IsChromeURI(uri)) {
+              // Reload the sheet.
+              nsCOMPtr<nsICSSStyleSheet> newSheet;
+              LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
+			        if (newSheet)
+                newBackstopSheets->AppendElement(newSheet);
+            }
+            else  // Just use the same sheet.
+              newBackstopSheets->AppendElement(sheet);
+          }
+
+          styleSet->ReplaceBackstopStyleSheets(newBackstopSheets);
+        }
+      }
+    }
+
 		nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
 		nsCOMPtr<nsICSSLoader> cssLoader;
 		container->GetCSSLoader(*getter_AddRefs(cssLoader));
@@ -1002,6 +1060,18 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 		// Build an array of nsIURIs of style sheets we need to load.
 		nsCOMPtr<nsISupportsArray> urls;
 		NS_NewISupportsArray(getter_AddRefs(urls));
+
+    nsCOMPtr<nsISupportsArray> oldSheets;
+    NS_NewISupportsArray(getter_AddRefs(oldSheets));
+
+    nsCOMPtr<nsISupportsArray> newSheets;
+    NS_NewISupportsArray(getter_AddRefs(newSheets));
+
+    nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
+		container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
+
+		nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+		container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
 
 		PRInt32 count = document->GetNumberOfStyleSheets();
   
@@ -1012,12 +1082,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
     
 			// Make sure we aren't the special style sheets that never change.  We
 			// want to skip those.
-			nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
-			container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
-
-			nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-			container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
-
+			
 			nsCOMPtr<nsIStyleSheet> attr = do_QueryInterface(attrSheet);
 			nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
 			if ((attr.get() != styleSheet.get()) &&
@@ -1028,9 +1093,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 				urls->AppendElement(uri);
       
 				// Remove the sheet. 
-				count--;
-				i--;
-				document->RemoveStyleSheet(styleSheet);
+		    oldSheets->AppendElement(styleSheet);		
 			}
 		}
   
@@ -1041,28 +1104,17 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 		for (PRUint32 j = 0; j < urlCount; j++) {
 			nsCOMPtr<nsISupports> supports = getter_AddRefs(urls->ElementAt(j));
 			nsCOMPtr<nsIURL> url = do_QueryInterface(supports);
-			ProcessStyleSheet(url, cssLoader, document);
+      nsCOMPtr<nsICSSStyleSheet> newSheet;
+      LoadStyleSheetWithURL(url, getter_AddRefs(newSheet));
+			if (newSheet)
+        newSheets->AppendElement(newSheet);
 		}
+
+    // Now notify the document that multiple sheets have been added and removed.
+    document->UpdateStyleSheets(oldSheets, newSheets);
 	}
 
   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument)
-{
-  PRBool doneLoading;
-  nsresult rv = aLoader->LoadStyleLink(nsnull, // anElement
-                                       aURL,
-                                       nsAutoString(), // aTitle
-                                       nsAutoString(), // aMedia
-                                       kNameSpaceID_Unknown,
-                                       aDocument->GetNumberOfStyleSheets(),
-                                       nsnull,
-                                       doneLoading,  // Ignore doneLoading. Don't care.
-                                       nsnull);
-
-  return rv;
 }
 
 NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(char *aDocURI,
@@ -1921,13 +1973,8 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
                                     
 void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
 {
-  // Load the style sheet
-  nsresult rv; 
-
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "component://netscape/rdf/xul-prototype-cache", &rv);
-  
   nsCOMPtr<nsIURL> url;
-  rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+  nsresult rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
                                   nsnull,
                                   NS_GET_IID(nsIURL),
                                   getter_AddRefs(url));
@@ -1935,8 +1982,18 @@ void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString
     return;
     
   url->SetSpec(aURL);
+
+  LoadStyleSheetWithURL(url, aSheet);
+}
+
+void nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
+{
+  // Load the style sheet
+  nsresult rv; 
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "component://netscape/rdf/xul-prototype-cache", &rv);
+   
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = xulCache->GetStyleSheet(url, getter_AddRefs(sheet));
+  rv = xulCache->GetStyleSheet(aURL, getter_AddRefs(sheet));
 
   if (NS_SUCCEEDED(rv) && sheet) {
     sheet->Clone(*aSheet);
@@ -1950,8 +2007,8 @@ void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString
                                     getter_AddRefs(loader));
   if(loader) {
       PRBool complete;
-      rv = loader->LoadAgentSheet(url, *aSheet, complete,
-                                 nsnull);
+      rv = loader->LoadAgentSheet(aURL, *aSheet, complete,
+                                  nsnull);
   }
 }
 

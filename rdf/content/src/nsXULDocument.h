@@ -188,6 +188,10 @@ public:
 
     virtual void AddStyleSheet(nsIStyleSheet* aSheet);
     virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
+    NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets);
+    void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
+    void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
+
     NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
 
     virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
