@@ -3072,31 +3072,6 @@ nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
 }
 
 nsresult
-nsGenericHTMLElement::GetContentsAsText(nsAString& aText)
-{
-  aText.Truncate();
-  PRInt32 children = GetChildCount();
-  
-  nsCOMPtr<nsIDOMText> tc;
-  nsAutoString textData;
-
-  PRInt32 i;
-  for (i = 0; i < children; ++i) {
-    tc = do_QueryInterface(GetChildAt(i));
-    if (tc) {
-      if (aText.IsEmpty()) {
-        tc->GetData(aText);
-      } else {
-        tc->GetData(textData);
-        aText.Append(textData);
-      }
-    }
-  }
-  
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::GetAttrHelper(nsIAtom* aAttr, nsAString& aValue)
 {
   GetAttr(kNameSpaceID_None, aAttr, aValue);

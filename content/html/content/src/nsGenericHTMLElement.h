@@ -750,17 +750,6 @@ protected:
   nsresult ReplaceContentsWithText(const nsAString& aText, PRBool aNotify);
 
   /**
-   * GetContentsAsText will take all the textnodes that are children
-   * of |this| and concatenate the text in them into aText.  It
-   * completely ignores any non-text-node children of |this|; in
-   * particular it does not descend into any children of |this| that
-   * happen to be container elements.
-   *
-   * @param aText the resulting text [OUT]
-   */
-  nsresult GetContentsAsText(nsAString& aText);
-
-  /**
    * Helper method for NS_IMPL_STRING_ATTR macro.
    * Gets the value of an attribute, returns empty string if
    * attribute isn't set. Only works for attributes in null namespace.

@@ -85,6 +85,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGPresAspectRatio.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGRectElement.idl \
+		nsIDOMSVGScriptElement.idl \
 		nsIDOMSVGSVGElement.idl \
 		nsIDOMSVGStylable.idl \
 		nsIDOMSVGStyleElement.idl \

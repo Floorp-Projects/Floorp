@@ -39,7 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIDocument;
-interface nsIDOMHTMLScriptElement;
+interface nsIScriptElement;
 interface nsIScriptLoaderObserver;
 
 [scriptable, uuid(501209d3-7edf-437d-9948-3c6d1c08ef7a)]
@@ -86,7 +86,7 @@ interface nsIScriptLoader : nsISupports {
    * @param aObserver An observer for this script load only
    *
    */
-  void processScriptElement(in nsIDOMHTMLScriptElement aElement,
+  void processScriptElement(in nsIScriptElement aElement,
                             in nsIScriptLoaderObserver aObserver);
 
   /**

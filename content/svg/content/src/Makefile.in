@@ -93,6 +93,7 @@ CPPSRCS		= \
 		nsSVGPolygonElement.cpp \
 		nsSVGPolylineElement.cpp \
 		nsSVGPreserveAspectRatio.cpp \
+		nsSVGScriptElement.cpp \
 		nsSVGStringProxyValue.cpp \
 		nsSVGStylableElement.cpp \
 		nsSVGRect.cpp \

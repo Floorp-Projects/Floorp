@@ -124,7 +124,8 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
       mNodeInfo->Equals(nsHTMLAtoms::plaintext)) {
-    return GetContentsAsText(aInnerHTML);
+    GetContentsAsText(aInnerHTML);
+    return NS_OK;
   }
 
   return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);  

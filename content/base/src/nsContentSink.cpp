@@ -51,7 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsIContent.h"
-#include "nsIDOMHTMLScriptElement.h"
+#include "nsIScriptElement.h"
 #include "nsIParser.h"
 #include "nsContentErrors.h"
 #include "nsIPresShell.h"
@@ -107,7 +107,7 @@ NS_IMPL_ISUPPORTS1(nsScriptLoaderObserverProxy, nsIScriptLoaderObserver)
 
 NS_IMETHODIMP
 nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
-                                             nsIDOMHTMLScriptElement *aElement,
+                                             nsIScriptElement *aElement,
                                              PRBool aIsInline,
                                              PRBool aWasPending,
                                              nsIURI *aURI,
@@ -126,7 +126,7 @@ nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
 
 NS_IMETHODIMP
 nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
-                                             nsIDOMHTMLScriptElement *aElement,
+                                             nsIScriptElement *aElement,
                                              PRBool aIsInline,
                                              PRBool aWasPending)
 {
@@ -203,7 +203,7 @@ nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
 
 NS_IMETHODIMP
 nsContentSink::ScriptAvailable(nsresult aResult,
-                               nsIDOMHTMLScriptElement *aElement,
+                               nsIScriptElement *aElement,
                                PRBool aIsInline,
                                PRBool aWasPending,
                                nsIURI *aURI,
@@ -250,7 +250,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
 
 NS_IMETHODIMP
 nsContentSink::ScriptEvaluated(nsresult aResult,
-                               nsIDOMHTMLScriptElement *aElement,
+                               nsIScriptElement *aElement,
                                PRBool aIsInline,
                                PRBool aWasPending)
 {

@@ -4211,7 +4211,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   dtd->CollectSkippedContent(eHTMLTag_script, script, lineNo);
 
   if (sele) {
-    sele->SetLineNumber((PRUint32)lineNo);
+    sele->SetScriptLineNumber((PRUint32)lineNo);
   }
 
   // Create a text node holding the content. First, get the text
@@ -4249,8 +4249,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // to our ScriptAvailable method.
     mNeedToBlockParser = PR_TRUE;
 
-    nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(element);
-    mScriptElements.AppendObject(scriptElement);
+    mScriptElements.AppendObject(sele);
   }
 
   // Insert the child into the content tree. This will evaluate the

@@ -214,6 +214,12 @@ nsSVGElement::SetBindingParent(nsIContent* aParent)
   return rv;
 }
 
+PRBool
+nsSVGElement::IsContentOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eELEMENT | eSVG));
+}
+
 //----------------------------------------------------------------------
 // nsIStyledContent methods
 

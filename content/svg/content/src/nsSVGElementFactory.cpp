@@ -73,6 +73,8 @@ nsresult
 NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -109,6 +111,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGStyleElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::defs)
     return NS_NewSVGDefsElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::script)
+    return NS_NewSVGScriptElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

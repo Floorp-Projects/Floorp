@@ -744,6 +744,17 @@ protected:
   }
 
   /**
+   * GetContentsAsText will take all the textnodes that are children
+   * of |this| and concatenate the text in them into aText.  It
+   * completely ignores any non-text-node children of |this|; in
+   * particular it does not descend into any children of |this| that
+   * happen to be container elements.
+   *
+   * @param aText the resulting text [OUT]
+   */
+  void GetContentsAsText(nsAString& aText);
+
+  /**
    * Information about this type of node
    */
   nsCOMPtr<nsINodeInfo> mNodeInfo;          // OWNER

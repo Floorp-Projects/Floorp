@@ -54,6 +54,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptElement.h"
+#include "nsIDOMHTMLScriptElement.h"
 #include "nsIDocShell.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
@@ -104,7 +105,7 @@ IntersectPrincipalCerts(nsIPrincipal *aOld, nsIPrincipal *aNew)
 
 class nsScriptLoadRequest : public nsISupports {
 public:
-  nsScriptLoadRequest(nsIDOMHTMLScriptElement* aElement,
+  nsScriptLoadRequest(nsIScriptElement* aElement,
                       nsIScriptLoaderObserver* aObserver,
                       const char* aVersionString);
   virtual ~nsScriptLoadRequest();
@@ -115,7 +116,7 @@ public:
                            const nsAFlatString& aScript);
   void FireScriptEvaluated(nsresult aResult);
   
-  nsCOMPtr<nsIDOMHTMLScriptElement> mElement;
+  nsCOMPtr<nsIScriptElement> mElement;
   nsCOMPtr<nsIScriptLoaderObserver> mObserver;
   PRPackedBool mLoading;             // Are we still waiting for a load to complete?
   PRPackedBool mWasPending;          // Processed immediately or pending
@@ -126,7 +127,7 @@ public:
   PRInt32 mLineNo;
 };
 
-nsScriptLoadRequest::nsScriptLoadRequest(nsIDOMHTMLScriptElement* aElement,
+nsScriptLoadRequest::nsScriptLoadRequest(nsIScriptElement* aElement,
                                          nsIScriptLoaderObserver* aObserver,
                                          const char* aVersionString) :
   mElement(aElement), mObserver(aObserver), 
@@ -239,7 +240,7 @@ nsScriptLoader::RemoveObserver(nsIScriptLoaderObserver *aObserver)
 }
 
 PRBool
-nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
+nsScriptLoader::InNonScriptingContainer(nsIScriptElement* aScriptElement)
 {
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aScriptElement));
   nsCOMPtr<nsIDOMNode> parent;
@@ -285,7 +286,7 @@ nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
 // <script for=... event=...> element.
 
 PRBool
-nsScriptLoader::IsScriptEventHandler(nsIDOMHTMLScriptElement *aScriptElement)
+nsScriptLoader::IsScriptEventHandler(nsIScriptElement *aScriptElement)
 {
   nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
   if (!contElement ||
@@ -341,9 +342,9 @@ nsScriptLoader::IsScriptEventHandler(nsIDOMHTMLScriptElement *aScriptElement)
   return PR_FALSE;
 }
 
-/* void processScriptElement (in nsIDOMHTMLScriptElement aElement, in nsIScriptLoaderObserver aObserver); */
+/* void processScriptElement (in nsIScriptElement aElement, in nsIScriptLoaderObserver aObserver); */
 NS_IMETHODIMP 
-nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement, 
+nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement, 
                                      nsIScriptLoaderObserver *aObserver)
 {
   NS_ENSURE_ARG(aElement);
@@ -391,14 +392,19 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   const char* jsVersionString = nsnull;
   nsAutoString language, type, src;
 
-  // Check the language attribute first, so type can trump language.
-  aElement->GetAttribute(NS_LITERAL_STRING("language"), language);
-  if (!language.IsEmpty()) {
-    isJavaScript = nsParserUtils::IsJavaScriptLanguage(language, &jsVersionString);
+  // "language" is a depreciated attribute of HTML, so we only check
+  // it for HTML script elements
+  nsCOMPtr<nsIDOMHTMLScriptElement> htmlScriptElement = do_QueryInterface(aElement);
+  if (htmlScriptElement) {
+    // Check the language attribute first, so type can trump language.
+    htmlScriptElement->GetAttribute(NS_LITERAL_STRING("language"), language);
+    if (!language.IsEmpty()) {
+      isJavaScript = nsParserUtils::IsJavaScriptLanguage(language, &jsVersionString);
+    }
   }
 
   // Check the type attribute to determine language and version.
-  aElement->GetType(type);
+  aElement->GetScriptType(type);
   if (!type.IsEmpty()) {
     nsAutoString  mimeType;
     nsAutoString  params;
@@ -437,21 +443,9 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     return FireErrorNotification(NS_ERROR_OUT_OF_MEMORY, aElement, aObserver);
   }
 
-  // Check to see if we have a src attribute.
-  aElement->GetSrc(src);
-  if (!src.IsEmpty()) {
-    nsCOMPtr<nsIURI> scriptURI;
-
-    // Use the SRC attribute value to load the URL
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-    NS_ASSERTION(content, "nsIDOMHTMLScriptElement not implementing nsIContent");
-    nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
-    rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
-
-    if (NS_FAILED(rv)) {
-      return FireErrorNotification(rv, aElement, aObserver);
-    }
-
+  // First check to see if this is an external script
+  nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
+  if (scriptURI) {
     // Check that the containing page is allowed to load this URI.
     nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
     if (!docPrincipal) {
@@ -469,10 +463,11 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     if (globalObject) {
       PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
       nsIURI *docURI = mDocument->GetDocumentURI();
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
       rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                      scriptURI,
                                      docURI,
-                                     aElement,
+                                     node,
                                      NS_LossyConvertUCS2toASCII(type),
                                      nsnull,    //extra
                                      &shouldLoad);
@@ -525,12 +520,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     request->mIsInline = PR_TRUE;
     request->mURI = mDocument->GetDocumentURI();
 
-    nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aElement));
-    if (scriptElement) {
-      PRUint32 lineNumber;
-      scriptElement->GetLineNumber(&lineNumber);
-      request->mLineNo = lineNumber;
-    }
+    request->mLineNo = aElement->GetScriptLineNumber();
 
     // If we've got existing pending requests, add ourselves
     // to this list.
@@ -549,7 +539,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
 
 nsresult
 nsScriptLoader::FireErrorNotification(nsresult aResult,
-                                      nsIDOMHTMLScriptElement* aElement,
+                                      nsIScriptElement* aElement,
                                       nsIScriptLoaderObserver* aObserver)
 {
   PRInt32 count = mObservers.Count();
@@ -585,7 +575,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   if (aRequest->mIsInline) {
     // XXX This is inefficient - GetText makes multiple
     // copies.
-    aRequest->mElement->GetText(textData);
+    aRequest->mElement->GetScriptText(textData);
 
     script = &textData;
   }
@@ -799,8 +789,8 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (NS_FAILED(rv) || characterSet.IsEmpty()) {
       // Check the charset attribute to determine script charset.
       nsAutoString charset;
-      rv = request->mElement->GetCharset(charset);
-      if (NS_SUCCEEDED(rv)) {  
+      request->mElement->GetScriptCharset(charset);
+      if (!charset.IsEmpty()) {  
         // charset name is always ASCII.
         LossyCopyUTF16toASCII(charset, characterSet);
       }
