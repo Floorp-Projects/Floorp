@@ -257,8 +257,6 @@ nsHttpResponseHead::ComputeCurrentAge(PRUint32 now,
 nsresult
 nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
 {
-    PRUint32 date, date2;
-
     *result = 0;
 
     // Try HTTP/1.1 style max-age directive...
@@ -267,22 +265,24 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
 
     *result = 0;
 
-    if (NS_SUCCEEDED(GetDateValue(&date))) {
-        // Try HTTP/1.0 style expires header...
-        if (NS_SUCCEEDED(GetExpiresValue(&date2))) {
-            if (date2 > date)
-                *result = date2 - date;
-            // the Expires header can specify a date in the past.
-            return NS_OK;
-        }
+    PRUint32 date = 0, date2 = 0;
+    if (NS_FAILED(GetDateValue(&date)))
+        date = NowInSeconds(); // synthesize a date header if none exists
 
-        // Fallback on heuristic using last modified header...
-        if (NS_SUCCEEDED(GetLastModifiedValue(&date2))) {
-            LOG(("using last-modified to determine freshness-lifetime\n"));
-            LOG(("last-modified = %u, date = %u\n", date2, date));
-            *result = (date - date2) / 10;
-            return NS_OK;
-        }
+    // Try HTTP/1.0 style expires header...
+    if (NS_SUCCEEDED(GetExpiresValue(&date2))) {
+        if (date2 > date)
+            *result = date2 - date;
+        // the Expires header can specify a date in the past.
+        return NS_OK;
+    }
+    
+    // Fallback on heuristic using last modified header...
+    if (NS_SUCCEEDED(GetLastModifiedValue(&date2))) {
+        LOG(("using last-modified to determine freshness-lifetime\n"));
+        LOG(("last-modified = %u, date = %u\n", date2, date));
+        *result = (date - date2) / 10;
+        return NS_OK;
     }
 
     // These responses can be cached indefinitely.
