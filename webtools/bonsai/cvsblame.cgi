@@ -399,7 +399,8 @@ if ($::use_layers || $::use_dom) {
     $revisionName =~ tr/./_/;
     
     my $log = $::revision_log{$revision};
-    $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
+    $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g if $::use_layers;
+    $log = html_quote($log);
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
     $log =~ s/"/\\"/g if $::use_layers;
@@ -416,7 +417,7 @@ if ($::use_layers || $::use_dom) {
     print "\";\n" if $::use_layers;
     print "</div>\n" if $::use_dom;
   }
-  print "//--></SCRIPT>";
+  print "//--></SCRIPT>" if $::use_layers;
 }
 
 &print_bottom;
