@@ -82,9 +82,13 @@ function checkData()
 		ispSupportName = globals.getSelectedISPName();
 	
 		if ( ispSupportNumber != null && ispSupportNumber != "" )
+		{
+			// * close before write will force the document to clear
+			globals.supportWindow.document.close();
 			globals.supportWindow.document.writeln( "<LAYER PAGEX='0' PAGEY='1'><P><CENTER><FONT FACE='PrimaSans BT' SIZE=-1>For problems, please call " +
 				ispSupportName + " at <B>" + ispSupportNumber + "</B></FONT></CENTER></P></LAYER>" );
-
+		}
+		
 		return true;
 	}
 	else
@@ -102,12 +106,6 @@ function insertISPName()
 
 function loadData()
 {
-	//parent.twostepfooter.document.writeln( "<BODY BACKGROUND='images/bg.gif' BGCOLOR='cccccc'>" );
-	//parent.twostepfooter.document.writeln( "<P>If you have trouble setting up your account call " );
-	//parent.twostepfooter.document.writeln( globals.getSelectedISPName() );
-	//parent.twostepfooter.document.writeln( "at (support number).</P>" );
-	//parent.twostepfooter.document.close();
-
 	if ( controls.generateControls )
 		controls.generateControls();
 }
