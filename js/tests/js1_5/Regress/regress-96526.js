@@ -17,7 +17,7 @@
 * Portions created by the Initial Developer are Copyright (C) 2002
 * the Initial Developer. All Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com
+* Contributor(s): pschwartau@netscape.com, Georgi Guninski
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,16 +35,31 @@
 *
 *
 * Date:    22 Jan 2002
-* SUMMARY: Just seeing that we don't crash when compiling this function - 
+* SUMMARY: Just seeing that we don't crash when compiling this script -
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=96526
 *
 */
 //-----------------------------------------------------------------------------
 printBugNumber(96526);
-printStatus("Just seeing that we don't crash when compiling this function -");
+printStatus("Just seeing that we don't crash when compiling this script -");
 
 
+/*
+ * Tail recursion test by Georgi Guninski
+ */
+a="[\"b\"]";
+s="g";
+for(i=0;i<20000;i++)
+  s += a;
+try {eval(s);}
+catch (e) {};
+
+
+
+/*
+ * Function definition with lots of recursion, from http://www.newyankee.com
+ */
 function setaction(jumpto)
 {
    if (jumpto == 0) window.location = "http://www.newyankee.com/GetYankees2.cgi?1.jpg";
