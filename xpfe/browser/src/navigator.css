@@ -130,11 +130,6 @@ toolbar#taskbar titledbutton:active {
   padding-bottom: 0px;
 }
 
-titledbutton[class="popup"]
-{
-	list-style-image:url(resource:/res/toolbar/TB_popup.gif);
-}
-
 titledbutton#mini-nav
 {
 	list-style-image:url(resource:/res/toolbar/TB_MiniNav.gif);
