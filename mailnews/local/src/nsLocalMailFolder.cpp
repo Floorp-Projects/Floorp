@@ -1225,15 +1225,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	// function in nsIFileSpec
 
 	const nsString fileCharset(nsMsgI18NFileSystemCharset());
-	char *convertedNewName;
-	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), &convertedNewName)))
+	nsXPIDLCString convertedNewName;
+	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), getter_Copies(convertedNewName))))
 		return NS_ERROR_FAILURE;
-	nsCAutoString newNameStr(convertedNewName);
+	nsCAutoString newNameStr(convertedNewName.get());
 
     nsXPIDLCString oldLeafName;
 	oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
 
-    if (PL_strcasecmp(oldLeafName.get(), convertedNewName) == 0) {
+    if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) {
        if(msgWindow)
            rv=AlertFolderExists(msgWindow);
        return NS_MSG_FOLDER_EXISTS;
@@ -1259,12 +1259,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
 	
-    if (parentFolder)
-    {
-        SetParent(nsnull);
-        parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
-    }
-
     oldPathSpec->Rename(newNameStr.get());
 
 	newNameStr += ".msf";
@@ -1273,31 +1267,77 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	
 	if (NS_SUCCEEDED(rv) && cnt > 0) {
 		// rename "*.sbd" directory
-		nsCAutoString newNameDirStr(convertedNewName);
+		nsCAutoString newNameDirStr(convertedNewName.get());
 		newNameDirStr += ".sbd";
 		dirSpec.Rename(newNameDirStr.get());
 	}
 
-	PR_Free((void*) convertedNewName);
-
+    nsCOMPtr<nsIMsgFolder> newFolder;
     if (parentSupport)
     {
-        nsCOMPtr<nsIMsgFolder> newFolder;
         nsAutoString newFolderName(aNewName);
 		rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
-		if (newFolder) {
+		if (newFolder) 
+        {
 			newFolder->SetName(newFolderName.get());
-			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
-			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
             PRBool changed = PR_FALSE;
             ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
-		}
+          nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
+          NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
         /***** jefft -
         * Needs to find a way to reselect the new renamed folder and the
         * message being selected.
         */
+          if (cnt > 0)
+            newFolder->RenameSubFolders(this);
+          if (parentFolder)
+          {
+            SetParent(nsnull);
+            parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
+          }
+        }
     }
     return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgFolder *oldFolder)
+{
+  nsresult rv =NS_OK;
+  mInitialized = PR_TRUE;
+
+  PRUint32 flags;
+  oldFolder->GetFlags(&flags);
+  SetFlags(flags);
+
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  oldFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  nsCOMPtr<nsISupports> aSupport;
+  rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+     nsCOMPtr<nsIMsgFolder>msgFolder = do_QueryInterface(aSupport);
+     nsXPIDLString folderName;
+     rv = msgFolder->GetName(getter_Copies(folderName));
+     nsAutoString folderNameStr(folderName.get());
+     nsCOMPtr <nsIMsgFolder> newFolder;
+     AddSubfolder(&folderNameStr, getter_AddRefs(newFolder));
+     if (newFolder)
+     {
+       newFolder->SetName(folderName);
+       PRBool changed = PR_FALSE;
+       msgFolder->ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
+
+       nsCOMPtr <nsISupports> parentSupport = do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+       nsCOMPtr <nsISupports> newFolderSupport = do_QueryInterface(newFolder);
+       if (parentSupport && newFolderSupport)
+         NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
+
+       newFolder->RenameSubFolders(msgFolder);
+     }
+     rv = aEnumerator->Next();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)

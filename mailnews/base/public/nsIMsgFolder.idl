@@ -159,7 +159,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * @param name the new name of the folder
    */
 	void rename(in wstring name, in nsIMsgWindow msgWindow);
-
+    void renameSubFolders( in nsIMsgFolder oldFolder);
   /**
    * looks in immediate children of this folder for the given name
    *

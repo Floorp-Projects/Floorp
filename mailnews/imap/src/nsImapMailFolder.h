@@ -128,6 +128,7 @@ public:
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
+    NS_IMETHOD RenameSubFolders(nsIMsgFolder *oldFolder);
     NS_IMETHOD GetNoSelect(PRBool *aResult);
 
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
