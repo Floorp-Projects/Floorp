@@ -1533,8 +1533,7 @@ nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
       NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
       return rv;
   }
-  nsAllocator::Free(lookup);
-
+  
   if (NS_FAILED(container->Init(aDataSource, chromeResource)))
     return NS_OK;
 
