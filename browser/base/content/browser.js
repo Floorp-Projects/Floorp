@@ -1822,14 +1822,22 @@ function openHomeDialog(aURL)
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
   var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
   var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
-  var pressedVal = promptService.confirmEx(window, promptTitle, promptMsg,
+  var pressedVal  = promptService.confirmEx(window, promptTitle, promptMsg,
                           (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
                           (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
                           okButton, null, null, null, {value:0});
 
   if (pressedVal == 0) {
-    nsPreferences.setUnicharPref("browser.startup.homepage", aURL);
-    setTooltipText("home-button", aURL);
+    try {
+      var str = Components.classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
+      str.data = aURL;
+      gPrefService.setComplexValue("browser.startup.homepage",
+                           Components.interfaces.nsISupportsString, str);
+      setTooltipText("home-button", aURL);
+    } catch (ex) {
+      dump("Failed to set the home page.\n"+ex+"\n");
+    }
   }
 }
 
@@ -4400,16 +4408,15 @@ function SelectDetector(event, doReload)
     }
 
     try {
-        var str =  Components.classes["@mozilla.org/supports-string;1"]
-                             .createInstance(Components.interfaces.nsISupportsString);
-
+        var str = Components.classes["@mozilla.org/supports-string;1"]
+                            .createInstance(Components.interfaces.nsISupportsString);
         str.data = prefvalue;
         gPrefService.setComplexValue("intl.charset.detector",
                              Components.interfaces.nsISupportsString, str);
         if (doReload) window._content.location.reload();
     }
     catch (ex) {
-        dump("Failed to set the intl.charset.detector preference.\n");
+        dump("Failed to set the intl.charset.detector preference.\n"+ex+"\n");
     }
 }
 
