@@ -686,6 +686,18 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
 	return;
     }
 
+    if (!cert->slot) {
+	fprintf(stderr, "%s: cert does not have a slot.\n", progName);
+	pk12uErrno = PK12UERR_FINDCERTBYNN;
+	goto loser;
+    }
+    if (P12U_InitSlot(cert->slot, slotPw) != SECSuccess) {
+	fprintf(stderr, "%s: Failed to authenticate to \"%s\".\n",
+			 progName, PK11_GetSlotName(cert->slot));
+	pk12uErrno = PK12UERR_PK11GETSLOT;
+	goto loser;
+    }
+
     /*	Password to use for PKCS12 file.  */
     pwitem = P12U_GetP12FilePassword(PR_TRUE, p12FilePw);
     if(!pwitem) {
