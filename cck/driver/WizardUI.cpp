@@ -545,12 +545,25 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName) 
 {
 	// This doesn't really belong here...
+	WIN32_FIND_DATA data;
+	HANDLE d;
+
 	CNewConfigDialog newDlg;
 	newDlg.DoModal();
 	CString configField = newDlg.GetConfigName();
 	CString newDir = CString(customizationPath); 
 	newDir += configField;
-	_mkdir(newDir);
+
+	d = FindFirstFile((const char *) newDir, &data);
+	if (d == INVALID_HANDLE_VALUE)
+		_mkdir(newDir);
+	else
+	{
+		CWnd myWnd;
+		myWnd.MessageBox("That configuration already exists.", "Error", MB_OK);
+		return FALSE;
+	}
+
 					
 	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
 	if (!tmpWidget)
