@@ -6440,8 +6440,12 @@ nsDocShell::AddToGlobalHistory(nsIChannel* aChannel, nsIURI * aURI, PRBool aHidd
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsIBrowserHistory> browserHistory = 
                   do_QueryInterface(mGlobalHistory);
-                browserHistory->OutputReferrerURL(spec.get(), 
-                  referrerSpec.get());
+                // In embedding environments, the "lite" global history
+                // implementation might not implement nsIBrowserHistory.
+                if (browserHistory) {
+                  browserHistory->OutputReferrerURL(spec.get(), 
+                    referrerSpec.get());
+                }
             }
         }
     }
