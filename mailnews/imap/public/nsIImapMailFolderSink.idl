@@ -26,9 +26,11 @@
 #include "nsIImapProtocol.idl"
 #include "nsIMailboxSpec.idl"
 
- typedef long ImapOnlineCopyState;
+interface nsIMsgMailNewsUrl;
 
- [scriptable, uuid(5f7484b0-68b4-11d3-a53e-0060b0fc04b7)]
+typedef long ImapOnlineCopyState;
+
+[scriptable, uuid(5f7484b0-68b4-11d3-a53e-0060b0fc04b7)]
 
  interface ImapOnlineCopyStateType
  {
@@ -69,4 +71,9 @@ interface nsIImapMailFolderSink : nsISupports {
     void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
     
     void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState) ;
+	// these two hokey methods are needed so we can try to make sure the imap url is released
+	// on the UI thread. This in turn ensures that the objects the imap url holds on to
+	// are only released / destroyed from the UI thread.
+	void PrepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
+	void ReleaseUrl();
 };
