@@ -852,7 +852,6 @@ function awRecipientKeyPress(event, element)
     break;
   case KeyEvent.DOM_VK_RETURN:
   case KeyEvent.DOM_VK_TAB:
-  {
     // if the user text contains a comma or a line return, ignore 
     if (element.value.search(',') != -1)
     {
@@ -862,8 +861,8 @@ function awRecipientKeyPress(event, element)
     }
     else if (event.keyCode == KeyEvent.DOM_VK_TAB)
       awTabFromRecipient(element, event);
+    
     break;
-    }
   }
 }
 
