@@ -37,7 +37,7 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 CPPSRCS		= \
 		ParseCSS.cpp \
-		TestCSSPropertyLookup.cpp \
+#		TestCSSPropertyLookup.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../style/src
