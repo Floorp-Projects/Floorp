@@ -47,7 +47,10 @@
 
 // Maximum number of characters for a buffer to remember 
 // the generated collation key.
-const PRUint32 kCacheSize = 80;
+const PRUint32 kCacheSize = 128;
+// According to the documentation, the length of the key should typically be
+// at least 5 * textLength
+const PRUint32 kCollationValueSizeFactor = 5;
 
 class nsCollationMacUC : public nsICollation {
 
@@ -89,9 +92,10 @@ private:
   LocaleRef mLocale;
   nsCollationStrength mLastStrength;
   CollatorRef mCollator;
-  UCCollationValue mCachedKey[kCacheSize * 5];
-  PRUint32 mCachedKeyLen;   // byte length of key
+  UCCollationValue mCachedKey[kCacheSize * kCollationValueSizeFactor];
+  PRUint32 mCachedKeyLen;               // byte length of key
   UniChar mCachedString[kCacheSize];
+  PRUint32 mCachedStringLen;            // character length of the string
 };
 
 #endif  /* nsCollationMacUC_h__ */
