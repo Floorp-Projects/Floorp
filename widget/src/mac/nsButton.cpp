@@ -23,6 +23,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsUnitConversion.h"
 
 #include <Controls.h>
 
@@ -35,16 +36,59 @@
 //-------------------------------------------------------------------------
 nsButton::nsButton(nsISupports *aOuter) : nsWindow(aOuter)
 {
+  strcpy(gInstanceClassName, "nsButton");
 }
+
+
+/*
+ * Convert an nsPoint into mac local coordinated.
+ * The tree hierarchy is navigated upwards, changing
+ * the x,y offset by the parent's coordinates
+ *
+ */
+void nsButton::LocalToWindowCoordinate(nsPoint& aPoint)
+{
+	nsIWidget* 	parent = GetParent();
+  nsRect 			bounds;
+  
+	while (parent)
+	{
+		parent->GetBounds(bounds);
+		aPoint.x += bounds.x;
+		aPoint.y += bounds.y;	
+		parent = parent->GetParent();
+	}
+}
+
+/* 
+ * Convert an nsRect's local coordinates to global coordinates
+ */
+void nsButton::LocalToWindowCoordinate(nsRect& aRect)
+{
+	nsIWidget* 	parent = GetParent();
+  nsRect 			bounds;
+  
+	while (parent)
+	{
+		parent->GetBounds(bounds);
+		aRect.x += bounds.x;
+		aRect.y += bounds.y;	
+		parent = parent->GetParent();
+	}
+}
+
+
+
 
 void nsButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
+                      nsIDeviceContext */*aContext*/,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData */*aInitData*/) 
 {
+  mParent = aParent;
   aParent->AddChild(this);
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
@@ -73,12 +117,13 @@ void nsButton::Create(nsIWidget *aParent,
 		PRInt16 maxValue = 1;
 		PRInt16 ctrlType = pushButProc;
 		
-		Rect r;
-		r.left = aRect.x;
-		r.top = aRect.y;
-		r.right = aRect.x + aRect.width;
-		r.bottom = aRect.y + aRect.height;
+		// Set the bounds to the local rect
+		SetBounds(aRect);
 		
+		// Convert to macintosh coordinates		
+		Rect r;
+		nsRectToMacRect(aRect,r);
+				
 		mControl = NewControl ( window, &r, title, visible, 
 												    initialValue, minValue, maxValue, 
 												    ctrlType, (long)this);
@@ -92,13 +137,13 @@ void nsButton::Create(nsIWidget *aParent,
 	}
 }
 
-void nsButton::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+void nsButton::Create(nsNativeWidget /*aParent*/,
+                      const nsRect &/*aRect*/,
+                      EVENT_CALLBACK /*aHandleEventFunction*/,
+                      nsIDeviceContext */*aContext*/,
+                      nsIAppShell */*aAppShell*/,
+                      nsIToolkit */*aToolkit*/,
+                      nsWidgetInitData */*aInitData*/)
 {
 	NS_ERROR("This Widget must not use this Create method");
 }
@@ -136,14 +181,15 @@ nsresult nsButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 void nsButton::StringToStr255(const nsString& aText, Str255& aStr255)
 {
-	char buffer[256];
+  char buffer[256];
 	
 	aText.ToCString(buffer,255);
-	
+		
 	PRInt32 len = strlen(buffer);
-	for (PRInt32 i = 0; i < len; i++)
-		aStr255[i+1] = buffer[i];
+	memcpy(&aStr255[1],buffer,len);
 	aStr255[0] = len;
+	
+		
 }
 
 
@@ -164,6 +210,8 @@ void nsButton::SetLabel(const nsString& aText)
 	}
 }
 
+
+
 //-------------------------------------------------------------------------
 //
 // Get this button label
@@ -181,7 +229,9 @@ void nsButton::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsButton::OnPaint **\n");
+  //printf("** nsButton:OnPaint **\n");
+  if (mControl)
+	  Draw1Control(mControl);
   return PR_FALSE;
 }
 
@@ -202,6 +252,42 @@ void nsButton::AggButton::SetLabel(const nsString& aText)
 {
   GET_OUTER()->SetLabel(aText);
 }
+
+/*
+ *  @update  gpk 08/27/98
+ *  @param   aX -- x offset in widget local coordinates
+ *  @param   aY -- y offset in widget local coordinates
+ *  @return  PR_TRUE if the pt is contained in the widget
+ */
+PRBool
+nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
+{
+	PRBool	result = PR_FALSE;
+	nsPoint	hitPt(aX,aY);
+	nsRect	bounds;
+	
+	GetBounds(bounds);
+	if(bounds.Contains(hitPt))
+		result = PR_TRUE;
+	return(result);
+}
+
+PRBool 
+nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
+{
+	PRBool result = nsWindow::DispatchMouseEvent(aEvent);
+	
+	if (aEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN)
+	{
+		Point pt;		
+		pt.h = aEvent.point.x;
+		pt.v = aEvent.point.y;
+		if (mControl)
+			TrackControl(mControl,pt,nsnull);
+	}
+	return result;
+}
+
 
 //----------------------------------------------------------------------
 

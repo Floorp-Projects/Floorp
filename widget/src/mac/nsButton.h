@@ -57,6 +57,17 @@ public:
   virtual void   GetLabel(nsString& aBuffer);
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
+  
+  // Mac specific methods
+  void LocalToWindowCoordinate(nsPoint& aPoint);
+  void LocalToWindowCoordinate(nsRect& aRect);
+	ControlHandle GetControl() { return mControl; } 
+	
+  
+  // Overriden from nsWindow
+  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
+  
 
 private:
 
