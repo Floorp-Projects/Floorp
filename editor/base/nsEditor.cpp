@@ -79,13 +79,19 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDataFlavor.h"
+#include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
 
-static NS_DEFINE_IID(kITransferableIID, NS_ITRANSFERABLE_IID);
-static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
+static NS_DEFINE_CID(kCTransferableCID,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
+static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
+
+static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
 #endif
 
 #endif
@@ -854,16 +860,31 @@ NS_IMETHODIMP nsEditor::Paste()
                                              (nsISupports **)&clipboard);
   nsITransferable * trans;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
-  //if (nsnull != trans) {
-    //trans->AddDataFlavor("text/xif", "XIF Format");
-    //trans->AddDataFlavor(kTextMime, "Text Format");
-  //}
+
+  //nsIFormatConverter * xifConverter;
+  //rv = nsComponentManager::CreateInstance(kCXIFFormatConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
+
+  //trans->SetConverter(xifConverter);
+
+  nsIDataFlavor * flavor;
+  rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+  flavor->Init(kTextMime, "Text");
+  trans->AddDataFlavor(flavor);
 
   clipboard->GetData(trans);
-  trans->GetTransferString(stuffToPaste);
 
-  NS_IF_RELEASE(clipboard);
+  char * str;
+  PRUint32 len;
+  trans->GetTransferData(flavor, (void **)&str, &len);
+
+  if (str[len-1] == 0) {
+    len--;
+  }
+  stuffToPaste.SetString(str, len);
+
+  NS_IF_RELEASE(flavor);
   NS_IF_RELEASE(trans);
+  NS_IF_RELEASE(clipboard);
 
 
 #else 
