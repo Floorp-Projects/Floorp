@@ -2186,7 +2186,7 @@ NS_COM int fputs(const nsString& aString, FILE* out)
   if(len>0)
     ::fwrite(cp, 1, len, out);
   if (cp != buf) {
-    delete[] cp;
+    Recycle(cp);
   }
   return (int) len;
 }
