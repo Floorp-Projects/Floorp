@@ -71,15 +71,17 @@ static NS_DEFINE_CID(kComm4xMailImportCID,      NS_COMM4XMAILIMPORT_CID);
 ////////////////////////////////////////////////////////////////////////////////
 // eudora import Include Files
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 #include "nsEudoraImport.h"
 #include "nsEudoraStringBundle.h"
 
 static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // outlook import Include Files
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
 #if defined(_MSC_VER) && _MSC_VER >= 1100
 #include "nsOEImport.h"
 #include "nsOEStringBundle.h"
@@ -149,7 +151,7 @@ NS_METHOD Comm4xMailRegister(nsIComponentManager *aCompMgr,
 ////////////////////////////////////////////////////////////////////////////////
 // eudora import factories
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraImport)
 
 NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
@@ -169,10 +171,13 @@ NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
 
 	return( rv);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // outlook import factories
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
+
 #if defined(_MSC_VER) && _MSC_VER >= 1100
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEImport)
@@ -246,10 +251,12 @@ static const nsModuleComponentInfo components[] = {
     ////////////////////////////////////////////////////////////////////////////////
     // eduora import components
     ////////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
     ,{ "Text Import Component", NS_EUDORAIMPORT_CID,
 	  "@mozilla.org/import/import-eudora;1", nsEudoraImportConstructor, EudoraRegister, nsnull }
+#endif
 
+#ifdef XP_WIN
 #if defined(_MSC_VER) && _MSC_VER >= 1100
     ////////////////////////////////////////////////////////////////////////////////
     // oexpress import components
@@ -269,8 +276,11 @@ PR_STATIC_CALLBACK(void) importModuleDtor(nsIModule* self)
 	nsImportStringBundle::Cleanup();
     nsTextStringBundle::Cleanup();
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
     nsEudoraStringBundle::Cleanup();
+#endif
+
+#ifdef XP_WIN
 
 #if defined(_MSC_VER) && _MSC_VER >= 1100
     nsOEStringBundle::Cleanup();

@@ -68,6 +68,10 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES += impEudra
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 REQUIRES += impEudra
 
@@ -90,6 +94,10 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LIBS +=  msgbsutl_s
+
+ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX) 
