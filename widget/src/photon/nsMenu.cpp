@@ -285,6 +285,21 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetAccessKey(nsString &aText)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::GetAccessKey - Not Implemented\n"));
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::SetAccessKey - Not Implemented\n"));
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(nsISupports* aItem)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::AddItem with nsISupports - this=<%p> aIten=<%p>.\n", this, aItem));
