@@ -515,7 +515,7 @@ PRInt32 CRTFControlWord::GetTokenType() {
   return eRTFToken_controlword;
 }
 
-nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner) {
+nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
   const char* gAlphaChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   const char* gDigits="-0123456789";
 
@@ -564,7 +564,7 @@ PRBool CRTFGroup::IsGroupStart(){
   return mStart;
 }
 
-nsresult CRTFGroup::Consume(PRUnichar aChar,nsScanner& aScanner) {
+nsresult CRTFGroup::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
   PRInt32 result=NS_OK;
   if(PR_FALSE==mStart)
     result=aScanner.SkipWhitespace();
@@ -594,7 +594,7 @@ PRInt32 CRTFContent::GetTokenType() {
  * @return
  */
 
-nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner) {
+nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
   static const char* textTerminators="\\{}";
   PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
