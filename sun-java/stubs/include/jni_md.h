@@ -40,6 +40,8 @@
 #ifndef JNI_MD_H
 #define JNI_MD_H
 
+#include "prtypes.h" /* needed for _declspec */
+
 /*******************************************************************************
  * WHAT'S UP WITH THIS FILE?
  * 
@@ -94,7 +96,7 @@
 /* PC */
 #elif defined(XP_PC) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
 #	include <windows.h>
-#	if defined(_MSC_VER)
+#	if defined(_MSC_VER) || defined(__GNUC__)
 #		if defined(WIN32) || defined(_WIN32)
 #			define JNI_PUBLIC_API(ResultType)	_declspec(dllexport) ResultType __stdcall
 #			define JNI_PUBLIC_VAR(VarType)		VarType
