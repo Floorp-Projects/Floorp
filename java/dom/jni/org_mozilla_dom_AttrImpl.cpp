@@ -136,7 +136,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
   const char* cvalue = NULL;
   jboolean iscopy = JNI_FALSE;
   if (jval) {
-    const char* cvalue = env->GetStringUTFChars(jval, &iscopy);
+    cvalue = env->GetStringUTFChars(jval, &iscopy);
     if (!cvalue) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	     ("Attr.setValue: GetStringUTFChars failed\n"));
