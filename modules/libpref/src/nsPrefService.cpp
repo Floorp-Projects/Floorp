@@ -614,7 +614,13 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
 
   // this may fail in some normal cases, such as embedders who do not use a GRE
   rv = aDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    // If the directory doesn't exist, then we have no reason to complain.  We
+    // loaded everything (and nothing) successfully.
+    if (rv == NS_ERROR_FILE_NOT_FOUND)
+      rv = NS_OK;
+    return rv;
+  }
 
   rv = dirIterator->HasMoreElements(&hasMoreElements);
   NS_ENSURE_SUCCESS(rv, rv);
