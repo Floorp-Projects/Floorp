@@ -1871,10 +1871,10 @@ nsMsgNewsFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aRes
     NS_ENSURE_SUCCESS(rv, rv);
     
     // in 4.x, the news filter file was
-    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com.dat
+    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com\mcom.test.dat
     // where the summary file was 
-    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com.snm
-    // do it the same way in mozilla, so that migration works.
+    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com\mcom.test.snm
+    // we make the rules file ".dat" in mozilla, so that migration works.
     rv = mFilterFile->FromFileSpec(thisFolder);
     NS_ENSURE_SUCCESS(rv, rv);
     
