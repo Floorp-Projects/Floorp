@@ -44,8 +44,6 @@
 *   improve this to make it usable in general.
 */
 
-var gkungFooDeathGripOnEventBoxes;
-
 function unifinderInit( CalendarWindow )
 {
    var unifinderEventSelectionObserver = 
@@ -368,8 +366,6 @@ function refreshEventTree( eventArray, childrenName, Categories )
    while( oldTreeChildren.hasChildNodes() )
       oldTreeChildren.removeChild( oldTreeChildren.lastChild );
 
-   gkungFooDeathGripOnEventBoxes = new Array();
-   
    // add: tree item, row, cell, box and text items for every event
    for( var index = 0; index < eventArray.length; ++index )
    {
@@ -384,7 +380,6 @@ function refreshEventTree( eventArray, childrenName, Categories )
          treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
 
       treeItem.event = calendarEvent;
-      gkungFooDeathGripOnEventBoxes.push( treeItem );
 
       treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(" + calendarEvent.id + ")" );
       //treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
