@@ -793,6 +793,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\202\211\200\212\213\200\205") ||		/* kristin */
 	 !PL_strcmp((char*)user, "\203\170\211\214\171\171\200\206") ||		/* larubbio */
     !PL_strcmp((char*)user, "\203\170\216") ||                     /* law */
+	 !PL_strcmp((char*)user, "\203\174\170\175") ||				/* leaf */
 	 !PL_strcmp((char*)user, "\203\174\205\221") ||				/* lenz */
 	 !PL_strcmp((char*)user, "\203\206\211\200\202") ||			/* lorik */
 	 !PL_strcmp((char*)user, "\203\213\170\171\171") ||			/* ltabb */
@@ -815,6 +816,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\207\170\203\174\215\200\172\177") ||		/* palevich */
 	 !PL_strcmp((char*)user, "\207\170\210\214\200\205") ||			/* paquin */
 	 !PL_strcmp((char*)user, "\207\170\214\203\173") ||			/* pauld */
+	 !PL_strcmp((char*)user, "\207\170\215\203\206\215") ||			/* pavlov */
 	 !PL_strcmp((char*)user, "\207\172\177\174\205") ||			/* pchen */
 	 !PL_strcmp((char*)user, "\207\177\200\203") ||				/* phil */
 	 !PL_strcmp((char*)user, "\207\200\174\211\211\174") ||			/* pierre */
@@ -837,6 +839,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\212\172\214\203\203\200\205") ||		/* scullin */
 	 !PL_strcmp((char*)user, "\212\173\170\176\203\174\220") ||		/* sdagley */
 	 !PL_strcmp((char*)user, "\212\177\170\211\206\205\200") ||		/* sharoni */
+	 !PL_strcmp((char*)user, "\212\177\170\215\174\211") ||			/* shaver */
 	 !PL_strcmp((char*)user, "\212\177\214\170\205\176") ||			/* shuang */
 	 !PL_strcmp((char*)user, "\212\202") ||					/* sk */
 	 !PL_strcmp((char*)user, "\212\202\220\174") ||				/* skye */
