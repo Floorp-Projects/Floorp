@@ -33,12 +33,10 @@
 #include "nsIChromeRegistry.h" // for chrome registry
 
 #include "nsIFileSpec.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
@@ -65,80 +63,65 @@ nsMsgServiceProviderService::Init()
   mInnerDataSource = do_CreateInstance(kRDFCompositeDataSourceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFileSpec> dataFilesDir;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultsFolder50,
-                                getter_AddRefs(dataFilesDir));
+  nsCOMPtr<nsIFile> dataFilesDir;
+  rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(dataFilesDir));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dataFilesDir->AppendRelativeUnixPath("isp");
+  rv = dataFilesDir->Append("isp");
   NS_ENSURE_SUCCESS(rv,rv);
 
   // test if there is a locale provider
   PRBool isexists = PR_FALSE;
   rv = dataFilesDir->Exists(&isexists);
   NS_ENSURE_SUCCESS(rv,rv);
-  if (isexists) {
+  if (isexists) {    
     nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsXPIDLString lc_name;
       nsAutoString tmpstr; tmpstr.AssignWithConversion("navigator");
       rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString localeStr(lc_name);
+      if (NS_SUCCEEDED(rv) && (const PRUnichar *)lc_name && nsCRT::strlen((const PRUnichar *)lc_name)) {
 
-        nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
-        rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->FromFileSpec(dataFilesDir);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        if ((const PRUnichar*)lc_name)
-            tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->Exists(&isexists);
-        NS_ENSURE_SUCCESS(rv,rv);
-        if (isexists) {
+          nsCOMPtr<nsIFile> tmpdataFilesDir;
+          rv = dataFilesDir->Clone(getter_AddRefs(tmpdataFilesDir));
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = tmpdataFilesDir->AppendUnicode(lc_name);
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = tmpdataFilesDir->Exists(&isexists);
+          NS_ENSURE_SUCCESS(rv,rv);
+          if (isexists) {
             // use locale provider instead
-            if ((const PRUnichar*)lc_name)
-                dataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
+            rv = dataFilesDir->AppendUnicode(lc_name);            
             NS_ENSURE_SUCCESS(rv,rv);
-        }
-      }
+          }
+       }
+    }
+      
+    // now enumerate every file in the directory, and suck it into the datasource
+    PRBool hasMore = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = dataFilesDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFile> dirEntry;
+    nsCOMPtr<nsIFileURL> dirEntryURL(do_CreateInstance("@mozilla.org/network/standard-url;1"));
+
+    while ((rv = dirIterator->HasMoreElements(&hasMore)) == NS_OK && hasMore) {
+      rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+      if (NS_FAILED(rv))
+        continue;
+         
+      rv = dirEntryURL->SetFile(dirEntry);
+      if (NS_FAILED(rv))
+         continue;
+
+      nsXPIDLCString urlSpec;
+      rv = dirEntryURL->GetSpec(getter_Copies(urlSpec));
+      rv = LoadDataSource(urlSpec);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
     }
   }
-  // now enumerate every file in the directory, and suck it into the datasource
-
-  nsCOMPtr<nsIDirectoryIterator> fileIterator =
-    do_CreateInstance(NS_DIRECTORYITERATOR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = fileIterator->Init(dataFilesDir, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool exists=PR_TRUE;
-  fileIterator->Exists(&exists);
   
-  while (exists) {
-    nsCOMPtr<nsIFileSpec> ispFile;
-    
-    rv = fileIterator->GetCurrentSpec(getter_AddRefs(ispFile));
-    if (NS_FAILED(rv)) continue;
-
-    nsXPIDLCString url;
-    ispFile->GetURLString(getter_Copies(url));
-    
-
-    rv = LoadDataSource(url);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
-    // fall through on failure though, just keep going
-    
-    fileIterator->Next();
-    fileIterator->Exists(&exists);
-  }
-
   return NS_OK;
 }
 
