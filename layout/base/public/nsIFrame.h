@@ -272,12 +272,12 @@ typedef PRBool nsDidReflowStatus;
  * objects.
  *
  * Frames are NOT reference counted. Use the DeleteFrame() member function
- * to delete a frame
+ * to delete a frame.
  *
- * XXX This should probably be changed so it's consistent with the way nsIView
- * (which is also not reference counted) is defined...
+ * The lifetime of the frame hierarchy is bounded by the lifetime of the
+ * presentation shell which owns the frames.
  */
-class nsIFrame : private nsISupports
+class nsIFrame : public nsISupports
 {
 public:
   /**
@@ -289,18 +289,10 @@ public:
    * You should reflow the frames when you get your 'initial' reflow
    * notification.
    *   
-   * XXX Should we also pass in the child count?
-   *
    * @param   aChildList list of child frames. May be NULL
    * @see     #Reflow()
    */
   NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList) = 0;
-
-  /**
-   * QueryInterface() defined in nsISupports. This is the only member
-   * function of nsISupports that is public.
-   */
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr) = 0;
 
   /**
    * Add this object's size information to the sizeof handler. Note that
@@ -707,6 +699,10 @@ public:
 
 protected:
   static NS_LAYOUT PRLogModuleInfo* gLogModule;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
 
 // Constructs an initial reflow state (no parent reflow state) for a

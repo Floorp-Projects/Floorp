@@ -147,17 +147,7 @@ public:
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
-  // XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer);
-  NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer,
-                              nsIContent*     aChild,
-                              PRInt32         aIndexInParent);
-#endif
+
   NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer,
