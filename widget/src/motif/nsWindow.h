@@ -183,7 +183,7 @@ public:
 
 };
 
-#define AGGRRGATE_METHOD_DEF \
+#define AGGREGATE_METHOD_DEF \
 public:                                                                     \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                  \
                             void** aInstancePtr);                           \

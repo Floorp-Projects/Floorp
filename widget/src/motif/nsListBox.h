@@ -76,7 +76,7 @@ private:
     AggListBox();
     virtual ~AggListBox();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     // nsIListBox
     void      SetMultipleSelection(PRBool aMultipleSelections);
@@ -94,6 +94,7 @@ private:
 
   };
   AggListBox mAggWidget;
+  friend class AggListBox;
 
 };
 

@@ -72,7 +72,7 @@ private:
     AggButton();
     virtual ~AggButton();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     // nsIButton
     virtual void SetLabel(const nsString &aText);
@@ -80,6 +80,7 @@ private:
 
   };
   AggButton mAggWidget;
+  friend class AggButton;
 
 
 };

@@ -85,7 +85,7 @@ private:
     AggCheckButton();
     virtual ~AggCheckButton();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     // nsICheckButton
     virtual void   SetLabel(const nsString &aText);
@@ -96,7 +96,7 @@ private:
 
   };
   AggCheckButton mAggWidget;
-
+  friend class AggCheckButton;
 
 };
 

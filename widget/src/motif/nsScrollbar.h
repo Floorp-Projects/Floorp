@@ -85,7 +85,7 @@ private:
     AggScrollbar();
     virtual ~AggScrollbar();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     // nsIScrollbar part
     virtual void      SetMaxRange(PRUint32 aEndRange);
@@ -100,7 +100,7 @@ private:
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
   };
   AggScrollbar mAggWidget;
-
+  friend class AggScrollbar;
 
 
 };

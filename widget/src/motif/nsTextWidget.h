@@ -93,7 +93,7 @@ private:
     AggTextWidget();
     virtual ~AggTextWidget();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     virtual void      SelectAll();
     virtual void      SetMaxTextLength(PRUint32 aChars);
@@ -111,7 +111,7 @@ private:
 
   };
   AggTextWidget mAggWidget;
-
+  friend class AggTextWidget;
 
 };
 
