@@ -88,6 +88,7 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	SECKEYPublicKey *pubKey = NULL;
 	SECKEYPrivateKey *privKey = NULL;
 	SECItem wrapData;
+	unsigned int     symKeyLength = PK11_GetKeyLength(symKey);
 
 	wrapData.data = NULL;
 
@@ -99,7 +100,6 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
 	/* if no key exists, generate a key pair */
 	if (privKeyHandle == CK_INVALID_HANDLE) {
-	    unsigned int     symKeyLength = PK11_GetKeyLength(symKey);
 	    PK11RSAGenParams rsaParams;
 
 	    if (symKeyLength > 53) /* bytes */ {
@@ -139,7 +139,7 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	rv = PK11_PubWrapSymKey(CKM_RSA_PKCS, pubKey, symKey, &wrapData);
 	if (rv == SECSuccess) {
 	    newSymKey = PK11_PubUnwrapSymKeyWithFlagsPerm(privKey,
-			&wrapData,type,operation,0,flags,isPerm);
+			&wrapData,type,operation,symKeyLength,flags,isPerm);
 	}
 rsa_failed:
 	if (wrapData.data != NULL) PORT_Free(wrapData.data);

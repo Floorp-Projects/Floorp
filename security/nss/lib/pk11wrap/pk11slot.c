@@ -2876,6 +2876,58 @@ PK11_AddMechanismEntry(CK_MECHANISM_TYPE type, CK_KEY_TYPE key,
  * Get the key type needed for the given mechanism
  */
 CK_MECHANISM_TYPE
+PK11_GetKeyMechanism(CK_KEY_TYPE type)
+{
+    switch (type) {
+    case CKK_AES:
+	return CKM_AES_CBC;
+    case CKK_DES:
+	return CKM_DES_CBC;
+    case CKK_DES3:
+	return CKM_DES3_KEY_GEN;
+    case CKK_DES2:
+	return CKM_DES2_KEY_GEN;
+    case CKK_CDMF:
+	return CKM_CDMF_CBC;
+    case CKK_RC2:
+	return CKM_RC2_CBC;
+    case CKK_RC4:
+	return CKM_RC4;
+    case CKK_RC5:
+	return CKM_RC5_CBC;
+    case CKK_SKIPJACK:
+	return CKM_SKIPJACK_CBC64;
+    case CKK_BATON:
+	return CKM_BATON_CBC128;
+    case CKK_JUNIPER:
+	return CKM_JUNIPER_CBC128;
+    case CKK_IDEA:
+	return CKM_IDEA_CBC;
+    case CKK_CAST:
+	return CKM_CAST_CBC;
+    case CKK_CAST3:
+	return CKM_CAST3_CBC;
+    case CKK_CAST5:
+	return CKM_CAST5_CBC;
+    case CKK_RSA:
+	return CKM_RSA_PKCS;
+    case CKK_DSA:
+	return CKM_DSA;
+    case CKK_DH:
+	return CKM_DH_PKCS_DERIVE;
+    case CKK_KEA:
+	return CKM_KEA_KEY_DERIVE;
+    case CKK_EC:  /* CKK_ECDSA is deprecated */
+	return CKM_ECDSA;
+    case CKK_GENERIC_SECRET:
+    default:
+	return CKM_SHA_1_HMAC;
+    }
+}
+/*
+ * Get the key type needed for the given mechanism
+ */
+CK_MECHANISM_TYPE
 PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
 {
     switch (type) {
@@ -3054,6 +3106,12 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
 CK_MECHANISM_TYPE
 PK11_GetKeyGen(CK_MECHANISM_TYPE type)
 {
+    return PK11_GetKeyGenWithSize(type, 0);
+}
+
+CK_MECHANISM_TYPE
+PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
+{
     switch (type) {
     case CKM_AES_ECB:
     case CKM_AES_CBC:
@@ -3075,6 +3133,7 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_DES3_MAC:
     case CKM_DES3_MAC_GENERAL:
     case CKM_DES3_CBC_PAD:
+	return (size == 16) ? CKM_DES2_KEY_GEN : CKM_DES3_KEY_GEN;
     case CKM_DES3_KEY_GEN:
 	return CKM_DES3_KEY_GEN;
     case CKM_DES2_KEY_GEN:

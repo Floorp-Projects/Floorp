@@ -769,6 +769,7 @@ NSS_Get_CERT_TimeChoiceTemplate;
 PK11_DeriveWithFlagsPerm;
 PK11_ExportEncryptedPrivKeyInfo;
 PK11_FindSlotsByAliases;
+PK11_GetSymKeyType;
 PK11_MoveKey;
 PK11_PubDeriveExtended;
 PK11_PubUnwrapSymKeyWithFlagsPerm;
