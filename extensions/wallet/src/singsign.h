@@ -32,6 +32,7 @@
 #include "ntypes.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsIPref.h"
 
 class nsIPrompt;
 XP_BEGIN_PROTOS
@@ -73,8 +74,6 @@ SINGSIGN_StorePassword
 
 extern nsresult
 SINGSIGN_HaveData(const char* passwordRealm, const PRUnichar *userName, PRBool *retval);
-
-typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
 
 extern void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
