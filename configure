@@ -2616,8 +2616,8 @@ case "$target" in
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
 		DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
 	fi
-	MKSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
-	MKCSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
+	MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
+	MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
 	;;
 
 *-*-solaris*) 
@@ -8486,6 +8486,58 @@ if test "${enable_static+set}" = set; then
 fi
 
 
+case "$target" in
+    *-*-aix*)
+	if test "${NO_STATIC_LIB}" = "1" -o -z "${NO_SHARED_LIB}"; then
+	    if test -f /usr/lpp/xlC/bin/makeC++SharedLib_r; then
+		AIX_SHLIB_BIN='/usr/lpp/xlC/bin/makeC++SharedLib_r'
+	    elif test -f /usr/ibmcxx/bin/makeC++SharedLib_r; then
+		AIX_SHLIB_BIN='/usr/ibmcxx/bin/makeC++SharedLib_r'
+	    fi
+	    # Extract the first word of "makeC++SharedLib_r", so it can be a program name with args.
+set dummy makeC++SharedLib_r; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:8501: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_AIX_SHLIB_BIN'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$AIX_SHLIB_BIN" in
+  /*)
+  ac_cv_path_AIX_SHLIB_BIN="$AIX_SHLIB_BIN" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $PATH; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_AIX_SHLIB_BIN="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  test -z "$ac_cv_path_AIX_SHLIB_BIN" && ac_cv_path_AIX_SHLIB_BIN=":"
+  ;;
+esac
+fi
+AIX_SHLIB_BIN="$ac_cv_path_AIX_SHLIB_BIN"
+if test -n "$AIX_SHLIB_BIN"; then
+  echo "$ac_t""$AIX_SHLIB_BIN" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+	    if test ! -n "$AIX_SHLIB_BIN"; then
+		echo
+		echo "*** Unable to locate makeC++SharedLib_r, needed for creation of shared"
+		echo "*** libraries on AIX.  You will only be able to build static libraries."
+		echo
+		NO_STATIC_LIB=''
+		NO_SHARED_LIB=1
+	    fi
+	fi
+	
+	;;
+esac
 
 
 
@@ -8538,7 +8590,7 @@ if test "$JPEG_DIR" = no; then
     SYSTEM_JPEG=
 else
     echo $ac_n "checking for jpeg_destroy_compress in -ljpeg""... $ac_c" 1>&6
-echo "configure:8542: checking for jpeg_destroy_compress in -ljpeg" >&5
+echo "configure:8594: checking for jpeg_destroy_compress in -ljpeg" >&5
 ac_lib_var=`echo jpeg'_'jpeg_destroy_compress | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8546,7 +8598,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ljpeg $JPEG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 8550 "configure"
+#line 8602 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -8557,7 +8609,7 @@ int main() {
 jpeg_destroy_compress()
 ; return 0; }
 EOF
-if { (eval echo configure:8561: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:8613: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -8586,7 +8638,7 @@ if test "$SYSTEM_JPEG" = 1; then
   SYSTEM_JPEG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 8590 "configure"
+#line 8642 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -8600,7 +8652,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:8604: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:8656: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_JPEG=1
 else
@@ -8638,16 +8690,16 @@ if test "$ZLIB_DIR" = no; then
     SYSTEM_ZLIB=
 else
     echo $ac_n "checking "for zlib.h"""... $ac_c" 1>&6
-echo "configure:8642: checking "for zlib.h"" >&5
+echo "configure:8694: checking "for zlib.h"" >&5
     cat > conftest.$ac_ext <<EOF
-#line 8644 "configure"
+#line 8696 "configure"
 #include "confdefs.h"
 #include "zlib.h"
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:8651: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:8703: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   result="yes" SYSTEM_ZLIB=1
 else
@@ -8661,7 +8713,7 @@ rm -f conftest*
 fi
 if test "$SYSTEM_ZLIB" = 1; then
     echo $ac_n "checking for gzread in -lz""... $ac_c" 1>&6
-echo "configure:8665: checking for gzread in -lz" >&5
+echo "configure:8717: checking for gzread in -lz" >&5
 ac_lib_var=`echo z'_'gzread | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8669,7 +8721,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lz $ZLIB_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 8673 "configure"
+#line 8725 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -8680,7 +8732,7 @@ int main() {
 gzread()
 ; return 0; }
 EOF
-if { (eval echo configure:8684: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:8736: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -8726,7 +8778,7 @@ if test "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
     echo $ac_n "checking for png_get_valid in -lpng""... $ac_c" 1>&6
-echo "configure:8730: checking for png_get_valid in -lpng" >&5
+echo "configure:8782: checking for png_get_valid in -lpng" >&5
 ac_lib_var=`echo png'_'png_get_valid | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8734,7 +8786,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpng $PNG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 8738 "configure"
+#line 8790 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -8745,7 +8797,7 @@ int main() {
 png_get_valid()
 ; return 0; }
 EOF
-if { (eval echo configure:8749: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:8801: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -8773,7 +8825,7 @@ if test "$SYSTEM_PNG" = 1; then
   SYSTEM_PNG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 8777 "configure"
+#line 8829 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -8787,7 +8839,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:8791: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:8843: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_PNG=1
 else
@@ -8831,10 +8883,10 @@ CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 
 echo $ac_n "checking "for FC_Initialize in -ltalkback"""... $ac_c" 1>&6
-echo "configure:8835: checking "for FC_Initialize in -ltalkback"" >&5;
+echo "configure:8887: checking "for FC_Initialize in -ltalkback"" >&5;
 LIBS="-ltalkback $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 8838 "configure"
+#line 8890 "configure"
 #include "confdefs.h"
 
 	#include "fullcircle.h"
@@ -8846,7 +8898,7 @@ FC_Initialize();
         
 ; return 0; }
 EOF
-if { (eval echo configure:8850: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:8902: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"
 else
@@ -9339,6 +9391,7 @@ s%@ALLOCA@%$ALLOCA%g
 s%@LIBOBJS@%$LIBOBJS%g
 s%@COMPILER_DEPEND@%$COMPILER_DEPEND%g
 s%@MDDEPDIR@%$MDDEPDIR%g
+s%@AIX_SHLIB_BIN@%$AIX_SHLIB_BIN%g
 s%@AR@%$AR%g
 s%@AS@%$AS%g
 s%@ASFLAGS@%$ASFLAGS%g
