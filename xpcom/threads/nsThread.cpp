@@ -23,6 +23,7 @@
 #include "nsThread.h"
 #include "prmem.h"
 #include "prlog.h"
+#include "nsAutoLock.h"
 
 PRUintn nsThread::kIThreadSelfIndex = 0;
 static nsIThread *gMainThread = 0;
@@ -83,10 +84,16 @@ nsThread::Main(void* arg)
     rv = self->mRunnable->Run();
     NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
+#ifdef DEBUG
     PRThreadState state;
     rv = self->GetState(&state);
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
+#endif
+
+    // explicitly drop the runnable now in case there are circular references
+    // between it and the thread object
+    self->mRunnable = nsnull;
 }
 
 void
@@ -125,7 +132,7 @@ nsThread::Join()
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p end join\n", this));
     if (status == PR_SUCCESS) {
-        this->Release();   // most likely the final release of this thread 
+        NS_RELEASE_THIS();   // most likely the final release of this thread 
         return NS_OK;
     }
     else
@@ -338,8 +345,8 @@ nsThread::Shutdown()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
-    : mMinThreads(minThreads), mMaxThreads(maxThreads), mShuttingDown(PR_FALSE)
+nsThreadPool::nsThreadPool()
+    : mMinThreads(0), mMaxThreads(0), mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -361,38 +368,50 @@ NS_IMETHODIMP
 nsThreadPool::DispatchRequest(nsIRunnable* runnable)
 {
     nsresult rv;
-    PR_EnterMonitor(mRequestMonitor);
+    nsAutoMonitor mon(mRequestMonitor);
 
-#if defined(PR_LOGGING)
-    nsCOMPtr<nsIThread> th;
-    nsIThread::GetCurrent(getter_AddRefs(th));
-#endif
+    NS_ASSERTION(mMinThreads > 0, "forgot to call Init");
     if (mShuttingDown) {
         rv = NS_ERROR_FAILURE;
     }
     else {
+        PRUint32 requestCnt, threadCount;
+
+        rv = mRequests->Count(&requestCnt);
+        if (NS_FAILED(rv)) goto exit;
+
+        rv = mThreads->Count(&threadCount);
+        if (NS_FAILED(rv)) goto exit;
+
+        if ((requestCnt >= threadCount) && (threadCount < mMaxThreads)) {
+            rv = AddThread();
+            if (NS_FAILED(rv)) goto exit;
+        }
+
         // XXX for now AppendElement returns a PRBool
         rv = ((PRBool) mRequests->AppendElement(runnable)) ? NS_OK : NS_ERROR_FAILURE;
-        if (NS_SUCCEEDED(rv))
-            PR_Notify(mRequestMonitor);
+        if (NS_SUCCEEDED(rv)) {
+            rv = mon.Notify();
+            if (NS_FAILED(rv)) goto exit;
+        }
     }
+     
+exit:
+#if defined(PR_LOGGING)
+    nsCOMPtr<nsIThread> th;
+    nsIThread::GetCurrent(getter_AddRefs(th));
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p dispatching %p status %x\n", th.get(), runnable, rv));
-    PR_ExitMonitor(mRequestMonitor);
+           ("nsIThreadPool thread %p dispatched %p status %x\n", th.get(), runnable, rv));
+#endif
     return rv;
 }
 
 nsIRunnable*
-nsThreadPool::GetRequest()
+nsThreadPool::GetRequest(nsIThread* currentThread)
 {
     nsresult rv = NS_OK;
     nsIRunnable* request = nsnull;
- 
-    PR_EnterMonitor(mRequestMonitor);
-#if defined(PR_LOGGING)
-    nsCOMPtr<nsIThread> th;
-    nsIThread::GetCurrent(getter_AddRefs(th));
-#endif
+    nsAutoMonitor mon(mRequestMonitor);
 
     PRUint32 cnt;
     while (PR_TRUE) {
@@ -404,10 +423,40 @@ nsThreadPool::GetRequest()
             rv = NS_ERROR_FAILURE;
             break;
         }
+
+        // no requests, and we're not shutting down yet...
+        // if we have more than the minimum required threads already then
+        // we can just go away
+        PRUint32 threadCnt;
+        rv = mThreads->Count(&threadCnt);
+        if (NS_FAILED(rv)) break;
+
+#if 0   /* XXX I had to take this code out to cut the number of threads back to 
+         * the minimum count because if you just let the threads terminate 
+         * themselves without joining with them, they'll just end up hanging around
+         * anyway. So we might as well keep them on the active list. Fix later!
+         */
+        if (threadCnt > mMinThreads) {
+            PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+                   ("nsIThreadPool thread %p being removed (%d threads left)\n",
+                    currentThread.get(), threadCnt - 1));
+
+            rv = mThreads->RemoveElement(currentThread) ? NS_OK : NS_ERROR_FAILURE;  // XXX fix result
+            if (NS_FAILED(rv)) break;
+            
+            // release the thread once more because the thread pool isn't 
+            // going to join with it now:
+            nsIThread* current = currentThread;
+            NS_RELEASE(current);
+
+            return nsnull;      // causes nsThreadPoolRunnable::Run to quit
+        }
+#endif
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p waiting\n", th.get()));
-        PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
-        if (status != PR_SUCCESS || mShuttingDown) {
+               ("nsIThreadPool thread %p waiting (%d threads in pool)\n",
+                currentThread, threadCnt));
+        rv = mon.Wait();  
+        if (NS_FAILED(rv) || mShuttingDown) {
             rv = NS_ERROR_FAILURE;
             break;
         }
@@ -423,15 +472,16 @@ nsThreadPool::GetRequest()
         NS_ASSERTION(removed, "nsISupportsArray broken");
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p got request %p\n", th.get(), request));
-    PR_ExitMonitor(mRequestMonitor);
+           ("nsIThreadPool thread %p got request %p\n", 
+            currentThread, request));
+
     return request;
 }
 
 NS_METHOD
 nsThreadPool::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsThreadPool* pool = new nsThreadPool(0, 4);
+    nsThreadPool* pool = new nsThreadPool();
     if (!pool) return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = pool->QueryInterface(aIID, aResult);
     if (NS_FAILED(rv)) delete pool;
@@ -442,7 +492,7 @@ NS_IMETHODIMP
 nsThreadPool::ProcessPendingRequests()
 {
     nsresult rv;
-    PR_CEnterMonitor(this);
+    nsAutoCMonitor mon(this);
 
     while (PR_TRUE) {
         PRUint32 cnt;
@@ -450,14 +500,16 @@ nsThreadPool::ProcessPendingRequests()
         if (NS_FAILED(rv) || cnt == 0)
             break;
     
-        PRStatus status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-        if (status != PR_SUCCESS) {
-            rv = NS_ERROR_FAILURE; // our thread was interrupted!
+        rv = mon.Wait();
+        if (NS_FAILED(rv)) { // our thread was interrupted!
             break;
         }
     }
-
-    PR_CExitMonitor(this);
+#ifdef DEBUG
+    PRUint32 requestCount;
+    (void)mRequests->Count(&requestCount);
+    NS_ASSERTION(requestCount == 0, "not all requests processed");
+#endif
     return rv;
 }
 
@@ -476,11 +528,14 @@ nsThreadPool::Shutdown()
            ("nsIThreadPool thread %p shutting down\n", th.get()));
 
     mShuttingDown = PR_TRUE;
-    ProcessPendingRequests();
-    
+    rv = ProcessPendingRequests();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ProcessPendingRequests failed");
+    // keep trying... don't bail with an error here
+
     // then interrupt the threads and join them
     rv = mThreads->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    if (NS_FAILED(rv)) return rv;
     for (i = 0; i < count; i++) {
         nsIThread* thread = (nsIThread*)(mThreads->ElementAt(0));
 
@@ -497,16 +552,25 @@ nsThreadPool::Shutdown()
         // don't break out of the loop because of an error here
         NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveElementAt failed");
     }
-
+    mThreads = nsnull;
     return rv;
 }
 
 NS_IMETHODIMP
-nsThreadPool::Init(PRUint32 stackSize,
+nsThreadPool::Init(PRUint32 minThreadCount,
+                   PRUint32 maxThreadCount,
+                   PRUint32 stackSize,
                    PRThreadPriority priority,
                    PRThreadScope scope)
 {
     nsresult rv;
+    
+    mStackSize = stackSize;
+    mPriority = priority;
+    mScope = scope;
+    NS_ASSERTION(minThreadCount > 0 && minThreadCount <= maxThreadCount, "bad min/max values");
+    mMinThreads = minThreadCount;
+    mMaxThreads = maxThreadCount;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
     if (NS_FAILED(rv)) return rv;
@@ -518,32 +582,50 @@ nsThreadPool::Init(PRUint32 stackSize,
     if (mRequestMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    PR_CEnterMonitor(this);
+    return rv;
+}
 
-    for (PRUint32 i = 0; i < mMinThreads; i++) {
-        nsThreadPoolRunnable* runnable =
-            new nsThreadPoolRunnable(this);
-        if (runnable == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(runnable);
 
-        nsIThread* thread;
+nsresult
+nsThreadPool::AddThread()
+{
+    nsAutoCMonitor mon(this);
 
-        rv = NS_NewThread(&thread, runnable, stackSize, 
-                          PR_JOINABLE_THREAD, /* needed for Shutdown */
-                          priority, scope);
-        NS_RELEASE(runnable);
-        if (NS_FAILED(rv)) goto exit;
+#ifdef DEBUG
+    PRUint32 cnt;
+    nsresult rv = mThreads->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
 
+    if (cnt >= mMaxThreads)
+        return NS_ERROR_FAILURE;
+#endif
+
+    nsThreadPoolRunnable* runnable = new nsThreadPoolRunnable(this);
+    if (runnable == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(runnable);
+
+    nsIThread* thread;
+    rv = NS_NewThread(&thread, 
+                      runnable, 
+                      mStackSize, 
+                      PR_JOINABLE_THREAD, /* needed for Shutdown */
+                      mPriority, 
+                      mScope);
+    NS_RELEASE(runnable);
+    if (NS_FAILED(rv)) return rv;
+    
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThreadPool adding new thread %p (%d total)\n",
+            thread, cnt + 1));
+
+    // wait for worker thread to be ready
+    rv = mon.Wait();
+    
+    if (NS_SUCCEEDED(rv))
         rv = mThreads->AppendElement(thread) ? NS_OK : NS_ERROR_FAILURE;
-        NS_RELEASE(thread);
-        if (NS_FAILED(rv)) goto exit;
-    }
-    // wait for some worker thread to be ready
-    PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-
-  exit:
-    PR_CExitMonitor(this);
+    
+    NS_RELEASE(thread);
     return rv;
 }
 
@@ -555,12 +637,12 @@ NS_NewThreadPool(nsIThreadPool* *result,
                  PRThreadScope scope)
 {
     nsresult rv;
-    nsThreadPool* pool = new nsThreadPool(minThreads, maxThreads);
+    nsThreadPool* pool = new nsThreadPool();
     if (pool == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(pool);
 
-    rv = pool->Init(stackSize, priority, scope);
+    rv = pool->Init(minThreads, maxThreads, stackSize, priority, scope);
     if (NS_FAILED(rv)) {
         NS_RELEASE(pool);
         return rv;
@@ -573,18 +655,16 @@ NS_NewThreadPool(nsIThreadPool* *result,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThreadPoolRunnable::nsThreadPoolRunnable(nsThreadPool* pool)
+    : mPool(pool)
 {
     NS_INIT_REFCNT();
-    mPool = pool;
-    NS_ADDREF(pool);
 }
 
 nsThreadPoolRunnable::~nsThreadPoolRunnable()
 {
-    NS_RELEASE(mPool);
 }
 
-NS_IMPL_ISUPPORTS1(nsThreadPoolRunnable, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsThreadPoolRunnable, nsIRunnable)
 
 NS_IMETHODIMP
 nsThreadPoolRunnable::Run()
@@ -593,31 +673,34 @@ nsThreadPoolRunnable::Run()
     nsIRunnable* request;
 
     // let the thread pool know we're ready
-    PR_CEnterMonitor(mPool);
-    PR_CNotify(mPool);
-    PR_CExitMonitor(mPool);
+    {
+        nsAutoCMonitor mon(mPool);
+        mon.Notify();
+    }
 
-#if defined(PR_LOGGING)
-    nsCOMPtr<nsIThread> th;
-    nsIThread::GetCurrent(getter_AddRefs(th));
-#endif
-    while ((request = mPool->GetRequest()) != nsnull) {
+    nsCOMPtr<nsIThread> currentThread;
+    nsIThread::GetCurrent(getter_AddRefs(currentThread));
+
+    while ((request = mPool->GetRequest(currentThread)) != nsnull) {
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p running %p\n", th.get(), request));
+               ("nsIThreadPool thread %p running %p\n", 
+                currentThread.get(), request));
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
         // let the thread pool know we've finished a run
-        PR_CEnterMonitor(mPool);
-        PR_CNotify(mPool);
-        PR_CExitMonitor(mPool);
+        {
+            nsAutoCMonitor mon(mPool);
+            mon.Notify();
+        }
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p completed %p status=%x\n",
-                th.get(), request, rv));
+                currentThread.get(), request, rv));
         NS_RELEASE(request);
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p quitting %p\n", th.get(), this));
+           ("nsIThreadPool thread %p quitting %p\n",
+            currentThread.get(), this));
     return rv;
 }
 
