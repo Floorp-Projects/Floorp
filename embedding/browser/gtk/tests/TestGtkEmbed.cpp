@@ -74,6 +74,7 @@ static void new_window_cb        (GtkMozEmbed *embed, GtkMozEmbed **retval, guin
 				  TestGtkBrowser *browser);
 static void visibility_cb        (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser);
 static void destroy_brsr_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
+static gint open_uri_cb          (GtkMozEmbed *embed, const char *uri, TestGtkBrowser *browser);
 
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
@@ -245,8 +246,14 @@ new_gtk_browser(guint32 chromeMask)
   // hookup to any requested visibility changes
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "visibility",
 		     GTK_SIGNAL_FUNC(visibility_cb), browser);
+  // hookup to the signal that says that the browser requested to be
+  // destroyed
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy_browser",
 		     GTK_SIGNAL_FUNC(destroy_brsr_cb), browser);
+  // hookup to the signal that is called when someone clicks on a link
+  // to load a new uri
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "open_uri",
+		     GTK_SIGNAL_FUNC(open_uri_cb), browser);
   // hookup to when the window is destroyed
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
 		     GTK_SIGNAL_FUNC(destroy_cb), browser);
@@ -497,6 +504,18 @@ destroy_brsr_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser)
 {
   g_print("destroy_brsr_cb\n");
   gtk_widget_destroy(browser->topLevelWindow);
+}
+
+gint
+open_uri_cb          (GtkMozEmbed *embed, const char *uri, TestGtkBrowser *browser)
+{
+  g_print("open_uri_cb %s\n", uri);
+
+  // interrupt this test load
+  if (!strcmp(uri, "http://people.redhat.com/blizzard/monkeys.txt"))
+    return TRUE;
+  // don't interrupt anything
+  return FALSE;
 }
 
 // utility functions

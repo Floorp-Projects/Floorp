@@ -59,6 +59,7 @@ struct _GtkMozEmbedClass
   void (* new_window)   (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask);
   void (* visibility)   (GtkMozEmbed *embed, gboolean visibility);
   void (* destroy_brsr) (GtkMozEmbed *embed);
+  gint (* open_uri)     (GtkMozEmbed *embed, const char *aURI);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);

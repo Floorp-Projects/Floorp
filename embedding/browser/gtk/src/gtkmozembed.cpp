@@ -59,6 +59,7 @@ enum {
   NEW_WINDOW,
   VISIBILITY,
   DESTROY_BROWSER,
+  OPEN_URI,
   LAST_SIGNAL
 };
 
@@ -127,6 +128,9 @@ gtk_moz_embed_handle_visibility(PRBool aVisibility, void *aData);
 
 static void
 gtk_moz_embed_handle_destroy(void *aData);
+
+static PRBool
+gtk_moz_embed_handle_open_uri(const char *aURI, void *aData);
 
 static GtkBinClass *parent_class;
 
@@ -295,6 +299,13 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, destroy_brsr),
 		   gtk_marshal_NONE__NONE,
 		   GTK_TYPE_NONE, 0);
+  moz_embed_signals[OPEN_URI] = 
+    gtk_signal_new("open_uri",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, open_uri),
+		   gtk_marshal_BOOL__POINTER,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
 
@@ -346,6 +357,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   embed_private->embed->SetNewBrowserCallback(gtk_moz_embed_handle_new_window, embed);
   embed_private->embed->SetVisibilityCallback(gtk_moz_embed_handle_visibility, embed);
   embed_private->embed->SetDestroyCallback(gtk_moz_embed_handle_destroy, embed);
+  embed_private->embed->SetStartOpenCallback(gtk_moz_embed_handle_open_uri, embed);
   // get our hands on a copy of the nsIWebNavigation interface for later
   embed_private->navigation = do_QueryInterface(embed_private->webBrowser);
   g_return_if_fail(embed_private->navigation);
@@ -893,4 +905,14 @@ gtk_moz_embed_handle_destroy(void *aData)
   GtkMozEmbed *embed = (GtkMozEmbed *)aData;
   g_return_if_fail(GTK_IS_MOZ_EMBED(embed));
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[DESTROY_BROWSER]);
+}
+
+static PRBool
+gtk_moz_embed_handle_open_uri(const char *aURI, void *aData)
+{
+  GtkMozEmbed *embed = (GtkMozEmbed *)aData;
+  gint return_val = PR_FALSE;
+  g_return_val_if_fail(GTK_IS_MOZ_EMBED(embed), PR_FALSE);
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[OPEN_URI], aURI, &return_val);
+  return return_val;
 }
