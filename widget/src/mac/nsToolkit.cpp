@@ -329,17 +329,19 @@ void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
 {
   if (!RecoverMemoryBuffer(kMemoryBufferSize))
   {
+    // NS_ASSERTION(0, "Failed to recallocate memory buffer. Flushing caches");
     // until imglib implements nsIMemoryPressureObserver (bug 46337)
     // manually flush the imglib cache here
     nsCOMPtr<nsIImageManager> imageManager = do_GetService(kImageManagerCID);
     if (imageManager)
     {
-      imageManager->FlushCache(1);
+      imageManager->FlushCache(1);    // flush everything
     }
   }
 
   if (!RecoverMemoryReserve(kMemoryReserveSize))
   {
+    // NS_ASSERTION(0, "Failed to recallocate memory reserve. Flushing caches");
     nsMemory::HeapMinimize(PR_TRUE);
   }
 }
@@ -351,7 +353,7 @@ Boolean nsMacMemoryCushion::RecoverMemoryReserve(Size reserveSize)
   if (*sMemoryReserve != nsnull) return true;   // everything is OK
   
   ::ReallocateHandle(sMemoryReserve, reserveSize);
-  if (::MemError() != noErr) return false;
+  if (::MemError() != noErr || !*sMemoryReserve) return false;
   return true;
 }
 
@@ -359,9 +361,12 @@ Boolean nsMacMemoryCushion::RecoverMemoryBuffer(Size bufferSize)
 {
   if (!mBufferHandle) return true;     // not initted yet
   if (*mBufferHandle != nsnull) return true;   // everything is OK
-  
+    
   ::ReallocateHandle(mBufferHandle, bufferSize);
-  if (::MemError() != noErr) return false;
+  if (::MemError() != noErr || !*mBufferHandle) return false;
+
+  // make this purgable
+  ::HPurge(mBufferHandle);
   return true;
 }
 

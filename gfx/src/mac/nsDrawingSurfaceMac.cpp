@@ -244,8 +244,6 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
  * @update 3/02/99 dwc
  * @return error status
  */
-#define kReserveHeapFreeSpace			(256 * 1024)
-#define kReserverHeapContigSpace	(64 * 1024)
 
 NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32 aHeight, PRUint32 aFlags)
 {
@@ -272,6 +270,9 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
 	// Quick and dirty check to make sure there is some memory available.
 	// GWorld allocations in temp mem can still fail if the heap is totally
 	// full, because some stuff is allocated in the heap
+	const long kReserveHeapFreeSpace = (256 * 1024);
+	const long kReserverHeapContigSpace	= (128 * 1024);
+
   QDErr		err = noErr;
   long	  totalSpace, contiguousSpace;
   
