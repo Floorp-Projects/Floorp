@@ -112,7 +112,7 @@ typedef struct _MDSocketCallerInfo {
 
 struct _MDFileDesc {
     PRInt32     osfd;
-	PRBool      connectionOpen;
+	PRBool      orderlyDisconnect;
 	PRBool      readReady;
 	PRBool      writeReady;
 	PRBool      exceptReady;
