@@ -1335,19 +1335,21 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         PRUnichar emptyUnichar = 0;
         PRBool needToRemoveDup = PR_FALSE;
         nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+        nsXPIDLCString charset;
+        compFields->GetCharacterSet(getter_Copies(charset));
         
         if (type == nsIMsgCompType::ReplyAll)
         {
           mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            mimeConverter->DecodeMimeHeader(outCString, recipient);
+            mimeConverter->DecodeMimeHeader(outCString, recipient, charset);
           }
               
           mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            mimeConverter->DecodeMimeHeader(outCString, cc);
+            mimeConverter->DecodeMimeHeader(outCString, cc, charset);
           }
               
           if (recipient.Length() > 0 && cc.Length() > 0)
@@ -1361,31 +1363,31 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mimeConverter->DecodeMimeHeader(outCString, replyTo);
+          mimeConverter->DecodeMimeHeader(outCString, replyTo, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mimeConverter->DecodeMimeHeader(outCString, newgroups);
+          mimeConverter->DecodeMimeHeader(outCString, newgroups, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mimeConverter->DecodeMimeHeader(outCString, followUpTo);
+          mimeConverter->DecodeMimeHeader(outCString, followUpTo, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mimeConverter->DecodeMimeHeader(outCString, messageId);
+          mimeConverter->DecodeMimeHeader(outCString, messageId, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mimeConverter->DecodeMimeHeader(outCString, references);
+          mimeConverter->DecodeMimeHeader(outCString, references, charset);
         }
         
         if (! replyTo.IsEmpty())
