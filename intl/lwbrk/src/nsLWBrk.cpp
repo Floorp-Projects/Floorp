@@ -25,6 +25,7 @@
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBreakerFImp.h"
+#include "nsLWBrkDll.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -33,8 +34,8 @@ NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 
-extern "C" PRInt32 g_InstanceCount = 0;
-extern "C" PRInt32 g_LockCount = 0;
+PRInt32 g_InstanceCount = 0;
+PRInt32 g_LockCount = 0;
 
 class nsLWBrkFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
