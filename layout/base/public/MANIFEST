@@ -1,0 +1,24 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:layout directory
+#
+nslayout.h
+nsIContent.h
+nsIContentDelegate.h
+nsIDocument.h
+nsIDocumentContainer.h
+nsIDocumentObserver.h
+nsIFrame.h
+nsIFrameImageLoader.h
+nsIPresContext.h
+nsIPresShell.h
+nsIReflowCommand.h
+nsIRunaround.h
+nsISelection.h
+nsISpaceManager.h
+nsStyleCoord.h
+nsStyleStruct.h
+nsIStyleContext.h
+nsIStyleRule.h
+nsIStyleSet.h
+nsIStyleSheet.h
+nsITextContent.h
