@@ -37,11 +37,6 @@
 #include "nsIJVMManager.h"
 #endif
 #include "nsIPluginManager.h"
-#include "nsICharsetConverterManager.h"
-#include "nsICharsetAlias.h"
-#include "nsIPlatformCharset.h"
-
-#include "nsUnicharUtilCIID.h"
 #include "nsIProperties.h"
 
 #include "nsIObserverService.h"
@@ -64,7 +59,6 @@
     #define PARSER_DLL "raptorhtmlpars.dll"
     #define DOM_DLL    "jsdom.dll"
     #define NETLIB_DLL "netlib.dll"
-    #define UNICHARUTIL_DLL   "unicharutil.dll"
     #define PLUGIN_DLL "raptorplugin.dll"
     #define CAPS_DLL   "caps.dll"
     #define LIVECONNECT_DLL    "jsj3250.dll"
@@ -78,7 +72,6 @@
     #define PARSER_DLL    "PARSER_DLL"
     #define DOM_DLL        "DOM_DLL"
     #define NETLIB_DLL    "NETLIB_DLL"
-    #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
     #define PLUGIN_DLL    "PLUGIN_DLL"
     #define CAPS_DLL    "CAPS_DLL"
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
@@ -100,7 +93,6 @@
     #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
     #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
-    #define UNICHARUTIL_DLL   "libunicharutil"MOZ_DLL_SUFFIX
     #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
     #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
@@ -174,9 +166,6 @@ static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 // NETLIB
 static NS_DEFINE_CID(kCNetServiceCID, NS_NETSERVICE_CID);
-
-// UNICHARUTIL
-static NS_DEFINE_IID(kCUnicharUtilCID,             NS_UNICHARUTIL_CID);
 
 // PLUGIN
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
@@ -254,11 +243,6 @@ NS_SetupRegistry()
 
   // NETLIB
   nsComponentManager::RegisterComponent(kCNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef XP_MAC
-  // UNICHARUTIL
-  nsComponentManager::RegisterComponent(kCUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   // PLUGIN
   nsComponentManager::RegisterComponent(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
