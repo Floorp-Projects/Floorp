@@ -784,6 +784,13 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           }
           break;
 
+        case eHTMLTag_script:
+          {
+            //nsCParserNode& theCNode=*(nsCParserNode*)&attrNode;
+            result=HandleScriptToken(attrNode);
+          }
+          break;
+
         case eHTMLTag_area:
           if (mHasOpenMap) {
             result = mSink->AddLeaf(attrNode);
@@ -971,28 +978,17 @@ nsresult CNavDTD::HandleScriptToken(nsCParserNode& aNode) {
   PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
 
   if (kNotFound == pos) {
-    // We're in the HEAD
-    result=OpenHead(aNode);
+    // We're in the HEAD, but don't bother to open it.
     if(NS_OK==result) {
       CollectSkippedContent(aNode,attrCount);
-      if(NS_OK==result) {
-          //Boy is this an evil hack...
-        mContextStack.Pop();
-        result=AddLeaf(aNode);
-          mContextStack.Push(eHTMLTag_head);
-          if(NS_OK==result)
-          result=CloseHead(aNode);
-      }
-    }
-  }
+      result=AddLeaf(aNode);
+    }//if
+  }//if
   else {
     // We're in the BODY
     CollectSkippedContent(aNode,attrCount);
-    if(NS_OK==result) {
-      result=AddLeaf(aNode);
-    }
+    result=AddLeaf(aNode);
   }
-
   return result;
 }
 
