@@ -1332,11 +1332,11 @@ nsTraceRefcntImpl::LogAddCOMPtr(void* aCOMPtr,
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
-    return;
+    return NS_OK;
   }
   PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
-    return;
+    return NS_OK;
   }
 
   if (!gInitialized)
@@ -1375,11 +1375,11 @@ nsTraceRefcntImpl::LogReleaseCOMPtr(void* aCOMPtr,
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
-    return;
+    return NS_OK;
   }
   PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
-    return;
+    return NS_OK;
   }
 
   if (!gInitialized)
