@@ -52,8 +52,8 @@ public:
   virtual ~nsCSSRule(void);
 
   // for implementing nsISupports
-  nsrefcnt AddRef();
-  nsrefcnt Release();
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
 protected:
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
