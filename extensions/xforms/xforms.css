@@ -44,7 +44,10 @@ case {
 }
 
 message[level="ephemeral"], hint {
-  background: #ffffcc;
+  background-color: InfoBackground;
+  color: InfoText;
+  padding: 2px 3px;
+  font: message-box;
   border: 1px black solid;
   visibility: hidden !important;
   position: absolute !important;
