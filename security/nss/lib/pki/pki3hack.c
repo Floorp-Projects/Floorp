@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.13 $ $Date: 2001/12/14 20:50:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.14 $ $Date: 2001/12/18 16:04:52 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -496,12 +496,12 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
 	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	}
     } else if (instance) {
-	/* trust */
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	/* slot */
 	cc->slot = instance->token->pk11slot;
 	/* pkcs11ID */
 	cc->pkcs11ID = instance->handle;
+	/* trust */
+	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
     } 
     /* database handle is now the trust domain */
     cc->dbhandle = c->object.trustDomain;
