@@ -812,12 +812,10 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_br)
   {
-    if (mFlags & nsIDocumentEncoder::OutputFormatted)
-    {
-      nsString temp (NS_LINEBREAK);
-      Write(temp);
-      mColPos = 0;
-    }
+    // Do this even if we're not doing formatted output:
+    nsString temp (NS_LINEBREAK);
+    Write(temp);
+    mColPos = 0;
   }
   // The only time we want to pass along whitespace from the original
   // html source is if we're prettyprinting and we're inside a <pre>.
