@@ -322,7 +322,7 @@ nsresult nsRenderingContextOS2::CommonInit()
     ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
   } else if (!palInfo.isPaletteDevice && palInfo.palette) {
     GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET,
-                            LCOLF_CONSECRGB, palInfo.sizePalette,
+                            LCOLF_CONSECRGB, 0,
                             palInfo.sizePalette, (PLONG) palInfo.palette);
   }
   else
