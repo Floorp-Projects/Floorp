@@ -22,20 +22,21 @@
  */
 
 
-  function StartupViewSource() {
-    // Generate unique name (var appCoreName declared in navigator.js).
-    EdAppCoreName = "ViewSource." + ( new Date() ).getTime().toString();
-    
-    // Create and initialize the browser app core.
-    EdAppCore = new BrowserAppCore();
-    EdAppCore.Init( EdAppCoreName );
-    EdAppCore.setContentWindow(window.frames[0]);
-    EdAppCore.setWebShellWindow(window);
-    EdAppCore.setToolbarWindow(window);
+function StartupViewSource()
+{
+	// Create and initialize the browser instance.
+	createBrowserInstance();
 
-    // Get url whose source to view.
-    var url = document.getElementById("args").getAttribute("value");
+	if ( appCore ) {
+	    appCore.isViewSource = true;
+	    appCore.setContentWindow(window.frames[0]);
+	    appCore.setWebShellWindow(window);
+	    appCore.setToolbarWindow(window);
+	}
 
-    // Load the source (the app core will magically know what to do).
-    EdAppCore.loadUrl(url);
-  }
+	// Get url whose source to view.
+	var url = window.arguments[0];
+
+	// Load the source (the app core will magically know what to do).
+	appCore.loadUrl( url );
+}

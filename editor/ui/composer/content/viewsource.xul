@@ -29,11 +29,12 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/viewSource.dtd" >
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onunload="EditorShutdown()"
+        onload="StartupViewSource()"
         title="&mainWindow.title;" align="vertical" width="640" height="480">
   
-  <html:script src="chrome://editor/content/EditorCommands.js"></html:script>
+  <html:script src="chrome://navigator/content/navigator.js"></html:script>
   <html:script src="chrome://editor/content/viewsource.js"></html:script>
+  <html:script src="chrome://editor/content/EditorCommands.js"></html:script>
 
   <broadcaster id="args" value="http://www.mozilla.org/"/>
   <broadcaster id="canPrint"/>
@@ -44,12 +45,7 @@
   <broadcaster id="Editor:OnStopBinding"/>
   <broadcaster id="Editor:Throbber" busy="false"/>
 
-  
-  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-  <broadcaster id="dialog.start" ready="false"/>
-  <observes element="dialog.start" attribute="ready" onchange="StartupViewSource()"/>
-    
-  <menubar>
+   <menubar>
     <menu value="&fileMenu.label;">
 	    <menupopup>
 			  <menuitem value="&browserCmd.label;" oncommand="BrowserNewWindow();"/>
