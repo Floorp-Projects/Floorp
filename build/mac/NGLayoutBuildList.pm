@@ -868,7 +868,6 @@ sub BuildIDLProjects()
     	
     BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",                   "docshell");
 
-	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
@@ -883,6 +882,8 @@ sub BuildIDLProjects()
 	
 	BuildIDLProject(":mozilla:xpfe:browser:macbuild:mozBrowserIDL.mcp",				"mozBrowser");
 	
+	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
+
 	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
 	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
 	BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
@@ -1232,8 +1233,6 @@ sub MakeResourceAliases()
 	my($domds_dir) = "$samples_dir" . "rdf:";
 	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
 
-	my($xpinstall_dir) = "$resource_dir" . "xpinstall:";
-	_InstallResources(":mozilla:xpinstall:res:MANIFEST",                                "$xpinstall_dir");
 	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
