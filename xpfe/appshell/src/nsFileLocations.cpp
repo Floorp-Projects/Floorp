@@ -19,7 +19,7 @@
  * Reserved.
  *
  * Contributors:
- *     Doug Turner <dougt@netscape.com>
+ *     John R. McMullen <mcmullen@netscape.com>
  */
 
 #include "nsFileLocations.h"
@@ -46,40 +46,163 @@
 #include <sys/param.h>
 #endif
 
-// header file for profiles
-#if defined(XP_PC) 
 #include "nsIProfile.h"
-#endif //XP_PC
 
 #include "plstr.h"
 #include "prenv.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#if defined(XP_PC) 
-	static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
+#if defined(NS_USING_PROFILES)
+    static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
-
-
-#if XP_PC
-//----------------------------------------------------------------------------------------
-static char* MakeUpperCase(char* aPath)
-//----------------------------------------------------------------------------------------
-{
-  // windows does not care about case.  push to uppercase:
-  int length = strlen(aPath);
-  for (int i = 0; i < length; i++)
-      if (islower(aPath[i]))
-        aPath[i] = _toupper(aPath[i]);
-    
-  return aPath;
-}
-#endif
 
 #ifdef XP_MAC
 #pragma export on
 #endif
+//========================================================================================
+// Static functions that ain't nobody else's business.
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
+// to these. For now I am using these until the profile stuff picks up and
+// we know how to get the absolute fallback for all platforms
+// UNIX    : ~/.mozilla
+// WIN    : Program Files\Netscape\Users50\
+// Mac    : :Documents:Mozilla:Users50:
+//----------------------------------------------------------------------------------------
+{
+#if defined(XP_MAC)
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Mac_DocumentsDirectory);
+    cwd += "Mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+    cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+    cwd += "Default";
+#elif defined(XP_UNIX)
+        // ~/.mozilla
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Unix_HomeDirectory);
+    cwd += ".mozilla";
+#else
+    // set its directory an aunt of the executable.
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    // That's "program files\Netscape\Communicator\Program"
+    nsFileSpec parent;
+    cwd.GetParent(parent); // "program files\Netscape\Communicator"
+    parent.GetParent(cwd); // "program files\Netscape\"
+    cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+    cwd += "Default";
+#endif
+    outSpec = cwd;
+} // CreateDefaultProfileDirectorySpec
+
+//----------------------------------------------------------------------------------------
+static void GetProfileDirectory(nsFileSpec& outSpec)
+// The app profile directory comes from the profile manager.
+// Once the profile manager knows which profile needs to be
+// accessed it tells us about the directory. 
+
+// And if the profile manager doesn't return anything, we use the routine above,
+// CreateDefaultProfileDirectorySpec() above.
+//----------------------------------------------------------------------------------------
+{
+    static nsFileSpec* gProfileDir = nsnull;
+        // pointer so that we can detect whether it has been initialized
+    if (!gProfileDir)
+    {
+        // First time, initialize gProfileDir
+        nsIProfile *profileService = nsnull;
+        gProfileDir = new nsFileSpec;
+        if (!gProfileDir)
+            return;
+        nsresult rv = nsServiceManager::GetService(
+            kProfileCID, 
+            nsIProfile::GetIID(), 
+            (nsISupports **)&profileService);
+        if (NS_SUCCEEDED(rv))
+        {
+            char* currProfileName = nsnull;
+            nsFileSpec currProfileDirSpec;
+            
+            profileService->Startup(nsnull);
+            int numProfiles = 0;
+            profileService->GetProfileCount(&numProfiles);
+            if (numProfiles == 0)
+            {    
+		        // no profiles exist: create "default" profile
+		        CreateDefaultProfileDirectorySpec(currProfileDirSpec);
+	            profileService->SetProfileDir("default", currProfileDirSpec);
+	            currProfileName = PL_strdup("default");
+	        }
+	        else if (numProfiles == 1)
+	        {
+	            // one profile exists: use that profile
+	            profileService->GetSingleProfile(&currProfileName);
+	            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+	        }
+		    else
+		    {
+			    // multiple profiles exist: we'll use the same profile as last time 
+			    // (see following rules) 
+			    // (if we can't figure out what the last profile used was for some reason, 
+			    // we'll pick the first one as returned from the registry query) 
+		        profileService->GetCurrentProfile(&currProfileName);
+		        if (currProfileName)
+		        {
+		            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+		        }
+		        else
+		        {
+		            profileService->GetFirstProfile(&currProfileName);
+		            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+		        }
+		    }
+
+		    if (currProfileName)
+		    {
+#if defined(XP_PC) && defined(NS_DEBUG)
+		        // Don't print in release version. Don't use stderr in XP code.
+		        fprintf(stderr, "ProfileName : %s\n", currProfileName);
+		        fprintf(stderr, "ProfileDir  : %s\n", currProfileDirSpec.GetCString());
+#endif
+		        PR_FREEIF(currProfileName);
+            }
+            if (!currProfileDirSpec.Exists())
+                currProfileDirSpec.CreateDir();
+
+            if (NS_FAILED(profileService->GetCurrentProfileDir(gProfileDir)))
+            {
+                delete gProfileDir; // All that for nothing.  sigh.
+                gProfileDir = nsnull;
+            }
+                
+            nsServiceManager::ReleaseService(kProfileCID, profileService);
+        }
+        if (!gProfileDir)
+        {
+            gProfileDir = new nsFileSpec;
+            if (gProfileDir)
+                CreateDefaultProfileDirectorySpec(*gProfileDir);
+        }
+        if (gProfileDir && !gProfileDir->Exists())
+            gProfileDir->CreateDir();
+    }
+    if (gProfileDir)
+    {
+        outSpec = *gProfileDir;
+    }
+} // GetProfileDirectory
+
+//========================================================================================
+// Implementation of nsSpecialFileSpec
+//========================================================================================
 
 //----------------------------------------------------------------------------------------
 nsSpecialFileSpec::nsSpecialFileSpec(Type aType)
@@ -99,167 +222,118 @@ nsSpecialFileSpec::~nsSpecialFileSpec()
 void nsSpecialFileSpec::operator = (Type aType)
 //----------------------------------------------------------------------------------------
 {
-	*this = (const char*)nsnull;
-	switch (aType)
-	{
+    *this = (const char*)nsnull;
+    
+    switch (aType)
+    {
         
-	#ifdef XP_MAC
+    #ifdef XP_MAC
         case App_PrefsDirectory30:
         case App_PrefsDirectory40:
+            NS_NOTYETIMPLEMENTED("Write me!");
+            break;    
         case App_PrefsDirectory50:
-	        {
-	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
-	            *this += "Netscape \xC4";
-	            break;
-	        }
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                break;
+            }
     #elif defined(XP_PC)
         case App_PrefsDirectory30:
         case App_PrefsDirectory40:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
         case App_PrefsDirectory50:
-	        {
-	            *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-	            break;
-	        }
-	#else
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                break;
+            }
+    #else
         case App_PrefsDirectory30:
         case App_PrefsDirectory40:
+        case App_PrefsDirectory50:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
-        case App_PrefsDirectory50:
-	        {
-	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	            break;
-	        }
-	#endif
+    #endif
         
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
         case App_UserProfileDirectory50:
-            {
-                // The app profile directory comes from the profile manager.
-                // Once the profile manager knows which profile needs to be
-				// accessed it tells us about the directory. 
-
-                // And if the profile manager doesn't return anything, we got to fallback
-                // to these. For now I am using these until the profile stuff picks up and
-                // we know how to get the absolute fallback for all platforms
-                // UNIX	: ~/.mozilla
-                // WIN	: ./profile
-                // MAC	: ./profile
-
-				    	#ifdef XP_PC
-						nsIProfile *profile = nsnull;
-						static nsFileSpec* profileDir = nsnull;
-
-						if (!profileDir)
-						{
-                           			 	nsIProfile* profile = nsnull;
-                            				nsresult rv = nsServiceManager::GetService(kProfileCID, 
-														nsIProfile::GetIID(), 
-														(nsISupports **)&profile);
-                            				if (NS_FAILED(rv)) {
-                               					return;
-							}
-
-                            				profile->Startup(nsnull);
-
-                            				profileDir = new nsFileSpec;
-                            				profile->GetCurrentProfileDir(&profileDir);
-						}
-						if (profileDir) {
-							*this = *profileDir;
-						}
-					#endif // XP_PC
-
-					#ifdef XP_UNIX
-						// ~/.mozilla
-						*this = PR_GetEnv("HOME");
-						*this += ".mozilla";
-					#endif //XP_UNIX
-					
-					#ifdef XP_MAC
-						// XXX Fix Me. For now use ./profile
-						*this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
-						*this += "profile";
-					#endif //XP_MAC
-            }
+            GetProfileDirectory(*this);
             break;    
      
-			
+            
         case App_PreferencesFile30:
-	        {
-	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
-	        #ifdef XP_MAC
-	            *this += "Netscape Preferences";
-	        #elif defined(XP_UNIX)
-	            *this += "preferences.js";
-	        #else
-	            *this += "prefs.js";
-	        #endif
-	        }
-	        break;
+            {
+                *this = nsSpecialFileSpec(App_PrefsDirectory30);
+            #ifdef XP_MAC
+                *this += "Netscape Preferences";
+            #elif defined(XP_UNIX)
+                *this += "preferences.js";
+            #else
+                *this += "prefs.js";
+            #endif
+            }
+            break;
         case App_PreferencesFile40:
-	        {
-	            *this = nsSpecialFileSpec(App_PrefsDirectory40);
-	        #ifdef XP_MAC
-	            *this += "Netscape Preferences";
-	        #elif defined(XP_UNIX)
-	            *this += "preferences.js";
-	        #else
-	            *this += "prefs.js";
-	        #endif
-	        }
+            {
+                *this = nsSpecialFileSpec(App_PrefsDirectory40);
+            #ifdef XP_MAC
+                *this += "Netscape Preferences";
+            #elif defined(XP_UNIX)
+                *this += "preferences.js";
+            #else
+                *this += "prefs.js";
+            #endif
+            }
             break;    
         case App_PreferencesFile50:
-	        {
-	            *this = nsSpecialFileSpec(App_PrefsDirectory50);
-	            *this += "prefs50.js";
-	            break;
-	        }
+            {
+                *this = nsSpecialFileSpec(App_PrefsDirectory50);
+                *this += "prefs50.js";
+                break;
+            }
             break;    
         
         case App_BookmarksFile30:
-	        #ifdef XP_MAC
-	        {
-	            // This is possibly correct on all platforms
-	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
-	            *this += "Bookmarks.html";
-	            break;
-	        }
-	        #endif
+            #ifdef XP_MAC
+            {
+                // This is possibly correct on all platforms
+                *this = nsSpecialFileSpec(App_PrefsDirectory30);
+                *this += "Bookmarks.html";
+                break;
+            }
+            #endif
         case App_BookmarksFile40:
-	        #ifdef XP_MAC
-	        {
-	            // This is possibly correct on all platforms
-	            *this = nsSpecialFileSpec(App_PrefsDirectory40);
-	            *this += "Bookmarks.html";
-	            break;
-	        }
-	        #endif
+            #ifdef XP_MAC
+            {
+                // This is possibly correct on all platforms
+                *this = nsSpecialFileSpec(App_PrefsDirectory40);
+                *this += "Bookmarks.html";
+                break;
+            }
+            #endif
         case App_BookmarksFile50:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
         
         case App_Registry40:
-	        #ifdef XP_MAC
-	        {
-	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
-	            *this += "Netscape Registry";
-	            break;
-	        }
-	        #endif
+            #ifdef XP_MAC
+            {
+                *this = nsSpecialFileSpec(App_PrefsDirectory30);
+                *this += "Netscape Registry";
+                break;
+            }
+            #endif
         case App_Registry50:
-	        #ifdef XP_MAC
-	        {
-	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
-	            *this += "Mozilla Registry";
-	            break;
-	        }
-	        #endif
+            #ifdef XP_MAC
+            {
+                *this = nsSpecialFileSpec(App_PrefsDirectory30);
+                *this += "Mozilla Registry";
+                break;
+            }
+            #endif
         
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
@@ -275,6 +349,10 @@ void nsSpecialFileSpec::operator = (Type aType)
 #ifdef XP_MAC
 #pragma export off
 #endif
+
+//========================================================================================
+// Implementation of nsIFileLocator
+//========================================================================================
 
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 
@@ -318,9 +396,15 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
       nsFileSpec* outSpec)
 //----------------------------------------------------------------------------------------
 {
-  if (nsnull == outSpec)
-    return NS_ERROR_NULL_POINTER;
+    if (!outSpec)
+        return NS_ERROR_NULL_POINTER;
 
+   if (aType < nsSpecialFileSpec::App_DirectoryBase)
+   {
+       *(nsSpecialSystemDirectory*)outSpec
+           = (nsSpecialSystemDirectory::SystemDirectories)aType;
+       return NS_OK;
+   }
    *(nsSpecialFileSpec*)outSpec = (nsSpecialFileSpec::Type)aType;
    return NS_OK;
 }
