@@ -42,9 +42,8 @@ Rights Reserved.
 				  style="height:5em"
 				  onclick="awClickRow()">
 				  
-				<treecol style="width:15%"/>
-				<treecol style="width:3%"/>
-				<treecol style="width:82%"/>
+				<treecol style="width:9em"/>
+				<treecol style="width:2em"/>
 
 				<treechildren id="addressWidgetBody">
 					<treeitem>
