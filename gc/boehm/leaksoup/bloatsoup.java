@@ -186,6 +186,7 @@ public class bloatsoup {
 			long totalSize = 0;
 			
 			StringTable strings = new StringTable();
+			strings.internAs("void*", "void");
 			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
 			CallTree calls = new CallTree(strings);
@@ -313,10 +314,6 @@ public class bloatsoup {
 			writer.println("total object count = " + objectCount + "<BR>");
 			writer.println("total memory bloat = " + totalSize + " bytes.<BR>");
 			
-            File contentsFile = new File(inputName + ".contents");
-            if (!contentsFile.exists())
-                contentsFile.mkdir();
-
             // print histogram sorted by count * size.
 			writer.println("<H2>Bloat Histogram</H2>");
             printHistogram(writer, hist, contentsDir);
@@ -324,6 +321,18 @@ public class bloatsoup {
 			writer.close();
 			writer = null;
             
+			// ensure the contents directory has been created.
+            File contentsFile = new File(inputName + ".contents");
+            if (!contentsFile.exists())
+                contentsFile.mkdir();
+            
+            // create the stack crawl script.
+            outputName = contentsDir + "showCrawl.js";
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName))));
+            writer.print(kStackCrawlScript);
+            writer.close();
+            writer = null;
+
             // print the Entries graph.
 			int length = entries.length;
 		    Type anchorType = null;
@@ -339,8 +348,8 @@ public class bloatsoup {
     				writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName))));
     			    // set up the stack crawl script. use a <LAYER> on Communicator 4.X, a separate
     			    // window on other browsers.
-    			    writer.println("<TITLE>&LT;" + anchorType.mName + "&GT;</TITLE>");
-                    writer.println("<SCRIPT>\n" + kStackCrawlScript + "</SCRIPT>");
+    			    writer.println("<TITLE>&LT;" + anchorType.mName + "&GT; (" + anchorType.mSize + ")</TITLE>");
+                    writer.println("<SCRIPT src='showCrawl.js'></SCRIPT>");
                     writer.println("<LAYER NAME='popup' LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>");
     				writer.println("<A NAME=\"" + anchorType.mName + "_" + anchorType.mSize + "\"></A>");
     				writer.println("<H3>" + anchorType + " Bloat</H3>");
