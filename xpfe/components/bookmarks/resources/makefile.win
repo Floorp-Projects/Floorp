@@ -33,8 +33,6 @@ FILES=\
         manage-bookmarks.css            \
         personal-folder-closed.gif      \
         personal-folder-open.gif        \
-        locale/en-US/bm-props.dtd \
-        locale/en-US/bookmarks.dtd \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
