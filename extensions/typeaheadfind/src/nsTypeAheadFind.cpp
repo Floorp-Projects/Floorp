@@ -614,7 +614,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // by waiting for the first keystroke, we still get the startup time benefits.
     mIsSoundInitialized = PR_TRUE;
     mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (mSoundInterface) {
+    if (mSoundInterface && !mNotFoundSoundURL.Equals(NS_LITERAL_CSTRING("beep"))) {
       mSoundInterface->Init();
     }
   }
