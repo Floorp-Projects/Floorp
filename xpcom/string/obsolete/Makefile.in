@@ -30,6 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= string_obsolete_s
 
+REQUIRES	= unicharutil
+
 CPPSRCS		=			\
 		nsStr.cpp		\
 		nsString.cpp		\
