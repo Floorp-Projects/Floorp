@@ -267,7 +267,11 @@ viewer:Components:MsgNews.shlb
 viewer:Components:MsgNews.xpt 
 viewer:Components:vcard.shlb 
 viewer:Components:smime.shlb
-viewer:Components:signed.shlb 
+viewer:Components:signed.shlb
+viewer:Components:msgImport.shlb
+viewer:Components:msgImport.xpt
+viewer:Components:msgImportText.shlb
+viewer:Components:msgImportEudora.shlb
 viewer:chrome:addressbook:* 
 viewer:chrome:messenger:* 
 viewer:chrome:messengercompose:* 
