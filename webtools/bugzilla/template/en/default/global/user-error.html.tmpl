@@ -249,6 +249,12 @@
     [% title = "Blank Component Name Not Allowed" %]
     You must enter a name for this new component.
 
+  [% ELSIF error == "component_has_bugs" %]
+    [% title = BLOCK %]Component has [% terms.Bugs %][% END %]
+    There are [% nb FILTER html %] [%+ terms.bugs %] entered for this component!
+    You must reassign those [% terms.bugs %] to another component before you
+    can delete this one.
+
   [% ELSIF error == "component_must_have_a_name" %]
     [% title = "Blank Component Name Not Allowed" %]
     You cannot delete the component name for component '[% name FILTER html %]'.
@@ -683,6 +689,11 @@
     [% title = "Blank Milestone Name Not Allowed" %]
     You must enter a name for this milestone.
 
+  [% ELSIF error == "milestone_is_default" %]
+    [% title = "Default milestone not deletable" %]
+    Sorry, but [% name FILTER html %] is the default milestone for
+    product '[% product FILTER html %]', and so it can not be deleted.
+
   [% ELSIF error == "milestone_name_too_long" %]
     [% title = "Milestone Name Is Too Long" %]
     The name of a milestone is limited to 20 characters. 
@@ -911,6 +922,12 @@
     You are not permitted to edit [% terms.bugs %] in product 
     [% product FILTER html %].
 
+  [% ELSIF error == "product_has_bugs" %]
+    [% title = BLOCK %]Product has [% terms.Bugs %][% END %]
+    There are [% nb FILTER html %] [%+ terms.bugs %] entered for this product!
+    You must reassign those [% terms.bugs %] to another product before you
+    can delete this one.
+
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Search Name Specified" %]
     You must enter a name for your search.
@@ -1025,6 +1042,12 @@
   [% ELSIF error == "version_blank_name" %]
     [% title = "Blank Version Name Not Allowed" %]
     You must enter a name for this version.
+
+  [% ELSIF error == "version_has_bugs" %]
+    [% title = BLOCK %]Version has [% terms.Bugs %][% END %]
+    There are [% nb FILTER html %] [%+ terms.bugs %] associated with this
+    version! You must reassign those [% terms.bugs %] to another version
+    before you can delete this one.
 
   [% ELSIF error == "version_name_too_long" %]
     [% title = "Version Name Is Too Long" %]

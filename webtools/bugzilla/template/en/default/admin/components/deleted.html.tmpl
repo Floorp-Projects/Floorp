@@ -36,23 +36,15 @@
 
 <p>
 [% IF deleted_bug_count %]
-  Attachments, [% terms.bug %] activity and dependencies deleted for
-  [%+ deleted_bug_count %]
-  [%- IF deleted_bug_count %] 
-    [% terms.bugs %]
-  [% ELSE %]
-    [% terms.bug %]
-  [% END %].
-
-  </p><p>
   [% deleted_bug_count %]
-  [%- IF deleted_bug_count %] 
+  [%- IF deleted_bug_count > 1 %] 
     [% terms.bugs %]
   [% ELSE %]
     [% terms.bug %]
   [% END %]
   deleted.
-
+  </p><p>
+  All references to those deleted [% terms.bugs %] have been removed.
 [% ELSE %]
   No [% terms.bugs %] existed for the component.
 [% END %]

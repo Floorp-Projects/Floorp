@@ -23,6 +23,7 @@
 #               Dawn Endico <endico@mozilla.org>
 #               Joe Robins <jmrobins@tgix.com>
 #               Gavin Shelley <bugzilla@chimpychompy.org>
+#               Frédéric Buclin <LpSolit@gmail.com>
 #
 # Direct any questions on this source code to
 #
@@ -259,7 +260,8 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
+my $whoid = $user->id;
 
 print Bugzilla->cgi->header();
 
@@ -771,79 +773,55 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting product");
     CheckProduct($product);
     my $product_id = get_product_id($product);
 
-    # lock the tables before we start to change everything:
+    my $bug_ids =
+      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs WHERE product_id = ?",
+                               undef, $product_id);
 
-    $dbh->bz_lock_tables('attachments WRITE',
-                         'bugs WRITE',
-                         'bugs_activity WRITE',
-                         'components WRITE',
-                         'dependencies WRITE',
-                         'versions WRITE',
-                         'products WRITE',
-                         'groups WRITE',
-                         'group_control_map WRITE',
-                         'profiles WRITE',
-                         'milestones WRITE',
-                         'flaginclusions WRITE',
-                         'flagexclusions WRITE');
-
-    # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
-    # so I have to iterate over bugs and delete all the indivial entries
-    # in bugs_activies and attachments.
-
-    if (Param("allowbugdeletion")) {
-        SendSQL("SELECT bug_id
-             FROM bugs
-             WHERE product_id=$product_id");
-        while (MoreSQLData()) {
-            my $bugid = FetchOneColumn();
-
-            PushGlobalSQLState();
-            SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
-            PopGlobalSQLState();
+    my $nb_bugs = scalar(@$bug_ids);
+    if ($nb_bugs) {
+        if (Param("allowbugdeletion")) {
+            foreach my $bug_id (@$bug_ids) {
+                my $bug = new Bugzilla::Bug($bug_id, $whoid);
+                $bug->remove_from_db();
+            }
         }
-        print "Attachments, bug activity and dependencies deleted.<BR>\n";
-
-
-        # Deleting the rest is easier:
-
-        SendSQL("DELETE FROM bugs
-             WHERE product_id=$product_id");
-        print "Bugs deleted.<BR>\n";
+        else {
+            ThrowUserError("product_has_bugs", { nb => $nb_bugs });
+        }
     }
 
-    SendSQL("DELETE FROM components
-             WHERE product_id=$product_id");
+    PutHeader("Deleting product");
+    print "All references to deleted bugs removed.<P>\n" if $nb_bugs;
+
+    $dbh->bz_lock_tables('products WRITE', 'components WRITE',
+                         'versions WRITE', 'milestones WRITE',
+                         'group_control_map WRITE',
+                         'flaginclusions WRITE', 'flagexclusions WRITE');
+
+    $dbh->do("DELETE FROM components WHERE product_id = ?", undef, $product_id);
     print "Components deleted.<BR>\n";
 
-    SendSQL("DELETE FROM versions
-             WHERE product_id=$product_id");
-    print "Versions deleted.<P>\n";
+    $dbh->do("DELETE FROM versions WHERE product_id = ?", undef, $product_id);
+    print "Versions deleted.<BR>\n";
 
-    # deleting associated target milestones - matthew@zeroknowledge.com
-    SendSQL("DELETE FROM milestones
-             WHERE product_id=$product_id");
-    print "Milestones deleted.<BR>\n";
+    $dbh->do("DELETE FROM milestones WHERE product_id = ?", undef, $product_id);
+    print "Milestones deleted.<P>\n";
 
-    SendSQL("DELETE FROM group_control_map
-             WHERE product_id=$product_id");
+    $dbh->do("DELETE FROM group_control_map WHERE product_id = ?",
+             undef, $product_id);
     print "Group controls deleted.<BR>\n";
 
-    SendSQL("DELETE FROM flaginclusions
-             WHERE product_id=$product_id");
-    SendSQL("DELETE FROM flagexclusions
-             WHERE product_id=$product_id");
-    print "Flag inclusions and exclusions deleted.<BR>\n";
+    $dbh->do("DELETE FROM flaginclusions WHERE product_id = ?",
+             undef, $product_id);
+    $dbh->do("DELETE FROM flagexclusions WHERE product_id = ?",
+             undef, $product_id);
+    print "Flag inclusions and exclusions deleted.<P>\n";
 
-    SendSQL("DELETE FROM products
-             WHERE id=$product_id");
-    print "Product '$product' deleted.<BR>\n";
+    $dbh->do("DELETE FROM products WHERE id = ?", undef, $product_id);
+    print "Product '$product' deleted.<P>\n";
 
     $dbh->bz_unlock_tables();
 

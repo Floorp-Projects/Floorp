@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -67,46 +68,23 @@
   
 [% IF bug_count %]
 
-  [% IF !Param("allowbugdeletion") %]
-
-    Sorry, there
-
-    [% IF bug_count > 1 %] 
-      are [% bug_count %] [%+ terms.bugs %] 
-    [% ELSE %]
-      is [% bug_count %] [%+ terms.bug %] 
-    [% END %]
-
-    outstanding for this version. You must move 
-
-    [% IF bug_count > 1 %]
-       those [% terms.bugs %] 
-    [% ELSE %]
-       that [% terms.bug %]
-    [% END %]
-
-    to another version before you can delete this one.
-
+  Sorry, there
+  [% IF bug_count > 1 %] 
+    are [% bug_count %] [%+ terms.bugs %] 
   [% ELSE %]
-
-    <table border="0" cellpadding="20" width="70%" bgcolor="red"><tr><td>
-
-      There [% IF bug_count > 1 %] 
-        are [% bug_count %] [%+ terms.bugs %] 
-      [% ELSE %]
-        is 1 [% terms.bug %]
-      [% END %]
-      entered for this version!  When you delete this
-      version, <b><blink>ALL</blink></b> stored [% terms.bugs %] will be deleted,
-      too.
-      You could not even see the [% terms.bug %] history for this version anymore!
-      </td></tr></table>
-
+    is [% bug_count %] [%+ terms.bug %] 
   [% END %]
 
-[% END %]
+  outstanding for this version. You must move 
 
-[% IF bug_count == 0 || Param('allowbugdeletion') %]
+  [% IF bug_count > 1 %]
+     those [% terms.bugs %] 
+  [% ELSE %]
+     that [% terms.bug %]
+  [% END %]
+  to another version before you can delete this one.
+
+[% ELSE %]
 
   <p>Do you really want to delete this version?<p>
   

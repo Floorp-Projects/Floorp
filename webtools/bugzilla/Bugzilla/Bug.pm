@@ -23,6 +23,7 @@
 #                 Bradley Baetz  <bbaetz@acm.org>
 #                 Dave Miller    <justdave@bugzilla.org>
 #                 Max Kanat-Alexander <mkanat@kerio.com>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 package Bugzilla::Bug;
 
@@ -215,6 +216,60 @@ sub initBug  {
   $self->{'isopened'} = &::IsOpenedState($self->{bug_status});
   
   return $self;
+}
+
+# This is the correct way to delete bugs from the DB.
+# No bug should be deleted from anywhere else except from here.
+#
+sub remove_from_db {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    if ($self->{'error'}) {
+        ThrowCodeError("bug_error", { bug => $self });
+    }
+
+    my $bug_id = $self->{'bug_id'};
+
+    # tables having 'bugs.bug_id' as a foreign key:
+    # - attachments
+    # - bug_group_map
+    # - bugs
+    # - bugs_activity
+    # - cc
+    # - dependencies
+    # - duplicates
+    # - flags
+    # - keywords
+    # - longdescs
+    # - votes
+
+    $dbh->bz_lock_tables('attachments WRITE', 'bug_group_map WRITE',
+                         'bugs WRITE', 'bugs_activity WRITE', 'cc WRITE',
+                         'dependencies WRITE', 'duplicates WRITE',
+                         'flags WRITE', 'keywords WRITE',
+                         'longdescs WRITE', 'votes WRITE');
+
+    $dbh->do("DELETE FROM bug_group_map WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM bugs_activity WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM cc WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM dependencies WHERE blocked = ? OR dependson = ?",
+             undef, ($bug_id, $bug_id));
+    $dbh->do("DELETE FROM duplicates WHERE dupe = ? OR dupe_of = ?",
+             undef, ($bug_id, $bug_id));
+    $dbh->do("DELETE FROM flags WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM keywords WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM longdescs WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM votes WHERE bug_id = ?", undef, $bug_id);
+    # Several of the previous tables also depend on attach_id.
+    $dbh->do("DELETE FROM attachments WHERE bug_id = ?", undef, $bug_id);
+    $dbh->do("DELETE FROM bugs WHERE bug_id = ?", undef, $bug_id);
+
+    $dbh->bz_unlock_tables();
+
+    # Now this bug no longer exists
+    $self->DESTROY;
+    return $self;
 }
 
 #####################################################################

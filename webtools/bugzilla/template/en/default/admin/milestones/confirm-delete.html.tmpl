@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -69,66 +70,30 @@
   
 [% IF bug_count %]
 
-  [% IF !Param("allowbugdeletion") %]
-
-    Sorry, there
-
+  <table border="0" cellpadding="20" width="70%" bgcolor="red">
+  <tr><td>
+    There
     [% IF bug_count > 1 %] 
       are [% bug_count %] [%+ terms.bugs %] 
     [% ELSE %]
-      is [% bug_count %] [%+ terms.bug %] 
+      is 1 [% terms.bug %]
     [% END %]
-
-    outstanding for this milestone. You must move 
-
-    [% IF bug_count > 1 %]
-       those [% terms.bugs %] 
-    [% ELSE %]
-       that [% terms.bug %]
-    [% END %]
-
-    to another milestone before you can delete this one.
-
-  [% ELSE %]
-
-    <table border="0" cellpadding="20" width="70%" bgcolor="red"><tr><td>
-
-      There [% IF bug_count > 1 %] 
-        are [% bug_count %] [%+ terms.bugs %] 
-      [% ELSE %]
-        is 1 [% terms.bug %]
-      [% END %]
-      entered for this milestone!  When you delete this
-      milestone, <b><blink>ALL</blink></b> stored [% terms.bugs %] will be deleted,
-      too.
-      You could not even see the [% terms.bug %] history for this milestone anymore!
-      </td></tr></table>
-
-  [% END %]
+    entered for this milestone! When you delete this milestone,
+    <b><blink>ALL</blink></b> stored [% terms.bugs %] will be reassigned to
+    the default milestone of this product.
+  </td></tr>
+  </table>
 
 [% END %]
 
-[% IF default_milestone == name %]
+<p>Do you really want to delete this milestone?<p>
 
-    <p>Sorry, but '[% name FILTER html %]' is the default milestone for product '
-    [%- product FILTER html %]', and so it can not be deleted.
-
-  [% ELSE %]
-
-    [% IF bug_count == 0 || Param('allowbugdeletion') %]
-
-      <p>Do you really want to delete this milestone?<p>
-  
-      <form method="post" action="editmilestones.cgi">
-        <input type="submit" value="Yes, delete">
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="product" value="[% product FILTER html %]">
-        <input type="hidden" name="milestone" value="[% name FILTER html %]">
-      </form>
-
-  [% END %]
-
-[% END %]
+<form method="post" action="editmilestones.cgi">
+  <input type="submit" value="Yes, delete">
+  <input type="hidden" name="action" value="delete">
+  <input type="hidden" name="product" value="[% product FILTER html %]">
+  <input type="hidden" name="milestone" value="[% name FILTER html %]">
+</form>
 
 [% PROCESS admin/milestones/footer.html.tmpl %]
 

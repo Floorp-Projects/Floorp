@@ -112,7 +112,8 @@ sub CheckComponent ($$)
 # Preliminary checks:
 #
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
+my $whoid = $user->id;
 
 print Bugzilla->cgi->header();
 
@@ -436,57 +437,36 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
     CheckComponent($product, $component);
-    my $component_id = get_component_id(get_product_id($product),$component);
+    my $component_id = get_component_id(get_product_id($product), $component);
 
-    # lock the tables before we start to change everything:
+    my $bug_ids =
+      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs WHERE component_id = ?",
+                               undef, $component_id);
 
-    $dbh->bz_lock_tables('attachments WRITE',
-                         'bugs WRITE',
-                         'bugs_activity WRITE',
-                         'components WRITE',
-                         'dependencies WRITE',
-                         'flaginclusions WRITE',
-                         'flagexclusions WRITE');
-
-    # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
-    # so I have to iterate over bugs and delete all the indivial entries
-    # in bugs_activies and attachments.
-
-    if (Param("allowbugdeletion")) {
-        my $deleted_bug_count = 0;
-
-        SendSQL("SELECT bug_id
-                 FROM bugs
-                 WHERE component_id = $component_id");
-        while (MoreSQLData()) {
-            my $bugid = FetchOneColumn();
-
-            PushGlobalSQLState();
-            SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
-            PopGlobalSQLState();
-
-            $deleted_bug_count++;
+    my $nb_bugs = scalar(@$bug_ids);
+    if ($nb_bugs) {
+        if (Param("allowbugdeletion")) {
+            foreach my $bug_id (@$bug_ids) {
+                my $bug = new Bugzilla::Bug($bug_id, $whoid);
+                $bug->remove_from_db();
+            }
         }
-
-        $vars->{'deleted_bug_count'} = $deleted_bug_count;
-
-        # Deleting the rest is easier:
-
-        SendSQL("DELETE FROM bugs
-                 WHERE component_id=$component_id");
+        else {
+            ThrowUserError("component_has_bugs", { nb => $nb_bugs });
+        }
     }
 
-    SendSQL("DELETE FROM flaginclusions
-             WHERE component_id=$component_id");
-    SendSQL("DELETE FROM flagexclusions
-             WHERE component_id=$component_id");
-    
-    SendSQL("DELETE FROM components
-             WHERE id=$component_id");
+    $vars->{'deleted_bug_count'} = $nb_bugs;
+
+    $dbh->bz_lock_tables('components WRITE', 'flaginclusions WRITE',
+                         'flagexclusions WRITE');
+
+    $dbh->do("DELETE FROM flaginclusions WHERE component_id = ?",
+             undef, $component_id);
+    $dbh->do("DELETE FROM flagexclusions WHERE component_id = ?",
+             undef, $component_id);
+    $dbh->do("DELETE FROM components WHERE id = ?", undef, $component_id);
 
     $dbh->bz_unlock_tables();
 
@@ -494,10 +474,8 @@ if ($action eq 'delete') {
 
     $vars->{'name'} = $component;
     $vars->{'product'} = $product;
-    $template->process("admin/components/deleted.html.tmpl",
-                       $vars)
+    $template->process("admin/components/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
-
     exit;
 }
 

@@ -21,6 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Gavin Shelley <bugzilla@chimpychompy.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 #
 #
 # Direct any questions on this source code to
@@ -293,66 +294,32 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
-    CheckVersion($product,$version);
+    CheckVersion($product, $version);
     my $product_id = get_product_id($product);
 
-    # lock the tables before we start to change everything:
+    trick_taint($version);
 
-    $dbh->bz_lock_tables('attachments WRITE',
-                         'bugs WRITE',
-                         'bugs_activity WRITE',
-                         'versions WRITE',
-                         'dependencies WRITE');
+    my $nb_bugs =
+      $dbh->selectrow_array("SELECT COUNT(bug_id) FROM bugs
+                             WHERE product_id = ? AND version = ?",
+                             undef, ($product_id, $version));
 
-    # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
-    # so I have to iterate over bugs and delete all the indivial entries
-    # in bugs_activies and attachments.
-
-    if (Param("allowbugdeletion")) {
-
-        my $deleted_bug_count = 0;
-
-        SendSQL("SELECT bug_id
-                 FROM bugs
-                 WHERE product_id = $product_id
-                   AND version = " . SqlQuote($version));
-        while (MoreSQLData()) {
-            my $bugid = FetchOneColumn();
-
-            PushGlobalSQLState();
-            SendSQL("DELETE FROM attachments WHERE bug_id = $bugid");
-            SendSQL("DELETE FROM bugs_activity WHERE bug_id = $bugid");
-            SendSQL("DELETE FROM dependencies WHERE blocked = $bugid");
-            PopGlobalSQLState();
-
-            $deleted_bug_count++;
-        }
-
-        $vars->{'deleted_bug_count'} = $deleted_bug_count;
-
-        # Deleting the rest is easier:
-
-        SendSQL("DELETE FROM bugs
-                 WHERE product_id = $product_id
-                   AND version = " . SqlQuote($version));
-
+    # The version cannot be removed if there are bugs
+    # associated with it.
+    if ($nb_bugs) {
+        ThrowUserError("version_has_bugs", { nb => $nb_bugs });
     }
 
-    SendSQL("DELETE FROM versions
-             WHERE product_id = $product_id
-               AND value = " . SqlQuote($version));
-
-    $dbh->bz_unlock_tables();
+    $dbh->do("DELETE FROM versions WHERE product_id = ? AND value = ?",
+              undef, ($product_id, $version));
 
     unlink "$datadir/versioncache";
 
     $vars->{'name'} = $version;
     $vars->{'product'} = $product;
-    $template->process("admin/versions/deleted.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
 
+    $template->process("admin/versions/deleted.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 

@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -24,8 +25,8 @@
   #
   # product: string; the name of the product the milestone belonged to
   #
-  # deleted_bug_count: number; the number of bugs which were deleted
-  #                            (if bug deletion is allowed)
+  # bug_count: number; the number of bugs which were reassigned to
+  #            the default milestone.
   #%]
   
 [% title = BLOCK %]Deleted Milestone '[% name FILTER html %]' of Product
@@ -35,23 +36,15 @@
 %]
 
 <p>
-[% IF deleted_bug_count %]
-  Attachments, [% terms.bug %] activity and dependencies deleted for
-  [%+ deleted_bug_count %]
-  [% IF deleted_bug_count > 1 %] 
-    [%+ terms.bugs %]
-  [% ELSE %]
-    [%+ terms.bug %]
-  [% END %].
+[% IF bug_count %]
 
-  </p><p>
-  [% deleted_bug_count %]
-  [% IF deleted_bug_count > 1 %] 
+  [% bug_count %]
+  [% IF bug_count > 1 %] 
     [%+ terms.bugs %]
   [% ELSE %]
     [%+ terms.bug %]
   [% END %]
-  deleted.
+  reassigned to the default milestone.
 
 [% ELSE %]
   No [% terms.bugs %] were targetted at the milestone.

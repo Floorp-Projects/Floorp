@@ -24,8 +24,6 @@
   #
   # product: string; the name of the product the version belonged to
   #
-  # deleted_bug_count: number; the number of bugs which were deleted
-  #                            (if bug deletion is allowed)
   #%]
   
 [% title = BLOCK %]Deleted Version '[% name FILTER html %]' of Product
@@ -33,30 +31,6 @@
 [% PROCESS global/header.html.tmpl
   title = title
 %]
-
-<p>
-[% IF deleted_bug_count %]
-  Attachments, [% terms.bug %] activity and dependencies deleted for
-  [%+ deleted_bug_count %]
-  [% IF deleted_bug_count > 1 %] 
-    [%+ terms.bugs %]
-  [% ELSE %]
-    [%+ terms.bug %]
-  [% END %].
-
-  </p><p>
-  [% deleted_bug_count %]
-  [% IF deleted_bug_count > 1 %] 
-    [%+ terms.bugs %]
-  [% ELSE %]
-    [%+ terms.bug %]
-  [% END %]
-  deleted.
-
-[% ELSE %]
-  No [% terms.bugs %] were targetted at the version.
-[% END %]
-</p>
 
 <p>Version '[% name FILTER html %]' deleted.</p>
 

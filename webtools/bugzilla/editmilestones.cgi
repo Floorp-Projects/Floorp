@@ -12,6 +12,7 @@
 # Matt Masson <matthew@zeroknowledge.com>
 #
 # Contributors : Gavin Shelley <bugzilla@chimpychompy.org>
+#                Frédéric Buclin <LpSolit@gmail.com>
 #
 
 
@@ -119,7 +120,8 @@ sub CheckMilestone ($$)
 # Preliminary checks:
 #
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
+my $whoid = $user->id;
 
 print Bugzilla->cgi->header();
 
@@ -304,39 +306,31 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-
     CheckMilestone($product, $milestone);
     my $product_id = get_product_id($product);
-
     my $dbh = Bugzilla->dbh;
 
-    my $sth = $dbh->prepare('SELECT count(bug_id), product_id, target_milestone
-                             FROM bugs ' .
-                            $dbh->sql_group_by('product_id,
-                                                target_milestone') . '
-                             HAVING product_id = ?
-                                AND target_milestone = ?');
+    $vars->{'default_milestone'} =
+      $dbh->selectrow_array('SELECT defaultmilestone
+                             FROM products WHERE id = ?',
+                             undef, $product_id);
 
     trick_taint($milestone);
-    $vars->{'bug_count'} = $dbh->selectrow_array($sth,
-                                                 undef,
-                                                 $product_id,
-                                                 $milestone) || 0;
-
-    $sth = $dbh->prepare('SELECT defaultmilestone
-                          FROM products
-                          WHERE id = ?');
-
-    $vars->{'default_milestone'} = $dbh->selectrow_array($sth,
-                                                         undef,
-                                                         $product_id) || '';
-
     $vars->{'name'} = $milestone;
     $vars->{'product'} = $product;
-    $template->process("admin/milestones/confirm-delete.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
 
+    # The default milestone cannot be deleted.
+    if ($vars->{'default_milestone'} eq $milestone) {
+        ThrowUserError("milestone_is_default", $vars);
+    }
+
+    $vars->{'bug_count'} =
+      $dbh->selectrow_array("SELECT COUNT(bug_id) FROM bugs
+                             WHERE product_id = ? AND target_milestone = ?",
+                             undef, ($product_id, $milestone)) || 0;
+
+    $template->process("admin/milestones/confirm-delete.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -347,88 +341,52 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
-    CheckMilestone($product,$milestone);
+    CheckMilestone($product, $milestone);
     my $product_id = get_product_id($product);
-
     my $dbh = Bugzilla->dbh;
 
-    # lock the tables before we start to change everything:
+    my $default_milestone =
+      $dbh->selectrow_array("SELECT defaultmilestone
+                             FROM products WHERE id = ?",
+                             undef, $product_id);
 
-    $dbh->bz_lock_tables('attachments WRITE',
-                         'bugs WRITE',
-                         'bugs_activity WRITE',
-                         'milestones WRITE',
-                         'dependencies WRITE');
-
-    # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
-    # so I have to iterate over bugs and delete all the indivial entries
-    # in bugs_activies and attachments.
-
-    # Detaint this here, as we may need it if deleting bugs, but will
-    # definitely need it detainted whhen we actually delete the
-    # milestone itself
     trick_taint($milestone);
+    $vars->{'name'} = $milestone;
+    $vars->{'product'} = $product;
 
-    if (Param("allowbugdeletion")) {
-
-        my $deleted_bug_count = 0;
-
-        my $sth = $dbh->prepare_cached('SELECT bug_id
-                                        FROM bugs
-                                        WHERE product_id = ?
-                                        AND target_milestone = ?');
-
-        my $data = $dbh->selectall_arrayref($sth,
-                                            undef,
-                                            $product_id,
-                                            $milestone);
-
-        foreach my $aref (@$data) {
-
-            my ($bugid) = @$aref;
-
-            $dbh->do('DELETE FROM attachments WHERE bug_id = ?',
-                     undef,
-                     $bugid);
-            $dbh->do('DELETE FROM bugs_activity WHERE bug_id = ?',
-                     undef,
-                     $bugid);
-            $dbh->do('DELETE FROM dependencies WHERE blocked = ?',
-                     undef,
-                     $bugid);
-
-            $deleted_bug_count++;
-        }
-
-        $vars->{'deleted_bug_count'} = $deleted_bug_count;
-
-        # Deleting the rest is easier:
-
-        $dbh->do('DELETE FROM bugs
-                  WHERE product_id = ?
-                  AND target_milestone = ?',
-                 undef,
-                 $product_id,
-                 $milestone);
+    # The default milestone cannot be deleted.
+    if ($milestone eq $default_milestone) {
+        ThrowUserError("milestone_is_default", $vars);
     }
 
-    $dbh->do('DELETE FROM milestones
-              WHERE product_id = ?
-              AND value = ?',
-             undef,
-             $product_id,
-             $milestone);
+    # We don't want to delete bugs when deleting a milestone.
+    # Bugs concerned are reassigned to the default milestone.
+    my $bug_ids =
+      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs
+                                WHERE product_id = ? AND target_milestone = ?",
+                                undef, ($product_id, $milestone));
 
-    $dbh->bz_unlock_tables();
+    my $nb_bugs = scalar(@$bug_ids);
+    if ($nb_bugs) {
+        my $timestamp = $dbh->selectrow_array("SELECT NOW()");
+        foreach my $bug_id (@$bug_ids) {
+            $dbh->do("UPDATE bugs SET target_milestone = ?,
+                      delta_ts = ? WHERE bug_id = ?",
+                      undef, ($default_milestone, $timestamp, $bug_id));
+            # We have to update the 'bugs_activity' table too.
+            LogActivityEntry($bug_id, 'target_milestone', $milestone,
+                             $default_milestone, $whoid, $timestamp);
+        }
+    }
+
+    $vars->{'bug_count'} = $nb_bugs;
+
+    $dbh->do("DELETE FROM milestones WHERE product_id = ? AND value = ?",
+             undef, ($product_id, $milestone));
 
     unlink "$datadir/versioncache";
 
-
-    $vars->{'name'} = $milestone;
-    $vars->{'product'} = $product;
-    $template->process("admin/milestones/deleted.html.tmpl",
-                       $vars)
+    $template->process("admin/milestones/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
 }
