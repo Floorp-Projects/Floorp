@@ -7,6 +7,12 @@
   display: -moz-popup !important;
 }
 
+/* the C++ implementation of widgets is too eager to make popups visible.
+   this causes problems (bug 120155 and others), thus this workaround: */
+.autocomplete-result-popup[hidden="true"] {
+  visibility: hidden;
+}
+
 /* The following rule is here to fix bug 96899 (and now 117952).  
    Somehow trees create a situation
    in which a popupset flows itself as if its popup child is directly within it
