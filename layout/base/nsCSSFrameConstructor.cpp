@@ -3307,12 +3307,51 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       nsCOMPtr<nsIDOMElement> node;
       nsCOMPtr<nsIContent> content;
 
+      nsAutoString indent;
+      nsCOMPtr<nsIDOMElement> parentNode = do_QueryInterface(aContent);
+      parentNode->GetAttribute("indent", indent);
+      
+      nsCOMPtr<nsIDOMElement> boxElement;
+      nsCOMPtr<nsIDOMNode> dummy;
+      if (indent == "true") {
+        // We have to make a box to hold everything.
+        nsDocument->CreateElementWithNameSpace("box", xulNamespace, getter_AddRefs(node));
+        content = do_QueryInterface(node);
+        anonymousItems->AppendElement(content);
+        content->SetAttribute(kNameSpaceID_None, classAtom, "tree-icon", PR_FALSE);
+        boxElement = do_QueryInterface(content);
+
+        // Make the indentation.
+        nsDocument->CreateElementWithNameSpace("treeindentation", xulNamespace, getter_AddRefs(node));
+        boxElement->AppendChild(node, getter_AddRefs(dummy));
+        
+        nsCOMPtr<nsIDOMNode> treeRow;
+        nsCOMPtr<nsIDOMNode> treeItem;
+        parentNode->GetParentNode(getter_AddRefs(treeRow));
+        treeRow->GetParentNode(getter_AddRefs(treeItem));
+      
+        nsAutoString container;
+        nsCOMPtr<nsIDOMElement> treeItemNode = do_QueryInterface(treeItem);
+        treeItemNode->GetAttribute("container", container);
+          
+        // Always make a twisty but disable it for non-containers.
+        nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
+        content = do_QueryInterface(node);
+        content->SetAttribute(kNameSpaceID_None, classAtom, "twisty", PR_FALSE);
+        if (container != "true")
+          content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, "true", PR_FALSE);
+        else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, "true", PR_FALSE);
+
+        boxElement->AppendChild(node, getter_AddRefs(dummy));
+      }
+
+      nsString classDesc = "tree-button";
+      
       nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
       content = do_QueryInterface(node);
-      content->SetAttribute(kNameSpaceID_None, classAtom, "tree-button", PR_FALSE);
+      content->SetAttribute(kNameSpaceID_None, classAtom, classDesc, PR_FALSE);
       nsAutoString value;
 
-      nsCOMPtr<nsIDOMElement> parentNode = do_QueryInterface(aContent);
       parentNode->GetAttribute("value", value);
       if (value != "")
         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
@@ -3326,7 +3365,12 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       parentNode->GetAttribute("align", align);
       if (align == "") align = "left";
       content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align, PR_FALSE);
-      anonymousItems->AppendElement(content);
+
+      if (boxElement) {
+        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
+        boxElement->AppendChild(node, getter_AddRefs(dummy));
+      }
+      else anonymousItems->AppendElement(content);
     }
   }
   else creator->CreateAnonymousContent(*anonymousItems);
