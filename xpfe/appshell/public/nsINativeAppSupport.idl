@@ -152,6 +152,7 @@
  */
 
 interface nsIXULWindow;
+interface nsICmdLineService;
 
 [scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
 interface nsINativeAppSupport : nsISupports {
@@ -159,6 +160,12 @@ interface nsINativeAppSupport : nsISupports {
     boolean start();
     boolean stop();
     void    quit();
+
+    // Startup/Shutdown for features like MAPI
+
+    [noscript] void startAddonFeatures();
+    [noscript] void stopAddonFeatures();
+    [noscript] void ensureProfile(in nsICmdLineService aCmdService);
 
     // Splash screen functions.
     void showSplashScreen();
