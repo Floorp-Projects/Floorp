@@ -60,7 +60,8 @@ function CEventPump (eventsPerStep)
     
 }
 
-CEventPump.prototype.onHook = function ep_hook(e)
+CEventPump.prototype.onHook = 
+function ep_hook(e)
 {
     var hooks = this.hooks;
     
@@ -84,7 +85,8 @@ CEventPump.prototype.onHook = function ep_hook(e)
 
 }
 
-CEventPump.prototype.addHook = function ep_addhook(pattern, f, name, neg)
+CEventPump.prototype.addHook = 
+function ep_addhook(pattern, f, name, neg)
 {
     
     if (typeof f != "function")
@@ -96,7 +98,8 @@ CEventPump.prototype.addHook = function ep_addhook(pattern, f, name, neg)
 
 }
 
-CEventPump.prototype.removeHookByName = function ep_remhookname(name)
+CEventPump.prototype.removeHookByName = 
+function ep_remhookname(name)
 {
 
     for (var h in this.hooks)
@@ -110,14 +113,16 @@ CEventPump.prototype.removeHookByName = function ep_remhookname(name)
 
 }
 
-CEventPump.prototype.removeHookByIndex = function ep_remhooki(idx)
+CEventPump.prototype.removeHookByIndex = 
+function ep_remhooki(idx)
 {
 
     return arrayRemoveAt (this.hooks, idx);
 
 }
 
-CEventPump.prototype.addEvent = function ep_addevent (e)
+CEventPump.prototype.addEvent = 
+function ep_addevent (e)
 {
 
     e.queuedAt = new Date();
@@ -126,7 +131,8 @@ CEventPump.prototype.addEvent = function ep_addevent (e)
     
 }
 
-CEventPump.prototype.routeEvent = function ep_routeevent (e)
+CEventPump.prototype.routeEvent = 
+function ep_routeevent (e)
 {
     var count = 0;
     var ddprefix = "";
@@ -150,7 +156,7 @@ CEventPump.prototype.routeEvent = function ep_routeevent (e)
                 }
                 catch (ex)
                 {
-                    dd ("Error routing event: " + ex);
+                    dd ("Error routing event: " + ex.toSource());
                 }
                 if (count++ > this.MAX_EVENT_DEPTH)
                     throw "Too many events in chain";
@@ -182,7 +188,8 @@ CEventPump.prototype.routeEvent = function ep_routeevent (e)
     
 }
 
-CEventPump.prototype.stepEvents = function ep_stepevents()
+CEventPump.prototype.stepEvents = 
+function ep_stepevents()
 {
     var i = 0;
     
@@ -198,8 +205,3 @@ CEventPump.prototype.stepEvents = function ep_stepevents()
     return true;
     
 }
-
-
-
-
-

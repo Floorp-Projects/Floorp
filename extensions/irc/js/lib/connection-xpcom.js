@@ -39,8 +39,8 @@ function CBSConnection ()
 
 }
 
-CBSConnection.prototype.connect = function bs_connect (host, port,
-                                                       bind, tcp_flag)
+CBSConnection.prototype.connect = 
+function bs_connect (host, port, bind, tcp_flag)
 {
     if (typeof tcp_flag == "undefined")
 	tcp_flag = false;
@@ -57,7 +57,8 @@ CBSConnection.prototype.connect = function bs_connect (host, port,
   
 }
 
-CBSConnection.prototype.disconnect = function bs_disconnect ()
+CBSConnection.prototype.disconnect =
+function bs_disconnect ()
 {
     
     this.isConnected = false;
@@ -65,8 +66,11 @@ CBSConnection.prototype.disconnect = function bs_disconnect ()
 
 }
 
-CBSConnection.prototype.sendData = function bs_send (str)
+CBSConnection.prototype.sendData =
+function bs_send (str)
 {
+    if (!this.isConnected)
+        throw "Not Connected.";
 
     try
     {
@@ -87,9 +91,13 @@ CBSConnection.prototype.sendData = function bs_send (str)
 
 }
 
-CBSConnection.prototype.readData = function bs_read (timeout)
+CBSConnection.prototype.readData =
+function bs_read (timeout)
 {
     
+    if (!this.isConnected)
+        throw "Not Connected.";
+
     try
     {
         var rv = this._bsc.readData(timeout);

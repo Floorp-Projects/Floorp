@@ -1,3 +1,26 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/ 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License. 
+ *
+ * The Original Code is JSIRC Test Client #3
+ *
+ * The Initial Developer of the Original Code is New Dimensions Consulting,
+ * Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
+ * New Dimenstions Consulting, Inc. All Rights Reserved.
+ *
+ *
+ * Contributor(s):
+ *  Robert Ginda, rginda@ndcico.com, original author
+ */
+
 var client = new Object();
 
 client.COMMAND_CHAR = "/";
@@ -13,6 +36,8 @@ client.V0_IMG = "g_grey.gif"; /* user isnt voide image */
 client.ACT_IMG = "green-on.gif";   /* view has activity image */
 client.NACT_IMG = "green-off.gif"; /* view has no activity image */
 client.CUR_IMG = "yellow-on.gif"; /* view is currently displayed */
+client.PRINT_DIRECTION = -1; /*1 => new messages at bottom, -1 => at top */
+                
 client.name = "*client*";
 client.viewsArray = new Array();
 client.currentObject = client;
@@ -23,9 +48,15 @@ CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
 CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 50;
+CIRCNetwork.prototype.IGNORE_MOTD = false;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
-CIRCServer.prototype.VERSION_RPLY += "ChatZilla test client #3";
+CIRCServer.prototype.VERSION_RPLY += "\nChatZilla test client #3";
+if (jsenv.HAS_DOCUMENT)
+{
+    CIRCServer.prototype.VERSION_RPLY += ", running under " +
+        navigator.userAgent;
+}
 
 CIRCUser.prototype.MAX_MESSAGES = 100;
 
@@ -45,18 +76,25 @@ function initStatic()
     
     client.quickList = new CListBox(document.getElementById("quickList"));
 
-    client.display ("More help is on the way!", "HELP");
-    client.display ("/nick, /join, /part, and /me may also be useful.", "HELP");
-    client.display ("Where <network-name> is one of [" +
-                    keys (client.networks) + "]", "HELP");
-    client.display ("Use /attach <network-name> connect to a network.", "HELP");
-    client.display ("Welcome to ChatZilla...", "HELP");
+    var saveDir = client.PRINT_DIRECTION;
+    client.PRINT_DIRECTION = 1;
+    client.display ("Welcome to ChatZilla...\n" +
+                    "Use /attach <network-name> connect to a network.\n" +
+                    "Where <network-name> is one of [" +
+                    keys (client.networks) + "]\n" +
+                    "More help is available with /help [<command-name>]",
+                    "HELLO");
+    client.PRINT_DIRECTION = saveDir;
+    
     setCurrentObject (client);
     
 }
 
 function initHost(obj)
 {
+
+    client.commands = new CCommandManager();
+    addCommands (obj.commands);
     
     obj.networks = new Object();
     obj.eventPump = new CEventPump (10);
@@ -114,7 +152,8 @@ function setCurrentObject (obj)
     }
 
     var tb = getTBForObject(client.currentObject);
-    tb.setAttribute ("src", client.NACT_IMG);
+    if (tb)
+        tb.setAttribute ("src", client.NACT_IMG);
 
     var output = document.getElementById ("output");
 
@@ -130,7 +169,8 @@ function setCurrentObject (obj)
         
     client.currentObject = obj;
     tb = getTBForObject(obj);
-    tb.setAttribute ("src", client.CUR_IMG);
+    if (tb)
+        tb.setAttribute ("src", client.CUR_IMG);
     
 }
 
@@ -181,18 +221,20 @@ function addHistory (source, obj)
 
 function notifyActivity (source)
 {
-    var tb = getTBForObject (source);
+    var tb = getTBForObject (source, true);
     
     if (client.currentObject != source)
-        tb.setAttribute ("src", "green-on.gif");
+        tb.setAttribute ("src", client.ACT_IMG);
     
 }
 
 /* gets the toolbutton associated with an object
- * creating it if it doesn't exist */
-function getTBForObject (source)
+ * if |create| is present, and true, create if not found */
+function getTBForObject (source, create)
 {
-    var name, tb;
+    var name;
+
+    create = (typeof create != "undefined") ? Boolean(create) : false;
 
     switch (source.TYPE)
     {
@@ -206,22 +248,37 @@ function getTBForObject (source)
         case "IRCClient":
             name = source.name;
             break;
+
+        default:
+            dd ("** INVALID OBJECT passed to getTBForObject **");
+            return;
     }
 
-    var id = "tb[" + name + "]";
-    
-    if (!(tb = document.getElementById (id)))
+    var tb, id = "tb[" + name + "]";
+    var matches = 1;
+
+    for (var i in client.viewsArray)
+        if (client.viewsArray[i].source == source)
+            tb = client.viewsArray[i].tb;
+        else
+            if (client.viewsArray[i].tb.id == id)
+                id = "tb[" + name + "<" + (++matches) + ">]";
+
+    if (!tb && create) /* not found, create one */
     {
         var views = document.getElementById ("views-tbar");
         var tbi = document.createElement ("toolbaritem");
         tbi.setAttribute ("class", "activity-button");
         tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
-        
-        var tb = document.createElement ("titledbutton");
+    
+        tb = document.createElement ("titledbutton");
         tb.setAttribute ("id", id);
-        client.viewsArray.push (source);
+        client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
-        tb.setAttribute ("value", name);
+        if (matches > 1)
+            tb.setAttribute ("value", name + "<" + matches + ">");
+        else
+            tb.setAttribute ("value", name);
         tbi.appendChild (tb);
         views.appendChild (tbi);
     }

@@ -44,6 +44,7 @@ jsenv.HAS_XPCOM = ((typeof Components == "function") &&
                    (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
+jsenv.HAS_DOCUMENT = (typeof document == "object");
 
 function dumpObject (o, pfx, sep)
 {

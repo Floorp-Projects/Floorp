@@ -39,6 +39,7 @@ JSLIBFILES = \
     .\js\lib\utils.js \
     .\js\lib\events.js \
     .\js\lib\connection-xpcom.js \
+    .\js\lib\command-manager.js \
     .\js\lib\irc.js \
 	.\js\lib\irc-debug.js \
     $(NULL)
@@ -62,6 +63,7 @@ TESTFILES = \
 	.\xul\tests\test3.css \
 	.\xul\tests\test3-static.js \
 	.\xul\tests\test3-handlers.js \
+	.\xul\tests\test3-commands.js \
 	.\xul\tests\g_blue.gif \
 	.\xul\tests\g_blue_on.gif \
 	.\xul\tests\g_grey.gif \

@@ -42,6 +42,7 @@ JSLIBFILES	= \
 		$(srcdir)/js/lib/utils.js \
 		$(srcdir)/js/lib/events.js \
 		$(srcdir)/js/lib/connection-xpcom.js \
+		$(srcdir)/js/lib/command-manager.js \
 		$(srcdir)/js/lib/irc.js \
 		$(srcdir)/js/lib/irc-debug.js \
 		$(NULL)
@@ -65,6 +66,7 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/test3.css \
 		$(srcdir)/xul/tests/test3-static.js \
 		$(srcdir)/xul/tests/test3-handlers.js \
+		$(srcdir)/xul/tests/test3-commands.js \
 		$(srcdir)/xul/tests/g_blue.gif \
 		$(srcdir)/xul/tests/g_blue_on.gif \
 		$(srcdir)/xul/tests/g_grey.gif \

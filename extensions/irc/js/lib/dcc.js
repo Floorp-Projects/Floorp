@@ -39,7 +39,8 @@ function CDCCChat (ep, host, port)
 
 }
 
-CDCCChat.prototype.connect = function dchat_connect (host, port)
+CDCCChat.prototype.connect =
+function dchat_connect (host, port)
 {
     
     if (typeof host != "undefined") this.host = host;
@@ -54,7 +55,8 @@ CDCCChat.prototype.connect = function dchat_connect (host, port)
     
 }
 
-CDCCChat.prototype.onPoll = function dchat_poll (e)
+CDCCChat.prototype.onPoll =
+function dchat_poll (e)
 {
     var line = "";
     
@@ -106,10 +108,10 @@ CDCCChat.prototype.onPoll = function dchat_poll (e)
     
 }
 
-CDCCChat.prototype.say = function dchat_say (msg)
+CDCCChat.prototype.say =
+function dchat_say (msg)
 {
 
     this.connection.sendData (msg + "\n");
 
 }
-

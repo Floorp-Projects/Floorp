@@ -39,7 +39,8 @@ function CHTTPDoc (server, path)
     
 }
 
-CHTTPDoc.prototype.get = function http_get (ep)
+CHTTPDoc.prototype.get =
+function http_get (ep)
 {
 
     this.connection = new CBSConnection();
@@ -66,7 +67,8 @@ CHTTPDoc.prototype.get = function http_get (ep)
     
 }
 
-CHTTPDoc.prototype.onPoll = function http_poll (e)
+CHTTPDoc.prototype.onPoll =
+function http_poll (e)
 {
     var line = "";
     var ex, c;
@@ -158,7 +160,7 @@ CHTTPDoc.prototype.onPoll = function http_poll (e)
             break;
             
         default:
-            dd ("** INVALID STATE IN HTTPDoc OBJECT (" + this.state + ") **");
+            dd ("** INVALID STATE in HTTPDoc object (" + this.state + ") **");
             need_more = false;
             this.state = "error";
             break;
@@ -188,7 +190,8 @@ CHTTPDoc.prototype.onPoll = function http_poll (e)
     
 }
 
-CHTTPDoc.prototype.onComplete = function http_complete(e)
+CHTTPDoc.prototype.onComplete =
+function http_complete(e)
 {
 
     return true;

@@ -13,6 +13,7 @@ function event_tracer (e)
                 data = "'" + e.data + "'";
             break;
 
+        case "network":
         case "channel":
             name = e.destObject.name;
             break;

@@ -1,13 +1,36 @@
 <?xml version="1.0"?>
 
+<!--
+  The contents of this file are subject to the Mozilla Public License
+  Version 1.0 (the "License"); you may not use this file except in
+  compliance with the License. You may obtain a copy of the License at
+  http://www.mozilla.org/MPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  for the specific language governing rights and limitations under the
+  License. 
+ 
+  The Original Code is JSIRC Test Client #2
+ 
+  The Initial Developer of the Original Code is New Dimensions Consulting,
+  Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
+  New Dimenstions Consulting, Inc. All Rights Reserved.
+ 
+ 
+  Contributor(s):
+   Robert Ginda, rginda@ndcico.com, original author
+-->
+
 <!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="test3.css" type="text/css"?>
 
 <!--
-file:/home/rginda/src/mozilla_DEV/mozilla/extensions/irc/xul/tests/test3.xul
+resource:///irc/tests/test3.xul
 -->
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoad();" onunload="onUnload();">
@@ -15,12 +38,14 @@ file:/home/rginda/src/mozilla_DEV/mozilla/extensions/irc/xul/tests/test3.xul
 <html:script src="resource:///irc/js/lib/utils.js"/>
 <html:script src="resource:///irc/js/lib/connection-xpcom.js"/>
 <html:script src="resource:///irc/js/lib/events.js"/>
+<html:script src="resource:///irc/js/lib/command-manager.js"/>
 <html:script src="resource:///irc/js/lib/irc.js"/>
 <html:script src="resource:///irc/js/lib/irc-debug.js"/>
 <html:script src="resource:///irc/xul/lib/listbox.js"/>
 
 <html:script src="resource:///irc/tests/test3-static.js"/>
 <html:script src="resource:///irc/tests/test3-handlers.js"/>
+<html:script src="resource:///irc/tests/test3-commands.js"/>
 
 <toolbox>
   <menubar>
