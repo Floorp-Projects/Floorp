@@ -436,7 +436,10 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
     // dithering and paletized storage of images. Bail on the 
     // optimization to DDB if we're on a paletted device.
     int rasterCaps = ::GetDeviceCaps(TheHDC, RASTERCAPS);
-    if (RC_PALETTE == (rasterCaps & RC_PALETTE)) return;
+    if (RC_PALETTE == (rasterCaps & RC_PALETTE)) {
+      ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
+      return;
+    }
     
     if (mSizeImage > 0){
        if (mAlphaDepth == 8) {
@@ -475,10 +478,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   if (mBHead == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
     return NS_ERROR_FAILURE;
 
-
   if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
     return NS_OK;
-
 
   // limit the size of the blit to the amount of the image read in
   if (aSX + aSWidth > mDecodedX2) {
@@ -490,7 +491,6 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     aSX = mDecodedX1;
   }
 
-
   if (aSY + aSHeight > mDecodedY2) {
     aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
     aSHeight -= (aSY + aSHeight) - mDecodedY2;
@@ -500,10 +500,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     aSY = mDecodedY1;
   }
 
-
   if (aDWidth <= 0 || aDHeight <= 0)
     return NS_OK;
-
 
   // Translate to bottom-up coordinates for the source bitmap
   srcy = mBHead->biHeight - (aSY + aSHeight);
@@ -512,14 +510,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   // if DC is not for a printer, and the image can be optimized, 
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
 
-
   // find out if the surface is a printer.
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
-  if (canRaster != DT_RASPRINTER){
-    if ((PR_TRUE==mCanOptimize) && (nsnull == mHBitmap))
-      CreateDDB(aSurface);
-  }
-
 
   if (nsnull != TheHDC){
     PRBool  didComposite = PR_FALSE;
@@ -1110,13 +1102,49 @@ PRBool nsImageWin::CanAlphaBlend(void)
 nsresult 
 nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
-  // Just set the flag sinze we may not have a valid HDC, like at startup, but at drawtime we do have a valid HDC
+  // we used to set a flag because  a valid HDC may not be ready, 
+  // like at startup, but now we just roll our own HDC for the given screen.
   
   // Windows 95/98/Me: DDB size cannot exceed 16MB in size.
-  if (gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) 
-    mCanOptimize = PR_FALSE;
-  else if ((8 != mAlphaDepth) || CanAlphaBlend())
-    mCanOptimize = PR_TRUE;
+  if ((gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) || (mAlphaDepth == 8) || (!CanAlphaBlend()) ){
+    return NS_OK;
+  }  
+  
+  HDC TheHDC = ::CreateCompatibleDC(NULL);
+  
+  if (TheHDC != NULL){
+    // Temporary fix for bug 135226 until we do better decode-time
+    // dithering and paletized storage of images. Bail on the 
+    // optimization to DDB if we're on a paletted device.
+    int rasterCaps = ::GetDeviceCaps(TheHDC, RASTERCAPS);
+    if (RC_PALETTE == (rasterCaps & RC_PALETTE)) {
+      ::DeleteDC(TheHDC);
+      return NS_OK;
+    }
+  
+    // we have to install the correct bitmap to get a good DC going
+    int planes = ::GetDeviceCaps(TheHDC, PLANES);
+    int bpp = ::GetDeviceCaps(TheHDC, BITSPIXEL);
+
+    HBITMAP  tBitmap = ::CreateBitmap(1,1,planes,bpp,NULL);
+    HBITMAP oldbits = (HBITMAP)::SelectObject(TheHDC,tBitmap);
+
+    if (mSizeImage > 0){
+       if (mAlphaDepth == 8) {
+         CreateImageWithAlphaBits(TheHDC);
+       } else {
+         mHBitmap = ::CreateDIBitmap(TheHDC,mBHead,CBM_INIT,mImageBits,(LPBITMAPINFO)mBHead,
+                  256==mNumPaletteColors?DIB_PAL_COLORS:DIB_RGB_COLORS);
+         mIsOptimized = (mHBitmap != 0);
+       }
+      if (mIsOptimized)
+        CleanUpDIB();
+    }
+    ::SelectObject(TheHDC,oldbits);
+    ::DeleteObject(tBitmap);
+    ::DeleteDC(TheHDC);
+  }
+
   return NS_OK;
 }
 
@@ -1209,11 +1237,7 @@ nsImageWin :: CleanUpDDB()
     mBHead = nsnull;
   }
 
-
-  mCanOptimize = PR_FALSE;
   mIsOptimized = PR_FALSE;
-
-
 }
 
 
