@@ -84,6 +84,13 @@ dom/src/jsurl/Makefile
 dom/tools/Makefile
 editor/Makefile
 editor/public/Makefile
+editor/txmgr/Makefile
+editor/txmgr/public/Makefile
+editor/txmgr/src/Makefile
+editor/txmgr/tests/Makefile
+editor/txtsvc/Makefile
+editor/txtsvc/public/Makefile
+editor/txtsvc/src/Makefile
 expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
@@ -421,13 +428,6 @@ END_NGMAKEFILES
 if [ "$MOZ_EDITOR" ]; then
   add_makefiles <<END_EDITOR_MAKEFILES
 editor/base/Makefile
-editor/txmgr/Makefile
-editor/txmgr/public/Makefile
-editor/txmgr/src/Makefile
-editor/txmgr/tests/Makefile
-editor/txtsvc/Makefile
-editor/txtsvc/public/Makefile
-editor/txtsvc/src/Makefile
 editor/guimgr/Makefile
 editor/guimgr/src/Makefile
 editor/guimgr/public/Makefile
