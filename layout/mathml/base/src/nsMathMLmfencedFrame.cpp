@@ -126,38 +126,43 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators()
 
   //////////////  
   // see if the opening fence is there ...
-  data = '('; // default as per the MathML REC
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::open_, value)) {
     value.Trim(" ");
     data = value;
   }
+  else data = '('; // default as per the MathML REC
+
   if (0 < data.Length()) {
     mOpenChar = new nsMathMLChar;
     if (!mOpenChar) return NS_ERROR_OUT_OF_MEMORY;
     mOpenChar->SetData(data);
   }
+
   //////////////
   // see if the closing fence is there ...
-  data = ')'; // default as per the MathML REC
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::close_, value)) {
     value.Trim(" ");
     data = value;
   }
+  else data = ')'; // default as per the MathML REC
+
   if (0 < data.Length()) {
     mCloseChar = new nsMathMLChar;
     if (!mCloseChar) return NS_ERROR_OUT_OF_MEMORY;
     mCloseChar->SetData(data);
   }
+
   //////////////
   // see if separators are there ...
-  data = ','; // default as per the MathML REC
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::separators_, value)) {
     value.Trim(" ");
     data = value;
   }
+  else data = ','; // default as per the MathML REC
+
   mSeparatorsCount = data.Length();
   if (0 < mSeparatorsCount) {
     PRInt32 sepCount = -1;
