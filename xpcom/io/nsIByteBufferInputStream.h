@@ -15,10 +15,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #ifndef nsIByteBufferInputStream_h___
 #define nsIByteBufferInputStream_h___
 
 #include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 
 #define NS_IBYTEBUFFERINPUTSTREAM_IID                \
 { /* 40767100-eb9c-11d2-931c-00104ba0fd40 */         \
@@ -30,14 +32,46 @@
 
 class nsIByteBufferInputStream : public nsIInputStream {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFERINPUTSTREAM_IID);
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IBYTEBUFFERINPUTSTREAM_IID; return iid; }
+    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 *aWriteCount) = 0;
 
-    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 *filledAmount) = 0;
+    NS_IMETHOD Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) = 0;
+
 };
 
-// Makes an byte buffer input stream:
+////////////////////////////////////////////////////////////////////////////////
+
+// XXX regenerate:
+#define NS_IBYTEBUFFEROUTPUTSTREAM_IID               \
+{ /* 924df6d0-f192-11d2-9322-000000000000 */         \
+    0x924df6d0,                                      \
+    0xf192,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+class nsIByteBufferOutputStream : public nsIOutputStream {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFEROUTPUTSTREAM_IID);
+
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) = 0;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern NS_BASE nsresult
-NS_NewByteBufferInputStream(PRUint32 size, nsIByteBufferInputStream* *result);
+NS_NewByteBufferInputStream(nsIByteBufferInputStream* *result,
+                            PRBool blocking = PR_FALSE,
+                            PRUint32 size = 4096);
+
+extern NS_BASE nsresult
+NS_NewPipe(nsIInputStream* *inStrResult,
+           nsIOutputStream* *outStrResult,
+           PRBool blocking = PR_TRUE,
+           PRUint32 bufferSize = 4096);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsByteBufferInputStream_h___ */
