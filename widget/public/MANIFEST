@@ -20,9 +20,7 @@ nsIMouseListener.h
 nsIEventListener.h
 nsIFileWidget.h
 nsIMenuListener.h
-nsIToolkit.h
 nsWidgetsCID.h
-nsIAppShell.h
 nsILabel.h
 nsILookAndFeel.h
 nsWidgetSupport.h
@@ -33,4 +31,3 @@ nsIPopUpMenu.h
 nsIKeyBindMgr.h
 nsStringUtil.h
 nsIContextMenu.h
-nsIRollupListener.h
