@@ -31,24 +31,43 @@ class nsIImage;
 { 0xc31444c0, 0xaec9, 0x11d1,  \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
+/**
+ *
+ * An image request generated as a result of invoking the 
+ * <code>GetImage</code> method of the <code>nsIImageGroup</code>
+ * interface. 
+ */
 class nsIImageRequest : public nsISupports {
 public:  
-  // Get the image associated with the request.
+  /// @return the image object associated with the request.
   virtual nsIImage* GetImage() = 0;
   
-  // Return the natural dimensions of the image.  Returns 0,0 
-  //if the dimensions are unknown.
+  /**
+   *  Returns the natural dimensions of the image.  Returns 0,0 
+   *  if the dimensions are unknown.
+   * 
+   * @param aWidth, aHeight - pointers to integers to be filled in with
+   *      the dimensions.
+   */
   virtual void GetNaturalDimensions(PRUint32 *aWidth, PRUint32 *aHeight) = 0;
-
-  // Add and remove observers to listen in on image loading notifications
+ 
+  /** 
+   * Add an observers to be informed of image loading notifications.
+   *
+   * @param aObserver - An observer to add to the observer list.
+   * @param boolean indicating whether addition was successful.
+   */
   virtual PRBool AddObserver(nsIImageRequestObserver *aObserver) = 0;
+
+  /**
+   * Remove a previously added observer from the observer list.
+   *
+   * @param aObserver - An observer to remove from the observer list.
+   * @param boolean indicating whether the removal was successful.
+   */ 
   virtual PRBool RemoveObserver(nsIImageRequestObserver *aObserver) = 0;
 
-  // Interrupt loading of just this image.
+  /// Interrupt loading of just this image.
   virtual void Interrupt() = 0;
 };
-
-extern NS_GFX nsresult
-  NS_NewImageRequest(nsIImageRequest **aInstancePtrResult);                   
-
 #endif

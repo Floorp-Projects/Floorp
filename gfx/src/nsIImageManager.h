@@ -38,29 +38,45 @@ typedef enum
 { 0x9f327100, 0xad5a, 0x11d1,   \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
-//----------------------------------------------------------------------
-// 
-// Image manager. There is only a single instance, created when the
-// class is initially loaded. 
+/**
+ *
+ * Image manager. There is only a single instance, returned when invoking
+ * the factory instantiation method. A user of the image library should
+ * hold on to the singleton image manager.
+ */
 class nsIImageManager : public nsISupports
 {
 public:
+  /// Initialization method to be called before use
   virtual nsresult Init() = 0;
 
-  // Set and get the cache size in bytes
+  /// Set the size (in bytes) image cache maintained by the image manager
   virtual void SetCacheSize(PRInt32 aCacheSize) = 0;
+
+  /// @return the current size of the image cache (in bytes)
   virtual PRInt32 GetCacheSize(void) = 0;
   
-  // Attempts to release some memory by freeing an image from the image
-  // cache.  This may not always be possible either because all images
-  // in the cache are in use or because the cache is empty.  Returns the
-  // new approximate size of the imagelib cache. 
+  /**
+   *  Attempts to release some memory by freeing an image from the image
+   *  cache.  This may not always be possible either because all images
+   *  in the cache are in use or because the cache is empty.  
+   *
+   *  @return the new approximate size of the imagelib cache. 
+   */
   virtual PRInt32 ShrinkCache(void) = 0;
 
-  // Determine the type of the image, based on the first few bytes of data.  
+  /**
+   * Determine the type of the image, based on the first few bytes of data.  
+   *
+   * @param buf - a buffer of image data
+   * @param length - the length of the buffer
+   *
+   * @return the type of the image, if known
+   */
   virtual nsImageType GetImageType(const char *buf, PRInt32 length) = 0;
 };
 
+/// Factory method to get a reference to the singleton image manager
 extern NS_GFX nsresult
   NS_NewImageManager(nsIImageManager **aInstancePtrResult);
 
