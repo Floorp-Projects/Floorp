@@ -194,7 +194,6 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
         if ((0==c1) || (0==c2)) break;
       }
     }
-    else return 1;
   }
   return 0;
 }
@@ -252,7 +251,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
         }
         if ((0==c1) || (0==c2)) break;
       }
-    } else return 1;
+    }
   }
   return 0;
 }
@@ -304,7 +303,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
         }
         if ((0==c1) || (0==c2)) break;
       }
-    } else return 1;
+    }
   }
   return 0;
 }
@@ -362,7 +361,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
         }
         if (c1 == 0) break;
       }
-    } else return 1;
+    }
   }
   return 0;
 }
