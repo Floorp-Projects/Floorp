@@ -241,14 +241,17 @@ var DefaultController =
 			case "cmd_sortByThread":
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
-      case "cmd_watchThread":
-      case "cmd_killThread":
       case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
       case "cmd_close":
       case "cmd_selectThread":
       case "cmd_selectFlagged":
 				return true;
+
+      case "cmd_watchThread":
+      case "cmd_killThread":
+        return(isNewsURI(GetFirstSelectedMessage()));
+
 			default:
 				return false;
 		}
