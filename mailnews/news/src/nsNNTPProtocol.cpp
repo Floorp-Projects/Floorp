@@ -556,6 +556,9 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
   m_connectionBusy = PR_TRUE;
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
+  	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+    if (mailnewsUrl)
+      mailnewsUrl->SetMsgWindow(aMsgWindow);
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
 		m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
