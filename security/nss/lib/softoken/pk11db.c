@@ -625,8 +625,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 
 	slotStrings[i] = pk11_mkSlotString(slotID, defaultFlags, timeout, 
 	                                   (unsigned char)slots[i].askpw, 
-	                                   (unsigned char)hasRootCerts, 
-	                                   (unsigned char)hasRootTrust);
+	                                   hasRootCerts, hasRootTrust);
     }
 
     nss = pk11_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
