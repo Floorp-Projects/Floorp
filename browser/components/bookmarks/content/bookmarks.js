@@ -1703,7 +1703,7 @@ BookmarkImportTransaction.prototype =
 
 }
 
-var BookmarkMenuTransactionListener =
+var BookmarkEditMenuTxnListener =
 {
 
   didDo: function (aTxmgr, aTxn)

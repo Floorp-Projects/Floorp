@@ -66,12 +66,14 @@ function Startup()
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.tree.focus();
 
+  BMSVC.transactionManager.AddListener(BookmarkEditMenuTxnListener);
+
 }
 
 function Shutdown ()
 {
-
-  // Store current window position and size in window attributes (for persistence).
+  BMSVC.transactionManager.RemoveListener(BookmarkEditMenuTxnListener);
+  // Store current window position and size in window attributes (for persistence)
   var win = document.getElementById("bookmark-window");
   win.setAttribute("x", screenX);
   win.setAttribute("y", screenY);
