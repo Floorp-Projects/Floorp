@@ -630,7 +630,7 @@
   </toolbox>
 
   
-  <html:iframe id="content-frame" html:name="content" html:src="BrowserInitPage.html" flex="100%" />
+  <html:iframe id="content-frame" html:name="content" html:src="contentframe.html" flex="100%" />
 
  
   <html:script>
