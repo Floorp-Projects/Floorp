@@ -224,7 +224,11 @@ struct nsHTMLReflowState : nsReflowState {
     return eHTMLFrameConstraint_FixedContent == heightConstraint;
   }
 
-  nscoord GetContainingBlockContentWidth() const;
+  /**
+   * Return the width of the content area based on this reflow state's
+   * state.
+   */
+  nscoord GetContentWidth() const;
 
   /**
    * Get the containing block reflow state, starting from a frames
@@ -233,6 +237,14 @@ struct nsHTMLReflowState : nsReflowState {
    */
   static const nsHTMLReflowState*
     GetContainingBlockReflowState(const nsReflowState* aParentRS);
+
+  /**
+   * First find the containing block's reflow state using
+   * GetContainingBlockReflowState, then ask the containing block for
+   * it's content width using GetContentWidth
+   */
+  static nscoord
+    GetContainingBlockContentWidth(const nsReflowState* aParentRS);
 
   /**
    * Get the page box reflow state, starting from a frames
