@@ -3415,6 +3415,11 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   PRBool useMultipartAlternative = mCompFields->GetUseMultipartAlternative();
   PRUint32 sendFormat = nsIAbPreferMailFormat::unknown;
 
+  // this code is not ready yet
+  // see bug #44494 for more details
+  // so for now, just pass in nsIAbPreferMailFormat::unknown
+  // which will have no effect on the "prefers" attribute in the ab
+#if 0
   // see GenericSendMessage() in MsgComposeCommands.js for the reverse logic
   // if we choose to send both (html and plain) remember html.
   if (forcePlainText && !useMultipartAlternative)
@@ -3424,7 +3429,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // the body was "convertible", but that doesn't mean
     // we intended to force plain text here.
     // so for now, use "unknown" which will have no effect on the
-    // prefers html attribute in the ab.
+    // "prefers" attribute in the ab.
     // see bug #245520 for more details
     // sendFormat = nsIAbPreferMailFormat::plaintext;
     sendFormat = nsIAbPreferMailFormat::unknown;
@@ -3433,6 +3438,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     sendFormat = nsIAbPreferMailFormat::html;
   else
     NS_ASSERTION(0,"unknown send format, should not happen");
+#endif
 
   PL_strcpy (buf, "");
   buf2 = buf + PL_strlen (buf);
