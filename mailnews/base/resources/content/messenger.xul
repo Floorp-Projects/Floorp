@@ -301,6 +301,7 @@ Rights Reserved.
       <menuitem value="&printCmd.label;" onaction="Print();"/>
       <menuseparator/>
       <menuitem value="&closeCmd.label;" onaction="CloseMessenger();"/>
+	  </menupopup>
     </menu>
     <menu value="&editMenu.label;">
       <menupopup>
