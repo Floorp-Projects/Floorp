@@ -436,8 +436,6 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   rv = nsContentUtils::LoadImage(imageURI, doc, this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (!mayNeedReframe) {
     // We're all set
     return NS_OK;
