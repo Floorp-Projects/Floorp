@@ -58,6 +58,16 @@ enum nsContentQuality {
   nsContentQuality_kUnknown
 };
 
+enum nsRectVisibility { 
+  nsRectVisibility_kVisible, 
+  nsRectVisibility_kAboveViewport, 
+  nsRectVisibility_kBelowViewport, 
+  nsRectVisibility_kLeftOfViewport, 
+  nsRectVisibility_kRightOfViewport, 
+  nsRectVisibility_kZeroAreaRect
+}; 
+
+
 #define NS_IVIEWMANAGER_IID   \
 { 0x3a8863d0, 0xa7f3, 0x11d1, \
   { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
@@ -522,14 +532,18 @@ public:
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
 
   /**
-	 * Determine if a rectangle specified in the view's coordinate system 
-	 * is completely, or partially visible.
+   * Determine if a rectangle specified in the view's coordinate system 
+   * is completely, or partially visible.
    * @param aView view that aRect coordinates are specified relative to
    * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen needed for object to be counted visible
-   * @param aIsVisible returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
-	 */
-  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRUint16 aMinTwips, PRBool *aIsVisible)=0;
+   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
+   *                  needed for object to be counted visible
+   * @param aRectVisibility returns eVisible if the rect is visible, 
+   *                        otherwise it returns an enum indicating why not
+   */
+  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
+                               PRUint16 aMinTwips, 
+                               nsRectVisibility *aRectVisibility)=0;
 
 };
 

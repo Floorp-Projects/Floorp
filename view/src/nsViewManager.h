@@ -226,14 +226,18 @@ public:
   static PRUint32 gLastUserEventTime;
 
   /**
-	 * Determine if a rectangle specified in the view's coordinate system 
-	 * is completely, or partially visible.
+   * Determine if a rectangle specified in the view's coordinate system 
+   * is completely, or partially visible.
    * @param aView view that aRect coordinates are specified relative to
    * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen needed for object to be counted visible
-   * @param aIsVisible returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
-	 */
-  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRUint16 aMinTwips, PRBool *aIsVisible);
+   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
+   *                  needed for object to be counted visible
+   * @param aRectVisibility returns eVisible if the rect is visible, 
+   *                        otherwise it returns an enum indicating why not
+   */
+  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
+                               PRUint16 aMinTwips, 
+                               nsRectVisibility *aRectVisibility);
 
 protected:
   virtual ~nsViewManager();

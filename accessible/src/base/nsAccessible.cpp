@@ -735,10 +735,12 @@ PRBool nsAccessible::IsPartiallyVisible()
 
   float p2t;
   presContext->GetPixelsToTwips(&p2t);
-  PRBool isVisible = PR_FALSE;
-  viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), &isVisible);
+  nsRectVisibility rectVisibility;
+  viewManager->GetRectVisibility(containingView, relFrameRect, 
+                                 NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                                 &rectVisibility);
 
-  return isVisible;
+  return rectVisibility == nsRectVisibility_kVisible;
 }
 
 NS_IMETHODIMP nsAccessible::GetFocusedNode(nsIDOMNode **aFocusedNode) 
