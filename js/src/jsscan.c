@@ -740,7 +740,7 @@ retry:
 
     if (c == EOF)
 	RETURN(TOK_EOF);
-    if (c != '-')
+    if (c != '-' && c != '\n')
         ts->flags |= TSF_DIRTYLINE;
 
     hadUnicodeEscape = JS_FALSE;
