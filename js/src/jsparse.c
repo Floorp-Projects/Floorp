@@ -676,17 +676,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
             if (sprop && pobj == fun->object) {
                 if (SPROP_GETTER(sprop, pobj) == js_GetArgument) {
-                    if (JS_HAS_STRICT_OPTION(cx)) {
-                        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-                        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                         JSREPORT_WARNING |
-                                                         JSREPORT_STRICT,
-                                                         JSMSG_DUPLICATE_FORMAL,
-                                                         ATOM_BYTES(argAtom))) {
-                            return NULL;
-                        }
-                    }
-
                     /*
                      * A duplicate parameter name. We create a dummy symbol
                      * entry with property id of the parameter number and set
@@ -696,6 +685,16 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     oldArgId = (jsid) sprop->id;
                     OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
                     sprop = NULL;
+
+                    if (JS_HAS_STRICT_OPTION(cx) &&
+                        !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_DUPLICATE_FORMAL,
+                                                     ATOM_BYTES(argAtom))) {
+                        return NULL;
+                    }
+
                     if (!js_DefineProperty(cx, fun->object,
                                            oldArgId, JSVAL_VOID,
                                            js_GetArgument, js_SetArgument,
