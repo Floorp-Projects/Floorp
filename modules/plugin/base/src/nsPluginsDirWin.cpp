@@ -32,9 +32,13 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "prprf.h"
 
 #include "windows.h"
 #include "winbase.h"
+
+#include "nsSpecialSystemDirectory.h"
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -124,30 +128,18 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
   DWORD pathlen; 
   char path[2000];
   const char* allocPath;
+  // Use the Moz_BinDirectory
+  nsSpecialSystemDirectory plugDir(nsSpecialSystemDirectory::Moz_BinDirectory);
 
   if((location == PLUGINS_DIR_LOCATION_AUTO) || (location == PLUGINS_DIR_LOCATION_MOZ_LOCAL))
   {
-    // look for a plugin folder that exists in the same directory as our executable
-    if (::GetModuleFileName(NULL, path, sizeof(path)) > 0) 
-    { 
-      pathlen = PL_strlen(path) - 1; 
+    // look for a plugin folder that exists in the same directory as 
+    // the mozilla bin directory
 
-      while (pathlen > 0) 
-      { 
-        if (path[pathlen] == '\\') 
-          break; 
-
-        pathlen--; 
-      }
-
-      if (pathlen > 0) 
-      { 
-        PL_strcpy(&path[pathlen + 1], "plugins"); 
-
-	      allocPath = path;
-	      *(nsFileSpec*)this = allocPath;
-      } 
-    } 
+    plugDir += "plugins";
+    *(nsFileSpec*)this = plugDir;
+    PR_snprintf(path, 2000, "%s", (const char *) plugDir);
+    
   }
 
   if(((location == PLUGINS_DIR_LOCATION_AUTO) && !Exists()) || 
