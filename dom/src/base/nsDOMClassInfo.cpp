@@ -827,6 +827,8 @@ JSString *nsDOMClassInfo::sOnpaint_id         = nsnull;
 JSString *nsDOMClassInfo::sOnresize_id        = nsnull;
 JSString *nsDOMClassInfo::sOnscroll_id        = nsnull;
 JSString *nsDOMClassInfo::sScrollIntoView_id  = nsnull;
+JSString *nsDOMClassInfo::sScrollX_id         = nsnull;
+JSString *nsDOMClassInfo::sScrollY_id         = nsnull;
 JSString *nsDOMClassInfo::sOpen_id            = nsnull;
 JSString *nsDOMClassInfo::sItem_id            = nsnull;
 JSString *nsDOMClassInfo::sEnumerate_id       = nsnull;
@@ -898,6 +900,8 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   sOnresize_id       = ::JS_InternString(cx, "onresize");
   sOnscroll_id       = ::JS_InternString(cx, "onscroll");
   sScrollIntoView_id = ::JS_InternString(cx, "scrollIntoView");
+  sScrollX_id        = ::JS_InternString(cx, "scrollX");
+  sScrollY_id        = ::JS_InternString(cx, "scrollY");
   sOpen_id           = ::JS_InternString(cx, "open");
   sItem_id           = ::JS_InternString(cx, "item");
   sEnumerate_id      = ::JS_InternString(cx, "enumerateProperties");
@@ -2627,6 +2631,8 @@ nsDOMClassInfo::ShutDown()
   sOnresize_id        = jsnullstring;
   sOnscroll_id        = jsnullstring;
   sScrollIntoView_id  = jsnullstring;
+  sScrollX_id         = jsnullstring;
+  sScrollY_id         = jsnullstring;
   sOpen_id            = jsnullstring;
   sItem_id            = jsnullstring;
   sEnumerate_id       = jsnullstring;
