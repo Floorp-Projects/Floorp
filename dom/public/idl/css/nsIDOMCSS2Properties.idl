@@ -24,7 +24,6 @@
 [scriptable, uuid(a6cf90d1-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSS2Properties : nsIDOMCSSStyleDeclaration
 {
-
            attribute DOMString        azimuth;
                                         // raises(DOMException) on setting
 
@@ -390,7 +389,11 @@ interface nsIDOMCSS2Properties : nsIDOMCSSStyleDeclaration
 
            attribute DOMString        zIndex;
                                         // raises(DOMException) on setting
+};
 
+[scriptable, uuid({88354c1a-d623-44a9-a894-4ee01ba29615)]
+interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
+{
            /* Non-DOM 2 extensions */
            attribute DOMString        MozBinding;
                                         // raises(DOMException) on setting
@@ -400,4 +403,3 @@ interface nsIDOMCSS2Properties : nsIDOMCSSStyleDeclaration
            attribute DOMString        MozOpacity;
                                         // raises(DOMException) on setting
 };
-

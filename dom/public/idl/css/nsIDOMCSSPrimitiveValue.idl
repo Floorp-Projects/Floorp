@@ -24,33 +24,32 @@
 [scriptable, uuid(e249031f-8df9-4e7a-b644-18946dce0019)]
 interface nsIDOMCSSPrimitiveValue : nsIDOMCSSValue
 {
-
-  const unsigned short      nsIDOMCSS_UNKNOWN                    = 0;
-  const unsigned short      nsIDOMCSS_NUMBER                     = 1;
-  const unsigned short      nsIDOMCSS_PERCENTAGE                 = 2;
-  const unsigned short      nsIDOMCSS_EMS                        = 3;
-  const unsigned short      nsIDOMCSS_EXS                        = 4;
-  const unsigned short      nsIDOMCSS_PX                         = 5;
-  const unsigned short      nsIDOMCSS_CM                         = 6;
-  const unsigned short      nsIDOMCSS_MM                         = 7;
-  const unsigned short      nsIDOMCSS_IN                         = 8;
-  const unsigned short      nsIDOMCSS_PT                         = 9;
-  const unsigned short      nsIDOMCSS_PC                         = 10;
-  const unsigned short      nsIDOMCSS_DEG                        = 11;
-  const unsigned short      nsIDOMCSS_RAD                        = 12;
-  const unsigned short      nsIDOMCSS_GRAD                       = 13;
-  const unsigned short      nsIDOMCSS_MS                         = 14;
-  const unsigned short      nsIDOMCSS_S                          = 15;
-  const unsigned short      nsIDOMCSS_HZ                         = 16;
-  const unsigned short      nsIDOMCSS_KHZ                        = 17;
-  const unsigned short      nsIDOMCSS_DIMENSION                  = 18;
-  const unsigned short      nsIDOMCSS_STRING                     = 19;
-  const unsigned short      nsIDOMCSS_URI                        = 20;
-  const unsigned short      nsIDOMCSS_IDENT                      = 21;
-  const unsigned short      nsIDOMCSS_ATTR                       = 22;
-  const unsigned short      nsIDOMCSS_COUNTER                    = 23;
-  const unsigned short      nsIDOMCSS_RECT                       = 24;
-  const unsigned short      nsIDOMCSS_RGBCOLOR                   = 25;
+  const unsigned short      CSS_UNKNOWN                    = 0;
+  const unsigned short      CSS_NUMBER                     = 1;
+  const unsigned short      CSS_PERCENTAGE                 = 2;
+  const unsigned short      CSS_EMS                        = 3;
+  const unsigned short      CSS_EXS                        = 4;
+  const unsigned short      CSS_PX                         = 5;
+  const unsigned short      CSS_CM                         = 6;
+  const unsigned short      CSS_MM                         = 7;
+  const unsigned short      CSS_IN                         = 8;
+  const unsigned short      CSS_PT                         = 9;
+  const unsigned short      CSS_PC                         = 10;
+  const unsigned short      CSS_DEG                        = 11;
+  const unsigned short      CSS_RAD                        = 12;
+  const unsigned short      CSS_GRAD                       = 13;
+  const unsigned short      CSS_MS                         = 14;
+  const unsigned short      CSS_S                          = 15;
+  const unsigned short      CSS_HZ                         = 16;
+  const unsigned short      CSS_KHZ                        = 17;
+  const unsigned short      CSS_DIMENSION                  = 18;
+  const unsigned short      CSS_STRING                     = 19;
+  const unsigned short      CSS_URI                        = 20;
+  const unsigned short      CSS_IDENT                      = 21;
+  const unsigned short      CSS_ATTR                       = 22;
+  const unsigned short      CSS_COUNTER                    = 23;
+  const unsigned short      CSS_RECT                       = 24;
+  const unsigned short      CSS_RGBCOLOR                   = 25;
 
   readonly attribute unsigned short   primitiveType;
   void               setFloatValue(in unsigned short unitType, 
@@ -63,11 +62,10 @@ interface nsIDOMCSSPrimitiveValue : nsIDOMCSSValue
                                         raises(DOMException);
   DOMString          getStringValue()
                                         raises(DOMException);
-  nsIDOMCounter            getCounterValue()
+  nsIDOMCounter      getCounterValue()
                                         raises(DOMException);
-  nsIDOMRect               getRectValue()
+  nsIDOMRect         getRectValue()
                                         raises(DOMException);
-  nsIDOMRGBColor           getRGBColorValue()
+  nsIDOMRGBColor     getRGBColorValue()
                                         raises(DOMException);
 };
-
