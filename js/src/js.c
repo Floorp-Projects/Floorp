@@ -154,7 +154,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	 * as a legal js program (using sharp variables) might start with '#'.
 	 * But that would require multi-character lookahead.
 	 */
-	char ch = fgetc(ts->file);
+	int ch = fgetc(ts->file);
 	if (ch == '#') {
 	    while((ch = fgetc(ts->file)) != EOF) {
 		if(ch == '\n' || ch == '\r')
@@ -945,6 +945,47 @@ DoExport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
 #ifdef TEST_CVTARGS
+#include <ctype.h>
+
+static const char *
+EscapeWideString(jschar *w)
+{
+    static char enuf[80];
+    static char hex[] = "0123456789abcdef";
+    jschar u;
+    unsigned char b, c;
+    int i, j;
+
+    for (i = j = 0; i < sizeof enuf - 1; i++, j++) {
+	u = w[j];
+	if (u == 0)
+	    break;
+	b = (unsigned char)(u >> 8);
+	c = (unsigned char)(u);
+	if (b) {
+	    if (i >= sizeof enuf - 6)
+		break;
+	    enuf[i++] = '\\';
+	    enuf[i++] = 'u';
+	    enuf[i++] = hex[b >> 4];
+	    enuf[i++] = hex[b & 15];
+	    enuf[i++] = hex[c >> 4];
+	    enuf[i] = hex[c & 15];
+	} else if (!isprint(c)) {
+	    if (i >= sizeof enuf - 4)
+		break;
+	    enuf[i++] = '\\';
+	    enuf[i++] = 'x';
+	    enuf[i++] = hex[c >> 4];
+	    enuf[i] = hex[c & 15];
+	} else {
+	    enuf[i] = (char)c;
+	}
+    }
+    enuf[i] = 0;
+    return enuf;
+}
+
 static JSBool
 ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -955,21 +996,25 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble d, I;
     char *s;
     JSString *str;
+    jschar *w;
     JSObject *obj;
     JSFunction *fun;
     jsval v;
 
-    if (!JS_ConvertArguments(cx, argc, argv, "b/ciujdIsSofv*",
-			     &b, &c, &i, &u, &j, &d, &I, &s, &str, &obj, &fun,
-			     &v)) {
+    if (!JS_ConvertArguments(cx, argc, argv, "b/ciujdIsSWofv*",
+			     &b, &c, &i, &u, &j, &d, &I, &s, &str, &w, &obj,
+			     &fun, &v)) {
 	return JS_FALSE;
     }
-    fprintf(gOutFile, "b %u, c %x (%c), i %ld, u %lu, j %ld\n", b, c, (char)c, i, u, j);
-    fprintf(gOutFile, "d %g, I %g, s %s, S %s, obj %s, fun %s, v %s\n",
-	   d, I, s, JS_GetStringBytes(str),
-	   JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj))),
-	   JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)),
-	   JS_GetStringBytes(JS_ValueToString(cx, v)));
+    fprintf(gOutFile,
+	    "b %u, c %x (%c), i %ld, u %lu, j %ld\n",
+	    b, c, (char)c, i, u, j);
+    fprintf(gOutFile,
+	    "d %g, I %g, s %s, S %s, W %s, obj %s, fun %s, v %s\n",
+	    d, I, s, JS_GetStringBytes(str), EscapeWideString(w),
+	    JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj))),
+	    JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)),
+	    JS_GetStringBytes(JS_ValueToString(cx, v)));
     return JS_TRUE;
 }
 #endif

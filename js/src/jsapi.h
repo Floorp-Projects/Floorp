@@ -139,7 +139,8 @@ JS_GetEmptyStringValue(JSContext *cx);
  *   d      jsdouble        IEEE double
  *   I      jsdouble        Integral IEEE double
  *   s      char *          C string
- *   S      JSString *      Unicode string
+ *   S      JSString *      Unicode string, accessed by a JSString pointer
+ *   W      jschar *        Unicode character vector, 0-terminated (W for wide)
  *   o      JSObject *      Object reference
  *   f      JSFunction *    Function private
  *   v      jsval           Argument value (no conversion)
