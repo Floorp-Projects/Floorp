@@ -30,7 +30,8 @@ Mapping fdMapping;
 
 extern "C" {
 
-#ifdef LINUX
+//#ifdef LINUX
+#if 0
 
 // 
 // This is temporary. I have to find a way to get the static 
