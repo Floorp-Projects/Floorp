@@ -33,18 +33,6 @@ nsBlender :: nsBlender()
   NS_INIT_REFCNT();
 
   mContext = nsnull;
-
-  mSrcBytes = nsnull;
-  mSecondSrcBytes = nsnull;
-  mDestBytes = nsnull;
-
-  mSrcRowBytes = 0;
-  mDestRowBytes = 0;
-  mSecondSrcRowBytes = 0;
-
-  mSrcSpan = 0;
-  mDestSpan = 0;
-  mSecondSrcSpan = 0;
 }
 
 /** ---------------------------------------------------
@@ -56,10 +44,38 @@ nsBlender::~nsBlender()
   NS_IF_RELEASE(mContext);
 }
 
-
 NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
 
 //------------------------------------------------------------
+
+// need to set up some masks for 16 bit blending
+// Use compile-time constants where possible for marginally smaller
+// footprint (don't need fields in nsBlender) but also for faster code
+#ifdef XP_MAC
+
+#define BLEND_RED_MASK        0x7c00
+#define BLEND_GREEN_MASK      0x03e0
+#define BLEND_BLUE_MASK       0x001f
+#define BLEND_RED_SET_MASK    0xf8
+#define BLEND_GREEN_SET_MASK  0xf8
+#define BLEND_BLUE_SET_MASK   0xf8
+#define BLEND_RED_SHIFT       7
+#define BLEND_GREEN_SHIFT     2
+#define BLEND_BLUE_SHIFT      3
+
+#else  // XP_WIN, XP_UNIX, ???
+
+#define BLEND_RED_MASK        0xf800
+#define BLEND_GREEN_MASK      0x07e0
+#define BLEND_BLUE_MASK       0x001f
+#define BLEND_RED_SET_MASK    0xf8
+#define BLEND_GREEN_SET_MASK  0xfC
+#define BLEND_BLUE_SET_MASK   0xf8
+#define BLEND_RED_SHIFT       8
+#define BLEND_GREEN_SHIFT     3
+#define BLEND_BLUE_SHIFT      3
+
+#endif
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
@@ -70,43 +86,6 @@ nsBlender::Init(nsIDeviceContext *aContext)
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
-  
-  // need to set up some masks for 16 bit Mac or Unix
-#ifdef XP_MAC
-	mRedMask = 0x7c00;
-	mGreenMask = 0x03e0;
-	mBlueMask = 0x001f;
-	mRedSetMask = 0xf8;
-	mGreenSetMask = 0xf8;
-	mBlueSetMask = 0xf8;	
- 	mRedShift = 7;
-  mGreenShift = 2;
-  mBlueShift = 3;
-#endif
-
-#ifdef XP_WIN
-	mRedMask = 0xf800;
-	mGreenMask = 0x07e0;
-	mBlueMask = 0x001f;
-	mRedSetMask = 0xf8;
-	mGreenSetMask = 0xfC;
-	mBlueSetMask = 0xf8;	
- 	mRedShift = 8;
-  mGreenShift = 3;
-  mBlueShift = 3;
-#endif  
-  
-#ifdef XP_UNIX
-	mRedMask = 0xf800;
-	mGreenMask = 0x07e0;
-	mBlueMask = 0x001f;
-	mRedSetMask = 0xf8;
-	mGreenSetMask = 0xfC;
-	mBlueSetMask = 0xf8;	
- 	mRedShift = 8;
-  mGreenShift = 3;
-  mBlueShift = 3;
-#endif  
   
   return NS_OK;
 }
@@ -140,8 +119,23 @@ static void rangeCheck(nsIDrawingSurface* surface, PRInt32& aX, PRInt32& aY, PRI
 NS_IMETHODIMP
 nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDrawingSurface aSrc,
                  nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                 nsDrawingSurface aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+                 nsDrawingSurface aSecondSrc, nscolor aSrcBackColor,
+                 nscolor aSecondSrcBackColor)
 {
+  if (aSecondSrc) {
+    // the background color options are obsolete and should be removed.
+    NS_ASSERTION(aSrcBackColor == NS_RGB(0, 0, 0),
+      "Background color for primary source must be black");
+    NS_ASSERTION(aSecondSrcBackColor == NS_RGB(255, 255, 255),
+      "Background color for secondary source must be white");
+    if (aSrcBackColor != NS_RGB(0, 0, 0) ||
+        aSecondSrcBackColor != NS_RGB(255, 255, 255)) {
+      // disable multi-buffer blending; pretend the primary buffer
+      // is all opaque pixels
+      aSecondSrc = nsnull;
+    }
+  }
+ 
   nsresult result = NS_ERROR_FAILURE;
 
   nsIDrawingSurface* srcSurface = (nsIDrawingSurface *)aSrc;
@@ -152,26 +146,43 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
   rangeCheck(srcSurface, aSX, aSY, aWidth, aHeight);
   rangeCheck(destSurface, aDX, aDY, aWidth, aHeight);
 
-  mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
+  PRUint8* srcBytes = nsnull;
+  PRUint8* secondSrcBytes = nsnull;
+  PRUint8* destBytes = nsnull;
+  PRInt32 srcSpan, destSpan, secondSrcSpan;
+  PRInt32 srcRowBytes, destRowBytes, secondSrcRowBytes;
 
-  if (NS_OK == srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
-    if (NS_OK == destSurface->Lock(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)) {
-      if (secondSrcSurface)
-        secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+  if (NS_OK == srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
+    if (NS_OK == destSurface->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0)) {
+      NS_ASSERTION(srcSpan == destSpan, "Mismatched bitmap formats (src/dest) in Blender");
+      if (srcSpan == destSpan) {
 
-      nsPixelFormat pixformat;
-      srcSurface->GetPixelFormat(&pixformat);
+        if (secondSrcSurface) {
+          if (NS_OK == secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
+            NS_ASSERTION(srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes,
+                         "Mismatched bitmap formats (src/secondSrc) in Blender");
+            if (srcSpan != secondSrcSpan || srcRowBytes != secondSrcRowBytes) {
+              // disable second source if there's a format mismatch
+              secondSrcBytes = nsnull;
+            }
+          } else {
+            // failed to lock. So, pretend it was never there.
+            secondSrcSurface = nsnull;
+            secondSrcBytes = nsnull;
+          }
+        }
 
-      result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
-                     mDestBytes, mDestRowBytes, mDestSpan,
-                     mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
-                     aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
-                     aSrcBackColor, aSecondSrcBackColor);
+        result = Blend(srcBytes, srcRowBytes,
+                       destBytes, destRowBytes,
+                       secondSrcBytes,
+                       srcSpan, aHeight, aSrcOpacity);
+
+        if (secondSrcSurface) {
+          secondSrcSurface->Unlock();
+        }
+      }
 
       destSurface->Unlock();
-
-      if (secondSrcSurface)
-        secondSrcSurface->Unlock();
     }
 
     srcSurface->Unlock();
@@ -186,7 +197,8 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
  */
 NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
                                nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                               nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+                               nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor,
+                               nscolor aSecondSrcBackColor)
 {
   // just hand off to the drawing surface blender, to make code easier to maintain.
   nsDrawingSurface srcSurface, destSurface, secondSrcSurface = nsnull;
@@ -195,55 +207,49 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
   if (aSecondSrc != nsnull)
     aSecondSrc->GetDrawingSurface(&secondSrcSurface);
   return Blend(aSX, aSY, aWidth, aHeight, srcSurface, destSurface,
-               aDX, aDY, aSrcOpacity, secondSrcSurface,
-               aSrcBackColor, aSecondSrcBackColor);
+               aDX, aDY, aSrcOpacity, secondSrcSurface, aSrcBackColor,
+               aSecondSrcBackColor);
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
  */
-nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
-                               PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
-                               PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
-                               PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
-                               nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
+                          PRUint8 *aDestBits, PRInt32 aDestStride,
+                          PRUint8 *aSecondSrcBits,
+                          PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity)
 {
-nsresult  result = NS_OK;
-PRUint32 depth;
- 
+  nsresult result = NS_OK;
+  PRUint32 depth;
   mContext->GetDepth(depth);
   // now do the blend
   switch (depth){
     case 32:
-        Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-        result = NS_OK;
-      break;
+        Do32Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual);
+        break;
 
     case 24:
-        Do24Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-      break;
+        Do24Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual);
+        break;
 
     case 16:
-        Do16Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
-                  aSrcBackColor, aSecondSrcBackColor, aPixFormat);
-      break;
+        Do16Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
+                  aSecondSrcBits, aSrcStride, aDestStride, nsHighQual);
+        break;
 
     case 8:
     {
       IL_ColorSpace *thespace = nsnull;
 
-        if ((result = mContext->GetILColorSpace(thespace)) == NS_OK){
-          Do8Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
-                   aSecondSrcBits, aSrcStride, aDestStride, thespace,
-                   nsHighQual, aSrcBackColor, aSecondSrcBackColor);
-          IL_ReleaseColorSpace(thespace);
-        }
+      if ((result = mContext->GetILColorSpace(thespace)) == NS_OK) {
+        Do8Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
+          aSecondSrcBits, aSrcStride, aDestStride, thespace,
+          nsHighQual);
+        IL_ReleaseColorSpace(thespace);
+      }
       break;
     }
   }
@@ -251,177 +257,264 @@ PRUint32 depth;
   return result;
 }
 
-
-/** ---------------------------------------------------
- *  See documentation in nsBlender.h
- *	@update 2/25/00 dwc
- */
-void
-nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
+/**
+  This is the simple case where the opacity == 1.0. We just copy the pixels.
+*/
+static void DoOpaqueBlend(PRInt32 aNumLines, PRInt32 aNumBytes,
+                          PRUint8 *aSImage, PRUint8 *aDImage,
+                          PRInt32 aSLSpan, PRInt32 aDLSpan)
 {
-PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
-PRUint32  val1,val2;
-PRInt32   x,y,temp1,numlines,numPixels,xinc,yinc;
-PRUint32  srccolor,secsrccolor,i;
-PRUint32  pixSColor,pixSSColor;
-
-  aBlendVal = (aBlendVal*255)/100;
-  val2 = aBlendVal;
-  val1 = 255-val2;
-
-  // now go thru the image and blend (remember, its bottom upwards)
-  s1 = aSImage;
-  d1 = aDImage;
-
-  numlines = aNumlines;  
-  xinc = 1;
-  yinc = 1;
-
-  if (nsnull != aSecondSImage){
-    ss1 = (PRUint8 *)aSecondSImage;
-    srccolor = ((NS_GET_R(aSrcBackColor)<<16)) | ((NS_GET_G(aSrcBackColor) <<8)) | ((NS_GET_B(aSrcBackColor)));
-    secsrccolor = ((NS_GET_R(aSecondSrcBackColor)<<16)) | ((NS_GET_G(aSecondSrcBackColor) <<8)) | ((NS_GET_B(aSecondSrcBackColor)));
-  }else {
-    ss1 = nsnull;
-  }
-  
-  if(nsnull == ss1){
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      for(x = 0; x < aNumbytes; x++){
-        FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
-        if(temp1>255){
-          temp1 = 255;
-        }
-
-        *d2 = (PRUint8)temp1; 
-
-        d2++;
-        s2++;
-      }
-
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-    }
-  } else {
-    numPixels = aNumbytes/4;
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      ss2=ss1;
-      for(x=0;x<numPixels;x++){
-        pixSColor =  *((PRUint32*)(s2))&0xFFFFFF;
-        pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF ;
-
-        if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
-          for(i=0;i<4;i++){
-            FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
-            if(temp1>255){
-              temp1 = 255;
-            }
-            *d2 = (PRUint8)temp1; 
-            d2++;
-            s2++;
-            ss2++;
-          }
-        } else {
-          d2+=4;
-          s2+=4;
-          ss2+=4;
-        }
-      }
-     s1 += aSLSpan;
-     d1 += aDLSpan;
-     ss1+= aDLSpan;
-    }
+  PRIntn y;
+  for (y = 0; y < aNumLines; y++) {
+    nsCRT::memcpy(aDImage, aSImage, aNumBytes);
+    aSImage += aSLSpan;
+    aDImage += aDLSpan;
   }
 }
 
+/**
+   This is the case where we have a single source buffer, all of whose
+   pixels have an alpha value of 1.0.
+
+   Here's how to get the formula for calculating new destination pixels:
+
+   There's a destination pixel whose current color is D (0 <= D <= 255).
+   We are required to find the new color value for the destination pixel, call it X.
+   We are given S, the color value of the source pixel (0 <= S <= 255).
+   We are also given P, the opacity to blend with (0 < P < 256).
+
+   Note that we have deliberately defined P's "opaque" range bound to be 256
+   and not 255. This considerably speeds up the code.
+
+   Then we have the equation
+     X = D*(1 - P/256) + S*(P/256)
+
+   Rearranging gives
+     X = D + ((S - D)*P)/256
+
+   This form minimizes the number of integer multiplications, which are much more
+   expensive than shifts, adds and subtractions on most processors.
+*/
+static void DoSingleImageBlend(PRUint32 aOpacity256, PRInt32 aNumLines, PRInt32 aNumBytes,
+                               PRUint8 *aSImage, PRUint8 *aDImage,
+                               PRInt32 aSLSpan, PRInt32 aDLSpan)
+{
+  PRIntn y;
+
+  for (y = 0; y < aNumLines; y++) {
+    PRUint8 *s2 = aSImage;
+    PRUint8 *d2 = aDImage;
+    
+    PRIntn i;
+    for (i = 0; i < aNumBytes; i++) {
+      PRUint32 destPix = *d2;
+      
+      *d2 = (PRUint8)(destPix + (((*s2 - destPix)*aOpacity256) >> 8));
+      
+      d2++;
+      s2++;
+    }
+    
+    aSImage += aSLSpan;
+    aDImage += aDLSpan;
+  }
+}
+
+/**
+   After disposing of the simpler cases, here we have two source buffers.
+
+   So here's how to get the formula for calculating new destination pixels:
+
+   If the source pixel is the same in each buffer, then the pixel was painted with
+   alpha=1.0 and we use the formula from above to compute the destination pixel.
+   However, if the source pixel is different in each buffer (and is not just the
+   background color for each buffer, which indicates alpha=0.0), then the pixel was
+   painted with some partial alpha value and we need to (at least implicitly) recover
+   that alpha value along with the actual color value. So...
+
+   There's a destination pixel whose current color is D (0 <= D <= 255).
+   We are required to find the new color value for the destination pixel, call it X.
+   We are given S, the color value of the source pixel painted onto black (0 <= S <= 255).
+   We are given T, the color value of the source pixel painted onto white (0 <= T <= 255).
+   We are also given P, the opacity to blend with (0 < P < 256).
+
+   Let A be the alpha value the source pixel was painted with (0 <= A <= 255).
+   Let C be the color value of the source pixel (0 <= C <= 255).
+
+   Note that even though (as above) we set the "opaque" range bound for P at 256,
+   we set the "opaque" range bound for A at 255. This turns out to simplify the formulae
+   and speed up the code.
+
+   Then we have the equations
+     S = C*(A/255)
+     T = 255*(1 - A/255) + C*(A/255)
+     X = D*(1 - (A/255)*(P/256)) + C*(A/255)*(P/256)
+
+   Rearranging and crunching the algebra gives
+     X = D + ((S - (D*(255 + S - T))/255)*P)/256
+
+   This is the simplest form I could find. Apart from the two integer multiplies,
+   which I think are minimal, the most troublesome part is the division by 255,
+   but I have a fast way to do that (for numbers in the range encountered) using
+   two adds and two shifts.
+*/
+void
+nsBlender::Do32Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                     PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                     PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality)
+{
+  /* Use alpha ranging from 0 to 256 inclusive. This means that we get accurate
+     results when we divide by 256. */
+  PRUint32 opacity256 = (PRUint32)(aOpacity*256);
+
+  // Handle simpler cases
+  if (opacity256 <= 0) {
+    return;
+  } else if (opacity256 >= 256) {
+    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
+    return;
+  } else if (nsnull == aSecondSImage) {
+    DoSingleImageBlend(opacity256, aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
+    return;
+  }
+
+  PRIntn numPixels = aNumBytes/4;
+
+  PRIntn y;
+  for (y = 0; y < aNumLines; y++) {
+    PRUint8 *s2 = aSImage;
+    PRUint8 *d2 = aDImage;
+    PRUint8 *ss2 = aSecondSImage;
+
+    PRIntn x;
+    for (x = 0; x < numPixels; x++) {
+      PRUint32 pixSColor  = *((PRUint32*)(s2))&0xFFFFFF;
+      PRUint32 pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF;
+      
+      if ((pixSColor != 0x000000) || (pixSSColor != 0xFFFFFF)) {
+        if (pixSColor != pixSSColor) {
+          PRIntn i;
+          // the original source pixel was alpha-blended into the background.
+          // We have to extract the original alpha and color value.
+          for (i = 0; i < 4; i++) {
+            PRUint32 destPix = *d2;
+            PRUint32 onBlack = *s2;
+            PRUint32 imageAlphaTimesDestPix = (255 + onBlack - *ss2)*destPix;
+            PRUint32 adjustedDestPix;
+            FAST_DIVIDE_BY_255(adjustedDestPix, imageAlphaTimesDestPix);
+            
+            *d2 = (PRUint8)(destPix + (((onBlack - adjustedDestPix)*opacity256) >> 8));
+            
+            d2++;
+            s2++;
+            ss2++;
+          }
+        } else {
+          PRIntn i;
+          for (i = 0; i < 4; i++) {
+            PRUint32 destPix = *d2;
+            PRUint32 onBlack = *s2;
+            
+            *d2 = (PRUint8)(destPix + (((onBlack - destPix)*opacity256) >> 8));
+            
+            d2++;
+            s2++;
+          }
+
+          ss2 += 4;
+        }
+      } else {
+        d2 += 4;
+        s2 += 4;
+        ss2 += 4;
+      }
+    }
+    
+    aSImage += aSLSpan;
+    aDImage += aDLSpan;
+    aSecondSImage += aSLSpan;
+  }
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
  */
 void
-nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
+nsBlender::Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                     PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                     PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality)
 {
-PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
-PRUint32  val1,val2;
-PRInt32   x,y,temp1,numlines,numPixels,xinc,yinc;
-PRUint32  srccolor,secsrccolor,i;
-PRUint32  pixSColor,pixSSColor;
+  /* Use alpha ranging from 0 to 256 inclusive. This means that we get accurate
+     results when we divide by 256. */
+  PRUint32 opacity256 = (PRUint32)(aOpacity*256);
 
-  aBlendVal = (aBlendVal*255)/100;
-  val2 = aBlendVal;
-  val1 = 255-val2;
-
-  // now go thru the image and blend (remember, its bottom upwards)
-  s1 = aSImage;
-  d1 = aDImage;
-
-  numlines = aNumlines;  
-  xinc = 1;
-  yinc = 1;
-
-  if (nsnull != aSecondSImage){
-    ss1 = (PRUint8 *)aSecondSImage;
-    srccolor = ((NS_GET_R(aSrcBackColor)<<16)) | ((NS_GET_G(aSrcBackColor) <<8)) | ((NS_GET_B(aSrcBackColor)));
-    secsrccolor = ((NS_GET_R(aSecondSrcBackColor)<<16)) | ((NS_GET_G(aSecondSrcBackColor) <<8)) | ((NS_GET_B(aSecondSrcBackColor)));
-  }else {
-    ss1 = nsnull;
+  // Handle simpler cases
+  if (opacity256 <= 0) {
+    return;
+  } else if (opacity256 >= 256) {
+    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
+    return;
+  } else if (nsnull == aSecondSImage) {
+    DoSingleImageBlend(opacity256, aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
+    return;
   }
-  
-  if(nsnull == ss1){
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      for(x = 0; x < aNumbytes; x++){
-        FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
-        if(temp1>255){
-          temp1 = 255;
-        }
 
-        *d2 = (PRUint8)temp1; 
+  PRIntn numPixels = aNumBytes/3;
 
-        d2++;
-        s2++;
-      }
+  PRIntn y;
+  for (y = 0; y < aNumLines; y++) {
+    PRUint8 *s2 = aSImage;
+    PRUint8 *d2 = aDImage;
+    PRUint8 *ss2 = aSecondSImage;
 
-      s1 += aSLSpan;
-      d1 += aDLSpan;
-    }
-  } else {
-    numPixels = aNumbytes/3;
-    for(y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      ss2=ss1;
-      for(x=0;x<numPixels;x++){
-        pixSColor =  *((PRUint32*)(s2))&0xFFFFFF;
-        pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF ;
-
-        if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
-          for(i=0;i<3;i++){
-            FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
-            if(temp1>255){
-              temp1 = 255;
-            }
-            *d2 = (PRUint8)temp1; 
+    PRIntn x;
+    for (x = 0; x < numPixels; x++) {
+      PRUint32 pixSColor  = *((PRUint32*)(s2))&0xFFFFFF;
+      PRUint32 pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF;
+      
+      if ((pixSColor != 0x000000) || (pixSSColor != 0xFFFFFF)) {
+        if (pixSColor != pixSSColor) {
+          PRIntn i;
+          // the original source pixel was alpha-blended into the background.
+          // We have to extract the original alpha and color value.
+          for (i = 0; i < 3; i++) {
+            PRUint32 destPix = *d2;
+            PRUint32 onBlack = *s2;
+            PRUint32 imageAlphaTimesDestPix = (255 + onBlack - *ss2)*destPix;
+            PRUint32 adjustedDestPix;
+            FAST_DIVIDE_BY_255(adjustedDestPix, imageAlphaTimesDestPix);
+            
+            *d2 = (PRUint8)(destPix + (((onBlack - adjustedDestPix)*opacity256) >> 8));
+            
             d2++;
             s2++;
             ss2++;
           }
         } else {
-          d2+=3;
-          s2+=3;
-          ss2+=3;
+          PRIntn i;
+          for (i = 0; i < 3; i++) {
+            PRUint32 destPix = *d2;
+            PRUint32 onBlack = *s2;
+            
+            *d2 = (PRUint8)(destPix + (((onBlack - destPix)*opacity256) >> 8));
+            
+            d2++;
+            s2++;
+          }
+
+          ss2 += 3;
         }
+      } else {
+        d2 += 3;
+        s2 += 3;
+        ss2 += 3;
       }
-     s1 += aSLSpan;
-     d1 += aDLSpan;
-     ss1+= aDLSpan;
     }
+    
+    aSImage += aSLSpan;
+    aDImage += aDLSpan;
+    aSecondSImage += aSLSpan;
   }
 }
 
@@ -429,124 +522,116 @@ PRUint32  pixSColor,pixSSColor;
 
 
 
-#define RED16(x)    (((x) & mRedMask) >> mRedShift)
-#define GREEN16(x)  (((x) & mGreenMask) >> mGreenShift)
-#define BLUE16(x)   (((x) & mBlueMask) << mBlueShift)
+#define RED16(x)    (((x) & BLEND_RED_MASK) >> BLEND_RED_SHIFT)
+#define GREEN16(x)  (((x) & BLEND_GREEN_MASK) >> BLEND_GREEN_SHIFT)
+#define BLUE16(x)   (((x) & BLEND_BLUE_MASK) << BLEND_BLUE_SHIFT)
 
+#define MAKE16(r, g, b)                                              \
+        (PRUint16)(((r) & BLEND_RED_SET_MASK) << BLEND_RED_SHIFT)    \
+          | (((g) & BLEND_GREEN_SET_MASK) << BLEND_GREEN_SHIFT)      \
+          | (((b) & BLEND_BLUE_SET_MASK) >> BLEND_BLUE_SHIFT)
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
  */
 void
-nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
+nsBlender::Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                     PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                     PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality)
 {
-PRUint16    *d1,*d2,*s1,*s2,*ss1,*ss2;
-PRUint32    val1,val2,red,green,blue,stemp,dtemp,sstemp;
-PRInt32     x,y,numlines,xinc,yinc;
-PRUint16    srccolor,secsrccolor;
-PRInt16     dspan,sspan,span;
+  PRUint32 opacity256 = (PRUint32)(aOpacity*256);
 
-  // since we are using 16 bit pointers, the num bytes need to be cut by 2
-  aBlendVal = (aBlendVal * 255) / 100;
-  val2 = aBlendVal;
-  val1 = 255-val2;
-
-  // now go thru the image and blend (remember, its bottom upwards)
-  s1 = (PRUint16*)aSImage;
-  d1 = (PRUint16*)aDImage;
-  dspan = aDLSpan >> 1;
-  sspan = aSLSpan >> 1;
-  span = aNumbytes >> 1;
-  numlines = aNumlines;
-  xinc = 1;
-  yinc = 1;
-
-  if (nsnull != aSecondSImage) {
-    ss1 = (PRUint16 *)aSecondSImage;
-    srccolor = ((NS_GET_R(aSrcBackColor) & mRedSetMask) << mRedShift) |
-               ((NS_GET_G(aSrcBackColor) & mGreenSetMask) << mGreenShift) |
-               ((NS_GET_B(aSrcBackColor) & mBlueSetMask) >> mBlueShift);
-    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & mRedSetMask) << mRedShift) |
-                  ((NS_GET_G(aSecondSrcBackColor) & mGreenSetMask) << mGreenShift) |
-                  ((NS_GET_B(aSecondSrcBackColor) & mBlueSetMask) >> mBlueShift);
-  } else {
-    ss1 = nsnull;
+  // Handle simpler cases
+  if (opacity256 <= 0) {
+    return;
+  } else if (opacity256 >= 256) {
+    DoOpaqueBlend(aNumLines, aNumBytes, aSImage, aDImage, aSLSpan, aDLSpan);
+    return;
   }
 
-  if (nsnull != ss1){
-    for (y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-      ss2 = ss1;
+  PRIntn numPixels = aNumBytes/2;
+  
+  if (nsnull == aSecondSImage) {
+    PRIntn y;
+    for (y = 0; y < aNumLines; y++) {
+      PRUint16 *s2 = (PRUint16*)aSImage;
+      PRUint16 *d2 = (PRUint16*)aDImage;
+      
+      PRIntn i;
+      for (i = 0; i < numPixels; i++) {
+        PRUint32 destPix = *d2;
+        PRUint32 destPixR = RED16(destPix);
+        PRUint32 destPixG = GREEN16(destPix);
+        PRUint32 destPixB = BLUE16(destPix);
+        PRUint32 srcPix = *s2;
+        
+        *d2 = MAKE16(destPixR + (((RED16(srcPix) - destPixR)*opacity256) >> 8),
+                     destPixG + (((GREEN16(srcPix) - destPixG)*opacity256) >> 8),
+                     destPixB + (((BLUE16(srcPix) - destPixB)*opacity256) >> 8));
 
-      for (x = 0; x < span; x++){
-        stemp = *s2;
-        sstemp = *ss2;
+        d2++;
+        s2++;
+      }
+      
+      aSImage += aSLSpan;
+      aDImage += aDLSpan;
+    }
+    return;
+  }
 
-        if ((stemp != srccolor) || (sstemp != secsrccolor)) {
-          dtemp = *d2;
+  PRUint32 srcBackgroundColor = MAKE16(0x00, 0x00, 0x00);
+  PRUint32 src2BackgroundColor = MAKE16(0xFF, 0xFF, 0xFF);
 
-          FAST_DIVIDE_BY_255(red, RED16(dtemp) * val1 + RED16(stemp) * val2);
+  PRIntn y;
+  for (y = 0; y < aNumLines; y++) {
+    PRUint16 *s2 = (PRUint16*)aSImage;
+    PRUint16 *d2 = (PRUint16*)aDImage;
+    PRUint16 *ss2 = (PRUint16*)aSecondSImage;
 
-          if (red > 255)
-            red = 255;
+    PRIntn x;
+    for (x = 0; x < numPixels; x++) {
+      PRUint32 srcPix = *s2;
+      PRUint32 src2Pix = *ss2;
 
-          FAST_DIVIDE_BY_255(green, GREEN16(dtemp) * val1 + GREEN16(stemp) * val2);
-
-          if (green > 255)
-            green = 255;
-
-          FAST_DIVIDE_BY_255(blue, BLUE16(dtemp) * val1 + BLUE16(stemp) * val2);
-
-          if (blue > 255)
-            blue = 255;
-
-          *d2 = (PRUint16)((red & mRedSetMask) << mRedShift) | ((green & mGreenSetMask) << mGreenShift) | ((blue & mBlueSetMask) >> mBlueShift);
+      if ((srcPix != srcBackgroundColor) || (src2Pix != src2BackgroundColor)) {
+        PRUint32 destPix = *d2;
+        PRUint32 destPixR = RED16(destPix);
+        PRUint32 destPixG = GREEN16(destPix);
+        PRUint32 destPixB = BLUE16(destPix);
+        PRUint32 srcPixR = RED16(srcPix);
+        PRUint32 srcPixG = GREEN16(srcPix);
+        PRUint32 srcPixB = BLUE16(srcPix);
+          
+        if (srcPix != src2Pix) {
+          PRUint32 imageAlphaTimesDestPixR = (255 + srcPixR - RED16(src2Pix))*destPixR;
+          PRUint32 imageAlphaTimesDestPixG = (255 + srcPixG - GREEN16(src2Pix))*destPixG;
+          PRUint32 imageAlphaTimesDestPixB = (255 + srcPixB - BLUE16(src2Pix))*destPixB;
+          PRUint32 adjustedDestPixR;
+          FAST_DIVIDE_BY_255(adjustedDestPixR, imageAlphaTimesDestPixR);
+          PRUint32 adjustedDestPixG;
+          FAST_DIVIDE_BY_255(adjustedDestPixG, imageAlphaTimesDestPixG);
+          PRUint32 adjustedDestPixB;
+          FAST_DIVIDE_BY_255(adjustedDestPixB, imageAlphaTimesDestPixB);
+            
+          *d2 = MAKE16(destPixR + (((srcPixR - adjustedDestPixR)*opacity256) >> 8),
+            destPixG + (((srcPixG - adjustedDestPixG)*opacity256) >> 8),
+            destPixB + (((srcPixB - adjustedDestPixB)*opacity256) >> 8));
+        } else {
+          *d2 = MAKE16(destPixR + (((srcPixR - destPixR)*opacity256) >> 8),
+            destPixG + (((srcPixG - destPixG)*opacity256) >> 8),
+            destPixB + (((srcPixB - destPixB)*opacity256) >> 8));
         }
-
-        d2++;
-        s2++;
-        ss2++;
       }
 
-      s1 += sspan;
-      d1 += dspan;
-      ss1 += sspan;
+      d2++;
+      s2++;
+      ss2++;
     }
-  } else {
-    for (y = 0; y < aNumlines; y++){
-      s2 = s1;
-      d2 = d1;
-
-      for (x = 0; x < span; x++){
-        stemp = *s2;
-        dtemp = *d2;
-
-        FAST_DIVIDE_BY_255(red, RED16(dtemp) * val1 + RED16(stemp) * val2);
-
-        if (red > 255)
-          red = 255;
-
-        FAST_DIVIDE_BY_255(green, GREEN16(dtemp) * val1 + GREEN16(stemp) * val2);
-
-        if (green > 255)
-          green = 255;
-
-        FAST_DIVIDE_BY_255(blue, BLUE16(dtemp) * val1 + BLUE16(stemp) * val2);
-
-        if (blue > 255)
-          blue = 255;
-
-        *d2 = (PRUint16)((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
-
-        d2++;
-        s2++;
-      }
-
-      s1 += sspan;
-      d1 += dspan;
-    }
+    
+    aSImage += aSLSpan;
+    aDImage += aDLSpan;
+    aSecondSImage += aSLSpan;
   }
 }
 
@@ -560,11 +645,14 @@ extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *di
  *	@update 2/25/00 dwc
  */
 void
-nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsBlender::Do8Blend(float aOpacity, PRInt32 aNumlines, PRInt32 aNumbytes,
+                    PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                    PRInt32 aSLSpan, PRInt32 aDLSpan, IL_ColorSpace *aColorMap,
+                    nsBlendQuality aBlendQuality)
 {
 PRUint32  r,g,b,r1,g1,b1,i;
 PRUint8   *d1,*d2,*s1,*s2;
-PRInt32   x,y,val1,val2,numlines,xinc,yinc;;
+PRInt32   x,y,val1,val2,numlines;
 PRUint8   *mapptr,*invermap;
 PRUint32  *distbuffer;
 PRUint32  quantlevel,tnum,num,shiftnum;
@@ -575,8 +663,7 @@ NI_RGB    *map;
     return;
   } 
 
-  aBlendVal = (aBlendVal*255)/100;
-  val2 = aBlendVal;
+  val2 = (PRUint8)(aOpacity*255);
   val1 = 255-val2;
 
   // build a colormap we can use to get an inverse map
@@ -621,8 +708,6 @@ NI_RGB    *map;
   d1 = aDImage;
 
   numlines = aNumlines;  
-  xinc = 1;
-  yinc = 1;
 
  
   for(y = 0; y < aNumlines; y++){
