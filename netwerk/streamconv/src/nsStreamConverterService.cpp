@@ -18,6 +18,7 @@
 
 #include "nsStreamConverterService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsString2.h"
 #include "nsIAtom.h"
 #include "nsDeque.h"
@@ -26,11 +27,10 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIStreamConverter.h"
-#include "nsIComponentManager.h"
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
-NS_IMPL_ISUPPORTS(nsStreamConverterService, nsCOMTypeInfo<nsIStreamConverterService>::GetIID());
+NS_IMPL_ISUPPORTS(nsStreamConverterService, NS_GET_IID(nsIStreamConverterService));
 
 
 ////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ nsStreamConverterService::BuildGraph() {
     nsIRegistry::Key key;
     nsIEnumerator *components = nsnull;
     rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
-                                      nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                      NS_GET_IID(nsIRegistry),
                                       (nsISupports**)&registry);
     if (NS_FAILED(rv)) return rv;
 
@@ -480,8 +480,13 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     progID.Append(aToType);
     const char *cProgID = progID.GetBuffer();
 
+    nsIComponentManager *comMgr;
+    rv = NS_GetGlobalComponentManager(&comMgr);
+    if (NS_FAILED(rv)) return rv;
+
     nsISupports *converter = nsnull;
-    rv = nsServiceManager::GetService(cProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+    rv = comMgr->CreateInstance(cProgID, nsnull,
+                                NS_GET_IID(nsIStreamConverter), (void**)&converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
@@ -510,21 +515,9 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
             const char *lProgID = progIDStr->GetBuffer();
 
-            nsIComponentManager *comMgr;
-            rv = NS_GetGlobalComponentManager(&comMgr);
-            if (NS_FAILED(rv)) return rv;
+            rv = comMgr->CreateInstance(lProgID, nsnull,
+                                        NS_GET_IID(nsIStreamConverter), (void**)&converter);
 
-
-            nsCID cid;
-            rv = comMgr->ProgIDToCLSID(lProgID, &cid);
-            // XXX should we be using a service or componentn mgr?
-//            rv = nsComponentManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
-            rv = comMgr->CreateInstance(cid,
-                                                    nsnull,
-                                                    nsCOMTypeInfo<nsIStreamConverter>::GetIID(),
-                                                    (void**)&converter);
-
-            //NS_ASSERTION(NS_SUCCEEDED(rv), "registration problem. someone registered a progid w/ the registry, but didn/'t register it with the component manager");
             if (NS_FAILED(rv)) {
                 // clean up the array.
                 nsCString *progID;
@@ -541,7 +534,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;
-            rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+            rv = converter->QueryInterface(NS_GET_IID(nsIStreamConverter), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
 
@@ -568,7 +561,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     } else {
         // we're going direct.
         nsIStreamConverter *conv = nsnull;
-        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+        rv = converter->QueryInterface(NS_GET_IID(nsIStreamConverter), (void**)&conv);
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
         rv = conv->Convert(aFromStream, aFromType, aToType, aContext, _retval);
@@ -598,8 +591,13 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     progID.Append(aToType);
     const char *cProgID = progID.GetBuffer();
 
+    nsIComponentManager *comMgr;
+    rv = NS_GetGlobalComponentManager(&comMgr);
+    if (NS_FAILED(rv)) return rv;
+
     nsISupports *converter = nsnull;
-    rv = nsServiceManager::GetService(cProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+    rv = comMgr->CreateInstance(cProgID, nsnull,
+                                NS_GET_IID(nsIStreamConverter), (void**)&converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
@@ -628,8 +626,8 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
             const char *lProgID = progIDStr->GetBuffer();
 
-            // XXX should we be using a service or componentn mgr?
-            rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+            rv = comMgr->CreateInstance(lProgID, nsnull,
+                                        NS_GET_IID(nsIStreamConverter), (void**)&converter);
             NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
 
             nsCString fromStr, toStr;
@@ -637,7 +635,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;
-            rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+            rv = converter->QueryInterface(NS_GET_IID(nsIStreamConverter), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
             
@@ -669,12 +667,12 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     } else {
         // we're going direct.
         nsIStreamListener *listener= nsnull;
-        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+        rv = converter->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         if (NS_FAILED(rv)) return rv;
         *_retval = listener;
 
         nsIStreamConverter *conv = nsnull;
-        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+        rv = converter->QueryInterface(NS_GET_IID(nsIStreamConverter), (void**)&conv);
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
 
