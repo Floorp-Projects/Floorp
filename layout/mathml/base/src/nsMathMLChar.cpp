@@ -303,16 +303,16 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
   }
 }
 
-// Structure used to walk/try all the the glyph tables that we have.
+// Class used to walk/try all the the glyph tables that we have.
 // Glyph tables are singly linked together through their next-table pointer.
 // -----------------------------------------------------------------------------------
 
-struct nsGlyphTableList {
-
+class nsGlyphTableList {
+public:
   nsGlyphTableList(void)
   {
-     mFirstTable = nsnull;
-     mIsInitialized = PR_FALSE;
+    mFirstTable = nsnull;
+    mIsInitialized = PR_FALSE;
   }
 
   PRBool IsInitialized(void)
@@ -335,7 +335,11 @@ struct nsGlyphTableList {
   nsGlyphTable*
   FindTableFor(nsMathMLCharEnum aCharEnum);
 
-  // ----
+  // Check for existence of a glyph table.
+  PRBool
+  Has(nsGlyphTable* aGlyphTable);
+
+private:
   nsGlyphTable* mFirstTable;
   PRBool        mIsInitialized;
 };
@@ -393,6 +397,20 @@ nsGlyphTableList::FindTableFor(nsMathMLCharEnum aCharEnum)
     glyphTable = glyphTable->GetNextTable();
   }
   return nsnull;
+}
+
+PRBool
+nsGlyphTableList::Has(nsGlyphTable* aGlyphTable)
+{
+  NS_ASSERTION(mIsInitialized, "glyph table list must be initialized first");
+  nsGlyphTable* glyphTable = mFirstTable;
+  while (glyphTable) {
+    if (glyphTable == aGlyphTable) {
+      return PR_TRUE;
+    }
+    glyphTable = glyphTable->GetNextTable();
+  }
+  return PR_FALSE;
 }
 
 // -----------------------------------------------------------------------------------
@@ -576,8 +594,27 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
 {
   if (!gGlyphTableList.IsInitialized()) {
     gGlyphTableList.Init(aPresContext, gAllGlyphTables);
-    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++)
+    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
       gCharInfo[i].mGlyphTable = &gGlyphTableUNDEFINED;
+    }
+    // let some particular chars have their preferred extension tables
+    if (gGlyphTableList.Has(&gGlyphTableMTExtra)) {
+      gCharInfo[eMathMLChar_OverCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+      gCharInfo[eMathMLChar_UnderCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+    }
+#ifdef NS_DEBUG
+    // sanity check
+    for (PRInt32 j = 0; j < eMathMLChar_COUNT; j++) {
+      PRUnichar ci = gCharInfo[i].mUnicode;
+      for (PRInt32 k = 0; k < eMathMLChar_COUNT; k++) {
+        // hitting this assertion? 
+        // check nsMathMLCharList to ensure that the same Unicode point
+        // is not associated to different enums
+        PRUnichar ck = gCharInfo[k].mUnicode;
+        NS_ASSERTION(!(ci == ck && i != k), "Duplicate Unicode point found");
+      }
+    }
+#endif
   }
   mData = aData;
   // some assumptions until proven otherwise!
@@ -604,8 +641,8 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
             mEnum = eMathMLChar_DONT_STRETCH;
           }
 #ifdef NS_DEBUG
-		  // hitting this assertion? 
-		  // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
+          // hitting this assertion? 
+          // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
           else NS_ASSERTION(mGlyphTable->Has(nsGlyphCode(mData[0])), "Something is wrong somewhere");
 #endif
         }
@@ -624,8 +661,27 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
   NS_ASSERTION(aEnum < eMathMLChar_COUNT, "Something is wrong somewhere");
   if (!gGlyphTableList.IsInitialized()) {
     gGlyphTableList.Init(aPresContext, gAllGlyphTables);
-    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++)
+    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
       gCharInfo[i].mGlyphTable = &gGlyphTableUNDEFINED;
+    }
+    // let some particular chars have their preferred extension tables
+    if (gGlyphTableList.Has(&gGlyphTableMTExtra)) {
+      gCharInfo[eMathMLChar_OverCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+      gCharInfo[eMathMLChar_UnderCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+    }
+#ifdef NS_DEBUG
+    // sanity check
+    for (PRInt32 j = 0; j < eMathMLChar_COUNT; j++) {
+      PRUnichar ci = gCharInfo[i].mUnicode;
+      for (PRInt32 k = 0; k < eMathMLChar_COUNT; k++) {
+        // hitting this assertion? 
+        // check nsMathMLCharList to ensure that the same Unicode point
+        // is not associated to different enums
+        PRUnichar ck = gCharInfo[k].mUnicode;
+        NS_ASSERTION(!(ci == ck && i != k), "Duplicate Unicode point found");
+      }
+    }
+#endif
   }
   mEnum = aEnum;
   // some assumptions until proven otherwise!
@@ -647,6 +703,8 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
         mEnum = eMathMLChar_DONT_STRETCH;
       }
 #ifdef NS_DEBUG
+      // hitting this assertion? 
+      // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
       else NS_ASSERTION(mGlyphTable->Has(nsGlyphCode(mData[0])), "Something is wrong somewhere");
 #endif
     }
@@ -659,7 +717,7 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
  @param aContainerSize - suggested size for the stretched char
  @param aDesiredStretchSize - IN/OUT parameter. On input
  our current size or zero if current size is unknown, on output
- the size after stretching. If not stretching is done, and the
+ the size after stretching. If no stretching is done, and the
  input was zero, the output will simply give the default size.
 
  How it works?
@@ -716,9 +774,9 @@ IsSizeBetter(nscoord a, nscoord olda, nscoord b, PRInt32 aHint)
     if (aHint == NS_STRETCH_NORMAL)
       return PR_TRUE;
     else if (aHint == NS_STRETCH_SMALLER)
-      return PRBool(a <= b);
+      return PRBool(a <= olda);
     else if (aHint == NS_STRETCH_LARGER)
-      return PRBool(a >= b);
+      return PRBool(a >= olda);
   }
   return PR_FALSE;
 }
@@ -727,6 +785,7 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsAutoString* familyList = (nsAutoString*)aData;
+  // XXX unreliable if aFamily is a substring of another family already in the list
   if (familyList->Find(aFamily, PR_TRUE) == kNotFound) {
     familyList->Append(',');
     // XXX could enclose in quotes if weird font problems develop
@@ -944,7 +1003,19 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
               // current glyph table is the one with the smallest glue, update the cache...
               gCharInfo[mEnum].mGlyphTable = glyphTable;
               lengthGlue = length;
+#ifdef NOISY_SEARCH
+              char str[50];
+              fontName.ToCString(str, sizeof(str));
+              printf("    %s glue:%d Current best\n", str, lengthGlue);
+#endif
             }
+#ifdef NOISY_SEARCH
+            else {
+              char str[50];
+              fontName.ToCString(str, sizeof(str));
+              printf("    %s glue:%d Rejected!\n", str, length);
+            }
+#endif
           }
         }
         glyphTable = glyphTable->GetNextTable();
@@ -954,7 +1025,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
         char str[50];
         fontName.ToCString(str, sizeof(str));
-        printf("    Found %s font in the global list\n", str);
+        printf("    Found %s in the global list\n", str);
       }
 #endif
     }
@@ -963,7 +1034,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
       char str[50];
       fontName.ToCString(str, sizeof(str));
-      printf("    Found %s font in the cache\n", str);
+      printf("    Found %s in the cache\n", str);
     }
     else {
       printf("    no font found\n");
@@ -1010,8 +1081,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     }
 
     // refine the flexibility depending on whether some parts are no there
-    if ((chdata[1] == chdata[0]) || // mid == top (or left) 
-        (chdata[1] == chdata[2]) || // mid == bot (or right)
+    if ((chdata[1] == chdata[0]) || // mid == top (or mid == left) 
+        (chdata[1] == chdata[2]) || // mid == bot (or mid == right)
         (chdata[1] == chdata[3]))   // mid == glue
     {
       flex[0] = 0.5f;
@@ -1189,9 +1260,8 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
                               nsRect               aRect)
 {
   nsresult rv = NS_OK;
-  nscoord dx = aRect.x;
-  nscoord dy = aRect.y;
   nsRect clipRect;
+  nscoord dx, dy;
 
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -1218,6 +1288,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     chdata[i] = ch;
     bmdata[i] = bm;
   }
+  dx = aRect.x;
   for (i = 0; i < 3; i++) {
     ch = chdata[i];
     bm = bmdata[i];
@@ -1307,12 +1378,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
 {
   nsresult rv = NS_OK;
   nsRect clipRect;
-
-  nscoord dx = aRect.x;
-  nscoord dy = aRect.y;
-  // place the parts such that the operator as a whole is centered 
-//  nscoord dx = aRect.x + (aRect.width - mBoundingMetrics.width)/2;
-//  nscoord dy = aRect.y - (aFontAscent - mBoundingMetrics.ascent);
+  nscoord dx, dy;
 
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -1370,11 +1436,9 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(nsRect(start[i], aRect.y, end[i]-start[i], aRect.height+30*(i+1)));
 #endif
     dx = offset[i];
-//    nscoord top = aRect.y; /*PR_MIN(dy, dy + aFontAscent - bm.ascent);*/
-    nscoord top = aRect.y;
-         if (i==0) clipRect = nsRect(dx, top, aRect.width, aRect.height);
-    else if (i==1) clipRect = nsRect(end[0], top, start[2]-end[0], aRect.height);
-    else if (i==2) clipRect = nsRect(start[2], top, end[2]-start[2], aRect.height);
+         if (i==0) clipRect = nsRect(dx, aRect.y, aRect.width, aRect.height);
+    else if (i==1) clipRect = nsRect(end[0], aRect.y, start[2]-end[0], aRect.height);
+    else if (i==2) clipRect = nsRect(start[2], aRect.y, end[2]-start[2], aRect.height);
 
     if (!clipRect.IsEmpty()) {
       clipRect.Inflate(onePixel, onePixel);
@@ -1388,9 +1452,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   for (i = 0; i < 2; i++) {
     PRInt32 count = 0;
     dx = offset[i];
-    nscoord top = aRect.y;
-//    nscoord top = PR_MIN(dy, dy + aFontAscent - bm.ascent);
-    clipRect = nsRect(end[i], top, start[i+1]-end[i], aRect.height);
+    clipRect = nsRect(end[i], aRect.y, start[i+1]-end[i], aRect.height);
     clipRect.Inflate(onePixel, onePixel);
 #ifdef SHOW_BORDERS
     // rectangles in-between that are to be filled

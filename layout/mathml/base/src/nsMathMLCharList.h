@@ -100,7 +100,7 @@ MATHML_CHAR(LeftSquareBracket,                '['  , STRETCH_VERTICAL)
 MATHML_CHAR(RightSquareBracket,               ']'  , STRETCH_VERTICAL)
 MATHML_CHAR(LeftCurlyBracket,                 '{'  , STRETCH_VERTICAL)
 MATHML_CHAR(RightCurlyBracket,                '}'  , STRETCH_VERTICAL)
-MATHML_CHAR(VerticalBar,                     0x007C, STRETCH_VERTICAL) // '|'
+MATHML_CHAR(VertBar,                         0x007C, STRETCH_VERTICAL) // '|'
 MATHML_CHAR(Integral,                        0x222B, STRETCH_VERTICAL)
 MATHML_CHAR(DownArrow,                       0x2193, STRETCH_VERTICAL)
 MATHML_CHAR(UpArrow,                         0x2191, STRETCH_VERTICAL)
@@ -123,7 +123,6 @@ MATHML_CHAR(RightFloor,                      0x230B, STRETCH_VERTICAL)
 MATHML_CHAR(HorizontalLine,                  0xE859, STRETCH_HORIZONTAL)
 MATHML_CHAR(VerticalLine,                    0xE85A, STRETCH_VERTICAL)
 MATHML_CHAR(VerticalSeparator,               0xE85C, STRETCH_VERTICAL)
-MATHML_CHAR(Implies,                         0x21D2, STRETCH_HORIZONTAL)
 MATHML_CHAR(And,                             0x2227, STRETCH_HORIZONTAL)
 MATHML_CHAR(Or,                              0x2228, STRETCH_HORIZONTAL)
 MATHML_CHAR(DoubleLeftArrow,                 0x21D0, STRETCH_HORIZONTAL)
@@ -221,13 +220,11 @@ MATHML_CHAR(Tilde,                           0x223C, STRETCH_HORIZONTAL)
 
 //UnionMultiply (UnionPlus?),         0x228E, STRETCH_VERTICAL,      
 
-// Oversight? \parallel (&DoubleVerticalBar, 0x2225) is not stretchy in 
-// the REC operator dictionary...
-
-
 // Extra stretchy operators that are not in the MathML REC Operator Dictionary
 // -----------------------------------------------------------------------------------
 // XXX For these extra to work, they must also be added in nsMathMLOperators
+MATHML_CHAR(VerticalBar,                     0x2223, STRETCH_VERTICAL)
+MATHML_CHAR(DoubleVerticalBar,               0x2225, STRETCH_VERTICAL)
 MATHML_CHAR(RightArrowAccent,                0x20D7, STRETCH_HORIZONTAL)
 MATHML_CHAR(LeftArrowAccent,                 0x20D6, STRETCH_HORIZONTAL)
 MATHML_CHAR(LeftRightArrowAccent,            0x20E1, STRETCH_HORIZONTAL)
@@ -235,6 +232,12 @@ MATHML_CHAR(RightHarpoonAccent,              0x20D1, STRETCH_HORIZONTAL)
 MATHML_CHAR(LeftHarpoonAccent,               0x20D0, STRETCH_HORIZONTAL)
 
 
+// Duplicate stretchy chars (i.e., with same Unicode points) that are in the
+// MathML REC Operator Dictionary shouldn't be added to the list, otherwise
+// they get different enums and these play havoc with the setup
+// -----------------------------------------------------------------------------------
+// These should not be added to the list
+//MATHML_CHAR(Implies, 0x21D2, STRETCH_HORIZONTAL), see DoubleRightArrow
 
 
 #undef STRETCH_UNSUPPORTED
@@ -261,7 +264,7 @@ MATHML_CHAR(60, LeftArrow,          0x2190 _ 0x0000 _ 0x0000 _ 0xF8E7, 0x2190)
 MATHML_CHAR(66, RightArrow,         0x0000 _ 0x0000 _ 0x2192 _ 0xF8E7, 0x2192)
 MATHML_CHAR(72, LeftRightArrow,     0x2190 _ 0x0000 _ 0x2192 _ 0xF8E7, 0x2194)
 MATHML_CHAR(78, OverBar,            0x0000 _ 0x0000 _ 0x0000 _ 0x00AF, 0x00AF)
-MATHML_CHAR(84, VerticalBar,        0x0000 _ 0x0000 _ 0x0000 _ 0x007C, 0x007C)
+MATHML_CHAR(84, VertBar,            0x0000 _ 0x0000 _ 0x0000 _ 0x007C, 0x007C)
    #endif // defined(WANT_SYMBOL_DATA)
 
 // Data for strecthy chars that are supported by the MT Extra font -------------------
@@ -269,11 +272,12 @@ MATHML_CHAR(84, VerticalBar,        0x0000 _ 0x0000 _ 0x0000 _ 0x007C, 0x007C)
    #if defined(WANT_MTEXTRA_DATA)//[top/left][middle][bot/right][glue] [size0 ... size{N-1}]
 MATHML_CHAR( 0, UnderCurlyBracket,   0xEC00 _ 0xEC01 _ 0xEC02 _ 0xEC03, 0xF613)
 MATHML_CHAR( 6, OverCurlyBracket,    0xEC04 _ 0xEC05 _ 0xEC06 _ 0xEC03, 0xF612)
-MATHML_CHAR(12, LeftArrowAccent,     0x20D6 _ 0x0000 _ 0x0000 _ 0xEB00, 0x20D6)
-MATHML_CHAR(18, RightArrowAccent,    0x0000 _ 0x0000 _ 0x20D7 _ 0xEB00, 0x20D7)
-MATHML_CHAR(24, LeftRightArrowAccent,0x20D6 _ 0x0000 _ 0x20D7 _ 0xEB00, 0x20E1)
-MATHML_CHAR(30, LeftHarpoonAccent,   0x20D0 _ 0x0000 _ 0x0000 _ 0xEB00, 0x20D0)
-MATHML_CHAR(36, RightHarpoonAccent,  0x0000 _ 0x0000 _ 0x20D1 _ 0xEB00, 0x20D1)
+//disable for now as they appear too small and don't align properly at default font-size 
+//MATHML_CHAR(12, LeftArrowAccent,     0x20D6 _ 0x0000 _ 0x0000 _ 0xEB00, 0x20D6)
+//MATHML_CHAR(18, RightArrowAccent,    0x0000 _ 0x0000 _ 0x20D7 _ 0xEB00, 0x20D7)
+//MATHML_CHAR(24, LeftRightArrowAccent,0x20D6 _ 0x0000 _ 0x20D7 _ 0xEB00, 0x20E1)
+//MATHML_CHAR(30, LeftHarpoonAccent,   0x20D0 _ 0x0000 _ 0x0000 _ 0xEB00, 0x20D0)
+//MATHML_CHAR(36, RightHarpoonAccent,  0x0000 _ 0x0000 _ 0x20D1 _ 0xEB00, 0x20D1)
    #endif // defined(WANT_MTEXTRA_DATA)
 
 // Data for strecthy chars that are supported by TeX's CMSY font ---------------------
@@ -287,6 +291,8 @@ MATHML_CHAR(18, DoubleLeftRightArrow,0x21D0 _ 0x0000 _ 0x21D2 _    '=', 0x21D4)
 MATHML_CHAR(24, DoubleLongLeftArrow, 0x21D0 _ 0x0000 _ 0x0000 _    '=', 0xE200)
 MATHML_CHAR(30, DoubleLongRightArrow,0x0000 _ 0x0000 _ 0x21D2 _    '=', 0xE204)
 MATHML_CHAR(36, DoubleLongLeftRightArrow, 0x21D0 _ 0x0000 _ 0x21D2 _    '=', 0xE202)
+MATHML_CHAR(42, VerticalBar,        0x0000 _ 0x0000 _ 0x0000 _ 0x2223, 0x2223)
+MATHML_CHAR(48, DoubleVerticalBar,  0x0000 _ 0x0000 _ 0x0000 _ 0x2225, 0x2225)
    #endif // defined(WANT_CMSY_DATA)
 
 // Data for strecthy chars that are supported by TeX's CMEX font ---------------------
