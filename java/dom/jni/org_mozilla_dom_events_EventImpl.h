@@ -9,6 +9,22 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getType
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getTarget
+ * Signature: ()Lorg/w3c/dom/events/EventTarget;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
  * Method:    getCurrentNode
  * Signature: ()Lorg/w3c/dom/Node;
  */
@@ -25,18 +41,18 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_getEventPhase
 
 /*
  * Class:     org_mozilla_dom_events_EventImpl
- * Method:    getTarget
- * Signature: ()Lorg/w3c/dom/events/EventTarget;
+ * Method:    getBubbles
+ * Signature: ()Z
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getBubbles
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_events_EventImpl
- * Method:    getType
- * Signature: ()Ljava/lang/String;
+ * Method:    getCancelable
+ * Signature: ()Z
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getCancelable
   (JNIEnv *, jobject);
 
 /*
@@ -62,6 +78,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventCapture
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventDefault
   (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    initEvent
+ * Signature: (Ljava/lang/String;ZZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
+  (JNIEnv *, jobject, jstring, jboolean, jboolean);
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,7 @@
 */
 
 #include "prlog.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMMouseEvent.h"
 #include "javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_MouseEventImpl.h"
@@ -44,7 +45,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
     nsresult rv = event->GetAltKey(&altKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getAltKey: failed");
+            "MouseEvent.getAltKey: failed", rv);
         return JNI_FALSE;
     }
 
@@ -73,7 +74,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
     nsresult rv = event->GetButton(&code);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getButton: failed");
+            "MouseEvent.getButton: failed", rv);
         return 0;
     }
 
@@ -100,7 +101,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientX
     nsresult rv = event->GetClientX(&clientX);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getClientX: failed");
+            "MouseEvent.getClientX: failed", rv);
         return 0;
     }
 
@@ -127,7 +128,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientY
     nsresult rv = event->GetClientY(&clientY);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getClientY: failed");
+            "MouseEvent.getClientY: failed", rv);
         return 0;
     }
 
@@ -155,7 +156,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
     nsresult rv = event->GetCtrlKey(&ctrlKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getCtrlKey: failed");
+            "MouseEvent.getCtrlKey: failed", rv);
         return JNI_FALSE;
     }
 
@@ -183,7 +184,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
     nsresult rv = event->GetMetaKey(&metaKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getMetaKey: failed");
+            "MouseEvent.getMetaKey: failed", rv);
         return JNI_FALSE;
     }
 
@@ -211,7 +212,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
     nsresult rv = event->GetScreenX(&screenX);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getScreenX: failed");
+            "MouseEvent.getScreenX: failed", rv);
         return 0;
     }
 
@@ -238,7 +239,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
     nsresult rv = event->GetScreenY(&screenY);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getScreenY: failed");
+            "MouseEvent.getScreenY: failed", rv);
         return 0;
     }
 
@@ -266,11 +267,107 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKe
     nsresult rv = event->GetShiftKey(&shiftKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getShiftKey: failed");
+            "MouseEvent.getShiftKey: failed", rv);
         return JNI_FALSE;
     }
 
     return (shiftKey == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
+}
+
+/*
+ * Class:     org_mozilla_dom_events_MouseEventImpl
+ * Method:    getRelatedNode
+ * Signature: ()Lorg/w3c/dom/Node;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedNode
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+        "MouseEvent.getRelatedNode: NULL pointer");
+    return NULL;
+  }
+
+  nsIDOMNode* node = nsnull;
+  nsresult rv = event->GetRelatedNode(&node);
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ThrowException(env,
+        "MouseEvent.getRelatedNode: failed", rv);
+    return NULL;
+  }
+  if (!node)
+    return NULL;
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
+}
+
+/*
+ * Class:     org_mozilla_dom_events_MouseEventImpl
+ * Method:    initMouseEvent
+ * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;IIIIIZZZZSLorg/w3c/dom/Node;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
+  (JNIEnv *env, jobject jthis, 
+   jstring jtypeArg, 
+   jboolean jcanBubbleArg, 
+   jboolean jcancelableArg, 
+   jobject jviewArg, 
+   jint jdetailArg, 
+   jint jscreenXArg, 
+   jint jscreenYArg, 
+   jint jclientXArg, 
+   jint jclientYArg, 
+   jboolean jctrlKeyArg, 
+   jboolean jaltKeyArg, 
+   jboolean jshiftKeyArg, 
+   jboolean jmetaKeyArg, 
+   jshort jbuttonArg, 
+   jobject jrelatedNodeArg)
+{
+  nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
+  if (!event) {
+     JavaDOMGlobals::ThrowException(env,
+        "MouseEvent.initMouseEvent: NULL pointer");
+    return;
+  }
+
+  jboolean iscopy = JNI_FALSE;
+  const char* cvalue = env->GetStringUTFChars(jtypeArg, &iscopy);
+  if (!cvalue) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("UIEvent.initUIEvent: GetStringUTFChars failed"));
+    return;
+  }
+
+  PRBool canBubble   = jcanBubbleArg  == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool cancelable  = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool ctrlKeyArg  = jctrlKeyArg    == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool altKeyArg   = jaltKeyArg     == JNI_TRUE ? PR_TRUE : PR_FALSE; 
+  PRBool shiftKeyArg = jshiftKeyArg   == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool metaKeyArg  = jmetaKeyArg    == JNI_TRUE ? PR_TRUE : PR_FALSE;
+
+  nsresult rv = event->InitMouseEvent(cvalue,
+				      ctrlKeyArg, 
+				      altKeyArg, 
+				      shiftKeyArg, 
+				      metaKeyArg, 
+				      (PRInt32)jscreenXArg, 
+				      (PRInt32)jscreenYArg, 
+				      (PRInt32)jclientXArg, 
+				      (PRInt32)jclientYArg, 
+				      (PRUint16)jbuttonArg, 
+				      (PRUint16)jdetailArg);
+
+  if (iscopy == JNI_TRUE)
+    env->ReleaseStringUTFChars(jtypeArg, cvalue);
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ThrowException(env,
+        "UIEvent.initUIEvent: failed", rv);
+  }
+
 }
 
 

@@ -47,17 +47,13 @@ public class UIEventImpl extends EventImpl implements UIEvent {
    * The <code>view</code> attribute identifies the <code>AbstractView</code> 
    * from which the event was generated.
    */
-  public AbstractView       getView() {
-    throw new UnsupportedOperationException();
-  }  
+  public native AbstractView getView();
 
   /**
    * Specifies some detail information about the <code>Event</code>, depending 
    * on the type of event.
    */
-  public int              getDetail() {
-    throw new UnsupportedOperationException();
-  }
+  public native int getDetail();
 
   /**
    * 
@@ -69,12 +65,10 @@ public class UIEventImpl extends EventImpl implements UIEvent {
    *   <code>AbstractView</code>.
    * @param detailArg Specifies the <code>Event</code>'s detail.
    */
-  public void               initUIEvent(String typeArg, 
-                                        boolean canBubbleArg, 
-                                        boolean cancelableArg, 
-                                        AbstractView viewArg, 
-                                        int detailArg) {
-    throw new UnsupportedOperationException();
-  }
+  public native void initUIEvent(String typeArg, 
+				 boolean canBubbleArg, 
+				 boolean cancelableArg, 
+				 AbstractView viewArg, 
+				 int detailArg);
 }
 

@@ -7,6 +7,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    getView
+ * Signature: ()Lorg/w3c/dom/views/AbstractView;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_UIEventImpl_getView
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    getDetail
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_UIEventImpl_getDetail
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    initUIEvent
+ * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;I)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
+  (JNIEnv *, jobject, jstring, jboolean, jboolean, jobject, jint);
+
 #ifdef __cplusplus
 }
 #endif

@@ -44,7 +44,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentNode
     nsresult rv = event->GetCurrentNode(&ret);
     if (NS_FAILED(rv) || !ret) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.getCurrentNode: failed");
+            "Event.getCurrentNode: failed", rv);
         return NULL;
     }
 
@@ -71,7 +71,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_getEventPhase
     nsresult rv = event->GetEventPhase(&eventPhase);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.getEventPhase: failed");
+            "Event.getEventPhase: failed", rv);
         return 0;
     }
 
@@ -107,6 +107,60 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_getEventPhase
 
 /*
  * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getBubbles
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getBubbles
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMEvent* event = (nsIDOMEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+	"Event.getBubbles: NULL pointer");
+    return JNI_FALSE;
+  }
+
+  PRBool canBubble = PR_FALSE;
+  nsresult rv = event->GetBubbles(&canBubble);
+    if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+          "Event.getBubbles: failed", rv);
+    return JNI_FALSE;
+  }
+
+  return (canBubble == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
+}
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getCancelable
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getCancelable
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMEvent* event = (nsIDOMEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+        "Event.getCancelable: NULL pointer");
+    return JNI_FALSE;
+  }
+
+  PRBool cancelable = PR_FALSE;
+  nsresult rv = event->GetCancelable(&cancelable);
+    if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+          "Event.getCancelable: failed", rv);
+    return JNI_FALSE;
+  }
+
+  return (cancelable == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
+}
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
  * Method:    getTarget
  * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
@@ -125,7 +179,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
     nsresult rv = event->GetTarget(&ret);
     if (NS_FAILED(rv) || !ret) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.getTarget: failed");
+            "Event.getTarget: failed", rv);
         return NULL;
     }
 
@@ -152,7 +206,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
     nsresult rv = event->GetType(ret);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.getType: failed");
+            "Event.getType: failed", rv);
         return NULL;
     }
 
@@ -182,11 +236,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventBubble
         return;
     }
 
-    nsIDOMNode* ret = nsnull;
     nsresult rv = event->PreventBubble();
-    if (NS_FAILED(rv) || !ret) {
+    if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.preventBubble: failed");
+            "Event.preventBubble: failed", rv);
     }
 }
 
@@ -206,11 +259,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventCapture
         return;
     }
 
-    nsIDOMNode* ret = nsnull;
     nsresult rv = event->PreventCapture();
-    if (NS_FAILED(rv) || !ret) {
+    if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.preventCapture: failed");
+            "Event.preventCapture: failed", rv);
     }
 }
 
@@ -230,11 +282,45 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventDefault
         return;
     }
 
-    nsIDOMNode* ret = nsnull;
     nsresult rv = event->PreventDefault();
-    if (NS_FAILED(rv) || !ret) {
+    if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
-            "Event.preventDefault: failed");
+            "Event.preventDefault: failed", rv);
     }
 }
 
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    initEvent
+ * Signature: (Ljava/lang/String;ZZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
+  (JNIEnv *env, jobject jthis, jstring jeventTypeArg, jboolean jcanBubbleArg, jboolean jcancelableArg)
+{
+  nsIDOMEvent* event = (nsIDOMEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event || !jeventTypeArg) {
+    JavaDOMGlobals::ThrowException(env,
+        "Event.initEvent: NULL pointer");
+    return;
+  }
+
+  jboolean iscopy = JNI_FALSE;
+  const char* cvalue = env->GetStringUTFChars(jeventTypeArg, &iscopy);
+  if (!cvalue) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Event.initEvent: GetStringUTFChars failed\n"));
+    return;
+  }
+
+  PRBool canBubble = jcanBubbleArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool cancelable = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
+
+  nsresult rv = event->InitEvent(cvalue, canBubble, cancelable);
+  if (iscopy == JNI_TRUE)
+    env->ReleaseStringUTFChars(jeventTypeArg, cvalue);
+  if (NS_FAILED(rv)) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Event.initEvent: failed (%x)\n", rv));
+  }
+}

@@ -9,18 +9,18 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getAltKey
- * Signature: ()Z
+ * Method:    getScreenX
+ * Signature: ()I
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getButton
- * Signature: ()S
+ * Method:    getScreenY
+ * Signature: ()I
  */
-JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
   (JNIEnv *, jobject);
 
 /*
@@ -49,6 +49,22 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
+ * Method:    getShiftKey
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKey
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_MouseEventImpl
+ * Method:    getAltKey
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_MouseEventImpl
  * Method:    getMetaKey
  * Signature: ()Z
  */
@@ -57,27 +73,27 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getScreenX
- * Signature: ()I
+ * Method:    getButton
+ * Signature: ()S
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
+JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getScreenY
- * Signature: ()I
+ * Method:    getRelatedNode
+ * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedNode
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getShiftKey
- * Signature: ()Z
+ * Method:    initMouseEvent
+ * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;IIIIIZZZZSLorg/w3c/dom/Node;)V
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKey
-  (JNIEnv *, jobject);
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
+  (JNIEnv *, jobject, jstring, jboolean, jboolean, jobject, jint, jint, jint, jint, jint, jboolean, jboolean, jboolean, jboolean, jshort, jobject);
 
 #ifdef __cplusplus
 }

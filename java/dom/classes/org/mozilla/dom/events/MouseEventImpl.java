@@ -57,66 +57,64 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * <code>screenX</code> indicates the horizontal coordinate at which the 
      * event occurred in relative to the origin of the screen coordinate system.
      */
-    public native int                getScreenX();
+    public native int getScreenX();
     
     /**
      * <code>screenY</code> indicates the vertical coordinate at which the event 
      * occurred relative to the origin of the screen coordinate system.
      */
-    public native int                getScreenY();
+    public native int getScreenY();
     
     /**
      * <code>clientX</code> indicates the horizontal coordinate at which the 
      * event occurred relative to the DOM implementation's client area.
      */
-    public native int                getClientX();
+    public native int getClientX();
     
     /**
      * <code>clientY</code> indicates the vertical coordinate at which the event 
      * occurred relative to the DOM implementation's client area.
      */
-    public native int                getClientY();
+    public native int getClientY();
     
     /**
      * <code>ctrlKey</code> indicates whether the 'ctrl' key was depressed 
      * during the firing of the event.
      */
-    public native boolean            getCtrlKey();
+    public native boolean getCtrlKey();
     
     /**
      * <code>shiftKey</code> indicates whether the 'shift' key was depressed 
      * during the firing of the event.
      */
-    public native boolean            getShiftKey();
+    public native boolean getShiftKey();
     
     /**
      * <code>altKey</code> indicates whether the 'alt' key was depressed during 
      * the firing of the event.  On some platforms this key may map to an 
      * alternative key name.
      */
-    public native boolean            getAltKey();
+    public native boolean getAltKey();
     
     /**
      * <code>metaKey</code> indicates whether the 'meta' key was depressed 
      * during the firing of the event.  On some platforms this key may map to 
      * an alternative key name.
      */
-    public native boolean            getMetaKey();
+    public native boolean getMetaKey();
     
     /**
      * During mouse events caused by the depression or release of a mouse 
      * button, <code>button</code> is used to indicate which mouse button 
      * changed state.
      */
-    public native short              getButton();
+    public native short getButton();
     
     /**
      * <code>relatedNode</code> is used to identify a secondary node related to 
      * a UI event.
      */
-    public Node               getRelatedNode() {
-	throw new UnsupportedOperationException();
-    }
+    public native Node getRelatedNode();
     
     /**
      * 
@@ -142,22 +140,20 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * @param buttonArg Specifies the <code>Event</code>'s mouse button.
      * @param relatedNodeArg Specifies the <code>Event</code>'s related Node.
      */
-    public void initMouseEvent(String typeArg, 
-                               boolean canBubbleArg, 
-                               boolean cancelableArg, 
-                               AbstractView viewArg, 
-                               int detailArg, 
-                               int screenXArg, 
-                               int screenYArg, 
-                               int clientXArg, 
-                               int clientYArg, 
-                               boolean ctrlKeyArg, 
-                               boolean altKeyArg, 
-                               boolean shiftKeyArg, 
-                               boolean metaKeyArg, 
-                               short buttonArg, 
-                               Node relatedNodeArg) {
-        throw new UnsupportedOperationException();
-    }
+    public native void initMouseEvent(String typeArg, 
+				      boolean canBubbleArg, 
+				      boolean cancelableArg, 
+				      AbstractView viewArg, 
+				      int detailArg, 
+				      int screenXArg, 
+				      int screenYArg, 
+				      int clientXArg, 
+				      int clientYArg, 
+				      boolean ctrlKeyArg, 
+				      boolean altKeyArg, 
+				      boolean shiftKeyArg, 
+				      boolean metaKeyArg, 
+				      short buttonArg, 
+				      Node relatedNodeArg);
 }
 

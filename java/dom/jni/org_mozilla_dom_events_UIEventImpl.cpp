@@ -20,6 +20,108 @@
 */
 
 #include "prlog.h"
+#include"javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_UIEventImpl.h"
+#include "nsIDOMUIEvent.h"
+#include "nsIDOMAbstractView.h"
 
-/* Can't be implemented at the moment */
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    getView
+ * Signature: ()Lorg/w3c/dom/views/AbstractView;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_UIEventImpl_getView
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+	"Event.getCurrentNode: NULL pointer");
+    return NULL;
+  }
+
+  nsIDOMAbstractView* aView = nsnull;
+  nsresult rv = event->GetView(&aView);
+  if (NS_FAILED(rv) || !aView) {
+    JavaDOMGlobals::ThrowException(env,
+	"UIEvent.getView: failed", rv);
+    return NULL;
+  }
+
+  // REMIND: Abstract View
+  return NULL; //JavaDOMEventGlobals::CreateEventSubtype(env, ret);
+}
+
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    getDetail
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_UIEventImpl_getDetail
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+	"UIEvent.getDetail: NULL pointer");
+    return 0;
+  }
+
+  PRInt32 aDetail = 0;
+  nsresult rv = event->GetDetail(&aDetail);
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ThrowException(env,
+        "UIEvent.getDetail: failed", rv);
+    return 0;
+  }
+
+  return (jint)aDetail;
+}
+
+/*
+ * Class:     org_mozilla_dom_events_UIEventImpl
+ * Method:    initUIEvent
+ * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;I)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
+  (JNIEnv *env, jobject jthis, 
+   jstring jtypeArg, 
+   jboolean jcanBubbleArg, 
+   jboolean jcancelableArg, 
+   jobject jviewArg, 
+   jint jdetailArg)
+{
+  nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event || !jtypeArg || !jviewArg) {
+    JavaDOMGlobals::ThrowException(env,
+	"Event.initUIEvent: NULL pointer\n");
+    return;
+  }
+
+  jboolean iscopy = JNI_FALSE;
+  const char* cvalue = env->GetStringUTFChars(jtypeArg, &iscopy);
+  if (!cvalue) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("UIEvent.initUIEvent: GetStringUTFChars failed\n"));
+    return;
+  }
+
+  PRBool canBubble = jcanBubbleArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
+  PRBool cancelable = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
+
+
+  // REMIND: need to deal with AbstractView
+  // NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)=0;
+  nsresult rv = event->InitUIEvent(cvalue, canBubble, cancelable, NULL, (PRUint32)jdetailArg);
+
+  if (iscopy == JNI_TRUE)
+    env->ReleaseStringUTFChars(jtypeArg, cvalue);
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ThrowException(env,
+        "UIEvent.initUIEvent: failed", rv);
+  }
+}
+
