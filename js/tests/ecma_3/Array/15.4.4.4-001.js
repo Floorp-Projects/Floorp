@@ -59,43 +59,43 @@ expect = x.toString();
 addThis();
 
 status = inSection(2);
-var x = 999;
+x = 999;
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(3);
-var x = /Hello/g;
+x = /Hello/g;
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(4);
-var x = new Error("Hello");
+x = new Error("Hello");
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(5);
-var x = function() {return "Hello";};
+x = function() {return "Hello";};
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(6);
-var x = [function() {return "Hello";}];
+x = [function() {return "Hello";}];
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(7);
-var x = [1,2,3].concat([4,5,6]);
+x = [1,2,3].concat([4,5,6]);
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
 
 status = inSection(8);
-var x = eval('this');
+x = eval('this');
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
