@@ -10,14 +10,15 @@
 	align="vertical"
 	onload="commonDialogOnLoad()"
 	class="dialog"> 
+    
     <html:script language="JavaScript" src="chrome://global/content/commonDialog.js" />
+    
+	<keyset id="keyset"/>
+
     <box align="horizontal" flex="100%" style="width: 36em;">
 		<html:div style="width: 40px; margin: 5px;">
 			<html:img id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
 		</html:div>
-
-
-		<keyset id="keyset"/>
 
 		<box align="vertical" flex="100%">
 				<html:div id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;">

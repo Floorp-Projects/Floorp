@@ -38,6 +38,8 @@
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 
+<keyset id="keyset"/>
+
 <html:div>
 &categoryHeader;
 </html:div>
