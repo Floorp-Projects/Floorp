@@ -647,12 +647,10 @@ js_SetupLocks(int l, int g)
 
     if (global_locks)
         return JS_TRUE;
+#ifdef DEBUG
     if (l > 10000 || l < 0) /* l == number of initially allocated fat locks */
-#ifdef DEBUG
         printf("Bad number %d in js_SetupLocks()!\n", l);
-#endif
-    if (g > 100 || g < 0)       /* g equals number of global locks */
-#ifdef DEBUG
+    if (g > 100 || g < 0)   /* g equals number of global locks */
         printf("Bad number %d in js_SetupLocks()!\n", l);
 #endif
     global_locks_log2 = JS_CeilingLog2(g);
