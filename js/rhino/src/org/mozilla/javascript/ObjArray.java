@@ -55,6 +55,14 @@ public class ObjArray implements Serializable {
         }
     }
 
+    public final boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public final void setReadOnly() {
+        readOnly = true;
+    }
+
     public final boolean isEmpty() {
         return size == 0;
     }
@@ -65,6 +73,7 @@ public class ObjArray implements Serializable {
 
     public final void setSize(int newSize) {
         if (newSize < 0) throw new IllegalArgumentException();
+        if (readOnly) onReadonlyViolation();
         int N = size;
         if (newSize < N) {
             for (int i = newSize; i != N; ++i) {
@@ -79,12 +88,13 @@ public class ObjArray implements Serializable {
     }
 
     public final Object get(int index) {
-        if (!(0 <= index && index < size)) throw invalidIndex(index, size);
+        if (!(0 <= index && index < size)) onInvalidIndex(index, size);
         return getImpl(index);
     }
 
     public final void set(int index, Object value) {
-        if (!(0 <= index && index < size)) throw invalidIndex(index, size);
+        if (!(0 <= index && index < size)) onInvalidIndex(index, size);
+        if (readOnly) onReadonlyViolation();
         setImpl(index, value);
     }
 
@@ -95,7 +105,6 @@ public class ObjArray implements Serializable {
             case 2: return f2;
             case 3: return f3;
             case 4: return f4;
-            case 5: return f5;
         }
         return data[index - FIELDS_STORE_SIZE];
     }
@@ -107,7 +116,6 @@ public class ObjArray implements Serializable {
             case 2: f2 = value; break;
             case 3: f3 = value; break;
             case 4: f4 = value; break;
-            case 5: f5 = value; break;
             default: data[index - FIELDS_STORE_SIZE] = value;
         }
 
@@ -137,22 +145,22 @@ public class ObjArray implements Serializable {
 
     public final Object peek() {
         int N = size;
-        if (N == 0) throw invalidEmptyStackAccess();
+        if (N == 0) onEmptyStackTopRead();
         return getImpl(N - 1);
     }
 
     public final Object pop() {
+        if (readOnly) onReadonlyViolation();
         int N = size;
         --N;
         Object top;
         switch (N) {
-            case -1: throw invalidEmptyStackAccess();
+            case -1: onEmptyStackTopRead();
             case 0: top = f0; f0 = null; break;
             case 1: top = f1; f1 = null; break;
             case 2: top = f2; f2 = null; break;
             case 3: top = f3; f3 = null; break;
             case 4: top = f4; f4 = null; break;
-            case 5: top = f5; f5 = null; break;
             default:
                 top = data[N - FIELDS_STORE_SIZE];
                 data[N - FIELDS_STORE_SIZE] = null;
@@ -162,10 +170,12 @@ public class ObjArray implements Serializable {
     }
 
     public final void push(Object value) {
+        if (readOnly) onReadonlyViolation();
         add(value);
     }
 
     public final void add(Object value) {
+        if (readOnly) onReadonlyViolation();
         int N = size;
         if (N >= FIELDS_STORE_SIZE) {
             ensureCapacity(N + 1);
@@ -175,9 +185,10 @@ public class ObjArray implements Serializable {
     }
 
     public final void add(int index, Object value) {
-        Object tmp;
         int N = size;
-        if (!(0 <= index && index <= N)) throw invalidIndex(index, N + 1);
+        if (!(0 <= index && index <= N)) onInvalidIndex(index, N + 1);
+        if (readOnly) onReadonlyViolation();
+        Object tmp;
         switch (index) {
             case 0:
                 if (N == 0) { f0 = value; break; }
@@ -194,9 +205,6 @@ public class ObjArray implements Serializable {
             case 4:
                 if (N == 4) { f4 = value; break; }
                 tmp = f4; f4 = value; value = tmp;
-            case 5:
-                if (N == 5) { f5 = value; break; }
-                tmp = f5; f5 = value; value = tmp;
 
                 index = FIELDS_STORE_SIZE;
             default:
@@ -213,7 +221,8 @@ public class ObjArray implements Serializable {
 
     public final void remove(int index) {
         int N = size;
-        if (!(0 <= index && index < N)) throw invalidIndex(index, N);
+        if (!(0 <= index && index < N)) onInvalidIndex(index, N);
+        if (readOnly) onReadonlyViolation();
         --N;
         switch (index) {
             case 0:
@@ -230,10 +239,7 @@ public class ObjArray implements Serializable {
                 f3 = f4;
             case 4:
                 if (N == 4) { f4 = null; break; }
-                f4 = f5;
-            case 5:
-                if (N == 5) { f5 = null; break; }
-                f5 = data[0];
+                f4 = data[0];
 
                 index = FIELDS_STORE_SIZE;
             default:
@@ -248,6 +254,7 @@ public class ObjArray implements Serializable {
     }
 
     public final void clear() {
+        if (readOnly) onReadonlyViolation();
         int N = size;
         for (int i = 0; i != N; ++i) {
             setImpl(i, null);
@@ -271,7 +278,6 @@ public class ObjArray implements Serializable {
             default:
                 System.arraycopy(data, 0, array, offset + FIELDS_STORE_SIZE,
                                  N - FIELDS_STORE_SIZE);
-            case 6: array[offset + 5] = f5;
             case 5: array[offset + 4] = f4;
             case 4: array[offset + 3] = f3;
             case 3: array[offset + 2] = f2;
@@ -311,14 +317,18 @@ public class ObjArray implements Serializable {
         }
     }
 
-    private static RuntimeException invalidIndex(int index, int upperBound) {
+    private static void onInvalidIndex(int index, int upperBound) {
         // \u2209 is "NOT ELEMENT OF"
         String msg = index+" \u2209 [0, "+upperBound+')';
-        return new IndexOutOfBoundsException(msg);
+        throw new IndexOutOfBoundsException(msg);
     }
 
-    private static RuntimeException invalidEmptyStackAccess() {
+    private static void onEmptyStackTopRead() {
         throw new RuntimeException("Empty stack");
+    }
+
+    private static void onReadonlyViolation() {
+        throw new RuntimeException("Attempt to modify read only array");
     }
 
     private void writeObject(ObjectOutputStream os) throws IOException {
@@ -344,12 +354,14 @@ public class ObjArray implements Serializable {
         }
     }
 
-    static final long serialVersionUID = 7448768847663119705L;
+    static final long serialVersionUID = -8887981051569446902L;
 
 // Number of data elements
     private int size;
 
-    private static final int FIELDS_STORE_SIZE = 6;
-    private transient Object f0, f1, f2, f3, f4, f5;
+    private boolean readOnly;
+
+    private static final int FIELDS_STORE_SIZE = 5;
+    private transient Object f0, f1, f2, f3, f4;
     private transient Object[] data;
 }
