@@ -607,7 +607,7 @@ sub BuildClientDist()
 
    my $dir = '';
    for $dir (qw(bookmarks find history prefwindow related sample search
-                sidebar ucth xfer)) {
+                shistory sidebar ucth xfer)) {
      _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",
                           "$distdirectory:idl:");
    }
@@ -873,6 +873,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
 	BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",			"regviewer");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
+	BuildIDLProject(":mozilla:xpfe:components:shistory:macbuild:shistoryIDL.mcp",	"shistory");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
 	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
@@ -1371,9 +1372,9 @@ sub MakeResourceAliases()
         }
         {
           my($history_dir) = "$chrome_dir"."History";
-	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",			"$history_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",		"$history_dir:content:default");
 	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",			"$history_dir:skin:default");
-	  _InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",			"$history_dir:locale");
+	  _InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",		"$history_dir:locale");
         }
         {
           my($related_dir) = "$chrome_dir"."Related";
@@ -1581,6 +1582,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", "DirectoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", "RegViewerComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:history.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
