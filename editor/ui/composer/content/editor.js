@@ -1139,7 +1139,7 @@ function GetBackgroundElementWithColor()
       if (selection)
       {
         element = selection.focusNode;
-        while (!gEditor.NodeIsBlock(element))
+        while (!gEditor.nodeIsBlock(element))
           element = element.parentNode;
       }
       else
