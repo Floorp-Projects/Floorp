@@ -1029,12 +1029,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       case nsIMsgCompType::ForwardAsAttachment:
         {
         
-          if (!aCharset.IsEmpty())
-          {
-            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
-            m_compFields->SetCharacterSet(aCharsetCStr);
-          }
-        
           subjectStr.AppendWithConversion("[Fwd: ");
           subjectStr.AppendWithConversion(subject);
           subjectStr.AppendWithConversion("]");
