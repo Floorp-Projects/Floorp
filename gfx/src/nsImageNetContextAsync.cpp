@@ -47,7 +47,9 @@
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIHTTPChannel.h"
+#include "nsIStreamConverterService.h"
 
+static NS_DEFINE_CID(kStreamConvServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
@@ -241,11 +243,11 @@ ImageConsumer::CanHandleContent(const char * aContentType,
 {
   // if we had a webshell or doc shell around, we'd pass this call
   // through to it...but we don't =(
-
-  if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+  if (!nsCRT::strcasecmp(aContentType, "message/rfc822"))
     *aDesiredContentType = nsCRT::strdup("text/xul");
   // since we explicilty loaded the url, we always want to handle it!
   *aCanHandleContent = PR_TRUE;
+    
   return NS_OK;
 } 
 
@@ -260,6 +262,23 @@ ImageConsumer::DoContent(const char * aContentType,
   nsresult rv = NS_OK;
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
+
+  nsAutoString contentType(aContentType);
+
+  if (contentType == "multipart/x-mixed-replace"
+      || contentType == "multipart/mixed") {
+    // if we're getting multipart data, we have to convert it.
+    // so wedge the converter inbetween us and the consumer.
+    nsCOMPtr<nsIStreamConverterService> convServ = do_GetService(kStreamConvServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString astrix("*/*");
+    return convServ->AsyncConvertData(contentType.GetUnicode(),
+                                   astrix.GetUnicode(),
+                                   NS_STATIC_CAST(nsIStreamListener*, this),
+                                   nsnull /*a context?*/, aContentHandler);
+  }
+
   QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
   return rv;
 }
@@ -290,6 +309,7 @@ ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
   }
 
   ilINetReader *reader = mURL->GetReader(); //ptn test: nsCOMPtr??
+  nsresult err= reader->FlushImgBuffer(); //flush current data in buffer before starting 
 
   nsresult rv = NS_OK;
   char* aContentType = NULL;
