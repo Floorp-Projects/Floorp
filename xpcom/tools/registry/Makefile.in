@@ -43,6 +43,12 @@ LOCAL_INCLUDES	= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
+# Need to link with CoreFoundation on Mac
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += \
+		$(TK_LIBS) \
+		$(NULL)
+
 LIBS            = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
