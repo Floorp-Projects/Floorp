@@ -1222,9 +1222,10 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
 #endif
 
     resize = sizeof *re + state.progLength - 1;
-    re = (JSRegExp*) JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
+    re = (JSRegExp *) JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
     if (!re)
 	goto out;
+    re->nrefs = 1;
     re->source = str;
     re->lastIndex = 0;
     re->parenCount = state.parenCount;
@@ -1305,12 +1306,17 @@ static void freeRENtree(JSContext *cx, RENode *ren,  RENode *stop)
     }
 }
 
+#define HOLD_REGEXP(cx, re) JS_ATOMIC_INCREMENT(&(re)->nrefs)
+#define DROP_REGEXP(cx, re) js_DestroyRegExp(cx, re)
+
 void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
-    js_UnlockGCThing(cx, re->source);
-    freeRENtree(cx, re->ren, NULL);
-    JS_free(cx, re);
+    if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
+        js_UnlockGCThing(cx, re->source);
+        freeRENtree(cx, re->ren, NULL);
+        JS_free(cx, re);
+    }
 }
 
 typedef struct MatchState {
@@ -2283,7 +2289,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp*) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
     if (re) {
 	switch (slot) {
 	  case REGEXP_SOURCE:
@@ -2296,9 +2302,8 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
 	    break;
 	  case REGEXP_LAST_INDEX:
-            if (!js_NewNumberValue(cx, (jsdouble)re->lastIndex, vp))
-	        return JS_FALSE;
-	    break;
+            *vp = INT_TO_JSVAL((jsint) re->lastIndex);
+            break;
 	  case REGEXP_MULTILINE:
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
 	    break;
@@ -2318,14 +2323,16 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
-    JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp*) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
-    if (re && slot == REGEXP_LAST_INDEX) {
-	if (!js_ValueToNumber(cx, *vp, &d))
-	    return JS_FALSE;
-	re->lastIndex = (uintN)d;
+    if (slot == REGEXP_LAST_INDEX) {
+        if (!js_ValueToNumber(cx, *vp, &d))
+            return JS_FALSE;
+        d = js_DoubleToInteger(d);
+        JS_LOCK_OBJ(cx, obj);
+        re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+        if (re)
+            re->lastIndex = (uintN)d;
+        JS_UNLOCK_OBJ(cx, obj);
     }
-    JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
 }
 
@@ -2487,7 +2494,7 @@ regexp_finalize(JSContext *cx, JSObject *obj)
 {
     JSRegExp *re;
 
-    re = (JSRegExp*) JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!re)
 	return;
     js_DestroyRegExp(cx, re);
@@ -2516,7 +2523,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
     uint8 flags;
 
     if (xdr->mode == JSXDR_ENCODE) {
-	re = (JSRegExp*) JS_GetPrivate(xdr->cx, *objp);
+	re = (JSRegExp *) JS_GetPrivate(xdr->cx, *objp);
 	if (!re)
 	    return JS_FALSE;
 	source = re->source;
@@ -2560,7 +2567,6 @@ static JSBool
 regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		jsval *rval)
 {
-    JSBool ok;
     JSRegExp *re;
     jschar *chars;
     size_t length, nflags;
@@ -2569,12 +2575,12 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
 	return JS_FALSE;
-    ok = JS_TRUE;
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp*) JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!re) {
+        JS_UNLOCK_OBJ(cx, obj);
 	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
-	goto out;
+	return JS_TRUE;
     }
 
     length = re->source->length + 2;
@@ -2583,8 +2589,8 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	nflags++;
     chars = (jschar*) JS_malloc(cx, (length + nflags + 1) * sizeof(jschar));
     if (!chars) {
-	ok = JS_FALSE;
-	goto out;
+        JS_UNLOCK_OBJ(cx, obj);
+        return JS_FALSE;
     }
 
     chars[0] = '/';
@@ -2598,18 +2604,16 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	if (re->flags & JSREG_MULTILINE)
 	    chars[length++] = 'm';
     }
+    JS_UNLOCK_OBJ(cx, obj);
     chars[length] = 0;
 
     str = js_NewString(cx, chars, length, 0);
     if (!str) {
 	JS_free(cx, chars);
-	ok = JS_FALSE;
-	goto out;
+	return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
-out:
-    JS_UNLOCK_OBJ(cx, obj);
-    return ok;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -2624,17 +2628,13 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
 	return JS_FALSE;
     opt = NULL;
-    JS_LOCK_OBJ(cx, obj);
     if (argc == 0) {
 	str = js_NewStringCopyN(cx, cx->runtime->emptyString->chars, 
                                     cx->runtime->emptyString->length, 0);
-        if (!str) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!str)
+            return JS_FALSE;
     } else {
         if (JSVAL_IS_OBJECT(argv[0])) {
-            obj2 = JSVAL_TO_OBJECT(argv[0]);
             /*
              * If we get passed in a RegExp object we construct a new
              * RegExp that is a duplicate of it by re-compiling the
@@ -2642,58 +2642,54 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              * here if the flags are specified. (We must use the flags
              * from the original RegExp also).
              */
+            obj2 = JSVAL_TO_OBJECT(argv[0]);
             if (obj2 && OBJ_GET_CLASS(cx, obj2) == &js_RegExpClass) {
-                if (argc >= 2 && !JSVAL_IS_VOID(argv[1])) { /* 'flags' defined */
+                if (argc >= 2 && !JSVAL_IS_VOID(argv[1])) { /* 'flags' passed */
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
                                          JSMSG_NEWREGEXP_FLAGGED);
-                    ok = JS_FALSE;
-                    goto out;
+                    return JS_FALSE;
                 }
-                re = (JSRegExp*) JS_GetPrivate(cx, obj2);
+                JS_LOCK_OBJ(cx, obj2);
+                re = (JSRegExp *) JS_GetPrivate(cx, obj2);
                 if (!re) {
-                    ok = JS_FALSE;
-                    goto out;
+                    JS_UNLOCK_OBJ(cx, obj2);
+                    return JS_FALSE;
                 }
                 re = js_NewRegExp(cx, NULL, re->source, re->flags, JS_FALSE);
+                JS_UNLOCK_OBJ(cx, obj2);
                 goto madeit;
             }
         }
         str = js_ValueToString(cx, argv[0]);
-	if (!str) {
-	    ok = JS_FALSE;
-	    goto out;
-	}
+	if (!str)
+	    return JS_FALSE;
 	argv[0] = STRING_TO_JSVAL(str);
         if (argc > 1) {
-            if (JSVAL_IS_VOID(argv[1]))
+            if (JSVAL_IS_VOID(argv[1])) {
                 opt = NULL;
-            else {
+            } else {
                 opt = js_ValueToString(cx, argv[1]);
-                if (!opt) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
+                if (!opt)
+                    return JS_FALSE;
                 argv[1] = STRING_TO_JSVAL(opt);
             }
         }
     }
     re = js_NewRegExpOpt(cx, NULL, str, opt, JS_FALSE);
 madeit:
-    if (!re) {
-	ok = JS_FALSE;
-	goto out;
-    }
-    oldre = (JSRegExp*) JS_GetPrivate(cx, obj);
+    if (!re)
+	return JS_FALSE;
+    JS_LOCK_OBJ(cx, obj);
+    oldre = (JSRegExp *) JS_GetPrivate(cx, obj);
     ok = JS_SetPrivate(cx, obj, re);
+    JS_UNLOCK_OBJ(cx, obj);
     if (!ok) {
 	js_DestroyRegExp(cx, re);
-	goto out;
+    } else {
+        if (oldre)
+            js_DestroyRegExp(cx, oldre);
+        *rval = OBJECT_TO_JSVAL(obj);
     }
-    if (oldre)
-	js_DestroyRegExp(cx, oldre);
-    *rval = OBJECT_TO_JSVAL(obj);
-out:
-    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
@@ -2701,17 +2697,27 @@ static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		JSBool test, jsval *rval)
 {
-    JSBool ok, locked;
+    JSBool ok;
     JSRegExp *re;
     JSString *str;
     size_t i;
 
+    ok = JS_FALSE;
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
-	return JS_FALSE;
-    re = (JSRegExp*) JS_GetPrivate(cx, obj);
-    if (!re)
+	return ok;
+    JS_LOCK_OBJ(cx, obj);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    if (!re) {
+	JS_UNLOCK_OBJ(cx, obj);
 	return JS_TRUE;
-    ok = locked = JS_FALSE;
+    }
+
+    /* NB: we must reach out: after this paragraph, in order to drop re. */
+    HOLD_REGEXP(cx, re);
+    i = (re->flags & JSREG_GLOB) ? re->lastIndex : 0;
+    JS_UNLOCK_OBJ(cx, obj);
+
+    /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
     if (argc == 0) {
 	str = cx->regExpStatics.input;
 	if (!str) {
@@ -2721,7 +2727,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 				 (re->flags & JSREG_GLOB) ? "g" : "",
 				 (re->flags & JSREG_FOLD) ? "i" : "",
 				 (re->flags & JSREG_MULTILINE) ? "m" : "");
-	    goto out;
+            goto out;
 	}
     } else {
 	str = js_ValueToString(cx, argv[0]);
@@ -2729,19 +2735,15 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    goto out;
 	argv[0] = STRING_TO_JSVAL(str);
     }
-    if (re->flags & JSREG_GLOB) {
-        JS_LOCK_OBJ(cx, obj);
-        locked = JS_TRUE;
-        i = re->lastIndex;
-    } else {
-        i = 0;
-    }
+
     ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
+    JS_LOCK_OBJ(cx, obj);
     if (re->flags & JSREG_GLOB)
 	re->lastIndex = (*rval == JSVAL_NULL) ? 0 : i;
+    JS_UNLOCK_OBJ(cx, obj);
+
 out:
-    if (locked)
-	JS_UNLOCK_OBJ(cx, obj);
+    DROP_REGEXP(cx, re);
     return ok;
 }
 

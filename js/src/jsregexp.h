@@ -66,6 +66,7 @@ struct JSRegExpStatics {
      : &js_EmptySubString)
 
 struct JSRegExp {
+    jsrefcount  nrefs;          /* reference count */
     JSString    *source;        /* locked source string, sans // */
     uintN       lastIndex;      /* index after last match, for //g iterator */
     uintN       parenCount;     /* number of parenthesized submatches */
