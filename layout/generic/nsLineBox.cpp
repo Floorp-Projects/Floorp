@@ -55,10 +55,13 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
         frame->GetFrameName(frameName);
         fputs(frameName, out);
       }
-      fprintf(out, " %s region={%d,%d,%d,%d}",
+      fprintf(out, " %s region={%d,%d,%d,%d} combinedArea={%d,%d,%d,%d}",
               fc->mIsCurrentLineFloater ? "cl" : "bcl",
               fc->mRegion.x, fc->mRegion.y,
-              fc->mRegion.width, fc->mRegion.height);
+              fc->mRegion.width, fc->mRegion.height,
+              fc->mCombinedArea.x, fc->mCombinedArea.y,
+              fc->mCombinedArea.width, fc->mCombinedArea.height);
+
       fprintf(out, "\n");
     }
     fc = fc->Next();
@@ -84,13 +87,11 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
           this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
-#if XXX
-  if (0 != mCarriedOutTopMargin) {
-    fprintf(out, "tm=%d ", mCarriedOutTopMargin);
-  }
-#endif
   if (0 != mCarriedOutBottomMargin) {
     fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
+  }
+  if (0 != mMaxElementWidth) {
+    fprintf(out, "mew=%d ", mMaxElementWidth);
   }
   fprintf(out, "{%d,%d,%d,%d} ca={%d,%d,%d,%d}",
           mBounds.x, mBounds.y, mBounds.width, mBounds.height,
