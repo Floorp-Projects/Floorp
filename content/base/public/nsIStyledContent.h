@@ -23,6 +23,7 @@
 class nsString;
 class nsIStyleRule;
 class nsIStyleContext;
+class nsISupportsArray;
 
 // IID for the nsIStyledContent class
 #define NS_ISTYLEDCONTENT_IID   \
@@ -38,8 +39,8 @@ public:
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
   NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
 
-  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) = 0;
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) = 0;
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules) = 0;
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules) = 0;
 
   /** NRA ***
    * Get a hint that tells the style system what to do when 
