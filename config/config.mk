@@ -203,7 +203,6 @@ SEMICOLON	:= ;$(EMPTY)
 SPACE		:= $(EMPTY) $(EMPTY)
 PATH_SEPARATOR	:= \;
 RC		= flipper rc$(BIN_SUFFIX)
-XP_DEFINE	= -DXP_PC
 LIB_SUFFIX	= lib
 DLL_SUFFIX	= dll
 MAP_SUFFIX	= map
@@ -220,7 +219,6 @@ else
 ifeq ($(OS_ARCH),WINNT)
 PATH_SEPARATOR	:= :
 RC		= rc$(BIN_SUFFIX)
-XP_DEFINE	= -DXP_PC
 LIB_SUFFIX	= lib
 DLL_SUFFIX	= dll
 BIN_SUFFIX	= .exe
@@ -232,7 +230,6 @@ INSTALL		= $(NSINSTALL)
 JAVA_PROG	= java
 else
 PATH_SEPARATOR	:= :
-XP_DEFINE	= -DXP_UNIX
 AR		= ar cr $@
 ifndef USE_AUTOCONF
 DLL_SUFFIX	= so
@@ -476,7 +473,7 @@ endif
 ######################################################################
 # Now test variables that might have been set or overridden by $(MY_CONFIG).
 
-DEFINES		+= -DNETSCAPE -DOSTYPE=\"$(OS_CONFIG)\"
+DEFINES         += -DOSTYPE=\"$(OS_CONFIG)\"
 
 # Specify that we are building a client.
 # This will instruct the cross platform libraries to
@@ -490,11 +487,6 @@ STATIC_JAVA	= yes
 else
 MOZILLA_CLIENT	= 1
 MOZ_JSD		= 1
-DEFINES		+= -DMOZILLA_CLIENT
-endif
-
-ifndef MODULAR_NETLIB
-MOZ_COOKIEMANAGE	= 1
 endif
 
 ifndef USE_AUTOCONF
@@ -539,16 +531,8 @@ ifdef MOZ_SINGLESIGNON
 DEFINES		+= -DSingleSignon
 endif
 
-ifdef MOZ_COOKIEMANAGE
-DEFINES		+= -DCookieManagement
-endif
-
 ifdef MOZ_SMOOTH_PROGRESS
 DEFINES         += -DSMOOTH_PROGRESS
-endif
-
-ifdef MOZ_EDITOR
-DEFINES		+= -DNGEDITOR
 endif
 
 ifdef MOZ_SECURITY
@@ -560,23 +544,8 @@ ifdef MOZ_FULLCIRCLE
 DEFINES		+= -DMOZ_FULLCIRCLE
 endif
 
-# Build layers by default
-ifndef NO_LAYERS
-DEFINES		+= -DLAYERS
-endif
-
 ifdef BUILD_DEBUG_GC
 DEFINES		+= -DDEBUG_GC
-endif
-
-ifdef BUILD_UNIX_PLUGINS
-# UNIX_EMBED Should not be needed. For now these two defines go
-# together until I talk with jg.  --dp
-DEFINES		+= -DUNIX_EMBED -DX_PLUGINS
-endif
-
-ifndef NO_UNIX_LDAP
-DEFINES		+= -DUNIX_LDAP
 endif
 
 ifdef MOZ_MEDIUM
@@ -629,8 +598,6 @@ ifdef JAVA_OR_NSJVM	# XXX fix -- su can't depend on java
 MOZ_SMARTUPDATE	= 1
 endif
 
-DEFINES		+= -DJS_THREADSAFE
-
 ifdef FORTEZZA
 DEFINES		+= -DFORTEZZA
 endif
@@ -645,10 +612,6 @@ endif
 
 ifdef MOZ_DOM
 DEFINES		+= -DDOM
-endif
-
-ifndef NO_UNIX_ASYNC_DNS
-DEFINES		+= -DUNIX_ASYNC_DNS
 endif
 
 ifdef MOZ_TRANSACTION_RECEIPTS 
@@ -670,26 +633,9 @@ ifndef USE_AUTOCONF
 DEFINES		+= -DDEVELOPER_DEBUG
 endif
 
-#
-# For the standalone image lib
-#
-ifdef STANDALONE_IMAGE_LIB
-DEFINES		+= -DSTANDALONE_IMAGE_LIB
-endif
-
-ifdef MODULAR_NETLIB
-DEFINES 	+= -DMODULAR_NETLIB # -DNETLIB_THREAD
-endif
-
 ifndef MOZ_FE
 MOZ_FE		= x
 endif
-
-ifndef MOZ_USER_DIR
-MOZ_USER_DIR	= \".netscape\"
-endif
-
-DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
 
 ######################################################################
 
