@@ -80,11 +80,11 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsString& aAlias, nsString& oR
    aAlias.ToLowerCase(aKey);
    oResult = "";
    if(nsnull ==  mDelegate) {
-      if(aKey == "utf-8") {
+      if(aKey.Equals("utf-8")) {
         oResult = "UTF-8";
         return NS_OK;
       } 
-      if(aKey == "iso-8859-1") {
+      if(aKey.Equals("iso-8859-1")) {
         oResult = "ISO-8859-1";
         return NS_OK;
       } 

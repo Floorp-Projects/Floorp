@@ -397,7 +397,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
  
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
-  if (finalURL == nsCAutoString("")) {
+  if (finalURL.IsEmpty()) {
     finalURL = "resource:/chrome/";
     finalURL += package;
     finalURL += "/";
@@ -405,7 +405,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     finalURL += "/";
 
     // XXX Remove hack when our directory structure gets fixed.
-    if (provider == nsCAutoString("locale"))
+    if (provider.Equals(nsCAutoString("locale")))
       finalURL += "en-US";
     else finalURL += "default";
     finalURL += "/";
@@ -442,10 +442,10 @@ nsChromeRegistry::GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString&
 
   // Follow the "selectedSkin" or "selectedLocale" arc.
   nsCOMPtr<nsIRDFResource> arc;
-  if (aProvider == nsCAutoString("skin")) {
+  if (aProvider.Equals(nsCAutoString("skin"))) {
     arc = mSelectedSkin;
   }
-  else if (aProvider == nsCAutoString("locale")) {
+  else if (aProvider.Equals(nsCAutoString("locale"))) {
     arc = mSelectedLocale;
   }
 
@@ -650,7 +650,7 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
   if (resource) {
     nsXPIDLCString uri;
     resource->GetValue( getter_Copies(uri) );
-    aResult = uri;
+    aResult.Assign(uri);
     return NS_OK;
   }
  
@@ -965,7 +965,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCAutoString& aProvider,
   nsCAutoString resourceStr = "urn:mozilla:";
   resourceStr += aProvider;
   resourceStr += ":";
-  resourceStr += aProviderName;
+  resourceStr.Append(aProviderName);
 
   // Obtain the provider resource.
   nsresult rv = NS_OK;
@@ -1125,14 +1125,14 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCAutoString& aP
                                         PRBool aUseProfile, PRBool aIsAdding)
 {
   nsCAutoString package = "urn:mozilla:package:";
-  package += aPackageName;
+  package.Append(aPackageName);
 
   nsCAutoString provider = "urn:mozilla:";
   provider += aProviderType;
   provider += ":";
-  provider += aProviderName;
+  provider.Append(aProviderName);
   provider += ":";
-  provider += aPackageName;
+  provider.Append(aPackageName);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -1258,7 +1258,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
 
         // See if we're a packages seq.  If so, we need to set up the baseURL and
         // the package arcs.
-        if (val.Find(":packages") != -1 && aProviderType != nsCAutoString("package")) {
+        if (val.Find(":packages") != -1 && !aProviderType.Equals(nsCAutoString("package"))) {
           // Get the literal for our base URL.
           nsAutoString unistr(aBaseURL);
           nsCOMPtr<nsIRDFLiteral> literal;
