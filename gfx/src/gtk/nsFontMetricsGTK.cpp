@@ -1681,26 +1681,27 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
-        if (!aSelf->mCCMap)
-          return PR_FALSE;
-        DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
+        if (aSelf->mCCMap) {
+          DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
   
-        /*
-         * We used to disable special characters like smart quotes
-         * in CJK fonts because if they are quite a bit larger than
-         * western glyphs and we did not want glyph fill-in to use them
-         * in single byte documents.
-         *
-         * Now, single byte documents find these special chars before
-         * the CJK fonts are searched so this is no longer needed
-         * and should be removed, as requested in bug 100233
-         */
-        if ((aSelf->Convert == DoubleByteConvert) 
-            && (!gAllowDoubleByteSpecialChars)) {
-          PRUint16* ccmap = aSelf->mCCMap;
-          for (int i=0; gDoubleByteSpecialChars[i]; i++) {
-            CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
+          /*
+           * We used to disable special characters like smart quotes
+           * in CJK fonts because if they are quite a bit larger than
+           * western glyphs and we did not want glyph fill-in to use them
+           * in single byte documents.
+           *
+           * Now, single byte documents find these special chars before
+           * the CJK fonts are searched so this is no longer needed
+           * and should be removed, as requested in bug 100233
+           */
+          if ((aSelf->Convert == DoubleByteConvert) 
+              && (!gAllowDoubleByteSpecialChars)) {
+            PRUint16* ccmap = aSelf->mCCMap;
+            for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+              CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
+            }
           }
+          return PR_TRUE;
         }
       }
       else {
@@ -1714,6 +1715,17 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
   else {
     NS_WARNING("cannot get atom");
   }
+
+  //
+  // always try to return a map even if it is empty
+  //
+  nsCompressedCharMap empty_ccmapObj;
+  aSelf->mCCMap = empty_ccmapObj.NewCCMap();
+
+  // return false if unable to alloc a map
+  if (aSelf->mCCMap == nsnull)
+    return PR_FALSE;
+
   return PR_TRUE;
 }
 
