@@ -157,7 +157,7 @@ static JSValue load(Context *cx, const JSValues &argv)
         for (size_t i = 1; i < n; ++i) {
             JSValue val = argv[i].toString();
             if (val.isString()) {
-                JSString& fileName(*val.string);
+                JSString& fileName = *val.string;
                 std::string str(fileName.length(), char());
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
                 FILE* f = fopen(str.c_str(), "r");
@@ -179,7 +179,7 @@ static JSValue loadxml(Context *cx, const JSValues &argv)
         for (size_t i = 1; i < n; ++i) {
             JSValue val = argv[i].toString();
             if (val.isString()) {
-                JSString& fileName(*val.string);
+                JSString& fileName = *val.string;
                 std::string str(fileName.length(), char());
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
                 cx->loadClass(str.c_str());
