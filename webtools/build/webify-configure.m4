@@ -8,6 +8,8 @@ dnl WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
 dnl for the specific language governing rights and limitations under the
 dnl NPL.
 dnl
+dnl The Original Code is this file as it was released upon February 18, 1999.
+dnl
 dnl The Initial Developer of this code under the NPL is Netscape
 dnl Communications Corporation.  Portions created by Netscape are
 dnl Copyright (C) 1999 Netscape Communications Corporation.  All Rights
