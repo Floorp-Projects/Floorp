@@ -147,6 +147,7 @@ void morkHandle::NonOpenObjectError(morkEnv* ev) const
   
 void morkHandle::NewBadMagicHandleError(morkEnv* ev, mork_magic inMagic) const
 {
+  MORK_USED_1(inMagic);
   ev->NewError("wrong mHandle_Magic");
 }
 
@@ -393,6 +394,7 @@ morkHandle::Handle_CloseMdbObject(nsIMdbEnv* mev)
 /*virtual*/ mdb_err
 morkHandle::Handle_IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 {
+  MORK_USED_1(mev);
   mdb_err outErr = 0;
   
   MORK_ASSERT(outOpen);

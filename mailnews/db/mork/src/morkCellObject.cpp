@@ -156,7 +156,7 @@ morkCellObject::ResyncWithRow(morkEnv* ev)
   morkCell* cell = row->GetCell(ev, mCellObject_Col, &pos);
   if ( cell )
   {
-    mCellObject_Pos = pos;
+    mCellObject_Pos = (mork_u2) pos;
     mCellObject_Cell = cell;
     mCellObject_RowSeed = row->mRow_Seed;
   }

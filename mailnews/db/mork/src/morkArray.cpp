@@ -230,7 +230,7 @@ morkArray::AppendSlot(morkEnv* ev, void* ioSlot)
     mork_fill fill = mArray_Fill;
     if ( this->Grow(ev, fill+1) )
     {
-      outPos = fill;
+      outPos = (mork_pos) fill;
       mArray_Slots[ fill ] = ioSlot;
       mArray_Fill = fill + 1;
       // note Grow() increments mArray_Seed
@@ -269,6 +269,7 @@ morkArray::AddSlot(morkEnv* ev, mork_pos inPos, void* ioSlot)
 void
 morkArray::CutSlot(morkEnv* ev, mork_pos inPos)
 {
+  MORK_USED_1(ev);
   mork_fill fill = mArray_Fill;
   if ( inPos >= 0 && inPos < (mork_pos) fill ) // cutting slot in used array portion?
   {

@@ -230,7 +230,7 @@ protected:
 	nsMsgThread *	GetThreadForSubject(const char * subject);
 	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
-	nsMsgHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
+	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, nsMsgThread **newThread);

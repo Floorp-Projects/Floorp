@@ -30,6 +30,10 @@
 #endif
 
 // { %%%%% begin platform defs peculiar to Mork %%%%%
+
+//#define XP_MAC 1
+//#define MORK_ALONE 1
+
 #ifdef XP_MAC
 #define MORK_MAC 1
 #endif
@@ -59,7 +63,10 @@
 #include "errno.h" 
 #include "string.h" 
 #include "memory.h" 
+
+#ifndef MORK_ALONE
 #include "nsDebug.h" 
+#endif /*MORK_ALONE*/
 
 #define MORK_ISPRINT(c) isprint(c) 
 

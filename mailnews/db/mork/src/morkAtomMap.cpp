@@ -44,6 +44,14 @@
 #include "morkAtom.h"
 #endif
 
+#ifndef _MORKINTMAP_
+#include "morkIntMap.h"
+#endif
+
+#ifndef _MORKROW_
+#include "morkRow.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -103,6 +111,7 @@ morkAtomAidMap::CloseAtomAidMap(morkEnv* ev) // called by CloseMorkNode();
 morkAtomAidMap::Equal(morkEnv* ev, const void* inKeyA,
   const void* inKeyB) const
 {
+  MORK_USED_1(ev);
   return (*(const morkBookAtom**) inKeyA)->EqualAid(
     *(const morkBookAtom**) inKeyB);
 }
@@ -110,6 +119,7 @@ morkAtomAidMap::Equal(morkEnv* ev, const void* inKeyA,
 /*virtual*/ mork_u4 // 
 morkAtomAidMap::Hash(morkEnv* ev, const void* inKey) const
 {
+  MORK_USED_1(ev);
   return (*(const morkBookAtom**) inKey)->HashAid();
 }
 // } ===== end morkMap poly interface =====
@@ -258,6 +268,38 @@ morkAtomBodyMap::GetAtom(morkEnv* ev, const morkBookAtom* inAtom)
   this->Get(ev, &inAtom, &key, /*val*/ (void*) 0, (mork_change**) 0);
   
   return key;
+}
+
+//3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+
+morkAtomRowMap::~morkAtomRowMap()
+{
+}
+
+morkAtomRowMap::morkAtomRowMap(morkEnv* ev, const morkUsage& inUsage,
+  nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap, mork_column inIndexColumn)
+  : morkIntMap(ev, inUsage, sizeof(mork_aid), ioHeap, ioSlotHeap,
+    /*inHoldChanges*/ morkBool_kFalse)
+, mAtomRowMap_IndexColumn( inIndexColumn )
+{
+  if ( ev->Good() )
+    mNode_Derived = morkDerived_kAtomRowMap;
+}
+
+void morkAtomRowMap::AddRow(morkEnv* ev, morkRow* ioRow)
+// add ioRow only if it contains a cell in mAtomRowMap_IndexColumn. 
+{
+  mork_aid aid = ioRow->GetCellAtomAid(ev, mAtomRowMap_IndexColumn);
+  if ( aid )
+    this->AddAid(ev, aid, ioRow);
+}
+
+void morkAtomRowMap::CutRow(morkEnv* ev, morkRow* ioRow)
+// cut ioRow only if it contains a cell in mAtomRowMap_IndexColumn. 
+{
+  mork_aid aid = ioRow->GetCellAtomAid(ev, mAtomRowMap_IndexColumn);
+  if ( aid )
+    this->CutAid(ev, aid);
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

@@ -86,7 +86,7 @@ morkPortTableCursor::morkPortTableCursor(morkEnv* ev,
 {
   if ( ev->Good() )
   {
-    if ( ioStore )
+    if ( ioStore && ioSlotHeap )
     {
       mCursor_Pos = -1;
       mCursor_Seed = 0; // let the iterator do it's own seed handling

@@ -77,6 +77,7 @@ orkinEnv::MakeEnv(morkEnv* ev, morkEnv* ioObject)
 morkEnv*
 orkinEnv::CanUseEnv(mork_bool inMutable, mdb_err* outErr) const
 {
+  MORK_USED_1(inMutable);
   morkEnv* outEnv = 0;
   mdb_err err = morkEnv_kBadEnvError;
   if ( this->IsHandle() )

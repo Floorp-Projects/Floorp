@@ -373,6 +373,7 @@ morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
   // behavior is exhibited by the file, so crashes protect old files.
   // Note that AcquireBud() is an illegal operation on readonly files.
 {
+  MORK_USED_1(ioHeap);
   morkFile* outFile = 0;
   if ( this->IsOpenAndActiveFile() )
   {
@@ -491,7 +492,7 @@ morkStdioFile::Read(morkEnv* ev, void* outBuf, mork_size inSize)
     FILE* file = (FILE*) mStdioFile_File;
     if ( file )
     {
-      long count = MORK_FILEREAD(outBuf, inSize, file);
+      long count = (long) MORK_FILEREAD(outBuf, inSize, file);
       if ( count >= 0 )
       {
         outCount = (mork_num) count;

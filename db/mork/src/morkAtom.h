@@ -60,6 +60,14 @@ public:
 
   mork_bool IsBook() const { return this->IsWeeBook() || this->IsBigBook(); }
 
+public: // atom space scope if IsBook() is true, or else zero:
+
+  mork_scope GetBookAtomSpaceScope(morkEnv* ev) const;
+  // zero or book's space's scope
+
+  mork_aid   GetBookAtomAid() const;
+  // zero or book atom's ID
+ 
 public: // empty construction does nothing
   morkAtom() { }
 

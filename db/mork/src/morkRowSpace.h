@@ -43,11 +43,20 @@
 #include "morkTable.h"
 #endif
 
+#ifndef _MORKARRAY_
+#include "morkArray.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #define morkDerived_kRowSpace  /*i*/ 0x7253 /* ascii 'rS' */
 
 #define morkRowSpace_kStartRowMapSlotCount 512
+
+#define morkRowSpace_kMaxIndexCount 8 /* no more indexes than this */
+#define morkRowSpace_kPrimeCacheSize 17 /* should be prime number */
+
+class morkAtomRowMap;
 
 /*| morkRowSpace:
 |*/
@@ -76,11 +85,18 @@ class morkRowSpace : public morkSpace { //
 
 public: // state is public because the entire Mork system is private
 
+  nsIMdbHeap*  mRowSpace_SlotHeap;
+
   morkRowMap   mRowSpace_Rows;   // hash table of morkRow instances
   morkTableMap mRowSpace_Tables; // all the tables in this row scope
 
-  mork_tid     mRowSpace_NextTableId; // for auto-assigning table IDs
-  mork_rid     mRowSpace_NextRowId;   // for auto-assigning row IDs
+  mork_tid     mRowSpace_NextTableId;  // for auto-assigning table IDs
+  mork_rid     mRowSpace_NextRowId;    // for auto-assigning row IDs
+  
+  mork_count   mRowSpace_IndexCount; // if nonzero, row indexes exist
+    
+  // every nonzero slot in IndexCache is a strong ref to a morkAtomRowMap:
+  morkAtomRowMap* mRowSpace_IndexCache[ morkRowSpace_kPrimeCacheSize ];
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -130,6 +146,14 @@ public: // other space methods
 
   morkRow* NewRowWithOid(morkEnv* ev, const mdbOid* inOid);
   morkRow* NewRow(morkEnv* ev);
+
+  morkRow* FindRow(morkEnv* ev, mork_column inColumn, const mdbYarn* inYarn);
+
+  morkAtomRowMap* ForceMap(morkEnv* ev, mork_column inColumn);
+  morkAtomRowMap* FindMap(morkEnv* ev, mork_column inColumn);
+
+protected: // internal utilities
+  morkAtomRowMap* make_index(morkEnv* ev, mork_column inColumn);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakRowSpace(morkRowSpace* me,

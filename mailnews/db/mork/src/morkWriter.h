@@ -204,8 +204,11 @@ public: // typing & errors
   static void NilWriterStreamError(morkEnv* ev);
   static void UnsupportedPhaseError(morkEnv* ev);
 
-public: // inlines
+public: // utitlities
   void ChangeDictForm(morkEnv* ev, mork_cscode inNewForm);
+  void ChangeDictAtomScope(morkEnv* ev, mork_scope inScope);
+
+public: // inlines
   mork_bool DidStartDict() const { return mWriter_DidStartDict; }
   mork_bool DidEndDict() const { return mWriter_DidEndDict; }
   
@@ -225,7 +228,7 @@ public: // inlines
       mWriter_LineSize = mWriter_Stream->PutIndent(ev, inDepth);
   }
 
-public: // iterative/asynchronouse writing
+public: // iterative/asynchronous writing
   
   mork_bool WriteMore(morkEnv* ev); // call until IsWritingDone() is true
   

@@ -939,16 +939,54 @@ public:
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     mdb_bool* outHasRow) = 0; // whether GetRow() might succeed
+
+  virtual mdb_err GetRowRefCount( // get number of tables that contain a row 
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,  // hypothetical row oid
+    mdb_count* outRefCount) = 0; // number of tables containing inRowKey 
     
   virtual mdb_err GetRow( // access one row with specific oid
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     nsIMdbRow** acqRow) = 0; // acquire specific row (or null)
 
-  virtual mdb_err GetRowRefCount( // get number of tables that contain a row 
-    nsIMdbEnv* ev, // context
-    const mdbOid* inOid,  // hypothetical row oid
-    mdb_count* outRefCount) = 0; // number of tables containing inRowKey 
+  virtual mdb_err FindRow(nsIMdbEnv* ev, // search for row with matching cell
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_column inColumn,   // the column to search (and maintain an index)
+    const mdbYarn* inTargetCellValue, // cell value for which to search
+    mdbOid* outRowOid, // out row oid on match (or {0,-1} for no match)
+    nsIMdbRow** acqRow) = 0; // acquire matching row (or nil for no match)
+  // FindRow() searches for one row that has a cell in column inColumn with
+  // a contained value with the same form (i.e. charset) and is byte-wise
+  // identical to the blob described by yarn inTargetCellValue.  Both content
+  // and form of the yarn must be an exact match to find a matching row.
+  //
+  // (In other words, both a yarn's blob bytes and form are significant.  The
+  // form is not expected to vary in columns used for identity anyway.  This
+  // is intended to make the cost of FindRow() cheaper for MDB implementors,
+  // since any cell value atomization performed internally must necessarily
+  // make yarn form significant in order to avoid data loss in atomization.)
+  //
+  // FindRow() can lazily create an index on attribute inColumn for all rows
+  // with that attribute in row space scope inRowScope, so that subsequent
+  // calls to FindRow() will perform faster.  Such an index might or might
+  // not be persistent (but this seems desirable if it is cheap to do so).
+  // Note that lazy index creation in readonly DBs is not very feasible.
+  //
+  // This FindRow() interface assumes that attribute inColumn is effectively
+  // an alternative means of unique identification for a row in a rowspace,
+  // so correct behavior is only guaranteed when no duplicates for this col
+  // appear in the given set of rows.  (If more than one row has the same cell
+  // value in this column, no more than one will be found; and cutting one of
+  // two duplicate rows can cause the index to assume no other such row lives
+  // in the row space, so future calls return nil for negative search results
+  // even though some duplicate row might still live within the rowspace.)
+  //
+  // In other words, the FindRow() implementation is allowed to assume simple
+  // hash tables mapping unqiue column keys to associated row values will be
+  // sufficient, where any duplication is not recorded because only one copy
+  // of a given key need be remembered.  Implementors are not required to sort
+  // all rows by the specified column.
   // } ----- end row methods -----
 
   // { ----- begin table methods -----  
@@ -1116,6 +1154,7 @@ public:
     nsIMdbRow** acqRow) = 0; // create new row
   // Note this row must be added to some table or cell child before the
   // store is closed in order to make this row persist across sesssions.
+
   // } ----- end row methods -----
 
   // { ----- begin inport/export methods -----

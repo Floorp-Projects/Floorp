@@ -57,7 +57,7 @@ morkSpool::FlushSink(morkEnv* ev) // sync mSpool_Coil->mBuf_Fill
       mork_u1* end = mSink_End;
       if ( at >= body && at <= end ) // expected cursor order?
       {
-        mork_fill fill = at - body; // current content size
+        mork_fill fill = (mork_fill) (at - body); // current content size
         if ( fill <= coil->mBlob_Size )
           coil->mBuf_Fill = fill;
         else
@@ -90,7 +90,7 @@ morkSpool::SpillPutc(morkEnv* ev, int c) // grow coil and write byte
       if ( at >= body && at <= end ) // expected cursor order?
       {
         mork_size size = coil->mBlob_Size;
-        mork_fill fill = at - body; // current content size
+        mork_fill fill = (mork_fill) (at - body); // current content size
         if ( fill <= size ) // less content than medium size?
         {
           coil->mBuf_Fill = fill;
@@ -121,7 +121,7 @@ morkSpool::SpillPutc(morkEnv* ev, int c) // grow coil and write byte
           {
             if ( at < end ) // morkSink::Putc() would succeed?
             {
-              *at++ = c;
+              *at++ = (mork_u1) c;
               mSink_At = at;
               coil->mBuf_Fill = fill + 1;
             }
@@ -201,14 +201,14 @@ morkSpool::Seek(morkEnv* ev, mork_pos inPos)
   morkCoil* coil = mSpool_Coil;
   if ( coil )
   {
-    mork_size minSize = inPos + 64;
+    mork_size minSize = (mork_size) (inPos + 64);
     
     if ( coil->mBlob_Size < minSize )
       coil->GrowCoil(ev, minSize);
       
     if ( ev->Good() )
     {
-      coil->mBuf_Fill = inPos;
+      coil->mBuf_Fill = (mork_fill) inPos;
       mork_u1* body = (mork_u1*) coil->mBuf_Body;
       if ( body )
       {
@@ -246,7 +246,7 @@ morkSpool::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
         {
           // note coil->mBuf_Fill can be stale after morkSink::Putc():
           mork_pos fill = at - body; // current content size
-          mork_num space = end - at; // space left in body
+          mork_num space = (mork_num) (end - at); // space left in body
           if ( space < inSize ) // not enough to hold write?
           {
             mork_size minGrowth = space + 16;
@@ -258,7 +258,7 @@ morkSpool::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
               {
                 mSink_At = at = body + fill;
                 mSink_End = end = body + coil->mBlob_Size;
-                space = end - at; // space left in body
+                space = (mork_num) (end - at); // space left in body
               }
               else
                 coil->NilBufBodyError(ev);

@@ -2253,13 +2253,17 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, nsMsgThread **pnewThr
 
 nsMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID)
 {
-	nsMsgHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
+	nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
 	nsMsgThread *thread = NULL;
 
 	if (msgHdr != NULL)
 	{
-		// find thread header for header whose message id we matched.
-		thread = GetThreadForThreadId(msgHdr->m_threadId);
+		nsMsgKey threadId;
+		if (NS_SUCCEEDED(msgHdr->GetThreadId(&threadId)))
+		{
+			// find thread header for header whose message id we matched.
+			thread = GetThreadForThreadId(threadId);
+		}
 		msgHdr->Release();
 	}
 	return thread;
@@ -2289,7 +2293,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 #define SUBJ_THREADING 1// try reference threading first
 	for (PRInt32 i = 0; i < numReferences; i++)
 	{
-		nsString2 reference;
+		nsString2 reference(eOneByte);
 
 		newHdr->GetStringReference(i, reference);
 		// first reference we have hdr for is best top-level hdr.
@@ -2317,7 +2321,6 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		thread->GetThreadKey(&threadId);
 		newHdr->SetThreadId(threadId);
 		//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
-//			AddNeoHdr(neoMsgHdr);
 		// if we move this and do subject threading after, ref threading, 
 		// don't thread within children, since we know it won't work. But for now, pass TRUE.
 		result = AddToThread(newHdr, thread, TRUE);	
@@ -2349,8 +2352,32 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)
 	return nsnull;
 }
 
-nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
+nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 {
+	nsIMsgDBHdr	*msgHdr = nsnull;
+
+	mdbYarn	messageIdYarn;
+
+	messageIdYarn.mYarn_Buf = msgID.GetBuffer();
+	messageIdYarn.mYarn_Fill = PL_strlen(msgID.GetBuffer());
+	messageIdYarn.mYarn_Form = 0;
+	messageIdYarn.mYarn_Size = messageIdYarn.mYarn_Fill;
+
+	nsIMdbRow	*hdrRow;
+	mdbOid		outRowId;
+	mdb_err result = GetStore()->FindRow(GetEnv(), m_hdrRowScopeToken,
+		m_messageIdColumnToken, &messageIdYarn,  &outRowId, 
+		&hdrRow);
+	if (NS_SUCCEEDED(result) && hdrRow)
+	{
+		//Get key from row
+		mdbOid outOid;
+		nsMsgKey key;
+		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
+			key = outOid.mOid_Id;
+		nsresult rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+	}
+#if 0
     nsIEnumerator* hdrs;
 	nsIMsgDBHdr *pHeader = nsnull;
 
@@ -2373,6 +2400,7 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 	}
 	nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, pHeader);      // closed system, cast ok
 
+#endif
 	return msgHdr;
 }
 
@@ -2415,6 +2443,25 @@ NS_IMETHODIMP nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **
 // caller needs to unrefer.
 nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 {
+
+	nsMsgThread		*pThread = nsnull;
+	if (m_mdbStore)
+	{
+		mdbOid tableId;
+		tableId.mOid_Id = threadId;
+		tableId.mOid_Scope = m_hdrRowScopeToken;
+
+		nsIMdbTable *threadTable;
+		mdb_err res = m_mdbStore->GetTable(GetEnv(), &tableId, &threadTable);
+		
+		if (NS_SUCCEEDED(res) && threadTable)
+		{
+			pThread = new nsMsgThread(this, threadTable);
+			if(pThread)
+				NS_ADDREF(pThread);
+		}
+	}
+#if 0
 	// Iterate over the thread tables...
 	nsresult		rv;
 	nsMsgThread		*pThread;
@@ -2440,6 +2487,7 @@ nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 		pThread = nsnull;
 	}
 	NS_RELEASE(threads);
+#endif
 	return pThread;
 }
 

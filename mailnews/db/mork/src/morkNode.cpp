@@ -368,13 +368,16 @@ morkNode::SlotStrongNode(morkNode* me, morkEnv* ev, morkNode** ioSlot)
   // expression 'morkNode::SlotStrongNode((morkNode*) 0, ev, &slot)'.
 {
   morkNode* node = *ioSlot;
-  if ( node )
+  if ( me != node )
   {
-    *ioSlot = 0;
-    node->CutStrongRef(ev);
+    if ( node )
+    {
+      *ioSlot = 0;
+      node->CutStrongRef(ev);
+    }
+    if ( me && me->AddStrongRef(ev) )
+      *ioSlot = me;
   }
-  if ( me && me->AddStrongRef(ev) )
-    *ioSlot = me;
 }
 
 /*public static*/ void
@@ -386,13 +389,16 @@ morkNode::SlotWeakNode(morkNode* me, morkEnv* ev, morkNode** ioSlot)
   // expression 'morkNode::SlotWeakNode((morkNode*) 0, ev, &slot)'.
 {
   morkNode* node = *ioSlot;
-  if ( node )
+  if ( me != node )
   {
-    *ioSlot = 0;
-    node->CutWeakRef(ev);
+    if ( node )
+    {
+      *ioSlot = 0;
+      node->CutWeakRef(ev);
+    }
+    if ( me && me->AddWeakRef(ev) )
+      *ioSlot = me;
   }
-  if ( me && me->AddWeakRef(ev) )
-    *ioSlot = me;
 }
 
 /*public non-poly*/ mork_uses

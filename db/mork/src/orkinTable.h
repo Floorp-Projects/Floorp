@@ -73,7 +73,7 @@ protected: // morkHandle memory management operators
   { return ioPool.NewHandle(ev, inSize); }
   
   void* operator new(size_t inSize, morkHandleFace* ioFace)
-  { return ioFace; }
+  { MORK_USED_1(inSize); return ioFace; }
   
   void operator delete(void* ioAddress)
   { morkNode::OnDeleteAssert(ioAddress); }

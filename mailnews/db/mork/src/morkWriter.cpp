@@ -1027,7 +1027,7 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
 {
   morkStream* stream = mWriter_Stream;
   mork_bool isKindCol = ( morkStore_kKindColumn == inCol );
-  mork_u1 valSep = ( isKindCol )? '^' : '=';
+  mork_u1 valSep = (mork_u1) (( isKindCol )? '^' : '=');
   
   char buf[ 128 ]; // buffer for staging the two hex IDs
   char* p = buf;
@@ -1097,6 +1097,50 @@ morkWriter::WriteStringToTokenDictCell(morkEnv* ev,
 }
 
 void
+morkWriter::ChangeDictAtomScope(morkEnv* ev, mork_scope inScope)
+{
+  if ( inScope != mWriter_DictAtomScope )
+  {
+    ev->NewWarning("unexpected atom scope change");
+    
+    morkStream* stream = mWriter_Stream;
+    if ( mWriter_LineSize )
+      stream->PutLineBreak(ev);
+    mWriter_LineSize = 0;
+
+    char buf[ 128 ]; // buffer for staging the two hex IDs
+    char* p = buf;
+    *p++ = '<'; // we always start with open paren
+    *p++ = '('; // we always start with open paren
+    *p++ = (char) morkStore_kAtomScopeColumn;
+
+    mork_size scopeSize = 1; // default to one byte
+    if ( inScope >= 0x80 )
+    {
+      *p++ = '^'; // indicates col is hex ID
+      scopeSize = ev->TokenAsHex(p, inScope);
+      p += scopeSize;
+    }
+    else
+    {
+      *p++ = '='; // indicates col is imm byte
+      *p++ = (char) (mork_u1) inScope;
+    }
+
+    *p++ = ')';
+    *p++ = '>';
+    *p = 0;
+
+    mork_size pending = scopeSize + 6;
+    this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasDepth);
+    
+    mWriter_LineSize += stream->Write(ev, buf, pending);
+      
+    mWriter_DictAtomScope = inScope;
+  }
+}
+
+void
 morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
 {
   if ( inNewForm != mWriter_DictForm )
@@ -1111,10 +1155,20 @@ morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
     *p++ = '<'; // we always start with open paren
     *p++ = '('; // we always start with open paren
     *p++ = (char) morkStore_kFormColumn;
-    *p++ = '^'; // indicates col is hex ID
 
-    mork_size formSize = ev->TokenAsHex(p, inNewForm);
-    p += formSize;
+    mork_size formSize = 1; // default to one byte
+    if ( inNewForm >= 0x80 )
+    {
+      *p++ = '^'; // indicates col is hex ID
+      formSize = ev->TokenAsHex(p, inNewForm);
+      p += formSize;
+    }
+    else
+    {
+      *p++ = '='; // indicates col is imm byte
+      *p++ = (char) (mork_u1) inNewForm;
+    }
+    
     *p++ = ')';
     *p++ = '>';
     *p = 0;
@@ -1246,6 +1300,8 @@ morkWriter::EndTable(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   stream->Putc(ev, '}'); // end table
   ++mWriter_LineSize;
+
+  mWriter_TableAtomScope = 'v'; // (a=v)
 }
 
 mork_bool
@@ -1284,6 +1340,10 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
 
           if ( atom->AliasYarn(&yarn) )
           {
+            mork_scope atomScope = atom->GetBookAtomSpaceScope(ev);
+            if ( atomScope && atomScope != mWriter_DictAtomScope )
+              this->ChangeDictAtomScope(ev, atomScope);
+            
             if ( mWriter_DidStartDict && yarn.mYarn_Form != mWriter_DictForm )
               this->ChangeDictForm(ev, yarn.mYarn_Form);  
       
@@ -1354,6 +1414,9 @@ morkWriter::PutRowCells(morkEnv* ev, morkRow* ioRow)
         mdbYarn yarn; // to ref content inside atom
         atom->AliasYarn(&yarn);
         
+        if ( yarn.mYarn_Form != mWriter_DictForm )
+          this->ChangeDictForm(ev, yarn.mYarn_Form);
+        
         if ( atom->IsBook() ) // is it possible to write atom ID?
         {
           this->IndentAsNeeded(ev, morkWriter_kRowCellDepth);
@@ -1375,7 +1438,8 @@ morkWriter::PutRowCells(morkEnv* ev, morkRow* ioRow)
               p += yarnFill;
             }
             *p++ = ')';
-            mWriter_LineSize += stream->Write(ev, buf, p - buf);
+            mork_size distance = (mork_size) (p - buf);
+            mWriter_LineSize += stream->Write(ev, buf, distance);
           }
           else
           {
@@ -1392,9 +1456,6 @@ morkWriter::PutRowCells(morkEnv* ev, morkRow* ioRow)
         }
         else // must write an anonymous atom
         {
-          if ( yarn.mYarn_Form != mWriter_DictForm )
-            this->ChangeDictForm(ev, yarn.mYarn_Form);
-
           mork_size pending = yarn.mYarn_Fill + colSize +
             morkWriter_kYarnEscapeSlop + 2;
           this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);

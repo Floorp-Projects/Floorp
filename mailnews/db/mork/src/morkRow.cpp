@@ -69,8 +69,13 @@
 mork_u2
 morkRow::AddTableUse(morkEnv* ev)
 {
-  if ( mRow_TableUses < morkRow_kMaxTableUses ) // not already maxed out?
-    ++mRow_TableUses;
+  if ( this->IsRow() )
+  {
+    if ( mRow_TableUses < morkRow_kMaxTableUses ) // not already maxed out?
+      ++mRow_TableUses;
+  }
+  else
+    this->NonRowTypeError(ev);
     
   return mRow_TableUses;
 }
@@ -78,13 +83,18 @@ morkRow::AddTableUse(morkEnv* ev)
 mork_u2
 morkRow::CutTableUse(morkEnv* ev)
 {
-  if ( mRow_TableUses ) // any outstanding uses to cut?
+  if ( this->IsRow() )
   {
-    if ( mRow_TableUses < morkRow_kMaxTableUses ) // not frozen at max?
-      --mRow_TableUses;
+    if ( mRow_TableUses ) // any outstanding uses to cut?
+    {
+      if ( mRow_TableUses < morkRow_kMaxTableUses ) // not frozen at max?
+        --mRow_TableUses;
+    }
+    else
+      this->TableUsesUnderflowWarning(ev);
   }
   else
-    this->TableUsesUnderflowWarning(ev);
+    this->NonRowTypeError(ev);
     
   return mRow_TableUses;
 }
@@ -142,7 +152,7 @@ morkRow::InitRow(morkEnv* ev, const mdbOid* inOid, morkRowSpace* ioSpace,
         mRow_Cells = 0;
         mRow_Oid = *inOid;
 
-        mRow_Length = inLength;
+        mRow_Length = (mork_u2) inLength;
         mRow_Seed = (mork_u2) this; // "random" assignment
 
         mRow_TableUses = 0;
@@ -300,7 +310,7 @@ morkRow::TakeCells(morkEnv* ev, morkCell* ioVector, mork_fill inVecLength,
   if ( ioVector && inVecLength && ev->Good() )
   {
     ++mRow_Seed; // intend to change structure of mRow_Cells
-    mork_pos length = (mork_pos) mRow_Length;
+    mork_size length = (mork_size) mRow_Length;
     
     mork_count overlap = this->CountOverlap(ev, ioVector, inVecLength);
 
@@ -328,8 +338,8 @@ morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
   mork_pos* outPos, morkStore* ioStore)
 {
   ++mRow_Seed; // intend to change structure of mRow_Cells
-  mork_pos length = (mork_pos) mRow_Length;
-  *outPos = length;
+  mork_size length = (mork_size) mRow_Length;
+  *outPos = (mork_pos) length;
   morkPool* pool = ioStore->StorePool();
   if ( pool->AddRowCells(ev, this, length + 1) )
   {
@@ -344,6 +354,7 @@ morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
 morkCell*
 morkRow::CellAt(morkEnv* ev, mork_pos inPos) const
 {
+  MORK_USED_1(ev);
   morkCell* cells = mRow_Cells;
   if ( cells && inPos < mRow_Length && inPos >= 0 )
   {
@@ -355,6 +366,7 @@ morkRow::CellAt(morkEnv* ev, mork_pos inPos) const
 morkCell*
 morkRow::GetCell(morkEnv* ev, mdb_column inColumn, mork_pos* outPos) const
 {
+  MORK_USED_1(ev);
   morkCell* cells = mRow_Cells;
   if ( cells )
   {
@@ -373,6 +385,42 @@ morkRow::GetCell(morkEnv* ev, mdb_column inColumn, mork_pos* outPos) const
   }
   *outPos = -1;
   return (morkCell*) 0;
+}
+
+mork_aid
+morkRow::GetCellAtomAid(morkEnv* ev, mdb_column inColumn) const
+  // GetCellAtomAid() finds the cell with column inColumn, and sees if the
+  // atom has a token ID, and returns the atom's ID if there is one.  Or
+  // else zero is returned if there is no such column, or no atom, or if
+  // the atom has no ID to return.  This method is intended to support
+  // efficient updating of column indexes for rows in a row space.
+{
+  if ( this && this->IsRow() )
+  {
+    morkCell* cells = mRow_Cells;
+    if ( cells )
+    {
+      morkCell* end = cells + mRow_Length;
+      while ( cells < end )
+      {
+        mork_column col = cells->GetColumn();
+        if ( col == inColumn ) // found desired column?
+        {
+          morkAtom* atom = cells->mCell_Atom;
+          if ( atom && atom->IsBook() )
+            return ((morkBookAtom*) atom)->mBookAtom_Id;
+          else
+            return 0;
+        }
+        else
+          ++cells;
+      }
+    }
+  }
+  else
+    this->NonRowTypeError(ev);
+
+  return 0;
 }
 
 void
@@ -396,12 +444,46 @@ morkRow::EmptyAllCells(morkEnv* ev)
   }
 }
 
+void 
+morkRow::cut_all_index_entries(morkEnv* ev)
+{
+  morkRowSpace* rowSpace = mRow_Space;
+  if ( rowSpace->mRowSpace_IndexCount ) // any indexes?
+  {
+    morkCell* cells = mRow_Cells;
+    if ( cells )
+    {
+      morkCell* end = cells + mRow_Length;
+      --cells; // prepare for preincrement:
+      while ( ++cells < end )
+      {
+        morkAtom* atom = cells->mCell_Atom;
+        if ( atom )
+        {
+          mork_aid atomAid = atom->GetBookAtomAid();
+          if ( atomAid )
+          {
+            mork_column col = cells->GetColumn();
+            morkAtomRowMap* map = rowSpace->FindMap(ev, col);
+            if ( map ) // cut row from index for this column?
+              map->CutAid(ev, atomAid);
+          }
+        }
+      }
+    }
+  }
+}
+
 void
 morkRow::CutAllColumns(morkEnv* ev)
 {
   morkStore* store = this->GetRowSpaceStore(ev);
   if ( store )
   {
+    morkRowSpace* rowSpace = mRow_Space;
+    if ( rowSpace->mRowSpace_IndexCount ) // any indexes?
+      this->cut_all_index_entries(ev);
+  
     morkPool* pool = store->StorePool();
     pool->CutRowCells(ev, this, /*newSize*/ 0);
   }
@@ -415,6 +497,9 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
   morkStore* srcStore = inSourceRow->GetRowSpaceStore(ev);
   if ( store && srcStore )
   {
+    morkRowSpace* rowSpace = mRow_Space;
+    mork_count indexes = rowSpace->mRowSpace_IndexCount; // any indexes?
+    
     mork_bool sameStore = ( store == srcStore ); // identical stores?
     morkPool* pool = store->StorePool();
     if ( pool->CutRowCells(ev, this, /*newSize*/ 0) )
@@ -432,17 +517,17 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
         while ( ++dst < dstEnd && ++src < srcEnd && ev->Good() )
         {
           morkAtom* atom = src->mCell_Atom;
-          mork_column col = src->GetColumn();
+          mork_column dstCol = src->GetColumn();
           if ( sameStore ) // source and dest in same store?
           {
-            dst->SetColumnAndChange(col, morkChange_kAdd);
+            dst->SetColumnAndChange(dstCol, morkChange_kAdd);
             dst->mCell_Atom = atom;
             if ( atom ) // another ref to non-nil atom?
               atom->AddCellUse(ev);
           }
           else // need to dup items from src store in a dest store
           {
-            mork_column dstCol = store->CopyToken(ev, col, srcStore);
+            dstCol = store->CopyToken(ev, dstCol, srcStore);
             if ( dstCol )
             {
               dst->SetColumnAndChange(dstCol, morkChange_kAdd);
@@ -450,6 +535,16 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
               dst->mCell_Atom = atom;
               if ( atom ) // another ref?
                 atom->AddCellUse(ev);
+            }
+          }
+          if ( indexes && atom )
+          {
+            mork_aid atomAid = atom->GetBookAtomAid();
+            if ( atomAid )
+            {
+              morkAtomRowMap* map = rowSpace->FindMap(ev, dstCol);
+              if ( map )
+                map->AddAid(ev, atomAid, this);
             }
           }
         }
@@ -473,12 +568,14 @@ void
 morkRow::OnZeroTableUse(morkEnv* ev)
 // OnZeroTableUse() is called when CutTableUse() returns zero.
 {
+  MORK_USED_1(ev);
   // ev->NewWarning("need to implement OnZeroTableUse");
 }
 
 void
 morkRow::DirtyAllRowContent(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   this->SetRowDirty();
 
   morkCell* cells = mRow_Cells;
@@ -527,6 +624,20 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
     morkStore* store = this->GetRowSpaceStore(ev);
     if ( store )
     {
+      morkRowSpace* rowSpace = mRow_Space;
+      morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
+        rowSpace->FindMap(ev, inColumn) : (morkAtomRowMap*) 0;
+      if ( map ) // this row attribute is indexed by row space?
+      {
+        morkAtom* oldAtom = cell->mCell_Atom;
+        if ( oldAtom ) // need to cut an entry from the index?
+        {
+          mork_aid oldAid = oldAtom->GetBookAtomAid();
+          if ( oldAid ) // cut old row attribute from row index in space?
+            map->CutAid(ev, oldAid);
+        }
+      }
+      
       morkPool* pool = store->StorePool();
       cell->SetAtom(ev, (morkAtom*) 0, pool);
       
@@ -553,6 +664,25 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
   }
 }
 
+// void morkRow::cut_cell_from_space_index(morkEnv* ev, morkCell* ioCell)
+// {
+//   morkAtom* oldAtom = ioCell->mCell_Atom;
+//   if ( oldAtom )
+//   {
+//     mork_column col = ioCell->GetColumn();
+//     morkRowSpace* rowSpace = mRow_Space;
+//     morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
+//       rowSpace->FindMap(ev, col) : (morkAtomRowMap*) 0;
+//     
+//     if ( map ) // col is indexed by row space?
+//     {
+//       mork_aid oldAid = oldAtom->GetBookAtomAid();
+//       if ( oldAid ) // cut old row attribute from row index in space?
+//         map->CutAid(ev, oldAid);
+//     }
+//   }
+// }
+
 void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
   const mdbYarn* inYarn, morkStore* ioStore)
 {
@@ -570,7 +700,31 @@ void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
       // cell->SetYarn(ev, inYarn, ioStore);
       morkAtom* atom = ioStore->YarnToAtom(ev, inYarn);
       if ( atom )
+      {
+        morkRowSpace* rowSpace = mRow_Space;
+        morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
+          rowSpace->FindMap(ev, inColumn) : (morkAtomRowMap*) 0;
+        
+        if ( map ) // inColumn is indexed by row space?
+        {
+          morkAtom* oldAtom = cell->mCell_Atom;
+          if ( oldAtom && oldAtom != atom ) // cut old cell from index?
+          {
+            mork_aid oldAid = oldAtom->GetBookAtomAid();
+            if ( oldAid ) // cut old row attribute from row index in space?
+              map->CutAid(ev, oldAid);
+          }
+        }
+        
         cell->SetAtom(ev, atom, ioStore->StorePool()); // refcounts atom
+
+        if ( map ) // inColumn is indexed by row space?
+        {
+          mork_aid newAid = atom->GetBookAtomAid();
+          if ( newAid ) // add new row attribute to row index in space?
+            map->AddAid(ev, newAid, this);
+        }
+      }
     }
   }
 }

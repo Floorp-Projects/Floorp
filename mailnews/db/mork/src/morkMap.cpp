@@ -636,6 +636,9 @@ morkMap::Cut(morkEnv* ev, const void* inKey,
       outCut = morkBool_kTrue;
       morkAssoc* assoc = *ref;
       mork_pos i = assoc - mMap_Assocs; /* index of assoc */
+      if ( outKey || outVal )
+        this->get_assoc(outKey, outVal, i);
+
       *ref = assoc->mAssoc_Next; /* unlink the found assoc */
       this->push_free_assoc(assoc); /* and put it in free list */
 
@@ -747,6 +750,7 @@ morkMapIter::morkMapIter(morkEnv* ev, morkMap* ioMap)
 void
 morkMapIter::CloseMapIter(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   mMapIter_Map = 0;
   mMapIter_Seed = 0;
   

@@ -50,6 +50,7 @@ orkinHeap::Alloc(nsIMdbEnv* ev, // allocate a piece of memory
   mdb_size inSize,   // requested size of new memory block 
   void** outBlock)  // memory block of inSize bytes, or nil
 {
+  MORK_USED_1(ev);
   mdb_err outErr = 0;
   void* block = new char[ inSize ];
   if ( !block )
@@ -65,6 +66,7 @@ orkinHeap::Alloc(nsIMdbEnv* ev, // allocate a piece of memory
 orkinHeap::Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
   void* inBlock)
 {
+  MORK_USED_1(ev);
   MORK_ASSERT(inBlock);
   if ( inBlock )
     delete [] inBlock;

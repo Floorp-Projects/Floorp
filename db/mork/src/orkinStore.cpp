@@ -228,19 +228,23 @@ orkinStore::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 orkinStore::GetIsPortReadonly(nsIMdbEnv* mev, mdb_bool* outBool)
 {
   mdb_err outErr = 0;
+  mdb_bool isReadOnly = morkBool_kFalse;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outBool )
+    *outBool = isReadOnly;
   return outErr;
 }
 
 /*virtual*/ mdb_err
 orkinStore::GetIsStore(nsIMdbEnv* mev, mdb_bool* outBool)
 {
-  if ( outBool )
+  MORK_USED_1(mev);
+ if ( outBool )
     *outBool = morkBool_kTrue;
   return 0;
 }
@@ -265,6 +269,7 @@ orkinStore::GetIsStoreAndDirty(nsIMdbEnv* mev, mdb_bool* outBool)
 orkinStore::GetUsagePolicy(nsIMdbEnv* mev, 
   mdbUsagePolicy* ioUsagePolicy)
 {
+  MORK_USED_1(ioUsagePolicy);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -279,6 +284,7 @@ orkinStore::GetUsagePolicy(nsIMdbEnv* mev,
 orkinStore::SetUsagePolicy(nsIMdbEnv* mev, 
   const mdbUsagePolicy* inUsagePolicy)
 {
+  MORK_USED_1(inUsagePolicy);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -315,13 +321,17 @@ orkinStore::SessionMemoryPurge( // request specific footprint decrease
   mdb_size inDesiredBytesFreed, // approximate number of bytes wanted
   mdb_size* outEstimatedBytesFreed) // approximate bytes actually freed
 {
+  MORK_USED_1(inDesiredBytesFreed);
   mdb_err outErr = 0;
+  mdb_size estimate = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     // ev->StubMethodOnlyError(); // okay to do nothing?
     outErr = ev->AsErr();
   }
+  if ( outEstimatedBytesFreed )
+    *outEstimatedBytesFreed = estimate;
   return outErr;
 }
 
@@ -331,12 +341,15 @@ orkinStore::PanicMemoryPurge( // desperately free all possible memory
   mdb_size* outEstimatedBytesFreed) // approximate bytes actually freed
 {
   mdb_err outErr = 0;
+  mdb_size estimate = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     // ev->StubMethodOnlyError(); // okay to do nothing?
     outErr = ev->AsErr();
   }
+  if ( outEstimatedBytesFreed )
+    *outEstimatedBytesFreed = estimate;
   return outErr;
 }
 // } ----- end memory policy methods -----
@@ -349,6 +362,10 @@ orkinStore::GetPortFilePath(
   mdbYarn* outFormatVersion) // file format description
 {
   mdb_err outErr = 0;
+  if ( outFormatVersion )
+    outFormatVersion->mYarn_Fill = 0;
+  if ( outFilePath )
+    outFilePath->mYarn_Fill = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
@@ -366,6 +383,8 @@ orkinStore::BestExportFormat( // determine preferred export format
   mdbYarn* outFormatVersion) // file format description
 {
   mdb_err outErr = 0;
+  if ( outFormatVersion )
+    outFormatVersion->mYarn_Fill = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
@@ -381,6 +400,8 @@ orkinStore::CanExportToFormat( // can export content in given specific format?
   const char* inFormatVersion, // file format description
   mdb_bool* outCanExport) // whether ExportSource() might succeed
 {
+  MORK_USED_1(inFormatVersion);
+  mdb_bool canExport = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -388,6 +409,8 @@ orkinStore::CanExportToFormat( // can export content in given specific format?
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outCanExport )
+    *outCanExport = canExport;
   return outErr;
 }
 
@@ -400,13 +423,17 @@ orkinStore::ExportToFormat( // export content in given specific format
 // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
 // then the export will be finished.
 {
+  MORK_USED_2(inFilePath,inFormatVersion);
   mdb_err outErr = 0;
+  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqThumb )
+    *acqThumb = outThumb;
   return outErr;
 }
 
@@ -547,6 +574,71 @@ orkinStore::GetRowRefCount( // get number of tables that contain a row
     *outRefCount = count;
   return outErr;
 }
+
+/*virtual*/ mdb_err
+orkinStore::FindRow(nsIMdbEnv* mev, // search for row with matching cell
+    mdb_scope inRowScope,   // row scope for row ids
+    mdb_column inColumn,   // the column to search (and maintain an index)
+    const mdbYarn* inTargetCellValue, // cell value for which to search
+    mdbOid* outRowOid, // out row oid on match (or {0,-1} for no match)
+    nsIMdbRow** acqRow) // acquire matching row (or nil for no match)
+  // FindRow() searches for one row that has a cell in column inColumn with
+  // a contained value with the same form (i.e. charset) and is byte-wise
+  // identical to the blob described by yarn inTargetCellValue.  Both content
+  // and form of the yarn must be an exact match to find a matching row.
+  //
+  // (In other words, both a yarn's blob bytes and form are significant.  The
+  // form is not expected to vary in columns used for identity anyway.  This
+  // is intended to make the cost of FindRow() cheaper for MDB implementors,
+  // since any cell value atomization performed internally must necessarily
+  // make yarn form significant in order to avoid data loss in atomization.)
+  //
+  // FindRow() can lazily create an index on attribute inColumn for all rows
+  // with that attribute in row space scope inRowScope, so that subsequent
+  // calls to FindRow() will perform faster.  Such an index might or might
+  // not be persistent (but this seems desirable if it is cheap to do so).
+  // Note that lazy index creation in readonly DBs is not very feasible.
+  //
+  // This FindRow() interface assumes that attribute inColumn is effectively
+  // an alternative means of unique identification for a row in a rowspace,
+  // so correct behavior is only guaranteed when no duplicates for this col
+  // appear in the given set of rows.  (If more than one row has the same cell
+  // value in this column, no more than one will be found; and cutting one of
+  // two duplicate rows can cause the index to assume no other such row lives
+  // in the row space, so future calls return nil for negative search results
+  // even though some duplicate row might still live within the rowspace.)
+  //
+  // In other words, the FindRow() implementation is allowed to assume simple
+  // hash tables mapping unqiue column keys to associated row values will be
+  // sufficient, where any duplication is not recorded because only one copy
+  // of a given key need be remembered.  Implementors are not required to sort
+  // all rows by the specified column.
+{
+  mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
+  mdbOid rowOid;
+  rowOid.mOid_Scope = 0;
+  rowOid.mOid_Id = (mdb_id) -1;
+  
+  morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkStore* store = (morkStore*) mHandle_Object;
+    morkRow* row = store->FindRow(ev, inRowScope, inColumn, inTargetCellValue);
+    if ( row && ev->Good() )
+    {
+      outRow = row->AcquireRowHandle(ev, store);
+      if ( outRow )
+        rowOid = row->mRow_Oid;
+    }
+    outErr = ev->AsErr();
+  }
+  if ( acqRow )
+    *acqRow = outRow;
+    
+  return outErr;
+}
+
 // } ----- end row methods -----
 
 // { ----- begin table methods -----  
@@ -735,6 +827,9 @@ orkinStore::RowScopeHasAssignedIds(nsIMdbEnv* mev,
   mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
   mdb_bool* outStoreAssigned) // nonzero if store db assigned specified
 {
+  MORK_USED_1(inRowScope);
+  mdb_bool storeAssigned = morkBool_kFalse;
+  mdb_bool callerAssigned = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -742,6 +837,10 @@ orkinStore::RowScopeHasAssignedIds(nsIMdbEnv* mev,
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outCallerAssigned )
+    *outCallerAssigned = callerAssigned;
+  if ( outStoreAssigned )
+    *outStoreAssigned = storeAssigned;
   return outErr;
 }
 
@@ -751,6 +850,9 @@ orkinStore::SetCallerAssignedIds(nsIMdbEnv* mev,
   mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
   mdb_bool* outStoreAssigned) // nonzero if store db assigned specified
 {
+  MORK_USED_1(inRowScope);
+  mdb_bool storeAssigned = morkBool_kFalse;
+  mdb_bool callerAssigned = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -758,6 +860,10 @@ orkinStore::SetCallerAssignedIds(nsIMdbEnv* mev,
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outCallerAssigned )
+    *outCallerAssigned = callerAssigned;
+  if ( outStoreAssigned )
+    *outStoreAssigned = storeAssigned;
   return outErr;
 }
 
@@ -767,13 +873,20 @@ orkinStore::SetStoreAssignedIds(nsIMdbEnv* mev,
   mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
   mdb_bool* outStoreAssigned) // nonzero if store db assigned specified
 {
+  MORK_USED_1(inRowScope);
   mdb_err outErr = 0;
+  mdb_bool storeAssigned = morkBool_kFalse;
+  mdb_bool callerAssigned = morkBool_kFalse;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outCallerAssigned )
+    *outCallerAssigned = callerAssigned;
+  if ( outStoreAssigned )
+    *outStoreAssigned = storeAssigned;
   return outErr;
 }
 // } ----- end row scope methods -----
@@ -836,6 +949,8 @@ orkinStore::ImportContent( // import content from port
 // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
 // then the import will be finished.
 {
+  MORK_USED_2(inRowScope,ioPort);
+  nsIMdbThumb* outThumb = 0;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -843,6 +958,8 @@ orkinStore::ImportContent( // import content from port
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqThumb )
+    *acqThumb = outThumb;
   return outErr;
 }
 // } ----- end inport/export methods -----
@@ -854,6 +971,7 @@ orkinStore::ShareAtomColumnsHint( // advise re shared col content atomizing
   mdb_scope inScopeHint, // zero, or suggested shared namespace
   const mdbColumnSet* inColumnSet) // cols desired tokenized together
 {
+  MORK_USED_2(inColumnSet,inScopeHint);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -869,6 +987,7 @@ orkinStore::AvoidAtomColumnsHint( // advise col w/ poor atomizing prospects
   nsIMdbEnv* mev, // context
   const mdbColumnSet* inColumnSet) // cols with poor atomizing prospects
 {
+  MORK_USED_1(inColumnSet);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )

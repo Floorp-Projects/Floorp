@@ -204,15 +204,40 @@ morkAtom::AliasYarn(mdbYarn* outYarn) const
   return ( atom != 0 );
 }
 
+mork_aid
+morkAtom::GetBookAtomAid() const // zero or book atom's ID
+{
+  return ( this->IsBook() )? ((morkBookAtom*) this)->mBookAtom_Id : 0;
+}
+
+mork_scope
+morkAtom::GetBookAtomSpaceScope(morkEnv* ev) const // zero or book's space's scope
+{
+  mork_scope outScope = 0;
+  if ( this->IsBook() )
+  {
+    const morkBookAtom* bookAtom = (const morkBookAtom*) this;
+    morkAtomSpace* space = bookAtom->mBookAtom_Space;
+    if ( space->IsAtomSpace() )
+      outScope = space->mSpace_Scope;
+    else
+      space->NonAtomSpaceTypeError(ev);
+  }
+  
+  return outScope;
+}
+
 void
 morkAtom::MakeCellUseForever(morkEnv* ev)
 {
+  MORK_USED_1(ev); 
   mAtom_CellUses = morkAtom_kForeverCellUses;
 }
 
 mork_u1
 morkAtom::AddCellUse(morkEnv* ev)
 {
+  MORK_USED_1(ev); 
   if ( mAtom_CellUses < morkAtom_kMaxCellUses ) // not already maxed out?
     ++mAtom_CellUses;
     
@@ -260,6 +285,7 @@ morkAtom::AtomSizeOverflowError(morkEnv* ev)
 void
 morkOidAtom::InitRowOidAtom(morkEnv* ev, const mdbOid& inOid)
 {
+  MORK_USED_1(ev); 
   mAtom_CellUses = 0;
   mAtom_Kind = morkAtom_kKindRowOid;
   mAtom_Change = morkChange_kNil;
@@ -270,6 +296,7 @@ morkOidAtom::InitRowOidAtom(morkEnv* ev, const mdbOid& inOid)
 void
 morkOidAtom::InitTableOidAtom(morkEnv* ev, const mdbOid& inOid)
 {
+  MORK_USED_1(ev); 
   mAtom_CellUses = 0;
   mAtom_Kind = morkAtom_kKindTableOid;
   mAtom_Change = morkChange_kNil;
@@ -301,6 +328,7 @@ void
 morkBigAnonAtom::InitBigAnonAtom(morkEnv* ev, const morkBuf& inBuf,
   mork_cscode inForm)
 {
+  MORK_USED_1(ev); 
   mAtom_CellUses = 0;
   mAtom_Kind = morkAtom_kKindBigAnon;
   mAtom_Change = morkChange_kNil;

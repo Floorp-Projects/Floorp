@@ -103,12 +103,14 @@ morkRowMap::CloseRowMap(morkEnv* ev) // called by CloseMorkNode();
 morkRowMap::Equal(morkEnv* ev, const void* inKeyA,
   const void* inKeyB) const
 {
+  MORK_USED_1(ev);
   return (*(const morkRow**) inKeyA)->EqualRow(*(const morkRow**) inKeyB);
 }
 
 /*virtual*/ mork_u4 // 
 morkRowMap::Hash(morkEnv* ev, const void* inKey) const
 {
+  MORK_USED_1(ev);
   return (*(const morkRow**) inKey)->HashRow();
 }
 // } ===== end morkMap poly interface =====

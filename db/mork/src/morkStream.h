@@ -210,7 +210,7 @@ public: // public non-poly morkStream methods
   { this->PutString(ev, inString); }
 
   void    Ungetc(int c) /*i*/
-  { if ( mStream_At > mStream_Buf && c > 0 ) *--mStream_At = c; }
+  { if ( mStream_At > mStream_Buf && c > 0 ) *--mStream_At = (mork_u1) c; }
   
   // Note Getc() returns EOF consistently after any fill_getc() error occurs.
   int     Getc(morkEnv* ev) /*i*/
@@ -220,7 +220,7 @@ public: // public non-poly morkStream methods
   { 
     mStream_Dirty = morkBool_kTrue;
     if ( mStream_At < mStream_WriteEnd )
-      *mStream_At++ = c;
+      *mStream_At++ = (mork_u1) c;
     else
       spill_putc(ev, c);
   }

@@ -381,6 +381,7 @@ morkStream::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
   // behavior is exhibited by the file, so crashes protect old files.
   // Note that AcquireBud() is an illegal operation on readonly files.
 {
+  MORK_USED_1(ioHeap);
   morkFile* outFile = 0;
   morkFile* file = mStream_ContentFile;
   if ( this->IsOpenAndActiveFile() && file )
@@ -508,7 +509,7 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
           mork_u1* buf = mStream_Buf;
           if ( at >= buf && at <= end ) // expected cursor order?
           {
-            mork_num remaining = end - at; // bytes left in buffer
+            mork_num remaining = (mork_num) (end - at); // bytes left in buffer
             
             mork_num quantum = inSize; // number of bytes to copy
             if ( quantum > remaining ) // more than buffer content?
@@ -534,7 +535,7 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
               // exhausted the local buffer, so we need to show
               // it is now empty, and adjust the current buf pos.
               
-              mork_num posDelta = (at - buf); // old buf content
+              mork_num posDelta = (mork_num) (at - buf); // old buf content
               mStream_BufPos += posDelta;   // past now empty buf
               
               mStream_At = mStream_ReadEnd = buf; // empty buffer
@@ -569,7 +570,7 @@ morkStream::Read(morkEnv* ev, void* outBuf, mork_size inSize)
   if ( ev->Bad() )
     outActual = 0;
 
-  return outActual;
+  return (mork_size) outActual;
 }
 
 /*public virtual*/ mork_pos   
@@ -658,7 +659,7 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
           mork_u1* buf = mStream_Buf;
           if ( at >= buf && at <= end ) // expected cursor order?
           {
-            mork_num space = end - at; // space left in buffer
+            mork_num space = (mork_num) (end - at); // space left in buffer
             
             mork_num quantum = inSize; // number of bytes to write
             if ( quantum > space ) // more than buffer size?
@@ -695,7 +696,7 @@ morkStream::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
                 
               if ( ev->Good() ) // no errors?
               {
-                space = end - at; // space left in buffer
+                space = (mork_num) (end - at); // space left in buffer
                 if ( space > inSize ) // write to buffer?
                 {
                   mStream_Dirty = morkBool_kTrue; // ensure flush
@@ -817,7 +818,7 @@ morkStream::spill_buf(morkEnv* ev) // spill/flush from buffer to file
       mork_u1* at = mStream_At;
       if ( at >= buf && at <= mStream_WriteEnd ) // order?
       {
-        mork_num count = at - buf; // the number of bytes buffered
+        mork_num count = (mork_num) (at - buf); // bytes buffered
         if ( count ) // anything to write to the string?
         {
           if ( count > mStream_BufSize ) // no more than max?

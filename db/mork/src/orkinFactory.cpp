@@ -346,13 +346,19 @@ orkinFactory::MakeHeap(nsIMdbEnv* mev, nsIMdbHeap** acqHeap)
 orkinFactory::MakeRow(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
   nsIMdbRow** acqRow)
 {
+  MORK_USED_1(ioHeap);
   mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
   morkEnv* ev = this->CanUseFactory(mev,
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
+    ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqRow )
+    *acqRow = outRow;
+    
   return outErr;
 }
 // ioHeap can be nil, causing the heap associated with ev to be used
@@ -368,6 +374,10 @@ orkinFactory::CanOpenFilePort(
   mdbYarn* outFormatVersion)
 {
   mdb_err outErr = 0;
+  if ( outFormatVersion )
+  {
+    outFormatVersion->mYarn_Fill = 0;
+  }
   mdb_bool canOpenAsPort = morkBool_kFalse;
   morkEnv* ev = this->CanUseFactory(mev,
     /*inMutable*/ morkBool_kFalse, &outErr);
@@ -385,6 +395,7 @@ orkinFactory::CanOpenFilePort(
     
   if ( outCanOpen )
     *outCanOpen = canOpenAsPort;
+    
   return outErr;
 }
   
@@ -396,6 +407,7 @@ orkinFactory::OpenFilePort(
   const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
   nsIMdbThumb** acqThumb)
 {
+  MORK_USED_1(ioHeap);
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseFactory(mev,
@@ -438,7 +450,7 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
         morkStore* store = thumb->ThumbToOpenStore(ev);
         if ( store )
         {
-        	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+          store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
           outPort = orkinStore::MakeStore(ev, store);
         }
       }
@@ -458,6 +470,7 @@ mork_bool
 orkinFactory::CanOpenMorkTextFile(morkEnv* ev,
   const mdbYarn* inFirst512Bytes)
 {
+  MORK_USED_1(ev);
   mork_bool outBool = morkBool_kFalse;
   mork_size headSize = MORK_STRLEN(morkWriter_kFileHeader);
   const mdbYarn* y = inFirst512Bytes;
@@ -481,6 +494,10 @@ orkinFactory::CanOpenFileStore(
 {
   mdb_bool canOpenAsStore = morkBool_kFalse;
   mdb_bool canOpenAsPort = morkBool_kFalse;
+  if ( outFormatVersion )
+  {
+    outFormatVersion->mYarn_Fill = 0;
+  }
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseFactory(mev,
     /*inMutable*/ morkBool_kFalse, &outErr);
@@ -576,7 +593,7 @@ orkinFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
         morkStore* store = thumb->ThumbToOpenStore(ev);
         if ( store )
         {
-        	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+          store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
           outStore = orkinStore::MakeStore(ev, store);
         }
       }
@@ -616,7 +633,7 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
         
       if ( store )
       {
-      	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+        store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
         if ( store->CreateStoreFile(ev, inFilePath, inOpenPolicy) )
           outStore = orkinStore::MakeStore(ev, store);
           

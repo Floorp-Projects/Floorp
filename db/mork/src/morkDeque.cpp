@@ -92,7 +92,7 @@ morkDeque::IndexOf(const morkLink* member) const /*i*/
   {
     ++count;
     if ( member == link )
-      return count;
+      return (mork_pos) count;
   }
   return 0;
 }

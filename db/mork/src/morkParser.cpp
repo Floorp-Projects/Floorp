@@ -211,6 +211,7 @@ morkParser::NonUsableParserError(morkEnv* ev) //
 /*protected non-poly*/ void
 morkParser::StartParse(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   mParser_InCell = morkBool_kFalse;
   mParser_InMeta = morkBool_kFalse;
   mParser_InDict = morkBool_kFalse;
@@ -792,6 +793,7 @@ morkParser::EofInsteadOfHexError(morkEnv* ev)
 /*static*/ void
 morkParser::ExpectedHexDigitError(morkEnv* ev, int c)
 {
+  MORK_USED_1(c);
   ev->NewWarning("expected hex digit");
 }
 
@@ -969,6 +971,45 @@ morkParser::NonParserTypeError(morkEnv* ev)
   ev->NewError("non morkParser");
 }
 
+mork_bool morkParser::MatchPattern(morkEnv* ev, const char* inPattern)
+{
+  // if an error occurs, we want original inPattern in the debugger:
+  const char* pattern = inPattern; // mutable copy
+  morkStream* s = mParser_Stream;
+  register int c;
+  while ( *inPattern && ev->Good() )
+  {
+    char byte = *pattern++;
+    if ( (c = s->Getc(ev)) != byte )
+    {
+      ev->NewError("byte not in expected pattern");
+    }
+  }
+  return ev->Good();
+}
+
+void morkParser::ReadGroup(morkEnv* ev)
+/* groups must be ignored until properly terminated */
+// zm:Group       ::= zm:GroupStart zm:Content zm:GroupEnd /* transaction */
+// zm:GroupStart  ::= zm:S? '@$${' zm:Id '{@' /* transaction id has own space */
+// zm:GroupEnd    ::= zm:GroupCommit | zm:GroupAbort
+// zm:GroupCommit ::= zm:S? '@$$}' zm:Id '}@'  /* id matches start id */
+// zm:GroupAbort  ::= zm:S? '@$$}~~' zm:Id '}@' /* id matches start id */
+/* We must allow started transactions to be aborted in summary files. */
+/* Note '$$' will never occur unescaped in values we will see in Mork. */
+{
+  if ( this->MatchPattern(ev, "$${") )
+  {
+    //morkMid cellMid = &mParser_CellMid;
+    //if ( this->ReadMid(ev, cellMid) )
+    //{
+    //  if ( this->MatchPattern(ev, "}@") )
+    //  {
+    //  }
+    //}
+  }
+}
+
 void morkParser::ReadDict(morkEnv* ev)
 // zm:Dict      ::= zm:S? '<' zm:DictItem* zm:S? '>'
 // zm:DictItem  ::= zm:MetaDict | zm:Alias
@@ -1058,6 +1099,10 @@ morkParser::OnPortState(morkEnv* ev)
         
       case '<': // dict
         this->ReadDict(ev);
+        break;
+        
+      case '@': // group
+        this->ReadGroup(ev);
         break;
         
       case '+': // plus
@@ -1181,7 +1226,7 @@ morkParser::ParseMore( // return count of bytes consumed now
       *outPos = endPos;
       
     if ( endPos > startPos )
-      outCount = endPos - startPos;
+      outCount = (mdb_count) (endPos - startPos);
   }
   else
   {
