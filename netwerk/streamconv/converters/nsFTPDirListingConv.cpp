@@ -543,7 +543,7 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
     char c1 = month[1], c2 = month[2];
     PRInt8 rv = -1;
 
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::MonthNumber(month = %s) ", month) );
+    //PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::MonthNumber(month = %s) ", month) );
 
     switch (*month) {
     case 'f': case 'F':
@@ -583,7 +583,7 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
         rv = -1;
     }
 
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("returning %d\n", rv) );
+   //PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("returning %d\n", rv) );
 
     return rv;
 }
@@ -666,15 +666,11 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
-    PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &curTime);
+    InitPRExplodedTime(curTime);
 
     char *bcol = aCStr;         /* Column begin */
     char *ecol;                   /* Column end */
 
-    // defaults
-    curTime.tm_usec = 0;
-    curTime.tm_sec  = 0;
- 
     // MONTH
     char tmpChar = bcol[3];
     bcol[3] = '\0';
@@ -692,16 +688,12 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
     PRInt32 error;
     nsCAutoString day(bcol);
     curTime.tm_mday = day.ToInteger(&error, 10);
-    //curTime.tm_wday     = 0;
-    //curTime.tm_yday = 0;
 
     // YEAR
     bcol = ++ecol;
     if ((ecol = PL_strchr(bcol, ':')) == NULL) {
         nsCAutoString intStr(bcol);
         curTime.tm_year = intStr.ToInteger(&error, 10);
-    	curTime.tm_min  = 0;
-        curTime.tm_hour = 0;
     } else { 
         // TIME
     	/* If the time is given as hh:mm, then the file is less than 1 year
@@ -715,7 +707,10 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
         intStr = bcol;
         curTime.tm_hour = intStr.ToInteger(&error, 10);  // Left side of ':' 
 
-        curTime.tm_year = curTime.tm_year;
+        // Use the current year if one wasn't provided.
+        PRExplodedTime nowETime;
+        PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowETime);
+        curTime.tm_year = nowETime.tm_year;
     	//if (mktime(time_info) > curtime)
         //	--time_info->tm_year;
       }
@@ -730,7 +725,7 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
-    PR_ExplodeTime(PR_Now(), PR_GMTParameters, &curTime);
+    InitPRExplodedTime(curTime);
 
     char *col;
 
@@ -741,11 +736,6 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
     nsCAutoString intStr(col);
     PRInt32 error;
     curTime.tm_mday = intStr.ToInteger(&error, 10);
-
-    // XXX the following two sets may be skewing the Imploded time
-    // XXX we're not supposed to set wday and yday (see prtime.h)
-    curTime.tm_wday = 0;
-    curTime.tm_yday = 0;
 
     if ((col = strtok(nsnull, "-")) == nsnull || (curTime.tm_month = MonthNumber(col)) < 0)
     	return PR_FALSE;
@@ -771,7 +761,6 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
 
     intStr = col;
     curTime.tm_min = intStr.ToInteger(&error, 10);
-    curTime.tm_sec = 0;
 
     outDate = PR_ImplodeTime(&curTime);
     return PR_TRUE;
@@ -782,7 +771,7 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
-    PR_ExplodeTime(PR_Now(), PR_GMTParameters, &curTime);
+    InitPRExplodedTime(curTime);
 
     curTime.tm_month      = (aCStr[1]-'0')-1;
 
@@ -794,10 +783,6 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
         curTime.tm_hour += 12;
 
     curTime.tm_min = (((aCStr[13]-'0')*10) + aCStr[14]-'0');
-
-    curTime.tm_wday = 0;
-    curTime.tm_yday = 0;
-    curTime.tm_sec = 0;
 
     outDate = PR_ImplodeTime(&curTime);
     return PR_TRUE;
@@ -999,6 +984,21 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
                }
           }
     return NS_OK;
+}
+
+void
+nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
+    aTime.tm_usec = 0;
+    aTime.tm_sec  = 0;
+    aTime.tm_min  = 0;
+    aTime.tm_hour = 0;
+    aTime.tm_mday = 0;
+    aTime.tm_month= 0;
+    aTime.tm_year = 0;
+
+    // localize this sucker.
+    PRTimeParameters params = PR_LocalTimeParameters(&aTime);
+    aTime.tm_params = params;
 }
 
 
