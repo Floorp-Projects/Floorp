@@ -34,10 +34,13 @@
 #include <stdio.h>
 #include "nsLDAPConnection.h"
 
+NS_IMPL_ISUPPORTS1(nsLDAPConnection, nsILDAPConnection);
+
 // constructor
 //
 nsLDAPConnection::nsLDAPConnection()
 {
+  NS_INIT_ISUPPORTS();
 }
 
 // destructor
@@ -56,19 +59,21 @@ nsLDAPConnection::~nsLDAPConnection()
 
 // wrapper for ldap_init()
 //
-bool
-nsLDAPConnection::Init(const char *defhost, const int defport)
+NS_IMETHODIMP
+nsLDAPConnection::Init(const char *defhost, PRInt16 defport)
 {
   this->connectionHandle = ldap_init(defhost, defport);
-  return (this->connectionHandle == NULL ? false : true);
+  return (this->connectionHandle == NULL ? NS_ERROR_FAILURE : NS_OK);
 }
 
 // wrapper for ldap_get_lderrno
 //
-int
-nsLDAPConnection::GetLdErrno(char **matched, char **string)
+NS_IMETHODIMP
+nsLDAPConnection::GetLdErrno(char **matched, char **errString, 
+			     PRInt16 *_retval)
 {
-  return ldap_get_lderrno(this->connectionHandle, matched, string);
+  *_retval = ldap_get_lderrno(this->connectionHandle, matched, errString);
+  return NS_OK;
 }
 
 // return the error string corresponding to GetLdErrno.
@@ -76,8 +81,10 @@ nsLDAPConnection::GetLdErrno(char **matched, char **string)
 //
 // XXX - deal with optional params
 // XXX - how does ldap_perror know to look at the global errno?
-char *
-nsLDAPConnection::GetErrorString(void)
+NS_IMETHODIMP
+nsLDAPConnection::GetErrorString(char **_retval)
 {
-  return ldap_err2string(this->GetLdErrno(NULL, NULL));
+  *_retval = ldap_err2string(ldap_get_lderrno(this->connectionHandle, 
+					      NULL, NULL));
+  return NS_OK;
 }

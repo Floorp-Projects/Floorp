@@ -41,8 +41,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozldap
 XPIDL_MODULE	= mozldap
 
-XPIDLSRCS	= nsILDAPURI.idl \
-		  $(NULL)
+XPIDLSRCS	= 	nsILDAPConnection.idl \
+	  		nsILDAPURI.idl \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

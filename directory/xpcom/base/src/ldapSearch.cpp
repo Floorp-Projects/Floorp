@@ -50,8 +50,8 @@ lds(class nsLDAPChannel *chan, const char *url)
   // struct timeval timeout = {10,0};
   int returnCode;
   char *errString;
-  // url = "ldap://memberdir.netscape.com:389/ou=member_directory,
-  //        o=netcenter.com??sub?(sn=Mosedale)"
+  PRInt16 lden;
+
   myConnection = new nsLDAPConnection();
   if ( !myConnection->Init("nsdirectory.netscape.com", LDAP_PORT) ) {
     fprintf(stderr, "main: nsLDAPConnection::Init failed\n");
@@ -65,8 +65,8 @@ lds(class nsLDAPChannel *chan, const char *url)
   fflush(stderr);
   
   if ( !myOperation->SimpleBind(NULL, NULL) ) {
-    char *errstring = myConnection->GetErrorString();
-    fprintf(stderr, "ldap_simple_bind: %s\n", errstring);
+    (void)myConnection->GetErrorString(&errString);
+    fprintf(stderr, "ldap_simple_bind: %s\n", errString);
     exit(-1);
   }
 
@@ -87,7 +87,7 @@ lds(class nsLDAPChannel *chan, const char *url)
     // success
     break;
   case -1:
-    errString = myConnection->GetErrorString();
+    (void)myConnection->GetErrorString(&errString);
     fprintf(stderr, 
 	    "myOperation->Result() [myOperation->SimpleBind]: %s: errno=%d\n",
 	    errString, errno);
@@ -137,7 +137,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 
       switch (returnCode) {
       case -1: // something went wrong
-	  errString = myConnection->GetErrorString();
+	  (void)myConnection->GetErrorString(&errString);
 	  fprintf(stderr, 
 		  "\nmyOperation->Result() [URLSearch]: %s: errno=%d\n",
 		  errString, errno);
@@ -152,8 +152,9 @@ lds(class nsLDAPChannel *chan, const char *url)
 	  // get the DN
 	  dn = myMessage->GetDN();
 	  if (!dn) {
-	      fprintf(stderr, "myMessage->GetDN(): %s\n", 
-		      myConnection->GetErrorString());
+	      (void)myConnection->GetErrorString(&errString);
+	      fprintf(stderr, "myMessage->GetDN(): %s\n", errString);
+		     
 	      exit(-1);
 	  }
 	  chan->pipeWrite("dn: ");
@@ -173,8 +174,9 @@ lds(class nsLDAPChannel *chan, const char *url)
 	      // get the values of this attribute
 	      vals = myMessage->GetValues(attr);
 	      if (vals == NULL) {
-		  fprintf(stderr, "myMessage->GetValues: %s\n", 
-			  myConnection->GetErrorString());
+   		  (void)myConnection->GetErrorString(&errString);
+		  fprintf(stderr, "myMessage->GetValues: %s\n", errString); 
+
 		  exit(-1);
 	      }
 
@@ -191,9 +193,13 @@ lds(class nsLDAPChannel *chan, const char *url)
 	  }
 	  
 	  // did we reach this statement because of an error?
-	  if ( myConnection->GetLdErrno(NULL, NULL) != LDAP_SUCCESS ) {
+	  (void)myConnection->GetLdErrno(NULL, NULL, &lden);
+	  if ( lden != LDAP_SUCCESS ) {
+
+	      (void)myConnection->GetErrorString(&errString);
 	      fprintf(stderr, "myMessage: error getting attribute: %s\n", 
-		      myConnection->GetErrorString());	
+		      errString);
+
 	      exit(-1);
 	  }
 

@@ -1,5 +1,10 @@
 implementation
 --------------
+
+* finish XPCOMifying nsLDAP{Message,Connection,Operation} in order to allow
+  XPCOM proxies to be used for thread-crossing operations (side benefit: also
+  exposes more LDAPy goodness to JS) (in progres: dmose) 
+
 * make AsyncRead actually be asynchronous (and probably cause ldapSearch.cpp 
   to be split and moved) by factoring out the lowlevel stuff into another
   thread (in progress: dmose)
@@ -16,6 +21,13 @@ housecleaning
 * get the windows build glue wired up, and make the windows build work
 
 * implement nsLDAPChannel::Cancel()
+
+* should nsILDAPOperation subclass nsIRequest?  why do some
+  non-nsIChannel things in the mozilla code base implement nsIRequest?
+
+* implement shutdown for nsLDAPService (probably analogous to the way
+  nsSocketTransportService shuts down.  but how does
+  nsIShutdownListener fit in here? and CanUnload?)
 
 * get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
   from nsLDAP{Connection,Operation,Message}.[ch]
@@ -67,9 +79,6 @@ housecleaning
 
 features
 --------
-
-* finish XPCOMifying nsLDAP{Message,Connection,Operation} (allowing
-  for use from JS)
 
 * i18n / l10n
 

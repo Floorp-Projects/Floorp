@@ -31,31 +31,18 @@
  * GPL.
  */
 
-#ifndef _nsLDAPConnection_h_
-#define _nsLDAPConnection_h_
+#include "nsISupports.idl"
 
-#include "nsILDAPConnection.h"
-#include "ldap.h"
+[scriptable, uuid(337ad2fe-1dd2-11b2-89f8-aae1221ec86c)]
+interface nsILDAPConnection : nsISupports
+{
+    // return the string version of lderrno
+    readonly attribute string errorString;
 
-class nsLDAPConnection : public nsILDAPConnection {
-
-    friend class nsLDAPOperation;
-    friend class nsLDAPMessage;
-
-  public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSILDAPCONNECTION;
-
-    // constructor & destructor
-    //
-    nsLDAPConnection();
-    virtual ~nsLDAPConnection();
-
-  protected:
+    // wrapper for ldap_init()
+    void Init(in string defhost, in short defport);
   
-    // the LDAP SDK's struct for the connection
-    LDAP *connectionHandle;
-
+    // wrapper for ldap_get_lderrno()
+    short GetLdErrno(out string matched, out string s);
 };
 
-#endif /* _nsLDAPConnection_h_ */
