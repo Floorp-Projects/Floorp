@@ -159,3 +159,4 @@ NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus,
 
     return NS_OK;
 }
+
