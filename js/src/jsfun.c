@@ -1323,9 +1323,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
     fun = js_NewFunction(cx, obj, NULL, 0, 0, parent,
-			 (cx->version >= JSVERSION_1_2)
-			 ? NULL
-			 : cx->runtime->atomState.anonymousAtom);
+			 (JSVERSION_IS_ECMA(cx->version))
+			 ? cx->runtime->atomState.anonymousAtom
+                         : NULL);
+
     if (!fun)
 	return JS_FALSE;
 
