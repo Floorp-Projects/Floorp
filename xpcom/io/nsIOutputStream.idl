@@ -57,11 +57,9 @@ interface nsIInputStream;
  *
  * @return NS_OK and (*aReadCount > 0) if successfully provided some data
  * @return NS_OK and (*aReadCount = 0) or
- * @return NS_BASE_STREAM_WOULD_BLOCK if not interested in providing any data
- * @return <other-error> on failure
+ * @return <any-error> if not interested in providing any data
  *
- * Errors are passed to the caller of WriteSegments, unless aFromOffset is
- * greater than zero.
+ * Errors are never passed to the caller of WriteSegments.
  *
  * @status FROZEN
  */
@@ -105,7 +103,7 @@ interface nsIOutputStream : nsISupports
      * @param aBuf the buffer containing the data to be written
      * @param aCount the maximum number of bytes to be written
      *
-     * @return number of bytes written
+     * @return number of bytes written (may be less than aCount)
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
      *   block the calling thread (non-blocking mode only)
@@ -119,7 +117,7 @@ interface nsIOutputStream : nsISupports
      * @param aFromStream the stream containing the data to be written
      * @param aCount the maximum number of bytes to be written
      *
-     * @return number of bytes written
+     * @return number of bytes written (may be less than aCount)
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
      *    block the calling thread (non-blocking mode only)
@@ -135,14 +133,17 @@ interface nsIOutputStream : nsISupports
                             in unsigned long aCount);
 
     /**
-     * Low-level write method that has access to the stream's underlying buffer. The
-     * reader function may be called multiple times for segmented buffers.
+     * Low-level write method that has access to the stream's underlying buffer.
+     * The reader function may be called multiple times for segmented buffers.
+     * WriteSegments is expected to keep calling the reader until either there
+     * is nothing left to write or the reader returns an error.  WriteSegments
+     * should not call the reader with zero bytes to provide.
      *
      * @param aReader the "provider" of the data to be written
      * @param aClosure opaque parameter passed to reader
      * @param aCount the maximum number of bytes to be written
      *
-     * @return number of bytes written
+     * @return number of bytes written (may be less than aCount)
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
      *    block the calling thread (non-blocking mode only)
@@ -157,6 +158,9 @@ interface nsIOutputStream : nsISupports
 
     /**
      * @return true if stream is non-blocking
+     *
+     * NOTE: writing to a blocking output stream will block the calling thread
+     * until all given data can be consumed by the stream.
      */
     boolean isNonBlocking();
 };

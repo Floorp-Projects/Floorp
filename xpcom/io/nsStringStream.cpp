@@ -312,6 +312,10 @@ class ConstCharImpl
                                                      PRUint32 aCount, PRUint32 *result) {
                                             nsresult rv;
                                             PRInt32 maxCount = mLength - mOffset;
+                                            if (maxCount == 0) {
+                                                *result = 0;
+                                                return NS_OK;
+                                            }
                                             if ((PRInt32)aCount > maxCount)
                                                 aCount = maxCount;
                                             rv = writer(this, closure, mConstString + mOffset, 

@@ -55,11 +55,9 @@ interface nsIInputStream;
  * Implementers should return the following:
  *
  * @return NS_OK and (*aWriteCount > 0) if consumed some data
- * @return NS_BASE_STREAM_WOULD_BLOCK if not interested in consuming any data
- * @return <other-error> on failure
+ * @return <any-error> if not interested in consuming any data
  *
- * Errors are passed to the caller of ReadSegments, unless aToOffset is
- * greater than zero.
+ * Errors are never passed to the caller of ReadSegments.
  *
  * NOTE: returning NS_OK and (*aWriteCount = 0) has undefined behavior.
  *
@@ -99,7 +97,7 @@ interface nsIInputStream : nsISupports
      * @param aBuf the buffer into which the data is to be read
      * @param aCount the maximum number of bytes to be read
      *
-     * @return number of bytes read
+     * @return number of bytes read (may be less than aCount).
      * @return 0 if reached end of file
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream would
@@ -109,15 +107,18 @@ interface nsIInputStream : nsISupports
     [noscript] unsigned long read(in charPtr aBuf, in unsigned long aCount);
 
     /**
-     * Low-level read method that has access to the stream's underlying buffer. The
-     * writer function may be called multiple times for segmented buffers.
+     * Low-level read method that has access to the stream's underlying buffer.
+     * The writer function may be called multiple times for segmented buffers.
+     * ReadSegments is expected to keep calling the writer until either there is
+     * nothing left to read or the writer returns an error.  ReadSegments should
+     * not call the writer with zero bytes to consume.
      *
      * @param aWriter the "consumer" of the data to be read
      * @param aClosure opaque parameter passed to writer 
      * @param aCount the maximum number of bytes to be read
      *
-     * @return number of bytes read
-     * @return 0 if reached end of file
+     * @return number of bytes read (may be less than aCount)
+     * @return 0 if reached end of file (or if aWriter refused to consume data)
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream would
      *   block the calling thread (non-blocking mode only)

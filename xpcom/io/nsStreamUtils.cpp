@@ -408,10 +408,10 @@ NS_AsyncCopy(nsIAsyncInputStream *source,
         //
         // fire off two async copies :-)
         //
-        rv = NS_AsyncCopy(source, pipeOut, segmentSize, PR_FALSE, PR_TRUE);
+        rv = NS_AsyncCopy(source, pipeOut, PR_FALSE, PR_TRUE, segmentSize, 1, segmentAlloc);
         if (NS_FAILED(rv)) return rv;
  
-        rv = NS_AsyncCopy(pipeIn, sink, segmentSize, PR_TRUE, PR_FALSE);
+        rv = NS_AsyncCopy(pipeIn, sink, PR_TRUE, PR_FALSE, segmentSize, 1, segmentAlloc);
 
         // maybe calling NS_AsyncCopy twice is a bad idea!
         NS_ASSERTION(NS_SUCCEEDED(rv), "uh-oh");
