@@ -121,7 +121,7 @@ static int get_args(char*** argv)
 		short len = 0;
 		Handle fullPath = NULL;
 		if (FSpGetFullPath(&reply.sfFile, &len, &fullPath) == noErr && fullPath != NULL) {
-			char* path = args[1] = PR_Malloc(1 + len);
+			char* path = args[1] = XPT_MALLOC(1 + len);
 			BlockMoveData(*fullPath, path, len);
 			path[len] = '\0';
 			DisposeHandle(fullPath);
@@ -132,7 +132,20 @@ static int get_args(char*** argv)
 	return 1;
 }
 
+#define main xptdump_main
+int xptdump_main(int argc, char *argv[]);
+
 #endif
+
+static size_t get_file_length(const char* filename)
+{
+    struct stat file_stat;
+    if (stat(filename, &file_stat) != 0) {
+        perror("FAILED: fstat");
+        exit(1);
+    }
+    return file_stat.st_size;
+}
 
 int 
 main(int argc, char **argv)
@@ -141,12 +154,12 @@ main(int argc, char **argv)
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
-    struct stat file_stat;
     size_t flen;
     char *whole;
     FILE *in;
 
 #ifdef XP_MAC
+	if (argc == 0 || argv == NULL)
 	argc = get_args(&argv);
 #endif
 
@@ -156,11 +169,7 @@ main(int argc, char **argv)
             xpt_dump_usage(argv);
             return 1;
         }
-        if (stat(argv[1], &file_stat) != 0) {
-            perror("FAILED: fstat");
-            return 1;
-        }
-        flen = file_stat.st_size;
+        flen = get_file_length(argv[1]);
         in = fopen(argv[1], "rb");
         break;
     case 3:
@@ -169,11 +178,7 @@ main(int argc, char **argv)
             xpt_dump_usage(argv);
             return 1;
         }
-        if (stat(argv[2], &file_stat) != 0) {
-            perror("FAILED: fstat");
-            return 1;
-        }
-        flen = file_stat.st_size;
+        flen = get_file_length(argv[2]);
         in = fopen(argv[2], "rb");
         break;
     default:
@@ -252,7 +257,7 @@ XPT_DumpHeader(XPTCursor *cursor, XPTHeader *header,
             fprintf(stdout, "%02x", header->magic[i]);
         }
         fprintf(stdout, "\n");
-        if (strncmp(header->magic, XPT_MAGIC, 16) == 0)
+        if (strncmp((const char*)header->magic, XPT_MAGIC, 16) == 0)
             fprintf(stdout, "%*s                       PASSED\n", indent, " ");
         else
             fprintf(stdout, "%*s                       FAILED\n", indent, " ");
