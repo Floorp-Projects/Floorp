@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include <iostream.h>
+#include <iomanip.h>   // needed for libstdc++-v3
 #include "nsWeakReference.h"
 
 static nsIObserverService *anObserverService = NULL;

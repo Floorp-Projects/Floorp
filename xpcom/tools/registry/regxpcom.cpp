@@ -22,6 +22,7 @@
  */
 
 #include <iostream.h>
+#include <iomanip.h>   // needed for libstdc++-v3
 
 #ifdef XP_MAC
 #include "macstdlibextras.h"
