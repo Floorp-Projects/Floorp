@@ -943,10 +943,8 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 
 	if(dlg->FindNext())
 	{
-		nsString searchString;
-		searchString.AssignWithConversion(dlg->GetFindString().GetBuffer(0));
-		finder->SetSearchString(searchString.get());
-	
+		USES_CONVERSION;
+		finder->SetSearchString(T2W(dlg->GetFindString().GetBuffer(0)));
 		finder->SetMatchCase(dlg->MatchCase() ? PR_TRUE : PR_FALSE);
 		finder->SetEntireWord(dlg->MatchWholeWord() ? PR_TRUE : PR_FALSE);
 		finder->SetWrapFind(dlg->WrapAround() ? PR_TRUE : PR_FALSE);
