@@ -887,17 +887,12 @@ sub BuildClientDist()
     if ($main::options{xmlextras})
     {
         InstallFromManifest(":mozilla:extensions:xmlextras:base:public:MANIFEST_IDL", "$distdirectory:idl:");
-        if ($main::options{soap})
+        InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
+        if ($main::options{wsp})
         {
             InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
-            InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
-            InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
             InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
-            if ($main::options{wsp})
-            {
-                InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
-                InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
-            }
         }
     }
 
@@ -1212,15 +1207,12 @@ sub BuildIDLProjects()
     if ($main::options{xmlextras})
     {
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.xml", "xmlextras");
-        if ($main::options{soap})
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.xml", "xmlschema");
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.xml", "xmlsoap");
+        if ($main::options{wsp})
         {
-            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.xml", "xmlschema");
-            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.xml", "xmlsoap");
-            if ($main::options{wsp})
-            {
-                BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsproxyIDL.xml", "wsproxy");
-                BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "wsdl");
-            }
+            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsproxyIDL.xml", "wsproxy");
+            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "wsdl");
         }
     }
 
@@ -1983,19 +1975,11 @@ sub BuildExtensionsProjects()
     # XML Extras
     if ($main::options{xmlextras})
     {
-        if ($main::options{soap})
-        {
-            if ($main::options{wsp}) {
-                BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o");
-            }
-            else {
-                BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o stub");
-            }
-            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o");
+        if ($main::options{wsp}) {
+            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o");
         }
-        else
-        {
-            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o stub");
+        else {
+            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o stub");
         }
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.xml", "xmlextras$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
