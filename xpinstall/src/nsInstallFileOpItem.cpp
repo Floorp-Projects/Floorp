@@ -925,7 +925,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   shortcutTarget  = *mShortcutPath;
   shortcutTarget += shortcutDescription;
 
-  NativeFileOpFileDeleteComplete(shortcutTarget);
+  NativeFileOpFileDeleteComplete(&shortcutTarget);
 #endif
 
   return nsInstall::SUCCESS;
