@@ -268,10 +268,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 	<toolbar>
  		<titledbutton src="&sendButton.img;" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
- 		<titledbutton src="&quoteButton.img;" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+ 		<html:div class="separator" align="vertical"/>
  		<titledbutton src="&addressButton.img;" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
  		<titledbutton src="&attachButton.img;" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
+ 		<titledbutton src="&quoteButton.img;" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
  		<titledbutton src="&spellingButton.img;" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
+ 		<html:div class="separator" align="vertical"/>
  		<titledbutton src="&saveButton.img;" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
  		<titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="Stop()"/>
 	    <spring flex="100%"/>
@@ -352,16 +354,19 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
         <menupopup id="BackColorPopup"/>
       </menu>
       
+ 	  <html:div class="separator" align="vertical"/>
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
 
+ 	  <html:div class="separator" align="vertical"/>
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
 
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
 
+ 	  <html:div class="separator" align="vertical"/>
       <menu>
         <titledbutton id="AlignPopupButton"/>
         <menupopup id="AlignmentPopup"/>
