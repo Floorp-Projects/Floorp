@@ -72,7 +72,7 @@ use HTML::Entities;
 
 $|++;
 
-my $VERSION = '1.66'; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = '1.68'; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 my $mozbotfilename = $0;
 @::origargv = @ARGV;
