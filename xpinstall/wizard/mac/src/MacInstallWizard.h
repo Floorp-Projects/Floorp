@@ -25,6 +25,7 @@
 #define _MIW_H_
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
@@ -582,6 +583,7 @@ void		ShowSetupDescTxt(void);
 void		GetAllVInfo(unsigned char **, short *);
 pascal void OurNavEventFunction(NavEventCallbackMessage callBackSelector, 
 			NavCBRecPtr callBackParms, NavCallBackUserData callBackUD);
+void		InsertCompList(int instChoice);
 void		DrawDiskNFolder(short, unsigned char *);
 void		DrawDiskSpaceMsgs(short);
 char*		DiskSpaceNeeded(void);

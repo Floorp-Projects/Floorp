@@ -3,25 +3,22 @@ License File=License
 
 
 [Dialog Welcome]
-Message0=                 Welcome to Netscape Communicator 5.0
-
-Message1=This is welcome message 2 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort.This is welcome message 2 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. 
-
-Message2=This is welcome message 3 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort. This is still more text to aid in the former effort.This is welcome message 3 from the config.ini file. This is additional gunk to test auto text wrapping. This is still more text to aid in the former effort. 
-
+Message0=                      Welcome to the Mozilla Installer
+Message1=It is strongly recommended that you quit all applications before running this installer.
+Message2=Click Continue to proceed with this installation.
 
 [Dialog Setup Type]
 
 [Setup Type0]
 Description Short=Typical Install
-Description Long=Click continue to install the following component:                                                     <#buildID> Mozilla optimized build
+Description Long=Click Continue to install the following components:
 C0=Component0
 C1=Component1
 C2=Component2
 
 [Setup Type1]
 Description Short=Custom Install
-Description Long=Click continue to select which component(s) to install.                              
+Description Long=Click Continue to select the component(s) to install.
 C0=Component0
 C1=Component1
 C2=Component2
@@ -30,7 +27,7 @@ C2=Component2
 Message0=Please select the components you wish to install:
 
 [Component0]
-Description Short= XPInstall Engine
+Description Short= XPCOM
 Description Long=Installer technology software
 Archive=install.xpi
 URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
