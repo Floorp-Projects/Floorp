@@ -27,19 +27,16 @@ Rights Reserved.
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
 
+mail-emailaddress {
+  behavior: url(chrome://messenger/skin/mailWidgets.xml#mail-emailaddress);
+}
+
 spring.buttonTopSpacer     { height: .3em; }
 spring.buttonSpacer        { width: .5em; }
 box.headerBox              { overflow: hidden; min-width:50px;}
 box.header-part1           { background-color: #EEEEEE; border: none; }
 box.header-part2           { background-color: #CCCCCC; border: none; }
 box.header-part3           { background-color: #CCCCCC; border: none; }
-
-/* visibility: collapse ONLY works for things inside of boxes, if it isn't in a box, it won't 
-   work. Use hideNonBox for objects which aren't in a box such as the titlebutton for showing
-   more or fewer email addresses
-*/
-[hide] { visibility: collapse; } 
-[hideNonBox] { display: none;}
 
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addtoab.gif");
@@ -53,24 +50,28 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
   margin: 0px;
 }
 
-titledbutton.emailDisplayButton {
+image.emailDisplayImage
+{
   align: right;
+}
+
+text.emailDisplayButton {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
   max-height: 15px;
 }
 
-titledbutton.showMoreAddressesButton {
+button.showMoreAddressesButton {
   list-style-image:url("chrome://messenger/skin/more.gif");
 }
 
-titledbutton.showFewerAddressesButton {
+button.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
 }
 
-html|div.headerValue   { white-space: normal; min-width: 50px; }
-html|div.subjectvalue      {font-weight: bold;}
+html.headerValue   { white-space: normal; min-width: 50px; }
+html.subjectvalue      {font-weight: bold;}
 
 text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
 text.headerValue { white-space: normal; min-width: 50px; }
