@@ -62,9 +62,9 @@
     <separator orient="vertical" class="thin"/>
     <box orient="vertical" flex="1">
       <html>&enter.label;</html>
+      <separator class="thin"/>
 
       <box autostretch="never">
-        <!-- spank me -->
         <textfield id="dialog.input" flex="1" oninput="doEnabling();"/>
         <button value="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
@@ -83,7 +83,7 @@
     </box>
   </box> 
 
-  <separator class="groove"/>
+  <separator/>
 
   <box id="okCancelButtonsRight"/>
            
