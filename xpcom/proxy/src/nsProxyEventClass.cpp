@@ -223,11 +223,11 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 {
     NS_PRECONDITION(aInstancePtr, "Requires non-null result");
 
-	nsresult rv;
+    nsresult rv;
 
-	*aInstancePtr = nsnull;  // in case of error.
+    *aInstancePtr = nsnull;  // in case of error.
 
-	
+
     // The functions we will call: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     nsXPTCMiniVariant var[2];
@@ -238,40 +238,40 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
     nsCOMPtr<nsIInterfaceInfo> interfaceInfo;
     const nsXPTMethodInfo *mi;
 
-	nsCOMPtr<nsIInterfaceInfoManager> iim = getter_AddRefs(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIInterfaceInfoManager> iim = getter_AddRefs(XPTI_GetInterfaceInfoManager());
 
-	if (!iim) return NS_NOINTERFACE;
-	iim->GetInfoForName("nsISupports", getter_AddRefs(interfaceInfo));
+    if (!iim) return NS_NOINTERFACE;
+    iim->GetInfoForName("nsISupports", getter_AddRefs(interfaceInfo));
     interfaceInfo->GetMethodInfo(0, &mi); // 0 is QueryInterface
 
     rv = self->CallMethod(0, mi, var);
-	
-	if (NS_SUCCEEDED(rv))
-	{
+
+    if (NS_SUCCEEDED(rv))
+    {
         nsISupports *aIdentificationObject;
 
         rv = (*aInstancePtr)->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
 
-		if (NS_FAILED(rv))
-		{
-			// okay, aInstancePtr was not a proxy.  Lets create one.
-			nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-			if (manager == nsnull) 
-			{
-				NS_IF_RELEASE((*aInstancePtr));
-				return NS_ERROR_FAILURE;
-			}
-			
-			rv = manager->GetProxyForObject(self->GetQueue(), 
+        if (NS_FAILED(rv))
+        {
+            // okay, aInstancePtr was not a proxy.  Lets create one.
+            nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+            if (manager == nsnull) 
+            {
+                NS_IF_RELEASE((*aInstancePtr));
+                return NS_ERROR_FAILURE;
+            }
+
+            rv = manager->GetProxyForObject(self->GetQueue(), 
                                             aIID, 
                                             self->GetRealObject(), 
                                             self->GetProxyType(),
                                             (void**) &aIdentificationObject);
-		}
-		
-		NS_IF_RELEASE((*aInstancePtr));
-		(*aInstancePtr) = NS_STATIC_CAST(nsProxyEventObject*, aIdentificationObject);
-	}
+        }
+
+        NS_IF_RELEASE((*aInstancePtr));
+        (*aInstancePtr) = NS_STATIC_CAST(nsProxyEventObject*, aIdentificationObject);
+    }
     return rv;
 }
 
@@ -313,11 +313,14 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
     }
 
     nsProxyEventObject* sibling;
-   
+    {
+    nsProxyObjectManager* manager = nsProxyObjectManager::GetInstance();
+    nsAutoMonitor mon(manager->GetMonitor());
+
     // This includes checking for nsISupports and the iid of self.
     // And it also checks for other wrappers that have been constructed
     // for this object.
-    if(nsnull != (sibling = self->Find(aIID)))
+    if(nsnull != (sibling = self->LockedFind(aIID)))
     {
         NS_ADDREF(sibling);
         *aInstancePtr = (void*) sibling;
@@ -344,6 +347,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
                 return NS_OK;
             }
         }
+    }
     }
 
     return CallQueryInterfaceOnProxy(self, aIID, (nsProxyEventObject**)aInstancePtr);

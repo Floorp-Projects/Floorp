@@ -299,6 +299,7 @@ void nsAutoMonitor::Enter()
     (void) PR_SetThreadPrivate(LockStackTPI, this);
 #endif
     PR_EnterMonitor(mMonitor);
+    mLockCount += 1;
 }
 
 void nsAutoMonitor::Exit()
@@ -308,6 +309,7 @@ void nsAutoMonitor::Exit()
 #endif
     PRStatus status = PR_ExitMonitor(mMonitor);
     NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
+    mLockCount -= 1;
 }
 
 // XXX we don't worry about cached monitors being destroyed behind our back.
@@ -324,6 +326,7 @@ void nsAutoCMonitor::Enter()
     (void) PR_SetThreadPrivate(LockStackTPI, this);
 #endif
     PR_CEnterMonitor(mLockObject);
+    mLockCount += 1;
 }
 
 void nsAutoCMonitor::Exit()
@@ -333,4 +336,5 @@ void nsAutoCMonitor::Exit()
 #endif
     PRStatus status = PR_CExitMonitor(mLockObject);
     NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
+    mLockCount -= 1;
 }

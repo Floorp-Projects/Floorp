@@ -178,18 +178,24 @@ public:
 
     nsAutoMonitor(PRMonitor* mon)
         : nsAutoLockBase((void*)mon, eAutoMonitor),
-          mMonitor(mon)
+          mMonitor(mon), mLockCount(0)
     {
         NS_ASSERTION(mMonitor, "null monitor");
-        PR_EnterMonitor(mMonitor);
+        if (mMonitor) {
+            PR_EnterMonitor(mMonitor);
+            mLockCount = 1;
+        }
     }
 
     ~nsAutoMonitor() {
+        NS_ASSERTION(mMonitor, "null monitor");
+        if (mMonitor && mLockCount) {
 #ifdef DEBUG
-        PRStatus status = 
+            PRStatus status = 
 #endif
-         PR_ExitMonitor(mMonitor);
-        NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
+            PR_ExitMonitor(mMonitor);
+            NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
+        }
     }
 
     void Enter();
@@ -212,6 +218,7 @@ public:
 
 private:
     PRMonitor*  mMonitor;
+    PRInt32     mLockCount;
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
@@ -245,18 +252,21 @@ class NS_COM nsAutoCMonitor : public nsAutoLockBase {
 public:
     nsAutoCMonitor(void* lockObject)
         : nsAutoLockBase(lockObject, eAutoCMonitor),
-          mLockObject(lockObject)
+          mLockObject(lockObject), mLockCount(0)
     {
         NS_ASSERTION(lockObject, "null lock object");
         PR_CEnterMonitor(mLockObject);
+        mLockCount = 1;
     }
 
     ~nsAutoCMonitor() {
+        if (mLockCount) {
 #ifdef DEBUG
-        PRStatus status =
+            PRStatus status =
 #endif
-         PR_CExitMonitor(mLockObject);
-        NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
+            PR_CExitMonitor(mLockObject);
+            NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
+        }
     }
 
     void Enter();
@@ -278,7 +288,8 @@ public:
     }
 
 private:
-    void* mLockObject;
+    void*   mLockObject;
+    PRInt32 mLockCount;
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
