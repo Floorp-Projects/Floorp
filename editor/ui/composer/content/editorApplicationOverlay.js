@@ -95,6 +95,10 @@ function editPage(url, launchWindow, delay)
   if (isDocumentFrame(focusedWindow))
     url = focusedWindow.location.href;
 
+  // Always strip off "view-source:"
+  if (url.slice(0,12) == "view-source:")
+    url = url.slice(13);
+
   // User may not have supplied a window
   if (!launchWindow)
   {
