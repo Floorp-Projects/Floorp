@@ -76,13 +76,13 @@ public:
     void OnSocketReady(nsresult condition);
 
 private:
-    nsSocketTransport    *mTransport;
-    nsrefcnt              mReaderRefCnt;
+    nsSocketTransport             *mTransport;
+    nsrefcnt                       mReaderRefCnt;
 
     // access to these is protected by mTransport->mLock
-    nsresult              mCondition;
-    nsIInputStreamNotify *mNotify;
-    PRUint32              mByteCount;
+    nsresult                       mCondition;
+    nsCOMPtr<nsIInputStreamNotify> mNotify;
+    PRUint32                       mByteCount;
 };
 
 //-----------------------------------------------------------------------------
@@ -109,13 +109,13 @@ private:
                                        const char *, PRUint32 offset,
                                        PRUint32 count, PRUint32 *countRead);
 
-    nsSocketTransport     *mTransport;
-    nsrefcnt               mWriterRefCnt;
+    nsSocketTransport              *mTransport;
+    nsrefcnt                        mWriterRefCnt;
 
     // access to these is protected by mTransport->mLock
-    nsresult               mCondition;
-    nsIOutputStreamNotify *mNotify;
-    PRUint32               mByteCount;
+    nsresult                        mCondition;
+    nsCOMPtr<nsIOutputStreamNotify> mNotify;
+    PRUint32                        mByteCount;
 };
 
 //-----------------------------------------------------------------------------
