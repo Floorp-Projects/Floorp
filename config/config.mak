@@ -202,6 +202,11 @@ CFLAGS=$(CFLAGS) -DNECKO
 DETECT_WEBSHELL_LEAKS=1
 CFLAGS=$(CFLAGS) -DDETECT_WEBSHELL_LEAKS
 
+# Enable output of performance metrics if MOZ_PERF is set
+!ifdef MOZ_PERF
+CFLAGS=$(CFLAGS) -DMOZ_PERF_METRICS
+!endif
+
 !ifndef MOZ_JAVA
 MOZ_OJI = 1             # on by default now
 !endif
