@@ -21,7 +21,6 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-dump("Loading identity page\n");
 function validate(data)
 {
   var email = document.getElementById("identity.email").value;
@@ -31,10 +30,15 @@ function validate(data)
     window.alert("Please enter your name.");
     return false;
   }
-  
-  if (email.indexOf('@') == -1) {
+
+  var emailArray = email.split('@');
+  if (emailArray.length != 2 ||
+      emailArray[0] == "" ||
+      emailArray[1] == "") {
     window.alert("Please enter a valid email address.");
     return false;
   }
+  dump("emailArray[0] = '" + emailArray[0] + "'\n");
+  dump("emailArray[1] = '" + emailArray[1] + "'\n");
   return true;
 }
