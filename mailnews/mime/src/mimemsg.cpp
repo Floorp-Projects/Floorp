@@ -774,38 +774,40 @@ static char *
 MimeMessage_partial_message_html(const char *data, void *closure,
 								 MimeHeaders *headers)
 {
-    nsCAutoString orig_url(data);
-	char *partialMsgHtml = nsnull;
-	char *uidl = MimeHeaders_get(headers, HEADER_X_UIDL, PR_FALSE, PR_FALSE);
-	char *msgId = MimeHeaders_get(headers, HEADER_MESSAGE_ID, PR_FALSE,
+  nsCAutoString orig_url(data);
+  char *partialMsgHtml = nsnull;
+  char *uidl = MimeHeaders_get(headers, HEADER_X_UIDL, PR_FALSE, PR_FALSE);
+  char *msgId = MimeHeaders_get(headers, HEADER_MESSAGE_ID, PR_FALSE,
 								  PR_FALSE);
-	char *msgIdPtr = PL_strstr(msgId, "<");
+  char *msgIdPtr = PL_strstr(msgId, "<");
 
-	orig_url.ReplaceSubstring("mailbox-message", "mailbox");
-	orig_url.ReplaceSubstring("#", "?number=");
+  orig_url.ReplaceSubstring("mailbox-message", "mailbox");
+  orig_url.ReplaceSubstring("#", "?number=");
 
-	if (msgIdPtr)
-		msgIdPtr++;
-	else
-		msgIdPtr = msgId;
-	char *gtPtr = PL_strstr(msgIdPtr, ">");
-	if (gtPtr)
-		*gtPtr = 0;
+  if (msgIdPtr)
+    msgIdPtr++;
+  else
+    msgIdPtr = msgId;
+  char *gtPtr = PL_strstr(msgIdPtr, ">");
+  if (gtPtr)
+    *gtPtr = 0;
 
-	char *escapedMsgId = msgIdPtr ? nsEscape(msgIdPtr, url_Path) : nsnull;
-	char *fmt1 = MimeGetStringByID(1037);
-	char *fmt2 = MimeGetStringByID(1038);
-	char *fmt3 = MimeGetStringByID(1039);
-	char *msgUrl = PR_smprintf("%s&messageid=%s&uidl=%s",
-							   orig_url.get(), escapedMsgId, uidl);
-	partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);
-	PR_FREEIF(uidl);
-	PR_FREEIF(msgId);
-	PR_FREEIF(escapedMsgId);
-	PR_FREEIF(msgUrl);
-	PR_FREEIF(fmt1);
-	PR_FREEIF(fmt2);
-	PR_FREEIF(fmt3);
+  char *escapedUidl = uidl ? nsEscape(uidl, url_XAlphas) : nsnull;
+  char *escapedMsgId = msgIdPtr ? nsEscape(msgIdPtr, url_Path) : nsnull;
+  char *fmt1 = MimeGetStringByID(1037);
+  char *fmt2 = MimeGetStringByID(1038);
+  char *fmt3 = MimeGetStringByID(1039);
+  char *msgUrl = PR_smprintf("%s&messageid=%s&uidl=%s",
+                             orig_url.get(), escapedMsgId, escapedUidl);
+  partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);
+  PR_Free(uidl);
+  PR_Free(escapedUidl);
+  PR_Free(msgId);
+  PR_Free(escapedMsgId);
+  PR_Free(msgUrl);
+  PR_Free(fmt1);
+  PR_Free(fmt2);
+  PR_Free(fmt3);
 
 	return partialMsgHtml;
 }

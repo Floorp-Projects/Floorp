@@ -55,6 +55,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIDocShell.h"
+#include "nsEscape.h"
 
 #define EXTRA_SAFETY_SPACE 3096
 
@@ -732,7 +733,8 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
   if (uidl)
 	{
 		uidl += 5;
-		m_pop3ConData->only_uidl = PL_strdup(uidl);
+    char *only_uidl = PL_strdup(uidl);
+		m_pop3ConData->only_uidl = nsUnescape(only_uidl);
     mSuppressListenerNotifications = PR_TRUE; // suppress on start and on stop because this url won't have any content to display
 	}
 	
