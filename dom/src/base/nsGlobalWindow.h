@@ -411,8 +411,8 @@ struct nsTimeoutImpl
   // True if the timeout was cleared
   PRPackedBool mCleared;
 
-  // Alignment padding, unused
-  PRPackedBool mSpareAndUnused;
+  // True if this is one of the timeouts that are currently running
+  PRPackedBool mRunning;
 
   // Returned as value of setTimeout()
   PRUint32 mPublicId;
