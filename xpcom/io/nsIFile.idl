@@ -180,11 +180,6 @@ interface nsIFile : nsISupports
     void delete(in boolean recursive);
 
     /**
-     * Truncate the file to the given length.
-     */
-    void truncate(in unsigned long length);
-
-    /**
      *  Attributes of nsIFile.
      */
     
@@ -221,12 +216,6 @@ interface nsIFile : nsISupports
     readonly attribute string target;
     readonly attribute string path;
     
-
-    /**
-     * Parent will be nsnull when this is at the top of the volume.
-     */
-    readonly attribute nsIFile parent;
-    
     boolean exists();
     boolean isWritable();
     boolean isReadable();
@@ -253,13 +242,18 @@ interface nsIFile : nsISupports
 
 
     /**
+     * Parent will be nsnull when this is at the top of the volume.
+     */
+    readonly attribute nsIFile parent;
+
+    /**
      * Returns an enumeration of the elements in a directory. Each
      * element in the enumeration is an nsIFile. 
      *
      *   @return NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
      *           not specify a directory.
      */ 
-    readonly attribute nsISimpleEnumerator children;
+    readonly attribute nsISimpleEnumerator directoryEntries;
 };
 
 %{C++

@@ -27,41 +27,174 @@
 #include "nsIAllocator.h"
 
 #include "nsIFileImplWin.h"
-#include "nsFileUtils.h"
-
+#include "nsISimpleEnumerator.h"
+#include "nsIComponentManager.h"
 #include "prtypes.h"
 #include "prio.h"
 
 #include <direct.h>
 #include "windows.h"
 
-// For older version (<6.0) of the VC Compiler
-#if (_MSC_VER == 1100)
-#define INITGUID
-#include "objbase.h"
-DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
-#endif
-
-#include "shlobj.h"
 #include "shellapi.h"
 #include "shlguid.h"
+
+static void
+myLL_II2L(PRInt32 hi, PRInt32 lo, PRInt64 result)
+{
+    PRInt64 a64, b64;  // probably could have been done with 
+                       // only one PRInt64, but these are macros, 
+                       // and I am a wimp.
+
+    // put hi in the low bits of a64.
+    LL_I2L(a64, hi);
+    // now shift it to the upperbit and place it the result in result
+    LL_SHL(b64, a64, 32);
+    // now put the low bits on by adding them to the result.
+    LL_ADD(result, b64, lo);
+}
+
+
+class nsDirEnumerator : public nsISimpleEnumerator
+{
+    public:
+
+        NS_DECL_ISUPPORTS
+
+        nsDirEnumerator() : mDir(nsnull) 
+        {
+            NS_INIT_REFCNT();
+        }
+
+        nsresult Init(nsILocalFile* parent) 
+        {
+            char* filepath;
+            parent->GetTarget(&filepath);
+        
+            if (filepath == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        
+            mDir = PR_OpenDir(filepath);
+            if (mDir == nsnull)    // not a directory?
+                return NS_ERROR_FAILURE;
+        
+            mParent          = parent;    
+            return NS_OK;
+        }
+
+        NS_IMETHOD HasMoreElements(PRBool *result) 
+        {
+            nsresult rv;
+            if (mNext == nsnull && mDir) 
+            {
+                PRDirEntry* entry = PR_ReadDir(mDir, PR_SKIP_BOTH);
+                if (entry == nsnull) 
+                {
+                    // end of dir entries
+
+                    PRStatus status = PR_CloseDir(mDir);
+                    if (status != PR_SUCCESS)
+                        return NS_ERROR_FAILURE;
+                    mDir = nsnull;
+
+                    *result = PR_FALSE;
+                    return NS_OK;
+                }
+
+                nsCOMPtr<nsILocalFile> file;
+
+                rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                        nsnull, 
+                                                        nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                        getter_AddRefs(file));
+                if (NS_FAILED(rv)) 
+                    return rv;
+        
+                rv = file->InitWithFile(mParent);
+                if (NS_FAILED(rv)) 
+                    return rv;
+            
+                rv = file->AppendPath(entry->name);
+                if (NS_FAILED(rv)) 
+                    return rv;
+            
+                mNext = file;
+            }
+            *result = mNext != nsnull;
+            return NS_OK;
+        }
+
+        NS_IMETHOD GetNext(nsISupports **result) 
+        {
+            nsresult rv;
+            PRBool hasMore;
+            rv = HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            *result = mNext;        // might return nsnull
+            mNext = null_nsCOMPtr();
+            return NS_OK;
+        }
+
+        virtual ~nsDirEnumerator() 
+        {
+            if (mDir) 
+            {
+                PRStatus status = PR_CloseDir(mDir);
+                NS_ASSERTION(status == PR_SUCCESS, "close failed");
+            }
+        }
+
+    protected:
+        PRDir*                  mDir;
+        nsCOMPtr<nsILocalFile>  mParent;
+        nsCOMPtr<nsILocalFile>  mNext;
+};
+
+NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
+
+
+
+
+
+
 
 
 nsIFileImpl::nsIFileImpl()
 {
     NS_INIT_REFCNT();
     CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
-    makeDirty();
+
+    HRESULT hres; 
+    
+    
+    // Get a pointer to the IShellLink interface. 
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&mShellLink); 
+    if (SUCCEEDED(hres)) 
+    { 
+        // Get a pointer to the IPersistFile interface. 
+        hres = mShellLink->QueryInterface(IID_IPersistFile, (void**)&mPersistFile); 
+        
+        
+    }
+
+    MakeDirty();
 }
 
 nsIFileImpl::~nsIFileImpl()
 {
+    // Release the pointer to the IPersistFile interface. 
+    if (mPersistFile)
+        mPersistFile->Release(); 
+    
+    // Release the pointer to the IShellLink interface. 
+    if(mShellLink)
+        mShellLink->Release();
+
     CoUninitialize();
 }
 
 /* nsISupports interface implementation. */
-NS_IMPL_ISUPPORTS1(nsIFileImpl, nsIFile)
-
+NS_IMPL_ISUPPORTS2(nsIFileImpl, nsILocalFile, nsIFile)
 NS_METHOD
 nsIFileImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
@@ -81,167 +214,250 @@ nsIFileImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
     return NS_OK;
 }
 
-
 // This function resets any cached information about the file.
 void
-nsIFileImpl::makeDirty()
+nsIFileImpl::MakeDirty()
 {
-    mResolutionDirty = PR_TRUE;
     mStatDirty       = PR_TRUE;
 }
 
 //----------------------------------------------------------------------------------------
 //
-// resolveWorkingPath
+// ResolvePath
 //  this function will walk the native path of |this| resolving any symbolic
-//  links found.  The new resulting path will be placed into mResolvedPath 
-//  and mResolutionDirty will be set to true.
+//  links found.  The new resulting path will be placed into mResolvedPath.
 //----------------------------------------------------------------------------------------
 
 nsresult 
-nsIFileImpl::resolveWorkingPath()
+nsIFileImpl::ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath)
 {
-    if (!mResolutionDirty)
-        return NS_OK;
-    
     nsresult rv = NS_OK;
-    HRESULT hres; 
-    IShellLink* psl; 
+    
+    
+    // Make sure that we were able to get the PersistFile interface during the 
+    // construction of this object.
+    if (mPersistFile == nsnull || mShellLink == nsnull)
+        return NS_ERROR_FILE_INVALID_PATH;
     
     // Get the native path for |this|
-    
-    char* filePath = (char*) nsAllocator::Clone( mWorkingPath, strlen(mWorkingPath)+1 );
+    char* filePath = (char*) nsAllocator::Clone( workingPath, strlen(workingPath)+1 );
 
     if (filePath == nsnull)
         return NS_ERROR_NULL_POINTER;
-
-    // Get a pointer to the IShellLink interface. 
-    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl); 
-    if (SUCCEEDED(hres)) 
-    { 
-        IPersistFile* ppf; 
-        
-        // Get a pointer to the IPersistFile interface. 
-        hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf); 
-        
-        if (SUCCEEDED(hres)) 
+    
+    // We are going to walk the native file path
+    // and stop at each slash.  For each partial
+    // path (the string to the left of the slash)
+    // we will check to see if it is a shortcut.
+    // if it is, we will resolve it and continue
+    // with that resolved path.
+    
+    // Get the first slash.          
+    char* slash = strchr(filePath, '\\');
+            
+    if (slash == nsnull)
+    {
+        if (filePath[1] == ':' && filePath[2] == '\0')
         {
-            char* slash = strchr(filePath, '\\');
+            // we have a drive letter and a colon (eg 'c:'
+            // this is resolve already
             
-            if (slash == nsnull)
-                return NS_ERROR_NULL_POINTER;
+            *resolvedPath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+2 );
+            strcat(*resolvedPath, "\\");
 
-            // skip the first '\\'
-            slash = strchr(++slash, '\\');
-            
-            while (slash)
+            nsAllocator::Free(filePath);
+            return NS_OK;
+        }
+        else
+        {
+            nsAllocator::Free(filePath);
+            return NS_ERROR_FILE_INVALID_PATH;
+        }
+    }
+        
+
+    // We really cant have just a drive letter as
+    // a shortcut, so we will skip the first '\\'
+    slash = strchr(++slash, '\\');
+    
+    while (slash || resolveTerminal)
+    {
+        // Change the slash into a null so that
+        // we can use the partial path. It is is 
+        // null, we know it is the terminal node.
+        
+        if (slash)
+        {
+            *slash = '\0';
+        }
+        else
+        {
+            if (resolveTerminal)
             {
-                *slash = '\0';
-                
-                WORD wsz[MAX_PATH]; 
+                // this is our last time in this loop.
+                // set loop condition to false
 
-                if (strstr(filePath, ".lnk") == 0)
-                {
-                    char linkStr[MAX_PATH];
-                    strcpy(linkStr, filePath);
-                    strcat(linkStr, ".lnk");
-
-                    // Ensure that the string is Unicode. 
-                    MultiByteToWideChar(CP_ACP, 0, linkStr, -1, wsz, MAX_PATH); 
-                }
-                else
-                {
-                    // Ensure that the string is Unicode. 
-                    MultiByteToWideChar(CP_ACP, 0, filePath, -1, wsz, MAX_PATH); 
-                }
+                resolveTerminal = PR_FALSE;
+            }
+            else
+            {
+                // something is wrong.  we should not have
+                // both slash being null and resolveTerminal 
+                // not set!
+                nsAllocator::Free(filePath);
+                return NS_ERROR_NULL_POINTER;
+            }
+        }
                 
-                // Load the shortcut. 
-                hres = ppf->Load(wsz, STGM_READ); 
+        WORD wsz[MAX_PATH];     // TODO, Make this dynamically allocated.
+
+        // check to see the file is a shortcut by the magic .lnk extension.
+        size_t offset = strlen(filePath) - 4;
+        if ((offset > 0) && (strncmp( (filePath + offset), ".lnk", 4) == 0))
+        {
+            // Ensure that the string is Unicode. 
+            MultiByteToWideChar(CP_ACP, 0, filePath, -1, wsz, MAX_PATH); 
+
+            HRESULT hres; 
+            
+            // see if we can Load the path.
+            hres = mPersistFile->Load(wsz, STGM_READ); 
+
+            if (SUCCEEDED(hres)) 
+            {
+                // Resolve the link. 
+                hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
                 if (SUCCEEDED(hres)) 
-                {
-                    // Resolve the link. 
-                    hres = psl->Resolve(nsnull, SLR_NO_UI ); 
-                    if (SUCCEEDED(hres)) 
-                    { 
-                        char szGotPath[MAX_PATH]; 
-                        WIN32_FIND_DATA wfd; 
+                { 
+                    WIN32_FIND_DATA wfd; 
+                    
+                    char *temp = (char*) nsAllocator::Alloc( MAX_PATH );
+                    if (temp == nsnull)
+                        return NS_ERROR_NULL_POINTER;
+                    
+                    // Get the path to the link target. 
+                    hres = mShellLink->GetPath( temp, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
 
-                        // Get the path to the link target. 
-                        hres = psl->GetPath( szGotPath, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
-
-                        if (SUCCEEDED(hres))
+                    if (SUCCEEDED(hres))
+                    {
+                        // found a new path.
+                        
+                        // addend a slash on it since it does not come out of GetPath()
+                        // with one only if it is a directory.  If it is not a directory
+                        // and there is more to append, than we have a problem.
+                        
+                        struct stat st;
+                        int statrv = stat(temp, &st);
+                        
+                        if (0 == statrv && (_S_IFDIR & st.st_mode))
                         {
-                            char *temp = (char*) nsAllocator::Alloc( MAX_PATH );
-                            char *carot;
-
-                            strcpy(temp, szGotPath);
                             strcat(temp, "\\");
-                            
+                        }
+                        else
+                        {
+                           // check to see the file is a shortcut by the magic .lnk extension.
+                            size_t offset = strlen(temp) - 4;
+                            if ((offset > 0) && (strncmp( (temp + offset), ".lnk", 4) == 0)) 
+                            {
+                                strcat(temp, "\\");
+                            }
+                            else
+                            {
+                                // it is not an shortcut, we have an error!
+                                nsAllocator::Free(temp);
+                                nsAllocator::Free(filePath);
+                                return NS_ERROR_FILE_INVALID_PATH;
+                            }
+                        }
+                        
+                        if (slash)
+                        {
                             // save where we left off.
-                            carot = (temp + strlen(temp) -1 );
+                            char *carot= (temp + strlen(temp) -1 );
 
                             // append all the stuff that we have not done.
                             strcat(temp, ++slash);
                             
-                            nsAllocator::Free(filePath);
-
-                            filePath = temp;
                             slash = carot;
                         }
-                    } 
-                }
-                *slash = '\\';
-                ++slash;
-                slash = strchr(slash, '\\');
+
+                        nsAllocator::Free(filePath);
+                        filePath = temp;
                 
-                rv = NS_OK;
+                    }
+                    else
+                    {
+                        nsAllocator::Free(temp);
+                    }
+                }
+                else
+                {
+                    // could not resolve shortcut.  Return error;
+                    nsAllocator::Free(filePath);
+                    return NS_ERROR_FILE_INVALID_PATH;
+                }
             }
-            
-            // Release the pointer to the IPersistFile interface. 
-            ppf->Release(); 
+            else
+            {
+                // could not load shortcut.  Return error;
+                nsAllocator::Free(filePath);
+                return NS_ERROR_FILE_INVALID_PATH;
+            }
         }
-        // Release the pointer to the IShellLink interface. 
-        psl->Release();
+    
+        if (slash)
+        {
+            *slash = '\\';
+            ++slash;
+            slash = strchr(slash, '\\');
+        }
     }
-    
-    mResolvedPath.SetString(filePath);
-    
-    if(filePath)
-        nsAllocator::Free(filePath);
-    
+    *resolvedPath = filePath;
     return rv;
 }
 
 nsresult
-nsIFileImpl::bufferedStat(struct stat *st)
+nsIFileImpl::ResolveAndStat(PRBool resolveTerminal)
 {
-    if (!mStatDirty)
-    {
-        *st = mBuffered_st;
-        return mBuffered_stat_rv;
-    }
+//    if (!mStatDirty)
+//    {
+//        return NS_OK;  todo need to cache information about both the path and the target both
+//                       follow this code path.
+//    }
     
-    nsresult rv = resolveWorkingPath();
-    
+    char *resolvePath;
+    nsresult rv = ResolvePath(mWorkingPath.GetBuffer(), resolveTerminal, &resolvePath);
     if (NS_FAILED(rv))
         return rv;
+    mResolvedPath.SetString(resolvePath);
+    nsAllocator::Free(resolvePath);
+    
 
     const char *filePath = mResolvedPath.GetBuffer();
 
-    mBuffered_stat_rv = stat(filePath, &mBuffered_st);
-    *st = mBuffered_st;
-    return rv;
+    if ( 0 == GetFileAttributesEx( filePath, 
+                                   GetFileExInfoStandard,
+                                   &mFileAttrData) )
+    {
+        DWORD winError = GetLastError();  // how do we make this to something ns_
+        return NS_ERROR_FILE_INVALID_PATH;
+    }
+
+    mStatDirty = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::InitWithKey(const char *fileKey)
 {
+    MakeDirty();
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::InitWithFile(nsIFile *file)
 {
+    MakeDirty();
     NS_ENSURE_ARG(file);
 
     // TODO:  how do we get to the |file|'s working    XXXXXX
@@ -249,106 +465,58 @@ nsIFileImpl::InitWithFile(nsIFile *file)
     //        symlinked directories.
 
     char* aFilePath;
-    file->GetPath(nsIFile::NATIVE_PATH, &aFilePath);
+    file->GetPath(&aFilePath);
 
     if (aFilePath == nsnull)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     mWorkingPath.SetString(aFilePath);
 
     nsAllocator::Free(aFilePath);
-    
-    makeDirty();
-
     return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::InitWithPath(PRUint32 pathType, const char *filePath)
+nsIFileImpl::InitWithPath(const char *filePath)
 {
+    MakeDirty();
     NS_ENSURE_ARG(filePath);
-
-    makeDirty();
-
-    char* nativeFilePath = nsnull;
-    char* temp;
-
-    if (pathType == nsIFile::UNIX_PATH)
-    {
-        if (*filePath != '/')
-	        return NS_ERROR_FILE_INVALID_PATH;
-
-        // Since it was an absolute path, check for the drive letter
-        // format looks like:  /d|/
-        //                     ^
-        //                     |
-        //                    filePath
-		char* colonPointer = ((char*)(filePath)) + 2;  // this case is okay since I am not changing
-		if (strstr(filePath, "|/") == colonPointer)    // filePath
-        {
-            // allocate new string
-	        nativeFilePath = (char*) nsAllocator::Clone( filePath+1, strlen(filePath+1)+1 );
-            nativeFilePath[1] = ':';
-        }
-        else
-        {
-            // there is not a drive letter specifier.  we need to preserve the first slash.
-            nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
-        }
     
-        // Convert '/' to '\'.
-        temp = nativeFilePath;
-        do
-        {
-            if (*temp == '/')
-                *temp = '\\';
-        }
-        while (*temp++);
-    }
-    else if (pathType == nsIFile::NATIVE_PATH  || pathType == nsIFile::NSPR_PATH)  //TODO does NSPR take any other kind of path?
-    {
-        // just do a sanity check.  if it has any forward slashes, it is not a Native path
-        // on windows.  Also, it must have a colon at after the first char.
+    char* nativeFilePath = nsnull;
+    
+    // just do a sanity check.  if it has any forward slashes, it is not a Native path
+    // on windows.  Also, it must have a colon at after the first char.
 
-        if ((strchr(filePath, '/') == 0) && filePath[1] == ':')
-        {
-            // This is a native path
-            nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
-        }
+    if ( ( (filePath[1] == ':') && ( strchr(filePath, '/') == 0) ) ||  // normal windows path
+         ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
+    {
+        // This is a native path
+        nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
     }
+    
+    if (nativeFilePath == nsnull)
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     // kill any trailing seperator
-    if(nativeFilePath)
-    {
-        temp = nativeFilePath;
-        int len = strlen(temp) - 1;
-        if(temp[len] == '\\')
-            temp[len] = '\0';
-    }
-
-    if (nativeFilePath == nsnull)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+    char* temp = nativeFilePath;
+    int len = strlen(temp) - 1;
+    if(temp[len] == '\\')
+        temp[len] = '\0';
     
     mWorkingPath.SetString(nativeFilePath);
-    
     nsAllocator::Free( nativeFilePath );
-
     return NS_OK;
 }
 
 
 NS_IMETHODIMP  
 nsIFileImpl::Create(PRUint32 type, PRUint32 attributes)
-{
-    nsresult rv = resolveWorkingPath();
-
-    if (NS_FAILED(rv))
-        return rv;
-        
+{ 
     if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
         return NS_ERROR_FILE_UNKNOWN_TYPE;
 
-
+    ResolveAndStat(PR_TRUE);
+    
    // create nested directories to target
     char* slash = strchr(mResolvedPath, '\\');
     // skip the first '\\'
@@ -387,9 +555,9 @@ NS_IMETHODIMP
 nsIFileImpl::AppendPath(const char *node)
 {
     if ( (node == nsnull) || (*node == '/') || strchr(node, '\\') )
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    makeDirty();
+    MakeDirty();
 
     // We only can append relative unix styles strings.
 
@@ -421,6 +589,12 @@ nsIFileImpl::AppendPath(const char *node)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsIFileImpl::Normalize()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP  
 nsIFileImpl::GetLeafName(char * *aLeafName)
 {
@@ -428,7 +602,7 @@ nsIFileImpl::GetLeafName(char * *aLeafName)
 
     const char* temp = mWorkingPath.GetBuffer();
     if(temp == nsnull)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     const char* leaf = strrchr(temp, '\\');
     
@@ -444,83 +618,33 @@ nsIFileImpl::GetLeafName(char * *aLeafName)
 
 
 NS_IMETHODIMP  
-nsIFileImpl::GetPath(PRUint32 pathType, char **_retval)
+nsIFileImpl::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = nsnull;
-
-    nsresult rv = resolveWorkingPath();
-    
-    if (NS_FAILED(rv)) return rv;
-
-    const char *filePath = mResolvedPath.GetBuffer();
-    char* canonicalPath = (char*) nsAllocator::Clone(filePath, strlen(filePath)+1);
-    
-    if (canonicalPath == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    if (pathType == nsIFile::UNIX_PATH)
-    {
-        // Convert the drive-letter separator, if present
-	    nsString path;
-        path.SetString("/");
-
-	    char* cp = (char*)canonicalPath + 1;
-	
-        if (strstr(cp, ":\\") == cp)
-		    *cp = '|';    // absolute path
-        else
-            path.SetString("\0"); // relative path
-	
-	    // Convert '\' to '/'
-	    for (; *cp; cp++)
-        {
-            if (*cp == '\\')
-                *cp = '/';
-        }
-
-        path.Append(canonicalPath);
-        
-        cp = path.ToNewCString();
-        
-        *_retval = (char*) nsAllocator::Clone(cp, strlen(cp)+1);
-
-        delete [] cp;
-    
-    }
-    else if (pathType == nsIFile::NATIVE_PATH  || pathType == nsIFile::NSPR_PATH)  //TODO does NSPR take any other kind of path?
-    {
-        *_retval = (char*) nsAllocator::Clone(canonicalPath, strlen(canonicalPath)+1);
-    }
-    
-    nsAllocator::Free((char*)canonicalPath);
-
-    if (*_retval == nsnull)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
-
+    *_retval = (char*) nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
     return NS_OK;
 }
 
 
 nsresult
-nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move)
+nsIFileImpl::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move)
 {
     NS_ENSURE_ARG(newParentDir);
-    
-    PRBool exists;
-    nsresult rv = IsExists(&exists);
+    // check to see if this exists, otherwise return an error.
+    // we will check this by resolving.  If the user wants us
+    // to follow links, then we are talking about the target,
+    // hence we can use the |followSymlinks| parameter.
+    nsresult rv  = ResolveAndStat(followSymlinks);
     if (NS_FAILED(rv))
         return rv;
-
-    if (!exists)
-        return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-
+    // Now get the path to this resolved animal.
     const char *filePath = mResolvedPath.GetBuffer();
-
-    newParentDir->IsExists(&exists);
+    // make sure it exists and is a directory.  Create it if not there.
+    PRBool exists;
+    newParentDir->Exists(&exists);
     if (exists == PR_FALSE)
     {
-        rv = newParentDir->Create(DIRECTORY_TYPE, 0644);
+        rv = newParentDir->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
         if (NS_FAILED(rv))
             return rv;
     }
@@ -531,19 +655,23 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
         if (isDir == PR_FALSE)
             return NS_ERROR_FILE_DESTINATION_NOT_DIR;
     }        
-
     // get the path that we are going to copy to.
+    // Since windows does not know how to auto
+    // resolve shortcust, we must work with the
+    // target.
     char* inFilePath;
-    newParentDir->GetPath(nsIFile::NATIVE_PATH, &inFilePath);  //todo this needs to return a resolved path?
+    newParentDir->GetTarget(&inFilePath);  
     nsCString inFileCString = inFilePath;
     nsAllocator::Free(inFilePath);
-
+    // our stuff never has slashes at the end, lets add one
+    // so that the windows api does not complain.
     inFileCString.Append("\\");
+
 
     if (newName == nsnull)
     {
         char *aFileName;
-        GetFileName(&aFileName);
+        GetLeafName(&aFileName);
         inFileCString.Append(aFileName);
         nsAllocator::Free(aFileName);
     }
@@ -557,9 +685,14 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
     IsDirectory(&isDir);
     if (isDir)
     {
-        nsCOMPtr<nsIDirectoryEnumerator> iterator;
-        NS_NewDirectoryEnumerator(this, followSymlinks, getter_AddRefs(iterator));
-            
+        nsDirEnumerator* dirEnum = new nsDirEnumerator();
+        if (dirEnum)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        rv = dirEnum->Init(this);
+
+        nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
+
         PRBool more;
         iterator->HasMoreElements(&more);
         while (more)
@@ -570,8 +703,27 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
             file = do_QueryInterface(item);
 
             char* filePath;
-            file->GetPath(nsIFile::NATIVE_PATH, &filePath);
             
+            
+            
+            if (followSymlinks)
+            {
+                PRBool symLink;
+                rv = file->IsSymlink(&symLink);
+                if (NS_FAILED(rv))
+                    return rv;
+                
+                if (symLink)
+                {
+                    
+                }
+
+            }
+
+            rv = file->GetTarget(&filePath);
+            if (NS_FAILED(rv))
+                return rv;
+
             
             int copyOK;
             
@@ -592,7 +744,7 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
     else
     {
         char* filePath;
-        newParentDir->GetPath(nsIFile::NATIVE_PATH, &filePath);
+        newParentDir->GetTarget(&filePath);
 
         int copyOK;
         
@@ -614,7 +766,7 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
         if (newName == nsnull)
         {
             char *aFileName;
-            GetFileName(&aFileName);
+            GetLeafName(&aFileName);
             InitWithFile(newParentDir);
             AppendPath(aFileName); 
             nsAllocator::Free(aFileName);
@@ -624,7 +776,7 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
             InitWithFile(newParentDir);
             AppendPath(newName);
         }
-        makeDirty();
+        MakeDirty();
     }
         
     return NS_OK;
@@ -633,29 +785,29 @@ nsIFileImpl::copymove(nsIFile *newParentDir, const char *newName, PRBool followS
 NS_IMETHODIMP  
 nsIFileImpl::CopyTo(nsIFile *newParentDir, const char *newName)
 {
-    return copymove(newParentDir, newName, PR_FALSE, PR_FALSE);
+    return CopyMove(newParentDir, newName, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::CopyToFollowingLinks(nsIFile *newParentDir, const char *newName)
 {
-    return copymove(newParentDir, newName, PR_TRUE, PR_FALSE);
+    return CopyMove(newParentDir, newName, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::MoveTo(nsIFile *newParentDir, const char *newName)
 {
-    return copymove(newParentDir, newName, PR_FALSE, PR_TRUE);
+    return CopyMove(newParentDir, newName, PR_FALSE, PR_TRUE);
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::MoveToFollowingLinks(nsIFile *newParentDir, const char *newName)
 {
-    return copymove(newParentDir, newName, PR_TRUE, PR_TRUE);
+    return CopyMove(newParentDir, newName, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::Execute(const char *args)
+nsIFileImpl::Spawn(const char *args)
 {
     PRBool isFile;
     nsresult rv = IsFile(&isFile);
@@ -681,7 +833,7 @@ nsIFileImpl::Execute(const char *args)
 NS_IMETHODIMP  
 nsIFileImpl::Delete(PRBool recursive)
 {
-    makeDirty();
+    MakeDirty();
     
     PRBool isDir;
     
@@ -695,9 +847,14 @@ nsIFileImpl::Delete(PRBool recursive)
     {
         if (recursive)
         {
-            nsCOMPtr<nsIDirectoryEnumerator> iterator;
-            NS_NewDirectoryEnumerator(this, false, getter_AddRefs(iterator));
-            
+            nsDirEnumerator* dirEnum = new nsDirEnumerator();
+            if (dirEnum)
+                return NS_ERROR_OUT_OF_MEMORY;
+        
+            rv = dirEnum->Init(this);
+
+            nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
+        
             PRBool more;
             iterator->HasMoreElements(&more);
             while (more)
@@ -723,70 +880,237 @@ nsIFileImpl::Delete(PRBool recursive)
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::GetLastModificationDate(PRUint32 *aLastModificationDate)
+nsIFileImpl::GetLastModificationDate(PRInt64 *aLastModificationDate)
 {
     NS_ENSURE_ARG(aLastModificationDate);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    
+    *aLastModificationDate = 0;
+
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    
+
+    PRUint32 high = mFileAttrData.ftLastAccessTime.dwHighDateTime;
+    PRUint32 low  = mFileAttrData.ftLastAccessTime.dwLowDateTime;
+
+    myLL_II2L(high, low, *aLastModificationDate);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::SetLastModificationDate(PRUint32 aLastModificationDate)
+nsIFileImpl::SetLastModificationDate(PRInt64 aLastModificationDate)
 {
-    makeDirty();
-    return NS_ERROR_NOT_IMPLEMENTED;
+    MakeDirty();
+
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    FILETIME time = mFileAttrData.ftLastAccessTime;
+    
+    time.dwLowDateTime  = aLastModificationDate;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+    
+    HANDLE file = CreateFile(  filePath,          // pointer to name of the file
+                               GENERIC_WRITE,     // access (write) mode
+                               0,                 // share mode
+                               NULL,              // pointer to security attributes
+                               OPEN_EXISTING,     // how to create
+                               0,                 // file attributes  (??xxx)
+                               NULL);
+    
+    if (!file)
+    {
+        // could not open file for writing.
+        return NS_ERROR_FAILURE; //TODO better error code
+    }
+
+    if ( 0 == SetFileTime(file, NULL, &time, &time) )
+    {
+        // could not set time
+        return NS_ERROR_FAILURE;
+    }
+    
+    
+    MakeDirty();
+
+    CloseHandle( file );
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::GetLastModificationDateOfLink(PRUint32 *aLastModificationDateOfLink)
+nsIFileImpl::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
 {
-    NS_ENSURE_ARG(aLastModificationDateOfLink);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG(aLastModificationDate);
+    
+    *aLastModificationDate = 0;
+
+    nsresult rv = ResolveAndStat(PR_FALSE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    FILETIME time = mFileAttrData.ftLastAccessTime;
+
+    myLL_II2L(time.dwHighDateTime,  time.dwLowDateTime, *aLastModificationDate);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::SetLastModificationDateOfLink(PRUint32 aLastModificationDateOfLink)
+nsIFileImpl::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
 {
-    makeDirty();
-    return NS_ERROR_NOT_IMPLEMENTED;
+    MakeDirty();
+
+    nsresult rv = ResolveAndStat(PR_FALSE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    FILETIME time = mFileAttrData.ftLastAccessTime;
+    
+    time.dwLowDateTime  = aLastModificationDate;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+    
+    HANDLE file = CreateFile(  filePath,          // pointer to name of the file
+                               GENERIC_WRITE,     // access (write) mode
+                               0,                 // share mode
+                               NULL,              // pointer to security attributes
+                               OPEN_EXISTING,     // how to create
+                               0,                 // file attributes  (??xxx)
+                               NULL);
+    
+    if (!file)
+    {
+        // could not open file for writing.
+        return NS_ERROR_FAILURE; //TODO better error code
+    }
+
+    if ( 0 == SetFileTime(file, NULL, &time, &time) )
+    {
+        // could not set time
+        return NS_ERROR_FAILURE;
+    }
+    
+
+    MakeDirty();
+
+    CloseHandle( file );
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::GetPermissions(PRUint32 *aPermissions)
 {
-    NS_ENSURE_ARG(aPermissions);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
 {
-    NS_ENSURE_ARG(aPermissionsOfLink);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 NS_IMETHODIMP  
-nsIFileImpl::GetFileSize(PRUint32 *aFileSize)
+nsIFileImpl::SetPermissions(PRUint32 aPermissions)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP  
+nsIFileImpl::SetPermissionsOfLink(PRUint32 aPermissions)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP  
+nsIFileImpl::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG(aFileSize);
     
     *aFileSize = 0;
 
-    struct stat st;
-    nsresult rv = bufferedStat( &st );
+    nsresult rv = ResolveAndStat(PR_TRUE);
     
     if (NS_FAILED(rv))
         return rv;
     
-    if (0 == mBuffered_stat_rv)
-        *aFileSize = (PRUint32)st.st_size;
+    myLL_II2L(mFileAttrData.nFileSizeHigh,  mFileAttrData.nFileSizeLow, *aFileSize);
 
     return NS_OK;
 }
 
+
 NS_IMETHODIMP  
-nsIFileImpl::GetFileSizeOfLink(PRUint32 *aFileSizeOfLink)
+nsIFileImpl::SetFileSize(PRInt64 aFileSize)
 {
-    /* Link files on windows are not auto resolved. */
-    return GetFileSize(aFileSizeOfLink);
+
+    DWORD status;
+    HANDLE hFile;
+
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    const char *filePath = mResolvedPath.GetBuffer();
+
+
+    // Leave it to Microsoft to open an existing file with a function
+    // named "CreateFile".
+    hFile = CreateFile(filePath,
+                       GENERIC_WRITE, 
+                       FILE_SHARE_READ, 
+                       NULL, 
+                       OPEN_EXISTING, 
+                       FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, 
+                       NULL); 
+
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NS_ERROR_FAILURE;
+
+    // Seek to new, desired end of file
+    status = SetFilePointer(hFile, aFileSize, NULL, FILE_BEGIN);
+    if (status == 0xffffffff)
+        goto error;
+
+    // Truncate file at current cursor position
+    if (!SetEndOfFile(hFile))
+        goto error;
+
+    if (!CloseHandle(hFile))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+
+ error:
+    CloseHandle(hFile);
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP  
+nsIFileImpl::GetFileSizeOfLink(PRInt64 *aFileSize)
+{
+    NS_ENSURE_ARG(aFileSize);
+    
+    *aFileSize = 0;
+
+    nsresult rv = ResolveAndStat(PR_FALSE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    myLL_II2L(mFileAttrData.nFileSizeHigh,  mFileAttrData.nFileSizeLow, *aFileSize);
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -794,11 +1118,8 @@ nsIFileImpl::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
     NS_ENSURE_ARG(aDiskSpaceAvailable);
     
-    nsresult rv = resolveWorkingPath();
+    ResolveAndStat(PR_FALSE);
     
-    if (NS_FAILED(rv))
-        return rv;
-
     const char *filePath = mResolvedPath.GetBuffer();
 
     PRInt64 int64;
@@ -842,8 +1163,10 @@ nsIFileImpl::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     {
         nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
     }
-    return (PRInt64)nBytes;
 
+    LL_D2L(*aDiskSpaceAvailable, nBytes);
+
+    return NS_OK;
 
 }
 
@@ -856,7 +1179,7 @@ nsIFileImpl::GetParent(nsIFile * *aParent)
 
     PRInt32 offset = parentPath.RFindChar('\\');
     if (offset == -1)
-        return NS_ERROR_FILE_UNRECONGNIZED_PATH;
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     parentPath.Truncate(offset);
 
@@ -867,7 +1190,7 @@ nsIFileImpl::GetParent(nsIFile * *aParent)
         return NS_ERROR_OUT_OF_MEMORY;
     
     file->AddRef();
-    file->InitWithPath(nsIFile::NATIVE_PATH, filePath);
+    file->InitWithPath(filePath);
     *aParent = file;
 
     return NS_OK;
@@ -877,75 +1200,136 @@ nsIFileImpl::Exists(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
     
-    struct stat st;
-    nsresult rv = bufferedStat( &st );
+    nsresult rv = ResolveAndStat( PR_TRUE );
     
-    if (0 == mBuffered_stat_rv)
+    if (NS_SUCCEEDED(rv))
+    {
         *_retval = PR_TRUE;
-    else
+    }
+    else 
+    {
         *_retval = PR_FALSE;
+        if (GetLastError() != ERROR_FILE_NOT_FOUND)
+            return NS_ERROR_FAILURE;
+    }
     
-    return rv;
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::IsWritable(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    *_retval = !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY); 
+
+    return NS_OK;
+
+
 }
+
 NS_IMETHODIMP  
 nsIFileImpl::IsReadable(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    nsresult rv = ResolveAndStat( PR_TRUE );
+    if (NS_FAILED(rv))
+        return rv;
+
+    *_retval = PR_TRUE;
+    return NS_OK;
 }
+
+
+NS_IMETHODIMP  
+nsIFileImpl::IsExecutable(PRBool *_retval)
+{
+    NS_ENSURE_ARG(_retval);
+    
+    nsresult rv = ResolveAndStat( PR_TRUE );
+    if (NS_FAILED(rv))
+        return rv;
+
+    char* path;
+    PRBool symLink;
+    
+    rv = IsSymlink(&symLink);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    if (symLink)
+        GetTarget(&path);
+    else
+        GetPath(&path);
+
+    const char* leaf = strrchr(path, '\\');
+    
+    if ( (strstr(leaf, ".bat") != nsnull) ||
+         (strstr(leaf, ".exe") != nsnull) )  // are there more that we care about??
+    {
+        *_retval = PR_TRUE;
+    }
+    else
+    {
+        *_retval = PR_FALSE;
+    }
+    
+    nsAllocator::Free(path);
+    
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP  
 nsIFileImpl::IsDirectory(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
+    
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    *_retval = ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY); 
 
-    struct stat st;
-    nsresult rv = bufferedStat( &st );
-
-    if (0 == mBuffered_stat_rv && (_S_IFDIR & st.st_mode))
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::IsFile(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
-    struct stat st;
-    nsresult rv = bufferedStat( &st );
+    
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    *_retval = !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY); 
 
-    if (0 == mBuffered_stat_rv && (_S_IFREG & st.st_mode))
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
 nsIFileImpl::IsHidden(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
-    nsresult rv = resolveWorkingPath();
-    const char* in = mWorkingPath.GetBuffer();
+    
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    *_retval = ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN); 
 
-    DWORD attr = GetFileAttributes(in);
-    if (FILE_ATTRIBUTE_HIDDEN & attr)
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -961,6 +1345,21 @@ nsIFileImpl::IsSymlink(PRBool *_retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP  
+nsIFileImpl::IsSpecial(PRBool *_retval)
+{
+    NS_ENSURE_ARG(_retval);
+    
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    *_retval = ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM); 
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsIFileImpl::Equals(nsIFile *inFile, PRBool *_retval)
 {
@@ -970,10 +1369,10 @@ nsIFileImpl::Equals(nsIFile *inFile, PRBool *_retval)
     *_retval = PR_FALSE;
 
     char* inFilePath;
-    inFile->GetPath(nsIFile::NATIVE_PATH, &inFilePath);
+    inFile->GetPath(&inFilePath);
     
     char* filePath;
-    GetPath(nsIFile::NATIVE_PATH, &filePath);
+    GetPath(&filePath);
 
     if (strcmp(inFilePath, filePath) == 0)
         *_retval = PR_TRUE;
@@ -989,3 +1388,57 @@ nsIFileImpl::IsContainedIn(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+
+NS_IMETHODIMP
+nsIFileImpl::GetTarget(char **_retval)
+{   
+    PRBool symLink;
+    
+    nsresult rv = IsSymlink(&symLink);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!symLink)
+    {
+        return NS_ERROR_FILE_INVALID_PATH;
+    }
+
+    ResolveAndStat(PR_TRUE);
+        
+    *_retval = (char*) nsAllocator::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsIFileImpl::GetDirectoryEntries(nsISimpleEnumerator * *entries)
+{
+    nsresult rv;
+
+    PRBool isDir;
+    rv = IsDirectory(&isDir);
+    if (NS_FAILED(rv)) 
+        return rv;
+    if (!isDir)
+        return NS_ERROR_FILE_NOT_DIRECTORY;
+
+    nsDirEnumerator* dirEnum = new nsDirEnumerator();
+    if (dirEnum == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(dirEnum);
+    rv = dirEnum->Init(this);
+    if (NS_FAILED(rv)) 
+    {
+        NS_RELEASE(dirEnum);
+        return rv;
+    }
+    
+    *entries = dirEnum;
+    return NS_OK;
+}
+
+
+
+
