@@ -1654,17 +1654,11 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
         
         result = window->GetDocument(getter_AddRefs(document));
         if (NS_SUCCEEDED(result)) {
-          nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document, &result));
-          if (htmlDocument) {
-            nsAutoString url;
-            
-            htmlDocument->GetURL(url);
-#ifndef NECKO            
-            result = NS_NewURL(sourceURL, url);
-#else
-            result = NS_NewURI(sourceURL, url);
-#endif // NECKO
-          }
+          nsCOMPtr<nsIDocument> doc(do_QueryInterface(document, &result));
+          if (doc) { 
+            *sourceURL = doc->GetDocumentURL(); 
+            result = sourceURL ? NS_OK : NS_ERROR_FAILURE; 
+          } 
         }
       }
     }
