@@ -158,13 +158,9 @@
 #define PR_IMPLEMENT(__type) __type
 #define PR_EXTERN_DATA(__type) extern __type
 #define PR_IMPLEMENT_DATA(__type) __type
-#define PR_CALLBACK
+#define PR_CALLBACK _Optlink
 #define PR_CALLBACK_DECL
-#ifndef XP_OS2_VACPP
-#define PR_STATIC_CALLBACK(__x) static __x
-#else
-#define PR_STATIC_CALLBACK(__x) static __x _Optlink
-#endif
+#define PR_STATIC_CALLBACK(__x) static __x PR_CALLBACK
 
 #else /* Unix */
 
