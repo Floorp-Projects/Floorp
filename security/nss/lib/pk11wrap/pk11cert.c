@@ -1241,8 +1241,8 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     cert = PK11_MakeCertFromHandle(slot,certID[0],NULL);
     PK11_FreeSlot(slot);
     PORT_Free(certID);
-#else
     return cert;
+#else
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert;
     cert = NSSTrustDomain_FindBestCertificateByNickname(
@@ -2300,8 +2300,8 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     callarg.callbackArg = (void *) & caller;
     callarg.findTemplate = theTemplate;
     callarg.templateCount = templateSize;
-#else
     return PK11_TraverseSlot(slot, &callarg);
+#else
     struct nss3_cert_cbstr pk11cb;
     NSSToken *tok;
     pk11cb.callback = callback;
