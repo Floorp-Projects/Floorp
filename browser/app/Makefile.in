@@ -68,9 +68,12 @@ REQUIRES = \
 CPPSRCS = nsBrowserApp.cpp
 
 EXTRA_LIBS = \
+	$(EXTRA_DSO_LDOPTS) \
+	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
 
