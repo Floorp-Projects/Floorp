@@ -327,7 +327,6 @@
         <body>
           <![CDATA[
             this.removeEventListener("load", this.handleEvent, true);
-            this.attachFormFill();
          ]]>
         </body>
       </method>
