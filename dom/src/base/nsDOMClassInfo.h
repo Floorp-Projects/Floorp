@@ -310,7 +310,8 @@ protected:
 
   nsresult RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                   JSContext *cx, JSObject *obj, jsval id,
-                                  PRBool compile, PRBool *did_compile);
+                                  PRBool compile, PRBool remove,
+                                  PRBool *did_compile);
 
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
