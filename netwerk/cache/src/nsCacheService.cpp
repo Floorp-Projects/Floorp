@@ -58,9 +58,15 @@
 #define DISK_CACHE_ENABLE_PREF      "browser.cache.disk.enable"
 #define DISK_CACHE_DIR_PREF         "browser.cache.disk.parent_directory"
 #define DISK_CACHE_CAPACITY_PREF    "browser.cache.disk.capacity"
+#define DISK_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.disk.max_entry_size"
+#define DISK_CACHE_CAPACITY         51200
 
 #define MEMORY_CACHE_ENABLE_PREF    "browser.cache.memory.enable"
 #define MEMORY_CACHE_CAPACITY_PREF  "browser.cache.memory.capacity"
+#define MEMORY_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.memory.max_entry_size"
+#define MEMORY_CACHE_CAPACITY       4096
+
+#define BROWSER_CACHE_MEMORY_CAPACITY  4096
 
 
 class nsCacheProfilePrefObserver : public nsIObserver
@@ -74,7 +80,7 @@ public:
         , mDiskCacheEnabled(PR_FALSE)
         , mDiskCacheCapacity(0)
         , mMemoryCacheEnabled(PR_TRUE)
-        , mMemoryCacheCapacity(4 * 1024 * 1024)
+        , mMemoryCacheCapacity(-1)
     {
     }
 
@@ -128,34 +134,36 @@ nsCacheProfilePrefObserver::Install()
     
     
     // install preferences observer
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefService, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefBranchInternal> branch = do_QueryInterface(prefs);
+    if (!branch) return NS_ERROR_FAILURE;
 
-    rv = prefInternal->AddObserver(MEMORY_CACHE_ENABLE_PREF, this, PR_FALSE);
-    if (NS_FAILED(rv)) rv2 = rv;
+    char * prefList[] = { 
+        DISK_CACHE_ENABLE_PREF,
+        DISK_CACHE_CAPACITY_PREF,
+        DISK_CACHE_DIR_PREF,
+        MEMORY_CACHE_ENABLE_PREF,
+        MEMORY_CACHE_CAPACITY_PREF
+    };
+    int listCount = NS_ARRAY_LENGTH(prefList);
+      
+    for (int i=0; i<listCount; i++) {
+        rv = branch->AddObserver(prefList[i], this, PR_FALSE);
+        if (NS_FAILED(rv))  rv2 = rv;
+    }
 
-    rv = prefInternal->AddObserver(DISK_CACHE_ENABLE_PREF, this, PR_FALSE);
-    if (NS_FAILED(rv)) rv2 = rv;
-    
-    rv = prefInternal->AddObserver(DISK_CACHE_DIR_PREF, this, PR_FALSE);
-    if (NS_FAILED(rv)) rv2 = rv;
-    
-    rv = prefInternal->AddObserver(DISK_CACHE_CAPACITY_PREF, this, PR_FALSE);
-    if (NS_FAILED(rv)) rv2 = rv;
-    
-    rv = prefInternal->AddObserver(MEMORY_CACHE_CAPACITY_PREF, this, PR_FALSE);
-    if (NS_FAILED(rv)) rv2 = rv;
-    
-    // determine if we have a profile already
-    //     if there is only a single profile, or it is specified on the commandline
-    //     at startup, our Install() method won't be called until after the
-    //     profile-after-change notification.  In that case we detect the presence of
-    //     a profile by the existence of the NS_APP_USER_PROFILE_50_DIR.
+    // Determine if we have a profile already
+    //     Install() is called *after* the profile-after-change notification
+    //     when there is only a single profile, or it is specified on the
+    //     commandline at startup.
+    //     In that case, we detect the presence of a profile by the existence
+    //     of the NS_APP_USER_PROFILE_50_DIR directory.
+
     nsCOMPtr<nsIFile>  directory;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(directory));
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(directory));
     if (NS_SUCCEEDED(rv)) {
         mHaveProfile = PR_TRUE;
     }
@@ -216,76 +224,76 @@ nsCacheProfilePrefObserver::Remove()
 
 NS_IMETHODIMP
 nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
-                                    const char * topic,
-                                    const PRUnichar * data)
+                                    const char *      topic,
+                                    const PRUnichar * data_unicode)
 {
-#ifdef DEBUG
-    printf("### nsCacheProfilePrefObserver::Observe [topic=%s data=%s]\n", topic, 
-           NS_ConvertUCS2toUTF8(data).get());
-#endif
-            
     nsresult rv;
-    if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
+    NS_ConvertUCS2toUTF8 data(data_unicode);
+    CACHE_LOG_ALWAYS(("Observe [topic=%s data=%s]\n", topic, data.get()));
+
+    if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
         // xpcom going away, shutdown cache service
         if (nsCacheService::GlobalInstance())
             nsCacheService::GlobalInstance()->Shutdown();
     
-    } else if (!nsCRT::strcmp("profile-before-change", topic)) {
+    } else if (!strcmp("profile-before-change", topic)) {
         // profile before change
         mHaveProfile = PR_FALSE;
 
         // XXX shutdown devices
-        nsCacheService::OnProfileShutdown(!nsCRT::strcmp("shutdown-cleanse", NS_ConvertUCS2toUTF8(data).get()));
+        nsCacheService::OnProfileShutdown(!strcmp("shutdown-cleanse",
+                                                  data.get()));
         
-    } else if (!nsCRT::strcmp("profile-after-change", topic)) {
+    } else if (!strcmp("profile-after-change", topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
         ReadPrefs();
         nsCacheService::OnProfileChanged();
     
-    } else if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
+    } else if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
+
+        // ignore pref changes until we're done switch profiles
         if (!mHaveProfile)  return NS_OK;
-        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject, &rv);
-        if (NS_FAILED(rv))
-            return rv;
+
+        nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(subject, &rv);
+        if (NS_FAILED(rv))  return rv;
 
 #ifdef NECKO_DISK_CACHE
         // which preference changed?
-        if (!nsCRT::strcmp(DISK_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
+        if (!strcmp(DISK_CACHE_ENABLE_PREF, data.get())) {
 
-            rv = prefBranch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
+            rv = branch->GetBoolPref(DISK_CACHE_ENABLE_PREF,
+                                     &mDiskCacheEnabled);
             if (NS_FAILED(rv))  return rv;
             nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-            
 
-        } else if (!nsCRT::strcmp(DISK_CACHE_CAPACITY_PREF, NS_ConvertUCS2toUTF8(data).get())) {
+        } else if (!strcmp(DISK_CACHE_CAPACITY_PREF, data.get())) {
 
             PRInt32 capacity = 0;
-            rv = prefBranch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
+            rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
             if (NS_FAILED(rv))  return rv;
             mDiskCacheCapacity = PR_MAX(0, capacity);
             nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
 #if 0            
-        } else if (!nsCRT::strcmp(DISK_CACHE_DIR_PREF, NS_ConvertUCS2toUTF8(data).get())) {
-            // XXX we probaby don't want to respond to this pref except after profile changes
-            // XXX ideally, there should be somekind of user notification that the pref change
-            // XXX won't take effect until the next time the profile changes (browser launch)
+        } else if (!strcmp(DISK_CACHE_DIR_PREF, data.get())) {
+            // XXX We probaby don't want to respond to this pref except after
+            // XXX profile changes.  Ideally, there should be somekind of user
+            // XXX notification that the pref change won't take effect until
+            // XXX the next time the profile changes (browser launch)
 #endif            
-        } else
+        } else 
 #endif // !NECKO_DISK_CACHE
+        if (!strcmp(MEMORY_CACHE_ENABLE_PREF, data.get())) {
 
-        if (!nsCRT::strcmp(MEMORY_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
-
-            rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
+            rv = branch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF,
+                                     &mMemoryCacheEnabled);
             if (NS_FAILED(rv))  return rv;
             nsCacheService::SetMemoryCacheEnabled(MemoryCacheEnabled());
             
-        } else if (!nsCRT::strcmp(MEMORY_CACHE_CAPACITY_PREF, NS_ConvertUCS2toUTF8(data).get())) {
+        } else if (!strcmp(MEMORY_CACHE_CAPACITY_PREF, data.get())) {
 
-            PRInt32 capacity = 0;
-            rv = prefBranch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF, &capacity);
-            if (NS_FAILED(rv))  return rv;
-            mMemoryCacheCapacity = PR_MAX(0, capacity);
+            (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
+                                      &mMemoryCacheCapacity);
             nsCacheService::SetMemoryCacheCapacity(mMemoryCacheCapacity);
         }
     }
@@ -297,36 +305,43 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 nsresult
 nsCacheProfilePrefObserver::ReadPrefs()
 {
-    nsresult rv, rv2 = NS_OK;
-    PRInt32 capacity = 0;
+    nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)  return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefService, &rv);
-    if (NS_FAILED(rv))  return rv;
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+    if (!branch)  return NS_ERROR_FAILURE;
 
 #ifdef NECKO_DISK_CACHE
     // read disk cache device prefs
-    rv = prefBranch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
-    if (NS_FAILED(rv)) rv2 = rv;
+    mDiskCacheEnabled = PR_TRUE;  // presume disk cache is enabled
+    (void) branch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
 
-    rv = prefBranch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
-    if (NS_FAILED(rv)) rv2 = rv;
-    mDiskCacheCapacity = PR_MAX(0, capacity);
+    mDiskCacheCapacity = DISK_CACHE_CAPACITY;
+    (void)branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &mDiskCacheCapacity);
+    mDiskCacheCapacity = PR_MAX(0, mDiskCacheCapacity);
 
-    (void) prefBranch->GetComplexValue(DISK_CACHE_DIR_PREF,     // ignore error
-                                     NS_GET_IID(nsILocalFile),
-                                     getter_AddRefs(mDiskCacheParentDirectory));
+    (void) branch->GetComplexValue(DISK_CACHE_DIR_PREF,     // ignore error
+                                   NS_GET_IID(nsILocalFile),
+                                   getter_AddRefs(mDiskCacheParentDirectory));
     
     if (!mDiskCacheParentDirectory) {
         nsCOMPtr<nsIFile>  directory;
-        // try to get the profile directory (there may not be a profile yet)
-        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(directory));
-#if DEBUG
+
+        // try to get the disk cache parent directory
+        rv = NS_GetSpecialDirectory(NS_APP_CACHE_PARENT_DIR,
+                                    getter_AddRefs(directory));
         if (NS_FAILED(rv)) {
+
+        // try to get the profile directory (there may not be a profile yet)
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                    getter_AddRefs(directory));
+#if DEBUG
+        } else if (NS_FAILED(rv)) {
             // use current process directory during development
-            rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(directory));
+            rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                        getter_AddRefs(directory));
         }
 #endif
         if (directory)
@@ -335,14 +350,12 @@ nsCacheProfilePrefObserver::ReadPrefs()
 #endif // !NECKO_DISK_CACHE
     
     // read memory cache device prefs
-    rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
-    if (NS_FAILED(rv)) rv2 = rv;
-    
-    capacity = 0;
-    rv = prefBranch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF, &capacity);
-    mMemoryCacheCapacity = PR_MAX(0, capacity);
+    (void) branch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
+
+    (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
+                              &mMemoryCacheCapacity);
         
-    return NS_SUCCEEDED(rv) ? rv2 : rv;
+    return rv;
 }
 
 
@@ -464,9 +477,6 @@ nsCacheService::Shutdown()
     if (mInitialized) {
 
         mInitialized = PR_FALSE;
-#if defined(PR_LOGGING)
-        LogCacheStatistics();
-#endif
 
         mObserver->Remove();
         NS_RELEASE(mObserver);
@@ -482,6 +492,10 @@ nsCacheService::Shutdown()
 #ifdef NECKO_DISK_CACHE
         delete mDiskDevice;
         mDiskDevice = nsnull;
+
+#if defined(PR_LOGGING)
+        LogCacheStatistics();
+#endif
 #endif
     }
     return NS_OK;
@@ -692,7 +706,7 @@ nsCacheService::CreateMemoryDevice()
     if (!mMemoryDevice)       return NS_ERROR_OUT_OF_MEMORY;
     
     // set preference
-    mMemoryDevice->SetCapacity(mObserver->MemoryCacheCapacity());
+    mMemoryDevice->SetCapacity(CacheMemoryAvailable());
 
     nsresult rv = mMemoryDevice->Init();
     if (NS_FAILED(rv)) {
@@ -1108,12 +1122,16 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
         gService->mEnableDiskDevice = PR_FALSE;
     }
 #endif // !NECKO_DISK_CACHE
-#if 0
+
     if (gService->mMemoryDevice) {
+        // clear memory cache
+        gService->mMemoryDevice->EvictEntries(nsnull);
+#if 0
         gService->mMemoryDevice->Shutdown();
         gService->mEnableMemoryDevice = PR_FALSE;
-    }
 #endif
+    }
+
 }
 
 
@@ -1127,6 +1145,10 @@ nsCacheService::OnProfileChanged()
     
     gService->mEnableDiskDevice   = gService->mObserver->DiskCacheEnabled();
     gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
+    
+    if (gService->mEnableMemoryDevice && !gService->mMemoryDevice) {
+        (void) gService->CreateMemoryDevice();
+    }
 
 #ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
@@ -1144,10 +1166,10 @@ nsCacheService::OnProfileChanged()
 #endif // !NECKO_DISK_CACHE
     
     if (gService->mMemoryDevice) {
-        gService->mMemoryDevice->SetCapacity(gService->mObserver->MemoryCacheCapacity());
+        gService->mMemoryDevice->SetCapacity(gService->CacheMemoryAvailable());
         rv = gService->mMemoryDevice->Init();
         if (NS_FAILED(rv) && (rv != NS_ERROR_ALREADY_INITIALIZED)) {
-            NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing disk device failed");
+            NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing memory device failed");
             gService->mEnableMemoryDevice = PR_FALSE;
             // XXX delete mMemoryDevice?
         }
@@ -1201,35 +1223,127 @@ nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
     
-    if (gService->mMemoryDevice) {
-        gService->mMemoryDevice->SetCapacity(capacity);
-    }
-    
     gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
-}
-
-
-#if 0
-void
-nsCacheService::SetCacheDevicesEnabled(PRBool  enableDisk, PRBool  enableMemory)
-{
-    if (this == nsnull) return;  // NS_ERROR_NOT_AVAILABLE;
-    nsAutoLock lock(mCacheServiceLock);
-    
-    if (enableDisk && !mDiskDevice) {
-        // disk device requires lazy activation
-    } else if (!enableDisk && mDiskDevice) {
-        // XXX deactivate disk
+    if (gService->mEnableMemoryDevice && !gService->mMemoryDevice) {
+        (void) gService->CreateMemoryDevice();
     }
 
-    if (enableMemory && !mMemoryDevice) {
-        // XXX enable memory cache device
-    } else if (!enableMemory && mMemoryDevice) {
-        // XXX disable memory cache device
+    if (gService->mMemoryDevice) {
+        gService->mMemoryDevice->SetCapacity(gService->CacheMemoryAvailable());
     }
 }
+
+/**
+ * CacheMemoryAvailable
+ *
+ * If the browser.cache.memory.capacity preference is positive, we use that
+ * value for the amount of memory available for the cache.
+ *
+ * If browser.cache.memory.capacity is zero, the memory cache is disabled.
+ * 
+ * If browser.cache.memory.capacity is negative or not present, we use a
+ * formula that grows less than linearly with the amount of system memory.
+ *
+ * RAM	Cache
+ * ---	-----
+ *   32 Mb   2 Mb
+ *   64 Mb   4 Mb
+ *  128 Mb   8 Mb
+ *  256 Mb  14 Mb
+ *  512 Mb  22 Mb
+ * 1024 Mb  32 Mb
+ * 2048 Mb  44 Mb
+ * 4096 Mb  58 Mb
+ *
+ */
+
+#include <math.h>
+#if defined(__linux) || defined(__sun)
+#include <unistd.h>
+#elif defined(__hpux)
+#include <sys/pstat.h>
+#elif defined(XP_MACOSX)
+#include <mach/mach_init.h>
+#include <mach/mach_host.h>
+#elif defined(XP_OS2)
+#define INCL_DOSMISC
+#include <os2.h>
+#elif defined(XP_WIN)
+#include <windows.h>
 #endif
 
+
+PRInt32
+nsCacheService::CacheMemoryAvailable()
+{
+    PRInt32 capacity = mObserver->MemoryCacheCapacity();
+    if (capacity >= 0)
+        return capacity;
+
+    long kbytes  = 0;
+
+#if defined(__linux) || defined(__sun)
+
+    long pageSize  = sysconf(_SC_PAGESIZE);
+    long pageCount = sysconf(_SC_PHYS_PAGES);
+    kbytes         = (pageSize / 1024) * pageCount;
+
+#elif defined(__hpux)
+    
+    struct pst_static  info;
+    int result = pstat_getstatic(&info, sizeof(info), 1, 0);
+    if (result == 1) {
+        kbytes = info.physical_memory * (info.page_size / 1024);
+    }
+    
+#elif defined(XP_MACOSX)
+
+    struct host_basic_info hInfo;
+    mach_msg_type_number_t count;
+
+    int result = host_info(mach_host_self(),
+                           HOST_BASIC_INFO,
+                           (host_info_t) &hInfo,
+                           &count);
+    if (result == KERN_SUCCESS) {
+        kbytes = hInfo.memory_size / 1024;
+    }
+
+#elif defined(XP_WIN)
+    
+    // XXX we should use GlobalMemoryStatusEx on XP and 2000, but
+    // XXX our current build environment doesn't support it.
+    MEMORYSTATUS  memStat;
+    memset(&memStat, 0, sizeof(memStat));
+    GlobalMemoryStatus(&memStat);
+    kbytes = memStat.dwTotalPhys / 1024;
+
+#elif defined(XP_OS2)
+
+    ULONG ulPhysMem;
+    DosQuerySysInfo(QSV_TOTPHYSMEM,
+                    QSV_TOTPHYSMEM,
+                    &ulPhysMem,
+                    sizeof(ulPhysMem));
+    kbytes = (long)(ulPhysMem / 1024);
+      
+#else
+    return MEMORY_CACHE_CAPACITY;
+#endif
+
+    if (kbytes == 0)  return 0;
+    if (kbytes < 0)   kbytes = LONG_MAX; // cap overflows
+
+    double x = log(kbytes)/log(2) - 14;
+    if (x > 0) {
+        capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
+        capacity   *= 1024;
+    } else {
+        capacity    = 0;
+    }
+
+    return capacity;
+}
 
 
 /******************************************************************************
@@ -1586,7 +1700,9 @@ nsCacheService::LogCacheStatistics()
     CACHE_LOG_ALWAYS(("    Max Meta Size  = %d\n", mMaxMetaSize));
     CACHE_LOG_ALWAYS(("    Max Data Size  = %d\n", mMaxDataSize));
     CACHE_LOG_ALWAYS(("\n"));
-    CACHE_LOG_ALWAYS(("    Deactivate Failures         = %d\n", mDeactivateFailures));
-    CACHE_LOG_ALWAYS(("    Deactivated Unbound Entries = %d\n", mDeactivatedUnboundEntries));
+    CACHE_LOG_ALWAYS(("    Deactivate Failures         = %d\n",
+                      mDeactivateFailures));
+    CACHE_LOG_ALWAYS(("    Deactivated Unbound Entries = %d\n",
+                      mDeactivatedUnboundEntries));
 }
 #endif

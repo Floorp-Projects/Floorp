@@ -30,6 +30,7 @@
 #include "nsICacheVisitor.h"
 #include "nsCRT.h"
 #include "nsCache.h"
+#include "nsReadableUtils.h"
 
 // The memory cache implements a variation of the "LRU-SP" caching algorithm
 // described in "LRU-SP: A Size-Adjusted and Popularity-Aware LRU Replacement
@@ -519,7 +520,15 @@ NS_IMETHODIMP
 nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    *result = nsCRT::strdup("Memory cache usage report:");
+    nsCString  buffer;
+
+    buffer.Assign("<table>\n");
+    buffer.Append("<tr><td><b>Inactive Storage:</b></td><td><tt> ");
+    buffer.AppendInt(mDevice->mInactiveSize / 1024);
+    buffer.Append(" k</tt></td></tr>\n");
+    buffer.Append("</table>\n");
+
+    *result = ToNewCString(buffer);
     if (!*result) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
