@@ -15,8 +15,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 
-DIRS = base content document forms style table tests
+DIRS=src 
 
 include <$(DEPTH)\layout\config\rules.mak>

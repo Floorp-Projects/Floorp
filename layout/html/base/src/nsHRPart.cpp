@@ -72,6 +72,10 @@ public:
   HRuleFrame(nsIContent* aContent,
              nsIFrame* aParentFrame);
 
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -220,6 +224,33 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
                                  width - diameter, height);
      }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HRuleFrame::Reflow(nsIPresContext*      aPresContext,
+                   nsReflowMetrics&     aDesiredSize,
+                   const nsReflowState& aReflowState,
+                   nsReflowStatus&      aStatus)
+{
+  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+
+  // XXX add in code to check for width/height being set via css
+  // and if set use them instead of calling GetDesiredSize.
+
+
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+  AddBordersAndPadding(aPresContext, aDesiredSize);
+
+  // HR's do not impact the max-element-size, otherwise tables behave
+  // badly. This makes sense they are springy.
+  if (nsnull != aDesiredSize.maxElementSize) {
+    nscoord onePixel = nscoord(aPresContext->GetPixelsToTwips());
+    aDesiredSize.maxElementSize->width = onePixel;
+    aDesiredSize.maxElementSize->height = onePixel;
+  }
+
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

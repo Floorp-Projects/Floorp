@@ -19,7 +19,7 @@ DEPTH = ../..
 
 # Don't do tests for now
 #DIRS = base document forms style table build tests
-DIRS = base document forms style table
+DIRS = base content document forms style table
 
 include $(DEPTH)/config/config.mk
 

@@ -150,6 +150,7 @@ protected:
 
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
+  nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
 
@@ -752,6 +753,11 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eHTMLTag_area:
     ProcessAREATag(aNode);
     return 0;
+
+  case eHTMLTag_meta:
+    // Add meta objects to the head object
+    ProcessMETATag(aNode);
+    return 0;
   }
 
   eHTMLTags parentType;
@@ -974,6 +980,27 @@ nsresult HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     }
   }
   return NS_OK;
+}
+
+nsresult
+HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
+{
+  NS_PRECONDITION(nsnull != mHead, "bad parser: meta before head");
+  nsresult rv = NS_OK;
+  if (nsnull != mHead) {
+    nsAutoString tmp(aNode.GetText());
+    tmp.ToUpperCase();
+    nsIAtom* atom = NS_NewAtom(tmp);
+
+    nsIHTMLContent* it = nsnull;
+    rv = NS_NewHTMLMeta(&it, atom) ;
+    if (NS_OK == rv) {
+      rv = AddAttributes(aNode, it);
+      mHead->AppendChild(it, PR_FALSE);
+    }
+    NS_RELEASE(atom);
+  }
+  return rv;
 }
 
 nsresult HTMLContentSink::ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
