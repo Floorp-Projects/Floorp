@@ -53,6 +53,7 @@ static PRUnichar gt ('>');
 static PRUnichar space (' ');
 static PRUnichar nl ('\n');
 static PRUnichar cr('\r');
+static PRUnichar hyphen ('-');
 
 /** Mail citations using the Internet style: > This is a citation
   */
@@ -226,12 +227,18 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
   PRUint32 outStringCol = 0;
   PRUint32 citeLevel = 0;
   const nsPromiseFlatString &tString = PromiseFlatString(aInString);//MJUDGE SCC NEED HELP
+#ifdef DEBUG_wrapping
+  int loopcount = 0;
+#endif
   while (posInString < length)
   {
 #ifdef DEBUG_wrapping
     printf("Outer loop: '%s'\n",
            NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
                                                 length-posInString)).get());
+    printf("out string is now: '%s'\n",
+           NS_LossyConvertUCS2toASCII(aOutString).get());
+
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
@@ -250,10 +257,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     // (retain the original paragraph breaks)
     if (tString[posInString] == nl && aOutString.Length() > 0)
     {
-      nsReadingIterator <PRUnichar> outPeekIter;
-      aOutString.EndReading(outPeekIter);
-      outPeekIter.advance(-1);
-      if ((*outPeekIter) != nl)
+      if (aOutString.Last() != nl)
         aOutString.Append(nl);
       AddCite(aOutString, newCiteLevel);
       aOutString.Append(nl);
@@ -339,6 +343,9 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     while ((PRInt32)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
+      if (++loopcount > 1000)
+        NS_ASSERTION(PR_FALSE, "possible infinite loop in nsInternetCiter\n");
+
       printf("Inner loop: '%s'\n",
              NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
                                               nextNewline-posInString)).get());
@@ -407,12 +414,31 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 
       // Special case: maybe we should have wrapped last time.
       // If the first breakpoint here makes the current line too long,
-      // then break the current line and loop around again.
-      if (outStringCol + breakPt > aWrapCol)
+      // then if we already have text on the current line,
+      // break and loop around again;
+      // otherwise, the new text is too long and has no break points,
+      // so we have to decide to break hard or else don't break this line.
+      // But if we're at all close to the wrap column,
+      // just add the whole thing, and let it slop over a bit:
+      const int SLOP = 6;
+      if (outStringCol + breakPt > aWrapCol + SLOP)
       {
 #ifdef DEBUG_wrapping
         printf("line would be too long, breaking early\n");
+        printf("outStringCol=%d, posInString=%d, breakPt=%d\n",
+               outStringCol, posInString, breakPt);
 #endif
+        if (outStringCol <= citeLevel+1)
+        {
+          // Break hard, with a hyphen, and loop around again.
+          aOutString += Substring(tString, posInString,
+                                  aWrapCol - outStringCol - 1);
+          aOutString += hyphen;
+          posInString += aWrapCol - outStringCol - 1;
+#ifdef DEBUG_wrapping
+          printf("Need to break hard!  Now posInString=%d\n", posInString);
+#endif
+        }
         aOutString.Append(nl);
         AddCite(aOutString, citeLevel);
         outStringCol = citeLevel + (citeLevel ? 1 : 0);
@@ -424,7 +450,9 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 #endif
 
       aOutString += Substring(tString, posInString, breakPt);
-      posInString += breakPt;
+      // If we're letting it slop over, then we need to advance the
+      // pos by one more, to get past the character which caused the wrap:
+      posInString += breakPt + (outStringCol + breakPt > aWrapCol ? 1 : 0);
       outStringCol += breakPt;
 
       // Add a newline and the quote level to the out string
