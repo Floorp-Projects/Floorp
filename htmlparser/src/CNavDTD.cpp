@@ -1105,11 +1105,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 
     CObserverService* theService=mParser->GetObserverService();
     if(theService) {
-      CParserContext*   pc=mParser->PeekContext();
-      void*             theDocID=(pc)? pc->mKey:0;
-      
       const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
- 
       result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertToString(kHTMLTextContentType), mParser);
     }
   }
