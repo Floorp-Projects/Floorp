@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.40 2004/02/11 05:25:01 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.41 2004/02/11 06:05:17 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -263,49 +263,35 @@ const SEC_ASN1Template CERT_SetOfSignedCrlTemplate[] = {
     { SEC_ASN1_SET_OF, 0, cert_SignedCrlTemplate },
 };
 
-/* Check the version of the CRL.  If there is a critical extension in the crl
-   or crl entry, then the version must be v2. Otherwise, it should be v1.  If
-   the crl contains critical extension(s), then we must recognized the extension's
-   OID.
-   */
-SECStatus cert_check_crl_version (CERTCrl *crl)
+/* get CRL version */
+int cert_get_crl_version(CERTCrl * crl)
+{
+    /* CRL version is defaulted to v1 */
+    int version = SEC_CRL_VERSION_1;
+    if (crl && crl->version.data != 0) {
+	version = (int)DER_GetUInteger (&crl->version);
+    }
+    return version;
+}
+
+
+/* check the entries in the CRL */
+SECStatus cert_check_crl_entries (CERTCrl *crl)
 {
     CERTCrlEntry **entries;
     CERTCrlEntry *entry;
     PRBool hasCriticalExten = PR_FALSE;
     SECStatus rv = SECSuccess;
-    int version;
 
-    /* CRL version is defaulted to v1 */
-    version = SEC_CRL_VERSION_1;
-    if (crl->version.data != 0) 
-	version = (int)DER_GetUInteger (&crl->version);
-	
-    if (version > SEC_CRL_VERSION_2) {
-	PORT_SetError (SEC_ERROR_BAD_DER);
-	return (SECFailure);
+    if (!crl) {
+        return SECFailure;
     }
 
-    /* Check the crl extensions for a critial extension.  If one is found,
-       and the version is not v2, then we are done.
-     */
-    if (crl->extensions) {
-	hasCriticalExten = cert_HasCriticalExtension (crl->extensions);
-	if (hasCriticalExten) {
-	    if (version != SEC_CRL_VERSION_2)
-		return (SECFailure);
-	    /* make sure that there is no unknown critical extension */
-	    if (cert_HasUnknownCriticalExten (crl->extensions) == PR_TRUE) {
-		PORT_SetError (SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
-		return (SECFailure);
-	    }
-	}
-    }
-
-	
     if (crl->entries == NULL) {
+        /* CRLs with no entries are valid */
         return (SECSuccess);
     }
+
     /* Look in the crl entry extensions.  If there is a critical extension,
        then the crl version must be v2; otherwise, it should be v1.
      */
@@ -317,28 +303,66 @@ SECStatus cert_check_crl_version (CERTCrl *crl)
 	       CRL must be of version 2.  If we already saw a critical extension,
 	       there is no need to check the version again.
 	    */
-	    if (hasCriticalExten == PR_FALSE) {
-		hasCriticalExten = cert_HasCriticalExtension (entry->extensions);
-		if (hasCriticalExten && version != SEC_CRL_VERSION_2) { 
-		    rv = SECFailure;
-		    break;
-		}
-	    }
+            if (hasCriticalExten == PR_FALSE) {
+                hasCriticalExten = cert_HasCriticalExtension (entry->extensions);
+                if (hasCriticalExten) {
+                    if (cert_get_crl_version(crl) != SEC_CRL_VERSION_2) { 
+                        /* only CRL v2 critical extensions are supported */
+                        PORT_SetError(SEC_ERROR_CRL_V1_CRITICAL_EXTENSION);
+                        rv = SECFailure;
+                        break;
+                    }
+                }
+            }
 
 	    /* For each entry, make sure that it does not contain an unknown
 	       critical extension.  If it does, we must reject the CRL since
 	       we don't know how to process the extension.
 	    */
 	    if (cert_HasUnknownCriticalExten (entry->extensions) == PR_TRUE) {
-		PORT_SetError (SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+		PORT_SetError (SEC_ERROR_CRL_UNKNOWN_CRITICAL_EXTENSION);
 		rv = SECFailure;
 		break;
 	    }
 	}
 	++entries;
     }
-    if (rv == SECFailure)
-	return (rv);
+    return(rv);
+}
+
+/* Check the version of the CRL.  If there is a critical extension in the crl
+   or crl entry, then the version must be v2. Otherwise, it should be v1.  If
+   the crl contains critical extension(s), then we must recognized the extension's
+   OID.
+   */
+SECStatus cert_check_crl_version (CERTCrl *crl)
+{
+    PRBool hasCriticalExten = PR_FALSE;
+    int version = cert_get_crl_version(crl);
+	
+    if (version > SEC_CRL_VERSION_2) {
+	PORT_SetError (SEC_ERROR_CRL_INVALID_VERSION);
+	return (SECFailure);
+    }
+
+    /* Check the crl extensions for a critial extension.  If one is found,
+       and the version is not v2, then we are done.
+     */
+    if (crl->extensions) {
+	hasCriticalExten = cert_HasCriticalExtension (crl->extensions);
+	if (hasCriticalExten) {
+            if (version != SEC_CRL_VERSION_2) {
+                /* only CRL v2 critical extensions are supported */
+                PORT_SetError(SEC_ERROR_CRL_V1_CRITICAL_EXTENSION);
+                return (SECFailure);
+            }
+	    /* make sure that there is no unknown critical extension */
+	    if (cert_HasUnknownCriticalExten (crl->extensions) == PR_TRUE) {
+		PORT_SetError (SEC_ERROR_CRL_UNKNOWN_CRITICAL_EXTENSION);
+		return (SECFailure);
+	    }
+	}
+    }
 
     return (SECSuccess);
 }
@@ -373,18 +397,6 @@ CERT_KeyFromDERCrl(PRArenaPool *arena, SECItem *derCrl, SECItem *key)
 }
 
 #define GetOpaqueCRLFields(x) ((OpaqueCRLFields*)x->opaque)
-
-/*
-PRBool CERT_CRLIsInvalid(CERTSignedCrl* crl)
-{
-    OpaqueCRLFields* extended = NULL;
-
-    if (crl && (extended = (OpaqueCRLFields*) crl->opaque)) {
-        return extended->bad;
-    }
-    return PR_TRUE;
-}
-*/
 
 SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl)
 {
@@ -424,6 +436,10 @@ SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl)
             /* cache the decoding failure. If it fails the first time,
                it will fail again, which will grow the arena and leak
                memory, so we want to avoid it */
+        }
+        rv = cert_check_crl_entries(&crl->crl);
+        if (rv != SECSuccess) {
+            extended->badExtensions = PR_TRUE;
         }
     }
     return rv;
@@ -495,16 +511,28 @@ CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
     switch (type) {
     case SEC_CRL_TYPE:
         rv = SEC_QuickDERDecodeItem(arena, crl, crlTemplate, crl->derCrl);
-	if (rv != SECSuccess) {
+        if (rv != SECSuccess) {
             extended->badDER = PR_TRUE;
             break;
         }
-        /* check for critical extentions */
-	rv =  cert_check_crl_version (&crl->crl);
-	if (rv != SECSuccess) {
+        /* check for critical extensions */
+        rv =  cert_check_crl_version (&crl->crl);
+        if (rv != SECSuccess) {
+            extended->badExtensions = PR_TRUE;
+            break;
+        }
+
+        if (PR_TRUE == extended->partial) {
+            /* partial decoding, don't verify entries */
+            break;
+        }
+
+        rv = cert_check_crl_entries(&crl->crl);
+        if (rv != SECSuccess) {
             extended->badExtensions = PR_TRUE;
         }
-	break;
+
+        break;
 
     case SEC_KRL_TYPE:
 	rv = SEC_QuickDERDecodeItem
