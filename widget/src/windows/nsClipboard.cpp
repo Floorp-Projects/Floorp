@@ -35,6 +35,10 @@
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
 
+#include "nsGfxCIID.h"
+#include "nsIImage.h"
+
+static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID);
 
 //-------------------------------------------------------------------------
 //
@@ -86,7 +90,7 @@ UINT nsClipboard::GetFormat(const nsString & aMimeStr)
     format = ::RegisterClipboardFormat(str);
     delete[] str;
   }
-
+  printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr.ToNewCString(), format);
   return format;
 }
 
@@ -253,6 +257,46 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aForma
   return result;
 }
 
+#if 1
+static void DisplayErrCode(HRESULT hres) 
+{
+  if (hres == E_INVALIDARG) {
+    printf("E_INVALIDARG\n");
+  } else
+  if (hres == E_UNEXPECTED) {
+    printf("E_UNEXPECTED\n");
+  } else
+  if (hres == E_OUTOFMEMORY) {
+    printf("E_OUTOFMEMORY\n");
+  } else
+  if (hres == DV_E_LINDEX ) {
+    printf("DV_E_LINDEX\n");
+  } else
+  if (hres == DV_E_FORMATETC) {
+    printf("DV_E_FORMATETC\n");
+  }  else
+  if (hres == DV_E_TYMED) {
+    printf("DV_E_TYMED\n");
+  }  else
+  if (hres == DV_E_DVASPECT) {
+    printf("DV_E_DVASPECT\n");
+  }  else
+  if (hres == OLE_E_NOTRUNNING) {
+    printf("OLE_E_NOTRUNNING\n");
+  }  else
+  if (hres == STG_E_MEDIUMFULL) {
+    printf("STG_E_MEDIUMFULL\n");
+  }  else
+  if (hres == DV_E_CLIPFORMAT) {
+    printf("DV_E_CLIPFORMAT\n");
+  }  else
+  if (hres == S_OK) {
+    printf("S_OK\n");
+  } else {
+    printf("****** DisplayErrCode 0x%X\n", hres);
+  }
+}
+#endif
 //-------------------------------------------------------------------------
 static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed)
 {
@@ -260,43 +304,67 @@ static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATET
 
   // Starting by querying for the data to see if we can get it as from global memory
   HRESULT hres = S_FALSE;
-  if (S_OK == aDataObject->QueryGetData(pFE)) {
+  hres = aDataObject->QueryGetData(pFE);
+  DisplayErrCode(hres);
+  if (S_OK == hres) {
     hres = aDataObject->GetData(pFE, pSTM);
-
-#if 1 // for debug
-    if (hres == E_INVALIDARG) {
-      printf("E_INVALIDARG\n");
-    }
-    if (hres == E_UNEXPECTED) {
-      printf("E_UNEXPECTED\n");
-    }
-    if (hres == E_OUTOFMEMORY) {
-      printf("E_OUTOFMEMORY\n");
-    }
-    if (hres == DV_E_LINDEX ) {
-      printf("DV_E_LINDEX\n");
-    }
-    if (hres == DV_E_FORMATETC) {
-      printf("DV_E_FORMATETC\n");
-    } 
-    if (hres == DV_E_TYMED) {
-      printf("DV_E_TYMED\n");
-    } 
-    if (hres == DV_E_DVASPECT) {
-      printf("DV_E_DVASPECT\n");
-    } 
-    if (hres == OLE_E_NOTRUNNING) {
-      printf("OLE_E_NOTRUNNING\n");
-    } 
-    if (hres == STG_E_MEDIUMFULL) {
-      printf("STG_E_MEDIUMFULL\n");
-    } 
-    if (hres == S_OK) {
-      printf("S_OK\n");
-    } 
-#endif
+    DisplayErrCode(hres);
   }
   return hres;
+}
+
+/*------------------------------------------------------------------
+   DibCopyFromPackedDib is generally used for pasting DIBs from the 
+     clipboard.
+  ------------------------------------------------------------------*/
+
+PRUint8 * GetDIBBits(BITMAPINFO * aBitmapInfo)
+{
+  BYTE  * bits ;     
+  DWORD   headerSize;
+  DWORD   maskSize;
+  DWORD   colorSize;
+
+  // Get the size of the information header
+     
+  headerSize = aBitmapInfo->bmiHeader.biSize ;
+
+  if (headerSize != sizeof (BITMAPCOREHEADER) &&
+      headerSize != sizeof (BITMAPINFOHEADER) &&
+      //headerSize != sizeof (BITMAPV5HEADER) &&
+      headerSize != sizeof (BITMAPV4HEADER)) {
+    return NULL ;
+  }
+
+  // Get the size of the color masks
+  if (headerSize == sizeof (BITMAPINFOHEADER) &&
+      aBitmapInfo->bmiHeader.biCompression == BI_BITFIELDS) {
+    maskSize = 3 * sizeof (DWORD);
+  } else {
+    maskSize = 0;
+  }
+
+  // Get the size of the color table
+  if (headerSize == sizeof (BITMAPCOREHEADER)) {
+    int iBitCount = ((BITMAPCOREHEADER *) aBitmapInfo)->bcBitCount;
+    if (iBitCount <= 8) {
+       colorSize = (1 << iBitCount) * sizeof (RGBTRIPLE);
+    } else {
+     colorSize = 0 ;
+    }
+  } else {         // All non-OS/2 compatible DIBs
+    if (aBitmapInfo->bmiHeader.biClrUsed > 0)      {
+      colorSize = aBitmapInfo->bmiHeader.biClrUsed * sizeof (RGBQUAD);
+    } else if (aBitmapInfo->bmiHeader.biBitCount <= 8) {
+      colorSize = (1 << aBitmapInfo->bmiHeader.biBitCount) * sizeof (RGBQUAD);
+    } else {
+      colorSize = 0;
+    }
+  }
+
+  bits = (BYTE *) aBitmapInfo + headerSize + maskSize + colorSize ;
+
+  return bits;
 }
 
 //-------------------------------------------------------------------------
@@ -318,27 +386,17 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   STGMEDIUM stm;
   hres = FillSTGMedium(aDataObject, format, &fe, &stm, TYMED_HGLOBAL);
 
-  // We can only understand our own aFormats (the MIME types)
-  // So if the aFormat match one of the image MIME we need to convert over
-  // to a format that windows understands
-  /*if (S_OK != hres) {
-    nsAutoString mime(kJPEGImageMime);
-    UINT jpegFormat = GetFormat(mime);
-    if (jpegFormat == format) {
-      hres = FillSTGMedium(aDataObject, CF_DIB, &fe, &stm, TYMED_HGLOBAL);
-    }
-  }*/
-
-
+  // Currently this is only handling TYMED_HGLOBAL data
+  // For Text, Dibs, Files, and generic data (like HTML)
   if (S_OK == hres) {
     switch (stm.tymed) {
 
       case TYMED_HGLOBAL: 
         {
-          result = GetGlobalData(stm.hGlobal, aData, aLen);
           switch (fe.cfFormat) {
             case CF_TEXT: 
               {
+                result = GetGlobalData(stm.hGlobal, aData, aLen);
                 char * str = (char *)*aData;
                 while (str[*aLen-1] == 0) {
                   (*aLen)--;
@@ -347,7 +405,46 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
             case CF_DIB :
               {
-                printf("************** DIB was dropped!\n");
+                // This creates an nsIImage from 
+                // the DIB info on the clipboard
+                HGLOBAL hGlobal = stm.hGlobal;
+                BYTE  * pGlobal = (BYTE  *)::GlobalLock (hGlobal) ;
+                BITMAPV4HEADER * header = (BITMAPV4HEADER *)pGlobal;
+
+                nsIImage * image;
+                nsresult rv = nsComponentManager::CreateInstance(kCImageCID, nsnull, 
+                                          nsCOMTypeInfo<nsIImage>::GetIID(), 
+                                          (void**) &image);
+                if (NS_OK == rv) {
+                  // pull the size informat out of the BITMAPINFO header and
+                  // initializew the image
+                  PRInt32 width  = header->bV4Width;
+                  PRInt32 height = header->bV4Height;
+                  PRInt32 depth  = header->bV4BitCount;
+                  PRUint8 * bits = GetDIBBits((BITMAPINFO *)pGlobal);
+
+                  image->Init(width, height, depth, nsMaskRequirements_kNoMask);
+
+                  // Now, copy the image bits from the Dib into the nsIImage's buffer
+                  PRUint8 * imageBits = image->GetBits();
+                  depth = (depth >> 3);
+                  PRUint32 size = width * height * depth;
+                  CopyMemory(imageBits, bits, size);
+
+                  // return a pointer to the nsIImage
+                  *aData = (void *)image;
+                  *aLen   = 4;
+
+                  ::GlobalUnlock (hGlobal) ;
+                  result = NS_OK;
+                } else {
+                  *aData = nsnull;
+                  aLen   = 0;
+                }
+
+                // XXX NOTE this is temporary
+                // until the rest of the image code gets in
+                NS_ASSERTION(0, "Take this out when editor can handle images");
               } break;
 
             case CF_HDROP : 
@@ -375,9 +472,26 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 }
               } break;
 
-            default:
-              break;
+            default: {
+              // Check to see if there is HTML on the clipboard
+              // if not, then just get the data and return it
+              UINT format = GetFormat(nsAutoString(kHTMLMime));
+              if (fe.cfFormat == format) {
+                result = GetGlobalData(stm.hGlobal, aData, aLen);
+                char * str = (char *)*aData;
+                while (str[*aLen-1] == 0) {
+                  (*aLen)--;
+                }
+              } else {
+                result = GetGlobalData(stm.hGlobal, aData, aLen);
+              }
+              } break;
           } // switch
+        } break;
+
+      case TYMED_GDI: 
+        {
+          printf("*********************** TYMED_GDI\n");
         } break;
 
       default:
@@ -420,11 +534,13 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
         if (NS_OK == res) {
           aTransferable->SetTransferData(df, data, dataLen);
+          break;
         }
       } else if (nsnull != aWindow) {
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
         if (NS_OK == res) {
           aTransferable->SetTransferData(df, data, dataLen);
+          break;
         }
       } 
     }
