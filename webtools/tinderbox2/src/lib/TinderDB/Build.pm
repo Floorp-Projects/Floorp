@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.23 $ 
-# $Date: 2001/08/14 15:57:43 $ 
+# $Revision: 1.24 $ 
+# $Date: 2001/12/03 19:44:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -482,8 +482,10 @@ $out .=<<EOF;
 		<td align=right>Build</td>
 		<td align=left>Cell Links</td>
 	</tr></thead>
+              <tr><td align=center><TT>l</TT></td>
+                  <td>= Show Brief Build Log</td></tr>
               <tr><td align=center><TT>L</TT></td>
-                  <td>= Show Build Logs</td></tr>
+                  <td>= Show Full Build Log</td></tr>
               <tr><td align=center><TT>C</TT></td>
                   <td>= Show Previous Build Checkins</td></tr>
               <tr><td align=center><TT>B</TT></td>
@@ -502,10 +504,22 @@ EOF
   my $state_rows;
 
   foreach $state (@build_states) {
-    my ($color) = BuildStatus::status2html_colors($state);
+    my ($cell_color) = BuildStatus::status2html_colors($state);
     my ($description) = BuildStatus::status2descriptions($state);
+    my ($char) = BuildStatus::status2hdml_chars($state);
+    my $text_browser_color_string = 
+      HTMLPopUp::text_browser_color_string($cell_color, $char);
+
+    $description = (
+
+                    $text_browser_color_string.
+                    $description.
+                    $text_browser_color_string.
+
+                    "");
+
     $state_rows .= (
-                    "\t\t<tr bgcolor=\"$color\">\n".
+                    "\t\t<tr bgcolor=\"$cell_color\">\n".
                     "\t\t<td>$description</td>\n".
                     "\t\t</tr>\n"
                    );
@@ -1016,14 +1030,21 @@ sub status_table_row {
           ) {
       $rowspan++ ;
     }
-    
-    my ($cell_color) = BuildStatus::status2html_colors($current_rec->{'status'});
+
+    my ($status) = $current_rec->{'status'};
+    my ($cell_color) = BuildStatus::status2html_colors($status);
 
     my ($cell_options) = ("rowspan=$rowspan ".
                           "bgcolor=$cell_color ");
 
+    my ($char) = BuildStatus::status2hdml_chars($status);
+    my $text_browser_color_string = 
+      HTMLPopUp::text_browser_color_string($cell_color, $char);
+    
     my ($links) = '';
     my ($title) = "Build Info Buildname: $buildname";
+
+    $links.=  "\t\t".$text_browser_color_string."\n";
 
     # Build Log Link
 
@@ -1033,10 +1054,22 @@ sub status_table_row {
     if ($current_rec->{'brieflog'}) {
       $links.= "\t\t".
         HTMLPopUp::Link(
-                        "linktxt"=>"L", 
+                        "linktxt"=>"l", 
                         # the mail processor tells us the URL to
                         # retreive the log files.
                         "href"=>$current_rec->{'brieflog'},
+                        "windowtxt"=>$current_rec->{'info'}, 
+                        "windowtitle" =>$title,
+                       )."\n";
+    }
+    
+    if ($current_rec->{'fulllog'}) {
+      $links.= "\t\t".
+        HTMLPopUp::Link(
+                        "linktxt"=>"L", 
+                        # the mail processor tells us the URL to
+                        # retreive the log files.
+                        "href"=>$current_rec->{'fulllog'},
                         "windowtxt"=>$current_rec->{'info'}, 
                         "windowtitle" =>$title,
                        )."\n";
@@ -1091,6 +1124,8 @@ sub status_table_row {
                  "\n"
                 );
     }
+
+    $links.=  "\t\t".$text_browser_color_string."\n";
 
     push @outrow, ( "\t<!-- cell for build: $buildname, tree: $tree -->\n".
                     "\t<td align=center $cell_options><tt>\n".
