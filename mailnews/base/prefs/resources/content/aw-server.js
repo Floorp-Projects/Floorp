@@ -34,6 +34,30 @@ function validate() {
     window.alert(alertText);
     return false;
   }
+
+  dump("check if this account exists\n");
+  var pageData = parent.GetPageData();
+  var hostName = servername.value;
+  var serverType = parent.getCurrentServerType(pageData);
+  var userName = parent.getCurrentUserName(pageData);
+
+  var accountExists = false;
+  var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+  try {
+	var server = accountManager.FindServer(userName,hostName,serverType);
+	if (server) {
+		accountExists = true;
+	}
+  }
+  catch (ex) {
+	accountExists = false;
+  }
+  if (accountExists) {
+    var alertText = Bundle.GetStringFromName("accountExists");
+    window.alert(alertText);
+    return false;
+  }
+
   return true;
 }
 

@@ -222,7 +222,6 @@ function AccountDataToPageData(accountData, pageData)
     }
 }
 
-
 // take data from each page of pageData and dump it into accountData
 // use: to put results of wizard into a account-oriented object
 function PageDataToAccountData(pageData, accountData)
@@ -566,6 +565,28 @@ function serverIsNntp(pageData) {
     return false;
 }
 
+function getUsernameFromEmail(email)
+{
+	var emailData = email.split("@");
+    return emailData[0];
+}
+
+function getCurrentUserName(pageData)
+{
+	var userName = "";
+
+	if (pageData.login) {
+    	if (pageData.login.username) {
+        	userName = pageData.login.username.value;
+		}
+	}
+	if (userName == "") {
+		var email = pageData.identity.email.value;
+		userName = getUsernameFromEmail(email); 
+	}
+	return userName;
+}
+
 function getCurrentServerType(pageData) {
     var servertype = "pop3";    // hopefully don't resort to default!
     if (serverIsNntp(pageData))
@@ -642,7 +663,6 @@ function PrefillAccountForIsp(ispName)
     AccountDataToPageData(ispData, pageData);
 }
 
-
 // does any cleanup work for the the account data
 // - sets the username from the email address if it's not already set
 // - anything else?
@@ -652,8 +672,7 @@ function FixupAccountDataForIsp(accountData)
     var username;
 
     if (email) {
-        var emailData = email.split("@");
-        username = emailData[0];
+		username = getUsernameFromEmail(email);
     }
     
     // fix up the username
