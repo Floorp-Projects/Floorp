@@ -404,6 +404,9 @@ NS_IMETHODIMP nsWindowDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResou
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
+    // add extra NULL checking for top-crash bug # 146466
+    if (!gRDFService) return NS_RDF_NO_VALUE;
+    if (!mInner) return NS_RDF_NO_VALUE;
     if (!mContainer) return NS_RDF_NO_VALUE;
     // special case kNC_KeyIndex before we forward to mInner
     if (aProperty == kNC_KeyIndex) {
