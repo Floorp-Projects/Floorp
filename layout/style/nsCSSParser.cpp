@@ -730,6 +730,13 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
 
       if (NS_FAILED(errorCode))
         break;
+
+      if (!SkipDeclaration(errorCode, PR_FALSE)) {
+        if (errorCode != -1) {
+          rv = errorCode;
+        }
+        break;
+      }
     }
   } while (!aParseOnlyOneDecl);
 
