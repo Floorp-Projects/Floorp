@@ -24,7 +24,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
-
+#include "prprf.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsPop3IncomingServer : public nsMsgIncomingServer,
@@ -94,10 +94,7 @@ nsPop3IncomingServer::GetServerURI(char **uri)
     rv = GetHostName(&hostname);
     if (NS_FAILED(rv)) return rv;
 
-    const char* urischema ="mailbox:/";
-
-    // eventually, we want this to be mailbox://hostname/
-    *uri = PL_strdup(urischema);
+    *uri = PR_smprintf("mailbox://%s/", hostname);
 
     PR_Free(hostname);
     return rv;
