@@ -384,6 +384,7 @@ Rights Reserved.
 		<spring flex="100%"/>
 			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
 				<observes element="Messenger:LoadingProgress" attribute="mode"/>
+				<observes element="Messenger:LoadingProgress" attribute="value"/>
 				<observes element="Messenger:Throbber" attribute="busy" onchange="onProgress()"/>
 			</progressmeter>
 		<spring flex="100%"/>
