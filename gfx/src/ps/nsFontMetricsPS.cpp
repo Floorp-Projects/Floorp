@@ -934,36 +934,8 @@ nsFontPSXft::FindFont(PRUnichar aChar, const nsFont& aFont,
     // If there's a generic add a pref for the generic if there's one
     // set.
     if (fpi.mGenericFont && !aFont.systemFont) {
-      nsCAutoString name;
-      name.AppendLiteral("font.name.");
-      name += fpi.mGenericFont->get();
-      name.AppendLiteral(".");
-
-      nsAutoString langGroupStr;
-      langGroup->ToString(langGroupStr);
-
-      LossyAppendUTF16toASCII(langGroupStr, name);
-
-      nsCOMPtr<nsIPref> pref;
-      pref = do_GetService(NS_PREF_CONTRACTID);
-      if (pref) {
-        nsresult rv;
-        nsXPIDLCString value;
-        rv = pref->GetCharPref(name.get(), getter_Copies(value));
-
-        // we ignore prefs that have three hypens since they are X
-        // style prefs.
-        if (NS_FFRECountHyphens(value) < 3) {
-          nsCAutoString tmpstr(value);
-
-          if (PR_LOG_TEST(gFontMetricsPSM, PR_LOG_DEBUG)) {
-              printf("\tadding generic font from preferences: %s\n",
-                     tmpstr.get());
-          }
-
-          NS_AddFFRE(pattern, &tmpstr, PR_FALSE);
-        }
-      }
+      NS_AddGenericFontFromPref(fpi.mGenericFont, langGroup, pattern,
+                                gFontMetricsPSM); 
     }
 
     // Add the generic if there is one.

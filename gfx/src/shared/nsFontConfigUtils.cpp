@@ -34,6 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsFontConfigUtils.h"
 
 struct MozXftLangGroup {
@@ -207,4 +210,77 @@ NS_FFRECountHyphens (nsACString &aFFREName)
         ++hyphen;
     }
     return h;
+}
+
+inline static void 
+AddFFREandLog(FcPattern *aPattern, nsCString aFamily,
+              const PRLogModuleInfo *aLogModule)
+{
+    // we ignore prefs that have three hypens since they are X
+    // style prefs.
+    if (NS_FFRECountHyphens(aFamily) >= 3)
+        return;
+
+    if (PR_LOG_TEST(aLogModule, PR_LOG_DEBUG)) {
+        printf("\tadding generic font from preferences: %s\n",
+               aFamily.get());
+    }
+
+    NS_AddFFRE(aPattern, &aFamily, PR_FALSE);
+}
+
+// Add prefs (font.name.[generic].[lang] and font.name-list.[generic].[lang])
+// for the generic if they're set.
+void 
+NS_AddGenericFontFromPref(const nsCString *aGenericFont,
+                          nsIAtom *aLangGroup, FcPattern *aPattern, 
+                          const PRLogModuleInfo *aLogModule)
+{
+    nsCOMPtr<nsIPrefService> prefService;
+    prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefService)
+        return;
+    nsCOMPtr<nsIPrefBranch> pref;
+    if (NS_FAILED(prefService->GetBranch("font.", getter_AddRefs(pref))))
+        return;
+
+    nsCAutoString genericDotLangGroup(aGenericFont->get());
+    genericDotLangGroup.Append('.');
+    nsAutoString langGroup;
+    aLangGroup->ToString(langGroup);
+    LossyAppendUTF16toASCII(langGroup, genericDotLangGroup);
+
+    nsCAutoString name("name.");
+    name.Append(genericDotLangGroup);
+
+    // prefs file always uses (must use) UTF-8 and fontconfig
+    // expects to get a UTF-8 string so that using |GetCharPref|
+    // is fine.
+    nsresult rv;
+    nsXPIDLCString value;
+    rv = pref->GetCharPref(name.get(), getter_Copies(value));
+
+    if (NS_SUCCEEDED(rv)) {
+        AddFFREandLog(aPattern, value, aLogModule);
+    }
+
+    nsCAutoString nameList("name-list.");
+    nameList.Append(genericDotLangGroup);
+    rv = pref->GetCharPref(nameList.get(), getter_Copies(value));
+
+    if (NS_SUCCEEDED(rv)) {
+        PRInt32 prevCommaPos = -1;
+        PRInt32 commaPos; 
+        nsCAutoString family;
+
+        while ((commaPos = value.FindChar(',', prevCommaPos + 1)) > 0) {
+            family = Substring(value, prevCommaPos + 1, 
+                               commaPos - prevCommaPos - 1);
+            prevCommaPos = commaPos;
+            AddFFREandLog(aPattern, family, aLogModule);
+        }
+
+        family = Substring(value, prevCommaPos + 1);
+        AddFFREandLog(aPattern, family, aLogModule);
+    }
 }
