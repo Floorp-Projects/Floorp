@@ -65,7 +65,7 @@ public:
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 private:
-  GtkWidget mShell;
+  GtkWidget *mShell;
 
 };
 
