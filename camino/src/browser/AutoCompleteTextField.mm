@@ -732,13 +732,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [self enterResult:[mTableView selectedRow]];
     [mTableView deselectAll:self];
   } else if (command == @selector(moveUp:)) {
-    [self selectRowBy:-1];
-    [self completeSelectedResult];
-    return YES;
+    if ([self isOpen]) {
+      [self selectRowBy:-1];
+      [self completeSelectedResult];
+      return YES;
+	}
   } else if (command == @selector(moveDown:)) {
-    [self selectRowBy:1];
-    [self completeSelectedResult];
-    return YES;
+    if ([self isOpen]) {
+      [self selectRowBy:1];
+      [self completeSelectedResult];
+      return YES;
+	}
   } else if (command == @selector(scrollPageUp:)) {
     [self selectRowBy:-kMaxRows];
     [self completeSelectedResult];
