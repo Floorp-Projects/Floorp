@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *     Jean-Francois Ducarroz <ducarroz@netscaape.com>
+ *     Jean-Francois Ducarroz <ducarroz@netscape.com>
  *     Ben Bucksch <mozilla@bucksch.org>
  *     Håkan Waara <hwaara@chello.se>
  *     Pierre Phaneuf <pp@ludusdesign.com>
@@ -2746,7 +2746,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     else
       sigOutput.AppendWithConversion(CRLF);
 
-    const nsAString& firstFourChars = Substring(sigData, 0, 4);
+    nsDependentSubstring firstFourChars(sigData, 0, 4);
     
     if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n")) ||
           firstFourChars.Equals(NS_LITERAL_STRING("-- \r"))))
