@@ -54,6 +54,8 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
@@ -409,7 +411,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                               aDocListener);
   if (NS_FAILED(rv)) { return rv; }
 
-  nsCOMPtr<nsIWebShell> webShell;
   nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
   nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
@@ -558,22 +559,26 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   NS_ASSERTION(sink, "null sink in debug code variant.");
 #else
   NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
-  aContainer->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
   //
   // The following logic is mirrored in nsWebShell::Embed!
   //
   nsCOMPtr<nsIMarkupDocumentViewer> muCV;
   nsCOMPtr<nsIContentViewer> cv;
-  webShell->GetContentViewer(getter_AddRefs(cv));
+  docShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
      muCV = do_QueryInterface(cv);            
   } else {
     // in this block of code, if we get an error result, we return it
     // but if we get a null pointer, that's perfectly legal for parent and parentContentViewer
-    nsCOMPtr<nsIWebShell> parent;
-    rv = webShell->GetParent(*getter_AddRefs(parent));
-    if (NS_FAILED(rv)) { return rv; }
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+    
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+    nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
     if (parent) {
       nsCOMPtr<nsIContentViewer> parentContentViewer;
       rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
@@ -689,7 +694,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                         NS_GET_IID(nsICharsetDetectionAdaptor),(void**) &adp)))
           {
             if( NS_SUCCEEDED( rv_detect=
-                     webShell->QueryInterface(
+                     docShell->QueryInterface(
                         NS_GET_IID(nsIWebShellServices),(void**) &wss)))
             {
               rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
@@ -749,6 +754,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mParser->SetDocumentCharset( charset, charsetSource);
     mParser->SetCommand(aCommand);
     // create the content sink
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
     rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell);
     if (NS_FAILED(rv)) { return rv; }
     NS_ASSERTION(sink, "null sink with successful result from factory method");
