@@ -470,7 +470,7 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
                                                   PRInt32 curTotalProgress, 
                                                   PRInt32 maxTotalProgress)
 {
-    PRInt32 percentComplete;
+    PRInt32 percentComplete = 0;
     nsXPIDLString name;
     nsAutoString autoName;
     jobject msgJStr = nsnull;
@@ -482,7 +482,9 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
     
     // PENDING(edburns): Allow per fetch progress reporting.  Right now
     // we only have coarse grained support.
-    percentComplete = curTotalProgress / maxTotalProgress;
+    if (maxTotalProgress) {
+        percentComplete = curTotalProgress / maxTotalProgress;
+    }
     
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
