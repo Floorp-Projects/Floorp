@@ -86,7 +86,7 @@ LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor -I$(DEPTH)/
 REQUIRES=nspr xpcom util raptor jpeg
 CPPSRCS= nsJPGDecoder.cpp nsJPGCallback.cpp jpeg.cpp dllcompat.cpp
 CPP_OBJS= .\$(OBJDIR)\nsJPGDecoder.obj .\$(OBJDIR)\dllcompat.obj \
-          .\$(OBJDIR)\nsJPGCallback.obj .\$(OBJDIR)\jpeg.obj
+          .\$(OBJDIR)\jpeg.obj
 include <$(DEPTH)\config\rules.mak> 
 
 install:: $(DLL)
