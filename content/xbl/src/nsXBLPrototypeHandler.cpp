@@ -189,12 +189,18 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   if (!mHandlerElement)
     return NS_ERROR_FAILURE;
 
+  // See if our event receiver is a content node (and not us).
+  PRBool isReceiverCommandElement = PR_FALSE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
+  if (content && content.get() != mHandlerElement)
+    isReceiverCommandElement = PR_TRUE;
+
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
   nsAutoString command;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
   
-  if (!command.IsEmpty()) {
+  if (!command.IsEmpty() && !isReceiverCommandElement) {
     // Make sure the XBL doc is chrome or resource
     // Fix for bug #45989
     nsCOMPtr<nsIDocument> document;
@@ -207,6 +213,15 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     url->SchemeIs("chrome", &isChrome);
     url->SchemeIs("resource", &isRes);
     if (!isChrome && !isRes)
+      return NS_OK;
+
+    // See if preventDefault has been set.  If so, don't execute.
+    PRBool preventDefault;
+    nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent(do_QueryInterface(aEvent));
+    if (nsUIEvent)
+      nsUIEvent->GetPreventDefault(&preventDefault);
+
+    if (preventDefault)
       return NS_OK;
 
     // We are the default action for this command.
@@ -282,8 +297,15 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
       // Try an oncommand attribute (used by XUL <key> elements, which
       // are implemented using this code).
       mHandlerElement->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
-      if (handlerText.IsEmpty())
-        return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
+      if (handlerText.IsEmpty()) {
+        // Maybe the receiver is a <command> elt.
+        if (isReceiverCommandElement) {
+          // It is!  See if it has an oncommand attribute.
+          content->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
+          if (handlerText.IsEmpty())
+            return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
+        }
+      }
       aEvent->PreventDefault(); // Preventing default for XUL key handlers
     }
   }

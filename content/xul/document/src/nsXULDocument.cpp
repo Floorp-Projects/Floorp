@@ -6224,8 +6224,25 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         // Bail if there's no broadcasterID
         if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0)) {
-            *aNeedsHookup = PR_FALSE;
-            return NS_OK;
+            // Try the command attribute next.
+            nsAutoString commandID;
+            rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, commandID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE && commandID.Length() > 0) {
+              // We've got something in the command attribute.  We only treat this as
+              // a normal broadcaster if we are not a menuitem or a key.
+              nsCOMPtr<nsIAtom> tag;
+              aElement->GetTag(*getter_AddRefs(tag));
+              if (tag.get() == nsXULAtoms::menuitem || tag.get() == nsXULAtoms::key) {
+                *aNeedsHookup = PR_FALSE;
+                return NS_OK;
+              }
+            }
+            else {
+              *aNeedsHookup = PR_FALSE;
+              return NS_OK;
+            }
         }
 
         listener = do_QueryInterface(aElement);

@@ -46,6 +46,10 @@
 #include "nsIDocument.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMDocument.h"
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#endif
 
 class nsXBLSpecialDocInfo
 {
@@ -268,17 +272,35 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
  
     // if the handler says it wants the event, execute it
     if ( EventMatched(currHandler, aEventType, aEvent) ) {
-      // ...but don't exectute if it is disabled.
+      // ...but don't execute if it is disabled.
       nsAutoString disabled;
       
       nsCOMPtr<nsIContent> elt;
       currHandler->GetHandlerElement(getter_AddRefs(elt));
 
-      elt->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+      nsCOMPtr<nsIDOMElement> commandElt(do_QueryInterface(elt));
+
+      // See if we're in a XUL doc.
+      if (mElement) {
+        // We are.  Obtain our command attribute.
+        nsAutoString command;
+        elt->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+        if (!command.IsEmpty()) {
+          // Locate the command element in question.
+          nsCOMPtr<nsIDocument> doc;
+          elt->GetDocument(*getter_AddRefs(doc));
+          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+          domDoc->GetElementById(command, getter_AddRefs(commandElt));
+          if (!commandElt)
+            continue;
+        }
+      }
+
+      commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
       if (!disabled.Equals(NS_LITERAL_STRING("true"))) {
         nsCOMPtr<nsIDOMEventReceiver> rec = mReceiver;
         if (mElement)
-          rec = do_QueryInterface(elt);
+          rec = do_QueryInterface(commandElt);
         rv = currHandler->ExecuteHandler(rec, aEvent);
         if (NS_SUCCEEDED(rv))
           return NS_OK;
