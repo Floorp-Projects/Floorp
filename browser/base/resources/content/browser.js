@@ -1817,7 +1817,7 @@ function toDownloadManager()
   
 function toJavaScriptConsole()
 {
-  openDialog("chrome://global/content/history/console.xul", "JSConsole",
+  openDialog("chrome://global/content/console.xul", "JSConsole",
              "chrome,all,dialog=no" );
 }
 
