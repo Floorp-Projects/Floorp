@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 //*****************************************************************************
 
 nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
-   mPrimary(fPrimary), mChromeMask(0)
+   mPrimary(fPrimary), mChromeMask(nsIWebBrowserChrome::allChrome)
 {
 	NS_INIT_REFCNT();
 }
