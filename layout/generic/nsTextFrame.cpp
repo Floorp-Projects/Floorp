@@ -2932,7 +2932,7 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                          (aWordBufSize - aWordBufLen) : 
                          wordLen
                        );
-  if(copylen > 0)
+  if((aWordBufSize > aWordBufLen) && (copylen > 0))
   {
     nsCRT::memcpy((void*)&(aWordBuf[aWordBufLen]), buf, copylen);
 
