@@ -123,7 +123,11 @@ nsHTTPChannel::~nsHTTPChannel()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
+#ifdef NS_DEBUG
+    NS_RELEASE(mRequest);
+#else
     NS_IF_RELEASE(mRequest);
+#endif
     NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mCachedResponse);
 
