@@ -22,22 +22,22 @@
 	font-weight: bold;
 }
 
-.prioritycol[value="Highest"]
+.prioritycol[Priority="highest"]
 {
 	color:red;
 }
 
-.prioritycol[value="High"]
+.prioritycol[Priority="high"]
 {
 	color: rgb(128, 0, 0);
 }
 
-.prioritycol[value="Lowest"]
+.prioritycol[Priority="lowest"]
 {
 	color: rgb(170, 170, 170);
 }
 
-.prioritycol[value="Low"]
+.prioritycol[Priority="low"]
 {
 	color: rgb(85, 85, 85);
 }
