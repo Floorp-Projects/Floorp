@@ -1295,7 +1295,6 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     //if (mWidget != NULL) {  // check for null mWidget
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
         if (event == NULL || event->what == nullEvent ||
-            anEvent.message == NS_KEY_PRESS           ||
             anEvent.message == NS_CONTEXTMENU_MESSAGE_START) {
             EventRecord macEvent;
             GUItoMacEvent(anEvent, macEvent);
