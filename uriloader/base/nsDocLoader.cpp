@@ -118,7 +118,7 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                  nsIStreamListener** aDocListener,
                                  nsIContentViewer** aDocViewer)
 {
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
     nsIWebWidgetViewer* ww = nsnull;
 
