@@ -529,6 +529,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
                       PRBool aAllowPlugins)
 {
   mChromeMask = aChromeMask;
+  mAppShell = aAppShell;
+  mPrefs = aPrefs;
+  mAllowPlugins = aAllowPlugins;
 
   // Create top level window
   nsresult rv = NSRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
@@ -881,6 +884,38 @@ NS_IMETHODIMP
 nsBrowserWindow::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::NewWebShell(nsIWebShell *&aNewWebShell)
+{
+  nsNativeBrowserWindow *browser = (nsNativeBrowserWindow *)new nsNativeBrowserWindow();
+  nsresult        rv = NS_OK;
+
+  if (nsnull != browser)
+  {
+    nsRect  bounds;
+
+    GetBounds(bounds);
+
+    browser->SetApp(mApp);
+    rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
+
+    if (NS_OK == rv)
+    {
+      NS_ADDREF(browser);
+      browser->Show();
+      nsIWebShell *shell;
+      rv = browser->GetWebShell(shell);
+      aNewWebShell = shell;
+    }
+    else
+      browser->Destroy();
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+
+  return rv;
 }
 
 //----------------------------------------

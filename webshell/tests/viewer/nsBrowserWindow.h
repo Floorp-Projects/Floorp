@@ -89,6 +89,7 @@ public:
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
   NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec);
+  NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
 
   // nsINetSupport
   NS_IMETHOD_(void) Alert(const nsString &aText);
@@ -164,6 +165,11 @@ public:
 
   // "Status bar"
   nsITextWidget* mStatus;
+
+  //for creating more instances
+  nsIAppShell* mAppShell;   //not addref'ed!
+  nsIPref* mPrefs;          //not addref'ed!
+  PRBool mAllowPlugins;
 
   // Global window collection
   static nsVoidArray gBrowsers;

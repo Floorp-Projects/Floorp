@@ -70,6 +70,9 @@ public:
 
   NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec) = 0;
 
+  //instances
+  NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell) = 0;
+
   // Chrome control
 // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
 
