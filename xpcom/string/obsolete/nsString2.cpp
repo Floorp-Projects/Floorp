@@ -1390,11 +1390,17 @@ NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const nsASingleFragmentCString& aC
 
 NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const char* aCString )
   {
+    if (!aCString)
+      // Leave us as an uninitialized nsAutoString.
+      return;
     Init(aCString, nsCharTraits<char>::length(aCString));
   }
 
 NS_ConvertUTF8toUTF16::NS_ConvertUTF8toUTF16( const char* aCString, PRUint32 aLength )
   {
+    if (!aCString)
+      // Leave us as an uninitialized nsAutoString.
+      return;
     Init(aCString, aLength);
   }
 
