@@ -447,7 +447,7 @@ protected:
   BOOL                    OnIMECompositionFull();
   BOOL                    OnIMEEndComposition();
   BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);
-  BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode = PR_FALSE);
+  BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
   BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);
   BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);
   BOOL                    OnIMEStartComposition();
