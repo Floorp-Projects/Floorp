@@ -51,8 +51,8 @@ protected:
   nsresult useUserPrefFile();
 
 private:
-    nsCOMPtr<nsIPrefBranch> mRootBranch;
-    nsIFile*                mCurrentFile;
+  nsCOMPtr<nsIPrefBranch> mRootBranch;
+  nsIFile*                mCurrentFile;
     
 };
 
