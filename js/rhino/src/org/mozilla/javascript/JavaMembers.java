@@ -328,7 +328,18 @@ class JavaMembers {
             members = (JavaMembers) classTable.get(cl);
             if (members != null)
                 return members;
-            members = new JavaMembers(scope, cl);
+            try {
+                members = new JavaMembers(scope, cl);
+            } catch (SecurityException e) {
+                // Reflection may fail for objects that are in a restricted 
+                // access package (e.g. sun.*).  If we get a security
+                // exception, try again with the static type. Otherwise, 
+                // rethrow the exception.
+                if (cl != staticType)
+                    members = new JavaMembers(scope, staticType);
+                else
+                    throw e;
+            }
             classTable.put(cl, members);
             return members;
         }
