@@ -446,9 +446,8 @@ nsDOMImplementation::CreateDocument(const nsAReadableString& aNamespaceURI,
   nsresult rv = NS_OK;
   *aReturn = nsnull;
 
-  NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype, mBaseURI);
-
-  return rv;
+  return NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
+                           mBaseURI);
 }
 
 NS_IMETHODIMP 
