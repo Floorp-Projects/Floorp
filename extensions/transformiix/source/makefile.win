@@ -22,5 +22,8 @@
 DEPTH=..\..\..
 
 DIRS=base net xml xpath xslt
+!if defined(MOZ_XSL)
+DIRS=$(DIRS) examples\mozilla\Transformiix
+!endif
 
 include <$(DEPTH)\config\rules.mak>
