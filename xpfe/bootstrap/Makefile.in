@@ -117,10 +117,6 @@ XP_LIBS		+= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-ifdef MOZ_FULLCIRCLE
-XP_LIBS		+= $(FULLCIRCLE_LIBS)
-endif
-
 ifdef MOZ_ENABLE_PHOTON
 XP_LIBS		+= $(TK_LIBS)
 endif

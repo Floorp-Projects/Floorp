@@ -83,9 +83,6 @@ LINCS=  \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif
-!ifdef MOZ_FULLCIRCLE
-  -I$(MOZ_TOOLS)\include \
-!endif
   -I$(PUBLIC)\oji \
   -I$(PUBLIC)\caps \
   $(NULL)
@@ -102,9 +99,6 @@ LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
  $(LIBNSPR)                     \
-!ifdef MOZ_FULLCIRCLE
- $(MOZ_TOOLS)\lib\fulls32.lib \
-!endif
  $(NULL)
 
 WIN_LIBS= \

@@ -44,9 +44,6 @@ CPP_OBJS=                               \
  $(NULL)
 
 LINCS= \
-!ifdef MOZ_FULLCIRCLE
-      -I$(MOZ_TOOLS)\include \
-!endif
      $(NULL)
 
 LCFLAGS = \
@@ -61,9 +58,6 @@ LLIBS=                          \
  $(DIST)\lib\gkgfx.lib   \
  $(DIST)\lib\js3250.lib        \
  $(LIBNSPR)                     \
-!ifdef MOZ_FULLCIRCLE
- $(MOZ_TOOLS)\lib\fulls32.lib \
-!endif
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -4289,58 +4289,6 @@ if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
   AC_DEFINE(MOZ_BYPASS_PROFILE_AT_STARTUP)
 fi
 
-dnl system FullCircle/Talkback support (Crash-reporting mechanism)
-dnl ==============================================================
-
-MOZ_FULLCIRCLE=
-FULLCIRCLE_LIBS=
-MOZ_ARG_ENABLE_BOOL(fullcircle,
-[  --enable-fullcircle     Enable FullCircle/Talkback support],
-[ MOZ_FULLCIRCLE=1 FULLCIRCLE_LIBS="-lfullsoft" ])
-
-AC_ARG_WITH(fullcircle,
-[  --with-fullcircle=\$dir  Location of FullCircle headers and libraries],
-        FULLCIRCLE_DIR=$withval,
-        FULLCIRCLE_DIR=no)
-
-if test "$FULLCIRCLE_DIR" = no; then
-    FULLCIRCLE_DIR=
-else
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
-LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
-LIBS="-lfullsoft $LIBS"
-AC_MSG_CHECKING("for FCInitialize in -lfullsoft");
-AC_TRY_LINK([ #include <stdio.h>
-	      #include "fullsoft.h" ],
-            [ FCInitialize(); exit(0); ],
-            [FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"],
-            [MISSING_FULLCIRCLE=1 result="no"])
-AC_MSG_RESULT("$result")
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-if test "$MISSING_FULLCIRCLE"; then
-    echo
-    echo "Could not find FullCircle library -- ignoring it"
-    echo
-    MOZ_FULLCIRCLE=
-    FULLCIRCLE_LIBS=
-else
-    AC_DEFINE(MOZ_FULLCIRCLE)
-    CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
-    CXXFLAGS="$CXXFLAGS -I${FULLCIRCLE_DIR}"
-fi
-
-fi
-
-AC_SUBST(MOZ_FULLCIRCLE)
-AC_SUBST(FULLCIRCLE_LIBS)
-
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \

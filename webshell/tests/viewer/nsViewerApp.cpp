@@ -95,10 +95,6 @@
 #include <crtdbg.h>
 #endif
 
-#ifdef MOZ_FULLCIRCLE
-#include <fullsoft.h>
-#endif
-
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 
@@ -325,47 +321,6 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
   mPrefs->ReadUserPrefs(nsnull);
-
-  // Load Fullcircle Talkback crash-reporting mechanism.
-  // http://www.fullcirclesoftware.com for more details.
-  // Private build only.
-#ifdef MOZ_FULLCIRCLE
-  // This probably needs to be surrounded by a pref, the
-  // old 5.0 world used "general.fullcircle_enable".
-
-  {
-	  FC_ERROR fcstatus = FC_ERROR_FAILED;
-	  fcstatus = FCInitialize();
-	  
-	  // Print out error status.
-	  switch(fcstatus) {
-	  case FC_ERROR_OK:
-		  printf("Talkback loaded Ok.\n");
-		  break;
-	  case FC_ERROR_CANT_INITIALIZE:
-		  printf("Talkback error: Can't initialize.\n");
-		  break;
-	  case FC_ERROR_NOT_INITIALIZED:
-		  printf("Talkback error: Not initialized.\n");
-		  break;
-	  case FC_ERROR_ALREADY_INITIALIZED:
-		  printf("Talkback error: Already initialized.\n");
-		  break;
-	  case FC_ERROR_FAILED:
-		  printf("Talkback error: Failure.\n");
-		  break;
-	  case FC_ERROR_OUT_OF_MEMORY:
-		  printf("Talkback error: Out of memory.\n");
-		  break;
-	  case FC_ERROR_INVALID_PARAMETER:
-		  printf("Talkback error: Invalid parameter.\n");
-		  break;
-	  default:
-		  printf("Talkback error: Unknown error status.\n");
-		  break;
-	  }
-  }
-#endif
 
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);

@@ -43,11 +43,6 @@ DEPTH = ..
 #//
 #//------------------------------------------------------------------------
 
-!ifdef MOZ_FULLCIRCLE
-INSTALL_FILE_LIST=$(MOZ_TOOLS)\bin\fullsoft.dll $(MOZ_TOOLS)\bin\talkback.cnt $(MOZ_TOOLS)\bin\talkback.exe $(MOZ_TOOLS)\bin\talkback.hlp
-INSTALL_DIR=$(DIST)\bin
-!endif
-
 GARBAGE = *.obj *.sbr *.pdb build_number nsBuildID.h
 
 !ifdef MOZ_COVERAGE
@@ -130,19 +125,6 @@ export:: \
        $(MAKE_INSTALL) trace.lib $(DIST)/lib
        $(MAKE_INSTALL) trace.dll $(DIST)/install
        $(MAKE_INSTALL) $(DIST)/bin/nspr4.dll $(DIST)/install
-!endif
-
-!ifdef MOZ_FULLCIRCLE
-
-master.pl: build_number
-        $(PERL) build-number.pl
-
-master.ini: master.pl
-	$(RM) $@
-	$(PERL) master.pl
-
-install:: master.ini
-	$(MAKE_INSTALL) master.ini $(DIST)\bin\
 !endif
 
 #install::
