@@ -97,7 +97,7 @@ NS_FontMetricsFamilyExists(nsIDeviceContext *aDevice, const nsString &aName)
 #endif
 }
 
-#ifdef MOZ_ENABLE_XFT
+#if defined(MOZ_ENABLE_XFT) && defined(MOZ_ENABLE_COREXFONTS)
 
 PRBool
 NS_IsXftEnabled(void)
@@ -136,9 +136,9 @@ NS_IsXftEnabled(void)
     return cachedXftSetting;
 }
 
-#endif /* MOZ_ENABLE_XFT */
+#endif
 
-#ifdef MOZ_ENABLE_PANGO
+#if defined(MOZ_ENABLE_PANGO) && (defined(MOZ_ENABLE_XFT) || defined(MOZ_ENABLE_COREXFONTS))
 
 PRBool
 NS_IsPangoEnabled(void)
