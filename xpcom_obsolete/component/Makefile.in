@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom_compat_c
+MODULE_NAME	= xpcomObsoleteModule
 LIBRARY_NAME	= xpcom_compat_c
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= xpcomctc
