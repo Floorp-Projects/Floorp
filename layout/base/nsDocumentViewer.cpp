@@ -24,7 +24,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsISupports.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
 
 #include "nsIImageGroup.h"

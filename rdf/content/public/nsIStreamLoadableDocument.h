@@ -29,7 +29,6 @@
 #endif
 
 class nsIInputStream;
-class nsIContentViewerContainer;
 
 #define NS_ISTREAMLOADABLEDOCUMENT_IID \
  { 0x7dae0360, 0xf907, 0x11d2,{0x81, 0xee, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf}}
@@ -40,7 +39,7 @@ class nsIStreamLoadableDocument : public nsISupports
 		  static const nsIID& GetIID() { static nsIID iid = NS_ISTREAMLOADABLEDOCUMENT_IID; return iid; }
 
 			NS_IMETHOD LoadFromStream( nsIInputStream& xulStream,
-																 nsIContentViewerContainer* aContainer,
+																 nsISupports* aContainer,
 																 const char* aCommand ) = 0;
 	};
 

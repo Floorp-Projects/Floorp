@@ -61,7 +61,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsIStreamListener **aDocListener);
 
   nsresult CreateSyntheticDocument();
@@ -173,7 +173,7 @@ NS_IMETHODIMP
 nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    nsIChannel* aChannel,
                                    nsILoadGroup* aLoadGroup,
-                                   nsIContentViewerContainer* aContainer,
+                                   nsISupports* aContainer,
                                    nsIStreamListener **aDocListener)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
