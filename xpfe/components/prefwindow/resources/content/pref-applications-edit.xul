@@ -406,7 +406,7 @@
   <separator class="thin"/>
 
   <groupbox>
-    <description value="&handling.label;"/>
+    <caption label="&handling.label;"/>
     <radiogroup id="handler">
       <radio id="useSystemDefault" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
       <hbox align="center">
