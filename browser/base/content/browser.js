@@ -3788,6 +3788,7 @@ nsDefaultEngine.prototype =
          return false;
        loadURI(url);
        event.preventDefault();
+       return false;
      }
      else
        handleLinkClick(event, linkNode.href, linkNode);
