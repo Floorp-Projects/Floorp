@@ -72,8 +72,10 @@ public:
   NS_IMETHOD    Close()=0;
 
   NS_IMETHOD    Exit()=0;
-  
-  NS_IMETHOD    LoadInitialPage()=0;
+
+  NS_IMETHOD    Find()=0;
+
+  NS_IMETHOD    FindNext()=0;
 };
 
 
@@ -85,6 +87,8 @@ public:
   NS_IMETHOD    WalletSafeFillin();  \
   NS_IMETHOD    WalletQuickFillin();  \
   NS_IMETHOD    WalletSamples();  \
+  NS_IMETHOD    SignonViewer();  \
+  NS_IMETHOD    CookieViewer();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
@@ -95,27 +99,33 @@ public:
   NS_IMETHOD    Print();  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Exit();  \
+  NS_IMETHOD    Find();  \
+  NS_IMETHOD    FindNext();  \
 
 
 
 #define NS_FORWARD_IDOMBROWSERAPPCORE(_to)  \
-  NS_IMETHOD    Back() { return _to##Back(); }  \
-  NS_IMETHOD    Forward() { return _to##Forward(); }  \
-  NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to##LoadUrl(aUrl); }  \
-  NS_IMETHOD    WalletEditor() { return _to##WalletEditor(); }  \
-  NS_IMETHOD    WalletSafeFillin() { return _to##WalletSafeFillin(); }  \
-  NS_IMETHOD    WalletQuickFillin() { return _to##WalletQuickFillin(); }  \
-  NS_IMETHOD    WalletSamples() { return _to##WalletSamples(); }  \
-  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
-  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \
-  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
-  NS_IMETHOD    NewWindow() { return _to##NewWindow(); }  \
-  NS_IMETHOD    OpenWindow() { return _to##OpenWindow(); }  \
-  NS_IMETHOD    PrintPreview() { return _to##PrintPreview(); }  \
-  NS_IMETHOD    Copy() { return _to##Copy(); }  \
-  NS_IMETHOD    Print() { return _to##Print(); }  \
-  NS_IMETHOD    Close() { return _to##Close(); }  \
-  NS_IMETHOD    Exit() { return _to##Exit(); }  \
+  NS_IMETHOD    Back() { return _to Back(); }  \
+  NS_IMETHOD    Forward() { return _to Forward(); }  \
+  NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
+  NS_IMETHOD    WalletEditor() { return _to WalletEditor(); }  \
+  NS_IMETHOD    WalletSafeFillin() { return _to WalletSafeFillin(); }  \
+  NS_IMETHOD    WalletQuickFillin() { return _to WalletQuickFillin(); }  \
+  NS_IMETHOD    WalletSamples() { return _to WalletSamples(); }  \
+  NS_IMETHOD    SignonViewer() { return _to SignonViewer(); }  \
+  NS_IMETHOD    CookieViewer() { return _to CookieViewer(); }  \
+  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
+  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
+  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \
+  NS_IMETHOD    NewWindow() { return _to NewWindow(); }  \
+  NS_IMETHOD    OpenWindow() { return _to OpenWindow(); }  \
+  NS_IMETHOD    PrintPreview() { return _to PrintPreview(); }  \
+  NS_IMETHOD    Copy() { return _to Copy(); }  \
+  NS_IMETHOD    Print() { return _to Print(); }  \
+  NS_IMETHOD    Close() { return _to Close(); }  \
+  NS_IMETHOD    Exit() { return _to Exit(); }  \
+  NS_IMETHOD    Find() { return _to Find(); }  \
+  NS_IMETHOD    FindNext() { return _to FindNext(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
