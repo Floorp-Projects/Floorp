@@ -44,4 +44,8 @@ interface nsIBufferOutputStream : nsIOutputStream
     unsigned long WriteFrom(in nsIInputStream inStr,
                             in unsigned long count);
 
+    /**
+     * Set this attribute to put the stream in non-blocking mode.
+     */
+    attribute boolean NonBlocking;
 };

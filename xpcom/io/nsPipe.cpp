@@ -40,8 +40,12 @@ public:
     // nsIBufferInputStream methods:
     NS_IMETHOD GetBuffer(nsIBuffer* *result);
     NS_IMETHOD Search(const char *forString, PRBool ignoreCase, PRBool *found, PRUint32 *offsetSearchedTo);
+#if 0
     NS_IMETHOD Fill(const char *buf, PRUint32 count, PRUint32 *_retval);
     NS_IMETHOD FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
+#endif
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
 
     // nsBufferInputStream methods:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
@@ -72,6 +76,8 @@ public:
     NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer);
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
                          PRUint32 *aWriteCount);
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
 
     // nsBufferOutputStream methods:
     nsBufferOutputStream(nsIBuffer* buf, PRBool blocking);
@@ -132,11 +138,9 @@ nsBufferInputStream::Close(void)
 
     rv = mBuffer->ReaderClosed();
     // even if ReaderClosed fails, be sure to do the notify:
-    if (mBlocking) {
-        nsresult rv2 = mon.Notify();   // wake up the writer
-        if (NS_FAILED(rv2)) 
-            return rv2;
-    }
+    nsresult rv2 = mon.Notify();   // wake up the writer
+    if (NS_FAILED(rv2)) 
+        return rv2;
     return rv;
 }
 
@@ -228,6 +232,7 @@ nsBufferInputStream::Search(const char *forString, PRBool ignoreCase, PRBool *fo
     return mBuffer->Search(forString, ignoreCase, found, offsetSearchedTo);
 }
 
+#if 0
 NS_IMETHODIMP
 nsBufferInputStream::Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
@@ -300,31 +305,46 @@ nsBufferInputStream::FillFrom(nsIInputStream *fromStream, PRUint32 aCount, PRUin
     }
     return rv;
 }
+#endif
+
+NS_IMETHODIMP
+nsBufferInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    *aNonBlocking = !mBlocking;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferInputStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    mBlocking = !aNonBlocking;
+    return NS_OK;
+}
 
 nsresult
 nsBufferInputStream::Fill()
 {
     nsAutoCMonitor mon(mBuffer);
     nsresult rv;
-    if (mBlocking) {
-        while (PR_TRUE) {
-            // check read buffer again while in the monitor
-            PRUint32 amt;
-            const char* buf;
-            rv = mBuffer->GetReadSegment(0, &buf, &amt);
-            if (NS_FAILED(rv) || amt > 0) return rv;
+    while (PR_TRUE) {
+        // check read buffer again while in the monitor
+        PRUint32 amt;
+        const char* buf;
+        rv = mBuffer->GetReadSegment(0, &buf, &amt);
+        if (NS_FAILED(rv) || amt > 0) return rv;
 
-            // else notify the writer and wait
-            rv = mon.Notify();
-            if (NS_FAILED(rv)) return rv;   // interrupted
+        // else notify the writer and wait
+        rv = mon.Notify();
+        if (NS_FAILED(rv)) return rv;   // interrupted
+        if (mBlocking) {
             rv = mon.Wait();
             if (NS_FAILED(rv)) return rv;   // interrupted
-            // loop again so that we end up exiting on EOF with
-            // the right error
         }
-    }
-    else {
-        return NS_BASE_STREAM_WOULD_BLOCK;
+        else {
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
+        // loop again so that we end up exiting on EOF with
+        // the right error
     }
     return NS_OK;
 }
@@ -386,11 +406,9 @@ nsBufferOutputStream::Close(void)
     nsresult rv;
     rv = mBuffer->SetCondition(NS_BASE_STREAM_EOF);
     // even if SetCondition fails, be sure to do the notify:
-    if (mBlocking) {
-        nsresult rv2 = mon.Notify();   // wake up the writer
-        if (NS_FAILED(rv2))
-            return rv2;
-    }
+    nsresult rv2 = mon.Notify();   // wake up the writer
+    if (NS_FAILED(rv2))
+        return rv2;
     return rv;
 }
 
@@ -461,7 +479,8 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
         rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
 //        if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
         // If a blocking write fails just drop into Flush(...)
-        if (!mBlocking && NS_FAILED(rv)) break;
+        if (/*!mBlocking && */NS_FAILED(rv))
+            break;
 
         if (amt == 0) {
             rv = Flush();
@@ -488,28 +507,41 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
 }
 
 NS_IMETHODIMP
+nsBufferOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    *aNonBlocking = !mBlocking;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferOutputStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    mBlocking = !aNonBlocking;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBufferOutputStream::Flush(void)
 {
     nsAutoCMonitor mon(mBuffer);
     nsresult rv = NS_OK;
-    if (mBlocking) {
-        nsresult rv;
-        while (PR_TRUE) {
-            // check write buffer again while in the monitor
-            PRUint32 amt;
-            const char* buf;
-            rv = mBuffer->GetReadSegment(0, &buf, &amt);
-            if (NS_FAILED(rv) || amt == 0) return rv;
+    while (PR_TRUE) {
+        // check write buffer again while in the monitor
+        PRUint32 amt;
+        const char* buf;
+        rv = mBuffer->GetReadSegment(0, &buf, &amt);
+        if (NS_FAILED(rv) || amt == 0) return rv;
 
-            // else notify the reader and wait
-            rv = mon.Notify();
-            if (NS_FAILED(rv)) return rv;   // interrupted
+        // else notify the reader and wait
+        rv = mon.Notify();
+        if (NS_FAILED(rv)) return rv;   // interrupted
+        if (mBlocking) {
             rv = mon.Wait();
             if (NS_FAILED(rv)) return rv;   // interrupted
         }
-    }
-    else {
-        return NS_BASE_STREAM_WOULD_BLOCK;
+        else {
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
     }
     return NS_OK;
 }

@@ -44,16 +44,7 @@ interface nsIBufferInputStream : nsIInputStream
                 out unsigned long offsetSearchedTo);
 
     /**
-     * Fill the input stream so that someone can read from it.
-     * XXX obsolete
+     * Set this attribute to put the stream in non-blocking mode.
      */
-    unsigned long Fill(in string inStr,
-                       in unsigned long count);
-
-    /**
-     * Fill the input stream so that someone can read from it.
-     * XXX obsolete
-     */
-    unsigned long FillFrom(in nsIInputStream inStr,
-                           in unsigned long count);
+    attribute boolean NonBlocking;
 };
