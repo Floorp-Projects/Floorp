@@ -716,7 +716,7 @@ do_const_dcl(TreeState *state)
     }
 
     if (success) {
-        const char *const_format = is_signed ? "%" IDL_LL "d" : "%" IDL_LL "u";
+        const char *const_format = is_signed ? "%" IDL_LL "d" : "%" IDL_LL "uU";
         write_indent(state->file);
         fprintf(state->file, "enum { %s = ", name);
         fprintf(state->file, const_format, IDL_INTEGER(dcl->const_exp).value);
