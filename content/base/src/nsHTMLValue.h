@@ -59,6 +59,12 @@ enum nsHTMLUnit {
   eHTMLUnit_Pixel      = 600    // (int) screen pixels
 };
 
+/**
+ * Class which is used to represent the value of an attribute of an
+ * HTML element.  The value has a unit which is an nsHTMLUnit;
+ * checking the unit is a must before asking for the value in any
+ * particular form.
+ */
 class nsHTMLValue {
 public:
   nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null);

@@ -62,6 +62,14 @@ typedef union {
   float       mFloat;
 } nsStyleUnion;
 
+/**
+ * Class that hold a single size specification used by the style
+ * system.  The size specification consists of two parts -- a number
+ * and a unit.  The number is an integer, a floating point value, an
+ * nscoord, or undefined, and the unit is an nsStyleUnit.  Checking
+ * the unit is a must before asking for the value in any particular
+ * form.
+ */
 class nsStyleCoord {
 public:
   nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
@@ -100,6 +108,11 @@ public:
 };
 
 
+/**
+ * Class that represents a set of top/right/bottom/left nsStyleCoords.
+ * This is commonly used to hold the widths of the borders, margins,
+ * or paddings of a box.
+ */
 class nsStyleSides {
 public:
   nsStyleSides(void);
