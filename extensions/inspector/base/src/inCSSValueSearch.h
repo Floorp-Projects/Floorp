@@ -63,21 +63,20 @@ public:
   virtual ~inCSSValueSearch();
 
 protected:
-  PRBool mIsActive;
-  PRInt32 mResultCount;
-  PRBool mHoldResults;
-  nsVoidArray* mResults;
-  nsAutoString* mLastResult;
   nsCOMPtr<inISearchObserver> mObserver;
-
+  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsVoidArray* mResults;
+  nsCSSProperty* mProperties;
+  nsAutoString* mLastResult;
   nsAutoString* mBaseURL;
+  nsAutoString* mTextCriteria;
+  PRInt32 mResultCount;
+  PRUint32 mPropertyCount;
+  PRBool mIsActive;
+  PRBool mHoldResults;
   PRBool mReturnRelativeURLs;
   PRBool mNormalizeChromeURLs;
-  nsAutoString* mTextCriteria;
-  nsCSSProperty* mProperties;
-  PRUint32 mPropertyCount;
-  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
   nsresult InitSearch();
   nsresult KillSearch(PRInt16 aResult);

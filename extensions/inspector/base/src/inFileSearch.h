@@ -59,27 +59,22 @@ public:
   virtual ~inFileSearch();
 
 protected:
-  // inISearchProcess related
-  PRBool mIsActive;
-  PRInt32 mResultCount;
-  nsCOMPtr<nsIFile> mLastResult;
-  nsCOMPtr<nsISupportsArray> mResults;
-  PRBool mHoldResults;
-  nsAutoString* mBasePath;
-  PRBool mReturnRelativePaths;
   nsCOMPtr<inISearchObserver> mObserver;
-
-  // inIFileSearch related
+  nsCOMPtr<nsISupportsArray> mResults;
+  nsCOMPtr<nsISupportsArray> mDirStack;
+  nsCOMPtr<nsIFile> mLastResult;
   nsCOMPtr<nsIFile> mSearchPath;
+  inSearchLoop* mSearchLoop;
+  nsAutoString* mBasePath;
   nsAutoString* mTextCriteria;
   PRUnichar** mFilenameCriteria;
-  PRUint32 mFilenameCriteriaCount;
-  PRBool mSearchRecursive;
   PRUint32 mDirsSearched;
-
-  // asynchronous search related
-  nsCOMPtr<nsISupportsArray> mDirStack;
-  inSearchLoop* mSearchLoop;
+  PRUint32 mFilenameCriteriaCount;
+  PRInt32 mResultCount;
+  PRBool mIsActive;
+  PRBool mHoldResults;
+  PRBool mReturnRelativePaths;
+  PRBool mSearchRecursive;
 
   // life cycle of search
   nsresult InitSearch();

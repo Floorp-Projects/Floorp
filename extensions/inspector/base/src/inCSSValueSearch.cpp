@@ -46,18 +46,22 @@
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
-
 inCSSValueSearch::inCSSValueSearch()
+  : mResults(nsnull),
+    mProperties(nsnull),
+    mLastResult(nsnull),
+    mBaseURL(nsnull),
+    mTextCriteria(nsnull),
+    mResultCount(0),
+    mPropertyCount(0),
+    mIsActive(PR_FALSE),
+    mHoldResults(PR_TRUE),
+    mReturnRelativeURLs(PR_TRUE),
+    mNormalizeChromeURLs(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-  
-  mHoldResults = PR_TRUE;
-  mReturnRelativeURLs = PR_FALSE;
-  mNormalizeChromeURLs = PR_FALSE;
-  mResultCount = 0;
 
   mProperties = new nsCSSProperty[100];
-  mPropertyCount = 0;
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
