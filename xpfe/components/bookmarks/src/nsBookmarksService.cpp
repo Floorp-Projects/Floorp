@@ -4047,16 +4047,6 @@ nsBookmarksService::GetAllResources(nsISimpleEnumerator** aResult)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::GetAllCommands(nsIRDFResource* source,
-				   nsIEnumerator/*<nsIRDFResource>*/** commands)
-{
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-
-NS_IMETHODIMP
 nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 			       nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {

@@ -1283,17 +1283,6 @@ nsHTTPIndex::GetAllResources(nsISimpleEnumerator **_retval)
 }
 
 NS_IMETHODIMP
-nsHTTPIndex::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
-{
-	nsresult	rv = NS_ERROR_UNEXPECTED;
-	if (mInner)
-	{
-		rv = mInner->GetAllCommands(aSource, _retval);
-	}
-	return(rv);
-}
-
-NS_IMETHODIMP
 nsHTTPIndex::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand,
 				nsISupportsArray *aArguments, PRBool *_retval)
 {

@@ -287,15 +287,7 @@ nsMsgRDFDataSource::GetAllResources(nsISimpleEnumerator **_retval)
 }
 
 
-/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-NS_IMETHODIMP
-nsMsgRDFDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
-{
-    return NS_RDF_NO_VALUE;
-}
-
-
-/* nsISimpleEnumerator GetAllCommands (in nsIRDFResource aSource); */
+/* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
 NS_IMETHODIMP
 nsMsgRDFDataSource::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 {

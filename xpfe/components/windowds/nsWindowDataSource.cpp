@@ -534,14 +534,6 @@ NS_IMETHODIMP nsWindowDataSource::GetAllResources(nsISimpleEnumerator **_retval)
     return NS_OK;
 }
 
-/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-NS_IMETHODIMP nsWindowDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
-{
-    if (mInner)
-        return mInner->GetAllCommands(aSource, _retval);
-    return NS_OK;
-}
-
 /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 NS_IMETHODIMP nsWindowDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval)
 {

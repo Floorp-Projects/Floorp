@@ -554,12 +554,6 @@ nsSoundDatasource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PR
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
-nsSoundDatasource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsSoundDatasource::AddObserver(nsIRDFObserver *n)
 {

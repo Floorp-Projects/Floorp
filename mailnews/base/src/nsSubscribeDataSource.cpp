@@ -727,12 +727,6 @@ nsSubscribeDataSource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
-nsSubscribeDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsSubscribeDataSource::NotifyObservers(nsIRDFResource *subject,
                                                 nsIRDFResource *property,
