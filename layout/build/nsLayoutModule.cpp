@@ -31,6 +31,11 @@
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #endif
+//MathML Mod - RBS
+#ifdef MOZ_MATHML
+#include "nsMathMLAtoms.h"
+#include "nsMathMLOperators.h"
+#endif
 #include "nsLayoutAtoms.h"
 #include "nsDOMCID.h"
 #include "nsIScriptContext.h"
@@ -189,6 +194,11 @@ nsLayoutModule::Initialize()
 #ifdef INCLUDE_XUL
   nsXULAtoms::AddRefAtoms();
 #endif
+//MathML Mod - RBS
+#ifdef MOZ_MATHML
+  nsMathMLOperators::AddRefTable();
+  nsMathMLAtoms::AddRefAtoms();
+#endif
 
   // Load the UA style sheet
   nsCOMPtr<nsIURI> uaURL;
@@ -236,6 +246,11 @@ nsLayoutModule::Shutdown()
   nsLayoutAtoms::ReleaseAtoms();
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
+#endif
+//MathML Mod - RBS
+#ifdef MOZ_MATHML
+  nsMathMLOperators::ReleaseTable();
+  nsMathMLAtoms::ReleaseAtoms();
 #endif
 
   NS_IF_RELEASE(gRegistry);
