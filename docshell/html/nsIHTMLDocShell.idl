@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
+
 /**
  * The nsIHTMLDocShell
  */
@@ -62,6 +63,16 @@ interface nsIHTMLDocShell : nsISupports
 	XXX Comment here!
 	*/
 	attribute wstring forceCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	readonly attribute wstring hintCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	readonly attribute PRInt32 hintCharacterSetSource;
 
 	/* the following is the hacky access method 
 	Commented out as nsCharsetSource should be something IDL like
