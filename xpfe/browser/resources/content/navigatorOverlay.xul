@@ -64,8 +64,10 @@
 	<key id="key_reload"  key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel"/>
 	<key id="key_viewsource"    key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
 
-	<key id="key_textZoomReduce"   key="&textZoomReduceCmd.commandkey;"  observes="cmd_viewTextZoomReduce"  modifiers="accel"/>
-	<key id="key_textZoomEnlarge"  key="&textZoomEnlargeCmd.commandkey;" observes="cmd_viewTextZoomEnlarge" modifiers="accel"/>
+	<key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   observes="cmd_viewTextZoomReduce"  modifiers="accel"/>
+	<key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  observes="cmd_viewTextZoomEnlarge" modifiers="accel"/>
+	<key                          key="&textZoomEnlargeCmd.commandkey;"  observes="cmd_viewTextZoomEnlarge" modifiers="accel,shift"/>
+	<key                          key="&textZoomEnlargeCmd.commandkey2;" observes="cmd_viewTextZoomEnlarge" modifiers="accel"/>
 
 	<!-- Search Menu -->	
 	<key id="key_find"              key="&findOnCmd.commandkey;" observes="Browser:Find" modifiers="accel"/>
