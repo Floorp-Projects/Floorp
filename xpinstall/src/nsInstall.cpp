@@ -323,7 +323,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     }
     
     nsString qualifiedVersion = aVersion;
-    if (qualifiedVersion == "")
+    if (qualifiedVersion.IsEmpty())
     {
         // assume package version for overriden forms that don't take version info
         *aReturn = mVersionInfo->ToString(qualifiedVersion);
@@ -337,7 +337,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 	
     nsString subdirectory(aSubdir);
 
-    if (subdirectory != "")
+    if (!subdirectory.IsEmpty())
     {
         subdirectory.Append("/");
     }
@@ -381,7 +381,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
         nsString newSubDir;
 
-        if (subdirectory != "")
+        if (!subdirectory.IsEmpty())
         {
             newSubDir = subdirectory;
         }
@@ -512,7 +512,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     if( aTargetName.Equals("") )
       tempTargetName = aJarSource;
     
-    if (qualifiedVersion == "")
+    if (qualifiedVersion.IsEmpty())
         qualifiedVersion.Assign("0.0.0.0");   	
 
 
@@ -923,7 +923,7 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
     OSErr   err = noErr;
     OSType  selector;
     
-    if (aSelector == "")
+    if (aSelector.IsEmpty())
     {
         return NS_OK;
     }
@@ -2130,7 +2130,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
     }
     else if ( name.CharAt(0) != '/' )
     {
-        if (mRegistryPackageName != "")
+        if (!mRegistryPackageName.IsEmpty())
         {
             qualifiedRegName = mRegistryPackageName;
             qualifiedRegName += "/";

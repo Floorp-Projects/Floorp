@@ -199,7 +199,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     mInstall->GetRegPackageName(regPackageName);
     
     // determine Child status
-    if ( regPackageName == "" ) 
+    if ( regPackageName.IsEmpty() ) 
     {
         // in the "current communicator package" absolute pathnames (start
         // with slash) indicate shared files -- all others are children
@@ -359,7 +359,7 @@ nsInstallFile::RegisterInVersionRegistry()
     if (!mChildFile) 
     {
         int found;
-        if (regPackageName != "") 
+        if (!regPackageName.IsEmpty()) 
         {
             found = VR_UninstallFileExistsInList( (char*)(const char*)nsAutoCString(regPackageName) , 
                                                   (char*)(const char*)nsAutoCString(*mVersionRegistryName));
@@ -417,7 +417,7 @@ nsInstallFile::RegisterInVersionRegistry()
     
     if ( !mChildFile && !mUpgradeFile ) 
     {
-        if (regPackageName != "") 
+        if (!regPackageName.IsEmpty()) 
         { 
             VR_UninstallAddFileToList( (char*)(const char*)nsAutoCString(regPackageName), 
                                        (char*)(const char*)nsAutoCString(*mVersionRegistryName));
