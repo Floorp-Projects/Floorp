@@ -687,7 +687,7 @@ function MailAreaHasFocus()
 	if(focusedElement)
 	{
 		var name = focusedElement.localName;
-		return ((name != "INPUT") && (name != "TEXTAREA"));
+		return ((name != "input") && (name != "textarea"));
 	}
 	return true;
 }
