@@ -213,6 +213,7 @@
 <!ENTITY xptk3Cmd.label "Tree">
 <!ENTITY xptk4Cmd.label "Dialog">
 <!ENTITY xptk5Cmd.label "Dialog w/ animation">
+<!ENTITY xptk6Cmd.label "Tab">
 
 <!-- Toolbar items --> 
 <!ENTITY backButton.label "Back">
@@ -542,6 +543,7 @@
         <menuitem name="&xptk3Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
         <menuitem name="&xptk4Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexsimplemaster.xul'"/>
         <menuitem name="&xptk5Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/dexanimmaster.xul'"/>
+        <menuitem name="&xptk6Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/tab.xul'"/>
       </menu>
 
     </menu>
