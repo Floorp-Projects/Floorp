@@ -63,7 +63,6 @@ class nsStyleContext;
 class nsIFrameSelection;
 class nsIFrameManager;
 class nsILayoutHistoryState;
-class nsIArena;
 class nsIReflowCallback;
 class nsISupportsArray;
 class nsIDOMNode;

@@ -42,7 +42,6 @@
 #include "nsLineLayout.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
-#include "nsIArena.h"
 #include "nsString.h"
 #include "nsStyleContext.h"
 #include "nsIView.h"
@@ -647,7 +646,7 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
   }
 
   // Deleting the frame doesn't really free the memory, since we're using an
-  // nsIArena for allocation, but we will get our destructors called.
+  // arena for allocation, but we will get our destructors called.
   delete this;
 
   // Now that we're totally cleaned out, we need to add ourselves to the presshell's

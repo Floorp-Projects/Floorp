@@ -41,7 +41,6 @@ CSRCS = \
 		$(NULL)
 
 CPPSRCS		= \
-		nsArena.cpp \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
 		nsByteBuffer.cpp \
@@ -53,7 +52,6 @@ CPPSRCS		= \
 		nsFixedSizeAllocator.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
-		nsHashtableEnumerator.cpp \
 		nsObserver.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
@@ -95,8 +93,6 @@ EXPORTS		= \
 		nsHashSets.h \
 		nsHashKeys.h \
 		nsHashtable.h \
-		nsHashtableEnumerator.h \
-		nsIArena.h \
 		nsIByteBuffer.h \
 		nsIUnicharBuffer.h \
 		nsInt64.h \

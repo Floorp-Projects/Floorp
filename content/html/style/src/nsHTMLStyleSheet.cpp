@@ -29,7 +29,6 @@
  */
 #include "nsINameSpaceManager.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsIArena.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"

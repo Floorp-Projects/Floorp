@@ -51,7 +51,6 @@
 
 #include "nsMemoryImpl.h"
 #include "nsErrorService.h"
-#include "nsArena.h"
 #include "nsByteBuffer.h"
 
 #include "nsSupportsArray.h"
@@ -284,7 +283,6 @@ static const nsModuleComponentInfo components[] = {
 #define NS_ERRORSERVICE_CLASSNAME NS_ERRORSERVICE_NAME
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
 
-    COMPONENT(ARENA, ArenaImpl::Create),
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),

@@ -224,21 +224,6 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::ToString(char **_retval)
     return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
-NS_COM nsresult
-NS_NewISupportsPRBool (nsISupportsPRBool ** aResult)
-{
-    NS_ENSURE_ARG_POINTER (aResult);
-    nsISupportsPRBool * rval = (nsISupportsPRBool *) (new nsSupportsPRBoolImpl ());
-    
-    if (!rval)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF (rval);
-    *aResult = rval;
-
-    return NS_OK;
-}
-
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS2(nsSupportsPRUint8Impl, nsISupportsPRUint8,

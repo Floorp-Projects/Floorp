@@ -63,7 +63,6 @@
 #include "xptcall.h"
 #include "nsILocalFile.h"
 #include "nsIGenericFactory.h"
-#include "nsHashtableEnumerator.h"
 #include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsCWeakReference.h"
@@ -137,7 +136,6 @@ void XXXNeverCalled()
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(nsnull, nsnull);
     NS_NewGenericModule2(nsnull, nsnull);
-    NS_NewHashtableEnumerator(nsnull, nsnull, nsnull, nsnull);
     nsCWeakProxy(0, 0);
     nsCWeakReferent(0);
     NS_GetWeakReference(nsnull);
