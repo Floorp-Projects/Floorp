@@ -291,7 +291,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext* aPresContext,
   : mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloaterContainingBlock),
-    mFirstLetterStyle(PR_FALSE)
+    mFirstLetterStyle(PR_FALSE),
+    mFirstLineStyle(PR_FALSE)
 {
   aPresContext->GetShell(getter_AddRefs(mPresShell));
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
@@ -314,6 +315,7 @@ nsFrameConstructorState::PushFloaterContainingBlock(nsIFrame* aNewFloaterContain
 {
   aSaveState.mItems = &mFloatedItems;
   aSaveState.mFirstLetterStyle = &mFirstLetterStyle;
+  aSaveState.mFirstLineStyle = &mFirstLineStyle;
   aSaveState.mSavedItems = mFloatedItems;
   aSaveState.mSavedFirstLetterStyle = mFirstLetterStyle;
   aSaveState.mSavedFirstLineStyle = mFirstLineStyle;
