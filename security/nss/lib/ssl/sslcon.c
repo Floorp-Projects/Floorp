@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.17 2001/12/07 01:36:23 relyea%netscape.com Exp $
+ * $Id: sslcon.c,v 1.18 2001/12/07 02:30:52 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1507,7 +1507,8 @@ ssl2_CreateSessionCypher(sslSocket *ss, sslSessionID *sid, PRBool isClient)
 	PORT_SetError(isClient ? SSL_ERROR_BAD_SERVER : SSL_ERROR_BAD_CLIENT);
 	goto sec_loser;
     }
-
+ 
+    sec = ss->sec;
     ci = &sec->ci;
     rk = isClient ? &readKey  : &writeKey;
     wk = isClient ? &writeKey : &readKey;
