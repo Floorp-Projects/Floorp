@@ -32,7 +32,8 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar"];
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar",
+                       "openFolder"];
   ]]>
   </script>
   <groupbox>
@@ -54,6 +55,13 @@
       <checkbox id="urlBar"
                 label="&urlbar.label;" 
                 prefstring="browser.tabs.opentabfor.urlbar"/>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&openFolder.label;"/>
+      <checkbox id="openFolder"
+                label="&openFolderReplace.label;" 
+                prefstring="browser.tabs.loadFolderAndReplace"/>
   </groupbox>
 
 </page>
