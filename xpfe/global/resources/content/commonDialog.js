@@ -198,9 +198,7 @@ function commonDialogOnLoad()
 
 function onCheckboxClick()
 {
-	
-	var element = document.getElementById("checkbox" );
-	param.SetInt( 1, element.checked );
+	param.SetInt( 1, 1 - param.GetInt( 1 ) );
 //	dump("setting checkbox to "+ element.checked+"\n");
 }
 
