@@ -27,6 +27,9 @@
 #include "CHyperTreeFlexTable.h"
 #include "Netscape_constants.h"
 #include "CNavCenterSelectorPane.h"
+#include "URDFUtilities.h"
+
+extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
 
 //
@@ -93,10 +96,14 @@ CNavCenterContextMenuAttachment :: NewHTContextMenuCursor ( )
 		TableIndexT selectedRow = 0;
 		if ( table->GetNextSelectedRow(selectedRow) )
 			clickInBackground = PR_FALSE;
-	}
 		
+		// only allow context menu if the "useSelection" flag is true for the current view
+		if ( URDFUtilities::PropertyValueBool(HT_TopNode(table->GetHTView()), gNavCenter->useSelection) )
+			return NULL;
+	}
+	
 	return HT_NewContextualMenuCursor ( table->GetHTView(), PR_FALSE, clickInBackground );
-
+	
 } // NewHTContextMenuCursor
 
 
