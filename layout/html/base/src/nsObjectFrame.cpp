@@ -610,42 +610,38 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRUint32 width = EMBED_DEF_WIDTH;
   PRUint32 height = EMBED_DEF_HEIGHT;
 
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-    aMetrics.width = aReflowState.mComputedWidth;
-    haveWidth = PR_TRUE;
-  }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-    aMetrics.height = aReflowState.mComputedHeight;
-    haveHeight = PR_TRUE;
-  }
-
   if (IsHidden()) {
     // If we're hidden, then width and height are zero.
     haveWidth = haveHeight = PR_TRUE;
     aMetrics.width = aMetrics.height = 0;
   }
-  else if(mInstanceOwner != nsnull)
-  {
-    // the first time, mInstanceOwner will be null, so we a temporary default
-
-    // if no width and height attributes specified use embed_def_*.
-    if(NS_OK != mInstanceOwner->GetWidth(&width))
-    {
-      width = EMBED_DEF_WIDTH;
-      haveWidth = PR_FALSE;
+  else {
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+      aMetrics.width = aReflowState.mComputedWidth;
+      haveWidth = PR_TRUE;
     }
-    else
+    else if(mInstanceOwner != nsnull) {
+      if(NS_OK != mInstanceOwner->GetWidth(&width)) {
+        width = EMBED_DEF_WIDTH;
         haveWidth = PR_FALSE;
-
-    if(NS_OK != mInstanceOwner->GetHeight(&height))
-    {
-      height = EMBED_DEF_HEIGHT;
-      haveHeight = PR_FALSE;
+      }
+      else
+        haveWidth = PR_FALSE;    
     }
-    else
+    
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+      aMetrics.height = aReflowState.mComputedHeight;
+      haveHeight = PR_TRUE;
+    }
+    else if(mInstanceOwner != nsnull) {
+      if(NS_OK != mInstanceOwner->GetHeight(&height)) {
+        height = EMBED_DEF_HEIGHT;
         haveHeight = PR_FALSE;
+      }
+      else
+        haveHeight = PR_FALSE;
+    }
   }
-
 
   // XXX Temporary auto-sizing logic
   if (!haveWidth) {
