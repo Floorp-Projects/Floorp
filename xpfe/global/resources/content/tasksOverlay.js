@@ -22,13 +22,6 @@ function toNewsgroups()
 
 }
 
-function toIRC() 
-{
-
-	toOpenWindowByType("irc:chatzilla", "chrome://chatzilla/content/");
-
-}
-
 // Set up a lame hack to avoid opening two bookmarks.
 // Could otherwise happen with two Ctrl-B's in a row.
 var gDisableHistory = false;
