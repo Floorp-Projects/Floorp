@@ -7,7 +7,7 @@
 <window id="selectLangWindow"
         title="&langSelBox.title.label;"
         orient="vertical" class="dialog"
-        style="width: 30em; -moz-user-focus: ignore;"
+        style="width: 22em; -moz-user-focus: ignore;"
         onload="Startup();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -19,7 +19,7 @@
 
     <separator class="thin" />
     
-    <tree class="inset" id="langList" flex="1" 
+    <tree class="inset" id="langList" flex="1" rows="5" 
           ref="urn:mozilla:locale:root" datasources="rdf:chrome"
           sortResource="http://www.mozilla.org/rdf/chrome#name"
           sortDirection="ascending">
@@ -27,7 +27,10 @@
         <treecol flex="1"/>
       </treecolgroup>
       
-      <template>
+       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+        <rule chrome:localeType="region">
+        </rule>
+        <rule>
         <treechildren flex="1">
           <treeitem id="treechildren" uri="...">
             <treerow>
@@ -36,9 +39,30 @@
             </treerow>
           </treeitem>
         </treechildren>
+        </rule>
       </template>
-
     </tree>
+
+    <separator class="thin" />
+
+    <text class="label" value="&regionList.txt.label;" for="regionList"/>
+
+    <separator class="thin" />
+ 
+    <menulist id="regionList" flex="1">
+          <menupopup
+              datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
+              sortResource="http://www.mozilla.org/rdf/chrome#name"
+              sortDirection="ascending">
+            <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+                <rule chrome:localeType="region">
+                        <menuitem class="standard" uri="rdf:*" 
+                                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+                </rule>
+            </template>
+          </menupopup>
+    </menulist>       
 
   <separator/>  
   <box id="okCancelButtonsRight"/>
