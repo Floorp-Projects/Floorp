@@ -43,7 +43,12 @@ static int MimeInlineTextPlainFlowed_parse_begin (MimeObject *);
 static int MimeInlineTextPlainFlowed_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 
-static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = 0;
+static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
+                   PRBool *a_in_quote_in_tag, /* IN/OUT */
+                   char *a_quote_char, /* IN/OUT (pointer to single char) */
+                   char a_current_char); /* IN */
+
+static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = nsnull;
 
 extern "C" char *MimeTextBuildPrefixCSS(
                        PRInt32 quotedSizeSetting,      // mail.quoted_size
@@ -167,7 +172,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
     {
       openingDiv += " style=\"";
       openingDiv += fontstyle;
-      openingDiv += '\"';
+      openingDiv += '"';
     }
     openingDiv += ">";
     status = MimeObject_write(obj, openingDiv, openingDiv.Length(), PR_FALSE);
@@ -180,42 +185,48 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
 static int
 MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
 {
-  int status;
-  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) nsnull;
+  int status = 0;
+
   PRBool quoting = ( obj->options
     && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
          obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
        )           );  // see above
 
+  // Has this method already been called for this object?
+  // In that case return.
   if (obj->closed_p) return 0;
   
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
-  if (status < 0) return status;
+  if (status < 0) goto EarlyOut;
 
-  if (!obj->output_p) return 0;
-
+  // Look up and unlink "our" extended data structure
+  // We do it in the beginning so that if an error occur, we can
+  // just free |exdata|.
   struct MimeInlineTextPlainFlowedExData *exdata;
-  struct MimeInlineTextPlainFlowedExData *prevexdata;
-  exdata = MimeInlineTextPlainFlowedExDataList;
-  prevexdata = MimeInlineTextPlainFlowedExDataList;
-  while(exdata && (exdata->ownerobj != obj)) {
-    prevexdata = exdata;
-    exdata = exdata->next;
-  }
-  NS_ASSERTION(exdata, "The extra data has disappeared!");
+  struct MimeInlineTextPlainFlowedExData **prevexdata;
+  prevexdata = &MimeInlineTextPlainFlowedExDataList;
 
-  if(exdata == MimeInlineTextPlainFlowedExDataList) {
-    // No previous.
-    MimeInlineTextPlainFlowedExDataList = exdata->next;
-  } else {
-    prevexdata->next = exdata->next;
+  while ((exdata = *prevexdata) != nsnull) {
+    if (exdata->ownerobj == obj) {
+      // Fill hole
+      *prevexdata = exdata->next;
+      break;
+    }
+    prevexdata = &exdata->next;
   }
+  NS_ASSERTION (exdata, "The extra data has disappeared!");
 
+  if (!obj->output_p) {
+    status = 0;
+    goto EarlyOut;
+  }
+    
   for(; exdata->quotelevel > 0; exdata->quotelevel--) {
     status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
     if(status<0) goto EarlyOut;
   }
+    
   if (exdata->isSig && !quoting) {
     status = MimeObject_write(obj, "</div>", 6, PR_FALSE);      // txt-sig
     if (status<0) goto EarlyOut;
@@ -225,15 +236,17 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // text-flowed
     if (status<0) goto EarlyOut;
   }
-
+    
   status = 0;
-  text = (MimeInlineTextPlainFlowed *) obj;
 
-EarlyOut:
-  if (exdata) 
-    PR_Free(exdata);
+EarlyOut:  
+  PR_Free(exdata);
+
+  // Free mCitationColor
+  MimeInlineTextPlainFlowed *text = (MimeInlineTextPlainFlowed *) obj;
   PR_FREEIF(text->mCitationColor);
-
+  text->mCitationColor = nsnull;
+  
   return status;
 }
 
@@ -443,10 +456,10 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       *outlinep='l'; outlinep++;
       *outlinep='e'; outlinep++;
       *outlinep='='; outlinep++;
-      *outlinep='\"'; outlinep++;
+      *outlinep='"'; outlinep++;
       strcpy(outlinep, style);
       outlinep += nsCRT::strlen(style);
-      *outlinep='\"'; outlinep++;
+      *outlinep='"'; outlinep++;
       PR_FREEIF(style);
     }
     *outlinep='>'; outlinep++;
@@ -682,7 +695,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
  * @param in a_current_char, the next char. It decides which state
  *                           will be next.
  */
-void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
+static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
                    PRBool *a_in_quote_in_tag, /* IN/OUT */
                    char *a_quote_char, /* IN/OUT (pointer to single char) */
                    char a_current_char) /* IN */
@@ -732,3 +745,4 @@ void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
   }
   
 }
+

@@ -48,11 +48,6 @@ struct MimeInlineTextPlainFlowed {
   char            *mCitationColor;      // mail.citation_color
 };
 
-void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
-                   PRBool *a_in_quote_in_tag, /* IN/OUT */
-                   char *a_quote_char, /* IN/OUT (pointer to single char) */
-                   char a_current_char); /* IN */
-
 
 /*
  * Made to contain information to be kept during the whole message parsing.
