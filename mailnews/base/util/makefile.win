@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE= msgbaseutil
+MODULE= msgbsutl
 
 include <$(DEPTH)\config\config.mak>
 
@@ -44,7 +44,7 @@ EXPORTS=                \
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msgbaseutil
+LIBNAME = .\$(OBJDIR)\msgbsutl
 DLL = $(LIBNAME).dll
 
 DEFINES=-D_IMPL_NS_MSG_BASE

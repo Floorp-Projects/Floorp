@@ -32,7 +32,7 @@ LLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\msgdb.lib			\
- $(DIST)\lib\msgbaseutil.lib	\
+ $(DIST)\lib\msgbsutl.lib	\
  $(DIST)\lib\msglocal_s.lib		\
  $(NULL)
 

@@ -36,7 +36,7 @@ OBJS=											\
 LLIBS=											\
 			$(MSGLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
-			$(DIST)\lib\msgbaseutil.lib			\
+			$(DIST)\lib\msgbsutl.lib			\
 			$(DIST)\lib\msgnews_s.lib			\
 			$(LIBNSPR)							\
 			$(DIST)\lib\rdfutil_s.lib			\

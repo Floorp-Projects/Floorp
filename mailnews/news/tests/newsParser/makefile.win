@@ -31,7 +31,7 @@ LLIBS=							\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\msgnews_s.lib    	\
  $(DIST)\lib\msgbase.lib		\
- $(DIST)\lib\msgbaseutil.lib	\
+ $(DIST)\lib\msgbsutil.lib	\
  $(NULL)
 
 LLFLAGS=-SUBSYSTEM:CONSOLE 

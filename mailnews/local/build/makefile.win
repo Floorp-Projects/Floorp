@@ -39,7 +39,7 @@ LLIBS=\
 	$(DIST)\lib\xpcom.lib			\
     $(LIBNSPR)						\
     $(DIST)\lib\rdfutil_s.lib		\
-	$(DIST)\lib\msgbaseutil.lib		\
+	$(DIST)\lib\msgbsutl.lib		\
 	$(DIST)\lib\msglocal_s.lib		\
 	$(NULL)
 
