@@ -58,6 +58,9 @@ struct sym_file {
 	sym_file(const FSSpec* spec);
 	~sym_file();
 	
+	void* operator new(size_t n) { return ::GC_malloc(n); }
+	void operator delete(void* ptr) { return ::GC_free(ptr); }
+	
 	bool init();
 	bool open();
 	bool close();
@@ -82,7 +85,7 @@ sym_file::~sym_file()
 	}
 	
 	if (mPageBuffer != NULL) {
-		delete[] mPageBuffer;
+		GC_free(mPageBuffer);
 		mPageBuffer = NULL;
 	}
 	
@@ -92,7 +95,7 @@ sym_file::~sym_file()
 		while (pageCount-- > 0) {
 			GC_free(*nameTable++);
 		}
-		delete[] mNameTable;
+		GC_free(mNameTable);
 		mNameTable = NULL;
 	}
 }
@@ -110,7 +113,8 @@ bool sym_file::init()
 		return false;
 
 	// read the name table.
-	mNameTable = new UInt8*[header.dshb_nte.dti_page_count];
+	// mNameTable = new UInt8*[header.dshb_nte.dti_page_count];
+	mNameTable = (UInt8**) GC_malloc_ignore_off_page(header.dshb_nte.dti_page_count * sizeof(UInt8*));
 	if (mNameTable == NULL)
 		return false;
 	
@@ -128,7 +132,8 @@ bool sym_file::init()
 	}
 
 	// allocate the page buffer and initialize offsets.
-	mPageBuffer = new UInt8[header.dshb_page_size];
+	// mPageBuffer = (UInt8*) new UInt8[header.dshb_page_size];
+	mPageBuffer = (UInt8*) GC_malloc_atomic(header.dshb_page_size);
 
 	// read the RTE tables.
 	seek(header.dshb_rte.dti_first_page * header.dshb_page_size + sizeof(ResourceTableEntry));

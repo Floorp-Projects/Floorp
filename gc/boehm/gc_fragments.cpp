@@ -104,7 +104,10 @@ struct CodeFragment {
                  char* codeStart, char* codeEnd,
                  const FSSpec* fragmentSpec);
 
-	~CodeFragment();                 
+	~CodeFragment();
+	
+	void* operator new(size_t n) { return ::GC_malloc(n); }
+	void operator delete(void* ptr) { return ::GC_free(ptr); }     
 };
 
 CodeFragment::CodeFragment(char* dataStart, char* dataEnd,
