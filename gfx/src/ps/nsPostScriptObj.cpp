@@ -989,7 +989,7 @@ PRInt32 sRow, eRow, rStep;
   cbits = 8;
 
   XP_FilePrintf(mPrintContext->prSetup->out, "gsave\n");
-  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth);
+  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth/3);
   translate(aX, aY + aHeight);
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
   XP_FilePrintf(mPrintContext->prSetup->out, "%d %d ", width, height);
