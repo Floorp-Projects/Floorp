@@ -108,7 +108,7 @@
     </menu>
 
     <!-- Mail View Charset Menu -->
-    <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateMailMenus()">
+    <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateMailMenus()">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -123,7 +123,7 @@
         </template>
 
         <menupopup>
-        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+        <menu value="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
             <template>
                 <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                     <menupopup>
@@ -206,7 +206,7 @@
     </menu>
 
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" oncreate="InitCharsetMenuCheckMark();">
+    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" oncreate="InitCharsetMenuCheckMark();">
         <template>
             <rule>
                 <menupopup>
@@ -222,7 +222,7 @@
     </menu>
 
     <!-- Charset Menu -->
-    <menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
+    <menu id="charsetMenu" value="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -237,7 +237,7 @@
         </template>
 
         <menupopup>
-        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+        <menu value="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
             <template>
                 <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                     <menupopup>
@@ -248,7 +248,7 @@
             <menupopup>
             </menupopup>
         </menu>
-        <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+        <menu value="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
                     <menupopup>
@@ -257,7 +257,7 @@
                 </rule>
             </template>
             <menupopup>
-                <menu value="&charsetMenuMore1.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
+                <menu value="&charsetMenuMore1.label;" accesskey="&charsetMenuMore1.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -268,7 +268,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore2.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
+                <menu value="&charsetMenuMore2.label;" accesskey="&charsetMenuMore2.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -279,7 +279,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore3.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
+                <menu value="&charsetMenuMore3.label;" accesskey="&charsetMenuMore3.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -290,7 +290,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore4.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
+                <menu value="&charsetMenuMore4.label;" accesskey="&charsetMenuMore4.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -301,7 +301,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore5.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
+                <menu value="&charsetMenuMore5.label;" accesskey="&charsetMenuMore5.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
