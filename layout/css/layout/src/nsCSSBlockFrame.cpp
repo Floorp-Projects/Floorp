@@ -38,7 +38,6 @@
 #include "nsIHTMLContent.h"// XXX list ordinal hack
 
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
-// XXX inline span frames
 // XXX IsFirstChild
 // XXX max-element-size
 // XXX no-wrap
@@ -1164,6 +1163,7 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
     if (IS_REFLOW_ERROR(rs)) {
       return nsresult(rs);
     }
+printf("reflow-mapped: rs=%x\n", rs);
     switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
     case NS_INLINE_REFLOW_COMPLETE:
       prevChild = child;
@@ -1206,6 +1206,7 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
       if (IS_REFLOW_ERROR(rs)) {
         return nsresult(rs);
       }
+printf("pullup: rs=%x\n", rs);
       switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
       case NS_INLINE_REFLOW_COMPLETE:
         // Pullup succeeded
