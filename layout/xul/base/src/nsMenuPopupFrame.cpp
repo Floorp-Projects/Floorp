@@ -140,7 +140,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   GetView(aPresContext, &ourView);
 
   nsIFrame* parent;
-  aParent->GetParentWithView(aPresContext, &parent);
+  GetParentWithView(aPresContext, &parent);
   nsIView* parentView;
   parent->GetView(aPresContext, &parentView);
 
@@ -490,7 +490,9 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //
 
   nsIView* parentView = nsnull;
-  GetNearestEnclosingView(aPresContext, aFrame, &parentView);
+  nsIFrame* parentFrame = nsnull;
+  aFrame->GetParent(&parentFrame);
+  GetNearestEnclosingView(aPresContext, parentFrame, &parentView);
   if (!parentView)
     return NS_OK;
 
