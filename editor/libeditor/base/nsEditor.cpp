@@ -3238,6 +3238,35 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMNode> candidate;
+  result = GetPriorNodeImpl(aCurrentNode, aEditableNode, address_of(candidate), bNoBlockCrossing);
+  if (NS_FAILED(result)) return result;
+  
+  if (!candidate)
+  {
+    // we could not find a prior node.  return null.
+    *aResultNode = nsnull;
+    return NS_OK;
+  }
+  else if (!aEditableNode) *aResultNode = candidate;
+  else if (IsEditable(candidate)) *aResultNode = candidate;
+  else 
+  { // restart the search from the non-editable node we just found
+    nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(candidate);
+    return GetPriorNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::GetPriorNodeImpl(nsIDOMNode  *aCurrentNode, 
+                           PRBool       aEditableNode, 
+                           nsCOMPtr<nsIDOMNode> *aResultNode,
+                           PRBool       bNoBlockCrossing)
+{
+  // called only by GetPriorNode so we dont need to check params.
+  nsresult result;
+
   // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
   nsCOMPtr<nsIDOMNode> prevSibling;
   result = aCurrentNode->GetPreviousSibling(getter_AddRefs(prevSibling));
@@ -3247,74 +3276,58 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
     {
       // don't look inside prevsib, since it is a block
       *aResultNode = prevSibling;
-      return result;
+      return NS_OK;
     }
     *aResultNode = GetRightmostChild(prevSibling, bNoBlockCrossing);
     if (!*aResultNode) 
     { 
       *aResultNode = prevSibling;
-      return result; 
+      return NS_OK;
     }
     if (!IsDescendantOfBody(*aResultNode))
     {
       *aResultNode = nsnull;
-      return result;
-    }
-    if (!aEditableNode)  return result;
-    if (IsEditable(*aResultNode))  return result;
-    else 
-    { // restart the search from the non-editable node we just found
-      nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
-      return GetPriorNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+      return NS_OK;
     }
   }
-  
-  // otherwise, walk up the parent change until there is a child that comes before 
-  // the ancestor of aCurrentNode.  Then return that node's rightmost child
-  nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(aCurrentNode);
-  nsCOMPtr<nsIDOMNode> node, notEditableNode;
-  do {
-    node = parent;
-    result = node->GetParentNode(getter_AddRefs(parent));
-    if ((NS_SUCCEEDED(result)) && parent)
-    {
-      if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
+  else
+  {
+    // otherwise, walk up the parent tree until there is a child that comes before 
+    // the ancestor of aCurrentNode.  Then return that node's rightmost child
+    nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(aCurrentNode);
+    nsCOMPtr<nsIDOMNode> node, notEditableNode;
+    do {
+      node = parent;
+      result = node->GetParentNode(getter_AddRefs(parent));
+      if ((NS_SUCCEEDED(result)) && parent)
       {
-        // we are at front of block or root, do not step out
-        *aResultNode = nsnull;
-        return result;
-      }
-      result = parent->GetPreviousSibling(getter_AddRefs(node));
-      if ((NS_SUCCEEDED(result)) && node)
-      {
-        if (bNoBlockCrossing && IsBlockNode(node))
-        {
-          // prev sibling is a block, do not step into it
-          *aResultNode = node;
-          return result;
-        }
-        *aResultNode = GetRightmostChild(node, bNoBlockCrossing);
-        if (!*aResultNode)
-        { 
-          *aResultNode = node;
-          return result; 
-        }
-        if (!IsDescendantOfBody(*aResultNode))
+        if (!IsDescendantOfBody(parent))
         {
           *aResultNode = nsnull;
-          return result;
+          return NS_OK;
         }
-        if (!aEditableNode) return result;
-        if (IsEditable(*aResultNode)) return result;
-        else 
-        { // restart the search from the non-editable node we just found
-          notEditableNode = do_QueryInterface(*aResultNode);
-          return GetPriorNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+        if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
+        {
+          // we are at front of block or root, do not step out
+          *aResultNode = nsnull;
+          return NS_OK;
+        }
+        result = parent->GetPreviousSibling(getter_AddRefs(node));
+        if ((NS_SUCCEEDED(result)) && node)
+        {
+          if (bNoBlockCrossing && IsBlockNode(node))
+          {
+            // prev sibling is a block, do not step into it
+            *aResultNode = node;
+            return NS_OK;
+          }
+          *aResultNode = GetRightmostChild(node, bNoBlockCrossing);
+          if (!*aResultNode)  *aResultNode = node;
+          return NS_OK;
         }
       }
-    }
-  } while ((NS_SUCCEEDED(result)) && parent);
-
+    } while ((NS_SUCCEEDED(result)) && parent && !*aResultNode);
+  }
   return result;
 }
 
@@ -3338,6 +3351,36 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMNode> candidate;
+  result = GetNextNodeImpl(aCurrentNode, aEditableNode, address_of(candidate), bNoBlockCrossing);
+  if (NS_FAILED(result)) return result;
+  
+  if (!candidate)
+  {
+    // we could not find a next node.  return null.
+    *aResultNode = nsnull;
+    return NS_OK;
+  }
+  else if (!aEditableNode) *aResultNode = candidate;
+  else if (IsEditable(candidate)) *aResultNode = candidate;
+  else 
+  { // restart the search from the non-editable node we just found
+    nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(candidate);
+    return GetNextNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+  }
+  return result;
+}
+
+
+nsresult 
+nsEditor::GetNextNodeImpl(nsIDOMNode  *aCurrentNode, 
+                          PRBool       aEditableNode, 
+                          nsCOMPtr<nsIDOMNode> *aResultNode,
+                          PRBool       bNoBlockCrossing)
+{
+  // called only by GetNextNode so we dont need to check params.
+  nsresult result;
+
   // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
   nsCOMPtr<nsIDOMNode> nextSibling;
   result = aCurrentNode->GetNextSibling(getter_AddRefs(nextSibling));
@@ -3347,77 +3390,61 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
     {
       // next sibling is a block, do not step into it
       *aResultNode = nextSibling;
-      return result;
+      return NS_OK;
     }
     *aResultNode = GetLeftmostChild(nextSibling, bNoBlockCrossing);
     if (!*aResultNode)
     { 
       *aResultNode = nextSibling;
-      return result; 
+      return NS_OK; 
     }
     if (!IsDescendantOfBody(*aResultNode))
     {
       *aResultNode = nsnull;
-      return result;
-    }
-    if (!aEditableNode) return result;
-    if (IsEditable(*aResultNode)) return result;
-    else 
-    { // restart the search from the non-editable node we just found
-      nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
-      return GetNextNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+      return NS_OK;
     }
   }
-  
-  // otherwise, walk up the parent change until there is a child that comes after 
-  // the ancestor of aCurrentNode.  Then return that node's leftmost child
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
-  nsCOMPtr<nsIDOMNode> node, notEditableNode;
-  do {
-    node = parent;
-    result = node->GetParentNode(getter_AddRefs(parent));
-    if ((NS_SUCCEEDED(result)) && parent)
-    {
-      if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
+  else
+  {
+    // otherwise, walk up the parent tree until there is a child that comes after 
+    // the ancestor of aCurrentNode.  Then return that node's leftmost child
+    nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
+    nsCOMPtr<nsIDOMNode> node, notEditableNode;
+    do {
+      node = parent;
+      result = node->GetParentNode(getter_AddRefs(parent));
+      if ((NS_SUCCEEDED(result)) && parent)
       {
-        // we are at end of block or root, do not step out
-        *aResultNode = nsnull;
-        return result;
-      }
-      result = parent->GetNextSibling(getter_AddRefs(node));
-      if ((NS_SUCCEEDED(result)) && node)
-      {
-        if (bNoBlockCrossing && IsBlockNode(node))
-        {
-          // next sibling is a block, do not step into it
-          *aResultNode = node;
-          return result;
-        }
-        *aResultNode = GetLeftmostChild(node, bNoBlockCrossing);
-        if (!*aResultNode)
-        { 
-          *aResultNode = node;
-          return result; 
-        }
-        if (!IsDescendantOfBody(*aResultNode))
+        if (!IsDescendantOfBody(parent))
         {
           *aResultNode = nsnull;
-          return result;
+          return NS_OK;
         }
-        if (!aEditableNode) return result;
-        if (IsEditable(*aResultNode)) return result;
-        else 
-        { // restart the search from the non-editable node we just found
-          notEditableNode = do_QueryInterface(*aResultNode);
-          return GetNextNode(notEditableNode, aEditableNode, aResultNode, bNoBlockCrossing);
+        if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
+        {
+          // we are at end of block or root, do not step out
+          *aResultNode = nsnull;
+          return NS_OK;
+        }
+        result = parent->GetNextSibling(getter_AddRefs(node));
+        if ((NS_SUCCEEDED(result)) && node)
+        {
+          if (bNoBlockCrossing && IsBlockNode(node))
+          {
+            // next sibling is a block, do not step into it
+            *aResultNode = node;
+            return NS_OK;
+          }
+          *aResultNode = GetLeftmostChild(node, bNoBlockCrossing);
+          if (!*aResultNode) *aResultNode = node;
+          return NS_OK; 
         }
       }
-    }
-  } while ((NS_SUCCEEDED(result)) && parent);
-
+    } while ((NS_SUCCEEDED(result)) && parent);
+  }
   return result;
 }
+
 
 nsCOMPtr<nsIDOMNode>
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)

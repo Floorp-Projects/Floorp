@@ -1635,32 +1635,18 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         else
           rightParent = mHTMLEditor->GetBlockNodeParent(startNode);
         
-        // if leftParent or rightParent is null, it's because the
-        // corresponding selection endpoint is in the body node.
         if (!leftParent || !rightParent)
-          return NS_OK;  // bail to default
-          
-        // are the blocks of same type?
-        if (mHTMLEditor->NodesSameType(leftParent, rightParent))
+          return NS_ERROR_NULL_POINTER;  // should not happen
+        
+        nsCOMPtr<nsIDOMNode> selPointNode = startNode;
+        PRInt32 selPointOffset = startOffset;
         {
-          if (!bPlaintext)
-          {
-            // adjust whitespace at block boundaries
-            res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor,leftParent,rightParent);
-            if (NS_FAILED(res)) return res;
-          }
-          // join the nodes
+          nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(selPointNode), &selPointOffset);
+          res = JoinBlocks(aSelection, address_of(leftParent), address_of(rightParent), aCancel);
           *aHandled = PR_TRUE;
-          res = JoinNodesSmart(leftParent,rightParent,address_of(selNode),&selOffset);
-          if (NS_FAILED(res)) return res;
-          // fix up selection
-          res = aSelection->Collapse(selNode,selOffset);
-          return res;
         }
-        
-        // else blocks not same type, bail to default
-        return NS_OK;
-        
+        aSelection->Collapse(selPointNode, selPointOffset);
+        return res;
       }
     
       // at end of text node and deleted?
@@ -1776,37 +1762,32 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           leftParent = startNode;
         else
           leftParent = mHTMLEditor->GetBlockNodeParent(startNode);
-        if (IsBlockNode(nextNode))
-          rightParent = nextNode;
-        else
-          rightParent = mHTMLEditor->GetBlockNodeParent(nextNode);
-    
-        // if leftParent or rightParent is null, it's because the
-        // corresponding selection endpoint is in the body node.
-        if (!leftParent || !rightParent)
-          return NS_OK;  // bail to default
-          
-        // are the blocks of same type?
-        if (mHTMLEditor->NodesSameType(leftParent, rightParent))
+        if (IsBlockNode(nextNode) || nsEditor::IsTextNode(nextNode))
         {
-          if (!bPlaintext)
-          {
-            // adjust whitespace at block boundaries
-            res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor,leftParent,rightParent);
-            if (NS_FAILED(res)) return res;
-          }
-          // join the nodes
-          *aHandled = PR_TRUE;
-          res = JoinNodesSmart(leftParent,rightParent,address_of(selNode),&selOffset);
-          if (NS_FAILED(res)) return res;
-          // fix up selection
-          res = aSelection->Collapse(selNode,selOffset);
-          return res;
+          rightParent = nextNode;
+          aSelection->Collapse(nextNode,0);
+          startNode = nextNode; startOffset = 0;
         }
+        else
+        {
+          rightParent = mHTMLEditor->GetBlockNodeParent(nextNode);
+          nsEditor::GetNodeLocation(nextNode, address_of(startNode), &startOffset);
+          aSelection->Collapse(startNode, startOffset);
+        }
+        if (!leftParent || !rightParent)
+          return NS_ERROR_NULL_POINTER;  // should not happen
         
-        // else blocks not same type, bail to default
-        return NS_OK;
+        nsCOMPtr<nsIDOMNode> selPointNode = startNode;
+        PRInt32 selPointOffset = startOffset;
+        {
+          nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(selPointNode), &selPointOffset);
+          res = JoinBlocks(aSelection, address_of(leftParent), address_of(rightParent), aCancel);
+          *aHandled = PR_TRUE;
+        }
+        aSelection->Collapse(selPointNode, selPointOffset);
+        return res;
       }
+      
       // else in middle of text node.  default will do right thing.
       nsCOMPtr<nsIDOMCharacterData>nodeAsText;
       nodeAsText = do_QueryInterface(startNode);
@@ -2128,6 +2109,209 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
 
   return res;
 }  
+
+/*****************************************************************************************************
+*    JoinBlocks: this method is used to join two block elements.  The right element is always joined
+*    to the left element.  If the elements are the same type and not nested within each other, 
+*    JoinNodesSmart is called (example, joining two list items together into one).  If the elements
+*    are not the same type, or one is a ddescendant of the other, we instead destroy the right block
+*    placing it's children into leftblock.  DTD containment rules are followed throughout.
+*         nsISelection *aSelection                 the selection.  
+*         nsCOMPtr<nsIDOMNode> *aLeftBlock         pointer to the left block
+*         nsCOMPtr<nsIDOMNode> *aRightBlock        pointer to the right block; will have contents moved to left block
+*         PRBool *aCanceled                        return TRUE if we had to cancel operation
+*/
+nsresult
+nsHTMLEditRules::JoinBlocks(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *aLeftBlock, 
+                            nsCOMPtr<nsIDOMNode> *aRightBlock, PRBool *aCanceled)
+{
+  if (!aLeftBlock || !aRightBlock || !*aLeftBlock || !*aRightBlock) return NS_ERROR_NULL_POINTER;
+  if (nsHTMLEditUtils::IsTableElement(*aLeftBlock) || nsHTMLEditUtils::IsTableElement(*aRightBlock))
+  {
+    // do not try to merge table elements
+    *aCanceled = PR_TRUE;
+    return NS_OK;
+  }
+
+  nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+  
+  nsresult res = NS_OK;
+
+  PRInt32 theOffset;
+  // theOffset below is where you find yourself in aRightBlock when you traverse upwards
+  // from aLeftBlock
+  if (nsHTMLEditUtils::IsDescendantOf(*aLeftBlock, *aRightBlock, &theOffset))
+  {
+    // tricky case.  left block is inside right block.
+    // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
+    theOffset++;
+    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor, aLeftBlock, nsWSRunObject::kBlockEnd);
+    if (NS_FAILED(res)) return res;
+    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor, aRightBlock, nsWSRunObject::kAfterBlock, &theOffset);
+    if (NS_FAILED(res)) return res;
+    // Do br adjustment.
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = CheckForInvisibleBR(*aLeftBlock, kBlockEnd, address_of(brNode));
+    if (NS_FAILED(res)) return res;
+    res = MoveBlock(aSelection, *aLeftBlock, -1);
+    if (brNode) mHTMLEditor->DeleteNode(brNode);
+  }
+  // theOffset below is where you find yourself in aLeftBlock when you traverse upwards
+  // from aRightBlock
+  else if (nsHTMLEditUtils::IsDescendantOf(*aRightBlock, *aLeftBlock, &theOffset))
+  {
+    // tricky case.  right block is inside left block.
+    // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
+    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor, aRightBlock, nsWSRunObject::kBlockStart);
+    if (NS_FAILED(res)) return res;
+    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor, aLeftBlock, nsWSRunObject::kBeforeBlock, &theOffset);
+    if (NS_FAILED(res)) return res;
+    // Do br adjustment.
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = CheckForInvisibleBR(*aLeftBlock, kBeforeBlock, address_of(brNode), theOffset);
+    if (NS_FAILED(res)) return res;
+    res = MoveBlock(aSelection, *aLeftBlock, theOffset);
+    if (brNode) mHTMLEditor->DeleteNode(brNode);
+  }
+  else
+  {
+    // normal case.  blocks are siblings, or at least close enough to siblings.  An example
+    // of the latter is a <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The first
+    // li and the p are not true siblings, but we still want to join them if you backspace
+    // from li into p.
+    
+    // adjust whitespace at block boundaries
+    res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor, *aLeftBlock, *aRightBlock);
+    if (NS_FAILED(res)) return res;
+    // Do br adjustment.
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = CheckForInvisibleBR(*aLeftBlock, kBlockEnd, address_of(brNode));
+    if (NS_FAILED(res)) return res;
+    if (mHTMLEditor->NodesSameType(*aLeftBlock, *aRightBlock))
+    {
+      // nodes are same type.  merge them.
+      nsCOMPtr<nsIDOMNode> parent;
+      PRInt32 offset;
+      res = JoinNodesSmart(*aLeftBlock, *aRightBlock, address_of(parent), &offset);
+    }
+    else
+    {
+      // nodes are disimilar types. 
+      res = MoveBlock(aSelection, *aLeftBlock);
+    }
+    if (brNode) mHTMLEditor->DeleteNode(brNode);
+  }
+  return res;
+}
+
+
+/*****************************************************************************************************
+*    MoveBlock: this method is used to move the "block" implied by the selection into aNewParent.
+*    Note that the "block" might merely be inline nodes between <br>s, or between blocks, etc.
+*    DTD containment rules are followed throughout.
+*         nsISelection *aSelection       the selection.  
+*         nsIDOMNode *aNewParent         parent to receive moved content
+*         PRInt32 aOffset                offset in aNewParent to move content to
+*/
+nsresult
+nsHTMLEditRules::MoveBlock(nsISelection *aSelection, nsIDOMNode *aNewParent, PRInt32 aOffset)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  nsCOMPtr<nsISupports> isupports;
+  nsCOMPtr<nsIDOMNode> curNode;
+  // GetNodesFromSelection is the workhorse that figures out what we wnat to move.
+  // TODO: it is bogus to have to pass selectin to JoinBlocks() and thru to MoveBlock.  We only
+  // need it because of GetNodesFromSelection().  I need to write other versions of GetNodesFromSelection()
+  // that accept a nsIDOMRange or a DOMPoint.
+  nsresult res = GetNodesFromSelection(aSelection, kMakeList, address_of(arrayOfNodes), PR_TRUE);
+  if (NS_FAILED(res)) return res;
+  PRUint32 listCount;
+  arrayOfNodes->Count(&listCount);
+  PRUint32 i;
+  for (i=0; i<listCount; i++)
+  {
+    // get the node to act on
+    isupports  = dont_AddRef(arrayOfNodes->ElementAt(i));
+    curNode = do_QueryInterface(isupports);
+    if (IsBlockNode(curNode))
+    {
+      // For block nodes, move their contents only, then delete block.
+      res = MoveContents(curNode, aNewParent, &aOffset); 
+      if (NS_FAILED(res)) return res;
+      res = mHTMLEditor->DeleteNode(curNode);
+    }
+    else
+    {
+      // otherwise move the content as is, checking against the dtd.
+      res = MoveNodeSmart(curNode, aNewParent, &aOffset);
+    }
+  }
+  return res;
+}
+
+/*****************************************************************************************************
+*    MoveNodeSmart: this method is used to move node aSource to (aDest,aOffset).
+*    DTD containment rules are followed throughout.  aOffset is updated to point _after_
+*    inserted content.
+*         nsIDOMNode *aSource       the selection.  
+*         nsIDOMNode *aDest         parent to receive moved content
+*         PRInt32 *aOffset          offset in aNewParent to move content to
+*/
+nsresult
+nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset)
+{
+  if (!aSource || !aDest || !aOffset) return NS_ERROR_NULL_POINTER;
+
+  nsAutoString tag;
+  nsresult res;
+  res = mHTMLEditor->GetTagString(aSource, tag);
+  if (NS_FAILED(res)) return res;
+  tag.ToLowerCase();
+  // check if this node can go into the destination node
+  if (mHTMLEditor->CanContainTag(aDest, tag))
+  {
+    // if it can, move it there
+    res = mHTMLEditor->MoveNode(aSource, aDest, *aOffset);
+    if (NS_FAILED(res)) return res;
+    if (*aOffset != -1) ++(*aOffset);
+  }
+  else
+  {
+    // if it can't, move it's children, and then delete it.
+    res = MoveContents(aSource, aDest, aOffset);
+    if (NS_FAILED(res)) return res;
+    res = mHTMLEditor->DeleteNode(aSource);
+    if (NS_FAILED(res)) return res;
+  }
+  return NS_OK;
+}
+
+/*****************************************************************************************************
+*    MoveContents: this method is used to move node the _contents_ of aSource to (aDest,aOffset).
+*    DTD containment rules are followed throughout.  aOffset is updated to point _after_
+*    inserted content.  aSource is deleted.
+*         nsIDOMNode *aSource       the selection.  
+*         nsIDOMNode *aDest         parent to receive moved content
+*         PRInt32 *aOffset          offset in aNewParent to move content to
+*/
+nsresult
+nsHTMLEditRules::MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset)
+{
+  if (!aSource || !aDest || !aOffset) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> child;
+  nsAutoString tag;
+  nsresult res;
+  aSource->GetFirstChild(getter_AddRefs(child));
+  while (child)
+  {
+    res = MoveNodeSmart(child, aDest, aOffset);
+    if (NS_FAILED(res)) return res;
+  }
+  return NS_OK;
+}
+
 
 nsresult
 nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
@@ -3688,6 +3872,33 @@ nsHTMLEditRules::CheckForWhitespaceDeletion(nsCOMPtr<nsIDOMNode> *ioStartNode,
   return res;
 }
 
+nsresult
+nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock, 
+                                     BRLocation aWhere, 
+                                     nsCOMPtr<nsIDOMNode> *outBRNode,
+                                     PRInt32 aOffset)
+{
+  // for now I'm relying on fact that user has scrubbed any invisible whitespace
+  // inthe vicinity, so we don't need morecomplicated code here to check for that.
+  if (!aBlock || !outBRNode) return NS_ERROR_NULL_POINTER;
+  *outBRNode = nsnull;
+  if (aWhere == kBlockEnd)
+  {
+    nsCOMPtr<nsIDOMNode> node = mHTMLEditor->GetRightmostChild(aBlock, PR_TRUE);
+    if (nsTextEditUtils::IsBreak(node))
+      *outBRNode = node;
+  }
+  else if (aOffset)
+  {
+    nsCOMPtr<nsIDOMNode> prevItem;
+    mHTMLEditor->GetPriorHTMLNode(aBlock, aOffset, address_of(prevItem), PR_TRUE);
+    if (nsTextEditUtils::IsBreak(prevItem))
+      *outBRNode = prevItem;
+  }
+  return NS_OK;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // GetInnerContent: aList and aTbl allow the caller to specify what kind 
 //                  of content to "look inside".  If aTbl is true, look inside
@@ -3726,7 +3937,7 @@ nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOf
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// IsFirstNode: Are we the first edittable node in our parent?
+// IsFirstNode: Are we the first editable node in our parent?
 //                  
 PRBool
 nsHTMLEditRules::IsFirstNode(nsIDOMNode *aNode)
@@ -3766,7 +3977,7 @@ nsHTMLEditRules::IsFirstNode(nsIDOMNode *aNode)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsLastNode: Are we the first edittable node in our parent?
+// IsLastNode: Are we the last editable node in our parent?
 //                  
 PRBool
 nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)

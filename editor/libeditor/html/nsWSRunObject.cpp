@@ -128,6 +128,26 @@ nsWSRunObject::~nsWSRunObject()
 //   public static methods
 //--------------------------------------------------------------------------------------------
 
+nsresult
+nsWSRunObject::ScrubBlockBoundary(nsHTMLEditor *aHTMLEd, 
+                                  nsCOMPtr<nsIDOMNode> *aBlock,
+                                  BlockBoundary aBoundary,
+                                  PRInt32 *aOffset)
+{
+  if (!aBlock || !aHTMLEd)
+    return NS_ERROR_NULL_POINTER;
+  if ((aBoundary == kBlockStart) || (aBoundary == kBlockEnd))
+    return ScrubBlockBoundaryInner(aHTMLEd, aBlock, aBoundary);
+  
+  // else we are scrubbing an outer boundary - just before or after
+  // a block element.
+  if (!aOffset) 
+    return NS_ERROR_NULL_POINTER;
+  nsAutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aBlock, aOffset);
+  nsWSRunObject theWSObj(aHTMLEd, *aBlock, *aOffset);
+  return theWSObj.Scrub();
+}
+
 nsresult 
 nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor *aHTMLEd, 
                                    nsIDOMNode *aLeftParent, 
@@ -2210,3 +2230,40 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
   }
   return NS_OK;
 }
+
+
+nsresult
+nsWSRunObject::ScrubBlockBoundaryInner(nsHTMLEditor *aHTMLEd, 
+                                       nsCOMPtr<nsIDOMNode> *aBlock,
+                                       BlockBoundary aBoundary)
+{
+  if (!aBlock || !aHTMLEd)
+    return NS_ERROR_NULL_POINTER;
+  PRInt32 offset=0;
+  if (aBoundary == kBlockEnd)
+  {
+    PRUint32 uOffset;
+    aHTMLEd->GetLengthOfDOMNode(*aBlock, uOffset); 
+    offset = uOffset;
+  }
+  nsWSRunObject theWSObj(aHTMLEd, *aBlock, offset);
+  return theWSObj.Scrub();    
+}
+
+
+nsresult
+nsWSRunObject::Scrub()
+{
+  WSFragment *run = mStartRun;
+  while (run)
+  {
+    if (run->mType & (eLeadingWS|eTrailingWS) )
+    {
+      nsresult res = DeleteChars(run->mStartNode, run->mStartOffset, run->mEndNode, run->mEndOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    run = run->mRight;
+  }
+  return NS_OK;
+}
+

@@ -42,6 +42,7 @@
 #include "nsString.h"
 #include "nsEditor.h"
 #include "nsIDOMNode.h"
+#include "nsIContent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLAnchorElement.h"
 
@@ -403,7 +404,7 @@ nsHTMLEditUtils::IsMap(nsIDOMNode *node)
 
 
 PRBool 
-nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent) 
+nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
 {
   if (!aNode && !aParent) return PR_FALSE;
   if (aNode == aParent) return PR_FALSE;
@@ -415,7 +416,19 @@ nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent)
   {
     res = node->GetParentNode(getter_AddRefs(parent));
     if (NS_FAILED(res)) return PR_FALSE;
-    if (parent.get() == aParent) return PR_TRUE;
+    if (parent.get() == aParent) 
+    {
+      if (aOffset)
+      {
+        nsCOMPtr<nsIContent> pCon(do_QueryInterface(parent));
+        nsCOMPtr<nsIContent> cCon(do_QueryInterface(node));
+        if (pCon && cCon)
+        {
+          pCon->IndexOf(cCon, *aOffset);
+        }
+      }
+      return PR_TRUE;
+    }
     node = parent;
   } while (parent);
   
