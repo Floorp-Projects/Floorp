@@ -42,6 +42,10 @@
   // for |min|, |copy|
 
 
+#ifdef HAVE_CPP_USING
+using namespace std;
+#endif
+
 /*
   This file defines the abstract interfaces |nsAReadableString| and
   |nsAReadableCString| (the 'A' is for 'abstract', as opposed to the 'I' in
@@ -81,7 +85,7 @@ class basic_nsAReadableString
       ...
     */
   {
-    protected:
+    public:
 
       struct ReadableFragment
         {
@@ -227,7 +231,7 @@ class basic_nsAReadableString
 
                 while ( n )
                   {
-                    difference_type one_hop = min(n, size_forward());
+                    difference_type one_hop = NS_MIN(n, size_forward());
                     mPosition += one_hop;
                     normalize_forward();
                     n -= one_hop;
@@ -244,7 +248,7 @@ class basic_nsAReadableString
 
                 while ( n )
                   {
-                    difference_type one_hop = min(n, size_backward());
+                    difference_type one_hop = NS_MIN(n, size_backward());
                     mPosition -= one_hop;
                     normalize_backward();
                     n -= one_hop;
@@ -286,7 +290,7 @@ class basic_nsAReadableString
       EndReading( PRUint32 aOffset = 0 ) const
         {
           ReadableFragment fragment;
-          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
+          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
           return ReadingIterator(fragment, startPos, *this);
         }
 
@@ -576,7 +580,7 @@ PRUint32
 basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
     PRUint32 myLength = Length();
-    aLengthToCopy = min(myLength, aLengthToCopy);
+    aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
     aResult = Substring(*this, myLength-aLengthToCopy, aLengthToCopy);
     return aResult.Length();
   }
@@ -883,8 +887,8 @@ class nsPromiseSubstring
     public:
       nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
-            mStartPos( min(aStartPos, aString.Length()) ),
-            mLength( min(aLength, aString.Length()-mStartPos) )
+            mStartPos( NS_MIN(aStartPos, aString.Length()) ),
+            mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
         {
           // nothing else to do here
         }
@@ -954,14 +958,14 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
 
     PRUint32 lLength = lhs.Length();
     PRUint32 rLength = rhs.Length();
-    PRUint32 lengthToCompare = min(lLength, rLength);
+    PRUint32 lengthToCompare = NS_MIN(lLength, rLength);
 
     basic_nsAReadableString<CharT>::ReadingIterator leftIter( lhs.BeginReading() );
     basic_nsAReadableString<CharT>::ReadingIterator rightIter( rhs.BeginReading() );
 
     for (;;)
       {
-        PRUint32 lengthAvailable = PRUint32( min(leftIter.size_forward(), rightIter.size_forward()) );
+        PRUint32 lengthAvailable = PRUint32( NS_MIN(leftIter.size_forward(), rightIter.size_forward()) );
         // assert( lengthAvailable >= 0 );
 
         if ( lengthAvailable > lengthToCompare )
