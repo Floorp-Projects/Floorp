@@ -27,7 +27,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/default
 EXPORT_RESOURCE_SAMPLES = \
 		AccountManager.xul \
 		AccountManager.js \
-		accounttree.xul \
 		am-main.xul \
 		am-server.xul \
 		am-server.js \

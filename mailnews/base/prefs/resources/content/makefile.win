@@ -22,7 +22,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: 
 	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) accounttree.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server.js		$(DIST)\bin\chrome\messenger\content\default
@@ -48,7 +47,6 @@ install::
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.js
-	rm -f $(DIST)\chrome\messenger\content\default\accounttree.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-main.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-server.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-server.js

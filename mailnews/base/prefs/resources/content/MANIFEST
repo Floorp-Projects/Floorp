@@ -18,7 +18,6 @@
 
 AccountManager.xul
 AccountManager.js
-accounttree.xul
 am-main.xul
 am-server.xul
 am-server.js
