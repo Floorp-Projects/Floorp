@@ -28,10 +28,13 @@ var prefs = Components.classes['component://netscape/preferences'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref); 
 
 var serverid = null;
-var max_articles_value = 0;
-var mark_old_read_value = true;
 var markreadElement = null;
 var numberElement = null;
+
+var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+var server = accountManager.getIncomingServer(serverid);
+var nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+
 
 function OnLoad()
 {
@@ -39,22 +42,13 @@ function OnLoad()
 
 	if (window.arguments && window.arguments[0]) {
 		var args = window.arguments[0].split(",");
-		// args will be of the form <number>,<newsgroup name>,<max>,<mark>,<serverid>
+		// args will be of the form <number>,<newsgroup name>,<serverid>
 		newmessages = args[0];
 		newsgroupname = args[1];
-		max_articles_value = max_articles_value + args[2];
-		if (args[3] == "true") {
-			mark_old_read_value = true;
-		}
-		else {
-			mark_old_read_value = false;
-		}
-		serverid = args[4];
+		serverid = args[2];
 
 		dump("new message count = " + newmessages + "\n");
 		dump("newsgroup name = " + newsgroupname + "\n");
-		dump("max_articles_value = " + max_articles_value + "\n");
-		dump("mark_old_read_value = " + mark_old_read_value + "\n");
 		dump("serverid = " + serverid + "\n");
 
 		var downloadHeadersTitlePrefix = Bundle.GetStringFromName("downloadHeadersTitlePrefix");
@@ -69,10 +63,10 @@ function OnLoad()
 
 
 	numberElement = document.getElementById("number");
-	numberElement.value = max_articles_value;
+	numberElement.value = nntpServer.maxArticles;
 
 	markreadElement = document.getElementById("markread");
-	markreadElement.checked = mark_old_read_value;
+	markreadElement.checked = nntpServer.markOldRead;
 
 	return true;
 }
@@ -86,10 +80,6 @@ function setDivText(divname, value) {
 }
 
 function OkButtonCallback() {
-	var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-	var server = accountManager.getIncomingServer(serverid);
-	var nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
-
 	nntpServer.maxArticles = numberElement.value;
-	nntpServer.markOldRead= markreadElement.checked;
+	nntpServer.markOldRead = markreadElement.checked;
 }

@@ -446,25 +446,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				args.Append(",");
 				args.Append(m_groupName);
 
-				PRInt32 dialogMaxArticles = 0;
-				PRBool dialogMarkOldRead = PR_FALSE;
-
-				// get the max articles for this server
-				rv = nntpServer->GetMaxArticles(&dialogMaxArticles);
-				if (NS_FAILED(rv)) dialogMaxArticles = 0;
-				args.Append(dialogMaxArticles);
-				args.Append(",");
-
-				// get the marked read value for this server
-				rv = nntpServer->GetMarkOldRead(&dialogMarkOldRead);
-				if (NS_FAILED(rv)) dialogMarkOldRead = PR_FALSE;
-				if (dialogMarkOldRead) {
-					args.Append("true,");
-				}
-				else {
-					args.Append("false,");
-				}
-
 				// get the server key
 				nsXPIDLCString serverKey;
 				rv = server->GetKey(getter_Copies(serverKey));
