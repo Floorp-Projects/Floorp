@@ -60,7 +60,6 @@
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
-#include "nsIDocStreamLoaderFactory.h"
 
 #include "imgILoader.h"
 
@@ -146,9 +145,8 @@ nsContentDLF::~nsContentDLF()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsContentDLF,
-                   nsIDocumentLoaderFactory,
-                   nsIDocStreamLoaderFactory)
+NS_IMPL_ISUPPORTS1(nsContentDLF,
+                   nsIDocumentLoaderFactory)
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstance(const char* aCommand,
@@ -437,34 +435,6 @@ nsContentDLF::CreateDocument(const char* aCommand,
   return rv;
 }
 
-NS_IMETHODIMP
-nsContentDLF::CreateInstance(nsIInputStream& aInputStream,
-                             const char* aContentType,
-                             const char* aCommand,
-                             nsISupports* aContainer,
-                             nsISupports* aExtraInfo,
-                             nsIContentViewer** aDocViewer)
-
-{
-  nsresult status = NS_ERROR_FAILURE;
-
-  EnsureUAStyleSheet();
-
-  // Try RDF
-  int typeIndex = 0;
-  while (gRDFTypes[typeIndex]) {
-    if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
-      return CreateXULDocumentFromStream(aInputStream,
-                                         aCommand,
-                                         aContainer,
-                                         aExtraInfo,
-                                         aDocViewer);
-    }
-  }
-
-  return status;
-}
-
 // ...common work for |CreateRDFDocument| and |CreateXULDocumentFromStream|
 nsresult
 nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
@@ -529,41 +499,6 @@ nsContentDLF::CreateRDFDocument(const char* aCommand,
   }
    
   return rv;
-}
-
-nsresult
-nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
-                                          const char* aCommand,
-                                          nsISupports* aContainer,
-                                          nsISupports* aExtraInfo,
-                                          nsIContentViewer** aDocViewer)
-{
-  nsresult status = NS_OK;
-
-#if 0 // XXX dead code; remove
-  do
-  {
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIDocumentViewer> docv;
-    if ( NS_FAILED(status = CreateRDFDocument(aExtraInfo, address_of(doc), address_of(docv))) )
-      break;
-
-    if ( NS_FAILED(status = docv->LoadStart(doc)) )
-      break;
-
-    *aDocViewer = docv;
-    NS_IF_ADDREF(*aDocViewer);
-
-    nsCOMPtr<nsIStreamLoadableDocument> loader = do_QueryInterface(doc, &status);
-    if ( NS_FAILED(status) )
-      break;
-
-    status = loader->LoadFromStream(aXULStream, aContainer, aCommand);
-  }
-  while (0);
-#endif
-
-  return status;
 }
 
 static nsresult

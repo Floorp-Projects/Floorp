@@ -62,7 +62,6 @@ XPIDLSRCS = \
         $(NULL)
 
 EXPORTS		= \
-		nsIDocStreamLoaderFactory.h \
 		nsILinkHandler.h \
 		nsIWebShell.h \
 		nsIWebShellServices.h \

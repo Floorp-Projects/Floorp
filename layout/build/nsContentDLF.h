@@ -39,7 +39,6 @@
 #define nsContentDLF_h__
 
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDocStreamLoaderFactory.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 
@@ -54,8 +53,7 @@ class nsILoadGroup;
 class nsIStreamListener;
 struct nsModuleComponentInfo;
 
-class nsContentDLF : public nsIDocumentLoaderFactory,
-                     public nsIDocStreamLoaderFactory
+class nsContentDLF : public nsIDocumentLoaderFactory
 {
 public:
   nsContentDLF();
@@ -63,14 +61,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOCUMENTLOADERFACTORY
-
-  // for nsIDocStreamLoaderFactory
-  NS_METHOD CreateInstance(nsIInputStream& aInputStream,
-                           const char* aContentType,
-                           const char* aCommand,
-                           nsISupports* aContainer,
-                           nsISupports* aExtraInfo,
-                           nsIContentViewer** aDocViewer);
 
   nsresult InitUAStyleSheet();
 
@@ -90,12 +80,6 @@ public:
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer);
-
-  nsresult CreateXULDocumentFromStream(nsIInputStream& aXULStream,
-                                       const char* aCommand,
-                                       nsISupports* aContainer,
-                                       nsISupports* aExtraInfo,
-                                       nsIContentViewer** aDocViewer);
 
   nsresult CreateRDFDocument(nsISupports*,
                              nsCOMPtr<nsIDocument>*,
