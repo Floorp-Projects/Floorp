@@ -499,6 +499,9 @@ function delayedStartup()
     else if (gPrefService.prefHasUserValue(kPluginOverrideTypesNotHandled))
       gPrefService.clearUserPref(kPluginOverrideTypesNotHandled);
   }
+
+  clearObsoletePrefs();
+
 }
 
 function Shutdown()
@@ -4006,3 +4009,36 @@ function updatePageTheme(evt)
 }
 /* End of the Page Theme functions */
 
+function clearObsoletePrefs()
+{  
+  // removed 10/03/2003
+  try {
+    PREF.clearUserPref("timebomb.first_launch_time");
+  } catch (e) {}
+
+  // removed 10/16/2003
+  // migrate firebird cookie prefs, if they exist.
+  try {
+    PREF.clearUserPref("network.cookie.enable");
+    // No error: it means this pref was not the default one, cookie were disabled.
+    PREF.SetIntPref("network.cookie.cookieBehavior", 2);
+  } catch (e) {
+    try {
+      PREF.clearUserPref("network.cookie.enableForOriginatingWebsiteOnly");
+      // No error: it means that enableForOriginatingWebsiteOnly was true.
+      PREF.SetIntPref("network.cookie.cookieBehavior", 1);
+    } catch (e) {
+    // here, either we already have migrated the cookie pref
+    // or the new and old behavior are the same (0). In any case: nothing to do.
+    }
+  }
+
+  // removed 11/01/2003
+  try {
+    PREF.clearUserPref("print.use_global_printsettings");
+  } catch (e) {}
+  try {
+    PREF.clearUserPref("print.save_print_settings");
+  } catch (e) {}
+
+}
