@@ -106,6 +106,7 @@ checkout::
 
 real_checkout:
 	@failed=.cvs-failed.tmp; \
+	rm -f $$failed; \
 	cvs_co() { echo "$$@" ; \
 	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
 	  if test -f $$failed; then false; else true; fi; }; \
