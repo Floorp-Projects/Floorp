@@ -19,6 +19,8 @@
 # Contributor(s): 
 #
 
+INCLUDED_INSURE_MK = 1
+
 INSURE_MATCH_SCRIPT=$(topsrcdir)/build/autoconf/match-dir.sh
 
 INSURE_EXCLUDE=$(shell $(INSURE_MATCH_SCRIPT) $(MOZ_INSURE_EXCLUDE_DIRS))
