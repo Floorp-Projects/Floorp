@@ -84,6 +84,7 @@ CSRCS			= \
 				Debug.c \
 				DialogUtil.c \
 				Draw.c \
+				DynamicManager.c \
 				Find.c \
 				FrameShell.c \
 				GcUtil.c \
@@ -93,6 +94,7 @@ CSRCS			= \
 				ListUtil.c \
 				Logo.c \
 				Manager.c \
+				ManagerChildren.c \
 				MenuUtil.c \
 				Oriented.c \
 				Pane.c \
@@ -140,6 +142,8 @@ EXPORTS			= \
 				Defaults.h \
 				DialogUtil.h \
 				Draw.h \
+				DynamicManager.h \
+				DynamicManagerP.h \
 				Find.h \
 				FrameShell.h \
 				FrameShellP.h \

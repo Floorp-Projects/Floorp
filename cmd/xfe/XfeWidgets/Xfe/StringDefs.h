@@ -196,27 +196,21 @@
 #define XmNitemList						"itemList"
 #define XmNlabelAlignment				"labelAlignment"
 #define XmNlabelDirection				"labelDirection"
-#define XmNlayableChildren				"layableChildren"
 #define XmNleftPixmap					"leftPixmap"
 #define XmNleftRaisedPixmap				"leftRaisedPixmap"
 #define XmNleftView						"leftView"
 #define XmNlinkNode						"linkNode"
 #define XmNlogo							"logo"
 #define XmNmanagedItemCount				"managedItemCount"
+#define XmNmanagerChildType				"managerChildType"
 #define XmNmatchSubMenuWidth			"matchSubMenuWidth"
 #define XmNmaxChildHeight				"maxChildHeight"
 #define XmNmaxChildWidth				"maxChildWidth"
-#define XmNmaxLayableChildrenHeight		"maxLayableChildrenHeight"
-#define XmNmaxLayableChildrenWidth		"maxLayableChildrenWidth"
 #define XmNmaxNumColumns				"maxNumColumns"
 #define XmNmaxNumRows					"maxNumRows"
-#define XmNminLayableChildrenHeight		"minLayableChildrenHeight"
-#define XmNminLayableChildrenWidth		"minLayableChildrenWidth"
 #define XmNnumAnimationPixmaps			"numAnimationPixmaps"
 #define XmNnumFontItems					"numFontItems"
-#define XmNnumLayableChildren			"numLayableChildren"
 #define XmNnumPopupChildren				"numPopupChildren"
-#define XmNnumPrivateComponents			"numPrivateComponents"
 #define XmNnumRows						"numRows"
 #define XmNopen							"open"
 #define XmNopenedTabs					"openedTabs"
@@ -234,7 +228,6 @@
 #define XmNpreferredHeight				"preferredHeight"
 #define XmNpreferredWidth				"preferredWidth"
 #define XmNpretendSensitive				"pretendSensitive"
-#define XmNprivateComponent				"privateComponent"
 #define XmNprogressBar					"progressBar"
 #define XmNraiseBackground				"raiseBackground"
 #define XmNraiseBorderThickness			"raiseBorderThickness"
@@ -286,8 +279,6 @@
 #define XmNtopView						"topView"
 #define XmNtorn							"torn"
 #define XmNtornShellTitle				"tornShellTitle"
-#define XmNtotalLayableChildrenHeight	"totalLayableChildrenHeight"
-#define XmNtotalLayableChildrenWidth	"totalLayableChildrenWidth"
 #define XmNtrackDeleteWindow			"trackDeleteWindow"
 #define XmNtrackEditres					"trackEditres"
 #define XmNtrackMapping					"trackMapping"
@@ -403,7 +394,6 @@
 #define XmCItemForeground				"ItemForeground"
 #define XmCLabelAlignment				"LabelAlignment"
 #define XmCLabelDirection				"LabelDirection"
-#define XmCLayableChildren				"LayableChildren"
 #define XmCLeftPixmap					"LeftPixmap"
 #define XmCLeftRaisedPixmap				"LeftRaisedPixmap"
 #define XmCLinkNode						"LinkNode"
@@ -412,7 +402,6 @@
 #define XmCMaxNumRows					"MaxNumRows"
 #define XmCNumAnimationPixmaps			"NumAnimationPixmaps"
 #define XmCNumFontItems					"NumFontItems"
-#define XmCNumLayableChildren			"NumLayableChildren"
 #define XmCNumLogoPixmaps				"NumLogoPixmaps"
 #define XmCNumRows						"NumRows"
 #define XmCOpen							"Open"
@@ -424,7 +413,6 @@
 #define XmCPopupCursor					"PopupCursor"
 #define XmCPopupDelay					"PopupDelay"
 #define XmCPretendSensitive				"PretendSensitive"
-#define XmCPrivateComponent				"PrivateComponent"
 #define XmCRaiseBackground				"RaiseBackground"
 #define XmCRaiseBorderThickness			"RaiseBorderThickness"
 #define XmCRaiseForeground				"RaiseForeground"
@@ -482,6 +470,41 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeManager Children Resource Names									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdynamicChildren				"dynamicChildren"
+#define XmNmaxDynamicChildrenHeight		"maxDynamicChildrenHeight"
+#define XmNmaxDynamicChildrenWidth		"maxDynamicChildrenWidth"
+#define XmNminDynamicChildrenHeight		"minDynamicChildrenHeight"
+#define XmNminDynamicChildrenWidth		"minDynamicChildrenWidth"
+#define XmNnumDynamicChildren			"numDynamicChildren"
+#define XmNnumManagedDynamicChildren	"numManagedDynamicChildren"
+#define XmNtotalDynamicChildrenHeight	"totalDynamicChildrenHeight"
+#define XmNtotalDynamicChildrenWidth	"totalDynamicChildrenWidth"
+
+#define XmNstaticChildren				"staticChildren"
+#define XmNmaxStaticChildrenHeight		"maxStaticChildrenHeight"
+#define XmNmaxStaticChildrenWidth		"maxStaticChildrenWidth"
+#define XmNminStaticChildrenHeight		"minStaticChildrenHeight"
+#define XmNminStaticChildrenWidth		"minStaticChildrenWidth"
+#define XmNnumManagedStaticChildren		"numManagedStaticChildren"
+#define XmNnumStaticChildren			"numStaticChildren"
+#define XmNtotalStaticChildrenHeight	"totalStaticChildrenHeight"
+#define XmNtotalStaticChildrenWidth		"totalStaticChildrenWidth"
+
+#define XmNcomponentChildren			"componentChildren"
+#define XmNmaxComponentChildrenHeight	"maxComponentChildrenHeight"
+#define XmNmaxComponentChildrenWidth	"maxComponentChildrenWidth"
+#define XmNminComponentChildrenHeigh	"minComponentChildrenHeight"
+#define XmNminComponentChildrenWidth	"minComponentChildrenWidth"
+#define XmNnumComponentChildren			"numComponentChildren"
+#define XmNnumManagedComponentChildren	"numManagedComponentChildren"
+#define XmNtotalComponentChildrenHeight	"totalComponentChildrenHeight"
+#define XmNtotalComponentChildrenWidth	"totalComponentChildrenWidth"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Representation Types													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -508,6 +531,7 @@
 #define XmRToolScrollArrowPlacement		"ToolScrollArrowPlacement"
 #define XmRTruncateProc					"TruncateProc"
 #define XmRXfeArrowType					"XfeArrowType"
+#define XmRManagerChildType				"ManagerChildType"
 
 /*----------------------------------------------------------------------*/
 /*																		*/

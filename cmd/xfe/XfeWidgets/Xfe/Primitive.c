@@ -77,8 +77,7 @@ static Boolean		WidgetDisplayRect	(Widget,XRectangle  *);
 static void			InitializePostHook	(Widget,Widget);
 static Boolean		SetValuesPostHook	(Widget,Widget,Widget);
 static void			PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void			MinimumGeometry	(Widget,Dimension *,Dimension *);
-static void			UpdateRect			(Widget);
+static void			UpdateBoundary		(Widget);
 static void			DrawShadow			(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
@@ -472,8 +471,7 @@ _XFE_WIDGET_CLASS_RECORD(primitive,Primitive) =
     {
 		ForgetGravity,						/* bit_gravity				*/
 		PreferredGeometry,					/* preferred_geometry		*/
-		MinimumGeometry,					/* minimum_geometry		*/
-		UpdateRect,							/* update_rect				*/
+		UpdateBoundary,						/* update_boundary			*/
 		NULL,								/* prepare_components		*/
 		NULL,								/* layout_components		*/
 		NULL,								/* draw_background			*/
@@ -518,11 +516,8 @@ ClassPartInit(WidgetClass wc)
 	_XfeResolve(cc,sc,xfe_primitive_class,preferred_geometry,
 				XfeInheritPreferredGeometry);
 
-	_XfeResolve(cc,sc,xfe_primitive_class,minimum_geometry,
-				XfeInheritMinimumGeometry);
-   
-	_XfeResolve(cc,sc,xfe_primitive_class,update_rect,
-				XfeInheritUpdateRect);
+	_XfeResolve(cc,sc,xfe_primitive_class,update_boundary,
+				XfeInheritUpdateBoundary);
 
 	_XfeResolve(cc,sc,xfe_primitive_class,layout_components,
 				XfeInheritLayoutComponents);
@@ -657,8 +652,8 @@ Resize(Widget w)
 		_XfeHeight(w) = _XfePreferredHeight(w);
     }
     
-    /* Update the widget rect */
-    _XfePrimitiveUpdateRect(w);
+    /* Update the widget boundary */
+    _XfePrimitiveUpdateBoundary(w);
     
     /* Layout the components */
     _XfePrimitiveLayoutComponents(w);
@@ -888,10 +883,10 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 static Boolean
 WidgetDisplayRect(Widget w,XRectangle *rect)
 {
-	rect->x	= _XfeRectX(w);
-	rect->y	= _XfeRectY(w);
-	rect->height = _XfeRectHeight(w);
-	rect->width	= _XfeRectWidth(w);
+	rect->x	= _XfeBoundaryX(w);
+	rect->y	= _XfeBoundaryY(w);
+	rect->height = _XfeBoundaryHeight(w);
+	rect->width	= _XfeBoundaryWidth(w);
 
 	return (rect->width && rect->height);
 }
@@ -921,8 +916,8 @@ InitializePostHook(Widget rw,Widget nw)
 
 	_XfeHeight(nw) = GetHeight(nw);
 
-    /* Update the widget rect */
-    _XfePrimitiveUpdateRect(nw);
+    /* Update the widget boundary */
+    _XfePrimitiveUpdateBoundary(nw);
     
     /* Layout the Widget */
     _XfePrimitiveLayoutComponents(nw);
@@ -974,8 +969,8 @@ SetValuesPostHook(Widget ow,Widget rw,Widget nw)
 		_XfeHeight(nw) = GetHeight(nw);
     }
     
-    /* Update the widget rect */
-    _XfePrimitiveUpdateRect(nw);
+    /* Update the widget boundary */
+    _XfePrimitiveUpdateBoundary(nw);
     
     /* Layout the Widget if needed */
     if (_XfeConfigFlags(nw) & XfeConfigLayout)
@@ -1030,13 +1025,6 @@ PreferredGeometry(Widget w,Dimension *width,Dimension *height)
 }
 /*----------------------------------------------------------------------*/
 static void
-MinimumGeometry(Widget w,Dimension *width,Dimension *height)
-{
-	*width  = _XfeOffsetLeft(w) + _XfeOffsetRight(w);
-	*height = _XfeOffsetTop(w)  + _XfeOffsetBottom(w);
-}
-/*----------------------------------------------------------------------*/
-static void
 DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 {
     /* Draw the shadow */
@@ -1052,10 +1040,10 @@ DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 }
 /*----------------------------------------------------------------------*/
 static void
-UpdateRect(Widget w)
+UpdateBoundary(Widget w)
 {
 	/* Assign the rect coordinates */
-	XfeRectSet(&_XfeWidgetRect(w),
+	XfeRectSet(&_XfeBoundary(w),
 			   
 			   _XfeOffsetLeft(w),
 			   
@@ -1271,29 +1259,6 @@ _XfePrimitivePreferredGeometry(Widget w,Dimension *width,Dimension *height)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfePrimitiveMinimumGeometry(Widget w,Dimension *width,Dimension *height)
-{
-	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
-
-	if (pc->xfe_primitive_class.minimum_geometry)
-	{
-		(*pc->xfe_primitive_class.minimum_geometry)(w,width,height);
-	}
-
-	/* Make sure preferred width is greater than zero */
-	if (*width == 0)
-	{
-		*width = XfePRIMITIVE_DEFAULT_WIDTH;
-	}
-
-	/* Make sure preferred height is greater than zero */
-	if (*height == 0)
-	{
-		*height = XfePRIMITIVE_DEFAULT_HEIGHT;
-	}
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
 _XfePrimitivePrepareComponents(Widget w,int flags)
 {
 	WidgetClass					cc;
@@ -1329,13 +1294,13 @@ _XfePrimitivePrepareComponents(Widget w,int flags)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfePrimitiveUpdateRect(Widget w)
+_XfePrimitiveUpdateBoundary(Widget w)
 {
 	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
 
-	if (pc->xfe_primitive_class.update_rect)
+	if (pc->xfe_primitive_class.update_boundary)
 	{
-		(*pc->xfe_primitive_class.update_rect)(w);
+		(*pc->xfe_primitive_class.update_boundary)(w);
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -1481,10 +1446,10 @@ _XfePrimitiveDrawEverything(Widget w,XEvent * event,Region region)
 
     /* Draw Background */ 
     XfeRectSet(&rect,
-			   _XfeRectX(w) - _XfeMarginLeft(w),
-			   _XfeRectY(w) - _XfeMarginTop(w),
-			   _XfeRectWidth(w) + _XfeMarginLeft(w) + _XfeMarginRight(w),
-			   _XfeRectHeight(w) + _XfeMarginTop(w) + _XfeMarginBottom(w));
+			   _XfeBoundaryX(w) - _XfeMarginLeft(w),
+			   _XfeBoundaryY(w) - _XfeMarginTop(w),
+			   _XfeBoundaryWidth(w) + _XfeMarginLeft(w) + _XfeMarginRight(w),
+			   _XfeBoundaryHeight(w) + _XfeMarginTop(w) + _XfeMarginBottom(w));
     
     _XfePrimitiveDrawBackground(w,event,region,&rect);
     
@@ -1499,10 +1464,10 @@ _XfePrimitiveDrawEverything(Widget w,XEvent * event,Region region)
     }
     
     /* Draw Shadow */ 
-    _XfePrimitiveDrawShadow(w,event,region,&_XfeWidgetRect(w));
+    _XfePrimitiveDrawShadow(w,event,region,&_XfeBoundary(w));
     
     /* Draw Components */ 
-    _XfePrimitiveDrawComponents(w,event,region,&_XfeWidgetRect(w));
+    _XfePrimitiveDrawComponents(w,event,region,&_XfeBoundary(w));
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void

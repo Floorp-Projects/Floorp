@@ -253,8 +253,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		NULL,									/* prepare_components	*/
 		XfeInheritLayoutComponents,				/* layout_components	*/
 		DrawBackground,							/* draw_background		*/
@@ -451,8 +450,8 @@ DrawArrow(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 {
     XfeArrowPart *		ap = _XfeArrowPart(w);
     XfeButtonPart *		bp = _XfeButtonPart(w);
-	Dimension			width = XfeMin(ap->arrow_width,_XfeRectWidth(w));
-	Dimension			height = XfeMin(ap->arrow_height,_XfeRectHeight(w));
+	Dimension			width = XfeMin(ap->arrow_width,_XfeBoundaryWidth(w));
+	Dimension			height = XfeMin(ap->arrow_height,_XfeBoundaryHeight(w));
 	Position			x = (_XfeWidth(w) - width) / 2;
 	Position			y = (_XfeHeight(w) - height) / 2;
 

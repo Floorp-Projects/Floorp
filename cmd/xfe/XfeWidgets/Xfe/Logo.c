@@ -222,8 +222,7 @@ _XFE_WIDGET_CLASS_RECORD(logo,Logo) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		PrepareComponents,						/* prepare_components	*/
 		XfeInheritLayoutComponents,				/* layout_components	*/
 		XfeInheritDrawBackground,				/* draw_background		*/

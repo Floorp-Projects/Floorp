@@ -79,12 +79,17 @@ static Boolean		ConstraintSetValues		(Widget,Widget,Widget,ArgList,
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		MinimumGeometry	(Widget,Dimension *,Dimension *);
 static void		LayoutComponents	(Widget);
-static void		LayoutChildren		(Widget);
-static Boolean	AcceptChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static Boolean	InsertChild			(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Boolean	AcceptDynamicChild		(Widget);
+static Boolean	InsertDynamicChild		(Widget);
+static Boolean	DeleteDynamicChild		(Widget);
+static void		LayoutDynamicChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -560,7 +565,7 @@ static const XtResource constraint_resources[] =
 _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 {
 	{
-		(WidgetClass) &xfeManagerClassRec,		/* superclass       	*/
+		(WidgetClass) &xfeDynamicManagerClassRec,/* superclass       	*/
 		"XfeToolBox",							/* class_name       	*/
 		sizeof(XfeToolBoxRec),					/* widget_size      	*/
 		NULL,									/* class_initialize 	*/
@@ -596,7 +601,11 @@ _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 
 	/* Composite Part */
 	{
+#if 1
 		_XfeLiberalGeometryManager,				/* geometry_manager		*/
+#else
+		XtInheritGeometryManager,				/* geometry_manager		*/
+#endif
 		XtInheritChangeManaged,					/* change_managed		*/
 		XtInheritInsertChild,					/* insert_child			*/
 		XtInheritDeleteChild,					/* delete_child			*/
@@ -625,26 +634,35 @@ _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 		NULL,                                   /* extension           	*/
 	},
 
-	/* XfeManager Part 	*/
+    /* XfeManager Part 	*/
 	{
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		MinimumGeometry,						/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		LayoutChildren,							/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
-	},
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		NULL,									/* accept_static_child		*/
+		NULL,									/* insert_static_child		*/
+		NULL,									/* delete_static_child		*/
+		NULL,									/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
+    },
+
+	/* XfeDynamicManager Part */
+    {
+		AcceptDynamicChild,						/* accept_dynamic_child		*/
+		InsertDynamicChild,						/* insert_dynamic_child		*/
+		DeleteDynamicChild,						/* delete_dynamic_child		*/
+		LayoutDynamicChildren,					/* layout_dynamic_children	*/
+		XfeInheritGetChildDimensions,			/* get_child_dimensions		*/
+		NULL,									/* extension				*/
+    },
 
 	/* XfeToolBox Part */
 	{
@@ -836,13 +854,13 @@ ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList args,Cardinal *nargs)
  	XfeToolBoxConstraintPart *	ocp = _XfeToolBoxConstraintPart(oc);
 
 	/* position_index */
-	if (_XfeManagerPositionIndex(nc) != _XfeManagerPositionIndex(oc))
+	if (_XfeDynamicManagerPositionIndex(nc) != _XfeDynamicManagerPositionIndex(oc))
 	{
 		/* Make sure the new position index is within range */
-		if ((_XfeManagerPositionIndex(nc) < 0) || 
-			(_XfeManagerPositionIndex(nc) >= tp->item_count))
+		if ((_XfeDynamicManagerPositionIndex(nc) < 0) || 
+			(_XfeDynamicManagerPositionIndex(nc) >= tp->item_count))
 		{
-			_XfeManagerPositionIndex(nc) = _XfeManagerPositionIndex(oc);
+			_XfeDynamicManagerPositionIndex(nc) = _XfeDynamicManagerPositionIndex(oc);
 
 			_XfeArgWarning(w,MESSAGE5,XtName(nc));
 		}
@@ -850,8 +868,8 @@ ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList args,Cardinal *nargs)
 		{
 			/* Swap the items */
 			SwapItems(w,
-					  _XfeManagerPositionIndex(nc),
-					  _XfeManagerPositionIndex(oc));
+					  _XfeDynamicManagerPositionIndex(nc),
+					  _XfeDynamicManagerPositionIndex(oc));
 
 
 /* 			UpdatePositionIndeces(w); */
@@ -923,21 +941,12 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static void
-MinimumGeometry(Widget w,Dimension * width,Dimension * height)
-{
-/* 	XfeToolBoxPart *		tp = _XfeToolBoxPart(w); */
-
-	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
-	*height = _XfemOffsetTop(w) + _XfemOffsetBottom(w);
-}
-/*----------------------------------------------------------------------*/
-static void
 LayoutComponents(Widget w)
 {
     XfeToolBoxPart *	tp = _XfeToolBoxPart(w);
 	Cardinal			i;
-	int					x = _XfemRectX(w);
-	int					y = _XfemRectY(w);
+	int					x = _XfemBoundaryX(w);
+	int					y = _XfemBoundaryY(w);
 
 /* 	if ((_XfeWidth(w) <= 10) || (_XfeHeight(w) <= 10)) */
 /* 	{ */
@@ -956,7 +965,7 @@ LayoutComponents(Widget w)
 			{
 				_XfeConfigureWidget(tp->opened_tabs[i],
 									
-									_XfemRectX(w),
+									_XfemBoundaryX(w),
 									
 									y,
 
@@ -999,62 +1008,24 @@ LayoutComponents(Widget w)
 	}
 }
 /*----------------------------------------------------------------------*/
-static void
-LayoutChildren(Widget w)
-{
-    XfeToolBoxPart *		tp = _XfeToolBoxPart(w);
-	Cardinal				i;
-	int						y = _XfemRectY(w);
 
-	for (i = 0; i < tp->item_count; i++)
-	{
-		Widget item = tp->items[i];
-
-		if (_XfeIsAlive(item))
-		{
-			/* Item is managed */
-			if (_XfeChildIsShown(item))
-			{
-				/* Open */
-				if (_XfeToolBoxChildOpen(item))
-				{
-					int width;
-					int height;
-
-					width = _XfemRectWidth(w) - _XfeWidth(tp->opened_tabs[i]);
-					height = _XfeHeight(item);
-
-					_XfeConfigureWidget(item,
-										
-										_XfemRectX(w) + 
-										_XfeWidth(tp->opened_tabs[i]),
-										
-										y,
-										
-										width,
-										
-										height);
-						   
-					y += (_XfeHeight(item) + tp->vertical_spacing);
-				}
-				/* Closed */
-				else
-				{
-					_XfeMoveWidget(item,FAR_AWAY,FAR_AWAY);
-				}
-			}
-		}
-	}
-}
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptDynamicChild(Widget child)
 {
+	Widget					w = XtParent(child);
+
+/* 	printf("AcceptDynamicChild(%s) for %s\n",XtName(w),XtName(child)); */
+
 	return True;
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertDynamicChild(Widget child)
 {
 	Widget					w = XtParent(child);
 	XfeToolBoxPart *		tp = _XfeToolBoxPart(w);
@@ -1062,7 +1033,7 @@ InsertChild(Widget child)
 	Widget					closed_tab;
 	Cardinal				index;
 
-/*  	printf("InsertChild(%s) for %s\n",XtName(w),XtName(child)); */
+/*   	printf("InsertDynamicChild(%s) for %s\n",XtName(w),XtName(child)); */
 
 	/* Increase the item count */
 	tp->item_count++;
@@ -1125,7 +1096,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteDynamicChild(Widget child)
 {
 	Widget					w = XtParent(child);
 	XfeToolBoxPart *		tp = _XfeToolBoxPart(w);
@@ -1148,6 +1119,54 @@ DeleteChild(Widget child)
 	return XtIsManaged(child);
 }
 /*----------------------------------------------------------------------*/
+static void
+LayoutDynamicChildren(Widget w)
+{
+    XfeToolBoxPart *		tp = _XfeToolBoxPart(w);
+	Cardinal				i;
+	int						y = _XfemBoundaryY(w);
+
+	for (i = 0; i < tp->item_count; i++)
+	{
+		Widget item = tp->items[i];
+
+		if (_XfeIsAlive(item))
+		{
+			/* Item is managed */
+			if (_XfeChildIsShown(item))
+			{
+				/* Open */
+				if (_XfeToolBoxChildOpen(item))
+				{
+					int width;
+					int height;
+
+					width = _XfemBoundaryWidth(w) - _XfeWidth(tp->opened_tabs[i]);
+					height = _XfeHeight(item);
+
+					_XfeConfigureWidget(item,
+										
+										_XfemBoundaryX(w) + 
+										_XfeWidth(tp->opened_tabs[i]),
+										
+										y,
+										
+										width,
+										
+										height);
+						   
+					y += (_XfeHeight(item) + tp->vertical_spacing);
+				}
+				/* Closed */
+				else
+				{
+					_XfeMoveWidget(item,FAR_AWAY,FAR_AWAY);
+				}
+			}
+		}
+	}
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1163,7 +1182,7 @@ CreateTab(Widget w,Boolean opened)
 	Arg					av[10];
 	Cardinal			ac = 0;
 
-	XtSetArg(av[ac],XmNprivateComponent,		True); ac++;
+ 	XtSetArg(av[ac],XmNmanagerChildType,	XmMANAGER_COMPONENT_CHILD); ac++;
 
 	/* Opened - vertical */
 	if (opened)
@@ -1532,7 +1551,7 @@ DragEnd(Widget item,XEvent * event,int y,int root_y)
 	}
 
 	LayoutComponents(w);
-	LayoutChildren(w);
+	LayoutDynamicChildren(w);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1651,7 +1670,7 @@ DragMotion(Widget item,XEvent * event,int y,int root_y)
 			{
 				if (index == FirstManagedIndex(w))
 				{
-					empty_slot_y = _XfemRectY(w);
+					empty_slot_y = _XfemBoundaryY(w);
 				}
 				else
 				{
@@ -1985,7 +2004,7 @@ SnapItemInPlace(Widget w,int index)
 	/* Check for the first item */
 	if (index == first_managed_index)
 	{
-		moved = MoveItem(w,index,_XfemRectY(w));
+		moved = MoveItem(w,index,_XfemBoundaryY(w));
 	}
 	/* Check for the last item */
 	else if (index == last_managed_index)
@@ -2219,7 +2238,7 @@ UpdatePositionIndeces(Widget w)
 	{
 		if (_XfeIsAlive(tp->items[i]))
 		{
-			_XfeManagerPositionIndex(tp->items[i]) = index;
+			_XfeDynamicManagerPositionIndex(tp->items[i]) = index;
 
 			index++;
 		}
@@ -2262,7 +2281,7 @@ UpdatePositionIndeces(Widget w)
 		
 		assert( _XfeIsAlive(tp->items[i]) );
 
-		_XfeManagerPositionIndex(tp->items[i]) = i;
+		_XfeDynamicManagerPositionIndex(tp->items[i]) = i;
 	}
 
 
@@ -2389,7 +2408,7 @@ XfeToolBoxItemSetPosition(Widget w,Widget item,int pos)
 	if ((tp->item_count < 2) ||
 		(pos < 0) || 
 		(pos >= tp->item_count) || 
-		(pos == _XfeManagerPositionIndex(item)))
+		(pos == _XfeDynamicManagerPositionIndex(item)))
 	{
 		return;
 	}
@@ -2411,7 +2430,7 @@ XfeToolBoxItemSetPosition(Widget w,Widget item,int pos)
 	UpdatePositionIndeces(w);
 	
 	LayoutComponents(w);
-	LayoutChildren(w);
+	LayoutDynamicChildren(w);
 
 /* 	printf("Swap(%s = %d)\n",XtName(tp->items[pos]),pos); */
 
@@ -2425,7 +2444,7 @@ XfeToolBoxItemGetPosition(Widget w,Widget item)
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsToolBox(w) );
 
-	return _XfeManagerPositionIndex(item);
+	return _XfeDynamicManagerPositionIndex(item);
 }
 /*----------------------------------------------------------------------*/
 

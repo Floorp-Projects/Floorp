@@ -388,8 +388,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		NULL,									/* prepare_components	*/
 		LayoutComponents,						/* layout_components	*/
 		XfeInheritDrawBackground,				/* draw_background		*/
@@ -777,10 +776,10 @@ LayoutCascadeArrow(Widget w)
 	else
 	{
 		XfeRectSet(&bound,
-				   _XfeRectX(w),
-				   _XfeRectY(w),
-				   _XfeRectWidth(w),
-				   _XfeRectHeight(w));
+				   _XfeBoundaryX(w),
+				   _XfeBoundaryY(w),
+				   _XfeBoundaryWidth(w),
+				   _XfeBoundaryHeight(w));
 	}
 
 	/* Determine the horizontal layout of the arrow */

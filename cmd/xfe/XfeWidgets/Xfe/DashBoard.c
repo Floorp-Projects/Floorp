@@ -66,11 +66,11 @@ static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		LayoutComponents	(Widget);
-static Boolean	AcceptChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static Boolean	InsertChild			(Widget);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -79,7 +79,7 @@ static Boolean	InsertChild			(Widget);
 /*----------------------------------------------------------------------*/
 static Boolean		IsDocked				(Widget);
 static Dimension	MaxComponentHeight		(Widget);
-static void			ManageComponents		(Widget);
+static void			ManagerStaticChildren		(Widget);
 static void			LayoutProgressBar		(Widget);
 static void			LayoutToolBar			(Widget);
 static void			LayoutStatusBar			(Widget);
@@ -350,23 +350,23 @@ _XFE_WIDGET_CLASS_RECORD(dashboard,DashBoard) =
 
 	/* XfeManager Part 	*/
 	{
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
+
 	},
 
 	/* XfeDashBoard Part */
@@ -580,7 +580,7 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutComponents(Widget w)
+LayoutStaticChildren(Widget w)
 {
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
 
@@ -588,7 +588,7 @@ LayoutComponents(Widget w)
 	dp->max_component_height = MaxComponentHeight(w);
 
 	/* Manage the components */
-	ManageComponents(w);
+	ManagerStaticChildren(w);
 
 	if (SHOW_TOOL_BAR(dp))
 	{
@@ -609,7 +609,7 @@ LayoutComponents(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	Widget					w = XtParent(child);
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
@@ -640,7 +640,7 @@ AcceptChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
 	Widget					w = XtParent(child);
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
@@ -686,7 +686,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
 	Widget					w = XtParent(child);
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
@@ -906,7 +906,7 @@ RemoveFloatingShell(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static void
-ManageComponents(Widget w)
+ManagerStaticChildren(Widget w)
 {
     XfeDashBoardPart *	dp = _XfeDashBoardPart(w);
 

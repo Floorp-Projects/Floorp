@@ -49,11 +49,11 @@ static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		LayoutComponents	(Widget);
-static Boolean	AcceptChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static Boolean	InsertChild			(Widget);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -181,26 +181,25 @@ _XFE_WIDGET_CLASS_RECORD(toolitem,ToolItem) =
 		NULL,                                   /* extension           	*/
 	},
 
-	/* XfeManager Part 	*/
+    /* XfeManager Part 	*/
 	{
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
-	},
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
+    },
 
 	/* XfeToolItem Part */
 	{
@@ -286,8 +285,69 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 	}
 }
 /*----------------------------------------------------------------------*/
+static Boolean
+AcceptStaticChild(Widget child)
+{
+	Widget					w = XtParent(child);
+	XfeToolItemPart *		tp = _XfeToolItemPart(w);
+	Boolean					accept = False;
+
+	/* logo */
+	if (XfeIsLogo(child))
+	{
+		accept = !tp->logo;
+	}
+	/* Item */
+	else
+	{
+		accept = !tp->item;
+	}
+
+	return accept;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+InsertStaticChild(Widget child)
+{
+	Widget					w = XtParent(child);
+	XfeToolItemPart *		tp = _XfeToolItemPart(w);
+
+	/* Logo for logo */
+	if (XfeIsLogo(child))
+	{
+		tp->logo = child;
+	}
+	/* Item */
+	else
+	{
+		tp->item = child;
+	}
+
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+DeleteStaticChild(Widget child)
+{
+	Widget					w = XtParent(child);
+	XfeToolItemPart *		tp = _XfeToolItemPart(w);
+
+	/* Logo */
+	if (child == tp->logo)
+	{
+		tp->logo = NULL;
+	}
+	/* Item */
+	else if (child == tp->item)
+	{
+		tp->item = NULL;
+	}
+
+	return True;
+}
+/*----------------------------------------------------------------------*/
 static void
-LayoutComponents(Widget w)
+LayoutStaticChildren(Widget w)
 {
 	XfeToolItemPart *	tp = _XfeToolItemPart(w);
 
@@ -311,7 +371,7 @@ LayoutComponents(Widget w)
 	/* Configure the tool bar */
 	if (_XfeChildIsShown(tp->item))
 	{
-		Dimension width = _XfemRectWidth(w);
+		Dimension width = _XfemBoundaryWidth(w);
 
 		if (_XfeChildIsShown(tp->logo))
 		{
@@ -329,67 +389,6 @@ LayoutComponents(Widget w)
 
 							_XfeHeight(tp->item));
 	}		
-}
-/*----------------------------------------------------------------------*/
-static Boolean
-AcceptChild(Widget child)
-{
-	Widget					w = XtParent(child);
-	XfeToolItemPart *		tp = _XfeToolItemPart(w);
-	Boolean					accept = False;
-
-	/* logo */
-	if (XfeIsLogo(child))
-	{
-		accept = !tp->logo;
-	}
-	/* Item */
-	else
-	{
-		accept = !tp->item;
-	}
-
-	return accept;
-}
-/*----------------------------------------------------------------------*/
-static Boolean
-InsertChild(Widget child)
-{
-	Widget					w = XtParent(child);
-	XfeToolItemPart *		tp = _XfeToolItemPart(w);
-
-	/* Logo for logo */
-	if (XfeIsLogo(child))
-	{
-		tp->logo = child;
-	}
-	/* Item */
-	else
-	{
-		tp->item = child;
-	}
-
-	return True;
-}
-/*----------------------------------------------------------------------*/
-static Boolean
-DeleteChild(Widget child)
-{
-	Widget					w = XtParent(child);
-	XfeToolItemPart *		tp = _XfeToolItemPart(w);
-
-	/* Logo */
-	if (child == tp->logo)
-	{
-		tp->logo = NULL;
-	}
-	/* Item */
-	else if (child == tp->item)
-	{
-		tp->item = NULL;
-	}
-
-	return True;
 }
 /*----------------------------------------------------------------------*/
 

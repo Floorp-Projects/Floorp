@@ -69,11 +69,9 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	/* XmNbackground */
 	if (_XfeBackgroundPixel(nw) != _XfeBackgroundPixel(ow))
 	{
-		printf("XmNbackground changed\n");
-
 		SET_APPLY_DATA(data,XmNbackground,_XfeBackgroundPixel(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -83,7 +81,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNbackground,_XfeBackgroundPixmap(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -93,7 +91,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNborderColor,_XfeBorderPixmap(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -103,7 +101,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNborderPixmap,_XfeBorderPixmap(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -113,7 +111,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNtopShadowPixmap,_XfemTopShadowPixmap(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -123,7 +121,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNbottomShadowPixmap,_XfemBottomShadowPixmap(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -133,7 +131,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNtopShadowColor,_XfemTopShadowColor(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -143,7 +141,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNbottomShadowColor,_XfemBottomShadowColor(nw));
 
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -153,7 +151,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		SET_APPLY_DATA(data,XmNforeground,_XfemForeground(nw));
 		
-		XfeManagerApply(nw,ApplyChildSetValue,&data,True,False);
+		XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetValue,&data,True,False);
 
 		_XfemConfigFlags(nw) |= XfeConfigExpose;
 	}
@@ -163,7 +161,7 @@ _XfeManagerPropagateSetValues(Widget		ow,
 	{
 		if (_XfeSensitive(nw) != _XfeSensitive(ow))
 		{
-			XfeManagerApply(nw,ApplyChildSetSensitive,NULL,True,False);
+			XfeManagerApply(nw,XfeCHILDREN_INFO_ANY,ApplyChildSetSensitive,NULL,True,False);
 			
 			_XfemConfigFlags(nw) |= XfeConfigExpose;
 		}
@@ -191,7 +189,7 @@ ApplyChildSetValue(Widget w,Widget child,XtPointer client_data)
 	printf("XtSetValues(%s,%s,%d)\n",
 		   XtName(child),
 		   data->resource_name,
-		   data->resource_value);
+		   (int) data->resource_value);
 #endif
 }
 /*----------------------------------------------------------------------*/

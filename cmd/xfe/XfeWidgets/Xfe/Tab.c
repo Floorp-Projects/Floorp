@@ -294,8 +294,7 @@ _XFE_WIDGET_CLASS_RECORD(tab,Tab) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,					/* update_boundary			*/
 		PrepareComponents,						/* prepare_components	*/
 		XfeInheritLayoutComponents,				/* layout_components	*/
 		DrawBackground,							/* draw_background		*/
@@ -687,7 +686,7 @@ DrawTab(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 					  tp->top_width,
 					  tp->top_height,
 					  (_XfeWidth(w) - tp->top_width) / 2,
-					  _XfeRectY(w));
+					  _XfeBoundaryY(w));
 		}
 
 		/* Draw bottom pixmap if needed */
@@ -754,7 +753,7 @@ DrawTab(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 					  0,0,
 					  tp->left_width,
 					  tp->left_height,
-					  _XfeRectX(w),
+					  _XfeBoundaryX(w),
 					  (_XfeHeight(w) - tp->left_height) / 2);
 		}
 

@@ -28,7 +28,7 @@
 #define _XfeToolBoxP_h_
 
 #include <Xfe/ToolBox.h>
-#include <Xfe/ManagerP.h>
+#include <Xfe/DynamicManagerP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
    
@@ -54,6 +54,7 @@ typedef struct _XfeToolBoxClassRec
 	ConstraintClassPart			constraint_class;
 	XmManagerClassPart			manager_class;
 	XfeManagerClassPart			xfe_manager_class;
+	XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
 	XfeToolBoxClassPart			xfe_tool_box_class;
 } XfeToolBoxClassRec;
 
@@ -135,12 +136,13 @@ typedef struct _XfeToolBoxPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBoxRec
 {
-   CorePart				core;
-   CompositePart		composite;
-   ConstraintPart		constraint;
-   XmManagerPart		manager;
-   XfeManagerPart		xfe_manager;
-   XfeToolBoxPart		xfe_tool_box;
+	CorePart				core;
+	CompositePart			composite;
+	ConstraintPart			constraint;
+	XmManagerPart			manager;
+	XfeManagerPart			xfe_manager;
+	XfeDynamicManagerPart	xfe_dynamic_manager;
+	XfeToolBoxPart			xfe_tool_box;
 } XfeToolBoxRec;
 
 /*----------------------------------------------------------------------*/
@@ -160,9 +162,10 @@ typedef struct _XfeToolBoxConstraintPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBoxConstraintRec
 {
-    XmManagerConstraintPart		manager;
-    XfeManagerConstraintPart	xfe_manager;
-    XfeToolBoxConstraintPart	xfe_tool_box;
+    XmManagerConstraintPart			manager;
+    XfeManagerConstraintPart		xfe_manager;
+    XfeDynamicManagerConstraintPart	xfe_dynamic_manager;
+    XfeToolBoxConstraintPart		xfe_tool_box;
 } XfeToolBoxConstraintRec;
 
 /*----------------------------------------------------------------------*/

@@ -27,7 +27,7 @@
 #ifndef _XfeToolBox_h_							/* start ToolBox.h		*/
 #define _XfeToolBox_h_
 
-#include <Xfe/Manager.h>
+#include <Xfe/DynamicManager.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 

@@ -195,8 +195,7 @@ _XFE_WIDGET_CLASS_RECORD(fontchooser,FontChooser) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		XfeInheritPreferredGeometry,			/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		NULL,									/* prepare_components	*/
 		XfeInheritLayoutComponents,				/* layout_components	*/
 		XfeInheritDrawBackground,				/* draw_background		*/

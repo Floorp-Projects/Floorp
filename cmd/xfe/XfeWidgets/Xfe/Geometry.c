@@ -675,11 +675,8 @@ _XfeLiberalGeometryManager(Widget				child,
 
 	if (XfeIsManager(w))
 	{
-		/* Layout the components */
-		_XfeManagerLayoutComponents(w);
-		
-		/* Layout the children */
-		_XfeManagerLayoutChildren(w);
+		/* Layout the widget */
+		_XfeManagerLayoutWidget(w);
 	}
 	else
 	{

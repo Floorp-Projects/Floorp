@@ -272,8 +272,7 @@ _XFE_WIDGET_CLASS_RECORD(progressbar,ProgressBar) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		XfeInheritPreferredGeometry,			/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,					/* update_boundary			*/
 		NULL,									/* prepare_components	*/
 		LayoutComponents,						/* layout_components	*/
 		XfeInheritDrawBackground,				/* draw_background		*/
@@ -596,18 +595,18 @@ BarLayout(Widget w)
     float		x2;
 
 #if 0
-    x1 = (float) pp->start_percent / 100.0 * (float) _XfeRectWidth(w);
-    x2 = (float) pp->end_percent / 100.0 * (float) _XfeRectWidth(w);
+    x1 = (float) pp->start_percent / 100.0 * (float) _XfeBoundaryWidth(w);
+    x2 = (float) pp->end_percent / 100.0 * (float) _XfeBoundaryWidth(w);
 #else
-    x1 = ((float) pp->start_percent * (float) _XfeRectWidth(w)) / 100.0;
-    x2 = ((float) pp->end_percent * (float) _XfeRectWidth(w)) / 100.0;
+    x1 = ((float) pp->start_percent * (float) _XfeBoundaryWidth(w)) / 100.0;
+    x2 = ((float) pp->end_percent * (float) _XfeBoundaryWidth(w)) / 100.0;
 #endif
 
-    pp->bar_rect.x = _XfeRectX(w) + (int) x1;
-    pp->bar_rect.y = _XfeRectY(w);
+    pp->bar_rect.x = _XfeBoundaryX(w) + (int) x1;
+    pp->bar_rect.y = _XfeBoundaryY(w);
 
     pp->bar_rect.width = (int) (x2 - x1);
-    pp->bar_rect.height =_XfeRectHeight(w);
+    pp->bar_rect.height =_XfeBoundaryHeight(w);
 
 #if 0
 	printf("x1 = %f,x2 = %f\t(x2 - x1) = %f =(int) %d\n",

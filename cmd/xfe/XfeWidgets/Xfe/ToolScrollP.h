@@ -54,6 +54,7 @@ typedef struct _XfeToolScrollClassRec
 	ConstraintClassPart			constraint_class;
 	XmManagerClassPart			manager_class;
 	XfeManagerClassPart			xfe_manager_class;
+	XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
 	XfeOrientedClassPart		xfe_oriented_class;
 	XfeToolScrollClassPart		xfe_tool_scroll_class;
 } XfeToolScrollClassRec;
@@ -90,13 +91,14 @@ typedef struct _XfeToolScrollPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolScrollRec
 {
-   CorePart				core;
-   CompositePart		composite;
-   ConstraintPart		constraint;
-   XmManagerPart		manager;
-   XfeManagerPart		xfe_manager;
-   XfeOrientedPart		xfe_oriented;
-   XfeToolScrollPart	xfe_tool_scroll;
+	CorePart				core;
+	CompositePart			composite;
+	ConstraintPart			constraint;
+	XmManagerPart			manager;
+	XfeManagerPart			xfe_manager;
+	XfeDynamicManagerPart	xfe_dynamic_manager;
+	XfeOrientedPart			xfe_oriented;
+	XfeToolScrollPart		xfe_tool_scroll;
 } XfeToolScrollRec;
 
 /*----------------------------------------------------------------------*/

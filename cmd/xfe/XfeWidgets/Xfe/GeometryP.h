@@ -122,11 +122,6 @@ _XfePreferredGeometry			(Widget			w,
 								 Dimension *	width_out,
 								 Dimension *	height_out);
 /*----------------------------------------------------------------------*/
-extern void
-_XfeMinimumGeometry				(Widget			w,
-								 Dimension *	width_out,
-								 Dimension *	height_out);
-/*----------------------------------------------------------------------*/
 extern Boolean
 _XfeMakeGeometryRequest			(Widget			w,
 								 Dimension		width,

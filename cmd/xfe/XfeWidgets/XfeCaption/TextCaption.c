@@ -189,24 +189,23 @@ _XFE_WIDGET_CLASS_RECORD(textcaption,TextCaption) =
     },
     
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		XfeInheritPreferredGeometry,			/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		XfeInheritAcceptChild,					/* accept_child			*/
-		XfeInheritInsertChild,					/* insert_child			*/
-		XfeInheritDeleteChild,					/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		XfeInheritLayoutComponents,				/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		XfeInheritDrawComponents,				/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		XfeInheritPreferredGeometry,			/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		XfeInheritAcceptStaticChild,			/* accept_static_child		*/
+		XfeInheritInsertStaticChild,			/* insert_static_child		*/
+		XfeInheritDeleteStaticChild,			/* delete_static_child		*/
+		XfeInheritLayoutStaticChildren,			/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		XfeInheritDrawComponents,				/* draw_components			*/
+		NULL,									/* extension				*/
     },
 
     /* XfeCaption Part */

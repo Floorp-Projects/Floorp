@@ -77,15 +77,14 @@ static Boolean	ConstraintSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		MinimumGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
-static Boolean	InsertChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static void		PrepareComponents	(Widget,int);
-static void		LayoutComponents	(Widget);
-static void		LayoutChildren		(Widget);
-static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		PrepareComponents		(Widget,int);
+static void		LayoutComponents		(Widget);
+static void		LayoutStaticChildren	(Widget);
+static void		DrawComponents			(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -624,27 +623,36 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
 		XmInheritParentProcess,                 /* parent_process		*/
 		NULL,                                   /* extension			*/
     },
-    
+
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		MinimumGeometry,						/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		PrepareComponents,						/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		LayoutChildren,							/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		DrawComponents,							/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		PrepareComponents,						/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		DrawComponents,							/* draw_components			*/
+		NULL,									/* extension				*/
     },
+
+	/* XfeDynamicManager Part */
+    {
+		NULL,									/* accept_dynamic_child		*/
+		NULL,									/* insert_dynamic_child		*/
+		NULL,									/* delete_dynamic_child		*/
+		NULL,									/* layout_dynamic_children	*/
+		NULL,									/* extension				*/
+    },
+
 
 	/* XfeOriented Part */
 	{
@@ -1020,17 +1028,8 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 	}
 }
 /*----------------------------------------------------------------------*/
-static void
-MinimumGeometry(Widget w,Dimension * width,Dimension * height)
-{
-	/* XfePanePart *		sp = _XfePanePart(w); */
-
-	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
-	*height = _XfemOffsetTop(w) + _XfemOffsetBottom(w);
-}
-/*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
     Widget					w = _XfeParent(child);
     XfePanePart *			sp = _XfePanePart(w);
@@ -1075,7 +1074,7 @@ AcceptChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
     Widget					w = _XfeParent(child);
     XfePanePart *			sp = _XfePanePart(w);
@@ -1164,7 +1163,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
     Widget				w = XtParent(child);
     XfePanePart *		sp = _XfePanePart(w);
@@ -1237,7 +1236,7 @@ LayoutComponents(Widget w)
     XfePanePart *	sp = _XfePanePart(w);
 	Position		sash_position = sp->sash_position;
 
-	/* This is a hack and will be fixed later using MinimumGeometry() */
+	/* This is a hack and will be fixed later in PreferredGeometry() */
 	int min_width = 4;
 	int min_height = 4;
 
@@ -1344,7 +1343,7 @@ LayoutComponents(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutChildren(Widget w)
+LayoutStaticChildren(Widget w)
 {
     XfePanePart *		sp = _XfePanePart(w);
 	Boolean				one_on = False;
@@ -1645,9 +1644,9 @@ ChildOneLayoutVertical(Widget w)
     XfePanePart *		sp = _XfePanePart(w);
 	XfeGeometryRec		geom;
 
-	geom.x		= _XfemRectX(w);
-	geom.y		= _XfemRectY(w);
-	geom.width	= _XfemRectWidth(w);
+	geom.x		= _XfemBoundaryX(w);
+	geom.y		= _XfemBoundaryY(w);
+	geom.width	= _XfemBoundaryWidth(w);
 
 	/* Check whether the child can resize */
 	if (CONSTRAINT_ALLOW_RESIZE(sp->child_one))
@@ -1659,7 +1658,7 @@ ChildOneLayoutVertical(Widget w)
 			Widget aw = AttachmentGetVisibleChild(w,sp->child_two);
 			
 			/* Start by asuming that we can use the full extent of the pane */
-			geom.height = _XfemRectHeight(w);
+			geom.height = _XfemBoundaryHeight(w);
 			
 			/* Layout a visible attachment if needed */
 			if (_XfeIsAlive(aw))
@@ -1671,7 +1670,7 @@ ChildOneLayoutVertical(Widget w)
 		}
 		else
 		{
-			geom.height = sp->sash_rect.y - _XfemRectY(w) - SASH_SPACING(sp);
+			geom.height = sp->sash_rect.y - _XfemBoundaryY(w) - SASH_SPACING(sp);
 		}	
 	}
 	else
@@ -1693,8 +1692,8 @@ ChildTwoLayoutVertical(Widget w)
     XfePanePart *		sp = _XfePanePart(w);
 	XfeGeometryRec		geom;
 
-	geom.x		= _XfemRectX(w);
-	geom.width	= _XfemRectWidth(w);
+	geom.x		= _XfemBoundaryX(w);
+	geom.width	= _XfemBoundaryWidth(w);
 
 	/* Check whether the child can resize */
 	if (CONSTRAINT_ALLOW_RESIZE(sp->child_two))
@@ -1704,8 +1703,8 @@ ChildTwoLayoutVertical(Widget w)
 			Widget aw = AttachmentGetVisibleChild(w,sp->child_one);
 			
 			/* Start by asuming that we can use the full extent of the pane */
-			geom.y		= _XfemRectY(w);
-			geom.height = _XfemRectHeight(w);
+			geom.y		= _XfemBoundaryY(w);
+			geom.height = _XfemBoundaryHeight(w);
 			
 			/* Look for a visible attachment */
 			if (_XfeIsAlive(aw))
@@ -1725,8 +1724,8 @@ ChildTwoLayoutVertical(Widget w)
 				SASH_SPACING(sp);
 			
 			geom.height	= 
-				_XfemRectY(w) + 
-				_XfemRectHeight(w) - 
+				_XfemBoundaryY(w) + 
+				_XfemBoundaryHeight(w) - 
 				geom.y -
 				SASH_SPACING(sp);
 		}	
@@ -1751,16 +1750,16 @@ ChildOneLayoutHorizontal(Widget w)
     XfePanePart *		sp = _XfePanePart(w);
 	XfeGeometryRec		geom;
 
-	geom.x		= _XfemRectX(w);
-	geom.y		= _XfemRectY(w);
-	geom.height = _XfemRectHeight(w);
+	geom.x		= _XfemBoundaryX(w);
+	geom.y		= _XfemBoundaryY(w);
+	geom.height = _XfemBoundaryHeight(w);
 
 	if (ChildShouldExpand(w,sp->child_one))
 	{
 		Widget aw = AttachmentGetVisibleChild(w,sp->child_two);
 
 		/* Start by asuming that we can use the full extent of the pane */
-		geom.width = _XfemRectWidth(w);
+		geom.width = _XfemBoundaryWidth(w);
 
 		/* Look for a visible attachment */
 		if (_XfeIsAlive(aw))
@@ -1772,7 +1771,7 @@ ChildOneLayoutHorizontal(Widget w)
 	}
 	else
 	{
-		geom.width = sp->sash_rect.x - _XfemRectX(w) - SASH_SPACING(sp);
+		geom.width = sp->sash_rect.x - _XfemBoundaryX(w) - SASH_SPACING(sp);
 	}	
 
 	ChildLayout(sp->child_one,
@@ -1789,16 +1788,16 @@ ChildTwoLayoutHorizontal(Widget w)
     XfePanePart *		sp = _XfePanePart(w);
 	XfeGeometryRec		geom;
 
-	geom.y		= _XfemRectY(w);
-	geom.height = _XfemRectHeight(w);
+	geom.y		= _XfemBoundaryY(w);
+	geom.height = _XfemBoundaryHeight(w);
 
 	if (ChildShouldExpand(w,sp->child_two))
 	{
 		Widget aw = AttachmentGetVisibleChild(w,sp->child_one);
 
 		/* Start by asuming that we can use the full extent of the pane */
-		geom.x		= _XfemRectX(w);
-		geom.width	= _XfemRectWidth(w);
+		geom.x		= _XfemBoundaryX(w);
+		geom.width	= _XfemBoundaryWidth(w);
 
 		/* Look for a visible attachment */
 		if (_XfeIsAlive(aw))
@@ -1818,8 +1817,8 @@ ChildTwoLayoutHorizontal(Widget w)
 			SASH_SPACING(sp);
 
 		geom.width	= 
-			_XfemRectX(w) + 
-			_XfemRectWidth(w) - 
+			_XfemBoundaryX(w) + 
+			_XfemBoundaryWidth(w) - 
 			geom.x -
 			SASH_SPACING(sp);
 	}	
@@ -1944,7 +1943,7 @@ AttachmentLayout(Widget w,Widget aw,XfeGeometry pg)
 			(aw == sp->attachment_one_bottom))
 		{
 			x		= pg->x;
-			y		= _XfemRectY(w);
+			y		= _XfemBoundaryY(w);
 			width	= pg->width;
 			height	= _XfeHeight(aw);
 		}
@@ -1952,7 +1951,7 @@ AttachmentLayout(Widget w,Widget aw,XfeGeometry pg)
 				 (aw == sp->attachment_two_bottom))
 		{
 			x		= pg->x;
-			y		= _XfemRectY(w) + _XfemRectHeight(w) - _XfeHeight(aw);
+			y		= _XfemBoundaryY(w) + _XfemBoundaryHeight(w) - _XfeHeight(aw);
 			width	= pg->width;
 			height	= _XfeHeight(aw);
 		}
@@ -1963,7 +1962,7 @@ AttachmentLayout(Widget w,Widget aw,XfeGeometry pg)
 		if ((aw == sp->attachment_one_left) || 
 			(aw == sp->attachment_one_right))
 		{
-			x		= _XfemRectY(w);
+			x		= _XfemBoundaryY(w);
 			y		= pg->y;
 			width	= _XfeWidth(aw);
 			height	= pg->height;
@@ -1971,7 +1970,7 @@ AttachmentLayout(Widget w,Widget aw,XfeGeometry pg)
 		else if ((aw == sp->attachment_two_left) || 
 				 (aw == sp->attachment_two_right))
 		{
-			x		= _XfemRectX(w) + _XfemRectWidth(w) - _XfeWidth(aw);
+			x		= _XfemBoundaryX(w) + _XfemBoundaryWidth(w) - _XfeWidth(aw);
 			y		= pg->y;
 			width	= _XfeWidth(aw);
 			height	= pg->height;
@@ -2111,20 +2110,20 @@ SashLayout(Widget w,Position sash_position,XRectangle * sash_rect)
 	/* Vertical */
 	if (_XfeOrientedOrientation(w) == XmVERTICAL)
 	{
-		sash_rect->x = _XfemRectX(w) + sp->sash_offset;
-		sash_rect->y = _XfemRectY(w) + sash_position;  
+		sash_rect->x = _XfemBoundaryX(w) + sp->sash_offset;
+		sash_rect->y = _XfemBoundaryY(w) + sash_position;  
 		
-		sash_rect->width = _XfemRectWidth(w) - 2 * sp->sash_offset;
+		sash_rect->width = _XfemBoundaryWidth(w) - 2 * sp->sash_offset;
 		sash_rect->height = sp->sash_thickness;
 	}
 	/* Horizontal */
 	else
 	{
-		sash_rect->x = _XfemRectX(w) + sash_position; 
-		sash_rect->y = _XfemRectY(w) + sp->sash_offset; 
+		sash_rect->x = _XfemBoundaryX(w) + sash_position; 
+		sash_rect->y = _XfemBoundaryY(w) + sp->sash_offset; 
 
 		sash_rect->width = sp->sash_thickness;
-		sash_rect->height = _XfemRectHeight(w) - 2 * sp->sash_offset;
+		sash_rect->height = _XfemBoundaryHeight(w) - 2 * sp->sash_offset;
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -2367,11 +2366,8 @@ SashDragEnd(Widget w,int x,int y,Widget aw)
 	/* Update the sash position */
 	sp->sash_position = new_pos;
 	
-	/* Layout the components */
-	_XfeManagerLayoutComponents(w);
-	
-	/* Layout the children */
-	_XfeManagerLayoutChildren(w);
+	/* Layout the widget */
+	_XfeManagerLayoutWidget(w);
 	
 	/* Draw components */
 	SashDrawShadow(w,&sp->sash_rect,True);
@@ -2461,11 +2457,8 @@ SashDragMotion(Widget w,int x,int y,Widget aw)
 		/* Update the sash position */
 		sp->sash_position = new_pos;
 		
-		/* Layout the components */
-		_XfeManagerLayoutComponents(w);
-		
-		/* Layout the children */
-		_XfeManagerLayoutChildren(w);
+		/* Layout the widget */
+		_XfeManagerLayoutWidget(w);
 		
 		/* Draw components */
 		SashDrawShadow(w,&sp->sash_rect,True);
@@ -2529,7 +2522,7 @@ SashMaxPosition(Widget w)
 		Dimension pane_minimum_two = ChildMinSize(w,sp->child_two);
 
 		max_pos = 
-			_XfemRectWidth(w) - 
+			_XfemBoundaryWidth(w) - 
 			pane_minimum_two -
 			sp->sash_rect.width;
 	}
@@ -2569,7 +2562,7 @@ SashMaxPositionX(Widget w)
 		Dimension pane_minimum_two = ChildMinSize(w,sp->child_two);
 
 		max_pos = 
-			_XfemRectWidth(w) - 
+			_XfemBoundaryWidth(w) - 
 			pane_minimum_two -
 			sp->sash_rect.width;
 	}

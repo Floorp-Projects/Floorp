@@ -33,6 +33,31 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XmRManagerChildType													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmMANAGER_COMPONENT_INVALID,			/*						*/
+	XmMANAGER_COMPONENT_CHILD,				/*						*/
+	XmMANAGER_DYNAMIC_CHILD,				/*						*/
+	XmMANAGER_STATIC_CHILD					/*						*/
+};
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager children info/apply mask bits								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XfeCHILDREN_INFO_NONE		(0)
+#define XfeCHILDREN_INFO_ALIVE		(1 << 0)
+#define XfeCHILDREN_INFO_MANAGED	(1 << 1)
+#define XfeCHILDREN_INFO_REALIZED	(1 << 2)
+#define XfeCHILDREN_INFO_ANY		(~(0))
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager class names												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -54,7 +79,7 @@ typedef void		(*XfeManagerApplyProc)	(Widget		w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeManager class names												*/
+/* XfeManager public methods											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
@@ -72,12 +97,27 @@ XfeManagerResizeChildren		(Widget					w,
 								 Boolean				set_height,
 								 Boolean				only_managed);
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager public children apply functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
 extern void
 XfeManagerApply					(Widget					w,
+								 int					mask,
 								 XfeManagerApplyProc	proc,
 								 XtPointer				data,
-                                 Boolean				private_components,
-								 Boolean				only_managed);
+								 Boolean				private_components,
+								 Boolean				freeze_layout);
+/*----------------------------------------------------------------------*/
+extern void
+XfeManagerApplyLinked			(Widget					w,
+								 unsigned char			child_type,
+								 int					mask,
+								 XfeManagerApplyProc	proc,
+								 XtPointer				data,
+								 Boolean				freeze_layout);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION

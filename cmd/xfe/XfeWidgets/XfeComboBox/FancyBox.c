@@ -54,10 +54,10 @@
 #define CB_OFFSET_RIGHT(w,cp)	(cp->highlight_thickness+_XfemOffsetRight(w))
 #define CB_OFFSET_TOP(w,cp)		(cp->highlight_thickness+_XfemOffsetTop(w))
 
-#define CB_RECT_X(w,cp)			(_XfemRectX(w) + cp->highlight_thickness)
-#define CB_RECT_Y(w,cp)			(_XfemRectY(w) + cp->highlight_thickness)
-#define CB_RECT_WIDTH(w,cp)		(_XfemRectWidth(w)-2*cp->highlight_thickness)
-#define CB_RECT_HEIGHT(w,cp)	(_XfemRectHeight(w)-2*cp->highlight_thickness)
+#define CB_RECT_X(w,cp)			(_XfemBoundaryX(w) + cp->highlight_thickness)
+#define CB_RECT_Y(w,cp)			(_XfemBoundaryY(w) + cp->highlight_thickness)
+#define CB_RECT_WIDTH(w,cp)		(_XfemBoundaryWidth(w)-2*cp->highlight_thickness)
+#define CB_RECT_HEIGHT(w,cp)	(_XfemBoundaryHeight(w)-2*cp->highlight_thickness)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -74,11 +74,11 @@ static void		GetValuesHook		(Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
-static Boolean	InsertChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static void		LayoutComponents	(Widget);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -514,26 +514,25 @@ _XFE_WIDGET_CLASS_RECORD(fancybox,FancyBox) =
 		XmInheritParentProcess,                 /* parent_process		*/
 		NULL,                                   /* extension			*/
     },
-    
+
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		XfeInheritDrawComponents,				/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		XfeInheritLayoutComponents,				/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		XfeInheritDrawComponents,				/* draw_components			*/
+		NULL,									/* extension				*/
     },
 
     /* XfeComboBox Part */
@@ -712,7 +711,7 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	Widget					w = _XfeParent(child);
     XfeFancyBoxPart *		fp = _XfeFancyBoxPart(w);
@@ -721,7 +720,7 @@ AcceptChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
 	Widget					w = _XfeParent(child);
     XfeFancyBoxPart *		fp = _XfeFancyBoxPart(w);
@@ -732,7 +731,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
 	Widget					w = _XfeParent(child);
     XfeFancyBoxPart *		fp = _XfeFancyBoxPart(w);
@@ -743,14 +742,8 @@ DeleteChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutComponents(Widget w)
+LayoutStaticChildren(Widget w)
 {
-	/* Layout the arrow */
-	_XfeComboBoxLayoutArrow(w);
-
-	/* Layout the title */
-	_XfeComboBoxLayoutTitle(w);
-
 	/* Layout the icon if needed */
 	IconLayout(w);
 }

@@ -423,7 +423,7 @@ XfeDestroyMenuWidgetTree(WidgetList	children,
 		skip = (skip_private_components &&
 				XfeIsAlive(_XfeParent(children[i])) &&
 				XfeIsManager(_XfeParent(children[i])) &&
-				_XfeManagerPrivateComponent(children[i]));
+				XfeIsPrivateComponent(children[i]));
 		
 		if (!skip)
 		{

@@ -55,14 +55,12 @@ static void		GetValuesHook		(Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
-static Boolean	InsertChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static void		ChangeManaged		(Widget);
-static void		PrepareComponents	(Widget,int);
-static void		LayoutComponents	(Widget);
-static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
+static void		DrawComponents			(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -372,24 +370,23 @@ _XFE_WIDGET_CLASS_RECORD(caption,Caption) =
     },
     
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		ChangeManaged,							/* change_managed		*/
-		PrepareComponents,						/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		DrawComponents,							/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		DrawComponents,							/* draw_components			*/
+		NULL,									/* extension				*/
     },
 
     /* XfeCaption Part */
@@ -556,13 +553,13 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	return True;
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
 /*     Widget					w = XtParent(child); */
 /*     XfeCaptionPart *		pp = _XfeCaptionPart(w); */
@@ -571,7 +568,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
 /*     Widget					w = XtParent(child); */
 /*     XfeCaptionPart *		pp = _XfeCaptionPart(w); */
@@ -580,23 +577,7 @@ DeleteChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static void
-ChangeManaged(Widget w)
-{
-/*     XfeCaptionPart *		pp = _XfeCaptionPart(w); */
-}
-/*----------------------------------------------------------------------*/
-static void
-PrepareComponents(Widget w,int flags)
-{
-/*     XfeCaptionPart *		pp = _XfeCaptionPart(w); */
-
-/* 	if (flags & _XFE_PREPARE_CLOSE_PIXMAP_MASK) */
-/*     { */
-/*     } */
-}
-/*----------------------------------------------------------------------*/
-static void
-LayoutComponents(Widget w)
+LayoutStaticChildren(Widget w)
 {
     XfeCaptionPart *	pp = _XfeCaptionPart(w);
 
@@ -754,7 +735,7 @@ LayoutChildOnRight(Widget w)
 	if (pp->child_resize)
 	{
 		child_width = 
- 			_XfemRectWidth(w) -
+ 			_XfemBoundaryWidth(w) -
 			_XfeWidth(pp->title) - 
 			pp->spacing;
 
@@ -969,13 +950,13 @@ XfeCaptionMaxChildWidth(Widget w)
 		if (pp->caption_layout == XmCAPTION_CHILD_ON_BOTTOM ||
 			pp->caption_layout == XmCAPTION_CHILD_ON_TOP)
 		{
-			max_child_width = _XfemRectWidth(w);
+			max_child_width = _XfemBoundaryWidth(w);
 		}
 		else if (pp->caption_layout == XmCAPTION_CHILD_ON_LEFT ||
 				 pp->caption_layout == XmCAPTION_CHILD_ON_RIGHT)
 		{
 			max_child_width =
-				_XfemRectWidth(w) -
+				_XfemBoundaryWidth(w) -
 				_XfeWidth(pp->title) - 
 				pp->spacing;
 		}
@@ -988,7 +969,7 @@ XfeCaptionMaxChildWidth(Widget w)
 	/* Child only */
 	else if (_XfeChildIsShown(pp->child))
 	{
-		max_child_width = _XfemRectWidth(w);
+		max_child_width = _XfemBoundaryWidth(w);
 	}
 	
 	return max_child_width;

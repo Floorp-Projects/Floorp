@@ -614,8 +614,7 @@ _XFE_WIDGET_CLASS_RECORD(button,Button) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		PrepareComponents,						/* prepare_components	*/
 		LayoutComponents,						/* layout_components	*/
 		DrawBackground,							/* draw_background		*/
@@ -1866,7 +1865,7 @@ StringLayoutLabelOnly(Widget w)
 	{
 	case XmALIGNMENT_BEGINNING:
 		
-		lp->label_rect.x = _XfeRectX(w) + RAISE_OFFSET(bp);
+		lp->label_rect.x = _XfeBoundaryX(w) + RAISE_OFFSET(bp);
 		
 		break;
 		
@@ -1909,7 +1908,7 @@ StringLayoutLabelOnBottom(Widget w)
 	{
 	case XmALIGNMENT_BEGINNING:
 		
-		lp->label_rect.x = _XfeRectX(w) + RAISE_OFFSET(bp);
+		lp->label_rect.x = _XfeBoundaryX(w) + RAISE_OFFSET(bp);
 		
 		break;
 		
@@ -1955,7 +1954,7 @@ StringLayoutLabelOnTop(Widget w)
 	{
 	case XmALIGNMENT_BEGINNING:
 		
-		lp->label_rect.x = _XfeRectX(w) + RAISE_OFFSET(bp);
+		lp->label_rect.x = _XfeBoundaryX(w) + RAISE_OFFSET(bp);
 		
 		break;
 		

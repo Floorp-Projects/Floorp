@@ -49,14 +49,15 @@ typedef struct
 /*----------------------------------------------------------------------*/
 typedef struct _XfeTaskBarClassRec
 {
-    CoreClassPart			core_class;
-    CompositeClassPart		composite_class;
-    ConstraintClassPart		constraint_class;
-    XmManagerClassPart		manager_class;
-    XfeManagerClassPart		xfe_manager_class;
-    XfeOrientedClassPart	xfe_oriented_class;
-    XfeToolBarClassPart		xfe_tool_bar_class;
-    XfeTaskBarClassPart		xfe_task_bar_class;
+    CoreClassPart				core_class;
+    CompositeClassPart			composite_class;
+    ConstraintClassPart			constraint_class;
+    XmManagerClassPart			manager_class;
+    XfeManagerClassPart			xfe_manager_class;
+    XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
+    XfeOrientedClassPart		xfe_oriented_class;
+    XfeToolBarClassPart			xfe_tool_bar_class;
+    XfeTaskBarClassPart			xfe_task_bar_class;
 } XfeTaskBarClassRec;
 
 externalref XfeTaskBarClassRec xfeTaskBarClassRec;
@@ -87,14 +88,15 @@ typedef struct _XfeTaskBarPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeTaskBarRec
 {
-    CorePart			core;
-    CompositePart		composite;
-    ConstraintPart		constraint;
-    XmManagerPart		manager;
-    XfeManagerPart		xfe_manager;
-    XfeToolBarPart		xfe_tool_bar;
-    XfeOrientedPart		xfe_oriented;
-    XfeTaskBarPart		xfe_task_bar;
+    CorePart				core;
+    CompositePart			composite;
+    ConstraintPart			constraint;
+    XmManagerPart			manager;
+    XfeManagerPart			xfe_manager;
+    XfeDynamicManagerPart	xfe_dynamic_manager;
+    XfeToolBarPart			xfe_tool_bar;
+    XfeOrientedPart			xfe_oriented;
+    XfeTaskBarPart			xfe_task_bar;
 } XfeTaskBarRec;
 
 /*----------------------------------------------------------------------*/

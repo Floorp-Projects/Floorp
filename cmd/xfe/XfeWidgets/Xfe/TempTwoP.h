@@ -28,7 +28,7 @@
 #define _XfeTempTwoP_h_
 
 #include <Xfe/TempTwo.h>
-#include <Xfe/ManagerP.h>
+#include <Xfe/DynamicManagerP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
@@ -56,6 +56,7 @@ typedef struct _XfeTempTwoClassRec
     ConstraintClassPart			constraint_class;
     XmManagerClassPart			manager_class;
     XfeManagerClassPart			xfe_manager_class;
+    XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
     XfeTempTwoClassPart			xfe_temp_two_class;
 } XfeTempTwoClassRec;
 
@@ -104,12 +105,13 @@ typedef struct _XfeTempTwoPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeTempTwoRec
 {
-    CorePart			core;
-    CompositePart		composite;
-    ConstraintPart		constraint;
-    XmManagerPart		manager;
-    XfeManagerPart		xfe_manager;
-    XfeTempTwoPart		xfe_temp_two;
+    CorePart				core;
+    CompositePart			composite;
+    ConstraintPart			constraint;
+    XmManagerPart			manager;
+    XfeManagerPart			xfe_manager;
+    XfeDynamicManagerPart	xfe_dynamic_manager;
+    XfeTempTwoPart			xfe_temp_two;
 } XfeTempTwoRec;
 
 /*----------------------------------------------------------------------*/
@@ -132,9 +134,10 @@ typedef struct _XfeTempTwoConstraintPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeTempTwoConstraintRec
 {
-    XmManagerConstraintPart			manager;
-    XfeManagerConstraintPart		xfe_manager;
-    XfeTempTwoConstraintPart		xfe_temp_two;
+    XmManagerConstraintPart				manager;
+    XfeManagerConstraintPart			xfe_manager;
+    XfeDynamicManagerConstraintPart		xfe_dynamic_manager;
+    XfeTempTwoConstraintPart			xfe_temp_two;
 } XfeTempTwoConstraintRec;
 
 /*----------------------------------------------------------------------*/

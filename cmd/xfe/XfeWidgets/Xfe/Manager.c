@@ -49,81 +49,85 @@
 #define MESSAGE17 "XmNnumLayableChildren is a read-only resource."
 #define MESSAGE18 "The %s class does not support XmNlayableChildren."
 #define MESSAGE19 "The %s class does not support XmNnumLayableChildren."
-#define MESSAGE20 "XmNprivateComponent is a read-only resource."
+#define MESSAGE20 "XmNmanagerChildType is a read-only resource."
 #define MESSAGE21 "XmNlinkNode is a read-only resource."
+
+#define MESSAGE50 "XmNcomponentChildren is a read-only resource."
+#define MESSAGE51 "XmNstaticChildren is a read-only resource."
+#define MESSAGE52 "XmNnumComponentChildren is a read-only resource."
+#define MESSAGE53 "XmNnumStaticChildren is a read-only resource."
+
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Core Class Methods													*/
+/* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void				Initialize		(Widget,Widget,ArgList,Cardinal *);
-static void				ClassInitialize	();
-static void				ClassPartInit	(WidgetClass);
-static void				Destroy			(Widget);
-static void				Resize			(Widget);
-static void				Realize			(Widget,XtValueMask *,
-										 XSetWindowAttributes *);
-static void				Redisplay		(Widget,XEvent *,Region);
-static Boolean			SetValues		(Widget,Widget,Widget,ArgList,
-										 Cardinal *);
-static void				GetValuesHook	(Widget,ArgList,Cardinal *);
-static XtGeometryResult QueryGeometry	(Widget,XtWidgetGeometry *,
-										 XtWidgetGeometry *);
+static void	CoreInitialize		(Widget,Widget,ArgList,Cardinal *);
+static void	CoreClassInitialize	();
+static void	CoreClassPartInit	(WidgetClass);
+static void	CoreDestroy			(Widget);
+static void	CoreResize			(Widget);
+static void	CoreExpose			(Widget,XEvent *,Region);
+static void	CoreRealize			(Widget,XtValueMask *,XSetWindowAttributes *);
+
+static Boolean CoreSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
+
+static XtGeometryResult CoreQueryGeometry	(Widget,XtWidgetGeometry *,
+											 XtWidgetGeometry *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Composite Class Methods												*/
+/* Composite class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void				InsertChild		(Widget);
-static void				DeleteChild		(Widget);
-static void				ChangeManaged	(Widget);
-static XtGeometryResult GeometryManager	(Widget,XtWidgetGeometry *,
-										 XtWidgetGeometry *);
+static void				CompositeInsertChild		(Widget);
+static void				CompositeDeleteChild		(Widget);
+static void				CompositeChangeManaged		(Widget);
+static XtGeometryResult CompositeGeometryManager	(Widget,
+													 XtWidgetGeometry *,
+													 XtWidgetGeometry *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Composite XtOrderProc for XmNinsertPosition							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static Cardinal	InsertPosition		(Widget);
+static Cardinal			CompositeInsertPosition		(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Constraint Class Methods												*/
+/* Constraint class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void			ConstraintInitialize	(Widget,Widget,ArgList,Cardinal *);
-static Boolean		ConstraintSetValues		(Widget,Widget,Widget,ArgList,
-											 Cardinal *);
+static void		ConstraintInitialize	(Widget,Widget,ArgList,Cardinal *);
+static Boolean	ConstraintSetValues		(Widget,Widget,Widget,ArgList,
+										 Cardinal *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeManager Class Methods												*/
+/* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		InitializePostHook			(Widget,Widget);
-static Boolean	SetValuesPostHook			(Widget,Widget,Widget);
-static void		ConstraintInitializePostHook(Widget,Widget);
-static Boolean	ConstraintSetValuesPostHook	(Widget,Widget,Widget);
-static void		PreferredGeometry			(Widget,Dimension *,Dimension *);
-static void		MinimumGeometry				(Widget,Dimension *,Dimension *);
-static void		UpdateRect					(Widget);
-static void		DrawShadow					(Widget,XEvent *,Region,
-											 XRectangle *);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static void		UpdateBoundary			(Widget);
+static void		LayoutWidget			(Widget);
+static void		UpdateChildrenInfo		(Widget);
+static void		DrawShadow				(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Layable children functions											*/
+/* Composite hook functions												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		LayableInfoUpdate		(Widget);
-static void		LayableInfoFree			(Widget);
+static void		CoreInitializePostHook			(Widget,Widget);
+static Boolean	CoreSetValuesPostHook			(Widget,Widget,Widget);
 
+static void		ConstraintInitializePostHook	(Widget,Widget);
+static Boolean	ConstraintSetValuesPostHook		(Widget,Widget,Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -317,87 +321,42 @@ static const XtResource resources[] =
 		(XtPointer) NULL
 	},
 
-	/* Private Component resources */
+	/* Component children resources */
 	{ 
-		XmNnumPrivateComponents,
-		XmCReadOnly,
-		XmRCardinal,
-		sizeof(Cardinal),
-		XtOffsetOf(XfeManagerRec , xfe_manager . num_private_components),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-
-	/* Layable children resources */
-	{ 
-		XmNlayableChildren,
+		XmNcomponentChildren,
 		XmCReadOnly,
 		XmRLinkedChildren,
 		sizeof(XfeLinked),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . children),
+		XtOffsetOf(XfeManagerRec , xfe_manager . component_children),
 		XmRImmediate, 
 		(XtPointer) NULL
     },
 	{ 
-		XmNnumLayableChildren,
+		XmNnumComponentChildren,
 		XmCReadOnly,
 		XmRCardinal,
 		sizeof(Cardinal),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . num_children),
+		XtOffsetOf(XfeManagerRec , xfe_manager . num_component_children),
 		XmRImmediate, 
 		(XtPointer) 0
     },
+
+	/* Static children resources */
 	{ 
-		XmNmaxLayableChildrenWidth,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . max_width),
+		XmNstaticChildren,
+		XmCReadOnly,
+		XmRLinkedChildren,
+		sizeof(XfeLinked),
+		XtOffsetOf(XfeManagerRec , xfe_manager . static_children),
 		XmRImmediate, 
-		(XtPointer) 0
+		(XtPointer) NULL
     },
 	{ 
-		XmNmaxLayableChildrenHeight,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . max_height),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-	{ 
-		XmNminLayableChildrenWidth,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . min_width),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-	{ 
-		XmNminLayableChildrenHeight,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . min_height),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-	{ 
-		XmNtotalLayableChildrenWidth,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . total_width),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-	{ 
-		XmNtotalLayableChildrenHeight,
-		XmCDimension,
-		XmRDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . total_height),
+		XmNnumStaticChildren,
+		XmCReadOnly,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeManagerRec , xfe_manager . num_static_children),
 		XmRImmediate, 
 		(XtPointer) 0
     },
@@ -474,7 +433,7 @@ static const XtResource resources[] =
 		sizeof(XtOrderProc),
 		XtOffsetOf(XfeManagerRec , composite . insert_position),
 		XmRImmediate, 
-		(XtPointer) InsertPosition
+		(XtPointer) CompositeInsertPosition
     },
 };
 
@@ -528,6 +487,8 @@ static const XmSyntheticResource syn_resources[] =
 		_XmToVerticalPixels 
     },
 };
+/*----------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -537,33 +498,16 @@ static const XmSyntheticResource syn_resources[] =
 static const XtResource constraint_resources[] = 
 {
     { 
-		XmNpositionIndex,
-		XmCPositionIndex,
-		XmRInt,
-		sizeof(int),
-		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . position_index),
+		XmNmanagerChildType,
+		XmCReadOnly,
+		XmRManagerChildType,
+		sizeof(unsigned char),
+		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . manager_child_type),
 		XmRImmediate,
-		(XtPointer) XmLAST_POSITION
-    },
-    { 
-		XmNprivateComponent,
-		XmCPrivateComponent,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . private_component),
-		XmRImmediate,
-		(XtPointer) False
-    },
-    { 
-		XmNlinkNode,
-		XmCLinkNode,
-		XmRPointer,
-		sizeof(XfeLinkNode),
-		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . link_node),
-		XmRImmediate,
-		(XtPointer) NULL
-    },
+		(XtPointer) XmMANAGER_COMPONENT_INVALID
+    }
 };   
+/*----------------------------------------------------------------------*/
 
 /* Widget class record initialization. */
 _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
@@ -572,12 +516,12 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		(WidgetClass) &xmManagerClassRec,		/* superclass			*/
 		"XfeManager",							/* class_name			*/
 		sizeof(XfeManagerRec),					/* widget_size			*/
-		ClassInitialize,						/* class_initialize		*/
-		ClassPartInit,							/* class_part_initialize*/
+		CoreClassInitialize,					/* class_initialize		*/
+		CoreClassPartInit,						/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
-		Initialize,								/* initialize			*/
+		CoreInitialize,							/* initialize			*/
 		NULL,									/* initialize_hook		*/
-		Realize,								/* realize				*/
+		CoreRealize,							/* realize				*/
 		NULL,									/* actions				*/
 		0,										/* num_actions			*/
 		(XtResource *)resources,				/* resources			*/
@@ -587,28 +531,28 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		XtExposeCompressMaximal,				/* compress_exposure	*/
 		TRUE,									/* compress_enterleave	*/
 		FALSE,									/* visible_interest		*/
-		Destroy,								/* destroy				*/
-		Resize,									/* resize				*/
-		Redisplay,								/* expose				*/
-		SetValues,								/* set_values			*/
+		CoreDestroy,							/* destroy				*/
+		CoreResize,								/* resize				*/
+		CoreExpose,								/* expose				*/
+		CoreSetValues,							/* set_values			*/
 		NULL,									/* set_values_hook		*/
 		XtInheritSetValuesAlmost,				/* set_values_almost	*/
-		GetValuesHook,							/* get_values_hook		*/
+		NULL,									/* get_values_hook		*/
 		NULL,									/* accept_focus			*/
 		XtVersion,								/* version				*/
 		NULL,									/* callback_private		*/
 		XtInheritTranslations,					/* tm_table				*/
-		QueryGeometry,							/* query_geometry		*/
+		CoreQueryGeometry,						/* query_geometry		*/
 		XtInheritDisplayAccelerator,			/* display accel		*/
 		NULL,									/* extension			*/
     },
 
     /* Composite Part */
     {
-		GeometryManager,						/* geometry_manager		*/
-		ChangeManaged,							/* change_managed		*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
+		CompositeGeometryManager,				/* geometry_manager		*/
+		CompositeChangeManaged,					/* change_managed		*/
+		CompositeInsertChild,					/* insert_child			*/
+		CompositeDeleteChild,					/* delete_child			*/
 		NULL									/* extension			*/
     },
     
@@ -636,23 +580,22 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 
     /* XfeManager Part */
     {
-		ForgetGravity,							/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		MinimumGeometry,						/* minimum_geometry	*/
-		UpdateRect,								/* update_rect			*/
-		NULL,									/* accept_child			*/
-		NULL,									/* insert_child			*/
-		NULL,									/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		NULL,									/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		DrawShadow,								/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+		ForgetGravity,							/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		UpdateBoundary,							/* update_boundary			*/
+		UpdateChildrenInfo,						/* update_children_info		*/
+		LayoutWidget,							/* layout_widget			*/
+		NULL,									/* accept_static_child		*/
+		NULL,									/* insert_static_child		*/
+		NULL,									/* delete_static_child		*/
+		NULL,									/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		DrawShadow,								/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
     },
 };
 
@@ -665,11 +608,11 @@ _XFE_WIDGET_CLASS(manager,Manager);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Core Class Methods													*/
+/* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-ClassInitialize()
+CoreClassInitialize()
 {
 	/* Register Xfe Converters */
     XfeRegisterConverters();
@@ -679,41 +622,50 @@ ClassInitialize()
 }
 /*----------------------------------------------------------------------*/
 static void
-ClassPartInit(WidgetClass wc)
+CoreClassPartInit(WidgetClass wc)
 {
     XfeManagerWidgetClass cc = (XfeManagerWidgetClass) wc;
     XfeManagerWidgetClass sc = (XfeManagerWidgetClass) wc->core_class.superclass;
 
+	/* Bit gravity */
     _XfeResolve(cc,sc,xfe_manager_class,bit_gravity,
 				XfeInheritBitGravity);
    
+	/* Geometry methods */
     _XfeResolve(cc,sc,xfe_manager_class,preferred_geometry,
 				XfeInheritPreferredGeometry);
 
-    _XfeResolve(cc,sc,xfe_manager_class,minimum_geometry,
-				XfeInheritMinimumGeometry);
+    _XfeResolve(cc,sc,xfe_manager_class,update_boundary,
+				XfeInheritUpdateBoundary);
 
-    _XfeResolve(cc,sc,xfe_manager_class,update_rect,
-				XfeInheritUpdateRect);
+    _XfeResolve(cc,sc,xfe_manager_class,update_children_info,
+				XfeInheritUpdateChildrenInfo);
 
-    _XfeResolve(cc,sc,xfe_manager_class,accept_child,
-				XfeInheritAcceptChild);
+    _XfeResolve(cc,sc,xfe_manager_class,layout_widget,
+				XfeInheritLayoutWidget);
 
-    _XfeResolve(cc,sc,xfe_manager_class,insert_child,
-				XfeInheritInsertChild);
+	/* Static children methods */
+    _XfeResolve(cc,sc,xfe_manager_class,accept_static_child,
+				XfeInheritAcceptStaticChild);
 
-    _XfeResolve(cc,sc,xfe_manager_class,delete_child,
-				XfeInheritDeleteChild);
+    _XfeResolve(cc,sc,xfe_manager_class,insert_static_child,
+				XfeInheritInsertStaticChild);
 
+    _XfeResolve(cc,sc,xfe_manager_class,delete_static_child,
+				XfeInheritDeleteStaticChild);
+
+    _XfeResolve(cc,sc,xfe_manager_class,layout_static_children,
+				XfeInheritLayoutStaticChildren);
+
+	/* Change managed method */
     _XfeResolve(cc,sc,xfe_manager_class,change_managed,
 				XfeInheritChangeManaged);
 
+	/* Component methods */
     _XfeResolve(cc,sc,xfe_manager_class,layout_components,
 				XfeInheritLayoutComponents);
 
-    _XfeResolve(cc,sc,xfe_manager_class,layout_children,
-				XfeInheritLayoutChildren);
-   
+	/* Rendering methods */
     _XfeResolve(cc,sc,xfe_manager_class,draw_background,
 				XfeInheritDrawBackground);
    
@@ -722,16 +674,10 @@ ClassPartInit(WidgetClass wc)
    
     _XfeResolve(cc,sc,xfe_manager_class,draw_components,
 				XfeInheritDrawComponents);
-
-    _XfeResolve(cc,sc,xfe_manager_class,count_layable_children,
-				XfeInheritCountLayableChildren);
-
-    _XfeResolve(cc,sc,xfe_manager_class,child_is_layable,
-				XfeInheritChildIsLayable);
 }
 /*----------------------------------------------------------------------*/
 static void
-Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
+CoreInitialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
     /* Initialize private members */
     _XfemComponentFlag(nw)			= True;
@@ -745,7 +691,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 }
 /*----------------------------------------------------------------------*/
 static void
-Realize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
+CoreRealize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
 {
     XSetWindowAttributes attr;
     
@@ -767,7 +713,7 @@ Realize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
 }
 /*----------------------------------------------------------------------*/
 static void
-Destroy(Widget w)
+CoreDestroy(Widget w)
 {
 #ifdef DEBUG
 	XfeDebugPrintfFunction(w,"Destroy",NULL);
@@ -778,15 +724,25 @@ Destroy(Widget w)
     /* XtRemoveAllCallbacks(w,XmNresizeCallback); */
     /* XtRemoveAllCallbacks(w,XmNexposeCallback); */
 
-	/* Cleanup the layable children info */
-	LayableInfoFree(w);
+
+	/* Destroy the component children list if needed */
+	if (_XfemComponentChildren(w) != NULL)
+	{
+		XfeLinkedDestroy(_XfemComponentChildren(w),NULL,NULL);
+	}
+
+	/* Destroy the static children list if needed */
+	if (_XfemStaticChildren(w) != NULL)
+	{
+		XfeLinkedDestroy(_XfemStaticChildren(w),NULL,NULL);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
-Resize(Widget w)
+CoreResize(Widget w)
 {
 #ifdef DEBUG
-	XfeDebugPrintfFunction(w,"Resize",NULL);
+	XfeDebugPrintfFunction(w,"CoreResize",NULL);
 #endif
 
     /* Obtain the Prefered Geometry */
@@ -805,40 +761,37 @@ Resize(Widget w)
 		_XfeHeight(w) = _XfemPreferredHeight(w);
     }
     
-    /* Update the widget rect */
-    _XfeManagerUpdateRect(w);
+    /* Update the widget boundary */
+    _XfeManagerUpdateBoundary(w);
     
-    /* Layout the components */
-    _XfeManagerLayoutComponents(w);
-    
-    /* Layout the children */
-    _XfeManagerLayoutChildren(w);
+    /* Layout the widget */
+    _XfeManagerLayoutWidget(w);
 
     /* Invoke Resize Callbacks */
 	_XfeInvokeCallbacks(w,_XfemResizeCallback(w),XmCR_RESIZE,NULL,False);
 }
 /*----------------------------------------------------------------------*/
 static void
-Redisplay(Widget w,XEvent *event,Region region)
+CoreExpose(Widget w,XEvent *event,Region region)
 {
 	/* Make sure the widget is realized before drawing ! */
 	if (!XtIsRealized(w)) return;
    
 	/* Draw Background */ 
-	_XfeManagerDrawBackground(w,event,region,&_XfemWidgetRect(w));
+	_XfeManagerDrawBackground(w,event,region,&_XfemBoundary(w));
 
 	/* Draw Shadow */ 
-	_XfeManagerDrawShadow(w,event,region,&_XfemWidgetRect(w));
+	_XfeManagerDrawShadow(w,event,region,&_XfemBoundary(w));
 
 	/* Draw Components */ 
-	_XfeManagerDrawComponents(w,event,region,&_XfemWidgetRect(w));
+	_XfeManagerDrawComponents(w,event,region,&_XfemBoundary(w));
 
 	/* Redisplay Gadgets */
 	_XmRedisplayGadgets(w,event,region);
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
+CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
    /* Reset the Configuration Flags */
 	_XfemConfigFlags(nw) = XfeConfigNone;
@@ -878,28 +831,46 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeWarning(nw,MESSAGE9);
 	}
 
+#if 0
 	/* num_private_components */
-	if (_XfemNumPrivateComponents(nw) != _XfemNumPrivateComponents(ow))
+	if (_XfemNumComponentChildren(nw) != _XfemNumComponentChildren(ow))
 	{
-		_XfemNumPrivateComponents(nw) = _XfemNumPrivateComponents(ow);
+		_XfemNumComponentChildren(nw) = _XfemNumComponentChildren(ow);
       
 		_XfeWarning(nw,MESSAGE15);
 	}
+#endif
 
-	/* num_layable_children */
-	if (_XfemNumLayableChildren(nw) != _XfemNumLayableChildren(ow))
+	/* XmNcomponentChildren */
+	if (_XfemComponentChildren(nw) != _XfemComponentChildren(ow))
 	{
-		_XfemNumLayableChildren(nw) = _XfemNumLayableChildren(ow);
+		_XfemComponentChildren(nw) = _XfemComponentChildren(ow);
       
-		_XfeWarning(nw,MESSAGE17);
+		_XfeWarning(nw,MESSAGE50);
 	}
 
-	/* layable_children */
-	if (_XfemLayableChildren(nw) != _XfemLayableChildren(ow))
+	/* XmNnumComponentChildren */
+	if (_XfemNumComponentChildren(nw) != _XfemNumComponentChildren(ow))
 	{
-		_XfemLayableChildren(nw) = _XfemLayableChildren(ow);
+		_XfemNumComponentChildren(nw) = _XfemNumComponentChildren(ow);
       
-		_XfeWarning(nw,MESSAGE16);
+		_XfeWarning(nw,MESSAGE52);
+	}
+
+	/* XmNstaticChildren */
+	if (_XfemStaticChildren(nw) != _XfemStaticChildren(ow))
+	{
+		_XfemStaticChildren(nw) = _XfemStaticChildren(ow);
+      
+		_XfeWarning(nw,MESSAGE52);
+	}
+
+	/* XmNnumStaticChildren */
+	if (_XfemNumStaticChildren(nw) != _XfemNumStaticChildren(ow))
+	{
+		_XfemNumStaticChildren(nw) = _XfemNumStaticChildren(ow);
+      
+		_XfeWarning(nw,MESSAGE53);
 	}
 
 	/* height */
@@ -1013,38 +984,8 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	return _XfeManagerChainSetValues(ow,rw,nw,xfeManagerWidgetClass);
 }
 /*----------------------------------------------------------------------*/
-static void
-GetValuesHook(Widget w,ArgList av,Cardinal * pac)
-{
-	/* Verify layable children resources are not used with wrong classes */
-	if (!_XfeManagerCountLayableChildren(w))
-	{
-		Cardinal i;
-
-		for (i = 0; i < *pac; i++)
-		{
-			/* XmNlayableChildren */
-			if (strcmp(av[i].name,XmNlayableChildren) == 0)
-			{
-				/* av[i] = NULL */
-				_XfeGetValuesCastAndAssign(av,i,NULL);
-
-				_XfeArgWarning(w,MESSAGE18,XfeClassNameForWidget(w));
-			}
-			/* XmNnumLayableChildren */
-			else if (strcmp(av[i].name,XmNnumLayableChildren) == 0)
-			{
-				/* av[i] = 0 */
-				_XfeGetValuesCastAndAssign(av,i,0);
-
-				_XfeArgWarning(w,MESSAGE19,XfeClassNameForWidget(w));
-			}      
-		}
-	}
-}
-/*----------------------------------------------------------------------*/
 static XtGeometryResult
-QueryGeometry(Widget w,XtWidgetGeometry	*req,XtWidgetGeometry *reply)
+CoreQueryGeometry(Widget w,XtWidgetGeometry	* req,XtWidgetGeometry * reply)
 {
 	reply->request_mode		= CWWidth | CWHeight;
 	reply->width			= _XfemPreferredWidth(w);
@@ -1070,47 +1011,123 @@ QueryGeometry(Widget w,XtWidgetGeometry	*req,XtWidgetGeometry *reply)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Composite Class Methods												*/
+/* Composite class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-InsertChild(Widget child)
+CompositeInsertChild(Widget child)
 {
     Widget                  w = XtParent(child);
     XmManagerWidgetClass    mwc = (XmManagerWidgetClass) xmManagerWidgetClass;
 
-    /* Leave private components alone */
-    if (_XfemComponentFlag(w) || _XfeManagerPrivateComponent(child))
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,
+						   "CompositeInsertChild",
+						   "%s for %s",
+						   XtName(w),XtName(child));
+#endif
+
+	/*
+	 * Component children:
+	 * -------------------
+	 *
+	 * If the _XfemComponentFlag is set, the given child is being created
+	 * from one of the CoreInitialize() methods for this particular 
+	 * WidgetClass.
+	 *
+	 * The widget should be flagged as a component so that it can 
+	 * receive special treatment.
+	 */
+    if (_XfemComponentFlag(w) || 
+        (_XfeConstraintManagerChildType(child) == XmMANAGER_COMPONENT_CHILD))
 	{
-		/* Mark the child as a private component */
-		_XfeManagerPrivateComponent(child) = True;
+		/* Mark the child COMPONENT */
+		_XfeConstraintManagerChildType(child) = XmMANAGER_COMPONENT_CHILD;
+		
+		/* Create the component children list if needed */
+		if (_XfemComponentChildren(w) == NULL)
+		{
+			_XfemComponentChildren(w) = XfeLinkedConstruct();
+		}
 
-		/* Increment the private component count */
-		_XfemNumPrivateComponents(w)++;
+		/* Add the child to the component children list */
+		XfeLinkedInsertAtTail(_XfemComponentChildren(w),child);
 
-        /* Call XmManager's InsertChild */
+        /* Call XmManager's CompositeInsertChild to do the Xt magic */
         (*mwc->composite_class.insert_child)(child);
-    }
-    /* Accept or reject other children */
-    else if (_XfeManagerAcceptChild(child))
-    {
-        /* Call XmManager's InsertChild */
+	}
+	/*
+	 * Static children:
+	 * ----------------
+	 *
+	 * If the child is being created from somewhere other than a 
+	 * CoreInitialize() method, we need to determine whether it
+	 * is a static child.
+	 *
+	 * Static children are expected by the XfeManager class to exist
+	 * in a pre-defined location within the Widget.  
+	 *
+	 * For example, a caption widget could contain up to two static
+	 * children: A label and a text field.
+	 *
+	 * These two static children would always appear in the same 
+	 * pre-defined positions regradless of the Manager widget's 
+	 * geometry.
+	 *
+	 * It is up to XfeManager sub-classes to provide specialized 
+	 * methods to determine which (if any) widgets are accepeted
+	 * as static children.
+	 */
+	else if (_XfeManagerAcceptStaticChild(child))
+	{
+		/* Mark the child STATIC */
+		_XfeConstraintManagerChildType(child) = XmMANAGER_STATIC_CHILD;
+
+		/* Create the static children list if needed */
+		if (_XfemStaticChildren(w) == NULL)
+		{
+			_XfemStaticChildren(w) = XfeLinkedConstruct();
+		}
+		
+		/* Add the child to the static children list */
+		XfeLinkedInsertAtTail(_XfemStaticChildren(w),child);
+
+        /* Call XmManager's CompositeInsertChild to do the Xt magic */
         (*mwc->composite_class.insert_child)(child);
 
-		/* Assign the position index for this child.
-		 *
-		 * This will probably turn out to be a not so trivial thing,
-		 * cause of managing state and other stuff.  Fix as needed.
-		 */
-		_XfeManagerPositionIndex(child) = 
-			_XfemNumChildren(w) - _XfemNumPrivateComponents(w) - 1;
-        
-        /* Insert the child and relayout if necessary */
-        if (_XfeManagerInsertChild(child))
+        /* Insert the static child and relayout if needed */
+        if (_XfeManagerInsertStaticChild(child))
         {
             XfeManagerLayout(w);
         }
-    }
+	}
+#if 0
+	/*
+	 * Dynamic children:
+	 * -----------------
+	 *
+	 * For example, a toolbar could contain any number of dynamic
+	 * children, which get placed according to a layout policy.
+	 *
+	 * It is up to XfeManager sub-classes to provide specialized 
+	 * methods to determine which (if any) widgets are accepeted
+	 * as static children.
+	 */
+	else if (_XfeManagerAcceptDynamicChild(child))
+	{
+		/* Mark the child STATIC */
+		_XfeConstraintManagerChildType(child) = XmMANAGER_DYNAMIC_CHILD;
+
+        /* Call XmManager's CompositeInsertChild to do the Xt magic */
+        (*mwc->composite_class.insert_child)(child);
+
+        /* Insert the dynamic child and relayout if needed */
+        if (_XfeManagerInsertDynamicChild(child))
+        {
+            XfeManagerLayout(w);
+        }
+	}
+#endif
 	else
  	{
         _XfeArgWarning(w,MESSAGE14,XtName(child));
@@ -1118,48 +1135,94 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static void
-DeleteChild(Widget child)
+CompositeDeleteChild(Widget child)
 {
     Widget                  w = XtParent(child);
     XmManagerWidgetClass    mwc = (XmManagerWidgetClass) xmManagerWidgetClass;
-    Boolean                 layout = XtIsManaged(child);
+	Boolean					need_layout = False;
+	Boolean					is_managed = _XfeIsManaged(child);
 
-    /* Leave private components alone */
-    if (!_XfeManagerPrivateComponent(child))
-    {
-        /* Delete the child and relayout if necessary */
-        layout = _XfeManagerDeleteChild(child);
-	}
-	else
+	/*
+	 * Component children:
+	 * -------------------
+	 *
+	 * The only time when a component child will be deleted, is from
+	 * the CoreDestroy() method of the manager widget.  Because the
+	 * manager widget is being destroyed at this point, we dont need
+	 * to do anything else (layout), other than removing the child
+	 * from the appropiate lists
+	 */
+	if (_XfeConstraintManagerChildType(child) == XmMANAGER_COMPONENT_CHILD)
 	{
-		/* Decrement the private component count */
-		_XfemNumPrivateComponents(w)--;
-    }
-    
-    /* call manager DeleteChild to update child info */
-    (*mwc->composite_class.delete_child)(child);
+		XfeLinkNode node;
 
-    if (layout)
+		assert( _XfemComponentChildren(w) != NULL );
+
+		node = XfeLinkedFindNodeByItem(_XfemComponentChildren(w),child);
+
+		assert( node != NULL );
+
+		if (node != NULL)
+		{
+			XfeLinkedRemoveNode(_XfemComponentChildren(w),node);
+		}
+	}
+	/*
+	 * Static children:
+	 * ----------------
+	 *
+	 */
+	else if (_XfeConstraintManagerChildType(child) == XmMANAGER_STATIC_CHILD)
+	{
+		XfeLinkNode node;
+
+		assert( _XfemStaticChildren(w) != NULL );
+		
+		node = XfeLinkedFindNodeByItem(_XfemStaticChildren(w),child);
+
+		assert( node != NULL );
+
+		if (node != NULL)
+		{
+			XfeLinkedRemoveNode(_XfemStaticChildren(w),node);
+		}
+
+        /* Delete the static child */
+        need_layout = _XfeManagerDeleteStaticChild(child);
+	}
+#if 0
+	/*
+	 * Dynamic children:
+	 * ----------------
+	 *
+	 */
+	else if (_XfeConstraintManagerChildType(child) == XmMANAGER_DYNAMIC_CHILD)
+	{
+        /* Delete the dynamic child */
+        need_layout = _XfeManagerDeleteDynamicChild(child);
+	}
+#endif
+
+	/* Call XmManager's CompositeDeleteChild to do the Xt magic */
+	(*mwc->composite_class.delete_child)(child);
+
+	/* Do layout if needed */
+    if (need_layout && is_managed)
     {
         XfeManagerLayout(w);
     }
 }
 /*----------------------------------------------------------------------*/
 static void
-ChangeManaged(Widget w)
+CompositeChangeManaged(Widget w)
 {
 #ifdef DEBUG
 	XfeDebugPrintfFunction(w,
-						   "ChangeManaged",
+						   "CompositeChangeManaged",
 						   "%s",
 						   (_XfemIgnoreConfigure(w) ? " - ignored" : ""),
 						   "NULL");
 #endif
-
-#if 0
-	/* Update the layuable children info */
-	LayableInfoUpdate(w);
-#endif	
 
     /* Update widget geometry only if ignore_configure is False */
     if (!_XfemIgnoreConfigure(w))
@@ -1167,15 +1230,8 @@ ChangeManaged(Widget w)
 		Boolean		change_width = False;
 		Boolean		change_height = False;
 
-#if 1
-		/* Update the layuable children info */
-		LayableInfoUpdate(w);
-#endif
-
-#if 0
-		/* Prepare the Widget */
-		_XfeManagerPrepareComponents(w,_XfemPrepareFlags(w));
-#endif
+		/* Update the children info */
+		_XfeManagerUpdateChildrenInfo(w);
 
 		/* Invoke the change_managed method */
 		_XfeManagerChangeManaged(w);
@@ -1231,21 +1287,13 @@ ChangeManaged(Widget w)
 			{
 				/* Too bad */
 			}
-#if 0			
-			/* Make a geometry request to accomodate new geometry */
-			_XfeWidth(w) = _XfemPreferredWidth(w);
-			_XfeHeight(w) = _XfemPreferredHeight(w);
-#endif
 		}
 
-		/* Update the widget rect */
-		_XfeManagerUpdateRect(w);
+		/* Update the widget boundary */
+		_XfeManagerUpdateBoundary(w);
 		
-		/* Layout the components */
-		_XfeManagerLayoutComponents(w);
-		
-		/* Layout the children */
-		_XfeManagerLayoutChildren(w);
+		/* Layout the widget */
+		_XfeManagerLayoutWidget(w);
     }
 	else
 	{
@@ -1261,7 +1309,9 @@ ChangeManaged(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static XtGeometryResult
-GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
+CompositeGeometryManager(Widget				child,
+						 XtWidgetGeometry *	request,
+						 XtWidgetGeometry *	reply)
 {
 #if 1
 	Widget				w = XtParent(child);
@@ -1269,7 +1319,7 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 	XtGeometryResult	our_result = XtGeometryNo;
 
 #ifdef DEBUG
-	XfeDebugPrintfFunction(w,"GeometryManager",NULL,NULL);
+	XfeDebugPrintfFunction(w,"CompositeGeometryManager",NULL,NULL);
 #endif
 
 	/* Ignore x changes */
@@ -1514,20 +1564,26 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 /*																		*/
 /*----------------------------------------------------------------------*/
 static Cardinal
-InsertPosition(Widget child)
+CompositeInsertPosition(Widget child)
 {
-	Widget w = _XfeParent(child);
+	Widget		w = _XfeParent(child);
+	Cardinal	num_component_children = 0;
 
- 	/* Insert private components at the tail */
-    if (_XfeManagerPrivateComponent(child))
+ 	/* Insert component children at the end of the composite children array */
+    if (_XfeConstraintManagerChildType(child) == XmMANAGER_COMPONENT_CHILD)
     {
-      return _XfemNumChildren(w);
+		return _XfemNumChildren(w);
     }
 
-	/* Insert children before private components */
-	if (_XfemNumPrivateComponents(w) > 0)
+	if (_XfemComponentChildren(w) != NULL)
 	{
-		return _XfemNumChildren(w) - _XfemNumPrivateComponents(w);
+		num_component_children = XfeLinkedCount(_XfemComponentChildren(w));
+	}
+
+	/* Insert other children before component children */
+	if (num_component_children > 0)
+	{
+		return _XfemNumChildren(w) - num_component_children;
 	}
 
 	/* Otherwise return the default position - tail */
@@ -1538,7 +1594,7 @@ InsertPosition(Widget child)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Constraint Class Methods												*/
+/* Constraint class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
@@ -1564,26 +1620,12 @@ ConstraintSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	/* Reset the preparation Flags */
 	_XfemPrepareFlags(w) = XfePrepareNone;
 
-	/* XmNprivateComponent */
-	if (np->private_component != op->private_component)
+	/* XmNmanagerChildType */
+	if (np->manager_child_type != op->manager_child_type)
 	{
-		np->private_component = op->private_component;
+		np->manager_child_type = op->manager_child_type;
 
 		_XfeWarning(nw,MESSAGE20);
-	}
-
-	/* XmNlinkNode */
-	if (np->link_node != op->link_node)
-	{
-		np->link_node = op->link_node;
-
-		_XfeWarning(nw,MESSAGE21);
-	}
-
-	/* XmNpositionIndex */
-	if (np->position_index != op->position_index)
-	{
-		/* Do something magical */
 	}
 
 	/* Finish constraint set values */
@@ -1591,14 +1633,78 @@ ConstraintSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 }
 /*----------------------------------------------------------------------*/
 
-
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeManager Class Methods												*/
+/* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-InitializePostHook(Widget rw,Widget nw)
+PreferredGeometry(Widget w,Dimension *width,Dimension *height)
+{
+	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
+	*height = _XfemOffsetTop(w) + _XfemOffsetBottom(w);
+}
+/*----------------------------------------------------------------------*/
+static void
+UpdateBoundary(Widget w)
+{
+    XfeRectSet(&_XfemBoundary(w),
+			   
+			   _XfemOffsetLeft(w),
+			   
+			   _XfemOffsetTop(w),
+			   
+			   _XfeWidth(w) - _XfemOffsetLeft(w) - _XfemOffsetRight(w),
+			   
+			   _XfeHeight(w) - _XfemOffsetTop(w) - _XfemOffsetBottom(w));
+}
+/*----------------------------------------------------------------------*/
+static void
+UpdateChildrenInfo(Widget w)
+{
+	/* Update the component children */
+	_XfeManagerUpdateComponentChildrenInfo(w);
+
+	/* Update the static children */
+	_XfeManagerUpdateStaticChildrenInfo(w);
+}
+/*----------------------------------------------------------------------*/
+static void
+LayoutWidget(Widget w)
+{
+    /* Layout the components */
+    _XfeManagerLayoutComponents(w);
+
+    /* Layout the static children */
+    _XfeManagerLayoutStaticChildren(w);
+}
+/*----------------------------------------------------------------------*/
+static void
+DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
+{
+	if (!_XfemShadowThickness(w))
+ 	{
+ 		return;
+ 	}
+
+    /* Draw the shadow */
+    _XmDrawShadows(XtDisplay(w),
+				   _XfeWindow(w),
+				   _XfemTopShadowGC(w),_XfemBottomShadowGC(w),
+				   0,0,
+				   _XfeWidth(w),_XfeHeight(w),
+				   _XfemShadowThickness(w),
+				   _XfemShadowType(w));
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Composite hook functions												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+CoreInitializePostHook(Widget rw,Widget nw)
 {
 	assert( nw != NULL );
 	assert( _XfeIsAlive(nw) );
@@ -1628,14 +1734,11 @@ InitializePostHook(Widget rw,Widget nw)
 		_XfeHeight(nw) = _XfemPreferredHeight(nw);
     }
     
-    /* Update the widget rect */
-    _XfeManagerUpdateRect(nw);
+    /* Update the widget boundary */
+    _XfeManagerUpdateBoundary(nw);
     
-    /* Layout the components */
-    _XfeManagerLayoutComponents(nw);
-    
-    /* Layout the children */
-    _XfeManagerLayoutChildren(nw);
+    /* Layout the widget */
+    _XfeManagerLayoutWidget(nw);
     
     _XfemComponentFlag(nw) = False;
     _XfemPrepareFlags(nw) = XfePrepareNone;
@@ -1645,7 +1748,7 @@ InitializePostHook(Widget rw,Widget nw)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-SetValuesPostHook(Widget ow,Widget rw,Widget nw)
+CoreSetValuesPostHook(Widget ow,Widget rw,Widget nw)
 {
 	assert( nw != NULL );
 	assert( _XfeIsAlive(nw) );
@@ -1676,8 +1779,8 @@ SetValuesPostHook(Widget ow,Widget rw,Widget nw)
 		}
 	}
 	
-	/* Update the widget rect */
-	_XfeManagerUpdateRect(nw);
+	/* Update the widget boundary */
+	_XfeManagerUpdateBoundary(nw);
 
 	/* Clear the window if it is dirty and realized */
 	if (XtIsRealized(nw) && (_XfemConfigFlags(nw) & XfeConfigDirty))
@@ -1687,11 +1790,8 @@ SetValuesPostHook(Widget ow,Widget rw,Widget nw)
 	
 	if (_XfemConfigFlags(nw) & XfeConfigLayout)
 	{
-		/* Layout the components */
-		_XfeManagerLayoutComponents(nw);
-		
-		/* Layout the children */
-		_XfeManagerLayoutChildren(nw);
+		/* Layout the widget */
+		_XfeManagerLayoutWidget(nw);
 	}
 	
 	return (_XfemConfigFlags(nw) & XfeConfigExpose);
@@ -1761,8 +1861,8 @@ ConstraintSetValuesPostHook(Widget oc,Widget rc,Widget nc)
 		_XfeMakeGeometryRequest(w,width,height);
 	}
 	
-	/* Update the widget rect */
-	_XfeManagerUpdateRect(w);
+	/* Update the widget boundary */
+	_XfeManagerUpdateBoundary(w);
 
 	/* Clear the window if it is dirty and realized */
 	if (XtIsRealized(w) && (_XfemConfigFlags(w) & XfeConfigDirty))
@@ -1772,125 +1872,13 @@ ConstraintSetValuesPostHook(Widget oc,Widget rc,Widget nc)
 	
 	if (_XfemConfigFlags(w) & XfeConfigLayout)
 	{
-		/* Layout the components */
-		_XfeManagerLayoutComponents(w);
-		
-		/* Layout the children */
-		_XfeManagerLayoutChildren(w);
+		/* Layout the widget */
+		_XfeManagerLayoutWidget(w);
 	}
 	
 	return (_XfemConfigFlags(w) & XfeConfigExpose);
 }
 /*----------------------------------------------------------------------*/
-static void
-PreferredGeometry(Widget w,Dimension *width,Dimension *height)
-{
-	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
-	*height = _XfemOffsetTop(w) + _XfemOffsetBottom(w);
-}
-/*----------------------------------------------------------------------*/
-static void
-MinimumGeometry(Widget w,Dimension *width,Dimension *height)
-{
-	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
-	*height = _XfemOffsetTop(w) + _XfemOffsetBottom(w);
-}
-/*----------------------------------------------------------------------*/
-static void
-UpdateRect(Widget w)
-{
-    XfeRectSet(&_XfemWidgetRect(w),
-			   
-			   _XfemOffsetLeft(w),
-			   
-			   _XfemOffsetTop(w),
-			   
-			   _XfeWidth(w) - _XfemOffsetLeft(w) - _XfemOffsetRight(w),
-			   
-			   _XfeHeight(w) - _XfemOffsetTop(w) - _XfemOffsetBottom(w));
-}
-/*----------------------------------------------------------------------*/
-static void
-DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
-{
-	if (!_XfemShadowThickness(w))
- 	{
- 		return;
- 	}
-
-    /* Draw the shadow */
-    _XmDrawShadows(XtDisplay(w),
-				   _XfeWindow(w),
-				   _XfemTopShadowGC(w),_XfemBottomShadowGC(w),
-				   0,0,
-				   _XfeWidth(w),_XfeHeight(w),
-				   _XfemShadowThickness(w),
-				   _XfemShadowType(w));
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Layable children functions											*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void
-LayableInfoUpdate(Widget w)
-{
-	/* Make sure this class needs to count layable children */
-	if (!_XfeManagerCountLayableChildren(w))
-	{
-		return;
-    }
-
-	/* Reset the lc info */
-	LayableInfoFree(w);
-
-	/* Make sure the widget is alive */
-	if (!_XfeIsAlive(w))
-	{
-		return;
-	}
-
-#ifdef DEBUG
-	XfeDebugPrintfFunction(w,"LayableInfoUpdate",NULL);
-#endif
-
-	/* Obtain the layable children info */
-	_XfeManagerGetLayableChildrenInfo(w,&_XfemLCInfo(w));
-}
-/*----------------------------------------------------------------------*/
-static void
-LayableInfoFree(Widget w)
-{
-	/* Make sure this class needs to count layable children */
-	if (!_XfeManagerCountLayableChildren(w))
-	{
-		return;
-    }
-
-	/* Destroy the layable children list if needed */
-	if (_XfemLayableChildren(w) != NULL)
-	{
-		XfeLinkedDestroy(_XfemLayableChildren(w),NULL,NULL);
-	}
-
-	/* Initialize the layable children info */
-	_XfemLayableChildren(w) = NULL;
-
-	_XfemNumLayableChildren(w) = 0;
-
-	_XfemMaxLayableChildrenWidth(w) = 0;
-	_XfemMaxLayableChildrenHeight(w) = 0;
-
-	_XfemMinLayableChildrenWidth(w) = 0;
-	_XfemMinLayableChildrenHeight(w) = 0;
-
-	_XfemTotalLayableChildrenWidth(w) = 0;
-	_XfemTotalLayableChildrenHeight(w) = 0;
-}
-/*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1908,6 +1896,9 @@ _XfeManagerPreferredGeometry(Widget w,Dimension *width,Dimension *height)
 	Dimension				min_height = 
 		XfeMax(_XfemMinHeight(w),XfeMANAGER_DEFAULT_HEIGHT);
 	
+	assert( width != NULL );
+	assert( height != NULL );
+
 	if (mc->xfe_manager_class.preferred_geometry)
 	{
 		(*mc->xfe_manager_class.preferred_geometry)(w,width,height);
@@ -1927,70 +1918,98 @@ _XfeManagerPreferredGeometry(Widget w,Dimension *width,Dimension *height)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfeManagerMinimumGeometry(Widget w,Dimension *width,Dimension *height)
+_XfeManagerUpdateBoundary(Widget w)
 {
-	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
-
-	if (mc->xfe_manager_class.minimum_geometry)
+	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
+	
+	if (mc->xfe_manager_class.update_boundary)
 	{
-		(*mc->xfe_manager_class.minimum_geometry)(w,width,height);
+		(*mc->xfe_manager_class.update_boundary)(w);
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfeManagerUpdateRect(Widget w)
+_XfeManagerUpdateChildrenInfo(Widget w)
 {
 	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
 	
-	if (mc->xfe_manager_class.update_rect)
+	if (mc->xfe_manager_class.update_children_info)
 	{
-		(*mc->xfe_manager_class.update_rect)(w);
+		(*mc->xfe_manager_class.update_children_info)(w);
 	}
 }
 /*----------------------------------------------------------------------*/
-/* extern */ Boolean
-_XfeManagerAcceptChild(Widget child)
+/* extern */ void
+_XfeManagerLayoutWidget(Widget w)
 {
-	Boolean					result = True;
-	Widget					w = XtParent(child);
-	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
+	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
 	
-	if (mc->xfe_manager_class.accept_child)
+	if (mc->xfe_manager_class.layout_widget)
 	{
-		result = (*mc->xfe_manager_class.accept_child)(child);
+		(*mc->xfe_manager_class.layout_widget)(w);
 	}
-
-	return result;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-_XfeManagerInsertChild(Widget child)
+_XfeManagerAcceptStaticChild(Widget child)
 {
 	Boolean					result = XtIsManaged(child);
 	Widget					w = XtParent(child);
 	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
 	
-	if (mc->xfe_manager_class.insert_child)
+	if (mc->xfe_manager_class.accept_static_child)
 	{
-		result = (*mc->xfe_manager_class.insert_child)(child);
+		result = (*mc->xfe_manager_class.accept_static_child)(child);
 	}
 
 	return result;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-_XfeManagerDeleteChild(Widget child)
+_XfeManagerInsertStaticChild(Widget child)
 {
 	Boolean					result = XtIsManaged(child);
 	Widget					w = XtParent(child);
 	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
 	
-	if (mc->xfe_manager_class.delete_child)
+	if (mc->xfe_manager_class.insert_static_child)
 	{
-		result = (*mc->xfe_manager_class.delete_child)(child);
+		result = (*mc->xfe_manager_class.insert_static_child)(child);
 	}
 
 	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+_XfeManagerDeleteStaticChild(Widget child)
+{
+	Boolean					result = XtIsManaged(child);
+	Widget					w = XtParent(child);
+	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
+	
+	if (mc->xfe_manager_class.delete_static_child)
+	{
+		result = (*mc->xfe_manager_class.delete_static_child)(child);
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+_XfeManagerLayoutStaticChildren(Widget w)
+{
+	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
+	
+ 	if ((_XfeWidth(w) <= MIN_LAYOUT_WIDTH) || 
+		(_XfeHeight(w) <= MIN_LAYOUT_HEIGHT))
+	{
+		return;
+	}
+	
+	if (mc->xfe_manager_class.layout_static_children)
+	{
+		(*mc->xfe_manager_class.layout_static_children)(w);
+	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
@@ -2056,22 +2075,6 @@ _XfeManagerLayoutComponents(Widget w)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfeManagerLayoutChildren(Widget w)
-{
-	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
-
- 	if ((_XfeWidth(w) <= MIN_LAYOUT_WIDTH) || (_XfeHeight(w) <= MIN_LAYOUT_HEIGHT))
-	{
-		return;
-	}
-	
-	if (mc->xfe_manager_class.layout_children)
-	{
-		(*mc->xfe_manager_class.layout_children)(w);
-	}
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
 _XfeManagerDrawBackground(Widget		w,
 						  XEvent *		event,
 						  Region		region,
@@ -2113,30 +2116,10 @@ _XfeManagerDrawShadow(Widget		w,
 	}
 }
 /*----------------------------------------------------------------------*/
-/* extern */ Boolean
-_XfeManagerChildIsLayable(Widget child)
-{
-	Widget					w = _XfeParent(child);
-	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
-	Boolean					filter = True;
-
-	if (mc->xfe_manager_class.child_is_layable != NULL)
-	{
-		filter = (*mc->xfe_manager_class.child_is_layable)(child);
-	}
-
-#if 0	
- 	return (filter && _XfeChildIsShown(child) && _XfeIsRealized(child));
-#else
-	return (filter);
-#endif
-}
-/*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeManager private functions											*/
+/* XfeManager constraint chain functions								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
@@ -2146,7 +2129,7 @@ _XfeManagerChainInitialize(Widget rw,Widget nw,WidgetClass wc)
 
 	if (XtClass(nw) == wc)
 	{
-		InitializePostHook(rw,nw);
+		CoreInitializePostHook(rw,nw);
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -2157,7 +2140,7 @@ _XfeManagerChainSetValues(Widget ow,Widget rw,Widget nw,WidgetClass wc)
 
 	if (XtClass(nw) == wc)
 	{
-		return SetValuesPostHook(ow,rw,nw);
+		return CoreSetValuesPostHook(ow,rw,nw);
 	}
 	
 	return False;
@@ -2189,305 +2172,13 @@ _XfeConstraintChainSetValues(Widget ow,Widget rw,Widget nw,WidgetClass wc)
 	return False;
 }
 /*----------------------------------------------------------------------*/
-/*																		*/
-/* Name:		_XfeManagerChildrenInfo()								*/
-/*																		*/
-/* Purpose:		Obtain information about the manager's children			*/
-/*																		*/
-/* Ret Val:		void													*/
-/*																		*/
-/* Args in:		w					The manager widget.					*/
-/*																		*/
-/* Args out:	max_width_out		Max managed child width				*/
-/*				max_height_out		Max managed child height			*/
-/*				num_managed_out		Num managed children				*/
-/*				num_components_out	Num component children				*/
-/*																		*/
-/* Comments:	Output args can be NULL - for which no value is			*/
-/*				assigned or returned.									*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-/* extern */ void
-_XfeManagerChildrenInfo(Widget			w,
-						Dimension *		max_width_out,
-						Dimension *		max_height_out,
-						Dimension *		total_width_out,
-						Dimension *		total_height_out,
-						Cardinal *		num_managed_out,
-						Cardinal *		num_components_out)
-{
-	Dimension			max_width = 0;
-	Dimension			max_height = 0;
-	Dimension			total_width = 0;
-	Dimension			total_height = 0;
-	Cardinal			num_managed = 0;
-	Cardinal			num_components = 0;
-	Widget				child;
-	Cardinal			i;
-
-	if (!XfeIsManager(w))
-	{
-		_XfeWarning(w,MESSAGE5);
-
-		return;
-	}
-
-	/* Iterate through all the items */
-	for (i = 0; i < _XfemNumChildren(w); i++)
-	{
-		child = _XfemChildren(w)[i];
-
-		/* Check for private components */
-		if (_XfeManagerPrivateComponent(child))
-		{
-				num_components++;
-		}
-		else
-		{
-			/* Make sure widget is shown */
-			if (_XfeChildIsShown(child))
-			{
-				Dimension width;
-				Dimension height;
-
-				if (XfeIsPrimitive(child))
-				{
-					width = _XfePreferredWidth(child);
-				}
-				else
-				{
-					width = _XfeWidth(child);
-				}
-
-				if (XfeIsPrimitive(child))
-				{
-					height = _XfePreferredHeight(child);
-				}
-				else
-				{
-					height = _XfeHeight(child);
-				}
-
-				/* Keep track of largest width */
-				if (width > max_width)
-				{
-					max_width = width;
-				}
 
 
-				/* Keep track of largest height */
-				if (height > max_height)
-				{
-					max_height = height;
-				}
-
-				total_width  += width;
-				total_height += height;
-				
-				num_managed++;
-			}
-		}
-	}
-
-	/* Assign only required arguments */
-	if (max_width_out) 
-	{
-		*max_width_out = max_width;
-	}
-
-	if (max_height_out) 
-	{
-		*max_height_out = max_height;
-	}
-
-	if (total_width_out) 
-	{
-		*total_width_out = total_width;
-	}
-
-	if (total_height_out) 
-	{
-		*total_height_out = total_height;
-	}
-
-	if (num_managed_out) 
-	{
-		*num_managed_out = num_managed;
-	}
-
-	if (num_components_out) 
-	{
-		*num_components_out = num_components;
-	}
-}
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		_XfeManagerComponentInfo()								*/
-/*																		*/
-/* Purpose:		Obtain information about the manager's components		*/
-/*																		*/
-/* Ret Val:		void													*/
-/*																		*/
-/* Args in:		w					The manager widget.					*/
-/*																		*/
-/* Args out:	max_width_out		Max managed child width				*/
-/*				max_height_out		Max managed child height			*/
-/*																		*/
-/* Comments:	Output args can be NULL - for which no value is			*/
-/*				assigned or returned.									*/
+/* XfeManager private functions											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-/* extern */ void
-_XfeManagerComponentInfo(Widget				w,
-						 Dimension *		max_width_out,
-						 Dimension *		max_height_out)
-{
-	Dimension			max_width = 0;
-	Dimension			max_height = 0;
-	Widget				child;
-	Cardinal			i;
-
-	if (!XfeIsManager(w))
-	{
-		_XfeWarning(w,MESSAGE5);
-
-		return;
-	}
-
-	/* Iterate through all the items */
-	for (i = 0; i < _XfemNumChildren(w); i++)
-	{
-		child = _XfemChildren(w)[i];
-
-		/* Check for private components */
-		if (_XfeManagerPrivateComponent(child) &&
-			XtIsManaged(child) && 
-			_XfeIsAlive(child))
-		{
-			/* Keep track of largest width */
-			if (_XfeWidth(child) > max_width)
-			{
-				max_width = _XfeWidth(child);
-			}
-
-			/* Keep track of largest height */
-			if (_XfeHeight(child) > max_height)
-			{
-				max_height = _XfeHeight(child);
-			}
-		}
-	}
-
-	/* Assign only required arguments */
-	if (max_width_out) 
-	{
-		*max_width_out = max_width;
-	}
-
-	if (max_height_out) 
-	{
-		*max_height_out = max_height;
-	}
-}
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Name:		_XfeManagerGetLayableChildren()							*/
-/*																		*/
-/* Purpose:		Obtain a list of layable children						*/
-/*																		*/
-/* Ret Val:		void													*/
-/*																		*/
-/* Args in:		w							The manager widget.			*/
-/*																		*/
-/* Args out:	layable_children_out		Array of layable children	*/
-/*				num_layable_children_out	Size of the array			*/
-/*				max_width_out				Max layable children width.	*/
-/*				max_height_out				Max layable children height.*/
-/*																		*/
-/* Comments:	Its up to the caller to XtFree() the value returned in	*/
-/*              layable_children_out (if its not NULL)					*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-/* extern */ void
-_XfeManagerGetLayableChildrenInfo(Widget						w,
-								  XfeLayableChildrenInfoRec *	info)
-{
-	Widget				child;
-	Cardinal			i;
-
-	assert( _XfeIsAlive(w) );
-	assert( XfeIsManager(w) );
-
-	assert( info != NULL );
-
-	/* Initialize the results */
-	info->children = NULL;
-	info->num_children = 0;
-
-	info->max_width = 0;
-	info->max_height = 0;
-
-	info->min_width = 0;
-	info->min_height = 0;
-
-	info->total_width = 0;
-	info->total_height = 0;
-	
-	/* Proceed only if children exist */
-	if (_XfemNumChildren(w) > 0)
-	{
-		/* Allocate a layable children linked list */
-		info->children = XfeLinkedConstruct();
-		
-		/* Iterate through all the items */
-		for (i = 0; i < _XfemNumChildren(w); i++)
-		{
-			child = _XfeChildrenIndex(w,i);
-
-			/* Look for layable children and add them to the list */
-			if (_XfeManagerChildIsLayable(child))
-			{
-				/* Add a node to the list for this child */
-				XfeLinkNode node = 
-					XfeLinkedInsertAtTail(info->children,child);
-
-				/* Point child's link node constraint resource to the node */
-				_XfeManagerLinkNode(child) = node;
-				
-				/* Keep track of the largest width */
-				if (_XfeWidth(child) > info->max_width)
-				{
-					info->max_width = _XfeWidth(child);
-				}
-				/* Keep track of the smallest width */
-				else if (_XfeWidth(child) < info->min_width)
-				{
-					info->min_width = _XfeWidth(child);
-				}
-
-				/* Keep track of the largest height */
-				if (_XfeHeight(child) > info->max_height)
-				{
-					info->max_height = _XfeHeight(child);
-				}
-				/* Keep track of the smallest height */
-				else if (_XfeHeight(child) < info->min_height)
-				{
-					info->min_height = _XfeHeight(child);
-				}
-
-				/* Keep track of the total width and height */
-				else if (_XfeHeight(child) < info->min_height)
-				{
-					info->total_width += _XfeWidth(child);
-					info->total_height += _XfeHeight(child);
-				}
-			}
-		}
-	}
-}
-/*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -2500,20 +2191,11 @@ XfeManagerLayout(Widget w)
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsManager(w) );
 
-	LayableInfoUpdate(w);
-
 	XfeResize(w);
 
 #if 0	
    /* Setup the max children dimensions */
-	_XfeManagerChildrenInfo(w,
-							&_XfemMaxChildWidth(w),
-							&_XfemMaxChildHeight(w),
-							&_XfemTotalChildrenWidth(w),
-							&_XfemTotalChildrenHeight(w),
-							&_XfemNumManaged(w),
-							&_XfemNumComponents(w));
-	
+	_XfeManagerUpdateChildrenInfo(w);
 
 	/* Make sure some components exist */
 	if (!_XfemNumComponents(w))
@@ -2521,104 +2203,8 @@ XfeManagerLayout(Widget w)
 		return;
 	}
 	
-	/* Layout the components */
-	_XfeManagerLayoutComponents(w);
-	
-	/* Layout the children */
-	_XfeManagerLayoutChildren(w);
+	/* Layout the widget */
+	_XfeManagerLayoutWidget(w);
 #endif
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeManagerSetChildrenValues(Widget		w,
-							ArgList		args,
-							Cardinal	count,
-							Boolean		only_managed)
-{
-	Cardinal i;
-   
-	assert(w != NULL);
-   
-	/* Make sure its a Manager */
-	if (!XfeIsManager(w))
-	{
-		_XfeWarning(w,MESSAGE5);
-		return;
-	}
-
-	_XfemIgnoreConfigure(w) = True;
-
-	/* Iterate through all the items */
-	for (i = 0; i < _XfemNumChildren(w); i++)
-	{
-		Widget obj = _XfemChildren(w)[i];
-
-		if (_XfeIsAlive(obj))
-		{
-			if (only_managed && XtIsManaged(obj))
-			{
-				XtSetValues(obj,args,count);
-			}
-			else
-			{
-				XtSetValues(obj,args,count);
-			}
-		}
-	}
-   
-	_XfemIgnoreConfigure(w) = False;
-
-/*    XfeConfigure(w); */
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeManagerApply(Widget				w,
-				XfeManagerApplyProc	proc,
-				XtPointer			data,
-                Boolean				private_components,
-				Boolean				only_managed)
-{
-   Cardinal i;
-
-   assert(w != NULL);
-
-   /* Make sure its a Manager */
-   if (!XfeIsManager(w))
-   {
-      _XfeWarning(w,MESSAGE5);
-
-      return;
-   }
-
-	/* Show the action button as needed */
-	_XfemIgnoreConfigure(w) = True;
-
-   /* Iterate through all the items */
-   for (i = 0; i < _XfemNumChildren(w); i++)
-   {
-	   Widget child = _XfemChildren(w)[i];
-	   
-	   if (child && _XfeIsAlive(child))
-	   {
-		   if ( (!_XfeManagerPrivateComponent(child)) || private_components)
-		   {
-			   if (only_managed)
-			   {
-				   if (XtIsManaged(child))
-				   {
-					   proc(w,child,data);
-				   }
-			   }
-			   else
-			   {
-				   proc(w,child,data);
-			   }
-		   }
-	   }
-   }
-
-	_XfemIgnoreConfigure(w) = False;
-
-	XfeManagerLayout(w);
 }
 /*----------------------------------------------------------------------*/

@@ -296,8 +296,7 @@ _XFE_WIDGET_CLASS_RECORD(label,Label) =
     {
 		XfeInheritBitGravity,					/* bit_gravity			*/
 		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
+		XfeInheritUpdateBoundary,				/* update_boundary		*/
 		PrepareComponents,						/* prepare_components	*/
 		LayoutComponents,						/* layout_components	*/
 		XfeInheritDrawBackground,				/* draw_background		*/
@@ -687,7 +686,7 @@ LayoutString(Widget w)
 	{
 	case XmALIGNMENT_BEGINNING:
 
-		lp->label_rect.x = _XfeRectX(w);
+		lp->label_rect.x = _XfeBoundaryX(w);
 
 		break;
 		
@@ -730,12 +729,12 @@ DrawString(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 	rect.y			= lp->label_rect.y;
 
 	/* Determine whether we need to truncate the string */
-	if (lp->truncate_label && (lp->label_rect.width > _XfeRectWidth(w)))
+	if (lp->truncate_label && (lp->label_rect.width > _XfeBoundaryWidth(w)))
 	{
 		string = CreateTruncatedString(w);
 
-		rect.width	= _XfeRectWidth(w);
-		rect.x		= _XfeRectX(w);
+		rect.width	= _XfeBoundaryWidth(w);
+		rect.x		= _XfeBoundaryX(w);
 
 		need_to_free_string = True;		
 	}
@@ -765,7 +764,7 @@ DrawString(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 					 rect.width,
 					 lp->label_alignment,
 					 lp->label_direction,
-					 &_XfeWidgetRect(w));
+					 &_XfeBoundary(w));
     }
     else
     {
@@ -780,7 +779,7 @@ DrawString(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 					 rect.width,
 					 lp->label_alignment,
 					 lp->label_direction,
-					 &_XfeWidgetRect(w));
+					 &_XfeBoundary(w));
 
 		XmStringDraw(XtDisplay(w),
 					 _XfePrimitiveDrawable(w),
@@ -792,7 +791,7 @@ DrawString(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 					 rect.width,
 					 lp->label_alignment,
 					 lp->label_direction,
-					 &_XfeWidgetRect(w));
+					 &_XfeBoundary(w));
     }
 
 	/* Free the string if needed */
@@ -924,7 +923,7 @@ CreateTruncatedString(Widget w)
 
 		if (psz_tmp)
 		{
-			Dimension max_width = _XfeRectWidth(w) - lp->misc_offset;
+			Dimension max_width = _XfeBoundaryWidth(w) - lp->misc_offset;
 
 			if (!_XfeIsSensitive(w))
 			{

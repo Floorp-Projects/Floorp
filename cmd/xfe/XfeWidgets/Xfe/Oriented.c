@@ -225,7 +225,7 @@ static const XtResource constraint_resources[] =
 _XFE_WIDGET_CLASS_RECORD(oriented,Oriented) =
 {
 	{
-		(WidgetClass) &xfeManagerClassRec,		/* superclass       	*/
+		(WidgetClass) &xfeDynamicManagerClassRec,/* superclass       	*/
 		"XfeOriented",							/* class_name       	*/
 		sizeof(XfeOrientedRec),					/* widget_size      	*/
 		NULL,									/* class_initialize 	*/
@@ -290,26 +290,35 @@ _XFE_WIDGET_CLASS_RECORD(oriented,Oriented) =
 		NULL,                                   /* extension           	*/
 	},
 
-	/* XfeManager Part 	*/
+    /* XfeManager Part 	*/
 	{
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		XfeInheritPreferredGeometry,			/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		NULL,									/* accept_child			*/
-		NULL,									/* insert_child			*/
-		NULL,									/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		NULL,									/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
-	},
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		NULL,									/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		NULL,									/* accept_static_child		*/
+		NULL,									/* insert_static_child		*/
+		NULL,									/* delete_static_child		*/
+		NULL,									/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
+    },
+
+	/* XfeDynamicManager Part */
+    {
+		NULL,									/* accept_dynamic_child		*/
+		NULL,									/* insert_dynamic_child		*/
+		NULL,									/* delete_dynamic_child		*/
+		NULL,									/* layout_dynamic_children	*/
+		XfeInheritGetChildDimensions,			/* get_child_dimensions		*/
+		NULL,									/* extension				*/
+    },
 
 	/* XfeOriented Part */
 	{
@@ -1127,6 +1136,11 @@ XfeOrientedChildrenSetAllowDrag(Widget w,Boolean allow_drag)
 		return;
 	}
 	
-	XfeManagerApply(w,ApplyChildSetAllowDrag,(XtPointer) allow_drag,False,False);
+	XfeManagerApply(w,
+					XfeCHILDREN_INFO_ANY,
+					ApplyChildSetAllowDrag,
+					(XtPointer) allow_drag,
+					False,
+					True);
 }
 /*----------------------------------------------------------------------*/

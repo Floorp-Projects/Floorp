@@ -108,12 +108,12 @@ typedef struct _XfeCaptionPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeCaptionRec
 {
-    CorePart			core;
-    CompositePart		composite;
-    ConstraintPart		constraint;
-    XmManagerPart		manager;
-    XfeManagerPart		xfe_manager;
-    XfeCaptionPart		xfe_caption;
+    CorePart				core;
+    CompositePart			composite;
+    ConstraintPart			constraint;
+    XmManagerPart			manager;
+    XfeManagerPart			xfe_manager;
+    XfeCaptionPart			xfe_caption;
 } XfeCaptionRec;
 
 /*----------------------------------------------------------------------*/

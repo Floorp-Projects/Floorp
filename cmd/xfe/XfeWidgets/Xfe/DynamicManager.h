@@ -18,48 +18,37 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/TempTwo.h>											*/
-/* Description:	XfeTempTwo widget public header file.					*/
+/* Name:		<Xfe/DynamicManager.h>									*/
+/* Description:	XfeDynamicManager widget public header file.			*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeTempTwo_h_							/* start TempTwo.h		*/
-#define _XfeTempTwo_h_
+#ifndef _XfeDynamicManager_h_				/* start DynamicManager.h	*/
+#define _XfeDynamicManager_h_
 
-#include <Xfe/DynamicManager.h>
+#include <Xfe/Manager.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
+/* XfeDynamicManager class names										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-externalref WidgetClass xfeTempTwoWidgetClass;
+externalref WidgetClass xfeDynamicManagerWidgetClass;
 
-typedef struct _XfeTempTwoClassRec *		XfeTempTwoWidgetClass;
-typedef struct _XfeTempTwoRec *				XfeTempTwoWidget;
+typedef struct _XfeDynamicManagerClassRec *		XfeDynamicManagerWidgetClass;
+typedef struct _XfeDynamicManagerRec *			XfeDynamicManagerWidget;
 
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeBox subclass test macro											*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define XfeIsTempTwo(w)	XtIsSubclass(w,xfeTempTwoWidgetClass)
+#define XfeIsDynamicManager(w)	XtIsSubclass(w,xfeDynamicManagerWidgetClass)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeTempTwo public methods											*/
+/* XfeDynamicManager class names										*/
 /*																		*/
-/*----------------------------------------------------------------------*/
-extern Widget
-XfeCreateTempTwo				(Widget		pw,
-								 String		name,
-								 Arg *		av,
-								 Cardinal	ac);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION
 
-#endif											/* end TempTwo.h		*/
+#endif										/* end DynamicManager.h		*/

@@ -297,6 +297,21 @@ RegisterChromeChildType(void)
     XmRepTypeRegister(XmRChromeChildType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
+#if 0
+static void
+RegisterManagerChildType(void)
+{
+    static String names[] = 
+    { 
+		"manager_component_child",
+		"manager_dynamic_child",
+		"manager_static_child"
+    };
+    
+    XmRepTypeRegister(XmRManagerChildType,names,NULL,XtNumber(names));
+}
+/*----------------------------------------------------------------------*/
+#endif
 /* extern */ void
 XfeRegisterRepresentationTypes(void)
 {
@@ -307,6 +322,7 @@ XfeRegisterRepresentationTypes(void)
 	RegisterButtonType();
 	RegisterChromeChildType();
 	RegisterLocationType();
+/* 	RegisterManagerChildType(); */
 	RegisterPaneChildAttachment();
 	RegisterPaneChildType();
 	RegisterPaneDragModeType();

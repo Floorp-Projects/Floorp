@@ -61,8 +61,14 @@ static Boolean	SetValues		(Widget,Widget,Widget,ArgList,
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		LayoutChildren		(Widget);
 static void		LayoutComponents	(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void		LayoutDynamicChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -250,24 +256,32 @@ _XFE_WIDGET_CLASS_RECORD(taskbar,TaskBar) =
 	},
 
     /* XfeManager Part 	*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		NULL,									/* accept_static_child		*/
+		NULL,									/* insert_static_child		*/
+		NULL,									/* delete_static_child		*/
+		NULL,									/* layout_static_children	*/
+		XfeInheritChangeManaged,				/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		XfeInheritDrawComponents,				/* draw_components			*/
+		NULL,									/* extension				*/
+    },
+
+	/* XfeDynamicManager Part */
     {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		XfeInheritAcceptChild,					/* accept_child			*/
-		XfeInheritInsertChild,					/* insert_child			*/
-		XfeInheritDeleteChild,					/* delete_child			*/
-		XfeInheritChangeManaged,				/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		LayoutChildren,							/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		XfeInheritDrawComponents,				/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
+		XfeInheritAcceptDynamicChild,			/* accept_dynamic_child		*/
+		XfeInheritInsertDynamicChild,			/* insert_dynamic_child		*/
+		XfeInheritDeleteDynamicChild,			/* delete_dynamic_child		*/
+		LayoutDynamicChildren,					/* layout_dynamic_children	*/
+		NULL,									/* extension				*/
     },
 
 	/* XfeOriented Part */
@@ -327,7 +341,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 						 XmNmarginRight,		0,
 						 XmNmarginTop,			0,
 						 XmNmarginBottom,		0,
-						 XmNprivateComponent,	True,
+/* 						 XmNprivateComponent,	True, */
 						 XmNtraversalOn,		False,
 						 XmNhighlightThickness,	0,
 						 XmNarmOffset,			0,
@@ -434,50 +448,6 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutChildren(Widget w)
-{
-    XfeTaskBarPart *		tp = _XfeTaskBarPart(w);
-    XfeToolBarWidgetClass	tbc = (XfeToolBarWidgetClass)xfeToolBarWidgetClass;
-	Dimension				action_width;
-	Dimension				action_height;
-
-	if (tp->show_action_button && _XfeIsAlive(tp->action_button))
-	{
-		action_width  = _XfeWidth(tp->action_button);
-		action_height = _XfeHeight(tp->action_button);
-	}
-	else
-	{
-		action_width  = 0;
-		action_height = 0;
-	}
-
-	/* Add the action button's dimensions if needed */
-    switch (_XfeOrientedOrientation(w))
-	{
-	case XmHORIZONTAL:
-
-		_XfemMarginLeft(w) += action_width;
-		
-		(*tbc->xfe_manager_class.layout_children)(w);
-		
-		_XfemMarginLeft(w) -= action_width;
-
-		break;
-		
-	case XmVERTICAL:
-
-		_XfemMarginTop(w) += action_height;
-		
-		(*tbc->xfe_manager_class.layout_children)(w);
-		
-		_XfemMarginTop(w) -= action_height;
-
-		break;
-    }
-}
-/*----------------------------------------------------------------------*/
-static void
 LayoutComponents(Widget w)
 {
     XfeTaskBarPart *	tp = _XfeTaskBarPart(w);
@@ -491,19 +461,66 @@ LayoutComponents(Widget w)
 		return;
 	}
 
-	/* Do our layout */
-    switch(_XfeOrientedOrientation(w))
+	/* Horizontal */
+    if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
 	{
-	case XmHORIZONTAL:
 		LayoutComponentsHorizontal(w);
-		break;
-
-	case XmVERTICAL:
+	}
+	/* Vertical */
+	else
+	{
 		LayoutComponentsVertical(w);
-		break;
 	}
 }
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+LayoutDynamicChildren(Widget w)
+{
+    XfeTaskBarPart *		tp = _XfeTaskBarPart(w);
+	Dimension				action_width;
+	Dimension				action_height;
+
+	if (tp->show_action_button && _XfeIsAlive(tp->action_button))
+	{
+		action_width  = _XfeWidth(tp->action_button);
+		action_height = _XfeHeight(tp->action_button);
+	}
+	else
+	{
+		action_width  = 0;
+		action_height = 0;
+	}
+	
+	/* Horizontal */
+    if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
+	{
+		/* Add the action button's dimensions to the left margin */
+		_XfemMarginLeft(w) += action_width;
+		
+		(*xfeToolBarClassRec.xfe_dynamic_manager_class.layout_dynamic_children)(w);
+	
+		/* Restore the left margin */
+		_XfemMarginLeft(w) -= action_width;
+	}
+	else
+	{
+		/* Add the action button's dimensions to the top margin */
+		_XfemMarginTop(w) += action_height;
+		
+		(*xfeToolBarClassRec.xfe_dynamic_manager_class.layout_dynamic_children)(w);
+		
+		/* Restore the top margin */
+		_XfemMarginTop(w) -= action_height;
+	}
+}
+/*----------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/

@@ -28,7 +28,7 @@
 #define _XfeOriented_h_
 
 #include <Xfe/Xfe.h>
-#include <Xfe/Manager.h>
+#include <Xfe/DynamicManager.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 

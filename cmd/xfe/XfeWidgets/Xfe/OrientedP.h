@@ -28,7 +28,7 @@
 #define _XfeOrientedP_h_
 
 #include <Xfe/Oriented.h>
-#include <Xfe/ManagerP.h>
+#include <Xfe/DynamicManagerP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
    
@@ -70,6 +70,7 @@ typedef struct _XfeOrientedClassRec
 	ConstraintClassPart			constraint_class;
 	XmManagerClassPart			manager_class;
 	XfeManagerClassPart			xfe_manager_class;
+	XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
 	XfeOrientedClassPart		xfe_oriented_class;
 } XfeOrientedClassRec;
 
@@ -109,12 +110,13 @@ typedef struct _XfeOrientedPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeOrientedRec
 {
-   CorePart				core;
-   CompositePart		composite;
-   ConstraintPart		constraint;
-   XmManagerPart		manager;
-   XfeManagerPart		xfe_manager;
-   XfeOrientedPart		xfe_oriented;
+	CorePart				core;
+	CompositePart			composite;
+	ConstraintPart			constraint;
+	XmManagerPart			manager;
+	XfeManagerPart			xfe_manager;
+	XfeDynamicManagerPart	xfe_dynamic_manager;
+	XfeOrientedPart			xfe_oriented;
 } XfeOrientedRec;
 
 /*----------------------------------------------------------------------*/
@@ -134,9 +136,10 @@ typedef struct _XfeOrientedConstraintPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeOrientedConstraintRec
 {
-    XmManagerConstraintPart			manager;
-    XfeManagerConstraintPart		xfe_manager;
-    XfeOrientedConstraintPart		xfe_oriented;
+    XmManagerConstraintPart				manager;
+    XfeManagerConstraintPart			xfe_manager;
+    XfeDynamicManagerConstraintPart		xfe_dynamic_manager;
+    XfeOrientedConstraintPart			xfe_oriented;
 } XfeOrientedConstraintRec;
 
 /*----------------------------------------------------------------------*/

@@ -61,9 +61,9 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void 	Initialize			(Widget,Widget,ArgList,Cardinal *);
-static void 	Destroy				(Widget);
-static Boolean	SetValues			(Widget,Widget,Widget,ArgList,Cardinal *);
+static void 	CoreInitialize		(Widget,Widget,ArgList,Cardinal *);
+static void 	CoreDestroy			(Widget);
+static Boolean	CoreSetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -78,11 +78,11 @@ static Boolean	ConstraintSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
-static Boolean	InsertChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static void		LayoutChildren		(Widget);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -282,7 +282,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
 		NULL,									/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
-		Initialize,								/* initialize			*/
+		CoreInitialize,							/* initialize			*/
 		NULL,									/* initialize_hook		*/
 		XtInheritRealize,						/* realize				*/
 		NULL,									/* actions				*/
@@ -294,10 +294,10 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
 		XtExposeCompressMaximal,                /* compress_exposure	*/
 		TRUE,                                   /* compress_enterleave	*/
 		FALSE,                                  /* visible_interest		*/
-		Destroy,								/* destroy				*/
+		CoreDestroy,							/* destroy				*/
 		XtInheritResize,                        /* resize				*/
 		XtInheritExpose,						/* expose				*/
-		SetValues,                              /* set_values			*/
+		CoreSetValues,							/* set_values			*/
 		NULL,                                   /* set_values_hook		*/
 		XtInheritSetValuesAlmost,				/* set_values_almost	*/
 		NULL,									/* get_values_hook		*/
@@ -342,24 +342,23 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
     },
     
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		NULL,									/* layout_components	*/
-		LayoutChildren,							/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		NULL,									/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		NULL,									/* draw_components			*/
+		NULL,									/* extension				*/
     },
 
     /* XfeChrome Part */
@@ -439,23 +438,23 @@ DefaultChromeChildType(Widget child,int offset,XrmValue * value)
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
+CoreInitialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
-    XfeChromePart *		cp = _XfeChromePart(nw);
+/*     XfeChromePart *		cp = _XfeChromePart(nw); */
 
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeChromeWidgetClass);
 }
 /*----------------------------------------------------------------------*/
 static void
-Destroy(Widget w)
+CoreDestroy(Widget w)
 {
-    XfeChromePart *		cp = _XfeChromePart(w);
+/*     XfeChromePart *		cp = _XfeChromePart(w); */
 
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
+CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
     XfeChromePart *		np = _XfeChromePart(nw);
     XfeChromePart *		op = _XfeChromePart(ow);
@@ -555,8 +554,8 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 static void
 ConstraintInitialize(Widget rc,Widget nc,ArgList av,Cardinal * ac)
 {
-  	Widget						w = _XfeParent(nc);
-	XfeChromeConstraintPart *	cp = _XfeChromeConstraintPart(nc);
+/*   	Widget						w = _XfeParent(nc); */
+ 	XfeChromeConstraintPart *	cp = _XfeChromeConstraintPart(nc);
 
     /* Make sure the chrome child type is ok */
     XfeRepTypeCheck(nc,XmRChromeChildType,&cp->chrome_child_type,
@@ -569,7 +568,7 @@ ConstraintInitialize(Widget rc,Widget nc,ArgList av,Cardinal * ac)
 static Boolean
 ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList av,Cardinal * ac)
 {
-	Widget						w = XtParent(nc);
+/* 	Widget						w = XtParent(nc); */
  	XfeChromeConstraintPart *	ncp = _XfeChromeConstraintPart(nc);
  	XfeChromeConstraintPart *	ocp = _XfeChromeConstraintPart(oc);
 
@@ -690,7 +689,7 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	Widget				w = XtParent(child);
 	XfeChromePart *		cp = _XfeChromePart(w);
@@ -725,7 +724,7 @@ AcceptChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
 	Widget				w = XtParent(child);
 	XfeChromePart *		cp = _XfeChromePart(w);
@@ -792,7 +791,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
 	Widget				w = XtParent(child);
 	XfeChromePart *		cp = _XfeChromePart(w);
@@ -838,11 +837,11 @@ DeleteChild(Widget child)
 		cp->right_view = NULL;
 	}
 	
-	return !_XfeBeingDestroyed(w);
+	return _XfeIsAlive(w);
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutChildren(Widget w)
+LayoutStaticChildren(Widget w)
 {
     XfeChromePart *	cp = _XfeChromePart(w);
 
@@ -910,9 +909,9 @@ LayoutMenuBar(Widget w)
 
 	/* Place the menu bar on the very top and occupy the full width */
 	_XfeConfigureWidget(cp->menu_bar,
-						_XfemRectX(w),
-						_XfemRectY(w),
-						_XfemRectWidth(w),
+						_XfemBoundaryX(w),
+						_XfemBoundaryY(w),
+						_XfemBoundaryWidth(w),
 						_XfeHeight(cp->menu_bar));
 }
 /*----------------------------------------------------------------------*/
@@ -929,12 +928,12 @@ LayoutToolBox(Widget w)
 		/* Place the tool box right after the menu bar */
 		_XfeConfigureWidget(cp->tool_box,
 
-							_XfemRectX(w),
+							_XfemBoundaryX(w),
 							
 							_XfeY(cp->menu_bar) +
 							_XfeHeight(cp->menu_bar),
 							
-							_XfemRectWidth(w),
+							_XfemBoundaryWidth(w),
 
 							_XfeHeight(cp->tool_box));
 	}
@@ -944,11 +943,11 @@ LayoutToolBox(Widget w)
 		/* Place the tool box on the very top */
 		_XfeConfigureWidget(cp->tool_box,
 
-							_XfemRectX(w),
+							_XfemBoundaryX(w),
 							
-							_XfemRectY(w),
+							_XfemBoundaryY(w),
 							
-							_XfemRectWidth(w),
+							_XfemBoundaryWidth(w),
 
 							_XfeHeight(cp->tool_box));
 	}
@@ -971,13 +970,13 @@ LayoutDashBoard(Widget w)
 	/* Place the dash board the very bottom and occupy the full width */
 	_XfeConfigureWidget(cp->dash_board,
 
-						_XfemRectX(w),
+						_XfemBoundaryX(w),
 						
 						_XfeHeight(w) - 
 						_XfemOffsetBottom(w) -
 						_XfeHeight(cp->dash_board),
 
-						_XfemRectWidth(w),
+						_XfemBoundaryWidth(w),
 
 						_XfeHeight(cp->dash_board));
 
@@ -988,7 +987,7 @@ LayoutTopView(Widget w)
 {
     XfeChromePart *	cp = _XfeChromePart(w);
 	Widget			top = NULL;
-	Widget			bottom = NULL;
+/* 	Widget			bottom = NULL; */
 	int				y;
 	int				x;
 	int				width;
@@ -1013,21 +1012,21 @@ LayoutTopView(Widget w)
 	}
 	else
 	{
-		y = _XfemRectY(w);
+		y = _XfemBoundaryY(w);
 	}
 
 	/* left_view is shown */
 	if (SHOW_LEFT_VIEW(cp))
 	{
-		x = _XfemRectX(w) + _XfeWidth(cp->left_view);
+		x = _XfemBoundaryX(w) + _XfeWidth(cp->left_view);
 
-		width = _XfemRectWidth(w) - _XfeWidth(cp->left_view);
+		width = _XfemBoundaryWidth(w) - _XfeWidth(cp->left_view);
 	}
 	else
 	{
-		x = _XfemRectX(w);
+		x = _XfemBoundaryX(w);
 
-		width = _XfemRectWidth(w);
+		width = _XfemBoundaryWidth(w);
 	}
 	
 	/* right_view is shown */
@@ -1046,7 +1045,7 @@ static void
 LayoutBottomView(Widget w)
 {
     XfeChromePart *	cp = _XfeChromePart(w);
-	Widget			top = NULL;
+/* 	Widget			top = NULL; */
 	Widget			bottom = NULL;
 	int				y;
 	int				x;
@@ -1075,15 +1074,15 @@ LayoutBottomView(Widget w)
 	/* left_view is shown */
 	if (SHOW_LEFT_VIEW(cp))
 	{
-		x = _XfemRectX(w) + _XfeWidth(cp->left_view);
+		x = _XfemBoundaryX(w) + _XfeWidth(cp->left_view);
 
-		width = _XfemRectWidth(w) - _XfeWidth(cp->left_view);
+		width = _XfemBoundaryWidth(w) - _XfeWidth(cp->left_view);
 	}
 	else
 	{
-		x = _XfemRectX(w);
+		x = _XfemBoundaryX(w);
 
-		width = _XfemRectWidth(w);
+		width = _XfemBoundaryWidth(w);
 	}
 	
 	/* right_view is shown */
@@ -1145,7 +1144,7 @@ LayoutCenterView(Widget w)
 	}
 	else
 	{
-		y = _XfemRectY(w);
+		y = _XfemBoundaryY(w);
 	}
 
 	if (_XfeIsAlive(bottom))
@@ -1160,15 +1159,15 @@ LayoutCenterView(Widget w)
 	/* left_view is shown */
 	if (SHOW_LEFT_VIEW(cp))
 	{
-		x = _XfemRectX(w) + _XfeWidth(cp->left_view);
+		x = _XfemBoundaryX(w) + _XfeWidth(cp->left_view);
 
-		width = _XfemRectWidth(w) - _XfeWidth(cp->left_view);
+		width = _XfemBoundaryWidth(w) - _XfeWidth(cp->left_view);
 	}
 	else
 	{
-		x = _XfemRectX(w);
+		x = _XfemBoundaryX(w);
 
-		width = _XfemRectWidth(w);
+		width = _XfemBoundaryWidth(w);
 	}
 	
 	/* right_view is shown */
@@ -1187,10 +1186,10 @@ static void
 LayoutLeftView(Widget w)
 {
     XfeChromePart *	cp = _XfeChromePart(w);
-	Widget			top = NULL;
-	Widget			bottom = NULL;
-	Position		y1;
-	Position		y2;
+/* 	Widget			top = NULL; */
+/* 	Widget			bottom = NULL; */
+/* 	Position		y1; */
+/* 	Position		y2; */
 
 	assert( SHOW_LEFT_VIEW(cp) );
 
@@ -1212,17 +1211,17 @@ LayoutLeftView(Widget w)
 	}
 	else
 	{
-		y1 = _XfemRectY(w);
+		y1 = _XfemBoundaryY(w);
 	}
 
 	/* Place the top_view */
 	_XfeConfigureWidget(cp->top_view,
 						
-						_XfemRectX(w),
+						_XfemBoundaryX(w),
 							
 						y1,
 							
-						_XfemRectWidth(w),
+						_XfemBoundaryWidth(w),
 
 						_XfeHeight(cp->top_view));
 
@@ -1234,10 +1233,10 @@ static void
 LayoutRightView(Widget w)
 {
     XfeChromePart *	cp = _XfeChromePart(w);
-	Widget			top = NULL;
-	Widget			bottom = NULL;
-	Position		y1;
-	Position		y2;
+/* 	Widget			top = NULL; */
+/* 	Widget			bottom = NULL; */
+/* 	Position		y1; */
+/* 	Position		y2; */
 
 	assert( SHOW_RIGHT_VIEW(cp) );
 
@@ -1259,17 +1258,17 @@ LayoutRightView(Widget w)
 	}
 	else
 	{
-		y1 = _XfemRectY(w);
+		y1 = _XfemBoundaryY(w);
 	}
 
 	/* Place the top_view */
 	_XfeConfigureWidget(cp->top_view,
 						
-						_XfemRectX(w),
+						_XfemBoundaryX(w),
 							
 						y1,
 							
-						_XfemRectWidth(w),
+						_XfemBoundaryWidth(w),
 
 						_XfeHeight(cp->top_view));
 

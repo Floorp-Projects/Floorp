@@ -54,6 +54,7 @@ typedef struct _XfePaneClassRec
     ConstraintClassPart			constraint_class;
     XmManagerClassPart			manager_class;
     XfeManagerClassPart			xfe_manager_class;
+	XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
     XfeOrientedClassPart		xfe_oriented_class;
     XfePaneClassPart			xfe_pane_class;
 } XfePaneClassRec;
@@ -115,13 +116,14 @@ typedef struct _XfePanePart
 /*----------------------------------------------------------------------*/
 typedef struct _XfePaneRec
 {
-    CorePart			core;
-    CompositePart		composite;
-    ConstraintPart		constraint;
-    XmManagerPart		manager;
-    XfeManagerPart		xfe_manager;
-    XfeOrientedPart		xfe_oriented;
-    XfePanePart			xfe_pane;
+    CorePart				core;
+    CompositePart			composite;
+    ConstraintPart			constraint;
+    XmManagerPart			manager;
+    XfeManagerPart			xfe_manager;
+    XfeDynamicManagerPart	xfe_dynamic_manager;
+    XfeOrientedPart			xfe_oriented;
+    XfePanePart				xfe_pane;
 } XfePaneRec;
 
 /*----------------------------------------------------------------------*/
@@ -149,6 +151,7 @@ typedef struct _XfePaneConstraintRec
 {
     XmManagerConstraintPart			manager;
     XfeManagerConstraintPart		xfe_manager;
+	XfeDynamicManagerConstraintPart	xfe_dynamic_manager;
     XfeOrientedConstraintPart		xfe_oriented;
     XfePaneConstraintPart			xfe_pane;
 } XfePaneConstraintRec;

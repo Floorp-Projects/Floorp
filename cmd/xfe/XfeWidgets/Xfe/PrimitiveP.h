@@ -42,15 +42,22 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 typedef struct
 {
+	/* Bit gravity */
     XfeBitGravityType	bit_gravity;			/* bit_gravity			*/
+
+	/* Geometry methods */
     XfeGeometryProc		preferred_geometry;		/* preferred_geometry	*/
-    XfeGeometryProc		minimum_geometry;		/* minimum_geometry		*/
-    XtWidgetProc		update_rect;			/* update_rect			*/
+    XtWidgetProc		update_boundary;		/* update_boundary		*/
+
+	/* Component methods */
     XfePrepareProc		prepare_components;		/* prepare_components	*/
     XtWidgetProc		layout_components;		/* layout_components	*/
+
+	/* Rendering methods */
     XfeExposeProc		draw_background;		/* draw_background		*/
     XfeExposeProc		draw_shadow;			/* draw_shadow			*/
     XfeExposeProc		draw_components;		/* draw_components		*/
+
     XtPointer			extension;				/* extension			*/
 } XfePrimitiveClassPart;
 
@@ -113,8 +120,12 @@ typedef struct _XfePrimitivePart
     /* Private Data Members */
     int					config_flags;			/* Config Flags			*/
     int					prepare_flags;			/* Prepare Flags		*/
-    XRectangle			widget_rect;			/* Widget Rect			*/
+
+	/* The widget's boundary */
+    XRectangle			boundary;				/* Boundary				*/
+
     GC					background_GC;			/* Background GC		*/
+
     Pixmap				buffer_pixmap;			/* Buffer pixmap		*/
 } XfePrimitivePart;
 
@@ -164,7 +175,7 @@ _XfePrimitivePreferredGeometry		(Widget			w,
 									 Dimension *	height);
 /*----------------------------------------------------------------------*/
 extern void
-_XfePrimitiveUpdateRect				(Widget			w);
+_XfePrimitiveUpdateBoundary			(Widget		w);
 /*----------------------------------------------------------------------*/
 extern void
 _XfePrimitivePrepareComponents		(Widget			w,
@@ -318,9 +329,6 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 #define _XfePointerInside(w) \
 (((XfePrimitiveWidget) (w))->xfe_primitive . pointer_inside)
 /*----------------------------------------------------------------------*/
-#define _XfeWidgetRect(w) \
-(((XfePrimitiveWidget) (w))->xfe_primitive . widget_rect)
-/*----------------------------------------------------------------------*/
 #define _XfeBackgroundGC(w) \
 (((XfePrimitiveWidget) (w))->xfe_primitive . background_GC)
 /*----------------------------------------------------------------------*/
@@ -414,6 +422,19 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfePrimitive boundary access macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfeBoundary(w) (((XfePrimitiveWidget) (w))->xfe_primitive . boundary)
+
+#define _XfeBoundaryHeight(w)		(_XfeBoundary(w) . height)
+#define _XfeBoundaryWidth(w)		(_XfeBoundary(w) . width)
+#define _XfeBoundaryX(w)			(_XfeBoundary(w) . x)
+#define _XfeBoundaryY(w)			(_XfeBoundary(w) . y)
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Access to debug resources											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -440,10 +461,6 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 #define _XfeOffsetRight(w)		(_XfePrimitiveOffset(w) + _XfeMarginRight(w))
 #define _XfeOffsetTop(w)		(_XfePrimitiveOffset(w) + _XfeMarginTop(w))
 #define _XfeOffsetBottom(w)		(_XfePrimitiveOffset(w) + _XfeMarginBottom(w))
-#define _XfeRectHeight(w)		(_XfeWidgetRect(w) . height)
-#define _XfeRectWidth(w)		(_XfeWidgetRect(w) . width)
-#define _XfeRectX(w)			(_XfeWidgetRect(w) . x)
-#define _XfeRectY(w)			(_XfeWidgetRect(w) . y)
 
 /*----------------------------------------------------------------------*/
 /*																		*/

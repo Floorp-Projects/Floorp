@@ -43,64 +43,34 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-	XfeBitGravityType	bit_gravity;			/* bit_gravity			*/
+	/* Bit gravity */
+	XfeBitGravityType	bit_gravity;			/* bit_gravity				*/
 
-	XfeGeometryProc		preferred_geometry;		/* preferred_geometry	*/
-	XfeGeometryProc		minimum_geometry;		/* minimum_geometry		*/
+	/* Geometry methods */
+	XfeGeometryProc		preferred_geometry;		/* preferred_geometry		*/
+	XtWidgetProc		update_boundary;		/* update_boundary			*/
+	XtWidgetProc		update_children_info;	/* update_children_info		*/
+	XtWidgetProc		layout_widget;			/* layout_widget			*/
+	
+	/* Static children methods */
+	XfeChildFunc		accept_static_child;	/* accept_static_child		*/
+	XfeChildFunc		insert_static_child;	/* insert_static_child		*/
+	XfeChildFunc		delete_static_child;	/* delete_static_child		*/
+	XtWidgetProc		layout_static_children;	/* layout_static_children   */
 
-	XtWidgetProc		update_rect;			/* update_rect			*/
+	/* Change managed method */
+	XtWidgetProc		change_managed;			/* change_managed			*/
 
-	XfeChildFunc		accept_child;			/* accept_child			*/
-	XfeChildFunc		insert_child;			/* insert_child			*/
-	XfeChildFunc		delete_child;			/* delete_child			*/
-	XtWidgetProc		change_managed;			/* change_managed	    */
+	/* Component methods */
+	XfePrepareProc		prepare_components;		/* prepare_components		*/
+	XtWidgetProc		layout_components;		/* layout_components		*/
 
-	XfePrepareProc		prepare_components;		/* prepare_components	*/
+	/* Rendering methods */
+	XfeExposeProc		draw_background;		/* draw_background			*/
+	XfeExposeProc		draw_shadow;			/* draw_shadow				*/
+	XfeExposeProc		draw_components;		/* draw_components			*/
 
-	XtWidgetProc		layout_components;		/* layout_components	*/
-	XtWidgetProc		layout_children;		/* layout_children	    */
-
-	XfeExposeProc		draw_background;		/* draw_background		*/
-	XfeExposeProc		draw_shadow;			/* draw_shadow		    */
-	XfeExposeProc		draw_components;		/* draw_components		*/
-
-	/*
-	 * Layable children support.
-	 *
-	 * If the widget class sets the 'count_layable_children' field to
-	 * 'True', then a read-only list of layable children will be allocated
-	 * and maintained by the XfeManager super class.  This list can be
-	 * accessed via the XmNlayableChildren and XmNnumLayableChildren.
-	 *
-	 * The purpose of these two fields is to give the sub class widget
-	 * writer the ability to control children layout in detail.  The feature
-	 * is optional so that sub classes of XfeManager that don't need detailed
-	 * layout control will not suffer a runtime resource and performance
-	 * penalty.
-	 *
-	 * The 'child_is_layable' is used to determine whether a child is
-	 * layable.  By default all children that comply with the following
-	 * are considered layable:
-	 *
-	 * 1.  _XfeIsAlive(child)
-	 * 2.  _XfeIsRealized(child)
-	 * 3.  _XfeIsManaged(child)
-	 * 4.  !_XfemNumPrivateComponents(child)
-     *
-     * The XfeManager class does not define an 'child_is_layable' method
-     * by default.  Thus, all children that comply with the above
-     * conditions are considered layable.  
-     *
-     * A sub class can further filter which children are layable by
-     * defining an 'child_is_layable' method.  If defined, this method 
-     * will be invoked as needed by the XfeManager class.  If should 
-     * return 'True' if the given child is layable, or 'False' otherwise.
-	 *
-	 */
-	Boolean				count_layable_children;
-	XfeChildFunc		child_is_layable;
-
-	XtPointer			extension;				/* extension			*/
+	XtPointer			extension;				/* extension				*/
 
 } XfeManagerClassPart;
 
@@ -119,27 +89,6 @@ typedef struct _XfeManagerClassRec
 } XfeManagerClassRec;
 
 externalref XfeManagerClassRec xfeManagerClassRec;
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeManagerLayableInfoRec												*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-typedef struct _XfeLayableChildrenInfoRec
-{
-	XfeLinked			children;				/* Layable children		*/
-	Cardinal			num_children;			/* Num layable children	*/
-
-	Dimension			max_width;				/* Max children width	*/
-	Dimension			max_height;				/* Max children height	*/
-
-	Dimension			min_width;				/* Min children width	*/
-	Dimension			min_height;				/* Min children height	*/
-
-	Dimension			total_width;			/* Total children width	*/
-	Dimension			total_height;			/* Total children height*/
-
-} XfeLayableChildrenInfoRec, *XfeLayableChildrenInfo;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -167,6 +116,7 @@ typedef struct _XfeManagerPart
 	Dimension			preferred_height;		/* Preferred Height		*/
 	Boolean				use_preferred_width;	/* use preferred width	*/
 	Boolean				use_preferred_height;	/* use preferred height	*/
+
 	Dimension			min_width;				/* Min width			*/
 	Dimension			min_height;				/* Min height			*/
 
@@ -179,11 +129,13 @@ typedef struct _XfeManagerPart
 	/* For c++ usage */
 	XtPointer			instance_pointer;		/* Instance pointer		*/
 
-	/* Private Component resources */
-	Cardinal			num_private_components;	/* Num private components*/
-
-	/* Layable children resources */
-	XfeLayableChildrenInfoRec	lc_info;
+	/* Component children resources */
+	XfeLinked			component_children;		/* Component children	*/
+	Cardinal			num_component_children;	/* Num Component children*/
+	
+	/* Static children resources */
+	XfeLinked			static_children;		/* Static children		*/
+	Cardinal			num_static_children;	/* Num Static children	*/
 
 	/* Debug resources */
 #ifdef DEBUG
@@ -195,9 +147,10 @@ typedef struct _XfeManagerPart
 	int					prepare_flags;			/* Require Geometry		*/
 	Boolean				component_flag;			/* Components Layout ?	*/
 
-	XRectangle			widget_rect;			/* Widget Rect			*/
-	XfeDimensionsRec	old_dimensions;			/* Old dimensions		*/
+	/* The widget's boundary */
+	XRectangle			boundary;				/* Boundary				*/
 
+	XfeDimensionsRec	old_dimensions;			/* Old dimensions		*/
 } XfeManagerPart;
 
 /*----------------------------------------------------------------------*/
@@ -221,9 +174,7 @@ typedef struct _XfeManagerRec
 /*----------------------------------------------------------------------*/
 typedef struct _XfeManagerConstraintPart
 {
-    int					position_index;			/* Position Index		*/
-    Boolean				private_component;		/* Private Component	*/
-	XfeLinkNode			link_node;				/* Link node			*/
+	unsigned char		manager_child_type;		/* Manager Child type	*/
 } XfeManagerConstraintPart;
 
 /*----------------------------------------------------------------------*/
@@ -240,6 +191,67 @@ typedef struct _XfeManagerConstraintRec
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeManager Method invocation functions								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerPreferredGeometry		(Widget			w,
+									 Dimension *	width_out,
+									 Dimension *	height_out);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerUpdateBoundary			(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerUpdateChildrenInfo		(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerLayoutWidget				(Widget			w);
+/*----------------------------------------------------------------------*/
+extern Boolean
+_XfeManagerInsertStaticChild		(Widget			child);
+/*----------------------------------------------------------------------*/
+extern Boolean
+_XfeManagerAcceptStaticChild		(Widget			child);
+/*----------------------------------------------------------------------*/
+extern Boolean
+_XfeManagerDeleteStaticChild		(Widget			child);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerLayoutStaticChildren		(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerChangeManaged			(Widget			child);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerPrepareComponents		(Widget			w,
+									 int			flags);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerLayoutComponents			(Widget			w);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerDrawBackground			(Widget			w,
+									 XEvent *		event,
+									 Region			region,
+									 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerDrawComponents			(Widget			w,
+									 XEvent *		event,
+									 Region			region,
+									 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerDrawShadow				(Widget			w,
+									 XEvent *		event,
+									 Region			region,
+									 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager constraint chain functions								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
@@ -264,62 +276,6 @@ _XfeConstraintChainSetValues	(Widget			ow,
 								 Widget			nw,
 								 WidgetClass	wc);
 /*----------------------------------------------------------------------*/
-extern void
-_XfeManagerPreferredGeometry	(Widget			w,
-								 Dimension *	width_out,
-								 Dimension *	height_out);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerMinimumGeometry		(Widget			w,
-								 Dimension *	width_out,
-								 Dimension *	height_out);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerUpdateRect			(Widget			w);
-/*----------------------------------------------------------------------*/
-extern Boolean
-_XfeManagerAcceptChild			(Widget			child);
-/*----------------------------------------------------------------------*/
-extern Boolean
-_XfeManagerInsertChild			(Widget			child);
-/*----------------------------------------------------------------------*/
-extern Boolean
-_XfeManagerDeleteChild			(Widget			child);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerChangeManaged		(Widget			child);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerPrepareComponents	(Widget			w,
-								 int			flags);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerLayoutComponents		(Widget			w);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerLayoutChildren		(Widget			w);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerDrawBackground		(Widget			w,
-								 XEvent *		event,
-								 Region			region,
-								 XRectangle *	clip_rect);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerDrawComponents		(Widget			w,
-								 XEvent *		event,
-								 Region			region,
-								 XRectangle *	clip_rect);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerDrawShadow			(Widget			w,
-								 XEvent *		event,
-								 Region			region,
-								 XRectangle *	clip_rect);
-/*----------------------------------------------------------------------*/
-extern Boolean
-_XfeManagerChildIsLayable		(Widget			child);
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -327,28 +283,48 @@ _XfeManagerChildIsLayable		(Widget			child);
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-_XfeManagerChildrenInfo				(Widget			w,
-									 Dimension *	max_width_out,
-									 Dimension *	max_height_out,
-									 Dimension *	total_width_out,
-									 Dimension *	total_height_out,
-									 Cardinal *		num_managed_out,
-									 Cardinal *		num_components_out);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerComponentInfo			(Widget			w,
-									 Dimension *	max_width_out,
-									 Dimension *	max_height_out);
-/*----------------------------------------------------------------------*/
-extern void
-_XfeManagerGetLayableChildrenInfo	(Widget							w,
-									 XfeLayableChildrenInfoRec *	info);
-/*----------------------------------------------------------------------*/
-extern void
 _XfeManagerPropagateSetValues		(Widget			ow,
 									 Widget			nw,
 									 Boolean		propagate_sensitive);
+/*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager children info functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerGetChildrenInfo				(Widget				w,
+										 XfeLinked			children,
+										 int				mask,
+										 XfeGeometryProc	proc,
+										 Dimension *		max_width_out,
+										 Dimension *		max_height_out,
+										 Dimension *		min_width_out,
+										 Dimension *		min_height_out,
+										 Dimension *		total_width_out,
+										 Dimension *		total_height_out,
+										 Cardinal *			num_managed_out);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerUpdateComponentChildrenInfo	(Widget				w);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerUpdateStaticChildrenInfo		(Widget				w);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager private children apply functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+_XfeManagerApplyProcToChildren			(Widget					w,
+										 XfeLinked				children,
+										 int					mask,
+										 XfeManagerApplyProc	proc,
+										 XtPointer				data);
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -357,14 +333,6 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 /*----------------------------------------------------------------------*/
 #define _XfeManagerAccessBitGravity(w) \
 (((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class . bit_gravity)
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeManagerWidgetClass bit_gravity access macro						*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define _XfeManagerCountLayableChildren(w) \
-(((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class . count_layable_children)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -552,9 +520,6 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 #define _XfemComponentFlag(w) \
 (((XfeManagerWidget) (w))->xfe_manager . component_flag)
 /*----------------------------------------------------------------------*/
-#define _XfemWidgetRect(w) \
-(((XfeManagerWidget) (w))->xfe_manager . widget_rect)
-/*----------------------------------------------------------------------*/
 #define _XfemInstancePointer(w) \
 (((XfeManagerWidget) (w))->xfe_manager . instance_pointer)
 /*----------------------------------------------------------------------*/
@@ -564,8 +529,42 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 #define _XfemOldHeight(w) \
 (((XfeManagerWidget) (w))->xfe_manager . old_dimensions . height)
 /*----------------------------------------------------------------------*/
-#define _XfemNumPrivateComponents(w) \
-(((XfeManagerWidget) (w))->xfe_manager . num_private_components)
+#define _XfemComponentChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . component_children)
+/*----------------------------------------------------------------------*/
+#define _XfemNumComponentChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . num_component_children)
+/*----------------------------------------------------------------------*/
+#define _XfemStaticChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . static_children)
+/*----------------------------------------------------------------------*/
+#define _XfemNumStaticChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . num_static_children)
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Component & Static children count									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemComponentChildrenCount(w) \
+(_XfemComponentChildren(w) ? XfeLinkedCount(_XfemComponentChildren(w)) : 0)
+/*----------------------------------------------------------------------*/
+#define _XfemStaticChildrenCount(w) \
+(_XfemStaticChildren(w) ? XfeLinkedCount(_XfemStaticChildren(w)) : 0)
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager boundary access macros									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemBoundary(w) (((XfeManagerWidget) (w))->xfe_manager . boundary)
+
+#define _XfemBoundaryHeight(w)		(_XfemBoundary(w) . height)
+#define _XfemBoundaryWidth(w)		(_XfemBoundary(w) . width)
+#define _XfemBoundaryX(w)			(_XfemBoundary(w) . x)
+#define _XfemBoundaryY(w)			(_XfemBoundary(w) . y)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -578,24 +577,6 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 (((XfeManagerWidget) (w))->xfe_manager . debug_trace)
 /*----------------------------------------------------------------------*/
 #endif
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeManager layable children info access macros						*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-#define _XfemLCInfo(w) \
-(((XfeManagerWidget) (w))->xfe_manager . lc_info)
-/*----------------------------------------------------------------------*/
-#define _XfemLayableChildren(w)				(_XfemLCInfo(w) . children)
-#define _XfemNumLayableChildren(w)			(_XfemLCInfo(w) . num_children)
-#define _XfemMaxLayableChildrenWidth(w)		(_XfemLCInfo(w) . max_width)
-#define _XfemMaxLayableChildrenHeight(w)	(_XfemLCInfo(w) . max_height)
-#define _XfemMinLayableChildrenWidth(w)		(_XfemLCInfo(w) . min_width)
-#define _XfemMinLayableChildrenHeight(w)	(_XfemLCInfo(w) . min_height)
-#define _XfemTotalLayableChildrenWidth(w)	(_XfemLCInfo(w) . total_width)
-#define _XfemTotalLayableChildrenHeight(w)	(_XfemLCInfo(w) . total_height)
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -613,14 +594,6 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 /*----------------------------------------------------------------------*/
 #define _XfemOffsetBottom(w)	(_XfemShadowThickness(w) +	\
 								 _XfemMarginBottom(w))
-/*----------------------------------------------------------------------*/
-#define _XfemRectHeight(w)		(_XfemWidgetRect(w) . height)
-/*----------------------------------------------------------------------*/
-#define _XfemRectWidth(w)		(_XfemWidgetRect(w) . width)
-/*----------------------------------------------------------------------*/
-#define _XfemRectX(w)			(_XfemWidgetRect(w) . x)
-/*----------------------------------------------------------------------*/
-#define _XfemRectY(w)			(_XfemWidgetRect(w) . y)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -653,14 +626,8 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 /* XfeManager child individual constraint resource access macro			*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XfeManagerPositionIndex(w) \
-(_XfeManagerConstraintPart(w)) -> position_index
-/*----------------------------------------------------------------------*/
-#define _XfeManagerPrivateComponent(w) \
-(_XfeManagerConstraintPart(w)) -> private_component
-/*----------------------------------------------------------------------*/
-#define _XfeManagerLinkNode(w) \
-(_XfeManagerConstraintPart(w)) -> link_node
+#define _XfeConstraintManagerChildType(child) \
+(_XfeManagerConstraintPart(child)) -> manager_child_type
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

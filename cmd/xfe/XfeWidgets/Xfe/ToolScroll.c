@@ -56,12 +56,13 @@ static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
-static void		LayoutComponents	(Widget);
-static Boolean	AcceptChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static Boolean	InsertChild			(Widget);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
+static void		LayoutComponents		(Widget);
+static void		DrawComponents			(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -295,26 +296,34 @@ _XFE_WIDGET_CLASS_RECORD(toolscroll,ToolScroll) =
 		NULL,                                   /* extension           	*/
 	},
 
-	/* XfeManager Part 	*/
+    /* XfeManager Part 	*/
 	{
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		DrawComponents,							/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension          	*/
-	},
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		DrawComponents,							/* draw_components			*/
+		NULL,									/* extension				*/
+    },
+
+	/* XfeDynamicManager Part */
+    {
+		NULL,									/* accept_dynamic_child		*/
+		NULL,									/* insert_dynamic_child		*/
+		NULL,									/* delete_dynamic_child		*/
+		NULL,									/* layout_dynamic_children	*/
+		NULL,									/* extension				*/
+    },
 
 	/* XfeOriented Part */
 	{
@@ -527,21 +536,33 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 	}
 }
 /*----------------------------------------------------------------------*/
-static void
-DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
+static Boolean
+AcceptStaticChild(Widget child)
 {
-	XfeToolScrollPart *	tp = _XfeToolScrollPart(w);
+	return False;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+InsertStaticChild(Widget child)
+{
+	Widget					w = XtParent(child);
+/* 	XfeToolScrollPart *		tp = _XfeToolScrollPart(w); */
 
-	if (tp->clip_shadow_thickness > 0)
-	{
-		XfeDrawShadowsAroundWidget(w,
-								   tp->clip_area,
-								   _XfemTopShadowGC(w),
-								   _XfemBottomShadowGC(w),
-								   _XfeOrientedSpacing(w),
-								   tp->clip_shadow_thickness,
-								   tp->clip_shadow_type);
-	}
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+DeleteStaticChild(Widget child)
+{
+	Widget					w = XtParent(child);
+/* 	XfeToolScrollPart *		tp = _XfeToolScrollPart(w); */
+
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static void
+LayoutStaticChildren(Widget w)
+{
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -562,28 +583,21 @@ LayoutComponents(Widget w)
 	LayoutToolBar(w);
 }
 /*----------------------------------------------------------------------*/
-static Boolean
-AcceptChild(Widget child)
+static void
+DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 {
-	return False;
-}
-/*----------------------------------------------------------------------*/
-static Boolean
-InsertChild(Widget child)
-{
-	Widget					w = XtParent(child);
-/* 	XfeToolScrollPart *		tp = _XfeToolScrollPart(w); */
+	XfeToolScrollPart *	tp = _XfeToolScrollPart(w);
 
-	return True;
-}
-/*----------------------------------------------------------------------*/
-static Boolean
-DeleteChild(Widget child)
-{
-	Widget					w = XtParent(child);
-/* 	XfeToolScrollPart *		tp = _XfeToolScrollPart(w); */
-
-	return True;
+	if (tp->clip_shadow_thickness > 0)
+	{
+		XfeDrawShadowsAroundWidget(w,
+								   tp->clip_area,
+								   _XfemTopShadowGC(w),
+								   _XfemBottomShadowGC(w),
+								   _XfeOrientedSpacing(w),
+								   tp->clip_shadow_thickness,
+								   tp->clip_shadow_type);
+	}
 }
 /*----------------------------------------------------------------------*/
 
@@ -721,8 +735,8 @@ static void
 LayoutVertical(Widget w)
 {
 	XfeToolScrollPart *	tp = _XfeToolScrollPart(w);
-	int					backward_width = _XfemRectWidth(w) / 2;
-	int					forward_width = _XfemRectWidth(w) - backward_width;
+	int					backward_width = _XfemBoundaryWidth(w) / 2;
+	int					forward_width = _XfemBoundaryWidth(w) - backward_width;
 
 
 	/* The backward arrow */
@@ -731,8 +745,8 @@ LayoutVertical(Widget w)
 		XtVaSetValues(tp->backward_arrow,XmNarrowDirection,XmARROW_DOWN,NULL);
 		
 		_XfeConfigureWidget(tp->backward_arrow,
-							_XfemRectX(w),
-							_XfemRectY(w),
+							_XfemBoundaryX(w),
+							_XfemBoundaryY(w),
 							backward_width,
 							_XfeHeight(tp->backward_arrow));
 	}
@@ -747,7 +761,7 @@ LayoutVertical(Widget w)
 							_XfeX(tp->backward_arrow) + 
 							_XfeWidth(tp->backward_arrow),
 							
-							_XfemRectY(w),
+							_XfemBoundaryY(w),
 							
 							forward_width,
 							
@@ -758,7 +772,7 @@ LayoutVertical(Widget w)
 	{
 		_XfeConfigureWidget(tp->clip_area,
 							
-							_XfemRectX(w) + 
+							_XfemBoundaryX(w) + 
 							tp->clip_shadow_thickness +
 							_XfeOrientedSpacing(w),
 							
@@ -767,11 +781,11 @@ LayoutVertical(Widget w)
 							tp->clip_shadow_thickness +
 							_XfeOrientedSpacing(w),
 							
-							_XfemRectWidth(w) - 
+							_XfemBoundaryWidth(w) - 
 							2 * tp->clip_shadow_thickness -
 							2 * _XfeOrientedSpacing(w),
 								
-							_XfemRectHeight(w) - 
+							_XfemBoundaryHeight(w) - 
 							_XfeHeight(tp->backward_arrow) -
 							2 * tp->clip_shadow_thickness -
 							2 * _XfeOrientedSpacing(w));
@@ -783,8 +797,8 @@ static void
 LayoutHorizontal(Widget w)
 {
 	XfeToolScrollPart *	tp = _XfeToolScrollPart(w);
-	int					backward_height = _XfemRectHeight(w) / 2;
-	int					forward_height = _XfemRectHeight(w) - backward_height;
+	int					backward_height = _XfemBoundaryHeight(w) / 2;
+	int					forward_height = _XfemBoundaryHeight(w) - backward_height;
 	
 	/* The backward arrow */
 	if (backward_height > 1)
@@ -792,8 +806,8 @@ LayoutHorizontal(Widget w)
 		XtVaSetValues(tp->backward_arrow,XmNarrowDirection,XmARROW_LEFT,NULL);
 		
 		_XfeConfigureWidget(tp->backward_arrow,
-							_XfemRectX(w),
-							_XfemRectY(w),
+							_XfemBoundaryX(w),
+							_XfemBoundaryY(w),
 							_XfeWidth(tp->backward_arrow),
 							backward_height);
 	}
@@ -805,7 +819,7 @@ LayoutHorizontal(Widget w)
 		
 		_XfeConfigureWidget(tp->forward_arrow,
 							
-							_XfemRectX(w),
+							_XfemBoundaryX(w),
 							
 							_XfeY(tp->backward_arrow) + 
 							_XfeHeight(tp->backward_arrow),
@@ -824,16 +838,16 @@ LayoutHorizontal(Widget w)
 							tp->clip_shadow_thickness +
 							_XfeOrientedSpacing(w),
 							
-							_XfemRectY(w) + 
+							_XfemBoundaryY(w) + 
 							tp->clip_shadow_thickness +
 							_XfeOrientedSpacing(w),
 							
-							_XfemRectWidth(w) - 
+							_XfemBoundaryWidth(w) - 
 							_XfeWidth(tp->backward_arrow) -
 							2 * tp->clip_shadow_thickness -
 							2 * _XfeOrientedSpacing(w),
 							
-							_XfemRectHeight(w) -
+							_XfemBoundaryHeight(w) -
 							2 * tp->clip_shadow_thickness -
 							2 * _XfeOrientedSpacing(w));
 	}

@@ -57,10 +57,10 @@
 #define CB_OFFSET_RIGHT(w,cp)	(cp->highlight_thickness+_XfemOffsetRight(w))
 #define CB_OFFSET_TOP(w,cp)		(cp->highlight_thickness+_XfemOffsetTop(w))
 
-#define CB_RECT_X(w,cp)			(_XfemRectX(w) + cp->highlight_thickness)
-#define CB_RECT_Y(w,cp)			(_XfemRectY(w) + cp->highlight_thickness)
-#define CB_RECT_WIDTH(w,cp)		(_XfemRectWidth(w)-2*cp->highlight_thickness)
-#define CB_RECT_HEIGHT(w,cp)	(_XfemRectHeight(w)-2*cp->highlight_thickness)
+#define CB_RECT_X(w,cp)			(_XfemBoundaryX(w) + cp->highlight_thickness)
+#define CB_RECT_Y(w,cp)			(_XfemBoundaryY(w) + cp->highlight_thickness)
+#define CB_RECT_WIDTH(w,cp)		(_XfemBoundaryWidth(w)-2*cp->highlight_thickness)
+#define CB_RECT_HEIGHT(w,cp)	(_XfemBoundaryHeight(w)-2*cp->highlight_thickness)
 
 #define STICK_DELAY 200
 
@@ -82,7 +82,7 @@ static void		GetValuesHook		(Widget,ArgList,Cardinal *);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
+static Boolean	AcceptStaticChild			(Widget);
 static void		LayoutComponents	(Widget);
 static void		DrawShadow			(Widget,XEvent *,Region,XRectangle *);
 static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
@@ -599,24 +599,23 @@ _XFE_WIDGET_CLASS_RECORD(combobox,ComboBox) =
     },
     
     /* XfeManager Part 	*/
-    {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		NULL,									/* insert_child			*/
-		NULL,									/* delete_child			*/
-		NULL,									/* change_managed		*/
-		NULL,									/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		NULL,									/* layout_children		*/
-		NULL,									/* draw_background		*/
-		DrawShadow,								/* draw_shadow			*/
-		DrawComponents,							/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		NULL,									/* insert_static_child		*/
+		NULL,									/* delete_static_child		*/
+		NULL,									/* layout_static_children	*/
+		NULL,									/* change_managed			*/
+		NULL,									/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		DrawShadow,								/* draw_shadow				*/
+		DrawComponents,							/* draw_components			*/
+		NULL,									/* extension				*/
     },
 
     /* XfeComboBox Part */
@@ -891,7 +890,7 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	return False;
 }
@@ -1437,7 +1436,7 @@ TextFocusCB(Widget text,XtPointer client_data,XtPointer call_data)
 
 	cp->highlighted = True;
 
-	DrawHighlight(w,NULL,NULL,&_XfemWidgetRect(w));
+	DrawHighlight(w,NULL,NULL,&_XfemBoundary(w));
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1448,7 +1447,7 @@ TextLosingFocusCB(Widget text,XtPointer client_data,XtPointer call_data)
 
 	cp->highlighted = False;
 
-	DrawHighlight(w,NULL,NULL,&_XfemWidgetRect(w));
+	DrawHighlight(w,NULL,NULL,&_XfemBoundary(w));
 }
 /*----------------------------------------------------------------------*/
 

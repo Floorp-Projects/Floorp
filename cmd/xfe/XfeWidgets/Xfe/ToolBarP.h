@@ -51,13 +51,14 @@ typedef struct
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBarClassRec
 {
-    CoreClassPart			core_class;
-    CompositeClassPart		composite_class;
-    ConstraintClassPart		constraint_class;
-    XmManagerClassPart		manager_class;
-    XfeManagerClassPart		xfe_manager_class;
-    XfeOrientedClassPart	xfe_oriented_class;
-    XfeToolBarClassPart		xfe_tool_bar_class;
+    CoreClassPart				core_class;
+    CompositeClassPart			composite_class;
+    ConstraintClassPart			constraint_class;
+    XmManagerClassPart			manager_class;
+    XfeManagerClassPart			xfe_manager_class;
+	XfeDynamicManagerClassPart	xfe_dynamic_manager_class;
+    XfeOrientedClassPart		xfe_oriented_class;
+    XfeToolBarClassPart			xfe_tool_bar_class;
 } XfeToolBarClassRec;
 
 externalref XfeToolBarClassRec xfeToolBarClassRec;
@@ -108,8 +109,10 @@ typedef struct _XfeToolBarPart
 	Boolean				child_force_width;		/* Child force width ?	*/
 	Boolean				child_force_height;		/* Child force height ?	*/
 
+#if 0
 	Dimension			max_child_width;		/* Max Width			*/
 	Dimension			max_child_height;		/* Max Height			*/
+#endif
 
 	/* Wrapping resources */
 	Boolean				allow_wrap;				/* Allow wrap			*/
@@ -117,10 +120,13 @@ typedef struct _XfeToolBarPart
 	Cardinal			max_num_rows;			/* Max num rows			*/
     
     /* Private data -- Dont even look past this comment -- */
+#if 0
 	Dimension			total_children_width;	/* Total children width	*/
 	Dimension			total_children_height;	/* Total children height*/
 	Cardinal			num_managed;			/* Num managed widgets	*/
 	Cardinal			num_components;			/* Num components		*/
+#endif
+
 	Widget				indicator;				/* Indicator			*/
 	Widget				indicator_target;		/* Indicator target		*/
 	Widget				edit_text;				/* Edit text			*/
@@ -134,13 +140,14 @@ typedef struct _XfeToolBarPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBarRec
 {
-    CorePart		core;
-    CompositePart	composite;
-    ConstraintPart	constraint;
-    XmManagerPart	manager;
-    XfeManagerPart	xfe_manager;
-    XfeOrientedPart	xfe_oriented;
-    XfeToolBarPart	xfe_tool_bar;
+    CorePart				core;
+    CompositePart			composite;
+    ConstraintPart			constraint;
+    XmManagerPart			manager;
+    XfeManagerPart			xfe_manager;
+    XfeDynamicManagerPart	xfe_dynamic_manager;
+    XfeOrientedPart			xfe_oriented;
+    XfeToolBarPart			xfe_tool_bar;
 } XfeToolBarRec;
 
 /*----------------------------------------------------------------------*/
@@ -160,10 +167,11 @@ typedef struct _XfeToolBarConstraintPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBarConstraintRec
 {
-    XmManagerConstraintPart		manager;
-    XfeManagerConstraintPart	xfe_manager;
-    XfeOrientedConstraintPart	xfe_oriented;
-    XfeToolBarConstraintPart	xfe_tool_bar;
+    XmManagerConstraintPart				manager;
+    XfeManagerConstraintPart			xfe_manager;
+    XfeDynamicManagerConstraintPart		xfe_dynamic_manager;
+    XfeOrientedConstraintPart			xfe_oriented;
+    XfeToolBarConstraintPart			xfe_tool_bar;
 } XfeToolBarConstraintRec;
 
 /*----------------------------------------------------------------------*/

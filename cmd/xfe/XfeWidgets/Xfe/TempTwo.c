@@ -64,15 +64,25 @@ static void 	ConstraintDestroy	(Widget);
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static Boolean	AcceptChild			(Widget);
-static Boolean	InsertChild			(Widget);
-static Boolean	DeleteChild			(Widget);
-static void		ChangeManaged		(Widget);
-static void		PrepareComponents	(Widget,int);
-static void		LayoutComponents	(Widget);
-static void		LayoutChildren		(Widget);
-static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
+static void		PreferredGeometry		(Widget,Dimension *,Dimension *);
+static Boolean	AcceptStaticChild		(Widget);
+static Boolean	InsertStaticChild		(Widget);
+static Boolean	DeleteStaticChild		(Widget);
+static void		LayoutStaticChildren	(Widget);
+static void		ChangeManaged			(Widget);
+static void		PrepareComponents		(Widget,int);
+static void		LayoutComponents		(Widget);
+static void		DrawComponents			(Widget,XEvent *,Region,XRectangle *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Boolean	AcceptDynamicChild		(Widget);
+static Boolean	InsertDynamicChild		(Widget);
+static Boolean	DeleteDynamicChild		(Widget);
+static void		LayoutDynamicChildren	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -382,7 +392,7 @@ static XtActionsRec actions[] =
 _XFE_WIDGET_CLASS_RECORD(temptwo,TempTwo) =
 {
     {
-		(WidgetClass) &xfeManagerClassRec,		/* superclass			*/
+		(WidgetClass) &xfeDynamicManagerClassRec,/* superclass			*/
 		"XfeTempTwo",							/* class_name			*/
 		sizeof(XfeTempTwoRec),					/* widget_size			*/
 		NULL,									/* class_initialize		*/
@@ -446,26 +456,35 @@ _XFE_WIDGET_CLASS_RECORD(temptwo,TempTwo) =
 		XmInheritParentProcess,                 /* parent_process		*/
 		NULL,                                   /* extension			*/
     },
-    
+
     /* XfeManager Part 	*/
+	{
+		XfeInheritBitGravity,					/* bit_gravity				*/
+		PreferredGeometry,						/* preferred_geometry		*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
+		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
+		XfeInheritLayoutWidget,					/* layout_widget			*/
+		AcceptStaticChild,						/* accept_static_child		*/
+		InsertStaticChild,						/* insert_static_child		*/
+		DeleteStaticChild,						/* delete_static_child		*/
+		LayoutStaticChildren,					/* layout_static_children	*/
+		ChangeManaged,							/* change_managed			*/
+		PrepareComponents,						/* prepare_components		*/
+		LayoutComponents,						/* layout_components		*/
+		NULL,									/* draw_background			*/
+		XfeInheritDrawShadow,					/* draw_shadow				*/
+		DrawComponents,							/* draw_components			*/
+		NULL,									/* extension				*/
+    },
+
+	/* XfeDynamicManager Part */
     {
-		XfeInheritBitGravity,					/* bit_gravity			*/
-		PreferredGeometry,						/* preferred_geometry	*/
-		XfeInheritMinimumGeometry,				/* minimum_geometry		*/
-		XfeInheritUpdateRect,					/* update_rect			*/
-		AcceptChild,							/* accept_child			*/
-		InsertChild,							/* insert_child			*/
-		DeleteChild,							/* delete_child			*/
-		ChangeManaged,							/* change_managed		*/
-		PrepareComponents,						/* prepare_components	*/
-		LayoutComponents,						/* layout_components	*/
-		LayoutChildren,							/* layout_children		*/
-		NULL,									/* draw_background		*/
-		XfeInheritDrawShadow,					/* draw_shadow			*/
-		DrawComponents,							/* draw_components		*/
-		False,									/* count_layable_children*/
-		NULL,									/* child_is_layable		*/
-		NULL,									/* extension			*/
+		AcceptDynamicChild,						/* accept_dynamic_child		*/
+		InsertDynamicChild,						/* insert_dynamic_child		*/
+		DeleteDynamicChild,						/* delete_dynamic_child		*/
+		LayoutDynamicChildren,					/* layout_dynamic_children	*/
+		XfeInheritGetChildDimensions,			/* get_child_dimensions		*/
+		NULL,									/* extension				*/
     },
 
     /* XfeTempTwo Part */
@@ -652,13 +671,13 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-AcceptChild(Widget child)
+AcceptStaticChild(Widget child)
 {
 	return True;
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-InsertChild(Widget child)
+InsertStaticChild(Widget child)
 {
     Widget					w = XtParent(child);
     XfeTempTwoPart *		ttp = _XfeTempTwoPart(w);
@@ -667,7 +686,7 @@ InsertChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static Boolean
-DeleteChild(Widget child)
+DeleteStaticChild(Widget child)
 {
     Widget					w = XtParent(child);
     XfeTempTwoPart *		ttp = _XfeTempTwoPart(w);
@@ -679,6 +698,13 @@ static void
 ChangeManaged(Widget w)
 {
     XfeTempTwoPart *		ttp = _XfeTempTwoPart(w);
+}
+/*----------------------------------------------------------------------*/
+static void
+LayoutStaticChildren(Widget w)
+{
+    XfeTempTwoPart *	ttp = _XfeTempTwoPart(w);
+	
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -697,17 +723,47 @@ LayoutComponents(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static void
-LayoutChildren(Widget w)
-{
-    XfeTempTwoPart *	ttp = _XfeTempTwoPart(w);
-	
-}
-/*----------------------------------------------------------------------*/
-static void
 DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 {
     XfeTempTwoPart *	ttp = _XfeTempTwoPart(w);
 
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDynamicManager class methods										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Boolean
+AcceptDynamicChild(Widget child)
+{
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+InsertDynamicChild(Widget child)
+{
+    Widget					w = XtParent(child);
+    XfeTempTwoPart *		ttp = _XfeTempTwoPart(w);
+
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+DeleteDynamicChild(Widget child)
+{
+    Widget					w = XtParent(child);
+    XfeTempTwoPart *		ttp = _XfeTempTwoPart(w);
+
+	return True;
+}
+/*----------------------------------------------------------------------*/
+static void
+LayoutDynamicChildren(Widget w)
+{
+    XfeTempTwoPart *	ttp = _XfeTempTwoPart(w);
+	
 }
 /*----------------------------------------------------------------------*/
 

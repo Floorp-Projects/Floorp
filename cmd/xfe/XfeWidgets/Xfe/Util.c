@@ -690,7 +690,7 @@ XfeToggleButtonIsSet(Widget w)
 XfeIsPrivateComponent(Widget w)
 {
 	return (XfeIsManager(_XfeParent(w)) && 
-			_XfeManagerPrivateComponent(w));
+			_XfeConstraintManagerChildType(w) == XmMANAGER_COMPONENT_CHILD);
 }
 /*----------------------------------------------------------------------*/
 
