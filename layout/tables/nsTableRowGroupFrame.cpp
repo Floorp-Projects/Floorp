@@ -525,7 +525,7 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     kidFrame->GetSize(kidFrameSize);
     kidFrame->IsSplittable(kidIsSplittable);
     if ((kidFrameSize.height > aState.availSize.height) &&
-        (kidIsSplittable == frNotSplittable)) {
+        (kidIsSplittable == NotSplittable)) {
       result = PR_FALSE;
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
