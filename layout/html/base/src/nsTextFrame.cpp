@@ -864,8 +864,20 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
           switch (aDetails->mType)
           {
           case SELECTION_NORMAL:{
+//
+// XOR InvertRect is currently implemented only in the unix and windows
+// rendering contexts.  When other platforms implement InvertRect(), they
+// can be added here.  Eventually this #ifdef should die.
+//
+// For platforms that dont implement InvertRect(), the selection will be 
+// a non-filled rectangle.
+#if defined(XP_PC) || defined(XP_UNIX)
+              aRenderingContext.SetColor(NS_RGB(255,255,255));
+              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
+#else
               aRenderingContext.SetColor(NS_RGB(0,0,0));
               aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
+#endif
                                 }break;
           case SELECTION_SPELLCHECK:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);

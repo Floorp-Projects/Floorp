@@ -1003,6 +1003,22 @@ nsresult nsRenderingContextOS2::FillRect( nscoord aX, nscoord aY, nscoord aWidth
    return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextOS2 :: InvertRect(const nsRect& aRect)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextOS2::InvertRect");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextOS2::InvertRect");
+
+  return NS_OK;
+}
+
 void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
 {
    mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);

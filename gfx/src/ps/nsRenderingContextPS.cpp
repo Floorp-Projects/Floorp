@@ -724,6 +724,22 @@ nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextPS :: InvertRect(const nsRect& aRect)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextPS::InvertRect");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRenderingContextPS :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextPS::InvertRect");
+
+  return NS_OK;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc

@@ -823,6 +823,22 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillRect(nscoord aX, nscoord aY, nscoord a
 	return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextBeOS :: InvertRect(const nsRect& aRect)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextBeOS::InvertRect");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRenderingContextBeOS :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextBeOS::InvertRect");
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
 	// First transform nsPoint's into BPoint's; perform coordinate space

@@ -745,6 +745,40 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextGTK::InvertRect(const nsRect& aRect)
+{
+  return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+  if (nsnull == mTMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // Set XOR drawing mode
+  ::gdk_gc_set_function(mSurface->GetGC(),GDK_XOR);  
+
+  // Fill the rect
+  ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
+                       TRUE,
+                       x, y, w, h);
+
+  // Back to normal copy drawing mode
+  ::gdk_gc_set_function(mSurface->GetGC(),GDK_COPY);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
