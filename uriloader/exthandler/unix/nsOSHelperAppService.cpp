@@ -66,7 +66,8 @@ CreateInputStream(const nsAString& aFilename,
                   nsIFileInputStream** aFileInputStream,
                   nsILineInputStream** aLineInputStream,
                   nsAString& aBuffer,
-                  PRBool* aNetscapeFormat);
+                  PRBool* aNetscapeFormat,
+                  PRBool* aMore);
 
 nsresult
 GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
@@ -311,9 +312,9 @@ CreateInputStream(const nsAString& aFilename,
                   nsIFileInputStream ** aFileInputStream,
                   nsILineInputStream ** aLineInputStream,
                   nsAString& aBuffer,
-                  PRBool * aNetscapeFormat) {
+                  PRBool * aNetscapeFormat,
+                  PRBool * aMore) {
   nsresult rv = NS_OK;
-  PRBool more;
 
   nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
@@ -341,8 +342,8 @@ CreateInputStream(const nsAString& aFilename,
     return rv;
   }
 
-  rv = lineStream->ReadLine(aBuffer, &more);
-  if (NS_FAILED(rv) || !more) {
+  rv = lineStream->ReadLine(aBuffer, aMore);
+  if (NS_FAILED(rv)) {
     fileStream->Close();
     return rv;
   }
@@ -370,9 +371,9 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
   nsCOMPtr<nsILineInputStream> mimeTypes;
   PRBool netscapeFormat;
   nsAutoString buf;
-  PRBool more = PR_TRUE;
+  PRBool more = PR_FALSE;
   rv = CreateInputStream(aFilename, getter_AddRefs(mimeFile), getter_AddRefs(mimeTypes),
-                         buf, &netscapeFormat);                    
+                         buf, &netscapeFormat, &more);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -513,9 +514,9 @@ GetExtensionsAndDescriptionFromMimetypesFile(const nsAString& aFilename,
   nsCOMPtr<nsILineInputStream> mimeTypes;
   PRBool netscapeFormat;
   nsAutoString buf;
-  PRBool more = PR_TRUE;
+  PRBool more = PR_FALSE;
   rv = CreateInputStream(aFilename, getter_AddRefs(mimeFile), getter_AddRefs(mimeTypes),
-                         buf, &netscapeFormat);                    
+                         buf, &netscapeFormat, &more);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -1068,6 +1069,10 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
+  if (! *platformAppPath) { // empty filename--return error
+    NS_WARNING("Empty filename passed in.");
+    return NS_ERROR_INVALID_ARG;
+  }
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   nsresult rv;
 
@@ -1266,8 +1271,11 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
     mimeInfo->SetDescription(mailcap_description.get());
   }
     
+  rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIFile> handlerFile;
-  rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
+  if (! handler.IsEmpty()) {
+    rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
+  }
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetPreferredApplicationHandler(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
