@@ -196,8 +196,16 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     }
                     sprintf(qualURL, "%s%s", currURL, currComp->GetArchive());
 
-                    conn->SetProxyInfo(qualURL, gCtx->opt->mProxyUser,
-                                                gCtx->opt->mProxyPswd);
+                    if (*gCtx->opt->mProxyUser || *gCtx->opt->mProxyPswd)
+                    {
+                      conn->SetProxyInfo(qualURL, gCtx->opt->mProxyUser,
+                                                  gCtx->opt->mProxyPswd);
+                    }
+                    else
+                    {
+                      conn->SetProxyInfo(qualURL, NULL, NULL);
+                    }
+
                     err = conn->Open();
                     if (err == nsHTTPConn::OK)
                     {
