@@ -98,6 +98,8 @@
 #include "nsIPrefService.h"
 #include "gfxIImageFrame.h"
 
+#include "nsLayoutErrors.h"
+
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
 #undef NOISY_ICON_LOADING
@@ -320,8 +322,8 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
 
     PRBool loadBlocked = PR_FALSE;
     imageLoader->GetImageBlocked(&loadBlocked);
-    HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
-                    presShell);
+    rv = HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
+                         presShell);
   }
   
   return rv;
@@ -425,14 +427,14 @@ nsImageFrame::ConvertPxRectToTwips(const nsRect& aRect) const
                 NSIntPixelsToTwips(aRect.height, p2t)); // height
 }
 
-void
+nsresult
 nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
 {
   if (aStatus == NS_ERROR_IMAGE_BLOCKED &&
       !(mIconLoad && mIconLoad->mPrefAllImagesBlocked)) {
     // don't display any alt feedback in this case; we're blocking images
     // from that site and don't care to see anything from them
-    return;
+    return NS_OK;
   }
   
   // If we have an image map, don't do anything here
@@ -442,7 +444,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
   nsAutoString usemap;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);    
   if (!usemap.IsEmpty()) {
-    return;
+    return NS_OK;
   }
   
   // check if we want to honor the ALT text in the IMG frame, or let the preShell make it into inline text
@@ -465,7 +467,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
 
   // check for style property that indicates the icon should always be shown
   const nsStyleUIReset* styleData;
-  GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&) styleData);
+  ::GetStyleData(this, &styleData);
   if (styleData->mForceBrokenImageIcon) {
     forceIcon = PR_TRUE;
   }
@@ -489,11 +491,13 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     aPresShell->GetPrimaryFrameFor(mContent, &primaryFrame);
     aPresShell->CantRenderReplacedElement(mPresContext,
                                           primaryFrame ? primaryFrame : this);
-  } else {
-    // we are handling it
-    // invalidate the icon area (it may change states)   
-    InvalidateIcon(mPresContext);
+    return NS_ERROR_FRAME_REPLACED;
   }
+
+  // we are handling it
+  // invalidate the icon area (it may change states)   
+  InvalidateIcon(mPresContext);
+  return NS_OK;
 }
 
 nsresult

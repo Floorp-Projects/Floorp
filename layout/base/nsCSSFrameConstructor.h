@@ -472,7 +472,8 @@ protected:
                                    nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsStyleContext*  aStyleContext,
-                                   nsIFrame*        aParentFrame,
+                                   nsIFrame*        aGeometricParent,
+                                   nsIFrame*        aContentParent,
                                    nsIFrame*&       aFrame);
 
   nsWidgetRendering GetFormElementRenderingMode(nsIPresContext* aPresContext,
