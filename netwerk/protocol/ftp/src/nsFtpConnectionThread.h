@@ -37,6 +37,7 @@
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -246,7 +247,7 @@ private:
     PRBool              mKeepRunning;       // thread event loop boolean
 
     nsString2           mContentType;       // the content type of the data we're dealing w/.
-    char*               mURLSpec;
+    nsXPIDLCString      mURLSpec;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

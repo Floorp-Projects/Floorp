@@ -119,7 +119,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mResetMode = PR_FALSE;
     mList      = PR_FALSE;
     mKeepRunning = PR_TRUE;
-    mUseDefaultPath = PR_TRUE;
+    mUseDefaultPath = PR_FALSE;
     mContinueRead = PR_FALSE;
     mAnonymous = PR_TRUE;
     mRetryPass = PR_FALSE;
@@ -134,8 +134,6 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
     // lose the socket transport
     NS_RELEASE(mSTS);
     NS_RELEASE(mFTPContext);
-
-    nsAllocator::Free(mURLSpec);
 }
 
 nsresult
@@ -742,22 +740,22 @@ nsFtpConnectionThread::S_user() {
             NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            PRUnichar *user, *passwd;
+            PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
             if (message.Length() < 1) {
-                char *host;
-                rv = mURL->GetHost(&host);
+                nsXPIDLCString host;
+                rv = mURL->GetHost(getter_Copies(host));
                 if (NS_FAILED(rv)) return rv;
                 message = "Enter username and password for "; //TODO localize it!
                 message += host;
-                nsAllocator::Free(host);
             }
 		    rv = authdialog->PromptUsernameAndPassword(message.GetUnicode(), &user, &passwd, &retval);
-            if (retval) {
-                mUsername = user;
-                mPassword = passwd;
-            }
+            // if the user canceled or didn't supply a username we want to fail
+            if (!retval || (user && !*user) )
+                return NS_ERROR_FAILURE;
+            mUsername = user;
+            mPassword = passwd;
         }
         usernameStr.Append(mUsername);    
     }
@@ -806,23 +804,23 @@ nsFtpConnectionThread::S_pass() {
             NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            PRUnichar *passwd;
+            PRUnichar *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
             if (message.Length() < 1) {
-                char *host;
-                rv = mURL->GetHost(&host);
+                nsXPIDLCString host;
+                rv = mURL->GetHost(getter_Copies(host));
                 if (NS_FAILED(rv)) return rv;
                 message = "Enter password for "; //TODO localize it!
 		        message += mUsername;
                 message += " on ";
                 message += host;
-                nsAllocator::Free(host);
             }
 		    rv = authdialog->PromptPassword(message.GetUnicode(), &passwd, &retval);
-            if (retval) {
-                mPassword = passwd;
-            }
+            // we want to fail if the user canceled or didn't enter a password.
+            if (!retval || (passwd && !*passwd) )
+                return NS_ERROR_FAILURE;
+            mPassword = passwd;
         }
         passwordStr.Append(mPassword);    
     }
@@ -1000,8 +998,8 @@ nsFtpConnectionThread::R_pwd() {
         // the initial path to the new path.
         if (ptr.Length()) {
 
-            char *initialPath = nsnull;
-            rv = mURL->GetPath(&initialPath);
+            nsXPIDLCString initialPath;
+            rv = mURL->GetPath(getter_Copies(initialPath));
             if (NS_FAILED(rv)) return FTP_ERROR;
 
             if (ptr.Last() == '/') {
@@ -1011,7 +1009,6 @@ nsFtpConnectionThread::R_pwd() {
             } else {
                 ptr.Append(initialPath);
             }
-            nsAllocator::Free(initialPath);
 
             const char *p = ptr.GetBuffer();
             rv = mURL->SetPath(p);
@@ -1067,9 +1064,9 @@ nsFtpConnectionThread::R_mode() {
 nsresult
 nsFtpConnectionThread::S_cwd() {
     nsresult rv;
-    char *path;
+    nsXPIDLCString path;
     PRUint32 bytes;
-    rv = mURL->GetPath(&path);
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString cwdStr("CWD ");
@@ -1098,7 +1095,6 @@ nsFtpConnectionThread::S_cwd() {
         cwdStr.Append(path);
         cwdStr.Append(FTP_CRLF);
     }
-    nsAllocator::Free(path);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), cwdStr.GetBuffer()));
 
@@ -1139,9 +1135,9 @@ nsFtpConnectionThread::R_cwd() {
 nsresult
 nsFtpConnectionThread::S_size() {
     nsresult rv;
-    char *path;
+    nsXPIDLCString path;
     PRUint32 bytes;
-    rv = mURL->GetPath(&path);
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     // XXX should the actual file name be parsed out???
@@ -1155,8 +1151,6 @@ nsFtpConnectionThread::S_size() {
     nsCAutoString sizeBuf("SIZE ");
     sizeBuf.Append(path);
     sizeBuf.Append(FTP_CRLF);
-
-    nsAllocator::Free(path);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), sizeBuf.GetBuffer()));
 
@@ -1184,9 +1178,9 @@ nsFtpConnectionThread::R_size() {
 nsresult
 nsFtpConnectionThread::S_mdtm() {
     nsresult rv;
-    char *path;
+    nsXPIDLCString path;
     PRUint32 bytes;
-    rv = mURL->GetPath(&path);
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     /*if (mServerType == FTP_VMS_TYPE) {
@@ -1197,7 +1191,6 @@ nsFtpConnectionThread::S_mdtm() {
     nsCAutoString mdtmStr("MDTM ");
     mdtmStr.Append(path);
     mdtmStr.Append(FTP_CRLF);
-    nsAllocator::Free(path);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), mdtmStr.GetBuffer()));
 
@@ -1339,9 +1332,9 @@ nsFtpConnectionThread::R_list() {
 nsresult
 nsFtpConnectionThread::S_retr() {
     nsresult rv;
-    char *path;
+    nsXPIDLCString path;
     PRUint32 bytes;
-    rv = mURL->GetPath(&path);
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString retrStr("RETR ");
@@ -1352,7 +1345,6 @@ nsFtpConnectionThread::S_retr() {
     } else {
         retrStr.Append(path);
     }
-    nsAllocator::Free(path);
     retrStr.Append(FTP_CRLF);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), retrStr.GetBuffer()));
@@ -1379,8 +1371,8 @@ nsFtpConnectionThread::R_retr() {
         NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
-        char *contentType;
-        rv = MIMEService->GetTypeFromURI(mURL, &contentType);
+        nsXPIDLCString contentType;
+        rv = MIMEService->GetTypeFromURI(mURL, getter_Copies(contentType));
 
         // if we fail, we want to push the data on up anyway. let the app figure
         // out what to do.
@@ -1529,8 +1521,8 @@ nsFtpConnectionThread::R_pasv() {
     }
 
     // we're connected figure out what type of transfer we're doing (ascii or binary)
-    char *type = nsnull;
-    rv = mChannel->GetContentType(&type);
+    nsXPIDLCString type;
+    rv = mChannel->GetContentType(getter_Copies(type));
     nsCAutoString typeStr;
     if (NS_FAILED(rv) || !type) 
         typeStr = "bin";
@@ -1539,7 +1531,6 @@ nsFtpConnectionThread::R_pasv() {
 
     mContentType = typeStr;
 
-    nsAllocator::Free(type);
     PRInt32 textType = typeStr.Find("text");
     if (textType == 0)
         // only send ascii for text type files
@@ -1553,16 +1544,15 @@ nsFtpConnectionThread::R_pasv() {
 nsresult
 nsFtpConnectionThread::S_del_file() {
     nsresult rv;
-    char *filename;
+    nsXPIDLCString filename;
     PRUint32 bytes;
-    rv = mURL->GetPath(&filename); // XXX we should probably check to 
+    rv = mURL->GetPath(getter_Copies(filename)); // XXX we should probably check to 
                                    // XXX make sure we have an actual filename.
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString delStr("DELE ");
     delStr.Append(filename);
     delStr.Append(FTP_CRLF);
-    nsAllocator::Free(filename);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), delStr.GetBuffer()));
 
@@ -1582,15 +1572,14 @@ nsFtpConnectionThread::R_del_file() {
 nsresult
 nsFtpConnectionThread::S_del_dir() {
     nsresult rv;
-    char *dir;
+    nsXPIDLCString dir;
     PRUint32 bytes;
-    rv = mURL->GetPath(&dir);
+    rv = mURL->GetPath(getter_Copies(dir));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString delDirStr("RMD ");
     delDirStr.Append(dir);
     delDirStr.Append(FTP_CRLF);
-    nsAllocator::Free(dir);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), delDirStr.GetBuffer()));
 
@@ -1609,15 +1598,14 @@ nsFtpConnectionThread::R_del_dir() {
 nsresult
 nsFtpConnectionThread::S_mkdir() {
     nsresult rv;
-    char *dir;
+    nsXPIDLCString dir;
     PRUint32 bytes;
-    rv = mURL->GetPath(&dir);
+    rv = mURL->GetPath(getter_Copies(dir));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString mkdirStr("MKD ");
     mkdirStr.Append(dir);
     mkdirStr.Append(FTP_CRLF);
-    nsAllocator::Free(dir);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), mkdirStr.GetBuffer()));
 
@@ -1654,8 +1642,8 @@ nsFtpConnectionThread::Run() {
     /////////////////////////
     // COMMAND CHANNEL SETUP
     /////////////////////////
-    char *host;
-    rv = mURL->GetHost(&host);
+    nsXPIDLCString host;
+    rv = mURL->GetHost(getter_Copies(host));
     if (NS_FAILED(rv)) return rv;
     PRInt32 port;
     rv = mURL->GetPort(&port);
@@ -1680,7 +1668,6 @@ nsFtpConnectionThread::Run() {
     } else {
         // build our own
         rv = mSTS->CreateTransport(host, port, nsnull, getter_AddRefs(mCPipe)); // the command channel
-        nsAllocator::Free(host);
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
@@ -1873,11 +1860,11 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
     mContext = aContext;
     mURL = aUrl;
 
-    mURL->GetSpec(&mURLSpec);
+    mURL->GetSpec(getter_Copies(mURLSpec));
 
     // pull any username and/or password out of the uri
-    char *preHost = nsnull;
-    rv = mURL->GetPreHost(&preHost);
+    nsXPIDLCString preHost;
+    rv = mURL->GetPreHost(getter_Copies(preHost));
     if (NS_FAILED(rv)) return rv;
     
     if (preHost) {
@@ -1887,11 +1874,10 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
             mPassword = colon+1;
         }
         mUsername = preHost;
-        nsAllocator::Free(preHost);
     }
 
-    char *host;
-    rv = mURL->GetHost(&host);
+    nsXPIDLCString host;
+    rv = mURL->GetHost(getter_Copies(host));
     if (NS_FAILED(rv)) return rv;
     PRInt32 port;
     rv = mURL->GetPort(&port);
@@ -1899,7 +1885,6 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
 
     mCacheKey.SetString(host);
     mCacheKey.Append(port);
-    nsAllocator::Free(host);
 
     // this context is used to get channel specific info back into the FTP channel
     nsFTPContext *dataCtxt = new nsFTPContext();
@@ -1916,6 +1901,24 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
                                               PROXY_SYNC | PROXY_ALWAYS,
                                               getter_AddRefs(mConnCache));
     if (NS_FAILED(rv)) return rv;
+
+    // XXX this entire check can probably go away.
+    // figure out whether or not we want to use the default path supplied by the server.
+    // we want to do this when there's some ambiguity in our path.
+    nsXPIDLCString path;
+    rv = mURL->GetPath(getter_Copies(path));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!path || !*path || !PL_strncmp(path, "/.", 2) ) {
+        // scoot past the '/.'
+        char *newPath = nsCRT::strdup((const char*)path+2);
+        if (!newPath) return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = mURL->SetPath(newPath);
+        if (NS_FAILED(rv)) return rv;
+
+        mUseDefaultPath = PR_TRUE;
+    }
 
     return NS_OK;
 }
@@ -2030,11 +2033,11 @@ nsFtpConnectionThread::FindActionState(void) {
 
 FTP_STATE
 nsFtpConnectionThread::FindGetState(void) {
-    char *path = nsnull;
+    nsXPIDLCString path;
     nsresult rv;
     FTP_STATE result = FTP_ERROR;
 
-    rv = mURL->GetPath(&path);
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mServerType == FTP_VMS_TYPE) {
@@ -2057,7 +2060,6 @@ nsFtpConnectionThread::FindGetState(void) {
             result = FTP_S_RETR;
         }
     }
-    nsCRT::free(path);
     return result;
 }
 
