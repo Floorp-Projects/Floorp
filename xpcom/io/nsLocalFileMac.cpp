@@ -546,6 +546,18 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 	{
 		outSpec->vRefNum = inSpec->vRefNum;
 		outSpec->parID = inSpec->parID;
+		
+		if (inSpec->name[0] != 0)
+		{
+		    long theDirID;
+		    Boolean isDirectory;
+		    
+			err = FSpGetDirectoryID(inSpec, &theDirID, &isDirectory);
+		
+			if (err == noErr  &&  isDirectory)
+				outSpec->parID = theDirID;
+		}
+	
 	}
 	else
 	{
@@ -1054,7 +1066,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 		case eInitWithPath:
 		{
 			filePath = (char *)nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
-			err = ResolvePathAndSpec(filePath, nsnull, PR_FALSE, &mResolvedSpec);
+			err = ResolvePathAndSpec(filePath, nsnull, PR_TRUE, &mResolvedSpec);
 			nsAllocator::Free(filePath);
 			break;
 		}
@@ -1064,7 +1076,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 			if (strlen(mAppendedPath))
 			{	// We've got an FSSpec and an appended path so pass 'em both to ResolvePathAndSpec
 				filePath = (char *)nsAllocator::Clone(mAppendedPath, strlen(mAppendedPath)+1);
-				err = ResolvePathAndSpec(filePath, &mSpec, PR_FALSE, &mResolvedSpec);
+				err = ResolvePathAndSpec(filePath, &mSpec, PR_TRUE, &mResolvedSpec);
 				nsAllocator::Free(filePath);
 			}
 			else
@@ -1670,39 +1682,80 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 		
 		case eInitWithFSSpec:
 		{
-			rv = ResolveAndStat(PR_TRUE);
+			// Now set any appended path info
+			char* appendedPath;
+			GetAppendedPath(&appendedPath);
+						
+			if (appendedPath == nsnull || (appendedPath[0] == ':' && appendedPath[1] == '\0' ))
+			{	
+				rv = ResolveAndStat(PR_TRUE);
 
-      //if the file does not exist, does not mean that the parent does not.
-			if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
-          return rv;
- 
-			FSSpec      parentFolderSpec;		  
-			CInfoPBRec 	pBlock = {0};
+			    //if the file does not exist, does not mean that the parent does not.
+				if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+					return rv;
 
-			parentFolderSpec.name[0] = 0;
-			
-			pBlock.dirInfo.ioVRefNum = mResolvedSpec.vRefNum;
-			pBlock.dirInfo.ioDrDirID = mResolvedSpec.parID;
-			pBlock.dirInfo.ioNamePtr = (StringPtr)parentFolderSpec.name;
-			pBlock.dirInfo.ioFDirIndex = -1;		//get info on parID
-			OSErr err = PBGetCatInfoSync(&pBlock);
-			if (err != noErr) return MacErrorMapper(err);
-			
-			parentFolderSpec.vRefNum = mResolvedSpec.vRefNum;
-			parentFolderSpec.parID = pBlock.dirInfo.ioDrParID;
+				FSSpec      parentFolderSpec;		  
+				CInfoPBRec 	pBlock = {0};
 
-			nsCOMPtr<nsILocalFile> file;
-			rv =  NS_NewLocalFile("dummy:path", getter_AddRefs(file));
-			if (NS_FAILED(rv)) 
-				return rv;
-			
-			// Init with the FSSpec for the current dir
-			nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(file, &rv);
-			if (localFileMac) {
-				localFileMac->InitWithFSSpec(&parentFolderSpec);
-				rv = localFileMac->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+				parentFolderSpec.name[0] = 0;
+
+				pBlock.dirInfo.ioVRefNum = mResolvedSpec.vRefNum;
+				pBlock.dirInfo.ioDrDirID = mResolvedSpec.parID;
+				pBlock.dirInfo.ioNamePtr = (StringPtr)parentFolderSpec.name;
+				pBlock.dirInfo.ioFDirIndex = -1;		//get info on parID
+				OSErr err = PBGetCatInfoSync(&pBlock);
+				if (err != noErr) 
+				{
+					rv = MacErrorMapper(err);
+					goto bail;
+				}
+				parentFolderSpec.vRefNum = mResolvedSpec.vRefNum;
+				parentFolderSpec.parID = pBlock.dirInfo.ioDrParID;
+
+				nsCOMPtr<nsILocalFile> file;
+				rv =  NS_NewLocalFile("dummy:path", getter_AddRefs(file));
+				if (NS_FAILED(rv)) 
+					goto bail;
+
+				// Init with the FSSpec for the current dir
+				nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(file, &rv);
+				if (localFileMac) 
+				{
+					localFileMac->InitWithFSSpec(&parentFolderSpec);
+					rv = localFileMac->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+				}
 			}
-      break;
+			else
+			{
+				int len = strlen(appendedPath);
+				if (appendedPath[len] == ':')
+					appendedPath[len] = '\0';
+					
+				char * doomedChar = strrchr(appendedPath, ':');
+				doomedChar[0] = '\0';
+				
+				// Create the new nsLocalFile
+				nsCOMPtr<nsILocalFile> localFile = new nsLocalFile();
+				if (localFile == NULL)
+			  	{ 
+			  		rv =  NS_ERROR_OUT_OF_MEMORY;
+					goto bail;
+				}
+				
+				// See if it's a nsLocalFileMac (shouldn't be possible for it not to be)
+				nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(localFile);
+				if (localFileMac == NULL)
+				{ 
+			  		rv =  NS_ERROR_NO_INTERFACE;
+					goto bail;
+				}
+				localFileMac->InitWithFSSpec(&mSpec);
+				localFileMac->SetAppendedPath(appendedPath);
+				localFileMac->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+			}
+			bail:
+				nsAllocator::Free(appendedPath);
+			break;
 		}
 			
 		default:
