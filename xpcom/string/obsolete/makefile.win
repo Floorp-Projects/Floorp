@@ -27,7 +27,6 @@ EXPORTS =                               \
         nsStr.h                         \
         nsString.h                      \
         nsString2.h                     \
-        nsXPIDLString.h                 \
         $(NULL)                        
 
 LIBRARY_NAME=string_obsolete_s
@@ -39,7 +38,6 @@ CPP_OBJS =                              \
         .\$(OBJDIR)\nsStr.obj           \
         .\$(OBJDIR)\nsString.obj        \
         .\$(OBJDIR)\nsString2.obj       \
-        .\$(OBJDIR)\nsXPIDLString.obj   \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

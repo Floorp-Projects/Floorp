@@ -133,7 +133,7 @@ const PRUnichar*
 nsAFlatString::get() const
   { 
     const nsBufferHandle<PRUnichar>* handle = GetBufferHandle();
-    NS_ASSERTION(handle, "handle is null!");
+    // NS_ASSERTION(handle, "handle is null!");
     return handle ? handle->DataStart() : 0; 
   }
 
@@ -141,6 +141,6 @@ const char*
 nsAFlatCString::get() const
   { 
     const nsBufferHandle<char>* handle = GetBufferHandle();
-    NS_ASSERTION(handle, "handle is null!");
+    // NS_ASSERTION(handle, "handle is null!");
     return handle ? handle->DataStart() : 0; 
   }

@@ -24,6 +24,10 @@
 #ifndef nsStringIteratorUtils_h___
 #define nsStringIteratorUtils_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
 template <class Iterator>
 inline
 PRBool

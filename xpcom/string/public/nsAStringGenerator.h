@@ -25,6 +25,10 @@
 #ifndef nsAStringGenerator_h___
 #define nsAStringGenerator_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
 #include "nscore.h"
   // for |PRUnichar|
 

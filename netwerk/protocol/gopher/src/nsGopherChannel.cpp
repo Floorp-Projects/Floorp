@@ -111,7 +111,7 @@ nsGopherChannel::Init(nsIURI* uri)
         mSelector.Adopt(nsCRT::strdup(""));
     } else {
         mType = buffer[1]; // Ignore leading '/'
-        mSelector.Adopt(nsCRT::strdup(nsUnescape(NS_CONST_CAST(char*,&buffer[2]))));
+        mSelector.Adopt(nsCRT::strdup(nsUnescape(NS_CONST_CAST(char*,buffer.get()+2))));
     }
 
     PR_LOG(gGopherLog,

@@ -36,14 +36,12 @@ CPPSRCS		=			\
 		nsStr.cpp		\
 		nsString.cpp		\
 		nsString2.cpp		\
-		nsXPIDLString.cpp	\
 		$(NULL)
 
 EXPORTS		=			\
 		nsStr.h			\
 		nsString.h		\
 		nsString2.h		\
-		nsXPIDLString.h		\
 		$(NULL)			
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

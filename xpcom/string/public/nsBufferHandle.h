@@ -27,6 +27,10 @@
 #ifndef nsBufferHandle_h___
 #define nsBufferHandle_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
 #include <stddef.h>
   // for |ptrdiff_t|
 

@@ -26,6 +26,9 @@
 #ifndef nsStringFragment_h___
 #define nsStringFragment_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
 
 
   /**

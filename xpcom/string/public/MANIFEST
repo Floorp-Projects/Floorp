@@ -43,8 +43,10 @@ nsReadableUtils.h
 nsSharableString.h
 nsSharedBufferList.h
 nsSlidingString.h
+nsStringDefines.h
 nsStringFragment.h
 nsStringFwd.h
 nsStringIterator.h
 nsStringIteratorUtils.h
 nsStringTraits.h
+nsXPIDLString.h

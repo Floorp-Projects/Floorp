@@ -26,6 +26,10 @@
 #ifndef nsStringFwd_h___
 #define nsStringFwd_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
 
   /**
    * @see nsAString.h
