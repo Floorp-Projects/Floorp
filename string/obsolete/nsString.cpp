@@ -1082,7 +1082,10 @@ void nsCString::AppendWithConversion( const PRUnichar* aBuffer, PRInt32 aLength 
       aLength = nsCharTraits<PRUnichar>::length(aBuffer);
 
     if ( aLength > 0 )
-      StrAppend(*this, temp, 0, aLength);
+      {
+        temp.mLength = aLength;
+        StrAppend(*this, temp, 0, aLength);
+      }
   }
 
 /**
