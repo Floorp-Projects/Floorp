@@ -80,8 +80,14 @@ const nsSharedBufferHandle<PRUnichar>*
 XPCReadableJSStringWrapper::BufferHandle(JSBool shared) const
 {
     if (!mStr) {
-        // This is a "void" string, no buffer handle available
-        return nsnull;
+        // This is a "void" string, so return a shared empty buffer handle.
+        static shared_buffer_handle_type* sBufferHandle = nsnull;
+        if (!sBufferHandle) {
+            sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
+                                              PRUint32(1), (self_type*)nsnull);
+            sBufferHandle->AcquireReference();
+        }
+        return sBufferHandle;
     }
 
     XPCReadableJSStringWrapper * mutable_this =
