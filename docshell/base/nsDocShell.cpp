@@ -109,6 +109,8 @@
 
 #include "prlog.h"
 
+#include "nsISelectionDisplay.h"
+
 // this is going away - see
 //
 #include "nsIBrowserHistory.h"
@@ -381,6 +383,12 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
       }  
 
       return NS_NOINTERFACE;   
+    }
+    else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult rv = GetPresShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell)
+        return shell->QueryInterface(aIID,aSink);    
     }
     else {
         return QueryInterface(aIID, aSink);
