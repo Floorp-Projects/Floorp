@@ -96,7 +96,7 @@ nsTransactionStack::Clear(void)
 
   result = Pop(&tx);
 
-  if (! NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     return result;
 
   while (tx) {
@@ -104,7 +104,7 @@ nsTransactionStack::Clear(void)
 
     result = Pop(&tx);
 
-    if (! NS_SUCCEEDED(result))
+    if (NS_FAILED(result))
       return result;
   }
 
@@ -157,7 +157,7 @@ nsTransactionRedoStack::Clear(void)
 
   result = PopBottom(&tx);
 
-  if (! NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     return result;
 
   while (tx) {
@@ -165,7 +165,7 @@ nsTransactionRedoStack::Clear(void)
 
     result = PopBottom(&tx);
 
-    if (! NS_SUCCEEDED(result))
+    if (NS_FAILED(result))
       return result;
   }
 
