@@ -1149,13 +1149,11 @@ namespace MetaData {
                                     bCon->addType(v->type);
                                     LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitInitBytecode(bCon, p->pos);      
-                                    bCon->emitOp(ePop, p->pos);
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
                                     LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitInitBytecode(bCon, p->pos);      
-                                    bCon->emitOp(ePop, p->pos);
                                 }
                             }
                         }
@@ -2342,39 +2340,27 @@ doUnary:
         LookupKind lookup(true, findThis(false));
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
-            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase))
+            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase, false))
                 return;
             fi++;
         }
         if (createIfMissing) {
             Frame *pf = getPackageOrGlobalFrame();
             if (pf->kind == GlobalObjectKind) {
-                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
+                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase, false))
                     return;
             }
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
 
-    // Attempt the write in the top frame in the current environment - if the property
-    // exists, then fine. Otherwise create the property there.
+    // Attempt the write in the top frame in the current environment, the property must exist
+    // as this is the initialization of a previously defined member.
     void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
-            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase))
-                return;
-            fi++;
-        }
-        if (createIfMissing) {
-            Frame *pf = getPackageOrGlobalFrame();
-            if (pf->kind == GlobalObjectKind) {
-                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
-                    return;
-            }
-        }
-        meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
+        if (!meta->writeProperty(*getBegin(), multiname, &lookup, false, newValue, phase, true))
+            ASSERT(false);
     }
 
     // Delete the named property in the current environment, return true if the property
@@ -3373,7 +3359,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
     // Write a value to the local member
-    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, Phase /* phase */) // phase not used?
+    bool JS2Metadata::writeLocalMember(LocalMember *m, js2val newValue, Phase /* phase */, bool initFlag) // phase not used?
     {
         if (m == NULL)
             return false;   // 'None'
@@ -3385,8 +3371,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case LocalMember::Variable:
             {
                 Variable *v = checked_cast<Variable *>(m);
-                if (JS2VAL_IS_INACCESSIBLE(v->value) 
-                        || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value)))
+                if (!initFlag
+                        && (JS2VAL_IS_INACCESSIBLE(v->value) 
+                                || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value))))
                     reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
                 v->value = v->type->implicitCoerce(this, newValue);
             }
@@ -3558,7 +3545,7 @@ readClassProperty:
         case ParameterKind: 
         case BlockKind: 
         case ClassKind:
-            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
+            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase, false);
 
         case PrototypeInstanceKind: 
             return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
@@ -3601,7 +3588,7 @@ readClassProperty:
 
     // Write the value of a property in the frame. Return true/false if that frame has
     // the property or not.
-    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
+    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag)
     {
         if (container->kind != ClassKind) {
             // Must be System, Global, Package, Parameter or Block
@@ -3609,7 +3596,7 @@ readClassProperty:
             if (!m && (container->kind == GlobalObjectKind))
                 return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
             else
-                return writeLocalMember(m, newValue, phase);
+                return writeLocalMember(m, newValue, phase, initFlag);
         }
         else {
             // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
@@ -3621,7 +3608,7 @@ readClassProperty:
             MemberDescriptor m2;
             if (!findLocalMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) 
                             || m2.localMember)
-                return writeLocalMember(m2.localMember, newValue, phase);
+                return writeLocalMember(m2.localMember, newValue, phase, initFlag);
             else {
                 if (JS2VAL_IS_NULL(thisObject))
                     reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
@@ -4409,6 +4396,20 @@ deleteClassProperty:
         }
     }
 
+ /************************************************************************************
+ *
+ *  AlienInstance
+ *
+ ************************************************************************************/
+
+    bool AlienInstance::readProperty(Multiname *m, js2val *rval)
+    {
+        return false;
+    }
+
+    void AlienInstance::writeProperty(Multiname *m, js2val rval)
+    {
+    }
 
  /************************************************************************************
  *

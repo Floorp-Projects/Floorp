@@ -169,6 +169,7 @@ namespace MetaData {
                     }
                     sp = hndlr->mStackTop;
                     pc = hndlr->mPC;
+                    meta->env->setTopFrame(hndlr->mFrame);
                     push(x);
                 }
                 else
@@ -457,6 +458,7 @@ namespace MetaData {
 
         { eLexicalRead,  "LexicalRead", NAME_INDEX },       // <multiname index:u16>
         { eLexicalWrite,  "LexicalWrite", NAME_INDEX },      // <multiname index:u16>
+        { eLexicalInit,  "LexicalInit", NAME_INDEX },      // <multiname index:u16>
         { eLexicalRef,  "LexicalRef", NAME_INDEX },        // <multiname index:u16>
         { eLexicalDelete,  "LexicalDelete", NAME_INDEX },     // <multiname index:u16>
         { eDotRead,  "DotRead", NAME_INDEX },           // <multiname index:u16>
@@ -661,6 +663,8 @@ namespace MetaData {
         case eSlotRead:     // push the value
             return 1;
 
+        case eLexicalInit:
+            return -1;      // pop the value
         case eLexicalRead:
             return 1;       // push the value
         case eLexicalWrite:
@@ -854,7 +858,7 @@ namespace MetaData {
     void JS2Engine::pushHandler(uint8 *pc)
     { 
         ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
-        mTryStack.push(new HandlerData(pc, sp, curAct)); 
+        mTryStack.push(new HandlerData(pc, sp, curAct, meta->env->getTopFrame())); 
     }
 
     void JS2Engine::popHandler()

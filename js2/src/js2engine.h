@@ -289,12 +289,13 @@ public:
     void insert(js2val x, int count);
 
     struct HandlerData {
-        HandlerData(uint8 *pc, js2val *stackTop, ActivationFrame *curAct) 
-            : mPC(pc), mStackTop(stackTop), mActivation(curAct) { }
+        HandlerData(uint8 *pc, js2val *stackTop, ActivationFrame *curAct, Frame *frame) 
+            : mPC(pc), mStackTop(stackTop), mActivation(curAct), mFrame(frame) { }
 
         uint8 *mPC;
         js2val *mStackTop;
         ActivationFrame *mActivation;
+        Frame *mFrame;
     };
 
     std::stack<HandlerData *> mTryStack;
