@@ -37,6 +37,27 @@ use vars qw(%ops @ISA);
 require Exporter;
 @ISA = qw(Exporter);
 
+sub get_classname {
+    # munge an OPCODE_MNEMONIC into a ClassName
+    my ($enum_name) = @_;
+    my @words = split ("_", $enum_name);
+    my $cname = "";
+    my $i = 0;
+    my $word;
+
+    for $word (@words) {
+        if ((length($word) == 2) && ($i != 0)) {
+            $cname .= uc($word);
+        } else {
+            $cname .= uc(substr($word, 0, 1)) . lc(substr($word, 1));
+        }
+        $i++;
+    }
+    
+    return $cname;
+}
+
+
 #
 # fields are:
 #

@@ -34,54 +34,98 @@
 use strict;
 use jsicodes;
 
-my $k;
-my $count = 0;
+my $tab = "    ";
 
-for $k (sort(keys(%jsicodes::ops))) {
-    $count++;
-    print "    {\"$k\", {";
-    my $c = $jsicodes::ops{$k};
-    if ($c->{"params"}) {
-        my @ot;
-        my @params = @{$c->{"params"}};
-        my $p;
-        @ot = ();
-        for $p (@params) {
-            if ($p eq "ArgumentList") {
-                push (@ot, "otArgumentList");
-            } elsif ($p eq "BinaryOperator::BinaryOp") {
-                push (@ot, "otBinaryOp");
-            } elsif ($p eq "ICodeModule*") {
-                push (@ot, "otICodeModule");
-            } elsif ($p eq "JSClass*") {
-                push (@ot, "otJSClass");
-            } elsif ($p eq "JSFunction*") {
-                push (@ot, "otJSFunction");
-            } elsif ($p eq "JSString*") {
-                push (@ot, "otJSString");
-            } elsif ($p eq "JSType*") {
-                push (@ot, "otJSType");
-            } elsif ($p eq "Label*") {
-                push (@ot, "otLabel");
-            } elsif ($p eq "TypedRegister") {
-                push (@ot, "otRegister");
-            } elsif ($p eq "bool") {
-                push (@ot, "otBool");
-            } elsif ($p eq "const StringAtom*") {
-                push (@ot, "otStringAtom");
-            } elsif ($p eq "double") {
-                push (@ot, "otDouble");
-            } elsif ($p eq "uint32") {
-                push (@ot, "otUInt32");
-            } else {
-                die "unknown parameter type '$p' for icode '$k'.\n";
+my @map = &get_map();
+my $gen_body = &get_generator();
+
+print $tab . "static uint icodemap_size = " . ($#map + 1) . "\n\n\n";
+print join ("\n", @map) . "\n\n\n";
+print $gen_body . "\n";
+
+sub get_map {
+    my $k;
+    my @map;
+    for $k (sort(keys(%jsicodes::ops))) {
+        my $map_entry .= $tab . $tab . "{\"$k\", {";
+        my $c = $jsicodes::ops{$k};
+        if ($c->{"params"}) {
+            my @ot;
+            my @params = @{$c->{"params"}};
+            my $p;
+            @ot = ();
+            for $p (@params) {
+                if ($p eq "ArgumentList") {
+                    push (@ot, "otArgumentList");
+                } elsif ($p eq "BinaryOperator::BinaryOp") {
+                    push (@ot, "otBinaryOp");
+                } elsif ($p eq "ICodeModule*") {
+                    push (@ot, "otICodeModule");
+                } elsif ($p eq "JSClass*") {
+                    push (@ot, "otJSClass");
+                } elsif ($p eq "JSFunction*") {
+                    push (@ot, "otJSFunction");
+                } elsif ($p eq "JSString*") {
+                    push (@ot, "otJSString");
+                } elsif ($p eq "JSType*") {
+                    push (@ot, "otJSType");
+                } elsif ($p eq "Label*") {
+                    push (@ot, "otLabel");
+                } elsif ($p eq "TypedRegister") {
+                    push (@ot, "otRegister");
+                } elsif ($p eq "bool") {
+                    push (@ot, "otBool");
+                } elsif ($p eq "const StringAtom*") {
+                    push (@ot, "otStringAtom");
+                } elsif ($p eq "double") {
+                    push (@ot, "otDouble");
+                } elsif ($p eq "uint32") {
+                    push (@ot, "otUInt32");
+                } else {
+                    die "unknown parameter type '$p' for icode '$k'.\n";
+                }
             }
+            $map_entry .= join (", ", @ot);
+        } else {
+            $map_entry .= "otNone";
         }
-        print (join (", ", @ot));
-    } else {
-        print "otNone";
+        $map_entry .= "}},";
+        push (@map, $map_entry);
     }
-    print "}},\n";
+
+    return @map;
 }
 
-print "\n\nstatic uint icodemap_size = $count\n";
+sub get_generator {
+    my $k;
+    my $rval = "";
+    my $icode_id = 0;
+    for $k (sort(keys(%jsicodes::ops))) {
+        my $c = $jsicodes::ops{$k};
+        my @args = ();
+        if ($c->{"params"}) {
+            my @params = @{$c->{"params"}};
+            my $arg_num = 0;
+            my $p;
+            for $p (@params) {
+                if ($p eq "TypedRegister") {
+                    push (@args, "TypedRegister(static_cast<JSTypes::Register>(node->operand[$arg_num].data), 0)");
+                } elsif ($p =~ /\*$/) {
+                    push (@args, "reinterpret_cast<$p>(node->operand[$arg_num].data)");
+                } else {
+                    push (@args, "static_cast<$p>(node->operand[$arg_num].data)");
+                }
+                $arg_num++;
+            }
+        }
+
+        $rval .= $tab . $tab . $tab . "case $icode_id:\n";
+        $rval .= $tab . $tab . $tab . $tab . 
+          "i = new " . &jsicodes::get_classname($k) . " (" . join (", ", @args) .
+            ");\n";
+        $rval .= $tab . $tab . $tab . $tab . "break;\n";
+        $icode_id++;
+    }
+
+    return $rval;
+}
