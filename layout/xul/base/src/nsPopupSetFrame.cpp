@@ -409,7 +409,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
   if (entry && entry->mCreateHandlerSucceeded)
     ActivatePopup(entry, PR_FALSE);
 
-  if (entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+  if (entry && entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
     // If we are a context menu, and if we are attached to a menupopup, then hiding us
     // should also hide the parent menu popup.
     nsCOMPtr<nsIAtom> tag;
