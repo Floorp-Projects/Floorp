@@ -44,6 +44,7 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsIStringBundle.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
 #include "nsFileLocations.h"
@@ -85,6 +86,7 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class nsChromeRegistry;
 
@@ -1930,6 +1932,12 @@ nsChromeRegistry::ReloadChrome()
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
+  
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(kStringBundleServiceCID, &rv);
+  
+  if (NS_SUCCEEDED(rv))
+    bundleService->FlushBundles();
   
   // Get the window mediator
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
