@@ -86,13 +86,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
   [super dealloc];
 }
 
-- (void)awakeFromNib
-{
-  NSLog(@"awakeFromNib");
-  //[[self window] setFrameUsingName: ProgressWindowFrameSaveName];
-  //[[self window] setFrameAutosaveName: ProgressWindowFrameSaveName];
-}
-
 - (void)windowDidLoad
 {
   [super windowDidLoad];
@@ -110,8 +103,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
   [self setupToolbar];
   [mProgressBar setUsesThreadedAnimation:YES];      
   [mProgressBar startAnimation:self];   // move to onStateChange
-
-  //[[self window] setFrameUsingName: ProgressWindowFrameSaveName];
 }
 
 - (void)setupToolbar
