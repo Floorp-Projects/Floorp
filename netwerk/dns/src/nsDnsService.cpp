@@ -680,12 +680,7 @@ nsDNSLookup::InitiateLookup()
     if (HostnameIsIPAddress())  return NS_OK;
 
    
-#if defined(XP_BEOS) || defined(XP_OS2)
-
-    DoSyncLookup();
-    return NS_OK;
-
-#elif defined(XP_MAC)
+#if defined(XP_MAC)
     
     nsDNSService::gService->EnqueuePendingQ(this);
     OSErr err = OTInetStringToAddress(nsDNSService::gService->mServiceRef, mHostName, &mInetHostInfo);
@@ -717,7 +712,7 @@ nsDNSLookup::InitiateLookup()
     }
     return NS_OK;
     
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 
     // Add to pending lookup queue
     nsDNSService::gService->EnqueuePendingQ(this);
@@ -814,21 +809,12 @@ nsDNSLookup::DoSyncLookup()
     PRStatus status;
     nsresult rv = NS_OK;
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
     status = PR_GetIPNodeByName(mHostName,
                                 PR_AF_INET6,
                                 PR_AI_DEFAULT,
                                 mHostEntry.buffer,
                                 PR_NETDB_BUF_SIZE,
                                 &(mHostEntry.hostEnt));
-#elif defined(XP_OS2)
-    status = PR_GetHostByName(mHostName, 
-                              mHostEntry.buffer, 
-                              PR_NETDB_BUF_SIZE, 
-                              &(mHostEntry.hostEnt));
-#else
-    NS_NOTREACHED("platform requires sync interface");
-#endif
 
     if (PR_SUCCESS != status)
         rv = NS_ERROR_UNKNOWN_HOST;
@@ -954,7 +940,7 @@ nsDNSService::Init()
     mDNSServiceLock = PR_NewLock();
     if (mDNSServiceLock == nsnull)  return NS_ERROR_OUT_OF_MEMORY;
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_BEOS) || defined(XP_OS2)
     mDNSCondVar = PR_NewCondVar(mDNSServiceLock);
     if (!mDNSCondVar) {
         rv = NS_ERROR_OUT_OF_MEMORY;
@@ -967,13 +953,11 @@ nsDNSService::Init()
     nsAutoLock  dnsLock(mDNSServiceLock);
 #endif
 
-#if defined(XP_MAC) || defined(XP_WIN) || defined(XP_UNIX)
     // create DNS thread
     NS_ASSERTION(mThread == nsnull, "nsDNSService not shut down");
     rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewThread failed.");
     if (NS_FAILED(rv))  goto error_exit;
-#endif
 
 #if defined(XP_WIN)
     // sync with DNS thread to allow it to create the DNS window
@@ -994,7 +978,7 @@ nsDNSService::Init()
 #endif
 error_exit:
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_BEOS) || defined(XP_OS2)
     if (mDNSCondVar)  PR_DestroyCondVar(mDNSCondVar);
     mDNSCondVar = nsnull;
 #endif
@@ -1054,7 +1038,7 @@ nsDNSService::~nsDNSService()
     NS_ASSERTION(PR_CLIST_IS_EMPTY(&mPendingQ),  "didn't clean up lookups");
     NS_ASSERTION(PR_CLIST_IS_EMPTY(&mEvictionQ), "didn't clean up lookups");
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_BEOS) || defined(XP_OS2)
     NS_ASSERTION(mDNSCondVar == nsnull, "DNS condition variable not destroyed");
 #endif
 
@@ -1242,7 +1226,7 @@ nsDNSService::Run()
 }
 
 
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 
 NS_IMETHODIMP
 nsDNSService::Run()
@@ -1347,10 +1331,8 @@ nsDNSService::Lookup(const char*     hostName,
             if (NS_FAILED(rv)) return rv;
         }
 
-#if !defined(XP_OS2) && !defined(XP_BEOS)
         if (mThread == nsnull)
             return NS_ERROR_OFFLINE;
-#endif
 
         nsDNSLookup * lookup = FindOrCreateLookup(hostName);
         if (!lookup) return NS_ERROR_OUT_OF_MEMORY;
@@ -1430,7 +1412,7 @@ nsDNSService::EnqueuePendingQ(nsDNSLookup * lookup)
 {
     PR_APPEND_LINK(lookup, &mPendingQ);
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
     // Notify the worker thread that a request has been queued.
     PRStatus  status = PR_NotifyCondVar(mDNSCondVar);
     NS_ASSERTION(status == PR_SUCCESS, "PR_NotifyCondVar failed.");
@@ -1441,7 +1423,7 @@ nsDNSService::EnqueuePendingQ(nsDNSLookup * lookup)
 nsDNSLookup *
 nsDNSService::DequeuePendingQ()
 {
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
     // Wait for notification of a queued request, unless  we're shutting down.
     while (PR_CLIST_IS_EMPTY(&mPendingQ) && (mState != DNS_SHUTTING_DOWN)) {
         PRStatus  status = PR_WaitCondVar(mDNSCondVar, PR_INTERVAL_NO_TIMEOUT);
@@ -1648,9 +1630,7 @@ nsDNSService::Shutdown()
 {
     nsresult rv = NS_OK;
 
-#if !defined(XP_OS2) && !defined(XP_BEOS)
     if (mThread == nsnull) return rv;
-#endif
 
     if (!mDNSServiceLock) // already shutdown or not init'ed as yet. 
         return NS_ERROR_NOT_AVAILABLE; 
@@ -1675,7 +1655,7 @@ nsDNSService::Shutdown()
     if (dnsServiceThread)
         PR_Mac_PostAsyncNotify(dnsServiceThread);
 
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 
     PRStatus status = PR_NotifyCondVar(mDNSCondVar);
     NS_ASSERTION(status == PR_SUCCESS, "unable to notify dns cond var");
@@ -1686,11 +1666,9 @@ nsDNSService::Shutdown()
 
 #endif
 
-#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_WIN)
     PR_Unlock(mDNSServiceLock);  // so dns thread can aquire it.
     rv = mThread->Join();        // wait for dns thread to quit
     NS_ASSERTION(NS_SUCCEEDED(rv), "dns thread join failed in shutdown.");
-#endif
 
     // clean up outstanding lookups
     //   - wait until DNS thread is gone so we don't collide while calling requests
@@ -1707,7 +1685,7 @@ nsDNSService::Shutdown()
     // and the thread holds onto the nsDNSService via its mRunnable
     mThread = nsnull;
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_BEOS) || defined(XP_OS2)
     PR_DestroyCondVar(mDNSCondVar);
     mDNSCondVar = nsnull;
 #endif
