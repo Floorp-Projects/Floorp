@@ -288,9 +288,11 @@
                contextmenu="calendarlist-context-menu">
                <listhead>
                   <listheader flex="1" crop="end" label="Calendars"/>
+                  <listheader/>
                </listhead>
                <listcols>
                   <listcol flex="1"/>
+                  <listcol/>
                </listcols>
             </listbox>
          </vbox>

@@ -153,6 +153,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       
       profileFile.append("RemoteCalendar"+CalendarObject.serverNumber+".ics");
 
+      CalendarObject.remote = true;
       CalendarObject.remotePath = CalendarObject.path;
       CalendarObject.path = profileFile.path;
       
@@ -162,13 +163,14 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    }
    else
    {
+      CalendarObject.remote = false;
       dump( "Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
   
    
    //add the information to the preferences.
    this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".name", CalendarObject.name );
-   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CalendarObject.serverNumber+".remote", true );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CalendarObject.serverNumber+".remote", CalendarObject.remote );
    this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".remotePath", CalendarObject.remotePath );
    this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CalendarObject.serverNumber+".path", CalendarObject.path );
    this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CalendarObject.serverNumber+".active", true );
@@ -204,6 +206,8 @@ calendarManager.prototype.editServerDialogResponse = function calMan_editServerD
 */
 calendarManager.prototype.addCalendar = function calMan_addCalendar( ThisCalendarObject )
 {
+   dump( "\n calendarManager-> add calendar "+ThisCalendarObject.path );
+
    this.CalendarWindow.eventSource.gICalLib.addCalendar( ThisCalendarObject.path );
 
    this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+this.getCalendarIndex( ThisCalendarObject )+".active", true );
@@ -324,17 +328,29 @@ calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
 calendarManager.prototype.addCalendarToListBox = function calMan_addCalendarToListBox( ThisCalendarObject )
 {
    var calendarListItem = document.createElement( "listitem" );
-   calendarListItem.setAttribute( "id", "calendar-list-item-"+ThisCalendarObject.serverNumber );
    calendarListItem.setAttribute( "onclick", "switchCalendar( event );" );
    calendarListItem.calendarObject = ThisCalendarObject;
-   calendarListItem.setAttribute( "label", ThisCalendarObject.name );
-   calendarListItem.setAttribute( "flex", "1" );
-   
-   calendarListItem.setAttribute( "calendarPath", ThisCalendarObject.path );
 
-   calendarListItem.setAttribute( "type", "checkbox" );
-   calendarListItem.setAttribute( "checked", ThisCalendarObject.active );
+   var calendarListCell = document.createElement( "listcell" );
+   calendarListCell.setAttribute( "id", "calendar-list-item-"+ThisCalendarObject.serverNumber );
+   calendarListCell.setAttribute( "class", "calendar-list-item-class" );
+   calendarListCell.setAttribute( "src", "chrome://calendar/skin/synch_animated.gif" );
+   calendarListCell.setAttribute( "label", ThisCalendarObject.name );
+   calendarListCell.setAttribute( "flex", "1" );
+   calendarListCell.setAttribute( "calendarPath", ThisCalendarObject.path );
+   calendarListCell.setAttribute( "type", "checkbox" );
+   calendarListCell.setAttribute( "checked", ThisCalendarObject.active );
    
+   calendarListItem.appendChild( calendarListCell );
+
+   var calendarRightListCell = document.createElement( "listcell" );
+   var calendarImage = document.createElement( "image" );
+   calendarImage.setAttribute( "id", "calendar-list-image-"+ThisCalendarObject.serverNumber );
+   calendarImage.setAttribute( "class", "calendar-list-item-class" );
+   calendarRightListCell.appendChild( calendarImage );
+
+   calendarListItem.appendChild( calendarRightListCell );
+
    document.getElementById( "list-calendars-listbox" ).appendChild( calendarListItem );
 }
 
@@ -379,6 +395,8 @@ var calendarToGet = null;
 
 calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject, onResponse )
 {
+   document.getElementById( "calendar-list-image-"+ThisCalendarObject.serverNumber ).setAttribute( "synching", "true" );
+
    calendarToGet = ThisCalendarObject;
    // make a request
    xmlhttprequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -387,7 +405,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
    request.addEventListener( "load", onResponse, false );
    request.addEventListener( "error", onError, false );
    
-   request.open( "GET", ThisCalendarObject.remotePath, true );    // true means async
+   request.open( "GET", ThisCalendarObject.remotePath, false );    // true means async
    
    request.send( null );
 }
@@ -474,11 +492,14 @@ function onResponseAndRefresh( )
    
    gCalendarWindow.calendarManager.removeCalendar( calendarToGet );
 
-   gCalendarWindow.calendarManager.addCalendar( calendarToGet );
+   if( calendarToGet.active )
+      gCalendarWindow.calendarManager.addCalendar( calendarToGet );
 
    refreshEventTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
+
+   document.getElementById( "calendar-list-image-"+calendarToGet.serverNumber ).removeAttribute( "synching" );
 }
 
 function onError( )
@@ -498,11 +519,21 @@ function switchCalendar( event )
       return;
    }
       
-   if( event.currentTarget.checked )
-      gCalendarWindow.calendarManager.addCalendar( event.currentTarget.calendarObject );
-   else
-      gCalendarWindow.calendarManager.removeCalendar( event.currentTarget.calendarObject );
+   //document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber );
 
+   if( event.currentTarget.childNodes[0].getAttribute( "checked" ) != "true" )
+   {
+      gCalendarWindow.calendarManager.addCalendar( event.currentTarget.calendarObject );
+      
+      event.currentTarget.childNodes[0].setAttribute( "checked", "true" )
+   }
+   else
+   {
+      gCalendarWindow.calendarManager.removeCalendar( event.currentTarget.calendarObject );
+      
+      event.currentTarget.childNodes[0].removeAttribute( "checked" );
+   }
+      
    refreshEventTree( false );
 
    refreshToDoTree( false );

@@ -1156,3 +1156,9 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
 treechildren:-moz-tree-cell-text(focus, selected) {
    color                  : white;
 }
+
+.calendar-list-item-class[synching="true"]
+{
+   list-style-image     : url( "chrome://calendar/skin/synch_animated.gif" );
+}
+
