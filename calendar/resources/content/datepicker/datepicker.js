@@ -179,7 +179,7 @@ oeDatePicker.clickDay = function( newDayItemNumber )
       
       oeDatePicker.selectDate();
 
-      oeDatePicker.gPopup.closePopup();
+      oeDatePicker.gPopup.hidePopup();
    }
 }
 

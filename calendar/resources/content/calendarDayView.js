@@ -159,9 +159,9 @@ DayView.prototype.refreshEvents = function( )
          {
             //thisCalendarEventDisplay = dayEventList[j];
             calendarEventDisplayToMatch = dayEventList[j];
+            
             calendarEventToMatchHours = calendarEventDisplayToMatch.displayDate.getHours();
             calendarEventToMatchMinutes = calendarEventDisplayToMatch.displayDate.getMinutes();
-            calendarEventToMatchMinutes = calendarEventToMatch.displayDate.getMinutes();
             calendarEventDisplayHours = calendarEventDisplay.displayDate.getHours();
             calendarEventDisplayMinutes = calendarEventDisplay.displayDate.getMinutes();
             calendarEventEndHours = calendarEventDisplay.event.end.hour;

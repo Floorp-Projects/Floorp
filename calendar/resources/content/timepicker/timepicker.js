@@ -304,7 +304,7 @@ oeTimePicker.clickMinute = function( minuteItem, minuteNumber )
    
    oeTimePicker.selectTime();
 
-   oeTimePicker.gPopup.closePopup ();
+   oeTimePicker.gPopup.hidePopup();
 
 }
 
@@ -344,7 +344,7 @@ oeTimePicker.selectTime = function()
    
    // close the popup
    
-   //oeTimePicker.gPopup.closePopup ();
+   //oeTimePicker.gPopup.hidePopup();
 
 }
 

@@ -457,37 +457,37 @@ ALARM RELATED CODE
 
 CalendarEventDataSource.prototype.launchAlarmDialog = function( Event )
 {
-   var args = new Object();
+   //var args = new Object();
 
-   args.calendarEvent = Event;
+   //args.calendarEvent = Event;
 
-   Root.getRootWindowAppPath( "controlbar" ).penapplication.openDialog( "caAlarmDialog", "chrome://calendar/content/ca-event-alert-dialog.xul", false, args );   
+   //openDialog( "caAlarmDialog", "chrome://calendar/content/ca-event-alert-dialog.xul", false, args );   
 }
 
 
 CalendarEventDataSource.prototype.checkAlarmDialog = function( )
 {
-   var AlarmDialogIsOpen = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" ); //change this to do something
+   //var AlarmDialogIsOpen = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" ); //change this to do something
    
-   if( AlarmDialogIsOpen )
-      return( true );
-   else
-      return( false );
+   //if( AlarmDialogIsOpen )
+   //   return( true );
+   //else
+   //   return( false );
 
 }
 
 CalendarEventDataSource.prototype.addEventToDialog = function( Event )
 {
-   if( this.checkAlarmDialog() )
-   {
-      var DialogWindow = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" );
+   //if( this.checkAlarmDialog() )
+   //{
+   //   var DialogWindow = Root.getRootWindowAppPath( "controlbar" ).penapplication.getDialogPath( "caAlarmDialog" );
 
-      DialogWindow.createAlarmBox( Event );
-   }
-   else
-   {
-      this.launchAlarmDialog( Event );
-   }
+   //   DialogWindow.createAlarmBox( Event );
+   //}
+   //else
+   //{
+   //   this.launchAlarmDialog( Event );
+   //}
 }
 
 
@@ -569,116 +569,6 @@ CalendarEventDataSource.prototype.makeXmlNode = function( xmlDocument, calendarE
     return eventNode;
 }
 
-CalendarEventDataSource.prototype.fillEventFromXmlNode = function( calendarEvent, eventNode )
-{
-    
-    var checkDate = function( node, name )
-    {
-        var year    = Number( node.getAttribute( name + "Year" ) );
-        var month   = Number( node.getAttribute( name + "Month" ) );
-        var day     = Number( node.getAttribute( name + "Day" ) );
-        var hour    = Number( node.getAttribute( name + "Hour" ) );
-        var minute  = Number( node.getAttribute( name + "Minute" ) );
-        
-        var jsDate = new Date( year, month - 1, day, hour, minute, 0, 0  );
-        
-        return jsDate.getTime();
-    }
-    
-    var checkString = function( str )
-    {
-        if( typeof( str ) == "string" )
-            return str;
-        else
-            return ""
-    }
-    
-    var checkNumber = function( num )
-    {
-        if( typeof( num ) == "undefined" || num == null )
-            return 0;
-        else
-            return num
-    }
-    
-    var checkBoolean = function( bool )
-    {
-        if( bool == "false")      
-            return false
-        else if( bool )      // this is false for: false, 0, undefined, null, ""
-            return true;
-        else
-            return false
-    }
-        
-    calendarEvent.syncId = checkNumber(  eventNode.getAttribute( "syncId" ) );
-    
-    calendarEvent.start.setTime( checkDate( eventNode, "start" ) );
-    calendarEvent.end.setTime( checkDate( eventNode, "end" ) );
-    
-    calendarEvent.allDay       = checkBoolean( eventNode.getAttribute( "allDay"   ) );
-    
-    calendarEvent.title        = checkString(  eventNode.getAttribute( "title"   ) );
-    calendarEvent.description  = checkString(  eventNode.getAttribute( "description"   ) );
-    calendarEvent.category     = checkString(  eventNode.getAttribute( "category"   ) );
-    calendarEvent.location     = checkString(  eventNode.getAttribute( "location"   ) );
-    calendarEvent.privateEvent = checkBoolean( eventNode.getAttribute( "privateEvent"   ) );
-    
-    calendarEvent.inviteEmailAddress = checkString(  eventNode.getAttribute( "inviteEmailAddress"   ) );
-    
-    calendarEvent.alarm             = checkBoolean( eventNode.getAttribute( "alarm"   ) );
-    calendarEvent.alarmLength       = checkNumber(  eventNode.getAttribute( "alarmLength"   ) );
-    calendarEvent.alarmUnits        = checkString(  eventNode.getAttribute( "alarmUnits"   ) );
-    calendarEvent.alarmEmailAddress = checkString(  eventNode.getAttribute( "alarmEmailAddress"   ) );
-    
-    calendarEvent.recur           = checkBoolean( eventNode.getAttribute( "recur"   ) );
-    calendarEvent.recurUnits      = checkString(  eventNode.getAttribute( "recurUnits"   ) );
-    calendarEvent.recurForever    = checkBoolean( eventNode.getAttribute( "recurForever"   ) );
-    calendarEvent.recurInterval   = checkNumber(  eventNode.getAttribute( "recurInterval"   ) );
-    calendarEvent.recurWeekdays   = checkNumber(  eventNode.getAttribute( "recurWeekdays"   ) );
-    calendarEvent.recurWeekNumber = checkNumber(  eventNode.getAttribute( "recurWeekNumber"   ) );
-   
-    calendarEvent.recurEnd.setTime( checkDate( eventNode, "recurEnd" ) );
-    
-    return calendarEvent;
-}
-
-
-/** PUBLIC
-* 
-* RETURN
-*    An xml document with all the event info
-*/
-
-CalendarEventDataSource.prototype.makeXmlDocument = function( eventList )
-{
-    // use the domparser to create the XML 
-    var domParser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService( Components.interfaces.nsIDOMParser );
-    
-    // start with one tag
-    var xmlDocument = domParser.parseFromString( "<events/>", "text/xml" );
-    
-    // get the top tag, there will only be one.
-    var topNodeList = xmlDocument.getElementsByTagName( "events" );
-    var topNode = topNodeList[0];
-    
-    
-    // add each event as an element
-    
-    for( var index = 0; index < eventList.length; ++index )
-    {
-        var calendarEvent = eventList[ index ];
-        
-        var eventNode = this.makeXmlNode( xmlDocument, calendarEvent );
-        
-        topNode.appendChild( eventNode );
-    }
-
-    // return the document
-    
-    return xmlDocument;
-}
-
 CalendarEventDataSource.prototype.prepareAlarms = function( )
 {
     this.alarmObserver =  new CalendarAlarmObserver( this );
@@ -739,3 +629,9 @@ CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
       }
    }
 }
+
+function debug(str )
+{
+    dump( "\n CalendarEvent.js DEBUG: "+ str + "\n");
+}
+

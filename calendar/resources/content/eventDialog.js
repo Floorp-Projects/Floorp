@@ -272,8 +272,6 @@ function onOKCommand()
    gEvent.start.hour = startTime.getHours();
    gEvent.start.minute = startTime.getMinutes();
    
-   gEvent.start.setSeconds( 0 );
-   
    //do this because the end date is always the same as the start date.
    gEvent.end.year = gEvent.start.year;
    gEvent.end.month = gEvent.start.month;
@@ -767,7 +765,7 @@ function updateUntilItemEnabled()
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
   
-   if( repeatCheckBox.checked && repeatUntilRadio.checked  )
+   if( repeatCheckBox.checked == true && repeatUntilRadio.checked  )
    {
       repeatEndText.removeAttribute( "disabled"  );
       repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
@@ -839,7 +837,6 @@ function updateStartEndItemEnabled()
    var endTimeLabel = document.getElementById( "end-time-label" );
    var endTimePicker = document.getElementById( "end-time-button" );
    var endTimeText = document.getElementById( "end-time-text" );
-   
    if( allDayCheckBox.checked )
    {
       // disable popups by removing the popup attribute
@@ -1011,7 +1008,7 @@ function getDayOfWeek( )
    
    var dayNumber = startTime.getDay();
 
-   var dateStringBundle = srGetStrBundle("chrome://penglobal/locale/dateFormat.properties");
+   var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
    //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
    var oneBasedDayNumber = parseInt( dayNumber ) + 1;
@@ -1097,11 +1094,14 @@ function setFieldValue( elementId, newValue, propertyName  )
       if( propertyName )
       {
          field[ propertyName ] = newValue;
+         
          field.setAttribute( propertyName, newValue );
       }
       else
       {
          field.value = newValue;
+
+         field.setAttribute( propertyName, newValue );
       }
    }
 }
@@ -1123,14 +1123,24 @@ function getFieldValue( elementId, propertyName )
 {
    var field = document.getElementById( elementId );
    
+   return( field.getAttribute( propertyName ) );
+
+   /*
+   dump( "\nProperty Name-->"+propertyName );
+
    if( propertyName )
    {
+      dump( "\nfield[propertyName]-->"+field[ propertyName ] );
+
       return field[ propertyName ];
    }
    else
    {
+      dump( "\nfield.value is "+field.value );
+
       return field.value;
    }
+   */
 }
 
 /**

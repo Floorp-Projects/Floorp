@@ -172,9 +172,7 @@
                     <!-- All Day -->    
                     <row>
                         <spacer />
-                        <hbox>
-                          <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="true" oncommand="commandAllDay()"/>
-                        </hbox>
+                        <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="false" oncommand="commandAllDay()"/>
                     </row>
             
                     
@@ -214,9 +212,7 @@
                     <!-- Private -->    
                     <row collapsed="true">
                         <spacer />
-                        <hbox>
-                          <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
-                        </hbox>
+                        <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
                     </row>
             
             
@@ -278,7 +274,7 @@
                           </hbox>
                                
                           
-                          <hbox id="repeat-extenstions-week" diabled="true" collapsed="true">
+                          <hbox id="repeat-extenstions-week" diabled="true" disable-controller="repeat" collapsed="true">
                             <spacer class="repeat-left-spacer" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
