@@ -1990,16 +1990,15 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     nsresult rv;
     JSStackFrame *fp = nsnull;
     JSContext *cx = GetCurrentJSContext();
-    fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
-    if (!fp)
+    if (!cx)
     {
-        // No script code on stack. Allow execution.
+        // No context reachable. Allow execution.
         *result = PR_TRUE;
         return NS_OK;
     }
     *result = PR_FALSE;
     nsCOMPtr<nsIPrincipal> previousPrincipal;
-    do
+    while ((fp = JS_FrameIterator(cx, &fp)) != nsnull)
     {
         nsCOMPtr<nsIPrincipal> principal;
         if (NS_FAILED(GetFramePrincipal(cx, fp, getter_AddRefs(principal))))
@@ -2031,7 +2030,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         if (NS_FAILED(rv)) return rv;
         if (*result)
             return NS_OK;
-    } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
+    }
 
     if (!previousPrincipal)
     {
