@@ -44,16 +44,32 @@ public class JSSESocketFactory
 
     // Optional explicit cipher suites to use
     private String[] suites;
+    // The socket factory
+    private SSLSocketFactory factory;
 
     /**
-     * Factory constructor
+     * Factory constructor that uses the default JSSE SSLSocketFactory
      *
      * @param suites Cipher suites to attempt to use with the server;
      * if <code>null</code>, use any cipher suites available in the
      * JSSE package
      */
     public JSSESocketFactory( String[] suites ) {
+        this(suites, null);
+    }
+  
+   /**
+    * Factory constructor that provides an explicit SSLSocketFactory.
+    *
+    * @param suites Cipher suites to attempt to use with the server;
+    * if <code>null</code>, use any cipher suites available in the
+    * JSSE package
+    * @param factory the specific SSL server socket factory to use
+    */
+    public JSSESocketFactory( String[] suites, SSLSocketFactory factory ) {
         this.suites = suites;
+        this.factory = (factory != null) ? factory :
+                       (SSLSocketFactory)SSLSocketFactory.getDefault();
     }
 
     /**
@@ -70,8 +86,6 @@ public class JSSESocketFactory
         SSLSocket sock = null;
 
         try {
-            SSLSocketFactory factory =
-                (SSLSocketFactory)SSLSocketFactory.getDefault();
             sock = (SSLSocket)factory.createSocket(host, port);
 
             if (suites != null) {
