@@ -1514,13 +1514,13 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
 
                 /* An image can specify a delay time before which to display
                    subsequent images.  Block until the appointed time. */
-                if(gs->delay_time < MINIMUM_DELAY_TIME )
-                    gs->delay_time = MINIMUM_DELAY_TIME;
 
                 if (gs->delay_time){
+                    if(gs->delay_time < MINIMUM_DELAY_TIME )
+                        gs->delay_time = MINIMUM_DELAY_TIME;
                     if(ic->imgdcb){
-                          gs->delay_timeout = (void *)
-                                ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
+                        gs->delay_timeout = (void *)
+                        ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
                      }
                     /* Essentially, tell the decoder state machine to wait
                        forever.  The timeout callback routine will wake up the
