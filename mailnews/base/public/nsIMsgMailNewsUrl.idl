@@ -48,6 +48,8 @@ interface nsIMsgSearchSession;
 interface nsICacheEntryDescriptor;
 interface nsICacheSession;
 interface nsIMimeHeaders;
+interface nsIStreamListener;
+
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
 	///////////////////////////////////////////////////////////////////////////////
@@ -101,6 +103,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	const unsigned long eMove     = 1;
 	const unsigned long eDisplay  = 2;
 	boolean IsUrlType(in unsigned long type);
+        nsIStreamListener getSaveAsListener(in boolean addDummyEnvelope, in nsIFileSpec aFileSpec);
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -115,12 +118,12 @@ interface nsIMsgMailNewsUrl : nsIURL {
 
 [scriptable, uuid(02338DD2-E7B9-11d2-8070-006008128C4E)]
 interface nsIMsgMessageUrl : nsISupports {
-	// get and set the RDF URI associated with the url. Note, not all urls have
-	// had uri's set on them so be prepared to handle cases where this string is empty.
-	attribute string uri;
-	// used by imap, pop and nntp in order to implement save message to disk
-	attribute nsIFileSpec messageFile;
-	attribute boolean AddDummyEnvelope;	
+  // get and set the RDF URI associated with the url. Note, not all urls have
+  // had uri's set on them so be prepared to handle cases where this string is empty.
+  attribute string uri;
+  // used by imap, pop and nntp in order to implement save message to disk
+  attribute nsIFileSpec messageFile;
+  attribute boolean AddDummyEnvelope;	
   attribute boolean canonicalLineEnding;
   attribute string originalSpec;
 };

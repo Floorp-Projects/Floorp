@@ -157,21 +157,35 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
 
     nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(url);
     if (msgUrl) {
-        msgUrl->SetMessageFile(aFile);
+//        msgUrl->SetMessageFile(aFile);
         msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
         msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
     }   
     
-    rv = RunNewsUrl(url, nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv,rv);
+    PRBool hasMsgOffline = PR_FALSE;
 
-    if (aURL)
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(url);
+    if (folder)
     {
-	    *aURL = url;
-	    NS_IF_ADDREF(*aURL);
+      nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(folder);
+      if (newsFolder)
+      {
+        if (mailNewsUrl)
+        {
+          folder->HasMsgOffline(key, &hasMsgOffline);
+          mailNewsUrl->SetMsgIsInLocalCache(hasMsgOffline);
+        }
+      }
     }
 
-  return rv;
+    if (mailNewsUrl)
+    {
+      nsCOMPtr <nsIStreamListener> saveAsListener;
+      mailNewsUrl->GetSaveAsListener(aAddDummyEnvelope, aFile, getter_AddRefs(saveAsListener));
+    
+      rv = DisplayMessage(aMessageURI, saveAsListener, /* nsIMsgWindow *aMsgWindow */nsnull, aUrlListener, nsnull /*aCharsetOverride */, aURL);
+    }
+    return rv;
 }
 
 

@@ -204,8 +204,6 @@ private:
 
   static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
 
-  nsCOMPtr<nsIOutputStream> m_tempArticleStream; 
-   
   nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
   nsCOMPtr <nsINNTPArticleList> m_articleList;
 

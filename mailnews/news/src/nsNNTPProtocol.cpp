@@ -530,7 +530,8 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
       mailnewsUrl->SetMsgWindow(aMsgWindow);
 
       m_runningURL->GetNewsAction(&m_newsAction);
-      if (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart) {
+      if (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart
+        || m_newsAction == nsINntpUrl::ActionSaveMessageToDisk) {
         PRBool msgIsInLocalCache = PR_FALSE;
         mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
         if (msgIsInLocalCache)
@@ -963,7 +964,8 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports
   m_runningURL->GetNewsAction(&m_newsAction);
   // first, check if this is a message load that should come from either
   // the memory cache or the local msg cache.
-  if (mailnewsUrl && (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart))
+  if (mailnewsUrl && (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart
+    || m_newsAction == nsINntpUrl::ActionSaveMessageToDisk))
   {
 
     SetupPartExtractorListener(m_channelListener);
@@ -2488,54 +2490,6 @@ PRInt32 nsNNTPProtocol::BeginArticle()
       // TODO: return on failure?
   }
 
-  if (m_newsAction == nsINntpUrl::ActionSaveMessageToDisk)
-  {
-      // get the file involved from the url
-      nsCOMPtr<nsIFileSpec> msgSpec;
-      nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
-      msgurl->GetMessageFile(getter_AddRefs(msgSpec));
-
-      nsFileSpec fileSpec;
-      if (msgSpec)
-      {
-          msgSpec->GetFileSpec(&fileSpec);
-
-          fileSpec.Delete(PR_FALSE);
-          nsCOMPtr <nsISupports> supports;
-          NS_NewIOFileStream(getter_AddRefs(supports), fileSpec,
-                         PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-          nsresult rv;
-          m_tempArticleStream = do_QueryInterface(supports, &rv);
-          NS_ASSERTION(NS_SUCCEEDED(rv) && m_tempArticleStream,"failed to get article stream");
-          if (NS_FAILED(rv) || !m_tempArticleStream) return -1;
-
-          PRBool needDummyHeaders = PR_FALSE;
-          msgurl->GetAddDummyEnvelope(&needDummyHeaders);
-          if (needDummyHeaders)
-          {
-              nsCAutoString result;
-              char *ct;
-              PRUint32 writeCount;
-              time_t now = time ((time_t*) 0);
-              ct = ctime(&now);
-              ct[24] = 0;
-              result = "From - ";
-              result += ct;
-              result += MSG_LINEBREAK;
-
-              m_tempArticleStream->Write(result.get(), result.Length(),
-                                         &writeCount);
-              result = "X-Mozilla-Status: 0001";
-              result += MSG_LINEBREAK;
-              m_tempArticleStream->Write(result.get(), result.Length(),
-                                         &writeCount);
-              result =  "X-Mozilla-Status2: 00000000";
-              result += MSG_LINEBREAK;
-              m_tempArticleStream->Write(result.get(), result.Length(),
-                                         &writeCount);
-          }
-      }
-  }
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
@@ -2675,10 +2629,6 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		else
 			m_nextState = NEWS_DONE;
 
-		// and close the article file if it was open....
-		if (m_tempArticleStream)
-			m_tempArticleStream->Close();
-
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 	else
@@ -2699,32 +2649,6 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
                 ParseHeaderForCancel(outputBuffer);
             }
 
-			if (m_tempArticleStream)
-			{
-				PRUint32 count = 0;
-				m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
-
-				/* When we're sending this line to a converter (ie,
-				   it's a message/rfc822) use the local line termination
-				   convention, not CRLF.  This makes text articles get
-				   saved with the local line terminators.  Since SMTP
-				   and NNTP mandate the use of CRLF, it is expected that
-				   the local system will convert that to the local line
-				   terminator as it is read.
-				 */
-				// ** jto - in the case of save message to the stationary file if the
-				// message is to be uploaded to the imap server we need to end the
-				// line with canonical line endings, i.e., CRLF
-				nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
-				PRBool canonicalLineEnding = PR_FALSE;
-				if (msgurl)
-					msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
-
-				if (canonicalLineEnding)
-					m_tempArticleStream->Write(CRLF, PL_strlen(CRLF), &count);
-				else
-					m_tempArticleStream->Write(MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK), &count);
-			}
 		}
 	}
 
