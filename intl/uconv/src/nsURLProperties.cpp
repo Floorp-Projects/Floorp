@@ -24,6 +24,7 @@
 #ifndef NECKO
 #include "nsINetService.h"
 #else
+#include "nsNeckoUtil.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #endif // NECKO
@@ -61,18 +62,12 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
   if (NS_FAILED(res)) return;
 
-  nsIChannel *channel = nsnull;
-  // XXX NECKO verb? sinkGetter?
-  const char *urlStr = aUrl.GetBuffer();
-  if (!urlStr)
-      urlStr = aUrl.ToNewCString();
-  res = pNetService->NewChannel("load", urlStr, nsnull, nsnull, &channel);
-  if (urlStr)
-      delete [] (char*)urlStr;
+  res = NS_NewURI(&url, aUrl, nsnull);
   if (NS_FAILED(res)) return;
 
-  res = channel->OpenInputStream(0, -1, &in);
-  NS_RELEASE(channel);
+  res = NS_OpenURI(&in, url, nsnull);
+  NS_RELEASE(url);
+  if (NS_FAILED(res)) return;
 #endif // NECKO
 
   if(NS_SUCCEEDED(res))
