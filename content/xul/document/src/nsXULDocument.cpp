@@ -620,8 +620,6 @@ XULDocumentImpl::XULDocumentImpl(void)
                                                     kIDOMSelectionIID,
                                                     (void**) &mSelection)))
         PR_ASSERT(0);
-
-    
 }
 
 XULDocumentImpl::~XULDocumentImpl()
