@@ -1873,7 +1873,12 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
     mIconData.hWnd  = (HWND)MessageWindow();
 
     // Icon is our default application icon.
-    mIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( NULL ), IDI_APPLICATION ),
+    mIconData.hIcon =  (HICON)::LoadImage( ::GetModuleHandle( NULL ),
+                                           IDI_APPLICATION,
+                                           IMAGE_ICON,
+                                           ::GetSystemMetrics( SM_CXSMICON ),
+                                           ::GetSystemMetrics( SM_CYSMICON ),
+                                           NULL );
 
     // Tooltip is the brand short name.
     mIconData.szTip[0] = 0;
