@@ -48,6 +48,7 @@
 #include "nsNetUtil.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
+#include "nsIJVMManager.h"
 #include "nsContentCID.h"
 
 // Interfaces Needed
@@ -113,6 +114,7 @@ static PRInt32              gRefCnt           = 0;
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
@@ -4310,31 +4312,13 @@ NS_IMETHODIMP NavigatorImpl::JavaEnabled(PRBool *aReturn)
   if (!*aReturn)
     return NS_OK;
 
-  if (!mPlugins) {
-    nsCOMPtr<nsIDOMPluginArray> pluginArray;
-    rv = GetPlugins(getter_AddRefs(pluginArray));
-    if (NS_FAILED(rv))
-      return rv;
-
-    // now it is garanteed that mPlugins is not null;
+  // Ask the nsIJVMManager if Java is enabled
+  nsCOMPtr<nsIJVMManager> jvmService = do_GetService(kJVMServiceCID);
+  if (jvmService) {
+    jvmService->GetJavaEnabled(aReturn);
   }
-
-  nsCOMPtr<nsIPluginHost> pluginHost;
-
-  rv = mPlugins->GetPluginHost(getter_AddRefs(pluginHost));
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (pluginHost) {
-    nsresult plhrv = pluginHost->IsPluginEnabledForType("application/x-java-vm");
-
-    if (NS_SUCCEEDED(plhrv)) {
-      *aReturn = PR_TRUE;
-    }
-
-    else {
-      *aReturn = PR_FALSE;
-    }
+  else {
+    *aReturn = PR_FALSE;
   }
 
   return rv;
