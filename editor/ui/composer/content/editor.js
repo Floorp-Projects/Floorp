@@ -812,6 +812,42 @@ function onBackgroundColorChange()
   }
 }
 
+// Call this when user changes text and/or background colors of the page
+function UpdateDefaultColors()
+{
+  var BrowserColors = GetDefaultBrowserColors();
+  var bodyelement = GetBodyElement();
+  var defTextColor = gDefaultTextColor;
+  var defBackColor = gDefaultBackgroundColor;
+
+  if (bodyelement)
+  {
+    var color = bodyelement.getAttribute("text");
+    if (color)
+      gDefaultTextColor = color;
+    else if (BrowserColors)
+      gDefaultTextColor = BrowserColors.TextColor;
+
+    color = bodyelement.getAttribute("bgcolor");
+    if (color)
+      gDefaultBackgroundColor = color;
+    else if (BrowserColors)
+      gDefaultBackgroundColor = BrowserColors.BackgroundColor;
+  }
+
+  // Trigger update on toolbar
+  if (defTextColor != gDefaultTextColor)
+  {
+    goUpdateCommand("cmd_fontColor");
+    onFontColorChange();
+  }
+  if (defBackColor != gDefaultBackgroundColor)
+  {
+    goUpdateCommand("cmd_backgroundColor");
+    onBackgroundColorChange();
+  }
+}
+
 function GetBackgroundElementWithColor()
 {
   gColorObj.Type = "";

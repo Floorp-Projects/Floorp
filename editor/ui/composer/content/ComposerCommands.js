@@ -1661,6 +1661,7 @@ var nsColorPropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", ""); 
+    UpdateDefaultColors();
     window._content.focus();
   }
 };
