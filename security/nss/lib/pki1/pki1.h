@@ -38,7 +38,7 @@
 #define PKI1_H
 
 #ifdef DEBUG
-static const char PKI1_CVS_ID[] = "@(#) $RCSfile: pki1.h,v $ $Revision: 1.3 $ $Date: 2004/04/25 15:03:15 $ $Name:  $";
+static const char PKI1_CVS_ID[] = "@(#) $RCSfile: pki1.h,v $ $Revision: 1.4 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 /*

@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-MAKEFILE_IN_CVS_ID = "@(#) $RCSfile: Makefile.in,v $ $Revision: 1.2 $ $Date: 2004/04/25 15:03:24 $ $Name:  $"
+MAKEFILE_IN_CVS_ID = "@(#) $RCSfile: Makefile.in,v $ $Revision: 1.3 $ $Date: 2005/01/20 02:25:51 $"
 
 SHELL = /bin/sh
 .SUFFIXES:

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.52 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.53 $ $Date: 2005/01/20 02:25:48 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H

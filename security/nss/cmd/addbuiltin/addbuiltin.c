@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.9 2004/05/25 21:47:44 nelsonb%netscape.com Exp $
+ * $Id: addbuiltin.c,v 1.10 2005/01/20 02:25:44 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -206,7 +206,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.9 $ $Date: 2004/05/25 21:47:44 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.10 $ $Date: 2005/01/20 02:25:44 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"

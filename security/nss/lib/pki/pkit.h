@@ -38,7 +38,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.16 $ $Date: 2004/07/29 23:38:14 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.17 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 /*

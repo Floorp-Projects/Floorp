@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.20 $ $Date: 2004/04/25 15:03:12 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.21 $ $Date: 2005/01/20 02:25:48 $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE

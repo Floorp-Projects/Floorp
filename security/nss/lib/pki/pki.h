@@ -38,7 +38,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.12 $ $Date: 2004/04/25 15:03:14 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.13 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 #ifndef NSSDEVT_H

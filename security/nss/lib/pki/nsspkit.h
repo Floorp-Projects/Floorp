@@ -38,7 +38,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.5 $ $Date: 2004/04/25 15:03:14 $ $Name:  $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 /*

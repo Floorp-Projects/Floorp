@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.7 $ $Date: 2004/04/25 15:03:04 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.8 $ $Date: 2005/01/20 02:25:45 $';
 
 $copyright = '/* THIS IS A GENERATED FILE */
 /* 

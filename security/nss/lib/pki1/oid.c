@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.5 $ $Date: 2004/04/25 15:03:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 /*

@@ -32,7 +32,7 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.1 $ $Date: 2002/01/04 05:22:07 $ $Name:  $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.1 $ $Date: 2002/01/04 05:22:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.2 $ $Date: 2005/01/20 02:25:49 $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.2 $ $Date: 2005/01/20 02:25:49 $";
 #endif /* DEBUG */
 
 #ifndef PKI1T_H
