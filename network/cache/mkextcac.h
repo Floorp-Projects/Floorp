@@ -19,13 +19,4 @@
 #ifndef MKEXTCACHE_H
 #define MKEXTCACHE_H
 
-/* lookup routine
- *
- * builds a key and looks for it in
- * the database.  Returns an access
- * method and sets a filename in the
- * URL struct if found
- */
-extern int NET_FindURLInExtCache(URL_Struct * URL_s, MWContext *ctxt);
-
 #endif /* MKEXTCACHE_H */
