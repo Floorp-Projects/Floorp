@@ -90,6 +90,12 @@ scrollbarbutton:hover:active {
   background-position: 1px 2px;
 }
 
+/* ::::: square at the corner of two scrollbars ::::: */
+
+scrollcorner { 
+  background-color: -moz-Dialog;
+}
+
 /* ..... increment .... */
 
 scrollbarbutton[type="increment"] {
