@@ -44,6 +44,8 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
+#include "nsOS2Uni.h"
+
 #ifdef MOZ_MATHML
   #include <math.h>
 #endif

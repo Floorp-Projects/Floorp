@@ -32,6 +32,8 @@
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 
+#include "nsOS2Uni.h"
+
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
 
 //----------------------------------------------------------------------------------

@@ -126,6 +126,20 @@ CPPSRCS += \
         $(NULL)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += \
+        os2/nsOS2Uni.cpp \
+        $(NULL)
+EXPORTS += \
+        os2/nsOS2Uni.h \
+        $(NULL)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libconv.lib
+else
+OS_LIBS += -luconv
+endif
+endif
+
 EXTRA_DSO_LDOPTS = \
         $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \

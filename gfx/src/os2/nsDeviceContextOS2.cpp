@@ -37,6 +37,8 @@
 #include "nsGfxDefs.h"
 #include "nsIPref.h"
 
+#include "nsOS2Uni.h"
+
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
 

@@ -41,6 +41,8 @@
 #include "nsModule.h"
 #include "nsCRT.h"
 
+#include "nsOS2Uni.h"
+
 /* Item structure */
 typedef struct _MyData
 {
