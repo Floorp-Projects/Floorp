@@ -1501,6 +1501,7 @@ mips-sony-newsos*)
 *-openvms*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(VMS)
+    AC_DEFINE(PR_GETIPNODE_NOT_THREADSAFE)
     RESOLVE_LINK_SYMBOLS=1
     AR_FLAGS='c $@'
     MDCPUCFG_H=_openvms.cfg

@@ -874,7 +874,12 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #endif	/* _PR_HAVE_GETHOSTBYNAME2 */
 #elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
     if (_pr_ipv6_is_present == PR_TRUE)
+    {
+#ifdef PR_GETIPNODE_NOT_THREADSAFE
+        LOCK_DNS();
+#endif
     	h = (*((_pr_getipnodebyname_t)_pr_getipnodebyname_fp))(name, md_af, tmp_flags, &error_num);
+    }
     else
     {
         LOCK_DNS();
@@ -934,8 +939,12 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     UNLOCK_DNS();
 #endif	/* _PR_HAVE_GETHOSTBYNAME2 */
 #elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+#ifdef PR_GETIPNODE_NOT_THREADSAFE
+    UNLOCK_DNS();
+#else
     if (_pr_ipv6_is_present == PR_FALSE)
         UNLOCK_DNS();
+#endif
 #else /* _PR_INET6 */
     UNLOCK_DNS();
 #endif /* _PR_INET6 */
@@ -1035,8 +1044,13 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	h = getipnodebyaddr(addr, addrlen, af, &error_num);
 #elif defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6_PROBE)
     if (_pr_ipv6_is_present == PR_TRUE)
+    {
+#ifdef PR_GETIPNODE_NOT_THREADSAFE
+        LOCK_DNS();
+#endif
     	h = (*((_pr_getipnodebyaddr_t)_pr_getipnodebyaddr_fp))(addr, addrlen,
 				af, &error_num);
+    }
 	else
     {
         LOCK_DNS();
@@ -1092,8 +1106,12 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
     /* Must match the convoluted logic above for LOCK_DNS() */
 #if defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6)
 #elif defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6_PROBE)
+#ifdef PR_GETIPNODE_NOT_THREADSAFE
+    UNLOCK_DNS();
+#else
     if (_pr_ipv6_is_present == PR_FALSE)
         UNLOCK_DNS();
+#endif
 #else	/* _PR_HAVE_GETIPNODEBYADDR */
     UNLOCK_DNS();
 #endif /* _PR_HAVE_GETIPNODEBYADDR */
