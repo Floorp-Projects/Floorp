@@ -1109,7 +1109,7 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
     array->AppendElement(cert);
   }
 #else // workaround here
-  CERTCertificate *cert = mCert;
+  CERTCertificate *cert = nsnull;
   /* enumerate the chain for scripting purposes */
   nsCOMPtr<nsISupportsArray> array;
   rv = NS_NewISupportsArray(getter_AddRefs(array));
@@ -1117,13 +1117,24 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
     goto done; 
   }
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
+  cert = CERT_DupCertificate(mCert);
   while (cert) {
     nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(cert);
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", cert->nickname));
     array->AppendElement(pipCert);
-    if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual)
+    PRBool wantToBreak = PR_FALSE;
+    CERTCertificate *next_cert = nsnull;
+    if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual) {
+      wantToBreak = PR_TRUE;
+    }
+    else {
+      next_cert = CERT_FindCertIssuer(cert, PR_Now(), certUsageSSLClient);
+    }
+    CERT_DestroyCertificate(cert);
+    if (wantToBreak) {
       break;
-    cert = CERT_FindCertIssuer(cert, PR_Now(), certUsageSSLClient);
+    }
+    cert = next_cert;
   }
 #endif // NSS_CHAIN_BUG_FIXED
   *_rvChain = array;
