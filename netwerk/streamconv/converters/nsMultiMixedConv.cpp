@@ -912,10 +912,13 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 nsresult
 nsMultiMixedConv::ParseContentType(char *type)
 {
-    char *p = PL_strchr(type, '(');
+    // don't bother with an empty content-type header - bug 83465
+    if (!*type)
+        return NS_OK;
 
+    // we don't care about comments (although they are invalid here)
+    char *p = PL_strchr(type, '(');
     if (p)
-        // we don't care about comments (although they are invalid here)
         *p = 0;
 
     // check if the content-type has additional fields...
