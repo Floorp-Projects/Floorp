@@ -963,8 +963,8 @@ NS_IMETHODIMP nsRenderingContextWin :: SetColor(nscolor aColor)
 {
   mCurrentColor = aColor;
   mColor = RGB(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(aColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NG_GET_G(aColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NG_GET_B(aColor)));
+               NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(aColor)),
+               NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(aColor)));
   return NS_OK;
 }
 
