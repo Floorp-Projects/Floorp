@@ -243,10 +243,10 @@
       <vbox class="indent" align="left">
         <checkbox id="enableSmartUpdate"
                   label="&enableSmartUpdate.label;" accesskey="&enableSmartUpdate.accesskey;"
-                  prefstring="update.app.enabled"/>
+                  prefstring="app.update.autoUpdateEnabled"/>
         <checkbox id="enableExtensionUpdate"
                   label="&enableExtensionUpdate.label;" accesskey="&enableExtensionUpdate.accesskey;"
-                  prefstring="update.extensions.enabled"/>      
+                  prefstring="extensions.update.autoUpdateEnabled"/>      
         <separator class="thin"/>
         <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
                 oncommand="checkForUpdates();"/>
