@@ -179,14 +179,11 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 
 #include "primpl.h"
 
-/* On Alpha Linux, these are already defined in sys/socket.h */
-#if !(defined(LINUX) && defined(__alpha))
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #ifdef LINUX
 /* TCP_CORK is not defined in <netinet/tcp.h> on Red Hat Linux 6.0 */
 #ifndef TCP_CORK
 #define TCP_CORK 3
-#endif
 #endif
 #endif
 
@@ -291,11 +288,9 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
  * most current systems.
  */
 #if defined(HAVE_SOCKLEN_T) \
-    || (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2 \
-    && !defined(__alpha))
+    || (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2)
 typedef socklen_t pt_SockLen;
 #elif (defined(AIX) && !defined(AIX4_1)) \
-    || (defined(LINUX) && defined(__alpha)) \
     || defined(VMS)
 typedef PRSize pt_SockLen;
 #else
