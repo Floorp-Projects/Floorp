@@ -702,7 +702,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     // Means no header
-    SetDomStringToNull(_retval);
+    _retval.SetIsVoid(PR_TRUE);
     rv = NS_OK;
   }
 
