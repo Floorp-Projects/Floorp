@@ -89,6 +89,8 @@ SECStatus PK11_Logout(PK11SlotInfo *slot);
 void PK11_LogoutAll(void);
 void PK11_EnterSlotMonitor(PK11SlotInfo *);
 void PK11_ExitSlotMonitor(PK11SlotInfo *);
+void PK11_CleanKeyList(PK11SlotInfo *slot);
+
 
 
 /************************************************************
