@@ -52,9 +52,9 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
-
 #include "nsIRDFRemoteDataSource.h"
-
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -88,6 +88,7 @@
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char kURINC_SearchEngineRoot[]           = "NC:SearchEngineRoot";
 static const char kURINC_SearchResultsSitesRoot[]     = "NC:SearchResultsSitesRoot";
@@ -103,10 +104,11 @@ class	InternetSearchContext : public nsIInternetSearchContext
 private:
 	nsCOMPtr<nsIRDFResource>	mParent;
 	nsCOMPtr<nsIRDFResource>	mEngine;
+	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 	nsAutoString			mBuffer;
 
 public:
-			InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine);
+			InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine, nsIUnicodeDecoder *aUnicodeDecoder);
 	virtual		~InternetSearchContext(void);
 	NS_METHOD	Init();
 
@@ -122,8 +124,9 @@ InternetSearchContext::~InternetSearchContext(void)
 
 
 
-InternetSearchContext::InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine)
-	: mParent(aParent), mEngine(aEngine)
+InternetSearchContext::InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
+						nsIUnicodeDecoder *aUnicodeDecoder)
+	: mParent(aParent), mEngine(aEngine), mUnicodeDecoder(aUnicodeDecoder)
 {
 	NS_INIT_ISUPPORTS();
 }
@@ -133,6 +136,16 @@ InternetSearchContext::InternetSearchContext(nsIRDFResource *aParent, nsIRDFReso
 NS_IMETHODIMP
 InternetSearchContext::Init()
 {
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::GetUnicodeDecoder(nsIUnicodeDecoder **decoder)
+{
+	*decoder = mUnicodeDecoder;
+	NS_IF_ADDREF(*decoder);
 	return(NS_OK);
 }
 
@@ -168,6 +181,15 @@ InternetSearchContext::AppendBytes(const char *buffer, PRInt32 numBytes)
 
 
 NS_IMETHODIMP
+InternetSearchContext::AppendUnicodeBytes(const PRUnichar *buffer, PRInt32 numUniBytes)
+{
+	mBuffer.Append(buffer, numUniBytes);
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
 InternetSearchContext::GetBuffer(PRUnichar **buffer)
 {
 	*buffer = NS_CONST_CAST(PRUnichar *, mBuffer.GetUnicode());
@@ -191,10 +213,10 @@ NS_IMPL_ISUPPORTS(InternetSearchContext, NS_GET_IID(nsIInternetSearchContext));
 
 nsresult
 NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
-				nsIInternetSearchContext **aResult)
+	nsIUnicodeDecoder *aUnicodeDecoder, nsIInternetSearchContext **aResult)
 {
 	 InternetSearchContext *result =
-		 new InternetSearchContext(aParent, aEngine);
+		 new InternetSearchContext(aParent, aEngine, aUnicodeDecoder);
 
 	 if (! result)
 		 return NS_ERROR_OUT_OF_MEMORY;
@@ -263,6 +285,7 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
 	nsresult	FindData(nsIRDFResource *engine, nsString &data);
 	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
+	nsresult	MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
 	nsresult	GetSearchEngineList(nsFileSpec spec, PRBool checkMacFileType);
 	nsresult	GetCategoryList();
 	nsresult	GetSearchFolder(nsFileSpec &spec);
@@ -1714,6 +1737,43 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsString &data)
 
 
 
+struct	encodings
+{
+	char		*numericEncoding;
+	char		*stringEncoding;
+};
+
+
+
+nsresult
+InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString &stringEncoding)
+{
+	// XXX we need to have a fully table of numeric --> string conversions
+
+	struct	encodings	encodingList[] =
+	{
+		"2336",	"EUC-JP",
+		"2561", "Shift_JIS",
+		nsnull, nsnull
+	};
+
+	stringEncoding.Truncate();
+
+	PRUint32	loop = 0;
+	while (encodingList[loop].numericEncoding != nsnull)
+	{
+		if (numericEncoding.Equals(encodingList[loop].numericEncoding))
+		{
+			stringEncoding = encodingList[loop].stringEncoding;
+			break;
+		}
+		++loop;
+	}
+	return(NS_OK);
+}
+
+
+
 nsresult
 InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine,
 				const nsString &fullURL, const nsString &text)
@@ -1726,7 +1786,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!engine)	return(NS_ERROR_NULL_POINTER);
 	if (!mInner)	return(NS_RDF_NO_VALUE);
 
-	nsAutoString	action, method, input;
+	nsCOMPtr<nsIUnicodeDecoder>	unicodeDecoder;
+	nsAutoString			action, method, input;
 
 	if (fullURL.Length() > 0)
 	{
@@ -1743,32 +1804,34 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 		if (NS_FAILED(rv = GetData(data, "search", "action", action)))	return(rv);
 		if (NS_FAILED(rv = GetData(data, "search", "method", method)))	return(rv);
+
+		nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
+
+		GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
+		MapEncoding(encodingStr, queryEncodingStr);
+		if (queryEncodingStr.Length() > 0)
+		{
+			// XXX to do: need to convert "text" from escaped-UTF_8 to
+			// whatever the dataset indicates it wants to be sent
+		}
+
 		if (NS_FAILED(rv = GetInputs(data, userVar, text, input)))	return(rv);
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
-#ifdef	DEBUG_SEARCH_OUTPUT
-		char *cAction = action.ToNewCString();
-		char *cMethod = method.ToNewCString();
-		char *cInput = input.ToNewCString();
-		printf("Search Action: '%s'\n", cAction);
-		printf("Search Method: '%s'\n", cMethod);
-		printf(" Search Input: '%s'\n\n", cInput);
-		if (cAction)
+		GetData(data, "interpret", "resultEncoding", encodingStr);	// decimal string values
+		MapEncoding(encodingStr, resultEncodingStr);
+		// rjc note: ignore "interpret/resultTranslationEncoding" as well as
+		// "interpret/resultTranslationFont" since we always convert results to Unicode
+		if (resultEncodingStr.Length() > 0)
 		{
-			nsCRT::free(cAction);
-			cAction = nsnull;
+			NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
+				kCharsetConverterManagerCID, &rv);
+			if (NS_SUCCEEDED(rv) && (charsetConv))
+			{
+				rv = charsetConv->GetUnicodeDecoder(&resultEncodingStr,
+					getter_AddRefs(unicodeDecoder));
+			}
 		}
-		if (cMethod)
-		{
-			nsCRT::free(cMethod);
-			cMethod = nsnull;
-		}
-		if (cInput)
-		{
-			nsCRT::free(cInput);
-			cInput = nsnull;
-		}
-#endif
 
 		if (method.EqualsIgnoreCase("get"))
 		{
@@ -1779,7 +1842,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	}
 
 	nsCOMPtr<nsIInternetSearchContext>	context;
-	if (NS_FAILED(rv = NS_NewInternetSearchContext(source, engine, getter_AddRefs(context))))
+	if (NS_FAILED(rv = NS_NewInternetSearchContext(source, engine, unicodeDecoder, getter_AddRefs(context))))
 		return(rv);
 	if (!context)	return(NS_ERROR_UNEXPECTED);
 
@@ -2338,8 +2401,9 @@ NS_IMETHODIMP
 InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 				nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
-	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
+	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
+	if (!context)	return(NS_ERROR_NO_INTERFACE);
 
 	nsresult	rv = NS_OK;
 
@@ -2366,7 +2430,53 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 		return(NS_ERROR_UNEXPECTED);
 	}
 
-	context->AppendBytes(buffer, aLength);
+	nsCOMPtr<nsIUnicodeDecoder>	decoder;
+	context->GetUnicodeDecoder(getter_AddRefs(decoder));
+	if (decoder)
+	{
+		char			*aBuffer = buffer;
+		PRInt32			unicharBufLen = 0;
+		decoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
+		PRUnichar		*unichars = new PRUnichar [ unicharBufLen+1 ];
+		do
+		{
+			PRInt32		srcLength = aLength;
+			PRInt32		unicharLength = unicharBufLen;
+			rv = decoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+			unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+
+			// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
+
+			// Hack Start
+			for(PRInt32 i=0;i<unicharLength;i++)
+				if(0x0000 == unichars[i])	unichars[i] = 0x0020;
+			// Hack End
+
+			context->AppendUnicodeBytes(unichars, unicharLength);
+			// if we failed, we consume one byte by replace it with U+FFFD
+			// and try conversion again.
+			if(NS_FAILED(rv))
+			{
+				decoder->Reset();
+				char	smallBuf[2];
+				smallBuf[0] = 0xFF;
+				smallBuf[1] = 0xFD;
+				context->AppendBytes( (const char *)&smallBuf, 2L);
+				if(((PRUint32) (srcLength + 1)) > aLength)
+					srcLength = aLength;
+				else 
+					srcLength++;
+				aBuffer += srcLength;
+				aLength -= srcLength;
+			}
+		} while (NS_FAILED(rv) && (aLength > 0));
+		delete [] unichars;
+		unichars = nsnull;
+	}
+	else
+	{
+		context->AppendBytes(buffer, aLength);
+	}
 
 	delete [] buffer;
 	buffer = nsnull;
