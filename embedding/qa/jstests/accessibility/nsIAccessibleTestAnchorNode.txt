@@ -4,7 +4,7 @@
 <!-- Descrpt: Test nsIAccessible Interface methods for HTML Anchor Node
      Author: dsirnapalli@netscape.com
      Revs: 12.13.01 - Created
-     Last Run On:12.17.01.
+     Last Run On:01.03.01.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -74,7 +74,6 @@ function executeTestCase()
        var role = getRole(accNode);
        var state = getState(accNode);
        var value = getValue(accNode);
-
 
        var col1 = new Array("Property", "Name->", "Role->", "State->", "Value->");
        var col2 = new Array("Values", name, role, state, value);
