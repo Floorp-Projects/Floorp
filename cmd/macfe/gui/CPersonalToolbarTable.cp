@@ -329,7 +329,7 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 			Rect bounds;
 			GetLocalCellRect ( inCell, bounds );
 			CUserButtonInfo* data = GetButtonInfo ( inCell.col );
-			cstring finalCaption = CURLDragHelper::MakeIconTextValid ( data->GetName().c_str() );
+			string finalCaption = CURLDragHelper::MakeIconTextValid ( data->GetName().c_str() );
 			HT_Resource node = HT_GetNthItem(CFrontApp::GetPersonalToolbarManager()->GetHTView(), 
 												URDFUtilities::PPRowToHTRow(inCell.col));
 			CIconTextSuite suite ( this, bounds, kBOOKMARK_ICON, finalCaption, node );
