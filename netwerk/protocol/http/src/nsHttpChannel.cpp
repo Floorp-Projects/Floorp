@@ -136,7 +136,7 @@ nsHttpChannel::Init(nsIURI *uri,
 
     nsCOMPtr<nsIIDNService> converter;
     if ((converter = nsHttpHandler::get()->IDNConverter()) &&
-        !IsAsciiString(host))
+        !nsCRT::IsAscii(host))
     {
         nsXPIDLCString hostACE;
         rv = converter->UTF8ToIDNHostName(host.get(), getter_Copies(hostACE));
@@ -1656,15 +1656,6 @@ nsHttpChannel::GetCurrentPath(char **path)
     else
         rv = mURI->GetPath(path);
     return rv;
-}
-
-PRBool
-nsHttpChannel::IsAsciiString(const char *s)
-{
-    for (const char *c = s; *c; c++) {
-        if (!nsCRT::IsAscii(*c)) return PR_FALSE;
-    }
-    return PR_TRUE;
 }
 
 //-----------------------------------------------------------------------------

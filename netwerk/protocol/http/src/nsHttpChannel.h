@@ -118,9 +118,6 @@ private:
     static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
     static void  PR_CALLBACK AsyncRedirect_EventCleanupFunc(PLEvent *);
 
-    // Helper to detect non-Ascii hostnames (should be provided somewhere else)
-    static PRBool IsAsciiString(const char *c);
-
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
     nsCOMPtr<nsIURI>                  mURI;
