@@ -22,6 +22,8 @@
 #include <nsCOMPtr.h>
 #include <nsIDOMMouseEvent.h>
 
+#include "nsIDOMKeyEvent.h"
+
 #include "EmbedEventListener.h"
 #include "EmbedPrivate.h"
 

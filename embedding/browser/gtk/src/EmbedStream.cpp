@@ -27,6 +27,8 @@
 #include <nsNetUtil.h>
 #include <prmem.h>
 
+#include "nsIContentViewer.h"
+
 #include "EmbedStream.h"
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
