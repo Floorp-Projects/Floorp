@@ -52,7 +52,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            if (!meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(retval);
         }

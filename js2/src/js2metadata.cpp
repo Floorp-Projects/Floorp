@@ -976,6 +976,8 @@ doBinary:
     // return true if the given namespace is on the namespace list
     bool Multiname::onList(Namespace *nameSpace)
     { 
+        if (nsList.empty())
+            return true;
         for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
             if (*n == nameSpace)
                 return true;
@@ -1189,6 +1191,8 @@ doBinary:
         return os;
     }
 
+    // Define an instance member in the class. Verify that, if any overriding is happening, it's legal. The result pair indicates
+    // the members being overridden.
     OverrideStatusPair JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
     {
         OverrideStatus *readStatus;
@@ -1398,6 +1402,7 @@ doBinary:
         return false;   // 'None'
     }
 
+    // Write a value to a dynamic container - inserting into the map if not already there (if createIfMissing)
     bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
         ASSERT(container && ((container->kind == DynamicInstanceKind) 
@@ -1445,6 +1450,7 @@ doBinary:
         return false;   // 'None'
     }
 
+    // Read the static member
     bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, js2val *rval)
     {
         if (m == NULL)
@@ -1468,6 +1474,7 @@ doBinary:
         return false;
     }
 
+    // Write the static member
     bool JS2Metadata::writeStaticMember(StaticMember *m, js2val newValue, Phase phase)
     {
         if (m == NULL)
@@ -1520,23 +1527,35 @@ readClassProperty:
         case PackageKind:
         case FunctionKind: 
         case BlockKind: 
-            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, ReadAccess, phase);
+            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
 
         case ClassKind:
             {
+                // this:
+                // JS2VAL_UNINITIALIZED --> generic
+                // JS2VAL_NULL --> none
+                // JS2VAL_VOID --> inaccessible
+                // 
+                js2val thisObject;
+                if (lookupKind->isPropertyLookup()) 
+                    thisObject = JS2VAL_UNINITIALIZED;
+                else
+                    thisObject = lookupKind->thisObject;
                 MemberDescriptor m2;
                 if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
                     return readStaticMember(m2.staticMember, phase, rval);
                 else {
-                    if (lookupKind->isPropertyLookup()) {
+                    if (JS2VAL_IS_NULL(thisObject))
+                        reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
+                    if (JS2VAL_IS_VOID(thisObject))
+                        reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
+                    if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
                         // 'this' is {generic}
                         // XXX is ??? in spec.
                     }
-                    else {
-                    }
+                    return readInstanceMember(thisObject, objectType(thisObject), m2.qname, phase, rval);
                 }
             }
-            break;
 
         case PrototypeInstanceKind: 
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
@@ -1547,6 +1566,7 @@ readClassProperty:
         }
     }
 
+    // Use the slotIndex from the instanceVariable to access the slot
     Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
     {
         ASSERT(JS2VAL_IS_OBJECT(thisObjVal) 
@@ -1601,6 +1621,7 @@ readClassProperty:
     // the property or not.
     bool JS2Metadata::writeProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
     {
+        JS2Class *c = NULL;
         if (JS2VAL_IS_PRIMITIVE(containerVal))
             return false;
         JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
@@ -1609,14 +1630,19 @@ readClassProperty:
         case MultinameKind:
             return false;
 
-        case FixedInstanceKind: 
+        case FixedInstanceKind:
+            c = checked_cast<FixedInstance *>(container)->type;
+            goto instanceWrite;
         case DynamicInstanceKind:
+            c = checked_cast<DynamicInstance *>(container)->type;
+            goto instanceWrite;
+    instanceWrite:
             {
-                InstanceBinding *ib = resolveInstanceMemberName(objectType(containerVal), multiname, WriteAccess, phase);
+                InstanceBinding *ib = resolveInstanceMemberName(c, multiname, WriteAccess, phase);
                 if ((ib == NULL) && (container->kind == DynamicInstanceKind))
                     return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
                 else
-                    return writeInstanceMember();
+                    return writeInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, newValue, phase); 
             }
 
         case SystemKind:
@@ -1627,6 +1653,32 @@ readClassProperty:
             return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
 
         case ClassKind:
+            {
+                // this:
+                // JS2VAL_UNINITIALIZED --> generic
+                // JS2VAL_NULL --> none
+                // JS2VAL_VOID --> inaccessible
+                // 
+                js2val thisObject;
+                if (lookupKind->isPropertyLookup()) 
+                    thisObject = JS2VAL_UNINITIALIZED;
+                else
+                    thisObject = lookupKind->thisObject;
+                MemberDescriptor m2;
+                if (findStaticMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) && m2.staticMember)
+                    return writeStaticMember(m2.staticMember, newValue, phase);
+                else {
+                    if (JS2VAL_IS_NULL(thisObject))
+                        reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
+                    if (JS2VAL_IS_VOID(thisObject))
+                        reportError(Exception::compileExpressionError, "Undefined 'this' object", engine->errorPos());
+                    if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
+                        // 'this' is {generic}
+                        // XXX is ??? in spec.
+                    }
+                    return writeInstanceMember(thisObject, objectType(thisObject), m2.qname, newValue, phase);
+                }
+            }
             break;
 
         case PrototypeInstanceKind: 
@@ -1639,7 +1691,7 @@ readClassProperty:
 
     }
 
-    bool JS2Metadata::writeInstanceMember(JS2Object *thisObj, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase)
+    bool JS2Metadata::writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase)
     {
         if (phase == CompilePhase)
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
@@ -1972,6 +2024,9 @@ readClassProperty:
             typeofString(type->getName()),
             slots(new Slot[type->slotCount])
     {
+        for (uint32 i = 0; i < type->slotCount; i++) {
+            slots[i].value = JS2VAL_UNINITIALIZED;
+        }
     }
 
  
@@ -1991,6 +2046,9 @@ readClassProperty:
             typeofString(type->getName()),
             slots(new Slot[type->slotCount])
     {
+        for (uint32 i = 0; i < type->slotCount; i++) {
+            slots[i].value = JS2VAL_UNINITIALIZED;
+        }
     }
 
 

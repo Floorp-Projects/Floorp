@@ -705,6 +705,7 @@ public:
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeStaticMember(StaticMember *m, js2val newValue, Phase phase);
+    bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
