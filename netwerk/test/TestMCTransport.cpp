@@ -34,6 +34,16 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#ifndef USE_CREATE_INSTANCE
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsNetCID.h"
+static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
+static nsICacheSession *session = nsnull;
+static nsICacheEntryDescriptor *desc = nsnull;
+#endif
+
 /**
  * This test program exercises the memory cache's nsITransport implementation.
  *
@@ -128,8 +138,9 @@ TestListener::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 nsresult TestMCTransport(const char *filename)
 {
     nsresult rv = NS_OK;
-
     nsCOMPtr<nsITransport> transport;
+
+#ifdef USE_CREATE_INSTANCE
     rv = nsComponentManager::CreateInstance(
                     "@mozilla.org/network/memory-cache-transport;1",
                     nsnull,
@@ -137,6 +148,26 @@ nsresult TestMCTransport(const char *filename)
                     getter_AddRefs(transport));
     if (NS_FAILED(rv))
         return rv;
+#else
+    NS_WITH_SERVICE(nsICacheService, serv, kCacheServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = serv->CreateSession("TestMCTransport",
+                             nsICache::STORE_ANYWHERE, PR_TRUE,
+                             &session);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = session->OpenCacheEntry(filename,
+                                 nsICache::ACCESS_READ_WRITE,
+                                 &desc);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = desc->MarkValid();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = desc->GetTransport(getter_AddRefs(transport));
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     nsCOMPtr<nsIOutputStream> os;
     transport->OpenOutputStream(0, (PRUint32) -1, 0, getter_AddRefs(os));
@@ -205,5 +236,9 @@ int main(int argc, char **argv)
 
     gEventQ->ProcessPendingEvents();
 
+#ifndef USE_CREATE_INSTANCE
+    NS_IF_RELEASE(desc);
+    NS_IF_RELEASE(session);
+#endif
     return 0;
 }
