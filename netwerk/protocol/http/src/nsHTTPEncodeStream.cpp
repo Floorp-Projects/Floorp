@@ -25,6 +25,8 @@
 
 #include "prmem.h"
 
+#define MAX_BUF_SIZE 2048
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPEncodeStream methods:
 
@@ -32,6 +34,9 @@ nsHTTPEncodeStream::nsHTTPEncodeStream()
     : mInput(nsnull)
     , mFlags(nsIHTTPProtocolHandler::ENCODE_NORMAL)
     , mLastLineComplete(PR_TRUE)
+    , mBuf(nsnull)
+    , mBufCursor(0)
+    , mBufUnread(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -46,6 +51,8 @@ nsHTTPEncodeStream::Init(nsIInputStream* in, PRUint32 flags)
 
 nsHTTPEncodeStream::~nsHTTPEncodeStream()
 {
+    if (mBuf)
+        PR_Free(mBuf);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsHTTPEncodeStream);
@@ -121,23 +128,22 @@ nsHTTPEncodeStream::PushBack(nsString& data)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
+nsresult
+nsHTTPEncodeStream::ReadNext(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 {
     nsresult rv;
 #define BUF_SIZE 1024
     char readBuf[BUF_SIZE];
     PRUint32 amt = 0;
-    PRUint32 bytesRead = 0;
+
+    *result = 0;
 
     while (outBufCnt > 0) {
         PRUint32 readCnt = PR_MIN(outBufCnt, BUF_SIZE);
         rv = GetData(readBuf, readCnt, &amt);
-        bytesRead += amt;
-        *result = bytesRead;
-        if (NS_FAILED(rv)) return rv;
-        if (rv == NS_BASE_STREAM_WOULD_BLOCK || amt == 0)
-            return rv;
+        if (NS_FAILED(rv) || (amt == 0)) return rv;
+
+        *result += amt;
         
         if (mFlags & nsIHTTPProtocolHandler::ENCODE_QUOTE_LINES) {
             // If this line begins with "." so we need to quote it
@@ -165,23 +171,81 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsHTTPEncodeStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsHTTPEncodeStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
 {
-    char* readBuf = (char*) PR_Malloc (count);
-    PRUint32 nBytes;
+    NS_ASSERTION(buf, "null pointer");
+    NS_ASSERTION(countRead, "null pointer");
 
-    if (readBuf == NULL)
-        return NS_ERROR_FAILURE;
+    *countRead = 0;
 
-    nsresult rv = Read (readBuf, count, &nBytes);
+    PRUint32 amt = 0;
 
-    *_retval = 0;
-
-    if (NS_SUCCEEDED (rv))
-        rv = writer (this, closure, readBuf, *_retval, nBytes, _retval);
-
-    PR_Free (readBuf);
+    // Read from the buffer if it is not empty
+    if (mBufUnread) {
+        amt = PR_MIN(count, mBufUnread);
+        nsCRT::memcpy(buf, mBuf + mBufCursor, amt);
+        mBufCursor += amt;
+        mBufUnread -= amt;
+        *countRead = amt;
+        // If we've read all that was requested then return
+        if (count == amt)
+            return NS_OK;
+        // Fall through...
+    }
+    // Read from the source data stream
+    nsresult rv = ReadNext(buf + amt, count - amt, &amt);
+    *countRead += amt;
     return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPEncodeStream::ReadSegments(nsWriteSegmentFun writer, void * closure,
+                                 PRUint32 count, PRUint32 *countRead)
+{
+    NS_ASSERTION(writer, "null pointer");
+    NS_ASSERTION(countRead, "null pointer");
+
+    nsresult rv;
+    PRUint32 offset = 0;
+
+    *countRead = 0;
+
+    while (count) {
+        // Read from the buffer if it is not empty
+        while (mBufUnread) {
+            PRUint32 amt = PR_MIN(count, mBufUnread);
+            rv = writer(this, closure, mBuf + mBufCursor, offset, amt, &amt);
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+                return NS_OK; // mask this error
+            if (NS_FAILED(rv))
+                return rv;
+            if (amt == 0)
+                return NS_OK;
+            mBufCursor += amt;
+            mBufUnread -= amt;
+            count -= amt;
+            *countRead += amt;
+            offset += amt;
+        }
+        // Fill the buffer with more data if the read hasn't been satisfied
+        if (count) {
+            // Allocate the buffer if not already allocated
+            if (!mBuf) {
+                mBuf = (char *) PR_Malloc(MAX_BUF_SIZE);
+                if (!mBuf)
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
+            // Reset the cursor to the start of the buffer
+            mBufCursor = 0;
+            // Fill the buffer 
+            rv = ReadNext(mBuf, MAX_BUF_SIZE, &mBufUnread);
+            if (NS_FAILED(rv)) return rv;
+            // Break out of this loop, if we didn't add anything to the buffer
+            if (mBufUnread == 0)
+                break;
+        }
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -215,6 +279,9 @@ nsHTTPEncodeStream::Seek(PRInt32 whence, PRInt32 offset)
     nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mInput, &rv);
     if (NS_FAILED(rv)) return rv;
 
+    // Clear the ReadSegments buffer
+    mBufUnread = 0;
+
     mPushBackBuffer.SetLength(0);
     return ras->Seek(whence, offset);
 }
@@ -226,7 +293,8 @@ nsHTTPEncodeStream::Tell(PRUint32* outWhere)
     nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mInput, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return ras->Tell(outWhere);
+    // Our current stream position depends on the size of the ReadSegments buffer
+    return ras->Tell(outWhere) - mBufUnread;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
