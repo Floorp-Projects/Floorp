@@ -25,7 +25,7 @@
 #include "nsImageWin.h"
 #include "nsDeviceContextWin.h"
 #include "nsRegionWin.h"
-#include "nsBlenderWin.h"
+#include "nsBlender.h"
 #include "nsDeviceContextSpecWin.h"
 #include "nsDeviceContextSpecFactoryW.h"
 
@@ -153,11 +153,11 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)region;
   }
   else if (mClassID.Equals(kCBlender)) {
-    nsBlenderWin* blender;
-    NS_NEWXPCOM(blender, nsBlenderWin);
+    nsBlender* blender;
+    NS_NEWXPCOM(blender, nsBlender);
     inst = (nsISupports *)blender;
   }
-  else if (mClassID.Equals(kCBlender)) {
+  else if (mClassID.Equals(kCDrawingSurface)) {
     nsDrawingSurfaceWin* ds;
     NS_NEWXPCOM(ds, nsDrawingSurfaceWin);
     inst = (nsISupports *)((nsIDrawingSurface *)ds);
