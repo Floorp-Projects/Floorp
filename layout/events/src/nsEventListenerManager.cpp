@@ -41,6 +41,7 @@
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectData.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -509,7 +510,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 {
   nsresult ret = NS_OK;
   if (aFlags & NS_EVENT_FLAG_INIT) {
-    aFlags |= NS_EVENT_FLAG_BUBBLE;
+    aFlags |= (NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE);
   }
 
   switch(aEvent->message) {
@@ -1041,14 +1042,13 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 
         if (NS_OK == ret) {
           for (int i=0; i<mDragListeners->Count(); i++) {
-            nsListenerStruct *ls;
-            nsIDOMDragListener *dragListener;
+            nsListenerStruct *dragStruct;
 
-            ls = (nsListenerStruct*)mDragListeners->ElementAt(i);
+            dragStruct = (nsListenerStruct*)mDragListeners->ElementAt(i);
 
-            if (ls->mFlags & aFlags) {
-              if (NS_OK == ls->mListener->QueryInterface(kIDOMDragListenerIID,
-                                                       (void**)&dragListener)) {
+            if (dragStruct->mFlags & aFlags) {
+              nsCOMPtr<nsIDOMDragListener> dragListener ( do_QueryInterface(dragStruct->mListener) );
+              if ( dragListener ) {
                 switch (aEvent->message) {
                   case NS_DRAGDROP_ENTER:
                     ret = dragListener->DragEnter(*aDOMEvent);
@@ -1066,36 +1066,35 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     ret = dragListener->DragGesture(*aDOMEvent);
                     break;
                 } // switch 
-                NS_RELEASE(dragListener);
               }
               else {
                 PRBool correctSubType = PR_FALSE;
                 switch(aEvent->message) {
                   case NS_DRAGDROP_ENTER:
-                    if (ls->mSubType & NS_EVENT_BITS_DRAG_ENTER)
+                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_ENTER)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_OVER:
-                    if (ls->mSubType & NS_EVENT_BITS_DRAG_OVER)
+                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_OVER)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_EXIT:
-                    if (ls->mSubType & NS_EVENT_BITS_DRAG_EXIT)
+                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_EXIT)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_DROP:
-                    if (ls->mSubType & NS_EVENT_BITS_DRAG_DROP)
+                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_DROP)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_GESTURE:
-                    if (ls->mSubType & NS_EVENT_BITS_DRAG_GESTURE)
+                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_GESTURE)
                       correctSubType = PR_TRUE;
                     break;
                   default:
                     break;
                 }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_DRAG_NONE)
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                if (correctSubType || dragStruct->mSubType == NS_EVENT_BITS_DRAG_NONE)
+                  ret = dragStruct->mListener->HandleEvent(*aDOMEvent);
               }
             }
           }
