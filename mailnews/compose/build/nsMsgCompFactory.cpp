@@ -80,7 +80,7 @@ static nsModuleComponentInfo components[] =
   { NS_SMTPSERVER_CID,        &nsSmtpServerConstructor, NS_SMTPSERVER_PROGID,    },
   { NS_SMTPURL_CID,           &nsSmtpUrlConstructor, NS_SMTPURL_PROGID, },
   { NS_MSGQUOTE_CID,          &nsMsgQuoteConstructor, NS_MSGQUOTE_PROGID, },
-  { NS_MSGQUOTELISTENER_CID,  &nsMsgQuoteListenerConstructor, "", }
+  { NS_MSGQUOTELISTENER_CID,  &nsMsgQuoteListenerConstructor, NS_MSGQUOTELISTENER_PROGID, }
 };
 
   
