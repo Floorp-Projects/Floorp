@@ -425,9 +425,9 @@ MAKEDEPDETECT=$(MAKEDEPDETECT:	=)
 !if !defined(NODEPEND) && "$(MAKEDEPDETECT)" != ""
 
 depend:: $(OBJDIR)
-!if "$(WINOS)" =! "WINNT"
+!if "$(WINOS)" != "WINNT"
     @echo Analyzing dependencies...
-else
+!else
     @echo $(MAKEDEP) -s -o $(LINCS) $(OBJS)
 !endif
     $(MAKEDEP) -s -o $(MAKEDEPFILE) @<<
