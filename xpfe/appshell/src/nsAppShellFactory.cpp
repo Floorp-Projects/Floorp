@@ -24,12 +24,14 @@
 #include "nsICmdLineService.h"
 #include "nsIFileLocator.h"
 #include "nsIGlobalHistory.h"
+#include "nsINetSupportDialogService.h"
 
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
 #if 0
 nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult);
+
 #endif
 
 
@@ -39,6 +41,7 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /*
  * Global entry point to register all components in the registry...
@@ -52,7 +55,9 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    return NS_OK;
+   	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+
+   return NS_OK;
 }
 
 /*
@@ -66,8 +71,9 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterFactory(kFileLocatorCID,  path);
     nsComponentManager::UnregisterFactory(kProtocolHelperCID,  path);
     nsComponentManager::UnregisterFactory(kXPConnectFactoryCID, path);
-    nsComponentManager::UnregisterFactory(kGlobalHistoryCID, path);
-    
+    nsComponentManager::UnregisterFactory(kGlobalHistoryCID, path);  
+    nsComponentManager::UnregisterFactory(kNetSupportDialogCID, path);
+
     return NS_OK;
 }
 
@@ -117,6 +123,12 @@ NSGetFactory(nsISupports* serviceMgr,
 #if 0
   else if (aClass.Equals(kProtocolHelperCID)) {
     rv = NS_NewDefaultProtocolHelperFactory(aFactory);
+  }
+#endif
+#if defined (XP_MAC) || (XP_WIN )
+  else if ( aClass.Equals( kNetSupportDialogCID ) )
+  {
+  	 rv = NS_NewNetSupportDialogFactory(aFactory);
   }
 #endif
 
