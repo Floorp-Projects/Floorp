@@ -44,7 +44,7 @@
 #include "windows.h"
 #endif
 #include "zipstub.h"
-#undef NETSCAPE       // undoes prtypes damage in zlib.h
+#undef MOZILLA_CLIENT       // undoes prtypes damage in zlib.h
 #define ZFILE_CREATE  "wb"
 #define READTYPE  PRUint32
 #endif /* STANDALONE */
