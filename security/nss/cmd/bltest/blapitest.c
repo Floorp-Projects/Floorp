@@ -1470,6 +1470,10 @@ cipherFinish(bltestCipherInfo *cipherInfo)
     case bltestDES_EDE_CBC:
 	DES_DestroyContext((DESContext *)cipherInfo->cx, PR_TRUE);
 	break;
+    case bltestAES_ECB:
+    case bltestAES_CBC:
+	AES_DestroyContext((AESContext *)cipherInfo->cx, PR_TRUE);
+	break;
     case bltestRC2_ECB:
     case bltestRC2_CBC:
 	RC2_DestroyContext((RC2Context *)cipherInfo->cx, PR_TRUE);
