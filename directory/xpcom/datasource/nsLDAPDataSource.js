@@ -59,6 +59,9 @@ ArrayEnumerator.prototype = {
 			           this.array[index++] : null; }
 }
 
+	 function boundCallback() {}
+
+
 // the datasource object itself
 //
 const NS_LDAPDATASOURCE_PROGID = 
@@ -237,6 +240,24 @@ nsLDAPDataSource.prototype = {
 
      GetTargets: function(aSource, aProperty, aTruthValue) {
 
+	 function generateBoundCallback() {
+
+	     cb = new boundCallback();
+
+	     cb.onLDAPMessage = function() {
+
+		 // netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		 if (DEBUG) {
+		     dump("boundCallback() called with scope: \n\t" + 
+			  aSource.Value + "\n\t" + aProperty.Value + 
+			  "\n\t" + aTruthValue + "\n\n");
+		 }
+	     }
+
+	     return cb;
+	 }
+
 	 if (DEBUG) {
 	     dump("GetTargets() called with args: \n\t" + aSource.Value + 
 		  "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
@@ -246,11 +267,11 @@ nsLDAPDataSource.prototype = {
 	                        .getService(Components.interfaces.nsILDAPURL);
 	 url.spec = aSource.Value;
 
-	 this.getConnection(url.host, url.port);
+	 this.getConnection(url.host, url.port, generateBoundCallback());
 
 	 return new ArrayEnumerator(new Array());
      },
-    
+
     /**
      * Get a cursor to iterate over all the arcs that originate in
      * a resource.
@@ -283,7 +304,7 @@ nsLDAPDataSource.prototype = {
 
     // XXX need to support non-null passwords & bind names
     //
-    getConnection : function(aServer, aPort)
+    getConnection : function(aServer, aPort, aCallback)
     {
 
 	// initialize our connection
@@ -295,7 +316,7 @@ nsLDAPDataSource.prototype = {
 	this.mOperation = Components.classes["mozilla.network.ldapoperation"].
                           createInstance(Components.interfaces.
 					 nsILDAPOperation);
-	this.mOperation.init(this.mConnection, this);
+	this.mOperation.init(this.mConnection, aCallback);
 
 	// bind to the server.  we'll get a callback when this finishes.
 	//
