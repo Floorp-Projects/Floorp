@@ -2060,7 +2060,14 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       if (NS_FAILED(rv))
         return rv;
 
-      rv = nsMsgI18NConvertFromUnicode(nsCAutoString("UTF-8"), nsAutoString(unicode), convertedStr);
+     nsAutoString familyname(unicode);
+#if defined(XP_UNIX)
+     // extract "courier" from "adobe-courier-iso8859-1"
+     nsAutoString tmp;
+     familyname.Right(tmp, familyname.Length()-familyname.FindChar(PRUnichar('-'))-1);
+     tmp.Left(familyname, tmp.FindChar(PRUnichar('-')));
+#endif
+      rv = nsMsgI18NConvertFromUnicode(nsCAutoString("UTF-8"), familyname, convertedStr);
       PR_FREEIF(unicode);
       if (NS_FAILED(rv))
         return rv;
