@@ -944,7 +944,7 @@ PRBool
 nsFreeTypeFace::FreeFace(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsFreeTypeFace *face = (nsFreeTypeFace*) aData;
-  delete face;
+  NS_RELEASE(face);
 
   return PR_TRUE;
 }
@@ -1037,9 +1037,12 @@ nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce)
     NS_ASSERTION(face, "memory error while creating nsFreeTypeFace");
     if (!face)
       return nsnull;
+    NS_ADDREF(face);
     nsresult rv = face->Init(aFce);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(face);
       return nsnull;
+    }
     gFreeTypeFaces->Put(&key, face);
   }
   return face;

@@ -61,6 +61,7 @@ void nsFT2FontNode::GetFontNames(const char* aPattern,
 #include "nsFreeType.h"
 #include "nsFontFreeType.h"
 #include "nsIServiceManager.h"
+#include "nsArray.h"
 
 nsHashtable* nsFT2FontNode::mFreeTypeNodes = nsnull;
 PRBool       nsFT2FontNode::sInited = PR_FALSE;
@@ -116,7 +117,7 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
   char *pattern, *foundry, *family, *charset, *encoding;
   const char *charSetName;
   nsFontNode *node;
-  nsISupportsArray* arrayFC;
+  nsCOMPtr<nsIArray> arrayFC;
   nsCAutoString familyTmp, languageTmp;
 
   FONT_CATALOG_PRINTF(("looking for FreeType font matching %s", aPattern));
@@ -139,13 +140,13 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
   if (family)
     familyTmp.Assign(family);
 
-  sFcs->GetFontCatalogEntries(familyTmp, languageTmp, 0, 0, 0, 0, &arrayFC);
+  sFcs->GetFontCatalogEntries(familyTmp, languageTmp, 0, 0, 0, 0,
+                              getter_AddRefs(arrayFC));
   if (!arrayFC)
     goto cleanup_and_return;
-  arrayFC->Count(&count);
+  arrayFC->GetLength(&count);
   for (i = 0; i < count; i++) {
-    nsISupports* item = (nsISupports*)arrayFC->ElementAt(i);
-    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryInterface(item);
+    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryElementAt(arrayFC, i);
     if (!fce)
       continue;
     nsCAutoString foundryName, familyName;
@@ -297,17 +298,17 @@ PRBool
 nsFT2FontNode::LoadNodeTable()
 {
   int j;
-  nsISupportsArray* arrayFC;
+  nsCOMPtr<nsIArray> arrayFC;
   nsCAutoString family, language;
-  sFcs->GetFontCatalogEntries(family, language, 0, 0, 0, 0, &arrayFC);
+  sFcs->GetFontCatalogEntries(family, language, 0, 0, 0, 0,
+                              getter_AddRefs(arrayFC));
   if (!arrayFC)
     return PR_FALSE;
   PRUint32 count, i;
-  arrayFC->Count(&count);
+  arrayFC->GetLength(&count);
   for (i = 0; i < count; i++) {
-    nsISupports* item = (nsISupports*)arrayFC->ElementAt(i);
     const char *charsetName;
-    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryInterface(item);
+    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryElementAt(arrayFC, i);
     if (!fce)
       continue;
     PRUint32 flags, codePageRange1, codePageRange2;
