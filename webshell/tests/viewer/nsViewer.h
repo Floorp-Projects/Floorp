@@ -31,7 +31,9 @@
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIImageGroup.h"
+#include "nsIThrobber.h"
 
+class nsIThrobber;
 class nsITextWidget;
 class nsIScriptContext;
 class nsIScriptGlobalObject;
@@ -67,12 +69,14 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIWebShellContainer
+  NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD GetTitle(nsString& aResult);
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
 
   // nsIDocumentObserver
-  NS_IMETHOD SetTitle(const nsString& aTitle);
+//  NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD BeginUpdate();
   NS_IMETHOD EndUpdate();
   NS_IMETHOD BeginLoad();
@@ -134,18 +138,11 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   public:
     nsViewer() {
       mLocation = nsnull;
-      mHistoryIndex = -1;
-
       mThrobber = nsnull;
-      mThrobberImages = nsnull;
-      mThrobberIdx = 0;
-      mThrobberImageGroup = nsnull;
-      mThrobTimer = nsnull;
-      mUpdateThrobber = PR_FALSE;
     }
 
     ~nsViewer() {
-      DestroyThrobberImages();
+      NS_IF_RELEASE(mThrobber);
     }
 
     // nsISupports
@@ -210,11 +207,6 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
   void Back();
   void Forward();
-  void GoingTo(const nsString& aURL);
-  void ShowHistory();
-
-  void LoadThrobberImages();
-  void DestroyThrobberImages();
 
   // Debug methods
   void ToggleFrameBorders(nsIWebShell* aWebWidget);
@@ -230,17 +222,11 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   void ForceRefresh(nsIWebShell* aWebWidget);
 
   nsITextWidget* mLocation;
-  nsIWidget* mThrobber;
-  nsVoidArray* mThrobberImages;
-  PRInt32 mThrobberIdx;
-  nsIImageGroup* mThrobberImageGroup;
-  nsITimer* mThrobTimer;
-  PRBool mUpdateThrobber;
+  nsIThrobber* mThrobber;
 
-  // Cheesy history (just the urls are stored)
   WindowData* mWD;
-  nsVoidArray mHistory;
-  PRInt32 mHistoryIndex;
+  nsString mTitle;
+
   nsIRelatedLinks * mRelatedLinks;
   RL_Window mRLWindow;
 };
