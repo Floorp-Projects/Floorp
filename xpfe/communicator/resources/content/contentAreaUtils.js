@@ -408,7 +408,8 @@ function foundHeaderInfo(aSniffer, aData)
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
     dl.init(source, persistArgs.target, null, null, null, persist);
-    persist.saveURI(source, null, null, persistArgs.postData, null, persistArgs.target);
+    var referer = getReferrer(document);
+    persist.saveURI(source, null, referer, persistArgs.postData, null, persistArgs.target);
   }
 }
 
@@ -430,6 +431,13 @@ function nsHeaderSniffer(aURL, aCallback, aData)
     flags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
   }
   this.linkChecker.loadFlags = flags;
+
+  // Set referrer, ignore errors
+  try {
+    var referrer = getReferrer(document);
+    this.linkChecker.baseChannel.QueryInterface(Components.interfaces.nsIHttpChannel).referrer = referrer;
+  }
+  catch (ex) { }
 
   this.linkChecker.asyncCheck(this, null);
 }
