@@ -172,7 +172,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         if (! (Modifier.isInterface(modifiers) ||
                Modifier.isAbstract(modifiers)))
         {
-            Constructor[] ctors = members.getConstructors();
+            Constructor[] ctors = members.ctors;
             int index = NativeJavaMethod.findFunction(ctors, args);
             if (index < 0) {
                 String sig = NativeJavaMethod.scriptSignature(args);

@@ -55,11 +55,6 @@ import java.lang.reflect.*;
 public class NativeJavaMethod extends BaseFunction
 {
 
-    public NativeJavaMethod()
-    {
-        this.functionName = null;
-    }
-
     public NativeJavaMethod(Method[] methods)
     {
         this.methods = methods;
