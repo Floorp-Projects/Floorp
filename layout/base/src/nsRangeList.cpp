@@ -2085,7 +2085,8 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
   nsCOMPtr<nsIDOMNode> tempNode;
   nsCOMPtr<nsIDOMNode> tempNode2;
   PRBool cellMode = PR_FALSE;
-  PRBool dirty = PR_FALSE;
+  PRBool dirtystart = PR_FALSE;
+  PRBool dirtyend = PR_FALSE;
   if (startNode != endNode)
   {
     if (parent != startNode)
@@ -2103,7 +2104,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
             return NS_ERROR_FAILURE;
           if (*aDir == eDirPrevious) //select after
             startOffset++;
-          dirty = PR_TRUE;
+          dirtystart = PR_TRUE;
           cellMode = PR_FALSE;
         }
         else if (atom.get() == nsRangeList::sCellAtom) //you are in "cell" mode put selection to end of cell
@@ -2114,7 +2115,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
             return result;
           if (*aDir == eDirPrevious) //select after
             startOffset++;
-          dirty = PR_TRUE;
+          dirtystart = PR_TRUE;
         }
         result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
         if (NS_FAILED(result) || !tempNode2)
@@ -2142,7 +2143,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
               return result;
             if (*aDir == eDirNext) //select after
               endOffset++;
-            dirty = PR_TRUE;
+            dirtyend = PR_TRUE;
           }
           else
             found = PR_FALSE; //didnt find the right cell yet
@@ -2155,7 +2156,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
           if (*aDir == eDirNext) //select after
             endOffset++;
           found = PR_TRUE;
-          dirty = PR_TRUE;
+          dirtyend = PR_TRUE;
         }
         result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
         if (NS_FAILED(result) || !tempNode2)
@@ -2165,26 +2166,36 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
       if (!found)
         return NS_ERROR_FAILURE;
     }
+  } 
+  if (FetchAnchorNode() == startNode.get() && FetchFocusNode() == endNode.get() &&
+      FetchAnchorOffset() == startOffset && FetchFocusOffset() == endOffset)
+  {
+    *aFixupState = PR_FALSE;
+    return NS_ERROR_FAILURE;//nothing to do
   }
-  if (FetchAnchorNode() != startNode.get() || startOffset != FetchAnchorOffset())
-    dirty = PR_TRUE; //something has changed we are dirty no matter what
-  if (dirty && *aDir != mDirection) //fixup took place but new direction all bets are off
+  if ((dirtystart || dirtyend) && *aDir != mDirection) //fixup took place but new direction all bets are off
   {
     *aFixupState = PR_TRUE;
     mFixupState = PR_FALSE;
   }
   else
-    if (startNode.get() != FetchOriginalAnchorNode() && PR_TRUE == mFixupState) //no longer a fixup
-    {
-      *aFixupState = PR_TRUE;
-      mFixupState = PR_FALSE;
-    }
-    else
-    {
-      mFixupState = dirty;
-      *aFixupState = dirty;
-    }
-  if (dirty){
+  if (dirtystart && (FetchAnchorNode() != startNode.get() || FetchAnchorOffset() != startOffset))
+  {
+    *aFixupState = PR_TRUE;
+    mFixupState  = PR_TRUE;
+  }
+  else
+  if (dirtyend && (FetchFocusNode() != endNode.get() || FetchFocusOffset() != endOffset))
+  {
+    *aFixupState = PR_TRUE;
+    mFixupState  = PR_TRUE;
+  }
+  else
+  {
+    mFixupState = PR_FALSE;
+    *aFixupState = PR_FALSE;
+  }
+  if (dirtystart || dirtyend){
     if (*aDir == eDirNext)
     {
       if (NS_FAILED(aRange->SetStart(startNode,startOffset)) || NS_FAILED(aRange->SetEnd(endNode, endOffset)))
