@@ -35,7 +35,7 @@ DIRS 		+= jsdb
 
 REQUIRES	= java js
 
-EXPORTS		= $(srcdir)/jsdebug.h
+EXPORTS		= jsdebug.h
 
 ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE

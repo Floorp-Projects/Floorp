@@ -27,29 +27,17 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-VPATH = ../../src
+CSRCS		= jsdrefl.c jsdb.c
+EXPORTS     = jsdb.h
 
-CSRCS		= \
-		  js.c \
-		  jsdb.c \
-		  jsdrefl.c
+MODULE		= jsd_refl
+LIBRARY_NAME	= jsdr
 
-PROGRAM		= js
-
-EXTRA_LIBS	= $(NSPR_LIBS)
-
-LIBS		= \
-		  -ljsd \
-		  -lmozjs \
-		  $(NSPR_LIBS)
+REQUIRES = jsd mozjs
 
 ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE
 endif
 
-DEFINES += -DJSDEBUGGER -DJSDEBUGGER_C_UI -DJSD_LOWLEVEL_SOURCE -DJSFILE
-
 include $(topsrcdir)/config/rules.mk
-
-INCLUDES += -I../../src -I.
 

@@ -320,19 +320,20 @@ NativeBreak(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSFunctionSpec debugger_functions[] = {
-    {"version",         Version,        0},
-    {"load",            Load,           1},
-    {"write",           Write,          0},
-    {"gets",            Gets,           0},
-    {"safeEval",        SafeEval,       3},
-    {"nativeBreak",     NativeBreak,    0},
-    {0}
+    {"version",         Version,        0, 0, 0},
+    {"load",            Load,           1, 0, 0},
+    {"write",           Write,          0, 0, 0},
+    {"gets",            Gets,           0, 0, 0},
+    {"safeEval",        SafeEval,       3, 0, 0},
+    {"nativeBreak",     NativeBreak,    0, 0, 0},
+    {0, 0, 0, 0, 0}
 };
 
 static JSClass debugger_global_class = {
     "debugger_global", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS    
 };
 
 /***************************************************************************/
@@ -429,11 +430,12 @@ JSDB_InitDebugger(JSRuntime* rt, JSDContext* jsdc, int depth)
 
     if(data->debuggerDepth < MAX_DEBUGGER_DEPTH)
     {
-        JSDContext* jsdc;
-        if(!(jsdc = JSD_DebuggerOnForUser(data->rtDebugger, NULL, NULL)))
-            return _initReturn("failed to create jsdc for nested debugger", JS_FALSE);
-        JSD_JSContextInUse(jsdc, data->cxDebugger);
-        if(!JSDB_InitDebugger(data->rtDebugger, jsdc, data->debuggerDepth))
+        JSDContext* local_jsdc;
+        if(!(local_jsdc = JSD_DebuggerOnForUser(data->rtDebugger, NULL, NULL)))
+            return _initReturn("failed to create jsdc for nested debugger",
+                               JS_FALSE);
+        JSD_JSContextInUse(local_jsdc, data->cxDebugger);
+        if(!JSDB_InitDebugger(data->rtDebugger, local_jsdc, data->debuggerDepth))
             return _initReturn("failed to init nested debugger", JS_FALSE);
     }
 

@@ -51,12 +51,12 @@ enum jsd_prop_ids
 };
 
 static JSPropertySpec jsd_properties[] = {
-    {_str_ThreadStateHandle, JSD_PROP_ID_THREADSTATE_HANDLE, JSPROP_ENUMERATE|JSPROP_PERMANENT},
-    {_str_InterruptSet,      JSD_PROP_ID_INTERRUPT_SET,      JSPROP_ENUMERATE|JSPROP_PERMANENT},
-    {_str_Evaluating,        JSD_PROP_ID_EVALUATING,         JSPROP_ENUMERATE|JSPROP_PERMANENT},
-    {_str_DebuggerDepth,     JSD_PROP_ID_DEBUGGER_DEPTH,     JSPROP_ENUMERATE|JSPROP_PERMANENT},
-    {_str_ReturnExpression,  JSD_PROP_ID_RETURN_EXPRESSION,  JSPROP_ENUMERATE|JSPROP_PERMANENT},
-    {0}
+    {_str_ThreadStateHandle, JSD_PROP_ID_THREADSTATE_HANDLE, JSPROP_ENUMERATE|JSPROP_PERMANENT, 0, 0},
+    {_str_InterruptSet,      JSD_PROP_ID_INTERRUPT_SET,      JSPROP_ENUMERATE|JSPROP_PERMANENT, 0, 0},
+    {_str_Evaluating,        JSD_PROP_ID_EVALUATING,         JSPROP_ENUMERATE|JSPROP_PERMANENT, 0, 0},
+    {_str_DebuggerDepth,     JSD_PROP_ID_DEBUGGER_DEPTH,     JSPROP_ENUMERATE|JSPROP_PERMANENT, 0, 0},
+    {_str_ReturnExpression,  JSD_PROP_ID_RETURN_EXPRESSION,  JSPROP_ENUMERATE|JSPROP_PERMANENT, 0, 0},
+    {0, 0, 0, 0, 0}
 };
 
 static JSBool
@@ -158,7 +158,8 @@ JSClass jsdb_HandleClass = {
     "JSDHandle",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   handle_finalize
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   handle_finalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -174,8 +175,8 @@ handle_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 }
 
 static JSFunctionSpec handle_methods[] = {
-    {"toString",   handle_toString,        0},
-    {0}
+    {"toString",   handle_toString,        0, 0, 0},
+    {0, 0, 0, 0, 0}
 };
 
 void*
@@ -2050,7 +2051,7 @@ GetValueForObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
  * FUN_SPEC(GetMajorVersion,0) ->
  *      {"GetMajorVersion",GetMajorVersion,0,JSPROP_ENUMERATE},
  */
-#define FUN_SPEC(x,n) {#x,x,n,JSPROP_ENUMERATE},
+#define FUN_SPEC(x,n) {#x,x,n,JSPROP_ENUMERATE,0},
 
 static JSFunctionSpec jsd_functions[] = {
 /* High Level calls */
@@ -2142,7 +2143,7 @@ static JSFunctionSpec jsd_functions[] = {
     FUN_SPEC(GetObjectConstructorName, 1)
     FUN_SPEC(GetObjectForValue, 1)
     FUN_SPEC(GetValueForObject, 1)
-    {0}
+    {0,0,0,0,0}
 };
 
 /***************************************************************************/
@@ -2193,7 +2194,7 @@ static ConstProp const_props[] = {
     CONST_PROP(JSDPD_VARIABLE)
     CONST_PROP(JSDPD_HINTED)
 
-    {0}
+    {0,0}
 };
 
 JSBool
@@ -2216,7 +2217,8 @@ _defineConstProperties(JSDB_Data* data)
 static JSClass jsd_class = {
     "JSD", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 /***************************************************************************/
