@@ -645,7 +645,7 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
   char theChar=0;
   char theDigit=0;
   while(--cp>=aString.mStr){
-    char theChar=*cp;
+    theChar=*cp;
     if((theChar>='0') && (theChar<='9')){
       theDigit=theChar-'0';
     }
@@ -899,7 +899,8 @@ nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
  * append given string to this string
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount: #of chars to be copied
+ * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  this
  */
 nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
@@ -907,10 +908,11 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
     nsStr temp;
     Initialize(temp,eOneByte);
     temp.mStr=(char*)aCString;
-    temp.mLength=nsCRT::strlen(aCString);
-    if(aCount<0)
-      aCount=temp.mLength;
-    else aCount=MinInt(aCount,temp.mLength);
+
+    if(aCount<0) 
+      aCount=temp.mLength=nsCRT::strlen(aCString);
+    else temp.mLength=aCount;
+
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount,mAgent);
   }
@@ -921,7 +923,8 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
  * append given uni-string to this string
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount: #of chars to be copied
+ * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  this
  */
 nsCString& nsCString::Append(const PRUnichar* aString,PRInt32 aCount) {
@@ -929,10 +932,11 @@ nsCString& nsCString::Append(const PRUnichar* aString,PRInt32 aCount) {
     nsStr temp;
     Initialize(temp,eTwoByte);
     temp.mUStr=(PRUnichar*)aString;
-    temp.mLength=nsCRT::strlen(aString);
-    if(aCount<0)
-      aCount=temp.mLength;
-    else aCount=MinInt(aCount,temp.mLength);
+
+    if(aCount<0) 
+      aCount=temp.mLength=nsCRT::strlen(aString);
+    else temp.mLength=aCount;
+
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount,mAgent);
   }
@@ -1082,6 +1086,8 @@ nsCString& nsCString::Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount
  * @update	gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
+ * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  the number of chars inserted into this string
  */
 nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
@@ -1089,10 +1095,11 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
     nsStr temp;
     nsStr::Initialize(temp,eOneByte);
     temp.mStr=(char*)aCString;
-    temp.mLength=nsCRT::strlen(aCString);
-    if(aCount<0)
-      aCount=temp.mLength;
-    else aCount=MinInt(aCount,temp.mLength);
+
+    if(aCount<0) 
+      aCount=temp.mLength=nsCRT::strlen(aCString);
+    else temp.mLength=aCount;
+
     if(temp.mLength && (0<aCount)){
       nsStr::Insert(*this,anOffset,temp,0,aCount,0);
     }
@@ -1109,6 +1116,8 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
  * @update	gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
+ * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  the number of chars inserted into this string
  */
 nsCString& nsCString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
@@ -1116,10 +1125,11 @@ nsCString& nsCString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 
     nsStr temp;
     nsStr::Initialize(temp,eTwoByte);
     temp.mUStr=(PRUnichar*)aString;
-    temp.mLength=nsCRT::strlen(aString);
-    if(aCount<0)
-      aCount=temp.mLength;
-    else aCount=MinInt(aCount,temp.mLength);
+
+    if(aCount<0) 
+      aCount=temp.mLength=nsCRT::strlen(aString);
+    else temp.mLength=aCount;
+
     if(temp.mLength && (0<aCount)){
       nsStr::Insert(*this,anOffset,temp,0,aCount,0);
     }

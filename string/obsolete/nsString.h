@@ -439,7 +439,8 @@ nsCString& Append(const nsCString& aString) {return Append(aString,aString.mLeng
  *  Appends n characters from given string to this,
  *  
  *  @param   aString is the source to be appended to this
- *  @param   aCount -- number of chars to copy
+ *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ *            WARNING: If you provide a count>0, we don't double check the actual string length!
  *  @return  number of chars copied
  */
 nsCString& Append(const nsStr& aString,PRInt32 aCount);
@@ -490,7 +491,8 @@ PRUint32 Right(nsCString& aCopy,PRInt32 aCount) const;
  *  
  *  @param  aCopy -- String to be inserted into this
  *  @param  anOffset -- insertion position within this str
- *  @param  aCount -- number of chars to be copied from aCopy
+ *  @param  aCount -- number of chars to insert; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  *  @return number of chars inserted into this.
  */
 nsCString& Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
@@ -501,6 +503,8 @@ nsCString& Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
  *
  * @param   aString* to be inserted into this string
  * @param   anOffset is insert pos in str 
+ * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
+ *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  the number of chars inserted into this string
  */
 nsCString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
@@ -514,7 +518,6 @@ nsCString& Insert(const PRUnichar* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
  * @param   anOffset is insert pos in str 
  * @return  the number of chars inserted into this string
  */
-//nsCString& Insert(char aChar,PRUint32 anOffset);
 nsCString& Insert(PRUnichar aChar,PRUint32 anOffset);
 
 /*

@@ -446,7 +446,8 @@ nsString& Append(const nsString& aString) {return Append(aString,aString.mLength
  *  Appends n characters from given string to this,
  *  
  *  @param   aString is the source to be appended to this
- *  @param   aCount -- number of chars to copy
+ *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ *           WARNING: If you provide a count>0, we don't double check the actual string length!
  *  @return  number of chars copied
  */
 nsString& Append(const nsStr& aString,PRInt32 aCount);

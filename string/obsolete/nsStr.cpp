@@ -36,8 +36,8 @@
 
  
 static const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
-static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
-static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
+//static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
+//static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
 //----------------------------------------------------------------------------------------
 //  The following is a memory agent who knows how to recycled (pool) freed memory...
