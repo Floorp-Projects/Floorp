@@ -4131,7 +4131,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
       nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
       while (parent) {
-        aContainer->GetParent(*getter_AddRefs(parent));
+        child->GetParent(*getter_AddRefs(parent));
         parent->GetTag(*getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree)
           break;
@@ -4348,7 +4348,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
       nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
       while (parent) {
-        aContainer->GetParent(*getter_AddRefs(parent));
+        child->GetParent(*getter_AddRefs(parent));
         parent->GetTag(*getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree)
           break;
@@ -4668,7 +4668,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
         nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
         while (parent) {
-          aContainer->GetParent(*getter_AddRefs(parent));
+          child->GetParent(*getter_AddRefs(parent));
           parent->GetTag(*getter_AddRefs(tag));
           if (tag.get() == nsXULAtoms::tree)
             break;
