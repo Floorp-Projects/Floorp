@@ -65,10 +65,11 @@
 #include <errno.h>
 #ifdef XP_PC
 #include <io.h>     /* for isatty() */
-#else
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>     /* for isatty() */
-#endif
+#elif defined(XP_MAC)
+#include <unistd.h>
+#include <unix.h>
 #endif
 #include "jsparse.h"
 #include "jsscan.h"
@@ -768,8 +769,10 @@ main(int argc, char **argv)
     if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
         return 1;
 
+#if !defined(XP_MAC)
     argc--;
     argv++;
+#endif
 
     result = ProcessArgs(jscontext, glob, argv, argc);
 
