@@ -196,7 +196,13 @@
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onchange="EditorStartup('text')"/>
     
-  <menubar>
+  
+  <broadcaster id="Editor:Style:IsBold" bold="false"/>
+  <broadcaster id="Editor:Style:IsItalic"/>
+  <broadcaster id="Editor:Style:IsUnderline"/>
+
+  <toolbox>
+    <menubar>
     <menu value="&fileMenu.label;">
 	  <menupopup>
       <menuitem value="&newCmd.label;" onaction="EditorNew()"/>
@@ -333,13 +339,9 @@
 	  <menuitem value="&aboutCmd.label;" onaction=""/>
 	  </menupopup>
     </menu>
+	<spring flex="100%"/>
   </menubar>
   
-  <broadcaster id="Editor:Style:IsBold" bold="false"/>
-  <broadcaster id="Editor:Style:IsItalic"/>
-  <broadcaster id="Editor:Style:IsUnderline"/>
-
-    <toolbox>
       <toolbar>
 		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
