@@ -61,6 +61,15 @@ enum PopupControlState {
   openOverridden    // disallow window open
 };
 
+// permissible values for GetOpenAllow
+enum OpenAllowValue {
+  allowNot = 0,     // the window opening is denied
+  allowNoAbuse,     // allowed: not a popup
+  allowSelf,        // allowed: it's the same window (_self, _top, et.al.)
+  allowExtant,      // allowed: an already open window
+  allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
+};
+
 class nsIDocShell;
 class nsIFocusController;
 struct nsTimeoutImpl;
@@ -125,6 +134,7 @@ public:
   virtual PopupControlState PushPopupControlState(PopupControlState aState) const = 0;
   virtual void PopPopupControlState(PopupControlState state) const = 0;
   virtual PopupControlState GetPopupControlState() const = 0;
+  virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
 
 protected:
   nsPIDOMWindow()
